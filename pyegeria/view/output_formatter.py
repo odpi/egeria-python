@@ -23,6 +23,7 @@ from typing import Any, Callable, Dict, List, Optional, Tuple, Union
 
 from pyegeria.core._globals import MERMAID_GRAPH_TITLES, MERMAID_GRAPHS
 from pyegeria.core.utils import (camel_to_title_case, get_item_display_name)
+from pyegeria.core.config import settings
 from markdown_it import MarkdownIt
 from rich.console import Console
 from loguru import logger
@@ -82,8 +83,123 @@ This function and related data structures have been moved back to _output_format
 Please import select_report_spec from pyegeria._output_formats instead of from this module.
 """
 # Todo - put this back after testing
-# console = Console(width=settings.Environment.egeria_width)
-console = Console(width=300)
+console = Console(width=settings.Environment.egeria_width)
+
+
+MERMAID_ATTRIBUTE_KEYS = {
+    "mermaidGraph",
+    "anchorMermaidGraph",
+    "informationSupplyChainMermaidGraph",
+    "fieldLevelLineageGraph",
+    "actionMermaidGraph",
+    "localLineageGraph",
+    "edgeMermaidGraph",
+    "iscImplementationGraph",
+    "specificationMermaidGraph",
+    "solutionBlueprintMermaidGraph",
+    "solutionSubcomponentMermaidGraph",
+    "governanceActionProcessMermaidGraph",
+    "collectionMermaidMindMap",
+    "zoneProfileMermaidPieChart",
+    "zoneProfileAnchoredMermaidPieChart",
+    "zoneProfileAllMermaidPieChart",
+    # TODO: Research SecretStore retrieval/extraction path before enabling these:
+    # "userAccountTypeProfileMermaidPieChart",
+    # "userAccountStatusProfileMermaidPieChart",
+}
+
+
+def _is_mermaid_attribute(attribute_name: str | None = None, attribute_key: str | None = None) -> bool:
+    """Return True when a selected report attribute should be rendered as Mermaid."""
+    if attribute_key in MERMAID_ATTRIBUTE_KEYS:
+        return True
+
+    attribute_title = camel_to_title_case(attribute_name or "")
+    return attribute_title in MERMAID_GRAPH_TITLES + ["Mermaid Graph", "Mermaid"]
+
+
+def _get_report_spec_attributes(columns_struct: Optional[dict]) -> list[dict]:
+    """Return the selected report spec attributes in display order."""
+    if not isinstance(columns_struct, dict):
+        return []
+
+    formats = columns_struct.get("formats") or {}
+    attributes = formats.get("attributes") if isinstance(formats, dict) else None
+    return attributes if isinstance(attributes, list) else []
+
+
+def _get_element_value(element: dict, key: str) -> Any:
+    """Get a report attribute value from top-level element data or its properties."""
+    if not isinstance(element, dict) or not key:
+        return None
+
+    if key in element:
+        return element.get(key)
+
+    properties = element.get("properties")
+    if isinstance(properties, dict):
+        if key in properties:
+            return properties.get(key)
+
+        key_camel = to_camel_case(key)
+        if key_camel in properties:
+            return properties.get(key_camel)
+
+    key_camel = to_camel_case(key)
+    if key_camel in element:
+        return element.get(key_camel)
+
+    return None
+
+
+def _normalize_escaped_mermaid_newlines(mermaid_code: str) -> str:
+    """Normalize escaped newline sequences in Mermaid content.
+
+    Flowchart labels render more reliably with <br/>. Mindmaps and other
+    indentation-sensitive graphs need real newlines.
+    """
+    if not isinstance(mermaid_code, str):
+        return mermaid_code
+
+    stripped = mermaid_code.lstrip()
+    if stripped.startswith(("flowchart", "graph")):
+        return mermaid_code.replace("\\n", "<br/>")
+
+    return mermaid_code.replace("\\n", "\n")
+
+
+def _format_mermaid_value(value: Any) -> str:
+    """Format a Mermaid value as a Markdown Mermaid block, or --- when missing."""
+    if value in (None, "", [], {}):
+        return "---"
+
+    if not isinstance(value, str):
+        value = str(value)
+
+    value = _normalize_escaped_mermaid_newlines(value)
+    norm_mermaid = _normalize_mermaid_graph(value)
+    return f"```mermaid\n{norm_mermaid}\n```"
+
+
+def _extract_selected_mermaid_fields(element: dict, columns_struct: Optional[dict]) -> list[str]:
+    """Extract only Mermaid fields selected by the active MERMAID report spec."""
+    attributes = _get_report_spec_attributes(columns_struct)
+    selected_fields = [
+        attribute for attribute in attributes
+        if _is_mermaid_attribute(attribute.get("name"), attribute.get("key"))
+    ]
+
+    # Legacy compatibility: if no explicit Mermaid fields were selected, use mermaidGraph.
+    if not selected_fields:
+        selected_fields = [{"name": "Mermaid Graph", "key": "mermaidGraph"}]
+
+    result = []
+    for attribute in selected_fields:
+        key = attribute.get("key")
+        value = _get_element_value(element, key)
+        result.append(_format_mermaid_value(value))
+
+    return result
 
 
 def _extract_referenceable_properties(element: dict[str, Any]) -> dict[str, Any]:
@@ -470,7 +586,8 @@ def render_rich_value(value: Any, output_format: str) -> str:
 
     return bullets(value, 0)
 
-def make_md_attribute(attribute_name: str, attribute_value: str|list|dict, output_type: str) -> Optional[str]:
+def make_md_attribute(attribute_name: str, attribute_value: str|list|dict, output_type: str,
+                      attribute_key: str | None = None) -> Optional[str]:
     """
     Create a markdown attribute line for a given attribute name and value.
 
@@ -478,6 +595,7 @@ def make_md_attribute(attribute_name: str, attribute_value: str|list|dict, outpu
         attribute_name: The name of the attribute
         attribute_value: The value of the attribute
         output_type: The output format (FORM, MD, REPORT)
+        attribute_key: The camelCase key from the column spec, used to detect mermaid attributes by key
 
     Returns:
         str: Formatted markdown for the attribute
@@ -485,7 +603,7 @@ def make_md_attribute(attribute_name: str, attribute_value: str|list|dict, outpu
     output = ""
     if isinstance(attribute_value,str):
         attribute_value = attribute_value.strip() if attribute_value else ""
-    
+
     if attribute_name:
         attribute_title = camel_to_title_case(attribute_name)
     else:
@@ -503,13 +621,19 @@ def make_md_attribute(attribute_name: str, attribute_value: str|list|dict, outpu
             return '\n'
 
         output = f"### {attribute_title}\n{attribute_value}\n\n"
+
     elif output_type in ["REPORT", "MERMAID"]:
-        if attribute_title in MERMAID_GRAPH_TITLES + ["Mermaid Graph", "Mermaid"]:
-            norm_mermaid = _normalize_mermaid_graph(attribute_value)
-            output = f"### {attribute_title}\n\n```mermaid\n{norm_mermaid}\n```\n"
+        if _is_mermaid_attribute(attribute_name, attribute_key):
+            if attribute_value in (None, ""):
+                output = f"### {attribute_title}\n---\n\n"
+            else:
+                attribute_value = _normalize_escaped_mermaid_newlines(attribute_value)
+                norm_mermaid = _normalize_mermaid_graph(attribute_value)
+                output = f"### {attribute_title}\n\n```mermaid\n{norm_mermaid}\n```\n"
         elif attribute_value:
             output = f"### {attribute_title}\n{attribute_value}\n\n"
     return output
+
 
 def format_for_markdown_table(text: str, guid: str = None, format_type: str = None) -> str:
     """
@@ -828,9 +952,20 @@ def generate_entity_md(elements: List[Dict],
 
         # Prefer new behavior: extractor returns an updated columns_struct with values
         returned_struct = None
+        local_columns_struct = None
         if columns_struct is not None:
+            # Use shallow copy and reset only column values for performance
+            local_columns_struct = columns_struct.copy()
+            if 'formats' in local_columns_struct and 'attributes' in local_columns_struct['formats']:
+                # Create new list of columns with reset values
+                local_columns_struct['formats'] = local_columns_struct['formats'].copy()
+                local_columns_struct['formats']['attributes'] = [
+                    {**col, 'value': None} if isinstance(col, dict) else col
+                    for col in local_columns_struct['formats']['attributes']
+                ]
+
             try:
-                returned_struct = extract_properties_func(element, columns_struct)
+                returned_struct = extract_properties_func(element, local_columns_struct)
             except TypeError:
                 # Fallback for legacy extractors without columns_struct parameter
                 returned_struct = None
@@ -891,7 +1026,7 @@ def generate_entity_md(elements: List[Dict],
                 if column.get('format'):
                     value = format_for_markdown_table(value, guid)
                 
-                elements_md += make_md_attribute(name, value, output_format)
+                elements_md += make_md_attribute(name, value, output_format, attribute_key=key)
 
                 # Master-Detail support for REPORT, MD, and FORM formats
                 if detail_spec and value and output_format in ['REPORT', 'MD', 'FORM']:
@@ -925,7 +1060,7 @@ def generate_entity_md(elements: List[Dict],
                     value = additional_props[key]
                 if column.get('format'):
                     value = format_for_markdown_table(value, guid or props.get('GUID'))
-                elements_md += make_md_attribute(name, value, output_format)
+                elements_md += make_md_attribute(name, value, output_format, attribute_key=key)
             if wk := columns_struct.get("annotations", {}).get("wikilinks", None):
                 elements_md += ", ".join(wk)
         else:
@@ -936,9 +1071,9 @@ def generate_entity_md(elements: List[Dict],
                 if key not in ['properties', 'display_name']:
                     if key == 'mermaid' and value == '':
                         continue
-                    elements_md += make_md_attribute(key.replace('_', ' '), value, output_format)
+                    elements_md += make_md_attribute(key.replace('_', ' '), value, output_format, attribute_key=key)
             for key, value in additional_props.items():
-                elements_md += make_md_attribute(key.replace('_', ' '), value, output_format)
+                elements_md += make_md_attribute(key.replace('_', ' '), value, output_format, attribute_key=key)
 
         if element != elements[-1]:
             elements_md += MD_SEPARATOR
@@ -1564,15 +1699,13 @@ def _extract_name_from_relationship_item(item: Any) -> Optional[str]:
     return None
 
 
-def extract_mermaid_only(elements: Union[Dict, List[Dict]]) -> str:
+def extract_mermaid_only(elements: Union[Dict, List[Dict]], columns_struct: Optional[dict] = None) -> str:
     """
-    Extract mermaid graph data from elements.
+    Extract Mermaid graph data from elements.
 
-    Args:
-        elements: Dictionary or list of dictionaries containing element data
-
-    Returns:
-        String containing mermaid graph data
+    If columns_struct is provided, only the Mermaid attributes selected by the
+    active report spec are rendered. If no Mermaid attributes are selected,
+    legacy behavior renders mermaidGraph.
     """
     if isinstance(elements, dict):
         elements = [elements]
@@ -1582,13 +1715,10 @@ def extract_mermaid_only(elements: Union[Dict, List[Dict]]) -> str:
         if isinstance(element, str):
             result.append(element)
             continue
-        mer = element.get("mermaidGraph", None)
-        if mer:
-            norm_mermaid = _normalize_mermaid_graph(mer)
-            mer_out = f"```mermaid\n{norm_mermaid}\n```"
-        else:
-            mer_out = "---"
-        result.append(mer_out)
+
+        selected_mermaid = _extract_selected_mermaid_fields(element, columns_struct)
+        result.append("\n\n".join(selected_mermaid))
+
     return "\n\n".join(result)
 
 def extract_basic_dict(elements: Union[Dict, List[Dict]]) -> Union[Dict, List[Dict]]:
@@ -1737,8 +1867,8 @@ def _normalize_mermaid_graph(mermaid_code: str) -> str:
         transform_shape,
         mermaid_code,
     )
-
-    return mermaid_code
+    out = _normalize_escaped_mermaid_newlines(mermaid_code)
+    return out
 
 
 def _lg_node_title(d: Dict[str, Any]) -> str:
@@ -1938,7 +2068,7 @@ def generate_output(elements: Union[Dict, List[Dict]],
         return elements
 
     if output_format == 'MERMAID':
-        return extract_mermaid_only(elements)
+        return extract_mermaid_only(elements, columns_struct)
 
     elif output_format == 'HTML':
         # First generate the REPORT format output
@@ -1955,29 +2085,11 @@ def generate_output(elements: Union[Dict, List[Dict]],
         # Convert the markdown to HTML
         return markdown_to_html(report_output)
 
-    elif output_format in ['DICT', 'TABLE']:
-        return generate_entity_dict(
-            elements=elements,
-            extract_properties_func=extract_properties_func,
-            get_additional_props_func=get_additional_props_func,
-            exclude_keys=['properties'],
-            columns_struct=columns_struct,
-            output_format=output_format
-        )
-
+    # elif output_format in ['DICT', 'TABLE']:
+    if output_format == 'DICT':
+        return generate_entity_dict(elements, extract_properties_func, get_additional_props_func, columns_struct=columns_struct, output_format=output_format)
     elif output_format == 'LIST':
-        if columns is None:
-            raise ValueError("Columns must be provided for LIST output format")
-
-        return generate_entity_md_table(
-            elements=elements,
-            search_string=search_string,
-            entity_type=target_type,
-            extract_properties_func=extract_properties_func,
-            columns_struct=columns_struct,
-            get_additional_props_func=get_additional_props_func,
-            output_format=output_format
-        )
+        return generate_entity_md_table(elements, search_string, entity_type, extract_properties_func, columns_struct, get_additional_props_func, output_format=output_format)
 
     elif output_format == 'REPORT-GRAPH':
         return generate_linked_graph_report(

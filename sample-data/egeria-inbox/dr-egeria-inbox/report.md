@@ -3,7 +3,7 @@
 Glossaries
 
 ### Output Format
-LIST
+REPORT
 
 ### Search String
-*
+Sust

@@ -275,6 +275,18 @@ MERMAID_FORMAT = Format(
     attributes=[Attribute(name='Mermaid', key='mermaidGraph')]
 )
 
+NEW_MERMAID_COLUMNS = [
+    Column(name="Collection Mermaid Mind Map", key="collectionMermaidMindMap"),
+    Column(name="Zone Profile Mermaid Pie Chart", key="zoneProfileMermaidPieChart"),
+    Column(name="Zone Profile Anchored Mermaid Pie Chart", key="zoneProfileAnchoredMermaidPieChart"),
+    Column(name="Zone Profile All Mermaid Pie Chart", key="zoneProfileAllMermaidPieChart"),
+]
+
+# TODO: Research SecretStore retrieval/extraction path before enabling:
+# - userAccountTypeProfileMermaidPieChart
+# - userAccountStatusProfileMermaidPieChart
+
+
 EXT_REF_COLUMNS = COMMON_COLUMNS + [
     Column(name='Reference Title', key='reference_title'),
     Column(name='Reference Abstract', key='reference_abstract'),
@@ -1061,29 +1073,30 @@ base_report_specs = FormatSetDict({
             Format(
                 types=["DICT", "REPORT"],
                 attributes=[
-                    Column(name='Display Name', key='display_name'),
-                    Column(name="Qualified Name", key='qualified_name'),
-                    Column(name="Description", key='description'),
-                    Column(name="GUID", key='guid'),
-                    Column(name="Mermaid Graph", key='mermaidGraph'),
-                    Column(name="Anchor Mermaid Graph", key='anchorMermaidGraph'),
-                    Column(name="Information Supply Chain Mermaid Graph", key='informationSupplyChainMermaidGraph'),
-                    Column(name="Field Level Lineage Graph", key='fieldLevelLineageGraph'),
-                    Column(name="Action Mermaid Graph", key='actionMermaidGraph'),
-                    Column(name="Local Lineage Graph", key="localLineageGraph"),
-                    Column(name="Edge Mermaid", key="edgeMermaidGraph"),
-                    Column(name="ISC Implementation Graph", key='iscImplementationGraph'),
-                    Column(name="Specification Mermaid Graph", key='specificationMermaidGraph'),
-                    Column(name="Solution Blueprint Mermaid Graph", key='solutionBlueprintMermaidGraph'),
-                    Column(name="Solution Subcomponent Mermaid Graph", key='solutionSubcomponentMermaidGraph'),
-
-                ],
+                               Column(name='Display Name', key='display_name'),
+                               Column(name="Qualified Name", key='qualified_name'),
+                               Column(name="Description", key='description'),
+                               Column(name="GUID", key='guid'),
+                               Column(name="Mermaid Graph", key='mermaidGraph'),
+                               Column(name="Anchor Mermaid Graph", key='anchorMermaidGraph'),
+                               Column(name="Information Supply Chain Mermaid Graph",
+                                      key='informationSupplyChainMermaidGraph'),
+                               Column(name="Field Level Lineage Graph", key='fieldLevelLineageGraph'),
+                               Column(name="Action Mermaid Graph", key='actionMermaidGraph'),
+                               Column(name="Local Lineage Graph", key="localLineageGraph"),
+                               Column(name="Edge Mermaid", key="edgeMermaidGraph"),
+                               Column(name="ISC Implementation Graph", key='iscImplementationGraph'),
+                               Column(name="Specification Mermaid Graph", key='specificationMermaidGraph'),
+                               Column(name="Solution Blueprint Mermaid Graph", key='solutionBlueprintMermaidGraph'),
+                               Column(name="Solution Subcomponent Mermaid Graph",
+                                      key='solutionSubcomponentMermaidGraph'),
+                           ] + NEW_MERMAID_COLUMNS,
             ),
             Format(
                 types=["MERMAID"],
                 attributes=[
-                    Column(name="Mermaid Graph", key='mermaidGraph')
-                ])
+                               Column(name="Mermaid Graph", key='mermaidGraph'),
+                           ] + NEW_MERMAID_COLUMNS)
         ],
 
     ),
@@ -1097,30 +1110,32 @@ base_report_specs = FormatSetDict({
             Format(
                 types=["DICT", "REPORT"],
                 attributes=[
-                    Column(name='Display Name', key='display_name'),
-                    Column(name="Qualified Name", key='qualified_name'),
-                    Column(name="Description", key='description'),
-                    Column(name="GUID", key='guid'),
-                    Column(name="Mermaid Graph", key='mermaidGraph'),
-                    Column(name="Anchor Mermaid Graph", key='anchorMermaidGraph'),
-                    Column(name="Information Supply Chain Mermaid Graph", key='informationSupplyChainMermaidGraph'),
-                    Column(name="Field Level Lineage Graph", key='fieldLevelLineageGraph'),
-                    Column(name="Action Mermaid Graph", key='actionMermaidGraph'),
-                    Column(name="Local Lineage Graph", key="localLineageGraph"),
-                    Column(name="Edge Mermaid", key="edgeMermaidGraph"),
-                    Column(name="ISC Implementation Graph", key='iscImplementationGraph'),
-                    Column(name="Specification Mermaid Graph", key='specificationMermaidGraph'),
-                    Column(name="Solution Blueprint Mermaid Graph", key='solutionBlueprintMermaidGraph'),
-                    Column(name="Solution Subcomponent Mermaid Graph", key='solutionSubcomponentMermaidGraph'),
-                    Column(name="Governance Action Process Mermaid Graph", key='governanceActionProcessMermaidGraph'),
-
-                ],
+                               Column(name='Display Name', key='display_name'),
+                               Column(name="Qualified Name", key='qualified_name'),
+                               Column(name="Description", key='description'),
+                               Column(name="GUID", key='guid'),
+                               Column(name="Mermaid Graph", key='mermaidGraph'),
+                               Column(name="Anchor Mermaid Graph", key='anchorMermaidGraph'),
+                               Column(name="Information Supply Chain Mermaid Graph",
+                                      key='informationSupplyChainMermaidGraph'),
+                               Column(name="Field Level Lineage Graph", key='fieldLevelLineageGraph'),
+                               Column(name="Action Mermaid Graph", key='actionMermaidGraph'),
+                               Column(name="Local Lineage Graph", key="localLineageGraph"),
+                               Column(name="Edge Mermaid", key="edgeMermaidGraph"),
+                               Column(name="ISC Implementation Graph", key='iscImplementationGraph'),
+                               Column(name="Specification Mermaid Graph", key='specificationMermaidGraph'),
+                               Column(name="Solution Blueprint Mermaid Graph", key='solutionBlueprintMermaidGraph'),
+                               Column(name="Solution Subcomponent Mermaid Graph",
+                                      key='solutionSubcomponentMermaidGraph'),
+                               Column(name="Governance Action Process Mermaid Graph",
+                                      key='governanceActionProcessMermaidGraph'),
+                           ] + NEW_MERMAID_COLUMNS,
             ),
             Format(
                 types=["MERMAID"],
                 attributes=[
-                    Column(name="Mermaid Graph", key='mermaidGraph')
-                ])
+                               Column(name="Mermaid Graph", key='mermaidGraph'),
+                           ] + NEW_MERMAID_COLUMNS)
         ],
         action=ActionParameter(
             function="EgeriaTech.get_elements_by_property_value",
@@ -1763,6 +1778,34 @@ base_report_specs = FormatSetDict({
         family="Collection Manager",
         formats=[MERMAID_FORMAT, COLLECTION_DICT, COLLECTION_TABLE, COLLECTION_REPORT, COMMON_FORMATS_ALL],
         # Reusing common formats
+        action=ActionParameter(
+            function="CollectionManager.find_collections",
+            required_params=["search_string"],
+            optional_params=OPTIONAL_SEARCH_PARAMS,
+            spec_params={},
+        )
+    ),
+    "Collection-MindMap": FormatSet(
+        target_type="Collection",
+        heading="Collection Mind Map",
+        description="Displays the collection Mermaid mind map.",
+        annotations=COMMON_ANNOTATIONS,
+        family="Collection Manager",
+        formats=[
+            Format(
+                types=["REPORT"],
+                attributes=COMMON_COLUMNS + [
+                    Column(name="GUID", key="guid"),
+                    Column(name="Collection Mermaid Mind Map", key="collectionMermaidMindMap"),
+                ],
+            ),
+            Format(
+                types=["MERMAID"],
+                attributes=[
+                    Column(name="Collection Mermaid Mind Map", key="collectionMermaidMindMap"),
+                ],
+            ),
+        ],
         action=ActionParameter(
             function="CollectionManager.find_collections",
             required_params=["search_string"],
@@ -2577,6 +2620,25 @@ base_report_specs = FormatSetDict({
                                         required_params=["search_string"],
                                         optional_params=OPTIONAL_SEARCH_PARAMS,
                                         spec_params={"metadata_element_subtypes": ["GovernanceActionProcess"]},
+                                    )
+                                    ),
+    'Governance-Zone-Overview-Charts': FormatSet(target_type='Governance Zone',
+                                    heading='Governance Zone Charts',
+                                    description='Governance Zone Overview',
+                                    family="Governance Officer",
+                                    formats=[
+                                        Format(types=['MERMAID', 'REPORT', 'DICT'],
+                                               attributes=[Column(name='Mermaid Graph', key='mermaidGraph'),
+                                                           Column(name='Zone Profiles', key='zoneProfileMermaidPieChart'),
+                                                           Column(name='Zone Profile Anhored', key='zoneProfileAnchoredMermaidPieChart'),
+                                                           Column(name='Zone Profile All', key='zoneProfileAllMermaidPieChart')
+                                                           ])
+                                    ],
+                                    action=ActionParameter(
+                                        function="GovernanceOfficer.find_governance_definitions",
+                                        required_params=["search_string"],
+                                        optional_params=OPTIONAL_SEARCH_PARAMS,
+                                        spec_params={"metadata_element_subtypes": ["GovernanceZone"]},
                                     )
                                     ),
     "Valid-Value-Def": FormatSet(

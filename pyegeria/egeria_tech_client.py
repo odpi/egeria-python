@@ -44,6 +44,7 @@ from pyegeria.omvs.valid_metadata import ValidMetadataManager
 from pyegeria.omvs.valid_metadata_lists import ValidMetadataLists
 from pyegeria.omvs.valid_type_lists import ValidTypeLists
 from pyegeria.core._globals import NO_ELEMENTS_FOUND
+from pyegeria.core.config import settings
 
 class EgeriaTech:
     """
@@ -73,10 +74,10 @@ class EgeriaTech:
         user_pwd: str = None,
         token: str = None,
     ):
-        self.view_server = view_server
-        self.platform_url = platform_url
-        self.user_id = user_id
-        self.user_pwd = user_pwd
+        self.view_server = view_server or settings.Environment.egeria_view_server
+        self.platform_url = platform_url or settings.Environment.egeria_platform_url
+        self.user_id = user_id or settings.User_Profile.user_name
+        self.user_pwd = user_pwd or settings.User_Profile.user_pwd
         self.token = token
 
         # Mapping of attribute names to their classes for lazy loading
