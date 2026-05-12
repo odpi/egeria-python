@@ -477,8 +477,8 @@ async def process_md_file_v2(input_file: str, output_folder: str, directive: str
     summary_table.add_column("Canonical Command", style="bright_cyan", overflow="fold")
     summary_table.add_column("Status", style="bold", overflow="fold")
     summary_table.add_column("Found", style="green", overflow="fold")
-    summary_table.add_column("Display Name", style="blue", overflow="fold")
-    summary_table.add_column("Qualified Name", style="magenta", overflow="fold")
+    summary_table.add_column("Display Name / End 1", style="blue", overflow="fold")
+    summary_table.add_column("Qualified Name / End2", style="magenta", overflow="fold")
     summary_table.add_column("Message", min_width=36, overflow="fold")
 
     updated = False

@@ -103,9 +103,8 @@ MERMAID_ATTRIBUTE_KEYS = {
     "zoneProfileMermaidPieChart",
     "zoneProfileAnchoredMermaidPieChart",
     "zoneProfileAllMermaidPieChart",
-    # TODO: Research SecretStore retrieval/extraction path before enabling these:
-    # "userAccountTypeProfileMermaidPieChart",
-    # "userAccountStatusProfileMermaidPieChart",
+    "userAccountTypeProfileMermaidPieChart",
+    "userAccountStatusProfileMermaidPieChart",
 }
 
 
