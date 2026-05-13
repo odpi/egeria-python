@@ -425,7 +425,7 @@ async def _async_run_report(
             return {"kind": "json", "data": result}
 
         # For narrative formats, try to use generate_output if the result is structured
-        if output_format in {"REPORT", "REPORT-GRAPH", "MD", "FORM", "LIST", "HTML", "MERMAID"}:
+        if output_format in {"REPORT", "REPORT-GRAPH", "MD", "FORM", "LIST", "HTML", "MERMAID", "GRAPH"}:
             if isinstance(result, (list, dict)):
                 result = generate_output(
                     elements=result,
@@ -447,7 +447,7 @@ async def _async_run_report(
             if preamble and not content.strip().startswith("#"):
                 content = preamble + content
 
-            mime = "text/html" if output_format == "HTML" else "text/markdown"
+            mime = "text/html" if output_format in ["HTML", "GRAPH"] else "text/markdown"
             return {"kind": "text", "mime": mime, "content": content}
 
         return {"kind": "unknown", "raw": result}
@@ -576,7 +576,7 @@ def exec_report_spec(
             return {"kind": "json", "data": result}
 
         # For narrative formats, try to use generate_output if the result is structured
-        if output_format in {"REPORT", "REPORT-GRAPH", "MD", "FORM", "LIST", "HTML", "MERMAID"}:
+        if output_format in {"REPORT", "REPORT-GRAPH", "MD", "FORM", "LIST", "HTML", "MERMAID", "GRAPH"}:
             if isinstance(result, (list, dict)):
                 result = generate_output(
                     elements=result,
@@ -598,7 +598,7 @@ def exec_report_spec(
             if preamble and not content.strip().startswith("#"):
                 content = preamble + content
 
-            mime = "text/html" if output_format == "HTML" else "text/markdown"
+            mime = "text/html" if output_format in ["HTML", "GRAPH"] else "text/markdown"
             return {"kind": "text", "mime": mime, "content": content}
 
         return {"kind": "unknown", "raw": result}

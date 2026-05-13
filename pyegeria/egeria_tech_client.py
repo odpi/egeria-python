@@ -220,6 +220,58 @@ class EgeriaTech:
                     pass
         self._instantiated_clients.clear()
 
+    def get_report_spec_schema(self, report_spec_name: str, **kwargs) -> list:
+        """
+        Executes a report spec's action to dynamically discover all available attributes
+        and their data types, returning a list of dictionaries suitable for reporting.
+        """
+        from pyegeria.view.base_report_formats import report_specs
+        from pyegeria.view.output_formatter import materialize_egeria_summary
+        from pyegeria.core.utils import discover_element_schema
+        import logging
+
+        logger = logging.getLogger(__name__)
+
+        spec = report_specs.get(report_spec_name)
+        if not spec or not getattr(spec, "action", None):
+            return [{"attribute_path": "Error", "data_type": f"Report spec '{report_spec_name}' not found or has no action."}]
+
+        # Merge kwargs with spec_params if they exist
+        action_params = spec.action.spec_params.copy() if spec.action.spec_params else {}
+        action_params.update(kwargs)
+        
+        # Force output format to JSON to bypass filtering and get raw attributes
+        action_params["output_format"] = "JSON"
+
+        func_name = spec.action.function
+        if "." in func_name:
+            # E.g., 'GovernanceOfficer.find_governance_definitions' -> method_name
+            _, method_name = func_name.split(".", 1)
+        else:
+            method_name = func_name
+
+        try:
+            # Retrieve the function dynamically from self (the TechClient facade)
+            func = getattr(self, method_name)
+            results = func(**action_params)
+        except Exception as e:
+            logger.error(f"Failed to execute action {method_name} for schema discovery: {e}")
+            return [{"attribute_path": "Error", "data_type": f"Execution failed: {str(e)}"}]
+
+        if not results or isinstance(results, str):
+            return [{"attribute_path": "Info", "data_type": "No elements found by this action."}]
+        
+        # Take the first element
+        first_el = results[0] if isinstance(results, list) else results
+
+        # Flatten and extract using the standard engine
+        materialized = materialize_egeria_summary(first_el)
+        schema = discover_element_schema(materialized)
+
+        # Format as table rows
+        schema_list = [{"attribute_path": path, "data_type": dtype} for path, dtype in schema.items()]
+        return schema_list
+
 
 if __name__ == "__main__":
     print("Main-Tech Client")

@@ -117,6 +117,14 @@ def _is_mermaid_attribute(attribute_name: str | None = None, attribute_key: str 
     return attribute_title in MERMAID_GRAPH_TITLES + ["Mermaid Graph", "Mermaid"]
 
 
+def _is_vega_attribute(attribute_name: str | None = None, attribute_key: str | None = None) -> bool:
+    """Return True when a selected report attribute should be rendered as a Vega-Lite graph."""
+    key = attribute_key or ""
+    name = attribute_name or ""
+    return key.endswith("BarGraph") or key.endswith("PieGraph") or key.endswith("VegaGraph") or \
+           name.endswith("Bar Graph") or name.endswith("Pie Graph") or name.endswith("Vega Graph")
+
+
 def _get_report_spec_attributes(columns_struct: Optional[dict]) -> list[dict]:
     """Return the selected report spec attributes in display order."""
     if not isinstance(columns_struct, dict):
@@ -127,9 +135,49 @@ def _get_report_spec_attributes(columns_struct: Optional[dict]) -> list[dict]:
     return attributes if isinstance(attributes, list) else []
 
 
+def _resolve_dot_path(element: dict, path: str) -> Any:
+    """Resolve a dot-separated path in a dictionary.
+    Supports both exact keys and snake_case to camelCase conversion.
+    Returns None if the path cannot be fully resolved.
+    """
+    if not isinstance(element, dict) or not path:
+        return None
+        
+    parts = path.split('.')
+    current = element
+    
+    for part in parts:
+        if isinstance(current, dict):
+            if part in current:
+                current = current[part]
+            else:
+                part_camel = to_camel_case(part)
+                if part_camel in current:
+                    current = current[part_camel]
+                else:
+                    return None
+        else:
+            return None
+            
+    return current
+
+
 def _get_element_value(element: dict, key: str) -> Any:
     """Get a report attribute value from top-level element data or its properties."""
     if not isinstance(element, dict) or not key:
+        return None
+
+    if "." in key:
+        # Try to resolve deeply from the root first
+        val = _resolve_dot_path(element, key)
+        if val is not None:
+            return val
+        # Fallback to resolving from inside properties
+        properties = element.get("properties")
+        if isinstance(properties, dict):
+            val = _resolve_dot_path(properties, key)
+            if val is not None:
+                return val
         return None
 
     if key in element:
@@ -313,6 +361,14 @@ def markdown_to_html(markdown_text: str) -> str:
         markdown_text = markdown_text.replace(f"```mermaid\n{block}\n```", placeholder)
         placeholders.append((placeholder, block))
 
+    # Find all vega-lite code blocks
+    vega_blocks = re.findall(r'```vega-lite\n(.*?)\n```', markdown_text, re.DOTALL)
+    vega_placeholders = []
+    for i, block in enumerate(vega_blocks):
+        placeholder = f"VEGA_PLACEHOLDER_{i}"
+        markdown_text = markdown_text.replace(f"```vega-lite\n{block}\n```", placeholder)
+        vega_placeholders.append((placeholder, block, i))
+
     # Convert markdown to HTML
     html_text = md.render(markdown_text)
 
@@ -320,6 +376,11 @@ def markdown_to_html(markdown_text: str) -> str:
     for placeholder, mermaid_block in placeholders:
         mermaid_html = construct_mermaid_web(mermaid_block)
         html_text = html_text.replace(placeholder, mermaid_html)
+
+    # Replace placeholders with rendered vega HTML
+    for placeholder, vega_block, i in vega_placeholders:
+        vega_html = f"<div id='vega_vis_{i}'></div><script>vegaEmbed('#vega_vis_{i}', {vega_block}).catch(console.error);</script>"
+        html_text = html_text.replace(placeholder, vega_html)
 
     # Add basic HTML structure
     html_text = f"""
@@ -331,8 +392,11 @@ def markdown_to_html(markdown_text: str) -> str:
         <title>Egeria Report</title>
         <script src="https://cdn.jsdelivr.net/npm/mermaid@10/dist/mermaid.min.js"></script>
         <script>
-            mermaid.initialize({{ startOnLoad: true }});
+            mermaid.initialize({ startOnLoad: true });
         </script>
+        <script src="https://cdn.jsdelivr.net/npm/vega@5"></script>
+        <script src="https://cdn.jsdelivr.net/npm/vega-lite@5"></script>
+        <script src="https://cdn.jsdelivr.net/npm/vega-embed@6"></script>
         <style>
             body {{ font-family: Arial, sans-serif; line-height: 1.6; padding: 20px; }}
             h1 {{ color: #2c3e50; }}
@@ -414,7 +478,7 @@ def materialize_egeria_summary(summary: dict, columns_struct: Optional[dict] = N
         
         # Pull everything else from the header generically
         for h_key, h_val in header.items():
-            if h_key in ("guid", "type", "classifications", "origin", "versions", "status"):
+            if h_key in ("guid", "type", "origin", "versions", "status"):
                 continue
             
             # Materialize this header property
@@ -518,6 +582,45 @@ def materialize_egeria_summary(summary: dict, columns_struct: Optional[dict] = N
                     res[target_key] = []
                 res[target_key].append(extracted)
 
+    # 5. Generic Vega-Lite Chart Generation
+    from pyegeria.view.vega_utilities import generate_vega_bar_chart, generate_vega_pie_chart
+
+    def _is_categorical_counts(d: Any) -> bool:
+        if not isinstance(d, dict) or not d:
+            return False
+        # To avoid false positives, we look for dicts where keys are strings and values are numbers
+        for key, val in d.items():
+            if not isinstance(key, str) or not isinstance(val, (int, float)) or isinstance(val, bool):
+                return False
+        return True
+
+    def _find_categorical_counts(d: Any) -> list[tuple[str, dict]]:
+        found = []
+        if isinstance(d, dict):
+            for key, val in d.items():
+                if _is_categorical_counts(val):
+                    found.append((key, val))
+                elif isinstance(val, (dict, list)):
+                    found.extend(_find_categorical_counts(val))
+        elif isinstance(d, list):
+            for item in d:
+                found.extend(_find_categorical_counts(item))
+        return found
+
+    # Find all nested categorical count dicts and promote them as Vega graphs to the root
+    for cat_key, cat_dict in _find_categorical_counts(res):
+        bar_key = f"{cat_key}BarGraph"
+        if bar_key not in res:
+            bar_chart = generate_vega_bar_chart(cat_dict, title=f"{camel_to_title_case(cat_key)} Bar Chart")
+            if bar_chart:
+                res[bar_key] = bar_chart
+                
+        pie_key = f"{cat_key}PieGraph"
+        if pie_key not in res:
+            pie_chart = generate_vega_pie_chart(cat_dict, title=f"{camel_to_title_case(cat_key)} Pie Chart")
+            if pie_chart:
+                res[pie_key] = pie_chart
+
     return res
 
 def render_rich_value(value: Any, output_format: str) -> str:
@@ -607,6 +710,19 @@ def make_md_attribute(attribute_name: str, attribute_value: str|list|dict, outpu
         attribute_title = camel_to_title_case(attribute_name)
     else:
         attribute_title = ""
+
+    # Intercept Vega graphs before generic dict/list rendering
+    if _is_vega_attribute(attribute_name, attribute_key):
+        if output_type in ["REPORT", "MERMAID", "GRAPH"]:
+            import json
+            if not attribute_value:
+                return f"### {attribute_title}\n---\n\n"
+            
+            # If it's a dict, convert to json string for the fence
+            vega_json = json.dumps(attribute_value, indent=2) if isinstance(attribute_value, dict) else str(attribute_value)
+            return f"### {attribute_title}\n\n```vega-lite\n{vega_json}\n```\n\n"
+        elif output_type in ["FORM", "MD"]:
+            return "\n"
 
     if isinstance(attribute_value, (dict, list)):
         rendered = render_rich_value(attribute_value, output_type)
@@ -1604,6 +1720,18 @@ def populate_common_columns(
         if column.get('value') not in (None, ""):
             continue
         
+        # 0) Dot notation path resolution
+        if "." in key:
+            val = _resolve_dot_path(element, key)
+            if val is None:
+                val = _resolve_dot_path(props, key)
+            if val is None:
+                val = _resolve_dot_path(header, key)
+            
+            if val is not None:
+                column['value'] = val
+                continue
+                
         # 1) Try properties (camelCase conversion)
         key_camel = to_camel_case(key)
         if key_camel in props:
@@ -1662,8 +1790,46 @@ def populate_common_columns(
             column['value'] = element.get(key, '')
             continue
     
+    # --- Auto-generate Vega graphs for categorical counts if requested by the columns_struct ---
+    # Only do the heavy recursive scan if the report spec actually asks for a BarGraph or PieGraph
+    requested_graph_keys = [c.get('key') for c in columns_list if isinstance(c, dict) and c.get('key') and (c['key'].endswith('BarGraph') or c['key'].endswith('PieGraph')) and c.get('value') in (None, "")]
+    if requested_graph_keys:
+        from pyegeria.view.vega_utilities import generate_vega_bar_chart, generate_vega_pie_chart
+        from pyegeria.core.utils import camel_to_title_case
+        
+        def _is_cat_counts(d: Any) -> bool:
+            if not isinstance(d, dict) or not d: return False
+            for k, v in d.items():
+                if not isinstance(k, str) or not isinstance(v, (int, float)) or isinstance(v, bool): return False
+            return True
+
+        def _find_cat_counts(d: Any) -> list[tuple[str, dict]]:
+            found = []
+            if isinstance(d, dict):
+                for k, v in d.items():
+                    if _is_cat_counts(v): found.append((k, v))
+                    elif isinstance(v, (dict, list)): found.extend(_find_cat_counts(v))
+            elif isinstance(d, list):
+                for i in d: found.extend(_find_cat_counts(i))
+            return found
+            
+        cat_counts = _find_cat_counts(element)
+        cat_graphs = {}
+        for cat_key, cat_dict in cat_counts:
+            bar_key = f"{cat_key}BarGraph"
+            if bar_key in requested_graph_keys:
+                cat_graphs[bar_key] = generate_vega_bar_chart(cat_dict, title=f"{camel_to_title_case(cat_key)} Bar Chart")
+            pie_key = f"{cat_key}PieGraph"
+            if pie_key in requested_graph_keys:
+                cat_graphs[pie_key] = generate_vega_pie_chart(cat_dict, title=f"{camel_to_title_case(cat_key)} Pie Chart")
+
+        for col in columns_list:
+            key = col.get('key')
+            if key in cat_graphs and col.get('value') in (None, ""):
+                col['value'] = cat_graphs[key]
+
     # Get any Feedback Values that have been requested (kept separate as it may have side effects)
-    col_data = populate_feedback(element, col_data)
+    col_data = populate_feedback(element, columns_struct)
     
     return col_data
 
