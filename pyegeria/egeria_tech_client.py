@@ -236,6 +236,8 @@ class EgeriaTech:
         if not spec or not getattr(spec, "action", None):
             return [{"attribute_path": "Error", "data_type": f"Report spec '{report_spec_name}' not found or has no action."}]
 
+        exclude_sys = kwargs.pop("exclude_system_properties", True)
+
         # Merge kwargs with spec_params if they exist
         action_params = spec.action.spec_params.copy() if spec.action.spec_params else {}
         action_params.update(kwargs)
@@ -266,7 +268,7 @@ class EgeriaTech:
 
         # Flatten and extract using the standard engine
         materialized = materialize_egeria_summary(first_el)
-        schema = discover_element_schema(materialized)
+        schema = discover_element_schema(materialized, exclude_system_properties=exclude_sys)
 
         # Format as table rows
         schema_list = [{"attribute_path": path, "data_type": dtype} for path, dtype in schema.items()]
