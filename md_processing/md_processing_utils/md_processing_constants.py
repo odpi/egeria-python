@@ -85,7 +85,8 @@ COLLECTION_SUBTYPES = [
     "Namespace", "Results Set", "Recent Access", "Work Item List", "Folio",
     "Digital Product", "Digital Product Catalog", "Digital Product Family",
     "Agreement", "Digital Subscription", "Data Sharing Agreement", "Data Dictionary", "Data Spec",
-    "Glossary", "Security Group", "Security List", "Security Role"
+    "Glossary", "Security Group", "Security List", "Security Role",
+    "Skill Set", "Reference List"
 ]
 
 SIMPLE_BASE_COLLECTIONS: set = set(COLLECTION_SUBTYPES) | {
@@ -142,7 +143,13 @@ CREATION_LINK_VERBS = {"Link", "Attach", "Add"}
 REMOVAL_LINK_VERBS = {"Detach", "Unlink", "Remove"}
 CREATE_VERBS = ("Create", "Update")
 VIEW_VERBS = ("View", "List", "Run")
-ALL_VERBS = set(LINK_VERBS + CREATE_VERBS + VIEW_VERBS)
+# Classify/Declassify/Reclassify verbs with their synonyms (Set/Unset).
+# Reclassify has no synonyms — only used when a classification has properties to change.
+CLASSIFY_VERBS = {"Classify", "Set", "Declassify", "Unset", "Reclassify"}
+APPLY_CLASSIFICATION_VERBS = {"Classify", "Set"}
+REMOVE_CLASSIFICATION_VERBS = {"Declassify", "Unset"}
+UPDATE_CLASSIFICATION_VERBS = {"Reclassify"}
+ALL_VERBS = set(LINK_VERBS + CREATE_VERBS + VIEW_VERBS) | CLASSIFY_VERBS
 
 command_list = ["Provenance"]
 pre_command = "\n---\n==> Processing object_action:"

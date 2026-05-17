@@ -1,6 +1,6 @@
 {
   "family": "Actor Manager",
-  "exported": "Apr 26, 2026 at 4:12:30 PM",
+  "exported": "May 17, 2026 at 2:40:54 PM",
   "attribute_definitions": {
     "Activity Status": {
       "variable_name": "activity_status",
@@ -1572,6 +1572,25 @@
       "level": "Advanced",
       "Journal Entry": ""
     },
+    "SkillSet Name": {
+      "variable_name": "skill_set",
+      "inUpdate": true,
+      "attr_labels": "SkillSet",
+      "examples": "",
+      "default_value": "",
+      "valid_values": [],
+      "existing_element": "SkillSet",
+      "description": "Skillset to assign.",
+      "generated": false,
+      "style": "Simple",
+      "user_specified": true,
+      "unique": false,
+      "input_required": false,
+      "min_cardinality": 1,
+      "max_cardinality": 1,
+      "level": "Advanced",
+      "Journal Entry": ""
+    },
     "Source": {
       "variable_name": "source",
       "inUpdate": true,
@@ -1901,6 +1920,25 @@
       "min_cardinality": 0,
       "max_cardinality": 1,
       "level": "Advanced",
+      "Journal Entry": ""
+    },
+    "Actor Name": {
+      "variable_name": "actor_name",
+      "inUpdate": true,
+      "attr_labels": "Actor",
+      "examples": "",
+      "default_value": "",
+      "valid_values": [],
+      "existing_element": "Actor",
+      "description": "Qualified name of the Actor",
+      "generated": false,
+      "style": "Reference Name",
+      "user_specified": true,
+      "unique": false,
+      "input_required": false,
+      "min_cardinality": 1,
+      "max_cardinality": 1,
+      "level": "Domain",
       "Journal Entry": ""
     },
     "Assigned Actor": {
@@ -2650,9 +2688,35 @@
         "Surname",
         "Time Zone"
       ]
+    },
+    "Associated Skill Set Link Base": {
+      "inherits": "Link Command Base",
+      "own_attributes": [
+        "Actor Name",
+        "SkillSet Name"
+      ]
     }
   },
   "commands": {
+    "Create Governance Role": {
+      "display_name": "Governance Role",
+      "qn_prefix": "GovernanceRole",
+      "alternate_names": [],
+      "family": "",
+      "description": "Creates or updates a governance role — a role that may be performed by people.",
+      "verb": "Create",
+      "upsert": true,
+      "attach": false,
+      "level": "Basic",
+      "find_method": "ActorManager.find_actor_roles",
+      "find_constraints": "{\"metadata_element_type\": \"GovernanceRole\"}",
+      "extra_find": "",
+      "extra_constraints": "",
+      "OM_TYPE": "GovernanceRole",
+      "bundle": "Person Role Base",
+      "custom_attributes": [],
+      "Journal Entry": ""
+    },
     "Create IT Profile Role": {
       "display_name": "IT Profile Role",
       "qn_prefix": "ITProfileRole",
@@ -2729,6 +2793,44 @@
       "custom_attributes": [],
       "Journal Entry": ""
     },
+    "Create Perspective": {
+      "display_name": "Perspective",
+      "qn_prefix": "Perspective",
+      "alternate_names": [],
+      "family": "",
+      "description": "Creates or updates a perspective — a viewpoint or standpoint held by an actor.",
+      "verb": "Create",
+      "upsert": true,
+      "attach": false,
+      "level": "Basic",
+      "find_method": "ActorManager.find_perspectives",
+      "find_constraints": "{\"metadata_element_type\": \"Perspective\"}",
+      "extra_find": "",
+      "extra_constraints": "",
+      "OM_TYPE": "Perspective",
+      "bundle": "Referenceable",
+      "custom_attributes": [],
+      "Journal Entry": ""
+    },
+    "Create Skill": {
+      "display_name": "Skill",
+      "qn_prefix": "Skill",
+      "alternate_names": [],
+      "family": "",
+      "description": "Creates or updates a skill — a capability or competency held by an actor.",
+      "verb": "Create",
+      "upsert": true,
+      "attach": false,
+      "level": "Basic",
+      "find_method": "ActorManager.find_skills",
+      "find_constraints": "{\"metadata_element_type\": \"Skill\"}",
+      "extra_find": "",
+      "extra_constraints": "",
+      "OM_TYPE": "Skill",
+      "bundle": "Authored Referenceable",
+      "custom_attributes": [],
+      "Journal Entry": ""
+    },
     "Create Team": {
       "display_name": "Team",
       "qn_prefix": "Team",
@@ -2786,6 +2888,25 @@
       "custom_attributes": [],
       "Journal Entry": ""
     },
+    "Link Associated Skill Set": {
+      "display_name": "Associated Skill Set",
+      "qn_prefix": "",
+      "alternate_names": [],
+      "family": "",
+      "description": "Links an actor to a skill set.",
+      "verb": "Link",
+      "upsert": false,
+      "attach": false,
+      "level": "Basic",
+      "find_method": "",
+      "find_constraints": "",
+      "extra_find": "",
+      "extra_constraints": "",
+      "OM_TYPE": "AssociatedSkillSet",
+      "bundle": "Associated Skill Set Link Base",
+      "custom_attributes": [],
+      "Journal Entry": ""
+    },
     "Link IT Profile Role Appointment": {
       "display_name": "Link IT Profile Role Appointment",
       "qn_prefix": "",
@@ -2827,7 +2948,9 @@
     "Link Team Leader": {
       "display_name": "Link Team Leader",
       "qn_prefix": "",
-      "alternate_names": ["Link Team Leadership"],
+      "alternate_names": [
+        "Link Team Leadership"
+      ],
       "family": "",
       "description": "Links a team to a TeamLeader role (a PersonRole subtype) that leads it using AssignmentScope relationship.",
       "verb": "Link",
@@ -2846,7 +2969,7 @@
     "Link Team Membership": {
       "display_name": "Link Team Membership",
       "qn_prefix": "",
-      "alternate_names": ["Link Team Member"],
+      "alternate_names": [],
       "family": "",
       "description": "Links a team to a TeamMember role (a PersonRole subtype) representing membership in the team using the AssignmentScope relationship.",
       "verb": "Link",

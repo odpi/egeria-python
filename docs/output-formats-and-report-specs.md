@@ -44,6 +44,7 @@ pyegeria supports multiple output types. Each report spec declares which types i
 - MD: Plain Markdown (legacy simple rendering).
 - MERMAID: Mermaid graph text for supported responses.
 - HTML: HTML wrapper around Markdown (when enabled in generators).
+- GRAPH: Generates a standalone HTML page natively rendering dynamic Vega-Lite visualizations. Functions identically to `HTML` when rendering but signals intent for rich visualization output.
 - TABLE: Used for generating a rich textual table for terminal display.
 
 Tip: Use DICT for APIs and automation; use LIST for dashboards/browsing; use REPORT for deep, readable details; use FORM when producing updateable forms.
@@ -176,6 +177,78 @@ In practice you will call a client method (e.g., `MyProfile.get_my_profile`) and
 
 ---
 
+### Automated Schema Discovery
+
+If you are a report author creating a new report specification, you may want to know all available attribute paths, classifications, and nested relationship properties for a given Egeria element without manually guessing paths. pyegeria provides an automated discovery capability to flatten and expose these properties using dot notation (e.g., `zoneMembership.type.typeCategory`). 
+
+By default, the discovery utility filters out boilerplate Egeria system properties (like `versions`, `status`, `metadataOrigin`) to reduce cognitive noise. You can control this via the `exclude_system_properties` parameter if calling the SDK directly.
+
+1.  **Using `Report-Spec-Schema` (CLI / Dr. Egeria)**  
+    Execute the special `Report-Spec-Schema` format set and pass your "skinny" target report specification as an argument. The engine will run the underlying action, flatten the materialization tree, and output a table mapping each available `attribute_path` to its observed `data_type`.
+    ```bash
+    run_report --report Report-Spec-Schema --param report_spec_name=My-New-Report --param search_string="example"
+    ```
+
+2.  **Using the SDK (`get_report_spec_schema`)**  
+    You can directly invoke the schema discovery utility from the `EgeriaTech` client:
+    ```python
+    from pyegeria.egeria_tech_client import EgeriaTech
+    client = EgeriaTech("qs-view-server", "https://localhost:9443", user_id="user", user_pwd="secret")
+    schema = client.get_report_spec_schema(report_spec_name="Digital-Product-DrE-Basic", search_string="example", exclude_system_properties=True)
+    print(schema) # returns a list of {"attribute_path": "...", "data_type": "..."}
+    ```
+
+### Using Dot-Notation for Nested Attributes
+
+Once you have discovered the nested attributes you want to include, you can reference them directly in your `Column` definitions using dot notation. The formatting engine recursively traverses the data structure to resolve these paths automatically.
+
+You can specify the dot paths in **either** exact `camelCase` (as returned by the discovery tool) or standard `snake_case`.
+
+```python
+# Both approaches are fully supported and resolve to the same underlying data:
+Column(name="Zone Category", key="zoneMembership.type.typeCategory")
+Column(name="Zone Category", key="zone_membership.type.type_category")
+```
+
+---
+
+### Step-by-Step: Creating a New Report Spec
+
+Creating a new report spec is a straightforward process when combining the schema discovery tools and JSON spec loading. 
+
+1. **Create a "Skinny" Spec**: Start by defining the minimum required fields, targeting the Egeria action you wish to report on. Place this in your user specs directory (e.g., `my_specs.json`).
+   ```json
+   {
+     "My-New-Report": {
+       "target_type": "DigitalProduct",
+       "heading": "My Digital Products",
+       "formats": [
+         {
+           "types": ["ALL"],
+           "attributes": [
+             {"name": "Display Name", "key": "display_name"}
+           ]
+         }
+       ],
+       "action": {
+         "function": "AssetCatalog.find_assets",
+         "required_params": ["search_string"]
+       }
+     }
+   }
+   ```
+2. **Discover Available Attributes**: Load your spec and run the `Report-Spec-Schema` tool against it to see the exact structure of the data it returns.
+   ```bash
+   run_report --report Report-Spec-Schema --param report_spec_name=My-New-Report --param search_string="*"
+   ```
+3. **Enhance Your Spec**: Review the generated schema table. Pick the dot-notation paths (e.g., `zoneMembership.type.typeCategory`, `typeMembershipPieGraph`) that are relevant to your users and add them as new `attributes` in your JSON file.
+4. **Run Your Finished Report**: Execute your updated report spec to see the rich, nested data formatted perfectly in your chosen output style.
+   ```bash
+   run_report --report My-New-Report --output-format TABLE --param search_string="*"
+   ```
+
+---
+
 ### Nested Data and the Master–Detail Pattern
 
 Egeria OMVS responses often include related elements and nested hierarchies. pyegeria preserves this richness and makes it navigable across all primary output formats (`LIST`, `REPORT`, `DICT`, and CLI `TABLE`).
@@ -300,6 +373,37 @@ Notes
 - The outbox file is saved as Markdown (`.md`).
 - The top preamble (title/description) is automatically included by the executor.
 - Use optional parameters (if supported by the calling client/spec), for example `page_size`, `start_from`.
+
+---
+
+### Vega-Lite Graphs and Automated Extraction
+
+PyEgeria supports dynamic Vega-Lite visualization for categorical data. Instead of manually extracting charting attributes for each API payload, the `materialize_egeria_summary` engine automatically scans Egeria API responses for numeric dictionaries (e.g. `typeMembership: {"Asset": 5, "GlossaryTerm": 10}`). When found, it automatically generates two attributes at the root level of the materialized object:
+- `<key>BarGraph` (e.g., `typeMembershipBarGraph`): A Vega-Lite specification for a bar chart.
+- `<key>PieGraph` (e.g., `typeMembershipPieGraph`): A Vega-Lite specification for a pie/donut chart.
+
+To include these in a report spec, simply reference them in a `Column` definition. 
+When rendered in `REPORT` format, they appear as ` ```vega-lite ` Markdown code fences. When rendered in `HTML` or `GRAPH` formats, they are automatically injected as interactive web components using `vega-embed`.
+
+Example:
+```python
+Column(name='Asset Type Breakdown (Bar)', key='typeMembershipBarGraph'),
+Column(name='Asset Type Breakdown (Pie)', key='typeMembershipPieGraph'),
+```
+
+### Attribute Discovery
+
+When authoring report specs, it can be difficult to know exactly what properties are available (including dynamically generated graphs). PyEgeria provides a utility method to flatten and discover the schema of any materialized object.
+
+```python
+from pyegeria.core.utils import discover_element_schema
+
+# After getting a materialized summary from an API...
+schema = discover_element_schema(materialized_summary)
+for path, data_type in schema.items():
+    print(f"{path}: {data_type}")
+```
+This returns a clear dictionary mapping dot-separated JSON paths to their data types, such as `'typeMembershipBarGraph': 'dict'`.
 
 ---
 

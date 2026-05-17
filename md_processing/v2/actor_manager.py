@@ -36,12 +36,16 @@ class ActorManagerProcessor(AsyncBaseCommandProcessor):
         if verb == "Create":
             body = set_create_body(egeria_type, attributes)
             body["properties"] = props
-            
-            if "Role" in object_type:
+
+            if object_type == "Perspective":
+                raw_guid = await self.client.actor_manager._async_create_perspective(body=body)
+            elif object_type == "Skill":
+                raw_guid = await self.client.actor_manager._async_create_skill(body=body)
+            elif "Role" in object_type:
                 raw_guid = await self.client.actor_manager._async_create_actor_role(body=body)
             else:
                 raw_guid = await self.client.actor_manager._async_create_actor_profile(body=body)
-            
+
             new_guid = self.extract_guid_or_raise(raw_guid, f"Create {object_type}")
             self.parsed_output["guid"] = new_guid
             update_element_dictionary(qualified_name, {'guid': new_guid, 'display_name': display_name})
@@ -51,15 +55,19 @@ class ActorManagerProcessor(AsyncBaseCommandProcessor):
         if verb == "Update":
             if not guid:
                  raise PyegeriaException(f"GUID missing for Update of {object_type} {qualified_name}")
-            
+
             body = set_update_body(egeria_type, attributes)
             body["properties"] = props
 
-            if "Role" in object_type:
+            if object_type == "Perspective":
+                await self.client.actor_manager._async_update_perspective(perspective_guid=guid, body=body)
+            elif object_type == "Skill":
+                await self.client.actor_manager._async_update_skill(skill_guid=guid, body=body)
+            elif "Role" in object_type:
                 await self.client.actor_manager._async_update_actor_role(actor_role_guid=guid, body=body)
             else:
                 await self.client.actor_manager._async_update_actor_profile(actor_profile_guid=guid, body=body)
-            
+
             logger.success(f"Updated {object_type} '{display_name}' (GUID: {guid})")
             return await self.render_result_markdown(guid)
 
@@ -131,12 +139,12 @@ class ActorManagerLinkProcessor(AsyncBaseCommandProcessor):
             # Team Leader -> Team, Team Leader Role
             # Team Membership -> Team, Team Member Role
             # Assignment Scope -> Scope Element, Assigned Actor
-            scope_guid = (attributes.get("Team", {}).get("guid") or 
+            scope_guid = (attributes.get("Team", {}).get("guid") or
                           attributes.get("Scope Element", {}).get("guid"))
-            actor_guid = (attributes.get("Team Leader Role", {}).get("guid") or 
-                          attributes.get("Team Member Role", {}).get("guid") or 
+            actor_guid = (attributes.get("Team Leader Role", {}).get("guid") or
+                          attributes.get("Team Member Role", {}).get("guid") or
                           attributes.get("Assigned Actor", {}).get("guid"))
-            
+
             # Force AssignmentScope for property body construction to ensure correct class name
             rel_egeria_type = "AssignmentScope"
             if verb in ["Link", "Attach", "Add"]:
@@ -150,6 +158,24 @@ class ActorManagerLinkProcessor(AsyncBaseCommandProcessor):
                 await self.client.actor_manager._async_detach_assignment_scope(
                     scope_element_guid=scope_guid, actor_guid=actor_guid, body=body
                 )
+
+        elif object_type == "Associated Skill Set":
+            # AssociatedSkillSet: Actor (end1) <-> SkillSet collection (end2)
+            # Note: end1 must be an Actor-subtype entity (e.g. ActorRole), not ActorProfile.
+            actor_guid = attributes.get("Actor Name", {}).get("guid")
+            skill_set_guid = attributes.get("SkillSet Name", {}).get("guid")
+            if verb in ["Link", "Attach", "Add"]:
+                body = set_rel_request_body(egeria_type, attributes)
+                body["properties"] = set_rel_prop_body(egeria_type, attributes)
+                await self.client.collection_manager._async_link_associated_skill_set(
+                    actor_guid=actor_guid, skill_set_guid=skill_set_guid, body=body
+                )
+            elif verb in ["Detach", "Remove", "Unlink"]:
+                body = set_delete_rel_request_body(egeria_type, attributes)
+                await self.client.collection_manager._async_detach_associated_skill_set(
+                    actor_guid=actor_guid, skill_set_guid=skill_set_guid, body=body
+                )
+
         else:
              raise PyegeriaException(f"Unsupported Link object type: {object_type}")
 

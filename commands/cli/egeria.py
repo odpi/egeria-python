@@ -63,6 +63,7 @@ from commands.cat.list_user_actions import display_user_actions
 from commands.cat.list_user_ids import list_user_ids
 
 from commands.cat.dr_egeria import process_markdown_file
+from commands.cat.view_schema_tree import schema_tree_cmd
 
 from commands.cli.ops_config import Config
 from commands.my.get_my_profile import display_my_profile
@@ -1083,6 +1084,8 @@ def show_data_specs(ctx, output_format, search_string):
 def show_cat_info(ctx):
     """Group of md_commands to show information about various Egeria objects"""
     pass
+
+show_cat_info.add_command(schema_tree_cmd, name="report-schema-tree")
 
 @show_cat_info.command("Run Report")
 @click.option("--report", help="Report to output", default="Digital-Products")

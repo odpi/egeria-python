@@ -280,6 +280,167 @@ class TestGlossaryManager:
         finally:
             g_client.close_session()
 
+    def test_set_glossary_as_taxonomy(self):
+        try:
+            g_client = GlossaryManager(
+                self.good_view_server_2,
+                self.good_platform1_url,
+                user_id=self.good_user_2,
+                user_pwd=self.good_user_2_pwd,
+            )
+            token = g_client.create_egeria_bearer_token(self.good_user_2, self.good_user_2_pwd)
+            start_time = time.perf_counter()
+            glossary_guid = "add glossary guid here"
+            g_client.set_glossary_as_taxonomy(glossary_guid, organizing_principle="Subject Area")
+            duration = time.perf_counter() - start_time
+            print(f"\n\tDuration was {duration} seconds")
+            assert True
+        except (PyegeriaException, PyegeriaInvalidParameterException) as e:
+            print_exception_table(e)
+            assert False, "Invalid request"
+        except ValidationError as e:
+            print_validation_error(e)
+        finally:
+            g_client.close_session()
+
+    def test_clear_glossary_as_taxonomy(self):
+        try:
+            g_client = GlossaryManager(
+                self.good_view_server_2,
+                self.good_platform1_url,
+                user_id=self.good_user_2,
+                user_pwd=self.good_user_2_pwd,
+            )
+            token = g_client.create_egeria_bearer_token(self.good_user_2, self.good_user_2_pwd)
+            start_time = time.perf_counter()
+            glossary_guid = "add glossary guid here"
+            g_client.clear_glossary_as_taxonomy(glossary_guid)
+            duration = time.perf_counter() - start_time
+            print(f"\n\tDuration was {duration} seconds")
+            assert True
+        except (PyegeriaException, PyegeriaInvalidParameterException) as e:
+            print_exception_table(e)
+            assert False, "Invalid request"
+        except ValidationError as e:
+            print_validation_error(e)
+        finally:
+            g_client.close_session()
+
+    def test_set_glossary_as_canonical(self):
+        try:
+            g_client = GlossaryManager(
+                self.good_view_server_2,
+                self.good_platform1_url,
+                user_id=self.good_user_2,
+                user_pwd=self.good_user_2_pwd,
+            )
+            token = g_client.create_egeria_bearer_token(self.good_user_2, self.good_user_2_pwd)
+            start_time = time.perf_counter()
+            glossary_guid = "add glossary guid here"
+            g_client.set_glossary_as_canonical(glossary_guid, scope="Enterprise-wide data definitions")
+            duration = time.perf_counter() - start_time
+            print(f"\n\tDuration was {duration} seconds")
+            assert True
+        except (PyegeriaException, PyegeriaInvalidParameterException) as e:
+            print_exception_table(e)
+            assert False, "Invalid request"
+        except ValidationError as e:
+            print_validation_error(e)
+        finally:
+            g_client.close_session()
+
+    def test_clear_glossary_as_canonical(self):
+        try:
+            g_client = GlossaryManager(
+                self.good_view_server_2,
+                self.good_platform1_url,
+                user_id=self.good_user_2,
+                user_pwd=self.good_user_2_pwd,
+            )
+            token = g_client.create_egeria_bearer_token(self.good_user_2, self.good_user_2_pwd)
+            start_time = time.perf_counter()
+            glossary_guid = "add glossary guid here"
+            g_client.clear_glossary_as_canonical(glossary_guid)
+            duration = time.perf_counter() - start_time
+            print(f"\n\tDuration was {duration} seconds")
+            assert True
+        except (PyegeriaException, PyegeriaInvalidParameterException) as e:
+            print_exception_table(e)
+            assert False, "Invalid request"
+        except ValidationError as e:
+            print_validation_error(e)
+        finally:
+            g_client.close_session()
+
+    def test_set_term_as_question(self):
+        try:
+            g_client = GlossaryManager(
+                self.good_view_server_2,
+                self.good_platform1_url,
+                user_id=self.good_user_2,
+                user_pwd=self.good_user_2_pwd,
+            )
+            token = g_client.create_egeria_bearer_token(self.good_user_2, self.good_user_2_pwd)
+            start_time = time.perf_counter()
+            term_guid = "a6247ae4-0606-4aa9-94e1-4f0b0713cc58"
+            g_client.set_term_as_question(term_guid)
+            duration = time.perf_counter() - start_time
+            print(f"\n\tDuration was {duration} seconds")
+            assert True
+        except (PyegeriaException, PyegeriaInvalidParameterException) as e:
+            print_exception_table(e)
+            assert False, "Invalid request"
+        except ValidationError as e:
+            print_validation_error(e)
+        finally:
+            g_client.close_session()
+
+    def test_clear_term_as_question(self):
+        try:
+            g_client = GlossaryManager(
+                self.good_view_server_2,
+                self.good_platform1_url,
+                user_id=self.good_user_2,
+                user_pwd=self.good_user_2_pwd,
+            )
+            token = g_client.create_egeria_bearer_token(self.good_user_2, self.good_user_2_pwd)
+            start_time = time.perf_counter()
+            term_guid = "a6247ae4-0606-4aa9-94e1-4f0b0713cc58"
+            g_client.clear_term_as_question(term_guid)
+            duration = time.perf_counter() - start_time
+            print(f"\n\tDuration was {duration} seconds")
+            assert True
+        except (PyegeriaException, PyegeriaInvalidParameterException) as e:
+            print_exception_table(e)
+            assert False, "Invalid request"
+        except ValidationError as e:
+            print_validation_error(e)
+        finally:
+            g_client.close_session()
+
+    def test_update_glossary_term_from_template(self):
+        try:
+            g_client = GlossaryManager(
+                self.good_view_server_2,
+                self.good_platform1_url,
+                user_id=self.good_user_2,
+                user_pwd=self.good_user_2_pwd,
+            )
+            token = g_client.create_egeria_bearer_token(self.good_user_2, self.good_user_2_pwd)
+            start_time = time.perf_counter()
+            term_guid = "add term guid here"
+            template_guid = "add template guid here"
+            g_client.update_glossary_term_from_template(term_guid, template_guid)
+            duration = time.perf_counter() - start_time
+            print(f"\n\tDuration was {duration} seconds")
+            assert True
+        except (PyegeriaException, PyegeriaInvalidParameterException) as e:
+            print_exception_table(e)
+            assert False, "Invalid request"
+        except ValidationError as e:
+            print_validation_error(e)
+        finally:
+            g_client.close_session()
 
     def test_find_glossaries(self):
         try:

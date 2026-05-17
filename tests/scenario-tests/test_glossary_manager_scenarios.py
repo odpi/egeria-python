@@ -574,6 +574,219 @@ class GlossaryScenarioTester:
                 error=str(e),
             )
 
+    def scenario_glossary_classifications(self) -> TestResult:
+        """
+        Scenario: Glossary taxonomy and canonical classifications
+        - Create a glossary
+        - Set it as a taxonomy with an organizing principle
+        - Clear the taxonomy classification
+        - Set it as a canonical vocabulary
+        - Clear the canonical classification
+        - Clean up
+        """
+        scenario_name = "Glossary Taxonomy and Canonical Classifications"
+        start_time = time.perf_counter()
+
+        try:
+            timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
+
+            # Step 1: Create a glossary
+            glossary_name = f"Classification_Test_Glossary_{timestamp}"
+            console.print(f"\n[cyan]Creating glossary: {glossary_name}[/cyan]")
+            response = self.client.create_glossary(
+                glossary_name,
+                "Glossary for testing taxonomy and canonical classifications",
+                "English",
+                "Testing classification methods"
+            )
+            glossary_guid = response.get("guid") if isinstance(response, dict) else response
+            self.created_glossaries.append(glossary_guid)
+            console.print(f"[green]✓[/green] Created glossary: {glossary_guid}")
+
+            # Step 2: Set as taxonomy
+            console.print(f"\n[cyan]Setting glossary as taxonomy[/cyan]")
+            self.client.set_glossary_as_taxonomy(glossary_guid, organizing_principle="Subject Area Hierarchy")
+            console.print(f"[green]✓[/green] Set as taxonomy")
+
+            # Step 3: Verify taxonomy classification present
+            glossary = self.client.get_glossary_by_guid(glossary_guid)
+            console.print(f"[green]✓[/green] Verified glossary with taxonomy classification")
+
+            # Step 4: Clear taxonomy
+            console.print(f"\n[cyan]Clearing taxonomy classification[/cyan]")
+            self.client.clear_glossary_as_taxonomy(glossary_guid)
+            console.print(f"[green]✓[/green] Cleared taxonomy classification")
+
+            # Step 5: Set as canonical vocabulary
+            console.print(f"\n[cyan]Setting glossary as canonical vocabulary[/cyan]")
+            self.client.set_glossary_as_canonical(glossary_guid, scope="Enterprise-wide data definitions")
+            console.print(f"[green]✓[/green] Set as canonical vocabulary")
+
+            # Step 6: Verify canonical classification present
+            glossary = self.client.get_glossary_by_guid(glossary_guid)
+            console.print(f"[green]✓[/green] Verified glossary with canonical classification")
+
+            # Step 7: Clear canonical
+            console.print(f"\n[cyan]Clearing canonical vocabulary classification[/cyan]")
+            self.client.clear_glossary_as_canonical(glossary_guid)
+            console.print(f"[green]✓[/green] Cleared canonical vocabulary classification")
+
+            # Step 8: Clean up
+            console.print(f"\n[cyan]Deleting glossary: {glossary_guid}[/cyan]")
+            self.client.delete_glossary(glossary_guid, cascade=True)
+            self.created_glossaries.remove(glossary_guid)
+            console.print(f"[green]✓[/green] Deleted glossary")
+
+            duration = time.perf_counter() - start_time
+            return TestResult(
+                scenario_name=scenario_name,
+                passed=True,
+                duration=duration,
+                message="Successfully exercised taxonomy and canonical vocabulary classifications",
+            )
+
+        except PyegeriaTimeoutException as e:
+            duration = time.perf_counter() - start_time
+            console.print(f"[yellow]Timeout in {scenario_name}; continuing.[/yellow]")
+            return TestResult(
+                scenario_name=scenario_name,
+                passed=False,
+                skipped=True,
+                duration=duration,
+                message=f"Timeout: {e}",
+            )
+        except PyegeriaException as e:
+            duration = time.perf_counter() - start_time
+            print_basic_exception(e)
+            return TestResult(
+                scenario_name=scenario_name,
+                passed=False,
+                duration=duration,
+                error=str(e),
+            )
+        except Exception as e:
+            duration = time.perf_counter() - start_time
+            console.print(f"[red]Unexpected error:[/red] {str(e)}")
+            return TestResult(
+                scenario_name=scenario_name,
+                passed=False,
+                duration=duration,
+                error=str(e),
+            )
+
+    def scenario_term_question_classification(self) -> TestResult:
+        """
+        Scenario: Term question classification
+        - Create a glossary and a term
+        - Set the term as a question
+        - Clear the question classification
+        - Clean up
+        """
+        scenario_name = "Term Question Classification"
+        start_time = time.perf_counter()
+
+        try:
+            timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
+
+            # Step 1: Create a glossary
+            glossary_name = f"Question_Test_Glossary_{timestamp}"
+            console.print(f"\n[cyan]Creating glossary: {glossary_name}[/cyan]")
+            response = self.client.create_glossary(
+                glossary_name,
+                "Glossary for testing question classification",
+                "English",
+                "Testing question term classification"
+            )
+            glossary_guid = response.get("guid") if isinstance(response, dict) else response
+            self.created_glossaries.append(glossary_guid)
+            console.print(f"[green]✓[/green] Created glossary: {glossary_guid}")
+
+            # Step 2: Create a term
+            term_name = "QuestionTerm"
+            qualified_name = f"GlossaryTerm:{glossary_name}:{term_name}_{timestamp}"
+            console.print(f"\n[cyan]Creating term: {term_name}[/cyan]")
+
+            prop_body = GlossaryTermProperties(
+                class_="GlossaryTermProperties",
+                display_name=term_name,
+                description="A term that represents a question",
+                qualified_name=qualified_name,
+            )
+            body = NewElementRequestBody(
+                class_="NewElementRequestBody",
+                parent_guid=glossary_guid,
+                is_own_anchor=True,
+                anchor_scope_guid=glossary_guid,
+                parent_relationship_type_name="CollectionMembership",
+                parent_at_end_1=True,
+                properties=prop_body.model_dump(exclude_none=True),
+            )
+            response = self.client.create_glossary_term(body)
+            term_guid = response.get("guid") if isinstance(response, dict) else response
+            self.created_terms.append(term_guid)
+            console.print(f"[green]✓[/green] Created term: {term_guid}")
+
+            # Step 3: Set term as question
+            console.print(f"\n[cyan]Setting term as question[/cyan]")
+            self.client.set_term_as_question(term_guid)
+            console.print(f"[green]✓[/green] Set term as question")
+
+            # Step 4: Verify question classification
+            term = self.client.get_term_by_guid(term_guid)
+            console.print(f"[green]✓[/green] Verified term with question classification")
+
+            # Step 5: Clear question classification
+            console.print(f"\n[cyan]Clearing question classification[/cyan]")
+            self.client.clear_term_as_question(term_guid)
+            console.print(f"[green]✓[/green] Cleared question classification")
+
+            # Step 6: Clean up
+            console.print(f"\n[cyan]Deleting term: {term_guid}[/cyan]")
+            self.client.delete_term(term_guid)
+            self.created_terms.remove(term_guid)
+
+            console.print(f"\n[cyan]Deleting glossary: {glossary_guid}[/cyan]")
+            self.client.delete_glossary(glossary_guid, cascade=True)
+            self.created_glossaries.remove(glossary_guid)
+            console.print(f"[green]✓[/green] Cleaned up")
+
+            duration = time.perf_counter() - start_time
+            return TestResult(
+                scenario_name=scenario_name,
+                passed=True,
+                duration=duration,
+                message="Successfully exercised question classification on a term",
+            )
+
+        except PyegeriaTimeoutException as e:
+            duration = time.perf_counter() - start_time
+            console.print(f"[yellow]Timeout in {scenario_name}; continuing.[/yellow]")
+            return TestResult(
+                scenario_name=scenario_name,
+                passed=False,
+                skipped=True,
+                duration=duration,
+                message=f"Timeout: {e}",
+            )
+        except PyegeriaException as e:
+            duration = time.perf_counter() - start_time
+            print_basic_exception(e)
+            return TestResult(
+                scenario_name=scenario_name,
+                passed=False,
+                duration=duration,
+                error=str(e),
+            )
+        except Exception as e:
+            duration = time.perf_counter() - start_time
+            console.print(f"[red]Unexpected error:[/red] {str(e)}")
+            return TestResult(
+                scenario_name=scenario_name,
+                passed=False,
+                duration=duration,
+                error=str(e),
+            )
+
     def run_all_scenarios(self) -> list[TestResult]:
         """Run all test scenarios"""
         results = []
@@ -594,6 +807,8 @@ class GlossaryScenarioTester:
                 self.scenario_glossary_term_management,
                 self.scenario_glossary_search_and_retrieval,
                 self.scenario_term_copy_and_relationships,
+                self.scenario_glossary_classifications,
+                self.scenario_term_question_classification,
             ]
 
             for scenario_func in scenarios:

@@ -451,6 +451,59 @@ def make_format_set_name_from_type(obj_type: str)-> str:
     formatted_name = obj_type.replace(" ", "-")
     return f"{formatted_name}-DrE"
 
+def discover_element_schema(element: Any, prefix: str = "", exclude_system_properties: bool = True) -> dict[str, str]:
+    """
+    Recursively inspects a data structure (like a materialized Egeria object)
+    and returns a dictionary mapping dot-separated JSON paths to their Python data types.
+    
+    This is especially useful for discovering what attributes (including dynamically
+    generated ones like Vega-Lite graphs) are available for use in a report_spec.
+    
+    Parameters
+    ----------
+    element : Any
+        The data structure to inspect. If a list, inspects the first item.
+    prefix : str
+        Current path prefix used during recursion.
+    exclude_system_properties : bool
+        If True, common noisy Egeria system properties are filtered out from the discovery.
+        
+    Returns
+    -------
+    dict
+        A mapping of JSON path string -> type string.
+    """
+    system_keys = {"versions", "metadataOrigin", "provenance", "relationshipProperties", "class"}
+
+    schema = {}
+    if isinstance(element, list):
+        if len(element) > 0:
+            return discover_element_schema(element[0], prefix, exclude_system_properties)
+        return {prefix: "list[empty]"} if prefix else {}
+        
+    if isinstance(element, dict):
+        for k, v in element.items():
+            if exclude_system_properties and not prefix and k in system_keys:
+                continue
+            path = f"{prefix}.{k}" if prefix else k
+            if isinstance(v, dict):
+                schema[path] = "dict"
+                schema.update(discover_element_schema(v, path, exclude_system_properties))
+            elif isinstance(v, list):
+                if len(v) > 0:
+                    first_type = type(v[0]).__name__
+                    schema[path] = f"list[{first_type}]"
+                    if isinstance(v[0], dict):
+                        schema.update(discover_element_schema(v[0], f"{path}[]", exclude_system_properties))
+                else:
+                    schema[path] = "list[empty]"
+            else:
+                schema[path] = type(v).__name__
+    elif prefix:
+        schema[prefix] = type(element).__name__
+        
+    return schema
+
 
 if __name__ == "__main__":
     print("Main-Utils")

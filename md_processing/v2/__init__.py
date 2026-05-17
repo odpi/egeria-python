@@ -6,7 +6,7 @@ from .parsing import AttributeFirstParser, parse_dr_egeria_content
 from .utils import parse_key_value
 from .processors import AsyncBaseCommandProcessor
 from .dispatcher import V2Dispatcher
-from .glossary import GlossaryProcessor, TermProcessor, TermRelationshipProcessor
+from .glossary import GlossaryProcessor, TermProcessor, TermRelationshipProcessor, GlossaryClassifyProcessor
 from .data_designer import (
     DataCollectionProcessor, DataStructureProcessor, 
     DataFieldProcessor, DataClassProcessor,

@@ -180,7 +180,28 @@ generated_format_sets = FormatSetDict({
     'Team-Role-DrE-Basic': FormatSet(target_type='Team Role', heading='Team-Role-DrE-Basic Attributes', description='Auto-generated format for Team Role (Create, Basic).', family='Actor Manager', formats=[Format(types=['LIST'], attributes=[Column(name='Display Name', key='display_name'), Column(name='Qualified Name', key='qualified_name'), Column(name='GUID', key='guid'), Column(name='Description', key='description'), Column(name='Scope', key='scope'), Column(name='Headcount', key='head_count'), Column(name='Version Identifier', key='version_identifier'), Column(name='Category', key='category')]), Format(types=['ALL'], attributes=[Column(name='Category', key='category'), Column(name='Description', key='description'), Column(name='Display Name', key='display_name'), Column(name='GUID', key='guid'), Column(name='Qualified Name', key='qualified_name'), Column(name='URL', key='url'), Column(name='Version Identifier', key='version_identifier'), Column(name='Scope', key='scope'), Column(name='Headcount', key='head_count')])], action=ActionParameter(function='ActorManager.find_actor_roles', required_params=['search_string'], optional_params=['sequencing_order', 'sequencing_property', 'page_size', 'start_from', 'starts_with', 'ends_with', 'ignore_case', 'classification_names', 'metadata_element_subtypes', 'metadata_element_type'], spec_params={'metadata_element_type': 'TeamRole'})),
     'Terms-and-Conditions-DrE-Basic': FormatSet(target_type='Terms and Conditions', heading='Terms-and-Conditions-DrE-Basic Attributes', description='Auto-generated format for Terms and Conditions (Create, Basic).', family='Governance Officer', formats=[Format(types=['LIST'], attributes=[Column(name='Display Name', key='display_name'), Column(name='Qualified Name', key='qualified_name'), Column(name='GUID', key='guid'), Column(name='Description', key='description'), Column(name='Authors', key='authors'), Column(name='Domain Identifier', key='domain_identifier', valid_values=['ALL', 'DATA', 'PRIVACY', 'SECURITY', 'IT_INFRASTRUCTURE', 'SOFTWARE_DEVELOPMENT', 'CORPORATE', 'ASSET_MANAGEMENT', 'OTHER']), Column(name='Implications', key='implications'), Column(name='Importance', key='importance'), Column(name='Outcomes', key='outcomes'), Column(name='Results', key='results'), Column(name='Scope', key='scope'), Column(name='Summary', key='summary'), Column(name='Usage', key='usage'), Column(name='Implementation Description', key='implementation_description'), Column(name='Entitlements', key='entitlements'), Column(name='Obligations', key='obligations'), Column(name='Restrictions', key='restrictions'), Column(name='Version Identifier', key='version_identifier'), Column(name='Content Status', key='content_status', valid_values=['DRAFT', 'PREPARED', 'PROPOSED', 'APPROVED', 'REJECTED', 'ACTIVE', 'DEPRECATED', 'OTHER']), Column(name='Category', key='category')]), Format(types=['ALL'], attributes=[Column(name='Category', key='category'), Column(name='Description', key='description'), Column(name='Display Name', key='display_name'), Column(name='GUID', key='guid'), Column(name='Qualified Name', key='qualified_name'), Column(name='URL', key='url'), Column(name='Version Identifier', key='version_identifier'), Column(name='Authors', key='authors'), Column(name='Content Status', key='content_status', valid_values=['DRAFT', 'PREPARED', 'PROPOSED', 'APPROVED', 'REJECTED', 'ACTIVE', 'DEPRECATED', 'OTHER']), Column(name='Domain Identifier', key='domain_identifier', valid_values=['ALL', 'DATA', 'PRIVACY', 'SECURITY', 'IT_INFRASTRUCTURE', 'SOFTWARE_DEVELOPMENT', 'CORPORATE', 'ASSET_MANAGEMENT', 'OTHER']), Column(name='Implications', key='implications'), Column(name='Importance', key='importance'), Column(name='Outcomes', key='outcomes'), Column(name='Results', key='results'), Column(name='Scope', key='scope'), Column(name='Summary', key='summary'), Column(name='Usage', key='usage'), Column(name='Implementation Description', key='implementation_description'), Column(name='Entitlements', key='entitlements'), Column(name='Obligations', key='obligations'), Column(name='Restrictions', key='restrictions')])], action=ActionParameter(function='GovernanceOfficer.find_governance_definitions', required_params=['search_string'], optional_params=['sequencing_order', 'sequencing_property', 'page_size', 'start_from', 'starts_with', 'ends_with', 'ignore_case', 'classification_names', 'metadata_element_subtypes', 'metadata_element_type'], spec_params={'metadata_element_type': 'TermsAndConditions'})),
     'Threat-DrE-Basic': FormatSet(target_type='Threat', heading='Threat-DrE-Basic Attributes', description='Auto-generated format for Threat (Create, Basic).', family='Governance Officer', formats=[Format(types=['LIST'], attributes=[Column(name='Display Name', key='display_name'), Column(name='Qualified Name', key='qualified_name'), Column(name='GUID', key='guid'), Column(name='Description', key='description'), Column(name='Authors', key='authors'), Column(name='Domain Identifier', key='domain_identifier', valid_values=['ALL', 'DATA', 'PRIVACY', 'SECURITY', 'IT_INFRASTRUCTURE', 'SOFTWARE_DEVELOPMENT', 'CORPORATE', 'ASSET_MANAGEMENT', 'OTHER']), Column(name='Implications', key='implications'), Column(name='Importance', key='importance'), Column(name='Outcomes', key='outcomes'), Column(name='Results', key='results'), Column(name='Scope', key='scope'), Column(name='Summary', key='summary'), Column(name='Usage', key='usage'), Column(name='Version Identifier', key='version_identifier'), Column(name='Content Status', key='content_status', valid_values=['DRAFT', 'PREPARED', 'PROPOSED', 'APPROVED', 'REJECTED', 'ACTIVE', 'DEPRECATED', 'OTHER']), Column(name='Category', key='category')]), Format(types=['ALL'], attributes=[Column(name='Category', key='category'), Column(name='Description', key='description'), Column(name='Display Name', key='display_name'), Column(name='GUID', key='guid'), Column(name='Qualified Name', key='qualified_name'), Column(name='URL', key='url'), Column(name='Version Identifier', key='version_identifier'), Column(name='Authors', key='authors'), Column(name='Content Status', key='content_status', valid_values=['DRAFT', 'PREPARED', 'PROPOSED', 'APPROVED', 'REJECTED', 'ACTIVE', 'DEPRECATED', 'OTHER']), Column(name='Domain Identifier', key='domain_identifier', valid_values=['ALL', 'DATA', 'PRIVACY', 'SECURITY', 'IT_INFRASTRUCTURE', 'SOFTWARE_DEVELOPMENT', 'CORPORATE', 'ASSET_MANAGEMENT', 'OTHER']), Column(name='Implications', key='implications'), Column(name='Importance', key='importance'), Column(name='Outcomes', key='outcomes'), Column(name='Results', key='results'), Column(name='Scope', key='scope'), Column(name='Summary', key='summary'), Column(name='Usage', key='usage')])], action=ActionParameter(function='GovernanceOfficer.find_governance_definitions', required_params=['search_string'], optional_params=['sequencing_order', 'sequencing_property', 'page_size', 'start_from', 'starts_with', 'ends_with', 'ignore_case', 'classification_names', 'metadata_element_subtypes', 'metadata_element_type'], spec_params={'metadata_element_type': 'Threat'})),
-    'Work-Item-List-DrE-Basic': FormatSet(target_type='Work Item List', heading='Work-Item-List-DrE-Basic Attributes', description='Auto-generated format for Work Item List (Create, Basic).', family='Collections', formats=[Format(types=['LIST'], attributes=[Column(name='Display Name', key='display_name'), Column(name='Qualified Name', key='qualified_name'), Column(name='GUID', key='guid'), Column(name='Description', key='description'), Column(name='Authors', key='authors'), Column(name='Purpose', key='purpose'), Column(name='Version Identifier', key='version_identifier'), Column(name='Content Status', key='content_status', valid_values=['DRAFT', 'PREPARED', 'PROPOSED', 'APPROVED', 'REJECTED', 'ACTIVE', 'DEPRECATED', 'OTHER']), Column(name='Category', key='category')]), Format(types=['ALL'], attributes=[Column(name='Category', key='category'), Column(name='Description', key='description'), Column(name='Display Name', key='display_name'), Column(name='GUID', key='guid'), Column(name='Qualified Name', key='qualified_name'), Column(name='URL', key='url'), Column(name='Version Identifier', key='version_identifier'), Column(name='Authors', key='authors'), Column(name='Content Status', key='content_status', valid_values=['DRAFT', 'PREPARED', 'PROPOSED', 'APPROVED', 'REJECTED', 'ACTIVE', 'DEPRECATED', 'OTHER']), Column(name='Purpose', key='purpose')])], action=ActionParameter(function='CollectionManager.find_collections', required_params=['search_string'], optional_params=['sequencing_order', 'sequencing_property', 'page_size', 'start_from', 'starts_with', 'ends_with', 'ignore_case', 'classification_names', 'metadata_element_subtypes', 'metadata_element_type'], spec_params={'metadata_element_type': 'WorkItemList'}))
+    'Work-Item-List-DrE-Basic': FormatSet(target_type='Work Item List', heading='Work-Item-List-DrE-Basic Attributes', description='Auto-generated format for Work Item List (Create, Basic).', family='Collections', formats=[Format(types=['LIST'], attributes=[Column(name='Display Name', key='display_name'), Column(name='Qualified Name', key='qualified_name'), Column(name='GUID', key='guid'), Column(name='Description', key='description'), Column(name='Authors', key='authors'), Column(name='Purpose', key='purpose'), Column(name='Version Identifier', key='version_identifier'), Column(name='Content Status', key='content_status', valid_values=['DRAFT', 'PREPARED', 'PROPOSED', 'APPROVED', 'REJECTED', 'ACTIVE', 'DEPRECATED', 'OTHER']), Column(name='Category', key='category')]), Format(types=['ALL'], attributes=[Column(name='Category', key='category'), Column(name='Description', key='description'), Column(name='Display Name', key='display_name'), Column(name='GUID', key='guid'), Column(name='Qualified Name', key='qualified_name'), Column(name='URL', key='url'), Column(name='Version Identifier', key='version_identifier'), Column(name='Authors', key='authors'), Column(name='Content Status', key='content_status', valid_values=['DRAFT', 'PREPARED', 'PROPOSED', 'APPROVED', 'REJECTED', 'ACTIVE', 'DEPRECATED', 'OTHER']), Column(name='Purpose', key='purpose')])], action=ActionParameter(function='CollectionManager.find_collections', required_params=['search_string'], optional_params=['sequencing_order', 'sequencing_property', 'page_size', 'start_from', 'starts_with', 'ends_with', 'ignore_case', 'classification_names', 'metadata_element_subtypes', 'metadata_element_type'], spec_params={'metadata_element_type': 'WorkItemList'})),
+    'Report-Spec-Schema': FormatSet(
+        target_type='Report Spec Schema',
+        heading='Report Spec Schema Attributes',
+        description='Auto-generated format for Report Spec Schema discovery.',
+        family='Report Engine',
+        formats=[
+            Format(
+                types=['LIST', 'ALL', 'DICT'],
+                attributes=[
+                    Column(name='Attribute Path', key='attribute_path'),
+                    Column(name='Data Type', key='data_type')
+                ]
+            )
+        ],
+        action=ActionParameter(
+            function='EgeriaTech.get_report_spec_schema',
+            required_params=['report_spec_name'],
+            optional_params=[],
+            spec_params={}
+        )
+    )
 })
 # --- END GENERATED FORMAT SETS ---
 
@@ -277,9 +298,9 @@ MERMAID_FORMAT = Format(
 
 NEW_MERMAID_COLUMNS = [
     Column(name="Collection Mermaid Mind Map", key="collectionMermaidMindMap"),
-    Column(name="Zone Profile Mermaid Pie Chart", key="zoneProfileMermaidPieChart"),
-    Column(name="Zone Profile Anchored Mermaid Pie Chart", key="zoneProfileAnchoredMermaidPieChart"),
-    Column(name="Zone Profile All Mermaid Pie Chart", key="zoneProfileAllMermaidPieChart"),
+    # Column(name="Zone Profile Mermaid Pie Chart", key="zoneProfileMermaidPieChart"),
+    # Column(name="Zone Profile Anchored Mermaid Pie Chart", key="zoneProfileAnchoredMermaidPieChart"),
+    # Column(name="Zone Profile All Mermaid Pie Chart", key="zoneProfileAllMermaidPieChart"),
 ]
 
 # TODO: Research SecretStore retrieval/extraction path before enabling:
@@ -385,8 +406,8 @@ WHO = [
 WHAT = [
     "What is this?",  # description
     "What is the source of this?",  # metadata_collection_id/name
-    "What type is this?"  # type
-    "What zone is this?"  # Anchors classification - zone membership
+    "What type is this?",  # type
+    "What zone is this?",  # Anchors classification - zone membership
 ]
 
 WHEN = [
@@ -507,6 +528,28 @@ base_report_specs = FormatSetDict({
         description="Actor Profile Information",
         annotations={},  # No specific annotations
         family="ActorManager",
+        question_spec=[
+            {'perspectives': ["Business Analyst"],
+             'questions': [
+                 "Who is responsible for [data or domain]?",
+                 "Find the contact for [team or department].",
+                 "Who owns [dataset]?",
+             ]},
+            {'perspectives': ["Data Steward"],
+             'questions': [
+                 "Who are the data owners in [domain]?",
+                 "Find actor profiles for [department].",
+             ]},
+            {'perspectives': ["Governance Officer"],
+             'questions': [
+                 "Who has governance responsibilities for [domain]?",
+                 "Show me all registered actor profiles.",
+             ]},
+            {'perspectives': ["Project Manager"],
+             'questions': [
+                 "Who are the key stakeholders for [project]?",
+             ]},
+        ],
         formats=[
             Format(
                 types=["ALL"],
@@ -523,12 +566,19 @@ base_report_specs = FormatSetDict({
             spec_params={},
         )
     ),
-"Actor-Profiles-Assigned-MD": FormatSet(
+    "Actor-Profiles-Assigned-MD": FormatSet(
         target_type="Actor Profile",
         heading="Actor Profile - Assigned Actors",
         description="Actor Profile Assigned Actor Information",
         annotations={},  # No specific annotations
         family="ActorManager",
+        question_spec=[
+            {'perspectives': ["Governance Officer", "Data Steward"],
+             'questions': [
+                 "Who has been assigned to [role or responsibility]?",
+                 "Which profiles have actors assigned to them?",
+             ]},
+        ],
         formats=[
             Format(
                 types=["ALL"],
@@ -571,6 +621,23 @@ base_report_specs = FormatSetDict({
         description="Actor Profile Information",
         annotations={},  # No specific annotations
         family="ActorManager",
+        question_spec=[
+            {'perspectives': ["Governance Officer"],
+             'questions': [
+                 "What data governance roles are defined?",
+                 "What roles exist for [domain]?",
+                 "Show me all actor roles.",
+             ]},
+            {'perspectives': ["Data Steward"],
+             'questions': [
+                 "What are the responsibilities of the [role] role?",
+                 "What is the scope of the [role]?",
+             ]},
+            {'perspectives': ["Solution Architect"],
+             'questions': [
+                 "What roles are involved in [process]?",
+             ]},
+        ],
         formats=[
             Format(
                 types=["ALL"],
@@ -591,6 +658,23 @@ base_report_specs = FormatSetDict({
         heading="Team Members",
         description="Team Members and Leaders Information",
         family="ActorManager",
+        question_spec=[
+            {'perspectives': ["Business Analyst"],
+             'questions': [
+                 "Who is on the [team] team?",
+                 "What teams exist in our organization?",
+             ]},
+            {'perspectives': ["Project Manager"],
+             'questions': [
+                 "What team is responsible for [project]?",
+                 "Who are the members of [team]?",
+             ]},
+            {'perspectives': ["Governance Officer", "Data Steward"],
+             'questions': [
+                 "What governance teams exist?",
+                 "Which team manages [data domain]?",
+             ]},
+        ],
         formats=[
             Format(
                 types=["ALL"],
@@ -631,6 +715,18 @@ base_report_specs = FormatSetDict({
         description="User Identity Information",
         annotations={},  # No specific annotations
         family="ActorManager",
+        question_spec=[
+            {'perspectives': ["Security Officer"],
+             'questions': [
+                 "What user identities are registered?",
+                 "Find the user identity for [person].",
+                 "What is the user ID for [name]?",
+             ]},
+            {'perspectives': ["Governance Officer"],
+             'questions': [
+                 "Who has registered user identities?",
+             ]},
+        ],
         formats=[
             Format(
                 types=["ALL"],
@@ -647,12 +743,91 @@ base_report_specs = FormatSetDict({
             spec_params={},
         )
     ),
+    "Perspectives": FormatSet(
+        target_type="Perspective",
+        heading="Perspectives",
+        description="Perspective Information",
+        annotations={},
+        family="ActorManager",
+        question_spec=[
+            {'perspectives': ["Business Analyst", "Governance Officer"],
+             'questions': [
+                 "What perspectives are defined?",
+                 "Show me all perspectives for [domain].",
+                 "What viewpoints have been registered?",
+             ]},
+            {'perspectives': ["Data Steward"],
+             'questions': [
+                 "Find perspectives related to [topic].",
+                 "What perspectives exist in [category]?",
+             ]},
+        ],
+        formats=[
+            Format(
+                types=["ALL"],
+                attributes=COMMON_COLUMNS + COMMON_METADATA_COLUMNS + [
+                    Column(name="Additional Properties", key='additional_properties'),
+                ],
+            )
+        ],
+        action=ActionParameter(
+            function="ActorManager.find_perspectives",
+            optional_params=OPTIONAL_FILTER_PARAMS + TIME_PARAMETERS,
+            required_params=["search_string"],
+            spec_params={},
+        )
+    ),
+    "Skills": FormatSet(
+        target_type="Skill",
+        heading="Skills",
+        description="Skill Information",
+        annotations={},
+        family="ActorManager",
+        question_spec=[
+            {'perspectives': ["Human Resources", "Project Manager"],
+             'questions': [
+                 "What skills are defined?",
+                 "Find skills related to [topic].",
+                 "What skills are required for [role]?",
+             ]},
+            {'perspectives': ["Governance Officer", "Data Steward"],
+             'questions': [
+                 "What data-related skills are registered?",
+                 "Show me all skills in [category].",
+             ]},
+        ],
+        formats=[
+            Format(
+                types=["ALL"],
+                attributes=COMMON_COLUMNS + COMMON_METADATA_COLUMNS + [
+                    Column(name="Additional Properties", key='additional_properties'),
+                ],
+            )
+        ],
+        action=ActionParameter(
+            function="ActorManager.find_skills",
+            optional_params=OPTIONAL_FILTER_PARAMS + TIME_PARAMETERS,
+            required_params=["search_string"],
+            spec_params={},
+        )
+    ),
 "My-User": FormatSet(
         target_type="My-User",
         heading="My Information",
         description="User Information",
         annotations={},  # No specific annotations
         family="MyProfile",
+        question_spec=[
+            {'perspectives': ["Individual"],
+             'questions': [
+                 "Show me my profile.",
+                 "What is my job title?",
+                 "What roles am I assigned to?",
+                 "What teams am I a member of?",
+                 "What communities am I part of?",
+                 "What projects am I on?",
+             ]},
+        ],
         formats=[
             Format(
                 types=["DICT","LIST", "TABLE"],
@@ -685,6 +860,15 @@ base_report_specs = FormatSetDict({
         description="User Information with links to details",
         annotations={},  # No specific annotations
         family="MyProfile",
+        question_spec=[
+            {'perspectives': ["Individual"],
+             'questions': [
+                 "Show me my full profile with all details.",
+                 "Show me my roles, teams, projects and communities.",
+                 "What is my contribution record?",
+                 "Show me my activity and journals.",
+             ]},
+        ],
         formats=[
             Format(
                 types=["DICT","LIST", "REPORT", "TABLE"],
@@ -752,6 +936,13 @@ base_report_specs = FormatSetDict({
         heading="My Activities",
         description="User Activity Entries",
         family="MyProfile",
+        question_spec=[
+            {'perspectives': ["Individual"],
+             'questions': [
+                 "Show me my recent activity.",
+                 "What have I been working on?",
+             ]},
+        ],
         formats=[
             Format(
                 types=["DICT", "LIST", "REPORT", "TABLE"],
@@ -772,6 +963,13 @@ base_report_specs = FormatSetDict({
         heading="My Blogs",
         description="User Blog Entries",
         family="MyProfile",
+        question_spec=[
+            {'perspectives': ["Individual"],
+             'questions': [
+                 "Show me my blog posts.",
+                 "What have I written about?",
+             ]},
+        ],
         formats=[
             Format(
                 types=["DICT", "LIST", "REPORT", "TABLE"],
@@ -792,6 +990,13 @@ base_report_specs = FormatSetDict({
         heading="My Journals",
         description="User Journal Entries",
         family="MyProfile",
+        question_spec=[
+            {'perspectives': ["Individual"],
+             'questions': [
+                 "Show me my journal entries.",
+                 "What are my recent journal notes?",
+             ]},
+        ],
         formats=[
             Format(
                 types=["DICT", "LIST", "REPORT", "TABLE"],
@@ -913,6 +1118,15 @@ base_report_specs = FormatSetDict({
     heading="Todos",
     description="My Todos",
     family="MyProfile",
+    question_spec=[
+        {'perspectives': ["Individual"],
+         'questions': [
+             "What are my open to-dos?",
+             "Show me my to-do list.",
+             "What tasks do I need to complete?",
+             "What are my high-priority tasks?",
+         ]},
+    ],
     formats=[
         Format(
             types=["LIST", "REPORT", "DICT", "TABLE"],
@@ -939,6 +1153,19 @@ base_report_specs = FormatSetDict({
     heading="Org Chart",
     description="Organization Chart",
     family="Actor Manager",
+    question_spec=[
+        {'perspectives': ["Business Analyst"],
+         'questions': [
+             "Show me the organization chart.",
+             "What does the [org / team] org chart look like?",
+             "Who reports to [person or team]?",
+         ]},
+        {'perspectives': ["Governance Officer"],
+         'questions': [
+             "Show me the organizational structure for [division].",
+             "Who are the senior leaders?",
+         ]},
+    ],
     formats=[
         Format(
             types=["MERMAID","REPORT"],
@@ -960,6 +1187,15 @@ base_report_specs = FormatSetDict({
         description="Attributes that describe TypeDefs",
         annotations={},  # No specific annotations
         family="TypeDef",
+        question_spec=[
+            {'perspectives': ["Data Engineer", "Solution Architect"],
+             'questions': [
+                 "What metadata types are defined?",
+                 "What is [type name]?",
+                 "Show me types in category [category].",
+                 "What is the initial status for [type]?",
+             ]},
+        ],
         formats=[
             Format(
                 types=["ALL"],
@@ -982,6 +1218,21 @@ base_report_specs = FormatSetDict({
         description="Attributes that describe valid values used by Egeria for metadata governance.",
         annotations={},  # No specific annotations
         family="Valid-Values",
+        question_spec=[
+            {'perspectives': ["Data Steward"],
+             'questions': [
+                 "What valid values are defined for [property name]?",
+                 "What is the preferred value for [concept]?",
+                 "What category does [valid value] belong to?",
+                 "Show me all valid values for [type].",
+             ]},
+            {'perspectives': ["Data Engineer"],
+             'questions': [
+                 "What values are allowed for [field]?",
+                 "Is [value] a valid entry for [property]?",
+                 "What data type is used for [property]?",
+             ]},
+        ],
         formats=[
             Format(
                 types=["ALL"],
@@ -1012,6 +1263,15 @@ base_report_specs = FormatSetDict({
         description="A Display of Engine Actions",
         annotations={},  # No specific annotations
         family="AutomatedCuration",
+        question_spec=[
+            {'perspectives': ["DevOps Engineer"],
+             'questions': [
+                 "What engine actions are running?",
+                 "Show me recent engine actions.",
+                 "What actions are targeting [element]?",
+                 "What are the action request sources for [action]?",
+             ]},
+        ],
         formats=[
             Format(
                 types=["ALL"],
@@ -1039,6 +1299,27 @@ base_report_specs = FormatSetDict({
         description="Attributes that apply to all Assets",
         annotations={},  # No specific annotations
         family="AssetCatalog",
+        question_spec=[
+            {'perspectives': ["Business Analyst"],
+             'questions': [
+                 "Show me the full picture of [asset].",
+                 "What systems does [asset] connect to?",
+             ]},
+            {'perspectives': ["Data Steward"],
+             'questions': [
+                 "Show me all details and relationships for [asset].",
+                 "What anchors or classifies [asset]?",
+             ]},
+            {'perspectives': ["Solution Architect", "Data Engineer"],
+             'questions': [
+                 "Show me the data flow and lineage for [asset].",
+                 "What is the field-level lineage for [asset]?",
+             ]},
+            {'perspectives': ["Data Scientist"],
+             'questions': [
+                 "Where does [dataset] come from? Show me the lineage.",
+             ]},
+        ],
         formats=[
             Format(
                 types=["ALL"],
@@ -1150,6 +1431,14 @@ base_report_specs = FormatSetDict({
         description="Elements of a Technology",
         annotations={},  # No specific annotations
         family="Automated Curation",
+        question_spec=[
+            {'perspectives': ["DevOps Engineer", "Integration Specialist"],
+             'questions': [
+                 "What elements are catalogued for [tech type]?",
+                 "Show me deployed instances of [technology].",
+                 "What is the architecture diagram for [tech type]?",
+             ]},
+        ],
         formats=[
             Format(
                 types=["MD", "FORM", ],
@@ -1199,6 +1488,14 @@ base_report_specs = FormatSetDict({
         description="A report of elements with search keywords matching the specified string",
         annotations={},  # No specific annotations
         family="Feedback Manager",
+        question_spec=[
+            {'perspectives': ["Business Analyst", "Data Steward"],
+             'questions': [
+                 "What elements are tagged with [keyword]?",
+                 "What is tagged as [topic]?",
+                 "Find everything related to [term].",
+             ]},
+        ],
         formats=[
             Format(
                 types=["ALL"],
@@ -1231,6 +1528,14 @@ base_report_specs = FormatSetDict({
         description="Details of a Technology Type Valid Value.",
         annotations={},  # No specific annotations
         family="Automated Curation",
+        question_spec=[
+            {'perspectives': ["DevOps Engineer", "Integration Specialist"],
+             'questions': [
+                 "What are the details for [tech type]?",
+                 "What catalog template placeholders does [tech type] require?",
+                 "Show me full details for [technology].",
+             ]},
+        ],
         formats=[
             Format(
                 types=["ALL"],
@@ -1256,6 +1561,13 @@ base_report_specs = FormatSetDict({
         description="Details of a Technology Type Valid Value as a Master-Detail pattern",
         annotations={},  # No specific annotations
         family="Automated Curation",
+        question_spec=[
+            {'perspectives': ["DevOps Engineer", "Integration Specialist"],
+             'questions': [
+                 "Show me the full master-detail for [tech type] including templates, processes, and references.",
+                 "What governance processes and catalog templates exist for [technology]?",
+             ]},
+        ],
         formats=[
             Format(
                 types=["ALL"],
@@ -1402,6 +1714,14 @@ base_report_specs = FormatSetDict({
         heading="Catalog Target",
         description="Detailed Catalog Target Information",
         family="Automated Curation",
+        question_spec=[
+            {'perspectives': ["DevOps Engineer", "Integration Specialist"],
+             'questions': [
+                 "What catalog targets are configured?",
+                 "What is [connector] cataloguing?",
+                 "What is the target name for [integration connector]?",
+             ]},
+        ],
         formats=[
             Format(
                 types=["ALL"],
@@ -1420,6 +1740,14 @@ base_report_specs = FormatSetDict({
         description="Governance Processes for a Tech Type",
         annotations={},  # No specific annotations
         family="Automated Curation",
+        question_spec=[
+            {'perspectives': ["DevOps Engineer", "Governance Officer"],
+             'questions': [
+                 "What governance processes are defined for [tech type]?",
+                 "Show me the process diagram for [tech type].",
+                 "What automation is in place for [technology]?",
+             ]},
+        ],
         formats=[
             Format(
                 types=["REPORT", "LIST", "FORM", "MD", "TABLE"],
@@ -1460,6 +1788,19 @@ base_report_specs = FormatSetDict({
         description="Details of a Technology Type Valid Value.",
         annotations={},  # No specific annotations
         family="Automated Curation",
+        question_spec=[
+            {'perspectives': ["DevOps Engineer", "Integration Specialist"],
+             'questions': [
+                 "What technology types are registered?",
+                 "Is [technology] a registered tech type?",
+                 "Show me tech types matching [name].",
+             ]},
+            {'perspectives': ["Data Engineer"],
+             'questions': [
+                 "What technology types can be catalogued?",
+                 "What is [tech type] used for?",
+             ]},
+        ],
         formats=[
             Format(
                 types=["ALL"],
@@ -1485,6 +1826,15 @@ base_report_specs = FormatSetDict({
         description="Details of an OMAG Server Platform",
         annotations={},
         family="RuntimeManager",
+        question_spec=[
+            {'perspectives': ["DevOps Engineer"],
+             'questions': [
+                 "What OMAG platforms are registered?",
+                 "What version is [platform] running?",
+                 "When did [platform] last start?",
+                 "What servers are on [platform]?",
+             ]},
+        ],
         formats=[
             Format(
                 types=["ALL", "TABLE", "DICT"],
@@ -1506,6 +1856,15 @@ base_report_specs = FormatSetDict({
         description="Details of an OMAG Server",
         annotations={},
         family="RuntimeManager",
+        question_spec=[
+            {'perspectives': ["DevOps Engineer"],
+             'questions': [
+                 "What OMAG servers are running?",
+                 "What is the status of [server]?",
+                 "What type of server is [server]?",
+                 "Show me the configuration for [server].",
+             ]},
+        ],
         formats=[
             Format(
                 types=["ALL", "TABLE", "DICT"],
@@ -1525,6 +1884,16 @@ base_report_specs = FormatSetDict({
         description="Details of an Integration Connector",
         annotations={},
         family="RuntimeManager",
+        question_spec=[
+            {'perspectives': ["DevOps Engineer", "Integration Specialist"],
+             'questions': [
+                 "What integration connectors are running?",
+                 "What is the status of [connector]?",
+                 "What does [connector] integrate with?",
+                 "When did [connector] last change status?",
+                 "What metadata source does [connector] use?",
+             ]},
+        ],
         formats=[
             Format(
                 types=["ALL", "TABLE", "DICT"],
@@ -1546,6 +1915,18 @@ base_report_specs = FormatSetDict({
         description="Details of a journal entry.",
         annotations={},  # No specific annotations
         family="Feedback Manager",
+        question_spec=[
+            {'perspectives': ["Individual"],
+             'questions': [
+                 "Show me journal entries for [topic].",
+                 "What notes exist in [journal]?",
+             ]},
+            {'perspectives': ["Data Steward"],
+             'questions': [
+                 "What stewardship notes have been recorded for [element]?",
+                 "Show me journal entries about [data or subject].",
+             ]},
+        ],
         formats=[
             Format(
                 types=["ALL"],
@@ -1571,6 +1952,14 @@ base_report_specs = FormatSetDict({
         description="Details of Informal Tags.",
         annotations={},  # No specific annotations
         family="Feedback Manager",
+        question_spec=[
+            {'perspectives': ["Business Analyst", "Data Steward"],
+             'questions': [
+                 "What informal tags exist?",
+                 "What elements are tagged with [tag]?",
+                 "Show me all tags matching [name].",
+             ]},
+        ],
         formats=[
             Format(
                 types=["ALL"],
@@ -1598,6 +1987,20 @@ base_report_specs = FormatSetDict({
         annotations={},
         family="External References",
         aliases=["ExternalDataSource", "ExternalModelSource", "External References"],
+        question_spec=[
+            {'perspectives': ["Researcher", "Business Analyst"],
+             'questions': [
+                 "What external references are catalogued?",
+                 "Are there references to [topic or standard]?",
+                 "What is the URL for [reference]?",
+                 "Who published [reference]?",
+             ]},
+            {'perspectives': ["Data Steward"],
+             'questions': [
+                 "What external sources are linked to [element]?",
+                 "Show me references categorised as [category].",
+             ]},
+        ],
         formats=[
             Format(
                 types=["ALL"],
@@ -1617,6 +2020,14 @@ base_report_specs = FormatSetDict({
         description="Attributes that apply to related media.",
         annotations={},
         family="External References",
+        question_spec=[
+            {'perspectives': ["Researcher", "Business Analyst"],
+             'questions': [
+                 "What related media is catalogued?",
+                 "Are there images or videos for [topic]?",
+                 "Show me media of type [media type].",
+             ]},
+        ],
         formats=[
             Format(
                 types=["ALL", "LIST"],
@@ -1642,6 +2053,19 @@ base_report_specs = FormatSetDict({
         description="Attributes that apply to all Cited Documents.",
         annotations={},
         family="External References",
+        question_spec=[
+            {'perspectives': ["Researcher"],
+             'questions': [
+                 "What documents are cited in the metadata?",
+                 "Who published [document]?",
+                 "What is the publication date of [document]?",
+                 "Show me cited documents about [topic].",
+             ]},
+            {'perspectives': ["Governance Officer"],
+             'questions': [
+                 "What regulatory documents or standards are referenced?",
+             ]},
+        ],
         formats=[
             Format(
                 types=["ALL", "LIST"],
@@ -1674,6 +2098,26 @@ base_report_specs = FormatSetDict({
         description="Attributes that apply to all Projects.",
         annotations={},
         family="Project Manager",
+        question_spec=[
+            {'perspectives': ["Business Analyst"],
+             'questions': [
+                 "What data projects are underway?",
+                 "Are there any projects affecting [data domain]?",
+             ]},
+            {'perspectives': ["Project Manager"],
+             'questions': [
+                 "What projects are currently active?",
+                 "Show me projects by priority.",
+                 "Who is assigned to [project]?",
+                 "What is the status of [project]?",
+                 "What projects started in [period]?",
+             ]},
+            {'perspectives': ["Data Steward"],
+             'questions': [
+                 "Are there active projects that will change [data]?",
+                 "What governance projects are running?",
+             ]},
+        ],
         formats=[
             Format(
                 types=["ALL", "LIST"],
@@ -1694,6 +2138,27 @@ base_report_specs = FormatSetDict({
         description="Attributes that apply to all Glossaries.",
         annotations={"wikilinks": ["[[Glossaries]]"]},
         family="Glossary Manager",
+        question_spec=[
+            {'perspectives': ["Business Analyst", "Researcher"],
+             'questions': [
+                 "What glossaries do we have?",
+                 "Is there a glossary for [finance / customer / HR / regulatory]?",
+                 "Which glossary covers [subject area or topic]?",
+                 "Where can I find definitions for [domain]?",
+             ]},
+            {'perspectives': ["Data Steward"],
+             'questions': [
+                 "What is the [glossary name] glossary used for?",
+                 "Which glossaries are in [language]?",
+                 "How many glossaries exist?",
+                 "What folders are defined in [glossary]?",
+             ]},
+            {'perspectives': ["Governance Officer"],
+             'questions': [
+                 "Which glossaries are approved for regulatory or compliance use?",
+                 "Show me the compliance glossary.",
+             ]},
+        ],
         formats=[
             Format(
                 types=["ALL"],
@@ -1714,6 +2179,35 @@ base_report_specs = FormatSetDict({
         description="Attributes that apply to all Basic Glossary Terms.",
         annotations={},
         family="Glossary Manager",
+        question_spec=[
+            {'perspectives': ["Business Analyst", "Researcher"],
+             'questions': [
+                 "What does [term] mean?",
+                 "Find terms related to [concept or topic].",
+                 "What terms are in the [subject area]?",
+                 "Give me an example of how [term] is used.",
+                 "Is there a definition for [abbreviation or acronym]?",
+             ]},
+            {'perspectives': ["Data Steward"],
+             'questions': [
+                 "Which terms have usage notes?",
+                 "Show me terms that are no longer effective.",
+                 "Who last updated [term]?",
+                 "What terms were updated recently?",
+                 "Which terms belong to [glossary]?",
+             ]},
+            {'perspectives': ["Data Scientist", "Data Engineer"],
+             'questions': [
+                 "What are the technical definitions for [feature or concept]?",
+                 "Find terms related to [dataset or model].",
+             ]},
+            {'perspectives': ["Governance Officer"],
+             'questions': [
+                 "What regulatory or compliance terms are defined?",
+                 "Show me terms with usage restrictions.",
+                 "Which terms are still in draft status?",
+             ]},
+        ],
         formats=[
             Format(
                 types=["ALL"],
@@ -1747,6 +2241,15 @@ base_report_specs = FormatSetDict({
         description="Designed for help output of Dr.Egeria commands.",
         annotations={"wikilinks": ["[[Help]]", "[[Dr.Egeria]]"]},
         family="General",
+        question_spec=[
+            {'perspectives': ["Business Analyst", "Data Steward", "Data Engineer"],
+             'questions': [
+                 "How do I use [Dr.Egeria command]?",
+                 "What does [command] do?",
+                 "Show me help for [topic].",
+                 "What commands are available for [task]?",
+             ]},
+        ],
         formats=[
             Format(
 
@@ -1776,6 +2279,27 @@ base_report_specs = FormatSetDict({
                  "ResultSet", "RecentAccess", "WorkItemList", "Namespace"],
         annotations=COMMON_ANNOTATIONS,
         family="Collection Manager",
+        question_spec=[
+            {'perspectives': ["Business Analyst"],
+             'questions': [
+                 "What data collections are available?",
+                 "Show me collections about [topic or domain].",
+                 "What is in the [collection name] collection?",
+                 "What collections were created recently?",
+             ]},
+            {'perspectives': ["Data Steward"],
+             'questions': [
+                 "Who created the [collection] collection?",
+                 "Which collections have no classification?",
+                 "What collections is [element] a member of?",
+                 "When was [collection] last updated?",
+             ]},
+            {'perspectives': ["Solution Architect"],
+             'questions': [
+                 "Show me a visual map of our data collections.",
+                 "How are our collections structured and related?",
+             ]},
+        ],
         formats=[MERMAID_FORMAT, COLLECTION_DICT, COLLECTION_TABLE, COLLECTION_REPORT, COMMON_FORMATS_ALL],
         # Reusing common formats
         action=ActionParameter(
@@ -1791,6 +2315,18 @@ base_report_specs = FormatSetDict({
         description="Displays the collection Mermaid mind map.",
         annotations=COMMON_ANNOTATIONS,
         family="Collection Manager",
+        question_spec=[
+            {'perspectives': ["Business Analyst"],
+             'questions': [
+                 "Show me a mind map of [collection].",
+                 "Give me a visual overview of what is in [collection].",
+             ]},
+            {'perspectives': ["Data Steward"],
+             'questions': [
+                 "Show me the structure of [collection] as a diagram.",
+                 "What does the collection hierarchy look like?",
+             ]},
+        ],
         formats=[
             Format(
                 types=["REPORT"],
@@ -1820,6 +2356,15 @@ base_report_specs = FormatSetDict({
         aliases=[],
         annotations=COMMON_ANNOTATIONS,
         family="Collection Manager",
+        question_spec=[
+            {'perspectives': ["Business Analyst", "Data Steward", "Solution Architect"],
+             'questions': [
+                 "List all data collections.",
+                 "What type of collection is [name]?",
+                 "What does [collection] contain?",
+                 "What collections belong to [parent collection]?",
+             ]},
+        ],
         formats=[Format(
             types=["ALL"],
             attributes=BASIC_COLLECTIONS_COLUMNS,
@@ -1838,6 +2383,14 @@ base_report_specs = FormatSetDict({
         aliases=[],
         annotations=COMMON_ANNOTATIONS,
         family="External References",
+        question_spec=[
+            {'perspectives': ["Business Analyst", "Data Steward"],
+             'questions': [
+                 "What folders exist in [collection or catalog]?",
+                 "What is in the [folder name] folder?",
+                 "Show me folders for [topic or domain].",
+             ]},
+        ],
         formats=[Format(
             types=["ALL"],
             attributes=BASIC_COLLECTIONS_COLUMNS,
@@ -1856,6 +2409,23 @@ base_report_specs = FormatSetDict({
         aliases=[],
         annotations=COMMON_ANNOTATIONS,
         family="Digital Business",
+        question_spec=[
+            {'perspectives': ["Business Analyst"],
+             'questions': [
+                 "What business capabilities are defined?",
+                 "What systems support [capability]?",
+             ]},
+            {'perspectives': ["Solution Architect"],
+             'questions': [
+                 "What business capabilities exist?",
+                 "Which capabilities map to [process or system]?",
+                 "What is the implementation approach for [capability]?",
+             ]},
+            {'perspectives': ["Governance Officer"],
+             'questions': [
+                 "What capabilities are in scope for [regulation]?",
+             ]},
+        ],
         formats=[Format(
             types=["ALL"],
             attributes=BASIC_COLLECTIONS_COLUMNS + [
@@ -1878,6 +2448,14 @@ base_report_specs = FormatSetDict({
         aliases=["CollectionMember", "Member", "Members"],
         annotations={"wikilinks": ["[[CollectionMembers]]"]},
         family="External References",
+        question_spec=[
+            {'perspectives': ["Business Analyst", "Data Steward"],
+             'questions': [
+                 "What is in [collection]?",
+                 "List the members of [collection].",
+                 "What elements belong to [collection]?",
+             ]},
+        ],
         formats=[COLLECTION_DICT, COLLECTION_TABLE],
         action=ActionParameter(
             function="CollectionManager.get_collection_members",
@@ -1893,6 +2471,20 @@ base_report_specs = FormatSetDict({
         aliases=[],
         annotations={"Wikilinks": ["[[Solution-Blueprint]]"]},
         family="Solution Architect",
+        question_spec=[
+            {'perspectives': ["Solution Architect"],
+             'questions': [
+                 "What solution blueprints exist?",
+                 "Show me the blueprint for [solution].",
+                 "What components make up [solution blueprint]?",
+                 "Show me the architecture diagram for [solution].",
+             ]},
+            {'perspectives': ["Digital Product Manager"],
+             'questions': [
+                 "Which solution blueprint supports [data product]?",
+                 "Show me the solution design for [product].",
+             ]},
+        ],
         formats=[
             Format(
                 types=["DICT", "TABLE", "LIST", "MD", "FORM"],
@@ -1925,6 +2517,15 @@ base_report_specs = FormatSetDict({
         description="Registered services on the OMAG Server Platform.",
         annotations={},
         family="Platform",
+        question_spec=[
+            {'perspectives': ["DevOps Engineer"],
+             'questions': [
+                 "What services are registered on the platform?",
+                 "What is the URL marker for [service]?",
+                 "What type is [service]?",
+                 "What services are available for [capability]?",
+             ]},
+        ],
         formats=[
             Format(
                 types=["ALL"],
@@ -1945,6 +2546,14 @@ base_report_specs = FormatSetDict({
         description="Severity definitions available in the OMAG Server.",
         annotations={},
         family="Platform",
+        question_spec=[
+            {'perspectives': ["DevOps Engineer"],
+             'questions': [
+                 "What audit log severity levels are defined?",
+                 "What does [severity code] mean?",
+                 "What action should I take for [severity]?",
+             ]},
+        ],
         formats=[
             Format(
                 types=["ALL"],
@@ -1965,6 +2574,19 @@ base_report_specs = FormatSetDict({
         description="Types of assets available in the catalog.",
         annotations={},
         family="AssetCatalog",
+        question_spec=[
+            {'perspectives': ["Business Analyst"],
+             'questions': [
+                 "What types of data assets are catalogued?",
+                 "What is a [type name]?",
+             ]},
+            {'perspectives': ["Data Engineer", "Solution Architect"],
+             'questions': [
+                 "What asset types does Egeria support?",
+                 "Show me the hierarchy of asset types.",
+                 "Which asset type should I use for [use case]?",
+             ]},
+        ],
         formats=[
             Format(
                 types=["ALL"],
@@ -1984,7 +2606,25 @@ base_report_specs = FormatSetDict({
         aliases=["Product Catalog", "DataProductCatalog"],
         annotations={"Wikilinks": ["[[Digital Products]]"]},
         family="Product Manager",
-        question_spec=[{'perspectives': ["ANY"], 'questions': WHO + WHAT + WHEN}],
+        question_spec=[
+            {'perspectives': ["Business Analyst"],
+             'questions': [
+                 "What data product catalogs exist?",
+                 "Which catalog covers [domain or topic]?",
+                 "What products are in the [catalog name] catalog?",
+             ]},
+            {'perspectives': ["Digital Product Manager"],
+             'questions': [
+                 "How many products are in each catalog?",
+                 "When was [catalog] last updated?",
+                 "Who created the [catalog] catalog?",
+             ]},
+            {'perspectives': ["Solution Architect"],
+             'questions': [
+                 "How are our product catalogs organized?",
+                 "Which catalogs contain [collection type]?",
+             ]},
+        ],
         formats=[
             Format(
                 types=["DICT", "TABLE", "LIST", "MD", "FORM","REPORT-GRAPH"],
@@ -2017,6 +2657,19 @@ base_report_specs = FormatSetDict({
         aliases=[],
         annotations={},
         family="Product Manager",
+        question_spec=[
+            {'perspectives': ["Digital Product Manager"],
+             'questions': [
+                 "What digital product catalogs exist?",
+                 "What products are in [catalog]?",
+                 "Which catalog contains [product]?",
+             ]},
+            {'perspectives': ["Business Analyst"],
+             'questions': [
+                 "Where can I browse data products?",
+                 "What catalogs are available?",
+             ]},
+        ],
         formats=[
             Format(
                 types=["DICT", "TABLE", "LIST", "MD", "FORM", "REPORT"],
@@ -2043,7 +2696,36 @@ base_report_specs = FormatSetDict({
         aliases=["DigitalProduct", "DataProducts"],
         annotations={},
         family="Product Manager",
-        question_spec=[{'perspectives': ["ANY"], 'questions': WHO + WHAT + WHEN}],
+        question_spec=[
+            {'perspectives': ["Business Analyst"],
+             'questions': [
+                 "What data products are available?",
+                 "Show me active data products for [topic or domain].",
+                 "What data does [product] include?",
+                 "Who manages the [product] data product?",
+                 "What license does [product] use?",
+                 "Is [product] still supported?",
+             ]},
+            {'perspectives': ["Data Scientist"],
+             'questions': [
+                 "What datasets are available for analysis?",
+                 "Show me mature data products for [domain].",
+                 "What data products can I use for [use case]?",
+             ]},
+            {'perspectives': ["Digital Product Manager"],
+             'questions': [
+                 "Which products are nearing end of service life?",
+                 "What products are due for a new version?",
+                 "What is the withdrawal date for [product]?",
+                 "Which products are still in development or draft?",
+                 "What other products does [product] depend on?",
+             ]},
+            {'perspectives': ["Data Owner"],
+             'questions': [
+                 "What data products include my data assets?",
+                 "Which products are built on [dataset]?",
+             ]},
+        ],
         formats=[
             Format(
                 types=["FORM", "DICT", "TABLE", "LIST"],
@@ -2101,6 +2783,20 @@ base_report_specs = FormatSetDict({
         aliases=[],
         annotations={},
         family="Product Manager",
+        question_spec=[
+            {'perspectives': ["Digital Product Manager"],
+             'questions': [
+                 "What digital products are available?",
+                 "What is the status of [product]?",
+                 "Who manages [product]?",
+                 "What data does [product] contain?",
+             ]},
+            {'perspectives': ["Business Analyst"],
+             'questions': [
+                 "Show me active data products.",
+                 "What data products cover [topic]?",
+             ]},
+        ],
         formats=[
             Format(
                 types=["FORM", "DICT", "TABLE", "LIST", "MD"],
@@ -2152,6 +2848,14 @@ base_report_specs = FormatSetDict({
         aliases=[],
         annotations={},
         family="Product Manager",
+        question_spec=[
+            {'perspectives': ["Business Analyst", "Digital Product Manager"],
+             'questions': [
+                 "Give me a quick list of data products.",
+                 "What products are deployed?",
+                 "Who is the contact for [product]?",
+             ]},
+        ],
         formats=[
             Format(
                 types=["FORM", "TABLE", "LIST", "MD"],
@@ -2207,6 +2911,27 @@ base_report_specs = FormatSetDict({
         aliases=["DataSharingAgreement", "Agreement", "Subscriptions"],
         annotations={"wikilinks": ["[[Agreements]]", "[[Egeria]]"]},
         family="Product Manager",
+        question_spec=[
+            {'perspectives': ["Business Analyst"],
+             'questions': [
+                 "What data sharing agreements are in place?",
+                 "What agreements cover [dataset or domain]?",
+                 "Is there an agreement that allows use of [data]?",
+             ]},
+            {'perspectives': ["Data Owner"],
+             'questions': [
+                 "What agreements cover my data assets?",
+                 "What are the terms of the agreement with [party]?",
+                 "What is the support level for [agreement]?",
+             ]},
+            {'perspectives': ["Governance Officer", "Data Steward"],
+             'questions': [
+                 "Which agreements are currently effective?",
+                 "What service levels are defined in [agreement]?",
+                 "Show me all data sharing agreements and their status.",
+                 "What data sharing agreements involve external parties?",
+             ]},
+        ],
         formats=[
             Format(
                 types=["REPORT", "DICT", "TABLE", "LIST", "FORM"],
@@ -2239,6 +2964,24 @@ base_report_specs = FormatSetDict({
         aliases=["Data Dict", "Data Dictionary"],
         annotations={"wikilinks": ["[[Data Dictionary]]"]},
         family="Data Designer",
+        question_spec=[
+            {'perspectives': ["Business Analyst"],
+             'questions': [
+                 "Is there a dictionary that defines [term or field]?",
+                 "Where can I find field definitions for [system or domain]?",
+             ]},
+            {'perspectives': ["Data Steward"],
+             'questions': [
+                 "What data dictionaries exist?",
+                 "Which dictionary covers [domain]?",
+                 "Is there a data dictionary for [system]?",
+             ]},
+            {'perspectives': ["Data Engineer"],
+             'questions': [
+                 "Show me the data dictionary for [dataset].",
+                 "What dictionaries contain [field name]?",
+             ]},
+        ],
         formats=[COMMON_FORMATS_ALL],  # Reusing common formats and columns
         action=ActionParameter(
             function="CollectionManager.find_collections",
@@ -2254,6 +2997,22 @@ base_report_specs = FormatSetDict({
         aliases=["Data Spec", "DataSpec", "DataSpecification"],
         annotations={"wikilinks": ["[[Data Specification]]"]},
         family="Data Designer",
+        question_spec=[
+            {'perspectives': ["Solution Architect"],
+             'questions': [
+                 "What data specifications have been defined?",
+                 "Show me the specification for [system or product].",
+                 "Show me a visual of [data specification].",
+             ]},
+            {'perspectives': ["Data Engineer"],
+             'questions': [
+                 "What data specifications cover [integration or system]?",
+             ]},
+            {'perspectives': ["Data Steward"],
+             'questions': [
+                 "Which data specifications are approved for [domain]?",
+             ]},
+        ],
         formats=[
             Format(types=["REPORT", "HTML"],
                    attributes=COMMON_COLUMNS + [Column(name="Mermaid", key='mermaidGraph'), ]),
@@ -2276,6 +3035,29 @@ base_report_specs = FormatSetDict({
         aliases=["Data Structure", "DataStructures", "Data Structures", "Data Struct", "DataStructure"],
         annotations={"wikilinks": ["[[Data Structure]]"]},
         family="Data Designer",
+        question_spec=[
+            {'perspectives': ["Business Analyst"],
+             'questions': [
+                 "What information is captured in [structure]?",
+                 "What fields make up [structure]?",
+             ]},
+            {'perspectives': ["Data Engineer"],
+             'questions': [
+                 "What data structures are defined for [system]?",
+                 "Show me the fields in [structure].",
+                 "Which data structures are used in [specification]?",
+             ]},
+            {'perspectives': ["Data Scientist"],
+             'questions': [
+                 "What is the structure of [dataset]?",
+                 "What fields does [structure] contain?",
+             ]},
+            {'perspectives': ["Data Steward"],
+             'questions': [
+                 "Which data structures are in the [dictionary]?",
+                 "Which structures belong to [data specification]?",
+             ]},
+        ],
         formats=[Format(types=["FORM", "DICT", "LIST"], attributes=COMMON_COLUMNS +
                                                                    [
                                                                        Column(name="In Data Specifications",
@@ -2307,6 +3089,29 @@ base_report_specs = FormatSetDict({
         aliases=["Data Field", "Data Fields", "DataFields"],
         annotations={"wikilinks": ["[[Data Field]]"]},
         family="Data Designer",
+        question_spec=[
+            {'perspectives': ["Business Analyst"],
+             'questions': [
+                 "What information is captured in [structure]?",
+                 "What does the [field] field contain?",
+             ]},
+            {'perspectives': ["Data Engineer"],
+             'questions': [
+                 "What fields are in [structure]?",
+                 "Find all fields named [name] across structures.",
+                 "What data type is [field]?",
+             ]},
+            {'perspectives': ["Data Scientist"],
+             'questions': [
+                 "What fields are available in [dataset]?",
+                 "Which structure contains [field]?",
+             ]},
+            {'perspectives': ["Data Steward"],
+             'questions': [
+                 "Which fields are in [data dictionary]?",
+                 "Show me fields missing descriptions in [dictionary].",
+             ]},
+        ],
         formats=[Format(types=["MD", "FORM", "DICT", "LIST"], attributes=COMMON_COLUMNS + [
             Column(name="In Data Dictionaries", key='in_data_dictionary'),
             Column(name="In Data Structure", key='in_data_structure')]),
@@ -2332,6 +3137,25 @@ base_report_specs = FormatSetDict({
         aliases=["Data Field", "Data Fields", "DataFields"],
         annotations={"wikilinks": ["[[Data Field]]"]},
         family="Data Designer",
+        question_spec=[
+            {'perspectives': ["Data Steward"],
+             'questions': [
+                 "What data classes are defined?",
+                 "What is the [class name] data class?",
+                 "Which classes specialize [parent class]?",
+                 "Which data classes are in [dictionary]?",
+             ]},
+            {'perspectives': ["Data Engineer"],
+             'questions': [
+                 "What data type does [class] represent?",
+                 "Show me the specification for [class].",
+             ]},
+            {'perspectives': ["Solution Architect"],
+             'questions': [
+                 "Show me the hierarchy of data classes.",
+                 "What specification does [class] use?",
+             ]},
+        ],
         formats=[Format(types=["MD", "FORM", "DICT", "LIST","TABLE"], attributes=COMMON_COLUMNS + [
             Column(name="Data Type", key='data_type'),
             Column(name="Specification", key='specification'),
@@ -2362,6 +3186,26 @@ base_report_specs = FormatSetDict({
         aliases=["Data Value Spec"],
         annotations={"wikilinks": ["[[Data Value Specification]]"]},
         family="Data Designer",
+        question_spec=[
+            {'perspectives': ["Data Steward"],
+             'questions': [
+                 "What data value specifications are defined?",
+                 "What is the [spec name] data value specification?",
+                 "Which data value specs are in [dictionary]?",
+                 "What namespace does [spec] belong to?",
+             ]},
+            {'perspectives': ["Data Engineer"],
+             'questions': [
+                 "What data type does [spec] define?",
+                 "What is the specification detail for [spec]?",
+                 "What units does [spec] use?",
+             ]},
+            {'perspectives': ["Solution Architect"],
+             'questions': [
+                 "Show me the hierarchy of data value specifications.",
+                 "Which spec specializes [parent spec]?",
+             ]},
+        ],
         formats=[Format(types=["MD", "FORM", "DICT", "LIST","TABLE"], attributes=COMMON_COLUMNS + [
             Column(name="Data Type", key='data_type'),
             Column(name="Specification", key='specification'),
@@ -2391,6 +3235,20 @@ base_report_specs = FormatSetDict({
                                      heading='External-Reference Attributes',
                                      description='External References',
                                      family="External References",
+                                     question_spec=[
+                                         {'perspectives': ["Researcher", "Business Analyst"],
+                                          'questions': [
+                                              "What external references are catalogued?",
+                                              "Find references about [topic or standard]?",
+                                              "Who published [reference]?",
+                                              "What is the URL for [reference]?",
+                                          ]},
+                                         {'perspectives': ["Data Steward"],
+                                          'questions': [
+                                              "What external sources are linked to [element]?",
+                                              "Show me references categorised as [category].",
+                                          ]},
+                                     ],
                                      formats=[
                                          Format(types=['MD', 'FORM', 'DICT'],
                                                 attributes=[Column(name='Display Name', key='display_name'),
@@ -2461,6 +3319,19 @@ base_report_specs = FormatSetDict({
         aliases=["BasicGovernance"],
         annotations={"wikilinks": ["[[Governance]]"]},
         family="Governance Officer",
+        question_spec=[
+            {'perspectives': ["Governance Officer"],
+             'questions': [
+                 "List all governance definitions.",
+                 "What governance definitions exist in [domain]?",
+                 "What type is [definition]?",
+             ]},
+            {'perspectives': ["Data Steward"],
+             'questions': [
+                 "What governance definition covers [subject]?",
+                 "Give me a summary of [definition].",
+             ]},
+        ],
         formats=[Format(types=["ALL"], attributes=GOVERNANCE_DEFINITIONS_BASIC)],
         action=ActionParameter(
             function="GovernanceOfficer.find_governance_definitions",
@@ -2475,7 +3346,26 @@ base_report_specs = FormatSetDict({
         aliases=["GovernanceDefinitions"],
         annotations={"wikilinks": ["[[Governance]]"]},
         family="Governance Officer",
-        question_spec=[{'perspectives': ["ANY"], 'questions': WHO + WHAT + WHEN}],
+        question_spec=[
+            {'perspectives': ["Governance Officer"],
+             'questions': [
+                 "What governance definitions are in place?",
+                 "Show me all definitions in the [data / privacy / security] domain.",
+                 "What is the scope of [definition]?",
+                 "What are the implications of [definition]?",
+                 "Which definitions are approved and active?",
+             ]},
+            {'perspectives': ["Data Steward"],
+             'questions': [
+                 "What governance definition applies to [subject]?",
+                 "What is the usage guidance for [definition]?",
+             ]},
+            {'perspectives': ["Solution Architect"],
+             'questions': [
+                 "Which governance definitions affect [system or data product]?",
+                 "What is the importance rating of [definition]?",
+             ]},
+        ],
         formats=[Format(types=["ALL"], attributes=GOVERNANCE_DEFINITIONS_COLUMNS)],
         action=ActionParameter(
             function="GovernanceOfficer.find_governance_definitions",
@@ -2491,6 +3381,20 @@ base_report_specs = FormatSetDict({
         aliases=["GovernanceDefinitions"],
         annotations={"wikilinks": ["[[Governance]]"]},
         family="Governance Officer",
+        question_spec=[
+            {'perspectives': ["Governance Officer"],
+             'questions': [
+                 "What governance principles are defined?",
+                 "What strategies have been documented?",
+                 "What governance responses are in place?",
+                 "List the principles in [domain].",
+             ]},
+            {'perspectives': ["Data Steward"],
+             'questions': [
+                 "What principle applies to [subject]?",
+                 "What is the summary for [principle or strategy]?",
+             ]},
+        ],
         formats=[Format(types=["ALL"], attributes=GOVERNANCE_DEFINITIONS_BASIC)],
         action=ActionParameter(
             function="GovernanceOfficer.find_governance_definitions",
@@ -2503,12 +3407,21 @@ base_report_specs = FormatSetDict({
                                      heading='Control Attributes',
                                      description='Governance Control (Create).',
                                      family="Governance Officer",
-                                     question_spec=[{'perspectives': ["Governance"], 'questions': WHO + WHAT + WHEN + [
-                                         "What governance controls have been defined?",
-                                         "What measurements and measurement targets have been defined for governance controls?",
-                                         "What are the implications of the governance controls?",
-                                         "What are the risks associated with the governance controls?",
-                                     ]}],
+                                     question_spec=[
+                                         {'perspectives': ["Governance Officer"],
+                                          'questions': [
+                                              "What governance controls have been defined?",
+                                              "What measurements and targets are defined for governance controls?",
+                                              "What are the implications of the governance controls?",
+                                              "What risks are associated with the governance controls?",
+                                              "Show me controls in [domain].",
+                                          ]},
+                                         {'perspectives': ["Data Steward"],
+                                          'questions': [
+                                              "What controls apply to [data or process]?",
+                                              "What is the scope of [control]?",
+                                          ]},
+                                     ],
                                      formats=[
                                          Format(types=['DICT', 'MD', 'FORM', 'REPORT'],
                                                 attributes=[Column(name='Display Name', key='display_name'),
@@ -2553,12 +3466,33 @@ base_report_specs = FormatSetDict({
                                      heading='Governance Zones',
                                      description='Descriptions of Governance Zones',
                                      family="Governance Officer",
-                                     question_spec=[{'perspectives': ["Governance"], 'questions': WHO + WHAT + WHEN + [
-                                         "What governance zones have been defined?",
-                                        
-                                     ]}],
+                                     question_spec=[
+                                         {'perspectives': ["Business Analyst"],
+                                          'questions': [
+                                              "What data zones exist?",
+                                              "Which zone is [data] in?",
+                                              "What does it mean to be in the [zone] zone?",
+                                          ]},
+                                         {'perspectives': ["Data Owner"],
+                                          'questions': [
+                                              "Which governance zone is my data in?",
+                                              "What restrictions apply to data in [zone]?",
+                                          ]},
+                                         {'perspectives': ["Data Steward"],
+                                          'questions': [
+                                              "What data is in the [zone] zone?",
+                                              "How many items are in each governance zone?",
+                                              "What is the scope of the [zone] zone?",
+                                          ]},
+                                         {'perspectives': ["Governance Officer"],
+                                          'questions': [
+                                              "What governance zones have been defined?",
+                                              "Which zones have the most data?",
+                                              "What are the compliance requirements for [zone]?",
+                                          ]},
+                                     ],
                                      formats=[
-                                         Format(types=['DICT', 'MD', 'FORM', 'REPORT'],
+                                         Format(types=['DICT', 'MD', 'FORM'],
                                                 attributes=[Column(name='Display Name', key='display_name'),
                                                             Column(name='Summary', key='summary'),
                                                             Column(name='Description', key='description'),
@@ -2570,6 +3504,30 @@ base_report_specs = FormatSetDict({
                                                             Column(name='Scope', key='scope'),
                                                             Column(name='Total Zone Membership', key='total_membership'),
                                                             Column(name='Zone Membership Types', key='type_membership'),
+                                                            Column(name='Asset Type Breakdown (Bar)', key='typeMembershipBarGraph'),
+                                                            Column(name='Asset Type Breakdown (Pie)', key='typeMembershipPieGraph'),
+                                                            Column(name='Anchored Total Membership', key='anchored_total_membership'),
+                                                            Column(name='Anchored Type Membership', key='anchored_type_membership'),
+                                                            Column(name='All Total Membership', key='all_total_membership'),
+                                                            Column(name='all Type Membership', key='all_type_membership'),
+                                                            Column(name='Analysis Time', key='analysis_time'),
+                                                            Column(name='Qualified Name', key='qualified_name'),
+                                                            Column(name='GUID', key='guid')
+                                                            ]),
+                                         Format(types=['REPORT', 'GRAPH'],
+                                                attributes=[Column(name='Display Name', key='display_name'),
+                                                            Column(name='Summary', key='summary'),
+                                                            Column(name='Description', key='description'),
+                                                            Column(name='Category', key='category'),
+                                                            Column(name='Domain Identifier', key='domain_identifier'),
+                                                            Column(name='Identifier', key='identifier'),
+                                                            Column(name='Version Identifier', key='version_identifier'),
+                                                            Column(name='Usage', key='usage'),
+                                                            Column(name='Scope', key='scope'),
+                                                            Column(name='Total Zone Membership', key='total_membership'),
+                                                            Column(name='Zone Membership Types', key='type_membership'),
+                                                            Column(name='Asset Type Breakdown (Bar)', key='typeMembershipBarGraph'),
+                                                            Column(name='Asset Type Breakdown (Pie)', key='typeMembershipPieGraph'),
                                                             Column(name='Anchored Total Membership', key='anchored_total_membership'),
                                                             Column(name='Anchored Type Membership', key='anchored_type_membership'),
                                                             Column(name='All Total Membership', key='all_total_membership'),
@@ -2599,6 +3557,18 @@ base_report_specs = FormatSetDict({
                                     heading='Governance Process Attributes',
                                     description='Governance Process Attributes.',
                                     family="Governance Officer",
+                                    question_spec=[
+                                        {'perspectives': ["Governance Officer"],
+                                         'questions': [
+                                             "What governance processes are defined?",
+                                             "Show me processes in [category or domain].",
+                                             "What is the [process name] process?",
+                                         ]},
+                                        {'perspectives': ["Data Steward"],
+                                         'questions': [
+                                             "What governance processes apply to [data]?",
+                                         ]},
+                                    ],
                                     formats=[
                                         Format(types=['TABLE', 'LIST', 'MD', 'FORM', 'REPORT'],
                                                attributes=[Column(name='Display Name', key='display_name'),
@@ -2626,12 +3596,31 @@ base_report_specs = FormatSetDict({
                                     heading='Governance Zone Charts',
                                     description='Governance Zone Overview',
                                     family="Governance Officer",
+                                    question_spec=[
+                                        {'perspectives': ["Governance Officer"],
+                                         'questions': [
+                                             "Show me the governance zone membership overview.",
+                                             "What is the distribution of data across governance zones?",
+                                             "Which zones have the most anchored items?",
+                                         ]},
+                                        {'perspectives': ["Data Steward"],
+                                         'questions': [
+                                             "Give me a visual summary of zone memberships.",
+                                             "Show me zone profile charts.",
+                                         ]},
+                                    ],
                                     formats=[
-                                        Format(types=['MERMAID', 'REPORT', 'DICT'],
+                                        Format(types=['MERMAID', 'REPORT', 'GRAPH', 'DICT'],
                                                attributes=[Column(name='Mermaid Graph', key='mermaidGraph'),
-                                                           Column(name='Zone Profiles', key='zoneProfileMermaidPieChart'),
-                                                           Column(name='Zone Profile Anhored', key='zoneProfileAnchoredMermaidPieChart'),
-                                                           Column(name='Zone Profile All', key='zoneProfileAllMermaidPieChart')
+                                                           # Column(name='Zone Profiles (Mermaid)', key='zoneProfileMermaidPieChart'),
+                                                           Column(name='Zone Profile Bar Chart', key='typeMembershipBarGraph'),
+                                                           Column(name='Zone Profile Pie Chart', key='typeMembershipPieGraph'),
+                                                           # Column(name='Zone Profile Anchored (Mermaid)', key='zoneProfileAnchoredMermaidPieChart'),
+                                                           Column(name='Zone Profile Anchored Bar Chart', key='anchoredTypeMembershipBarGraph'),
+                                                           Column(name='Zone Profile Anchored Pie Chart', key='anchoredTypeMembershipPieGraph'),
+                                                           # Column(name='Zone Profile All (Mermaid)', key='zoneProfileAllMermaidPieChart'),
+                                                           Column(name='Zone Profile All Bar Chart', key='allTypeMembershipBarGraph'),
+                                                           Column(name='Zone Profile All Pie Chart', key='allTypeMembershipPieGraph'),
                                                            ])
                                     ],
                                     action=ActionParameter(
@@ -2641,6 +3630,43 @@ base_report_specs = FormatSetDict({
                                         spec_params={"metadata_element_subtypes": ["GovernanceZone"]},
                                     )
                                     ),
+    'Secrets-Collection-User-Profile-Charts': FormatSet(target_type='SecretsCollection',
+                                                 heading='Secrets Collection User Profile Charts',
+                                                 description='Secrets Collection User Profile',
+                                                 family="Governance Officer",
+                                                 question_spec=[
+                                                     {'perspectives': ["Security Officer", "Governance Officer"],
+                                                      'questions': [
+                                                          "Show me the user account profile for [secrets collection].",
+                                                          "What account types are used in [collection]?",
+                                                          "What is the account status distribution?",
+                                                      ]},
+                                                 ],
+                                                 formats=[
+                                                     Format(types=['MERMAID', 'REPORT', 'GRAPH', 'DICT'],
+                                                            attributes=[
+                                                                Column(name='Mermaid Graph', key='mermaidGraph'),
+                                                                # Column(name='Account Type Profile (Mermaid)',
+                                                                #        key='userAccountTypeProfileMermaidPieChart'),
+                                                                Column(name='Account Type Bar Chart',
+                                                                       key='userAccountTypeProfileBarGraph'),
+                                                                Column(name='Account Type Pie Chart',
+                                                                       key='userAccountTypeProfilePieGraph'),
+                                                                # Column(name='Account Status Profile (Mermaid)',
+                                                                #        key='userAccountStatusProfileMermaidPieChart'),
+                                                                Column(name='Account Status Bar Chart',
+                                                                       key='userAccountStatusProfileBarGraph'),
+                                                                Column(name='Account Status Pie Chart',
+                                                                       key='userAccountStatusProfilePieGraph'),
+                                                                ])
+                                                 ],
+                                                 action=ActionParameter(
+                                                     function="GovernanceOfficer.find_governance_definitions",
+                                                     required_params=["search_string"],
+                                                     optional_params=OPTIONAL_SEARCH_PARAMS,
+                                                     spec_params={"metadata_element_subtypes": ["GovernanceZone"]},
+                                                 )
+                                                 ),
     "Valid-Value-Def": FormatSet(
         target_type="Valid Value Definition",
         heading="Valid Value Definitions Information",
@@ -2648,6 +3674,25 @@ base_report_specs = FormatSetDict({
         aliases=[],
         annotations={"wikilinks": ["[[VV-Def]]"]},
         family="General",
+        question_spec=[
+            {'perspectives': ["Data Steward"],
+             'questions': [
+                 "What valid value definitions are defined?",
+                 "What is the preferred value for [concept]?",
+                 "What data type does [valid value] use?",
+                 "What is the scope of [valid value definition]?",
+             ]},
+            {'perspectives': ["Data Engineer"],
+             'questions': [
+                 "How should I encode [concept] in my data?",
+                 "What valid values exist for [property name]?",
+             ]},
+            {'perspectives': ["Governance Officer"],
+             'questions': [
+                 "What are the approved reference values for [domain]?",
+                 "Show me valid value definitions in [scope].",
+             ]},
+        ],
         formats=[Format(types=["ALL"], attributes=COMMON_COLUMNS +
                                                   [Column(name='Data Type', key='data_type'),
                                                    Column(name='Preferred Value', key='preferred_value'),
@@ -2666,6 +3711,21 @@ base_report_specs = FormatSetDict({
                               heading='License Type Attributes',
                               description='Attributes of a License type.',
                               family="Governance Officer",
+                              question_spec=[
+                                  {'perspectives': ["Business Analyst", "Data Scientist"],
+                                   'questions': [
+                                       "What license does [data product or dataset] use?",
+                                       "What are the restrictions on using [data]?",
+                                       "What licenses allow commercial use?",
+                                   ]},
+                                  {'perspectives': ["Governance Officer", "Data Steward"],
+                                   'questions': [
+                                       "What license types are defined?",
+                                       "What are the obligations under [license]?",
+                                       "What data is covered by [license type]?",
+                                       "Show me licenses in [domain].",
+                                   ]},
+                              ],
                               formats=[
                                   Format(types=['DICT', 'MD', 'FORM', 'REPORT'],
                                          attributes=[Column(name='Display Name', key='display_name'),
@@ -2713,6 +3773,27 @@ base_report_specs = FormatSetDict({
         aliases=["GovernanceDefinitions"],
         annotations={"wikilinks": ["[[Governance]]"]},
         family="Governance Officer",
+        question_spec=[
+            {'perspectives': ["Governance Officer"],
+             'questions': [
+                 "What governance policies are in place?",
+                 "Show me policies in the [data / privacy / security] domain.",
+                 "What is the scope of [policy]?",
+                 "What are the implications of [policy]?",
+                 "Which policies are active and approved?",
+             ]},
+            {'perspectives': ["Data Steward"],
+             'questions': [
+                 "What policy applies to [data or subject]?",
+                 "What is the usage guidance for [policy]?",
+                 "What is the importance of [policy]?",
+             ]},
+            {'perspectives': ["Solution Architect"],
+             'questions': [
+                 "Which policies affect [system or data product]?",
+                 "What outcomes are expected from [policy]?",
+             ]},
+        ],
         formats=[Format(types=["ALL"], attributes=GOVERNANCE_DEFINITIONS_COLUMNS)],
         action=ActionParameter(
             function="GovernanceOfficer.find_governance_definitions",
