@@ -385,6 +385,13 @@ class UpdateElementRequestBody(PyegeriaModel):
     merge_update: bool | None = True
 
 
+class UpdateWithTemplateRequestBody(PyegeriaModel):
+    class_: Annotated[Literal["UpdateWithTemplateRequestBody"], Field(alias="class")]
+    merge_update: bool | None = True
+    merge_classifications: bool | None = True
+    properties: dict[str, Any] | None = None
+
+
 class UpdatePropertiesRequestBody(RequestBody):
     class_: Annotated[Literal["UpdatePropertiesRequestBody"], Field(alias="class")]
     properties: dict | None = None

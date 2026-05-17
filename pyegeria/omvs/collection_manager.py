@@ -29,7 +29,8 @@ from pyegeria.core.utils import body_slimmer, dynamic_catch
 
 COLLECTION_PROPERTIES_LIST = ["CollectionProperties", "DataDictionaryProperties",
                               "DataSpecProperties", "DigitalProductProperties",
-                              "AgreementProperties","RootCollectionProperties", "HomeCollectionProperties",]
+                              "AgreementProperties","RootCollectionProperties", "HomeCollectionProperties",
+                              "SkillSetProperties", "ReferenceListProperties",]
 
 AGREEMENT_PROPERTIES_LIST = ["AgreementProperties", "DigitalSubscriptionProperties",]
 
@@ -111,6 +112,14 @@ class DataDictionaryProperties(CollectionProperties):
     class_: Annotated[Literal["DataDictionaryProperties"], Field(alias="class")]
 
 
+class SkillSetProperties(CollectionProperties):
+    class_: Annotated[Literal["SkillSetProperties"], Field(alias="class")]
+
+
+class ReferenceListProperties(CollectionProperties):
+    class_: Annotated[Literal["ReferenceListProperties"], Field(alias="class")]
+
+
 class AgreementProperties(CollectionProperties):
     class_: Annotated[Literal["AgreementProperties"], Field(alias="class")]
     identifier: str | None = None
@@ -162,6 +171,8 @@ class Collections(PyegeriaModel):
         AgreementProperties,
         DataSpecProperties,
         DataDictionaryProperties,
+        SkillSetProperties,
+        ReferenceListProperties,
         RootCollectionProperties,
         HomeCollectionProperties,
         CollectionFolderProperties,
@@ -2871,9 +2882,488 @@ class CollectionManager(ServerClient):
             self._async_create_data_dictionary_collection(display_name, description,category,
                                                  classification_name, body))
 
+    @dynamic_catch
+    async def _async_create_skill_set_collection(self, display_name: Optional[str] = None,
+                                                 description: Optional[str] = None,
+                                                 category: Optional[str] = None,
+                                                 classification_name: Optional[str] = None,
+                                                 body: Optional[dict | NewElementRequestBody] = None) -> str:
+        """ Create a new skill set collection. If the body is not present, the display_name, description, category
+            and classification will be used to create a simple, self-anchored collection.
+            Collections: https://egeria-project.org/concepts/collection
+            Async version.
 
+        Parameters
+        ----------
+        display_name: str, optional
+            The display name of the collection. The display name will be used to manufacture a qualified name. An
+            exception will be raised if a unique qualified name can't be manufactured.
+        description: str, optional
+            The description of the collection.
+        category: str, optional
+            An optional user-assigned category for the collection.
+        classification_name: str, optional
+            An initial classification for the collection.
 
+        body: dict | NewElementRequestBody, optional
+            A dict or NewElementRequestBody representing the details of the collection to create. If supplied, this
+            information will be used to create the collection and the other attributes will be ignored. The body is
+            validated before being used.
 
+        Returns
+        -------
+        str - the guid of the created collection
+
+        Raises
+        ------
+        PyegeriaException
+            One of the pyegeria exceptions will be raised if there are issues in communications, message format or
+            Egeria errors.
+        ValidationError
+            Pydantic validation errors are raised if the body does not conform to the NewElementRequestBody.
+        NotAuthorizedException
+          The principle specified by the user_id does not have authorization for the requested action
+
+        Notes:
+        -----
+        simple:
+        {
+          "class": "NewElementRequestBody",
+          "isOwnAnchor": true,
+          "properties": {
+            "class": "SkillSetProperties",
+            "qualifiedName": "Must provide a unique name here",
+            "displayName": "Add display name here",
+            "description": "Add description of the collection here",
+            "category": "Add appropriate valid value for type"
+          }
+        }
+
+        """
+
+        validated_body = self.validate_new_element_request(body, "SkillSetProperties")
+
+        if validated_body is None and display_name is not None:
+            qualified_name = self.__create_qualified_name__("SkillSet", display_name)
+            initial_classifications_data = {"class": "ClassificationProperties"}
+            if classification_name:
+                initial_classification_dict = {
+                    classification_name: InitialClassifications.model_validate(initial_classifications_data)
+                }
+            else:
+                initial_classification_dict = None
+            collection_properties = SkillSetProperties(class_="SkillSetProperties",
+                                                       qualified_name=qualified_name,
+                                                       display_name=display_name,
+                                                       description=description,
+                                                       category=category,
+                                                       type_name="SkillSet")
+            body = {
+                "class": "NewElementRequestBody",
+                "isOwnAnchor": True,
+                "initialClassifications": initial_classification_dict,
+                "properties": collection_properties.model_dump()
+            }
+            validated_body = NewElementRequestBody.model_validate(body)
+
+        if validated_body is None:
+            raise PyegeriaInvalidParameterException(additional_info={"reason": "Invalid input parameters"})
+
+        url = f"{self.collection_command_root}"
+        json_body = validated_body.model_dump_json(indent=2, exclude_none=True, by_alias=True)
+        logger.info(json_body)
+        resp = await self._async_make_request("POST", url, json_body, is_json=True)
+        logger.info(f"Create skill set collection with GUID: {resp.json().get('guid')}")
+        return resp.json().get("guid", NO_GUID_RETURNED)
+
+    @dynamic_catch
+    def create_skill_set_collection(self, display_name: Optional[str] = None,
+                                    description: Optional[str] = None,
+                                    category: Optional[str] = None,
+                                    classification_name: Optional[str] = None,
+                                    body: Optional[dict | NewElementRequestBody] = None) -> str:
+        """ Create a new skill set collection. If the body is not present, the display_name, description, category
+            and classification will be used to create a simple, self-anchored collection.
+            Collections: https://egeria-project.org/concepts/collection
+
+        Parameters
+        ----------
+        display_name: str, optional
+            The display name of the collection. The display name will be used to manufacture a qualified name. An
+            exception will be raised if a unique qualified name can't be manufactured.
+        description: str, optional
+            The description of the collection.
+        category: str, optional
+            An optional user-assigned category for the collection.
+        classification_name: str, optional
+            An initial classification for the collection.
+
+        body: dict | NewElementRequestBody, optional
+            A dict or NewElementRequestBody representing the details of the collection to create. If supplied, this
+            information will be used to create the collection and the other attributes will be ignored. The body is
+            validated before being used.
+
+        Returns
+        -------
+        str - the guid of the created collection
+
+        Raises
+        ------
+        PyegeriaException
+            One of the pyegeria exceptions will be raised if there are issues in communications, message format or
+            Egeria errors.
+        ValidationError
+            Pydantic validation errors are raised if the body does not conform to the NewElementRequestBody.
+        NotAuthorizedException
+          The principle specified by the user_id does not have authorization for the requested action
+
+        Notes:
+        -----
+        simple:
+        {
+          "class": "NewElementRequestBody",
+          "isOwnAnchor": true,
+          "properties": {
+            "class": "SkillSetProperties",
+            "qualifiedName": "Must provide a unique name here",
+            "displayName": "Add display name here",
+            "description": "Add description of the collection here",
+            "category": "Add appropriate valid value for type"
+          }
+        }
+
+        """
+
+        return asyncio.get_event_loop().run_until_complete(
+            self._async_create_skill_set_collection(display_name, description, category,
+                                                    classification_name, body))
+
+    @dynamic_catch
+    async def _async_create_reference_list_collection(self, display_name: Optional[str] = None,
+                                                      description: Optional[str] = None,
+                                                      category: Optional[str] = None,
+                                                      classification_name: Optional[str] = None,
+                                                      body: Optional[dict | NewElementRequestBody] = None) -> str:
+        """ Create a new reference list collection. If the body is not present, the display_name, description,
+            category and classification will be used to create a simple, self-anchored collection.
+            Collections: https://egeria-project.org/concepts/collection
+            Async version.
+
+        Parameters
+        ----------
+        display_name: str, optional
+            The display name of the collection. The display name will be used to manufacture a qualified name. An
+            exception will be raised if a unique qualified name can't be manufactured.
+        description: str, optional
+            The description of the collection.
+        category: str, optional
+            An optional user-assigned category for the collection.
+        classification_name: str, optional
+            An initial classification for the collection.
+        body: dict | NewElementRequestBody, optional
+            A dict or NewElementRequestBody representing the details of the collection to create. If supplied, this
+            information will be used to create the collection and the other attributes will be ignored. The body is
+            validated before being used.
+
+        Returns
+        -------
+        str - the guid of the created collection
+
+        Raises
+        ------
+        PyegeriaException
+            One of the pyegeria exceptions will be raised if there are issues in communications, message format or
+            Egeria errors.
+        ValidationError
+            Pydantic validation errors are raised if the body does not conform to the NewElementRequestBody.
+        NotAuthorizedException
+          The principle specified by the user_id does not have authorization for the requested action
+
+        Notes:
+        -----
+        simple:
+        {
+          "class": "NewElementRequestBody",
+          "isOwnAnchor": true,
+          "properties": {
+            "class": "ReferenceListProperties",
+            "qualifiedName": "Must provide a unique name here",
+            "displayName": "Add display name here",
+            "description": "Add description of the collection here",
+            "category": "Add appropriate valid value for type"
+          }
+        }
+
+        """
+
+        validated_body = self.validate_new_element_request(body, "ReferenceListProperties")
+
+        if validated_body is None and display_name is not None:
+            qualified_name = self.__create_qualified_name__("ReferenceList", display_name)
+            initial_classifications_data = {"class": "ClassificationProperties"}
+            if classification_name:
+                initial_classification_dict = {
+                    classification_name: InitialClassifications.model_validate(initial_classifications_data)
+                }
+            else:
+                initial_classification_dict = None
+            collection_properties = ReferenceListProperties(class_="ReferenceListProperties",
+                                                            qualified_name=qualified_name,
+                                                            display_name=display_name,
+                                                            description=description,
+                                                            category=category)
+            body = {
+                "class": "NewElementRequestBody",
+                "isOwnAnchor": True,
+                "initialClassifications": initial_classification_dict,
+                "properties": collection_properties.model_dump()
+            }
+            validated_body = NewElementRequestBody.model_validate(body)
+
+        if validated_body is None:
+            raise PyegeriaInvalidParameterException(additional_info={"reason": "Invalid input parameters"})
+
+        url = f"{self.collection_command_root}"
+        json_body = validated_body.model_dump_json(indent=2, exclude_none=True, by_alias=True)
+        logger.info(json_body)
+        resp = await self._async_make_request("POST", url, json_body, is_json=True)
+        logger.info(f"Create reference list collection with GUID: {resp.json().get('guid')}")
+        return resp.json().get("guid", NO_GUID_RETURNED)
+
+    @dynamic_catch
+    def create_reference_list_collection(self, display_name: Optional[str] = None,
+                                         description: Optional[str] = None,
+                                         category: Optional[str] = None,
+                                         classification_name: Optional[str] = None,
+                                         body: Optional[dict | NewElementRequestBody] = None) -> str:
+        """ Create a new reference list collection. If the body is not present, the display_name, description,
+            category and classification will be used to create a simple, self-anchored collection.
+            Collections: https://egeria-project.org/concepts/collection
+
+        Parameters
+        ----------
+        display_name: str, optional
+            The display name of the collection. The display name will be used to manufacture a qualified name. An
+            exception will be raised if a unique qualified name can't be manufactured.
+        description: str, optional
+            The description of the collection.
+        category: str, optional
+            An optional user-assigned category for the collection.
+        classification_name: str, optional
+            An initial classification for the collection.
+        body: dict | NewElementRequestBody, optional
+            A dict or NewElementRequestBody representing the details of the collection to create. If supplied, this
+            information will be used to create the collection and the other attributes will be ignored. The body is
+            validated before being used.
+
+        Returns
+        -------
+        str - the guid of the created collection
+
+        Raises
+        ------
+        PyegeriaException
+            One of the pyegeria exceptions will be raised if there are issues in communications, message format or
+            Egeria errors.
+        ValidationError
+            Pydantic validation errors are raised if the body does not conform to the NewElementRequestBody.
+        NotAuthorizedException
+          The principle specified by the user_id does not have authorization for the requested action
+
+        Notes:
+        -----
+        simple:
+        {
+          "class": "NewElementRequestBody",
+          "isOwnAnchor": true,
+          "properties": {
+            "class": "ReferenceListProperties",
+            "qualifiedName": "Must provide a unique name here",
+            "displayName": "Add display name here",
+            "description": "Add description of the collection here",
+            "category": "Add appropriate valid value for type"
+          }
+        }
+
+        """
+
+        return asyncio.get_event_loop().run_until_complete(
+            self._async_create_reference_list_collection(display_name, description, category,
+                                                         classification_name, body))
+
+    # =====================================================================================================================
+    # AssociatedSkillSet relationship
+    # =====================================================================================================================
+
+    @dynamic_catch
+    async def _async_link_associated_skill_set(self, actor_guid: str, skill_set_guid: str,
+                                               body: Optional[dict | NewRelationshipRequestBody] = None) -> None:
+        """ Attach a skill set collection to an actor via the AssociatedSkillSet relationship. Async version.
+
+        Parameters
+        ----------
+        actor_guid: str
+            The unique identifier of the actor profile.
+        skill_set_guid: str
+            The unique identifier of the skill set collection.
+        body: dict | NewRelationshipRequestBody, optional, default = None
+            Relationship properties. AssociatedSkillSetProperties supports 'label' and 'description' strings.
+
+        Returns
+        -------
+        Nothing
+
+        Raises
+        ------
+        PyegeriaException
+            One of the pyegeria exceptions will be raised if there are issues in communications, message format, or
+            Egeria errors.
+        ValidationError
+            Pydantic validation errors are raised if the body does not conform to the NewRelationshipRequestBody.
+        PyegeriaNotAuthorizedException
+            The principle specified by the user_id does not have authorization for the requested action
+
+        Notes
+        -----
+        JSON Structure looks like:
+        {
+          "class" : "NewRelationshipRequestBody",
+          "properties": {
+            "class": "AssociatedSkillSetProperties",
+            "label": "primary skill set",
+            "description": "Description of the association"
+          }
+        }
+        """
+        base = f"{self.platform_url}/servers/{self.view_server}/api/open-metadata/collection-manager"
+        url = f"{base}/actors/{actor_guid}/associated-skill-sets/{skill_set_guid}/attach"
+        await self._async_new_relationship_request(url, ["AssociatedSkillSetProperties"], body)
+        logger.debug(f"Linked skill set {skill_set_guid} to actor {actor_guid}")
+
+    @dynamic_catch
+    def link_associated_skill_set(self, actor_guid: str, skill_set_guid: str,
+                                   body: Optional[dict | NewRelationshipRequestBody] = None) -> None:
+        """ Attach a skill set collection to an actor via the AssociatedSkillSet relationship.
+
+        Parameters
+        ----------
+        actor_guid: str
+            The unique identifier of the actor profile.
+        skill_set_guid: str
+            The unique identifier of the skill set collection.
+        body: dict | NewRelationshipRequestBody, optional, default = None
+            Relationship properties. AssociatedSkillSetProperties supports 'label' and 'description' strings.
+
+        Returns
+        -------
+        Nothing
+
+        Raises
+        ------
+        PyegeriaException
+            One of the pyegeria exceptions will be raised if there are issues in communications, message format, or
+            Egeria errors.
+        ValidationError
+            Pydantic validation errors are raised if the body does not conform to the NewRelationshipRequestBody.
+        PyegeriaNotAuthorizedException
+            The principle specified by the user_id does not have authorization for the requested action
+
+        Notes
+        -----
+        JSON Structure looks like:
+        {
+          "class" : "NewRelationshipRequestBody",
+          "properties": {
+            "class": "AssociatedSkillSetProperties",
+            "label": "primary skill set",
+            "description": "Description of the association"
+          }
+        }
+        """
+        asyncio.get_event_loop().run_until_complete(
+            self._async_link_associated_skill_set(actor_guid, skill_set_guid, body))
+
+    @dynamic_catch
+    async def _async_detach_associated_skill_set(self, actor_guid: str, skill_set_guid: str,
+                                                  body: Optional[dict | DeleteRelationshipRequestBody] = None) -> None:
+        """ Detach a skill set collection from an actor. Async version.
+
+        Parameters
+        ----------
+        actor_guid: str
+            The unique identifier of the actor profile.
+        skill_set_guid: str
+            The unique identifier of the skill set collection.
+        body: dict | DeleteRelationshipRequestBody, optional, default = None
+            Delete options.
+
+        Returns
+        -------
+        Nothing
+
+        Raises
+        ------
+        PyegeriaException
+            One of the pyegeria exceptions will be raised if there are issues in communications, message format, or
+            Egeria errors.
+        ValidationError
+            Pydantic validation errors are raised if the body does not conform to the DeleteRelationshipRequestBody.
+        PyegeriaNotAuthorizedException
+            The principle specified by the user_id does not have authorization for the requested action
+
+        Notes
+        -----
+        JSON Structure looks like:
+        {
+          "class" : "DeleteRelationshipRequestBody",
+          "forLineage" : false,
+          "forDuplicateProcessing" : false
+        }
+        """
+        base = f"{self.platform_url}/servers/{self.view_server}/api/open-metadata/collection-manager"
+        url = f"{base}/actors/{actor_guid}/associated-skill-sets/{skill_set_guid}/detach"
+        await self._async_delete_relationship_request(url, body)
+        logger.debug(f"Detached skill set {skill_set_guid} from actor {actor_guid}")
+
+    @dynamic_catch
+    def detach_associated_skill_set(self, actor_guid: str, skill_set_guid: str,
+                                     body: Optional[dict | DeleteRelationshipRequestBody] = None) -> None:
+        """ Detach a skill set collection from an actor.
+
+        Parameters
+        ----------
+        actor_guid: str
+            The unique identifier of the actor profile.
+        skill_set_guid: str
+            The unique identifier of the skill set collection.
+        body: dict | DeleteRelationshipRequestBody, optional, default = None
+            Delete options.
+
+        Returns
+        -------
+        Nothing
+
+        Raises
+        ------
+        PyegeriaException
+            One of the pyegeria exceptions will be raised if there are issues in communications, message format, or
+            Egeria errors.
+        ValidationError
+            Pydantic validation errors are raised if the body does not conform to the DeleteRelationshipRequestBody.
+        PyegeriaNotAuthorizedException
+            The principle specified by the user_id does not have authorization for the requested action
+
+        Notes
+        -----
+        JSON Structure looks like:
+        {
+          "class" : "DeleteRelationshipRequestBody",
+          "forLineage" : false,
+          "forDuplicateProcessing" : false
+        }
+        """
+        asyncio.get_event_loop().run_until_complete(
+            self._async_detach_associated_skill_set(actor_guid, skill_set_guid, body))
 
 
 #######

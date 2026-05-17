@@ -17,6 +17,7 @@ from datetime import datetime
 from rich import print, print_json
 from rich.console import Console
 from pyegeria.omvs.collection_manager import CollectionManager
+from pyegeria.omvs.actor_manager import ActorManager
 from pyegeria.egeria_tech_client import EgeriaTech
 from pyegeria.core.logging_configuration import config_logging, init_logging
 from pyegeria.core._exceptions import (
@@ -33,7 +34,8 @@ from pyegeria.core._exceptions import (
 )
 from pydantic import ValidationError
 from pyegeria.models import (SearchStringRequestBody, SequencingOrder, FilterRequestBody,
-                             NewElementRequestBody)
+                             NewElementRequestBody, NewRelationshipRequestBody,
+                             DeleteRelationshipRequestBody, DeleteElementRequestBody)
 
 
 disable_ssl_warnings = True
@@ -109,12 +111,12 @@ class TestCollectionManager:
             c_client = EgeriaTech(self.good_server_2, self.good_platform1_url, user_id=self.good_user_2, )
             token = c_client.create_egeria_bearer_token(self.good_user_2, "secret")
             start_time = time.perf_counter()
-            search_string = "Open Metadata Digital Products"
+            search_string = "*"
             classification_name = None
-            element_type = ["DigitalProductCatalog"]
-            element_type = None
-            output_format = "MERMAID"
-            report_spec = "Collection-MindMap"
+            element_type = ["DigitalProduct"]
+            # element_type = None
+            output_format = "JSON"
+            report_spec = "Collections"
 
             response = c_client.find_collections(search_string = search_string
                                                  ,metadata_element_subtypes=element_type, max_mermaid_node_count=15
@@ -2149,6 +2151,77 @@ class TestCollectionManager:
 
 
     #
+    def test_associated_skill_set_link_detach(self):
+        """Test linking and detaching the AssociatedSkillSet relationship between an actor and a skill set."""
+        c_client = None
+        actor_client = None
+        skill_set_guid = None
+        actor_guid = None
+        try:
+            c_client = CollectionManager(self.good_view_server_1, self.good_platform1_url, user_id=self.good_user_2)
+            c_client.create_egeria_bearer_token(self.good_user_2, "secret")
+
+            actor_client = ActorManager(self.good_view_server_1, self.good_platform1_url, user_id=self.good_user_2)
+            actor_client.create_egeria_bearer_token(self.good_user_2, "secret")
+
+            ts = datetime.now().strftime("%H%M%S%f")
+
+            # Create actor profile
+            actor_guid = actor_client.create_actor_profile({
+                "class": "NewElementRequestBody",
+                "properties": {
+                    "class": "ActorProfileProperties",
+                    "qualifiedName": f"SkillSetTestActor::{ts}"
+                }
+            })
+            print(f"\n\tCreated actor profile: {actor_guid}")
+
+            # Create skill set collection
+            skill_set_guid = c_client.create_skill_set_collection(
+                display_name=f"Test Skill Set {ts}",
+                description="A skill set for testing the AssociatedSkillSet relationship"
+            )
+            print(f"\tCreated skill set collection: {skill_set_guid}")
+
+            # Link
+            link_body = NewRelationshipRequestBody(
+                class_="NewRelationshipRequestBody",
+                properties={
+                    "class": "AssociatedSkillSetProperties",
+                    "label": "primary",
+                    "description": "Primary skill set for this actor"
+                }
+            )
+            c_client.link_associated_skill_set(actor_guid, skill_set_guid, link_body)
+            print(f"\tLinked skill set {skill_set_guid} to actor {actor_guid}")
+
+            # Detach
+            detach_body = DeleteRelationshipRequestBody(class_="DeleteRelationshipRequestBody")
+            c_client.detach_associated_skill_set(actor_guid, skill_set_guid, detach_body)
+            print(f"\tDetached skill set from actor")
+
+            assert True
+
+        except (PyegeriaInvalidParameterException, PyegeriaConnectionException, PyegeriaAPIException,
+                PyegeriaUnknownException) as e:
+            print_exception_table(e)
+            assert False, "Invalid request"
+        finally:
+            if actor_client:
+                if actor_guid:
+                    try:
+                        actor_client.delete_actor_profile(actor_guid, DeleteElementRequestBody(class_="DeleteElementRequestBody"))
+                    except Exception:
+                        pass
+                actor_client.close_session()
+            if c_client:
+                if skill_set_guid:
+                    try:
+                        c_client.delete_collection(skill_set_guid, {"class": "DeleteElementRequestBody"})
+                    except Exception:
+                        pass
+                c_client.close_session()
+
     # def test_create_data_sharing_agreement(self):
     #     try:
     #         c_client = CollectionManager(self.good_view_server_1, self.good_platform1_url, user_id=self.good_user_2, )

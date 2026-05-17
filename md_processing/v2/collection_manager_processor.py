@@ -141,6 +141,10 @@ class CollectionManagerProcessor(AsyncBaseCommandProcessor):
                  method_name = "_async_create_agreement"
             elif object_type == "Digital Subscription":
                  method_name = "_async_create_digital_subscription"
+            elif object_type == "Skill Set":
+                method_name = "_async_create_skill_set_collection"
+            elif object_type == "Reference List":
+                method_name = "_async_create_reference_list_collection"
             
             if hasattr(self.client, method_name):
                 method = getattr(self.client, method_name)

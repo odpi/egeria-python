@@ -19,10 +19,10 @@ from pyegeria.core._globals import NO_GUID_RETURNED
 from pyegeria.core._validators import validate_guid
 from pyegeria.omvs.collection_manager import CollectionManager
 from pyegeria.models import (NewElementRequestBody, DeleteElementRequestBody, DeleteRelationshipRequestBody,
-                             ReferenceableProperties, UpdateElementRequestBody, TemplateRequestBody,
-                             NewRelationshipRequestBody, UpdateRelationshipRequestBody, NewClassificationRequestBody,
-                             FilterRequestBody, GetRequestBody, SearchStringRequestBody,
-                             DeleteClassificationRequestBody)
+                             ReferenceableProperties, UpdateElementRequestBody, UpdateWithTemplateRequestBody,
+                             TemplateRequestBody, NewRelationshipRequestBody, UpdateRelationshipRequestBody,
+                             NewClassificationRequestBody, FilterRequestBody, GetRequestBody,
+                             SearchStringRequestBody, DeleteClassificationRequestBody)
 from pyegeria.view.output_formatter import (_extract_referenceable_properties, populate_common_columns,
                                             overlay_additional_values, resolve_output_formats)
 from pyegeria.core.utils import body_slimmer, dynamic_catch
@@ -306,10 +306,321 @@ class GlossaryManager(CollectionManager):
             )
 
     #
-    #   add glossary classifications? is-canonical, is editing, is staging, is taxonomy?
-    #   Not all show up in UML
+    #  Glossary Classifications
+    #
 
+    @dynamic_catch
+    async def _async_set_glossary_as_taxonomy(self, glossary_guid: str,
+                                              organizing_principle: Optional[str] = None,
+                                              body: Optional[dict | NewClassificationRequestBody] = None) -> None:
+        """Classify a glossary to indicate it can be used as a taxonomy. Async version.
 
+        Parameters
+        ----------
+        glossary_guid : str
+            Unique identifier of the glossary to classify.
+        organizing_principle : str, optional
+            Describes the organizing principle used to build the taxonomy.
+        body : dict | NewClassificationRequestBody, optional
+            Full request body. If supplied, overrides other parameters.
+
+        Returns
+        -------
+        None
+
+        Raises
+        ------
+        PyegeriaInvalidParameterException
+        PyegeriaAPIException
+        NotAuthorizedException
+
+        Notes
+        -----
+        Example body:
+        {
+            "class": "NewClassificationRequestBody",
+            "properties": {
+                "class": "TaxonomyProperties",
+                "organizingPrinciple": "Add value here"
+            }
+        }
+        """
+        url = (f"{self.platform_url}/servers/{self.view_server}/api/open-metadata/glossary-manager/glossaries/"
+               f"{glossary_guid}/is-taxonomy")
+        if body is None:
+            body = {
+                "class": "NewClassificationRequestBody",
+                "properties": {
+                    "class": "TaxonomyProperties",
+                    "organizingPrinciple": organizing_principle
+                }
+            }
+        await self._async_new_classification_request(url, "TaxonomyProperties", body)
+        logger.info(f"Set glossary {glossary_guid} as taxonomy")
+
+    @dynamic_catch
+    def set_glossary_as_taxonomy(self, glossary_guid: str, organizing_principle: Optional[str] = None,
+                                 body: Optional[dict | NewClassificationRequestBody] = None) -> None:
+        """Classify a glossary to indicate it can be used as a taxonomy.
+
+        Parameters
+        ----------
+        glossary_guid : str
+            Unique identifier of the glossary to classify.
+        organizing_principle : str, optional
+            Describes the organizing principle used to build the taxonomy.
+        body : dict | NewClassificationRequestBody, optional
+            Full request body. If supplied, overrides other parameters.
+
+        Returns
+        -------
+        None
+
+        Raises
+        ------
+        PyegeriaInvalidParameterException
+        PyegeriaAPIException
+        NotAuthorizedException
+
+        Notes
+        -----
+        Example body:
+        {
+            "class": "NewClassificationRequestBody",
+            "properties": {
+                "class": "TaxonomyProperties",
+                "organizingPrinciple": "Add value here"
+            }
+        }
+        """
+        loop = asyncio.get_event_loop()
+        loop.run_until_complete(self._async_set_glossary_as_taxonomy(glossary_guid, organizing_principle, body))
+
+    @dynamic_catch
+    async def _async_clear_glossary_as_taxonomy(self, glossary_guid: str,
+                                                body: Optional[dict | DeleteClassificationRequestBody] = None) -> None:
+        """Remove the taxonomy classification from a glossary. Async version.
+
+        Parameters
+        ----------
+        glossary_guid : str
+            Unique identifier of the glossary.
+        body : dict | DeleteClassificationRequestBody, optional
+            Request body with correlation properties.
+
+        Returns
+        -------
+        None
+
+        Raises
+        ------
+        PyegeriaInvalidParameterException
+        PyegeriaAPIException
+        NotAuthorizedException
+
+        Notes
+        -----
+        Example body:
+        {
+            "class": "DeleteClassificationRequestBody",
+            "forLineage": false,
+            "forDuplicateProcessing": false
+        }
+        """
+        url = (f"{self.platform_url}/servers/{self.view_server}/api/open-metadata/glossary-manager/glossaries/"
+               f"{glossary_guid}/is-taxonomy/remove")
+        await self._async_delete_classification_request(url, body)
+        logger.info(f"Cleared taxonomy classification from glossary {glossary_guid}")
+
+    @dynamic_catch
+    def clear_glossary_as_taxonomy(self, glossary_guid: str,
+                                   body: Optional[dict | DeleteClassificationRequestBody] = None) -> None:
+        """Remove the taxonomy classification from a glossary.
+
+        Parameters
+        ----------
+        glossary_guid : str
+            Unique identifier of the glossary.
+        body : dict | DeleteClassificationRequestBody, optional
+            Request body with correlation properties.
+
+        Returns
+        -------
+        None
+
+        Raises
+        ------
+        PyegeriaInvalidParameterException
+        PyegeriaAPIException
+        NotAuthorizedException
+
+        Notes
+        -----
+        Example body:
+        {
+            "class": "DeleteClassificationRequestBody",
+            "forLineage": false,
+            "forDuplicateProcessing": false
+        }
+        """
+        loop = asyncio.get_event_loop()
+        loop.run_until_complete(self._async_clear_glossary_as_taxonomy(glossary_guid, body))
+
+    @dynamic_catch
+    async def _async_set_glossary_as_canonical(self, glossary_guid: str, scope: Optional[str] = None,
+                                               body: Optional[dict | NewClassificationRequestBody] = None) -> None:
+        """Classify a glossary to declare that it has no two terms with the same name. Async version.
+
+        Parameters
+        ----------
+        glossary_guid : str
+            Unique identifier of the glossary to classify.
+        scope : str, optional
+            Description of the situations where this glossary is relevant.
+        body : dict | NewClassificationRequestBody, optional
+            Full request body. If supplied, overrides other parameters.
+
+        Returns
+        -------
+        None
+
+        Raises
+        ------
+        PyegeriaInvalidParameterException
+        PyegeriaAPIException
+        NotAuthorizedException
+
+        Notes
+        -----
+        Example body:
+        {
+            "class": "NewClassificationRequestBody",
+            "properties": {
+                "class": "CanonicalProperties",
+                "scope": "Add value here"
+            }
+        }
+        """
+        url = (f"{self.platform_url}/servers/{self.view_server}/api/open-metadata/glossary-manager/glossaries/"
+               f"{glossary_guid}/is-canonical-vocabulary")
+        if body is None:
+            body = {
+                "class": "NewClassificationRequestBody",
+                "properties": {
+                    "class": "CanonicalProperties",
+                    "scope": scope
+                }
+            }
+        await self._async_new_classification_request(url, "CanonicalProperties", body)
+        logger.info(f"Set glossary {glossary_guid} as canonical vocabulary")
+
+    @dynamic_catch
+    def set_glossary_as_canonical(self, glossary_guid: str, scope: Optional[str] = None,
+                                  body: Optional[dict | NewClassificationRequestBody] = None) -> None:
+        """Classify a glossary to declare that it has no two terms with the same name.
+
+        Parameters
+        ----------
+        glossary_guid : str
+            Unique identifier of the glossary to classify.
+        scope : str, optional
+            Description of the situations where this glossary is relevant.
+        body : dict | NewClassificationRequestBody, optional
+            Full request body. If supplied, overrides other parameters.
+
+        Returns
+        -------
+        None
+
+        Raises
+        ------
+        PyegeriaInvalidParameterException
+        PyegeriaAPIException
+        NotAuthorizedException
+
+        Notes
+        -----
+        Example body:
+        {
+            "class": "NewClassificationRequestBody",
+            "properties": {
+                "class": "CanonicalProperties",
+                "scope": "Add value here"
+            }
+        }
+        """
+        loop = asyncio.get_event_loop()
+        loop.run_until_complete(self._async_set_glossary_as_canonical(glossary_guid, scope, body))
+
+    @dynamic_catch
+    async def _async_clear_glossary_as_canonical(self, glossary_guid: str,
+                                                 body: Optional[dict | DeleteClassificationRequestBody] = None) -> None:
+        """Remove the canonical vocabulary classification from a glossary. Async version.
+
+        Parameters
+        ----------
+        glossary_guid : str
+            Unique identifier of the glossary.
+        body : dict | DeleteClassificationRequestBody, optional
+            Request body with correlation properties.
+
+        Returns
+        -------
+        None
+
+        Raises
+        ------
+        PyegeriaInvalidParameterException
+        PyegeriaAPIException
+        NotAuthorizedException
+
+        Notes
+        -----
+        Example body:
+        {
+            "class": "DeleteClassificationRequestBody",
+            "forLineage": false,
+            "forDuplicateProcessing": false
+        }
+        """
+        url = (f"{self.platform_url}/servers/{self.view_server}/api/open-metadata/glossary-manager/glossaries/"
+               f"{glossary_guid}/is-canonical-vocabulary/remove")
+        await self._async_delete_classification_request(url, body)
+        logger.info(f"Cleared canonical vocabulary classification from glossary {glossary_guid}")
+
+    @dynamic_catch
+    def clear_glossary_as_canonical(self, glossary_guid: str,
+                                    body: Optional[dict | DeleteClassificationRequestBody] = None) -> None:
+        """Remove the canonical vocabulary classification from a glossary.
+
+        Parameters
+        ----------
+        glossary_guid : str
+            Unique identifier of the glossary.
+        body : dict | DeleteClassificationRequestBody, optional
+            Request body with correlation properties.
+
+        Returns
+        -------
+        None
+
+        Raises
+        ------
+        PyegeriaInvalidParameterException
+        PyegeriaAPIException
+        NotAuthorizedException
+
+        Notes
+        -----
+        Example body:
+        {
+            "class": "DeleteClassificationRequestBody",
+            "forLineage": false,
+            "forDuplicateProcessing": false
+        }
+        """
+        loop = asyncio.get_event_loop()
+        loop.run_until_complete(self._async_clear_glossary_as_canonical(glossary_guid, body))
 
     #
     #  Terms
@@ -1046,6 +1357,118 @@ class GlossaryManager(CollectionManager):
                 body,
                 )
             )
+
+    @dynamic_catch
+    async def _async_update_glossary_term_from_template(self, glossary_term_guid: str, template_guid: str,
+                                                        body: Optional[dict | UpdateWithTemplateRequestBody] = None,
+                                                        merge_update: bool = True,
+                                                        merge_classifications: bool = True) -> None:
+        """Update a glossary term using properties and classifications from a template. Async version.
+
+        Parameters
+        ----------
+        glossary_term_guid : str
+            Unique identifier of the glossary term to update.
+        template_guid : str
+            Unique identifier of the template to use.
+        body : dict | UpdateWithTemplateRequestBody, optional
+            Full request body. If supplied, overrides other parameters.
+        merge_update : bool, optional, default True
+            Whether to merge the update with existing properties or replace them.
+        merge_classifications : bool, optional, default True
+            Whether to merge classifications from the template or replace them.
+
+        Returns
+        -------
+        None
+
+        Raises
+        ------
+        PyegeriaInvalidParameterException
+        PyegeriaAPIException
+        NotAuthorizedException
+
+        Notes
+        -----
+        Example body:
+        {
+            "class": "UpdateWithTemplateRequestBody",
+            "mergeUpdate": true,
+            "mergeClassifications": true,
+            "properties": {
+                "class": "GlossaryTermProperties",
+                "qualifiedName": "Must provide a unique name here",
+                "displayName": "Add display name here",
+                "description": "Add description here"
+            }
+        }
+        """
+        validate_guid(glossary_term_guid)
+        url = (f"{self.platform_url}/servers/{self.view_server}/api/open-metadata/glossary-manager/glossaries/terms/"
+               f"{glossary_term_guid}/update/from-template/{template_guid}")
+        if body is None:
+            body = {
+                "class": "UpdateWithTemplateRequestBody",
+                "mergeUpdate": merge_update,
+                "mergeClassifications": merge_classifications
+            }
+        if isinstance(body, dict):
+            validated_body = UpdateWithTemplateRequestBody.model_validate(body)
+        else:
+            validated_body = body
+        json_body = validated_body.model_dump_json(indent=2, exclude_none=True, by_alias=True)
+        logger.info(json_body)
+        await self._async_make_request("POST", url, json_body, is_json=True)
+        logger.info(f"Updated glossary term {glossary_term_guid} from template {template_guid}")
+
+    @dynamic_catch
+    def update_glossary_term_from_template(self, glossary_term_guid: str, template_guid: str,
+                                           body: Optional[dict | UpdateWithTemplateRequestBody] = None,
+                                           merge_update: bool = True,
+                                           merge_classifications: bool = True) -> None:
+        """Update a glossary term using properties and classifications from a template.
+
+        Parameters
+        ----------
+        glossary_term_guid : str
+            Unique identifier of the glossary term to update.
+        template_guid : str
+            Unique identifier of the template to use.
+        body : dict | UpdateWithTemplateRequestBody, optional
+            Full request body. If supplied, overrides other parameters.
+        merge_update : bool, optional, default True
+            Whether to merge the update with existing properties or replace them.
+        merge_classifications : bool, optional, default True
+            Whether to merge classifications from the template or replace them.
+
+        Returns
+        -------
+        None
+
+        Raises
+        ------
+        PyegeriaInvalidParameterException
+        PyegeriaAPIException
+        NotAuthorizedException
+
+        Notes
+        -----
+        Example body:
+        {
+            "class": "UpdateWithTemplateRequestBody",
+            "mergeUpdate": true,
+            "mergeClassifications": true,
+            "properties": {
+                "class": "GlossaryTermProperties",
+                "qualifiedName": "Must provide a unique name here",
+                "displayName": "Add display name here",
+                "description": "Add description here"
+            }
+        }
+        """
+        loop = asyncio.get_event_loop()
+        loop.run_until_complete(self._async_update_glossary_term_from_template(
+            glossary_term_guid, template_guid, body, merge_update, merge_classifications))
 
     @dynamic_catch
     async def _async_update_glossary_term_status(
@@ -2248,6 +2671,155 @@ class GlossaryManager(CollectionManager):
         loop.run_until_complete(
             self._async_remove_activity_description(term_guid, body)
             )
+
+    @dynamic_catch
+    async def _async_set_term_as_question(self, term_guid: str,
+                                          body: Optional[dict | NewClassificationRequestBody] = None) -> None:
+        """Classify a glossary term to indicate that it describes a question. Async version.
+
+        Parameters
+        ----------
+        term_guid : str
+            Unique identifier of the glossary term.
+        body : dict | NewClassificationRequestBody, optional
+            Full request body. If supplied, overrides the default body.
+
+        Returns
+        -------
+        None
+
+        Raises
+        ------
+        PyegeriaInvalidParameterException
+        PyegeriaAPIException
+        NotAuthorizedException
+
+        Notes
+        -----
+        Example body:
+        {
+            "class": "NewClassificationRequestBody",
+            "properties": {
+                "class": "QuestionProperties"
+            }
+        }
+        """
+        url = (f"{self.platform_url}/servers/{self.view_server}/api/open-metadata/glossary-manager/glossaries/"
+               f"terms/{term_guid}/is-question")
+        if body is None:
+            body = {
+                "class": "NewClassificationRequestBody",
+                "properties": {
+                    "class": "QuestionProperties"
+                }
+            }
+        await self._async_new_classification_request(url, "QuestionProperties", body)
+        logger.info(f"Set term {term_guid} as question")
+
+    @dynamic_catch
+    def set_term_as_question(self, term_guid: str,
+                             body: Optional[dict | NewClassificationRequestBody] = None) -> None:
+        """Classify a glossary term to indicate that it describes a question.
+
+        Parameters
+        ----------
+        term_guid : str
+            Unique identifier of the glossary term.
+        body : dict | NewClassificationRequestBody, optional
+            Full request body. If supplied, overrides the default body.
+
+        Returns
+        -------
+        None
+
+        Raises
+        ------
+        PyegeriaInvalidParameterException
+        PyegeriaAPIException
+        NotAuthorizedException
+
+        Notes
+        -----
+        Example body:
+        {
+            "class": "NewClassificationRequestBody",
+            "properties": {
+                "class": "QuestionProperties"
+            }
+        }
+        """
+        loop = asyncio.get_event_loop()
+        loop.run_until_complete(self._async_set_term_as_question(term_guid, body))
+
+    @dynamic_catch
+    async def _async_clear_term_as_question(self, term_guid: str,
+                                            body: Optional[dict | DeleteClassificationRequestBody] = None) -> None:
+        """Remove the question classification from a glossary term. Async version.
+
+        Parameters
+        ----------
+        term_guid : str
+            Unique identifier of the glossary term.
+        body : dict | DeleteClassificationRequestBody, optional
+            Request body with correlation properties.
+
+        Returns
+        -------
+        None
+
+        Raises
+        ------
+        PyegeriaInvalidParameterException
+        PyegeriaAPIException
+        NotAuthorizedException
+
+        Notes
+        -----
+        Example body:
+        {
+            "class": "DeleteClassificationRequestBody",
+            "forLineage": false,
+            "forDuplicateProcessing": false
+        }
+        """
+        url = (f"{self.platform_url}/servers/{self.view_server}/api/open-metadata/glossary-manager/glossaries/"
+               f"terms/{term_guid}/is-question/remove")
+        await self._async_delete_classification_request(url, body)
+        logger.info(f"Cleared question classification from term {term_guid}")
+
+    @dynamic_catch
+    def clear_term_as_question(self, term_guid: str,
+                               body: Optional[dict | DeleteClassificationRequestBody] = None) -> None:
+        """Remove the question classification from a glossary term.
+
+        Parameters
+        ----------
+        term_guid : str
+            Unique identifier of the glossary term.
+        body : dict | DeleteClassificationRequestBody, optional
+            Request body with correlation properties.
+
+        Returns
+        -------
+        None
+
+        Raises
+        ------
+        PyegeriaInvalidParameterException
+        PyegeriaAPIException
+        NotAuthorizedException
+
+        Notes
+        -----
+        Example body:
+        {
+            "class": "DeleteClassificationRequestBody",
+            "forLineage": false,
+            "forDuplicateProcessing": false
+        }
+        """
+        loop = asyncio.get_event_loop()
+        loop.run_until_complete(self._async_clear_term_as_question(term_guid, body))
 
     #
     #   Term - Term Relationships

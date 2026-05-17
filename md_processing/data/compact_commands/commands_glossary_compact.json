@@ -1,6 +1,6 @@
 {
   "family": "Glossary",
-  "exported": "Apr 23, 2026 at 7:13:33 PM",
+  "exported": "May 16, 2026 at 9:31:59 PM",
   "attribute_definitions": {
     "Activity Status": {
       "variable_name": "activity_status",
@@ -1449,6 +1449,25 @@
       "level": "Common",
       "Journal Entry": ""
     },
+    "Resource Use Description": {
+      "variable_name": "resource_use_description",
+      "inUpdate": true,
+      "attr_labels": "",
+      "examples": "",
+      "default_value": "",
+      "valid_values": [],
+      "existing_element": "",
+      "description": "Describes how the resource is being used. From the ResourceList relationship (0019).",
+      "generated": false,
+      "style": "Simple",
+      "user_specified": true,
+      "unique": false,
+      "input_required": false,
+      "min_cardinality": 1,
+      "max_cardinality": 1,
+      "level": "Common",
+      "Journal Entry": ""
+    },
     "Restrictions": {
       "variable_name": "restrictions",
       "inUpdate": true,
@@ -2031,7 +2050,7 @@
       "user_specified": true,
       "unique": false,
       "input_required": false,
-      "min_cardinality": 0,
+      "min_cardinality": 1,
       "max_cardinality": 1,
       "level": "Advanced",
       "Journal Entry": ""
@@ -2050,7 +2069,7 @@
       "user_specified": true,
       "unique": false,
       "input_required": false,
-      "min_cardinality": 0,
+      "min_cardinality": 1,
       "max_cardinality": 1,
       "level": "Advanced",
       "Journal Entry": ""
@@ -2069,7 +2088,7 @@
       "user_specified": true,
       "unique": false,
       "input_required": false,
-      "min_cardinality": 0,
+      "min_cardinality": 1,
       "max_cardinality": 1,
       "level": "Advanced",
       "Journal Entry": "\n"
@@ -2088,7 +2107,7 @@
       "user_specified": true,
       "unique": false,
       "input_required": false,
-      "min_cardinality": 0,
+      "min_cardinality": 1,
       "max_cardinality": 1,
       "level": "Advanced",
       "Journal Entry": ""
@@ -2107,10 +2126,29 @@
       "user_specified": true,
       "unique": false,
       "input_required": false,
-      "min_cardinality": 0,
+      "min_cardinality": 1,
       "max_cardinality": 1,
       "level": "Advanced",
       "Journal Entry": ""
+    },
+    "Is Question": {
+      "variable_name": "is_canonical",
+      "inUpdate": true,
+      "attr_labels": "Canonical",
+      "examples": "",
+      "default_value": "False",
+      "valid_values": [],
+      "existing_element": "",
+      "description": "Classify a glossary term to declare that it represents a question.",
+      "generated": false,
+      "style": "Bool",
+      "user_specified": true,
+      "unique": false,
+      "input_required": false,
+      "min_cardinality": 1,
+      "max_cardinality": 1,
+      "level": "Basic",
+      "Journal Entry": "\n"
     },
     "Is Taxonomy": {
       "variable_name": "is_taxonomy",
@@ -2267,6 +2305,25 @@
       "level": "Advanced",
       "Journal Entry": ""
     },
+    "Term Name": {
+      "variable_name": "term_1",
+      "inUpdate": true,
+      "attr_labels": "Term; Term Name",
+      "examples": "",
+      "default_value": "",
+      "valid_values": [],
+      "existing_element": "GlossaryTerm",
+      "description": "The name of a term.",
+      "generated": false,
+      "style": "Reference Name",
+      "user_specified": true,
+      "unique": false,
+      "input_required": true,
+      "min_cardinality": 1,
+      "max_cardinality": 1,
+      "level": "Domain",
+      "Journal Entry": ""
+    },
     "Term Relationship Status": {
       "variable_name": "term_relationship_status",
       "inUpdate": true,
@@ -2401,8 +2458,6 @@
       "inherits": "Link Command Base",
       "own_attributes": [
         "Additional Properties",
-        "Element Id",
-        "Resource Id",
         "Resource Use"
       ]
     },
@@ -2486,7 +2541,7 @@
   "commands": {
     "Create Glossary": {
       "display_name": "Create Glossary",
-      "qn_prefix": "",
+      "qn_prefix": "Glossary",
       "alternate_names": [],
       "family": "Glossary",
       "description": "Creates or updates a glossary — a collection of related terms for a specific domain or purpose.",
@@ -2505,7 +2560,7 @@
     },
     "Create Glossary Term": {
       "display_name": "Create Glossary Term",
-      "qn_prefix": "",
+      "qn_prefix": "Term",
       "alternate_names": [
         "Term"
       ],
@@ -2524,13 +2579,13 @@
       "custom_attributes": [],
       "Journal Entry": ""
     },
-    "Set Glossary as Taxonomy": {
+    "Classify Glossary as Taxonomy": {
       "display_name": "Create Glossary",
       "qn_prefix": "",
       "alternate_names": [],
       "family": "Glossary",
       "description": "Classify a glossary as a Taxonomy",
-      "verb": "Update",
+      "verb": "Classify",
       "upsert": true,
       "attach": false,
       "level": "Basic",
@@ -2542,6 +2597,48 @@
       "bundle": "Request Base",
       "custom_attributes": [
         "Glossary Name"
+      ],
+      "Journal Entry": ""
+    },
+    "Classify Glossary as Canonical": {
+      "display_name": "Set Glossary as Canonical",
+      "qn_prefix": "",
+      "alternate_names": [],
+      "family": "Glossary",
+      "description": "Classify a glossary as a Canonical",
+      "verb": "Classify",
+      "upsert": true,
+      "attach": false,
+      "level": "Basic",
+      "find_method": "GlossaryManager.find_glossaries",
+      "find_constraints": "",
+      "extra_find": "",
+      "extra_constraints": "",
+      "OM_TYPE": "Glossary",
+      "bundle": "Request Base",
+      "custom_attributes": [
+        "Glossary Name"
+      ],
+      "Journal Entry": ""
+    },
+    "Classify Term as Question": {
+      "display_name": "Set Term as Question",
+      "qn_prefix": "",
+      "alternate_names": [],
+      "family": "Glossary",
+      "description": "Classify a glossary term as a Question",
+      "verb": "Classify",
+      "upsert": true,
+      "attach": false,
+      "level": "Basic",
+      "find_method": "",
+      "find_constraints": "",
+      "extra_find": "",
+      "extra_constraints": "",
+      "OM_TYPE": "GlossaryTerm",
+      "bundle": "Request Base",
+      "custom_attributes": [
+        "Term Name"
       ],
       "Journal Entry": ""
     },

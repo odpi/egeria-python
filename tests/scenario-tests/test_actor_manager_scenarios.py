@@ -29,6 +29,7 @@ from rich.panel import Panel
 from rich.progress import Progress, SpinnerColumn, TextColumn
 
 from pyegeria.omvs.actor_manager import ActorManager
+from pyegeria.omvs.collection_manager import CollectionManager
 from pyegeria.core._exceptions import (
     PyegeriaAPIException,
     PyegeriaTimeoutException,
@@ -825,6 +826,280 @@ class ActorManagerScenarioTester:
                 created_guids=created_guids
             )
 
+    def scenario_6_perspective_lifecycle(self) -> TestResult:
+        """Scenario 6: Perspective lifecycle - create, update, search, retrieve, delete"""
+        scenario_name = "Perspective Lifecycle"
+        console.print(f"\n[bold yellow]▶ Starting Scenario: {scenario_name}[/bold yellow]")
+        start_time = time.perf_counter()
+        created_guids = []
+
+        try:
+            ts = datetime.now().strftime("%H%M%S%f")
+
+            # 1. Create a Perspective
+            qname = f"Perspective::ScenarioTest::{ts}"
+            create_body = {
+                "class": "NewElementRequestBody",
+                "isOwnAnchor": True,
+                "properties": {
+                    "class": "PerspectiveProperties",
+                    "qualifiedName": qname,
+                    "displayName": "Scenario Perspective",
+                    "description": "A perspective created for scenario testing"
+                }
+            }
+            perspective_guid = self.client.create_perspective(create_body)
+            if not isinstance(perspective_guid, str):
+                perspective_guid = perspective_guid.get("guid") if isinstance(perspective_guid, dict) else None
+            created_guids.append(perspective_guid)
+            console.print(f"  [green]✓[/green] Created Perspective: {perspective_guid}")
+
+            # 2. Update the Perspective
+            update_body = {
+                "class": "UpdateElementRequestBody",
+                "mergeUpdate": True,
+                "properties": {
+                    "class": "PerspectiveProperties",
+                    "displayName": "Updated Scenario Perspective",
+                    "description": "Updated description for scenario testing"
+                }
+            }
+            self.client.update_perspective(perspective_guid, update_body)
+            console.print(f"  [green]✓[/green] Updated Perspective")
+
+            # 3. Retrieve by GUID
+            retrieved = self.client.get_perspective_by_guid(perspective_guid)
+            console.print(f"  [green]✓[/green] Retrieved Perspective by GUID")
+            assert retrieved is not None
+
+            # 4. Search by string
+            search_results = self.client.find_perspectives(search_string="*")
+            console.print(f"  [green]✓[/green] Searched perspectives: {len(search_results) if isinstance(search_results, list) else 0} found")
+
+            # 5. Get by name
+            name_results = self.client.get_perspectives_by_name(filter_string=qname)
+            console.print(f"  [green]✓[/green] Got perspectives by name: {len(name_results) if isinstance(name_results, list) else 0} found")
+
+            # 6. Delete the Perspective
+            self.client.delete_perspective(perspective_guid, {"class": "DeleteElementRequestBody"})
+            created_guids.remove(perspective_guid)
+            console.print(f"  [green]✓[/green] Deleted Perspective")
+
+            duration = time.perf_counter() - start_time
+            return TestResult(
+                scenario_name=scenario_name,
+                status="PASSED",
+                duration=duration,
+                message="Successfully completed perspective lifecycle: create, update, retrieve, search, delete",
+                created_guids=created_guids
+            )
+
+        except Exception as e:
+            duration = time.perf_counter() - start_time
+            if isinstance(e, PyegeriaTimeoutException):
+                console.print(f"  [yellow]⚠ Timeout in {scenario_name}; continuing.[/yellow]")
+                return TestResult(
+                    scenario_name=scenario_name,
+                    status="WARNING",
+                    duration=duration,
+                    message=f"Timeout: {str(e)}",
+                    error=e,
+                    created_guids=created_guids
+                )
+            console.print(f"  [red]✗ Scenario failed: {str(e)}[/red]")
+            traceback.print_exc()
+            return TestResult(
+                scenario_name=scenario_name,
+                status="FAILED",
+                duration=duration,
+                message=str(e),
+                error=e,
+                created_guids=created_guids
+            )
+
+    def scenario_7_skill_lifecycle(self) -> TestResult:
+        """Scenario 7: Skill lifecycle - create, update, search, retrieve, delete"""
+        scenario_name = "Skill Lifecycle"
+        console.print(f"\n[bold cyan]▶ Starting Scenario: {scenario_name}[/bold cyan]")
+        start_time = time.perf_counter()
+        created_guids = []
+
+        try:
+            ts = datetime.now().strftime("%H%M%S%f")
+
+            # 1. Create a Skill
+            qname = f"Skill::ScenarioTest::{ts}"
+            create_body = {
+                "class": "NewElementRequestBody",
+                "isOwnAnchor": True,
+                "properties": {
+                    "class": "SkillProperties",
+                    "qualifiedName": qname,
+                    "displayName": "Scenario Skill",
+                    "description": "A skill created for scenario testing"
+                }
+            }
+            skill_guid = self.client.create_skill(create_body)
+            if not isinstance(skill_guid, str):
+                skill_guid = skill_guid.get("guid") if isinstance(skill_guid, dict) else None
+            created_guids.append(skill_guid)
+            console.print(f"  [green]✓[/green] Created Skill: {skill_guid}")
+
+            # 2. Update the Skill
+            update_body = {
+                "class": "UpdateElementRequestBody",
+                "mergeUpdate": True,
+                "properties": {
+                    "class": "SkillProperties",
+                    "displayName": "Updated Scenario Skill",
+                    "description": "Updated description for scenario testing"
+                }
+            }
+            self.client.update_skill(skill_guid, update_body)
+            console.print(f"  [green]✓[/green] Updated Skill")
+
+            # 3. Retrieve by GUID
+            retrieved = self.client.get_skill_by_guid(skill_guid)
+            console.print(f"  [green]✓[/green] Retrieved Skill by GUID")
+            assert retrieved is not None
+
+            # 4. Search by string
+            search_results = self.client.find_skills(search_string="*")
+            console.print(f"  [green]✓[/green] Searched skills: {len(search_results) if isinstance(search_results, list) else 0} found")
+
+            # 5. Get by name
+            name_results = self.client.get_skills_by_name(filter_string=qname)
+            console.print(f"  [green]✓[/green] Got skills by name: {len(name_results) if isinstance(name_results, list) else 0} found")
+
+            # 6. Delete the Skill
+            self.client.delete_skill(skill_guid, {"class": "DeleteElementRequestBody"})
+            created_guids.remove(skill_guid)
+            console.print(f"  [green]✓[/green] Deleted Skill")
+
+            duration = time.perf_counter() - start_time
+            return TestResult(
+                scenario_name=scenario_name,
+                status="PASSED",
+                duration=duration,
+                message="Successfully completed skill lifecycle: create, update, retrieve, search, delete",
+                created_guids=created_guids
+            )
+
+        except Exception as e:
+            duration = time.perf_counter() - start_time
+            if isinstance(e, PyegeriaTimeoutException):
+                console.print(f"  [yellow]⚠ Timeout in {scenario_name}; continuing.[/yellow]")
+                return TestResult(
+                    scenario_name=scenario_name,
+                    status="WARNING",
+                    duration=duration,
+                    message=f"Timeout: {str(e)}",
+                    error=e,
+                    created_guids=created_guids
+                )
+            console.print(f"  [red]✗ Scenario failed: {str(e)}[/red]")
+            traceback.print_exc()
+            return TestResult(
+                scenario_name=scenario_name,
+                status="FAILED",
+                duration=duration,
+                message=str(e),
+                error=e,
+                created_guids=created_guids
+            )
+
+    def scenario_8_associated_skill_set(self) -> TestResult:
+        """Scenario 8: Link and detach the AssociatedSkillSet relationship"""
+        scenario_name = "Associated Skill Set"
+        console.print(f"\n[bold cyan]▶ Starting Scenario: {scenario_name}[/bold cyan]")
+        start_time = time.perf_counter()
+        created_guids = []
+        coll_client = None
+        skill_set_guid = None
+
+        try:
+            ts = datetime.now().strftime("%H%M%S%f")
+
+            # 1. Create Actor Role (AssociatedSkillSet end 1 requires Actor type, ActorRole is a subtype)
+            role_data = ActorRoleData(
+                qualified_name=f"scenario8_actor_{ts}",
+                display_name="Scenario 8 Actor",
+                description="Actor for testing AssociatedSkillSet"
+            )
+            actor_guid = self._create_actor_role(role_data)
+            created_guids.append(actor_guid)
+            console.print(f"  [green]✓[/green] Created Actor Role: {actor_guid}")
+
+            # 2. Create Skill Set collection via CollectionManager
+            coll_client = CollectionManager(VIEW_SERVER, PLATFORM_URL, user_id=USER_ID, user_pwd=USER_PWD)
+            coll_client.create_egeria_bearer_token(USER_ID, USER_PWD)
+            skill_set_guid = coll_client.create_skill_set_collection(
+                display_name=f"Scenario8 Skill Set {ts}",
+                description="Skill set for scenario 8 testing"
+            )
+            console.print(f"  [green]✓[/green] Created Skill Set: {skill_set_guid}")
+
+            # 3. Link
+            link_body = {
+                "class": "NewRelationshipRequestBody",
+                "properties": {
+                    "class": "AssociatedSkillSetProperties",
+                    "label": "primary",
+                    "description": "Primary skill set for scenario 8 actor"
+                }
+            }
+            coll_client.link_associated_skill_set(actor_guid, skill_set_guid, link_body)
+            console.print(f"  [green]✓[/green] Linked Skill Set to Actor")
+
+            # 4. Detach
+            coll_client.detach_associated_skill_set(actor_guid, skill_set_guid)
+            console.print(f"  [green]✓[/green] Detached Skill Set from Actor")
+
+            # 5. Cleanup skill set (cleanup_created_actors only handles actor entities)
+            coll_client.delete_collection(skill_set_guid, {"class": "DeleteElementRequestBody"})
+            skill_set_guid = None
+            console.print(f"  [green]✓[/green] Deleted Skill Set")
+
+            duration = time.perf_counter() - start_time
+            return TestResult(
+                scenario_name=scenario_name,
+                status="PASSED",
+                duration=duration,
+                message="Successfully linked and detached AssociatedSkillSet relationship",
+                created_guids=created_guids
+            )
+
+        except Exception as e:
+            duration = time.perf_counter() - start_time
+            if isinstance(e, PyegeriaTimeoutException):
+                console.print(f"  [yellow]⚠ Timeout in {scenario_name}; continuing.[/yellow]")
+                return TestResult(
+                    scenario_name=scenario_name,
+                    status="WARNING",
+                    duration=duration,
+                    message=f"Timeout: {str(e)}",
+                    error=e,
+                    created_guids=created_guids
+                )
+            console.print(f"  [red]✗ Scenario failed: {str(e)}[/red]")
+            traceback.print_exc()
+            return TestResult(
+                scenario_name=scenario_name,
+                status="FAILED",
+                duration=duration,
+                message=str(e),
+                error=e,
+                created_guids=created_guids
+            )
+        finally:
+            if coll_client and skill_set_guid:
+                try:
+                    coll_client.delete_collection(skill_set_guid, {"class": "DeleteElementRequestBody"})
+                except Exception:
+                    pass
+            if coll_client:
+                coll_client.close_session()
+
     def generate_report(self):
         """Generate comprehensive test report"""
         console.print("\n[bold cyan]═══ Test Execution Report ═══[/bold cyan]\n")
@@ -901,7 +1176,10 @@ class ActorManagerScenarioTester:
             self.results.append(self.scenario_3_user_identities())
             self.results.append(self.scenario_4_assignment_and_contact_details())
             self.results.append(self.scenario_5_team_management())
-            
+            self.results.append(self.scenario_6_perspective_lifecycle())
+            self.results.append(self.scenario_7_skill_lifecycle())
+            self.results.append(self.scenario_8_associated_skill_set())
+
             # Cleanup
             self.cleanup_created_actors()
             

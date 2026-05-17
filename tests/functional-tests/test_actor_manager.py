@@ -913,6 +913,518 @@ class TestActorManager:
             if actor_client:
                 actor_client.close_session()
 
+    # =====================================================================================================================
+    # Perspectives
+
+    def test_create_perspective(self):
+        """Test creating a basic perspective"""
+        actor_client = None
+        try:
+            actor_client = ActorManager(self.good_view_server_1, self.good_platform1_url, user_id=self.good_user_2)
+            actor_client.create_egeria_bearer_token(self.good_user_2, "secret")
+            start_time = time.perf_counter()
+
+            qualified_name = self._unique_qname("TestPerspective")
+            body = {
+                "class": "NewElementRequestBody",
+                "isOwnAnchor": True,
+                "properties": {
+                    "class": "PerspectiveProperties",
+                    "qualifiedName": qualified_name,
+                    "displayName": "Test Perspective",
+                    "description": "A perspective created for automated testing"
+                }
+            }
+
+            response = actor_client.create_perspective(body)
+            duration = time.perf_counter() - start_time
+            print(f"\n\tDuration was {duration} seconds")
+            print(f"\n\nCreated perspective with GUID: {response}")
+            assert type(response) is str
+            assert len(response) > 0
+
+            # Cleanup
+            actor_client.delete_perspective(response, {"class": "DeleteElementRequestBody"})
+
+        except (
+                PyegeriaInvalidParameterException,
+                PyegeriaAPIException,
+                PyegeriaUnauthorizedException,
+                PyegeriaNotFoundException,
+        ) as e:
+            print_exception_table(e)
+            assert False, "Invalid request"
+        except ValidationError as e:
+            print_validation_error(e)
+            assert False, "Invalid request"
+        except PyegeriaConnectionException as e:
+            print_basic_exception(e)
+            assert False, "Connection error"
+        finally:
+            if actor_client:
+                actor_client.close_session()
+
+    def test_update_perspective(self):
+        """Test updating a perspective"""
+        actor_client = None
+        perspective_guid = None
+        try:
+            actor_client = ActorManager(self.good_view_server_1, self.good_platform1_url, user_id=self.good_user_2)
+            actor_client.create_egeria_bearer_token(self.good_user_2, "secret")
+
+            qualified_name = self._unique_qname("TestPerspectiveUpdate")
+            create_body = {
+                "class": "NewElementRequestBody",
+                "isOwnAnchor": True,
+                "properties": {
+                    "class": "PerspectiveProperties",
+                    "qualifiedName": qualified_name,
+                    "displayName": "Original Display Name",
+                    "description": "Original description"
+                }
+            }
+            perspective_guid = actor_client.create_perspective(create_body)
+            print(f"\n\tCreated perspective: {perspective_guid}")
+
+            update_body = {
+                "class": "UpdateElementRequestBody",
+                "mergeUpdate": True,
+                "properties": {
+                    "class": "PerspectiveProperties",
+                    "displayName": "Updated Display Name",
+                    "description": "Updated description for automated testing"
+                }
+            }
+            actor_client.update_perspective(perspective_guid, update_body)
+            print(f"\tUpdated perspective: {perspective_guid}")
+
+        except (
+                PyegeriaInvalidParameterException,
+                PyegeriaAPIException,
+                PyegeriaUnauthorizedException,
+                PyegeriaNotFoundException,
+        ) as e:
+            print_exception_table(e)
+            assert False, "Invalid request"
+        except ValidationError as e:
+            print_validation_error(e)
+            assert False, "Invalid request"
+        except PyegeriaConnectionException as e:
+            print_basic_exception(e)
+            assert False, "Connection error"
+        finally:
+            if perspective_guid and actor_client:
+                try:
+                    actor_client.delete_perspective(perspective_guid, {"class": "DeleteElementRequestBody"})
+                except Exception:
+                    pass
+            if actor_client:
+                actor_client.close_session()
+
+    def test_get_perspective_by_guid(self):
+        """Test retrieving a perspective by GUID"""
+        actor_client = None
+        perspective_guid = None
+        try:
+            actor_client = ActorManager(self.good_view_server_1, self.good_platform1_url, user_id=self.good_user_2)
+            actor_client.create_egeria_bearer_token(self.good_user_2, "secret")
+
+            qualified_name = self._unique_qname("TestPerspectiveGet")
+            display_name = "Get Test Perspective"
+            create_body = {
+                "class": "NewElementRequestBody",
+                "isOwnAnchor": True,
+                "properties": {
+                    "class": "PerspectiveProperties",
+                    "qualifiedName": qualified_name,
+                    "displayName": display_name,
+                    "description": "A perspective for get-by-guid testing"
+                }
+            }
+            perspective_guid = actor_client.create_perspective(create_body)
+
+            get_body = {"class": "GetRequestBody"}
+            response = actor_client.get_perspective_by_guid(perspective_guid, get_body)
+            print(f"\n\tRetrieved perspective: {response}")
+            assert response is not None
+
+        except (
+                PyegeriaInvalidParameterException,
+                PyegeriaAPIException,
+                PyegeriaUnauthorizedException,
+                PyegeriaNotFoundException,
+        ) as e:
+            print_exception_table(e)
+            assert False, "Invalid request"
+        except ValidationError as e:
+            print_validation_error(e)
+            assert False, "Invalid request"
+        except PyegeriaConnectionException as e:
+            print_basic_exception(e)
+            assert False, "Connection error"
+        finally:
+            if perspective_guid and actor_client:
+                try:
+                    actor_client.delete_perspective(perspective_guid, {"class": "DeleteElementRequestBody"})
+                except Exception:
+                    pass
+            if actor_client:
+                actor_client.close_session()
+
+    def test_find_perspectives(self):
+        """Test finding perspectives by search string"""
+        actor_client = None
+        perspective_guid = None
+        try:
+            actor_client = ActorManager(self.good_view_server_1, self.good_platform1_url, user_id=self.good_user_2)
+            actor_client.create_egeria_bearer_token(self.good_user_2, "secret")
+
+            qualified_name = self._unique_qname("TestPerspectiveFind")
+            create_body = {
+                "class": "NewElementRequestBody",
+                "isOwnAnchor": True,
+                "properties": {
+                    "class": "PerspectiveProperties",
+                    "qualifiedName": qualified_name,
+                    "displayName": "Find Test Perspective",
+                    "description": "A perspective for search testing"
+                }
+            }
+            perspective_guid = actor_client.create_perspective(create_body)
+
+            response = actor_client.find_perspectives(search_string="*")
+            print(f"\n\tFound perspectives: {len(response) if isinstance(response, list) else 0}")
+            assert response is not None
+            assert isinstance(response, list)
+
+        except (
+                PyegeriaInvalidParameterException,
+                PyegeriaAPIException,
+                PyegeriaUnauthorizedException,
+                PyegeriaNotFoundException,
+        ) as e:
+            print_exception_table(e)
+            assert False, "Invalid request"
+        except ValidationError as e:
+            print_validation_error(e)
+            assert False, "Invalid request"
+        except PyegeriaConnectionException as e:
+            print_basic_exception(e)
+            assert False, "Connection error"
+        finally:
+            if perspective_guid and actor_client:
+                try:
+                    actor_client.delete_perspective(perspective_guid, {"class": "DeleteElementRequestBody"})
+                except Exception:
+                    pass
+            if actor_client:
+                actor_client.close_session()
+
+    def test_get_perspectives_by_name(self):
+        """Test getting perspectives by name"""
+        actor_client = None
+        perspective_guid = None
+        try:
+            actor_client = ActorManager(self.good_view_server_1, self.good_platform1_url, user_id=self.good_user_2)
+            actor_client.create_egeria_bearer_token(self.good_user_2, "secret")
+
+            qualified_name = self._unique_qname("TestPerspectiveByName")
+            create_body = {
+                "class": "NewElementRequestBody",
+                "isOwnAnchor": True,
+                "properties": {
+                    "class": "PerspectiveProperties",
+                    "qualifiedName": qualified_name,
+                    "displayName": "ByName Test Perspective",
+                    "description": "A perspective for name search testing"
+                }
+            }
+            perspective_guid = actor_client.create_perspective(create_body)
+
+            response = actor_client.get_perspectives_by_name(filter_string=qualified_name)
+            print(f"\n\tFound perspectives by name: {len(response) if isinstance(response, list) else 0}")
+            assert response is not None
+            assert isinstance(response, list)
+
+        except (
+                PyegeriaInvalidParameterException,
+                PyegeriaAPIException,
+                PyegeriaUnauthorizedException,
+                PyegeriaNotFoundException,
+        ) as e:
+            print_exception_table(e)
+            assert False, "Invalid request"
+        except ValidationError as e:
+            print_validation_error(e)
+            assert False, "Invalid request"
+        except PyegeriaConnectionException as e:
+            print_basic_exception(e)
+            assert False, "Connection error"
+        finally:
+            if perspective_guid and actor_client:
+                try:
+                    actor_client.delete_perspective(perspective_guid, {"class": "DeleteElementRequestBody"})
+                except Exception:
+                    pass
+            if actor_client:
+                actor_client.close_session()
+
+    # =====================================================================================================================
+    # Skills
+
+    def test_create_skill(self):
+        """Test creating a basic skill"""
+        actor_client = None
+        try:
+            actor_client = ActorManager(self.good_view_server_1, self.good_platform1_url, user_id=self.good_user_2)
+            actor_client.create_egeria_bearer_token(self.good_user_2, "secret")
+            start_time = time.perf_counter()
+
+            qualified_name = self._unique_qname("TestSkill")
+            body = {
+                "class": "NewElementRequestBody",
+                "isOwnAnchor": True,
+                "properties": {
+                    "class": "SkillProperties",
+                    "qualifiedName": qualified_name,
+                    "displayName": "Test Skill",
+                    "description": "A skill created for automated testing"
+                }
+            }
+
+            response = actor_client.create_skill(body)
+            duration = time.perf_counter() - start_time
+            print(f"\n\tDuration was {duration} seconds")
+            print(f"\n\nCreated skill with GUID: {response}")
+            assert type(response) is str
+            assert len(response) > 0
+
+            # Cleanup
+            actor_client.delete_skill(response, {"class": "DeleteElementRequestBody"})
+
+        except (
+                PyegeriaInvalidParameterException,
+                PyegeriaAPIException,
+                PyegeriaUnauthorizedException,
+                PyegeriaNotFoundException,
+        ) as e:
+            print_exception_table(e)
+            assert False, "Invalid request"
+        except ValidationError as e:
+            print_validation_error(e)
+            assert False, "Invalid request"
+        except PyegeriaConnectionException as e:
+            print_basic_exception(e)
+            assert False, "Connection error"
+        finally:
+            if actor_client:
+                actor_client.close_session()
+
+    def test_update_skill(self):
+        """Test updating a skill"""
+        actor_client = None
+        skill_guid = None
+        try:
+            actor_client = ActorManager(self.good_view_server_1, self.good_platform1_url, user_id=self.good_user_2)
+            actor_client.create_egeria_bearer_token(self.good_user_2, "secret")
+
+            qualified_name = self._unique_qname("TestSkillUpdate")
+            create_body = {
+                "class": "NewElementRequestBody",
+                "isOwnAnchor": True,
+                "properties": {
+                    "class": "SkillProperties",
+                    "qualifiedName": qualified_name,
+                    "displayName": "Original Skill Name",
+                    "description": "Original description"
+                }
+            }
+            skill_guid = actor_client.create_skill(create_body)
+            print(f"\n\tCreated skill: {skill_guid}")
+
+            update_body = {
+                "class": "UpdateElementRequestBody",
+                "mergeUpdate": True,
+                "properties": {
+                    "class": "SkillProperties",
+                    "displayName": "Updated Skill Name",
+                    "description": "Updated description for automated testing"
+                }
+            }
+            actor_client.update_skill(skill_guid, update_body)
+            print(f"\tUpdated skill: {skill_guid}")
+
+        except (
+                PyegeriaInvalidParameterException,
+                PyegeriaAPIException,
+                PyegeriaUnauthorizedException,
+                PyegeriaNotFoundException,
+        ) as e:
+            print_exception_table(e)
+            assert False, "Invalid request"
+        except ValidationError as e:
+            print_validation_error(e)
+            assert False, "Invalid request"
+        except PyegeriaConnectionException as e:
+            print_basic_exception(e)
+            assert False, "Connection error"
+        finally:
+            if skill_guid and actor_client:
+                try:
+                    actor_client.delete_skill(skill_guid, {"class": "DeleteElementRequestBody"})
+                except Exception:
+                    pass
+            if actor_client:
+                actor_client.close_session()
+
+    def test_get_skill_by_guid(self):
+        """Test retrieving a skill by GUID"""
+        actor_client = None
+        skill_guid = None
+        try:
+            actor_client = ActorManager(self.good_view_server_1, self.good_platform1_url, user_id=self.good_user_2)
+            actor_client.create_egeria_bearer_token(self.good_user_2, "secret")
+
+            qualified_name = self._unique_qname("TestSkillGet")
+            display_name = "Get Test Skill"
+            create_body = {
+                "class": "NewElementRequestBody",
+                "isOwnAnchor": True,
+                "properties": {
+                    "class": "SkillProperties",
+                    "qualifiedName": qualified_name,
+                    "displayName": display_name,
+                    "description": "A skill for get-by-guid testing"
+                }
+            }
+            skill_guid = actor_client.create_skill(create_body)
+
+            get_body = {"class": "GetRequestBody"}
+            response = actor_client.get_skill_by_guid(skill_guid, get_body)
+            print(f"\n\tRetrieved skill: {response}")
+            assert response is not None
+
+        except (
+                PyegeriaInvalidParameterException,
+                PyegeriaAPIException,
+                PyegeriaUnauthorizedException,
+                PyegeriaNotFoundException,
+        ) as e:
+            print_exception_table(e)
+            assert False, "Invalid request"
+        except ValidationError as e:
+            print_validation_error(e)
+            assert False, "Invalid request"
+        except PyegeriaConnectionException as e:
+            print_basic_exception(e)
+            assert False, "Connection error"
+        finally:
+            if skill_guid and actor_client:
+                try:
+                    actor_client.delete_skill(skill_guid, {"class": "DeleteElementRequestBody"})
+                except Exception:
+                    pass
+            if actor_client:
+                actor_client.close_session()
+
+    def test_find_skills(self):
+        """Test finding skills by search string"""
+        actor_client = None
+        skill_guid = None
+        try:
+            actor_client = ActorManager(self.good_view_server_1, self.good_platform1_url, user_id=self.good_user_2)
+            actor_client.create_egeria_bearer_token(self.good_user_2, "secret")
+
+            qualified_name = self._unique_qname("TestSkillFind")
+            create_body = {
+                "class": "NewElementRequestBody",
+                "isOwnAnchor": True,
+                "properties": {
+                    "class": "SkillProperties",
+                    "qualifiedName": qualified_name,
+                    "displayName": "Find Test Skill",
+                    "description": "A skill for search testing"
+                }
+            }
+            skill_guid = actor_client.create_skill(create_body)
+
+            response = actor_client.find_skills(search_string="*")
+            print(f"\n\tFound skills: {len(response) if isinstance(response, list) else 0}")
+            assert response is not None
+            assert isinstance(response, list)
+
+        except (
+                PyegeriaInvalidParameterException,
+                PyegeriaAPIException,
+                PyegeriaUnauthorizedException,
+                PyegeriaNotFoundException,
+        ) as e:
+            print_exception_table(e)
+            assert False, "Invalid request"
+        except ValidationError as e:
+            print_validation_error(e)
+            assert False, "Invalid request"
+        except PyegeriaConnectionException as e:
+            print_basic_exception(e)
+            assert False, "Connection error"
+        finally:
+            if skill_guid and actor_client:
+                try:
+                    actor_client.delete_skill(skill_guid, {"class": "DeleteElementRequestBody"})
+                except Exception:
+                    pass
+            if actor_client:
+                actor_client.close_session()
+
+    def test_get_skills_by_name(self):
+        """Test getting skills by name"""
+        actor_client = None
+        skill_guid = None
+        try:
+            actor_client = ActorManager(self.good_view_server_1, self.good_platform1_url, user_id=self.good_user_2)
+            actor_client.create_egeria_bearer_token(self.good_user_2, "secret")
+
+            qualified_name = self._unique_qname("TestSkillByName")
+            create_body = {
+                "class": "NewElementRequestBody",
+                "isOwnAnchor": True,
+                "properties": {
+                    "class": "SkillProperties",
+                    "qualifiedName": qualified_name,
+                    "displayName": "ByName Test Skill",
+                    "description": "A skill for name search testing"
+                }
+            }
+            skill_guid = actor_client.create_skill(create_body)
+
+            response = actor_client.get_skills_by_name(filter_string=qualified_name)
+            print(f"\n\tFound skills by name: {len(response) if isinstance(response, list) else 0}")
+            assert response is not None
+            assert isinstance(response, list)
+
+        except (
+                PyegeriaInvalidParameterException,
+                PyegeriaAPIException,
+                PyegeriaUnauthorizedException,
+                PyegeriaNotFoundException,
+        ) as e:
+            print_exception_table(e)
+            assert False, "Invalid request"
+        except ValidationError as e:
+            print_validation_error(e)
+            assert False, "Invalid request"
+        except PyegeriaConnectionException as e:
+            print_basic_exception(e)
+            assert False, "Connection error"
+        finally:
+            if skill_guid and actor_client:
+                try:
+                    actor_client.delete_skill(skill_guid, {"class": "DeleteElementRequestBody"})
+                except Exception:
+                    pass
+            if actor_client:
+                actor_client.close_session()
+
     def test_team_members_report(self):
         """Test the Team-Members report with dynamically created data"""
         actor_client = None
@@ -1019,3 +1531,4 @@ class TestActorManager:
         finally:
             if actor_client:
                 actor_client.close_session()
+

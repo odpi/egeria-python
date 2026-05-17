@@ -392,7 +392,7 @@ def markdown_to_html(markdown_text: str) -> str:
         <title>Egeria Report</title>
         <script src="https://cdn.jsdelivr.net/npm/mermaid@10/dist/mermaid.min.js"></script>
         <script>
-            mermaid.initialize({ startOnLoad: true });
+            mermaid.initialize({{ startOnLoad: true }});
         </script>
         <script src="https://cdn.jsdelivr.net/npm/vega@5"></script>
         <script src="https://cdn.jsdelivr.net/npm/vega-lite@5"></script>
@@ -2235,8 +2235,7 @@ def generate_output(elements: Union[Dict, List[Dict]],
     if output_format == 'MERMAID':
         return extract_mermaid_only(elements, columns_struct)
 
-    elif output_format == 'HTML':
-        # First generate the REPORT format output
+    elif output_format in ('HTML', 'GRAPH'):
         report_output = generate_output(
             elements=elements,
             search_string=search_string,
@@ -2246,8 +2245,6 @@ def generate_output(elements: Union[Dict, List[Dict]],
             get_additional_props_func=get_additional_props_func,
             columns_struct=columns_struct
         )
-
-        # Convert the markdown to HTML
         return markdown_to_html(report_output)
 
     # elif output_format in ['DICT', 'TABLE']:

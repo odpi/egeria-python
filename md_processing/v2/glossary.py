@@ -6,9 +6,12 @@ from loguru import logger
 
 from pyegeria import EgeriaTech, PyegeriaException
 from md_processing.v2.processors import AsyncBaseCommandProcessor
-from md_processing.md_processing_utils.md_processing_constants import get_command_spec
+from md_processing.md_processing_utils.md_processing_constants import (
+    get_command_spec, APPLY_CLASSIFICATION_VERBS, REMOVE_CLASSIFICATION_VERBS,
+    UPDATE_CLASSIFICATION_VERBS,
+)
 from md_processing.md_processing_utils.common_md_utils import (
-    set_element_prop_body, set_create_body, set_update_body, 
+    set_element_prop_body, set_create_body, set_update_body,
     set_object_classifications, update_element_dictionary,
     async_add_note_in_dr_e
 )
@@ -326,6 +329,73 @@ class TermProcessor(AsyncBaseCommandProcessor):
             })
             
         return results
+
+class GlossaryClassifyProcessor(AsyncBaseCommandProcessor):
+    """
+    Processor for classification commands on glossary entities (Glossary, GlossaryTerm).
+
+    Handles the Classify / Set, Declassify / Unset, and Reclassify verb families.
+    Classifications always act on an already-existing entity — no fetch/upsert logic.
+
+    Supported commands (extend by adding entries to the dispatch table below):
+      - Classify Term as Question  /  Declassify Term as Question
+    """
+
+    async def fetch_as_is(self) -> Optional[Dict[str, Any]]:
+        return None
+
+    async def apply_changes(self) -> str:
+        verb = self.command.verb
+        command_name = f"{verb} {self.command.object_type}"
+        attributes = self.parsed_output.get("attributes", {})
+
+        # --- dispatch table: command noun → (apply_coro, remove_coro) ---
+        # Each coro accepts (guid, body). Add new classification commands here.
+        dispatch = {
+            "Term as Question": (
+                self.client._async_set_term_as_question,
+                self.client._async_clear_term_as_question,
+            ),
+        }
+
+        # Identify which classification this command targets
+        noun = self.command.object_type  # e.g. "Term as Question"
+        if noun not in dispatch:
+            raise PyegeriaException(f"GlossaryClassifyProcessor: unsupported command '{command_name}'")
+
+        apply_coro, remove_coro = dispatch[noun]
+
+        # Resolve entity GUID — "Term Name" for term classifications
+        term_name_attr = attributes.get("Term Name", {})
+        entity_guid = term_name_attr.get("guid")
+        entity_label = term_name_attr.get("qualified_name") or term_name_attr.get("value") or noun
+
+        if not entity_guid:
+            logger.error(f"GlossaryClassifyProcessor: no GUID resolved for '{entity_label}' in '{command_name}'")
+            return self.command.raw_block
+
+        body = {
+            "class": "ClassificationRequestBody",
+            "forLineage": False,
+            "forDuplicateProcessing": False,
+        }
+
+        if verb in APPLY_CLASSIFICATION_VERBS:
+            await apply_coro(entity_guid, body)
+            logger.success(f"Classified '{entity_label}' via '{command_name}'")
+        elif verb in REMOVE_CLASSIFICATION_VERBS:
+            await remove_coro(entity_guid, body)
+            logger.success(f"Removed classification '{noun}' from '{entity_label}'")
+        elif verb in UPDATE_CLASSIFICATION_VERBS:
+            # Reclassify: remove then re-apply (default; override per noun if needed)
+            await remove_coro(entity_guid, body)
+            await apply_coro(entity_guid, body)
+            logger.success(f"Reclassified '{entity_label}' via '{command_name}'")
+        else:
+            raise PyegeriaException(f"GlossaryClassifyProcessor: unrecognised verb '{verb}'")
+
+        return await self.render_result_markdown(entity_guid)
+
 
 class TermRelationshipProcessor(AsyncBaseCommandProcessor):
     """

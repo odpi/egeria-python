@@ -298,9 +298,9 @@ MERMAID_FORMAT = Format(
 
 NEW_MERMAID_COLUMNS = [
     Column(name="Collection Mermaid Mind Map", key="collectionMermaidMindMap"),
-    Column(name="Zone Profile Mermaid Pie Chart", key="zoneProfileMermaidPieChart"),
-    Column(name="Zone Profile Anchored Mermaid Pie Chart", key="zoneProfileAnchoredMermaidPieChart"),
-    Column(name="Zone Profile All Mermaid Pie Chart", key="zoneProfileAllMermaidPieChart"),
+    # Column(name="Zone Profile Mermaid Pie Chart", key="zoneProfileMermaidPieChart"),
+    # Column(name="Zone Profile Anchored Mermaid Pie Chart", key="zoneProfileAnchoredMermaidPieChart"),
+    # Column(name="Zone Profile All Mermaid Pie Chart", key="zoneProfileAllMermaidPieChart"),
 ]
 
 # TODO: Research SecretStore retrieval/extraction path before enabling:
@@ -738,6 +738,74 @@ base_report_specs = FormatSetDict({
         ],
         action=ActionParameter(
             function="ActorManager.find_user_identities",
+            optional_params=OPTIONAL_FILTER_PARAMS + TIME_PARAMETERS,
+            required_params=["search_string"],
+            spec_params={},
+        )
+    ),
+    "Perspectives": FormatSet(
+        target_type="Perspective",
+        heading="Perspectives",
+        description="Perspective Information",
+        annotations={},
+        family="ActorManager",
+        question_spec=[
+            {'perspectives': ["Business Analyst", "Governance Officer"],
+             'questions': [
+                 "What perspectives are defined?",
+                 "Show me all perspectives for [domain].",
+                 "What viewpoints have been registered?",
+             ]},
+            {'perspectives': ["Data Steward"],
+             'questions': [
+                 "Find perspectives related to [topic].",
+                 "What perspectives exist in [category]?",
+             ]},
+        ],
+        formats=[
+            Format(
+                types=["ALL"],
+                attributes=COMMON_COLUMNS + COMMON_METADATA_COLUMNS + [
+                    Column(name="Additional Properties", key='additional_properties'),
+                ],
+            )
+        ],
+        action=ActionParameter(
+            function="ActorManager.find_perspectives",
+            optional_params=OPTIONAL_FILTER_PARAMS + TIME_PARAMETERS,
+            required_params=["search_string"],
+            spec_params={},
+        )
+    ),
+    "Skills": FormatSet(
+        target_type="Skill",
+        heading="Skills",
+        description="Skill Information",
+        annotations={},
+        family="ActorManager",
+        question_spec=[
+            {'perspectives': ["Human Resources", "Project Manager"],
+             'questions': [
+                 "What skills are defined?",
+                 "Find skills related to [topic].",
+                 "What skills are required for [role]?",
+             ]},
+            {'perspectives': ["Governance Officer", "Data Steward"],
+             'questions': [
+                 "What data-related skills are registered?",
+                 "Show me all skills in [category].",
+             ]},
+        ],
+        formats=[
+            Format(
+                types=["ALL"],
+                attributes=COMMON_COLUMNS + COMMON_METADATA_COLUMNS + [
+                    Column(name="Additional Properties", key='additional_properties'),
+                ],
+            )
+        ],
+        action=ActionParameter(
+            function="ActorManager.find_skills",
             optional_params=OPTIONAL_FILTER_PARAMS + TIME_PARAMETERS,
             required_params=["search_string"],
             spec_params={},
@@ -3542,11 +3610,17 @@ base_report_specs = FormatSetDict({
                                          ]},
                                     ],
                                     formats=[
-                                        Format(types=['MERMAID', 'REPORT', 'DICT'],
+                                        Format(types=['MERMAID', 'REPORT', 'GRAPH', 'DICT'],
                                                attributes=[Column(name='Mermaid Graph', key='mermaidGraph'),
-                                                           Column(name='Zone Profiles', key='zoneProfileMermaidPieChart'),
-                                                           Column(name='Zone Profile Anchored', key='zoneProfileAnchoredMermaidPieChart'),
-                                                           Column(name='Zone Profile All', key='zoneProfileAllMermaidPieChart')
+                                                           # Column(name='Zone Profiles (Mermaid)', key='zoneProfileMermaidPieChart'),
+                                                           Column(name='Zone Profile Bar Chart', key='typeMembershipBarGraph'),
+                                                           Column(name='Zone Profile Pie Chart', key='typeMembershipPieGraph'),
+                                                           # Column(name='Zone Profile Anchored (Mermaid)', key='zoneProfileAnchoredMermaidPieChart'),
+                                                           Column(name='Zone Profile Anchored Bar Chart', key='anchoredTypeMembershipBarGraph'),
+                                                           Column(name='Zone Profile Anchored Pie Chart', key='anchoredTypeMembershipPieGraph'),
+                                                           # Column(name='Zone Profile All (Mermaid)', key='zoneProfileAllMermaidPieChart'),
+                                                           Column(name='Zone Profile All Bar Chart', key='allTypeMembershipBarGraph'),
+                                                           Column(name='Zone Profile All Pie Chart', key='allTypeMembershipPieGraph'),
                                                            ])
                                     ],
                                     action=ActionParameter(
@@ -3569,13 +3643,21 @@ base_report_specs = FormatSetDict({
                                                       ]},
                                                  ],
                                                  formats=[
-                                                     Format(types=['MERMAID', 'REPORT', 'DICT'],
+                                                     Format(types=['MERMAID', 'REPORT', 'GRAPH', 'DICT'],
                                                             attributes=[
                                                                 Column(name='Mermaid Graph', key='mermaidGraph'),
-                                                                Column(name='Account Type Profile',
-                                                                       key='userAccountTypeProfileMermaidPieChart'),
-                                                                Column(name='Account Status Profile',
-                                                                       key='userAccountStatusProfileMermaidPieChart'),
+                                                                # Column(name='Account Type Profile (Mermaid)',
+                                                                #        key='userAccountTypeProfileMermaidPieChart'),
+                                                                Column(name='Account Type Bar Chart',
+                                                                       key='userAccountTypeProfileBarGraph'),
+                                                                Column(name='Account Type Pie Chart',
+                                                                       key='userAccountTypeProfilePieGraph'),
+                                                                # Column(name='Account Status Profile (Mermaid)',
+                                                                #        key='userAccountStatusProfileMermaidPieChart'),
+                                                                Column(name='Account Status Bar Chart',
+                                                                       key='userAccountStatusProfileBarGraph'),
+                                                                Column(name='Account Status Pie Chart',
+                                                                       key='userAccountStatusProfilePieGraph'),
                                                                 ])
                                                  ],
                                                  action=ActionParameter(

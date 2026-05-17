@@ -5995,6 +5995,1346 @@ class ActorManager(ServerClient):
         """
         return asyncio.run(self._async_get_contact_details_by_guid(contact_details_guid, body))
 
+    # =====================================================================================================================
+    # Work with Perspectives
+    # https://egeria-project.org/concepts/perspective
+
+    @dynamic_catch
+    async def _async_create_perspective(self, body: Optional[dict | NewElementRequestBody] = None) -> str:
+        """ Create a new perspective. Async version.
+
+        Parameters
+        ----------
+        body: dict | NewElementRequestBody, optional
+            A dict or NewElementRequestBody representing the details of the perspective to create.
+
+        Returns
+        -------
+        str - the guid of the created perspective
+
+        Raises
+        ------
+        PyegeriaException
+            One of the pyegeria exceptions will be raised if there are issues in communications, message format, or
+            Egeria errors.
+        ValidationError
+            Pydantic validation errors are raised if the body does not conform to the NewElementRequestBody.
+        PyegeriaNotAuthorizedException
+          The principle specified by the user_id does not have authorization for the requested action
+
+        Notes:
+        -----
+        example:
+        {
+          "class" : "NewElementRequestBody",
+          "isOwnAnchor": true,
+          "properties": {
+            "class" : "PerspectiveProperties",
+            "qualifiedName": "add unique name here",
+            "displayName": "add name here",
+            "description": "add description here",
+            "additionalProperties": {
+              "property1" : "propertyValue1",
+              "property2" : "propertyValue2"
+            }
+          }
+        }
+        """
+        url = f"{self.command_root}/perspectives"
+        body_to_use = body if body is not None else {}
+        return await self._async_create_element_body_request(url, ["PerspectiveProperties"], body_to_use)
+
+    @dynamic_catch
+    def create_perspective(self, body: Optional[dict | NewElementRequestBody] = None) -> str:
+        """ Create a new perspective.
+
+        Parameters
+        ----------
+        body: dict | NewElementRequestBody, optional
+            A dict or NewElementRequestBody representing the details of the perspective to create.
+
+        Returns
+        -------
+        str - the guid of the created perspective
+
+        Raises
+        ------
+        PyegeriaException
+            One of the pyegeria exceptions will be raised if there are issues in communications, message format, or
+            Egeria errors.
+        ValidationError
+            Pydantic validation errors are raised if the body does not conform to the NewElementRequestBody.
+        PyegeriaNotAuthorizedException
+          The principle specified by the user_id does not have authorization for the requested action
+
+        Notes:
+        -----
+        example:
+        {
+          "class" : "NewElementRequestBody",
+          "isOwnAnchor": true,
+          "properties": {
+            "class" : "PerspectiveProperties",
+            "qualifiedName": "add unique name here",
+            "displayName": "add name here",
+            "description": "add description here",
+            "additionalProperties": {
+              "property1" : "propertyValue1",
+              "property2" : "propertyValue2"
+            }
+          }
+        }
+        """
+        return asyncio.run(self._async_create_perspective(body))
+
+    @dynamic_catch
+    async def _async_create_perspective_from_template(self, body: Optional[dict | TemplateRequestBody] = None) -> str:
+        """ Create a new perspective from a template. Async version.
+
+        Parameters
+        ----------
+        body: dict | TemplateRequestBody, optional
+            A dict or TemplateRequestBody representing the template and replacement properties.
+
+        Returns
+        -------
+        str - the guid of the created perspective
+
+        Raises
+        ------
+        PyegeriaException
+            One of the pyegeria exceptions will be raised if there are issues in communications, message format, or
+            Egeria errors.
+        ValidationError
+            Pydantic validation errors are raised if the body does not conform to the TemplateRequestBody.
+        PyegeriaNotAuthorizedException
+          The principle specified by the user_id does not have authorization for the requested action
+
+        Notes:
+        -----
+        example:
+        {
+          "class" : "TemplateRequestBody",
+          "isOwnAnchor": false,
+          "templateGUID": "add guid here",
+          "replacementProperties": {
+            "class": "ElementProperties",
+            "propertyValueMap" : {
+              "description" : {
+                "class": "PrimitiveTypePropertyValue",
+                "typeName": "string",
+                "primitiveValue" : "New description"
+              }
+            }
+          },
+          "placeholderPropertyValues":  {
+            "placeholder1" : "propertyValue1",
+            "placeholder2" : "propertyValue2"
+          }
+        }
+        """
+        url = f"{self.command_root}/perspectives/from-template"
+        body_to_use = body if body is not None else {}
+        return await self._async_create_element_body_request(url, ["PerspectiveProperties"], body_to_use)
+
+    @dynamic_catch
+    def create_perspective_from_template(self, body: Optional[dict | TemplateRequestBody] = None) -> str:
+        """ Create a new perspective from a template.
+
+        Parameters
+        ----------
+        body: dict | TemplateRequestBody, optional
+            A dict or TemplateRequestBody representing the template and replacement properties.
+
+        Returns
+        -------
+        str - the guid of the created perspective
+
+        Raises
+        ------
+        PyegeriaException
+            One of the pyegeria exceptions will be raised if there are issues in communications, message format, or
+            Egeria errors.
+        ValidationError
+            Pydantic validation errors are raised if the body does not conform to the TemplateRequestBody.
+        PyegeriaNotAuthorizedException
+          The principle specified by the user_id does not have authorization for the requested action
+
+        Notes:
+        -----
+        example:
+        {
+          "class" : "TemplateRequestBody",
+          "isOwnAnchor": false,
+          "templateGUID": "add guid here",
+          "replacementProperties": {
+            "class": "ElementProperties",
+            "propertyValueMap" : {
+              "description" : {
+                "class": "PrimitiveTypePropertyValue",
+                "typeName": "string",
+                "primitiveValue" : "New description"
+              }
+            }
+          },
+          "placeholderPropertyValues":  {
+            "placeholder1" : "propertyValue1",
+            "placeholder2" : "propertyValue2"
+          }
+        }
+        """
+        return asyncio.run(self._async_create_perspective_from_template(body))
+
+    @dynamic_catch
+    async def _async_update_perspective(self, perspective_guid: str, body: Optional[dict | UpdateElementRequestBody] = None) -> None:
+        """ Update a perspective. Async version.
+
+        Parameters
+        ----------
+        perspective_guid: str
+            The unique identifier of the perspective to update.
+        body: dict | UpdateElementRequestBody, optional
+            A dict or UpdateElementRequestBody representing the properties to update.
+
+        Returns
+        -------
+        None
+
+        Raises
+        ------
+        PyegeriaException
+            One of the pyegeria exceptions will be raised if there are issues in communications, message format, or
+            Egeria errors.
+        ValidationError
+            Pydantic validation errors are raised if the body does not conform to the UpdateElementRequestBody.
+        PyegeriaNotAuthorizedException
+          The principle specified by the user_id does not have authorization for the requested action
+
+        Notes:
+        -----
+        example:
+        {
+          "class" : "UpdateElementRequestBody",
+          "mergeUpdate" : true,
+          "properties": {
+            "class" : "PerspectiveProperties",
+            "qualifiedName": "add unique name here",
+            "displayName": "add name here",
+            "description": "add description here",
+            "additionalProperties": {
+              "property1" : "propertyValue1",
+              "property2" : "propertyValue2"
+            },
+            "extendedProperties": {
+              "property1" : "propertyValue1",
+              "property2" : "propertyValue2"
+            }
+          }
+        }
+        """
+        url = f"{self.command_root}/perspectives/{perspective_guid}/update"
+        await self._async_update_element_body_request(url, ["PerspectiveProperties"], body)
+
+    @dynamic_catch
+    def update_perspective(self, perspective_guid: str, body: Optional[dict | UpdateElementRequestBody] = None) -> None:
+        """ Update a perspective.
+
+        Parameters
+        ----------
+        perspective_guid: str
+            The unique identifier of the perspective to update.
+        body: dict | UpdateElementRequestBody, optional
+            A dict or UpdateElementRequestBody representing the properties to update.
+
+        Returns
+        -------
+        None
+
+        Raises
+        ------
+        PyegeriaException
+            One of the pyegeria exceptions will be raised if there are issues in communications, message format, or
+            Egeria errors.
+        ValidationError
+            Pydantic validation errors are raised if the body does not conform to the UpdateElementRequestBody.
+        PyegeriaNotAuthorizedException
+          The principle specified by the user_id does not have authorization for the requested action
+
+        Notes:
+        -----
+        example:
+        {
+          "class" : "UpdateElementRequestBody",
+          "mergeUpdate" : true,
+          "properties": {
+            "class" : "PerspectiveProperties",
+            "qualifiedName": "add unique name here",
+            "displayName": "add name here",
+            "description": "add description here",
+            "additionalProperties": {
+              "property1" : "propertyValue1",
+              "property2" : "propertyValue2"
+            },
+            "extendedProperties": {
+              "property1" : "propertyValue1",
+              "property2" : "propertyValue2"
+            }
+          }
+        }
+        """
+        return asyncio.run(self._async_update_perspective(perspective_guid, body))
+
+    @dynamic_catch
+    async def _async_delete_perspective(self, perspective_guid: str, body: Optional[dict | DeleteElementRequestBody] = None) -> None:
+        """ Delete a perspective. Async version.
+
+        Parameters
+        ----------
+        perspective_guid: str
+            The unique identifier of the perspective to delete.
+        body: dict | DeleteElementRequestBody, optional
+            A dict or DeleteElementRequestBody representing the delete options.
+
+        Returns
+        -------
+        None
+
+        Raises
+        ------
+        PyegeriaException
+            One of the pyegeria exceptions will be raised if there are issues in communications, message format, or
+            Egeria errors.
+        ValidationError
+            Pydantic validation errors are raised if the body does not conform to the DeleteElementRequestBody.
+        PyegeriaNotAuthorizedException
+          The principle specified by the user_id does not have authorization for the requested action
+
+        Notes:
+        -----
+        example:
+        {
+          "class" : "DeleteElementRequestBody",
+          "cascadeDelete" : false,
+          "deleteMethod" : "LOOK_FOR_LINEAGE",
+          "externalSourceGUID": "add guid here",
+          "externalSourceName": "add qualified name here",
+          "effectiveTime" : "2024-01-01T00:00:00Z",
+          "forLineage" : false,
+          "forDuplicateProcessing" : false
+        }
+        """
+        url = f"{self.command_root}/perspectives/{perspective_guid}/delete"
+        await self._async_delete_element_request(url, body)
+
+    @dynamic_catch
+    def delete_perspective(self, perspective_guid: str, body: Optional[dict | DeleteElementRequestBody] = None) -> None:
+        """ Delete a perspective.
+
+        Parameters
+        ----------
+        perspective_guid: str
+            The unique identifier of the perspective to delete.
+        body: dict | DeleteElementRequestBody, optional
+            A dict or DeleteElementRequestBody representing the delete options.
+
+        Returns
+        -------
+        None
+
+        Raises
+        ------
+        PyegeriaException
+            One of the pyegeria exceptions will be raised if there are issues in communications, message format, or
+            Egeria errors.
+        ValidationError
+            Pydantic validation errors are raised if the body does not conform to the DeleteElementRequestBody.
+        PyegeriaNotAuthorizedException
+          The principle specified by the user_id does not have authorization for the requested action
+
+        Notes:
+        -----
+        example:
+        {
+          "class" : "DeleteElementRequestBody",
+          "cascadeDelete" : false,
+          "deleteMethod" : "LOOK_FOR_LINEAGE",
+          "externalSourceGUID": "add guid here",
+          "externalSourceName": "add qualified name here",
+          "effectiveTime" : "2024-01-01T00:00:00Z",
+          "forLineage" : false,
+          "forDuplicateProcessing" : false
+        }
+        """
+        return asyncio.run(self._async_delete_perspective(perspective_guid, body))
+
+    @dynamic_catch
+    async def _async_get_perspectives_by_name(self, filter_string: Optional[str] = None,
+                                              body: Optional[dict | FilterRequestBody] = None,
+                                              start_from: int = 0, page_size: int = 0,
+                                              output_format: str = 'JSON',
+                                              report_spec: Optional[str | dict] = None) -> list | str:
+        """ Returns the list of perspectives with a particular name. Async version.
+
+        Parameters
+        ----------
+        filter_string: str, optional
+            Name to filter perspectives by. Pass None or '*' to match all.
+        body: dict | FilterRequestBody, optional
+            Full request body. If provided, overrides filter_string and other parameters.
+        start_from: int, default 0
+            Starting index for pagination.
+        page_size: int, default 0
+            Number of items to return in a single page.
+        output_format: str, default "JSON"
+            Output format: "MD", "LIST", "FORM", "REPORT", "DICT", "MERMAID" or "JSON".
+        report_spec: str | dict, optional
+            Report specification for output formatting.
+
+        Returns
+        -------
+        list | str - the list of matching perspectives
+
+        Raises
+        ------
+        PyegeriaException
+            One of the pyegeria exceptions will be raised if there are issues in communications, message format, or
+            Egeria errors.
+        ValidationError
+            Pydantic validation errors are raised if the body does not conform to the FilterRequestBody.
+        PyegeriaNotAuthorizedException
+          The principle specified by the user_id does not have authorization for the requested action
+
+        Notes:
+        -----
+        example body (if using body parameter):
+        {
+          "class" : "FilterRequestBody",
+          "filter" : "Add name here",
+          "startFrom": 0,
+          "pageSize": 10,
+          "limitResultsByStatus" : ["ACTIVE"],
+          "sequencingOrder" : "PROPERTY_ASCENDING",
+          "sequencingProperty" : "qualifiedName"
+        }
+        """
+        url = str(HttpUrl(f"{self.command_root}/perspectives/by-name"))
+        return await self._async_get_name_request(url, _type="Perspective",
+                                                  _gen_output=self._generate_referenceable_output,
+                                                  filter_string=filter_string, start_from=start_from,
+                                                  page_size=page_size, output_format=output_format,
+                                                  report_spec=report_spec, body=body)
+
+    @dynamic_catch
+    def get_perspectives_by_name(self, filter_string: Optional[str] = None,
+                                 body: Optional[dict | FilterRequestBody] = None,
+                                 start_from: int = 0, page_size: int = 0,
+                                 output_format: str = 'JSON',
+                                 report_spec: Optional[str | dict] = None) -> list | str:
+        """ Returns the list of perspectives with a particular name.
+
+        Parameters
+        ----------
+        filter_string: str, optional
+            Name to filter perspectives by. Pass None or '*' to match all.
+        body: dict | FilterRequestBody, optional
+            Full request body. If provided, overrides filter_string and other parameters.
+        start_from: int, default 0
+            Starting index for pagination.
+        page_size: int, default 0
+            Number of items to return in a single page.
+        output_format: str, default "JSON"
+            Output format: "MD", "LIST", "FORM", "REPORT", "DICT", "MERMAID" or "JSON".
+        report_spec: str | dict, optional
+            Report specification for output formatting.
+
+        Returns
+        -------
+        list | str - the list of matching perspectives
+
+        Raises
+        ------
+        PyegeriaException
+            One of the pyegeria exceptions will be raised if there are issues in communications, message format, or
+            Egeria errors.
+        ValidationError
+            Pydantic validation errors are raised if the body does not conform to the FilterRequestBody.
+        PyegeriaNotAuthorizedException
+          The principle specified by the user_id does not have authorization for the requested action
+
+        Notes:
+        -----
+        example body (if using body parameter):
+        {
+          "class" : "FilterRequestBody",
+          "filter" : "Add name here",
+          "startFrom": 0,
+          "pageSize": 10,
+          "limitResultsByStatus" : ["ACTIVE"],
+          "sequencingOrder" : "PROPERTY_ASCENDING",
+          "sequencingProperty" : "qualifiedName"
+        }
+        """
+        return asyncio.run(self._async_get_perspectives_by_name(filter_string, body, start_from,
+                                                                page_size, output_format, report_spec))
+
+    @dynamic_catch
+    async def _async_find_perspectives(self, search_string: str = "*",
+                                       body: Optional[dict | SearchStringRequestBody] = None,
+                                       starts_with: bool = True, ends_with: bool = False,
+                                       ignore_case: bool = False, start_from: int = 0,
+                                       page_size: int = 0, output_format: str = 'JSON',
+                                       report_spec: Optional[str | dict] = None,
+                                       **kwargs) -> list | str:
+        """ Retrieve the list of perspective metadata elements that contain the search string. Async version.
+
+        Parameters
+        ----------
+        search_string: str, default "*"
+            Search string to match against. None or '*' matches all perspectives.
+        body: dict | SearchStringRequestBody, optional
+            Full request body. If provided, overrides other search parameters.
+        starts_with: bool, default True
+            Match elements that start with the search string.
+        ends_with: bool, default False
+            Match elements that end with the search string.
+        ignore_case: bool, default False
+            Ignore case when searching.
+        start_from: int, default 0
+            Starting index for pagination.
+        page_size: int, default 0
+            Number of items to return in a single page.
+        output_format: str, default "JSON"
+            Output format: "MD", "LIST", "FORM", "REPORT", "DICT", "MERMAID" or "JSON".
+        report_spec: str | dict, optional
+            Report specification for output formatting.
+
+        Returns
+        -------
+        list | str - the list of perspective metadata elements that match the search string
+
+        Raises
+        ------
+        PyegeriaException
+            One of the pyegeria exceptions will be raised if there are issues in communications, message format, or
+            Egeria errors.
+        ValidationError
+            Pydantic validation errors are raised if the body does not conform to the SearchStringRequestBody.
+        PyegeriaNotAuthorizedException
+          The principle specified by the user_id does not have authorization for the requested action
+        """
+        url = str(HttpUrl(f"{self.command_root}/perspectives/by-search-string"))
+        params = {
+            'search_string': search_string,
+            'body': body,
+            'starts_with': starts_with,
+            'ends_with': ends_with,
+            'ignore_case': ignore_case,
+            'start_from': start_from,
+            'page_size': page_size,
+            'output_format': output_format,
+            'report_spec': report_spec,
+        }
+        params.update(kwargs)
+        params = {k: v for k, v in params.items() if v is not None or k == 'search_string'}
+        return await self._async_find_request(url, _type="Perspective",
+                                              _gen_output=self._generate_referenceable_output, **params)
+
+    @dynamic_catch
+    def find_perspectives(self, search_string: str = "*",
+                          body: Optional[dict | SearchStringRequestBody] = None,
+                          starts_with: bool = True, ends_with: bool = False,
+                          ignore_case: bool = False, start_from: int = 0,
+                          page_size: int = 0, output_format: str = 'JSON',
+                          report_spec: Optional[str | dict] = None,
+                          **kwargs) -> list | str:
+        """ Retrieve the list of perspective metadata elements that contain the search string.
+
+        Parameters
+        ----------
+        search_string: str, default "*"
+            Search string to match against. None or '*' matches all perspectives.
+        body: dict | SearchStringRequestBody, optional
+            Full request body. If provided, overrides other search parameters.
+        starts_with: bool, default True
+            Match elements that start with the search string.
+        ends_with: bool, default False
+            Match elements that end with the search string.
+        ignore_case: bool, default False
+            Ignore case when searching.
+        start_from: int, default 0
+            Starting index for pagination.
+        page_size: int, default 0
+            Number of items to return in a single page.
+        output_format: str, default "JSON"
+            Output format: "MD", "LIST", "FORM", "REPORT", "DICT", "MERMAID" or "JSON".
+        report_spec: str | dict, optional
+            Report specification for output formatting.
+
+        Returns
+        -------
+        list | str - the list of perspective metadata elements that match the search string
+
+        Raises
+        ------
+        PyegeriaException
+            One of the pyegeria exceptions will be raised if there are issues in communications, message format, or
+            Egeria errors.
+        ValidationError
+            Pydantic validation errors are raised if the body does not conform to the SearchStringRequestBody.
+        PyegeriaNotAuthorizedException
+          The principle specified by the user_id does not have authorization for the requested action
+        """
+        return asyncio.run(self._async_find_perspectives(search_string, body, starts_with, ends_with,
+                                                         ignore_case, start_from, page_size,
+                                                         output_format, report_spec, **kwargs))
+
+    @dynamic_catch
+    async def _async_get_perspective_by_guid(self, perspective_guid: str, body: Optional[dict | GetRequestBody] = None) -> dict:
+        """ Return the properties of a specific perspective. Async version.
+
+        Parameters
+        ----------
+        perspective_guid: str
+            The unique identifier of the perspective to retrieve.
+        body: dict | GetRequestBody, optional
+            A dict or GetRequestBody representing the retrieval options.
+
+        Returns
+        -------
+        dict - the properties of a specific perspective
+
+        Raises
+        ------
+        PyegeriaException
+            One of the pyegeria exceptions will be raised if there are issues in communications, message format, or
+            Egeria errors.
+        ValidationError
+            Pydantic validation errors are raised if the body does not conform to the GetRequestBody.
+        PyegeriaNotAuthorizedException
+          The principle specified by the user_id does not have authorization for the requested action
+
+        Notes:
+        -----
+        example:
+        {
+          "class" : "GetRequestBody",
+          "asOfTime" : "2024-01-01T00:00:00Z",
+          "effectiveTime" : "2024-01-01T00:00:00Z",
+          "forLineage" : false,
+          "forDuplicateProcessing" : false
+        }
+        """
+        url = f"{self.command_root}/perspectives/{perspective_guid}/retrieve"
+        return await self._async_get_guid_request(url, "Perspective", self._generate_referenceable_output, body=body)
+
+    @dynamic_catch
+    def get_perspective_by_guid(self, perspective_guid: str, body: Optional[dict | GetRequestBody] = None) -> dict:
+        """ Return the properties of a specific perspective.
+
+        Parameters
+        ----------
+        perspective_guid: str
+            The unique identifier of the perspective to retrieve.
+        body: dict | GetRequestBody, optional
+            A dict or GetRequestBody representing the retrieval options.
+
+        Returns
+        -------
+        dict - the properties of a specific perspective
+
+        Raises
+        ------
+        PyegeriaException
+            One of the pyegeria exceptions will be raised if there are issues in communications, message format, or
+            Egeria errors.
+        ValidationError
+            Pydantic validation errors are raised if the body does not conform to the GetRequestBody.
+        PyegeriaNotAuthorizedException
+          The principle specified by the user_id does not have authorization for the requested action
+
+        Notes:
+        -----
+        example:
+        {
+          "class" : "GetRequestBody",
+          "asOfTime" : "2024-01-01T00:00:00Z",
+          "effectiveTime" : "2024-01-01T00:00:00Z",
+          "forLineage" : false,
+          "forDuplicateProcessing" : false
+        }
+        """
+        return asyncio.run(self._async_get_perspective_by_guid(perspective_guid, body))
+
+    # =====================================================================================================================
+    # Work with Skills
+    # https://egeria-project.org/concepts/skill
+
+    @dynamic_catch
+    async def _async_create_skill(self, body: Optional[dict | NewElementRequestBody] = None) -> str:
+        """ Create a new skill. Async version.
+
+        Parameters
+        ----------
+        body: dict | NewElementRequestBody, optional
+            A dict or NewElementRequestBody representing the details of the skill to create.
+
+        Returns
+        -------
+        str - the guid of the created skill
+
+        Raises
+        ------
+        PyegeriaException
+            One of the pyegeria exceptions will be raised if there are issues in communications, message format, or
+            Egeria errors.
+        ValidationError
+            Pydantic validation errors are raised if the body does not conform to the NewElementRequestBody.
+        PyegeriaNotAuthorizedException
+          The principle specified by the user_id does not have authorization for the requested action
+
+        Notes:
+        -----
+        example:
+        {
+          "class" : "NewElementRequestBody",
+          "isOwnAnchor": true,
+          "properties": {
+            "class" : "SkillProperties",
+            "qualifiedName": "add unique name here",
+            "displayName": "add name here",
+            "description": "add description here",
+            "additionalProperties": {
+              "property1" : "propertyValue1",
+              "property2" : "propertyValue2"
+            }
+          }
+        }
+        """
+        url = f"{self.command_root}/skills"
+        body_to_use = body if body is not None else {}
+        return await self._async_create_element_body_request(url, ["SkillProperties"], body_to_use)
+
+    @dynamic_catch
+    def create_skill(self, body: Optional[dict | NewElementRequestBody] = None) -> str:
+        """ Create a new skill.
+
+        Parameters
+        ----------
+        body: dict | NewElementRequestBody, optional
+            A dict or NewElementRequestBody representing the details of the skill to create.
+
+        Returns
+        -------
+        str - the guid of the created skill
+
+        Raises
+        ------
+        PyegeriaException
+            One of the pyegeria exceptions will be raised if there are issues in communications, message format, or
+            Egeria errors.
+        ValidationError
+            Pydantic validation errors are raised if the body does not conform to the NewElementRequestBody.
+        PyegeriaNotAuthorizedException
+          The principle specified by the user_id does not have authorization for the requested action
+
+        Notes:
+        -----
+        example:
+        {
+          "class" : "NewElementRequestBody",
+          "isOwnAnchor": true,
+          "properties": {
+            "class" : "SkillProperties",
+            "qualifiedName": "add unique name here",
+            "displayName": "add name here",
+            "description": "add description here",
+            "additionalProperties": {
+              "property1" : "propertyValue1",
+              "property2" : "propertyValue2"
+            }
+          }
+        }
+        """
+        return asyncio.run(self._async_create_skill(body))
+
+    @dynamic_catch
+    async def _async_create_skill_from_template(self, body: Optional[dict | TemplateRequestBody] = None) -> str:
+        """ Create a new skill from a template. Async version.
+
+        Parameters
+        ----------
+        body: dict | TemplateRequestBody, optional
+            A dict or TemplateRequestBody representing the template and replacement properties.
+
+        Returns
+        -------
+        str - the guid of the created skill
+
+        Raises
+        ------
+        PyegeriaException
+            One of the pyegeria exceptions will be raised if there are issues in communications, message format, or
+            Egeria errors.
+        ValidationError
+            Pydantic validation errors are raised if the body does not conform to the TemplateRequestBody.
+        PyegeriaNotAuthorizedException
+          The principle specified by the user_id does not have authorization for the requested action
+
+        Notes:
+        -----
+        example:
+        {
+          "class" : "TemplateRequestBody",
+          "isOwnAnchor": false,
+          "templateGUID": "add guid here",
+          "replacementProperties": {
+            "class": "ElementProperties",
+            "propertyValueMap" : {
+              "description" : {
+                "class": "PrimitiveTypePropertyValue",
+                "typeName": "string",
+                "primitiveValue" : "New description"
+              }
+            }
+          },
+          "placeholderPropertyValues":  {
+            "placeholder1" : "propertyValue1",
+            "placeholder2" : "propertyValue2"
+          }
+        }
+        """
+        url = f"{self.command_root}/skills/from-template"
+        body_to_use = body if body is not None else {}
+        return await self._async_create_element_body_request(url, ["SkillProperties"], body_to_use)
+
+    @dynamic_catch
+    def create_skill_from_template(self, body: Optional[dict | TemplateRequestBody] = None) -> str:
+        """ Create a new skill from a template.
+
+        Parameters
+        ----------
+        body: dict | TemplateRequestBody, optional
+            A dict or TemplateRequestBody representing the template and replacement properties.
+
+        Returns
+        -------
+        str - the guid of the created skill
+
+        Raises
+        ------
+        PyegeriaException
+            One of the pyegeria exceptions will be raised if there are issues in communications, message format, or
+            Egeria errors.
+        ValidationError
+            Pydantic validation errors are raised if the body does not conform to the TemplateRequestBody.
+        PyegeriaNotAuthorizedException
+          The principle specified by the user_id does not have authorization for the requested action
+
+        Notes:
+        -----
+        example:
+        {
+          "class" : "TemplateRequestBody",
+          "isOwnAnchor": false,
+          "templateGUID": "add guid here",
+          "replacementProperties": {
+            "class": "ElementProperties",
+            "propertyValueMap" : {
+              "description" : {
+                "class": "PrimitiveTypePropertyValue",
+                "typeName": "string",
+                "primitiveValue" : "New description"
+              }
+            }
+          },
+          "placeholderPropertyValues":  {
+            "placeholder1" : "propertyValue1",
+            "placeholder2" : "propertyValue2"
+          }
+        }
+        """
+        return asyncio.run(self._async_create_skill_from_template(body))
+
+    @dynamic_catch
+    async def _async_update_skill(self, skill_guid: str, body: Optional[dict | UpdateElementRequestBody] = None) -> None:
+        """ Update a skill. Async version.
+
+        Parameters
+        ----------
+        skill_guid: str
+            The unique identifier of the skill to update.
+        body: dict | UpdateElementRequestBody, optional
+            A dict or UpdateElementRequestBody representing the properties to update.
+
+        Returns
+        -------
+        None
+
+        Raises
+        ------
+        PyegeriaException
+            One of the pyegeria exceptions will be raised if there are issues in communications, message format, or
+            Egeria errors.
+        ValidationError
+            Pydantic validation errors are raised if the body does not conform to the UpdateElementRequestBody.
+        PyegeriaNotAuthorizedException
+          The principle specified by the user_id does not have authorization for the requested action
+
+        Notes:
+        -----
+        example:
+        {
+          "class" : "UpdateElementRequestBody",
+          "mergeUpdate" : true,
+          "properties": {
+            "class" : "SkillProperties",
+            "qualifiedName": "add unique name here",
+            "displayName": "add name here",
+            "description": "add description here",
+            "additionalProperties": {
+              "property1" : "propertyValue1",
+              "property2" : "propertyValue2"
+            },
+            "extendedProperties": {
+              "property1" : "propertyValue1",
+              "property2" : "propertyValue2"
+            }
+          }
+        }
+        """
+        url = f"{self.command_root}/skills/{skill_guid}/update"
+        await self._async_update_element_body_request(url, ["SkillProperties"], body)
+
+    @dynamic_catch
+    def update_skill(self, skill_guid: str, body: Optional[dict | UpdateElementRequestBody] = None) -> None:
+        """ Update a skill.
+
+        Parameters
+        ----------
+        skill_guid: str
+            The unique identifier of the skill to update.
+        body: dict | UpdateElementRequestBody, optional
+            A dict or UpdateElementRequestBody representing the properties to update.
+
+        Returns
+        -------
+        None
+
+        Raises
+        ------
+        PyegeriaException
+            One of the pyegeria exceptions will be raised if there are issues in communications, message format, or
+            Egeria errors.
+        ValidationError
+            Pydantic validation errors are raised if the body does not conform to the UpdateElementRequestBody.
+        PyegeriaNotAuthorizedException
+          The principle specified by the user_id does not have authorization for the requested action
+
+        Notes:
+        -----
+        example:
+        {
+          "class" : "UpdateElementRequestBody",
+          "mergeUpdate" : true,
+          "properties": {
+            "class" : "SkillProperties",
+            "qualifiedName": "add unique name here",
+            "displayName": "add name here",
+            "description": "add description here",
+            "additionalProperties": {
+              "property1" : "propertyValue1",
+              "property2" : "propertyValue2"
+            },
+            "extendedProperties": {
+              "property1" : "propertyValue1",
+              "property2" : "propertyValue2"
+            }
+          }
+        }
+        """
+        return asyncio.run(self._async_update_skill(skill_guid, body))
+
+    @dynamic_catch
+    async def _async_delete_skill(self, skill_guid: str, body: Optional[dict | DeleteElementRequestBody] = None) -> None:
+        """ Delete a skill. Async version.
+
+        Parameters
+        ----------
+        skill_guid: str
+            The unique identifier of the skill to delete.
+        body: dict | DeleteElementRequestBody, optional
+            A dict or DeleteElementRequestBody representing the delete options.
+
+        Returns
+        -------
+        None
+
+        Raises
+        ------
+        PyegeriaException
+            One of the pyegeria exceptions will be raised if there are issues in communications, message format, or
+            Egeria errors.
+        ValidationError
+            Pydantic validation errors are raised if the body does not conform to the DeleteElementRequestBody.
+        PyegeriaNotAuthorizedException
+          The principle specified by the user_id does not have authorization for the requested action
+
+        Notes:
+        -----
+        example:
+        {
+          "class" : "DeleteElementRequestBody",
+          "cascadeDelete" : false,
+          "deleteMethod" : "LOOK_FOR_LINEAGE",
+          "externalSourceGUID": "add guid here",
+          "externalSourceName": "add qualified name here",
+          "effectiveTime" : "2024-01-01T00:00:00Z",
+          "forLineage" : false,
+          "forDuplicateProcessing" : false
+        }
+        """
+        url = f"{self.command_root}/skills/{skill_guid}/delete"
+        await self._async_delete_element_request(url, body)
+
+    @dynamic_catch
+    def delete_skill(self, skill_guid: str, body: Optional[dict | DeleteElementRequestBody] = None) -> None:
+        """ Delete a skill.
+
+        Parameters
+        ----------
+        skill_guid: str
+            The unique identifier of the skill to delete.
+        body: dict | DeleteElementRequestBody, optional
+            A dict or DeleteElementRequestBody representing the delete options.
+
+        Returns
+        -------
+        None
+
+        Raises
+        ------
+        PyegeriaException
+            One of the pyegeria exceptions will be raised if there are issues in communications, message format, or
+            Egeria errors.
+        ValidationError
+            Pydantic validation errors are raised if the body does not conform to the DeleteElementRequestBody.
+        PyegeriaNotAuthorizedException
+          The principle specified by the user_id does not have authorization for the requested action
+
+        Notes:
+        -----
+        example:
+        {
+          "class" : "DeleteElementRequestBody",
+          "cascadeDelete" : false,
+          "deleteMethod" : "LOOK_FOR_LINEAGE",
+          "externalSourceGUID": "add guid here",
+          "externalSourceName": "add qualified name here",
+          "effectiveTime" : "2024-01-01T00:00:00Z",
+          "forLineage" : false,
+          "forDuplicateProcessing" : false
+        }
+        """
+        return asyncio.run(self._async_delete_skill(skill_guid, body))
+
+    @dynamic_catch
+    async def _async_get_skills_by_name(self, filter_string: Optional[str] = None,
+                                        body: Optional[dict | FilterRequestBody] = None,
+                                        start_from: int = 0, page_size: int = 0,
+                                        output_format: str = 'JSON',
+                                        report_spec: Optional[str | dict] = None) -> list | str:
+        """ Returns the list of skills with a particular name. Async version.
+
+        Parameters
+        ----------
+        filter_string: str, optional
+            Name to filter skills by. Pass None or '*' to match all.
+        body: dict | FilterRequestBody, optional
+            Full request body. If provided, overrides filter_string and other parameters.
+        start_from: int, default 0
+            Starting index for pagination.
+        page_size: int, default 0
+            Number of items to return in a single page.
+        output_format: str, default "JSON"
+            Output format: "MD", "LIST", "FORM", "REPORT", "DICT", "MERMAID" or "JSON".
+        report_spec: str | dict, optional
+            Report specification for output formatting.
+
+        Returns
+        -------
+        list | str - the list of matching skills
+
+        Raises
+        ------
+        PyegeriaException
+            One of the pyegeria exceptions will be raised if there are issues in communications, message format, or
+            Egeria errors.
+        ValidationError
+            Pydantic validation errors are raised if the body does not conform to the FilterRequestBody.
+        PyegeriaNotAuthorizedException
+          The principle specified by the user_id does not have authorization for the requested action
+
+        Notes:
+        -----
+        example body (if using body parameter):
+        {
+          "class" : "FilterRequestBody",
+          "filter" : "Add name here",
+          "startFrom": 0,
+          "pageSize": 10,
+          "limitResultsByStatus" : ["ACTIVE"],
+          "sequencingOrder" : "PROPERTY_ASCENDING",
+          "sequencingProperty" : "qualifiedName"
+        }
+        """
+        url = str(HttpUrl(f"{self.command_root}/skills/by-name"))
+        return await self._async_get_name_request(url, _type="Skill",
+                                                  _gen_output=self._generate_referenceable_output,
+                                                  filter_string=filter_string, start_from=start_from,
+                                                  page_size=page_size, output_format=output_format,
+                                                  report_spec=report_spec, body=body)
+
+    @dynamic_catch
+    def get_skills_by_name(self, filter_string: Optional[str] = None,
+                           body: Optional[dict | FilterRequestBody] = None,
+                           start_from: int = 0, page_size: int = 0,
+                           output_format: str = 'JSON',
+                           report_spec: Optional[str | dict] = None) -> list | str:
+        """ Returns the list of skills with a particular name.
+
+        Parameters
+        ----------
+        filter_string: str, optional
+            Name to filter skills by. Pass None or '*' to match all.
+        body: dict | FilterRequestBody, optional
+            Full request body. If provided, overrides filter_string and other parameters.
+        start_from: int, default 0
+            Starting index for pagination.
+        page_size: int, default 0
+            Number of items to return in a single page.
+        output_format: str, default "JSON"
+            Output format: "MD", "LIST", "FORM", "REPORT", "DICT", "MERMAID" or "JSON".
+        report_spec: str | dict, optional
+            Report specification for output formatting.
+
+        Returns
+        -------
+        list | str - the list of matching skills
+
+        Raises
+        ------
+        PyegeriaException
+            One of the pyegeria exceptions will be raised if there are issues in communications, message format, or
+            Egeria errors.
+        ValidationError
+            Pydantic validation errors are raised if the body does not conform to the FilterRequestBody.
+        PyegeriaNotAuthorizedException
+          The principle specified by the user_id does not have authorization for the requested action
+
+        Notes:
+        -----
+        example body (if using body parameter):
+        {
+          "class" : "FilterRequestBody",
+          "filter" : "Add name here",
+          "startFrom": 0,
+          "pageSize": 10,
+          "limitResultsByStatus" : ["ACTIVE"],
+          "sequencingOrder" : "PROPERTY_ASCENDING",
+          "sequencingProperty" : "qualifiedName"
+        }
+        """
+        return asyncio.run(self._async_get_skills_by_name(filter_string, body, start_from,
+                                                          page_size, output_format, report_spec))
+
+    @dynamic_catch
+    async def _async_find_skills(self, search_string: str = "*",
+                                 body: Optional[dict | SearchStringRequestBody] = None,
+                                 starts_with: bool = True, ends_with: bool = False,
+                                 ignore_case: bool = False, start_from: int = 0,
+                                 page_size: int = 0, output_format: str = 'JSON',
+                                 report_spec: Optional[str | dict] = None,
+                                 **kwargs) -> list | str:
+        """ Retrieve the list of skill metadata elements that contain the search string. Async version.
+
+        Parameters
+        ----------
+        search_string: str, default "*"
+            Search string to match against. None or '*' matches all skills.
+        body: dict | SearchStringRequestBody, optional
+            Full request body. If provided, overrides other search parameters.
+        starts_with: bool, default True
+            Match elements that start with the search string.
+        ends_with: bool, default False
+            Match elements that end with the search string.
+        ignore_case: bool, default False
+            Ignore case when searching.
+        start_from: int, default 0
+            Starting index for pagination.
+        page_size: int, default 0
+            Number of items to return in a single page.
+        output_format: str, default "JSON"
+            Output format: "MD", "LIST", "FORM", "REPORT", "DICT", "MERMAID" or "JSON".
+        report_spec: str | dict, optional
+            Report specification for output formatting.
+
+        Returns
+        -------
+        list | str - the list of skill metadata elements that match the search string
+
+        Raises
+        ------
+        PyegeriaException
+            One of the pyegeria exceptions will be raised if there are issues in communications, message format, or
+            Egeria errors.
+        ValidationError
+            Pydantic validation errors are raised if the body does not conform to the SearchStringRequestBody.
+        PyegeriaNotAuthorizedException
+          The principle specified by the user_id does not have authorization for the requested action
+        """
+        url = str(HttpUrl(f"{self.command_root}/skills/by-search-string"))
+        params = {
+            'search_string': search_string,
+            'body': body,
+            'starts_with': starts_with,
+            'ends_with': ends_with,
+            'ignore_case': ignore_case,
+            'start_from': start_from,
+            'page_size': page_size,
+            'output_format': output_format,
+            'report_spec': report_spec,
+        }
+        params.update(kwargs)
+        params = {k: v for k, v in params.items() if v is not None or k == 'search_string'}
+        return await self._async_find_request(url, _type="Skill",
+                                              _gen_output=self._generate_referenceable_output, **params)
+
+    @dynamic_catch
+    def find_skills(self, search_string: str = "*",
+                    body: Optional[dict | SearchStringRequestBody] = None,
+                    starts_with: bool = True, ends_with: bool = False,
+                    ignore_case: bool = False, start_from: int = 0,
+                    page_size: int = 0, output_format: str = 'JSON',
+                    report_spec: Optional[str | dict] = None,
+                    **kwargs) -> list | str:
+        """ Retrieve the list of skill metadata elements that contain the search string.
+
+        Parameters
+        ----------
+        search_string: str, default "*"
+            Search string to match against. None or '*' matches all skills.
+        body: dict | SearchStringRequestBody, optional
+            Full request body. If provided, overrides other search parameters.
+        starts_with: bool, default True
+            Match elements that start with the search string.
+        ends_with: bool, default False
+            Match elements that end with the search string.
+        ignore_case: bool, default False
+            Ignore case when searching.
+        start_from: int, default 0
+            Starting index for pagination.
+        page_size: int, default 0
+            Number of items to return in a single page.
+        output_format: str, default "JSON"
+            Output format: "MD", "LIST", "FORM", "REPORT", "DICT", "MERMAID" or "JSON".
+        report_spec: str | dict, optional
+            Report specification for output formatting.
+
+        Returns
+        -------
+        list | str - the list of skill metadata elements that match the search string
+
+        Raises
+        ------
+        PyegeriaException
+            One of the pyegeria exceptions will be raised if there are issues in communications, message format, or
+            Egeria errors.
+        ValidationError
+            Pydantic validation errors are raised if the body does not conform to the SearchStringRequestBody.
+        PyegeriaNotAuthorizedException
+          The principle specified by the user_id does not have authorization for the requested action
+        """
+        return asyncio.run(self._async_find_skills(search_string, body, starts_with, ends_with,
+                                                   ignore_case, start_from, page_size,
+                                                   output_format, report_spec, **kwargs))
+
+    @dynamic_catch
+    async def _async_get_skill_by_guid(self, skill_guid: str, body: Optional[dict | GetRequestBody] = None) -> dict:
+        """ Return the properties of a specific skill. Async version.
+
+        Parameters
+        ----------
+        skill_guid: str
+            The unique identifier of the skill to retrieve.
+        body: dict | GetRequestBody, optional
+            A dict or GetRequestBody representing the retrieval options.
+
+        Returns
+        -------
+        dict - the properties of a specific skill
+
+        Raises
+        ------
+        PyegeriaException
+            One of the pyegeria exceptions will be raised if there are issues in communications, message format, or
+            Egeria errors.
+        ValidationError
+            Pydantic validation errors are raised if the body does not conform to the GetRequestBody.
+        PyegeriaNotAuthorizedException
+          The principle specified by the user_id does not have authorization for the requested action
+
+        Notes:
+        -----
+        example:
+        {
+          "class" : "GetRequestBody",
+          "asOfTime" : "2024-01-01T00:00:00Z",
+          "effectiveTime" : "2024-01-01T00:00:00Z",
+          "forLineage" : false,
+          "forDuplicateProcessing" : false
+        }
+        """
+        url = f"{self.command_root}/skills/{skill_guid}/retrieve"
+        return await self._async_get_guid_request(url, "Skill", self._generate_referenceable_output, body=body)
+
+    @dynamic_catch
+    def get_skill_by_guid(self, skill_guid: str, body: Optional[dict | GetRequestBody] = None) -> dict:
+        """ Return the properties of a specific skill.
+
+        Parameters
+        ----------
+        skill_guid: str
+            The unique identifier of the skill to retrieve.
+        body: dict | GetRequestBody, optional
+            A dict or GetRequestBody representing the retrieval options.
+
+        Returns
+        -------
+        dict - the properties of a specific skill
+
+        Raises
+        ------
+        PyegeriaException
+            One of the pyegeria exceptions will be raised if there are issues in communications, message format, or
+            Egeria errors.
+        ValidationError
+            Pydantic validation errors are raised if the body does not conform to the GetRequestBody.
+        PyegeriaNotAuthorizedException
+          The principle specified by the user_id does not have authorization for the requested action
+
+        Notes:
+        -----
+        example:
+        {
+          "class" : "GetRequestBody",
+          "asOfTime" : "2024-01-01T00:00:00Z",
+          "effectiveTime" : "2024-01-01T00:00:00Z",
+          "forLineage" : false,
+          "forDuplicateProcessing" : false
+        }
+        """
+        return asyncio.run(self._async_get_skill_by_guid(skill_guid, body))
+
 from typing import Union, Dict, List, Optional
 
 if __name__ == "__main__":

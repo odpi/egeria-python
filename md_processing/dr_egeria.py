@@ -24,7 +24,7 @@ from md_processing.md_processing_utils.common_md_utils import set_attribute_log_
 from md_processing.md_processing_utils.md_processing_constants import PROJECT_SUBTYPES, COLLECTION_SUBTYPES
 from md_processing.v2 import (
     UniversalExtractor, V2Dispatcher, AsyncBaseCommandProcessor,
-    TermProcessor, TermRelationshipProcessor,
+    TermProcessor, TermRelationshipProcessor, GlossaryClassifyProcessor,
     DataCollectionProcessor, DataStructureProcessor, DataFieldProcessor, DataClassProcessor,
     BlueprintProcessor, ComponentProcessor, SupplyChainProcessor, SolutionLinkProcessor,
     SolutionArchitectProcessor,
@@ -215,6 +215,8 @@ def setup_dispatcher(client: EgeriaTech) -> V2Dispatcher:
     reg("Unlink Term-Term Relationship", TermRelationshipProcessor)
     reg("Remove Term-Term Relationship", TermRelationshipProcessor)
     reg("Detach Term-Term Relationship", TermRelationshipProcessor)
+    reg("Classify Term as Question", GlossaryClassifyProcessor)
+    reg("Declassify Term as Question", GlossaryClassifyProcessor)
 
     # Data Designer
     from md_processing.v2.data_designer import (
@@ -569,13 +571,13 @@ async def process_md_file_v2(input_file: str, output_folder: str, directive: str
         # Re-assemble the file (using joined outputs)
         content_to_write = "\n".join(final_output)
         
-        path, filename = os.path.split(input_file)
+        _, filename = os.path.split(full_file_path)
         new_filename = f"processed-{get_current_datetime_string()}-{filename}"
-        
+
         if output_folder:
             new_file_path = os.path.abspath(os.path.expanduser(os.path.join(EGERIA_ROOT_PATH, EGERIA_OUTBOX_PATH, output_folder, new_filename)))
         else:
-            new_file_path = os.path.abspath(os.path.expanduser(os.path.join(EGERIA_ROOT_PATH, EGERIA_OUTBOX_PATH, new_filename)))
+            new_file_path = os.path.join(os.path.dirname(full_file_path), "dr-egeria-outbox", new_filename)
             
         os.makedirs(os.path.dirname(new_file_path), exist_ok=True)
 

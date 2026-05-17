@@ -3,7 +3,7 @@
 
 [project]
 name = "pyegeria"
-version = "6.0.10"
+version = "6.0.11"
 license = 'Apache-2.0'
 license-files = ["LICENSE"]
 authors = [{name = "Dan Wolfson", email = "dan.wolfson@pdr-associates.com"},]
@@ -42,6 +42,7 @@ dependencies = [
     "python-dotenv>=1.1.1",
     "pytest>=8.4.2",
     "optional>=0.0.1",
+    "pyrefly>=0.60.0",
 ]
 
 [project.scripts]

@@ -1715,6 +1715,8 @@ class ValidMetadataManager(ServerClient):
     # Get all ...
     #
     async def _async_get_all_entity_types(self,
+                                          get_inherited_attributes: bool = False,
+                                          get_relationship_attributes: bool = False,
                                           output_format: str = "JSON",
                                           report_spec: dict | str | None = None) -> dict | list | str:
         """Returns the list of different types of metadata organized into two groups.  The first are the
@@ -1724,10 +1726,10 @@ class ValidMetadataManager(ServerClient):
 
         Parameters
         ----------
-
-
-        Parameters
-        ----------
+        get_inherited_attributes: bool, default = False
+            Whether to include inherited attributes in the returned type definitions.
+        get_relationship_attributes: bool, default = False
+            Whether to include relationship attributes in the returned type definitions.
         output_format: str, default = "JSON"
             Type of output to return. For example: "JSON", "DICT", "MD", "MD_TABLE", etc.
         report_spec: dict | str | None
@@ -1747,6 +1749,13 @@ class ValidMetadataManager(ServerClient):
         """
 
         url = f"{self.platform_url}/servers/{self.view_server}{self.valid_m_command_base}/open-metadata-types"
+        query_params = []
+        if get_inherited_attributes:
+            query_params.append("getInheritedAttributes=true")
+        if get_relationship_attributes:
+            query_params.append("getRelationshipAttributes=true")
+        if query_params:
+            url += "?" + "&".join(query_params)
 
         resp = await self._async_make_request("GET", url)
         elements = resp.json().get("typeDefs", NO_ELEMENTS_FOUND)
@@ -1758,6 +1767,8 @@ class ValidMetadataManager(ServerClient):
         return elements
 
     def get_all_entity_types(self,
+                             get_inherited_attributes: bool = False,
+                             get_relationship_attributes: bool = False,
                              output_format: str = "JSON",
                              report_spec: dict | str | None = None) -> dict | list | str:
         """Returns the list of different types of metadata organized into two groups.  The first are the
@@ -1767,10 +1778,10 @@ class ValidMetadataManager(ServerClient):
 
         Parameters
         ----------
-
-
-        Parameters
-        ----------
+        get_inherited_attributes: bool, default = False
+            Whether to include inherited attributes in the returned type definitions.
+        get_relationship_attributes: bool, default = False
+            Whether to include relationship attributes in the returned type definitions.
         output_format: str, default = "JSON"
             Type of output to return. For example: "JSON", "DICT", "MD", "MD_TABLE", etc.
         report_spec: dict | str | None
@@ -1789,21 +1800,25 @@ class ValidMetadataManager(ServerClient):
 
         """
         loop = asyncio.get_event_loop()
-        resp = loop.run_until_complete(self._async_get_all_entity_types(output_format=output_format,
+        resp = loop.run_until_complete(self._async_get_all_entity_types(get_inherited_attributes=get_inherited_attributes,
+                                                                        get_relationship_attributes=get_relationship_attributes,
+                                                                        output_format=output_format,
                                                                         report_spec=report_spec))
         return resp
 
     async def _async_get_all_entity_defs(self,
+                                         get_inherited_attributes: bool = False,
+                                         get_relationship_attributes: bool = False,
                                          output_format: str = "JSON",
                                          report_spec: dict | str | None = None) -> dict | list | str:
-        """GReturns all the entity type definitions. Async version.
+        """Returns all the entity type definitions. Async version.
 
         Parameters
         ----------
-
-
-        Parameters
-        ----------
+        get_inherited_attributes: bool, default = False
+            Whether to include inherited attributes in the returned type definitions.
+        get_relationship_attributes: bool, default = False
+            Whether to include relationship attributes in the returned type definitions.
         output_format: str, default = "JSON"
             Type of output to return. For example: "JSON", "DICT", "MD", "MD_TABLE", etc.
         report_spec: dict | str | None
@@ -1823,6 +1838,13 @@ class ValidMetadataManager(ServerClient):
         """
 
         url = f"{self.platform_url}/servers/{self.view_server}{self.valid_m_command_base}/open-metadata-types/entity-defs"
+        query_params = []
+        if get_inherited_attributes:
+            query_params.append("getInheritedAttributes=true")
+        if get_relationship_attributes:
+            query_params.append("getRelationshipAttributes=true")
+        if query_params:
+            url += "?" + "&".join(query_params)
 
         resp = await self._async_make_request("GET", url)
         elements = self._extract_typedef_list(resp.json())
@@ -1833,16 +1855,18 @@ class ValidMetadataManager(ServerClient):
         return elements
 
     def get_all_entity_defs(self,
+                            get_inherited_attributes: bool = False,
+                            get_relationship_attributes: bool = False,
                             output_format: str = "JSON",
                             report_spec: dict | str | None = None) -> dict | list | str:
         """Returns all the entity type definitions.
 
         Parameters
         ----------
-
-
-        Parameters
-        ----------
+        get_inherited_attributes: bool, default = False
+            Whether to include inherited attributes in the returned type definitions.
+        get_relationship_attributes: bool, default = False
+            Whether to include relationship attributes in the returned type definitions.
         output_format: str, default = "JSON"
             Type of output to return. For example: "JSON", "DICT", "MD", "MD_TABLE", etc.
         report_spec: dict | str | None
@@ -1861,21 +1885,25 @@ class ValidMetadataManager(ServerClient):
 
         """
         loop = asyncio.get_event_loop()
-        resp = loop.run_until_complete(self._async_get_all_entity_defs(output_format=output_format,
+        resp = loop.run_until_complete(self._async_get_all_entity_defs(get_inherited_attributes=get_inherited_attributes,
+                                                                       get_relationship_attributes=get_relationship_attributes,
+                                                                       output_format=output_format,
                                                                        report_spec=report_spec))
         return resp
 
     async def _async_get_all_relationship_defs(self,
+                                               get_inherited_attributes: bool = False,
+                                               get_relationship_attributes: bool = False,
                                                output_format: str = "JSON",
                                                report_spec: dict | str | None = None) -> dict | list | str:
         """Returns all the relationship type definitions. Async version.
 
         Parameters
         ----------
-
-
-        Parameters
-        ----------
+        get_inherited_attributes: bool, default = False
+            Whether to include inherited attributes in the returned type definitions.
+        get_relationship_attributes: bool, default = False
+            Whether to include relationship attributes in the returned type definitions.
         output_format: str, default = "JSON"
             Type of output to return. For example: "JSON", "DICT", "MD", "MD_TABLE", etc.
         report_spec: dict | str | None
@@ -1895,6 +1923,13 @@ class ValidMetadataManager(ServerClient):
         """
 
         url = f"{self.platform_url}/servers/{self.view_server}{self.valid_m_command_base}/open-metadata-types/relationship-defs"
+        query_params = []
+        if get_inherited_attributes:
+            query_params.append("getInheritedAttributes=true")
+        if get_relationship_attributes:
+            query_params.append("getRelationshipAttributes=true")
+        if query_params:
+            url += "?" + "&".join(query_params)
 
         resp = await self._async_make_request("GET", url)
         elements = self._extract_typedef_list(resp.json())
@@ -1905,16 +1940,18 @@ class ValidMetadataManager(ServerClient):
         return elements
 
     def get_all_relationship_defs(self,
+                                  get_inherited_attributes: bool = False,
+                                  get_relationship_attributes: bool = False,
                                   output_format: str = "JSON",
                                   report_spec: dict | str | None = None) -> dict | list | str:
         """Returns all the relationship type definitions.
 
         Parameters
         ----------
-
-
-        Parameters
-        ----------
+        get_inherited_attributes: bool, default = False
+            Whether to include inherited attributes in the returned type definitions.
+        get_relationship_attributes: bool, default = False
+            Whether to include relationship attributes in the returned type definitions.
         output_format: str, default = "JSON"
             Type of output to return. For example: "JSON", "DICT", "MD", "MD_TABLE", etc.
         report_spec: dict | str | None
@@ -1933,21 +1970,25 @@ class ValidMetadataManager(ServerClient):
 
         """
         loop = asyncio.get_event_loop()
-        resp = loop.run_until_complete(self._async_get_all_relationship_defs(output_format=output_format,
+        resp = loop.run_until_complete(self._async_get_all_relationship_defs(get_inherited_attributes=get_inherited_attributes,
+                                                                             get_relationship_attributes=get_relationship_attributes,
+                                                                             output_format=output_format,
                                                                              report_spec=report_spec))
         return resp
 
     async def _async_get_all_classification_defs(self,
+                                                 get_inherited_attributes: bool = False,
+                                                 get_relationship_attributes: bool = False,
                                                  output_format: str = "JSON",
                                                  report_spec: dict | str | None = None) -> dict | list | str:
         """Returns all the classification type definitions. Async version.
 
         Parameters
         ----------
-
-
-        Parameters
-        ----------
+        get_inherited_attributes: bool, default = False
+            Whether to include inherited attributes in the returned type definitions.
+        get_relationship_attributes: bool, default = False
+            Whether to include relationship attributes in the returned type definitions.
         output_format: str, default = "JSON"
             Type of output to return. For example: "JSON", "DICT", "MD", "MD_TABLE", etc.
         report_spec: dict | str | None
@@ -1967,6 +2008,13 @@ class ValidMetadataManager(ServerClient):
         """
 
         url = f"{self.platform_url}/servers/{self.view_server}{self.valid_m_command_base}/open-metadata-types/classification-defs"
+        query_params = []
+        if get_inherited_attributes:
+            query_params.append("getInheritedAttributes=true")
+        if get_relationship_attributes:
+            query_params.append("getRelationshipAttributes=true")
+        if query_params:
+            url += "?" + "&".join(query_params)
 
         resp = await self._async_make_request("GET", url)
         elements = self._extract_typedef_list(resp.json())
@@ -1977,16 +2025,18 @@ class ValidMetadataManager(ServerClient):
         return elements
 
     def get_all_classification_defs(self,
+                                    get_inherited_attributes: bool = False,
+                                    get_relationship_attributes: bool = False,
                                     output_format: str = "JSON",
                                     report_spec: dict | str | None = None) -> dict | list | str:
         """Returns all the classification type definitions.
 
         Parameters
         ----------
-
-
-        Parameters
-        ----------
+        get_inherited_attributes: bool, default = False
+            Whether to include inherited attributes in the returned type definitions.
+        get_relationship_attributes: bool, default = False
+            Whether to include relationship attributes in the returned type definitions.
         output_format: str, default = "JSON"
             Type of output to return. For example: "JSON", "DICT", "MD", "MD_TABLE", etc.
         report_spec: dict | str | None
@@ -2005,7 +2055,9 @@ class ValidMetadataManager(ServerClient):
 
         """
         loop = asyncio.get_event_loop()
-        resp = loop.run_until_complete(self._async_get_all_classification_defs(output_format=output_format,
+        resp = loop.run_until_complete(self._async_get_all_classification_defs(get_inherited_attributes=get_inherited_attributes,
+                                                                               get_relationship_attributes=get_relationship_attributes,
+                                                                               output_format=output_format,
                                                                                report_spec=report_spec))
         return resp
 
@@ -2014,6 +2066,8 @@ class ValidMetadataManager(ServerClient):
     #
 
     async def _async_get_sub_types(self, type_name: str,
+                                   get_inherited_attributes: bool = False,
+                                   get_relationship_attributes: bool = False,
                                    output_format: str = "JSON",
                                    report_spec: dict | str | None = None) -> dict | list | str:
         """Returns all the TypeDefs for a specific subtype.  If a null result is returned it means the
@@ -2023,9 +2077,10 @@ class ValidMetadataManager(ServerClient):
         ----------
         type_name : str
             Type name to retrieve the sub-types for.
-
-        Parameters
-        ----------
+        get_inherited_attributes: bool, default = False
+            Whether to include inherited attributes in the returned type definitions.
+        get_relationship_attributes: bool, default = False
+            Whether to include relationship attributes in the returned type definitions.
         output_format: str, default = "JSON"
             Type of output to return. For example: "JSON", "DICT", "MD", "MD_TABLE", etc.
         report_spec: dict | str | None
@@ -2044,10 +2099,14 @@ class ValidMetadataManager(ServerClient):
 
         """
 
-        url = (
-            f"{self.platform_url}/servers/{self.view_server}{self.valid_m_command_base}/open-metadata-types/sub-types/"
-            f"{type_name}"
-        )
+        url = f"{self.platform_url}/servers/{self.view_server}{self.valid_m_command_base}/open-metadata-types/sub-types/{type_name}"
+        query_params = []
+        if get_inherited_attributes:
+            query_params.append("getInheritedAttributes=true")
+        if get_relationship_attributes:
+            query_params.append("getRelationshipAttributes=true")
+        if query_params:
+            url += "?" + "&".join(query_params)
 
         resp = await self._async_make_request("GET", url)
         elements = resp.json().get("typeDefList", NO_ELEMENTS_FOUND)
@@ -2058,6 +2117,8 @@ class ValidMetadataManager(ServerClient):
         return elements
 
     def get_sub_types(self, type_name: str,
+                      get_inherited_attributes: bool = False,
+                      get_relationship_attributes: bool = False,
                       output_format: str = "JSON",
                       report_spec: dict | str | None = None) -> dict | list | str:
         """Returns all the TypeDefs for a specific subtype.  If a null result is returned it means the
@@ -2067,9 +2128,10 @@ class ValidMetadataManager(ServerClient):
         ----------
         type_name : str
             Type name to retrieve the sub-types for.
-
-        Parameters
-        ----------
+        get_inherited_attributes: bool, default = False
+            Whether to include inherited attributes in the returned type definitions.
+        get_relationship_attributes: bool, default = False
+            Whether to include relationship attributes in the returned type definitions.
         output_format: str, default = "JSON"
             Type of output to return. For example: "JSON", "DICT", "MD", "MD_TABLE", etc.
         report_spec: dict | str | None
@@ -2089,11 +2151,17 @@ class ValidMetadataManager(ServerClient):
         """
         loop = asyncio.get_event_loop()
         resp = loop.run_until_complete(
-            self._async_get_sub_types(type_name, output_format=output_format, report_spec=report_spec)
+            self._async_get_sub_types(type_name,
+                                      get_inherited_attributes=get_inherited_attributes,
+                                      get_relationship_attributes=get_relationship_attributes,
+                                      output_format=output_format,
+                                      report_spec=report_spec)
         )
         return resp
 
     async def _async_get_valid_relationship_types(self, entity_type: str,
+                                                  get_inherited_attributes: bool = False,
+                                                  get_relationship_attributes: bool = False,
                                                   output_format: str = "JSON",
                                                   report_spec: dict | str | None = None) -> dict | list | str:
         """Returns all the TypeDefs for relationships that can be attached to the requested entity type.
@@ -2103,10 +2171,10 @@ class ValidMetadataManager(ServerClient):
         ----------
         entity_type : str
             The name of the entity type to retrieve the valid relationships for.
-
-
-        Parameters
-        ----------
+        get_inherited_attributes: bool, default = False
+            Whether to include inherited attributes in the returned type definitions.
+        get_relationship_attributes: bool, default = False
+            Whether to include relationship attributes in the returned type definitions.
         output_format: str, default = "JSON"
             Type of output to return. For example: "JSON", "DICT", "MD", "MD_TABLE", etc.
         report_spec: dict | str | None
@@ -2125,10 +2193,14 @@ class ValidMetadataManager(ServerClient):
 
         """
 
-        url = (
-            f"{self.platform_url}/servers/{self.view_server}{self.valid_m_command_base}/open-metadata-types/{entity_type}/"
-            f"attached-relationships"
-        )
+        url = f"{self.platform_url}/servers/{self.view_server}{self.valid_m_command_base}/open-metadata-types/{entity_type}/attached-relationships"
+        query_params = []
+        if get_inherited_attributes:
+            query_params.append("getInheritedAttributes=true")
+        if get_relationship_attributes:
+            query_params.append("getRelationshipAttributes=true")
+        if query_params:
+            url += "?" + "&".join(query_params)
 
         resp = await self._async_make_request("GET", url)
         elements = resp.json().get("typeDefList", NO_ELEMENTS_FOUND)
@@ -2139,31 +2211,30 @@ class ValidMetadataManager(ServerClient):
         return elements
 
     def get_valid_relationship_types(self, entity_type: str,
+                                     get_inherited_attributes: bool = False,
+                                     get_relationship_attributes: bool = False,
                                      output_format: str = "JSON",
                                      report_spec: dict | str | None = None) -> dict | list | str:
         """Returns all the TypeDefs for relationships that can be attached to the requested entity type.
-                    Async version.
 
-            Parameters
-            ----------
-            entity_type : str
-                 The name of the entity type to retrieve the valid relationships for.
-             : str, optional
-                The name of the server to  configure.
-                If not provided, the server name associated with the instance is used.
+        Parameters
+        ----------
+        entity_type : str
+             The name of the entity type to retrieve the valid relationships for.
+        get_inherited_attributes: bool, default = False
+            Whether to include inherited attributes in the returned type definitions.
+        get_relationship_attributes: bool, default = False
+            Whether to include relationship attributes in the returned type definitions.
+        output_format: str, default = "JSON"
+            Type of output to return. For example: "JSON", "DICT", "MD", "MD_TABLE", etc.
+        report_spec: dict | str | None
+            Output format set to use. If None, the default output format set is used.
 
-            Parameters
-            ----------
-            output_format: str, default = "JSON"
-                Type of output to return. For example: "JSON", "DICT", "MD", "MD_TABLE", etc.
-            report_spec: dict | str | None
-                Output format set to use. If None, the default output format set is used.
+        Returns
+        -------
+        List | str
 
-            Returns
-            -------
-            List | str
-
-                A list of TypeDefs that can be attached to the specified entity type.
+            A list of TypeDefs that can be attached to the specified entity type.
 
         Raises
         ------
@@ -2173,12 +2244,18 @@ class ValidMetadataManager(ServerClient):
         """
         loop = asyncio.get_event_loop()
         resp = loop.run_until_complete(
-            self._async_get_valid_relationship_types(entity_type, output_format=output_format, report_spec=report_spec)
+            self._async_get_valid_relationship_types(entity_type,
+                                                     get_inherited_attributes=get_inherited_attributes,
+                                                     get_relationship_attributes=get_relationship_attributes,
+                                                     output_format=output_format,
+                                                     report_spec=report_spec)
         )
         return resp
 
     async def _async_get_valid_classification_types(
         self, entity_type: str,
+        get_inherited_attributes: bool = False,
+        get_relationship_attributes: bool = False,
         output_format: str = "JSON",
         report_spec: dict | str | None = None
     ) -> dict | list | str:
@@ -2189,10 +2266,10 @@ class ValidMetadataManager(ServerClient):
         ----------
         entity_type : str
             The name of the entity type to retrieve the classifications for.
-
-
-        Parameters
-        ----------
+        get_inherited_attributes: bool, default = False
+            Whether to include inherited attributes in the returned type definitions.
+        get_relationship_attributes: bool, default = False
+            Whether to include relationship attributes in the returned type definitions.
         output_format: str, default = "JSON"
             Type of output to return. For example: "JSON", "DICT", "MD", "MD_TABLE", etc.
         report_spec: dict | str | None
@@ -2211,10 +2288,14 @@ class ValidMetadataManager(ServerClient):
 
         """
 
-        url = (
-            f"{self.platform_url}/servers/{self.view_server}{self.valid_m_command_base}/open-metadata-types/{entity_type}/"
-            f"attached-classifications"
-        )
+        url = f"{self.platform_url}/servers/{self.view_server}{self.valid_m_command_base}/open-metadata-types/{entity_type}/attached-classifications"
+        query_params = []
+        if get_inherited_attributes:
+            query_params.append("getInheritedAttributes=true")
+        if get_relationship_attributes:
+            query_params.append("getRelationshipAttributes=true")
+        if query_params:
+            url += "?" + "&".join(query_params)
 
         resp = await self._async_make_request("GET", url)
         elements = resp.json().get("typeDefList", NO_ELEMENTS_FOUND)
@@ -2225,31 +2306,30 @@ class ValidMetadataManager(ServerClient):
         return elements
 
     def get_valid_classification_types(self, entity_type: str,
+                                       get_inherited_attributes: bool = False,
+                                       get_relationship_attributes: bool = False,
                                        output_format: str = "JSON",
                                        report_spec: dict | str | None = None) -> dict | list | str:
         """Returns all the TypeDefs for classifications that can be attached to the requested entity type.
-                    Async version.
 
-            Parameters
-            ----------
-            entity_type : str
-                The name of the entity type to retrieve the classifications for.
-             : str, optional
-                The name of the server to  configure.
-                If not provided, the server name associated with the instance is used.
+        Parameters
+        ----------
+        entity_type : str
+            The name of the entity type to retrieve the classifications for.
+        get_inherited_attributes: bool, default = False
+            Whether to include inherited attributes in the returned type definitions.
+        get_relationship_attributes: bool, default = False
+            Whether to include relationship attributes in the returned type definitions.
+        output_format: str, default = "JSON"
+            Type of output to return. For example: "JSON", "DICT", "MD", "MD_TABLE", etc.
+        report_spec: dict | str | None
+            Output format set to use. If None, the default output format set is used.
 
-            Parameters
-            ----------
-            output_format: str, default = "JSON"
-                Type of output to return. For example: "JSON", "DICT", "MD", "MD_TABLE", etc.
-            report_spec: dict | str | None
-                Output format set to use. If None, the default output format set is used.
+        Returns
+        -------
+        List | str
 
-            Returns
-            -------
-            List | str
-
-                A list of classifications that can be attached to the specified entity type.
+            A list of classifications that can be attached to the specified entity type.
 
         Raises
         ------
@@ -2259,12 +2339,17 @@ class ValidMetadataManager(ServerClient):
         """
         loop = asyncio.get_event_loop()
         resp = loop.run_until_complete(
-            self._async_get_valid_classification_types(entity_type, output_format=output_format,
+            self._async_get_valid_classification_types(entity_type,
+                                                       get_inherited_attributes=get_inherited_attributes,
+                                                       get_relationship_attributes=get_relationship_attributes,
+                                                       output_format=output_format,
                                                        report_spec=report_spec)
         )
         return resp
 
     async def _async_get_typedef_by_name(self, entity_type: str,
+                                         get_inherited_attributes: bool = False,
+                                         get_relationship_attributes: bool = False,
                                          output_format: str = "JSON",
                                          report_spec: dict | str | None = None) -> dict | str | list[dict]:
         """Return the TypeDef identified by the unique name.
@@ -2274,10 +2359,10 @@ class ValidMetadataManager(ServerClient):
         ----------
         entity_type : str
             The name of the entity type to retrieve the typedef for.
-
-
-        Parameters
-        ----------
+        get_inherited_attributes: bool, default = False
+            Whether to include inherited attributes in the returned type definitions.
+        get_relationship_attributes: bool, default = False
+            Whether to include relationship attributes in the returned type definitions.
         output_format: str, default = "JSON"
             Type of output to return. For example: "JSON", "DICT", "MD", "MD_TABLE", etc.
         report_spec: dict | str | None
@@ -2297,6 +2382,13 @@ class ValidMetadataManager(ServerClient):
         """
 
         url = f"{self.platform_url}/servers/{self.view_server}{self.valid_m_command_base}/open-metadata-types/name/{entity_type}"
+        query_params = []
+        if get_inherited_attributes:
+            query_params.append("getInheritedAttributes=true")
+        if get_relationship_attributes:
+            query_params.append("getRelationshipAttributes=true")
+        if query_params:
+            url += "?" + "&".join(query_params)
 
         resp = await self._async_make_request("GET", url)
         element = resp.json().get("typeDef", NO_ELEMENTS_FOUND)
@@ -2307,6 +2399,8 @@ class ValidMetadataManager(ServerClient):
         return element
 
     def get_typedef_by_name(self, entity_type: str,
+                            get_inherited_attributes: bool = False,
+                            get_relationship_attributes: bool = False,
                             output_format: str = "JSON",
                             report_spec: dict | str | None = None) -> dict | str | list[dict]:
         """Return the TypeDef identified by the unique name.
@@ -2315,10 +2409,10 @@ class ValidMetadataManager(ServerClient):
         ----------
         entity_type : str
             The name of the entity type to retrieve the typedef for.
-
-
-        Parameters
-        ----------
+        get_inherited_attributes: bool, default = False
+            Whether to include inherited attributes in the returned type definitions.
+        get_relationship_attributes: bool, default = False
+            Whether to include relationship attributes in the returned type definitions.
         output_format: str, default = "JSON"
             Type of output to return. For example: "JSON", "DICT", "MD", "MD_TABLE", etc.
         report_spec: dict | str | None
@@ -2338,6 +2432,8 @@ class ValidMetadataManager(ServerClient):
         """
         loop = asyncio.get_event_loop()
         resp = loop.run_until_complete(self._async_get_typedef_by_name(entity_type,
+                                                                       get_inherited_attributes=get_inherited_attributes,
+                                                                       get_relationship_attributes=get_relationship_attributes,
                                                                        output_format=output_format,
                                                                        report_spec=report_spec))
         return resp
