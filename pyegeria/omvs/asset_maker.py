@@ -1876,6 +1876,654 @@ class AssetMaker(ServerClient):
             )
         )
 
+    @dynamic_catch
+    async def _async_link_data_set_content(
+        self,
+        data_set_guid: str,
+        data_content_asset_guid: str,
+        body: dict | NewRelationshipRequestBody | None = None,
+    ) -> None:
+        """Attach a data set to another asset (typically a data store) that is supplying the data. Async version.
+
+        Parameters
+        ----------
+        data_set_guid: str
+            Unique identifier of the data set.
+        data_content_asset_guid: str
+            Unique identifier of the data asset supplying the data.
+        body: dict | NewRelationshipRequestBody, optional
+            Properties for the DataSetContent relationship.
+
+        Returns
+        -------
+        None
+
+        Raises
+        ------
+        PyegeriaException
+            One of the pyegeria exceptions will be raised if there are issues in communications, message format, or
+            Egeria errors.
+
+        Notes
+        -----
+        See: https://egeria-project.org/concepts/asset
+
+        Sample body:
+        {
+          "class" : "NewRelationshipRequestBody",
+          "properties": {
+            "class": "DataSetContentProperties",
+            "queryId": "add id that is used on overall formula",
+            "query": "add query",
+            "queryType": "add query type",
+            "iscQualifiedName": "add qualified name",
+            "effectiveFrom": "2024-01-01T00:00:00.000+00:00",
+            "effectiveTo": "2024-12-31T23:59:59.999+00:00"
+          }
+        }
+        """
+        url = f"{self.asset_command_root}/data-sets/{data_set_guid}/data-set-content/{data_content_asset_guid}/attach"
+        await self._async_new_relationship_request(url, ["DataSetContentProperties"], body)
+
+    @dynamic_catch
+    def link_data_set_content(
+        self,
+        data_set_guid: str,
+        data_content_asset_guid: str,
+        body: dict | NewRelationshipRequestBody | None = None,
+    ) -> None:
+        """Attach a data set to another asset (typically a data store) that is supplying the data.
+
+        Parameters
+        ----------
+        data_set_guid: str
+            Unique identifier of the data set.
+        data_content_asset_guid: str
+            Unique identifier of the data asset supplying the data.
+        body: dict | NewRelationshipRequestBody, optional
+            Properties for the DataSetContent relationship.
+
+        Returns
+        -------
+        None
+
+        Raises
+        ------
+        PyegeriaException
+            One of the pyegeria exceptions will be raised if there are issues in communications, message format, or
+            Egeria errors.
+
+        Notes
+        -----
+        See: https://egeria-project.org/concepts/asset
+
+        Sample body:
+        {
+          "class" : "NewRelationshipRequestBody",
+          "properties": {
+            "class": "DataSetContentProperties",
+            "queryId": "add id that is used on overall formula",
+            "query": "add query",
+            "queryType": "add query type",
+            "iscQualifiedName": "add qualified name",
+            "effectiveFrom": "2024-01-01T00:00:00.000+00:00",
+            "effectiveTo": "2024-12-31T23:59:59.999+00:00"
+          }
+        }
+        """
+        loop = asyncio.get_event_loop()
+        loop.run_until_complete(
+            self._async_link_data_set_content(data_set_guid, data_content_asset_guid, body)
+        )
+
+    @dynamic_catch
+    async def _async_detach_data_set_content(
+        self,
+        data_set_guid: str,
+        data_content_asset_guid: str,
+        body: dict | DeleteRelationshipRequestBody | None = None,
+    ) -> None:
+        """Detach a data set from another asset that was supplying the data. Async version.
+
+        Parameters
+        ----------
+        data_set_guid: str
+            Unique identifier of the data set.
+        data_content_asset_guid: str
+            Unique identifier of the data asset that was supplying the data.
+        body: dict | DeleteRelationshipRequestBody, optional
+            Additional parameters for the delete operation.
+
+        Returns
+        -------
+        None
+
+        Raises
+        ------
+        PyegeriaException
+            One of the pyegeria exceptions will be raised if there are issues in communications, message format, or
+            Egeria errors.
+        """
+        url = f"{self.asset_command_root}/data-sets/{data_set_guid}/data-set-content/{data_content_asset_guid}/detach"
+        await self._async_delete_relationship_request(url, body)
+
+    @dynamic_catch
+    def detach_data_set_content(
+        self,
+        data_set_guid: str,
+        data_content_asset_guid: str,
+        body: dict | DeleteRelationshipRequestBody | None = None,
+    ) -> None:
+        """Detach a data set from another asset that was supplying the data.
+
+        Parameters
+        ----------
+        data_set_guid: str
+            Unique identifier of the data set.
+        data_content_asset_guid: str
+            Unique identifier of the data asset that was supplying the data.
+        body: dict | DeleteRelationshipRequestBody, optional
+            Additional parameters for the delete operation.
+
+        Returns
+        -------
+        None
+
+        Raises
+        ------
+        PyegeriaException
+            One of the pyegeria exceptions will be raised if there are issues in communications, message format, or
+            Egeria errors.
+        """
+        loop = asyncio.get_event_loop()
+        loop.run_until_complete(
+            self._async_detach_data_set_content(data_set_guid, data_content_asset_guid, body)
+        )
+
+    #
+    # Report Methods
+    #
+
+    @dynamic_catch
+    async def _async_link_report_originator(
+        self,
+        originator_guid: str,
+        report_guid: str,
+        body: dict | NewRelationshipRequestBody | None = None,
+    ) -> None:
+        """Create a relationship that identifies the originator of a report. Async version.
+
+        Parameters
+        ----------
+        originator_guid: str
+            Unique identifier of the originator.
+        report_guid: str
+            Unique identifier of the report.
+        body: dict | NewRelationshipRequestBody, optional
+            Properties for the ReportOriginator relationship.
+
+        Returns
+        -------
+        None
+
+        Raises
+        ------
+        PyegeriaException
+            One of the pyegeria exceptions will be raised if there are issues in communications, message format, or
+            Egeria errors.
+
+        Notes
+        -----
+        See: https://egeria-project.org/concepts/report
+
+        Sample body:
+        {
+          "class" : "NewRelationshipRequestBody",
+          "properties": {
+            "class": "ReportOriginatorProperties",
+            "label": "add display label",
+            "description": "add description",
+            "effectiveFrom": "2024-01-01T00:00:00.000+00:00",
+            "effectiveTo": "2024-12-31T23:59:59.999+00:00"
+          }
+        }
+        """
+        url = f"{self.asset_command_root}/elements/{originator_guid}/originated-reports/{report_guid}/attach"
+        await self._async_new_relationship_request(url, ["ReportOriginatorProperties"], body)
+
+    @dynamic_catch
+    def link_report_originator(
+        self,
+        originator_guid: str,
+        report_guid: str,
+        body: dict | NewRelationshipRequestBody | None = None,
+    ) -> None:
+        """Create a relationship that identifies the originator of a report.
+
+        Parameters
+        ----------
+        originator_guid: str
+            Unique identifier of the originator.
+        report_guid: str
+            Unique identifier of the report.
+        body: dict | NewRelationshipRequestBody, optional
+            Properties for the ReportOriginator relationship.
+
+        Returns
+        -------
+        None
+
+        Raises
+        ------
+        PyegeriaException
+            One of the pyegeria exceptions will be raised if there are issues in communications, message format, or
+            Egeria errors.
+
+        Notes
+        -----
+        See: https://egeria-project.org/concepts/report
+
+        Sample body:
+        {
+          "class" : "NewRelationshipRequestBody",
+          "properties": {
+            "class": "ReportOriginatorProperties",
+            "label": "add display label",
+            "description": "add description",
+            "effectiveFrom": "2024-01-01T00:00:00.000+00:00",
+            "effectiveTo": "2024-12-31T23:59:59.999+00:00"
+          }
+        }
+        """
+        loop = asyncio.get_event_loop()
+        loop.run_until_complete(
+            self._async_link_report_originator(originator_guid, report_guid, body)
+        )
+
+    @dynamic_catch
+    async def _async_unlink_report_originator(
+        self,
+        originator_guid: str,
+        report_guid: str,
+        body: dict | DeleteRelationshipRequestBody | None = None,
+    ) -> None:
+        """Remove a ReportOriginator relationship. Async version.
+
+        Parameters
+        ----------
+        originator_guid: str
+            Unique identifier of the originator.
+        report_guid: str
+            Unique identifier of the report.
+        body: dict | DeleteRelationshipRequestBody, optional
+            Additional parameters for the delete operation.
+
+        Returns
+        -------
+        None
+
+        Raises
+        ------
+        PyegeriaException
+            One of the pyegeria exceptions will be raised if there are issues in communications, message format, or
+            Egeria errors.
+        """
+        url = f"{self.asset_command_root}/elements/{originator_guid}/originated-reports/{report_guid}/detach"
+        await self._async_delete_relationship_request(url, body)
+
+    @dynamic_catch
+    def unlink_report_originator(
+        self,
+        originator_guid: str,
+        report_guid: str,
+        body: dict | DeleteRelationshipRequestBody | None = None,
+    ) -> None:
+        """Remove a ReportOriginator relationship.
+
+        Parameters
+        ----------
+        originator_guid: str
+            Unique identifier of the originator.
+        report_guid: str
+            Unique identifier of the report.
+        body: dict | DeleteRelationshipRequestBody, optional
+            Additional parameters for the delete operation.
+
+        Returns
+        -------
+        None
+
+        Raises
+        ------
+        PyegeriaException
+            One of the pyegeria exceptions will be raised if there are issues in communications, message format, or
+            Egeria errors.
+        """
+        loop = asyncio.get_event_loop()
+        loop.run_until_complete(
+            self._async_unlink_report_originator(originator_guid, report_guid, body)
+        )
+
+    @dynamic_catch
+    async def _async_link_report_dependency(
+        self,
+        prior_report_guid: str,
+        report_guid: str,
+        body: dict | NewRelationshipRequestBody | None = None,
+    ) -> None:
+        """Create a relationship that identifies the prior publishing of a report. Async version.
+
+        Parameters
+        ----------
+        prior_report_guid: str
+            Unique identifier of the earlier report.
+        report_guid: str
+            Unique identifier of the new report.
+        body: dict | NewRelationshipRequestBody, optional
+            Properties for the ReportDependency relationship.
+
+        Returns
+        -------
+        None
+
+        Raises
+        ------
+        PyegeriaException
+            One of the pyegeria exceptions will be raised if there are issues in communications, message format, or
+            Egeria errors.
+
+        Notes
+        -----
+        See: https://egeria-project.org/concepts/report
+
+        Sample body:
+        {
+          "class" : "NewRelationshipRequestBody",
+          "properties": {
+            "class": "ReportDependencyProperties",
+            "label": "add display label",
+            "description": "add description",
+            "effectiveFrom": "2024-01-01T00:00:00.000+00:00",
+            "effectiveTo": "2024-12-31T23:59:59.999+00:00"
+          }
+        }
+        """
+        url = f"{self.asset_command_root}/reports/{prior_report_guid}/follow-on-reports/{report_guid}/attach"
+        await self._async_new_relationship_request(url, ["ReportDependencyProperties"], body)
+
+    @dynamic_catch
+    def link_report_dependency(
+        self,
+        prior_report_guid: str,
+        report_guid: str,
+        body: dict | NewRelationshipRequestBody | None = None,
+    ) -> None:
+        """Create a relationship that identifies the prior publishing of a report.
+
+        Parameters
+        ----------
+        prior_report_guid: str
+            Unique identifier of the earlier report.
+        report_guid: str
+            Unique identifier of the new report.
+        body: dict | NewRelationshipRequestBody, optional
+            Properties for the ReportDependency relationship.
+
+        Returns
+        -------
+        None
+
+        Raises
+        ------
+        PyegeriaException
+            One of the pyegeria exceptions will be raised if there are issues in communications, message format, or
+            Egeria errors.
+
+        Notes
+        -----
+        See: https://egeria-project.org/concepts/report
+
+        Sample body:
+        {
+          "class" : "NewRelationshipRequestBody",
+          "properties": {
+            "class": "ReportDependencyProperties",
+            "label": "add display label",
+            "description": "add description",
+            "effectiveFrom": "2024-01-01T00:00:00.000+00:00",
+            "effectiveTo": "2024-12-31T23:59:59.999+00:00"
+          }
+        }
+        """
+        loop = asyncio.get_event_loop()
+        loop.run_until_complete(
+            self._async_link_report_dependency(prior_report_guid, report_guid, body)
+        )
+
+    @dynamic_catch
+    async def _async_unlink_report_dependency(
+        self,
+        prior_report_guid: str,
+        report_guid: str,
+        body: dict | DeleteRelationshipRequestBody | None = None,
+    ) -> None:
+        """Remove a ReportDependency relationship. Async version.
+
+        Parameters
+        ----------
+        prior_report_guid: str
+            Unique identifier of the earlier report.
+        report_guid: str
+            Unique identifier of the new report.
+        body: dict | DeleteRelationshipRequestBody, optional
+            Additional parameters for the delete operation.
+
+        Returns
+        -------
+        None
+
+        Raises
+        ------
+        PyegeriaException
+            One of the pyegeria exceptions will be raised if there are issues in communications, message format, or
+            Egeria errors.
+        """
+        url = f"{self.asset_command_root}/reports/{prior_report_guid}/follow-on-reports/{report_guid}/detach"
+        await self._async_delete_relationship_request(url, body)
+
+    @dynamic_catch
+    def unlink_report_dependency(
+        self,
+        prior_report_guid: str,
+        report_guid: str,
+        body: dict | DeleteRelationshipRequestBody | None = None,
+    ) -> None:
+        """Remove a ReportDependency relationship.
+
+        Parameters
+        ----------
+        prior_report_guid: str
+            Unique identifier of the earlier report.
+        report_guid: str
+            Unique identifier of the new report.
+        body: dict | DeleteRelationshipRequestBody, optional
+            Additional parameters for the delete operation.
+
+        Returns
+        -------
+        None
+
+        Raises
+        ------
+        PyegeriaException
+            One of the pyegeria exceptions will be raised if there are issues in communications, message format, or
+            Egeria errors.
+        """
+        loop = asyncio.get_event_loop()
+        loop.run_until_complete(
+            self._async_unlink_report_dependency(prior_report_guid, report_guid, body)
+        )
+
+    @dynamic_catch
+    async def _async_link_report_subject(
+        self,
+        subject_guid: str,
+        report_guid: str,
+        body: dict | NewRelationshipRequestBody | None = None,
+    ) -> None:
+        """Create a relationship that identifies the subject of a report. Async version.
+
+        Parameters
+        ----------
+        subject_guid: str
+            Unique identifier of the subject.
+        report_guid: str
+            Unique identifier of the report.
+        body: dict | NewRelationshipRequestBody, optional
+            Properties for the ReportSubject relationship.
+
+        Returns
+        -------
+        None
+
+        Raises
+        ------
+        PyegeriaException
+            One of the pyegeria exceptions will be raised if there are issues in communications, message format, or
+            Egeria errors.
+
+        Notes
+        -----
+        See: https://egeria-project.org/concepts/report
+
+        Sample body:
+        {
+          "class" : "NewRelationshipRequestBody",
+          "properties": {
+            "class": "ReportSubjectProperties",
+            "label": "add display label",
+            "description": "add description",
+            "effectiveFrom": "2024-01-01T00:00:00.000+00:00",
+            "effectiveTo": "2024-12-31T23:59:59.999+00:00"
+          }
+        }
+        """
+        url = f"{self.asset_command_root}/elements/{subject_guid}/reports/{report_guid}/attach"
+        await self._async_new_relationship_request(url, ["ReportSubjectProperties"], body)
+
+    @dynamic_catch
+    def link_report_subject(
+        self,
+        subject_guid: str,
+        report_guid: str,
+        body: dict | NewRelationshipRequestBody | None = None,
+    ) -> None:
+        """Create a relationship that identifies the subject of a report.
+
+        Parameters
+        ----------
+        subject_guid: str
+            Unique identifier of the subject.
+        report_guid: str
+            Unique identifier of the report.
+        body: dict | NewRelationshipRequestBody, optional
+            Properties for the ReportSubject relationship.
+
+        Returns
+        -------
+        None
+
+        Raises
+        ------
+        PyegeriaException
+            One of the pyegeria exceptions will be raised if there are issues in communications, message format, or
+            Egeria errors.
+
+        Notes
+        -----
+        See: https://egeria-project.org/concepts/report
+
+        Sample body:
+        {
+          "class" : "NewRelationshipRequestBody",
+          "properties": {
+            "class": "ReportSubjectProperties",
+            "label": "add display label",
+            "description": "add description",
+            "effectiveFrom": "2024-01-01T00:00:00.000+00:00",
+            "effectiveTo": "2024-12-31T23:59:59.999+00:00"
+          }
+        }
+        """
+        loop = asyncio.get_event_loop()
+        loop.run_until_complete(
+            self._async_link_report_subject(subject_guid, report_guid, body)
+        )
+
+    @dynamic_catch
+    async def _async_unlink_report_subject(
+        self,
+        subject_guid: str,
+        report_guid: str,
+        body: dict | DeleteRelationshipRequestBody | None = None,
+    ) -> None:
+        """Remove a ReportSubject relationship. Async version.
+
+        Parameters
+        ----------
+        subject_guid: str
+            Unique identifier of the subject.
+        report_guid: str
+            Unique identifier of the report.
+        body: dict | DeleteRelationshipRequestBody, optional
+            Additional parameters for the delete operation.
+
+        Returns
+        -------
+        None
+
+        Raises
+        ------
+        PyegeriaException
+            One of the pyegeria exceptions will be raised if there are issues in communications, message format, or
+            Egeria errors.
+        """
+        url = f"{self.asset_command_root}/elements/{subject_guid}/reports/{report_guid}/detach"
+        await self._async_delete_relationship_request(url, body)
+
+    @dynamic_catch
+    def unlink_report_subject(
+        self,
+        subject_guid: str,
+        report_guid: str,
+        body: dict | DeleteRelationshipRequestBody | None = None,
+    ) -> None:
+        """Remove a ReportSubject relationship.
+
+        Parameters
+        ----------
+        subject_guid: str
+            Unique identifier of the subject.
+        report_guid: str
+            Unique identifier of the report.
+        body: dict | DeleteRelationshipRequestBody, optional
+            Additional parameters for the delete operation.
+
+        Returns
+        -------
+        None
+
+        Raises
+        ------
+        PyegeriaException
+            One of the pyegeria exceptions will be raised if there are issues in communications, message format, or
+            Egeria errors.
+        """
+        loop = asyncio.get_event_loop()
+        loop.run_until_complete(
+            self._async_unlink_report_subject(subject_guid, report_guid, body)
+        )
+
     #
     # Infrastructure Methods
     #
@@ -2225,6 +2873,331 @@ class AssetMaker(ServerClient):
             self._async_get_infrastructure_by_category(
                 category, deployment_status_list, start_from, page_size, output_format, report_spec, body
             )
+        )
+
+    @dynamic_catch
+    async def _async_deploy_it_asset(
+        self,
+        asset_guid: str,
+        destination_guid: str,
+        body: dict | NewRelationshipRequestBody | None = None,
+    ) -> None:
+        """Create a relationship that represents the deployment of an IT infrastructure asset to a destination.
+        Async version.
+
+        Parameters
+        ----------
+        asset_guid: str
+            Unique identifier of the IT infrastructure asset.
+        destination_guid: str
+            Unique identifier of the deployment destination asset.
+        body: dict | NewRelationshipRequestBody, optional
+            Properties for the DeployedOn relationship.
+
+        Returns
+        -------
+        None
+
+        Raises
+        ------
+        PyegeriaException
+            One of the pyegeria exceptions will be raised if there are issues in communications, message format, or
+            Egeria errors.
+
+        Notes
+        -----
+        See: https://egeria-project.org/concepts/asset
+
+        Sample body:
+        {
+          "class" : "NewRelationshipRequestBody",
+          "properties": {
+            "class": "DeployedOnProperties",
+            "deployer": "add name of actor",
+            "deployerTypeName": "add type of actor",
+            "deployerPropertyName": "add property of name of actor",
+            "deploymentTime": "2024-01-01T00:00:00.000+00:00",
+            "effectiveFrom": "2024-01-01T00:00:00.000+00:00",
+            "effectiveTo": "2024-12-31T23:59:59.999+00:00"
+          }
+        }
+        """
+        url = f"{self.asset_command_root}/assets/{asset_guid}/deployed-on/{destination_guid}/attach"
+        await self._async_new_relationship_request(url, ["DeployedOnProperties"], body)
+
+    @dynamic_catch
+    def deploy_it_asset(
+        self,
+        asset_guid: str,
+        destination_guid: str,
+        body: dict | NewRelationshipRequestBody | None = None,
+    ) -> None:
+        """Create a relationship that represents the deployment of an IT infrastructure asset to a destination.
+
+        Parameters
+        ----------
+        asset_guid: str
+            Unique identifier of the IT infrastructure asset.
+        destination_guid: str
+            Unique identifier of the deployment destination asset.
+        body: dict | NewRelationshipRequestBody, optional
+            Properties for the DeployedOn relationship.
+
+        Returns
+        -------
+        None
+
+        Raises
+        ------
+        PyegeriaException
+            One of the pyegeria exceptions will be raised if there are issues in communications, message format, or
+            Egeria errors.
+
+        Notes
+        -----
+        See: https://egeria-project.org/concepts/asset
+
+        Sample body:
+        {
+          "class" : "NewRelationshipRequestBody",
+          "properties": {
+            "class": "DeployedOnProperties",
+            "deployer": "add name of actor",
+            "deployerTypeName": "add type of actor",
+            "deployerPropertyName": "add property of name of actor",
+            "deploymentTime": "2024-01-01T00:00:00.000+00:00",
+            "effectiveFrom": "2024-01-01T00:00:00.000+00:00",
+            "effectiveTo": "2024-12-31T23:59:59.999+00:00"
+          }
+        }
+        """
+        loop = asyncio.get_event_loop()
+        loop.run_until_complete(
+            self._async_deploy_it_asset(asset_guid, destination_guid, body)
+        )
+
+    @dynamic_catch
+    async def _async_undeploy_it_asset(
+        self,
+        asset_guid: str,
+        destination_guid: str,
+        body: dict | DeleteRelationshipRequestBody | None = None,
+    ) -> None:
+        """Remove a DeployedOn relationship. Async version.
+
+        Parameters
+        ----------
+        asset_guid: str
+            Unique identifier of the IT infrastructure asset.
+        destination_guid: str
+            Unique identifier of the deployment destination asset.
+        body: dict | DeleteRelationshipRequestBody, optional
+            Additional parameters for the delete operation.
+
+        Returns
+        -------
+        None
+
+        Raises
+        ------
+        PyegeriaException
+            One of the pyegeria exceptions will be raised if there are issues in communications, message format, or
+            Egeria errors.
+        """
+        url = f"{self.asset_command_root}/assets/{asset_guid}/deployed-on/{destination_guid}/detach"
+        await self._async_delete_relationship_request(url, body)
+
+    @dynamic_catch
+    def undeploy_it_asset(
+        self,
+        asset_guid: str,
+        destination_guid: str,
+        body: dict | DeleteRelationshipRequestBody | None = None,
+    ) -> None:
+        """Remove a DeployedOn relationship.
+
+        Parameters
+        ----------
+        asset_guid: str
+            Unique identifier of the IT infrastructure asset.
+        destination_guid: str
+            Unique identifier of the deployment destination asset.
+        body: dict | DeleteRelationshipRequestBody, optional
+            Additional parameters for the delete operation.
+
+        Returns
+        -------
+        None
+
+        Raises
+        ------
+        PyegeriaException
+            One of the pyegeria exceptions will be raised if there are issues in communications, message format, or
+            Egeria errors.
+        """
+        loop = asyncio.get_event_loop()
+        loop.run_until_complete(
+            self._async_undeploy_it_asset(asset_guid, destination_guid, body)
+        )
+
+    @dynamic_catch
+    async def _async_link_software_capability_to_asset(
+        self,
+        asset_guid: str,
+        capability_guid: str,
+        body: dict | NewRelationshipRequestBody | None = None,
+    ) -> None:
+        """Create a relationship that links a software capability to an infrastructure asset. Async version.
+
+        Parameters
+        ----------
+        asset_guid: str
+            Unique identifier of the infrastructure asset.
+        capability_guid: str
+            Unique identifier of the software capability.
+        body: dict | NewRelationshipRequestBody, optional
+            Properties for the SupportedSoftwareCapability relationship.
+
+        Returns
+        -------
+        None
+
+        Raises
+        ------
+        PyegeriaException
+            One of the pyegeria exceptions will be raised if there are issues in communications, message format, or
+            Egeria errors.
+
+        Notes
+        -----
+        Sample body:
+        {
+          "class" : "NewRelationshipRequestBody",
+          "properties": {
+            "class": "SupportedSoftwareCapabilityProperties",
+            "deployer": "add name of actor",
+            "deployerTypeName": "add type of actor",
+            "deployerPropertyName": "add property of name of actor",
+            "deploymentTime": "2024-01-01T00:00:00.000+00:00",
+            "effectiveFrom": "2024-01-01T00:00:00.000+00:00",
+            "effectiveTo": "2024-12-31T23:59:59.999+00:00"
+          }
+        }
+        """
+        url = f"{self.asset_command_root}/assets/{asset_guid}/supported-software-capabilities/{capability_guid}/attach"
+        await self._async_new_relationship_request(url, ["SupportedSoftwareCapabilityProperties"], body)
+
+    @dynamic_catch
+    def link_software_capability_to_asset(
+        self,
+        asset_guid: str,
+        capability_guid: str,
+        body: dict | NewRelationshipRequestBody | None = None,
+    ) -> None:
+        """Create a relationship that links a software capability to an infrastructure asset.
+
+        Parameters
+        ----------
+        asset_guid: str
+            Unique identifier of the infrastructure asset.
+        capability_guid: str
+            Unique identifier of the software capability.
+        body: dict | NewRelationshipRequestBody, optional
+            Properties for the SupportedSoftwareCapability relationship.
+
+        Returns
+        -------
+        None
+
+        Raises
+        ------
+        PyegeriaException
+            One of the pyegeria exceptions will be raised if there are issues in communications, message format, or
+            Egeria errors.
+
+        Notes
+        -----
+        Sample body:
+        {
+          "class" : "NewRelationshipRequestBody",
+          "properties": {
+            "class": "SupportedSoftwareCapabilityProperties",
+            "deployer": "add name of actor",
+            "deployerTypeName": "add type of actor",
+            "deployerPropertyName": "add property of name of actor",
+            "deploymentTime": "2024-01-01T00:00:00.000+00:00",
+            "effectiveFrom": "2024-01-01T00:00:00.000+00:00",
+            "effectiveTo": "2024-12-31T23:59:59.999+00:00"
+          }
+        }
+        """
+        loop = asyncio.get_event_loop()
+        loop.run_until_complete(
+            self._async_link_software_capability_to_asset(asset_guid, capability_guid, body)
+        )
+
+    @dynamic_catch
+    async def _async_detach_software_capability_from_asset(
+        self,
+        asset_guid: str,
+        capability_guid: str,
+        body: dict | DeleteRelationshipRequestBody | None = None,
+    ) -> None:
+        """Remove a relationship that links a software capability to an infrastructure asset. Async version.
+
+        Parameters
+        ----------
+        asset_guid: str
+            Unique identifier of the infrastructure asset.
+        capability_guid: str
+            Unique identifier of the software capability.
+        body: dict | DeleteRelationshipRequestBody, optional
+            Additional parameters for the delete operation.
+
+        Returns
+        -------
+        None
+
+        Raises
+        ------
+        PyegeriaException
+            One of the pyegeria exceptions will be raised if there are issues in communications, message format, or
+            Egeria errors.
+        """
+        url = f"{self.asset_command_root}/assets/{asset_guid}/supported-software-capabilities/{capability_guid}/detach"
+        await self._async_delete_relationship_request(url, body)
+
+    @dynamic_catch
+    def detach_software_capability_from_asset(
+        self,
+        asset_guid: str,
+        capability_guid: str,
+        body: dict | DeleteRelationshipRequestBody | None = None,
+    ) -> None:
+        """Remove a relationship that links a software capability to an infrastructure asset.
+
+        Parameters
+        ----------
+        asset_guid: str
+            Unique identifier of the infrastructure asset.
+        capability_guid: str
+            Unique identifier of the software capability.
+        body: dict | DeleteRelationshipRequestBody, optional
+            Additional parameters for the delete operation.
+
+        Returns
+        -------
+        None
+
+        Raises
+        ------
+        PyegeriaException
+            One of the pyegeria exceptions will be raised if there are issues in communications, message format, or
+            Egeria errors.
+        """
+        loop = asyncio.get_event_loop()
+        loop.run_until_complete(
+            self._async_detach_software_capability_from_asset(asset_guid, capability_guid, body)
         )
 
     #
@@ -3627,6 +4600,1169 @@ class AssetMaker(ServerClient):
             )
         )
 
+
+    #
+    # Software Capability Methods
+    #
+
+    @dynamic_catch
+    async def _async_create_software_capability(
+        self,
+        body: dict | NewElementRequestBody | None = None,
+    ) -> str:
+        """Create a software capability. Async version.
+
+        Parameters
+        ----------
+        body: dict | NewElementRequestBody, optional
+            A dict or NewElementRequestBody representing the software capability to create.
+
+        Returns
+        -------
+        str
+            GUID of the created software capability.
+
+        Raises
+        ------
+        PyegeriaException
+            One of the pyegeria exceptions will be raised if there are issues in communications, message format, or
+            Egeria errors.
+
+        Notes
+        -----
+        See: https://egeria-project.org/concepts/software-capability
+
+        Sample body:
+        {
+          "class" : "NewElementRequestBody",
+          "properties" : {
+            "class": "SoftwareCapabilityProperties",
+            "qualifiedName": "SoftwareCapability:unique-name",
+            "displayName": "New Software Capability",
+            "description": "Description of the new software capability.",
+            "deployedImplementationType": "Software Server"
+          }
+        }
+        """
+        url = f"{self.asset_command_root}/software-capabilities"
+        return await self._async_create_element_body_request(url, ["SoftwareCapabilityProperties"], body)
+
+    @dynamic_catch
+    def create_software_capability(
+        self,
+        body: dict | NewElementRequestBody | None = None,
+    ) -> str:
+        """Create a software capability.
+
+        Parameters
+        ----------
+        body: dict | NewElementRequestBody, optional
+            A dict or NewElementRequestBody representing the software capability to create.
+
+        Returns
+        -------
+        str
+            GUID of the created software capability.
+
+        Raises
+        ------
+        PyegeriaException
+            One of the pyegeria exceptions will be raised if there are issues in communications, message format, or
+            Egeria errors.
+
+        Notes
+        -----
+        See: https://egeria-project.org/concepts/software-capability
+
+        Sample body:
+        {
+          "class" : "NewElementRequestBody",
+          "properties" : {
+            "class": "SoftwareCapabilityProperties",
+            "qualifiedName": "SoftwareCapability:unique-name",
+            "displayName": "New Software Capability",
+            "description": "Description of the new software capability.",
+            "deployedImplementationType": "Software Server"
+          }
+        }
+        """
+        loop = asyncio.get_event_loop()
+        return loop.run_until_complete(self._async_create_software_capability(body))
+
+    @dynamic_catch
+    async def _async_create_software_capability_from_template(
+        self,
+        body: dict | TemplateRequestBody | None = None,
+    ) -> str:
+        """Create a software capability using an existing metadata element as a template. Async version.
+
+        Parameters
+        ----------
+        body: dict | TemplateRequestBody, optional
+            A dict or TemplateRequestBody representing the template details.
+
+        Returns
+        -------
+        str
+            GUID of the created software capability.
+
+        Raises
+        ------
+        PyegeriaException
+            One of the pyegeria exceptions will be raised if there are issues in communications, message format, or
+            Egeria errors.
+
+        Notes
+        -----
+        See: https://egeria-project.org/concepts/software-capability
+
+        Sample body:
+        {
+          "class" : "TemplateRequestBody",
+          "templateGUID" : "add guid here",
+          "replacementProperties" : {
+            "class": "SoftwareCapabilityProperties",
+            "qualifiedName": "SoftwareCapability:unique-name",
+            "displayName": "New Software Capability from Template"
+          }
+        }
+        """
+        url = f"{self.asset_command_root}/software-capabilities/from-template"
+        return await self._async_create_element_from_template(url, body)
+
+    @dynamic_catch
+    def create_software_capability_from_template(
+        self,
+        body: dict | TemplateRequestBody | None = None,
+    ) -> str:
+        """Create a software capability using an existing metadata element as a template.
+
+        Parameters
+        ----------
+        body: dict | TemplateRequestBody, optional
+            A dict or TemplateRequestBody representing the template details.
+
+        Returns
+        -------
+        str
+            GUID of the created software capability.
+
+        Raises
+        ------
+        PyegeriaException
+            One of the pyegeria exceptions will be raised if there are issues in communications, message format, or
+            Egeria errors.
+
+        Notes
+        -----
+        See: https://egeria-project.org/concepts/software-capability
+
+        Sample body:
+        {
+          "class" : "TemplateRequestBody",
+          "templateGUID" : "add guid here",
+          "replacementProperties" : {
+            "class": "SoftwareCapabilityProperties",
+            "qualifiedName": "SoftwareCapability:unique-name",
+            "displayName": "New Software Capability from Template"
+          }
+        }
+        """
+        loop = asyncio.get_event_loop()
+        return loop.run_until_complete(self._async_create_software_capability_from_template(body))
+
+    @dynamic_catch
+    async def _async_update_software_capability(
+        self,
+        software_capability_guid: str,
+        body: dict | UpdateElementRequestBody | None = None,
+    ) -> None:
+        """Update the properties of a software capability. Async version.
+
+        Parameters
+        ----------
+        software_capability_guid: str
+            Unique identifier of the software capability to update.
+        body: dict | UpdateElementRequestBody, optional
+            Updated properties for the software capability.
+
+        Returns
+        -------
+        None
+
+        Raises
+        ------
+        PyegeriaException
+            One of the pyegeria exceptions will be raised if there are issues in communications, message format, or
+            Egeria errors.
+
+        Notes
+        -----
+        See: https://egeria-project.org/concepts/software-capability
+
+        Sample body:
+        {
+          "class" : "UpdateElementRequestBody",
+          "properties" : {
+            "class": "SoftwareCapabilityProperties",
+            "description": "Updated description of the software capability."
+          }
+        }
+        """
+        url = f"{self.asset_command_root}/software-capabilities/{software_capability_guid}/update"
+        await self._async_update_element_body_request(url, ["SoftwareCapabilityProperties"], body)
+
+    @dynamic_catch
+    def update_software_capability(
+        self,
+        software_capability_guid: str,
+        body: dict | UpdateElementRequestBody | None = None,
+    ) -> None:
+        """Update the properties of a software capability.
+
+        Parameters
+        ----------
+        software_capability_guid: str
+            Unique identifier of the software capability to update.
+        body: dict | UpdateElementRequestBody, optional
+            Updated properties for the software capability.
+
+        Returns
+        -------
+        None
+
+        Raises
+        ------
+        PyegeriaException
+            One of the pyegeria exceptions will be raised if there are issues in communications, message format, or
+            Egeria errors.
+
+        Notes
+        -----
+        See: https://egeria-project.org/concepts/software-capability
+
+        Sample body:
+        {
+          "class" : "UpdateElementRequestBody",
+          "properties" : {
+            "class": "SoftwareCapabilityProperties",
+            "description": "Updated description of the software capability."
+          }
+        }
+        """
+        loop = asyncio.get_event_loop()
+        loop.run_until_complete(
+            self._async_update_software_capability(software_capability_guid, body)
+        )
+
+    @dynamic_catch
+    async def _async_get_software_capability_by_guid(
+        self,
+        software_capability_guid: str,
+        body: dict | GetRequestBody | None = None,
+        output_format: str = "DICT",
+        report_spec: dict | str | None = None,
+    ) -> dict | str:
+        """Retrieve a specific software capability. Async version.
+
+        Parameters
+        ----------
+        software_capability_guid: str
+            Unique identifier of the software capability.
+        body: dict | GetRequestBody, optional
+            Additional parameters for the request.
+        output_format: str, optional
+            Format of the output. Default is "DICT".
+        report_spec: dict | str, optional
+            Specification for report formatting.
+
+        Returns
+        -------
+        dict | str
+            Properties of the software capability in the specified format.
+
+        Raises
+        ------
+        PyegeriaException
+            One of the pyegeria exceptions will be raised if there are issues in communications, message format, or
+            Egeria errors.
+
+        Notes
+        -----
+        See: https://egeria-project.org/concepts/software-capability
+        """
+        url = f"{self.asset_command_root}/software-capabilities/{software_capability_guid}"
+        return await self._async_get_guid_request(
+            url,
+            _type="SoftwareCapability",
+            _gen_output=self._generate_referenceable_output,
+            output_format=output_format,
+            report_spec=report_spec,
+            body=body,
+        )
+
+    @dynamic_catch
+    def get_software_capability_by_guid(
+        self,
+        software_capability_guid: str,
+        body: dict | GetRequestBody | None = None,
+        output_format: str = "DICT",
+        report_spec: dict | str | None = None,
+    ) -> dict | str:
+        """Retrieve a specific software capability.
+
+        Parameters
+        ----------
+        software_capability_guid: str
+            Unique identifier of the software capability.
+        body: dict | GetRequestBody, optional
+            Additional parameters for the request.
+        output_format: str, optional
+            Format of the output. Default is "DICT".
+        report_spec: dict | str, optional
+            Specification for report formatting.
+
+        Returns
+        -------
+        dict | str
+            Properties of the software capability in the specified format.
+
+        Raises
+        ------
+        PyegeriaException
+            One of the pyegeria exceptions will be raised if there are issues in communications, message format, or
+            Egeria errors.
+
+        Notes
+        -----
+        See: https://egeria-project.org/concepts/software-capability
+        """
+        loop = asyncio.get_event_loop()
+        return loop.run_until_complete(
+            self._async_get_software_capability_by_guid(
+                software_capability_guid, body, output_format, report_spec
+            )
+        )
+
+    @dynamic_catch
+    async def _async_find_software_capabilities(
+        self,
+        search_string: str = "*",
+        starts_with: bool = False,
+        ends_with: bool = False,
+        ignore_case: bool = True,
+        start_from: int = 0,
+        page_size: int = 0,
+        output_format: str = "JSON",
+        report_spec: str | dict = None,
+        body: Optional[dict | SearchStringRequestBody] = None,
+    ) -> list | str:
+        """Retrieve the list of software capability metadata elements that contain the search string. Async version.
+
+        Parameters
+        ----------
+        search_string: str, default = "*"
+            String to search for in software capability properties.
+        starts_with: bool, default = False
+        ends_with: bool, default = False
+        ignore_case: bool, default = True
+        start_from: int, default = 0
+        page_size: int, default = 0
+        output_format: str, default = "JSON"
+        report_spec: str | dict, optional
+        body: dict | SearchStringRequestBody, optional
+
+        Returns
+        -------
+        list | str
+            List of software capabilities matching the search string.
+
+        Raises
+        ------
+        PyegeriaException
+            One of the pyegeria exceptions will be raised if there are issues in communications, message format, or
+            Egeria errors.
+
+        Notes
+        -----
+        See: https://egeria-project.org/concepts/software-capability
+        """
+        url = f"{self.asset_command_root}/software-capabilities/search"
+        return await self._async_find_request(
+            url,
+            _type="SoftwareCapability",
+            _gen_output=self._generate_referenceable_output,
+            search_string=search_string,
+            starts_with=starts_with,
+            ends_with=ends_with,
+            ignore_case=ignore_case,
+            start_from=start_from,
+            page_size=page_size,
+            output_format=output_format,
+            report_spec=report_spec,
+            body=body,
+        )
+
+    @dynamic_catch
+    def find_software_capabilities(
+        self,
+        search_string: str = "*",
+        starts_with: bool = False,
+        ends_with: bool = False,
+        ignore_case: bool = True,
+        start_from: int = 0,
+        page_size: int = 0,
+        output_format: str = "JSON",
+        report_spec: str | dict = None,
+        body: Optional[dict | SearchStringRequestBody] = None,
+    ) -> list | str:
+        """Retrieve the list of software capability metadata elements that contain the search string.
+
+        Parameters
+        ----------
+        search_string: str, default = "*"
+            String to search for in software capability properties.
+        starts_with: bool, default = False
+        ends_with: bool, default = False
+        ignore_case: bool, default = True
+        start_from: int, default = 0
+        page_size: int, default = 0
+        output_format: str, default = "JSON"
+        report_spec: str | dict, optional
+        body: dict | SearchStringRequestBody, optional
+
+        Returns
+        -------
+        list | str
+            List of software capabilities matching the search string.
+
+        Raises
+        ------
+        PyegeriaException
+            One of the pyegeria exceptions will be raised if there are issues in communications, message format, or
+            Egeria errors.
+
+        Notes
+        -----
+        See: https://egeria-project.org/concepts/software-capability
+        """
+        loop = asyncio.get_event_loop()
+        return loop.run_until_complete(
+            self._async_find_software_capabilities(
+                search_string, starts_with, ends_with, ignore_case,
+                start_from, page_size, output_format, report_spec, body
+            )
+        )
+
+    @dynamic_catch
+    async def _async_get_software_capabilities_by_name(
+        self,
+        filter_string: str,
+        start_from: int = 0,
+        page_size: int = 0,
+        output_format: str = "JSON",
+        report_spec: str | dict = None,
+        body: Optional[dict | FilterRequestBody] = None,
+    ) -> list | str:
+        """Retrieve the list of software capabilities with a particular name. Async version.
+
+        Parameters
+        ----------
+        filter_string: str
+            Name to filter software capabilities by.
+        start_from: int, default = 0
+        page_size: int, default = 0
+        output_format: str, default = "JSON"
+        report_spec: str | dict, optional
+        body: dict | FilterRequestBody, optional
+
+        Returns
+        -------
+        list | str
+            List of software capabilities with the matching name.
+
+        Raises
+        ------
+        PyegeriaException
+            One of the pyegeria exceptions will be raised if there are issues in communications, message format, or
+            Egeria errors.
+
+        Notes
+        -----
+        See: https://egeria-project.org/concepts/software-capability
+        """
+        url = f"{self.asset_command_root}/software-capabilities/by-name"
+        return await self._async_get_name_request(
+            url,
+            _type="SoftwareCapability",
+            _gen_output=self._generate_referenceable_output,
+            filter_string=filter_string,
+            start_from=start_from,
+            page_size=page_size,
+            output_format=output_format,
+            report_spec=report_spec,
+            body=body,
+        )
+
+    @dynamic_catch
+    def get_software_capabilities_by_name(
+        self,
+        filter_string: str,
+        start_from: int = 0,
+        page_size: int = 0,
+        output_format: str = "JSON",
+        report_spec: str | dict = None,
+        body: Optional[dict | FilterRequestBody] = None,
+    ) -> list | str:
+        """Retrieve the list of software capabilities with a particular name.
+
+        Parameters
+        ----------
+        filter_string: str
+            Name to filter software capabilities by.
+        start_from: int, default = 0
+        page_size: int, default = 0
+        output_format: str, default = "JSON"
+        report_spec: str | dict, optional
+        body: dict | FilterRequestBody, optional
+
+        Returns
+        -------
+        list | str
+            List of software capabilities with the matching name.
+
+        Raises
+        ------
+        PyegeriaException
+            One of the pyegeria exceptions will be raised if there are issues in communications, message format, or
+            Egeria errors.
+
+        Notes
+        -----
+        See: https://egeria-project.org/concepts/software-capability
+        """
+        loop = asyncio.get_event_loop()
+        return loop.run_until_complete(
+            self._async_get_software_capabilities_by_name(
+                filter_string, start_from, page_size, output_format, report_spec, body
+            )
+        )
+
+    @dynamic_catch
+    async def _async_get_software_capabilities_by_deployed_implementation_type(
+        self,
+        filter_string: str,
+        start_from: int = 0,
+        page_size: int = 0,
+        output_format: str = "JSON",
+        report_spec: str | dict = None,
+        body: Optional[dict | FilterRequestBody] = None,
+    ) -> list | str:
+        """Retrieve the list of software capabilities with a particular deployed implementation type. Async version.
+
+        Parameters
+        ----------
+        filter_string: str
+            Deployed implementation type to filter by (e.g., "Software Server").
+        start_from: int, default = 0
+        page_size: int, default = 0
+        output_format: str, default = "JSON"
+        report_spec: str | dict, optional
+        body: dict | FilterRequestBody, optional
+
+        Returns
+        -------
+        list | str
+            List of software capabilities matching the deployed implementation type.
+
+        Raises
+        ------
+        PyegeriaException
+            One of the pyegeria exceptions will be raised if there are issues in communications, message format, or
+            Egeria errors.
+
+        Notes
+        -----
+        See: https://egeria-project.org/concepts/software-capability
+        """
+        url = f"{self.asset_command_root}/software-capabilities/by-deployed-implementation-type"
+        return await self._async_get_name_request(
+            url,
+            _type="SoftwareCapability",
+            _gen_output=self._generate_referenceable_output,
+            filter_string=filter_string,
+            start_from=start_from,
+            page_size=page_size,
+            output_format=output_format,
+            report_spec=report_spec,
+            body=body,
+        )
+
+    @dynamic_catch
+    def get_software_capabilities_by_deployed_implementation_type(
+        self,
+        filter_string: str,
+        start_from: int = 0,
+        page_size: int = 0,
+        output_format: str = "JSON",
+        report_spec: str | dict = None,
+        body: Optional[dict | FilterRequestBody] = None,
+    ) -> list | str:
+        """Retrieve the list of software capabilities with a particular deployed implementation type.
+
+        Parameters
+        ----------
+        filter_string: str
+            Deployed implementation type to filter by (e.g., "Software Server").
+        start_from: int, default = 0
+        page_size: int, default = 0
+        output_format: str, default = "JSON"
+        report_spec: str | dict, optional
+        body: dict | FilterRequestBody, optional
+
+        Returns
+        -------
+        list | str
+            List of software capabilities matching the deployed implementation type.
+
+        Raises
+        ------
+        PyegeriaException
+            One of the pyegeria exceptions will be raised if there are issues in communications, message format, or
+            Egeria errors.
+
+        Notes
+        -----
+        See: https://egeria-project.org/concepts/software-capability
+        """
+        loop = asyncio.get_event_loop()
+        return loop.run_until_complete(
+            self._async_get_software_capabilities_by_deployed_implementation_type(
+                filter_string, start_from, page_size, output_format, report_spec, body
+            )
+        )
+
+    @dynamic_catch
+    async def _async_get_software_capabilities_for_infrastructure(
+        self,
+        infrastructure_guid: str,
+        start_from: int = 0,
+        page_size: int = 0,
+        output_format: str = "DICT",
+        report_spec: dict | str | None = None,
+    ) -> list | dict | str:
+        """Retrieve the list of software capabilities attached to a specific infrastructure element. Async version.
+
+        Parameters
+        ----------
+        infrastructure_guid: str
+            Unique identifier of the infrastructure element.
+        start_from: int, optional
+        page_size: int, optional
+        output_format: str, optional
+        report_spec: dict | str, optional
+
+        Returns
+        -------
+        list | dict | str
+            List of software capabilities attached to the infrastructure element.
+
+        Raises
+        ------
+        PyegeriaException
+            One of the pyegeria exceptions will be raised if there are issues in communications, message format, or
+            Egeria errors.
+
+        Notes
+        -----
+        See: https://egeria-project.org/concepts/software-capability
+        """
+        url = f"{self.asset_command_root}/infrastructure/{infrastructure_guid}/software-capabilities"
+        return await self._async_get_results_body_request(
+            url,
+            _type="SoftwareCapability",
+            _gen_output=self._generate_referenceable_output,
+            start_from=start_from,
+            page_size=page_size,
+            output_format=output_format,
+            report_spec=report_spec,
+        )
+
+    @dynamic_catch
+    def get_software_capabilities_for_infrastructure(
+        self,
+        infrastructure_guid: str,
+        start_from: int = 0,
+        page_size: int = 0,
+        output_format: str = "DICT",
+        report_spec: dict | str | None = None,
+    ) -> list | dict | str:
+        """Retrieve the list of software capabilities attached to a specific infrastructure element.
+
+        Parameters
+        ----------
+        infrastructure_guid: str
+            Unique identifier of the infrastructure element.
+        start_from: int, optional
+        page_size: int, optional
+        output_format: str, optional
+        report_spec: dict | str, optional
+
+        Returns
+        -------
+        list | dict | str
+            List of software capabilities attached to the infrastructure element.
+
+        Raises
+        ------
+        PyegeriaException
+            One of the pyegeria exceptions will be raised if there are issues in communications, message format, or
+            Egeria errors.
+
+        Notes
+        -----
+        See: https://egeria-project.org/concepts/software-capability
+        """
+        loop = asyncio.get_event_loop()
+        return loop.run_until_complete(
+            self._async_get_software_capabilities_for_infrastructure(
+                infrastructure_guid, start_from, page_size, output_format, report_spec
+            )
+        )
+
+    @dynamic_catch
+    async def _async_add_capability_asset_use(
+        self,
+        software_capability_guid: str,
+        asset_guid: str,
+        body: dict | NewRelationshipRequestBody | None = None,
+    ) -> None:
+        """Create a CapabilityAssetUse relationship between a software capability and an asset. Async version.
+
+        Parameters
+        ----------
+        software_capability_guid: str
+            Unique identifier of the software capability.
+        asset_guid: str
+            Unique identifier of the asset.
+        body: dict | NewRelationshipRequestBody, optional
+            Optional properties for the CapabilityAssetUse relationship.
+
+        Returns
+        -------
+        None
+
+        Raises
+        ------
+        PyegeriaException
+            One of the pyegeria exceptions will be raised if there are issues in communications, message format, or
+            Egeria errors.
+
+        Notes
+        -----
+        See: https://egeria-project.org/concepts/software-capability
+
+        CapabilityAssetUseProperties (all optional):
+          useType        : CapabilityAssetUseType enum — OWNS | GOVERNS | MAINTAINS | USES | OTHER
+          description    : str   — description of how the capability uses the asset
+          minimumInstances: int  — minimum number of running instances needed
+          maximumInstances: int  — maximum number of running instances supported
+
+        Sample body:
+        {
+          "class" : "NewRelationshipRequestBody",
+          "properties" : {
+            "class": "CapabilityAssetUseProperties",
+            "useType": "OWNS",
+            "description": "Primary data store for this capability.",
+            "minimumInstances": 1,
+            "maximumInstances": 5
+          }
+        }
+        """
+        url = f"{self.asset_command_root}/software-capabilities/{software_capability_guid}/assets/{asset_guid}/attach"
+        await self._async_new_relationship_request(url, ["CapabilityAssetUseProperties"], body)
+
+    @dynamic_catch
+    def add_capability_asset_use(
+        self,
+        software_capability_guid: str,
+        asset_guid: str,
+        body: dict | NewRelationshipRequestBody | None = None,
+    ) -> None:
+        """Create a CapabilityAssetUse relationship between a software capability and an asset.
+
+        Parameters
+        ----------
+        software_capability_guid: str
+            Unique identifier of the software capability.
+        asset_guid: str
+            Unique identifier of the asset.
+        body: dict | NewRelationshipRequestBody, optional
+            Optional properties for the CapabilityAssetUse relationship.
+
+        Returns
+        -------
+        None
+
+        Raises
+        ------
+        PyegeriaException
+            One of the pyegeria exceptions will be raised if there are issues in communications, message format, or
+            Egeria errors.
+
+        Notes
+        -----
+        See: https://egeria-project.org/concepts/software-capability
+
+        CapabilityAssetUseProperties (all optional):
+          useType        : CapabilityAssetUseType enum — OWNS | GOVERNS | MAINTAINS | USES | OTHER
+          description    : str   — description of how the capability uses the asset
+          minimumInstances: int  — minimum number of running instances needed
+          maximumInstances: int  — maximum number of running instances supported
+
+        Sample body:
+        {
+          "class" : "NewRelationshipRequestBody",
+          "properties" : {
+            "class": "CapabilityAssetUseProperties",
+            "useType": "OWNS",
+            "description": "Primary data store for this capability.",
+            "minimumInstances": 1,
+            "maximumInstances": 5
+          }
+        }
+        """
+        loop = asyncio.get_event_loop()
+        loop.run_until_complete(
+            self._async_add_capability_asset_use(software_capability_guid, asset_guid, body)
+        )
+
+    @dynamic_catch
+    async def _async_remove_capability_asset_use(
+        self,
+        software_capability_guid: str,
+        asset_guid: str,
+        body: dict | DeleteRelationshipRequestBody | None = None,
+    ) -> None:
+        """Remove a CapabilityAssetUse relationship between a software capability and an asset. Async version.
+
+        Parameters
+        ----------
+        software_capability_guid: str
+            Unique identifier of the software capability.
+        asset_guid: str
+            Unique identifier of the asset.
+        body: dict | DeleteRelationshipRequestBody, optional
+            Additional parameters for the delete operation.
+
+        Returns
+        -------
+        None
+
+        Raises
+        ------
+        PyegeriaException
+            One of the pyegeria exceptions will be raised if there are issues in communications, message format, or
+            Egeria errors.
+        """
+        url = f"{self.asset_command_root}/software-capabilities/{software_capability_guid}/assets/{asset_guid}/detach"
+        await self._async_delete_relationship_request(url, body)
+
+    @dynamic_catch
+    def remove_capability_asset_use(
+        self,
+        software_capability_guid: str,
+        asset_guid: str,
+        body: dict | DeleteRelationshipRequestBody | None = None,
+    ) -> None:
+        """Remove a CapabilityAssetUse relationship between a software capability and an asset.
+
+        Parameters
+        ----------
+        software_capability_guid: str
+            Unique identifier of the software capability.
+        asset_guid: str
+            Unique identifier of the asset.
+        body: dict | DeleteRelationshipRequestBody, optional
+            Additional parameters for the delete operation.
+
+        Returns
+        -------
+        None
+
+        Raises
+        ------
+        PyegeriaException
+            One of the pyegeria exceptions will be raised if there are issues in communications, message format, or
+            Egeria errors.
+        """
+        loop = asyncio.get_event_loop()
+        loop.run_until_complete(
+            self._async_remove_capability_asset_use(software_capability_guid, asset_guid, body)
+        )
+
+    @dynamic_catch
+    async def _async_get_capability_use(
+        self,
+        asset_guid: str,
+        start_from: int = 0,
+        page_size: int = 0,
+        output_format: str = "DICT",
+        report_spec: dict | str | None = None,
+    ) -> list | dict | str:
+        """Retrieve the software capabilities using a particular asset. Async version.
+
+        Parameters
+        ----------
+        asset_guid: str
+            Unique identifier of the asset.
+        start_from: int, optional
+        page_size: int, optional
+        output_format: str, optional
+        report_spec: dict | str, optional
+
+        Returns
+        -------
+        list | dict | str
+            List of software capabilities that use the asset.
+
+        Raises
+        ------
+        PyegeriaException
+            One of the pyegeria exceptions will be raised if there are issues in communications, message format, or
+            Egeria errors.
+
+        Notes
+        -----
+        See: https://egeria-project.org/concepts/software-capability
+        """
+        url = f"{self.asset_command_root}/assets/{asset_guid}/capability-use"
+        return await self._async_get_results_body_request(
+            url,
+            _type="SoftwareCapability",
+            _gen_output=self._generate_referenceable_output,
+            start_from=start_from,
+            page_size=page_size,
+            output_format=output_format,
+            report_spec=report_spec,
+        )
+
+    @dynamic_catch
+    def get_capability_use(
+        self,
+        asset_guid: str,
+        start_from: int = 0,
+        page_size: int = 0,
+        output_format: str = "DICT",
+        report_spec: dict | str | None = None,
+    ) -> list | dict | str:
+        """Retrieve the software capabilities using a particular asset.
+
+        Parameters
+        ----------
+        asset_guid: str
+            Unique identifier of the asset.
+        start_from: int, optional
+        page_size: int, optional
+        output_format: str, optional
+        report_spec: dict | str, optional
+
+        Returns
+        -------
+        list | dict | str
+            List of software capabilities that use the asset.
+
+        Raises
+        ------
+        PyegeriaException
+            One of the pyegeria exceptions will be raised if there are issues in communications, message format, or
+            Egeria errors.
+
+        Notes
+        -----
+        See: https://egeria-project.org/concepts/software-capability
+        """
+        loop = asyncio.get_event_loop()
+        return loop.run_until_complete(
+            self._async_get_capability_use(asset_guid, start_from, page_size, output_format, report_spec)
+        )
+
+    @dynamic_catch
+    async def _async_get_governance_engines(
+        self,
+        governance_service_guid: str,
+        start_from: int = 0,
+        page_size: int = 0,
+        output_format: str = "DICT",
+        report_spec: dict | str | None = None,
+    ) -> list | dict | str:
+        """Retrieve the governance engines connected to a particular governance service. Async version.
+
+        Parameters
+        ----------
+        governance_service_guid: str
+            Unique identifier of the governance service.
+        start_from: int, optional
+        page_size: int, optional
+        output_format: str, optional
+        report_spec: dict | str, optional
+
+        Returns
+        -------
+        list | dict | str
+            List of governance engines connected to the governance service.
+
+        Raises
+        ------
+        PyegeriaException
+            One of the pyegeria exceptions will be raised if there are issues in communications, message format, or
+            Egeria errors.
+
+        Notes
+        -----
+        See: https://egeria-project.org/concepts/governance-engine
+        """
+        url = f"{self.asset_command_root}/governance-services/{governance_service_guid}/governance-engines"
+        return await self._async_get_results_body_request(
+            url,
+            _type="GovernanceEngine",
+            _gen_output=self._generate_referenceable_output,
+            start_from=start_from,
+            page_size=page_size,
+            output_format=output_format,
+            report_spec=report_spec,
+        )
+
+    @dynamic_catch
+    def get_governance_engines(
+        self,
+        governance_service_guid: str,
+        start_from: int = 0,
+        page_size: int = 0,
+        output_format: str = "DICT",
+        report_spec: dict | str | None = None,
+    ) -> list | dict | str:
+        """Retrieve the governance engines connected to a particular governance service.
+
+        Parameters
+        ----------
+        governance_service_guid: str
+            Unique identifier of the governance service.
+        start_from: int, optional
+        page_size: int, optional
+        output_format: str, optional
+        report_spec: dict | str, optional
+
+        Returns
+        -------
+        list | dict | str
+            List of governance engines connected to the governance service.
+
+        Raises
+        ------
+        PyegeriaException
+            One of the pyegeria exceptions will be raised if there are issues in communications, message format, or
+            Egeria errors.
+
+        Notes
+        -----
+        See: https://egeria-project.org/concepts/governance-engine
+        """
+        loop = asyncio.get_event_loop()
+        return loop.run_until_complete(
+            self._async_get_governance_engines(
+                governance_service_guid, start_from, page_size, output_format, report_spec
+            )
+        )
+
+    @dynamic_catch
+    async def _async_get_integration_groups(
+        self,
+        integration_connector_guid: str,
+        start_from: int = 0,
+        page_size: int = 0,
+        output_format: str = "DICT",
+        report_spec: dict | str | None = None,
+    ) -> list | dict | str:
+        """Retrieve the integration groups connected to a particular integration connector. Async version.
+
+        Parameters
+        ----------
+        integration_connector_guid: str
+            Unique identifier of the integration connector.
+        start_from: int, optional
+        page_size: int, optional
+        output_format: str, optional
+        report_spec: dict | str, optional
+
+        Returns
+        -------
+        list | dict | str
+            List of integration groups connected to the integration connector.
+
+        Raises
+        ------
+        PyegeriaException
+            One of the pyegeria exceptions will be raised if there are issues in communications, message format, or
+            Egeria errors.
+
+        Notes
+        -----
+        See: https://egeria-project.org/concepts/integration-group
+        """
+        url = f"{self.asset_command_root}/integration-connectors/{integration_connector_guid}/integration-groups"
+        return await self._async_get_results_body_request(
+            url,
+            _type="IntegrationGroup",
+            _gen_output=self._generate_referenceable_output,
+            start_from=start_from,
+            page_size=page_size,
+            output_format=output_format,
+            report_spec=report_spec,
+        )
+
+    @dynamic_catch
+    def get_integration_groups(
+        self,
+        integration_connector_guid: str,
+        start_from: int = 0,
+        page_size: int = 0,
+        output_format: str = "DICT",
+        report_spec: dict | str | None = None,
+    ) -> list | dict | str:
+        """Retrieve the integration groups connected to a particular integration connector.
+
+        Parameters
+        ----------
+        integration_connector_guid: str
+            Unique identifier of the integration connector.
+        start_from: int, optional
+        page_size: int, optional
+        output_format: str, optional
+        report_spec: dict | str, optional
+
+        Returns
+        -------
+        list | dict | str
+            List of integration groups connected to the integration connector.
+
+        Raises
+        ------
+        PyegeriaException
+            One of the pyegeria exceptions will be raised if there are issues in communications, message format, or
+            Egeria errors.
+
+        Notes
+        -----
+        See: https://egeria-project.org/concepts/integration-group
+        """
+        loop = asyncio.get_event_loop()
+        return loop.run_until_complete(
+            self._async_get_integration_groups(
+                integration_connector_guid, start_from, page_size, output_format, report_spec
+            )
+        )
 
     def _generate_referenceable_output(
         self,

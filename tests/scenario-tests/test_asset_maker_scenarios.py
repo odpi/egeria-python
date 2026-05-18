@@ -476,6 +476,325 @@ class AssetMakerScenarioTester:
                 created_guids=created_guids
             )
     
+    def scenario_software_capability_lifecycle(self) -> TestResult:
+        """Scenario: Software capability lifecycle - create, search, update, link to asset, retrieve use, delete"""
+        scenario_name = "Software Capability Lifecycle"
+        start_time = time.perf_counter()
+        cap_guid = None
+        asset_guid = None
+
+        try:
+            console.print(f"\n[bold cyan]═══ Scenario: {scenario_name} ═══[/bold cyan]\n")
+            ts = datetime.now().strftime("%Y%m%d%H%M%S%f")
+
+            # Step 1: Create a software capability
+            cap_body = {
+                "class": "NewElementRequestBody",
+                "properties": {
+                    "class": "SoftwareCapabilityProperties",
+                    "qualifiedName": f"TestSWCap::Lifecycle::{ts}",
+                    "displayName": f"Test Software Capability {ts}",
+                    "description": "Created for lifecycle scenario testing.",
+                    "deployedImplementationType": "Test Server",
+                }
+            }
+            cap_guid = self.client.create_software_capability(body=cap_body)
+            console.print(f"  ✓ Created software capability: {cap_guid}")
+            assert cap_guid is not None
+
+            # Step 2: Retrieve by GUID
+            result = self.client.get_software_capability_by_guid(software_capability_guid=cap_guid, output_format="DICT")
+            console.print(f"  ✓ Retrieved software capability by GUID")
+            assert result is not None
+
+            # Step 3: Update the capability
+            update_body = {
+                "class": "UpdateElementRequestBody",
+                "properties": {
+                    "class": "SoftwareCapabilityProperties",
+                    "description": "Updated description for lifecycle test.",
+                }
+            }
+            self.client.update_software_capability(software_capability_guid=cap_guid, body=update_body)
+            console.print(f"  ✓ Updated software capability")
+
+            # Step 4: Find it via search
+            search_result = self.client.find_software_capabilities(search_string="Test Software Capability", output_format="JSON")
+            console.print(f"  ✓ Found software capabilities via search")
+
+            # Step 5: Create an asset and link it via add_capability_asset_use
+            asset_body = {
+                "class": "NewElementRequestBody",
+                "properties": {
+                    "class": "AssetProperties",
+                    "qualifiedName": f"TestAsset::ForCapUse::{ts}",
+                    "displayName": f"Test Asset for Capability Use {ts}",
+                }
+            }
+            asset_guid = self.client.create_asset(body=asset_body)
+            self.created_assets.append(asset_guid)
+            console.print(f"  ✓ Created asset for capability use: {asset_guid}")
+
+            link_body = {
+                "class": "NewRelationshipRequestBody",
+                "properties": {
+                    "class": "CapabilityAssetUseProperties",
+                    "useType": "OWNS",
+                    "description": "Primary data store for this capability.",
+                    "minimumInstances": 1,
+                    "maximumInstances": 5,
+                }
+            }
+            self.client.add_capability_asset_use(
+                software_capability_guid=cap_guid, asset_guid=asset_guid, body=link_body
+            )
+            console.print(f"  ✓ Linked asset to software capability (useType=OWNS)")
+
+            # Step 6: Get capability use for the asset
+            cap_use = self.client.get_capability_use(asset_guid=asset_guid, output_format="JSON")
+            console.print(f"  ✓ Retrieved capability use for asset")
+
+            # Step 7: Remove capability asset use
+            self.client.remove_capability_asset_use(software_capability_guid=cap_guid, asset_guid=asset_guid)
+            console.print(f"  ✓ Removed capability asset use relationship")
+
+            duration = time.perf_counter() - start_time
+            return TestResult(
+                scenario_name=scenario_name,
+                status="PASSED",
+                duration=duration,
+                message=f"Software capability lifecycle complete. GUID: {cap_guid}",
+                created_guids=[cap_guid] if cap_guid else [],
+            )
+
+        except Exception as e:
+            duration = time.perf_counter() - start_time
+            console.print(f"  [red]✗ Scenario failed: {str(e)}[/red]")
+            if isinstance(e, PyegeriaException):
+                reason = e.additional_info.get("reason", "") if e.additional_info else ""
+                if reason:
+                    console.print(f"  [yellow]Server response: {reason[:500]}[/yellow]")
+                print_exception_table(e)
+            return TestResult(
+                scenario_name=scenario_name,
+                status="FAILED",
+                duration=duration,
+                message=str(e),
+                error=e,
+                created_guids=[g for g in [cap_guid] if g],
+            )
+
+    def scenario_report_relationships(self) -> TestResult:
+        """Scenario: Create two reports and link them with originator, dependency, and subject relationships"""
+        scenario_name = "Report Relationships"
+        start_time = time.perf_counter()
+        report1_guid = None
+        report2_guid = None
+        subject_guid = None
+
+        try:
+            console.print(f"\n[bold cyan]═══ Scenario: {scenario_name} ═══[/bold cyan]\n")
+            ts = datetime.now().strftime("%Y%m%d%H%M%S%f")
+
+            # Step 1: Create two reports (Report inherits from DataSet)
+            r1_body = {
+                "class": "NewElementRequestBody",
+                "properties": {
+                    "class": "AssetProperties",
+                    "typeName": "Report",
+                    "qualifiedName": f"TestReport::Prior::{ts}",
+                    "displayName": f"Prior Report {ts}",
+                    "description": "Prior version of the report.",
+                }
+            }
+            report1_guid = self.client.create_asset(body=r1_body)
+            self.created_assets.append(report1_guid)
+            console.print(f"  ✓ Created prior report: {report1_guid}")
+
+            r2_body = {
+                "class": "NewElementRequestBody",
+                "properties": {
+                    "class": "AssetProperties",
+                    "typeName": "Report",
+                    "qualifiedName": f"TestReport::New::{ts}",
+                    "displayName": f"New Report {ts}",
+                    "description": "New version of the report.",
+                }
+            }
+            report2_guid = self.client.create_asset(body=r2_body)
+            self.created_assets.append(report2_guid)
+            console.print(f"  ✓ Created new report: {report2_guid}")
+
+            # Step 2: Create a subject element (generic asset)
+            subject_body = {
+                "class": "NewElementRequestBody",
+                "properties": {
+                    "class": "AssetProperties",
+                    "qualifiedName": f"TestSubject::ForReport::{ts}",
+                    "displayName": f"Test Subject {ts}",
+                    "description": "Subject matter of the report.",
+                }
+            }
+            subject_guid = self.client.create_asset(body=subject_body)
+            self.created_assets.append(subject_guid)
+            console.print(f"  ✓ Created subject element: {subject_guid}")
+
+            # Step 3: Link originator to report2
+            orig_body = {
+                "class": "NewRelationshipRequestBody",
+                "properties": {
+                    "class": "ReportOriginatorProperties",
+                    "label": "Created by",
+                    "description": "The originating system for this report",
+                }
+            }
+            self.client.link_report_originator(
+                originator_guid=subject_guid, report_guid=report2_guid, body=orig_body
+            )
+            console.print(f"  ✓ Linked report originator")
+
+            # Step 4: Link report dependency (report2 follows on from report1)
+            dep_body = {
+                "class": "NewRelationshipRequestBody",
+                "properties": {
+                    "class": "ReportDependencyProperties",
+                    "label": "Supersedes",
+                    "description": "This report supersedes the prior report",
+                }
+            }
+            self.client.link_report_dependency(
+                prior_report_guid=report1_guid, report_guid=report2_guid, body=dep_body
+            )
+            console.print(f"  ✓ Linked report dependency")
+
+            # Step 5: Link subject to report2
+            subj_body = {
+                "class": "NewRelationshipRequestBody",
+                "properties": {
+                    "class": "ReportSubjectProperties",
+                    "label": "About",
+                    "description": "The primary subject of this report",
+                }
+            }
+            self.client.link_report_subject(
+                subject_guid=subject_guid, report_guid=report2_guid, body=subj_body
+            )
+            console.print(f"  ✓ Linked report subject")
+
+            # Step 6: Unlink relationships
+            self.client.unlink_report_originator(originator_guid=subject_guid, report_guid=report2_guid)
+            console.print(f"  ✓ Unlinked report originator")
+
+            self.client.unlink_report_dependency(prior_report_guid=report1_guid, report_guid=report2_guid)
+            console.print(f"  ✓ Unlinked report dependency")
+
+            self.client.unlink_report_subject(subject_guid=subject_guid, report_guid=report2_guid)
+            console.print(f"  ✓ Unlinked report subject")
+
+            duration = time.perf_counter() - start_time
+            return TestResult(
+                scenario_name=scenario_name,
+                status="PASSED",
+                duration=duration,
+                message="Report relationships linked and unlinked successfully.",
+                created_guids=[g for g in [report1_guid, report2_guid, subject_guid] if g],
+            )
+
+        except Exception as e:
+            duration = time.perf_counter() - start_time
+            console.print(f"  [red]✗ Scenario failed: {str(e)}[/red]")
+            return TestResult(
+                scenario_name=scenario_name,
+                status="FAILED",
+                duration=duration,
+                message=str(e),
+                error=e,
+                created_guids=[g for g in [report1_guid, report2_guid, subject_guid] if g],
+            )
+
+    def scenario_data_set_content(self) -> TestResult:
+        """Scenario: Create a data set and a data store, link content, then detach"""
+        scenario_name = "Data Set Content Linking"
+        start_time = time.perf_counter()
+        data_set_guid = None
+        data_store_guid = None
+
+        try:
+            console.print(f"\n[bold cyan]═══ Scenario: {scenario_name} ═══[/bold cyan]\n")
+            ts = datetime.now().strftime("%Y%m%d%H%M%S%f")
+
+            # Step 1: Create a data set
+            ds_body = {
+                "class": "NewElementRequestBody",
+                "properties": {
+                    "class": "AssetProperties",
+                    "typeName": "DataSet",
+                    "qualifiedName": f"TestDataSet::{ts}",
+                    "displayName": f"Test DataSet {ts}",
+                    "description": "Data set for content linking test.",
+                }
+            }
+            data_set_guid = self.client.create_asset(body=ds_body)
+            self.created_assets.append(data_set_guid)
+            console.print(f"  ✓ Created data set: {data_set_guid}")
+
+            # Step 2: Create a data store (content supplier)
+            store_body = {
+                "class": "NewElementRequestBody",
+                "properties": {
+                    "class": "AssetProperties",
+                    "typeName": "DataStore",
+                    "qualifiedName": f"TestDataStore::{ts}",
+                    "displayName": f"Test DataStore {ts}",
+                    "description": "Data store supplying content for the data set.",
+                }
+            }
+            data_store_guid = self.client.create_asset(body=store_body)
+            self.created_assets.append(data_store_guid)
+            console.print(f"  ✓ Created data store: {data_store_guid}")
+
+            # Step 3: Link data set content
+            link_body = {
+                "class": "NewRelationshipRequestBody",
+                "properties": {
+                    "class": "DataSetContentProperties",
+                    "queryId": "test-query-001",
+                    "query": "SELECT * FROM source_table",
+                    "queryType": "SQL",
+                }
+            }
+            self.client.link_data_set_content(
+                data_set_guid=data_set_guid, data_content_asset_guid=data_store_guid, body=link_body
+            )
+            console.print(f"  ✓ Linked data set content")
+
+            # Step 4: Detach data set content
+            self.client.detach_data_set_content(
+                data_set_guid=data_set_guid, data_content_asset_guid=data_store_guid
+            )
+            console.print(f"  ✓ Detached data set content")
+
+            duration = time.perf_counter() - start_time
+            return TestResult(
+                scenario_name=scenario_name,
+                status="PASSED",
+                duration=duration,
+                message="Data set content linked and detached successfully.",
+                created_guids=[g for g in [data_set_guid, data_store_guid] if g],
+            )
+
+        except Exception as e:
+            duration = time.perf_counter() - start_time
+            console.print(f"  [red]✗ Scenario failed: {str(e)}[/red]")
+            return TestResult(
+                scenario_name=scenario_name,
+                status="FAILED",
+                duration=duration,
+                message=str(e),
+                error=e,
+                created_guids=[g for g in [data_set_guid, data_store_guid] if g],
+            )
+
     def run_all_scenarios(self):
         """Execute all test scenarios"""
         console.print(Panel.fit(
@@ -483,26 +802,29 @@ class AssetMakerScenarioTester:
             f"Test Run ID: {self.test_run_id}",
             border_style="cyan"
         ))
-        
+
         if not self.setup():
             console.print("[bold red]Setup failed. Cannot proceed with tests.[/bold red]")
             return False
-        
+
         try:
             # Run all scenarios
             self.results.append(self.scenario_asset_lifecycle())
             self.results.append(self.scenario_multiple_assets())
             self.results.append(self.scenario_asset_from_template())
-            
+            self.results.append(self.scenario_software_capability_lifecycle())
+            self.results.append(self.scenario_report_relationships())
+            self.results.append(self.scenario_data_set_content())
+
             # Print summary
             self.print_results_summary()
-            
+
             # Cleanup
             self.cleanup_created_assets()
-            
+
             # Return success if no failures
             return all(r.status != "FAILED" for r in self.results)
-            
+
         finally:
             self.teardown()
 
