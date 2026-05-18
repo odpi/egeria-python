@@ -9,6 +9,7 @@ This module contains an initial version of the glossary_manager module.
 import asyncio
 import csv
 import os
+import re
 from typing import List, Annotated, Literal, Optional
 
 from loguru import logger
@@ -2820,6 +2821,77 @@ class GlossaryManager(CollectionManager):
         """
         loop = asyncio.get_event_loop()
         loop.run_until_complete(self._async_clear_term_as_question(term_guid, body))
+
+    @dynamic_catch
+    async def _async_create_question(self, display_name: Optional[str] = None,
+                                     description: Optional[str] = None,
+                                     body: Optional[dict | NewElementRequestBody] = None) -> str:
+        """Create a GlossaryTerm classified with Question in a single API call. Async version.
+
+        Parameters
+        ----------
+        display_name: str, optional
+            The question text; used as display name and to manufacture a qualified name
+            with 'Question::' prefix.
+        description: str, optional
+            Additional description or context for the question.
+        body: dict | NewElementRequestBody, optional
+            Full request body. If supplied, display_name and description are ignored.
+
+        Returns
+        -------
+        str - guid of the created question term
+
+        Notes
+        -----
+        Uses initialClassifications to apply Question classification at creation time — no second API call needed.
+        """
+        if body is None:
+            if display_name is None:
+                raise PyegeriaInvalidParameterException(additional_info={"reason": "display_name required"})
+            slug = re.sub(r"[?',\".!;:()\[\]{}]", "", display_name.lower().strip())
+            slug = re.sub(r"\s+", "-", slug)
+            qualified_name = f"Question::{slug}"
+            body = {
+                "class": "NewElementRequestBody",
+                "isOwnAnchor": True,
+                "initialClassifications": {
+                    "Question": {"class": "QuestionProperties"}
+                },
+                "properties": {
+                    "class": "GlossaryTermProperties",
+                    "qualifiedName": qualified_name,
+                    "displayName": display_name,
+                    "description": description,
+                },
+            }
+        url = (
+            f"{self.platform_url}/servers/{self.view_server}/api/open-metadata/glossary-manager/glossaries/terms"
+        )
+        return await self._async_create_element_body_request(url, "GlossaryTermProperties", body)
+
+    @dynamic_catch
+    def create_question(self, display_name: Optional[str] = None,
+                        description: Optional[str] = None,
+                        body: Optional[dict | NewElementRequestBody] = None) -> str:
+        """Create a GlossaryTerm classified with Question in a single API call.
+
+        Parameters
+        ----------
+        display_name: str, optional
+            The question text; used as display name and to manufacture a qualified name
+            with 'Question::' prefix.
+        description: str, optional
+            Additional description or context for the question.
+        body: dict | NewElementRequestBody, optional
+            Full request body. If supplied, display_name and description are ignored.
+
+        Returns
+        -------
+        str - guid of the created question term
+        """
+        loop = asyncio.get_event_loop()
+        return loop.run_until_complete(self._async_create_question(display_name, description, body))
 
     #
     #   Term - Term Relationships

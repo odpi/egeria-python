@@ -1,6 +1,6 @@
 {
   "family": "Glossary",
-  "exported": "May 16, 2026 at 9:31:59 PM",
+  "exported": "May 17, 2026 at 9:29:53 PM",
   "attribute_definitions": {
     "Activity Status": {
       "variable_name": "activity_status",
@@ -1041,6 +1041,25 @@
       "level": "Advanced",
       "Journal Entry": ""
     },
+    "Membership Type": {
+      "variable_name": "membership_type",
+      "inUpdate": true,
+      "attr_labels": "",
+      "examples": "",
+      "default_value": "",
+      "valid_values": [],
+      "existing_element": "",
+      "description": "Name of the type of membership.",
+      "generated": false,
+      "style": "Simple",
+      "user_specified": true,
+      "unique": false,
+      "input_required": false,
+      "min_cardinality": 0,
+      "max_cardinality": 1,
+      "level": "Domain",
+      "Journal Entry": ""
+    },
     "Merge Update": {
       "variable_name": "merge_update",
       "inUpdate": true,
@@ -1231,6 +1250,25 @@
       "level": "Advanced",
       "Journal Entry": ""
     },
+    "Perspective Name": {
+      "variable_name": "perspective_name",
+      "inUpdate": true,
+      "attr_labels": "",
+      "examples": "",
+      "default_value": "",
+      "valid_values": [],
+      "existing_element": "Perspective",
+      "description": "Qualified name of the Perspective.",
+      "generated": false,
+      "style": "Reference Name",
+      "user_specified": true,
+      "unique": false,
+      "input_required": true,
+      "min_cardinality": 1,
+      "max_cardinality": 1,
+      "level": "Basic",
+      "Journal Entry": ""
+    },
     "Policy Management Point": {
       "variable_name": "policy_management_point",
       "inUpdate": true,
@@ -1324,6 +1362,25 @@
       "min_cardinality": 0,
       "max_cardinality": 1,
       "level": "Common",
+      "Journal Entry": ""
+    },
+    "Question Name": {
+      "variable_name": "question_name",
+      "inUpdate": true,
+      "attr_labels": "",
+      "examples": "",
+      "default_value": "",
+      "valid_values": [],
+      "existing_element": "GlossaryTerm",
+      "description": "Qualified name of the Question (a GlossaryTerm with IsQuestion classification).",
+      "generated": false,
+      "style": "Reference Name",
+      "user_specified": true,
+      "unique": false,
+      "input_required": true,
+      "min_cardinality": 1,
+      "max_cardinality": 1,
+      "level": "Basic",
       "Journal Entry": ""
     },
     "Request ID": {
@@ -1569,6 +1626,25 @@
       "input_required": false,
       "min_cardinality": 0,
       "max_cardinality": 0,
+      "level": "Advanced",
+      "Journal Entry": ""
+    },
+    "SkillSet Name": {
+      "variable_name": "skill_set",
+      "inUpdate": true,
+      "attr_labels": "SkillSet",
+      "examples": "",
+      "default_value": "",
+      "valid_values": [],
+      "existing_element": "SkillSet",
+      "description": "Skillset to assign.",
+      "generated": false,
+      "style": "Reference Name",
+      "user_specified": true,
+      "unique": false,
+      "input_required": false,
+      "min_cardinality": 1,
+      "max_cardinality": 1,
       "level": "Advanced",
       "Journal Entry": ""
     },
@@ -2488,6 +2564,7 @@
         "Make Anchor",
         "Membership Rationale",
         "Membership Status",
+        "Membership Type",
         "Notes",
         "Source",
         "Steward",
@@ -2686,6 +2763,25 @@
       "extra_constraints": "",
       "OM_TYPE": "",
       "bundle": "Term-Term Link Base",
+      "custom_attributes": [],
+      "Journal Entry": ""
+    },
+    "Create Question": {
+      "display_name": "Create Question",
+      "qn_prefix": "Question",
+      "alternate_names": [],
+      "family": "Glossary",
+      "description": "Create a GlossaryTerm classified as a Question in a single API call.",
+      "verb": "Create",
+      "upsert": true,
+      "attach": false,
+      "level": "Basic",
+      "find_method": "GlossaryManager.find_glossary_terms",
+      "find_constraints": "{\"metadata_element_type\": \"GlossaryTerm\", \"classification\": \"Question\"}",
+      "extra_find": "",
+      "extra_constraints": "",
+      "OM_TYPE": "GlossaryTerm",
+      "bundle": "Glossary Term Base",
       "custom_attributes": [],
       "Journal Entry": ""
     }

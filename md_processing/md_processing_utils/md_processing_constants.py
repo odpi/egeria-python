@@ -86,7 +86,7 @@ COLLECTION_SUBTYPES = [
     "Digital Product", "Digital Product Catalog", "Digital Product Family",
     "Agreement", "Digital Subscription", "Data Sharing Agreement", "Data Dictionary", "Data Spec",
     "Glossary", "Security Group", "Security List", "Security Role",
-    "Skill Set", "Reference List"
+    "Skill Set", "Reference List", "Report Type", "Question Spec"
 ]
 
 SIMPLE_BASE_COLLECTIONS: set = set(COLLECTION_SUBTYPES) | {

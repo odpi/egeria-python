@@ -176,6 +176,22 @@ class ActorManagerLinkProcessor(AsyncBaseCommandProcessor):
                     actor_guid=actor_guid, skill_set_guid=skill_set_guid, body=body
                 )
 
+        elif object_type == "Perspective to Question":
+            # ScopedBy: Perspective (scope element) <-> Question (assigned actor/scoped)
+            perspective_guid = attributes.get("Perspective Name", {}).get("guid")
+            question_guid = attributes.get("Question Name", {}).get("guid")
+            if verb in ["Link", "Attach", "Add"]:
+                body = set_rel_request_body("AssignmentScope", attributes)
+                body["properties"] = set_rel_prop_body("AssignmentScope", attributes)
+                await self.client.actor_manager._async_link_assignment_scope(
+                    scope_element_guid=perspective_guid, actor_guid=question_guid, body=body
+                )
+            elif verb in ["Detach", "Remove", "Unlink"]:
+                body = set_delete_rel_request_body("AssignmentScope", attributes)
+                await self.client.actor_manager._async_detach_assignment_scope(
+                    scope_element_guid=perspective_guid, actor_guid=question_guid, body=body
+                )
+
         else:
              raise PyegeriaException(f"Unsupported Link object type: {object_type}")
 

@@ -145,6 +145,10 @@ class CollectionManagerProcessor(AsyncBaseCommandProcessor):
                 method_name = "_async_create_skill_set_collection"
             elif object_type == "Reference List":
                 method_name = "_async_create_reference_list_collection"
+            elif object_type == "Report Type":
+                method_name = "_async_create_report_type_collection"
+            elif object_type == "Question Spec":
+                method_name = "_async_create_question_spec_folder"
             
             if hasattr(self.client, method_name):
                 method = getattr(self.client, method_name)

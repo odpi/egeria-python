@@ -14,7 +14,7 @@ from mcp.server.fastmcp.exceptions import ValidationError
 
 from pyegeria.egeria_tech_client import EgeriaTech
 from pyegeria.core._exceptions import print_validation_error
-# from pyegeria.base_report_formats import find_report_specs
+from pyegeria.view.base_report_formats import load_egeria_report_specs
 
 GLOBAL_EGERIA_CLIENT: Optional[EgeriaTech] = None
 nest_asyncio.apply()
@@ -64,6 +64,9 @@ def main() -> None:
         logger.debug("Egeria Client initialized")
         GLOBAL_EGERIA_CLIENT.create_egeria_bearer_token("erinoverview", "secret")
         logger.debug("Egeria Client connected")
+
+        load_egeria_report_specs(GLOBAL_EGERIA_CLIENT)
+        logger.debug("Egeria report specs loaded into registry")
 
     except ValidationError as e:
         print_validation_error(e)

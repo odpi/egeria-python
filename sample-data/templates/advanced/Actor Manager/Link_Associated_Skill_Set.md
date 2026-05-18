@@ -122,7 +122,7 @@ ___
 ### SkillSet Name
 >	**Input Required**: False
 
->	**Attribute Type**: Simple
+>	**Attribute Type**: Reference Name
 
 >	**Description**: Skillset to assign.
 
