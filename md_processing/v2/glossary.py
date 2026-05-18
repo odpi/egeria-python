@@ -397,6 +397,60 @@ class GlossaryClassifyProcessor(AsyncBaseCommandProcessor):
         return await self.render_result_markdown(entity_guid)
 
 
+class QuestionProcessor(AsyncBaseCommandProcessor):
+    """
+    Processor for the 'Create Question' command.
+
+    Creates a GlossaryTerm classified with Question in a single API call,
+    using initialClassifications in the request body — no separate classify step.
+    """
+
+    async def fetch_element(self, guid: str) -> Optional[Dict[str, Any]]:
+        try:
+            return await self.client._async_get_term_by_guid(guid)
+        except PyegeriaException:
+            return None
+
+    async def apply_changes(self) -> str:
+        verb = self.command.verb
+        if verb != "Create":
+            return self.command.raw_block
+
+        attributes = self.parsed_output["attributes"]
+        qualified_name = self.parsed_output["qualified_name"]
+        display_name = attributes.get("Display Name", {}).get("value", qualified_name)
+        description = attributes.get("Description", {}).get("value")
+        journal_entry = attributes.get("Journal Entry", {}).get("value")
+
+        spec = self.get_command_spec()
+        om_type = spec.get("OM_TYPE", "GlossaryTerm")
+
+        prop_body = set_element_prop_body(om_type, qualified_name, attributes)
+        body = set_create_body(om_type, attributes)
+        body["properties"] = prop_body
+        body["initialClassifications"] = {"Question": {"class": "QuestionProperties"}}
+
+        raw_guid = await self.client._async_create_question(body=body)
+        guid = self.extract_guid_or_raise(raw_guid, "Create Question")
+
+        if guid:
+            self.parsed_output["guid"] = guid
+
+            if journal_entry:
+                try:
+                    j_guid = await async_add_note_in_dr_e(self.client, qualified_name, display_name, journal_entry)
+                    if j_guid:
+                        self.add_related_result("Journal Entry", j_guid)
+                except Exception as e:
+                    self.add_related_result("Journal Entry", status="failure", message=str(e))
+
+            update_element_dictionary(qualified_name, {"guid": guid, "display_name": display_name})
+            logger.success(f"Created Question '{display_name}' with GUID {guid}")
+            return await self.render_result_markdown(guid)
+
+        return self.command.raw_block
+
+
 class TermRelationshipProcessor(AsyncBaseCommandProcessor):
     """
     Processor for Term-to-Term relationships (Link, Attach, Add).

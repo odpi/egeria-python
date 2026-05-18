@@ -2344,6 +2344,83 @@ class CollectionManager(ServerClient):
         return asyncio.get_event_loop().run_until_complete(
             self._async_create_report_type_collection(display_name, description,category,
                                                  classification_name, body))
+
+    @dynamic_catch
+    async def _async_create_question_spec_folder(self, display_name: Optional[str] = None,
+                                                  description: Optional[str] = None,
+                                                  category: Optional[str] = None,
+                                                  body: Optional[dict | NewElementRequestBody] = None) -> str:
+        """Create a CollectionFolder with qualified name prefix 'QuestionSpec::' representing a
+        question spec entry (a perspective→question grouping) within a ReportType. Async version.
+
+        Parameters
+        ----------
+        display_name: str, optional
+            Display name; used to manufacture a qualified name with 'QuestionSpec::' prefix.
+        description: str, optional
+            Description of this question spec entry.
+        category: str, optional
+            An optional user-assigned category.
+        body: dict | NewElementRequestBody, optional
+            Full request body. If supplied, other params are ignored.
+
+        Returns
+        -------
+        str - guid of the created CollectionFolder
+        """
+        if body:
+            validated_body = self.validate_new_element_request(body, "CollectionFolderProperties")
+        elif display_name is not None:
+            qualified_name = self.__create_qualified_name__("QuestionSpec", display_name)
+            collection_properties = CollectionFolderProperties(
+                class_="CollectionFolderProperties",
+                qualified_name=qualified_name,
+                display_name=display_name,
+                description=description,
+                category=category,
+            )
+            body = {
+                "class": "NewElementRequestBody",
+                "isOwnAnchor": True,
+                "properties": collection_properties.model_dump(),
+            }
+            validated_body = NewElementRequestBody.model_validate(body)
+        else:
+            raise PyegeriaInvalidParameterException(additional_info={"reason": "Invalid input parameters"})
+
+        url = f"{self.collection_command_root}"
+        json_body = validated_body.model_dump_json(indent=2, exclude_none=True, by_alias=True)
+        logger.info(json_body)
+        resp = await self._async_make_request("POST", url, json_body, is_json=True)
+        logger.info(f"Create question spec folder with GUID: {resp.json().get('guid')}")
+        return resp.json().get("guid", NO_GUID_RETURNED)
+
+    @dynamic_catch
+    def create_question_spec_folder(self, display_name: Optional[str] = None,
+                                     description: Optional[str] = None,
+                                     category: Optional[str] = None,
+                                     body: Optional[dict | NewElementRequestBody] = None) -> str:
+        """Create a CollectionFolder with qualified name prefix 'QuestionSpec::' representing a
+        question spec entry within a ReportType.
+
+        Parameters
+        ----------
+        display_name: str, optional
+            Display name; used to manufacture a qualified name with 'QuestionSpec::' prefix.
+        description: str, optional
+            Description of this question spec entry.
+        category: str, optional
+            An optional user-assigned category.
+        body: dict | NewElementRequestBody, optional
+            Full request body. If supplied, other params are ignored.
+
+        Returns
+        -------
+        str - guid of the created CollectionFolder
+        """
+        return asyncio.get_event_loop().run_until_complete(
+            self._async_create_question_spec_folder(display_name, description, category, body))
+
     @dynamic_catch
     async def _async_create_security_list(self, display_name: Optional[str] = None, description: Optional[str] = None,
                                                 category: Optional[str] = None, classification_name: Optional[str] = None, prop:str = "SecurityList",

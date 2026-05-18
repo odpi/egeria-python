@@ -21,6 +21,7 @@ from pyegeria import settings, config_logging,  settings, ACTIVITY_STATUS
 from commands.cat.my_reports import start_exp2
 from commands.cat.run_report import list_generic
 from commands.cat.list_reports import display_reports
+from commands.cat.load_report_specs import load_report_specs_cmd
 from commands.cat.get_asset_graph import asset_viewer
 from commands.cat.get_collection_tree import collection_viewer
 from commands.cat.get_project_dependencies import project_dependency_viewer
@@ -1086,6 +1087,7 @@ def show_cat_info(ctx):
     pass
 
 show_cat_info.add_command(schema_tree_cmd, name="report-schema-tree")
+show_cat_info.add_command(load_report_specs_cmd, name="load-report-specs")
 
 @show_cat_info.command("Run Report")
 @click.option("--report", help="Report to output", default="Digital-Products")

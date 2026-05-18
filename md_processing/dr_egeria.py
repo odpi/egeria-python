@@ -24,7 +24,7 @@ from md_processing.md_processing_utils.common_md_utils import set_attribute_log_
 from md_processing.md_processing_utils.md_processing_constants import PROJECT_SUBTYPES, COLLECTION_SUBTYPES
 from md_processing.v2 import (
     UniversalExtractor, V2Dispatcher, AsyncBaseCommandProcessor,
-    TermProcessor, TermRelationshipProcessor, GlossaryClassifyProcessor,
+    TermProcessor, TermRelationshipProcessor, GlossaryClassifyProcessor, QuestionProcessor,
     DataCollectionProcessor, DataStructureProcessor, DataFieldProcessor, DataClassProcessor,
     BlueprintProcessor, ComponentProcessor, SupplyChainProcessor, SolutionLinkProcessor,
     SolutionArchitectProcessor,
@@ -217,6 +217,8 @@ def setup_dispatcher(client: EgeriaTech) -> V2Dispatcher:
     reg("Detach Term-Term Relationship", TermRelationshipProcessor)
     reg("Classify Term as Question", GlossaryClassifyProcessor)
     reg("Declassify Term as Question", GlossaryClassifyProcessor)
+    reg("Create Question", QuestionProcessor)
+    reg("Link Perspective to Question", ActorManagerLinkProcessor)
 
     # Data Designer
     from md_processing.v2.data_designer import (

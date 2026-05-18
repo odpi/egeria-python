@@ -1,6 +1,6 @@
 {
   "family": "Collections",
-  "exported": "May 17, 2026 at 4:02:24 PM",
+  "exported": "May 17, 2026 at 9:29:26 PM",
   "attribute_definitions": {
     "Activity Status": {
       "variable_name": "activity_status",
@@ -1250,6 +1250,25 @@
       "level": "Advanced",
       "Journal Entry": ""
     },
+    "Perspective Name": {
+      "variable_name": "perspective_name",
+      "inUpdate": true,
+      "attr_labels": "",
+      "examples": "",
+      "default_value": "",
+      "valid_values": [],
+      "existing_element": "Perspective",
+      "description": "Qualified name of the Perspective.",
+      "generated": false,
+      "style": "Reference Name",
+      "user_specified": true,
+      "unique": false,
+      "input_required": true,
+      "min_cardinality": 1,
+      "max_cardinality": 1,
+      "level": "Basic",
+      "Journal Entry": ""
+    },
     "Policy Management Point": {
       "variable_name": "policy_management_point",
       "inUpdate": true,
@@ -1343,6 +1362,25 @@
       "min_cardinality": 0,
       "max_cardinality": 1,
       "level": "Common",
+      "Journal Entry": ""
+    },
+    "Question Name": {
+      "variable_name": "question_name",
+      "inUpdate": true,
+      "attr_labels": "",
+      "examples": "",
+      "default_value": "",
+      "valid_values": [],
+      "existing_element": "GlossaryTerm",
+      "description": "Qualified name of the Question (a GlossaryTerm with IsQuestion classification).",
+      "generated": false,
+      "style": "Reference Name",
+      "user_specified": true,
+      "unique": false,
+      "input_required": true,
+      "min_cardinality": 1,
+      "max_cardinality": 1,
+      "level": "Basic",
       "Journal Entry": ""
     },
     "Request ID": {
@@ -1601,7 +1639,7 @@
       "existing_element": "SkillSet",
       "description": "Skillset to assign.",
       "generated": false,
-      "style": "Simple",
+      "style": "Reference Name",
       "user_specified": true,
       "unique": false,
       "input_required": false,
@@ -2267,6 +2305,25 @@
       "custom_attributes": [],
       "Journal Entry": ""
     },
+    "Create Question Spec": {
+      "display_name": "Question Spec",
+      "qn_prefix": "QuestionSpec",
+      "alternate_names": [],
+      "family": "Collections",
+      "description": "Creates or updates a CollectionFolder containing a question specification, identified by a qualified name beginning with QuestionSpec.",
+      "verb": "Create",
+      "upsert": true,
+      "attach": false,
+      "level": "Basic",
+      "find_method": "CollectionManager.find_collections",
+      "find_constraints": "{\"metadata_element_type\": \"CollectionFolder\", \"starts_with\": true, \"search_string\": \"QuestionSpec\"}",
+      "extra_find": "",
+      "extra_constraints": "",
+      "OM_TYPE": "CollectionFolder",
+      "bundle": "Collection Base",
+      "custom_attributes": [],
+      "Journal Entry": ""
+    },
     "Create Recent Access": {
       "display_name": "Recent Access",
       "qn_prefix": "RecentAccess",
@@ -2301,6 +2358,25 @@
       "extra_find": "",
       "extra_constraints": "",
       "OM_TYPE": "ReferenceList",
+      "bundle": "Collection Base",
+      "custom_attributes": [],
+      "Journal Entry": ""
+    },
+    "Create Report Type": {
+      "display_name": "Report Type",
+      "qn_prefix": "ReportType",
+      "alternate_names": [],
+      "family": "Collections",
+      "description": "Creates or updates a collection that defines the structure of a report (ReportType).",
+      "verb": "Create",
+      "upsert": true,
+      "attach": false,
+      "level": "Basic",
+      "find_method": "CollectionManager.find_collections",
+      "find_constraints": "{\"metadata_element_type\": \"ReportType\"}",
+      "extra_find": "",
+      "extra_constraints": "",
+      "OM_TYPE": "ReportType",
       "bundle": "Collection Base",
       "custom_attributes": [],
       "Journal Entry": ""

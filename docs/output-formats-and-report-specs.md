@@ -644,6 +644,147 @@ uv run commands/tech/refresh_specs.py --merge-reports
 
 ---
 
+### Question Specs: Linking Reports to User Intent
+
+A *question spec* describes the human questions a report is designed to answer and associates those questions with user *perspectives* (roles or viewpoints). This metadata lives inside each `FormatSet` as the `question_spec` attribute and can also be persisted into the Egeria metadata repository as first-class entities.
+
+#### Entity Model
+
+When persisted into Egeria, four entity types are created:
+
+| Entity Type | QN Prefix | Description |
+| :--- | :--- | :--- |
+| `ReportType` | `ReportType::` | Identifies a class of report — one per `FormatSet` with a `question_spec` |
+| `QuestionSpec` | `QuestionSpec::<label>::<n>` | A folder grouping related questions; linked to a `ReportType` |
+| `Question` | `Question::` | A `GlossaryTerm` classified as a `Question` |
+| `Perspective` | `Perspective::` | A viewpoint (role/persona) that scopes one or more Questions via a `ScopedBy` link |
+
+#### Dr. Egeria Commands
+
+Dr. Egeria supports four markdown commands for creating question-spec entities:
+
+- **Create Report Type** — creates a `ReportType` collection
+- **Create Question Spec** — creates a `QuestionSpec` folder collection and links it to its parent `ReportType`
+- **Create Question** — creates a `Question` (`GlossaryTerm` with the `Question` classification)
+- **Link Perspective to Question** — creates a `ScopedBy` relationship from a `Perspective` entity to a `Question`
+
+#### Bootstrapping: Generating Install Files
+
+`commands/generate_question_spec_markdown.py` generates a complete set of Dr. Egeria markdown install files from `base_report_specs` and `generated_format_sets`:
+
+```bash
+python commands/generate_question_spec_markdown.py [--output-dir <path>]
+# Default output: sample-data/question-spec-install/
+```
+
+Each report type with a `question_spec` produces one `.md` file containing the full sequence of `Create Report Type → Create Question Spec → Create Question → Link Perspective to Question` blocks. The generator also writes `00_perspectives.md` (all unique `Perspective` entities) and an executable `run_all.sh`.
+
+Process all files in order:
+
+```bash
+cd sample-data/question-spec-install
+bash run_all.sh [--url <platform_url>] [--server <view_server>] \
+                [--userid <user_id>] [--user_pass <user_pwd>]
+```
+
+Process `00_perspectives.md` first — the report-type files reference the `Perspective` qualified names created there.
+
+#### Bootstrapping: Direct API Migration
+
+For direct programmatic migration (no Dr. Egeria markdown processing):
+
+```bash
+python commands/migrate_question_specs.py \
+    [--url <platform_url>]  [--server <view_server>] \
+    [--user <user_id>]      [--password <user_pwd>]  \
+    [--dry-run]             [--label <label>]
+```
+
+- `--dry-run`: reports what would be created without making any API calls
+- `--label`: repeat to migrate only specific report types (e.g. `--label Glossaries --label Projects`)
+- The script is idempotent — all three entity types (ReportType, QuestionSpec, Question) are find-or-create; re-runs skip existing entities.
+
+Qualified name format used by both scripts (and `load_egeria_report_specs`):
+
+```
+[LocalQualifier::]TypeName::DisplayName
+```
+
+The `LocalQualifier` prefix (set via `EGERIA_LOCAL_QUALIFIER` or the config profile) is prepended by `__create_qualified_name__` in `_base_server_client.py`. The migration script replicates this logic at line `_build_qn(client, type_name, display_name)`.
+
+#### Loading Persisted Question Specs at Runtime
+
+`load_egeria_report_specs` reads `ReportType` and `QuestionSpec` collections from Egeria and merges their `question_spec` data into the in-process registry. Results are **cached** — by default for 1 day — so that repeated calls within a session are instant.
+
+**Python SDK:**
+
+```python
+from pyegeria.egeria_tech_client import EgeriaTech
+from pyegeria.view.base_report_formats import load_egeria_report_specs
+
+client = EgeriaTech("qs-view-server", "https://localhost:9443", user_id="user", user_pwd="secret")
+client.create_egeria_bearer_token()
+
+# Normal call — skips reload if the cache is still fresh (< TTL)
+load_egeria_report_specs(client)
+
+# Force a reload regardless of the cache age
+load_egeria_report_specs(client, force=True)
+
+# Override the TTL for this call only (0 = always reload)
+load_egeria_report_specs(client, ttl_seconds=3600)
+```
+
+Returns `True` if Egeria was queried and the registry updated; `False` if the cache was reused or Egeria was unreachable.
+
+**CLI (standalone):**
+
+```bash
+load_report_specs [--force] [--ttl <seconds>] \
+    [--server <view_server>] [--url <platform_url>] \
+    [--userid <user>] [--password <pwd>]
+```
+
+**CLI (`hey_egeria`):**
+
+```bash
+hey_egeria cat show info load-report-specs
+hey_egeria cat show info load-report-specs --force
+hey_egeria cat show info load-report-specs --ttl 3600
+```
+
+**Cache control:**
+
+| Mechanism | Effect |
+| :--- | :--- |
+| `PYEGERIA_REPORT_SPECS_CACHE_TTL=86400` | Default TTL (seconds). Set to `0` to always reload. |
+| `--force` flag | Bypass TTL unconditionally for this call. |
+| `--ttl <n>` flag | Per-call TTL override. |
+
+**Automatic loading:**
+
+The MCP server (`pyegeria/core/mcp_server.py`) calls `load_egeria_report_specs` automatically at startup, so `find_report_specs` tool calls are always Egeria-aware without any extra setup. For short-lived CLI commands (`run_report`, `dr_egeria`) the function must be called explicitly — the in-process cache does not persist between separate invocations.
+
+The function handles an optional `LocalQualifier` prefix in stored QNs — it extracts the label by splitting on `"ReportType::"` regardless of what precedes it. If Egeria is unreachable the merge step is skipped silently and the function returns `False`.
+
+#### Viewing Migrated Content
+
+Three built-in report specs let you inspect question-spec entities that have been persisted in Egeria:
+
+| Report Spec | What It Shows |
+| :--- | :--- |
+| `Questions` | All `GlossaryTerm` entities classified as `Question` |
+| `Report-Types` | All `ReportType` collections |
+| `Question-Specs` | All `QuestionSpec` folder collections |
+
+```bash
+run_report --report Questions      --output-format TABLE --param search_string="*"
+run_report --report Report-Types   --output-format TABLE --param search_string="*"
+run_report --report Question-Specs --output-format TABLE --param search_string="*"
+```
+
+---
+
 ### Discoverability & Introspection
 
 - List all spec names (optionally grouped): `report_spec_list(show_family=True, sort_by_family=True)`
@@ -665,6 +806,7 @@ pyegeria provides ready-to-use CLI commands to discover and run report specs.
   - `MD`/`REPORT`/`FORM`/`LIST`/`HTML`: writes a timestamped file to your outbox
   - `DICT`: returns machine-readable data (materialized)
   - `JSON`: returns raw machine-readable data from Egeria
+- `load_report_specs`: Refreshes the in-process report-spec registry from Egeria (ReportType collections and their QuestionSpec question data). Results are cached; use `--force` to reload unconditionally.
 
 Examples
 
@@ -676,35 +818,42 @@ poetry run list_reports
 poetry run list_reports --search glossary
 
 ## Run a report as a table (Rich table in terminal)
-poetry run run_report --report "Digital-Products" --output-format TABLE --param search_string="*"
+poetry run run_report --report “Digital-Products” --output-format TABLE --param search_string=”*”
 
 ## Run a report and save Markdown to the outbox
-poetry run run_report --report "My-User-MD" --output-format REPORT --param search_string="*"
+poetry run run_report --report “My-User-MD” --output-format REPORT --param search_string=”*”
 
 # Pass multiple parameters in snake_case
 poetry run run_report \
-  --report "Collections" \
+  --report “Collections” \
   --output-format TABLE \
-  --param search_string="*" \
+  --param search_string=”*” \
   --param page_size=100 \
   --param start_from=0
 
 # Or pass parameters as JSON (snake_case keys)
-poetry run run_report --report "Collections" --output-format TABLE \
-  --params-json '{"search_string":"*","page_size":100,"start_from":0}'
+poetry run run_report --report “Collections” --output-format TABLE \
+  --params-json '{“search_string”:”*”,”page_size”:100,”start_from”:0}'
+
+# Load (or refresh) question specs from Egeria into the local registry
+poetry run load_report_specs
+poetry run load_report_specs --force              # bypass cache
+poetry run load_report_specs --ttl 3600           # re-check every hour
 ```
 
 From the main CLI (`hey_egeria`):
 
 ```bash
-# Inside the Hey Egeria CLI
 hey_egeria cat show info list-reports --search user
-hey_egeria cat show info "Run Report" --report "Digital-Products" --output-format TABLE --search-string "*"
+hey_egeria cat show info “Run Report” --report “Digital-Products” --output-format TABLE --search-string “*”
+hey_egeria cat show info load-report-specs
+hey_egeria cat show info load-report-specs --force
 ```
 
 Notes
 - Unknown report vs unsupported format: error messages clearly distinguish a mistyped/unknown report from a known report that does not support the requested `output_format`. Hints include the list of available formats and suggest running `list_reports`.
 - CLI parameters must use snake_case (see “Parameter naming: snake_case vs camelCase”).
+- `load_report_specs` only affects the current process — the cache is in-memory and does not persist between separate CLI invocations.
 
 ---
 
