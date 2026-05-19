@@ -1,6 +1,6 @@
 {
   "family": "Glossary",
-  "exported": "May 17, 2026 at 9:29:53 PM",
+  "exported": "May 19, 2026 at 9:10:04 PM",
   "attribute_definitions": {
     "Activity Status": {
       "variable_name": "activity_status",
@@ -1020,6 +1020,25 @@
       "min_cardinality": 0,
       "max_cardinality": 1,
       "level": "Advanced",
+      "Journal Entry": ""
+    },
+    "Legal": {
+      "variable_name": "legal",
+      "inUpdate": true,
+      "attr_labels": "",
+      "examples": "",
+      "default_value": "",
+      "valid_values": [],
+      "existing_element": "",
+      "description": "Copyright and\/or license information for the element or associated resource.",
+      "generated": false,
+      "style": "Simple",
+      "user_specified": true,
+      "unique": false,
+      "input_required": false,
+      "min_cardinality": 0,
+      "max_cardinality": 1,
+      "level": "Common",
       "Journal Entry": ""
     },
     "Make Anchor": {
@@ -2452,6 +2471,15 @@
     }
   },
   "bundles": {
+    "Asset": {
+      "inherits": "Referenceable",
+      "own_attributes": [
+        "Deployed Implementation Type",
+        "Namespace Path",
+        "Resource Name",
+        "Source"
+      ]
+    },
     "Authored Referenceable": {
       "inherits": "Referenceable",
       "own_attributes": [
@@ -2460,43 +2488,45 @@
         "User Defined Content Status"
       ]
     },
-    "Request Base": {
-      "inherits": null,
+    "Collection Base": {
+      "inherits": "Authored Referenceable",
       "own_attributes": [
-        "Effective From",
-        "Effective Time",
-        "Effective To",
-        "Extended Properties",
-        "External Source GUID",
-        "External Source Name",
-        "For Duplicate Processing",
-        "For Lineage",
-        "Journal Entry",
-        "Request ID"
+        "Purpose"
       ]
     },
-    "Referenceable": {
-      "inherits": "New-Element",
+    "Collection Membership": {
+      "inherits": null,
       "own_attributes": [
-        "Additional Properties",
-        "Category",
-        "Class Word Classification",
-        "Confidence Classification",
-        "Confidentiality Classification",
-        "Criticality Classification",
+        "Anchor Scope IDs",
+        "Confidence",
+        "Expression",
+        "Make Anchor",
+        "Membership Rationale",
+        "Membership Status",
+        "Membership Type",
+        "Notes",
+        "Source",
+        "Steward",
+        "Steward Property Name",
+        "Steward Type Name",
+        "User Defined Status"
+      ]
+    },
+    "General Terms and Conditions": {
+      "inherits": null,
+      "own_attributes": [
+        "Entitlements",
+        "Obligations",
+        "Restrictions"
+      ]
+    },
+    "Link Command Base": {
+      "inherits": "Request Base",
+      "own_attributes": [
+        "Anchor Scope IDs",
         "Description",
-        "Display Name",
-        "GUID",
-        "Identifier",
-        "Impact Classification",
-        "Modifier Classification",
-        "Policy Management Point",
-        "Prime Word Classification",
-        "Qualified Name",
-        "Retention Classification",
-        "Security Tags",
-        "URL",
-        "Version Identifier"
+        "Label",
+        "Make Anchor"
       ]
     },
     "New-Element": {
@@ -2516,18 +2546,44 @@
         "Zone Membership"
       ]
     },
-    "General Terms and Conditions": {
-      "inherits": null,
+    "Referenceable": {
+      "inherits": "New-Element",
       "own_attributes": [
-        "Entitlements",
-        "Obligations",
-        "Restrictions"
+        "Additional Properties",
+        "Category",
+        "Class Word Classification",
+        "Confidence Classification",
+        "Confidentiality Classification",
+        "Criticality Classification",
+        "Description",
+        "Display Name",
+        "GUID",
+        "Identifier",
+        "Impact Classification",
+        "Legal",
+        "Modifier Classification",
+        "Policy Management Point",
+        "Prime Word Classification",
+        "Qualified Name",
+        "Retention Classification",
+        "Security Tags",
+        "URL",
+        "Version Identifier"
       ]
     },
-    "Collection Base": {
-      "inherits": "Authored Referenceable",
+    "Request Base": {
+      "inherits": null,
       "own_attributes": [
-        "Purpose"
+        "Effective From",
+        "Effective Time",
+        "Effective To",
+        "Extended Properties",
+        "External Source GUID",
+        "External Source Name",
+        "For Duplicate Processing",
+        "For Lineage",
+        "Journal Entry",
+        "Request ID"
       ]
     },
     "Resource List": {
@@ -2535,42 +2591,6 @@
       "own_attributes": [
         "Additional Properties",
         "Resource Use"
-      ]
-    },
-    "Link Command Base": {
-      "inherits": "Request Base",
-      "own_attributes": [
-        "Anchor Scope IDs",
-        "Description",
-        "Label",
-        "Make Anchor"
-      ]
-    },
-    "Asset": {
-      "inherits": "Referenceable",
-      "own_attributes": [
-        "Deployed Implementation Type",
-        "Namespace Path",
-        "Resource Name",
-        "Source"
-      ]
-    },
-    "Collection Membership": {
-      "inherits": null,
-      "own_attributes": [
-        "Anchor Scope IDs",
-        "Confidence",
-        "Expression",
-        "Make Anchor",
-        "Membership Rationale",
-        "Membership Status",
-        "Membership Type",
-        "Notes",
-        "Source",
-        "Steward",
-        "Steward Property Name",
-        "Steward Type Name",
-        "User Defined Status"
       ]
     },
     "Glossary Base": {
@@ -2616,52 +2636,12 @@
     }
   },
   "commands": {
-    "Create Glossary": {
-      "display_name": "Create Glossary",
-      "qn_prefix": "Glossary",
-      "alternate_names": [],
-      "family": "Glossary",
-      "description": "Creates or updates a glossary — a collection of related terms for a specific domain or purpose.",
-      "verb": "Create",
-      "upsert": true,
-      "attach": false,
-      "level": "Basic",
-      "find_method": "GlossaryManager.find_glossaries",
-      "find_constraints": "",
-      "extra_find": "",
-      "extra_constraints": "",
-      "OM_TYPE": "Glossary",
-      "bundle": "Glossary Base",
-      "custom_attributes": [],
-      "Journal Entry": ""
-    },
-    "Create Glossary Term": {
-      "display_name": "Create Glossary Term",
-      "qn_prefix": "Term",
-      "alternate_names": [
-        "Term"
-      ],
-      "family": "Glossary",
-      "description": "Creates or updates a glossary term — a concept, phrase, or word defined within a glossary.",
-      "verb": "Create",
-      "upsert": true,
-      "attach": false,
-      "level": "Basic",
-      "find_method": "GlossaryManager.find_glossary_terms",
-      "find_constraints": "",
-      "extra_find": "",
-      "extra_constraints": "",
-      "OM_TYPE": "GlossaryTerm",
-      "bundle": "Glossary Term Base",
-      "custom_attributes": [],
-      "Journal Entry": ""
-    },
-    "Classify Glossary as Taxonomy": {
-      "display_name": "Create Glossary",
+    "Classify Glossary as Canonical": {
+      "display_name": "Set Glossary as Canonical",
       "qn_prefix": "",
       "alternate_names": [],
       "family": "Glossary",
-      "description": "Classify a glossary as a Taxonomy",
+      "description": "Classify a glossary as a Canonical",
       "verb": "Classify",
       "upsert": true,
       "attach": false,
@@ -2677,12 +2657,12 @@
       ],
       "Journal Entry": ""
     },
-    "Classify Glossary as Canonical": {
-      "display_name": "Set Glossary as Canonical",
+    "Classify Glossary as Taxonomy": {
+      "display_name": "Set Glossary as Taxonomy",
       "qn_prefix": "",
       "alternate_names": [],
       "family": "Glossary",
-      "description": "Classify a glossary as a Canonical",
+      "description": "Classify a glossary as a Taxonomy",
       "verb": "Classify",
       "upsert": true,
       "attach": false,
@@ -2719,8 +2699,67 @@
       ],
       "Journal Entry": ""
     },
+    "Create Glossary": {
+      "display_name": "Glossary",
+      "qn_prefix": "Glossary",
+      "alternate_names": [],
+      "family": "Glossary",
+      "description": "Creates or updates a glossary — a collection of related terms for a specific domain or purpose.",
+      "verb": "Create",
+      "upsert": true,
+      "attach": false,
+      "level": "Basic",
+      "find_method": "GlossaryManager.find_glossaries",
+      "find_constraints": "",
+      "extra_find": "",
+      "extra_constraints": "",
+      "OM_TYPE": "Glossary",
+      "bundle": "Glossary Base",
+      "custom_attributes": [],
+      "Journal Entry": ""
+    },
+    "Create Glossary Term": {
+      "display_name": "Glossary Term",
+      "qn_prefix": "Term",
+      "alternate_names": [
+        "Term"
+      ],
+      "family": "Glossary",
+      "description": "Creates or updates a glossary term — a concept, phrase, or word defined within a glossary.",
+      "verb": "Create",
+      "upsert": true,
+      "attach": false,
+      "level": "Basic",
+      "find_method": "GlossaryManager.find_glossary_terms",
+      "find_constraints": "",
+      "extra_find": "",
+      "extra_constraints": "",
+      "OM_TYPE": "GlossaryTerm",
+      "bundle": "Glossary Term Base",
+      "custom_attributes": [],
+      "Journal Entry": ""
+    },
+    "Create Question": {
+      "display_name": "Question",
+      "qn_prefix": "Question",
+      "alternate_names": [],
+      "family": "Glossary",
+      "description": "Create a GlossaryTerm classified as a Question (IsQuestion) in a single API call.",
+      "verb": "Create",
+      "upsert": true,
+      "attach": false,
+      "level": "Basic",
+      "find_method": "GlossaryManager.find_glossary_terms",
+      "find_constraints": "{\"metadata_element_type\": \"GlossaryTerm\", \"classification\": \"Question\"}",
+      "extra_find": "",
+      "extra_constraints": "",
+      "OM_TYPE": "GlossaryTerm",
+      "bundle": "Glossary Term Base",
+      "custom_attributes": [],
+      "Journal Entry": ""
+    },
     "Link Term as Context": {
-      "display_name": "Link Term as Context",
+      "display_name": "Term as Context",
       "qn_prefix": "",
       "alternate_names": [
         "Used in Context",
@@ -2745,7 +2784,7 @@
       "Journal Entry": ""
     },
     "Link Term-Term Relationship": {
-      "display_name": "Link Term-Term Relationship",
+      "display_name": "Term-Term Relationship",
       "qn_prefix": "",
       "alternate_names": [
         "Term-Term Relationship",
@@ -2763,25 +2802,6 @@
       "extra_constraints": "",
       "OM_TYPE": "",
       "bundle": "Term-Term Link Base",
-      "custom_attributes": [],
-      "Journal Entry": ""
-    },
-    "Create Question": {
-      "display_name": "Create Question",
-      "qn_prefix": "Question",
-      "alternate_names": [],
-      "family": "Glossary",
-      "description": "Create a GlossaryTerm classified as a Question in a single API call.",
-      "verb": "Create",
-      "upsert": true,
-      "attach": false,
-      "level": "Basic",
-      "find_method": "GlossaryManager.find_glossary_terms",
-      "find_constraints": "{\"metadata_element_type\": \"GlossaryTerm\", \"classification\": \"Question\"}",
-      "extra_find": "",
-      "extra_constraints": "",
-      "OM_TYPE": "GlossaryTerm",
-      "bundle": "Glossary Term Base",
       "custom_attributes": [],
       "Journal Entry": ""
     }

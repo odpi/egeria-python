@@ -55,7 +55,7 @@ Link question spec 1 to Governance Policies report type.
 
 ### Membership Status
 
-ACTIVE
+VALIDATED
 
 ### Collection Id
 
@@ -93,7 +93,7 @@ Add question to Governance Policies::1.
 
 ### Membership Status
 
-ACTIVE
+VALIDATED
 
 ### Collection Id
 
@@ -145,7 +145,7 @@ Add question to Governance Policies::1.
 
 ### Membership Status
 
-ACTIVE
+VALIDATED
 
 ### Collection Id
 
@@ -197,7 +197,7 @@ Add question to Governance Policies::1.
 
 ### Membership Status
 
-ACTIVE
+VALIDATED
 
 ### Collection Id
 
@@ -249,7 +249,7 @@ Add question to Governance Policies::1.
 
 ### Membership Status
 
-ACTIVE
+VALIDATED
 
 ### Collection Id
 
@@ -301,7 +301,7 @@ Add question to Governance Policies::1.
 
 ### Membership Status
 
-ACTIVE
+VALIDATED
 
 ### Collection Id
 
@@ -355,7 +355,7 @@ Link question spec 2 to Governance Policies report type.
 
 ### Membership Status
 
-ACTIVE
+VALIDATED
 
 ### Collection Id
 
@@ -393,7 +393,7 @@ Add question to Governance Policies::2.
 
 ### Membership Status
 
-ACTIVE
+VALIDATED
 
 ### Collection Id
 
@@ -445,7 +445,7 @@ Add question to Governance Policies::2.
 
 ### Membership Status
 
-ACTIVE
+VALIDATED
 
 ### Collection Id
 
@@ -497,7 +497,7 @@ Add question to Governance Policies::2.
 
 ### Membership Status
 
-ACTIVE
+VALIDATED
 
 ### Collection Id
 
@@ -551,7 +551,7 @@ Link question spec 3 to Governance Policies report type.
 
 ### Membership Status
 
-ACTIVE
+VALIDATED
 
 ### Collection Id
 
@@ -589,7 +589,7 @@ Add question to Governance Policies::3.
 
 ### Membership Status
 
-ACTIVE
+VALIDATED
 
 ### Collection Id
 
@@ -641,7 +641,7 @@ Add question to Governance Policies::3.
 
 ### Membership Status
 
-ACTIVE
+VALIDATED
 
 ### Collection Id
 

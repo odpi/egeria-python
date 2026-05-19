@@ -55,7 +55,7 @@ Link question spec 1 to Actor-Profiles-Assigned-MD report type.
 
 ### Membership Status
 
-ACTIVE
+VALIDATED
 
 ### Collection Id
 
@@ -93,7 +93,7 @@ Add question to Actor-Profiles-Assigned-MD::1.
 
 ### Membership Status
 
-ACTIVE
+VALIDATED
 
 ### Collection Id
 
@@ -159,7 +159,7 @@ Add question to Actor-Profiles-Assigned-MD::1.
 
 ### Membership Status
 
-ACTIVE
+VALIDATED
 
 ### Collection Id
 

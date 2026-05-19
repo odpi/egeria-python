@@ -1,6 +1,6 @@
 {
   "family": "Governance Officer",
-  "exported": "Apr 29, 2026 at 3:34:51 PM",
+  "exported": "May 19, 2026 at 9:10:25 PM",
   "attribute_definitions": {
     "Activity Status": {
       "variable_name": "activity_status",
@@ -1022,6 +1022,25 @@
       "level": "Advanced",
       "Journal Entry": ""
     },
+    "Legal": {
+      "variable_name": "legal",
+      "inUpdate": true,
+      "attr_labels": "",
+      "examples": "",
+      "default_value": "",
+      "valid_values": [],
+      "existing_element": "",
+      "description": "Copyright and\/or license information for the element or associated resource.",
+      "generated": false,
+      "style": "Simple",
+      "user_specified": true,
+      "unique": false,
+      "input_required": false,
+      "min_cardinality": 0,
+      "max_cardinality": 1,
+      "level": "Common",
+      "Journal Entry": ""
+    },
     "Make Anchor": {
       "variable_name": "make_anchor",
       "inUpdate": true,
@@ -1039,6 +1058,25 @@
       "min_cardinality": 1,
       "max_cardinality": 1,
       "level": "Advanced",
+      "Journal Entry": ""
+    },
+    "Membership Type": {
+      "variable_name": "membership_type",
+      "inUpdate": true,
+      "attr_labels": "",
+      "examples": "",
+      "default_value": "",
+      "valid_values": [],
+      "existing_element": "",
+      "description": "Name of the type of membership.",
+      "generated": false,
+      "style": "Simple",
+      "user_specified": true,
+      "unique": false,
+      "input_required": false,
+      "min_cardinality": 0,
+      "max_cardinality": 1,
+      "level": "Domain",
       "Journal Entry": ""
     },
     "Merge Update": {
@@ -1231,6 +1269,25 @@
       "level": "Advanced",
       "Journal Entry": ""
     },
+    "Perspective Name": {
+      "variable_name": "perspective_name",
+      "inUpdate": true,
+      "attr_labels": "",
+      "examples": "",
+      "default_value": "",
+      "valid_values": [],
+      "existing_element": "Perspective",
+      "description": "Qualified name of the Perspective.",
+      "generated": false,
+      "style": "Reference Name",
+      "user_specified": true,
+      "unique": false,
+      "input_required": true,
+      "min_cardinality": 1,
+      "max_cardinality": 1,
+      "level": "Basic",
+      "Journal Entry": ""
+    },
     "Policy Management Point": {
       "variable_name": "policy_management_point",
       "inUpdate": true,
@@ -1324,6 +1381,25 @@
       "min_cardinality": 0,
       "max_cardinality": 1,
       "level": "Common",
+      "Journal Entry": ""
+    },
+    "Question Name": {
+      "variable_name": "question_name",
+      "inUpdate": true,
+      "attr_labels": "",
+      "examples": "",
+      "default_value": "",
+      "valid_values": [],
+      "existing_element": "GlossaryTerm",
+      "description": "Qualified name of the Question (a GlossaryTerm with IsQuestion classification).",
+      "generated": false,
+      "style": "Reference Name",
+      "user_specified": true,
+      "unique": false,
+      "input_required": true,
+      "min_cardinality": 1,
+      "max_cardinality": 1,
+      "level": "Basic",
       "Journal Entry": ""
     },
     "Request ID": {
@@ -1569,6 +1645,25 @@
       "input_required": false,
       "min_cardinality": 0,
       "max_cardinality": 0,
+      "level": "Advanced",
+      "Journal Entry": ""
+    },
+    "SkillSet Name": {
+      "variable_name": "skill_set",
+      "inUpdate": true,
+      "attr_labels": "SkillSet",
+      "examples": "",
+      "default_value": "",
+      "valid_values": [],
+      "existing_element": "SkillSet",
+      "description": "Skillset to assign.",
+      "generated": false,
+      "style": "Reference Name",
+      "user_specified": true,
+      "unique": false,
+      "input_required": false,
+      "min_cardinality": 1,
+      "max_cardinality": 1,
       "level": "Advanced",
       "Journal Entry": ""
     },
@@ -3148,25 +3243,6 @@
       "level": "Domain",
       "Journal Entry": ""
     },
-    "Regulator": {
-      "variable_name": "regulator",
-      "inUpdate": false,
-      "attr_labels": "",
-      "examples": "",
-      "default_value": "",
-      "valid_values": [],
-      "existing_element": "Organization",
-      "description": "The Regulator (usually an organization) to link to the regulation.",
-      "generated": false,
-      "style": "Reference Name",
-      "user_specified": true,
-      "unique": false,
-      "input_required": true,
-      "min_cardinality": 1,
-      "max_cardinality": 1,
-      "level": "Domain",
-      "Journal Entry": ""
-    },
     "Regulation Source": {
       "variable_name": "regulation_source",
       "inUpdate": true,
@@ -3340,6 +3416,15 @@
     }
   },
   "bundles": {
+    "Asset": {
+      "inherits": "Referenceable",
+      "own_attributes": [
+        "Deployed Implementation Type",
+        "Namespace Path",
+        "Resource Name",
+        "Source"
+      ]
+    },
     "Authored Referenceable": {
       "inherits": "Referenceable",
       "own_attributes": [
@@ -3348,43 +3433,45 @@
         "User Defined Content Status"
       ]
     },
-    "Request Base": {
-      "inherits": null,
+    "Collection Base": {
+      "inherits": "Authored Referenceable",
       "own_attributes": [
-        "Effective From",
-        "Effective Time",
-        "Effective To",
-        "Extended Properties",
-        "External Source GUID",
-        "External Source Name",
-        "For Duplicate Processing",
-        "For Lineage",
-        "Journal Entry",
-        "Request ID"
+        "Purpose"
       ]
     },
-    "Referenceable": {
-      "inherits": "New-Element",
+    "Collection Membership": {
+      "inherits": null,
       "own_attributes": [
-        "Additional Properties",
-        "Category",
-        "Class Word Classification",
-        "Confidence Classification",
-        "Confidentiality Classification",
-        "Criticality Classification",
+        "Anchor Scope IDs",
+        "Confidence",
+        "Expression",
+        "Make Anchor",
+        "Membership Rationale",
+        "Membership Status",
+        "Membership Type",
+        "Notes",
+        "Source",
+        "Steward",
+        "Steward Property Name",
+        "Steward Type Name",
+        "User Defined Status"
+      ]
+    },
+    "General Terms and Conditions": {
+      "inherits": null,
+      "own_attributes": [
+        "Entitlements",
+        "Obligations",
+        "Restrictions"
+      ]
+    },
+    "Link Command Base": {
+      "inherits": "Request Base",
+      "own_attributes": [
+        "Anchor Scope IDs",
         "Description",
-        "Display Name",
-        "GUID",
-        "Identifier",
-        "Impact Classification",
-        "Modifier Classification",
-        "Policy Management Point",
-        "Prime Word Classification",
-        "Qualified Name",
-        "Retention Classification",
-        "Security Tags",
-        "URL",
-        "Version Identifier"
+        "Label",
+        "Make Anchor"
       ]
     },
     "New-Element": {
@@ -3404,18 +3491,44 @@
         "Zone Membership"
       ]
     },
-    "General Terms and Conditions": {
-      "inherits": null,
+    "Referenceable": {
+      "inherits": "New-Element",
       "own_attributes": [
-        "Entitlements",
-        "Obligations",
-        "Restrictions"
+        "Additional Properties",
+        "Category",
+        "Class Word Classification",
+        "Confidence Classification",
+        "Confidentiality Classification",
+        "Criticality Classification",
+        "Description",
+        "Display Name",
+        "GUID",
+        "Identifier",
+        "Impact Classification",
+        "Legal",
+        "Modifier Classification",
+        "Policy Management Point",
+        "Prime Word Classification",
+        "Qualified Name",
+        "Retention Classification",
+        "Security Tags",
+        "URL",
+        "Version Identifier"
       ]
     },
-    "Collection Base": {
-      "inherits": "Authored Referenceable",
+    "Request Base": {
+      "inherits": null,
       "own_attributes": [
-        "Purpose"
+        "Effective From",
+        "Effective Time",
+        "Effective To",
+        "Extended Properties",
+        "External Source GUID",
+        "External Source Name",
+        "For Duplicate Processing",
+        "For Lineage",
+        "Journal Entry",
+        "Request ID"
       ]
     },
     "Resource List": {
@@ -3423,41 +3536,6 @@
       "own_attributes": [
         "Additional Properties",
         "Resource Use"
-      ]
-    },
-    "Link Command Base": {
-      "inherits": "Request Base",
-      "own_attributes": [
-        "Anchor Scope IDs",
-        "Description",
-        "Label",
-        "Make Anchor"
-      ]
-    },
-    "Asset": {
-      "inherits": "Referenceable",
-      "own_attributes": [
-        "Deployed Implementation Type",
-        "Namespace Path",
-        "Resource Name",
-        "Source"
-      ]
-    },
-    "Collection Membership": {
-      "inherits": null,
-      "own_attributes": [
-        "Anchor Scope IDs",
-        "Confidence",
-        "Expression",
-        "Make Anchor",
-        "Membership Rationale",
-        "Membership Status",
-        "Notes",
-        "Source",
-        "Steward",
-        "Steward Property Name",
-        "Steward Type Name",
-        "User Defined Status"
       ]
     },
     "Governance Definition Core": {
@@ -4417,54 +4495,6 @@
         "Governance Definition",
         "Scope",
         "Referenceable"
-      ],
-      "Journal Entry": ""
-    },
-    "Link Regulator": {
-      "display_name": "Regulator",
-      "qn_prefix": "",
-      "alternate_names": [],
-      "family": "Governance Officer",
-      "description": "Links a regulator (usually an organization) to a regulation using the Regulator relationship.",
-      "verb": "Link",
-      "upsert": false,
-      "attach": true,
-      "level": "Basic",
-      "find_method": "",
-      "find_constraints": "",
-      "extra_find": "",
-      "extra_constraints": "",
-      "OM_TYPE": "Regulator",
-      "bundle": "Link Command Base",
-      "custom_attributes": [
-        "Regulation",
-        "Regulator",
-        "Description",
-        "Scope",
-        "Effective From",
-        "Effective To"
-      ],
-      "Journal Entry": ""
-    },
-    "Detach Regulator": {
-      "display_name": "Regulator",
-      "qn_prefix": "",
-      "alternate_names": [],
-      "family": "Governance Officer",
-      "description": "Detaches a regulator (usually an organization) from a regulation.",
-      "verb": "Detach",
-      "upsert": false,
-      "attach": true,
-      "level": "Basic",
-      "find_method": "",
-      "find_constraints": "",
-      "extra_find": "",
-      "extra_constraints": "",
-      "OM_TYPE": "Regulator",
-      "bundle": "Link Command Base",
-      "custom_attributes": [
-        "Regulation",
-        "Regulator"
       ],
       "Journal Entry": ""
     },

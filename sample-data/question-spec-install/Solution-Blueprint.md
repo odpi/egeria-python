@@ -55,7 +55,7 @@ Link question spec 1 to Solution-Blueprint report type.
 
 ### Membership Status
 
-ACTIVE
+VALIDATED
 
 ### Collection Id
 
@@ -93,7 +93,7 @@ Add question to Solution-Blueprint::1.
 
 ### Membership Status
 
-ACTIVE
+VALIDATED
 
 ### Collection Id
 
@@ -145,7 +145,7 @@ Add question to Solution-Blueprint::1.
 
 ### Membership Status
 
-ACTIVE
+VALIDATED
 
 ### Collection Id
 
@@ -197,7 +197,7 @@ Add question to Solution-Blueprint::1.
 
 ### Membership Status
 
-ACTIVE
+VALIDATED
 
 ### Collection Id
 
@@ -249,7 +249,7 @@ Add question to Solution-Blueprint::1.
 
 ### Membership Status
 
-ACTIVE
+VALIDATED
 
 ### Collection Id
 
@@ -303,7 +303,7 @@ Link question spec 2 to Solution-Blueprint report type.
 
 ### Membership Status
 
-ACTIVE
+VALIDATED
 
 ### Collection Id
 
@@ -341,7 +341,7 @@ Add question to Solution-Blueprint::2.
 
 ### Membership Status
 
-ACTIVE
+VALIDATED
 
 ### Collection Id
 
@@ -393,7 +393,7 @@ Add question to Solution-Blueprint::2.
 
 ### Membership Status
 
-ACTIVE
+VALIDATED
 
 ### Collection Id
 

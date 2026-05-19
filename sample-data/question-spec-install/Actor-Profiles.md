@@ -55,7 +55,7 @@ Link question spec 1 to Actor-Profiles report type.
 
 ### Membership Status
 
-ACTIVE
+VALIDATED
 
 ### Collection Id
 
@@ -93,7 +93,7 @@ Add question to Actor-Profiles::1.
 
 ### Membership Status
 
-ACTIVE
+VALIDATED
 
 ### Collection Id
 
@@ -145,7 +145,7 @@ Add question to Actor-Profiles::1.
 
 ### Membership Status
 
-ACTIVE
+VALIDATED
 
 ### Collection Id
 
@@ -197,7 +197,7 @@ Add question to Actor-Profiles::1.
 
 ### Membership Status
 
-ACTIVE
+VALIDATED
 
 ### Collection Id
 
@@ -251,7 +251,7 @@ Link question spec 2 to Actor-Profiles report type.
 
 ### Membership Status
 
-ACTIVE
+VALIDATED
 
 ### Collection Id
 
@@ -289,7 +289,7 @@ Add question to Actor-Profiles::2.
 
 ### Membership Status
 
-ACTIVE
+VALIDATED
 
 ### Collection Id
 
@@ -341,7 +341,7 @@ Add question to Actor-Profiles::2.
 
 ### Membership Status
 
-ACTIVE
+VALIDATED
 
 ### Collection Id
 
@@ -395,7 +395,7 @@ Link question spec 3 to Actor-Profiles report type.
 
 ### Membership Status
 
-ACTIVE
+VALIDATED
 
 ### Collection Id
 
@@ -433,7 +433,7 @@ Add question to Actor-Profiles::3.
 
 ### Membership Status
 
-ACTIVE
+VALIDATED
 
 ### Collection Id
 
@@ -485,7 +485,7 @@ Add question to Actor-Profiles::3.
 
 ### Membership Status
 
-ACTIVE
+VALIDATED
 
 ### Collection Id
 
@@ -539,7 +539,7 @@ Link question spec 4 to Actor-Profiles report type.
 
 ### Membership Status
 
-ACTIVE
+VALIDATED
 
 ### Collection Id
 
@@ -577,7 +577,7 @@ Add question to Actor-Profiles::4.
 
 ### Membership Status
 
-ACTIVE
+VALIDATED
 
 ### Collection Id
 

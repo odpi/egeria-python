@@ -55,7 +55,7 @@ Link question spec 1 to Valid-Value-Def report type.
 
 ### Membership Status
 
-ACTIVE
+VALIDATED
 
 ### Collection Id
 
@@ -93,7 +93,7 @@ Add question to Valid-Value-Def::1.
 
 ### Membership Status
 
-ACTIVE
+VALIDATED
 
 ### Collection Id
 
@@ -145,7 +145,7 @@ Add question to Valid-Value-Def::1.
 
 ### Membership Status
 
-ACTIVE
+VALIDATED
 
 ### Collection Id
 
@@ -197,7 +197,7 @@ Add question to Valid-Value-Def::1.
 
 ### Membership Status
 
-ACTIVE
+VALIDATED
 
 ### Collection Id
 
@@ -249,7 +249,7 @@ Add question to Valid-Value-Def::1.
 
 ### Membership Status
 
-ACTIVE
+VALIDATED
 
 ### Collection Id
 
@@ -303,7 +303,7 @@ Link question spec 2 to Valid-Value-Def report type.
 
 ### Membership Status
 
-ACTIVE
+VALIDATED
 
 ### Collection Id
 
@@ -341,7 +341,7 @@ Add question to Valid-Value-Def::2.
 
 ### Membership Status
 
-ACTIVE
+VALIDATED
 
 ### Collection Id
 
@@ -393,7 +393,7 @@ Add question to Valid-Value-Def::2.
 
 ### Membership Status
 
-ACTIVE
+VALIDATED
 
 ### Collection Id
 
@@ -447,7 +447,7 @@ Link question spec 3 to Valid-Value-Def report type.
 
 ### Membership Status
 
-ACTIVE
+VALIDATED
 
 ### Collection Id
 
@@ -485,7 +485,7 @@ Add question to Valid-Value-Def::3.
 
 ### Membership Status
 
-ACTIVE
+VALIDATED
 
 ### Collection Id
 
@@ -537,7 +537,7 @@ Add question to Valid-Value-Def::3.
 
 ### Membership Status
 
-ACTIVE
+VALIDATED
 
 ### Collection Id
 

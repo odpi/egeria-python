@@ -55,7 +55,7 @@ Link question spec 1 to Team-Members report type.
 
 ### Membership Status
 
-ACTIVE
+VALIDATED
 
 ### Collection Id
 
@@ -93,7 +93,7 @@ Add question to Team-Members::1.
 
 ### Membership Status
 
-ACTIVE
+VALIDATED
 
 ### Collection Id
 
@@ -145,7 +145,7 @@ Add question to Team-Members::1.
 
 ### Membership Status
 
-ACTIVE
+VALIDATED
 
 ### Collection Id
 
@@ -199,7 +199,7 @@ Link question spec 2 to Team-Members report type.
 
 ### Membership Status
 
-ACTIVE
+VALIDATED
 
 ### Collection Id
 
@@ -237,7 +237,7 @@ Add question to Team-Members::2.
 
 ### Membership Status
 
-ACTIVE
+VALIDATED
 
 ### Collection Id
 
@@ -289,7 +289,7 @@ Add question to Team-Members::2.
 
 ### Membership Status
 
-ACTIVE
+VALIDATED
 
 ### Collection Id
 
@@ -343,7 +343,7 @@ Link question spec 3 to Team-Members report type.
 
 ### Membership Status
 
-ACTIVE
+VALIDATED
 
 ### Collection Id
 
@@ -381,7 +381,7 @@ Add question to Team-Members::3.
 
 ### Membership Status
 
-ACTIVE
+VALIDATED
 
 ### Collection Id
 
@@ -447,7 +447,7 @@ Add question to Team-Members::3.
 
 ### Membership Status
 
-ACTIVE
+VALIDATED
 
 ### Collection Id
 

@@ -31,8 +31,8 @@
 ### Display Name
 Sales Forecast Glossary
 
-### GUID
-
+### LEGAL
+Some legal gobblety-goop
 ___
 
 # GL-02: Create Glossary — full coverage, user-specified QN
@@ -81,7 +81,8 @@ Initial glossary created to support Q1 2026 Sales Forecast governance initiative
 ### Qualified Name
 Glossary::SalesForecast::Domain::1.0
 
-### GUID
+### LEGAL
+Some legal gobblety-goop
 
 ___
 
@@ -225,7 +226,7 @@ ___
 ### Display Name
 Commit Forecast
 
-### In Glossary
+### Glossary Name
 Glossary::SalesForecast::Domain::1.0
 
 ### Summary
@@ -372,7 +373,8 @@ ___
 GlossaryTerm::SalesForecast::Opportunity::1.0
 
 ### Term 2
-PDR::GlossaryTerm::Sales-Forecast::1.0
+GlossaryTerm::SalesForecast::PipelineCoverageRatio::1.0
+
 
 ### Relationship Type
 Synonym

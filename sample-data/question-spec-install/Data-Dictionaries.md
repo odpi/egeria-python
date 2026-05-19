@@ -55,7 +55,7 @@ Link question spec 1 to Data-Dictionaries report type.
 
 ### Membership Status
 
-ACTIVE
+VALIDATED
 
 ### Collection Id
 
@@ -93,7 +93,7 @@ Add question to Data-Dictionaries::1.
 
 ### Membership Status
 
-ACTIVE
+VALIDATED
 
 ### Collection Id
 
@@ -145,7 +145,7 @@ Add question to Data-Dictionaries::1.
 
 ### Membership Status
 
-ACTIVE
+VALIDATED
 
 ### Collection Id
 
@@ -199,7 +199,7 @@ Link question spec 2 to Data-Dictionaries report type.
 
 ### Membership Status
 
-ACTIVE
+VALIDATED
 
 ### Collection Id
 
@@ -237,7 +237,7 @@ Add question to Data-Dictionaries::2.
 
 ### Membership Status
 
-ACTIVE
+VALIDATED
 
 ### Collection Id
 
@@ -289,7 +289,7 @@ Add question to Data-Dictionaries::2.
 
 ### Membership Status
 
-ACTIVE
+VALIDATED
 
 ### Collection Id
 
@@ -341,7 +341,7 @@ Add question to Data-Dictionaries::2.
 
 ### Membership Status
 
-ACTIVE
+VALIDATED
 
 ### Collection Id
 
@@ -395,7 +395,7 @@ Link question spec 3 to Data-Dictionaries report type.
 
 ### Membership Status
 
-ACTIVE
+VALIDATED
 
 ### Collection Id
 
@@ -433,7 +433,7 @@ Add question to Data-Dictionaries::3.
 
 ### Membership Status
 
-ACTIVE
+VALIDATED
 
 ### Collection Id
 
@@ -485,7 +485,7 @@ Add question to Data-Dictionaries::3.
 
 ### Membership Status
 
-ACTIVE
+VALIDATED
 
 ### Collection Id
 

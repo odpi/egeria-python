@@ -55,7 +55,7 @@ Link question spec 1 to Digital-Products report type.
 
 ### Membership Status
 
-ACTIVE
+VALIDATED
 
 ### Collection Id
 
@@ -93,7 +93,7 @@ Add question to Digital-Products::1.
 
 ### Membership Status
 
-ACTIVE
+VALIDATED
 
 ### Collection Id
 
@@ -145,7 +145,7 @@ Add question to Digital-Products::1.
 
 ### Membership Status
 
-ACTIVE
+VALIDATED
 
 ### Collection Id
 
@@ -197,7 +197,7 @@ Add question to Digital-Products::1.
 
 ### Membership Status
 
-ACTIVE
+VALIDATED
 
 ### Collection Id
 
@@ -249,7 +249,7 @@ Add question to Digital-Products::1.
 
 ### Membership Status
 
-ACTIVE
+VALIDATED
 
 ### Collection Id
 
@@ -301,7 +301,7 @@ Add question to Digital-Products::1.
 
 ### Membership Status
 
-ACTIVE
+VALIDATED
 
 ### Collection Id
 
@@ -353,7 +353,7 @@ Add question to Digital-Products::1.
 
 ### Membership Status
 
-ACTIVE
+VALIDATED
 
 ### Collection Id
 
@@ -407,7 +407,7 @@ Link question spec 2 to Digital-Products report type.
 
 ### Membership Status
 
-ACTIVE
+VALIDATED
 
 ### Collection Id
 
@@ -445,7 +445,7 @@ Add question to Digital-Products::2.
 
 ### Membership Status
 
-ACTIVE
+VALIDATED
 
 ### Collection Id
 
@@ -497,7 +497,7 @@ Add question to Digital-Products::2.
 
 ### Membership Status
 
-ACTIVE
+VALIDATED
 
 ### Collection Id
 
@@ -549,7 +549,7 @@ Add question to Digital-Products::2.
 
 ### Membership Status
 
-ACTIVE
+VALIDATED
 
 ### Collection Id
 
@@ -603,7 +603,7 @@ Link question spec 3 to Digital-Products report type.
 
 ### Membership Status
 
-ACTIVE
+VALIDATED
 
 ### Collection Id
 
@@ -641,7 +641,7 @@ Add question to Digital-Products::3.
 
 ### Membership Status
 
-ACTIVE
+VALIDATED
 
 ### Collection Id
 
@@ -693,7 +693,7 @@ Add question to Digital-Products::3.
 
 ### Membership Status
 
-ACTIVE
+VALIDATED
 
 ### Collection Id
 
@@ -745,7 +745,7 @@ Add question to Digital-Products::3.
 
 ### Membership Status
 
-ACTIVE
+VALIDATED
 
 ### Collection Id
 
@@ -797,7 +797,7 @@ Add question to Digital-Products::3.
 
 ### Membership Status
 
-ACTIVE
+VALIDATED
 
 ### Collection Id
 
@@ -849,7 +849,7 @@ Add question to Digital-Products::3.
 
 ### Membership Status
 
-ACTIVE
+VALIDATED
 
 ### Collection Id
 
@@ -903,7 +903,7 @@ Link question spec 4 to Digital-Products report type.
 
 ### Membership Status
 
-ACTIVE
+VALIDATED
 
 ### Collection Id
 
@@ -941,7 +941,7 @@ Add question to Digital-Products::4.
 
 ### Membership Status
 
-ACTIVE
+VALIDATED
 
 ### Collection Id
 
@@ -993,7 +993,7 @@ Add question to Digital-Products::4.
 
 ### Membership Status
 
-ACTIVE
+VALIDATED
 
 ### Collection Id
 
