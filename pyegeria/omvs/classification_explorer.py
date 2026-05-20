@@ -11932,5 +11932,261 @@ body: Optional[dict | FilterRequestBody] = None,
         )
 
 
+    async def _async_add_supplementary_properties_to_element(
+            self,
+            element_guid: str,
+            glossary_term_guid: str,
+            body: dict | NewRelationshipRequestBody,
+            time_out: int = default_time_out,
+    ) -> str:
+        """
+        Link a glossary term to an element using the SupplementaryProperties relationship. Async version.
+
+        Supplementary Properties: https://egeria-project.org/types/0/0011-Managing-Reference-Values/
+
+        Parameters
+        ----------
+        element_guid: str
+            - the identity of the element to link
+        glossary_term_guid: str
+            - the identity of the glossary term to link
+        body: dict | NewRelationshipRequestBody
+            - a dictionary or Pydantic model containing the properties to set - see note below
+
+        time_out: int, default = default_time_out
+            - http request timeout for this request
+
+        Returns
+        -------
+        str
+            - the guid of the new relationship
+
+        Raises
+        ------
+        PyegeriaException
+
+        Notes
+        -----
+        Sample body:
+
+        {
+           "class" : "NewRelationshipRequestBody",
+           "properties": {
+              "class" : "SupplementaryPropertiesProperties",
+              "label" : "Add label here",
+              "description" : "Add description here"
+           },
+           "externalSourceGUID": "Add guid here",
+           "externalSourceName": "Add qualified name here",
+           "forLineage": false,
+           "forDuplicateProcessing": false,
+           "effectiveTime" : "isoTimestamp"
+        }
+        """
+
+        url = (
+            f"{base_path(self, self.view_server)}/elements/{element_guid}"
+            f"/supplementary-properties/{glossary_term_guid}/attach"
+        )
+
+        return await self._async_new_relationship_request(
+            url, prop=["SupplementaryPropertiesProperties"], body=body
+        )
+
+    def add_supplementary_properties_to_element(
+            self,
+            element_guid: str,
+            glossary_term_guid: str,
+            body: dict | NewRelationshipRequestBody,
+            time_out: int = default_time_out,
+    ) -> str:
+        """
+        Link a glossary term to an element using the SupplementaryProperties relationship.
+
+        Supplementary Properties: https://egeria-project.org/types/0/0011-Managing-Reference-Values/
+
+        Parameters
+        ----------
+        element_guid: str
+            - the identity of the element to link
+        glossary_term_guid: str
+            - the identity of the glossary term to link
+        body: dict | NewRelationshipRequestBody
+            - a dictionary or Pydantic model containing the properties to set - see note below
+
+        time_out: int, default = default_time_out
+            - http request timeout for this request
+
+        Returns
+        -------
+        str
+            - the guid of the new relationship
+
+        Raises
+        ------
+        PyegeriaException
+
+        Notes
+        -----
+        Sample body:
+
+        {
+           "class" : "NewRelationshipRequestBody",
+           "properties": {
+              "class" : "SupplementaryPropertiesProperties",
+              "label" : "Add label here",
+              "description" : "Add description here"
+           },
+           "externalSourceGUID": "Add guid here",
+           "externalSourceName": "Add qualified name here",
+           "forLineage": false,
+           "forDuplicateProcessing": false,
+           "effectiveTime" : "isoTimestamp"
+        }
+        """
+
+        loop = asyncio.get_event_loop()
+        return loop.run_until_complete(
+            self._async_add_supplementary_properties_to_element(
+                element_guid,
+                glossary_term_guid,
+                body,
+                time_out,
+            )
+        )
+
+    async def _async_remove_supplementary_properties_from_element(
+            self,
+            element_guid: str,
+            glossary_term_guid: str,
+            body: Optional[dict | DeleteRelationshipRequestBody] = None,
+            for_lineage: bool = False,
+            for_duplicate_processing: bool = False,
+            effective_time: Optional[str] = None,
+            time_out: int = default_time_out,
+    ) -> None:
+        """
+        Remove the SupplementaryProperties relationship between a glossary term and an element. Async version.
+
+        Supplementary Properties: https://egeria-project.org/types/0/0011-Managing-Reference-Values/
+
+        Parameters
+        ----------
+        element_guid: str
+            - the identity of the element
+        glossary_term_guid: str
+            - the identity of the glossary term
+        body: dict | DeleteRelationshipRequestBody, default = None
+            - a dictionary or Pydantic model containing the properties for the request - see note below
+        for_lineage: bool, default = False
+            - determines if elements classified as Memento should be returned
+        for_duplicate_processing: bool, default = False
+            - set true when the caller is part of a deduplication function
+        effective_time: str, default = None
+            - Time format is "YYYY-MM-DDTHH:MM:SS" (ISO 8601)
+        time_out: int, default = default_time_out
+            - http request timeout for this request
+
+        Returns
+        -------
+        None
+
+        Raises
+        ------
+        PyegeriaException
+
+        Notes
+        -----
+        Sample body:
+
+        {
+           "class" : "DeleteRelationshipRequestBody",
+           "externalSourceGUID": "Add guid here",
+           "externalSourceName": "Add qualified name here",
+           "forLineage": false,
+           "forDuplicateProcessing": false,
+           "effectiveTime" : "isoTimestamp"
+        }
+        """
+
+        url = (
+            f"{base_path(self, self.view_server)}/elements/{element_guid}"
+            f"/supplementary-properties/{glossary_term_guid}/detach"
+        )
+
+        if body is None:
+            body = {"class": "DeleteRelationshipRequestBody", "effectiveTime": effective_time,
+                    "forLineage": for_lineage, "forDuplicateProcessing": for_duplicate_processing}
+
+        await self._async_delete_relationship_request(url, body)
+
+    def remove_supplementary_properties_from_element(
+            self,
+            element_guid: str,
+            glossary_term_guid: str,
+            body: Optional[dict | DeleteRelationshipRequestBody] = None,
+            for_lineage: bool = False,
+            for_duplicate_processing: bool = False,
+            effective_time: Optional[str] = None,
+            time_out: int = default_time_out,
+    ) -> None:
+        """
+        Remove the SupplementaryProperties relationship between a glossary term and an element.
+
+        Supplementary Properties: https://egeria-project.org/types/0/0011-Managing-Reference-Values/
+
+        Parameters
+        ----------
+        element_guid: str
+            - the identity of the element
+        glossary_term_guid: str
+            - the identity of the glossary term
+        body: dict | DeleteRelationshipRequestBody, default = None
+            - a dictionary or Pydantic model containing the properties for the request - see note below
+        for_lineage: bool, default = False
+            - determines if elements classified as Memento should be returned
+        for_duplicate_processing: bool, default = False
+            - set true when the caller is part of a deduplication function
+        effective_time: str, default = None
+            - Time format is "YYYY-MM-DDTHH:MM:SS" (ISO 8601)
+        time_out: int, default = default_time_out
+            - http request timeout for this request
+
+        Returns
+        -------
+        None
+
+        Raises
+        ------
+        PyegeriaException
+
+        Notes
+        -----
+        Sample body:
+
+        {
+           "class" : "DeleteRelationshipRequestBody",
+           "externalSourceGUID": "Add guid here",
+           "externalSourceName": "Add qualified name here",
+           "forLineage": false,
+           "forDuplicateProcessing": false,
+           "effectiveTime" : "isoTimestamp"
+        }
+        """
+
+        loop = asyncio.get_event_loop()
+        loop.run_until_complete(
+            self._async_remove_supplementary_properties_from_element(
+                element_guid,
+                glossary_term_guid,
+                body,
+                for_lineage,
+                for_duplicate_processing,
+                effective_time,
+                time_out,
+            )
+        )
+
+
 if __name__ == "__main__":
     print("Main-Classification Manager")
