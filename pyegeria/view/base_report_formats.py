@@ -92,7 +92,8 @@ from pyegeria.view._output_format_models import (
     Format,
     ActionParameter,
     FormatSet,
-    FormatSetDict
+    FormatSetDict,
+    QuestionSpec,
 )
 
 # --- GENERATED FORMAT SETS ---
@@ -3770,16 +3771,34 @@ def load_egeria_report_specs(
             )
             return False
 
+    # Paginate through all collections with "ReportType" in their qualified name.
+    # Use page_size=1000 (the platform maximum) to fetch all in as few calls as possible.
+    _page_size = 1000
+    _start = 0
+    report_types: list = []
     try:
-        report_types = client.find_collections(
-            search_string="*",
-            _type="ReportType",
-        )
+        while True:
+            page = client.find_collections(
+                search_string="ReportType",
+                _type="Collection",
+                start_from=_start,
+                page_size=_page_size,
+            )
+            if not page or isinstance(page, str):
+                break
+            # Keep only entries whose qualified name contains "ReportType::"
+            report_types.extend(
+                r for r in page
+                if "ReportType::" in r.get("properties", {}).get("qualifiedName", "")
+            )
+            if len(page) < _page_size:
+                break
+            _start += _page_size
     except Exception as e:
         logger.warning(f"load_egeria_report_specs: could not query Egeria — skipping: {e}")
         return False
 
-    if not report_types or isinstance(report_types, str):
+    if not report_types:
         logger.debug("load_egeria_report_specs: no ReportType entities found in Egeria")
         _EGERIA_SPECS_LOADED_AT = datetime.now(timezone.utc)
         return True
@@ -3824,16 +3843,32 @@ def load_egeria_report_specs(
             if not qs_folders:
                 continue
 
-
+            question_spec = []
             for folder in qs_folders:
                 folder_header = folder.get("elementHeader", {})
                 folder_guid = folder_header.get("guid", "")
                 if not folder_guid:
                     continue
 
-                # Get members of this QuestionSpec folder (the Questions)
+                # Infer perspective from folder qualified name as a fallback.
+                # Pattern: "QuestionSpec::<report>::<perspective>" where the last
+                # segment is not a bare integer (e.g. "TypeDef::Developer" → Developer).
+                folder_qn = folder.get("properties", {}).get("qualifiedName", "")
+                _parts = folder_qn.split("::")
+                _inferred_perspective = None
+                if len(_parts) >= 3:
+                    _tail = _parts[-1].strip()
+                    if _tail and not _tail.isdigit():
+                        _inferred_perspective = _tail
+
+                # Get members of this QuestionSpec folder (the Questions).
+                # Pass an explicit body without metadataElementTypeName so that
+                # GlossaryTerm Question members are not filtered out by the default
+                # _type="Collection" that get_collection_members uses internally.
                 try:
-                    members = client.get_collection_members(folder_guid)
+                    members = client.get_collection_members(
+                        folder_guid, body={"class": "ResultsRequestBody"}
+                    )
                 except Exception:
                     members = []
 
@@ -3855,7 +3890,9 @@ def load_egeria_report_specs(
                     if not m_guid:
                         continue
 
-                    # Get perspectives linked to this question via ScopedBy
+                    # Get perspectives linked to this question via ScopedBy.
+                    # Falls back to the perspective inferred from the folder name
+                    # when get_related_elements is unavailable or returns nothing.
                     try:
                         scoped = client.get_related_elements(
                             m_guid, relationship_type="ScopedBy"
@@ -3869,6 +3906,8 @@ def load_egeria_report_specs(
                             p_name = p_props.get("displayName", "")
                             if p_name and p_name not in perspectives:
                                 perspectives.append(p_name)
+                    elif _inferred_perspective and _inferred_perspective not in perspectives:
+                        perspectives.append(_inferred_perspective)
 
                 if questions:
                     question_spec.append({
@@ -3879,16 +3918,23 @@ def load_egeria_report_specs(
             if not question_spec:
                 continue
 
+            # Convert raw dicts to QuestionSpec objects so getattr access works
+            # (Pydantic skips validators on direct attribute assignment).
+            qs_objects = [
+                QuestionSpec(**qs) if isinstance(qs, dict) else qs
+                for qs in question_spec
+            ]
+
             # Merge question_spec into the registry entry (or create a minimal runtime entry)
             if existing:
-                existing.question_spec = question_spec
+                existing.question_spec = qs_objects
             else:
                 # Create a minimal FormatSet shell so the question_spec is available
                 shell = FormatSet(
                     target_type=label,
                     heading=rt_display,
                     description=rt_props.get("description", ""),
-                    question_spec=question_spec,
+                    question_spec=qs_objects,
                 )
                 _RUNTIME_REPORT_FORMATS[label] = shell
 

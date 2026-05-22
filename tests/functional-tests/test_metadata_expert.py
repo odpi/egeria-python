@@ -4,6 +4,8 @@ Copyright Contributors to the ODPi Egeria project.
 
 This module tests the MetadataExpert class and methods from metadata_expert.py
 """
+import json
+
 import pytest
 from datetime import datetime
 from pyegeria.omvs.metadata_expert import MetadataExpert
@@ -467,38 +469,49 @@ class TestMetadataExpert:
 
     def test_find_metadata_elements(self, expert_client):
         """Find metadata elements anchored to active-metadata-store."""
+        # body = {
+        #     "class": "FindRequestBody",
+        #     "matchClassifications": {
+        #         "class": "SearchClassifications",
+        #         "conditions": [
+        #             {
+        #                 "name": "Anchors",
+        #                 "searchProperties": {
+        #                     "class": "SearchProperties",
+        #                     "conditions": [
+        #                         {
+        #                             "property": "anchorGUID",
+        #                             "operator": "EQ",
+        #                             "value": {
+        #                                 "class": "PrimitiveTypePropertyValue",
+        #                                 "typeName": "string",
+        #                                 "primitiveValue": "a3603c04-3697-49d1-ad79-baf3ea3db61f",
+        #                             },
+        #                         }
+        #                     ],
+        #                     "matchCriteria": "ALL",
+        #                 },
+        #             }
+        #         ],
+        #         "matchCriteria": "ANY",
+        #     },
+        # }
         body = {
-            "class": "FindRequestBody",
-            "matchClassifications": {
-                "class": "SearchClassifications",
-                "conditions": [
-                    {
-                        "name": "Anchors",
-                        "searchProperties": {
-                            "class": "SearchProperties",
-                            "conditions": [
-                                {
-                                    "property": "anchorGUID",
-                                    "operator": "EQ",
-                                    "value": {
-                                        "class": "PrimitiveTypePropertyValue",
-                                        "typeName": "string",
-                                        "primitiveValue": "a3603c04-3697-49d1-ad79-baf3ea3db61f",
-                                    },
-                                }
-                            ],
-                            "matchCriteria": "ALL",
-                        },
-                    }
-                ],
-                "matchCriteria": "ANY",
-            },
-        }
+                  "class" : "FindRequestBody",
+                  "metadataElementTypeName": "ValidMetadataValue",
+                  "searchProperties": {
+                    "class" : "SearchProperties",
+                    "conditions": [ {
+                      "property" : "preferredValue",
+                      "operator": "IS_NULL"}],
+                    "matchCriteria": "ANY"
+                  }
+                }
         try:
             response = expert_client.find_metadata_elements(body)
             print(f"\nResponse type: {type(response).__name__}")
-            if isinstance(response, (dict, list, str)):
-                print(response)
+            if isinstance(response, (dict, list)):
+                print(json.dumps(response, indent=2))
         except PyegeriaConnectionException:
             pytest.skip("No Egeria server running")
         except Exception as e:

@@ -177,19 +177,19 @@ class ActorManagerLinkProcessor(AsyncBaseCommandProcessor):
                 )
 
         elif object_type == "Perspective to Question":
-            # ScopedBy: Perspective (scope element) <-> Question (assigned actor/scoped)
+            # ScopedBy: Perspective (scope/scoped_by_guid) <-> Question (element_guid)
             perspective_guid = attributes.get("Perspective Name", {}).get("guid")
             question_guid = attributes.get("Question Name", {}).get("guid")
             if verb in ["Link", "Attach", "Add"]:
-                body = set_rel_request_body("AssignmentScope", attributes)
-                body["properties"] = set_rel_prop_body("AssignmentScope", attributes)
-                await self.client.actor_manager._async_link_assignment_scope(
-                    scope_element_guid=perspective_guid, actor_guid=question_guid, body=body
+                body = set_rel_request_body("ScopedBy", attributes)
+                body["properties"] = set_rel_prop_body("ScopedBy", attributes)
+                await self.client.classification_manager._async_add_scope_to_element(
+                    scoped_by_guid=perspective_guid, element_guid=question_guid, body=body
                 )
             elif verb in ["Detach", "Remove", "Unlink"]:
-                body = set_delete_rel_request_body("AssignmentScope", attributes)
-                await self.client.actor_manager._async_detach_assignment_scope(
-                    scope_element_guid=perspective_guid, actor_guid=question_guid, body=body
+                body = set_delete_rel_request_body("ScopedBy", attributes)
+                await self.client.classification_manager._async_clear_scope_from_element(
+                    scoped_by_guid=perspective_guid, element_guid=question_guid, body=body
                 )
 
         else:

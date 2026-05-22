@@ -183,3 +183,4 @@ dmypy.json
 /.ai/
 /.ai-sandbox/
 /.aiassistant/
+.output.txt
