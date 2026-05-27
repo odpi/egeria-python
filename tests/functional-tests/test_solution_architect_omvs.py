@@ -116,10 +116,10 @@ class TestSolutionArchitect:
             token = sa_client.create_egeria_bearer_token(self.good_user_2, "secret")
             start_time = time.perf_counter()
 
-            search_string = "*"
+            search_string = "InformationSupplyChain::Sustainability Reporting"
             response = sa_client.find_information_supply_chains(
                 search_string,
-                output_format="DICT"
+                output_format="JSON"
             )
             duration = time.perf_counter() - start_time
 

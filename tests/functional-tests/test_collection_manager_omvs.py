@@ -307,13 +307,13 @@ class TestCollectionManager:
             c_client = CollectionManager(self.good_server_2, self.good_platform1_url, user_id=self.good_user_2)
             token = c_client.create_egeria_bearer_token(self.good_user_2, "secret")
             start_time = time.perf_counter()
-            collection_name = "myLocal::Folder::Ham-Radio-collection"
+            collection_name = "InformationSupplyChain::Sustainability Reporting"
             filter_body = FilterRequestBody(
                 class_ = "FilterRequestBody",
                 filter_string = collection_name,
                 include_only_classified_elements=None
                 )
-            response = c_client.get_collections_by_name(body=filter_body, output_format="DICT",
+            response = c_client.get_collections_by_name(body=filter_body, output_format="JSON",
                                                         report_spec="Collections")
             duration = time.perf_counter() - start_time
             print(f"Type is {type(response)}")
@@ -368,7 +368,7 @@ class TestCollectionManager:
             c_client = CollectionManager(self.good_view_server_1, self.good_platform1_url, user_id=self.good_user_2, )
             token = c_client.create_egeria_bearer_token(self.good_user_2, "secret")
             start_time = time.perf_counter()
-            collection_guid = "46e216b4-9d66-48b2-9605-b460f798d5b7"
+            collection_guid = "aed5c289-6e81-4cf8-8852-752005eee0c4"
             element_type = None
             response = c_client.get_collection_by_guid(collection_guid, element_type,
                                                        output_format="JSON", report_spec="Folders")

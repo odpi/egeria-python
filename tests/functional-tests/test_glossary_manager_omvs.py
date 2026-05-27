@@ -708,7 +708,9 @@ class TestGlossaryManager:
                 True,
                 False,
                 True,
-                output_format="JSON",
+                include_only_classified_elements=['Question'],
+                graph_query_depth=2,
+                output_format="DICT",
                 report_spec = "Basic-Terms"
             )
             print(f"Duration is {time.perf_counter() - start_time} seconds")
