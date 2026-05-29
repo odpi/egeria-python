@@ -20,7 +20,11 @@ from pyegeria.core._validators import validate_guid
 from pyegeria.view.base_report_formats import select_report_spec, get_report_spec_match
 from pyegeria.models import NewElementRequestBody, TemplateRequestBody, UpdateElementRequestBody, \
     NewRelationshipRequestBody, SearchStringRequestBody, DeleteElementRequestBody, \
-    DeleteRelationshipRequestBody
+    DeleteRelationshipRequestBody, DesignPatternProperties, \
+    AuthoredReferenceableProperties, SolutionBlueprintProperties, \
+    NestedDesignPatternProperties, SpecializedDesignPatternProperties, \
+    RelatedDesignPatternProperties, SolutionDesignProperties, \
+    SolutionComponentActorProperties, SolutionLinkingWireProperties, GetRequestBody
 from pyegeria.view.output_formatter import extract_mermaid_only, \
     populate_common_columns
 from pyegeria.core.utils import body_slimmer, dynamic_catch
@@ -92,9 +96,213 @@ class SolutionArchitect(ServerClient):
     # Extract properties functions
     #
 
-    def _get_supply_chain_rel_elements(self, guid:str)-> dict | str:
-        elements = self.get_info_supply_chain_by_guid(guid)
-        return self._get_supply_chain_rel_elements_dict(elements)
+    def _extract_design_pattern_properties(self, element: dict, columns_struct: dict) -> dict:
+        """
+        Extract properties from a design pattern element.
+
+        Args:
+            element: Dictionary containing element data
+            columns_struct: Dictionary with column definitions
+
+        Returns:
+            Dictionary with extracted properties
+        """
+        return populate_common_columns(
+            element,
+            columns_struct,
+            include_header=True,
+            include_relationships=True,
+            include_subject_area=True,
+            mermaid_source_key='mermaidGraph',
+            mermaid_dest_key='mermaid',
+        )
+
+    def generate_design_pattern_output(self, elements: list | dict, search_string: Optional[str] = None,
+                                     element_type_name: Optional[str] = None, output_format: str = 'MD',
+                                     report_spec: dict | str | None = None, **kwargs):
+        report_spec = select_report_spec(report_spec, 'Design-Pattern-DrE')
+        return self.generate_output(elements, self._extract_design_pattern_properties, report_spec,
+                                  search_string=search_string, element_type_name=element_type_name,
+                                  output_format=output_format, **kwargs)
+
+    async def _async_create_design_pattern(self, body: dict | NewElementRequestBody):
+        url = f"{self.solution_architect_command_root}/design-patterns"
+        response = await self._async_make_request("POST", url, body)
+        return response.json().get('guid') if isinstance(response, Response) else response
+
+    def create_design_pattern(self, body: dict | NewElementRequestBody):
+        """Create a design pattern."""
+        return asyncio.run(self._async_create_design_pattern(body))
+
+    async def _async_create_design_pattern_from_template(self, body: dict | TemplateRequestBody):
+        url = f"{self.solution_architect_command_root}/design-patterns/from-template"
+        response = await self._async_make_request("POST", url, body)
+        return response.json().get('guid') if isinstance(response, Response) else response
+
+    def create_design_pattern_from_template(self, body: dict | TemplateRequestBody):
+        """Create a design pattern from template."""
+        return asyncio.run(self._async_create_design_pattern_from_template(body))
+
+    async def _async_update_design_pattern(self, guid: str, body: dict | UpdateElementRequestBody):
+        validate_guid(guid)
+        url = f"{self.solution_architect_command_root}/design-patterns/{guid}/update"
+        return await self._async_make_request("POST", url, body)
+
+    def update_design_pattern(self, guid: str, body: dict | UpdateElementRequestBody):
+        """Update a design pattern."""
+        return asyncio.run(self._async_update_design_pattern(guid, body))
+
+    async def _async_link_nested_design_patterns(self, parent_guid: str, child_guid: str, body: Optional[dict | NewRelationshipRequestBody] = None):
+        validate_guid(parent_guid)
+        validate_guid(child_guid)
+        url = f"{self.solution_architect_command_root}/design-patterns/{parent_guid}/nested-design-patterns/{child_guid}/attach"
+        return await self._async_make_request("POST", url, body)
+
+    def link_nested_design_patterns(self, parent_guid: str, child_guid: str, body: Optional[dict | NewRelationshipRequestBody] = None):
+        """Link nested design patterns."""
+        return asyncio.run(self._async_link_nested_design_patterns(parent_guid, child_guid, body))
+
+    async def _async_detach_nested_design_patterns(self, parent_guid: str, child_guid: str, body: Optional[dict | DeleteRelationshipRequestBody] = None):
+        validate_guid(parent_guid)
+        validate_guid(child_guid)
+        url = f"{self.solution_architect_command_root}/design-patterns/{parent_guid}/nested-design-patterns/{child_guid}/detach"
+        return await self._async_make_request("POST", url, body)
+
+    def detach_nested_design_patterns(self, parent_guid: str, child_guid: str, body: Optional[dict | DeleteRelationshipRequestBody] = None):
+        """Detach nested design patterns."""
+        return asyncio.run(self._async_detach_nested_design_patterns(parent_guid, child_guid, body))
+
+    async def _async_link_specialized_design_patterns(self, general_guid: str, special_guid: str, body: Optional[dict | NewRelationshipRequestBody] = None):
+        validate_guid(general_guid)
+        validate_guid(special_guid)
+        url = f"{self.solution_architect_command_root}/design-patterns/{general_guid}/specialized-design-patterns/{special_guid}/attach"
+        return await self._async_make_request("POST", url, body)
+
+    def link_specialized_design_patterns(self, general_guid: str, special_guid: str, body: Optional[dict | NewRelationshipRequestBody] = None):
+        """Link specialized design patterns."""
+        return asyncio.run(self._async_link_specialized_design_patterns(general_guid, special_guid, body))
+
+    async def _async_detach_specialized_design_patterns(self, general_guid: str, special_guid: str, body: Optional[dict | DeleteRelationshipRequestBody] = None):
+        validate_guid(general_guid)
+        validate_guid(special_guid)
+        url = f"{self.solution_architect_command_root}/design-patterns/{general_guid}/specialized-design-patterns/{special_guid}/detach"
+        return await self._async_make_request("POST", url, body)
+
+    def detach_specialized_design_patterns(self, general_guid: str, special_guid: str, body: Optional[dict | DeleteRelationshipRequestBody] = None):
+        """Detach specialized design patterns."""
+        return asyncio.run(self._async_detach_specialized_design_patterns(general_guid, special_guid, body))
+
+    async def _async_link_related_design_patterns(self, guid1: str, guid2: str, body: Optional[dict | NewRelationshipRequestBody] = None):
+        validate_guid(guid1)
+        validate_guid(guid2)
+        url = f"{self.solution_architect_command_root}/design-patterns/{guid1}/related-design-patterns/{guid2}/attach"
+        return await self._async_make_request("POST", url, body)
+
+    def link_related_design_patterns(self, guid1: str, guid2: str, body: Optional[dict | NewRelationshipRequestBody] = None):
+        """Link related design patterns."""
+        return asyncio.run(self._async_link_related_design_patterns(guid1, guid2, body))
+
+    async def _async_detach_related_design_patterns(self, guid1: str, guid2: str, body: Optional[dict | DeleteRelationshipRequestBody] = None):
+        validate_guid(guid1)
+        validate_guid(guid2)
+        url = f"{self.solution_architect_command_root}/design-patterns/{guid1}/related-design-patterns/{guid2}/detach"
+        return await self._async_make_request("POST", url, body)
+
+    def detach_related_design_patterns(self, guid1: str, guid2: str, body: Optional[dict | DeleteRelationshipRequestBody] = None):
+        """Detach related design patterns."""
+        return asyncio.run(self._async_detach_related_design_patterns(guid1, guid2, body))
+
+    async def _async_delete_design_pattern(self, guid: str, body: Optional[dict | DeleteElementRequestBody] = None):
+        validate_guid(guid)
+        url = f"{self.solution_architect_command_root}/design-patterns/{guid}/delete"
+        return await self._async_make_request("POST", url, body)
+
+    def delete_design_pattern(self, guid: str, body: Optional[dict | DeleteElementRequestBody] = None):
+        """Delete a design pattern."""
+        return asyncio.run(self._async_delete_design_pattern(guid, body))
+
+    async def _async_find_design_patterns(self, search_string: str = "*", body: Optional[dict | SearchStringRequestBody] = None,
+                                  starts_with: bool = True, ends_with: bool = False, ignore_case: bool = False,
+                                  start_from: int = 0, page_size: int = 100, output_format: str = "JSON",
+                                  report_spec: str | dict = "Design-Pattern-DrE", **kwargs):
+        url = f"{self.solution_architect_command_root}/design-patterns/by-search-string"
+        params = {
+            'search_string': search_string,
+            'body': body,
+            'starts_with': starts_with,
+            'ends_with': ends_with,
+            'ignore_case': ignore_case,
+            'start_from': start_from,
+            'page_size': page_size,
+            'output_format': output_format,
+            'report_spec': report_spec
+        }
+        params.update(kwargs)
+        params = {k: v for k, v in params.items() if v is not None or k == 'search_string'}
+
+        return await self._async_find_request(url, _type="DesignPattern",
+                                             _gen_output=self.generate_design_pattern_output, **params)
+
+    def find_design_patterns(self, search_string: str = "*", body: Optional[dict | SearchStringRequestBody] = None,
+                           starts_with: bool = True, ends_with: bool = False, ignore_case: bool = False,
+                           start_from: int = 0, page_size: int = 100, output_format: str = "JSON",
+                           report_spec: str | dict = "Design-Pattern-DrE", **kwargs):
+        """Find design patterns."""
+        return asyncio.run(self._async_find_design_patterns(search_string, body, starts_with, ends_with,
+                                                         ignore_case, start_from, page_size,
+                                                         output_format, report_spec, **kwargs))
+
+    async def _async_get_design_patterns_by_name(self, name: str, body: Optional[dict | SearchStringRequestBody] = None,
+                                         start_from: int = 0, page_size: int = max_paging_size,
+                                         output_format: str = "JSON", report_spec: str | dict = "Design-Pattern-DrE", **kwargs):
+        url = f"{self.solution_architect_command_root}/design-patterns/by-name/{name}"
+        params = {
+            'filter_string': name,
+            'body': body,
+            'start_from': start_from,
+            'page_size': page_size,
+            'output_format': output_format,
+            'report_spec': report_spec
+        }
+        params.update(kwargs)
+        params = {k: v for k, v in params.items() if v is not None}
+        return await self._async_get_name_request(url, _type="DesignPattern",
+                                                 _gen_output=self.generate_design_pattern_output, **params)
+
+    def get_design_patterns_by_name(self, name: str, body: Optional[dict | SearchStringRequestBody] = None,
+                                  start_from: int = 0, page_size: int = max_paging_size,
+                                  output_format: str = "JSON", report_spec: str | dict = "Design-Pattern-DrE", **kwargs):
+        """Get design patterns by name."""
+        return asyncio.run(self._async_get_design_patterns_by_name(name, body, start_from, page_size,
+                                                                output_format, report_spec, **kwargs))
+
+    async def _async_get_design_pattern_by_guid(self, guid: str, body: Optional[dict | GetRequestBody] = None,
+                                        output_format: str = "JSON", report_spec: str | dict = "Design-Pattern-DrE", **kwargs):
+        validate_guid(guid)
+        url = f"{self.solution_architect_command_root}/design-patterns/{guid}"
+        params = {
+            'output_format': output_format,
+            'report_spec': report_spec,
+            'body': body
+        }
+        params.update(kwargs)
+        params = {k: v for k, v in params.items() if v is not None}
+        return await self._async_get_guid_request(url, _type="DesignPattern",
+                                                 _gen_output=self.generate_design_pattern_output, **params)
+
+    def get_design_pattern_by_guid(self, guid: str, body: Optional[dict | GetRequestBody] = None,
+                                 output_format: str = "JSON", report_spec: str | dict = "Design-Pattern-DrE", **kwargs):
+        """Get a design pattern by GUID."""
+        return asyncio.run(self._async_get_design_pattern_by_guid(guid, body, output_format, report_spec, **kwargs))
+
+    async def _async_update_solution_blueprint_status(self, guid: str, body: dict | UpdateElementRequestBody):
+        validate_guid(guid)
+        url = f"{self.solution_architect_command_root}/solution-blueprints/{guid}/update"
+        return await self._async_make_request("POST", url, body)
+
+    def update_solution_blueprint_status(self, guid: str, body: dict | UpdateElementRequestBody):
+        """Update the status of a solution blueprint."""
+        return asyncio.run(self._async_update_solution_blueprint_status(guid, body))
 
 
     def _get_supply_chain_rel_elements_dict(self, el_struct: dict)-> dict | str:
@@ -2620,7 +2828,7 @@ class SolutionArchitect(ServerClient):
         """
 
         url = (f"{self.platform_url}/servers/{self.view_server}/api/open-metadata/solution-architect/"
-               f"elements/{blueprint_guid}/solution-designs/{element_guid}/attach")
+               f"elements/{element_guid}/solution-designs/{blueprint_guid}/attach")
 
         await self._async_new_relationship_request(url, ["SolutionDesignProperties"], body)
         logger.info(f"Linked referenceable element to blueprint {element_guid} -> {blueprint_guid}")
@@ -2705,7 +2913,7 @@ class SolutionArchitect(ServerClient):
         """
 
         url = (f"{self.platform_url}/servers/{self.view_server}/api/open-metadata/solution-architect/"
-               f"solution-blueprints/{blueprint_guid}/referenceable/{element_guid}/detach")
+               f"elements/{element_guid}/solution-designs/{blueprint_guid}/detach")
 
         await self._async_delete_relationship_request(url, body)
         logger.info(f"Detached element {element_guid} from blueprint {blueprint_guid}")
@@ -5365,7 +5573,7 @@ class SolutionArchitect(ServerClient):
         url = (f"{self.platform_url}/servers/{self.view_server}/api/open-metadata/solution-architect/"
                f"solution-roles/{role_guid}/solution-component-actors/{component_guid}/attach")
 
-        await self._async_new_relationship_request(url, ["InformationSupplyChainLinkProperties"], body)
+        await self._async_new_relationship_request(url, ["SolutionComponentActorProperties"], body)
         logger.info(f"Linked Role to Component {role_guid} -> {component_guid}")
 
     @dynamic_catch

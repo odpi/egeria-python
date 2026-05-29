@@ -71,7 +71,7 @@ class TestDataEngineer:
             de_client.create_egeria_bearer_token(self.good_user_1, "secret")
 
             # We need a GUID. Let's try to find one first.
-            find_response = de_client.find_tabular_data_sets(search_string="DigitalProduct::Jacquard::activityType::activityType Valid Values_Data set")
+            find_response = de_client.find_tabular_data_sets(search_string="DigitalProduct::Jacquard::EXCEPTIONS::Exceptions")
             
             if isinstance(find_response, list) and len(find_response) > 0:
                 guid = find_response[0].get('elementHeader', {}).get('guid')
