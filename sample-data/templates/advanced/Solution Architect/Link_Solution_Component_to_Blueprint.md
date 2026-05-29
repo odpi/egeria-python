@@ -39,6 +39,14 @@ ___
 >	**Default Value**: PROPOSED
 
 
+### Membership Type
+>	**Input Required**: False
+
+>	**Attribute Type**: Simple
+
+>	**Description**: Name of the type of membership.
+
+
 ### Notes
 >	**Input Required**: False
 

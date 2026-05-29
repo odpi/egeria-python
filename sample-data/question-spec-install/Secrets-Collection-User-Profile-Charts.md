@@ -55,7 +55,7 @@ Link question spec 1 to Secrets-Collection-User-Profile-Charts report type.
 
 ### Membership Status
 
-ACTIVE
+VALIDATED
 
 ### Collection Id
 
@@ -93,7 +93,7 @@ Add question to Secrets-Collection-User-Profile-Charts::1.
 
 ### Membership Status
 
-ACTIVE
+VALIDATED
 
 ### Collection Id
 
@@ -159,7 +159,7 @@ Add question to Secrets-Collection-User-Profile-Charts::1.
 
 ### Membership Status
 
-ACTIVE
+VALIDATED
 
 ### Collection Id
 
@@ -225,7 +225,7 @@ Add question to Secrets-Collection-User-Profile-Charts::1.
 
 ### Membership Status
 
-ACTIVE
+VALIDATED
 
 ### Collection Id
 

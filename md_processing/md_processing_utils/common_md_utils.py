@@ -396,6 +396,7 @@ def set_element_prop_body(object_type: str, qualified_name: str, attributes: dic
         "extendedProperties": attributes.get('Extended Properties', {}).get('value', None),
         "supportLevel": attributes.get('Support Level', {}).get('value', None),
         "serviceLevels": attributes.get('Service Levels', {}).get('value', None),
+        "legal": attributes.get('Legal', {}).get('value', None),
         }
 
 def set_collection_manager_body(object_type: str, qualified_name: str, attributes: dict) -> dict:

@@ -96,8 +96,7 @@ class SecurityOfficerScenarioTester:
                 metadata_element_type="SoftwareServerPlatform"
             )
             # Find the platform that actually has user accounts (specifically garygeeke)
-            # HARDCODED GUID as fallback if search fails to distinguish
-            self.platform_guid = "8d144303-d795-4efa-b25d-7b8b86dd1b24"
+            self.platform_guid = None
 
             if isinstance(platform_guids, list):
                 for p in platform_guids:
@@ -112,19 +111,21 @@ class SecurityOfficerScenarioTester:
                         continue
 
             if not self.platform_guid:
+                try:
+                    # Fallback to broad find
+                    platforms = self.client.find_assets(search_string=PLATFORM_NAME, metadata_element_type="SoftwareServerPlatform")
+                    if isinstance(platforms, list) and len(platforms) > 0:
+                        self.platform_guid = platforms[0]["elementHeader"]["guid"]
+                        console.print(f"✓ Platform GUID discovered (via find_assets): {self.platform_guid}")
+                except Exception:
+                    pass
+
+            if not self.platform_guid:
                 if isinstance(platform_guids, list) and len(platform_guids) > 0:
                     self.platform_guid = platform_guids[0]["elementHeader"]["guid"]
+                    console.print(f"✓ Platform GUID discovered (fallback from get_elements): {self.platform_guid}")
                 else:
-                    try:
-                        self.platform_guid = self.client.get_guid_for_name(
-                            PLATFORM_NAME,
-                            property_name=["displayName"],
-                            type_name="SoftwareServerPlatform"
-                        )
-                    except Exception:
-                        # If that fails, try a broader search or use the hardcoded fallback
-                        self.platform_guid = "8d144303-d795-4efa-b25d-7b8b86dd1b24"
-                console.print(f"✓ Platform GUID discovered (fallback): {self.platform_guid}")
+                    console.print("⚠ Platform GUID discovery failed.")
 
             # Pre-clean the known scenario test user so scenario 2 always starts fresh.
             try:
@@ -276,6 +277,12 @@ class SecurityOfficerScenarioTester:
             self.client.delete_user_account(PLATFORM_NAME, user_id, platform_guid=self.platform_guid)
             self.created_users.remove(user_id)
             console.print("  ✓ Deleted user")
+
+            # Verify user list
+            user_list = self.client.get_user_list(PLATFORM_NAME, platform_guid=self.platform_guid)
+            if user_id in user_list:
+                raise Exception(f"User {user_id} still in user list after deletion")
+            console.print("  ✓ Verified user list (user not present)")
 
             duration = time.perf_counter() - start_time
             return TestResult(
@@ -548,6 +555,12 @@ class SecurityOfficerScenarioTester:
                 PLATFORM_NAME, control_name, platform_guid=self.platform_guid
             )
             console.print(f"  ✓ Deleted security access control: {control_name}")
+
+            # Verify finding roles and groups (mostly structural check here)
+            roles = self.client.find_security_roles(".*")
+            console.print(f"  ✓ Found {len(roles)} security roles")
+            groups = self.client.find_security_groups(".*")
+            console.print(f"  ✓ Found {len(groups)} security groups")
 
             duration = time.perf_counter() - start_time
             return TestResult(

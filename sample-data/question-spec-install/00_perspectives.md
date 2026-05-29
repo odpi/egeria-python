@@ -9,6 +9,22 @@ ____
 
 ### Display Name
 
+Developer
+
+### Qualified Name
+
+Perspective::Developer
+
+### GUID
+
+___
+
+____
+
+## Create Perspective
+
+### Display Name
+
 Business Analyst
 
 ### Qualified Name

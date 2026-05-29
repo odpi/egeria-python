@@ -46,26 +46,70 @@ def base_path(client, view_server: str):
 
 class DataDesigner(ServerClient):
     @dynamic_catch
-    def find_data_value_specifications(self, search: str = "", start_from: int = 0, page_size: int = 100) -> list:
-        """
-        Find data value specifications by search string (qualified name, display name, etc).
-        """
+    async def _async_find_data_value_specifications(
+        self,
+        search_string: str,
+        body: Optional[dict | SearchStringRequestBody] = None,
+        starts_with: bool = True,
+        ends_with: bool = False,
+        ignore_case: bool = False,
+        start_from: int = 0,
+        page_size: int = 100,
+        output_format: str = "JSON",
+        report_spec: str | dict = None,
+        **kwargs
+    ) -> list | str:
+        """Find data value specifications by search string. Async version."""
         url = f"{base_path(self, self.view_server)}/data-value-specifications/by-search-string"
-        body = {
-            "class": "SearchStringRequestBody",
-            "searchString": search,
-            "startFrom": start_from,
-            "pageSize": page_size
+
+        params = {
+            'search_string': search_string,
+            'body': body,
+            'starts_with': starts_with,
+            'ends_with': ends_with,
+            'ignore_case': ignore_case,
+            'start_from': start_from,
+            'page_size': page_size,
+            'output_format': output_format,
+            'report_spec': report_spec,
         }
-        loop = asyncio.get_event_loop()
-        return loop.run_until_complete(self._async_find_data_value_specifications(url, body))
+        params.update(kwargs)
+        params = {k: v for k, v in params.items() if v is not None or k == 'search_string'}
+
+        return await self._async_find_request(
+            url, "DataValueSpecification", self._generate_data_value_specification_output, **params
+        )
 
     @dynamic_catch
-    async def _async_find_data_value_specifications(self, url: str, body: dict) -> list:
-        response = await self._async_post(url, body)
-        if response and isinstance(response, dict):
-            return response.get("elements", [])
-        return []
+    def find_data_value_specifications(
+        self,
+        search_string: str,
+        body: Optional[dict | SearchStringRequestBody] = None,
+        starts_with: bool = True,
+        ends_with: bool = False,
+        ignore_case: bool = False,
+        start_from: int = 0,
+        page_size: int = 100,
+        output_format: str = "JSON",
+        report_spec: str | dict = None,
+        **kwargs
+    ) -> list | str:
+        """Find data value specifications by search string."""
+        loop = asyncio.get_event_loop()
+        return loop.run_until_complete(
+            self._async_find_data_value_specifications(
+                search_string,
+                body=body,
+                starts_with=starts_with,
+                ends_with=ends_with,
+                ignore_case=ignore_case,
+                start_from=start_from,
+                page_size=page_size,
+                output_format=output_format,
+                report_spec=report_spec,
+                **kwargs
+            )
+        )
     @dynamic_catch
     async def _async_link_specialized_data_value_specification(self, spec_guid: str, grain_guid: str, body: dict | None = None) -> None:
         """

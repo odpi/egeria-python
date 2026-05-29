@@ -452,7 +452,7 @@ class TestGlossaryManager:
 
             token = g_client.create_egeria_bearer_token(self.good_user_2, "secret")
             start_time = time.perf_counter()
-            response = g_client.find_glossaries("Glossary::Jacquard::Open Metadata", starts_with=False, ends_with=False,
+            response = g_client.find_glossaries("Sales Forecast", starts_with=False, ends_with=False,
                                                 ignore_case=True, page_size=0, output_format="JSON")
             duration = time.perf_counter() - start_time
             # resp_str = json.loads(response)
@@ -708,7 +708,9 @@ class TestGlossaryManager:
                 True,
                 False,
                 True,
-                output_format="JSON",
+                include_only_classified_elements=['Question'],
+                graph_query_depth=2,
+                output_format="DICT",
                 report_spec = "Basic-Terms"
             )
             print(f"Duration is {time.perf_counter() - start_time} seconds")

@@ -26,6 +26,7 @@ from pyegeria.omvs.lineage_linker import LineageLinker
 from pyegeria.omvs.location_arena import LocationArena
 from pyegeria.omvs.metadata_expert import MetadataExpert
 from pyegeria.omvs.my_profile import MyProfile
+from pyegeria.omvs.privacy_officer import PrivacyOfficer
 from pyegeria.omvs.notification_manager import NotificationManager
 from pyegeria.omvs.people_organizer import PeopleOrganizer
 from pyegeria.omvs.product_manager import ProductManager
@@ -104,6 +105,7 @@ class EgeriaTech:
             "template_manager": TemplateManager,
             "gov_officer": GovernanceOfficer,
             "governance_officer": GovernanceOfficer,
+            "privacy_officer": PrivacyOfficer,
             "collections": CollectionManager,
             "collection_manager": CollectionManager,
             "external_references": ExternalReferences,

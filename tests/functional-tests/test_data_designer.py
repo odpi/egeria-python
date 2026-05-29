@@ -935,7 +935,7 @@ class TestDataDesigner:
         try:
             m_client = DataDesigner(self.view_server, self.platform_url)
             m_client.create_egeria_bearer_token(self.user, self.password)
-            response = m_client.find_data_value_specifications(search_string="*", output_format="DICT", report_spc="Data-Value-Spec")
+            response = m_client.find_data_value_specifications(search_string="*", output_format="JSON", report_spec="Data-Value-Spec")
             print(json.dumps(response, indent=4))
             assert isinstance(response, (list, str))
         except Exception as e:

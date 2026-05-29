@@ -55,7 +55,7 @@ Link question spec 1 to IntegrationConnectors report type.
 
 ### Membership Status
 
-ACTIVE
+VALIDATED
 
 ### Collection Id
 
@@ -93,7 +93,7 @@ Add question to IntegrationConnectors::1.
 
 ### Membership Status
 
-ACTIVE
+VALIDATED
 
 ### Collection Id
 
@@ -159,7 +159,7 @@ Add question to IntegrationConnectors::1.
 
 ### Membership Status
 
-ACTIVE
+VALIDATED
 
 ### Collection Id
 
@@ -225,7 +225,7 @@ Add question to IntegrationConnectors::1.
 
 ### Membership Status
 
-ACTIVE
+VALIDATED
 
 ### Collection Id
 
@@ -291,7 +291,7 @@ Add question to IntegrationConnectors::1.
 
 ### Membership Status
 
-ACTIVE
+VALIDATED
 
 ### Collection Id
 
@@ -357,7 +357,7 @@ Add question to IntegrationConnectors::1.
 
 ### Membership Status
 
-ACTIVE
+VALIDATED
 
 ### Collection Id
 

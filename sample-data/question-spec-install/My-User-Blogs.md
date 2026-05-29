@@ -55,7 +55,7 @@ Link question spec 1 to My-User-Blogs report type.
 
 ### Membership Status
 
-ACTIVE
+VALIDATED
 
 ### Collection Id
 
@@ -93,7 +93,7 @@ Add question to My-User-Blogs::1.
 
 ### Membership Status
 
-ACTIVE
+VALIDATED
 
 ### Collection Id
 
@@ -145,7 +145,7 @@ Add question to My-User-Blogs::1.
 
 ### Membership Status
 
-ACTIVE
+VALIDATED
 
 ### Collection Id
 

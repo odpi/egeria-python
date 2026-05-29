@@ -326,7 +326,7 @@ class TestRuntimeManager:
                 user_pwd="secret",
             )
             token = r_client.create_egeria_bearer_token()
-            platform_guid = "cdead3a3-36c9-422e-a4e9-51479319dd2e"
+            platform_guid = "40d5e171-3d36-427e-9716-2d1de313b720"
             platform_name = "Local OMAG Server Platform"
             # platform_guid = None
             start_time = time.perf_counter()

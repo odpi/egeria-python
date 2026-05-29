@@ -25,14 +25,6 @@ ___
 >	**Alternative Labels**: Wire Label
 
 
-### Resource Id
->	**Input Required**: False
-
->	**Attribute Type**: Reference Name
-
->	**Description**: The unique identifier (qualified name or GUID) of the supporting resource in a ResourceList relationship.
-
-
 ### Journal Entry
 >	**Input Required**: False
 

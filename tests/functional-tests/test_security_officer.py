@@ -97,8 +97,21 @@ class TestSecurityOfficer:
             )
             s_client.create_egeria_bearer_token(self.good_user_1, USER_PWD)
 
-            # Retrieve Gary Geeke's account as a test (assuming it exists)
-            user_id = "garygeeke" + datetime.now().strftime("%H%M%S")
+            # Create first
+            user_id = "testuser" + datetime.now().strftime("%H%M%S")
+            body = {
+                "class": "UserAccountRequestBody",
+                "userAccount": {
+                    "class": "OpenMetadataUserAccount",
+                    "userId": user_id,
+                    "userName": "Test User",
+                    "userAccountStatus": "AVAILABLE",
+                    "secrets": {"clearPassword": "testpassword"},
+                },
+            }
+            s_client.set_user_account(self.good_platform_name, body)
+
+            # Retrieve the account we just created
             response = s_client.get_user_account(self.good_platform_name, user_id)
             print(f"\n\nRetrieved user account for: {user_id}")
             print_json(data=response)
@@ -344,6 +357,94 @@ class TestSecurityOfficer:
             print(f"\n\tDuration was {duration} seconds")
             print(f"\n\nDeleted security access control: {control_name}")
             assert True
+
+        except (
+            PyegeriaInvalidParameterException,
+            PyegeriaAPIException,
+            PyegeriaUnauthorizedException,
+            PyegeriaNotFoundException,
+        ) as e:
+            print_exception_table(e)
+            assert False, "Invalid request"
+        except PyegeriaConnectionException as e:
+            print_basic_exception(e)
+            assert False, "Connection error"
+        finally:
+            s_client.close_session()
+
+    def test_get_user_list(self):
+        """Test retrieving the list of users from the platform."""
+        try:
+            s_client = SecurityOfficer(
+                self.good_server_1, self.good_platform1_url, user_id=self.good_user_1
+            )
+            s_client.create_egeria_bearer_token(self.good_user_1, USER_PWD)
+
+            start_time = time.perf_counter()
+            response = s_client.get_user_list(self.good_platform_name)
+            duration = time.perf_counter() - start_time
+            print(f"\n\tDuration was {duration} seconds")
+            print(f"\n\nRetrieved user list: {response}")
+            assert type(response) is list
+            assert len(response) >= 0
+
+        except (
+            PyegeriaInvalidParameterException,
+            PyegeriaAPIException,
+            PyegeriaUnauthorizedException,
+            PyegeriaNotFoundException,
+        ) as e:
+            print_exception_table(e)
+            assert False, "Invalid request"
+        except PyegeriaConnectionException as e:
+            print_basic_exception(e)
+            assert False, "Connection error"
+        finally:
+            s_client.close_session()
+
+    def test_find_security_roles(self):
+        """Test finding security roles."""
+        try:
+            s_client = SecurityOfficer(
+                self.good_server_1, self.good_platform1_url, user_id=self.good_user_1
+            )
+            s_client.create_egeria_bearer_token(self.good_user_1, USER_PWD)
+
+            start_time = time.perf_counter()
+            response = s_client.find_security_roles(".*")
+            duration = time.perf_counter() - start_time
+            print(f"\n\tDuration was {duration} seconds")
+            print(f"\n\nRetrieved security roles: {response}")
+            assert type(response) is list
+
+        except (
+            PyegeriaInvalidParameterException,
+            PyegeriaAPIException,
+            PyegeriaUnauthorizedException,
+            PyegeriaNotFoundException,
+        ) as e:
+            print_exception_table(e)
+            assert False, "Invalid request"
+        except PyegeriaConnectionException as e:
+            print_basic_exception(e)
+            assert False, "Connection error"
+        finally:
+            s_client.close_session()
+
+    def test_find_security_groups(self):
+        """Test finding security groups."""
+        try:
+            s_client = SecurityOfficer(
+                self.good_server_1, self.good_platform1_url, user_id=self.good_user_1
+            )
+            s_client.create_egeria_bearer_token(self.good_user_1, USER_PWD)
+
+            start_time = time.perf_counter()
+            response = s_client.find_security_groups(".*")
+            duration = time.perf_counter() - start_time
+            print(f"\n\tDuration was {duration} seconds")
+            print(f"\n\nRetrieved security groups: {response}")
+            assert type(response) is list
 
         except (
             PyegeriaInvalidParameterException,

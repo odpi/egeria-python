@@ -1,7 +1,7 @@
 ___
 
 ## Create Question
-> Create a GlossaryTerm classified as a Question in a single API call.
+> Create a GlossaryTerm classified as a Question (IsQuestion) in a single API call.
 
 ### Display Name
 >	**Input Required**: True
@@ -91,6 +91,14 @@ ___
 >	**Attribute Type**: Simple
 
 >	**Description**: A description.
+
+
+### Legal
+>	**Input Required**: False
+
+>	**Attribute Type**: Simple
+
+>	**Description**: Copyright and/or license information for the element or associated resource.
 
 
 ### Qualified Name

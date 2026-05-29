@@ -55,7 +55,7 @@ Link question spec 1 to License-Type report type.
 
 ### Membership Status
 
-ACTIVE
+VALIDATED
 
 ### Collection Id
 
@@ -93,7 +93,7 @@ Add question to License-Type::1.
 
 ### Membership Status
 
-ACTIVE
+VALIDATED
 
 ### Collection Id
 
@@ -159,7 +159,7 @@ Add question to License-Type::1.
 
 ### Membership Status
 
-ACTIVE
+VALIDATED
 
 ### Collection Id
 
@@ -225,7 +225,7 @@ Add question to License-Type::1.
 
 ### Membership Status
 
-ACTIVE
+VALIDATED
 
 ### Collection Id
 
@@ -293,7 +293,7 @@ Link question spec 2 to License-Type report type.
 
 ### Membership Status
 
-ACTIVE
+VALIDATED
 
 ### Collection Id
 
@@ -331,7 +331,7 @@ Add question to License-Type::2.
 
 ### Membership Status
 
-ACTIVE
+VALIDATED
 
 ### Collection Id
 
@@ -397,7 +397,7 @@ Add question to License-Type::2.
 
 ### Membership Status
 
-ACTIVE
+VALIDATED
 
 ### Collection Id
 
@@ -463,7 +463,7 @@ Add question to License-Type::2.
 
 ### Membership Status
 
-ACTIVE
+VALIDATED
 
 ### Collection Id
 
@@ -529,7 +529,7 @@ Add question to License-Type::2.
 
 ### Membership Status
 
-ACTIVE
+VALIDATED
 
 ### Collection Id
 

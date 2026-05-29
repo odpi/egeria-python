@@ -55,7 +55,7 @@ Link question spec 1 to Digital-Products-Slim report type.
 
 ### Membership Status
 
-ACTIVE
+VALIDATED
 
 ### Collection Id
 
@@ -93,7 +93,7 @@ Add question to Digital-Products-Slim::1.
 
 ### Membership Status
 
-ACTIVE
+VALIDATED
 
 ### Collection Id
 
@@ -159,7 +159,7 @@ Add question to Digital-Products-Slim::1.
 
 ### Membership Status
 
-ACTIVE
+VALIDATED
 
 ### Collection Id
 
@@ -225,7 +225,7 @@ Add question to Digital-Products-Slim::1.
 
 ### Membership Status
 
-ACTIVE
+VALIDATED
 
 ### Collection Id
 

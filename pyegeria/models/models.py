@@ -170,6 +170,91 @@ class MonitoredResourceProperties(PyegeriaModel):
     effective_to: datetime | None = None
 
 
+class PermittedProcessingProperties(PyegeriaModel):
+    class_: Annotated[Literal["PermittedProcessingProperties"], Field(alias="class")]
+    label: str | None = None
+    description: str | None = None
+    effective_from: datetime | None = None
+    effective_to: datetime | None = None
+
+
+class DataProcessingTargetProperties(PyegeriaModel):
+    class_: Annotated[Literal["DataProcessingTargetProperties"], Field(alias="class")]
+    label: str | None = None
+    description: str | None = None
+    effective_from: datetime | None = None
+    effective_to: datetime | None = None
+
+
+class DesignPatternProperties(ReferenceableProperties):
+    class_: Annotated[Literal["DesignPatternProperties"], Field(alias="class")]
+    identifier: str | None = None
+    legal: str | None = None
+    context: str | None = None
+    problem_statement: str | None = None
+    problem_example: str | None = None
+    solution_description: str | None = None
+    solution_example: str | None = None
+    forces: list[str] | None = None
+    benefits: list[str] | None = None
+    liabilities: list[str] | None = None
+
+
+class AuthoredReferenceableProperties(ReferenceableProperties):
+    class_: Annotated[Literal["AuthoredReferenceableProperties"], Field(alias="class")]
+
+
+class SolutionBlueprintProperties(AuthoredReferenceableProperties):
+    class_: Annotated[Literal["SolutionBlueprintProperties"], Field(alias="class")]
+
+
+class NestedDesignPatternProperties(PyegeriaModel):
+    class_: Annotated[Literal["NestedDesignPatternProperties"], Field(alias="class")]
+    label: str | None = None
+    description: str | None = None
+    effective_from: datetime | None = None
+    effective_to: datetime | None = None
+
+
+class SpecializedDesignPatternProperties(PyegeriaModel):
+    class_: Annotated[Literal["SpecializedDesignPatternProperties"], Field(alias="class")]
+    label: str | None = None
+    description: str | None = None
+    effective_from: datetime | None = None
+    effective_to: datetime | None = None
+
+
+class RelatedDesignPatternProperties(PyegeriaModel):
+    class_: Annotated[Literal["RelatedDesignPatternProperties"], Field(alias="class")]
+    label: str | None = None
+    description: str | None = None
+    effective_from: datetime | None = None
+    effective_to: datetime | None = None
+
+
+class SolutionDesignProperties(PyegeriaModel):
+    class_: Annotated[Literal["SolutionDesignProperties"], Field(alias="class")]
+    label: str | None = None
+    description: str | None = None
+    effective_from: datetime | None = None
+    effective_to: datetime | None = None
+
+
+class SolutionComponentActorProperties(PyegeriaModel):
+    class_: Annotated[Literal["SolutionComponentActorProperties"], Field(alias="class")]
+    role: str | None = None
+    description: str | None = None
+    effective_from: datetime | None = None
+    effective_to: datetime | None = None
+
+
+class SolutionLinkingWireProperties(PyegeriaModel):
+    class_: Annotated[Literal["SolutionLinkingWireProperties"], Field(alias="class")]
+    label: str | None = None
+    description: str | None = None
+    isc_qualified_names: list[str] | None = None
+
+
 class NotificationSubscriberProperties(PyegeriaModel):
     class_: Annotated[Literal["NotificationSubscriberProperties"], Field(alias="class")]
     label: str | None = None

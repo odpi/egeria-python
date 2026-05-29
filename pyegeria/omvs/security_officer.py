@@ -17,6 +17,7 @@ from pyegeria.models import (
     UserAccountRequestBody,
     NewRelationshipRequestBody,
     DeleteRelationshipRequestBody,
+    SearchStringRequestBody,
 )
 from pyegeria.core.utils import dynamic_catch
 
@@ -135,6 +136,54 @@ class SecurityOfficer(ServerClient):
         """Clear the account for a user with the platform security connector."""
         loop = asyncio.get_event_loop()
         return loop.run_until_complete(self._async_delete_user_account(platform_name, user_id, platform_guid))
+
+    @dynamic_catch
+    async def _async_get_user_list(
+        self,
+        platform_name: str,
+        status: str = None,
+        user_type: str = None,
+        platform_guid: str = None,
+    ) -> list[str]:
+        """Return the list of users registered with the platform security connector. Async version.
+
+        Parameters
+        ----------
+        platform_name : str
+            Name of the platform to query.
+        status : str, optional
+            Status of the user - or null for any status.
+        user_type : str, optional
+            Type of user - or null for any type.
+        platform_guid : str, optional
+            Pre-resolved GUID of the platform.
+        """
+        if not platform_guid:
+            platform_guid = await self.__get_platform_guid__(platform_name)
+        url = f"{self.security_officer_base_url}/platforms/{platform_guid}/user-accounts"
+        params = {}
+        if status:
+            params["status"] = status
+        if user_type:
+            params["type"] = user_type
+
+        response = await self._async_make_request("GET", url, params=params)
+        if response:
+            return response.json().get("userIds", [])
+        return []
+
+    def get_user_list(
+        self,
+        platform_name: str,
+        status: str = None,
+        user_type: str = None,
+        platform_guid: str = None,
+    ) -> list[str]:
+        """Return the list of users registered with the platform security connector."""
+        loop = asyncio.get_event_loop()
+        return loop.run_until_complete(
+            self._async_get_user_list(platform_name, status, user_type, platform_guid)
+        )
 
     @dynamic_catch
     async def _async_link_governance_zones(
@@ -376,4 +425,86 @@ class SecurityOfficer(ServerClient):
         loop = asyncio.get_event_loop()
         return loop.run_until_complete(
             self._async_delete_security_access_control(platform_name, control_name, platform_guid)
+        )
+
+    # =====================================================================
+    # Security Roles and Groups
+    # =====================================================================
+
+    @dynamic_catch
+    async def _async_find_security_roles(
+        self,
+        search_string: str,
+        graph_query_depth: int = 0,
+        start_from: int = 0,
+        page_size: int = 0,
+    ) -> list[dict]:
+        """Return the list of security roles matching the search string. Async version."""
+        url = f"{self.security_officer_base_url}/collections/by-search-string"
+        body = SearchStringRequestBody(
+            class_="SearchStringRequestBody",
+            search_string=search_string,
+            graph_query_depth=graph_query_depth,
+            start_from=start_from,
+            page_size=page_size,
+            metadata_element_type_name="SecurityRole",
+        )
+        payload = body.model_dump_json(exclude_none=True, by_alias=True)
+        response = await self._async_make_request("POST", url, payload)
+        if response:
+            return response.json().get("elements", [])
+        return []
+
+    def find_security_roles(
+        self,
+        search_string: str,
+        graph_query_depth: int = 0,
+        start_from: int = 0,
+        page_size: int = 0,
+    ) -> list[dict]:
+        """Return the list of security roles matching the search string."""
+        loop = asyncio.get_event_loop()
+        return loop.run_until_complete(
+            self._async_find_security_roles(
+                search_string, graph_query_depth, start_from, page_size
+            )
+        )
+
+    @dynamic_catch
+    async def _async_find_security_groups(
+        self,
+        search_string: str,
+        graph_query_depth: int = 0,
+        start_from: int = 0,
+        page_size: int = 0,
+    ) -> list[dict]:
+        """Return the list of security groups matching the search string. Async version."""
+        url = f"{self.security_officer_base_url}/collections/by-search-string"
+        body = SearchStringRequestBody(
+            class_="SearchStringRequestBody",
+            search_string=search_string,
+            graph_query_depth=graph_query_depth,
+            start_from=start_from,
+            page_size=page_size,
+            metadata_element_type_name="SecurityGroup",
+        )
+        payload = body.model_dump_json(exclude_none=True, by_alias=True)
+        response = await self._async_make_request("POST", url, payload)
+        if response:
+            return response.json().get("elements", [])
+        return []
+
+    def find_security_groups(
+        self,
+        search_string: str,
+        graph_query_depth: int = 0,
+        start_from: int = 0,
+        page_size: int = 0,
+    ) -> list[dict]:
+        """Return the list of security groups matching the search string."""
+        loop = asyncio.get_event_loop()
+        return loop.run_until_complete(
+            self._async_find_security_groups(
+                search_string, graph_query_depth, start_from, page_size
+            )
         )

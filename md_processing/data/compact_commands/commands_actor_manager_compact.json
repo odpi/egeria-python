@@ -1,6 +1,6 @@
 {
   "family": "Actor Manager",
-  "exported": "May 17, 2026 at 9:28:44 PM",
+  "exported": "May 19, 2026 at 9:07:07 PM",
   "attribute_definitions": {
     "Activity Status": {
       "variable_name": "activity_status",
@@ -1020,6 +1020,25 @@
       "min_cardinality": 0,
       "max_cardinality": 1,
       "level": "Advanced",
+      "Journal Entry": ""
+    },
+    "Legal": {
+      "variable_name": "legal",
+      "inUpdate": true,
+      "attr_labels": "",
+      "examples": "",
+      "default_value": "",
+      "valid_values": [],
+      "existing_element": "",
+      "description": "Copyright and\/or license information for the element or associated resource.",
+      "generated": false,
+      "style": "Simple",
+      "user_specified": true,
+      "unique": false,
+      "input_required": false,
+      "min_cardinality": 0,
+      "max_cardinality": 1,
+      "level": "Common",
       "Journal Entry": ""
     },
     "Make Anchor": {
@@ -2532,6 +2551,15 @@
     }
   },
   "bundles": {
+    "Asset": {
+      "inherits": "Referenceable",
+      "own_attributes": [
+        "Deployed Implementation Type",
+        "Namespace Path",
+        "Resource Name",
+        "Source"
+      ]
+    },
     "Authored Referenceable": {
       "inherits": "Referenceable",
       "own_attributes": [
@@ -2540,43 +2568,45 @@
         "User Defined Content Status"
       ]
     },
-    "Request Base": {
-      "inherits": null,
+    "Collection Base": {
+      "inherits": "Authored Referenceable",
       "own_attributes": [
-        "Effective From",
-        "Effective Time",
-        "Effective To",
-        "Extended Properties",
-        "External Source GUID",
-        "External Source Name",
-        "For Duplicate Processing",
-        "For Lineage",
-        "Journal Entry",
-        "Request ID"
+        "Purpose"
       ]
     },
-    "Referenceable": {
-      "inherits": "New-Element",
+    "Collection Membership": {
+      "inherits": null,
       "own_attributes": [
-        "Additional Properties",
-        "Category",
-        "Class Word Classification",
-        "Confidence Classification",
-        "Confidentiality Classification",
-        "Criticality Classification",
+        "Anchor Scope IDs",
+        "Confidence",
+        "Expression",
+        "Make Anchor",
+        "Membership Rationale",
+        "Membership Status",
+        "Membership Type",
+        "Notes",
+        "Source",
+        "Steward",
+        "Steward Property Name",
+        "Steward Type Name",
+        "User Defined Status"
+      ]
+    },
+    "General Terms and Conditions": {
+      "inherits": null,
+      "own_attributes": [
+        "Entitlements",
+        "Obligations",
+        "Restrictions"
+      ]
+    },
+    "Link Command Base": {
+      "inherits": "Request Base",
+      "own_attributes": [
+        "Anchor Scope IDs",
         "Description",
-        "Display Name",
-        "GUID",
-        "Identifier",
-        "Impact Classification",
-        "Modifier Classification",
-        "Policy Management Point",
-        "Prime Word Classification",
-        "Qualified Name",
-        "Retention Classification",
-        "Security Tags",
-        "URL",
-        "Version Identifier"
+        "Label",
+        "Make Anchor"
       ]
     },
     "New-Element": {
@@ -2596,18 +2626,44 @@
         "Zone Membership"
       ]
     },
-    "General Terms and Conditions": {
-      "inherits": null,
+    "Referenceable": {
+      "inherits": "New-Element",
       "own_attributes": [
-        "Entitlements",
-        "Obligations",
-        "Restrictions"
+        "Additional Properties",
+        "Category",
+        "Class Word Classification",
+        "Confidence Classification",
+        "Confidentiality Classification",
+        "Criticality Classification",
+        "Description",
+        "Display Name",
+        "GUID",
+        "Identifier",
+        "Impact Classification",
+        "Legal",
+        "Modifier Classification",
+        "Policy Management Point",
+        "Prime Word Classification",
+        "Qualified Name",
+        "Retention Classification",
+        "Security Tags",
+        "URL",
+        "Version Identifier"
       ]
     },
-    "Collection Base": {
-      "inherits": "Authored Referenceable",
+    "Request Base": {
+      "inherits": null,
       "own_attributes": [
-        "Purpose"
+        "Effective From",
+        "Effective Time",
+        "Effective To",
+        "Extended Properties",
+        "External Source GUID",
+        "External Source Name",
+        "For Duplicate Processing",
+        "For Lineage",
+        "Journal Entry",
+        "Request ID"
       ]
     },
     "Resource List": {
@@ -2615,42 +2671,6 @@
       "own_attributes": [
         "Additional Properties",
         "Resource Use"
-      ]
-    },
-    "Link Command Base": {
-      "inherits": "Request Base",
-      "own_attributes": [
-        "Anchor Scope IDs",
-        "Description",
-        "Label",
-        "Make Anchor"
-      ]
-    },
-    "Asset": {
-      "inherits": "Referenceable",
-      "own_attributes": [
-        "Deployed Implementation Type",
-        "Namespace Path",
-        "Resource Name",
-        "Source"
-      ]
-    },
-    "Collection Membership": {
-      "inherits": null,
-      "own_attributes": [
-        "Anchor Scope IDs",
-        "Confidence",
-        "Expression",
-        "Make Anchor",
-        "Membership Rationale",
-        "Membership Status",
-        "Membership Type",
-        "Notes",
-        "Source",
-        "Steward",
-        "Steward Property Name",
-        "Steward Type Name",
-        "User Defined Status"
       ]
     },
     "Team Base": {

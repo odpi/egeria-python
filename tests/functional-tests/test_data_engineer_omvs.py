@@ -7,6 +7,7 @@ This module tests the DataEngineer class and methods
 A running Egeria environment is needed to run these tests.
 """
 import asyncio
+import json
 import time
 
 from rich import print
@@ -45,7 +46,7 @@ class TestDataEngineer:
             de_client.create_egeria_bearer_token(self.good_user_1, "secret")
 
             start_time = time.perf_counter()
-            response = de_client.find_tabular_data_sets(search_string="Attributes", output_format="DICT",report_spec="Referenceable")
+            response = de_client.find_tabular_data_sets(search_string="DigitalProduct::Jacquard::annotationType::annotationType Valid Values_Data set", output_format="JSON",report_spec="Referenceable")
             duration = time.perf_counter() - start_time
             
             print(f"response type is {type(response)}, count = {len(response)}")
@@ -70,18 +71,19 @@ class TestDataEngineer:
             de_client.create_egeria_bearer_token(self.good_user_1, "secret")
 
             # We need a GUID. Let's try to find one first.
-            find_response = de_client.find_tabular_data_sets(search_string="Types")
+            find_response = de_client.find_tabular_data_sets(search_string="DigitalProduct::Jacquard::EXCEPTIONS::Exceptions")
             
             if isinstance(find_response, list) and len(find_response) > 0:
                 guid = find_response[0].get('elementHeader', {}).get('guid')
-
+                print(f"guid is {guid}")
                 if guid:
                     start_time = time.perf_counter()
-                    response = de_client.get_tabular_data_set(guid)
+                    response = de_client.get_tabular_data_set(guid, start_from_row = 0, max_row_count=20)
                     duration = time.perf_counter() - start_time
                     if isinstance(response, dict|list):
                         console.print(f"==>Found {response.get('recordCount',"")} records")
                     print(f"get response type is {type(response)}")
+                    print(json.dumps(response, indent=4, sort_keys=True))
                     print(f"\n\tget Duration was {duration} seconds")
 
                     assert response is not None

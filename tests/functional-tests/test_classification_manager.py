@@ -321,7 +321,7 @@ def test_find_elements_by_property_value():
 
 
 def test_get_element_by_guid():
-    element_guid = '4cc5bde4-2455-437a-aba8-fb1514faac75'
+    element_guid = 'ff7b59ab-a1cb-4e6d-b326-29134c64467b'
     try:
         c_client = ClassificationExplorer(view_server, platform_url)
 
@@ -1478,6 +1478,30 @@ def test_action_actor_linking():
         c_client.assign_action(action_guid, actor_guid, body)
         c_client.reassign_action(action_guid, actor_guid, body)
         c_client.unassign_action(action_guid, actor_guid, body)
+        assert True
+    except PyegeriaException as e:
+        print_basic_exception(e)
+    finally:
+        c_client.close_session()
+
+
+def test_supplementary_properties():
+    term_guid = "dummy-term-guid"
+    attach_body = {
+        "class": "NewRelationshipRequestBody",
+        "properties": {
+            "class": "SupplementaryPropertiesProperties",
+            "label": "Guiding question",
+            "description": "Add description here"
+        },
+        "forLineage": False,
+        "forDuplicateProcessing": False
+    }
+    try:
+        c_client = ClassificationExplorer(view_server, platform_url)
+        bearer_token = c_client.create_egeria_bearer_token(user, password)
+        # c_client.add_supplementary_properties_to_element(element_guid, term_guid, attach_body)
+        # c_client.remove_supplementary_properties_from_element(element_guid, term_guid)
         assert True
     except PyegeriaException as e:
         print_basic_exception(e)

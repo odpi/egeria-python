@@ -330,7 +330,7 @@ class DataEngineer(ServerClient):
             If there are issues in communications, message format, or Egeria errors.
         """
         url = str(HttpUrl(f"{self.command_root}/tabular-data-sets/{tabular_data_set_guid}/report?"
-                          f"startFromRow={start_from_row}&MaxRowCount={max_row_count}"))
+                          f"startFromRow={start_from_row}&maxRowCount={max_row_count}"))
         response = await self._async_make_request("GET", url)
         el_list = response.json().get('tabularDataSetReport',"No Dataset Found")
         if isinstance(el_list, dict):

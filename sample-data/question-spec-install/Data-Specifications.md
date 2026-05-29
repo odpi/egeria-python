@@ -55,7 +55,7 @@ Link question spec 1 to Data-Specifications report type.
 
 ### Membership Status
 
-ACTIVE
+VALIDATED
 
 ### Collection Id
 
@@ -93,7 +93,7 @@ Add question to Data-Specifications::1.
 
 ### Membership Status
 
-ACTIVE
+VALIDATED
 
 ### Collection Id
 
@@ -145,7 +145,7 @@ Add question to Data-Specifications::1.
 
 ### Membership Status
 
-ACTIVE
+VALIDATED
 
 ### Collection Id
 
@@ -197,7 +197,7 @@ Add question to Data-Specifications::1.
 
 ### Membership Status
 
-ACTIVE
+VALIDATED
 
 ### Collection Id
 
@@ -251,7 +251,7 @@ Link question spec 2 to Data-Specifications report type.
 
 ### Membership Status
 
-ACTIVE
+VALIDATED
 
 ### Collection Id
 
@@ -289,7 +289,7 @@ Add question to Data-Specifications::2.
 
 ### Membership Status
 
-ACTIVE
+VALIDATED
 
 ### Collection Id
 
@@ -343,7 +343,7 @@ Link question spec 3 to Data-Specifications report type.
 
 ### Membership Status
 
-ACTIVE
+VALIDATED
 
 ### Collection Id
 
@@ -381,7 +381,7 @@ Add question to Data-Specifications::3.
 
 ### Membership Status
 
-ACTIVE
+VALIDATED
 
 ### Collection Id
 

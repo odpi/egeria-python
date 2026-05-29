@@ -111,15 +111,16 @@ class TestCollectionManager:
             c_client = EgeriaTech(self.good_server_2, self.good_platform1_url, user_id=self.good_user_2, )
             token = c_client.create_egeria_bearer_token(self.good_user_2, "secret")
             start_time = time.perf_counter()
-            search_string = "*"
+            search_string = "Open Metadata Digital Product Catalog"
             classification_name = None
-            element_type = ["DigitalProduct"]
+            element_type = ["DigitalProductCatalog"]
             # element_type = None
             output_format = "JSON"
             report_spec = "Collections"
 
             response = c_client.find_collections(search_string = search_string
-                                                 ,metadata_element_subtypes=element_type, max_mermaid_node_count=15
+                                                 ,metadata_element_subtypes=element_type, max_mermaid_node_count=15,
+                                                 graph_query_depth = 1
                                                  ,output_format=output_format, report_spec=report_spec)
             duration = time.perf_counter() - start_time
             if response:
@@ -278,9 +279,9 @@ class TestCollectionManager:
             c_client = CollectionManager(self.good_server_2, self.good_platform1_url, user_id=self.good_user_2)
             token = c_client.create_egeria_bearer_token(self.good_user_2, "secret")
             start_time = time.perf_counter()
-            collection_name = "Subscription::GeoSpatial-Products-Subscription"
-
-            response = c_client.get_collections_by_name(collection_name, output_format="DICT", report_spec="Collections" )
+            # collection_name = "Subscription::GeoSpatial-Products-Subscription"
+            collection_name = "Actor-Profiles"
+            response = c_client.get_collections_by_name(collection_name, output_format="JSON", report_spec="Collections" )
             duration = time.perf_counter() - start_time
             print(f"Type is {type(response)}")
             print(f"\n\tDuration was {duration} seconds")
@@ -306,13 +307,13 @@ class TestCollectionManager:
             c_client = CollectionManager(self.good_server_2, self.good_platform1_url, user_id=self.good_user_2)
             token = c_client.create_egeria_bearer_token(self.good_user_2, "secret")
             start_time = time.perf_counter()
-            collection_name = "myLocal::Folder::Ham-Radio-collection"
+            collection_name = "InformationSupplyChain::Sustainability Reporting"
             filter_body = FilterRequestBody(
                 class_ = "FilterRequestBody",
                 filter_string = collection_name,
                 include_only_classified_elements=None
                 )
-            response = c_client.get_collections_by_name(body=filter_body, output_format="DICT",
+            response = c_client.get_collections_by_name(body=filter_body, output_format="JSON",
                                                         report_spec="Collections")
             duration = time.perf_counter() - start_time
             print(f"Type is {type(response)}")
@@ -367,7 +368,7 @@ class TestCollectionManager:
             c_client = CollectionManager(self.good_view_server_1, self.good_platform1_url, user_id=self.good_user_2, )
             token = c_client.create_egeria_bearer_token(self.good_user_2, "secret")
             start_time = time.perf_counter()
-            collection_guid = "5b346697-ccb7-4464-a84f-13c2d8e76d2e"
+            collection_guid = "aed5c289-6e81-4cf8-8852-752005eee0c4"
             element_type = None
             response = c_client.get_collection_by_guid(collection_guid, element_type,
                                                        output_format="JSON", report_spec="Folders")

@@ -311,3 +311,7 @@ echo "Processing Valid-Values.md..."
 dr_egeria "${SCRIPT_DIR}/Valid-Values.md" --process $ARGS
 echo "Done."
 
+echo "Processing Developer-Questions.md..."
+dr_egeria "${SCRIPT_DIR}/Developer-Questions.md" --process $ARGS
+echo "Done."
+

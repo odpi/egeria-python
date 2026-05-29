@@ -40,49 +40,53 @@ EGERIA_MERMAID_FOLDER = app_config.egeria_mermaid_folder
 
 
 def load_mermaid():
-    """Inject Mermaid.js library"""
-    # Alternative CDN URL via unpkg
-    mermaid_js = """
-    <script src="https://unpkg.com/mermaid@11.6.0/dist/mermaid.min.js"></script>
-    <script>
-        document.addEventListener('DOMContentLoaded', function() {
-            mermaid.initialize({startOnLoad: true},
-            {maxTextSize: 300000}, {securityLevel: 'loose'});
-        });
-    </script>
-
-    """
-
-    display(HTML(mermaid_js))
+    """No-op: Kroki renders server-side, no JS injection needed."""
+    pass
 
 
 def render_mermaid(mermaid_code):
-    title_label, guid, mermaid_code = parse_mermaid_code(mermaid_code)
-    graph_id = f"mermaid-graph-{guid}-{str(uuid.uuid4())[:4]}"
-    escaped_header = html.escape(title_label) if title_label else ""  # Sanitize the header safely
-    escaped_mermaid_code = html.escape(mermaid_code)
-    header_html = f"""
-                <h3 id="{graph_id}-heading" style="margin: 20px 0; font-size: 1.5em; text-align: center;">
-                    {escaped_header}
-                </h3>
-                <p id="{graph_id}-subheading" style="margin: 0; padding: 5px; font-size: 1em; text-align: center; color: gray; flex: 0 0 auto;">
-                    GUID: {guid}
-                </p>
-                """ if title_label else ""
+    """Render Mermaid diagram via Kroki API (server-side SVG, no JS required).
 
-    mermaid_html = f"""
-    <div>{header_html}</div>
-    <div class="mermaid">
-        {escaped_mermaid_code}
-    </div>
-    <script type_name = "text/javascript">
-        if (window.mermaid) {{
-    mermaid.initialize({{startOnLoad: true}});
-    mermaid.contentLoaded();
-    }}
-    </script>
+    JupyterLab 4.x strips <script> tags from HTML outputs, so the previous
+    approach of injecting mermaid.js from a CDN no longer works. Kroki renders
+    the diagram server-side in the Python kernel and returns an SVG directly,
+    which displays reliably without any JavaScript.
     """
-    display(HTML(mermaid_html))
+    import requests as _requests
+    from pyegeria.view.output_formatter import _normalize_mermaid_graph
+
+    title_label, guid, mermaid_code = parse_mermaid_code(mermaid_code)
+    mermaid_code = _normalize_mermaid_graph(mermaid_code)
+
+    header_html = ""
+    if title_label:
+        escaped_header = html.escape(title_label)
+        header_html = f"""
+        <h3 style="margin: 20px 0; font-size: 1.5em; text-align: center;">{escaped_header}</h3>
+        <p style="margin: 0; padding: 5px; font-size: 1em; text-align: center; color: gray;">GUID: {guid}</p>
+        """
+
+    try:
+        resp = _requests.post(
+            'https://kroki.io/mermaid/svg',
+            data=mermaid_code.encode('utf-8'),
+            headers={'Content-Type': 'text/plain'},
+            timeout=30,
+        )
+        if resp.status_code == 200:
+            display(HTML(f"""
+            <div style="font-family: sans-serif;">
+                {header_html}
+                <div style="width:100%; overflow:auto; border:1px solid #ddd; border-radius:4px; padding:10px; background:#fff;">
+                    {resp.text}
+                </div>
+            </div>
+            """))
+            return
+        else:
+            display(HTML(f'<p style="color:red">Kroki error {resp.status_code}: {html.escape(resp.text[:200])}</p>'))
+    except Exception as exc:
+        display(HTML(f'<p style="color:orange">Kroki unavailable ({html.escape(str(exc)[:120])})</p>'))
 
 
 def render_mermaid_adv(mermaid_code):
@@ -104,6 +108,10 @@ def parse_mermaid_code(mermaid_code):
         title = None
     if guid is None:
         guid = str(uuid.uuid4())[:8]
+
+    # Strip markdown fences if present
+    mermaid_code = mermaid_code.replace("```mermaid", "").replace("```", "").strip()
+
     return title, guid, mermaid_code
 
 

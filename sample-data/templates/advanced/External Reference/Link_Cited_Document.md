@@ -1,7 +1,7 @@
 ___
 
 ## Link Cited Document
-> Link a cited document to a referenceable via the DocumentCitationLink relationship.
+> Link a cited document to a referenceable via the CitedDocumentLink relationship.
 >
 >	**Alternative Names**: Link Referenceable->Cited Document; Link Cited Document
 
