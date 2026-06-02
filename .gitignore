@@ -184,3 +184,4 @@ dmypy.json
 /.ai-sandbox/
 /.aiassistant/
 .output.txt
+.aider*

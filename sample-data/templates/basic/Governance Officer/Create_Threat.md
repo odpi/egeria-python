@@ -101,6 +101,14 @@ ___
 >	**Description**: A description.
 
 
+### Legal
+>	**Input Required**: False
+
+>	**Attribute Type**: Simple
+
+>	**Description**: Copyright and/or license information for the element or associated resource.
+
+
 ### Qualified Name
 >	**Input Required**: False
 

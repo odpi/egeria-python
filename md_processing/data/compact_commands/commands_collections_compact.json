@@ -1,6 +1,6 @@
 {
   "family": "Collections",
-  "exported": "May 19, 2026 at 9:08:19 PM",
+  "exported": "Jun 1, 2026 at 5:05:21 PM",
   "attribute_definitions": {
     "Activity Status": {
       "variable_name": "activity_status",
@@ -2265,6 +2265,44 @@
       "bundle": "Collection Base",
       "custom_attributes": [],
       "Journal Entry": "If the collection folder  is in another collection, the Parent Relationship Type Name is CollectionMembership."
+    },
+    "Create DataHub": {
+      "display_name": "Data Hub",
+      "qn_prefix": "DataHub",
+      "alternate_names": [],
+      "family": "Collections",
+      "description": "Create a DataHub entity - a collection of data assets that are availble for sharing, as long as the requester satisfies the requirements laid down by the data owner.",
+      "verb": "Create",
+      "upsert": true,
+      "attach": false,
+      "level": "Basic",
+      "find_method": "CollectionManager.find_collections",
+      "find_constraints": "{\"metadata_element_type\": \"DataHub\"}",
+      "extra_find": "",
+      "extra_constraints": "",
+      "OM_TYPE": "DataHub",
+      "bundle": "Collection Base",
+      "custom_attributes": [],
+      "Journal Entry": ""
+    },
+    "Create DataSharingRequest": {
+      "display_name": "Data Sharing Request",
+      "qn_prefix": "DataSharingRequest",
+      "alternate_names": [],
+      "family": "Collections",
+      "description": "The DataSharingRequest entity describes a request for data sharing. It is used to track the status of the request and gather the details of the request (such as the requested data specification) and the data sharing agreement and related resources.",
+      "verb": "Create",
+      "upsert": true,
+      "attach": false,
+      "level": "Basic",
+      "find_method": "CollectionManager.find_collections",
+      "find_constraints": "{\"metadata_element_type\": \"DataSharingRequest\"}",
+      "extra_find": "",
+      "extra_constraints": "",
+      "OM_TYPE": "DataSharingRequest",
+      "bundle": "Collection Base",
+      "custom_attributes": [],
+      "Journal Entry": ""
     },
     "Create Folio": {
       "display_name": "Folio",

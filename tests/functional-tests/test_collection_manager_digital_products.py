@@ -34,7 +34,7 @@ class TestCollectionManagerDigitalProducts:
         try:
             c_client.create_egeria_bearer_token(self.good_user_1, USER_PWD)
             start_time = time.perf_counter()
-            search_string = "activityStatus Valid Values"
+            search_string = "*"
             # Test with parameters
             response = c_client.find_digital_products(
                 search_string=search_string,
