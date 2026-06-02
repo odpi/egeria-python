@@ -113,14 +113,14 @@ class TestCollectionManager:
             start_time = time.perf_counter()
             search_string = "Open Metadata Digital Product Catalog"
             classification_name = None
-            element_type = ["DigitalProductCatalog"]
+            element_type = ["DigitalProduct","DigitalProductFamily"]
             # element_type = None
             output_format = "JSON"
             report_spec = "Collections"
 
             response = c_client.find_collections(search_string = search_string
                                                  ,metadata_element_subtypes=element_type, max_mermaid_node_count=15,
-                                                 graph_query_depth = 1
+                                                 graph_query_depth = 4, include_only_relationships=['CollectionMembership']
                                                  ,output_format=output_format, report_spec=report_spec)
             duration = time.perf_counter() - start_time
             if response:
@@ -368,9 +368,10 @@ class TestCollectionManager:
             c_client = CollectionManager(self.good_view_server_1, self.good_platform1_url, user_id=self.good_user_2, )
             token = c_client.create_egeria_bearer_token(self.good_user_2, "secret")
             start_time = time.perf_counter()
-            collection_guid = "aed5c289-6e81-4cf8-8852-752005eee0c4"
+            collection_guid = "3e46c5f3-26aa-433e-9348-14786eaf33df"
             element_type = None
             response = c_client.get_collection_by_guid(collection_guid, element_type,
+                                                       include_only_relationships=['CollectionMembership'],
                                                        output_format="JSON", report_spec="Folders")
             duration = time.perf_counter() - start_time
 

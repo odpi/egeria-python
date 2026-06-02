@@ -83,6 +83,7 @@ GOV_COM_LIST = ["Create Business Imperative", "Update Business Imperative",
 COLLECTION_SUBTYPES = [
     "Collection", "Root Collection", "Home Collection", "Collection Folder",
     "Namespace", "Results Set", "Recent Access", "Work Item List", "Folio",
+    "DataHub", "DataSharingRequest",
     "Digital Product", "Digital Product Catalog", "Digital Product Family",
     "Agreement", "Digital Subscription", "Data Sharing Agreement", "Data Dictionary", "Data Spec",
     "Glossary", "Security Group", "Security List", "Security Role",
