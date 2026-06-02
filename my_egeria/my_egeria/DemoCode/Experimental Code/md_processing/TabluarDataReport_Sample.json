@@ -1,0 +1,272 @@
+{
+  "class": "TabularDataSetReportResponse",
+  "requestId": "093045f3-f572-434d-924f-939aebb104c1",
+  "relatedHTTPCode": 200,
+  "tabularDataSetReport": {
+    "recordCount": 55,
+    "tableName": "Exceptions",
+    "tableDescription": "A tabular data set where each record describes an exception from open metadata.",
+    "columnDescriptions": [
+      {
+        "columnName": "Exception Unique Identifier (GUID)",
+        "columnDataType": "STRING",
+        "description": "Unique identifier of an exception relationship.",
+        "isNullable": false,
+        "isIdentifier": true
+      },
+      {
+        "columnName": "Exception Type Unique Identifier (GUID)",
+        "columnDataType": "STRING",
+        "description": "Unique identifier of an exception type.",
+        "isNullable": true,
+        "isIdentifier": false
+      },
+      {
+        "columnName": "Element Unique Identifier (GUID)",
+        "columnDataType": "STRING",
+        "description": "Unique identifier of an open metadata element that is linked via a Certification, License or Exception relationship.",
+        "isNullable": true,
+        "isIdentifier": false
+      },
+      {
+        "columnName": "Open Metadata Type Name",
+        "columnDataType": "STRING",
+        "description": "The unique name of an open metadata type.",
+        "isNullable": true,
+        "isIdentifier": false
+      },
+      {
+        "columnName": "Label",
+        "columnDataType": "STRING",
+        "description": "Display label to use when displaying this lineage relationship in a lineage graph.",
+        "isNullable": true,
+        "isIdentifier": false
+      },
+      {
+        "columnName": "Description",
+        "columnDataType": "STRING",
+        "description": "Description of the element or associated resource in free-text.",
+        "isNullable": true,
+        "isIdentifier": false
+      },
+      {
+        "columnName": "Last Review Time",
+        "columnDataType": "DATE",
+        "description": "The Date/time that this activity was reviewed.",
+        "isNullable": true,
+        "isIdentifier": false
+      },
+      {
+        "columnName": "Next Review Date",
+        "columnDataType": "DATE",
+        "description": "Date of the review.",
+        "isNullable": true,
+        "isIdentifier": false
+      },
+      {
+        "columnName": "Steward",
+        "columnDataType": "STRING",
+        "description": "Unique identifier for the steward performing the action.",
+        "isNullable": true,
+        "isIdentifier": false
+      },
+      {
+        "columnName": "Steward Type Name",
+        "columnDataType": "STRING",
+        "description": "Type name of the Actor entity identifying the steward.",
+        "isNullable": true,
+        "isIdentifier": false
+      },
+      {
+        "columnName": "Steward Property Name",
+        "columnDataType": "STRING",
+        "description": "Property name for the steward's unique identifier (typically guid or qualifiedName).",
+        "isNullable": true,
+        "isIdentifier": false
+      },
+      {
+        "columnName": "Notes",
+        "columnDataType": "STRING",
+        "description": "Notes on why decision were made relating to this element, and other useful information.",
+        "isNullable": true,
+        "isIdentifier": false
+      },
+      {
+        "columnName": "Element Create Time",
+        "columnDataType": "DATE",
+        "description": "Time when this instance was created.",
+        "isNullable": true,
+        "isIdentifier": false
+      },
+      {
+        "columnName": "Element Last Update Time",
+        "columnDataType": "DATE",
+        "description": "Time when this instance was last updated.",
+        "isNullable": true,
+        "isIdentifier": false
+      }
+    ],
+    "dataRecords": {
+      "0": [
+        "Exception-bd1ebf1e-ee8a-4be9-aa79-a48c55c1c22b",
+        "769e2f89-a940-4f32-abbc-a427c78c14ca",
+        "SoftwareServerPlatform-dde353de-d988-4a4b-a970-c3b82bf78cd5",
+        "Exception",
+        "tanyatidie",
+        "User tanyatidie in OMAG server platform SoftwareServerPlatform-dde353de-d988-4a4b-a970-c3b82bf78cd5 has a clear password in the user directory.",
+        "Tue May 26 18:41:17 BST 2026",
+        null,
+        null,
+        null,
+        null,
+        null,
+        "1779817277603",
+        "1779817277603"
+      ],
+      "1": [
+        "Exception-ca19ced9-fa1f-4f39-a914-6d6da6d3d606",
+        "7998ac6d-b9db-4005-8d7c-9724484931c5",
+        "SoftwareServerPlatform-dde353de-d988-4a4b-a970-c3b82bf78cd5",
+        "Exception",
+        "apachekafkagovernanceengine",
+        "No user identity found for user apachekafkagovernanceengine in OMAG server platform SoftwareServerPlatform-dde353de-d988-4a4b-a970-c3b82bf78cd5",
+        "Tue May 26 18:41:17 BST 2026",
+        null,
+        null,
+        null,
+        null,
+        null,
+        "1779817277896",
+        "1779817277896"
+      ],
+      "2": [
+        "Exception-dc134824-b458-453b-9a76-96dd8be1a869",
+        "769e2f89-a940-4f32-abbc-a427c78c14ca",
+        "SoftwareServerPlatform-dde353de-d988-4a4b-a970-c3b82bf78cd5",
+        "Exception",
+        "tessatube",
+        "User tessatube in OMAG server platform SoftwareServerPlatform-dde353de-d988-4a4b-a970-c3b82bf78cd5 has a clear password in the user directory.",
+        "Tue May 26 18:41:17 BST 2026",
+        null,
+        null,
+        null,
+        null,
+        null,
+        "1779817277619",
+        "1779817277619"
+      ],
+      "3": [
+        "Exception-55ffd2bf-29bb-4379-a8a5-1a3fd54f60de",
+        "7998ac6d-b9db-4005-8d7c-9724484931c5",
+        "SoftwareServerPlatform-dde353de-d988-4a4b-a970-c3b82bf78cd5",
+        "Exception",
+        "enginenpa",
+        "No user identity found for user enginenpa in OMAG server platform SoftwareServerPlatform-dde353de-d988-4a4b-a970-c3b82bf78cd5",
+        "Tue May 26 18:41:17 BST 2026",
+        null,
+        null,
+        null,
+        null,
+        null,
+        "1779817278004",
+        "1779817278004"
+      ],
+      "4": [
+        "Exception-2b770df9-4593-4e07-b167-d8996492df9a",
+        "769e2f89-a940-4f32-abbc-a427c78c14ca",
+        "SoftwareServerPlatform-dde353de-d988-4a4b-a970-c3b82bf78cd5",
+        "Exception",
+        "harryhopeful",
+        "User harryhopeful in OMAG server platform SoftwareServerPlatform-dde353de-d988-4a4b-a970-c3b82bf78cd5 has a clear password in the user directory.",
+        "Tue May 26 18:41:17 BST 2026",
+        null,
+        null,
+        null,
+        null,
+        null,
+        "1779817277708",
+        "1779817277708"
+      ],
+      "5": [
+        "Exception-73cb405c-9890-4cea-8533-e46a0e4ceea8",
+        "7998ac6d-b9db-4005-8d7c-9724484931c5",
+        "SoftwareServerPlatform-dde353de-d988-4a4b-a970-c3b82bf78cd5",
+        "Exception",
+        "atlascatnpa",
+        "No user identity found for user atlascatnpa in OMAG server platform SoftwareServerPlatform-dde353de-d988-4a4b-a970-c3b82bf78cd5",
+        "Tue May 26 18:41:17 BST 2026",
+        null,
+        null,
+        null,
+        null,
+        null,
+        "1779817277937",
+        "1779817277937"
+      ],
+      "6": [
+        "Exception-cc9edb46-26ce-4a27-96f4-12681956ae75",
+        "7998ac6d-b9db-4005-8d7c-9724484931c5",
+        "SoftwareServerPlatform-dde353de-d988-4a4b-a970-c3b82bf78cd5",
+        "Exception",
+        "generalnpa",
+        "No user identity found for user generalnpa in OMAG server platform SoftwareServerPlatform-dde353de-d988-4a4b-a970-c3b82bf78cd5",
+        "Tue May 26 18:41:17 BST 2026",
+        null,
+        null,
+        null,
+        null,
+        null,
+        "1779817277836",
+        "1779817277836"
+      ],
+      "7": [
+        "Exception-7fbc07f2-3905-496e-a983-d5bb3a3f2cc1",
+        "769e2f89-a940-4f32-abbc-a427c78c14ca",
+        "SoftwareServerPlatform-dde353de-d988-4a4b-a970-c3b82bf78cd5",
+        "Exception",
+        "erinoverview",
+        "User erinoverview in OMAG server platform SoftwareServerPlatform-dde353de-d988-4a4b-a970-c3b82bf78cd5 has a clear password in the user directory.",
+        "Tue May 26 18:41:17 BST 2026",
+        null,
+        null,
+        null,
+        null,
+        null,
+        "1779817277700",
+        "1779817277700"
+      ],
+      "8": [
+        "Exception-30a2c384-5a16-4ee6-8cc0-42973bf5dfac",
+        "769e2f89-a940-4f32-abbc-a427c78c14ca",
+        "SoftwareServerPlatform-dde353de-d988-4a4b-a970-c3b82bf78cd5",
+        "Exception",
+        "bobnitter",
+        "User bobnitter in OMAG server platform SoftwareServerPlatform-dde353de-d988-4a4b-a970-c3b82bf78cd5 has a clear password in the user directory.",
+        "Tue May 26 18:41:17 BST 2026",
+        null,
+        null,
+        null,
+        null,
+        null,
+        "1779817277660",
+        "1779817277660"
+      ],
+      "9": [
+        "Exception-2af5fcfe-c948-4182-9f38-3070ddd2f8a5",
+        "769e2f89-a940-4f32-abbc-a427c78c14ca",
+        "SoftwareServerPlatform-dde353de-d988-4a4b-a970-c3b82bf78cd5",
+        "Exception",
+        "tomtally",
+        "User tomtally in OMAG server platform SoftwareServerPlatform-dde353de-d988-4a4b-a970-c3b82bf78cd5 has a clear password in the user directory.",
+        "Tue May 26 18:41:17 BST 2026",
+        null,
+        null,
+        null,
+        null,
+        null,
+        "1779817277766",
+        "1779817277766"
+      ]
+    }
+  }
+}

@@ -1,0 +1,45 @@
+/*"""*/
+/*   PDX-License-Identifier: Apache-2.0*/
+/*   Copyright Contributors to the ODPi Egeria project.*/
+
+/*   This file provides a set of report specification related functions for my_egeria.*/
+
+/*"""*/
+
+.Screen {
+    background: $surface;
+    background-color: rgb(255 255 128);
+    border: solid $primary;
+    padding: 1;
+    height: auto;
+}
+.box {
+    height: 100%;
+    border: solid green;
+}
+#connection_info {
+    background: $panel;
+    color: $text;
+    border: round $primary;
+    height: 1fr;
+    width: 1fr;
+    }
+#splash_title {
+    height: auto;
+    width: auto;
+    color: $primary;
+    text-align: center;
+    background: $surface;
+}
+#splash_meta {
+    height: auto;
+    width: auto;
+    color: $text;
+    text-align: center;
+    background: $surface;
+}
+#splash_top {
+    height: auto;
+    width: auto;
+    color: $text;
+}

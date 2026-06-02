@@ -1,0 +1,62 @@
+# YAML
+
+"""
+
+   PDX-License-Identifier: Apache-2.0
+   Copyright Contributors to the ODPi Egeria project.
+
+"""
+
+# Global exclude for all hooks
+exclude: |
+  ^(
+    \.venv/|
+    .*site-packages/|
+    \.idea/|
+    \.pytest_cache/|
+    ^src/my_egeria/\.pytest_cache/
+  )
+
+repos:
+  - repo: https://github.com/pre-commit/pre-commit-hooks
+    rev: v4.6.0
+    hooks:
+      - id: check-yaml
+      - id: end-of-file-fixer
+        exclude: |
+          ^(
+            \.venv/|
+            .*site-packages/|
+            \.idea/|
+            \.pytest_cache/|
+            ^src/my_egeria/\.pytest_cache/
+          )
+      - id: trailing-whitespace
+        exclude: |
+          ^(
+            \.venv/|
+            .*site-packages/|
+            \.idea/|
+            \.pytest_cache/|
+            ^src/my_egeria/\.pytest_cache/
+          )
+
+  - repo: https://github.com/psf/black
+    rev: 24.8.0
+    hooks:
+      - id: black
+        language_version: python3.13
+        # Only run Black on your source/tests (prevents .venv and other folders)
+        files: |
+          ^(
+            src/my_egeria/|
+            tests/
+          )
+        exclude: |
+          ^(
+            \.venv/|
+            .*site-packages/|
+            \.idea/|
+            \.pytest_cache/|
+            ^src/my_egeria/\.pytest_cache/
+          )

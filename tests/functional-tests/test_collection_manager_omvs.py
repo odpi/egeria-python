@@ -111,9 +111,9 @@ class TestCollectionManager:
             c_client = EgeriaTech(self.good_server_2, self.good_platform1_url, user_id=self.good_user_2, )
             token = c_client.create_egeria_bearer_token(self.good_user_2, "secret")
             start_time = time.perf_counter()
-            search_string = "Open Metadata Digital Product Catalog"
+            search_string = "*"
             classification_name = None
-            element_type = ["DigitalProduct","DigitalProductFamily"]
+            element_type = ["DataHub"]
             # element_type = None
             output_format = "JSON"
             report_spec = "Collections"

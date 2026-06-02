@@ -1,0 +1,84 @@
+/* tcss
+
+   PDX-License-Identifier: Apache-2.0
+   Copyright Contributors to the ODPi Egeria project.
+
+   This file provides style settings for a specific component of the my_egeria module.
+
+
+*/
+
+/* splash.css with fade-in animation */
+
+/*@keyframes fade-in {*/
+/*    0% {*/
+/*        opacity: 0;*/
+/*        transform: scale(0.95);*/
+/*        }*/
+/*    100% {*/
+/*        opacity: 1;*/
+/*        transform: scale(1);*/
+/*        }*/
+/*    }*/
+/*.SplashScreen {*/
+/*    height: 100%;*/
+/*    width: 100%;*/
+/*    !*content-align: center middle;*!*/
+/*    text-align: center;*/
+/*    opacity: 0;*/
+/*    transition: opacity 1.5s ease-in;*/
+/*}*/
+/*#splash-container {*/
+/*    height: 100%;*/
+/*    width: 100%;*/
+/*    align: center middle;       !* Center both horizontally and vertically *!*/
+/*    background: $background;    !* Use theme background *!*/
+/*}*/
+
+/*#splash-title {*/
+/*    text-style: bold;*/
+/*    color: $primary;*/
+/*    padding-bottom: 1;*/
+/*    content-align: center middle;*/
+/*    animation: fade-in 0.8s ease-out both;*/
+/*}*/
+
+/*#splash-message {*/
+/*    color: $text-muted;*/
+/*    content-align: center middle;*/
+/*    padding-top: 1;*/
+/*    animation: fade-in 1.5s ease-out both;*/
+/*}*/
+
+/* CSS */
+/* Textual CSS doesn't support @keyframes. Keep to supported rules. */
+
+/*#splash_root {*/
+/*  width: 80%;*/
+/*  height: auto;*/
+/*  border: panel;*/
+/*  padding: 1;*/
+/*  margin: 2;*/
+/*  background: $surface;*/
+/*}*/
+
+/*.splash-title {*/
+/*  text-style: bold;*/
+/*  text-align: center;*/
+/*  color: $text;*/
+/*}*/
+
+/*.splash-text {*/
+/*  color: $text;*/
+/*  text-align: center;*/
+/*}*/
+
+/* Optional fade-like effect with transition (requires toggling class in Python):
+.splash-fade {
+  opacity: 0;
+}
+.splash-fade.-visible {
+  transition: opacity 600ms in_out_cubic;
+  opacity: 1;
+}
+*/

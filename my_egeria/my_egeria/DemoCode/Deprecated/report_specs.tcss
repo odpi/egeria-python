@@ -1,0 +1,73 @@
+/* *********************************************************************************************** */
+/*   PDX-License-Identifier: Apache-2.0                                                            */
+/*   Copyright Contributors to the ODPi Egeria project.                                            */
+/*                                                                                                 */
+/*   This file provides a set of report specification related functions for my_egeria.             */
+/*                                                                                                 */
+/*    Unless you are running Microsoft's Studio Product with the Textual Extension installed       */
+/*    the file will show multiple errors, for example I use the PyCharm IDE for whoich there are   */
+/* no extensions for Textual, regarless of the errors the file will run correctly with Textual.    */
+/* *********************************************************************************************** */
+
+
+Screen {
+    background: $surface;
+    border: solid $primary;
+    padding: 1;
+    height: auto;
+}
+.box {
+    height: 100%;
+    border: solid green;
+}
+#connection_info {
+    background: $panel;
+    color: $text;
+    border: round $primary;
+    height: 5%;
+    width: 1fr;
+    }
+#report_specs_listview_container {
+    height: 85%;
+    width: 1fr;
+    border: round $primary;
+    color: $text;
+}
+#report_specs_listview {
+    height: 90%;
+    width: 1fr;
+    border: round $primary;
+    color: $text;
+}
+Header {
+    background: $primary;
+    color: $text;
+    border: round $primary;
+    height: 5%;
+    width: 1fr;
+}
+Footer {
+    background: $primary;
+    color: $text;
+    border: round $primary;
+    height: 5%;
+    width: 1fr;
+}
+#action_row {
+    background: $primary;
+    color: $text;
+    border: round $primary;
+    height: 10%;
+    width: 1fr;
+}
+#detail_connection_info {
+    background: $panel;
+    color: $text;
+    border: round $primary;
+    height: 5%;
+}
+#report_details {
+    background: $panel;
+    color: $text;
+    height: 90%;
+}

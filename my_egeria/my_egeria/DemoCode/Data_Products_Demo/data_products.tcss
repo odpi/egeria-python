@@ -1,0 +1,56 @@
+/* *********************************************************************************************** */
+/*   PDX-License-Identifier: Apache-2.0                                                            */
+/*   Copyright Contributors to the ODPi Egeria project.                                            */
+/*                                                                                                 */
+/*   This file provides a set of report specification related functions for my_egeria.             */
+/*                                                                                                 */
+/*    Unless you are running Microsoft's Studio Product with the Textual Extension installed       */
+/*    the file will show multiple errors, for example I use the PyCharm IDE for whoich there are   */
+/* no extensions for Textual, regarless of the errors the file will run correctly with Textual.    */
+/* *********************************************************************************************** */
+
+/*.Screen {*/
+/*    !* background: $surface; *!*/
+/*    color: $text;*/
+/*    border: solid $primary;*/
+/*    padding: 1;*/
+/*    height: auto;*/
+/*    }*/
+#connection_info {
+    /*background: $panel;*/
+    color: $text;
+    border: round $primary;
+    height: 1fr;
+    width: 1fr;
+    }
+#report_specs_listview_container {
+    height: 10fr;
+    border: round $primary;
+    color: $text;
+}
+#report_specs_listview {
+    height: 8fr;
+    border: round $primary;
+    color: $text;
+}
+Header {
+    background: $primary;
+    color: $text;
+    border: round $primary;
+    height: 1fr;
+    width: 1fr;
+}
+Footer {
+    background: $primary;
+    color: $text;
+    border: round $primary;
+    height: 1fr;
+    width: 1fr;
+}
+#action_row {
+    background: $primary;
+    color: $text;
+    border: round $primary;
+    height: 2fr;
+    width: 1fr;
+}
