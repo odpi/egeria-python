@@ -13,6 +13,7 @@
 - Explicit dependency flow:
   - `pyegeria` -> `commands/` (`hey_egeria`)
   - `pyegeria` -> `md_processing/` + `commands/cat/dr_egeria.py` (Dr.Egeria)
+  - `pyegeria` -> `my_egeria/` (MyEgeria TUI)
 - Change impact (`pyegeria/`): SDK API, config, report formatting/spec changes can break both `hey_egeria` and Dr.Egeria flows.
 - Change impact (`commands/`): CLI/TUI argument and output behavior changes must remain compatible with existing command names and snake_case params.
 - Change impact (`md_processing/`): markdown attribute/routing changes must stay aligned with `md_processing/data/compact_commands` and generated report specs.

@@ -1,0 +1,32 @@
+[project]
+name = "my-egeria"
+version = "0.1.0"
+description = "MyEgeria TUI application"
+readme = "README.md"
+authors = [{name = "Dan Wolfson"}]
+requires-python = ">=3.12"
+dependencies = [
+    "textual>=1.0.0",
+    "pyegeria",
+    "pydantic>=2.12.3",
+    "loguru",
+    "inflect",
+    "rich>=14.2",
+    "pyperclip",
+    "textual-serve>=1.1.3",
+    "textual-web",
+]
+
+[tool.uv.sources]
+pyegeria = { workspace = true }
+
+[build-system]
+requires = ["setuptools>=61.0"]
+build-backend = "setuptools.build_meta"
+
+[tool.setuptools.packages.find]
+where = ["."]
+include = ["my_egeria", "my_egeria.*"]
+
+[project.scripts]
+my-egeria = "my_egeria.main:main"

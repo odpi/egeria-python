@@ -1,0 +1,1145 @@
+compinit:527: no such file or directory: /opt/homebrew/share/zsh/site-functions/_brew_services
+compinit:527: no such file or directory: /opt/homebrew/share/zsh/site-functions/_brew_services
+
+egeria_tui on  main [✘!⇡] is 📦 v0.0.0 via 🐍 v3.13.0 (.venv) via 💎 v3.2.2
+❯ cd src/my_egeria
+
+egeria_tui/src/my_egeria on  main [✘!⇡] via 🐍 v3.13.0 (.venv) via 💎 v3.2.2
+❯ textual console
+▌Textual Development Console v5.3.0
+▌Run a Textual app with textual run --dev my_app.py to connect.
+▌Press Ctrl+C to quit.
+───────────────────────────────────────────────────────────────────────────────────────────── Client '127.0.0.1' connected ─────────────────────────────────────────────────────────────────────────────────────────────
+[11:10:45] SYSTEM                                                                                                                                                                                            app.py:3148
+Connected to devtools ( ws://127.0.0.1:8081 )
+[11:10:45] SYSTEM                                                                                                                                                                                            app.py:3172
+---
+[11:10:45] SYSTEM                                                                                                                                                                                            app.py:3173
+loop=<_UnixSelectorEventLoop running=True closed=False debug=False>
+[11:10:45] SYSTEM                                                                                                                                                                                            app.py:3174
+features=frozenset({'debug', 'devtools'})
+[11:10:45] SYSTEM                                                                                                                                                                                            app.py:3206
+STARTED FileMonitor({PosixPath('/Users/petercoldicott/PycharmProjects/egeria/egeria_tui/src/my_egeria/styles/common.css')})
+[11:10:45] EVENT                                                                                                                                                                                     message_pump.py:809
+Load() >>> EgeriaTUI(title='EgeriaTUI', classes={'-dark-mode'}, pseudo_classes={'dark', 'focus'}) method=None
+[11:10:45] INFO                                                                                                                                                                                              app.py:3275
+driver=<LinuxDriver EgeriaTUI(title='EgeriaTUI', classes={'-dark-mode'}, pseudo_classes={'dark', 'focus'})>
+[11:10:45] EVENT                                                                                                                                                                                     message_pump.py:800
+Mount() >>> Footer() method=<Footer.on_mount>
+[11:10:45] EVENT                                                                                                                                                                                     message_pump.py:800
+Mount() >>> Footer() method=<Widget.on_mount>
+[11:10:45] EVENT                                                                                                                                                                                     message_pump.py:800
+Mount() >>> ToastRack(id='textual-toastrack', classes='-textual-system') method=<Widget.on_mount>
+[11:10:45] EVENT                                                                                                                                                                                     message_pump.py:800
+Mount() >>> Tooltip(id='textual-tooltip', classes='-textual-system') method=<Widget.on_mount>
+[11:10:45] EVENT                                                                                                                                                                                     message_pump.py:800
+Mount() >>> FooterKey(classes='-command-palette') method=<Widget.on_mount>
+[11:10:45] EVENT                                                                                                                                                                                     message_pump.py:800
+Resize(size=Size(width=216, height=55)) >>> EgeriaTUI(title='EgeriaTUI', classes={'-dark-mode'}, pseudo_classes={'dark', 'focus'}) method=<App.on_resize>
+[11:10:45] EVENT                                                                                                                                                                                     message_pump.py:800
+Mount() >>> EgeriaTUI(title='EgeriaTUI', classes={'-dark-mode'}, pseudo_classes={'dark', 'focus'}) method=<EgeriaTUI.on_mount>
+[11:10:45] SYSTEM                                                                                                                                                                                            app.py:2773
+SplashScreen() is current (PUSHED)
+[11:10:45] EVENT                                                                                                                                                                                     message_pump.py:800
+Mount() >>> ScrollBar(name='vertical', classes='-textual-system', window_virtual_size=100, window_size=0, position=0, thickness=2) method=<Widget.on_mount>
+[11:10:45] EVENT                                                                                                                                                                                     message_pump.py:800
+Mount() >>> ToastRack(id='textual-toastrack', classes='-textual-system') method=<Widget.on_mount>
+[11:10:45] EVENT                                                                                                                                                                                     message_pump.py:800
+Mount() >>> Tooltip(id='textual-tooltip', classes='-textual-system') method=<Widget.on_mount>
+[11:10:45] EVENT                                                                                                                                                                                     message_pump.py:800
+Mount() >>> Footer() method=<Footer.on_mount>
+[11:10:45] EVENT                                                                                                                                                                                     message_pump.py:800
+Mount() >>> Footer() method=<Widget.on_mount>
+[11:10:45] EVENT                                                                                                                                                                                     message_pump.py:800
+Mount() >>> Screen(id='_default') method=<Screen.on_mount>
+[11:10:45] EVENT                                                                                                                                                                                     message_pump.py:800
+Mount() >>> Screen(id='_default') method=<Widget.on_mount>
+[11:10:45] EVENT                                                                                                                                                                                     message_pump.py:800
+ScreenResume() >>> Screen(id='_default') method=<Screen.on_screen_resume>
+[11:10:45] EVENT                                                                                                                                                                                     message_pump.py:800
+ScreenSuspend() >>> Screen(id='_default') method=<Screen.on_screen_suspend>
+[11:10:45] EVENT                                                                                                                                                                                     message_pump.py:800
+Resize(size=Size(width=216, height=55)) >>> Screen(id='_default') method=<Screen.on_resize>
+[11:10:45] EVENT                                                                                                                                                                                     message_pump.py:800
+Show() >>> Screen(id='_default') method=<Widget.on_show>
+[11:10:45] EVENT                                                                                                                                                                                     message_pump.py:800
+Mount() >>> HeaderIcon() method=<HeaderIcon.on_mount>
+[11:10:45] EVENT                                                                                                                                                                                     message_pump.py:800
+Mount() >>> HeaderIcon() method=<Widget.on_mount>
+[11:10:45] EVENT                                                                                                                                                                                     message_pump.py:800
+Mount() >>> HeaderTitle() method=<Widget.on_mount>
+[11:10:45] EVENT                                                                                                                                                                                     message_pump.py:800
+Mount() >>> HeaderClock() method=<HeaderClock.on_mount>
+[11:10:45] EVENT                                                                                                                                                                                     message_pump.py:800
+Mount() >>> HeaderClock() method=<Widget.on_mount>
+[11:10:45] EVENT                                                                                                                                                                                     message_pump.py:800
+Mount() >>> Static(id='connection_info') method=<Widget.on_mount>
+[11:10:45] EVENT                                                                                                                                                                                     message_pump.py:800
+Mount() >>> FooterKey() method=<Widget.on_mount>
+[11:10:45] EVENT                                                                                                                                                                                     message_pump.py:800
+Mount() >>> FooterKey() method=<Widget.on_mount>
+[11:10:45] EVENT                                                                                                                                                                                     message_pump.py:800
+Mount() >>> FooterKey() method=<Widget.on_mount>
+[11:10:45] EVENT                                                                                                                                                                                     message_pump.py:800
+Mount() >>> FooterKey(classes='-command-palette') method=<Widget.on_mount>
+[11:10:45] EVENT                                                                                                                                                                                     message_pump.py:800
+Mount() >>> Label(id='splash_title') method=<Widget.on_mount>
+[11:10:45] EVENT                                                                                                                                                                                     message_pump.py:800
+Mount() >>> TextArea(id='splash_text') method=<TextArea.on_mount>
+[11:10:45] EVENT                                                                                                                                                                                     message_pump.py:800
+Mount() >>> TextArea(id='splash_text') method=<ScrollView.on_mount>
+[11:10:45] EVENT                                                                                                                                                                                     message_pump.py:800
+Mount() >>> TextArea(id='splash_text') method=<Widget.on_mount>
+[11:10:45] EVENT                                                                                                                                                                                     message_pump.py:800
+Mount() >>> Label(id='splash_meta') method=<Widget.on_mount>
+[11:10:45] EVENT                                                                                                                                                                                     message_pump.py:800
+Mount() >>> Button(id='continue', classes='-primary', variant='primary') method=<Widget.on_mount>
+[11:10:45] EVENT                                                                                                                                                                                     message_pump.py:809
+Resize(size=Size(width=216, height=1)) >>> Footer() method=None
+[11:10:45] EVENT                                                                                                                                                                                     message_pump.py:800
+Show() >>> Footer() method=<Widget.on_show>
+[11:10:45] EVENT                                                                                                                                                                                     message_pump.py:809
+Resize(size=Size(width=12, height=1), container_size=Size(width=10, height=1)) >>> FooterKey(classes='-command-palette -compact') method=None
+[11:10:45] EVENT                                                                                                                                                                                     message_pump.py:800
+Show() >>> FooterKey(classes='-command-palette -compact') method=<Widget.on_show>
+[11:10:45] EVENT                                                                                                                                                                                     message_pump.py:800
+Mount() >>> Header() method=<Header.on_mount>
+[11:10:45] EVENT                                                                                                                                                                                     message_pump.py:800
+Mount() >>> Header() method=<Widget.on_mount>
+[11:10:45] EVENT                                                                                                                                                                                     message_pump.py:800
+Mount() >>> Container() method=<Widget.on_mount>
+[11:10:45] EVENT                                                                                                                                                                                     message_pump.py:800
+Mount() >>> Container(id='splash_top') method=<Widget.on_mount>
+[11:10:45] EVENT                                                                                                                                                                                     message_pump.py:800
+Mount() >>> SplashScreen() method=<SplashScreen.on_mount>
+[11:10:45] EVENT                                                                                                                                                                                     message_pump.py:800
+Mount() >>> SplashScreen() method=<BaseScreen.on_mount>
+[11:10:45] EVENT                                                                                                                                                                                     message_pump.py:800
+Mount() >>> SplashScreen() method=<Screen.on_mount>
+[11:10:45] EVENT                                                                                                                                                                                     message_pump.py:800
+Mount() >>> SplashScreen() method=<Widget.on_mount>
+[11:10:45] EVENT                                                                                                                                                                                     message_pump.py:800
+ScreenResume() >>> SplashScreen() method=<Screen.on_screen_resume>
+[11:10:45] DEBUG                                                                                                                                                                                          screen.py:1042
+TextArea(id='splash_text') was focused
+[11:10:45] EVENT                                                                                                                                                                                     message_pump.py:800
+Resize(size=Size(width=216, height=55)) >>> SplashScreen() method=<Screen.on_resize>
+[11:10:45] EVENT                                                                                                                                                                                     message_pump.py:800
+Show() >>> SplashScreen() method=<Widget.on_show>
+[11:10:45] EVENT                                                                                                                                                                                     message_pump.py:809
+Resize(size=Size(width=198, height=1)) >>> HeaderTitle() method=None
+[11:10:45] EVENT                                                                                                                                                                                     message_pump.py:800
+Show() >>> HeaderTitle() method=<Widget.on_show>
+[11:10:45] EVENT                                                                                                                                                                                     message_pump.py:809
+Resize(size=Size(width=216, height=27), virtual_size=Size(width=212, height=25), container_size=Size(width=212, height=25)) >>> Container(id='splash_top') method=None
+[11:10:45] EVENT                                                                                                                                                                                     message_pump.py:800
+Show() >>> Container(id='splash_top') method=<Widget.on_show>
+[11:10:45] EVENT                                                                                                                                                                                     message_pump.py:809
+Resize(size=Size(width=16, height=3), container_size=Size(width=16, height=1)) >>> Button(id='continue', classes='-primary', variant='primary') method=None
+[11:10:45] EVENT                                                                                                                                                                                     message_pump.py:800
+Show() >>> Button(id='continue', classes='-primary', variant='primary') method=<Widget.on_show>
+[11:10:45] EVENT                                                                                                                                                                                     message_pump.py:809
+Resize(size=Size(width=90, height=1)) >>> Label(id='splash_meta') method=None
+[11:10:45] EVENT                                                                                                                                                                                     message_pump.py:800
+Show() >>> Label(id='splash_meta') method=<Widget.on_show>
+[11:10:45] EVENT                                                                                                                                                                                     message_pump.py:800
+Focus(from_app_focus=False) >>> TextArea(id='splash_text') method=<Widget.on_focus>
+[11:10:45] EVENT                                                                                                                                                                                     message_pump.py:800
+Resize(size=Size(width=190, height=12), virtual_size=Size(width=186, height=8), container_size=Size(width=186, height=8)) >>> TextArea(id='splash_text') method=<TextArea.on_resize>
+[11:10:45] EVENT                                                                                                                                                                                     message_pump.py:800
+Show() >>> TextArea(id='splash_text') method=<Widget.on_show>
+[11:10:45] EVENT                                                                                                                                                                                     message_pump.py:809
+Resize(size=Size(width=46, height=1)) >>> Label(id='splash_title') method=None
+[11:10:45] EVENT                                                                                                                                                                                     message_pump.py:800
+Show() >>> Label(id='splash_title') method=<Widget.on_show>
+[11:10:45] EVENT                                                                                                                                                                                     message_pump.py:809
+Resize(size=Size(width=216, height=1)) >>> Footer() method=None
+[11:10:45] EVENT                                                                                                                                                                                     message_pump.py:800
+Show() >>> Footer() method=<Widget.on_show>
+[11:10:45] EVENT                                                                                                                                                                                     message_pump.py:809
+Resize(size=Size(width=12, height=1), container_size=Size(width=10, height=1)) >>> FooterKey(classes='-command-palette -compact') method=None
+[11:10:45] EVENT                                                                                                                                                                                     message_pump.py:800
+Show() >>> FooterKey(classes='-command-palette -compact') method=<Widget.on_show>
+[11:10:45] EVENT                                                                                                                                                                                     message_pump.py:809
+Resize(size=Size(width=8, height=1)) >>> FooterKey() method=None
+[11:10:45] EVENT                                                                                                                                                                                     message_pump.py:800
+Show() >>> FooterKey() method=<Widget.on_show>
+[11:10:45] EVENT                                                                                                                                                                                     message_pump.py:809
+Resize(size=Size(width=10, height=1)) >>> FooterKey() method=None
+[11:10:45] EVENT                                                                                                                                                                                     message_pump.py:800
+Show() >>> FooterKey() method=<Widget.on_show>
+[11:10:45] EVENT                                                                                                                                                                                     message_pump.py:809
+Resize(size=Size(width=11, height=1)) >>> FooterKey() method=None
+[11:10:45] EVENT                                                                                                                                                                                     message_pump.py:800
+Show() >>> FooterKey() method=<Widget.on_show>
+[11:10:45] EVENT                                                                                                                                                                                     message_pump.py:809
+Resize(size=Size(width=216, height=1)) >>> Static(id='connection_info') method=None
+[11:10:45] EVENT                                                                                                                                                                                     message_pump.py:800
+Show() >>> Static(id='connection_info') method=<Widget.on_show>
+[11:10:45] EVENT                                                                                                                                                                                     message_pump.py:809
+Resize(size=Size(width=216, height=27)) >>> Container() method=None
+[11:10:45] EVENT                                                                                                                                                                                     message_pump.py:800
+Show() >>> Container() method=<Widget.on_show>
+[11:10:45] EVENT                                                                                                                                                                                     message_pump.py:809
+Resize(size=Size(width=10, height=1), container_size=Size(width=8, height=1)) >>> HeaderClock() method=None
+[11:10:45] EVENT                                                                                                                                                                                     message_pump.py:800
+Show() >>> HeaderClock() method=<Widget.on_show>
+[11:10:45] EVENT                                                                                                                                                                                     message_pump.py:809
+Resize(size=Size(width=8, height=1), container_size=Size(width=6, height=1)) >>> HeaderIcon() method=None
+[11:10:45] EVENT                                                                                                                                                                                     message_pump.py:800
+Show() >>> HeaderIcon() method=<Widget.on_show>
+[11:10:45] EVENT                                                                                                                                                                                     message_pump.py:809
+Resize(size=Size(width=216, height=1)) >>> Header() method=None
+[11:10:45] EVENT                                                                                                                                                                                     message_pump.py:800
+Show() >>> Header() method=<Widget.on_show>
+[11:10:45] EVENT                                                                                                                                                                                     message_pump.py:800
+Mount() >>> ScrollBar(name='vertical', classes='-textual-system', window_virtual_size=100, window_size=0, position=0, thickness=2) method=<Widget.on_mount>
+[11:10:45] EVENT                                                                                                                                                                                     message_pump.py:800
+Mount() >>> ScrollBar(name='vertical', classes='-textual-system', window_virtual_size=11, window_size=8, position=0, thickness=2) method=<Widget.on_mount>
+[11:10:45] EVENT                                                                                                                                                                                     message_pump.py:809
+Resize(size=Size(width=2, height=8), virtual_size=Size(width=186, height=8), container_size=Size(width=186, height=8)) >>> ScrollBar(name='vertical', classes='-textual-system', window_virtual_size=11, window_size=8,
+position=0, thickness=2) method=None
+[11:10:45] EVENT                                                                                                                                                                                     message_pump.py:800
+Show() >>> ScrollBar(name='vertical', classes='-textual-system', window_virtual_size=11, window_size=8, position=0, thickness=2) method=<Widget.on_show>
+[11:10:45] EVENT                                                                                                                                                                                     message_pump.py:800
+Show() >>> ScrollBar(name='vertical', classes='-textual-system', window_virtual_size=11, window_size=8, position=0, thickness=2) method=<Widget.on_show>
+[11:10:45] EVENT                                                                                                                                                                                     message_pump.py:800
+Unmount() >>> FooterKey(classes='-command-palette -compact') method=<Widget.on_unmount>
+[11:10:45] EVENT                                                                                                                                                                                     message_pump.py:800
+Mount() >>> FooterKey(classes='-command-palette') method=<Widget.on_mount>
+[11:10:45] SYSTEM                                                                                                                                                                                            app.py:3319
+ready in 129 milliseconds
+[11:10:45] EVENT                                                                                                                                                                                     message_pump.py:800
+Resize(size=Size(width=216, height=55)) >>> EgeriaTUI(title='EgeriaTUI', classes={'-dark-mode'}, pseudo_classes={'dark', 'focus'}) method=<App.on_resize>
+[11:10:45] EVENT                                                                                                                                                                                     message_pump.py:809
+Ready() >>> EgeriaTUI(title='EgeriaTUI', classes={'-dark-mode'}, pseudo_classes={'dark', 'focus'}) method=None
+[11:10:45] EVENT                                                                                                                                                                                     message_pump.py:800
+Resize(size=Size(width=216, height=55)) >>> Screen(id='_default') method=<Screen.on_resize>
+[11:10:45] EVENT                                                                                                                                                                                     message_pump.py:809
+Resize(size=Size(width=12, height=1), container_size=Size(width=10, height=1)) >>> FooterKey(classes='-command-palette -compact') method=None
+[11:10:45] EVENT                                                                                                                                                                                     message_pump.py:800
+Show() >>> FooterKey(classes='-command-palette -compact') method=<Widget.on_show>
+[11:10:45] EVENT                                                                                                                                                                                     message_pump.py:800
+Unmount() >>> FooterKey(classes='-command-palette -compact') method=<Widget.on_unmount>
+[11:10:45] EVENT                                                                                                                                                                                     message_pump.py:800
+Mount() >>> FooterKey(classes='-command-palette') method=<Widget.on_mount>
+[11:10:45] EVENT                                                                                                                                                                                     message_pump.py:800
+Resize(size=Size(width=216, height=55)) >>> SplashScreen() method=<Screen.on_resize>
+[11:10:45] EVENT                                                                                                                                                                                     message_pump.py:809
+Resize(size=Size(width=12, height=1), container_size=Size(width=10, height=1)) >>> FooterKey(classes='-command-palette -compact') method=None
+[11:10:45] EVENT                                                                                                                                                                                     message_pump.py:800
+Show() >>> FooterKey(classes='-command-palette -compact') method=<Widget.on_show>
+[11:10:45] EVENT                                                                                                                                                                                     message_pump.py:800
+Unmount() >>> FooterKey() method=<Widget.on_unmount>
+[11:10:45] EVENT                                                                                                                                                                                     message_pump.py:800
+Unmount() >>> FooterKey() method=<Widget.on_unmount>
+[11:10:45] EVENT                                                                                                                                                                                     message_pump.py:800
+Unmount() >>> FooterKey() method=<Widget.on_unmount>
+[11:10:45] EVENT                                                                                                                                                                                     message_pump.py:800
+Unmount() >>> FooterKey(classes='-command-palette -compact') method=<Widget.on_unmount>
+[11:10:45] EVENT                                                                                                                                                                                     message_pump.py:800
+Mount() >>> FooterKey() method=<Widget.on_mount>
+[11:10:45] EVENT                                                                                                                                                                                     message_pump.py:800
+Mount() >>> FooterKey(classes='-command-palette') method=<Widget.on_mount>
+[11:10:45] EVENT                                                                                                                                                                                     message_pump.py:800
+Unmount() >>> FooterKey() method=<Widget.on_unmount>
+[11:10:45] EVENT                                                                                                                                                                                     message_pump.py:800
+Unmount() >>> FooterKey(classes='-command-palette -compact') method=<Widget.on_unmount>
+[11:10:45] EVENT                                                                                                                                                                                     message_pump.py:800
+Mount() >>> FooterKey() method=<Widget.on_mount>
+[11:10:45] EVENT                                                                                                                                                                                     message_pump.py:800
+Mount() >>> FooterKey(classes='-command-palette') method=<Widget.on_mount>
+[11:10:45] EVENT                                                                                                                                                                                     message_pump.py:800
+Unmount() >>> FooterKey() method=<Widget.on_unmount>
+[11:10:45] EVENT                                                                                                                                                                                     message_pump.py:800
+Unmount() >>> FooterKey(classes='-command-palette -compact') method=<Widget.on_unmount>
+[11:10:45] EVENT                                                                                                                                                                                     message_pump.py:800
+Mount() >>> FooterKey() method=<Widget.on_mount>
+[11:10:45] EVENT                                                                                                                                                                                     message_pump.py:800
+Mount() >>> FooterKey(classes='-command-palette') method=<Widget.on_mount>
+[11:10:45] EVENT                                                                                                                                                                                     message_pump.py:809
+Resize(size=Size(width=12, height=1), container_size=Size(width=10, height=1)) >>> FooterKey(classes='-command-palette -compact') method=None
+[11:10:45] EVENT                                                                                                                                                                                     message_pump.py:800
+Show() >>> FooterKey(classes='-command-palette -compact') method=<Widget.on_show>
+[11:10:45] EVENT                                                                                                                                                                                     message_pump.py:809
+Resize(size=Size(width=10, height=1)) >>> FooterKey() method=None
+[11:10:45] EVENT                                                                                                                                                                                     message_pump.py:800
+Show() >>> FooterKey() method=<Widget.on_show>
+────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────
+[11:10:48] DEBUG                                                                                                                                                                                          screen.py:1042
+Button(id='continue', classes='-primary', variant='primary') was focused
+[11:10:48] EVENT                                                                                                                                                                                     message_pump.py:800
+Blur() >>> TextArea(id='splash_text') method=<Widget.on_blur>
+[11:10:48] EVENT                                                                                                                                                                                     message_pump.py:800
+Focus(from_app_focus=False) >>> Button(id='continue', classes='-primary', variant='primary') method=<Widget.on_focus>
+[11:10:48] EVENT                                                                                                                                                                                     message_pump.py:800
+Unmount() >>> FooterKey() method=<Widget.on_unmount>
+[11:10:48] EVENT                                                                                                                                                                                     message_pump.py:800
+Unmount() >>> FooterKey(classes='-command-palette -compact') method=<Widget.on_unmount>
+[11:10:48] EVENT                                                                                                                                                                                     message_pump.py:800
+Mount() >>> FooterKey() method=<Widget.on_mount>
+[11:10:48] EVENT                                                                                                                                                                                     message_pump.py:800
+Mount() >>> FooterKey() method=<Widget.on_mount>
+[11:10:48] EVENT                                                                                                                                                                                     message_pump.py:800
+Mount() >>> FooterKey() method=<Widget.on_mount>
+[11:10:48] EVENT                                                                                                                                                                                     message_pump.py:800
+Mount() >>> FooterKey(classes='-command-palette') method=<Widget.on_mount>
+[11:10:48] EVENT                                                                                                                                                                                     message_pump.py:809
+Resize(size=Size(width=12, height=1), container_size=Size(width=10, height=1)) >>> FooterKey(classes='-command-palette -compact') method=None
+[11:10:48] EVENT                                                                                                                                                                                     message_pump.py:800
+Show() >>> FooterKey(classes='-command-palette -compact') method=<Widget.on_show>
+[11:10:48] EVENT                                                                                                                                                                                     message_pump.py:809
+Resize(size=Size(width=8, height=1)) >>> FooterKey() method=None
+[11:10:48] EVENT                                                                                                                                                                                     message_pump.py:800
+Show() >>> FooterKey() method=<Widget.on_show>
+[11:10:48] EVENT                                                                                                                                                                                     message_pump.py:809
+Resize(size=Size(width=10, height=1)) >>> FooterKey() method=None
+[11:10:48] EVENT                                                                                                                                                                                     message_pump.py:800
+Show() >>> FooterKey() method=<Widget.on_show>
+[11:10:48] EVENT                                                                                                                                                                                     message_pump.py:809
+Resize(size=Size(width=11, height=1)) >>> FooterKey() method=None
+[11:10:48] EVENT                                                                                                                                                                                     message_pump.py:800
+Show() >>> FooterKey() method=<Widget.on_show>
+[11:10:48] EVENT                                                                                                                                                                                     message_pump.py:800
+Unmount() >>> FooterKey() method=<Widget.on_unmount>
+[11:10:48] EVENT                                                                                                                                                                                     message_pump.py:800
+Unmount() >>> FooterKey() method=<Widget.on_unmount>
+[11:10:48] EVENT                                                                                                                                                                                     message_pump.py:800
+Unmount() >>> FooterKey() method=<Widget.on_unmount>
+[11:10:48] EVENT                                                                                                                                                                                     message_pump.py:800
+Unmount() >>> FooterKey(classes='-command-palette -compact') method=<Widget.on_unmount>
+[11:10:48] EVENT                                                                                                                                                                                     message_pump.py:800
+Mount() >>> FooterKey() method=<Widget.on_mount>
+[11:10:48] EVENT                                                                                                                                                                                     message_pump.py:800
+Mount() >>> FooterKey() method=<Widget.on_mount>
+[11:10:48] EVENT                                                                                                                                                                                     message_pump.py:800
+Mount() >>> FooterKey() method=<Widget.on_mount>
+[11:10:48] EVENT                                                                                                                                                                                     message_pump.py:800
+Mount() >>> FooterKey(classes='-command-palette') method=<Widget.on_mount>
+[11:10:48] EVENT                                                                                                                                                                                     message_pump.py:809
+Resize(size=Size(width=12, height=1), container_size=Size(width=10, height=1)) >>> FooterKey(classes='-command-palette -compact') method=None
+[11:10:48] EVENT                                                                                                                                                                                     message_pump.py:800
+Show() >>> FooterKey(classes='-command-palette -compact') method=<Widget.on_show>
+[11:10:48] EVENT                                                                                                                                                                                     message_pump.py:809
+Resize(size=Size(width=8, height=1)) >>> FooterKey() method=None
+[11:10:48] EVENT                                                                                                                                                                                     message_pump.py:800
+Show() >>> FooterKey() method=<Widget.on_show>
+[11:10:48] EVENT                                                                                                                                                                                     message_pump.py:809
+Resize(size=Size(width=10, height=1)) >>> FooterKey() method=None
+[11:10:48] EVENT                                                                                                                                                                                     message_pump.py:800
+Show() >>> FooterKey() method=<Widget.on_show>
+[11:10:48] EVENT                                                                                                                                                                                     message_pump.py:809
+Resize(size=Size(width=11, height=1)) >>> FooterKey() method=None
+[11:10:48] EVENT                                                                                                                                                                                     message_pump.py:800
+Show() >>> FooterKey() method=<Widget.on_show>
+[11:10:48] EVENT                                                                                                                                                                                     message_pump.py:800
+Click(Button(id='continue', classes='-primary', variant='primary'), x=6, y=1, pointer_x=6, pointer_y=1, screen_x=19, screen_y=17, button=1, style=Style(color=Color('#dfe9f4', ColorType.TRUECOLOR,
+triplet=ColorTriplet(red=223, green=233, blue=244)), bgcolor=Color('#0b5aac', ColorType.TRUECOLOR, triplet=ColorTriplet(red=11, green=90, blue=172)), bold=True, reverse=True, meta={'offset': (0, 0)}), chain=1) >>>
+Button(id='continue', classes='-primary', variant='primary') method=<Button.on_click>
+[11:10:48] EVENT                                                                                                                                                                                     message_pump.py:800
+Click(Button(id='continue', classes='-active -primary', variant='primary'), x=6, y=1, pointer_x=6, pointer_y=1, screen_x=19, screen_y=17, button=1, style=Style(color=Color('#dfe9f4', ColorType.TRUECOLOR,
+triplet=ColorTriplet(red=223, green=233, blue=244)), bgcolor=Color('#0b5aac', ColorType.TRUECOLOR, triplet=ColorTriplet(red=11, green=90, blue=172)), bold=True, reverse=True, meta={'offset': (0, 0)}), chain=1) >>>
+Button(id='continue', classes='-active -primary', variant='primary') method=<Widget.on_click>
+[11:10:48] EVENT                                                                                                                                                                                     message_pump.py:809
+Pressed() >>> Button(id='continue', classes='-active -primary', variant='primary') method=None
+[11:10:48] EVENT                                                                                                                                                                                     message_pump.py:809
+Pressed() >>> Container(id='splash_top') method=None
+[11:10:48] EVENT                                                                                                                                                                                     message_pump.py:800
+Pressed() >>> SplashScreen() method=<SplashScreen.on_button_pressed>
+[11:10:48] SYSTEM                                                                                                                                                                                            app.py:2773
+LoginScreen() is current (PUSHED)
+[11:10:48] EVENT                                                                                                                                                                                     message_pump.py:800
+Mount() >>> ToastRack(id='textual-toastrack', classes='-textual-system') method=<Widget.on_mount>
+[11:10:48] EVENT                                                                                                                                                                                     message_pump.py:800
+Mount() >>> Tooltip(id='textual-tooltip', classes='-textual-system') method=<Widget.on_mount>
+[11:10:48] EVENT                                                                                                                                                                                     message_pump.py:800
+Mount() >>> Footer() method=<Footer.on_mount>
+[11:10:48] EVENT                                                                                                                                                                                     message_pump.py:800
+Mount() >>> Footer() method=<Widget.on_mount>
+[11:10:48] EVENT                                                                                                                                                                                     message_pump.py:800
+Mount() >>> HeaderIcon() method=<HeaderIcon.on_mount>
+[11:10:48] EVENT                                                                                                                                                                                     message_pump.py:800
+Mount() >>> HeaderIcon() method=<Widget.on_mount>
+[11:10:48] EVENT                                                                                                                                                                                     message_pump.py:800
+Mount() >>> HeaderTitle() method=<Widget.on_mount>
+[11:10:48] EVENT                                                                                                                                                                                     message_pump.py:800
+Mount() >>> HeaderClock() method=<HeaderClock.on_mount>
+[11:10:48] EVENT                                                                                                                                                                                     message_pump.py:800
+Mount() >>> HeaderClock() method=<Widget.on_mount>
+[11:10:48] EVENT                                                                                                                                                                                     message_pump.py:800
+Mount() >>> Static(id='connection_info') method=<Widget.on_mount>
+[11:10:48] EVENT                                                                                                                                                                                     message_pump.py:800
+Mount() >>> FooterKey() method=<Widget.on_mount>
+[11:10:48] EVENT                                                                                                                                                                                     message_pump.py:800
+Mount() >>> FooterKey() method=<Widget.on_mount>
+[11:10:48] EVENT                                                                                                                                                                                     message_pump.py:800
+Mount() >>> FooterKey() method=<Widget.on_mount>
+[11:10:48] EVENT                                                                                                                                                                                     message_pump.py:800
+Mount() >>> FooterKey(classes='-command-palette') method=<Widget.on_mount>
+[11:10:48] EVENT                                                                                                                                                                                     message_pump.py:800
+Mount() >>> Static(id='login_title') method=<Widget.on_mount>
+[11:10:48] EVENT                                                                                                                                                                                     message_pump.py:800
+Mount() >>> Static() method=<Widget.on_mount>
+[11:10:48] EVENT                                                                                                                                                                                     message_pump.py:800
+Mount() >>> Input(id='username') method=<Input.on_mount>
+[11:10:48] EVENT                                                                                                                                                                                     message_pump.py:800
+Mount() >>> Input(id='username') method=<ScrollView.on_mount>
+[11:10:48] EVENT                                                                                                                                                                                     message_pump.py:800
+Mount() >>> Input(id='username') method=<Widget.on_mount>
+[11:10:48] EVENT                                                                                                                                                                                     message_pump.py:800
+Mount() >>> Static() method=<Widget.on_mount>
+[11:10:48] EVENT                                                                                                                                                                                     message_pump.py:800
+Mount() >>> Input(id='password') method=<Input.on_mount>
+[11:10:48] EVENT                                                                                                                                                                                     message_pump.py:800
+Mount() >>> Input(id='password') method=<ScrollView.on_mount>
+[11:10:48] EVENT                                                                                                                                                                                     message_pump.py:800
+Mount() >>> Input(id='password') method=<Widget.on_mount>
+[11:10:48] EVENT                                                                                                                                                                                     message_pump.py:800
+Mount() >>> Static() method=<Widget.on_mount>
+[11:10:48] EVENT                                                                                                                                                                                     message_pump.py:800
+Mount() >>> Input(id='platform-url') method=<Input.on_mount>
+[11:10:48] EVENT                                                                                                                                                                                     message_pump.py:800
+Mount() >>> Input(id='platform-url') method=<ScrollView.on_mount>
+[11:10:48] EVENT                                                                                                                                                                                     message_pump.py:800
+Mount() >>> Input(id='platform-url') method=<Widget.on_mount>
+[11:10:48] EVENT                                                                                                                                                                                     message_pump.py:800
+Mount() >>> Static() method=<Widget.on_mount>
+[11:10:48] EVENT                                                                                                                                                                                     message_pump.py:800
+Mount() >>> Input(id='view-server') method=<Input.on_mount>
+[11:10:48] EVENT                                                                                                                                                                                     message_pump.py:800
+Mount() >>> Input(id='view-server') method=<ScrollView.on_mount>
+[11:10:48] EVENT                                                                                                                                                                                     message_pump.py:800
+Mount() >>> Input(id='view-server') method=<Widget.on_mount>
+[11:10:48] EVENT                                                                                                                                                                                     message_pump.py:800
+Mount() >>> Button(id='login_button') method=<Widget.on_mount>
+[11:10:48] EVENT                                                                                                                                                                                     message_pump.py:800
+Mount() >>> Static(id='login_status') method=<Widget.on_mount>
+[11:10:48] SYSTEM                                                                                                                                                                                            app.py:2246
+<stylesheet> loaded 3 CSS files in 4 ms
+[11:10:48] EVENT                                                                                                                                                                                     message_pump.py:800
+Mount() >>> ScrollBar(name='vertical', classes='-textual-system', window_virtual_size=100, window_size=0, position=0, thickness=2) method=<Widget.on_mount>
+[11:10:48] EVENT                                                                                                                                                                                     message_pump.py:800
+Mount() >>> Header() method=<Header.on_mount>
+[11:10:48] EVENT                                                                                                                                                                                     message_pump.py:800
+Mount() >>> Header() method=<Widget.on_mount>
+[11:10:48] EVENT                                                                                                                                                                                     message_pump.py:800
+Mount() >>> Container() method=<Widget.on_mount>
+[11:10:48] EVENT                                                                                                                                                                                     message_pump.py:800
+Mount() >>> Vertical(id='login_form') method=<Widget.on_mount>
+[11:10:48] EVENT                                                                                                                                                                                     message_pump.py:800
+Mount() >>> Container(id='login_box') method=<Widget.on_mount>
+[11:10:48] EVENT                                                                                                                                                                                     message_pump.py:800
+Mount() >>> Container(id='login_top') method=<Widget.on_mount>
+[11:10:48] EVENT                                                                                                                                                                                     message_pump.py:800
+Mount() >>> LoginScreen() method=<LoginScreen.on_mount>
+[11:10:48] EVENT                                                                                                                                                                                     message_pump.py:800
+Mount() >>> LoginScreen() method=<BaseScreen.on_mount>
+[11:10:48] EVENT                                                                                                                                                                                     message_pump.py:800
+Mount() >>> LoginScreen() method=<Screen.on_mount>
+[11:10:48] EVENT                                                                                                                                                                                     message_pump.py:800
+Mount() >>> LoginScreen() method=<Widget.on_mount>
+[11:10:48] EVENT                                                                                                                                                                                     message_pump.py:800
+ScreenResume() >>> LoginScreen() method=<Screen.on_screen_resume>
+[11:10:48] DEBUG                                                                                                                                                                                          screen.py:1042
+Input(id='username', classes='-valid') was focused
+[11:10:48] EVENT                                                                                                                                                                                     message_pump.py:800
+Resize(size=Size(width=216, height=55)) >>> LoginScreen() method=<Screen.on_resize>
+[11:10:48] EVENT                                                                                                                                                                                     message_pump.py:800
+Show() >>> LoginScreen() method=<Widget.on_show>
+[11:10:48] EVENT                                                                                                                                                                                     message_pump.py:809
+Resize(size=Size(width=198, height=1)) >>> HeaderTitle() method=None
+[11:10:48] EVENT                                                                                                                                                                                     message_pump.py:800
+Show() >>> HeaderTitle() method=<Widget.on_show>
+[11:10:48] EVENT                                                                                                                                                                                     message_pump.py:809
+Resize(size=Size(width=216, height=33), virtual_size=Size(width=212, height=31), container_size=Size(width=212, height=31)) >>> Container(id='login_top') method=None
+[11:10:48] EVENT                                                                                                                                                                                     message_pump.py:800
+Show() >>> Container(id='login_top') method=<Widget.on_show>
+[11:10:48] EVENT                                                                                                                                                                                     message_pump.py:809
+Resize(size=Size(width=121, height=1)) >>> Static(id='login_status') method=None
+[11:10:48] EVENT                                                                                                                                                                                     message_pump.py:800
+Show() >>> Static(id='login_status') method=<Widget.on_show>
+[11:10:48] EVENT                                                                                                                                                                                     message_pump.py:809
+Resize(size=Size(width=16, height=3), container_size=Size(width=16, height=1)) >>> Button(id='login_button') method=None
+[11:10:48] EVENT                                                                                                                                                                                     message_pump.py:800
+Show() >>> Button(id='login_button') method=<Widget.on_show>
+[11:10:48] EVENT                                                                                                                                                                                     message_pump.py:809
+Input.Changed(input=Input(id='view-server', classes='-valid'), value='qs-view-server', validation_result=None) >>> Input(id='view-server', classes='-valid') method=None
+[11:10:48] EVENT                                                                                                                                                                                     message_pump.py:809
+Resize(size=Size(width=96, height=3), virtual_size=Size(width=90, height=1), container_size=Size(width=90, height=1)) >>> Input(id='view-server', classes='-valid') method=None
+[11:10:48] EVENT                                                                                                                                                                                     message_pump.py:800
+Show() >>> Input(id='view-server', classes='-valid') method=<Widget.on_show>
+[11:10:48] EVENT                                                                                                                                                                                     message_pump.py:809
+Resize(size=Size(width=121, height=1)) >>> Static() method=None
+[11:10:48] EVENT                                                                                                                                                                                     message_pump.py:800
+Show() >>> Static() method=<Widget.on_show>
+[11:10:48] EVENT                                                                                                                                                                                     message_pump.py:809
+Input.Changed(input=Input(id='platform-url', classes='-valid'), value='https://localhost:9443', validation_result=None) >>> Input(id='platform-url', classes='-valid') method=None
+[11:10:48] EVENT                                                                                                                                                                                     message_pump.py:809
+Resize(size=Size(width=96, height=3), virtual_size=Size(width=90, height=1), container_size=Size(width=90, height=1)) >>> Input(id='platform-url', classes='-valid') method=None
+[11:10:48] EVENT                                                                                                                                                                                     message_pump.py:800
+Show() >>> Input(id='platform-url', classes='-valid') method=<Widget.on_show>
+[11:10:48] EVENT                                                                                                                                                                                     message_pump.py:809
+Resize(size=Size(width=121, height=1)) >>> Static() method=None
+[11:10:48] EVENT                                                                                                                                                                                     message_pump.py:800
+Show() >>> Static() method=<Widget.on_show>
+[11:10:48] EVENT                                                                                                                                                                                     message_pump.py:809
+Input.Changed(input=Input(id='password', classes='-valid'), value='secret', validation_result=None) >>> Input(id='password', classes='-valid') method=None
+[11:10:48] EVENT                                                                                                                                                                                     message_pump.py:809
+Resize(size=Size(width=96, height=3), virtual_size=Size(width=90, height=1), container_size=Size(width=90, height=1)) >>> Input(id='password', classes='-valid') method=None
+[11:10:48] EVENT                                                                                                                                                                                     message_pump.py:800
+Show() >>> Input(id='password', classes='-valid') method=<Widget.on_show>
+[11:10:48] EVENT                                                                                                                                                                                     message_pump.py:809
+Resize(size=Size(width=121, height=1)) >>> Static() method=None
+[11:10:48] EVENT                                                                                                                                                                                     message_pump.py:800
+Show() >>> Static() method=<Widget.on_show>
+[11:10:48] EVENT                                                                                                                                                                                     message_pump.py:809
+Input.Changed(input=Input(id='username', classes='-valid'), value='erinoverview', validation_result=None) >>> Input(id='username', classes='-valid') method=None
+[11:10:48] EVENT                                                                                                                                                                                     message_pump.py:800
+Focus(from_app_focus=False) >>> Input(id='username', classes='-valid') method=<Input.on_focus>
+[11:10:48] EVENT                                                                                                                                                                                     message_pump.py:800
+Focus(from_app_focus=False) >>> Input(id='username', classes='-valid') method=<Widget.on_focus>
+[11:10:48] EVENT                                                                                                                                                                                     message_pump.py:809
+Resize(size=Size(width=96, height=3), virtual_size=Size(width=90, height=1), container_size=Size(width=90, height=1)) >>> Input(id='username', classes='-valid') method=None
+[11:10:48] EVENT                                                                                                                                                                                     message_pump.py:800
+Show() >>> Input(id='username', classes='-valid') method=<Widget.on_show>
+[11:10:48] EVENT                                                                                                                                                                                     message_pump.py:809
+Resize(size=Size(width=121, height=1)) >>> Static() method=None
+[11:10:48] EVENT                                                                                                                                                                                     message_pump.py:800
+Show() >>> Static() method=<Widget.on_show>
+[11:10:48] EVENT                                                                                                                                                                                     message_pump.py:809
+Resize(size=Size(width=121, height=1)) >>> Static(id='login_title') method=None
+[11:10:48] EVENT                                                                                                                                                                                     message_pump.py:800
+Show() >>> Static(id='login_title') method=<Widget.on_show>
+[11:10:48] EVENT                                                                                                                                                                                     message_pump.py:809
+Resize(size=Size(width=121, height=27)) >>> Vertical(id='login_form') method=None
+[11:10:48] EVENT                                                                                                                                                                                     message_pump.py:800
+Show() >>> Vertical(id='login_form') method=<Widget.on_show>
+[11:10:48] EVENT                                                                                                                                                                                     message_pump.py:809
+Input.Changed(input=Input(id='view-server', classes='-valid'), value='qs-view-server', validation_result=None) >>> Vertical(id='login_form') method=None
+[11:10:48] EVENT                                                                                                                                                                                     message_pump.py:809
+Input.Changed(input=Input(id='platform-url', classes='-valid'), value='https://localhost:9443', validation_result=None) >>> Vertical(id='login_form') method=None
+[11:10:48] EVENT                                                                                                                                                                                     message_pump.py:809
+Input.Changed(input=Input(id='password', classes='-valid'), value='secret', validation_result=None) >>> Vertical(id='login_form') method=None
+[11:10:48] EVENT                                                                                                                                                                                     message_pump.py:809
+Input.Changed(input=Input(id='username', classes='-valid'), value='erinoverview', validation_result=None) >>> Vertical(id='login_form') method=None
+[11:10:48] EVENT                                                                                                                                                                                     message_pump.py:809
+Resize(size=Size(width=127, height=31), virtual_size=Size(width=121, height=27), container_size=Size(width=121, height=27)) >>> Container(id='login_box') method=None
+[11:10:48] EVENT                                                                                                                                                                                     message_pump.py:800
+Show() >>> Container(id='login_box') method=<Widget.on_show>
+[11:10:48] EVENT                                                                                                                                                                                     message_pump.py:809
+Input.Changed(input=Input(id='view-server', classes='-valid'), value='qs-view-server', validation_result=None) >>> Container(id='login_box') method=None
+[11:10:48] EVENT                                                                                                                                                                                     message_pump.py:809
+Input.Changed(input=Input(id='platform-url', classes='-valid'), value='https://localhost:9443', validation_result=None) >>> Container(id='login_box') method=None
+[11:10:48] EVENT                                                                                                                                                                                     message_pump.py:809
+Input.Changed(input=Input(id='password', classes='-valid'), value='secret', validation_result=None) >>> Container(id='login_box') method=None
+[11:10:48] EVENT                                                                                                                                                                                     message_pump.py:809
+Input.Changed(input=Input(id='username', classes='-valid'), value='erinoverview', validation_result=None) >>> Container(id='login_box') method=None
+[11:10:48] EVENT                                                                                                                                                                                     message_pump.py:809
+Resize(size=Size(width=216, height=1)) >>> Footer() method=None
+[11:10:48] EVENT                                                                                                                                                                                     message_pump.py:800
+Show() >>> Footer() method=<Widget.on_show>
+[11:10:48] EVENT                                                                                                                                                                                     message_pump.py:809
+Resize(size=Size(width=12, height=1), container_size=Size(width=10, height=1)) >>> FooterKey(classes='-command-palette -compact') method=None
+[11:10:48] EVENT                                                                                                                                                                                     message_pump.py:800
+Show() >>> FooterKey(classes='-command-palette -compact') method=<Widget.on_show>
+[11:10:48] EVENT                                                                                                                                                                                     message_pump.py:809
+Resize(size=Size(width=8, height=1)) >>> FooterKey() method=None
+[11:10:48] EVENT                                                                                                                                                                                     message_pump.py:800
+Show() >>> FooterKey() method=<Widget.on_show>
+[11:10:48] EVENT                                                                                                                                                                                     message_pump.py:809
+Resize(size=Size(width=10, height=1)) >>> FooterKey() method=None
+[11:10:48] EVENT                                                                                                                                                                                     message_pump.py:800
+Show() >>> FooterKey() method=<Widget.on_show>
+[11:10:48] EVENT                                                                                                                                                                                     message_pump.py:809
+Resize(size=Size(width=11, height=1)) >>> FooterKey() method=None
+[11:10:48] EVENT                                                                                                                                                                                     message_pump.py:800
+Show() >>> FooterKey() method=<Widget.on_show>
+[11:10:48] EVENT                                                                                                                                                                                     message_pump.py:809
+Resize(size=Size(width=10, height=1), container_size=Size(width=8, height=1)) >>> HeaderClock() method=None
+[11:10:48] EVENT                                                                                                                                                                                     message_pump.py:800
+Show() >>> HeaderClock() method=<Widget.on_show>
+[11:10:48] EVENT                                                                                                                                                                                     message_pump.py:809
+Resize(size=Size(width=8, height=1), container_size=Size(width=6, height=1)) >>> HeaderIcon() method=None
+[11:10:48] EVENT                                                                                                                                                                                     message_pump.py:800
+Show() >>> HeaderIcon() method=<Widget.on_show>
+[11:10:48] EVENT                                                                                                                                                                                     message_pump.py:809
+Resize(size=Size(width=216, height=1)) >>> Header() method=None
+[11:10:48] EVENT                                                                                                                                                                                     message_pump.py:800
+Show() >>> Header() method=<Widget.on_show>
+[11:10:48] EVENT                                                                                                                                                                                     message_pump.py:809
+Resize(size=Size(width=216, height=1)) >>> Static(id='connection_info') method=None
+[11:10:48] EVENT                                                                                                                                                                                     message_pump.py:800
+Show() >>> Static(id='connection_info') method=<Widget.on_show>
+[11:10:48] EVENT                                                                                                                                                                                     message_pump.py:809
+Resize(size=Size(width=216, height=21)) >>> Container() method=None
+[11:10:48] EVENT                                                                                                                                                                                     message_pump.py:800
+Show() >>> Container() method=<Widget.on_show>
+[11:10:48] EVENT                                                                                                                                                                                     message_pump.py:809
+Input.Changed(input=Input(id='view-server', classes='-valid'), value='qs-view-server', validation_result=None) >>> Container(id='login_top') method=None
+[11:10:48] EVENT                                                                                                                                                                                     message_pump.py:809
+Input.Changed(input=Input(id='platform-url', classes='-valid'), value='https://localhost:9443', validation_result=None) >>> Container(id='login_top') method=None
+[11:10:48] EVENT                                                                                                                                                                                     message_pump.py:809
+Input.Changed(input=Input(id='password', classes='-valid'), value='secret', validation_result=None) >>> Container(id='login_top') method=None
+[11:10:48] EVENT                                                                                                                                                                                     message_pump.py:809
+Input.Changed(input=Input(id='username', classes='-valid'), value='erinoverview', validation_result=None) >>> Container(id='login_top') method=None
+[11:10:48] EVENT                                                                                                                                                                                     message_pump.py:809
+Input.Changed(input=Input(id='view-server', classes='-valid'), value='qs-view-server', validation_result=None) >>> LoginScreen() method=None
+[11:10:48] EVENT                                                                                                                                                                                     message_pump.py:809
+Input.Changed(input=Input(id='platform-url', classes='-valid'), value='https://localhost:9443', validation_result=None) >>> LoginScreen() method=None
+[11:10:48] EVENT                                                                                                                                                                                     message_pump.py:809
+Input.Changed(input=Input(id='password', classes='-valid'), value='secret', validation_result=None) >>> LoginScreen() method=None
+[11:10:48] EVENT                                                                                                                                                                                     message_pump.py:809
+Input.Changed(input=Input(id='username', classes='-valid'), value='erinoverview', validation_result=None) >>> LoginScreen() method=None
+[11:10:48] EVENT                                                                                                                                                                                     message_pump.py:800
+ScreenSuspend() >>> SplashScreen() method=<Screen.on_screen_suspend>
+[11:10:48] EVENT                                                                                                                                                                                     message_pump.py:809
+Input.Changed(input=Input(id='view-server', classes='-valid'), value='qs-view-server', validation_result=None) >>> EgeriaTUI(title='EgeriaTUI', classes={'-dark-mode'}, pseudo_classes={'dark', 'focus'}) method=None
+[11:10:48] EVENT                                                                                                                                                                                     message_pump.py:809
+Input.Changed(input=Input(id='platform-url', classes='-valid'), value='https://localhost:9443', validation_result=None) >>> EgeriaTUI(title='EgeriaTUI', classes={'-dark-mode'}, pseudo_classes={'dark', 'focus'})
+method=None
+[11:10:48] EVENT                                                                                                                                                                                     message_pump.py:809
+Input.Changed(input=Input(id='password', classes='-valid'), value='secret', validation_result=None) >>> EgeriaTUI(title='EgeriaTUI', classes={'-dark-mode'}, pseudo_classes={'dark', 'focus'}) method=None
+[11:10:48] EVENT                                                                                                                                                                                     message_pump.py:809
+Input.Changed(input=Input(id='username', classes='-valid'), value='erinoverview', validation_result=None) >>> EgeriaTUI(title='EgeriaTUI', classes={'-dark-mode'}, pseudo_classes={'dark', 'focus'}) method=None
+[11:10:48] EVENT                                                                                                                                                                                     message_pump.py:809
+Pressed() >>> EgeriaTUI(title='EgeriaTUI', classes={'-dark-mode'}, pseudo_classes={'dark', 'focus'}) method=None
+[11:10:48] EVENT                                                                                                                                                                                     message_pump.py:800
+Unmount() >>> FooterKey() method=<Widget.on_unmount>
+[11:10:48] EVENT                                                                                                                                                                                     message_pump.py:800
+Unmount() >>> FooterKey() method=<Widget.on_unmount>
+[11:10:48] EVENT                                                                                                                                                                                     message_pump.py:800
+Unmount() >>> FooterKey() method=<Widget.on_unmount>
+[11:10:48] EVENT                                                                                                                                                                                     message_pump.py:800
+Unmount() >>> FooterKey(classes='-command-palette -compact') method=<Widget.on_unmount>
+[11:10:48] EVENT                                                                                                                                                                                     message_pump.py:800
+Mount() >>> FooterKey() method=<Widget.on_mount>
+[11:10:48] EVENT                                                                                                                                                                                     message_pump.py:800
+Mount() >>> FooterKey(classes='-command-palette') method=<Widget.on_mount>
+[11:10:48] EVENT                                                                                                                                                                                     message_pump.py:800
+Unmount() >>> FooterKey() method=<Widget.on_unmount>
+[11:10:48] EVENT                                                                                                                                                                                     message_pump.py:800
+Unmount() >>> FooterKey(classes='-command-palette -compact') method=<Widget.on_unmount>
+[11:10:48] EVENT                                                                                                                                                                                     message_pump.py:800
+Mount() >>> FooterKey() method=<Widget.on_mount>
+[11:10:48] EVENT                                                                                                                                                                                     message_pump.py:800
+Mount() >>> FooterKey(classes='-command-palette') method=<Widget.on_mount>
+[11:10:48] EVENT                                                                                                                                                                                     message_pump.py:800
+Unmount() >>> FooterKey() method=<Widget.on_unmount>
+[11:10:48] EVENT                                                                                                                                                                                     message_pump.py:800
+Unmount() >>> FooterKey() method=<Widget.on_unmount>
+[11:10:48] EVENT                                                                                                                                                                                     message_pump.py:800
+Unmount() >>> FooterKey() method=<Widget.on_unmount>
+[11:10:48] EVENT                                                                                                                                                                                     message_pump.py:800
+Unmount() >>> FooterKey(classes='-command-palette -compact') method=<Widget.on_unmount>
+[11:10:48] EVENT                                                                                                                                                                                     message_pump.py:800
+Mount() >>> FooterKey() method=<Widget.on_mount>
+[11:10:48] EVENT                                                                                                                                                                                     message_pump.py:800
+Mount() >>> FooterKey() method=<Widget.on_mount>
+[11:10:48] EVENT                                                                                                                                                                                     message_pump.py:800
+Mount() >>> FooterKey() method=<Widget.on_mount>
+[11:10:48] EVENT                                                                                                                                                                                     message_pump.py:800
+Mount() >>> FooterKey(classes='-command-palette') method=<Widget.on_mount>
+[11:10:48] EVENT                                                                                                                                                                                     message_pump.py:800
+Unmount() >>> FooterKey() method=<Widget.on_unmount>
+[11:10:48] EVENT                                                                                                                                                                                     message_pump.py:800
+Unmount() >>> FooterKey(classes='-command-palette -compact') method=<Widget.on_unmount>
+[11:10:48] EVENT                                                                                                                                                                                     message_pump.py:800
+Mount() >>> FooterKey() method=<Widget.on_mount>
+[11:10:48] EVENT                                                                                                                                                                                     message_pump.py:800
+Mount() >>> FooterKey(classes='-command-palette') method=<Widget.on_mount>
+[11:10:48] EVENT                                                                                                                                                                                     message_pump.py:809
+Resize(size=Size(width=12, height=1), container_size=Size(width=10, height=1)) >>> FooterKey(classes='-command-palette -compact') method=None
+[11:10:48] EVENT                                                                                                                                                                                     message_pump.py:800
+Show() >>> FooterKey(classes='-command-palette -compact') method=<Widget.on_show>
+[11:10:48] EVENT                                                                                                                                                                                     message_pump.py:809
+Resize(size=Size(width=10, height=1)) >>> FooterKey() method=None
+[11:10:48] EVENT                                                                                                                                                                                     message_pump.py:800
+Show() >>> FooterKey() method=<Widget.on_show>
+[11:10:49] EVENT                                                                                                                                                                                     message_pump.py:809
+Resize(size=Size(width=12, height=1), container_size=Size(width=10, height=1)) >>> FooterKey(classes='-command-palette -compact') method=None
+[11:10:49] EVENT                                                                                                                                                                                     message_pump.py:800
+Show() >>> FooterKey(classes='-command-palette -compact') method=<Widget.on_show>
+[11:10:49] EVENT                                                                                                                                                                                     message_pump.py:809
+Resize(size=Size(width=8, height=1)) >>> FooterKey() method=None
+[11:10:49] EVENT                                                                                                                                                                                     message_pump.py:800
+Show() >>> FooterKey() method=<Widget.on_show>
+[11:10:49] EVENT                                                                                                                                                                                     message_pump.py:809
+Resize(size=Size(width=10, height=1)) >>> FooterKey() method=None
+[11:10:49] EVENT                                                                                                                                                                                     message_pump.py:800
+Show() >>> FooterKey() method=<Widget.on_show>
+[11:10:49] EVENT                                                                                                                                                                                     message_pump.py:809
+Resize(size=Size(width=11, height=1)) >>> FooterKey() method=None
+[11:10:49] EVENT                                                                                                                                                                                     message_pump.py:800
+Show() >>> FooterKey() method=<Widget.on_show>
+────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────
+[11:10:51] DEBUG                                                                                                                                                                                          screen.py:1042
+Button(id='login_button') was focused
+[11:10:51] EVENT                                                                                                                                                                                     message_pump.py:800
+Blur() >>> Input(id='username', classes='-valid') method=<Input.on_blur>
+[11:10:51] EVENT                                                                                                                                                                                     message_pump.py:800
+Blur() >>> Input(id='username', classes='-valid') method=<Widget.on_blur>
+[11:10:51] EVENT                                                                                                                                                                                     message_pump.py:809
+Input.Blurred(input=Input(id='username', classes='-valid'), value='erinoverview', validation_result=None) >>> Input(id='username', classes='-valid') method=None
+[11:10:51] EVENT                                                                                                                                                                                     message_pump.py:800
+Focus(from_app_focus=False) >>> Button(id='login_button') method=<Widget.on_focus>
+[11:10:51] EVENT                                                                                                                                                                                     message_pump.py:809
+Input.Blurred(input=Input(id='username', classes='-valid'), value='erinoverview', validation_result=None) >>> Vertical(id='login_form') method=None
+[11:10:51] EVENT                                                                                                                                                                                     message_pump.py:809
+Input.Blurred(input=Input(id='username', classes='-valid'), value='erinoverview', validation_result=None) >>> Container(id='login_box') method=None
+[11:10:51] EVENT                                                                                                                                                                                     message_pump.py:800
+Unmount() >>> FooterKey() method=<Widget.on_unmount>
+[11:10:51] EVENT                                                                                                                                                                                     message_pump.py:800
+Unmount() >>> FooterKey(classes='-command-palette -compact') method=<Widget.on_unmount>
+[11:10:51] EVENT                                                                                                                                                                                     message_pump.py:809
+Input.Blurred(input=Input(id='username', classes='-valid'), value='erinoverview', validation_result=None) >>> Container(id='login_top') method=None
+[11:10:51] EVENT                                                                                                                                                                                     message_pump.py:800
+Mount() >>> FooterKey() method=<Widget.on_mount>
+[11:10:51] EVENT                                                                                                                                                                                     message_pump.py:800
+Mount() >>> FooterKey() method=<Widget.on_mount>
+[11:10:51] EVENT                                                                                                                                                                                     message_pump.py:800
+Mount() >>> FooterKey() method=<Widget.on_mount>
+[11:10:51] EVENT                                                                                                                                                                                     message_pump.py:800
+Mount() >>> FooterKey(classes='-command-palette') method=<Widget.on_mount>
+[11:10:51] EVENT                                                                                                                                                                                     message_pump.py:809
+Input.Blurred(input=Input(id='username', classes='-valid'), value='erinoverview', validation_result=None) >>> LoginScreen() method=None
+[11:10:51] EVENT                                                                                                                                                                                     message_pump.py:809
+Input.Blurred(input=Input(id='username', classes='-valid'), value='erinoverview', validation_result=None) >>> EgeriaTUI(title='EgeriaTUI', classes={'-dark-mode'}, pseudo_classes={'dark', 'focus'}) method=None
+[11:10:51] EVENT                                                                                                                                                                                     message_pump.py:809
+Resize(size=Size(width=12, height=1), container_size=Size(width=10, height=1)) >>> FooterKey(classes='-command-palette -compact') method=None
+[11:10:51] EVENT                                                                                                                                                                                     message_pump.py:800
+Show() >>> FooterKey(classes='-command-palette -compact') method=<Widget.on_show>
+[11:10:51] EVENT                                                                                                                                                                                     message_pump.py:809
+Resize(size=Size(width=8, height=1)) >>> FooterKey() method=None
+[11:10:51] EVENT                                                                                                                                                                                     message_pump.py:800
+Show() >>> FooterKey() method=<Widget.on_show>
+[11:10:51] EVENT                                                                                                                                                                                     message_pump.py:809
+Resize(size=Size(width=10, height=1)) >>> FooterKey() method=None
+[11:10:51] EVENT                                                                                                                                                                                     message_pump.py:800
+Show() >>> FooterKey() method=<Widget.on_show>
+[11:10:51] EVENT                                                                                                                                                                                     message_pump.py:809
+Resize(size=Size(width=11, height=1)) >>> FooterKey() method=None
+[11:10:51] EVENT                                                                                                                                                                                     message_pump.py:800
+Show() >>> FooterKey() method=<Widget.on_show>
+[11:10:51] EVENT                                                                                                                                                                                     message_pump.py:800
+Unmount() >>> FooterKey() method=<Widget.on_unmount>
+[11:10:51] EVENT                                                                                                                                                                                     message_pump.py:800
+Unmount() >>> FooterKey() method=<Widget.on_unmount>
+[11:10:51] EVENT                                                                                                                                                                                     message_pump.py:800
+Unmount() >>> FooterKey() method=<Widget.on_unmount>
+[11:10:51] EVENT                                                                                                                                                                                     message_pump.py:800
+Unmount() >>> FooterKey(classes='-command-palette -compact') method=<Widget.on_unmount>
+[11:10:51] EVENT                                                                                                                                                                                     message_pump.py:800
+Mount() >>> FooterKey() method=<Widget.on_mount>
+[11:10:51] EVENT                                                                                                                                                                                     message_pump.py:800
+Mount() >>> FooterKey() method=<Widget.on_mount>
+[11:10:51] EVENT                                                                                                                                                                                     message_pump.py:800
+Mount() >>> FooterKey() method=<Widget.on_mount>
+[11:10:51] EVENT                                                                                                                                                                                     message_pump.py:800
+Mount() >>> FooterKey(classes='-command-palette') method=<Widget.on_mount>
+[11:10:51] EVENT                                                                                                                                                                                     message_pump.py:809
+Resize(size=Size(width=12, height=1), container_size=Size(width=10, height=1)) >>> FooterKey(classes='-command-palette -compact') method=None
+[11:10:51] EVENT                                                                                                                                                                                     message_pump.py:800
+Show() >>> FooterKey(classes='-command-palette -compact') method=<Widget.on_show>
+[11:10:51] EVENT                                                                                                                                                                                     message_pump.py:809
+Resize(size=Size(width=8, height=1)) >>> FooterKey() method=None
+[11:10:51] EVENT                                                                                                                                                                                     message_pump.py:800
+Show() >>> FooterKey() method=<Widget.on_show>
+[11:10:51] EVENT                                                                                                                                                                                     message_pump.py:809
+Resize(size=Size(width=10, height=1)) >>> FooterKey() method=None
+[11:10:51] EVENT                                                                                                                                                                                     message_pump.py:800
+Show() >>> FooterKey() method=<Widget.on_show>
+[11:10:51] EVENT                                                                                                                                                                                     message_pump.py:809
+Resize(size=Size(width=11, height=1)) >>> FooterKey() method=None
+[11:10:51] EVENT                                                                                                                                                                                     message_pump.py:800
+Show() >>> FooterKey() method=<Widget.on_show>
+[11:10:51] EVENT                                                                                                                                                                                     message_pump.py:800
+Click(Button(id='login_button'), x=9, y=1, pointer_x=9, pointer_y=1, screen_x=56, screen_y=23, button=1, style=Style(color=Color('#e0e0e0', ColorType.TRUECOLOR, triplet=ColorTriplet(red=224, green=224, blue=224)),
+bgcolor=Color('#171717', ColorType.TRUECOLOR, triplet=ColorTriplet(red=23, green=23, blue=23)), bold=True, reverse=True, meta={'offset': (0, 0)}), chain=1) >>> Button(id='login_button') method=<Button.on_click>
+[11:10:51] EVENT                                                                                                                                                                                     message_pump.py:800
+Click(Button(id='login_button', classes='-active'), x=9, y=1, pointer_x=9, pointer_y=1, screen_x=56, screen_y=23, button=1, style=Style(color=Color('#e0e0e0', ColorType.TRUECOLOR, triplet=ColorTriplet(red=224,
+green=224, blue=224)), bgcolor=Color('#171717', ColorType.TRUECOLOR, triplet=ColorTriplet(red=23, green=23, blue=23)), bold=True, reverse=True, meta={'offset': (0, 0)}), chain=1) >>> Button(id='login_button',
+classes='-active') method=<Widget.on_click>
+[11:10:51] EVENT                                                                                                                                                                                     message_pump.py:809
+Pressed() >>> Button(id='login_button', classes='-active') method=None
+[11:10:51] EVENT                                                                                                                                                                                     message_pump.py:809
+Pressed() >>> Vertical(id='login_form') method=None
+[11:10:51] EVENT                                                                                                                                                                                     message_pump.py:809
+Pressed() >>> Container(id='login_box') method=None
+[11:10:51] EVENT                                                                                                                                                                                     message_pump.py:809
+Pressed() >>> Container(id='login_top') method=None
+[11:10:51] EVENT                                                                                                                                                                                     message_pump.py:800
+Pressed() >>> LoginScreen() method=<LoginScreen.on_button_pressed>
+[11:10:51] DEBUG                                                                                                                                                                                          screen.py:1042
+Input(id='username', classes='-valid') was focused
+[11:10:51] EVENT                                                                                                                                                                                     message_pump.py:800
+Blur() >>> Button(id='login_button', classes='-active') method=<Widget.on_blur>
+[11:10:51] EVENT                                                                                                                                                                                     message_pump.py:800
+Focus(from_app_focus=False) >>> Input(id='username', classes='-valid') method=<Input.on_focus>
+[11:10:51] EVENT                                                                                                                                                                                     message_pump.py:800
+Focus(from_app_focus=False) >>> Input(id='username', classes='-valid') method=<Widget.on_focus>
+[11:10:51] SYSTEM                                                                                                                                                                                            app.py:2773
+MainMenuScreen() is current (PUSHED)
+[11:10:51] EVENT                                                                                                                                                                                     message_pump.py:800
+Mount() >>> ToastRack(id='textual-toastrack', classes='-textual-system') method=<Widget.on_mount>
+[11:10:51] EVENT                                                                                                                                                                                     message_pump.py:800
+Mount() >>> Tooltip(id='textual-tooltip', classes='-textual-system') method=<Widget.on_mount>
+[11:10:51] EVENT                                                                                                                                                                                     message_pump.py:800
+Mount() >>> Footer() method=<Footer.on_mount>
+[11:10:51] EVENT                                                                                                                                                                                     message_pump.py:800
+Mount() >>> Footer() method=<Widget.on_mount>
+[11:10:51] EVENT                                                                                                                                                                                     message_pump.py:800
+Mount() >>> HeaderIcon() method=<HeaderIcon.on_mount>
+[11:10:51] EVENT                                                                                                                                                                                     message_pump.py:800
+Mount() >>> HeaderIcon() method=<Widget.on_mount>
+[11:10:51] EVENT                                                                                                                                                                                     message_pump.py:800
+Mount() >>> HeaderTitle() method=<Widget.on_mount>
+[11:10:51] EVENT                                                                                                                                                                                     message_pump.py:800
+Mount() >>> HeaderClock() method=<HeaderClock.on_mount>
+[11:10:51] EVENT                                                                                                                                                                                     message_pump.py:800
+Mount() >>> HeaderClock() method=<Widget.on_mount>
+[11:10:51] EVENT                                                                                                                                                                                     message_pump.py:800
+Mount() >>> Static(id='connection_info') method=<Widget.on_mount>
+[11:10:51] EVENT                                                                                                                                                                                     message_pump.py:800
+Mount() >>> FooterKey() method=<Widget.on_mount>
+[11:10:51] EVENT                                                                                                                                                                                     message_pump.py:800
+Mount() >>> FooterKey() method=<Widget.on_mount>
+[11:10:51] EVENT                                                                                                                                                                                     message_pump.py:800
+Mount() >>> FooterKey() method=<Widget.on_mount>
+[11:10:51] EVENT                                                                                                                                                                                     message_pump.py:800
+Mount() >>> FooterKey(classes='-command-palette') method=<Widget.on_mount>
+[11:10:51] EVENT                                                                                                                                                                                     message_pump.py:800
+Mount() >>> Static(id='menu_title') method=<Widget.on_mount>
+[11:10:51] EVENT                                                                                                                                                                                     message_pump.py:800
+Mount() >>> Button(id='glossaries') method=<Widget.on_mount>
+[11:10:51] EVENT                                                                                                                                                                                     message_pump.py:800
+Mount() >>> Button(id='collections') method=<Widget.on_mount>
+[11:10:51] EVENT                                                                                                                                                                                     message_pump.py:800
+Mount() >>> Button(id='projects') method=<Widget.on_mount>
+[11:10:51] EVENT                                                                                                                                                                                     message_pump.py:800
+Mount() >>> Button(id='subject_areas') method=<Widget.on_mount>
+[11:10:51] EVENT                                                                                                                                                                                     message_pump.py:800
+Mount() >>> Button(id='quit') method=<Widget.on_mount>
+[11:10:51] EVENT                                                                                                                                                                                     message_pump.py:800
+Mount() >>> Header() method=<Header.on_mount>
+[11:10:51] EVENT                                                                                                                                                                                     message_pump.py:800
+Mount() >>> Header() method=<Widget.on_mount>
+[11:10:51] EVENT                                                                                                                                                                                     message_pump.py:800
+Mount() >>> Container() method=<Widget.on_mount>
+[11:10:51] EVENT                                                                                                                                                                                     message_pump.py:800
+Mount() >>> Vertical(id='menu_buttons') method=<Widget.on_mount>
+[11:10:51] EVENT                                                                                                                                                                                     message_pump.py:800
+Mount() >>> Vertical(id='menu_form') method=<Widget.on_mount>
+[11:10:51] EVENT                                                                                                                                                                                     message_pump.py:800
+Mount() >>> Container(id='menu_box') method=<Widget.on_mount>
+[11:10:51] EVENT                                                                                                                                                                                     message_pump.py:800
+Mount() >>> Container(id='menu_top') method=<Widget.on_mount>
+[11:10:51] EVENT                                                                                                                                                                                     message_pump.py:800
+Mount() >>> MainMenuScreen() method=<MainMenuScreen.on_mount>
+[11:10:51] EVENT                                                                                                                                                                                     message_pump.py:800
+Mount() >>> MainMenuScreen() method=<BaseScreen.on_mount>
+[11:10:51] EVENT                                                                                                                                                                                     message_pump.py:800
+Mount() >>> MainMenuScreen() method=<Screen.on_mount>
+[11:10:51] EVENT                                                                                                                                                                                     message_pump.py:800
+Mount() >>> MainMenuScreen() method=<Widget.on_mount>
+[11:10:51] EVENT                                                                                                                                                                                     message_pump.py:800
+ScreenResume() >>> MainMenuScreen() method=<Screen.on_screen_resume>
+[11:10:51] DEBUG                                                                                                                                                                                          screen.py:1042
+Button(id='glossaries') was focused
+[11:10:51] EVENT                                                                                                                                                                                     message_pump.py:800
+Resize(size=Size(width=216, height=55)) >>> MainMenuScreen() method=<Screen.on_resize>
+[11:10:51] EVENT                                                                                                                                                                                     message_pump.py:800
+Show() >>> MainMenuScreen() method=<Widget.on_show>
+[11:10:51] EVENT                                                                                                                                                                                     message_pump.py:809
+Resize(size=Size(width=198, height=1)) >>> HeaderTitle() method=None
+[11:10:51] EVENT                                                                                                                                                                                     message_pump.py:800
+Show() >>> HeaderTitle() method=<Widget.on_show>
+[11:10:51] EVENT                                                                                                                                                                                     message_pump.py:809
+Resize(size=Size(width=216, height=33), virtual_size=Size(width=212, height=31), container_size=Size(width=212, height=31)) >>> Container(id='menu_top') method=None
+[11:10:51] EVENT                                                                                                                                                                                     message_pump.py:800
+Show() >>> Container(id='menu_top') method=<Widget.on_show>
+[11:10:51] EVENT                                                                                                                                                                                     message_pump.py:809
+Resize(size=Size(width=24, height=3), container_size=Size(width=24, height=1)) >>> Button(id='quit') method=None
+[11:10:51] EVENT                                                                                                                                                                                     message_pump.py:800
+Show() >>> Button(id='quit') method=<Widget.on_show>
+[11:10:51] EVENT                                                                                                                                                                                     message_pump.py:809
+Resize(size=Size(width=24, height=3), container_size=Size(width=24, height=1)) >>> Button(id='subject_areas') method=None
+[11:10:51] EVENT                                                                                                                                                                                     message_pump.py:800
+Show() >>> Button(id='subject_areas') method=<Widget.on_show>
+[11:10:51] EVENT                                                                                                                                                                                     message_pump.py:809
+Resize(size=Size(width=24, height=3), container_size=Size(width=24, height=1)) >>> Button(id='projects') method=None
+[11:10:51] EVENT                                                                                                                                                                                     message_pump.py:800
+Show() >>> Button(id='projects') method=<Widget.on_show>
+[11:10:51] EVENT                                                                                                                                                                                     message_pump.py:809
+Resize(size=Size(width=24, height=3), container_size=Size(width=24, height=1)) >>> Button(id='collections') method=None
+[11:10:51] EVENT                                                                                                                                                                                     message_pump.py:800
+Show() >>> Button(id='collections') method=<Widget.on_show>
+[11:10:51] EVENT                                                                                                                                                                                     message_pump.py:800
+Focus(from_app_focus=False) >>> Button(id='glossaries') method=<Widget.on_focus>
+[11:10:51] EVENT                                                                                                                                                                                     message_pump.py:809
+Resize(size=Size(width=24, height=3), container_size=Size(width=24, height=1)) >>> Button(id='glossaries') method=None
+[11:10:51] EVENT                                                                                                                                                                                     message_pump.py:800
+Show() >>> Button(id='glossaries') method=<Widget.on_show>
+[11:10:51] EVENT                                                                                                                                                                                     message_pump.py:809
+Resize(size=Size(width=100, height=25)) >>> Vertical(id='menu_buttons') method=None
+[11:10:51] EVENT                                                                                                                                                                                     message_pump.py:800
+Show() >>> Vertical(id='menu_buttons') method=<Widget.on_show>
+[11:10:51] EVENT                                                                                                                                                                                     message_pump.py:809
+Resize(size=Size(width=100, height=1)) >>> Static(id='menu_title') method=None
+[11:10:51] EVENT                                                                                                                                                                                     message_pump.py:800
+Show() >>> Static(id='menu_title') method=<Widget.on_show>
+[11:10:51] EVENT                                                                                                                                                                                     message_pump.py:809
+Resize(size=Size(width=100, height=27)) >>> Vertical(id='menu_form') method=None
+[11:10:51] EVENT                                                                                                                                                                                     message_pump.py:800
+Show() >>> Vertical(id='menu_form') method=<Widget.on_show>
+[11:10:51] EVENT                                                                                                                                                                                     message_pump.py:809
+Resize(size=Size(width=106, height=31), virtual_size=Size(width=100, height=27), container_size=Size(width=100, height=27)) >>> Container(id='menu_box') method=None
+[11:10:51] EVENT                                                                                                                                                                                     message_pump.py:800
+Show() >>> Container(id='menu_box') method=<Widget.on_show>
+[11:10:51] EVENT                                                                                                                                                                                     message_pump.py:809
+Resize(size=Size(width=216, height=1)) >>> Footer() method=None
+[11:10:51] EVENT                                                                                                                                                                                     message_pump.py:800
+Show() >>> Footer() method=<Widget.on_show>
+[11:10:51] EVENT                                                                                                                                                                                     message_pump.py:809
+Resize(size=Size(width=12, height=1), container_size=Size(width=10, height=1)) >>> FooterKey(classes='-command-palette -compact') method=None
+[11:10:51] EVENT                                                                                                                                                                                     message_pump.py:800
+Show() >>> FooterKey(classes='-command-palette -compact') method=<Widget.on_show>
+[11:10:51] EVENT                                                                                                                                                                                     message_pump.py:809
+Resize(size=Size(width=8, height=1)) >>> FooterKey() method=None
+[11:10:51] EVENT                                                                                                                                                                                     message_pump.py:800
+Show() >>> FooterKey() method=<Widget.on_show>
+[11:10:51] EVENT                                                                                                                                                                                     message_pump.py:809
+Resize(size=Size(width=10, height=1)) >>> FooterKey() method=None
+[11:10:51] EVENT                                                                                                                                                                                     message_pump.py:800
+Show() >>> FooterKey() method=<Widget.on_show>
+[11:10:51] EVENT                                                                                                                                                                                     message_pump.py:809
+Resize(size=Size(width=11, height=1)) >>> FooterKey() method=None
+[11:10:51] EVENT                                                                                                                                                                                     message_pump.py:800
+Show() >>> FooterKey() method=<Widget.on_show>
+[11:10:51] EVENT                                                                                                                                                                                     message_pump.py:809
+Resize(size=Size(width=216, height=1)) >>> Static(id='connection_info') method=None
+[11:10:51] EVENT                                                                                                                                                                                     message_pump.py:800
+Show() >>> Static(id='connection_info') method=<Widget.on_show>
+[11:10:51] EVENT                                                                                                                                                                                     message_pump.py:809
+Resize(size=Size(width=216, height=21)) >>> Container() method=None
+[11:10:51] EVENT                                                                                                                                                                                     message_pump.py:800
+Show() >>> Container() method=<Widget.on_show>
+[11:10:51] EVENT                                                                                                                                                                                     message_pump.py:809
+Resize(size=Size(width=10, height=1), container_size=Size(width=8, height=1)) >>> HeaderClock() method=None
+[11:10:51] EVENT                                                                                                                                                                                     message_pump.py:800
+Show() >>> HeaderClock() method=<Widget.on_show>
+[11:10:51] EVENT                                                                                                                                                                                     message_pump.py:809
+Resize(size=Size(width=8, height=1), container_size=Size(width=6, height=1)) >>> HeaderIcon() method=None
+[11:10:51] EVENT                                                                                                                                                                                     message_pump.py:800
+Show() >>> HeaderIcon() method=<Widget.on_show>
+[11:10:51] EVENT                                                                                                                                                                                     message_pump.py:809
+Resize(size=Size(width=216, height=1)) >>> Header() method=None
+[11:10:51] EVENT                                                                                                                                                                                     message_pump.py:800
+Show() >>> Header() method=<Widget.on_show>
+[11:10:51] EVENT                                                                                                                                                                                     message_pump.py:800
+Mount() >>> ScrollBar(name='vertical', classes='-textual-system', window_virtual_size=100, window_size=0, position=0, thickness=2) method=<Widget.on_mount>
+[11:10:51] EVENT                                                                                                                                                                                     message_pump.py:800
+ScreenSuspend() >>> LoginScreen() method=<Screen.on_screen_suspend>
+[11:10:51] EVENT                                                                                                                                                                                     message_pump.py:809
+Pressed() >>> EgeriaTUI(title='EgeriaTUI', classes={'-dark-mode'}, pseudo_classes={'dark', 'focus'}) method=None
+[11:10:51] EVENT                                                                                                                                                                                     message_pump.py:800
+Unmount() >>> FooterKey() method=<Widget.on_unmount>
+[11:10:51] EVENT                                                                                                                                                                                     message_pump.py:800
+Unmount() >>> FooterKey() method=<Widget.on_unmount>
+[11:10:51] EVENT                                                                                                                                                                                     message_pump.py:800
+Unmount() >>> FooterKey() method=<Widget.on_unmount>
+[11:10:51] EVENT                                                                                                                                                                                     message_pump.py:800
+Unmount() >>> FooterKey(classes='-command-palette -compact') method=<Widget.on_unmount>
+[11:10:51] EVENT                                                                                                                                                                                     message_pump.py:800
+Mount() >>> FooterKey() method=<Widget.on_mount>
+[11:10:51] EVENT                                                                                                                                                                                     message_pump.py:800
+Mount() >>> FooterKey(classes='-command-palette') method=<Widget.on_mount>
+[11:10:51] EVENT                                                                                                                                                                                     message_pump.py:800
+Unmount() >>> FooterKey() method=<Widget.on_unmount>
+[11:10:51] EVENT                                                                                                                                                                                     message_pump.py:800
+Unmount() >>> FooterKey() method=<Widget.on_unmount>
+[11:10:51] EVENT                                                                                                                                                                                     message_pump.py:800
+Unmount() >>> FooterKey() method=<Widget.on_unmount>
+[11:10:51] EVENT                                                                                                                                                                                     message_pump.py:800
+Unmount() >>> FooterKey(classes='-command-palette -compact') method=<Widget.on_unmount>
+[11:10:51] EVENT                                                                                                                                                                                     message_pump.py:800
+Mount() >>> FooterKey() method=<Widget.on_mount>
+[11:10:51] EVENT                                                                                                                                                                                     message_pump.py:800
+Mount() >>> FooterKey() method=<Widget.on_mount>
+[11:10:51] EVENT                                                                                                                                                                                     message_pump.py:800
+Mount() >>> FooterKey() method=<Widget.on_mount>
+[11:10:51] EVENT                                                                                                                                                                                     message_pump.py:800
+Mount() >>> FooterKey(classes='-command-palette') method=<Widget.on_mount>
+[11:10:51] EVENT                                                                                                                                                                                     message_pump.py:800
+Unmount() >>> FooterKey() method=<Widget.on_unmount>
+[11:10:51] EVENT                                                                                                                                                                                     message_pump.py:800
+Unmount() >>> FooterKey() method=<Widget.on_unmount>
+[11:10:51] EVENT                                                                                                                                                                                     message_pump.py:800
+Unmount() >>> FooterKey() method=<Widget.on_unmount>
+[11:10:51] EVENT                                                                                                                                                                                     message_pump.py:800
+Unmount() >>> FooterKey(classes='-command-palette -compact') method=<Widget.on_unmount>
+[11:10:51] EVENT                                                                                                                                                                                     message_pump.py:800
+Mount() >>> FooterKey() method=<Widget.on_mount>
+[11:10:51] EVENT                                                                                                                                                                                     message_pump.py:800
+Mount() >>> FooterKey() method=<Widget.on_mount>
+[11:10:51] EVENT                                                                                                                                                                                     message_pump.py:800
+Mount() >>> FooterKey() method=<Widget.on_mount>
+[11:10:51] EVENT                                                                                                                                                                                     message_pump.py:800
+Mount() >>> FooterKey(classes='-command-palette') method=<Widget.on_mount>
+[11:10:51] EVENT                                                                                                                                                                                     message_pump.py:800
+Unmount() >>> FooterKey() method=<Widget.on_unmount>
+[11:10:51] EVENT                                                                                                                                                                                     message_pump.py:800
+Unmount() >>> FooterKey(classes='-command-palette -compact') method=<Widget.on_unmount>
+[11:10:51] EVENT                                                                                                                                                                                     message_pump.py:800
+Mount() >>> FooterKey() method=<Widget.on_mount>
+[11:10:51] EVENT                                                                                                                                                                                     message_pump.py:800
+Mount() >>> FooterKey(classes='-command-palette') method=<Widget.on_mount>
+[11:10:51] EVENT                                                                                                                                                                                     message_pump.py:800
+Unmount() >>> FooterKey() method=<Widget.on_unmount>
+[11:10:51] EVENT                                                                                                                                                                                     message_pump.py:800
+Unmount() >>> FooterKey() method=<Widget.on_unmount>
+[11:10:51] EVENT                                                                                                                                                                                     message_pump.py:800
+Unmount() >>> FooterKey() method=<Widget.on_unmount>
+[11:10:51] EVENT                                                                                                                                                                                     message_pump.py:800
+Unmount() >>> FooterKey(classes='-command-palette -compact') method=<Widget.on_unmount>
+[11:10:51] EVENT                                                                                                                                                                                     message_pump.py:800
+Mount() >>> FooterKey() method=<Widget.on_mount>
+[11:10:51] EVENT                                                                                                                                                                                     message_pump.py:800
+Mount() >>> FooterKey() method=<Widget.on_mount>
+[11:10:51] EVENT                                                                                                                                                                                     message_pump.py:800
+Mount() >>> FooterKey() method=<Widget.on_mount>
+[11:10:51] EVENT                                                                                                                                                                                     message_pump.py:800
+Mount() >>> FooterKey(classes='-command-palette') method=<Widget.on_mount>
+[11:10:51] EVENT                                                                                                                                                                                     message_pump.py:800
+Unmount() >>> FooterKey() method=<Widget.on_unmount>
+[11:10:51] EVENT                                                                                                                                                                                     message_pump.py:800
+Unmount() >>> FooterKey(classes='-command-palette -compact') method=<Widget.on_unmount>
+[11:10:51] EVENT                                                                                                                                                                                     message_pump.py:800
+Mount() >>> FooterKey() method=<Widget.on_mount>
+[11:10:51] EVENT                                                                                                                                                                                     message_pump.py:800
+Mount() >>> FooterKey(classes='-command-palette') method=<Widget.on_mount>
+[11:10:51] EVENT                                                                                                                                                                                     message_pump.py:809
+Resize(size=Size(width=12, height=1), container_size=Size(width=10, height=1)) >>> FooterKey(classes='-command-palette -compact') method=None
+[11:10:51] EVENT                                                                                                                                                                                     message_pump.py:800
+Show() >>> FooterKey(classes='-command-palette -compact') method=<Widget.on_show>
+[11:10:51] EVENT                                                                                                                                                                                     message_pump.py:809
+Resize(size=Size(width=8, height=1)) >>> FooterKey() method=None
+[11:10:51] EVENT                                                                                                                                                                                     message_pump.py:800
+Show() >>> FooterKey() method=<Widget.on_show>
+[11:10:51] EVENT                                                                                                                                                                                     message_pump.py:809
+Resize(size=Size(width=10, height=1)) >>> FooterKey() method=None
+[11:10:51] EVENT                                                                                                                                                                                     message_pump.py:800
+Show() >>> FooterKey() method=<Widget.on_show>
+[11:10:51] EVENT                                                                                                                                                                                     message_pump.py:809
+Resize(size=Size(width=11, height=1)) >>> FooterKey() method=None
+[11:10:51] EVENT                                                                                                                                                                                     message_pump.py:800
+Show() >>> FooterKey() method=<Widget.on_show>
+[11:10:51] EVENT                                                                                                                                                                                     message_pump.py:809
+Resize(size=Size(width=12, height=1), container_size=Size(width=10, height=1)) >>> FooterKey(classes='-command-palette -compact') method=None
+[11:10:51] EVENT                                                                                                                                                                                     message_pump.py:800
+Show() >>> FooterKey(classes='-command-palette -compact') method=<Widget.on_show>
+[11:10:51] EVENT                                                                                                                                                                                     message_pump.py:809
+Resize(size=Size(width=10, height=1)) >>> FooterKey() method=None
+[11:10:51] EVENT                                                                                                                                                                                     message_pump.py:800
+Show() >>> FooterKey() method=<Widget.on_show>
+────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────
+[11:10:58] EVENT                                                                                                                                                                                     message_pump.py:800
+Click(Button(id='glossaries'), x=11, y=1, pointer_x=11, pointer_y=1, screen_x=107, screen_y=6, button=1, style=Style(color=Color('#e0e0e0', ColorType.TRUECOLOR, triplet=ColorTriplet(red=224, green=224, blue=224)),
+bgcolor=Color('#171717', ColorType.TRUECOLOR, triplet=ColorTriplet(red=23, green=23, blue=23)), bold=True, reverse=True, meta={'offset': (0, 0)}), chain=1) >>> Button(id='glossaries') method=<Button.on_click>
+[11:10:58] EVENT                                                                                                                                                                                     message_pump.py:800
+Click(Button(id='glossaries', classes='-active'), x=11, y=1, pointer_x=11, pointer_y=1, screen_x=107, screen_y=6, button=1, style=Style(color=Color('#e0e0e0', ColorType.TRUECOLOR, triplet=ColorTriplet(red=224,
+green=224, blue=224)), bgcolor=Color('#171717', ColorType.TRUECOLOR, triplet=ColorTriplet(red=23, green=23, blue=23)), bold=True, reverse=True, meta={'offset': (0, 0)}), chain=1) >>> Button(id='glossaries',
+classes='-active') method=<Widget.on_click>
+[11:10:58] EVENT                                                                                                                                                                                     message_pump.py:809
+Pressed() >>> Button(id='glossaries', classes='-active') method=None
+[11:10:58] EVENT                                                                                                                                                                                     message_pump.py:809
+Pressed() >>> Vertical(id='menu_buttons') method=None
+[11:10:58] EVENT                                                                                                                                                                                     message_pump.py:809
+Pressed() >>> Vertical(id='menu_form') method=None
+[11:10:58] EVENT                                                                                                                                                                                     message_pump.py:809
+Pressed() >>> Container(id='menu_box') method=None
+[11:10:58] EVENT                                                                                                                                                                                     message_pump.py:809
+Pressed() >>> Container(id='menu_top') method=None
+[11:10:58] EVENT                                                                                                                                                                                     message_pump.py:800
+Pressed() >>> MainMenuScreen() method=<MainMenuScreen.on_button_pressed>
+[11:10:58] SYSTEM                                                                                                                                                                                            app.py:2773
+GlossaryBrowserScreen() is current (PUSHED)
+[11:10:58] EVENT                                                                                                                                                                                     message_pump.py:800
+Mount() >>> ToastRack(id='textual-toastrack', classes='-textual-system') method=<Widget.on_mount>
+[11:10:58] EVENT                                                                                                                                                                                     message_pump.py:800
+Mount() >>> Tooltip(id='textual-tooltip', classes='-textual-system') method=<Widget.on_mount>
+[11:10:58] EVENT                                                                                                                                                                                     message_pump.py:800
+Mount() >>> Footer() method=<Footer.on_mount>
+[11:10:58] EVENT                                                                                                                                                                                     message_pump.py:800
+Mount() >>> Footer() method=<Widget.on_mount>
+[11:10:58] EVENT                                                                                                                                                                                     message_pump.py:800
+Mount() >>> HeaderIcon() method=<HeaderIcon.on_mount>
+[11:10:58] EVENT                                                                                                                                                                                     message_pump.py:800
+Mount() >>> HeaderIcon() method=<Widget.on_mount>
+[11:10:58] EVENT                                                                                                                                                                                     message_pump.py:800
+Mount() >>> HeaderTitle() method=<Widget.on_mount>
+[11:10:58] EVENT                                                                                                                                                                                     message_pump.py:800
+Mount() >>> HeaderClock() method=<HeaderClock.on_mount>
+[11:10:58] EVENT                                                                                                                                                                                     message_pump.py:800
+Mount() >>> HeaderClock() method=<Widget.on_mount>
+[11:10:58] EVENT                                                                                                                                                                                     message_pump.py:800
+Mount() >>> Static(id='connection_info') method=<Widget.on_mount>
+[11:10:58] EVENT                                                                                                                                                                                     message_pump.py:800
+Mount() >>> FooterKey() method=<Widget.on_mount>
+[11:10:58] EVENT                                                                                                                                                                                     message_pump.py:800
+Mount() >>> FooterKey() method=<Widget.on_mount>
+[11:10:58] EVENT                                                                                                                                                                                     message_pump.py:800
+Mount() >>> FooterKey() method=<Widget.on_mount>
+[11:10:58] EVENT                                                                                                                                                                                     message_pump.py:800
+Mount() >>> FooterKey(classes='-command-palette') method=<Widget.on_mount>
+[11:10:58] EVENT                                                                                                                                                                                     message_pump.py:800
+Mount() >>> Container(id='spacer') method=<Widget.on_mount>
+[11:10:58] EVENT                                                                                                                                                                                     message_pump.py:800
+Mount() >>> Static(id='title') method=<Widget.on_mount>
+[11:10:58] EVENT                                                                                                                                                                                     message_pump.py:800
+Mount() >>> DataTable(id='main-table') method=<ScrollView.on_mount>
+[11:10:58] EVENT                                                                                                                                                                                     message_pump.py:800
+Mount() >>> DataTable(id='main-table') method=<Widget.on_mount>
+[11:10:58] EVENT                                                                                                                                                                                     message_pump.py:800
+Mount() >>> Input(id='search-input') method=<Input.on_mount>
+[11:10:58] EVENT                                                                                                                                                                                     message_pump.py:800
+Mount() >>> Input(id='search-input') method=<ScrollView.on_mount>
+[11:10:58] EVENT                                                                                                                                                                                     message_pump.py:800
+Mount() >>> Input(id='search-input') method=<Widget.on_mount>
+[11:10:58] EVENT                                                                                                                                                                                     message_pump.py:800
+Mount() >>> Button(id='search-button') method=<Widget.on_mount>
+[11:10:58] EVENT                                                                                                                                                                                     message_pump.py:800
+Mount() >>> Button(id='list-terms-button') method=<Widget.on_mount>
+[11:10:58] EVENT                                                                                                                                                                                     message_pump.py:800
+Mount() >>> Button(id='back-button') method=<Widget.on_mount>
+[11:10:58] EVENT                                                                                                                                                                                     message_pump.py:800
+Mount() >>> Button(id='add-glossary-button') method=<Widget.on_mount>
+[11:10:58] EVENT                                                                                                                                                                                     message_pump.py:800
+Mount() >>> Button(id='delete-glossary-button') method=<Widget.on_mount>
+[11:10:58] EVENT                                                                                                                                                                                     message_pump.py:800
+Mount() >>> Button(id='update-glossary-button') method=<Widget.on_mount>
+[11:10:58] EVENT                                                                                                                                                                                     message_pump.py:800
+Mount() >>> Button(id='add-term-button') method=<Widget.on_mount>
+[11:10:58] EVENT                                                                                                                                                                                     message_pump.py:800
+Mount() >>> Button(id='delete-term-button') method=<Widget.on_mount>
+[11:10:58] EVENT                                                                                                                                                                                     message_pump.py:800
+Mount() >>> Button(id='term-details-button') method=<Widget.on_mount>
+[11:10:58] EVENT                                                                                                                                                                                     message_pump.py:800
+Mount() >>> Header() method=<Header.on_mount>
+[11:10:58] EVENT                                                                                                                                                                                     message_pump.py:800
+Mount() >>> Header() method=<Widget.on_mount>
+[11:10:58] EVENT                                                                                                                                                                                     message_pump.py:800
+Mount() >>> Container() method=<Widget.on_mount>
+[11:10:58] EVENT                                                                                                                                                                                     message_pump.py:800
+Mount() >>> Vertical(id='top_content') method=<Widget.on_mount>
+[11:10:58] EVENT                                                                                                                                                                                     message_pump.py:800
+Mount() >>> Horizontal(id='search_row') method=<Widget.on_mount>
+[11:10:58] EVENT                                                                                                                                                                                     message_pump.py:800
+Mount() >>> Horizontal(id='action_row') method=<Widget.on_mount>
+[11:10:58] EVENT                                                                                                                                                                                     message_pump.py:800
+Mount() >>> Container(id='top_row') method=<Widget.on_mount>
+[11:10:58] EVENT                                                                                                                                                                                     message_pump.py:800
+Mount() >>> Container(id='search_row_container') method=<Widget.on_mount>
+[11:10:58] EVENT                                                                                                                                                                                     message_pump.py:800
+Mount() >>> Container(id='action_row_container') method=<Widget.on_mount>
+[11:10:58] EVENT                                                                                                                                                                                     message_pump.py:800
+Mount() >>> Vertical(id='v_root') method=<Widget.on_mount>
