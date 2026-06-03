@@ -10,11 +10,17 @@ import datetime
 import pprint
 import re
 import json
+import sys
+from pathlib import Path
 
-from prompt_toolkit.clipboard.pyperclip import PyperclipClipboard
+# Add the project root to sys.path to allow running this script from any directory
+root_path = Path(__file__).resolve().parents[4]
+if str(root_path) not in sys.path:
+    sys.path.append(str(root_path))
+
 from pyegeria import load_app_config, settings, MyProfile, PyegeriaException, print_basic_exception, exec_report_spec, \
     AutomatedCuration, MetadataExpert, ActorManager, EgeriaCat, CollectionManager, ProductManager, \
-    PyegeriaInvalidParameterException, PyegeriaAPIException, DataEngineer
+    PyegeriaInvalidParameterException, PyegeriaAPIException, DataEngineer, copy_to_clipboard
 from pyegeria.omvs import GovernanceOfficer
 from textual import on
 from textual.app import App, ComposeResult
@@ -33,7 +39,6 @@ from MyTeam import MyTeam
 from MainScreen import MainScreen
 from SearchForTermScreen import SearchForTermScreen
 from CreateSubscriptionRequestScreen import CreateSubscriptionRequestScreen
-from pyegeria import GovernanceOfficer
 
 
 class MyProfileApp(App):
@@ -118,8 +123,6 @@ class MyProfileApp(App):
     async def on_mount(self) -> None:
         """Load profile; if missing, prompt to create it; then populate tables."""
         # DOMInfo.attach_to(self)
-        # Initiate clipboard session
-        clipboard = PyperclipClipboard()
 
         await self._load_or_create_profile()
         await self._populate_tables()
@@ -1214,7 +1217,7 @@ class MyProfileApp(App):
                 self.log(f"build_structure: {build_structure}")
                 continue
             # Once the structure is complete we can build the tree from it
-            sample_data:list = []
+            sample_data: list = []
             for instance, data_prods in build_structure.items():
                 catalog_branch = catalog_tree.root.add(instance)
                 for data_prod in data_prods:
@@ -1222,43 +1225,52 @@ class MyProfileApp(App):
                         catalog_branch.add_leaf(term_summary, data=term_qualified_name)
                         self.log(f"term_qualified_name: {term_qualified_name}, term summary: {term_summary}")
                 catalog_tree.root.expand()
-                # get some sample data from the data source
-                if product:
-                    collection_memberships = product.get("Member Of")
-                    self.log(f"Collection memberships len: {len(collection_memberships)}")
+
+            # get some sample data from the data source for each product
+            for product in self.catalog_details_data:
+                collection_memberships = product.get("Member Of")
                 if collection_memberships:
-                    data_set_data = None
                     collection_membership_list = collection_memberships.split(",")
-                    self.log(f"Membership List: {collection_membership_list}")
+                    self.log(f"Membership List for product {product.get('Display Name')}: {collection_membership_list}")
                     for membership_qname in collection_membership_list:
                         self.log(f"Processing collection membership: {membership_qname}")
                         if "DigitalProduct" in membership_qname:
                             self.log(f"Processing dataset: {membership_qname}")
                             try:
                                 # create client instance and retrieve data
-                                dclient = DataEngineer(self.view_server, self.platform_url, self.user_name, self.user_password)
+                                dclient = DataEngineer(self.view_server, self.platform_url, self.user_name,
+                                                       self.user_password)
                                 token = dclient.create_egeria_bearer_token(self.user_name, self.user_password)
-                                data_set_data = dclient.find_tabular_data_sets(
-                                                                           search_string=membership_qname,
-                                                                           start_from=0,
-                                                                           page_size=10,
-                                                                           output_format = "MD"
-                                                                           )
-                                self.log(f"Dataset data retrieved: {data_set_data}")
-                                if data_set_data == "No elements found":
-                                    sample_data.append(f"No data sample available at this time for {membership_qname}")
+                                data_set_metadata = dclient.find_tabular_data_sets(
+                                    search_string=membership_qname,
+                                    start_from=0,
+                                    page_size=1,
+                                    output_format="DICT"
+                                )
+                                self.log(f"Dataset metadata retrieved: {data_set_metadata}")
+                                if isinstance(data_set_metadata, list) and len(data_set_metadata) > 0:
+                                    data_set_guid = data_set_metadata[0].get("GUID")
+                                    if data_set_guid:
+                                        data_set_data = dclient.get_tabular_data_set(
+                                            tabular_data_set_guid=data_set_guid,
+                                            start_from_row=0,
+                                            max_row_count=10,
+                                            output_format="MD"
+                                        )
+                                        self.log(f"Dataset data retrieved: {data_set_data}")
+                                        sample_data.append(data_set_data)
+                                    else:
+                                        sample_data.append(f"No GUID found for dataset {membership_qname}")
                                 else:
-                                    sample_data.append(data_set_data)
+                                    sample_data.append(f"No metadata found for dataset {membership_qname}")
                                 continue
                             except PyegeriaException as e:
                                 self.log(f"Error retrieving dataset data: {e}")
                                 print_basic_exception(e)
                         else:
                             continue
-                    # ************************************************************
-                    # once we have the correct data decide how we will display it!
-                    # ************************************************************
-                    self.log(f"Sample data: {sample_data}")
+                    self.log(f"Sample data after product {product.get('Display Name')}: {sample_data}")
+            self.log(f"Final sample data length: {len(sample_data)}")
 
         self.push_screen(SelectionOverviewScreen("catalog",
                                                  self.view_server,
