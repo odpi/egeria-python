@@ -3,7 +3,7 @@
 
 [project]
 name = "pyegeria"
-version = "6.0.13.1"
+version = "6.0.13.2"
 license = 'Apache-2.0'
 license-files = ["LICENSE"]
 authors = [{name = "Dan Wolfson", email = "dan.wolfson@pdr-associates.com"},]
@@ -211,6 +211,7 @@ exclude = ["tests", "config"]
     "md_processing_utils/tests/*.md",
     "md_processing_utils/tests/*.txt"
 ]
+"my_egeria" = ["**/*.tcss"]
 
 
 [project.optional-dependencies]
