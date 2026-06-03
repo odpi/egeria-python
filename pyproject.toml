@@ -3,7 +3,7 @@
 
 [project]
 name = "pyegeria"
-version = "6.0.12.9"
+version = "6.0.13.1"
 license = 'Apache-2.0'
 license-files = ["LICENSE"]
 authors = [{name = "Dan Wolfson", email = "dan.wolfson@pdr-associates.com"},]
@@ -126,6 +126,11 @@ dependencies = [
     stop_daemon = "commands.ops.engine_actions:stop_daemon"
     list_archives = "commands.ops.list_archives:main"
 
+    # my_egeria TUI apps — terminal mode
+    my_profile = "my_egeria.DemoCode.My_Profile.my_profile_app:main"
+    # my_egeria TUI apps — browser mode (textual serve); env: MY_EGERIA_HOST, MY_PROFILE_PORT
+    serve_my_profile = "my_egeria.serve:serve_my_profile"
+
     list_my_profile = "commands.my.get_my_profile:main"
     list_my_roles = "commands.my.list_my_roles:main"
     monitor_my_actions = "commands.my.monitor_my_actions:main"
@@ -194,7 +199,7 @@ requires = ["setuptools>=42", "wheel"]
 build-backend = "setuptools.build_meta"
 
 [tool.setuptools.packages.find]
-include = ["pyegeria", "pyegeria.*", "commands", "commands.*", "md_processing", "md_processing.*"]
+include = ["pyegeria", "pyegeria.*", "commands", "commands.*", "md_processing", "md_processing.*", "my_egeria", "my_egeria.*"]
 exclude = ["tests", "config"]
 
 [tool.setuptools.package-data]
