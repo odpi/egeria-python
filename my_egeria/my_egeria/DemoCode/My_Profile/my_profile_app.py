@@ -39,6 +39,7 @@ from MyTeam import MyTeam
 from MainScreen import MainScreen
 from SearchForTermScreen import SearchForTermScreen
 from CreateSubscriptionRequestScreen import CreateSubscriptionRequestScreen
+from UserIdentitiesScreen import UserIdentitiesScreen
 
 
 class MyProfileApp(App):
@@ -331,10 +332,18 @@ class MyProfileApp(App):
                 self.exit(int(self.tech_type_response))
             self.log("Technology types fetched successfully.")
             self.log("Displaying technology types...")
-            await self.push_screen(TechnologyTypesScreen(self.tech_type_list, self.user_name, self.user_password, self.karma_points), callback=self.tech_type_callback)
+            await self.push_screen(TechnologyTypesScreen(self.tech_type_list,
+                                                         self.user_name,
+                                                         self.user_password,
+                                                         self.karma_points),
+                                   callback=self.tech_type_callback)
             self.log("Technology types displayed successfully.")
         elif selected_option == "User Identities":
-            pass
+            await self.push_screen(UserIdentitiesScreen(self.user_name,
+                                                        self.user_password,
+                                                        self.karma_points,
+                                                        self.user_identities),
+                                   callback=self.user_identities_callback)
         elif selected_option == "Catalogs/Shop for Data":
             """ Push new Screen, Show Glossaries, Digital Product Catalogs, Data Dictionaries and
                 Business Domains, allow the user to select from one of the 4 categories and use that selection to
@@ -1763,6 +1772,12 @@ class MyProfileApp(App):
 
         # Return all other types unchanged (ints, floats, strings, None)
         return data
+
+    def user_identities_callback(self):
+        """ Callback roiutine for the user identities screen
+            the user has requested to exit the screen and so will will
+            push the main screen again"""
+        self.push_screen("main")
 
 if __name__ == "__main__":
     app = MyProfileApp()

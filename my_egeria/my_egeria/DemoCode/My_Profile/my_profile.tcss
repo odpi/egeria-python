@@ -222,6 +222,12 @@ SelectionOverviewScreen > Footer {
     height: auto;
     border: solid white;
 }
+#user_identities_container {
+    width: auto;
+    height: auto;
+    border: solid white;
+}
+#user_identities_table {}
 #technology_types_tree {
     width: auto;
     height: auto;
