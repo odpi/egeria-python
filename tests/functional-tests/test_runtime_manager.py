@@ -617,6 +617,145 @@ class TestRuntimeManager:
         finally:
             r_client.close_session()
 
+    def test_stop_connector(self):
+        try:
+            r_client = RuntimeManager(
+                self.good_view_server_2,
+                self.good_platform1_url,
+                user_id=self.good_user_1,
+                user_pwd="secret",
+            )
+            token = r_client.create_egeria_bearer_token()
+
+            connector_name = "UnityCatalogServerSynchronizer"
+            server_name = "qs-integration-daemon"
+            start_time = time.perf_counter()
+            r_client.stop_connector(
+                connector_name,
+                display_name=server_name,
+                organization_name="Coco Pharmaceuticals",
+            )
+
+            duration = time.perf_counter() - start_time
+            print(f"\n\tDuration was {duration} seconds")
+            print(f"Connector '{connector_name}' stopped")
+            assert True
+
+        except (
+            PyegeriaInvalidParameterException,
+            PyegeriaAPIException,
+            PyegeriaUnauthorizedException,
+        ) as e:
+            print_exception_response(e)
+            assert False, "Invalid request"
+
+        finally:
+            r_client.close_session()
+
+    def test_start_connector(self):
+        try:
+            r_client = RuntimeManager(
+                self.good_view_server_2,
+                self.good_platform1_url,
+                user_id=self.good_user_1,
+                user_pwd="secret",
+            )
+            token = r_client.create_egeria_bearer_token()
+
+            connector_name = "UnityCatalogServerSynchronizer"
+            server_name = "qs-integration-daemon"
+            start_time = time.perf_counter()
+            r_client.start_connector(
+                connector_name,
+                display_name=server_name,
+                organization_name="Coco Pharmaceuticals",
+            )
+
+            duration = time.perf_counter() - start_time
+            print(f"\n\tDuration was {duration} seconds")
+            print(f"Connector '{connector_name}' started")
+            assert True
+
+        except (
+            PyegeriaInvalidParameterException,
+            PyegeriaAPIException,
+            PyegeriaUnauthorizedException,
+        ) as e:
+            print_exception_response(e)
+            assert False, "Invalid request"
+
+        finally:
+            r_client.close_session()
+
+    def test_refresh_integ_group_config(self):
+        try:
+            r_client = RuntimeManager(
+                self.good_view_server_2,
+                self.good_platform1_url,
+                user_id=self.good_user_1,
+                user_pwd="secret",
+            )
+            token = r_client.create_egeria_bearer_token()
+
+            server_name = "qs-integration-daemon"
+            start_time = time.perf_counter()
+            r_client.refresh_integ_group_config(
+                display_name=server_name,
+                organization_name="Coco Pharmaceuticals",
+            )
+
+            duration = time.perf_counter() - start_time
+            print(f"\n\tDuration was {duration} seconds")
+            print(f"Integration group config refreshed for '{server_name}'")
+            assert True
+
+        except (
+            PyegeriaInvalidParameterException,
+            PyegeriaAPIException,
+            PyegeriaUnauthorizedException,
+        ) as e:
+            print_exception_response(e)
+            assert False, "Invalid request"
+
+        finally:
+            r_client.close_session()
+
+    def test_update_endpoint_address(self):
+        try:
+            r_client = RuntimeManager(
+                self.good_view_server_2,
+                self.good_platform1_url,
+                user_id=self.good_user_1,
+                user_pwd="secret",
+            )
+            token = r_client.create_egeria_bearer_token()
+
+            connector_name = "UnityCatalogServerSynchronizer"
+            server_name = "qs-integration-daemon"
+            endpoint_address = "http://localhost:8080"
+            start_time = time.perf_counter()
+            r_client.update_endpoint_address(
+                connector_name,
+                endpoint_address,
+                display_name=server_name,
+            )
+
+            duration = time.perf_counter() - start_time
+            print(f"\n\tDuration was {duration} seconds")
+            print(f"Endpoint address for '{connector_name}' updated to '{endpoint_address}'")
+            assert True
+
+        except (
+            PyegeriaInvalidParameterException,
+            PyegeriaAPIException,
+            PyegeriaUnauthorizedException,
+        ) as e:
+            print_exception_response(e)
+            assert False, "Invalid request"
+
+        finally:
+            r_client.close_session()
+
     def test_refresh_integ_integration_connectors(self):
         try:
             r_client = RuntimeManager(
