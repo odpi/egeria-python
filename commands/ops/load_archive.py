@@ -58,7 +58,8 @@ config_logging()
 @click.option("--userid", default=EGERIA_USER, help="Egeria admin user")
 @click.option("--password", default=EGERIA_USER_PASSWORD, help="Egeria admin password")
 @click.option("--timeout", default=120, help="Number of seconds to wait")
-def load_archive(file_name, server_name, view_server, url, userid, password, timeout):
+@click.option("--organization-name", default=app_config.organization_name, help="Organization name prefix for resource names")
+def load_archive(file_name, server_name, view_server, url, userid, password, timeout, organization_name):
     """Load an Open Metadata Archive"""
 
     try:
@@ -69,7 +70,7 @@ def load_archive(file_name, server_name, view_server, url, userid, password, tim
         if server_guid == "No elements found":
             raise click.ClickException("Didn't find the metadata store")
 
-        s_client.add_archive_file(file_name, server_guid, server_name, time_out=timeout)
+        s_client.add_archive_file(file_name, server_guid, server_name, time_out=timeout, organization_name=organization_name)
 
         click.echo(f"Loaded archive: {file_name}")
 

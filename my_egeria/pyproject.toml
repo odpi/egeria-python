@@ -28,5 +28,11 @@ build-backend = "setuptools.build_meta"
 where = ["."]
 include = ["my_egeria", "my_egeria.*"]
 
+[tool.setuptools.package-data]
+"my_egeria" = ["**/*.tcss"]
+
 [project.scripts]
 my-egeria = "my_egeria.main:main"
+
+[app.my-profile]
+command = "python my_egeria.DemoCode.My_Profile.my_profile_app:main"
