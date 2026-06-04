@@ -75,8 +75,9 @@ class RuntimeManager(ServerClient):
         self,
         connector_name: str,
         server_guid: Optional[str] = None,
-        display_name: Optional[str] = None,
+        server_name: Optional[str] = None,
         qualified_name: Optional[str] = None,
+        organization_name: Optional[str] = None,
         output_format: str = "JSON",
         report_spec: str | dict = "IntegrationConnector",
         body: Optional[dict | GetRequestBody] = None,
@@ -117,10 +118,11 @@ class RuntimeManager(ServerClient):
         """
         server_guid = self.__get_guid__(
             server_guid,
-            display_name,
-            "displayName",
+            server_name,
+            "resourceName",
             qualified_name,
             "Integration Daemon",
+            organization_name
         )
         url = (
             f"{self.runtime_command_root}/integration-daemon/"
@@ -165,8 +167,9 @@ class RuntimeManager(ServerClient):
         self,
         connector_name: str,
         server_guid: Optional[str] = None,
-        display_name: Optional[str] = None,
+        server_name: Optional[str] = None,
         qualified_name: Optional[str] = None,
+        organization_name: Optional[str] = None,
         output_format: str = "JSON",
         report_spec: str | dict = "IntegrationConnector",
         body: Optional[dict | GetRequestBody] = None,
@@ -181,7 +184,7 @@ class RuntimeManager(ServerClient):
             Name of the integration connector to retrieve properties for.
         server_guid : str, default = None
             Identity of the server to act on. If not specified, qualified_name or server_name must be.
-        display_name: str, default = None
+        server_name: str, default = None
             Name of server to act on. If not specified, server_guid or qualified_name must be.
         qualified_name: str, default = None
             Unique name of server to act on. If not specified, server_guid or server_name must be.
@@ -207,7 +210,7 @@ class RuntimeManager(ServerClient):
         loop = asyncio.get_event_loop()
         response = loop.run_until_complete(
             self._async_get_integration_connector_config_properties(
-                connector_name, server_guid, display_name, qualified_name, output_format, report_spec, body
+                connector_name, server_guid, server_name, qualified_name, organization_name, output_format, report_spec, body
             )
         )
         return response
@@ -220,6 +223,7 @@ class RuntimeManager(ServerClient):
         qualified_name: Optional[str] = None,
         merge_update: bool = True,
         config_properties: dict = None,
+        organization_name: Optional[str] = None,
         body: Optional[dict | FilterRequestBody] = None,
     ) -> None:
         """Update the configuration properties of the integration connectors, or specific integration connector
@@ -262,9 +266,10 @@ class RuntimeManager(ServerClient):
         server_guid = self.__get_guid__(
             server_guid,
             display_name,
-            "qualifiedName",
+            "resourceName",
             qualified_name,
             "Integration Daemon",
+            organization_name,
         )
         url = (
             f"{self.runtime_command_root}/integration-daemon/"
@@ -289,6 +294,7 @@ class RuntimeManager(ServerClient):
         qualified_name: Optional[str] = None,
         merge_update: bool = False,
         config_properties: dict = None,
+        organization_name: Optional[str] = None,
         body: Optional[dict] = None,
     ) -> None:
         """Update the configuration properties of the integration connectors, or specific integration connector
@@ -335,6 +341,7 @@ class RuntimeManager(ServerClient):
                 qualified_name,
                 merge_update,
                 config_properties,
+                organization_name,
                 body,
             )
         )
@@ -459,6 +466,7 @@ class RuntimeManager(ServerClient):
         server_guid: Optional[str] = None,
         display_name: Optional[str] = None,
         qualified_name: Optional[str] = None,
+        organization_name: Optional[str] = None,
         body: Optional[dict | FilterRequestBody] = None,
     ) -> None:
         """Stop the named integration connector OR all connectors if connector name is None.  Async version.
@@ -491,9 +499,10 @@ class RuntimeManager(ServerClient):
         server_guid = self.__get_guid__(
             server_guid,
             display_name,
-            "qualifiedName",
+            "resourceName",
             qualified_name,
             "Integration Daemon",
+            organization_name,
         )
 
         if connector_name is None:
@@ -516,6 +525,7 @@ class RuntimeManager(ServerClient):
         server_guid: Optional[str] = None,
         display_name: Optional[str] = None,
         qualified_name: Optional[str] = None,
+        organization_name: Optional[str] = None,
         body: Optional[dict | FilterRequestBody] = None,
     ) -> None:
         """Stop the named integration connector OR all connectors if connector name is None.
@@ -548,7 +558,7 @@ class RuntimeManager(ServerClient):
         loop = asyncio.get_event_loop()
         loop.run_until_complete(
             self._async_stop_connector(
-                connector_name, server_guid, display_name, qualified_name, body
+                connector_name, server_guid, display_name, qualified_name, organization_name, body
             )
         )
         return
@@ -559,6 +569,7 @@ class RuntimeManager(ServerClient):
         server_guid: Optional[str] = None,
         display_name: Optional[str] = None,
         qualified_name: Optional[str] = None,
+        organization_name: Optional[str] = None,
         body: Optional[dict | FilterRequestBody] = None,
     ) -> None:
         """Start the named integration connector OR all connectors if connector name is None.  Async version.
@@ -591,9 +602,10 @@ class RuntimeManager(ServerClient):
         server_guid = self.__get_guid__(
             server_guid,
             display_name,
-            "qualifiedName",
+            "resourceName",
             qualified_name,
             "Integration Daemon",
+            organization_name,
         )
 
         if connector_name is None:
@@ -616,6 +628,7 @@ class RuntimeManager(ServerClient):
         server_guid: Optional[str] = None,
         display_name: Optional[str] = None,
         qualified_name: Optional[str] = None,
+        organization_name: Optional[str] = None,
         body: Optional[dict | FilterRequestBody] = None,
     ) -> None:
         """Start the named integration connector OR all connectors if connector name is None.
@@ -648,13 +661,14 @@ class RuntimeManager(ServerClient):
         loop = asyncio.get_event_loop()
         loop.run_until_complete(
             self._async_start_connector(
-                connector_name, server_guid, display_name, qualified_name, body
+                connector_name, server_guid, display_name, qualified_name, organization_name, body
             )
         )
         return
 
     async def _async_connect_to_cohort(
-        self, cohort_name: str, server_guid: str = None, server_name: str = None, body: Optional[dict | FilterRequestBody] = None
+        self, cohort_name: str, server_guid: str = None, server_name: str = None,
+        organization_name: Optional[str] = None, body: Optional[dict | FilterRequestBody] = None
     ) -> None:
         """Request the named OMAG server to register with the named cohort.  Async version.
 
@@ -682,7 +696,8 @@ class RuntimeManager(ServerClient):
 
         """
         server_guid = self.__get_guid__(
-            server_guid, server_name, "resourceName", tech_type="OMAG Server"
+            server_guid, server_name, "resourceName", tech_type="OMAG Server",
+            organization_name=organization_name
         )
         url = (
             f"{self.runtime_command_root}/omag-servers/"
@@ -692,7 +707,8 @@ class RuntimeManager(ServerClient):
         return
 
     def connect_to_cohort(
-        self, cohort_name: str, server_guid: str = None, server_name: str = None, body: Optional[dict | FilterRequestBody] = None
+        self, cohort_name: str, server_guid: str = None, server_name: str = None,
+        organization_name: Optional[str] = None, body: Optional[dict | FilterRequestBody] = None
     ) -> None:
         """Request the named OMAG server to register with the named cohort.
 
@@ -721,12 +737,13 @@ class RuntimeManager(ServerClient):
         """
         loop = asyncio.get_event_loop()
         loop.run_until_complete(
-            self._async_connect_to_cohort(cohort_name, server_guid, server_name, body)
+            self._async_connect_to_cohort(cohort_name, server_guid, server_name, organization_name, body)
         )
         return
 
     async def _async_disconnect_from_cohort(
-        self, cohort_name: str, server_guid: str = None, server_name: str = None, body: Optional[dict | FilterRequestBody] = None
+        self, cohort_name: str, server_guid: str = None, server_name: str = None,
+        organization_name: Optional[str] = None, body: Optional[dict | FilterRequestBody] = None
     ) -> None:
         """Request the named OMAG server to disconnect from the named cohort. Async version.
 
@@ -754,7 +771,8 @@ class RuntimeManager(ServerClient):
 
         """
         server_guid = self.__get_guid__(
-            server_guid, server_name, "resourceName", tech_type="OMAG Server"
+            server_guid, server_name, "resourceName", tech_type="OMAG Server",
+            organization_name=organization_name
         )
         url = (
             f"{self.runtime_command_root}/omag-servers/"
@@ -764,7 +782,8 @@ class RuntimeManager(ServerClient):
         return
 
     def disconnect_from_cohort(
-        self, cohort_name: str, server_guid: str = None, server_name: str = None, body: Optional[dict | FilterRequestBody] = None
+        self, cohort_name: str, server_guid: str = None, server_name: str = None,
+        organization_name: Optional[str] = None, body: Optional[dict | FilterRequestBody] = None
     ) -> None:
         """Request the named OMAG server to disconnect from the named cohort.
 
@@ -793,12 +812,13 @@ class RuntimeManager(ServerClient):
         """
         loop = asyncio.get_event_loop()
         loop.run_until_complete(
-            self._async_disconnect_from_cohort(cohort_name, server_guid, server_name, body)
+            self._async_disconnect_from_cohort(cohort_name, server_guid, server_name, organization_name, body)
         )
         return
 
     async def _async_unregister_from_cohort(
-        self, cohort_name: str, server_guid: str = None, server_name: str = None, body: Optional[dict | FilterRequestBody] = None
+        self, cohort_name: str, server_guid: str = None, server_name: str = None,
+        organization_name: Optional[str] = None, body: Optional[dict | FilterRequestBody] = None
     ) -> None:
         """Request the named OMAG server to unregister from the named cohort. Async version.
 
@@ -826,7 +846,8 @@ class RuntimeManager(ServerClient):
 
         """
         server_guid = self.__get_guid__(
-            server_guid, server_name, "resourceName", tech_type="OMAG Server"
+            server_guid, server_name, "resourceName", tech_type="OMAG Server",
+            organization_name=organization_name
         )
         url = (
             f"{self.runtime_command_root}/omag-servers/"
@@ -836,7 +857,8 @@ class RuntimeManager(ServerClient):
         return
 
     def unregister_from_cohort(
-        self, cohort_name: str, server_guid: str = None, server_name: str = None, body: Optional[dict | FilterRequestBody] = None
+        self, cohort_name: str, server_guid: str = None, server_name: str = None,
+        organization_name: Optional[str] = None, body: Optional[dict | FilterRequestBody] = None
     ) -> None:
         """Request the named OMAG server to unregister from the named cohort.
 
@@ -865,7 +887,7 @@ class RuntimeManager(ServerClient):
         """
         loop = asyncio.get_event_loop()
         loop.run_until_complete(
-            self._async_unregister_from_cohort(cohort_name, server_guid, server_name, body)
+            self._async_unregister_from_cohort(cohort_name, server_guid, server_name, organization_name, body)
         )
         return
 
@@ -939,6 +961,7 @@ class RuntimeManager(ServerClient):
         server_guid: Optional[str] = None,
         display_name: Optional[str] = None,
         qualified_name: Optional[str] = None,
+        organization_name: Optional[str] = None,
         body: Optional[dict | FilterRequestBody] = None,
     ) -> None:
         """Request that the integration group refresh its configuration by calling the metadata access server.
@@ -975,9 +998,10 @@ class RuntimeManager(ServerClient):
         server_guid = self.__get_guid__(
             server_guid,
             display_name,
-            "qualifiedName",
+            "resourceName",
             qualified_name,
             "Integration Daemon",
+            organization_name,
         )
         url = (
             f"{self.runtime_command_root}/integration-daemon/"
@@ -993,6 +1017,7 @@ class RuntimeManager(ServerClient):
         server_guid: Optional[str] = None,
         display_name: Optional[str] = None,
         qualified_name: Optional[str] = None,
+        organization_name: Optional[str] = None,
         body: Optional[dict] = None,
     ) -> None:
         """Request that the integration group refresh its configuration by calling the metadata access server.
@@ -1030,7 +1055,7 @@ class RuntimeManager(ServerClient):
         loop = asyncio.get_event_loop()
         loop.run_until_complete(
             self._async_refresh_integ_group_config(
-                integ_group_name, server_guid, display_name, qualified_name, body
+                integ_group_name, server_guid, display_name, qualified_name, organization_name, body
             )
         )
         return
@@ -1044,6 +1069,7 @@ class RuntimeManager(ServerClient):
         server_guid: Optional[str] = None,
         display_name: Optional[str] = None,
         qualified_name: Optional[str] = None,
+        organization_name: Optional[str] = None,
         body: Optional[dict | FilterRequestBody] = None,
     ) -> None:
         """Send an Open Lineage event to the integration daemon. It will pass it on to the integration connectors that
@@ -1081,6 +1107,7 @@ class RuntimeManager(ServerClient):
             display_name,
             "resourceName",
             qualified_name,
+            organization_name=organization_name,
         )
         url = (
             f"{self.runtime_command_root}/integration-daemons/{server_guid}/open-lineage-events/publish-event-string"
@@ -1095,6 +1122,7 @@ class RuntimeManager(ServerClient):
         server_guid: Optional[str] = None,
         display_name: Optional[str] = None,
         qualified_name: Optional[str] = None,
+        organization_name: Optional[str] = None,
         body: Optional[dict | FilterRequestBody] = None,
     ) -> None:
         """Send an Open Lineage event to the integration daemon. It will pass it on to the integration connectors that
@@ -1129,7 +1157,7 @@ class RuntimeManager(ServerClient):
         """
         loop = asyncio.get_event_loop()
         loop.run_until_complete(
-            self._async_publish_open_lineage_event(ol_event, server_guid, display_name, qualified_name, body)
+            self._async_publish_open_lineage_event(ol_event, server_guid, display_name, qualified_name, organization_name, body)
         )
 
 
@@ -1248,6 +1276,7 @@ class RuntimeManager(ServerClient):
         display_name: Optional[str] = None,
         qualified_name: Optional[str] = None,
         time_out: int = 120,
+        organization_name: Optional[str] = None,
         body: Optional[dict | ArchiveRequestBody] = None,
     ) -> None:
         """Add a new open metadata archive to running OMAG Server's repository.
@@ -1291,6 +1320,7 @@ class RuntimeManager(ServerClient):
             "resourceName",
             qualified_name,
             "Metadata Access Server",
+            organization_name=organization_name,
         )
         url = f"{self.runtime_command_root}/metadata-access-stores/{server_guid}/instance/load/open-metadata-archives/file"
 
@@ -1307,6 +1337,7 @@ class RuntimeManager(ServerClient):
         display_name: Optional[str] = None,
         qualified_name: Optional[str] = None,
         time_out: int = 120,
+        organization_name: Optional[str] = None,
         body: Optional[dict | ArchiveRequestBody] = None,
     ) -> None:
         """Add a new open metadata archive to running OMAG Server's repository.
@@ -1346,7 +1377,7 @@ class RuntimeManager(ServerClient):
         loop = asyncio.get_event_loop()
         loop.run_until_complete(
             self._async_add_archive_file(
-                archive_file, server_guid, display_name, qualified_name, time_out, body
+                archive_file, server_guid, display_name, qualified_name, time_out, organization_name, body
             )
         )
         return
@@ -1433,6 +1464,7 @@ class RuntimeManager(ServerClient):
         display_name: Optional[str] = None,
         qualified_name: Optional[str] = None,
         timeout: int = 240,
+        organization_name: Optional[str] = None,
         body: Optional[dict | FilterRequestBody] = None,
     ) -> None:
         """Activate the named OMAG server using the appropriate configuration document found in the
@@ -1465,7 +1497,8 @@ class RuntimeManager(ServerClient):
 
         """
         server_guid = self.__get_guid__(
-            server_guid, display_name, "resourceName", qualified_name
+            server_guid, display_name, "resourceName", qualified_name,
+            organization_name=organization_name
         )
 
         url = f"{self.runtime_command_root}/omag-servers/{server_guid}/instance"
@@ -1479,6 +1512,7 @@ class RuntimeManager(ServerClient):
         display_name: Optional[str] = None,
         qualified_name: Optional[str] = None,
         timeout: int = 240,
+        organization_name: Optional[str] = None,
         body: Optional[dict | FilterRequestBody] = None,
     ) -> None:
         """Activate the named OMAG server using the appropriate configuration document found in the
@@ -1511,7 +1545,7 @@ class RuntimeManager(ServerClient):
         loop = asyncio.get_event_loop()
         loop.run_until_complete(
             self._async_activate_server_with_stored_config(
-                server_guid, display_name, qualified_name, timeout, body
+                server_guid, display_name, qualified_name, timeout, organization_name, body
             )
         )
         return
@@ -2147,8 +2181,7 @@ class RuntimeManager(ServerClient):
         Parameters
         ----------
         filter_string : str, opt
-            Filter specifies the kind of deployed implementation type of the platforms to return information for.
-            If the value is None, we will default to the "OMAG Server Platform".
+            Specifies the ResourceName of the server to return.
         start_from : int, optional
            The index from which to start fetching the engine actions. Default is 0.
         page_size : int, optional
@@ -2197,8 +2230,7 @@ class RuntimeManager(ServerClient):
         Parameters
         ----------
         filter_string : str, opt
-            Filter specifies the kind of deployed implementation type of the platforms to return information for.
-            If the value is None, we will default to the "OMAG Server Platform".
+            Specifies the ResourceName of the server to return.
         start_from : int, optional
             The index from which to start fetching the engine actions. Default is 0.
         page_size : int, optional
@@ -2423,11 +2455,12 @@ class RuntimeManager(ServerClient):
 
     @dynamic_catch
     async def _async_get_server_report(
-        self, 
-        server_guid: Optional[str] = None, 
+        self,
+        server_guid: Optional[str] = None,
         server_name: str = None,
         output_format: str = "JSON",
         report_spec: str | dict = "OMAGServers",
+        organization_name: Optional[str] = None,
     ) -> str | list | dict:
         """Returns details about the running server. Async version.
 
@@ -2455,7 +2488,8 @@ class RuntimeManager(ServerClient):
 
         """
         server_guid = self.__get_guid__(
-            server_guid, server_name, "resourceName", tech_type="Integration Daemon"
+            server_guid, server_name, "resourceName", tech_type="Integration Daemon",
+            organization_name=organization_name
         )
         url = f"{self.runtime_command_root}/omag-servers/{server_guid}/instance/report"
 
@@ -2473,11 +2507,12 @@ class RuntimeManager(ServerClient):
         return elements
 
     def get_server_report(
-        self, 
-        server_guid: Optional[str] = None, 
+        self,
+        server_guid: Optional[str] = None,
         server_name: str = None,
         output_format: str = "JSON",
         report_spec: str | dict = "OMAGServers",
+        organization_name: Optional[str] = None,
     ) -> str | list | dict:
         """Returns details about the running server.
 
@@ -2505,7 +2540,7 @@ class RuntimeManager(ServerClient):
         """
         loop = asyncio.get_event_loop()
         return loop.run_until_complete(
-            self._async_get_server_report(server_guid, server_name, output_format, report_spec)
+            self._async_get_server_report(server_guid, server_name, output_format, report_spec, organization_name)
         )
 
     def _extract_platform_properties(self, element: dict, columns_struct: dict) -> dict:
