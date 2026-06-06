@@ -4951,31 +4951,88 @@ class AssetMaker(ServerClient):
         starts_with: bool = False,
         ends_with: bool = False,
         ignore_case: bool = True,
+        anchor_domain: Optional[str] = None,
+        metadata_element_type: Optional[str] = None,
+        metadata_element_subtypes: Optional[list[str]] = None,
+        skip_relationships: Optional[list[str]] = None,
+        include_only_relationships: Optional[list[str]] = None,
+        skip_classified_elements: Optional[list[str]] = None,
+        include_only_classified_elements: Optional[list[str]] = None,
+        graph_query_depth: int = 3,
+        governance_zone_filter: Optional[list[str]] = None,
+        as_of_time: Optional[str] = None,
+        effective_time: Optional[str] = None,
+        relationship_page_size: int = 0,
+        limit_results_by_status: Optional[list[str]] = None,
+        sequencing_order: Optional[str] = None,
+        sequencing_property: Optional[str] = None,
+        output_format: str = "DICT",
+        report_spec: dict | str | None = None,
         start_from: int = 0,
         page_size: int = 0,
-        output_format: str = "JSON",
-        report_spec: str | dict = None,
-        body: Optional[dict | SearchStringRequestBody] = None,
-    ) -> list | str:
+        property_names: Optional[list[str]] = None,
+        body: dict | SearchStringRequestBody | None = None,
+        **kwargs
+    ) -> list | dict | str:
         """Retrieve the list of software capability metadata elements that contain the search string. Async version.
 
         Parameters
         ----------
-        search_string: str, default = "*"
-            String to search for in software capability properties.
-        starts_with: bool, default = False
-        ends_with: bool, default = False
-        ignore_case: bool, default = True
-        start_from: int, default = 0
-        page_size: int, default = 0
-        output_format: str, default = "JSON"
-        report_spec: str | dict, optional
+        search_string: str, optional
+            String to search for in software capability properties. Default is "*".
+        starts_with: bool, optional
+            Whether to match only at the start. Default is False.
+        ends_with: bool, optional
+            Whether to match only at the end. Default is False.
+        ignore_case: bool, optional
+            Whether to ignore case in matching. Default is True.
+        anchor_domain: str, optional
+            Domain to anchor the search.
+        metadata_element_type: str, optional
+            Specific metadata element type (e.g., "SoftwareCapability").
+        metadata_element_subtypes: list[str], optional
+            List of metadata element subtypes.
+        skip_relationships: list[str], optional
+            Relationship types to skip in graph traversal.
+        include_only_relationships: list[str], optional
+            Only include these relationship types.
+        skip_classified_elements: list[str], optional
+            Skip elements with these classifications.
+        include_only_classified_elements: list[str], optional
+            Only include elements with these classifications.
+        graph_query_depth: int, optional
+            Depth of graph traversal. Default is 3.
+        governance_zone_filter: list[str], optional
+            Filter by governance zones.
+        as_of_time: str, optional
+            Historical query time (ISO 8601 format).
+        effective_time: str, optional
+            Effective time for the query (ISO 8601 format).
+        relationship_page_size: int, optional
+            Page size for relationships. Default is 0.
+        limit_results_by_status: list[str], optional
+            Filter by element status (e.g., ["ACTIVE"]).
+        sequencing_order: str, optional
+            Order of results (e.g., "PROPERTY_ASCENDING").
+        sequencing_property: str, optional
+            Property to sequence by.
+        output_format: str, optional
+            Format of the output. Default is "DICT".
+        report_spec: dict | str, optional
+            Specification for report formatting.
+        start_from: int, optional
+            Index of the first result to return. Default is 0.
+        page_size: int, optional
+            Maximum number of results to return. Default is None (server default).
+        property_names: list[str], optional
+            Specific properties to search.
         body: dict | SearchStringRequestBody, optional
+            Additional search parameters.
 
         Returns
         -------
-        list | str
-            List of software capabilities matching the search string.
+        list | dict | str
+            List of matching software capabilities in the specified format.
 
         Raises
         ------
@@ -4985,7 +5042,31 @@ class AssetMaker(ServerClient):
 
         Notes
         -----
-        See: https://egeria-project.org/concepts/software-capability
+        Sample body:
+        {
+          "class" : "SearchStringRequestBody",
+          "searchString": "xxx",
+          "metadataElementTypeName": "SoftwareCapability",
+          "metadataElementSubtypeNames": [],
+          "skipRelationships": [],
+          "includeOnlyRelationships": [],
+          "relationshipsPageSize": 100,
+          "skipClassifiedElements": [],
+          "includeOnlyClassifiedElements": [],
+          "graphQueryDepth" : 10,
+          "startsWith" : false,
+          "endsWith" : false,
+          "ignoreCase" : true,
+          "startFrom" : 0,
+          "pageSize": 0,
+          "asOfTime" : "2024-01-01T00:00:00.000+00:00",
+          "effectiveTime" : "2024-01-01T00:00:00.000+00:00",
+          "forLineage" : false,
+          "forDuplicateProcessing" : false,
+          "limitResultsByStatus" : ["ACTIVE"],
+          "sequencingOrder" : "PROPERTY_ASCENDING",
+          "sequencingProperty" : "qualifiedName"
+        }
         """
         url = f"{self.asset_command_root}/software-capabilities/search"
         return await self._async_find_request(
@@ -4996,11 +5077,28 @@ class AssetMaker(ServerClient):
             starts_with=starts_with,
             ends_with=ends_with,
             ignore_case=ignore_case,
-            start_from=start_from,
-            page_size=page_size,
+            anchor_domain=anchor_domain,
+            metadata_element_type=metadata_element_type,
+            metadata_element_subtypes=metadata_element_subtypes,
+            skip_relationships=skip_relationships,
+            include_only_relationships=include_only_relationships,
+            skip_classified_elements=skip_classified_elements,
+            include_only_classified_elements=include_only_classified_elements,
+            graph_query_depth=graph_query_depth,
+            governance_zone_filter=governance_zone_filter,
+            as_of_time=as_of_time,
+            effective_time=effective_time,
+            relationship_page_size=relationship_page_size,
+            limit_results_by_status=limit_results_by_status,
+            sequencing_order=sequencing_order,
+            sequencing_property=sequencing_property,
             output_format=output_format,
             report_spec=report_spec,
+            start_from=start_from,
+            page_size=page_size,
+            property_names=property_names,
             body=body,
+            **kwargs
         )
 
     @dynamic_catch
@@ -5010,47 +5108,124 @@ class AssetMaker(ServerClient):
         starts_with: bool = False,
         ends_with: bool = False,
         ignore_case: bool = True,
+        anchor_domain: Optional[str] = None,
+        metadata_element_type: Optional[str] = None,
+        metadata_element_subtypes: Optional[list[str]] = None,
+        skip_relationships: Optional[list[str]] = None,
+        include_only_relationships: Optional[list[str]] = None,
+        skip_classified_elements: Optional[list[str]] = None,
+        include_only_classified_elements: Optional[list[str]] = None,
+        graph_query_depth: int = 3,
+        governance_zone_filter: Optional[list[str]] = None,
+        as_of_time: Optional[str] = None,
+        effective_time: Optional[str] = None,
+        relationship_page_size: int = 0,
+        limit_results_by_status: Optional[list[str]] = None,
+        sequencing_order: Optional[str] = None,
+        sequencing_property: Optional[str] = None,
+        output_format: str = "DICT",
+        report_spec: dict | str | None = None,
         start_from: int = 0,
         page_size: int = 0,
-        output_format: str = "JSON",
-        report_spec: str | dict = None,
-        body: Optional[dict | SearchStringRequestBody] = None,
-    ) -> list | str:
+        property_names: Optional[list[str]] = None,
+        body: dict | SearchStringRequestBody | None = None,
+        **kwargs
+    ) -> list | dict | str:
         """Retrieve the list of software capability metadata elements that contain the search string.
 
         Parameters
         ----------
-        search_string: str, default = "*"
-            String to search for in software capability properties.
-        starts_with: bool, default = False
-        ends_with: bool, default = False
-        ignore_case: bool, default = True
-        start_from: int, default = 0
-        page_size: int, default = 0
-        output_format: str, default = "JSON"
-        report_spec: str | dict, optional
+        search_string: str, optional
+            String to search for in software capability properties. Default is "*".
+        starts_with: bool, optional
+            Whether to match only at the start. Default is False.
+        ends_with: bool, optional
+            Whether to match only at the end. Default is False.
+        ignore_case: bool, optional
+            Whether to ignore case in matching. Default is True.
+        anchor_domain: str, optional
+            Domain to anchor the search.
+        metadata_element_type: str, optional
+            Specific metadata element type (e.g., "SoftwareCapability").
+        metadata_element_subtypes: list[str], optional
+            List of metadata element subtypes.
+        skip_relationships: list[str], optional
+            Relationship types to skip in graph traversal.
+        include_only_relationships: list[str], optional
+            Only include these relationship types.
+        skip_classified_elements: list[str], optional
+            Skip elements with these classifications.
+        include_only_classified_elements: list[str], optional
+            Only include elements with these classifications.
+        graph_query_depth: int, optional
+            Depth of graph traversal. Default is 3.
+        governance_zone_filter: list[str], optional
+            Filter by governance zones.
+        as_of_time: str, optional
+            Historical query time (ISO 8601 format).
+        effective_time: str, optional
+            Effective time for the query (ISO 8601 format).
+        relationship_page_size: int, optional
+            Page size for relationships. Default is 0.
+        limit_results_by_status: list[str], optional
+            Filter by element status (e.g., ["ACTIVE"]).
+        sequencing_order: str, optional
+            Order of results (e.g., "PROPERTY_ASCENDING").
+        sequencing_property: str, optional
+            Property to sequence by.
+        output_format: str, optional
+            Format of the output. Default is "DICT".
+        report_spec: dict | str, optional
+            Specification for report formatting.
+        start_from: int, optional
+            Index of the first result to return. Default is 0.
+        page_size: int, optional
+            Maximum number of results to return. Default is None (server default).
+        property_names: list[str], optional
+            Specific properties to search.
         body: dict | SearchStringRequestBody, optional
+            Additional search parameters.
 
         Returns
         -------
-        list | str
-            List of software capabilities matching the search string.
+        list | dict | str
+            List of matching software capabilities in the specified format.
 
         Raises
         ------
         PyegeriaException
             One of the pyegeria exceptions will be raised if there are issues in communications, message format, or
             Egeria errors.
-
-        Notes
-        -----
-        See: https://egeria-project.org/concepts/software-capability
         """
         loop = asyncio.get_event_loop()
         return loop.run_until_complete(
             self._async_find_software_capabilities(
-                search_string, starts_with, ends_with, ignore_case,
-                start_from, page_size, output_format, report_spec, body
+                search_string=search_string,
+                starts_with=starts_with,
+                ends_with=ends_with,
+                ignore_case=ignore_case,
+                anchor_domain=anchor_domain,
+                metadata_element_type=metadata_element_type,
+                metadata_element_subtypes=metadata_element_subtypes,
+                skip_relationships=skip_relationships,
+                include_only_relationships=include_only_relationships,
+                skip_classified_elements=skip_classified_elements,
+                include_only_classified_elements=include_only_classified_elements,
+                graph_query_depth=graph_query_depth,
+                governance_zone_filter=governance_zone_filter,
+                as_of_time=as_of_time,
+                effective_time=effective_time,
+                relationship_page_size=relationship_page_size,
+                limit_results_by_status=limit_results_by_status,
+                sequencing_order=sequencing_order,
+                sequencing_property=sequencing_property,
+                output_format=output_format,
+                report_spec=report_spec,
+                start_from=start_from,
+                page_size=page_size,
+                property_names=property_names,
+                body=body,
+                **kwargs
             )
         )
 

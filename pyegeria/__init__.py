@@ -62,6 +62,7 @@ from pyegeria.omvs.automated_curation import AutomatedCuration
 from pyegeria.omvs.classification_explorer import ClassificationExplorer
 from pyegeria.omvs.collection_manager import CollectionManager
 from pyegeria.omvs.community_matters_omvs import CommunityMatters
+from pyegeria.omvs.connection_maker import ConnectionMaker
 from pyegeria.omvs.data_designer import DataDesigner
 from pyegeria.omvs.data_discovery import DataDiscovery
 from pyegeria.omvs.data_engineer import DataEngineer
@@ -167,6 +168,7 @@ __all__ = [
     "ClassificationExplorer",
     "CollectionManager",
     "CommunityMatters",
+    "ConnectionMaker",
     "DataDesigner",
     "DataDiscovery",
     "DataEngineer",
