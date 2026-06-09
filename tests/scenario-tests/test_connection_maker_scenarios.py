@@ -80,8 +80,8 @@ async def test_full_connection_setup_scenario(connection_maker):
         await connection_maker._async_link_connection_endpoint(conn_guid, ep_guid, rel_body)
         
         # 6. Retrieve and Verify
-        conn_resp = await connection_maker._async_get_connection_by_guid(conn_guid, {"class": "GetRequestBody"})
-        assert conn_resp["element"]["elementHeader"]["guid"] == conn_guid
+        conn_resp = await connection_maker._async_get_connection_by_guid(conn_guid, body={"class": "GetRequestBody"})
+        assert conn_resp["elementHeader"]["guid"] == conn_guid
         # Note: Depending on the OMVS implementation, the attached elements might appear in the response 
         # or require separate retrieve calls. For now, we verify the primary element.
         

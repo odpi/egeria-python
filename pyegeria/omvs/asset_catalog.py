@@ -332,8 +332,16 @@ class AssetCatalog(ServerClient):
             f"{self.platform_url}/servers/{self.view_server}/api/open-metadata/asset-catalog/assets/{asset_guid}/"
             f"as-graph"
         )
-        response = await self._async_get_results_body_request(url, "Asset", self._generate_asset_output,
-                                                        start_from, page_size, output_format, report_spec, body)
+        response = await self._async_get_results_body_request(
+            url=url,
+            _type="Asset",
+            _gen_output=self._generate_asset_output,
+            start_from=start_from,
+            page_size=page_size,
+            output_format=output_format,
+            report_spec=report_spec,
+            body=body,
+        )
         return response
 
     def get_asset_graph(

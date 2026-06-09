@@ -510,10 +510,12 @@ class ProductManager(CollectionManager):
         PyegeriaException
             If there are issues in communications, message format, or Egeria errors.
         """
+        if "filter_string" in kwargs:
+            name = kwargs.pop("filter_string")
         url = f"{self.product_manager_command_root}/collections/by-name"
         response = await self._async_get_name_request(url, _type="DigitalProduct",
                                                       _gen_output=self._generate_collection_output,
-                                                      filter_string=filter_string,
+                                                      filter_string=name,
                                                       classification_names=classification_names, start_from=start_from,
                                                       page_size=page_size, output_format=output_format,
                                                       report_spec=report_spec, body=body)
@@ -1351,7 +1353,8 @@ class ProductManager(CollectionManager):
             If there are issues in communications, message format, or Egeria errors.
         """
         digital_product_catalog_guid = str(digital_product_catalog_guid)
-        body = self._prepare_body(body)
+        if body is not None:
+            body = self._prepare_body(body)
         cascade = bool(cascade)
         loop = asyncio.get_event_loop()
         loop.run_until_complete(
@@ -1491,9 +1494,11 @@ class ProductManager(CollectionManager):
         PyegeriaException
             If there are issues in communications, message format, or Egeria errors.
         """
+        if "filter_string" in kwargs:
+            name = kwargs.pop("filter_string")
         url = f"{self.product_manager_command_root}/collections/by-name"
         response = await self._async_get_name_request(url, _type="DigitalProductCatalog", _gen_output=None,
-                                                      filter_string=filter_string,
+                                                      filter_string=name,
                                                       classification_names=classification_names, start_from=start_from,
                                                       page_size=page_size, output_format=output_format,
                                                       report_spec=report_spec, body=body)

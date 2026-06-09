@@ -458,8 +458,15 @@ class ClassificationExplorer(ServerClient):
         url = (f"{self.platform_url}/servers/{self.view_server}/api/open-metadata/"
                f"classification-explorer/elements/by-ownership")
 
-        response = await self._async_get_name_request(url, "Referenceable", self._generate_referenceable_output,
-                                                      owner_name, None, 0, 0, output_format, report_spec, body)
+        response = await self._async_get_name_request(
+            url=url,
+            _type="Referenceable",
+            _gen_output=self._generate_referenceable_output,
+            filter_string=owner_name,
+            output_format=output_format,
+            report_spec=report_spec,
+            body=body,
+        )
         return response
 
     @dynamic_catch
@@ -574,8 +581,15 @@ body: Optional[dict | FilterRequestBody] = None,
         url = (f"{self.platform_url}/servers/{self.view_server}/api/open-metadata/"
                f"classification-explorer/elements/by-ownership")
 
-        response = await self._async_get_name_request(url, "Referenceable", self._generate_referenceable_output,
-                                                      subject_area, None, 0, 0, output_format, report_spec, body)
+        response = await self._async_get_name_request(
+            url=url,
+            _type="Referenceable",
+            _gen_output=self._generate_referenceable_output,
+            filter_string=subject_area,
+            output_format=output_format,
+            report_spec=report_spec,
+            body=body,
+        )
         return response
 
     @dynamic_catch
