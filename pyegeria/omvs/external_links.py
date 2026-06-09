@@ -1393,17 +1393,18 @@ class ExternalReferences(ServerClient):
         )
 
     @dynamic_catch
-    async def _async_get_external_references_by_name(self, filter_string: Optional[str] = None,
+    async def _async_get_external_references_by_name(self, name: Optional[str] = None,
                                                      classification_names: Optional[list[str]] = None,
                                                      body: Optional[dict | FilterRequestBody] = None,
                                                      start_from: int = 0, page_size: int = 0,
                                                      output_format: str = 'JSON',
-                                                     report_spec: str | dict = "ExternalReference") -> list | str:
+                                                     report_spec: str | dict = "ExternalReference",
+                                                     **kwargs) -> list | str:
         """ Returns the list of external references with a particular name.
 
             Parameters
             ----------
-            filter_string: str,
+            name: str,
                 name to use to find matching collections.
             classification_names: list[str], optional, default = None
                 type of collection to filter by - e.g., DataDict, Folder, Root
@@ -1435,27 +1436,40 @@ class ExternalReferences(ServerClient):
             NotAuthorizedException
               The principle specified by the user_id does not have authorization for the requested action
         """
+        if name is None and "filter_string" in kwargs:
+            name = kwargs.pop("filter_string")
+
         url = str(HttpUrl(f"{self.command_root}/external-references/by-name"))
+
+        params = {
+            'classification_names': classification_names,
+            'start_from': start_from,
+            'page_size': page_size,
+            'output_format': output_format,
+            'report_spec': report_spec,
+            'body': body
+        }
+        params.update(kwargs)
+        params = {k: v for k, v in params.items() if v is not None}
+
         response = await self._async_get_name_request(url, _type="ExternalReference",
                                                       _gen_output=self._generate_external_reference_output,
-                                                      filter_string=filter_string,
-                                                      classification_names=classification_names, start_from=start_from,
-                                                      page_size=page_size, output_format=output_format,
-                                                      report_spec=report_spec, body=body)
+                                                      filter_string=name, **params)
 
         return response
 
-    def get_external_references_by_name(self, filter_string: Optional[str] = None, classification_names: Optional[list[str]] = None,
+    def get_external_references_by_name(self, name: Optional[str] = None, classification_names: Optional[list[str]] = None,
                                         body: Optional[dict | FilterRequestBody] = None,
                                         start_from: int = 0, page_size: int = 0, output_format: str = 'JSON',
-                                        report_spec: str | dict = "ExternalReference") -> list | str:
+                                        report_spec: str | dict = "ExternalReference",
+                                        **kwargs) -> list | str:
         """Returns the list of external references matching the filter string. Async version.
             The search string is located in the request body and is interpreted as a plain string.
             The request parameters, startsWith, endsWith, and ignoreCase can be used to allow a fuzzy search.
 
         Parameters
         ----------
-        filter_string: str,
+        name: str,
             name to use to find matching collections.
         classification_names: list[str], optional, default = None
             type of collection to filter by - e.g., DataDict, Folder, Root
@@ -1483,20 +1497,22 @@ class ExternalReferences(ServerClient):
 
         """
         return asyncio.get_event_loop().run_until_complete(
-            self._async_get_external_references_by_name(filter_string, classification_names, body, start_from,
-                                                        page_size,
-                                                        output_format, report_spec))
+            self._async_get_external_references_by_name(name=name, classification_names=classification_names,
+                                                        body=body, start_from=start_from, page_size=page_size,
+                                                        output_format=output_format, report_spec=report_spec,
+                                                        **kwargs))
 
     @dynamic_catch
-    async def _async_get_external_reference_by_guid(self, ext_ref_guid: str, element_type: Optional[str] = None,
+    async def _async_get_external_reference_by_guid(self, guid: str, element_type: Optional[str] = None,
                                                     body: Optional[dict | GetRequestBody] = None,
                                                     output_format: str = 'JSON',
-                                                    report_spec: str | dict = "ExternalReference") -> dict | str:
+                                                    report_spec: str | dict = "ExternalReference",
+                                                    **kwargs) -> dict | str:
         """Return the properties of a specific external reference. Async version.
 
         Parameters
         ----------
-        ext_ref_guid: str,
+        guid: str,
             unique identifier of the external reference to retrieve.
         element_type: str, default = None, optional
              type of externak reference ExternalReference, RelatedMedia, etc.
@@ -1534,27 +1550,37 @@ class ExternalReferences(ServerClient):
           "forDuplicateProcessing": false
         }
         """
+        if guid is None and "ext_ref_guid" in kwargs:
+            guid = kwargs.pop("ext_ref_guid")
 
-        url = str(HttpUrl(f"{self.command_root}/external-references/{ext_ref_guid}/retrieve"))
-        type = element_type if element_type else "ExternalReference"
+        url = str(HttpUrl(f"{self.command_root}/external-references/{guid}/retrieve"))
+        type_ = element_type if element_type else "ExternalReference"
 
-        response = await self._async_get_guid_request(url, _type=type,
+        params = {
+            'output_format': output_format,
+            'report_spec': report_spec,
+            'body': body
+        }
+        params.update(kwargs)
+        params = {k: v for k, v in params.items() if v is not None}
+
+        response = await self._async_get_guid_request(url, _type=type_,
                                                       _gen_output=self._generate_external_reference_output,
-                                                      output_format=output_format, report_spec=report_spec,
-                                                      body=body)
+                                                      **params)
 
         return response
 
     @dynamic_catch
-    def get_external_reference_by_guid(self, ext_ref_guid: str, element_type: Optional[str] = None,
+    def get_external_reference_by_guid(self, guid: str, element_type: Optional[str] = None,
                                        body: Optional[dict | GetRequestBody] = None,
                                        output_format: str = 'JSON',
-                                       report_spec: str | dict = "ExternalReference") -> dict | str:
+                                       report_spec: str | dict = "ExternalReference",
+                                       **kwargs) -> dict | str:
         """ Return the properties of a specific external reference. Async version.
 
             Parameters
             ----------
-            ext_ref_guid: str,
+            guid: str,
                 unique identifier of the external reference to retrieve.
             element_type: str, default = None, optional
                 type of element - ExternalReference, RelatedMedia, etc.
@@ -1594,8 +1620,9 @@ class ExternalReferences(ServerClient):
             }
         """
         return asyncio.get_event_loop().run_until_complete(
-            self._async_get_external_reference_by_guid(ext_ref_guid, element_type, body,
-                                                       output_format, report_spec))
+            self._async_get_external_reference_by_guid(guid=guid, element_type=element_type, body=body,
+                                                       output_format=output_format, report_spec=report_spec,
+                                                       **kwargs))
 
     def _extract_external_reference_properties(self, element: dict, columns_struct: dict) -> dict:
         """

@@ -744,11 +744,11 @@ class MetadataExpert(ServerClient):
     @dynamic_catch
     async def _async_get_metadata_guid_by_unique_name(
         self,
-        name: str,
-        property_name: str,
-            as_of_time: Optional[str] = None,
-        effective_time: Optional[str] = None,
-            body: Optional[dict | FilterRequestBody] = None
+        name: Optional[str] = None,
+        property_name: str = "qualifiedName",
+        as_of_time: Optional[str] = None,
+        body: Optional[dict | FilterRequestBody] = None,
+        **kwargs
     ) -> str:
         """
             Retrieve the metadata element GUID using its unique name (typically the qualified name, but it is possible to
@@ -762,8 +762,6 @@ class MetadataExpert(ServerClient):
             property_name: str
                 - property name to search in (typically the qualified name)
             as_of_time: str, default = None
-                - The Time format is "YYYY-MM-DDTHH:MM:SS" (ISO 8601)
-            effective_time: str, default = None
                 - The Time format is "YYYY-MM-DDTHH:MM:SS" (ISO 8601)
             body: dict | FilterRequestBody, default = None
                 - details of the request supersede parameters.
@@ -795,14 +793,19 @@ class MetadataExpert(ServerClient):
 
 
         """
+        if name is None and "name" in kwargs:
+            name = kwargs.pop("name")
+        effective_time = kwargs.pop("effective_time", None)
+        as_of_time = kwargs.pop("as_of_time", as_of_time)
+
         if body is None:
             body = {
                 "class": "UniqueNameRequestBody",
                 "effectiveTime": effective_time,
                 "as_of_time": as_of_time,
-            "name": name,
-            "namePropertyName": property_name,
-        }
+                "name": name,
+                "namePropertyName": property_name,
+            }
 
         url = f"{base_path(self, self.view_server)}/metadata-elements/guid-by-unique-name"
 
@@ -814,11 +817,11 @@ class MetadataExpert(ServerClient):
     @dynamic_catch
     def get_metadata_guid_by_unique_name(
         self,
-        name: str,
-        property_name: str,
-            as_of_time: Optional[str] = None,
-        effective_time: Optional[str] = None,
-            body: Optional[dict | FilterRequestBody] = None,
+        name: Optional[str] = None,
+        property_name: str = "qualifiedName",
+        as_of_time: Optional[str] = None,
+        body: Optional[dict | FilterRequestBody] = None,
+        **kwargs,
     ) -> str:
         """
             Retrieve the metadata element GUID using its unique name (typically the qualified name, but it is possible to
@@ -832,8 +835,6 @@ class MetadataExpert(ServerClient):
             property_name: str
                 - property name to search in (typically the qualified name)
             as_of_time: str, default = None
-                - The Time format is "YYYY-MM-DDTHH:MM:SS" (ISO 8601)
-            effective_time: str, default = None
                 - The Time format is "YYYY-MM-DDTHH:MM:SS" (ISO 8601)
             body: dict | FilterRequestBody, default = None
                 - details of the request supersede parameters.
@@ -867,18 +868,19 @@ class MetadataExpert(ServerClient):
 
         loop = asyncio.get_event_loop()
         response = loop.run_until_complete(
-            self._async_get_metadata_guid_by_unique_name(name, property_name, as_of_time=as_of_time,
-                                                         effective_time=effective_time, body=body)
+            self._async_get_metadata_guid_by_unique_name(
+                name=name, property_name=property_name, as_of_time=as_of_time, body=body, **kwargs
+            )
         )
         return response
 
     @dynamic_catch
     async def _async_get_metadata_element_by_guid(
         self,
-        guid: str,
-        effective_time: Optional[str] = None,
+        guid: Optional[str] = None,
         as_of_time: Optional[str] = None,
-            body: Optional[dict | GetRequestBody] = None,
+        body: Optional[dict | GetRequestBody] = None,
+        **kwargs,
     ) -> dict | str:
         """
         Retrieve the metadata element using its unique identifier. Async version.
@@ -887,8 +889,6 @@ class MetadataExpert(ServerClient):
         ----------
         guid : str
             - unique identifier of the element to retrieve
-        effective_time: str, default = None
-            - Time format is "YYYY-MM-DDTHH:MM:SS" (ISO 8601)
         as_of_time: str, default = None
             - Query the element as of this time. If None, then use current time.
         body: dict | GetRequestBody, default = None
@@ -918,6 +918,10 @@ class MetadataExpert(ServerClient):
         }
 
         """
+        if guid is None and "guid" in kwargs:
+            guid = kwargs.pop("guid")
+        effective_time = kwargs.pop("effective_time", None)
+        as_of_time = kwargs.pop("as_of_time", as_of_time)
 
         if body is None:
             body = {
@@ -936,10 +940,10 @@ class MetadataExpert(ServerClient):
     @dynamic_catch
     def get_metadata_element_by_guid(
         self,
-        guid: str,
-        effective_time: Optional[str] = None,
+        guid: Optional[str] = None,
         as_of_time: Optional[str] = None,
-            body: Optional[dict | GetRequestBody] = None,
+        body: Optional[dict | GetRequestBody] = None,
+        **kwargs,
     ) -> dict | str:
         """
         Retrieve the metadata element using its unique identifier.
@@ -948,8 +952,6 @@ class MetadataExpert(ServerClient):
         ----------
         guid : str
             - unique identifier of the element to retrieve
-        effective_time: str, default = None
-            - Time format is "YYYY-MM-DDTHH:MM:SS" (ISO 8601)
         as_of_time: str, default = None
             - Query the element as of this time. If None, then use current time.
         body: dict | GetRequestBody, default = None
@@ -973,14 +975,17 @@ class MetadataExpert(ServerClient):
 
         loop = asyncio.get_event_loop()
         response = loop.run_until_complete(
-            self._async_get_metadata_element_by_guid(guid, effective_time, as_of_time, body)
+            self._async_get_metadata_element_by_guid(
+                guid=guid, as_of_time=as_of_time, body=body, **kwargs
+            )
         )
         return response
 
     @dynamic_catch
-    async def _async_get_anchored_element_graph(self, guid: str, effective_time: Optional[str] = None, as_of_time: Optional[str] = None,
+    async def _async_get_anchored_element_graph(self, guid: Optional[str] = None, as_of_time: Optional[str] = None,
                                                 mermaid_only: bool = False,
-                                                body: Optional[dict | GetRequestBody] = None) -> dict | str:
+                                                body: Optional[dict | GetRequestBody] = None,
+                                                **kwargs) -> dict | str:
         """
         Retrieve the metadata element and all of its anchored elements using its unique identifier. Async version.
 
@@ -988,8 +993,6 @@ class MetadataExpert(ServerClient):
         ----------
         guid : str
             - unique identifier of the element to retrieve
-        effective_time: str, default = None
-            - Time format is "YYYY-MM-DDTHH:MM:SS" (ISO 8601)
         as_of_time: str, default = None
             - Query the element as of this time. If None, current time is used.
         body: dict | GetRequestBody, default = None
@@ -1021,6 +1024,10 @@ class MetadataExpert(ServerClient):
 
 
         """
+        if guid is None and "guid" in kwargs:
+            guid = kwargs.pop("guid")
+        effective_time = kwargs.pop("effective_time", None)
+        as_of_time = kwargs.pop("as_of_time", as_of_time)
 
         if body is None:
             body = {
@@ -1043,11 +1050,11 @@ class MetadataExpert(ServerClient):
     @dynamic_catch
     def get_anchored_element_graph(
         self,
-        guid: str,
-        effective_time: Optional[str] = None,
+        guid: Optional[str] = None,
         as_of_time: Optional[str] = None,
-            mermaid_only: bool = False,
-            body: Optional[dict | GetRequestBody] = None
+        mermaid_only: bool = False,
+        body: Optional[dict | GetRequestBody] = None,
+        **kwargs
     ) -> dict | str:
         """
             Retrieve the metadata element and all of its anchored elements using its unique identifier.
@@ -1056,8 +1063,6 @@ class MetadataExpert(ServerClient):
             ----------
             guid : str
                 - unique identifier of the element to retrieve
-            effective_time: str, default = None
-                - Time format is "YYYY-MM-DDTHH:MM:SS" (ISO 8601)
             as_of_time: str, default = None
                 - Query the element as of this time. If None, current time is used.
             body: dict | GetRequestBody, default = None
@@ -1095,17 +1100,19 @@ class MetadataExpert(ServerClient):
 
         loop = asyncio.get_event_loop()
         response = loop.run_until_complete(
-            self._async_get_anchored_element_graph(guid, effective_time, as_of_time, mermaid_only, body)
+            self._async_get_anchored_element_graph(
+                guid=guid, as_of_time=as_of_time, mermaid_only=mermaid_only, body=body, **kwargs
+            )
         )
         return response
 
     @dynamic_catch
     async def _async_get_metadata_element_by_unique_name(
         self,
-        name: str,
+        name: Optional[str] = None,
         property_name: str = "qualifiedName",
-        effective_time: Optional[str] = None,
-            body: dict = None
+        body: dict = None,
+        **kwargs
     ) -> dict | str:
         """
         Retrieve the metadata element using its unique name (typically the *qualifiedName* attribute but other attributes
@@ -1117,8 +1124,6 @@ class MetadataExpert(ServerClient):
             - unique name to search for
         property_name: str, default = "qualifiedName"
             - property name to search in (typically the qualified name)
-        effective_time: str, default = None
-            - Time format is "YYYY-MM-DDTHH:MM:SS" (ISO 8601)
         body: dict, default = None
             - details of the request supersede parameters. Body, if present, overrides parameters.
         Returns
@@ -1147,6 +1152,9 @@ class MetadataExpert(ServerClient):
         }
 
         """
+        if name is None and "name" in kwargs:
+            name = kwargs.pop("name")
+        effective_time = kwargs.pop("effective_time", None)
 
         if body is None:
             body = {
@@ -1174,10 +1182,10 @@ class MetadataExpert(ServerClient):
     @dynamic_catch
     def get_metadata_element_by_unique_name(
         self,
-        name: str,
+        name: Optional[str] = None,
         property_name: str = "qualifiedName",
-        effective_time: Optional[str] = None,
-            body: dict = None
+        body: dict = None,
+        **kwargs
     ) -> str:
         """
         Retrieve the metadata element using its unique name (typically the *qualifiedName* attribute but other attributes
@@ -1189,8 +1197,6 @@ class MetadataExpert(ServerClient):
             - unique name to search for
         property_name: str, default = "qualifiedName"
             - property name to search in (typically the qualified name)
-        effective_time: str, default = None
-            - Time format is "YYYY-MM-DDTHH:MM:SS" (ISO 8601)
         body: dict, default = None
             - details of the request supersede parameters. Body, if present, overrides parameters.
         Returns
@@ -1222,21 +1228,23 @@ class MetadataExpert(ServerClient):
 
         loop = asyncio.get_event_loop()
         response = loop.run_until_complete(
-            self._async_get_metadata_element_by_unique_name(name, property_name, effective_time, body)
+            self._async_get_metadata_element_by_unique_name(
+                name=name, property_name=property_name, body=body, **kwargs
+            )
         )
         return response
 
     @dynamic_catch
     async def _async_get_element_history(
         self,
-        guid: str,
-        effective_time: Optional[str] = None,
+        guid: Optional[str] = None,
         oldest_first: bool = False,
         from_time: Optional[str] = None,
         to_time: Optional[str] = None,
         start_from: int = 0,
-            page_size: int = 0,
-            body: dict = None
+        page_size: int = 0,
+        body: dict = None,
+        **kwargs
     ) -> list | str:
         """
         Retrieve all the versions of a metadata element. Async version.
@@ -1245,8 +1253,6 @@ class MetadataExpert(ServerClient):
         ----------
         guid: str
             - Unique identity of an element to retrieve.
-        effective_time: str, default = None
-            - Time format is "YYYY-MM-DDTHH:MM:SS" (ISO 8601)
         oldest_first: bool, default = False
         from_time: str, default = None
             Time to begin returning history
@@ -1288,6 +1294,9 @@ class MetadataExpert(ServerClient):
             "IncludeOnlyRelationships": ["relationships"]
         }
         """
+        if guid is None and "guid" in kwargs:
+            guid = kwargs.pop("guid")
+        effective_time = kwargs.pop("effective_time", None)
 
         if body is None:
             body = {
@@ -1319,15 +1328,14 @@ class MetadataExpert(ServerClient):
     @dynamic_catch
     def get_element_history(
         self,
-        guid: str,
-        effective_time: Optional[str] = None,
+        guid: Optional[str] = None,
         oldest_first: bool = False,
         from_time: Optional[str] = None,
         to_time: Optional[str] = None,
         start_from: int = 0,
         page_size: int = max_paging_size,
-            body: dict = None
-
+        body: dict = None,
+        **kwargs
     ) -> list | str:
         """
         Retrieve all the versions of a metadata element.
@@ -1336,8 +1344,6 @@ class MetadataExpert(ServerClient):
         ----------
         guid: str
             - Unique identity of an element to retrieve.
-        effective_time: str, default = None
-            - Time format is "YYYY-MM-DDTHH:MM:SS" (ISO 8601)
         oldest_first: bool, default = False
         from_time: str, default = None
             Time to begin returning history
@@ -1378,29 +1384,29 @@ class MetadataExpert(ServerClient):
             "IncludeOnlyRelationships": ["relationships"]
         }
 
-        Args:
-            body ():
         """
 
         loop = asyncio.get_event_loop()
         response = loop.run_until_complete(
-            self._async_get_element_history(guid, effective_time, oldest_first, from_time, to_time, start_from,
-                                            page_size, body)
+            self._async_get_element_history(
+                guid=guid, oldest_first=oldest_first, from_time=from_time, to_time=to_time,
+                start_from=start_from, page_size=page_size, body=body, **kwargs
+            )
         )
         return response
 
     @dynamic_catch
     async def _async_get_classification_history(
         self,
-            guid: str,
-            classification_name: str,
-            effective_time: Optional[str] = None,
-            oldest_first: bool = False,
-            from_time: Optional[str] = None,
-            to_time: Optional[str] = None,
+        guid: Optional[str] = None,
+        classification_name: Optional[str] = None,
+        oldest_first: bool = False,
+        from_time: Optional[str] = None,
+        to_time: Optional[str] = None,
         start_from: int = 0,
-            page_size: int = 0,
-            body: dict = None
+        page_size: int = 0,
+        body: dict = None,
+        **kwargs
     ) -> list | str:
         """
         Retrieve all the versions of a metadata element. Async version.
@@ -1411,8 +1417,6 @@ class MetadataExpert(ServerClient):
             - Unique identity of an element to retrieve.
         classification_name: str
             - Name of the classification to retrieve history for.
-        effective_time: str, default = None
-            - Time format is "YYYY-MM-DDTHH:MM:SS" (ISO 8601)
         oldest_first: bool, default = False
         from_time: str, default = None
             Time to begin returning history
@@ -1454,9 +1458,12 @@ class MetadataExpert(ServerClient):
             "IncludeOnlyRelationships": ["relationships"]
         }
 
-        Args:
-            classification_name ():
         """
+        if guid is None and "guid" in kwargs:
+            guid = kwargs.pop("guid")
+        if classification_name is None and "classification_name" in kwargs:
+            classification_name = kwargs.pop("classification_name")
+        effective_time = kwargs.pop("effective_time", None)
 
         if body is None:
             body = {
@@ -1488,16 +1495,15 @@ class MetadataExpert(ServerClient):
     @dynamic_catch
     def get_classification_history(
         self,
-            guid: str,
-            classification_name: str,
-            effective_time: Optional[str] = None,
-            oldest_first: bool = False,
-            from_time: Optional[str] = None,
-            to_time: Optional[str] = None,
+        guid: Optional[str] = None,
+        classification_name: Optional[str] = None,
+        oldest_first: bool = False,
+        from_time: Optional[str] = None,
+        to_time: Optional[str] = None,
         start_from: int = 0,
         page_size: int = max_paging_size,
-            body: dict = None
-
+        body: dict = None,
+        **kwargs
     ) -> list | str:
         """
         Retrieve all the versions of a metadata element.
@@ -1508,8 +1514,6 @@ class MetadataExpert(ServerClient):
             - Unique identity of an element to retrieve.
         classification_name: str
             - Name of the classification to retrieve history for.
-        effective_time: str, default = None
-            - Time format is "YYYY-MM-DDTHH:MM:SS" (ISO 8601)
         oldest_first: bool, default = False
         from_time: str, default = None
             Time to begin returning history
@@ -1554,8 +1558,11 @@ class MetadataExpert(ServerClient):
 
         loop = asyncio.get_event_loop()
         response = loop.run_until_complete(
-            self._async_get_classification_history(guid, classification_name, effective_time, oldest_first, from_time,
-                                                   to_time, start_from, page_size, body)
+            self._async_get_classification_history(
+                guid=guid, classification_name=classification_name, oldest_first=oldest_first,
+                from_time=from_time, to_time=to_time, start_from=start_from, page_size=page_size,
+                body=body, **kwargs
+            )
         )
         return response
 
@@ -1570,12 +1577,13 @@ class MetadataExpert(ServerClient):
                                                         skip_classified_elements=None,
                                                         include_only_classified_elements: Optional[list[str]] = None,
                                                         graph_query_depth: int = 5,
-                                                        as_of_time: Optional[str] = None, effective_time: Optional[str] = None,
+                                                        as_of_time: Optional[str] = None,
                                                         limit_results_by_status: Optional[list[str]] = None,
                                                         sequencing_order: str = "PROPERTY_ASCENDING",
                                                         sequencing_property: str = "qualifiedName",
                                                         start_from: int = 0, page_size: int = 0,
-                                                        body: SearchStringRequestBody | dict = None) -> list | str:
+                                                        body: SearchStringRequestBody | dict = None,
+                                                        **kwargs) -> list | str:
         """ Searches for metadata elements based on a string pattern with a comprehensive filtering
         mechanism. This method allows for advanced keyword searches with various parameters including string
         matching rules, filtering by type, relationships, classifications, and querying depth.
@@ -1611,8 +1619,6 @@ class MetadataExpert(ServerClient):
                 metadata elements. Defaults to 5.
             as_of_time (str | None): Timestamp to filter metadata elements based on their historical
                 state as of the given time. Defaults to None.
-            effective_time (str | None): Timestamp to filter metadata elements based on their effective
-                state. Defaults to None.
             limit_results_by_status (list[str] | None): Filters to return only metadata elements associated
                 with the specified statuses. Defaults to None.
             sequencing_order (str): Determines the sequencing order of results. Defaults to "PROPERTY_ASCENDING".
@@ -1632,6 +1638,7 @@ class MetadataExpert(ServerClient):
         url = (
             f"{base_path(self, self.view_server)}/metadata-elements/by-search-string"
         )
+        effective_time = kwargs.pop("effective_time", None)
 
         response = await self._async_find_request(url=url, _type="Referenceable",
                                                   _gen_output=self._generate_referenceable_output,
@@ -1652,7 +1659,7 @@ class MetadataExpert(ServerClient):
                                                   sequencing_order=sequencing_order,
                                                   sequencing_property=sequencing_property, output_format="JSON",
                                                   report_spec=None, start_from=start_from, page_size=page_size,
-                                                  body=body)
+                                                  body=body, **kwargs)
         return response
 
     @dynamic_catch
@@ -1665,12 +1672,13 @@ class MetadataExpert(ServerClient):
                                            skip_classified_elements=None,
                                            include_only_classified_elements: Optional[list[str]] = None,
                                            graph_query_depth: int = 5,
-                                           as_of_time: Optional[str] = None, effective_time: Optional[str] = None,
+                                           as_of_time: Optional[str] = None,
                                            limit_results_by_status: Optional[list[str]] = None,
                                            sequencing_order: str = "PROPERTY_ASCENDING",
                                            sequencing_property: str = "qualifiedName",
                                            start_from: int = 0, page_size: int = 0,
-                                           body: SearchStringRequestBody | dict = None) -> list | str:
+                                           body: SearchStringRequestBody | dict = None,
+                                           **kwargs) -> list | str:
         """
         Asynchronously searches for metadata elements based on a string pattern with a comprehensive filtering
         mechanism. This method allows for advanced keyword searches with various parameters including string
@@ -1706,8 +1714,6 @@ class MetadataExpert(ServerClient):
                 metadata elements. Defaults to 5.
             as_of_time (str | None): Timestamp to filter metadata elements based on their historical
                 state as of the given time. Defaults to None.
-            effective_time (str | None): Timestamp to filter metadata elements based on their effective
-                state. Defaults to None.
             limit_results_by_status (list[str] | None): Filters to return only metadata elements associated
                 with the specified statuses. Defaults to None.
             sequencing_order (str): Determines the sequencing order of results. Defaults to "PROPERTY_ASCENDING".
@@ -1725,20 +1731,23 @@ class MetadataExpert(ServerClient):
         """
         loop = asyncio.get_event_loop()
         response = loop.run_until_complete(
-            self._async_find_metadata_elements_with_string(search_string, starts_with, ends_with,
-                                                           ignore_case, anchor_domain, zone_filter,
-                                                           metadata_element_type, metadata_element_sub_type,
-                                                           skip_relationships, include_only_relationships,
-                                                           relationship_page_size, skip_classified_elements,
-                                                           include_only_classified_elements,
-                                                           graph_query_depth, as_of_time, effective_time,
-                                                           limit_results_by_status, sequencing_order,
-                                                           sequencing_property, start_from, page_size, body)
+            self._async_find_metadata_elements_with_string(
+                search_string=search_string, starts_with=starts_with, ends_with=ends_with,
+                ignore_case=ignore_case, anchor_domain=anchor_domain, zone_filter=zone_filter,
+                metadata_element_type=metadata_element_type, metadata_element_sub_type=metadata_element_sub_type,
+                skip_relationships=skip_relationships, include_only_relationships=include_only_relationships,
+                relationship_page_size=relationship_page_size, skip_classified_elements=skip_classified_elements,
+                include_only_classified_elements=include_only_classified_elements,
+                graph_query_depth=graph_query_depth, as_of_time=as_of_time,
+                limit_results_by_status=limit_results_by_status, sequencing_order=sequencing_order,
+                sequencing_property=sequencing_property, start_from=start_from, page_size=page_size,
+                body=body, **kwargs
+            )
         )
         return response
 
     @dynamic_catch
-    async def _async_find_elements_for_anchor(self, anchor_guid: str, search_string: str = "*",
+    async def _async_find_elements_for_anchor(self, guid: Optional[str] = None, search_string: str = "*",
                                               starts_with: bool = True,
                                               ends_with: bool = False, ignore_case: bool = False,
                                               anchor_domain: Optional[str] = None,
@@ -1748,18 +1757,19 @@ class MetadataExpert(ServerClient):
                                               skip_classified_elements=None,
                                               include_only_classified_elements: Optional[list[str]] = None,
                                               graph_query_depth: int = 5,
-                                              as_of_time: Optional[str] = None, effective_time: Optional[str] = None,
+                                              as_of_time: Optional[str] = None,
                                               limit_results_by_status: Optional[list[str]] = None,
                                               sequencing_order: str = "PROPERTY_ASCENDING",
                                               sequencing_property: str = "qualifiedName",
                                               start_from: int = 0, page_size: int = 0,
-                                              body: SearchStringRequestBody | dict = None) -> list | str:
+                                              body: SearchStringRequestBody | dict = None,
+                                              **kwargs) -> list | str:
         """ Return a list of elements with the requested search string in their (display, resource) name, qualified name,
         title, text, summary, identifier, or description.  The search string is interpreted as a regular expression (RegEx).
         The breadth of the search is determined by the supplied anchorGUID. Async Version.
 
         Args:
-            anchor_guid (str): The GUID of the metadata element to anchor the search from.
+            guid (str): The GUID of the metadata element to anchor the search from.
             search_string (str): The string pattern to search for. Defaults to "*", which indicates no
                 restrictions on the search string.
             starts_with (bool): If set to True, the search string should match only elements that start
@@ -1789,8 +1799,6 @@ class MetadataExpert(ServerClient):
                 metadata elements. Defaults to 5.
             as_of_time (str | None): Timestamp to filter metadata elements based on their historical
                 state as of the given time. Defaults to None.
-            effective_time (str | None): Timestamp to filter metadata elements based on their effective
-                state. Defaults to None.
             limit_results_by_status (list[str] | None): Filters to return only metadata elements associated
                 with the specified statuses. Defaults to None.
             sequencing_order (str): Determines the sequencing order of results. Defaults to "PROPERTY_ASCENDING".
@@ -1807,8 +1815,12 @@ class MetadataExpert(ServerClient):
                 where the output is serialized in text format.
         """
 
+        if guid is None and "anchor_guid" in kwargs:
+            guid = kwargs.pop("anchor_guid")
+        effective_time = kwargs.pop("effective_time", None)
+
         url = (
-            f"{base_path(self, self.view_server)}/metadata-elements/by-search-string/for-anchor/{anchor_guid}"
+            f"{base_path(self, self.view_server)}/metadata-elements/by-search-string/for-anchor/{guid}"
         )
 
         response = await self._async_find_request(url=url, _type="Referenceable",
@@ -1828,29 +1840,30 @@ class MetadataExpert(ServerClient):
                                                   sequencing_order=sequencing_order,
                                                   sequencing_property=sequencing_property, output_format="JSON",
                                                   report_spec=None, start_from=start_from, page_size=page_size,
-                                                  body=body)
+                                                  body=body, **kwargs)
         return response
 
     @dynamic_catch
-    def find_elements_for_anchor(self, anchor_guid: str, search_string: str = "*", starts_with: bool = True,
+    def find_elements_for_anchor(self, guid: Optional[str] = None, search_string: str = "*", starts_with: bool = True,
                                  ends_with: bool = False, ignore_case: bool = False, anchor_domain: Optional[str] = None,
                                  zone_filter=None, metadata_element_type: Optional[str] = None,
                                  metadata_element_sub_type=None, skip_relationships=None,
                                  include_only_relationships=None, relationship_page_size: int = 10,
                                  skip_classified_elements=None,
                                  include_only_classified_elements: Optional[list[str]] = None, graph_query_depth: int = 5,
-                                 as_of_time: Optional[str] = None, effective_time: Optional[str] = None,
+                                 as_of_time: Optional[str] = None,
                                  limit_results_by_status: Optional[list[str]] = None,
                                  sequencing_order: str = "PROPERTY_ASCENDING",
                                  sequencing_property: str = "qualifiedName",
                                  start_from: int = 0, page_size: int = 0,
-                                 body: SearchStringRequestBody | dict = None) -> list | str:
+                                 body: SearchStringRequestBody | dict = None,
+                                 **kwargs) -> list | str:
         """ Return a list of elements with the requested search string in their (display, resource) name, qualified name,
             title, text, summary, identifier, or description.  The search string is interpreted as a regular expression (RegEx).
             The breadth of the search is determined by the supplied anchorGUID.
 
             Args:
-                anchor_guid (str): The GUID of the metadata element to anchor the search from.
+                guid (str): The GUID of the metadata element to anchor the search from.
                 search_string (str): The string pattern to search for. Defaults to "*", which indicates no
                     restrictions on the search string.
                 starts_with (bool): If set to True, the search string should match only elements that start
@@ -1880,8 +1893,6 @@ class MetadataExpert(ServerClient):
                     metadata elements. Defaults to 5.
                 as_of_time (str | None): Timestamp to filter metadata elements based on their historical
                 state as of the given time. Defaults to None.
-                effective_time (str | None): Timestamp to filter metadata elements based on their effective
-                    state. Defaults to None.
                 limit_results_by_status (list[str] | None): Filters to return only metadata elements associated
                     with the specified statuses. Defaults to None.
                 sequencing_order (str): Determines the sequencing order of results. Defaults to "PROPERTY_ASCENDING".
@@ -1899,15 +1910,18 @@ class MetadataExpert(ServerClient):
         """
         loop = asyncio.get_event_loop()
         response = loop.run_until_complete(
-            self._async_find_elements_for_anchor(anchor_guid, search_string, starts_with, ends_with,
-                                                 ignore_case, anchor_domain, zone_filter,
-                                                 metadata_element_type, metadata_element_sub_type,
-                                                 skip_relationships, include_only_relationships,
-                                                 relationship_page_size, skip_classified_elements,
-                                                 include_only_classified_elements,
-                                                 graph_query_depth, as_of_time, effective_time,
-                                                 limit_results_by_status, sequencing_order,
-                                                 sequencing_property, start_from, page_size, body)
+            self._async_find_elements_for_anchor(
+                guid=guid, search_string=search_string, starts_with=starts_with, ends_with=ends_with,
+                ignore_case=ignore_case, anchor_domain=anchor_domain, zone_filter=zone_filter,
+                metadata_element_type=metadata_element_type, metadata_element_sub_type=metadata_element_sub_type,
+                skip_relationships=skip_relationships, include_only_relationships=include_only_relationships,
+                relationship_page_size=relationship_page_size, skip_classified_elements=skip_classified_elements,
+                include_only_classified_elements=include_only_classified_elements,
+                graph_query_depth=graph_query_depth, as_of_time=as_of_time,
+                limit_results_by_status=limit_results_by_status, sequencing_order=sequencing_order,
+                sequencing_property=sequencing_property, start_from=start_from, page_size=page_size,
+                body=body, **kwargs
+            )
         )
         return response
 
@@ -1922,12 +1936,13 @@ class MetadataExpert(ServerClient):
                                                     skip_classified_elements=None,
                                                     include_only_classified_elements: Optional[list[str]] = None,
                                                     graph_query_depth: int = 5,
-                                                    as_of_time: Optional[str] = None, effective_time: Optional[str] = None,
+                                                    as_of_time: Optional[str] = None,
                                                     limit_results_by_status: Optional[list[str]] = None,
                                                     sequencing_order: str = "PROPERTY_ASCENDING",
                                                     sequencing_property: str = "qualifiedName",
                                                     start_from: int = 0, page_size: int = 0,
-                                                    body: SearchStringRequestBody | dict = None) -> list | str:
+                                                    body: SearchStringRequestBody | dict = None,
+                                                    **kwargs) -> list | str:
         """ Return a list of elements with the requested search string in their (display, resource) name, qualified name,
         title, text, summary, identifier, or description.  The search string is interpreted as a regular expression (RegEx).
         The breadth of the search is determined by the supplied anchorGUID. Async Version.
@@ -1962,8 +1977,6 @@ class MetadataExpert(ServerClient):
                 metadata elements. Defaults to 5.
             as_of_time (str | None): Timestamp to filter metadata elements based on their historical
                 state as of the given time. Defaults to None.
-            effective_time (str | None): Timestamp to filter metadata elements based on their effective
-                state. Defaults to None.
             limit_results_by_status (list[str] | None): Filters to return only metadata elements associated
                 with the specified statuses. Defaults to None.
             sequencing_order (str): Determines the sequencing order of results. Defaults to "PROPERTY_ASCENDING".
@@ -1979,6 +1992,8 @@ class MetadataExpert(ServerClient):
             list | str: Returns the search results as a list of metadata elements, or as a string in cases
                 where the output is serialized in text format.
         """
+
+        effective_time = kwargs.pop("effective_time", None)
 
         url = (
             f"{base_path(self, self.view_server)}/metadata-elements/by-search-string/"
@@ -2004,7 +2019,7 @@ class MetadataExpert(ServerClient):
                                                   sequencing_order=sequencing_order,
                                                   sequencing_property=sequencing_property, output_format="JSON",
                                                   report_spec=None, start_from=start_from, page_size=page_size,
-                                                  body=body)
+                                                  body=body, **kwargs)
         return response
 
     @dynamic_catch
@@ -2015,12 +2030,13 @@ class MetadataExpert(ServerClient):
                                        include_only_relationships=None, relationship_page_size: int = 10,
                                        skip_classified_elements=None,
                                        include_only_classified_elements: Optional[list[str]] = None, graph_query_depth: int = 5,
-                                       as_of_time: Optional[str] = None, effective_time: Optional[str] = None,
+                                       as_of_time: Optional[str] = None,
                                        limit_results_by_status: Optional[list[str]] = None,
                                        sequencing_order: str = "PROPERTY_ASCENDING",
                                        sequencing_property: str = "qualifiedName",
                                        start_from: int = 0, page_size: int = 0,
-                                       body: SearchStringRequestBody | dict = None) -> list | str:
+                                       body: SearchStringRequestBody | dict = None,
+                                       **kwargs) -> list | str:
         """ Return a list of elements with the requested search string in their (display, resource) name, qualified name,
             title, text, summary, identifier, or description.  The search string is interpreted as a regular expression (RegEx).
             The breadth of the search is determined by the supplied anchorGUID.
@@ -2052,11 +2068,9 @@ class MetadataExpert(ServerClient):
                 include_only_classified_elements (list[str] | None): A list of classification names to restrict
                     the search to metadata elements with these classifications exclusively. Defaults to None.
                 graph_query_depth (int): Specifies the depth for graph queries, useful for deeply connected
-                    metadata elements. Defaults to 5.
+                metadata elements. Defaults to 5.
                 as_of_time (str | None): Timestamp to filter metadata elements based on their historical
                     state as of the given time. Defaults to None.
-                effective_time (str | None): Timestamp to filter metadata elements based on their effective
-                    state. Defaults to None.
                 limit_results_by_status (list[str] | None): Filters to return only metadata elements associated
                     with the specified statuses. Defaults to None.
                 sequencing_order (str): Determines the sequencing order of results. Defaults to "PROPERTY_ASCENDING".
@@ -2074,20 +2088,23 @@ class MetadataExpert(ServerClient):
         """
         loop = asyncio.get_event_loop()
         response = loop.run_until_complete(
-            self._async_find_elements_in_anchor_domain(search_string, starts_with, ends_with, ignore_case,
-                                                       anchor_domain, zone_filter,
-                                                       metadata_element_type, metadata_element_sub_type,
-                                                       skip_relationships, include_only_relationships,
-                                                       relationship_page_size, skip_classified_elements,
-                                                       include_only_classified_elements, graph_query_depth, as_of_time,
-                                                       effective_time, limit_results_by_status, sequencing_order,
-                                                       sequencing_property, start_from,
-                                                       page_size, body)
+            self._async_find_elements_in_anchor_domain(
+                search_string=search_string, starts_with=starts_with, ends_with=ends_with,
+                ignore_case=ignore_case, anchor_domain=anchor_domain, zone_filter=zone_filter,
+                metadata_element_type=metadata_element_type, metadata_element_sub_type=metadata_element_sub_type,
+                skip_relationships=skip_relationships, include_only_relationships=include_only_relationships,
+                relationship_page_size=relationship_page_size, skip_classified_elements=skip_classified_elements,
+                include_only_classified_elements=include_only_classified_elements,
+                graph_query_depth=graph_query_depth, as_of_time=as_of_time,
+                limit_results_by_status=limit_results_by_status, sequencing_order=sequencing_order,
+                sequencing_property=sequencing_property, start_from=start_from, page_size=page_size,
+                body=body, **kwargs
+            )
         )
         return response
 
     @dynamic_catch
-    async def _async_find_elements_in_anchor_scope(self, anchor_scope_guid: str, search_string: str = "*",
+    async def _async_find_elements_in_anchor_scope(self, guid: Optional[str] = None, search_string: str = "*",
                                                    starts_with: bool = True,
                                                    ends_with: bool = False, ignore_case: bool = False,
                                                    anchor_domain: Optional[str] = None,
@@ -2097,19 +2114,20 @@ class MetadataExpert(ServerClient):
                                                    skip_classified_elements=None,
                                                    include_only_classified_elements: Optional[list[str]] = None,
                                                    graph_query_depth: int = 5,
-                                                   as_of_time: Optional[str] = None, effective_time: Optional[str] = None,
+                                                   as_of_time: Optional[str] = None,
                                                    limit_results_by_status: Optional[list[str]] = None,
                                                    sequencing_order: str = "PROPERTY_ASCENDING",
                                                    sequencing_property: str = "qualifiedName",
                                                    start_from: int = 0, page_size: int = 0,
-                                                   body: SearchStringRequestBody | dict = None) -> list | str:
+                                                   body: SearchStringRequestBody | dict = None,
+                                                   **kwargs) -> list | str:
         """ Return a list of elements with the requested search string in their (display, resource) name, qualified name,
             title, text, summary, identifier, or description.  The search string is interpreted as a regular expression (RegEx).
             The breadth of the search is determined by the supplied scope guid. The results are organized by anchor element.
             Async Version.
 
         Args:
-            anchor_scope_guid (str): The guid of the scope to search within. Required.
+            guid (str): The guid of the scope to search within. Required.
             search_string (str): The string pattern to search for. Defaults to "*", which indicates no
                 restrictions on the search string.
             starts_with (bool): If set to True, the search string should match only elements that start
@@ -2139,8 +2157,6 @@ class MetadataExpert(ServerClient):
                 metadata elements. Defaults to 5.
             as_of_time (str | None): Timestamp to filter metadata elements based on their historical
                 state as of the given time. Defaults to None.
-            effective_time (str | None): Timestamp to filter metadata elements based on their effective
-                state. Defaults to None.
             limit_results_by_status (list[str] | None): Filters to return only metadata elements associated
                 with the specified statuses. Defaults to None.
             sequencing_order (str): Determines the sequencing order of results. Defaults to "PROPERTY_ASCENDING".
@@ -2157,9 +2173,13 @@ class MetadataExpert(ServerClient):
                 where the output is serialized in text format.
         """
 
+        if guid is None and "anchor_scope_guid" in kwargs:
+            guid = kwargs.pop("anchor_scope_guid")
+        effective_time = kwargs.pop("effective_time", None)
+
         url = (
             f"{base_path(self, self.view_server)}/metadata-elements/by-search-string/"
-            f"in-anchor-scope/{anchor_scope_guid}"
+            f"in-anchor-scope/{guid}"
         )
 
         response = await self._async_find_request(url=url, _type="Referenceable",
@@ -2181,29 +2201,30 @@ class MetadataExpert(ServerClient):
                                                   sequencing_order=sequencing_order,
                                                   sequencing_property=sequencing_property, output_format="JSON",
                                                   report_spec=None, start_from=start_from, page_size=page_size,
-                                                  body=body)
+                                                  body=body, **kwargs)
         return response
 
     @dynamic_catch
-    def find_elements_in_anchor_scope(self, anchor_scope_guid: str, search_string: str = "*", starts_with: bool = True,
+    def find_elements_in_anchor_scope(self, guid: Optional[str] = None, search_string: str = "*", starts_with: bool = True,
                                       ends_with: bool = False, ignore_case: bool = False, anchor_domain: Optional[str] = None,
                                       zone_filter=None, metadata_element_type: Optional[str] = None,
                                       metadata_element_sub_type=None, skip_relationships=None,
                                       include_only_relationships=None, relationship_page_size: int = 10,
                                       skip_classified_elements=None,
                                       include_only_classified_elements: Optional[list[str]] = None, graph_query_depth: int = 5,
-                                      as_of_time: Optional[str] = None, effective_time: Optional[str] = None,
+                                      as_of_time: Optional[str] = None,
                                       limit_results_by_status: Optional[list[str]] = None,
                                       sequencing_order: str = "PROPERTY_ASCENDING",
                                       sequencing_property: str = "qualifiedName",
                                       start_from: int = 0, page_size: int = 0,
-                                      body: SearchStringRequestBody | dict = None) -> list | str:
+                                      body: SearchStringRequestBody | dict = None,
+                                      **kwargs) -> list | str:
         """ Return a list of elements with the requested search string in their (display, resource) name, qualified name,
             title, text, summary, identifier, or description.  The search string is interpreted as a regular expression (RegEx).
             The breadth of the search is determined by the supplied scope guid. The results are organized by anchor element.
 
             Args:
-                anchor_scope_guid (str): The guid of the scope to search within. Required.
+                guid (str): The guid of the scope to search within. Required.
                 search_string (str): The string pattern to search for. Defaults to "*", which indicates no
                     restrictions on the search string.
                 starts_with (bool): If set to True, the search string should match only elements that start
@@ -2233,8 +2254,6 @@ class MetadataExpert(ServerClient):
                     metadata elements. Defaults to 5.
                 as_of_time (str | None): Timestamp to filter metadata elements based on their historical
                 state as of the given time. Defaults to None.
-                effective_time (str | None): Timestamp to filter metadata elements based on their effective
-                    state. Defaults to None.
                 limit_results_by_status (list[str] | None): Filters to return only metadata elements associated
                     with the specified statuses. Defaults to None.
                 sequencing_order (str): Determines the sequencing order of results. Defaults to "PROPERTY_ASCENDING".
@@ -2252,33 +2271,37 @@ class MetadataExpert(ServerClient):
         """
         loop = asyncio.get_event_loop()
         response = loop.run_until_complete(
-            self._async_find_elements_in_anchor_scope(anchor_scope_guid, search_string, starts_with, ends_with,
-                                                      ignore_case, anchor_domain, zone_filter,
-                                                      metadata_element_type, metadata_element_sub_type,
-                                                      skip_relationships, include_only_relationships,
-                                                      relationship_page_size, skip_classified_elements,
-                                                      include_only_classified_elements, graph_query_depth, as_of_time,
-                                                      effective_time, limit_results_by_status, sequencing_order,
-                                                      sequencing_property, start_from,
-                                                      page_size, body)
+            self._async_find_elements_in_anchor_scope(
+                guid=guid, search_string=search_string, starts_with=starts_with, ends_with=ends_with,
+                ignore_case=ignore_case, anchor_domain=anchor_domain, zone_filter=zone_filter,
+                metadata_element_type=metadata_element_type, metadata_element_sub_type=metadata_element_sub_type,
+                skip_relationships=skip_relationships, include_only_relationships=include_only_relationships,
+                relationship_page_size=relationship_page_size, skip_classified_elements=skip_classified_elements,
+                include_only_classified_elements=include_only_classified_elements,
+                graph_query_depth=graph_query_depth, as_of_time=as_of_time,
+                limit_results_by_status=limit_results_by_status, sequencing_order=sequencing_order,
+                sequencing_property=sequencing_property, start_from=start_from, page_size=page_size,
+                body=body, **kwargs
+            )
         )
         return response
 
     @dynamic_catch
     async def _async_get_all_related_elements(
         self,
-            element_guid: str,
+        guid: Optional[str] = None,
         starting_at_end: int = 0,
         start_from: int = 0,
-            page_size: int = 0,
-            graph_query_depth: int = 5,
-            relationships_page_size: int = 0,
-            body: Optional[dict | ResultsRequestBody] = None,
+        page_size: int = 0,
+        graph_query_depth: int = 5,
+        relationships_page_size: int = 0,
+        body: Optional[dict | ResultsRequestBody] = None,
+        **kwargs
     ) -> list | str:
         """ Retrieve the metadata elements connected to the supplied element. Async Version.
 
         Args:
-            element_guid (str): The identifier of the element whose related metadata
+            guid (str): The identifier of the element whose related metadata
                 elements are to be fetched.
             starting_at_end (int): Indicator for starting fetch operation from the
                 end of the result list. Defaults to 0.
@@ -2317,6 +2340,11 @@ class MetadataExpert(ServerClient):
               "sequencingProperty": ""
             }
         """
+        if guid is None and "element_guid" in kwargs:
+            guid = kwargs.pop("element_guid")
+        if guid is None and "guid" in kwargs:
+            guid = kwargs.pop("guid")
+
         if body is None:
             body = {
                 "class": "ResultsRequestBody",
@@ -2326,7 +2354,7 @@ class MetadataExpert(ServerClient):
                 "relationshipsPageSize": relationships_page_size,
             }
         url = (
-            f"{base_path(self, self.view_server)}/related-elements/{element_guid}/"
+            f"{base_path(self, self.view_server)}/related-elements/{guid}/"
             f"any-type?startingAtEnd={starting_at_end}"
 
         )
@@ -2339,18 +2367,19 @@ class MetadataExpert(ServerClient):
 
     def get_all_related_elements(
             self,
-            element_guid: str,
+            guid: Optional[str] = None,
             starting_at_end: int = 0,
             start_from: int = 0,
             page_size: int = max_paging_size,
             graph_query_depth: int = 5,
             relationships_page_size: int = 0,
             body: Optional[dict | ResultsRequestBody] = None,
+            **kwargs
     ) -> list | str:
         """ Retrieve the metadata elements connected to the supplied element.
 
         Args:
-            element_guid (str): The identifier of the element whose related metadata
+            guid (str): The identifier of the element whose related metadata
                 elements are to be fetched.
             starting_at_end (int): Indicator for starting fetch operation from the
                 end of the result list. Defaults to 0.
@@ -2396,24 +2425,27 @@ class MetadataExpert(ServerClient):
     """
         loop = asyncio.get_event_loop()
         response = loop.run_until_complete(
-            self._async_get_all_related_elements(element_guid, starting_at_end, start_from, page_size,
-                                                 graph_query_depth, relationships_page_size,
-                                                 body=body)
+            self._async_get_all_related_elements(
+                guid=guid, starting_at_end=starting_at_end, start_from=start_from, page_size=page_size,
+                graph_query_depth=graph_query_depth, relationships_page_size=relationships_page_size,
+                body=body, **kwargs
+            )
         )
         return response
 
     async def _async_get_related_metadata_elements(
-            self,
-            element_guid: str,
-            relationship_type: str,
-            body: dict,
-            for_lineage: bool = None,
-            for_duplicate_processing: bool = None,
-            starting_at_end: int = 0,
-            start_from: int = 0,
-            page_size: int = max_paging_size,
-            time_out: int = default_time_out,
-            mermaid_only: bool = False,
+        self,
+        guid: str,
+        relationship_type: str,
+        body: dict,
+        for_lineage: bool = None,
+        for_duplicate_processing: bool = None,
+        starting_at_end: int = 0,
+        start_from: int = 0,
+        page_size: int = max_paging_size,
+        time_out: int = default_time_out,
+        mermaid_only: bool = False,
+        **kwargs,
     ) -> list | str:
         """
             Retrieve the metadata elements connected to the supplied element.
@@ -2469,10 +2501,10 @@ class MetadataExpert(ServerClient):
                     }
 
             """
+        guid = guid or kwargs.pop("guid", None) or kwargs.pop("element_guid", None)
 
         url = (
-            f"{base_path(self, self.view_server)}/related-elements/{element_guid}/type/{relationship_type}"
-
+            f"{base_path(self, self.view_server)}/related-elements/{guid}/type/{relationship_type}"
         )
 
         response: Response = await self._async_make_request(
@@ -2493,6 +2525,7 @@ class MetadataExpert(ServerClient):
         page_size: int = max_paging_size,
         time_out: int = default_time_out,
         mermaid_only: bool = False,
+        **kwargs,
     ) -> list | str:
         """
         Retrieve the metadata elements connected to the supplied element.
@@ -2555,13 +2588,14 @@ class MetadataExpert(ServerClient):
                 guid,
                 relationship_type,
                 body,
-                for_lineage,
-                for_duplicate_processing,
-                starting_at_end,
-                start_from,
-                page_size,
-                time_out,
-                mermaid_only,
+                for_lineage=for_lineage,
+                for_duplicate_processing=for_duplicate_processing,
+                starting_at_end=starting_at_end,
+                start_from=start_from,
+                page_size=page_size,
+                time_out=time_out,
+                mermaid_only=mermaid_only,
+                **kwargs,
             )
         )
         return response
@@ -2578,6 +2612,7 @@ class MetadataExpert(ServerClient):
         page_size: int = max_paging_size,
         time_out: int = default_time_out,
         mermaid_only: bool = False,
+        **kwargs,
     ) -> list | str:
         """
         Retrieve the relationships linking the supplied elements.
@@ -2636,6 +2671,8 @@ class MetadataExpert(ServerClient):
                 }
 
         """
+        end1_guid = end1_guid or kwargs.pop("end1_guid", None)
+        end2_guid = end2_guid or kwargs.pop("end2_guid", None)
 
         url = (
             f"{base_path(self, self.view_server)}/metadata-elements/{end1_guid}/linked-by-any-type/"
@@ -2660,6 +2697,7 @@ class MetadataExpert(ServerClient):
         page_size: int = max_paging_size,
         time_out: int = default_time_out,
         mermaid_only: bool = False,
+        **kwargs,
     ) -> list | str:
         """
         Retrieve the relationships linking the supplied elements.
@@ -2722,13 +2760,14 @@ class MetadataExpert(ServerClient):
                 end1_guid,
                 end2_guid,
                 body,
-                for_lineage,
-                for_duplicate_processing,
-                starting_at_end,
-                start_from,
-                page_size,
-                time_out,
-                mermaid_only,
+                for_lineage=for_lineage,
+                for_duplicate_processing=for_duplicate_processing,
+                starting_at_end=starting_at_end,
+                start_from=start_from,
+                page_size=page_size,
+                time_out=time_out,
+                mermaid_only=mermaid_only,
+                **kwargs,
             )
         )
         return response
@@ -2746,6 +2785,7 @@ class MetadataExpert(ServerClient):
         page_size: int = max_paging_size,
         time_out: int = default_time_out,
         mermaid_only: bool = False,
+        **kwargs,
     ) -> list | str:
         """
         Retrieve the relationships linking the supplied elements.
@@ -2805,7 +2845,8 @@ class MetadataExpert(ServerClient):
                 }
 
         """
-
+        end1_guid = end1_guid or kwargs.pop("end1_guid", None)
+        end2_guid = end2_guid or kwargs.pop("end2_guid", None)
 
         url = (
             f"{base_path(self, self.view_server)}/metadata-elements/{end1_guid}/linked-by-type/"
@@ -2831,6 +2872,7 @@ class MetadataExpert(ServerClient):
         page_size: int = max_paging_size,
         time_out: int = default_time_out,
         mermaid_only: bool = False,
+        **kwargs,
     ) -> list | str:
         """
         Retrieve the relationships linking the supplied elements.
@@ -2897,13 +2939,14 @@ class MetadataExpert(ServerClient):
                 end2_guid,
                 relationship_type,
                 body,
-                for_lineage,
-                for_duplicate_processing,
-                starting_at_end,
-                start_from,
-                page_size,
-                time_out,
-                mermaid_only,
+                for_lineage=for_lineage,
+                for_duplicate_processing=for_duplicate_processing,
+                starting_at_end=starting_at_end,
+                start_from=start_from,
+                page_size=page_size,
+                time_out=time_out,
+                mermaid_only=mermaid_only,
+                **kwargs,
             )
         )
         return response
@@ -2916,6 +2959,7 @@ class MetadataExpert(ServerClient):
         start_from: int = 0,
         page_size: int = max_paging_size,
         time_out: int = default_time_out,
+        **kwargs,
     ) -> list | str:
         """Return a list of metadata elements that match the supplied criteria.
         The results can be returned over many pages. Async version.
@@ -3028,6 +3072,7 @@ class MetadataExpert(ServerClient):
         start_from: int = 0,
         page_size: int = max_paging_size,
         time_out: int = default_time_out,
+        **kwargs,
     ) -> list | str:
         """
         Retrieve the relationships linking the supplied elements.
@@ -3121,11 +3166,12 @@ class MetadataExpert(ServerClient):
         response = loop.run_until_complete(
             self._async_find_metadata_elements(
                 body,
-                for_lineage,
-                for_duplicate_processing,
-                start_from,
-                page_size,
-                time_out,
+                for_lineage=for_lineage,
+                for_duplicate_processing=for_duplicate_processing,
+                start_from=start_from,
+                page_size=page_size,
+                time_out=time_out,
+                **kwargs,
             )
         )
         return response
@@ -3139,6 +3185,7 @@ class MetadataExpert(ServerClient):
         page_size: int = max_paging_size,
         time_out: int = default_time_out,
         mermaid_only: bool = False,
+        **kwargs,
     ) -> list | str:
         """Return a list of relationships that match the requested conditions.
             The results can be received as a series of pages. Async version.
@@ -3231,6 +3278,7 @@ class MetadataExpert(ServerClient):
         page_size: int = max_paging_size,
         time_out: int = default_time_out,
         mermaid_only: bool = False,
+        **kwargs,
     ) -> list | str:
         """Return a list of relationships that match the requested conditions.
             The results can be received as a series of pages.
@@ -3306,12 +3354,13 @@ class MetadataExpert(ServerClient):
         response = loop.run_until_complete(
             self._async_find_relationships_between_elements(
                 body,
-                for_lineage,
-                for_duplicate_processing,
-                start_from,
-                page_size,
-                time_out,
-                mermaid_only,
+                for_lineage=for_lineage,
+                for_duplicate_processing=for_duplicate_processing,
+                start_from=start_from,
+                page_size=page_size,
+                time_out=time_out,
+                mermaid_only=mermaid_only,
+                **kwargs,
             )
         )
         return response
@@ -3319,10 +3368,10 @@ class MetadataExpert(ServerClient):
     async def _async_get_relationship_by_guid(
         self,
         guid: str,
-        effective_time: Optional[str] = None,
         as_of_time: Optional[str] = None,
         for_lineage: bool = None,
         for_duplicate_processing: bool = None,
+        **kwargs,
     ) -> dict | str:
         """
         Retrieve the relationship using its unique identifier. Async version.
@@ -3352,7 +3401,9 @@ class MetadataExpert(ServerClient):
         PyegeriaUnauthorizedException
             the requesting user is not authorized to issue this request.
         """
-
+        guid = guid or kwargs.pop("guid", None)
+        effective_time = kwargs.pop("effective_time", None)
+        as_of_time = kwargs.pop("as_of_time", as_of_time)
 
         body = {
             "class": "AnyTimeRequestBody",
@@ -3371,9 +3422,9 @@ class MetadataExpert(ServerClient):
     def get_relationship_by_guid(
         self,
         guid: str,
-        effective_time: Optional[str] = None,
         for_lineage: bool = None,
         for_duplicate_processing: bool = None,
+        **kwargs,
     ) -> dict | str:
         """
         Retrieve the relationship using its unique identifier.
@@ -3407,7 +3458,10 @@ class MetadataExpert(ServerClient):
         loop = asyncio.get_event_loop()
         response = loop.run_until_complete(
             self._async_get_relationship_by_guid(
-                guid, effective_time, for_lineage, for_duplicate_processing
+                guid,
+                for_lineage=for_lineage,
+                for_duplicate_processing=for_duplicate_processing,
+                **kwargs,
             )
         )
         return response
@@ -3415,7 +3469,6 @@ class MetadataExpert(ServerClient):
     async def _async_get_relationship_history(
         self,
         guid: str,
-        effective_time: Optional[str] = None,
         oldest_first: bool = False,
         from_time: Optional[str] = None,
         to_time: Optional[str] = None,
@@ -3425,6 +3478,7 @@ class MetadataExpert(ServerClient):
         page_size: int = max_paging_size,
         time_out: int = default_time_out,
         mermaid_only: bool = False,
+        **kwargs,
     ) -> list | str:
         """
         Retrieve all the versions of a relationship. Async version.
@@ -3469,7 +3523,8 @@ class MetadataExpert(ServerClient):
         PyegeriaUnauthorizedException
             the requesting user is not authorized to issue this request.
         """
-
+        guid = guid or kwargs.pop("guid", None)
+        effective_time = kwargs.pop("effective_time", None)
 
         body = {
             "class": "HistoryRequestBody",
@@ -3495,7 +3550,6 @@ class MetadataExpert(ServerClient):
     def get_relationship_history(
         self,
         guid: str,
-        effective_time: Optional[str] = None,
         oldest_first: bool = False,
         from_time: Optional[str] = None,
         to_time: Optional[str] = None,
@@ -3505,6 +3559,7 @@ class MetadataExpert(ServerClient):
         page_size: int = max_paging_size,
         time_out: int = default_time_out,
         mermaid_only: bool = False,
+        **kwargs,
     ) -> list | str:
         """
         Retrieve all the versions of a relationship.
@@ -3554,16 +3609,16 @@ class MetadataExpert(ServerClient):
         response = loop.run_until_complete(
             self._async_get_relationship_history(
                 guid,
-                effective_time,
-                oldest_first,
-                from_time,
-                to_time,
-                for_lineage,
-                for_duplicate_processing,
-                start_from,
-                page_size,
-                time_out,
-                mermaid_only,
+                oldest_first=oldest_first,
+                from_time=from_time,
+                to_time=to_time,
+                for_lineage=for_lineage,
+                for_duplicate_processing=for_duplicate_processing,
+                start_from=start_from,
+                page_size=page_size,
+                time_out=time_out,
+                mermaid_only=mermaid_only,
+                **kwargs,
             )
         )
         return response

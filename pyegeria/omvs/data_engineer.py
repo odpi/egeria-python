@@ -272,8 +272,8 @@ class DataEngineer(ServerClient):
         )
 
     @dynamic_catch
-    def get_tabular_data_set(self, tabular_data_set_guid: str, start_from_row: int = 0, max_row_count: int = 5000,
-                             output_format: str = "JSON") -> dict:
+    def get_tabular_data_set(self, guid: str = None, start_from_row: int = 0, max_row_count: int = 5000,
+                             output_format: str = "JSON", **kwargs) -> dict:
         """ Retrieve a tabular data set report.
 
         Parameters
@@ -299,13 +299,13 @@ class DataEngineer(ServerClient):
         """
         loop = asyncio.get_event_loop()
         response = loop.run_until_complete(
-            self._async_get_tabular_data_set(tabular_data_set_guid, start_from_row, max_row_count, output_format)
+            self._async_get_tabular_data_set(guid=guid, start_from_row=start_from_row, max_row_count=max_row_count, output_format=output_format, **kwargs)
         )
         return response
 
     @dynamic_catch
-    async def _async_get_tabular_data_set(self, tabular_data_set_guid:str, start_from_row:int = 0, max_row_count: int = 5000,
-                                          output_format: str = "JSON") -> dict:
+    async def _async_get_tabular_data_set(self, guid: str = None, start_from_row: int = 0, max_row_count: int = 5000,
+                                          output_format: str = "JSON", **kwargs) -> dict:
         """Retrieve a tabular data set report. Async version.
 
         Parameters
@@ -329,7 +329,10 @@ class DataEngineer(ServerClient):
         PyegeriaException
             If there are issues in communications, message format, or Egeria errors.
         """
-        url = str(HttpUrl(f"{self.command_root}/tabular-data-sets/{tabular_data_set_guid}/report?"
+        if guid is None and "tabular_data_set_guid" in kwargs:
+            guid = kwargs.pop("tabular_data_set_guid")
+
+        url = str(HttpUrl(f"{self.command_root}/tabular-data-sets/{guid}/report?"
                           f"startFromRow={start_from_row}&maxRowCount={max_row_count}"))
         response = await self._async_make_request("GET", url)
         el_list = response.json().get('tabularDataSetReport',"No Dataset Found")

@@ -387,35 +387,49 @@ class SchemaMaker(ServerClient):
         )
 
     @dynamic_catch
+    @dynamic_catch
     async def _async_get_schema_type_by_guid(
         self,
-        schema_type_guid: str,
+        guid: str,
         element_type: str = "SchemaType",
         body: Optional[dict | GetRequestBody] = None,
         output_format: str = "JSON",
         report_spec: str | dict = "SchemaTypes",
+        **kwargs,
     ) -> dict | str:
-        url = f"{self.platform_url}/servers/{self.view_server}/api/open-metadata/schema-maker/schema-types/{schema_type_guid}/retrieve"
+        if guid is None and "schema_type_guid" in kwargs:
+            guid = kwargs.pop("schema_type_guid")
+
+        url = f"{self.platform_url}/servers/{self.view_server}/api/open-metadata/schema-maker/schema-types/{guid}/retrieve"
+        
+        params = {
+            'output_format': output_format,
+            'report_spec': report_spec,
+            'body': body
+        }
+        params.update(kwargs)
+        params = {k: v for k, v in params.items() if v is not None}
+
         return await self._async_get_guid_request(
             url,
             _type=element_type,
             _gen_output=self._generate_schema_output,
-            output_format=output_format,
-            report_spec=report_spec,
-            body=body,
+            **params,
         )
 
     def get_schema_type_by_guid(
         self,
-        schema_type_guid: str,
+        guid: str,
         element_type: str = "SchemaType",
         body: Optional[dict | GetRequestBody] = None,
         output_format: str = "JSON",
         report_spec: str | dict = "SchemaTypes",
+        **kwargs,
     ) -> dict | str:
         loop = asyncio.get_event_loop()
         return loop.run_until_complete(
             self._async_get_schema_type_by_guid(
-                schema_type_guid, element_type, body, output_format, report_spec
+                guid=guid, element_type=element_type, body=body, output_format=output_format, report_spec=report_spec,
+                **kwargs,
             )
         )

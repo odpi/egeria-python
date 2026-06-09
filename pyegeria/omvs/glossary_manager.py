@@ -497,7 +497,7 @@ class GlossaryManager(CollectionManager):
         {
             "class": "NewClassificationRequestBody",
             "properties": {
-                "class": "CanonicalProperties",
+                "class": "CanonicalVocabularyProperties",
                 "scope": "Add value here"
             }
         }
@@ -508,11 +508,11 @@ class GlossaryManager(CollectionManager):
             body = {
                 "class": "NewClassificationRequestBody",
                 "properties": {
-                    "class": "CanonicalProperties",
+                    "class": "CanonicalVocabularyProperties",
                     "scope": scope
                 }
             }
-        await self._async_new_classification_request(url, "CanonicalProperties", body)
+        await self._async_new_classification_request(url, "CanonicalVocabularyProperties", body)
         logger.info(f"Set glossary {glossary_guid} as canonical vocabulary")
 
     @dynamic_catch
@@ -545,7 +545,7 @@ class GlossaryManager(CollectionManager):
         {
             "class": "NewClassificationRequestBody",
             "properties": {
-                "class": "CanonicalProperties",
+                "class": "CanonicalVocabularyProperties",
                 "scope": "Add value here"
             }
         }

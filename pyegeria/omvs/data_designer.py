@@ -48,7 +48,7 @@ class DataDesigner(ServerClient):
     @dynamic_catch
     async def _async_find_data_value_specifications(
         self,
-        search_string: str,
+        search_string: str = "*",
         body: Optional[dict | SearchStringRequestBody] = None,
         starts_with: bool = True,
         ends_with: bool = False,
@@ -83,7 +83,7 @@ class DataDesigner(ServerClient):
     @dynamic_catch
     def find_data_value_specifications(
         self,
-        search_string: str,
+        search_string: str = "*",
         body: Optional[dict | SearchStringRequestBody] = None,
         starts_with: bool = True,
         ends_with: bool = False,
@@ -1167,7 +1167,7 @@ class DataDesigner(ServerClient):
     @dynamic_catch
     async def _async_find_data_structures(
         self,
-        search_string: str,
+        search_string: str = "*",
         body: Optional[dict | SearchStringRequestBody] = None,
         starts_with: bool = True,
         ends_with: bool = False,
@@ -1260,7 +1260,7 @@ class DataDesigner(ServerClient):
     @dynamic_catch
     def find_data_structures(
         self,
-        search_string: str,
+        search_string: str = "*",
         body: Optional[dict | SearchStringRequestBody] = None,
         starts_with: bool = True,
         ends_with: bool = False,
@@ -1332,7 +1332,7 @@ class DataDesigner(ServerClient):
         loop = asyncio.get_event_loop()
         response = loop.run_until_complete(
             self._async_find_data_structures(
-                search_string,
+                search_string=search_string,
                 body=body,
                 starts_with=starts_with,
                 ends_with=ends_with,
@@ -1341,17 +1341,18 @@ class DataDesigner(ServerClient):
                 page_size=page_size,
                 output_format=output_format,
                 report_spec=report_spec,
-                **kwargs
+                **kwargs,
             )
         )
         return response
 
     @dynamic_catch
-    async def _async_get_data_structures_by_name(self, filter_string: str, classification_names: Optional[list[str]] = None,
+    async def _async_get_data_structures_by_name(self, name: Optional[str] = None, classification_names: Optional[list[str]] = None,
                                                  body: Optional[dict | FilterRequestBody] = None, start_from: int = 0,
                                                  page_size: int = 0,
                                                  output_format: str = 'JSON',
-                                                 report_spec: str | dict = None) -> list | str:
+                                                 report_spec: str | dict = None,
+                                                 **kwargs) -> list | str:
         """ Get the list of data structure metadata elements with a matching name to the search string filter.
             Async version.
 
@@ -1399,21 +1400,30 @@ class DataDesigner(ServerClient):
         }
         """
 
+        if name is None and "filter_string" in kwargs:
+            name = kwargs.pop("filter_string")
         url = f"{base_path(self, self.view_server)}/data-structures/by-name"
+        params = {
+            'classification_names': classification_names,
+            'start_from': start_from,
+            'page_size': page_size,
+            'output_format': output_format,
+            'report_spec': report_spec,
+            'body': body
+        }
+        params.update(kwargs)
+        params = {k: v for k, v in params.items() if v is not None}
         response = await self._async_get_name_request(url, _type="DataStructure",
                                                       _gen_output=self._generate_data_structure_output,
-                                                      filter_string=filter_string,
-                                                      classification_names=classification_names, start_from=start_from,
-                                                      page_size=page_size, output_format=output_format,
-                                                      report_spec=report_spec, body=body)
-
+                                                      filter_string=name, **params)
         return response
 
     @dynamic_catch
-    def get_data_structures_by_name(self, filter_string: str, classification_names: Optional[list[str]] = None,
+    def get_data_structures_by_name(self, name: Optional[str] = None, classification_names: Optional[list[str]] = None,
                                     body: Optional[dict | FilterRequestBody] = None, start_from: int = 0,
                                     page_size: int = max_paging_size, output_format: str = 'JSON',
-                                    report_spec: str | dict = None) -> list | str:
+                                    report_spec: str | dict = None,
+                                    **kwargs) -> list | str:
         """ Get the list of data structure metadata elements with a matching name to the search string filter.
 
         Parameters
@@ -1450,15 +1460,16 @@ class DataDesigner(ServerClient):
 
         loop = asyncio.get_event_loop()
         response = loop.run_until_complete(
-            self._async_get_data_structures_by_name(filter_string, classification_names, body, start_from, page_size,
-                                                    output_format, report_spec))
+            self._async_get_data_structures_by_name(name=name, classification_names=classification_names, body=body, start_from=start_from, page_size=page_size,
+                                                    output_format=output_format, report_spec=report_spec, **kwargs))
         return response
 
     @dynamic_catch
-    async def _async_get_data_structure_by_guid(self, guid: str, element_type: Optional[str] = None,
+    async def _async_get_data_structure_by_guid(self, guid: str = None, element_type: Optional[str] = None,
                                                 body: Optional[dict | GetRequestBody] = None,
                                                 output_format: str = 'JSON',
-                                                report_spec: str | dict = None) -> list | str:
+                                                report_spec: str | dict = None,
+                                                **kwargs) -> list | str:
         """ Get the  data structure metadata elements for the specified GUID.
             Async version.
 
@@ -1504,20 +1515,27 @@ class DataDesigner(ServerClient):
 
         """
 
+        if guid is None and "data_struct_guid" in kwargs:
+            guid = kwargs.pop("data_struct_guid")
         url = (f"{base_path(self, self.view_server)}/data-structures/{guid}/retrieve")
-        type = element_type if element_type else "DataStructure"
-
-        response = await self._async_get_guid_request(url, _type=type,
+        type_ = element_type if element_type else "DataStructure"
+        params = {
+            'output_format': output_format,
+            'report_spec': report_spec,
+            'body': body
+        }
+        params.update(kwargs)
+        params = {k: v for k, v in params.items() if v is not None}
+        response = await self._async_get_guid_request(url, _type=type_,
                                                       _gen_output=self._generate_data_structure_output,
-                                                      output_format=output_format, report_spec=report_spec,
-                                                      body=body)
-
+                                                      **params)
         return response
 
     @dynamic_catch
-    def get_data_structure_by_guid(self, guid: str, element_type: Optional[str] = None,
+    def get_data_structure_by_guid(self, guid: str = None, element_type: Optional[str] = None,
                                    body: Optional[dict | GetRequestBody] = None,
-                                   output_format: str = 'JSON', report_spec: str | dict = None) -> list | str:
+                                   output_format: str = 'JSON', report_spec: str | dict = None,
+                                   **kwargs) -> list | str:
         """ Get the data structure metadata element with the specified unique identifier..
 
         Parameters
@@ -1563,7 +1581,7 @@ class DataDesigner(ServerClient):
 
         loop = asyncio.get_event_loop()
         response = loop.run_until_complete(
-            self._async_get_data_structure_by_guid(guid, element_type, body, output_format, report_spec))
+            self._async_get_data_structure_by_guid(guid=guid, element_type=element_type, body=body, output_format=output_format, report_spec=report_spec, **kwargs))
         return response
 
     def get_data_memberships(self, data_get_fcn: callable, data_struct_guid: str) -> dict | None:
@@ -2828,7 +2846,7 @@ class DataDesigner(ServerClient):
     @dynamic_catch
     async def _async_find_data_fields(
         self,
-        search_string: str,
+        search_string: str = "*",
         body: Optional[dict | SearchStringRequestBody] = None,
         starts_with: bool = True,
         ends_with: bool = False,
@@ -3152,8 +3170,8 @@ class DataDesigner(ServerClient):
 
         loop = asyncio.get_event_loop()
         response = loop.run_until_complete(
-            self._async_get_data_fields_by_name(filter_string, classification_names, body, start_from, page_size,
-                                                output_format, report_spec))
+            self._async_get_data_fields_by_name(name=name, classification_names=classification_names, body=body, start_from=start_from, page_size=page_size,
+                                                output_format=output_format, report_spec=report_spec, **kwargs))
         return response
 
 
@@ -3402,38 +3420,49 @@ class DataDesigner(ServerClient):
 
 
     @dynamic_catch
-    async def _async_get_data_class_by_guid(self, guid: str, element_type: Optional[str] = None,
+    async def _async_get_data_class_by_guid(self, guid: str = None, element_type: Optional[str] = None,
                                              body: Optional[dict | GetRequestBody] = None,
                                              output_format: str = 'JSON',
-                                             report_spec: str | dict = None) -> list | str:
+                                             report_spec: str | dict = None,
+                                             **kwargs) -> list | str:
         """Get a data class by its GUID. Async version.
         Uses the data-value-specifications parent endpoint since DataClass is a subtype.
         """
+        if guid is None and "data_class_guid" in kwargs:
+            guid = kwargs.pop("data_class_guid")
         url = f"{base_path(self, self.view_server)}/data-value-specifications/{guid}/retrieve"
         _type = element_type if element_type else "DataClass"
+        params = {
+            'output_format': output_format,
+            'report_spec': report_spec,
+            'body': body
+        }
+        params.update(kwargs)
+        params = {k: v for k, v in params.items() if v is not None}
         return await self._async_get_guid_request(url, _type=_type,
                                                    _gen_output=self._generate_data_class_output,
-                                                   output_format=output_format, report_spec=report_spec,
-                                                   body=body)
+                                                   **params)
 
     @dynamic_catch
-    def get_data_class_by_guid(self, guid: str, element_type: Optional[str] = None,
+    def get_data_class_by_guid(self, guid: str = None, element_type: Optional[str] = None,
                                 body: Optional[dict | GetRequestBody] = None,
-                                output_format: str = 'JSON', report_spec: str | dict = None) -> list | str:
+                                output_format: str = 'JSON', report_spec: str | dict = None,
+                                **kwargs) -> list | str:
         """Get a data class by its GUID."""
         loop = asyncio.get_event_loop()
         return loop.run_until_complete(
-            self._async_get_data_class_by_guid(guid, element_type, body, output_format, report_spec))
+            self._async_get_data_class_by_guid(guid=guid, element_type=element_type, body=body, output_format=output_format, report_spec=report_spec, **kwargs))
 
     @dynamic_catch
-    def get_data_grain_by_guid(self, guid: str, element_type: Optional[str] = None,
+    def get_data_grain_by_guid(self, guid: str = None, element_type: Optional[str] = None,
                                 body: Optional[dict] = None,
-                                output_format: str = 'JSON', report_spec: str | dict = None) -> list | str:
+                                output_format: str = 'JSON', report_spec: str | dict = None,
+                                **kwargs) -> list | str:
         """Get a data grain by its GUID. Alias for get_data_value_specification_by_guid with DataGrain type."""
         loop = asyncio.get_event_loop()
         return loop.run_until_complete(
             self._async_get_data_value_specification_by_guid(
-                guid, element_type or "DataGrain", body, output_format, report_spec))
+                guid=guid, element_type=element_type or "DataGrain", body=body, output_format=output_format, report_spec=report_spec, **kwargs))
 
     @dynamic_catch
     async def _async_create_data_classification(self, body: dict | NewElementRequestBody) -> str:
