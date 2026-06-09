@@ -73,6 +73,7 @@ class BaseServerClient:
             api_key: str = None,
             page_size: int = None,
             local_qualifier: str = None,
+            organization_name: str = None,
     ):
         server_name = server_name or settings.Environment.egeria_view_server
         platform_url = platform_url or settings.Environment.egeria_platform_url
@@ -88,6 +89,7 @@ class BaseServerClient:
         self.token_src = token_src
         self.token = token
         self.local_qualifier = local_qualifier or settings.User_Profile.egeria_local_qualifier
+        self.organization_name = organization_name or settings.Environment.organization_name
         self._valid_value_cache = {}
 
         self.exc_type = None

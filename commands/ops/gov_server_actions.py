@@ -11,6 +11,7 @@ This script restarts an integration daemon.
 import click
 
 from pyegeria import print_basic_exception, AutomatedCuration, EgeriaTech
+from pyegeria.core.config import settings
 from pyegeria.core._exceptions import (
     PyegeriaInvalidParameterException as PyegeriaInvalidParameterException,
     PyegeriaAPIException as PyegeriaAPIException,
@@ -126,7 +127,8 @@ def refresh_gov_eng_config(ctx, engine_host_guid: str):
 @click.command("start")
 @click.pass_context
 @click.option("--server", default="qs-metadata-store", help="OMAG Server to start")
-def start_server(ctx, server):
+@click.option("--organization-name", default=settings.Environment.organization_name, help="Organization name prefix for resource names")
+def start_server(ctx, server, organization_name):
     """Start or restart an engine-host from its known configuration"""
     c = ctx.obj
 
@@ -134,7 +136,7 @@ def start_server(ctx, server):
     token = p_client.create_egeria_bearer_token()
     try:
         server_guid = p_client.get_element_guid_by_unique_name(server, "name")
-        p_client.activate_server_with_stored_config(None, server_guid)
+        p_client.activate_server_with_stored_config(None, server_guid, organization_name=organization_name)
 
         click.echo(f"Started server {server}")
 

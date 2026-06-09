@@ -162,10 +162,11 @@ class ServerClient(BaseServerClient):
             api_key: Optional[str] = None,
             page_size: int = None,
             local_qualifier: str = None,
+            organization_name: str = None,
     ):
 
         super().__init__(server_name, platform_url, user_id, user_pwd, token,
-                         token_src, api_key, page_size, local_qualifier)
+                         token_src, api_key, page_size, local_qualifier, organization_name)
 
         self.command_root: str = f"{self.platform_url}/servers/{self.server_name}/api/open-metadata/"
         self._search_string_request_adapter = TypeAdapter(SearchStringRequestBody)
@@ -217,12 +218,16 @@ class ServerClient(BaseServerClient):
             property_name: str = "qualifiedName",
             qualified_name: Optional[str] = None,
             tech_type: Optional[str] = None,
+            organization_name: Optional[str] = None,
     ) -> str:
         """Helper function to return a server_guid - one of server_guid, qualified_name or display_name should
         contain information. If all are None, an exception will be thrown. If all contain
         values, server_guid will be used first, followed by qualified_name.  If the tech_type is supplied and the
         property_name is qualifiedName then the display_name will be pre-pended with the tech_type name to form a
         qualifiedName.
+
+        When property_name is "resourceName", the display_name is prefixed with <organization_name>. to form the
+        Egeria resource name convention. The organization_name falls back to self.organization_name if not supplied.
 
         An InvalidParameter Exception is thrown if multiple matches
         are found for the given property name. If this occurs, use a qualified name for the property name.
@@ -249,7 +254,7 @@ class ServerClient(BaseServerClient):
                 f"{self.platform_url}/servers/{self.server_name}/api/open-metadata/classification-explorer/"
                 f"elements/guid-by-unique-name"
             )
-        
+
             try:
                 result = await self._async_make_request("POST", url, body_slimmer(body))
                 guid_found = result.json().get("guid", NO_ELEMENTS_FOUND)
@@ -257,9 +262,14 @@ class ServerClient(BaseServerClient):
                     return guid_found
             except Exception:
                 pass
-        
+
         if display_name:
-            if (tech_type) and (property_name == "qualifiedName"):
+            if property_name == "resourceName":
+                org = organization_name or self.organization_name
+                if org and not display_name.startswith(f"{org}."):
+                    display_name = f"{org}.{display_name}"
+
+            if tech_type and property_name == "qualifiedName":
                 name = f"{tech_type}::{display_name}"
                 body = {
                     "class": "FindPropertyNameProperties",
@@ -273,7 +283,7 @@ class ServerClient(BaseServerClient):
                     f"{self.platform_url}/servers/{view_server}/api/open-metadata/classification-explorer/"
                     f"elements/guid-by-unique-name"
                 )
-        
+
                 result = await self._async_make_request("POST", url, body_slimmer(body))
                 return result.json().get("guid", NO_ELEMENTS_FOUND)
             else:
@@ -289,7 +299,7 @@ class ServerClient(BaseServerClient):
                     f"{self.platform_url}/servers/{view_server}/api/open-metadata/classification-explorer/"
                     f"elements/guid-by-unique-name"
                 )
-        
+
                 result = await self._async_make_request("POST", url, body_slimmer(body))
                 return result.json().get("guid", NO_ELEMENTS_FOUND)
         else:
@@ -311,6 +321,7 @@ class ServerClient(BaseServerClient):
             property_name: str = "qualifiedName",
             qualified_name: Optional[str] = None,
             tech_type: Optional[str] = None,
+            organization_name: Optional[str] = None,
     ) -> str:
         """Helper function to return a server_guid - one of server_guid, qualified_name or display_name should
         contain information. If all are None, an exception will be thrown. If all contain
@@ -318,14 +329,14 @@ class ServerClient(BaseServerClient):
         property_name is qualifiedName then the display_name will be pre-pended with the tech_type name to form a
         qualifiedName.
 
-        An InvalidParameter Exception is thrown if multiple matches
-        are found for the given property name. If this occurs, use a qualified name for the property name.
-        Async version.
+        When property_name is "resourceName", the display_name is prefixed with <organization_name>. to form the
+        Egeria resource name convention. The organization_name falls back to self.organization_name if not supplied.
+        Sync version.
         """
         loop = asyncio.get_event_loop()
         result = loop.run_until_complete(
             self.__async_get_guid__(
-                guid, display_name, property_name, qualified_name, tech_type
+                guid, display_name, property_name, qualified_name, tech_type, organization_name
             )
         )
         return result
@@ -963,6 +974,7 @@ class ServerClient(BaseServerClient):
             display_name: Optional[str] = None,
             qualified_name: Optional[str] = None,
             time_out: int = 120,
+            organization_name: Optional[str] = None,
     ) -> None:
         """Add a new open metadata archive to running OMAG Server's repository.
             An open metadata archive contains metadata types and instances.  This operation loads an open metadata archive
@@ -1002,6 +1014,7 @@ class ServerClient(BaseServerClient):
             "resourceName",
             qualified_name,
             "Metadata Access Server",
+            organization_name=organization_name,
         )
 
         url = f"{self.command_root}runtime-manager/omag-servers/{server_guid}/instance/load/open-metadata-archives/file"
@@ -1018,6 +1031,7 @@ class ServerClient(BaseServerClient):
             display_name: Optional[str] = None,
             qualified_name: Optional[str] = None,
             time_out: int = 120,
+            organization_name: Optional[str] = None,
     ) -> None:
         """Add a new open metadata archive to running OMAG Server's repository.
             An open metadata archive contains metadata types and instances.  This operation loads an open metadata archive
@@ -1053,7 +1067,7 @@ class ServerClient(BaseServerClient):
         loop = asyncio.get_event_loop()
         loop.run_until_complete(
             self._async_add_archive_file(
-                archive_file, server_guid, display_name, qualified_name, time_out
+                archive_file, server_guid, display_name, qualified_name, time_out, organization_name
             )
         )
         return

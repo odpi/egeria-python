@@ -32,7 +32,7 @@ config_logging()
 def display_integration_daemon_status(
     search_list: list[str] = ["*"],
     integ_server: str = os.environ.get(
-        "EGERIA_INTEGRATION_DAEMON", "integration-daemon"
+        "EGERIA_INTEGRATION_DAEMON", "qs-integration-daemon"
     ),
     integ_url: str = os.environ.get(
         "EGERIA_INTEGRATION_DAEMON_URL", "https://localhost:9443"

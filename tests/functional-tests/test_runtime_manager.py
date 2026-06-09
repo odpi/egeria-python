@@ -197,7 +197,7 @@ class TestRuntimeManager:
             token = r_client.create_egeria_bearer_token()
 
             start_time = time.perf_counter()
-            response = r_client.get_platforms_by_name("Local OMAG Server Platform", output_format="DICT",report_spec="Platform")
+            response = r_client.get_platforms_by_name("Local OMAG Server Platform", output_format="JSON",report_spec="Platform")
             duration = time.perf_counter() - start_time
             duration = time.perf_counter() - start_time
             print(f"Type of response: {type(response)}")
@@ -327,11 +327,11 @@ class TestRuntimeManager:
             )
             token = r_client.create_egeria_bearer_token()
             platform_guid = "40d5e171-3d36-427e-9716-2d1de313b720"
-            platform_name = "Local OMAG Server Platform"
+            platform_name = "OMAG Server Platform"
             # platform_guid = None
             start_time = time.perf_counter()
             response = r_client.get_platform_report(
-                platform_guid, platform_name
+                None, platform_name
             )
 
             duration = time.perf_counter() - start_time
@@ -367,7 +367,7 @@ class TestRuntimeManager:
             token = r_client.create_egeria_bearer_token()
 
             start_time = time.perf_counter()
-            filter_string = "qs-integration-daemon"
+            filter_string = "Coco Pharmaceuticals.qs-integration-daemon"
             # filter = "simple-metadata-store"
 
             response = r_client.get_servers_by_name(filter_string, output_format="JSON",report_spec="OMAGServers")
@@ -438,12 +438,12 @@ class TestRuntimeManager:
                 user_pwd="secret",
             )
             token = r_client.create_egeria_bearer_token()
-            name = "qs-integration-daemon"
+            name = "qs-engine-host"
 
             start_time = time.perf_counter()
             server_guid = None
             print(f"\n\tServer GUID is {server_guid}")
-            response = r_client.get_server_report(server_guid, name)
+            response = r_client.get_server_report(server_guid=server_guid, server_name=name, organization_name="Coco Pharmaceuticals")
             duration = time.perf_counter() - start_time
             print(f"Type of response: {type(response)}")
             print(f"\n\tDuration was {duration} seconds")
@@ -543,9 +543,9 @@ class TestRuntimeManager:
             start_time = time.perf_counter()
             connector_name = "UnityCatalogServerSynchronizer"
             server_guid = None
-            server_name = "integration-daemon"
+            server_name = "qs-integration-daemon"
             response = r_client.get_integration_connector_config_properties(
-                connector_name, display_name=server_name
+                connector_name, server_name=server_name, organization_name="Coco Pharmaceuticals"
             )
 
             duration = time.perf_counter() - start_time
@@ -582,7 +582,7 @@ class TestRuntimeManager:
             connector_name = "UnityCatalogServerSynchronizer"
             # connector_name = None
             server_guid = None
-            display_name = "integration-daemon"
+            display_name = "qs-integration-daemon"
             qualified_name = None
             merge_update = True
             body = {"refreshTimeInterval": 10}
@@ -593,7 +593,8 @@ class TestRuntimeManager:
                 display_name,
                 qualified_name,
                 merge_update,
-                body,
+                organization_name="Coco Pharmaceuticals",
+                body=body,
             )
 
             duration = time.perf_counter() - start_time
@@ -603,6 +604,145 @@ class TestRuntimeManager:
                 print(f"Servers:\n{json.dumps(response, indent=4)}")
             elif type(response) is str:
                 print(f"String response was {response}")
+            assert True
+
+        except (
+            PyegeriaInvalidParameterException,
+            PyegeriaAPIException,
+            PyegeriaUnauthorizedException,
+        ) as e:
+            print_exception_response(e)
+            assert False, "Invalid request"
+
+        finally:
+            r_client.close_session()
+
+    def test_stop_connector(self):
+        try:
+            r_client = RuntimeManager(
+                self.good_view_server_2,
+                self.good_platform1_url,
+                user_id=self.good_user_1,
+                user_pwd="secret",
+            )
+            token = r_client.create_egeria_bearer_token()
+
+            connector_name = "UnityCatalogServerSynchronizer"
+            server_name = "qs-integration-daemon"
+            start_time = time.perf_counter()
+            r_client.stop_connector(
+                connector_name,
+                display_name=server_name,
+                organization_name="Coco Pharmaceuticals",
+            )
+
+            duration = time.perf_counter() - start_time
+            print(f"\n\tDuration was {duration} seconds")
+            print(f"Connector '{connector_name}' stopped")
+            assert True
+
+        except (
+            PyegeriaInvalidParameterException,
+            PyegeriaAPIException,
+            PyegeriaUnauthorizedException,
+        ) as e:
+            print_exception_response(e)
+            assert False, "Invalid request"
+
+        finally:
+            r_client.close_session()
+
+    def test_start_connector(self):
+        try:
+            r_client = RuntimeManager(
+                self.good_view_server_2,
+                self.good_platform1_url,
+                user_id=self.good_user_1,
+                user_pwd="secret",
+            )
+            token = r_client.create_egeria_bearer_token()
+
+            connector_name = "UnityCatalogServerSynchronizer"
+            server_name = "qs-integration-daemon"
+            start_time = time.perf_counter()
+            r_client.start_connector(
+                connector_name,
+                display_name=server_name,
+                organization_name="Coco Pharmaceuticals",
+            )
+
+            duration = time.perf_counter() - start_time
+            print(f"\n\tDuration was {duration} seconds")
+            print(f"Connector '{connector_name}' started")
+            assert True
+
+        except (
+            PyegeriaInvalidParameterException,
+            PyegeriaAPIException,
+            PyegeriaUnauthorizedException,
+        ) as e:
+            print_exception_response(e)
+            assert False, "Invalid request"
+
+        finally:
+            r_client.close_session()
+
+    def test_refresh_integ_group_config(self):
+        try:
+            r_client = RuntimeManager(
+                self.good_view_server_2,
+                self.good_platform1_url,
+                user_id=self.good_user_1,
+                user_pwd="secret",
+            )
+            token = r_client.create_egeria_bearer_token()
+
+            server_name = "qs-integration-daemon"
+            start_time = time.perf_counter()
+            r_client.refresh_integ_group_config(
+                display_name=server_name,
+                organization_name="Coco Pharmaceuticals",
+            )
+
+            duration = time.perf_counter() - start_time
+            print(f"\n\tDuration was {duration} seconds")
+            print(f"Integration group config refreshed for '{server_name}'")
+            assert True
+
+        except (
+            PyegeriaInvalidParameterException,
+            PyegeriaAPIException,
+            PyegeriaUnauthorizedException,
+        ) as e:
+            print_exception_response(e)
+            assert False, "Invalid request"
+
+        finally:
+            r_client.close_session()
+
+    def test_update_endpoint_address(self):
+        try:
+            r_client = RuntimeManager(
+                self.good_view_server_2,
+                self.good_platform1_url,
+                user_id=self.good_user_1,
+                user_pwd="secret",
+            )
+            token = r_client.create_egeria_bearer_token()
+
+            connector_name = "UnityCatalogServerSynchronizer"
+            server_name = "qs-integration-daemon"
+            endpoint_address = "http://localhost:8080"
+            start_time = time.perf_counter()
+            r_client.update_endpoint_address(
+                connector_name,
+                endpoint_address,
+                display_name=server_name,
+            )
+
+            duration = time.perf_counter() - start_time
+            print(f"\n\tDuration was {duration} seconds")
+            print(f"Endpoint address for '{connector_name}' updated to '{endpoint_address}'")
             assert True
 
         except (
@@ -626,7 +766,7 @@ class TestRuntimeManager:
             )
             token = r_client.create_egeria_bearer_token()
             server_guid = None
-            server_name = "integration-daemon"
+            server_name = "qs-integration-daemon"
             connector_name = "UnityCatalogServerSynchronizer"
             start_time = time.perf_counter()
             r_client.refresh_integration_connectors(
@@ -659,7 +799,7 @@ class TestRuntimeManager:
             )
             token = r_client.create_egeria_bearer_token()
             server_guid = None
-            server_name = "integration-daemon"
+            server_name = "qs-integration-daemon"
             # connector_name = "UnityCatalogServerSynchronizer"
             connector_name = None
             start_time = time.perf_counter()

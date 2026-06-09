@@ -78,7 +78,7 @@ class MyProfileApp(App):
         self.heading = "My_Profile"
         self.subheading = "Egeria Profile for current user"
         self.description = "Display the user related items for the current user."
-        load_app_config("config/config.json")
+        load_app_config()
         app_config = settings.Environment
         app_user = settings.User_Profile
         # config_logging()
@@ -1782,3 +1782,6 @@ class MyProfileApp(App):
 if __name__ == "__main__":
     app = MyProfileApp()
     app.run()
+
+if __name__ == "__main__":
+    main()

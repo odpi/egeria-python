@@ -118,6 +118,7 @@ class EnvironmentConfig(BaseModel):
     pyegeria_root: str = Field(default="sample-data", alias="Pyegeria Root")
     pyegeria_config_directory: str = Field(default="", alias="Pyegeria Config Directory")
     pyegeria_config_file: str = Field(default="config.json", alias="Egeria Config File")
+    organization_name: str = Field(default="Coco Pharmaceuticals", alias="Organization Name")
     pyegeria_publishing_root: str = Field(default="/dr-egeria-outbox", alias="Pyegeria Publishing Root")
     # Renamed: Format Sets -> Report Specs
     pyegeria_user_report_specs_dir: str = Field(default="~/.pyegeria/report_specs", alias="Pyegeria User Report Specs Dir")
@@ -152,7 +153,7 @@ class UserProfileConfig(BaseModel):
     """User profile configuration settings"""
     egeria_home_collection: str = Field(default="MyHome", alias="Egeria Home Collection")
     egeria_home_glossary_name: str = Field(default="Egeria-Markdown", alias="Egeria Home Glossary Name")
-    egeria_local_qualifier: str = Field(default="pyegeria", alias="Egeria Local Qualifier")
+    egeria_local_qualifier: str = Field(default="Coco Pharmaceuticals", alias="Egeria Local Qualifier")
     egeria_usage_level: str = Field(default="Advanced", alias="Egeria Usage Level")
     user_name: Optional[str] = "erinoverview"
     user_pwd: Optional[str] = "secret"
@@ -365,6 +366,7 @@ def load_app_config(env_file: str | None = None):
         or env.get("Pyegeria User Format Sets Dir")
         or "~/.pyegeria/report_specs"
     )
+    env["Organization Name"] = os.getenv("EGERIA_ORGANIZATION_NAME", env.get("Organization Name", "Coco Pharmaceuticals"))
 
     # Logging
     log = config_dict.setdefault("Logging", {})
@@ -390,7 +392,7 @@ def load_app_config(env_file: str | None = None):
     user = config_dict.setdefault("User Profile", {})
     user["Egeria Home Collection"] = os.getenv("EGERIA_HOME_COLLECTION", user.get("Egeria Home Collection", "MyHome"))
     user["Egeria Home Glossary Name"] = os.getenv("EGERIA_HOME_GLOSSARY_NAME", user.get("Egeria Home Glossary Name", "Egeria-Markdown"))
-    user["Egeria Local Qualifier"] = os.getenv("EGERIA_LOCAL_QUALIFIER", user.get("Egeria Local Qualifier", "PDR"))
+    user["Egeria Local Qualifier"] = os.getenv("EGERIA_LOCAL_QUALIFIER", user.get("Egeria Local Qualifier") or env["Organization Name"])
     user["Egeria Usage Level"] = os.getenv("EGERIA_USAGE_LEVEL", user.get("Egeria Usage Level", env_settings.egeria_usage_level or "Advanced"))
 
     user_name = os.getenv("EGERIA_USER", user.get("user_name") or env_settings.egeria_user_name or None)
@@ -571,6 +573,7 @@ def pretty_print_config(env_file: str | None = None, safe: bool = True, to_conso
         ("Environment", "Egeria Platform URL"): "EGERIA_PLATFORM_URL",
         ("Environment", "Egeria View Server"): "EGERIA_VIEW_SERVER",
         ("Environment", "Egeria View Server URL"): "EGERIA_VIEW_SERVER_URL",
+        ("Environment", "Organization Name"): "EGERIA_ORGANIZATION_NAME",
         ("Environment", "Pyegeria Publishing Root"): "PYEGERIA_PUBLISHING_ROOT",
         # Updated variable name
         ("Environment", "Pyegeria User Report Specs Dir"): "PYEGERIA_USER_REPORT_SPECS_DIR",
