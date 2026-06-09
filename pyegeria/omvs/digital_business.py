@@ -20,7 +20,8 @@ from pyegeria.models import (
     NewRelationshipRequestBody,
     DeleteRelationshipRequestBody,
     NewClassificationRequestBody,
-    DeleteClassificationRequestBody
+    DeleteClassificationRequestBody,
+    SearchStringRequestBody
 )
 
 from pyegeria.core.utils import dynamic_catch, body_slimmer
@@ -96,10 +97,10 @@ class DigitalBusiness(CollectionManager):
     def _prepare_body(self, body: Optional[dict | NewElementRequestBody | UpdateElementRequestBody |
                                            DeleteElementRequestBody | NewRelationshipRequestBody |
                                            DeleteRelationshipRequestBody | NewClassificationRequestBody |
-                                           DeleteClassificationRequestBody]) -> dict:
+                                           DeleteClassificationRequestBody]) -> dict | None:
         """Convert Pydantic models to dict and slim the body."""
         if body is None:
-            return {}
+            return None
         if isinstance(body, dict):
             return body_slimmer(body)
         # It's a Pydantic model
@@ -318,23 +319,24 @@ class DigitalBusiness(CollectionManager):
     @dynamic_catch
     async def _async_get_business_capability_by_guid(
         self,
-        business_capability_guid: str,
-        body: Optional[dict] = None,
+        guid: str,
         output_format: str = "JSON",
-        report_spec: Optional[str | dict] = None,
+        report_spec: Optional[str | dict] = "BusinessCapabilities",
+        body: Optional[dict] = None,
+        **kwargs,
     ) -> dict | str:
         """Return the properties of a specific business capability by GUID. Async version.
 
         Parameters
         ----------
-        business_capability_guid : str
+        guid : str
             The GUID of the business capability to retrieve.
-        body : dict, optional
-            Request body (typically empty for retrieval).
         output_format : str, optional
             Format for output. Defaults to "JSON".
         report_spec : str | dict, optional
             Report specification for formatting.
+        body : dict, optional
+            Request body (typically empty for retrieval).
 
         Returns
         -------
@@ -350,36 +352,42 @@ class DigitalBusiness(CollectionManager):
         PyegeriaNotAuthorizedException
             If the user is not authorized for the requested action.
         """
-        url = f"{self.digital_business_command_root}/collections/{business_capability_guid}/retrieve"
+        url = f"{self.digital_business_command_root}/collections/{guid}/retrieve"
+        params = {
+            "output_format": output_format,
+            "report_spec": report_spec,
+            "body": body,
+        }
+        params.update(kwargs)
+        params = {k: v for k, v in params.items() if v is not None}
         response = await self._async_get_guid_request(
             url,
             _type="BusinessCapability",
             _gen_output=self._generate_collection_output,
-            output_format=output_format,
-            report_spec=report_spec,
-            body=body,
+            **params,
         )
         return response
 
     def get_business_capability_by_guid(
         self,
-        business_capability_guid: str,
-        body: Optional[dict] = None,
+        guid: str,
         output_format: str = "JSON",
-        report_spec: Optional[str | dict] = None,
+        report_spec: Optional[str | dict] = "BusinessCapabilities",
+        body: Optional[dict] = None,
+        **kwargs,
     ) -> dict | str:
         """Return the properties of a specific business capability by GUID. Sync version.
 
         Parameters
         ----------
-        business_capability_guid : str
+        guid : str
             The GUID of the business capability to retrieve.
-        body : dict, optional
-            Request body (typically empty for retrieval).
         output_format : str, optional
             Format for output. Defaults to "JSON".
         report_spec : str | dict, optional
             Report specification for formatting.
+        body : dict, optional
+            Request body (typically empty for retrieval).
 
         Returns
         -------
@@ -394,102 +402,168 @@ class DigitalBusiness(CollectionManager):
         loop = asyncio.get_event_loop()
         return loop.run_until_complete(
             self._async_get_business_capability_by_guid(
-                business_capability_guid, body, output_format, report_spec
+                guid=guid,
+                output_format=output_format,
+                report_spec=report_spec,
+                body=body,
+                **kwargs,
             )
         )
 
     @dynamic_catch
     async def _async_get_business_capabilities_by_name(
         self,
-        filter_string: Optional[str] = None,
-        classification_names: Optional[list[str]] = None,
-        body: Optional[dict] = None,
+        name: str = None,
+        metadata_element_type_name: str | None = "BusinessCapability",
+        metadata_element_subtypes: list[str] | None = None,
+        include_only_relationships: list[str] | None = None,
+        skip_relationships: list[str] | None = None,
+        graph_query_depth: int = 3,
         start_from: int = 0,
         page_size: int = 0,
         output_format: str = "JSON",
-        report_spec: Optional[str | dict] = None,
+        report_spec: Optional[str | dict] = "BusinessCapabilities",
+        body: Optional[dict] = None,
+        **kwargs,
     ) -> list | str:
         """Returns the list of business capabilities with a particular name. Async version.
 
         Parameters
         ----------
-        filter_string : str, optional
-            Filter string to match against capability names.
-        classification_names : list[str], optional
-            List of classification names to filter by.
-        body : dict, optional
-            Request body for additional filtering.
-        start_from : int, optional
-            Starting index for pagination. Defaults to 0.
-        page_size : int, optional
-            Number of results per page. Defaults to 0 (no limit).
-        output_format : str, optional
-            Format for output. Defaults to "JSON".
-        report_spec : str | dict, optional
-            Report specification for formatting.
+        name: str, optional
+            name to use to find matching business capabilities.
+        metadata_element_type_name : str, optional
+            The type of metadata element.
+        metadata_element_subtypes : list[str], optional
+            The list of subtypes to filter by.
+        include_only_relationships : list[str], optional
+            The list of relationship type names to include.
+        skip_relationships : list[str], optional
+            The list of relationship type names to skip.
+        graph_query_depth : int, optional
+            The query depth for relationships.
+        start_from: int, [default=0], optional
+            When multiple pages of results are available, the page number to start from.
+        page_size: int, [default=0]
+            The number of items to return in a single page.
+        output_format: str, default = "JSON"
+            - one of "DICT", "MERMAID" or "JSON"
+        report_spec: dict, optional, default = "BusinessCapabilities"
+            The desired output columns/fields to include.
+        body: dict, optional
+            Provides a full request body. If specified, the body supercedes other attributes.
 
         Returns
         -------
         list | str
-            List of business capabilities matching the criteria.
-
-        Raises
-        ------
-        PyegeriaException
-            If there are issues in communications, message format, or Egeria errors.
         """
+        # Handle backward-compatible positional or keyword args
+        if name is not None and not isinstance(name, str):
+            body = name
+            name = None
+
+        if name is None:
+            name = kwargs.pop("filter_string", None)
+
+        if name is None and body is None:
+            name = "*"
+
         url = f"{self.digital_business_command_root}/collections/by-name"
-        response = await self._async_get_name_request(url, _type="BusinessCapability",
-                                                      _gen_output=self._generate_collection_output,
-                                                      filter_string=filter_string,
-                                                      classification_names=classification_names, start_from=start_from,
-                                                      page_size=page_size, output_format=output_format,
-                                                      report_spec=report_spec, body=body)
-        return response
+        params = {
+            "filter_string": name,
+            "metadata_element_type": metadata_element_type_name,
+            "metadata_element_subtypes": metadata_element_subtypes,
+            "include_only_relationships": include_only_relationships,
+            "skip_relationships": skip_relationships,
+            "graph_query_depth": graph_query_depth,
+            "start_from": start_from,
+            "page_size": page_size,
+            "output_format": output_format,
+            "report_spec": report_spec,
+            "body": body,
+        }
+        params.update(kwargs)
+        params = {k: v for k, v in params.items() if v is not None or k == "filter_string"}
+
+        return await self._async_get_name_request(
+            url,
+            _type="BusinessCapability",
+            _gen_output=self._generate_collection_output,
+            **params,
+        )
 
     def get_business_capabilities_by_name(
         self,
-        filter_string: Optional[str] = None,
-        classification_names: Optional[list[str]] = None,
-        body: Optional[dict] = None,
+        name: str = None,
+        metadata_element_type_name: str | None = "BusinessCapability",
+        metadata_element_subtypes: list[str] | None = None,
+        include_only_relationships: list[str] | None = None,
+        skip_relationships: list[str] | None = None,
+        graph_query_depth: int = 3,
         start_from: int = 0,
         page_size: int = 0,
         output_format: str = "JSON",
-        report_spec: Optional[str | dict] = None,
+        report_spec: Optional[str | dict] = "BusinessCapabilities",
+        body: Optional[dict] = None,
+        **kwargs,
     ) -> list | str:
         """Returns the list of business capabilities with a particular name. Sync version.
 
         Parameters
         ----------
-        filter_string : str, optional
-            Filter string to match against capability names.
-        classification_names : list[str], optional
-            List of classification names to filter by.
-        body : dict, optional
-            Request body for additional filtering.
-        start_from : int, optional
-            Starting index for pagination. Defaults to 0.
-        page_size : int, optional
-            Number of results per page. Defaults to 0 (no limit).
-        output_format : str, optional
-            Format for output. Defaults to "JSON".
-        report_spec : str | dict, optional
-            Report specification for formatting.
+        name: str, optional
+            name to use to find matching business capabilities.
+        metadata_element_type_name : str, optional
+            The type of metadata element.
+        metadata_element_subtypes : list[str], optional
+            The list of subtypes to filter by.
+        include_only_relationships : list[str], optional
+            The list of relationship type names to include.
+        skip_relationships : list[str], optional
+            The list of relationship type names to skip.
+        graph_query_depth : int, optional
+            The query depth for relationships.
+        start_from: int, [default=0], optional
+            When multiple pages of results are available, the page number to start from.
+        page_size: int, [default=0]
+            The number of items to return in a single page.
+        output_format: str, default = "JSON"
+            - one of "DICT", "MERMAID" or "JSON"
+        report_spec: dict, optional, default = "BusinessCapabilities"
+            The desired output columns/fields to include.
+        body: dict, optional
+            Provides a full request body. If specified, the body supercedes other attributes.
 
         Returns
         -------
         list | str
-            List of business capabilities matching the criteria.
-
-        Raises
-        ------
-        PyegeriaException
-            If there are issues in communications, message format, or Egeria errors.
         """
+        # Handle backward-compatible positional or keyword args
+        if name is not None and not isinstance(name, str):
+            body = name
+            name = None
+
+        if name is None:
+            name = kwargs.pop("filter_string", None)
+
+        if name is None and body is None:
+            name = "*"
+
         loop = asyncio.get_event_loop()
         return loop.run_until_complete(
             self._async_get_business_capabilities_by_name(
-                filter_string, classification_names, body, start_from, page_size, output_format, report_spec
+                name=name,
+                metadata_element_type_name=metadata_element_type_name,
+                metadata_element_subtypes=metadata_element_subtypes,
+                include_only_relationships=include_only_relationships,
+                skip_relationships=skip_relationships,
+                graph_query_depth=graph_query_depth,
+                start_from=start_from,
+                page_size=page_size,
+                output_format=output_format,
+                report_spec=report_spec,
+                body=body,
+                **kwargs,
             )
         )
 
@@ -497,116 +571,119 @@ class DigitalBusiness(CollectionManager):
     async def _async_find_business_capabilities(
         self,
         search_string: str = "*",
-        body: Optional[dict] = None,
-        starts_with: bool = False,
+        starts_with: bool = True,
         ends_with: bool = False,
         ignore_case: bool = True,
+        metadata_element_type_name: str | None = "BusinessCapability",
+        metadata_element_subtypes: list[str] | None = None,
+        include_only_relationships: list[str] | None = None,
+        skip_relationships: list[str] | None = None,
+        graph_query_depth: int = 3,
+        as_of_time: Optional[str] = None,
         start_from: int = 0,
-        page_size: int = 0,
+        page_size: int = 100,
+        sequencing_order: Optional[str] = None,
+        sequencing_property: Optional[str] = None,
         output_format: str = "JSON",
-        report_spec: Optional[str | dict] = None,
-        **kwargs
+        report_spec: Optional[str | dict] = "BusinessCapabilities",
+        body: Optional[dict | SearchStringRequestBody] = None,
+        **kwargs,
     ) -> list | str:
-        """Returns the list of business capabilities matching the search string. Async version.
+        """Retrieve the list of business capability metadata elements that contain the search string. Async Version.
 
         Parameters
         ----------
-        search_string : str, optional
-            Search string to match. Defaults to "*" (all).
-        starts_with : bool, optional
-            Whether to match from the start. Defaults to False.
-        ends_with : bool, optional
-            Whether to match at the end. Defaults to False.
-        ignore_case : bool, optional
-            Whether to ignore case. Defaults to True.
-        anchor_domain : str, optional
-            Domain to anchor the search.
-        metadata_element_type : str, optional
-            Type of metadata element to search for. Defaults to "BusinessCapability".
-        metadata_element_subtype : list[str], optional
-            Subtypes of metadata element.
-        skip_relationships : list[str], optional
-            Relationships to skip in the graph.
-        include_only_relationships : list[str], optional
-            Only include these relationships.
-        skip_classified_elements : list[str], optional
-            Skip elements with these classifications.
-        include_only_classified_elements : list[str], optional
-            Only include elements with these classifications.
-        graph_query_depth : int, optional
-            Depth of graph query. Defaults to 0.
-        governance_zone_filter : list[str], optional
-            Filter by governance zones.
-        as_of_time : str, optional
-            Historical time for the query.
-        effective_time : str, optional
-            Effective time for the query.
-        relationship_page_size : int, optional
-            Page size for relationships. Defaults to 0.
-        limit_results_by_status : list[str], optional
-            Limit results by status values.
-        sequencing_order : str, optional
-            Order for sequencing results.
-        sequencing_property : str, optional
-            Property to sequence by.
-        start_from : int, optional
-            Starting index for pagination. Defaults to 0.
-        page_size : int, optional
-            Number of results per page. Defaults to 0 (no limit).
-        output_format : str, optional
-            Format for output. Defaults to "JSON".
-        report_spec : str | dict, optional
-            Report specification for formatting.
-        property_names: list[str], optional
-            The names of properties to search for.
-        body : dict, optional
-            Request body for additional parameters.
+        search_string: str
+            Search string to match against - None or '*' indicate match against all capabilities.
+        starts_with : bool, [default=True], optional
+            Starts with the supplied string.
+        ends_with : bool, [default=False], optional
+            Ends with the supplied string
+        ignore_case : bool, [default=True], optional
+            Ignore case when searching
+        metadata_element_type_name: str, optional
+            The type of metadata element to search for.
+        metadata_element_subtypes: list[str], optional
+            The subtypes of metadata element to search for.
+        include_only_relationships: list[str], optional
+            The types of relationships to include.
+        skip_relationships: list[str], optional
+            The types of relationships to skip.
+        graph_query_depth: int, [default=3], optional
+            The depth of the graph query.
+        as_of_time: str, optional
+            The time to search as of.
+        start_from: int, [default=0], optional
+            When paged results are available, the starting index.
+        page_size: int, [default=100]
+            The number of items to return.
+        sequencing_order: str, optional
+            The order to sequence results by.
+        sequencing_property: str, optional
+            The property to sequence results by.
+        output_format: str, default = "JSON"
+            - one of "MD", "LIST", "FORM", "REPORT", "DICT", "MERMAID" or "JSON"
+        report_spec: str | dict, optional
+            - The desired output columns/fields to include.
+        body: dict | SearchStringRequestBody, optional
+            - if provided, the search parameters in the body will supercede other attributes.
 
         Returns
         -------
         list | str
-            List of business capabilities matching the search criteria.
-
-        Raises
-        ------
-        PyegeriaException
-            If there are issues in communications, message format, or Egeria errors.
         """
         url = f"{self.digital_business_command_root}/collections/by-search-string"
-        
-        # Merge explicit parameters with kwargs
+
         params = {
-            'search_string': search_string,
-            'body': body,
-            'starts_with': starts_with,
-            'ends_with': ends_with,
-            'ignore_case': ignore_case,
-            'start_from': start_from,
-            'page_size': page_size,
-            'output_format': output_format,
-            'report_spec': report_spec
+            "search_string": search_string,
+            "starts_with": starts_with,
+            "ends_with": ends_with,
+            "ignore_case": ignore_case,
+            "metadata_element_type": metadata_element_type_name,
+            "metadata_element_subtypes": metadata_element_subtypes,
+            "include_only_relationships": include_only_relationships,
+            "skip_relationships": skip_relationships,
+            "graph_query_depth": graph_query_depth,
+            "as_of_time": as_of_time,
+            "start_from": start_from,
+            "page_size": page_size,
+            "sequencing_order": sequencing_order,
+            "sequencing_property": sequencing_property,
+            "output_format": output_format,
+            "report_spec": report_spec,
+            "body": body,
         }
         params.update(kwargs)
-        
-        # Filter out None values, but keep search_string even if None (it's required)
-        params = {k: v for k, v in params.items() if v is not None or k == 'search_string'}
-        
-        response = await self._async_find_request(url, _type="BusinessCapability",
-                                                  _gen_output=self._generate_collection_output, **params)
+        params = {k: v for k, v in params.items() if v is not None or k == "search_string"}
+
+        response = await self._async_find_request(
+            url,
+            _type="BusinessCapability",
+            _gen_output=self._generate_collection_output,
+            **params,
+        )
         return response
 
     def find_business_capabilities(
         self,
         search_string: str = "*",
-        body: Optional[dict] = None,
-        starts_with: bool = False,
+        starts_with: bool = True,
         ends_with: bool = False,
         ignore_case: bool = True,
+        metadata_element_type_name: str | None = "BusinessCapability",
+        metadata_element_subtypes: list[str] | None = None,
+        include_only_relationships: list[str] | None = None,
+        skip_relationships: list[str] | None = None,
+        graph_query_depth: int = 3,
+        as_of_time: Optional[str] = None,
         start_from: int = 0,
-        page_size: int = 0,
+        page_size: int = 100,
+        sequencing_order: Optional[str] = None,
+        sequencing_property: Optional[str] = None,
         output_format: str = "JSON",
-        report_spec: Optional[str | dict] = None,
-        **kwargs
+        report_spec: Optional[str | dict] = "BusinessCapabilities",
+        body: Optional[dict | SearchStringRequestBody] = None,
+        **kwargs,
     ) -> list | str:
         """Returns the list of business capabilities matching the search string. Sync version.
 
@@ -615,77 +692,63 @@ class DigitalBusiness(CollectionManager):
         search_string : str, optional
             Search string to match. Defaults to "*" (all).
         starts_with : bool, optional
-            Whether to match from the start. Defaults to False.
+            Whether to match from the start. Defaults to True.
         ends_with : bool, optional
             Whether to match at the end. Defaults to False.
         ignore_case : bool, optional
             Whether to ignore case. Defaults to True.
-        anchor_domain : str, optional
-            Domain to anchor the search.
-        metadata_element_type : str, optional
-            Type of metadata element to search for. Defaults to "BusinessCapability".
-        metadata_element_subtype : list[str], optional
-            Subtypes of metadata element.
-        skip_relationships : list[str], optional
-            Relationships to skip in the graph.
+        metadata_element_type_name : str, optional
+            The type of metadata element.
+        metadata_element_subtypes : list[str], optional
+            The subtypes to filter by.
         include_only_relationships : list[str], optional
             Only include these relationships.
-        skip_classified_elements : list[str], optional
-            Skip elements with these classifications.
-        include_only_classified_elements : list[str], optional
-            Only include elements with these classifications.
+        skip_relationships : list[str], optional
+            Relationships to skip in the graph.
         graph_query_depth : int, optional
-            Depth of graph query. Defaults to 0.
-        governance_zone_filter : list[str], optional
-            Filter by governance zones.
+            The query depth for relationships.
         as_of_time : str, optional
             Historical time for the query.
-        effective_time : str, optional
-            Effective time for the query.
-        relationship_page_size : int, optional
-            Page size for relationships. Defaults to 0.
-        limit_results_by_status : list[str], optional
-            Limit results by status values.
+        start_from : int, optional
+            Starting index for pagination. Defaults to 0.
+        page_size : int, optional
+            Number of results per page. Defaults to 100.
         sequencing_order : str, optional
             Order for sequencing results.
         sequencing_property : str, optional
             Property to sequence by.
-        start_from : int, optional
-            Starting index for pagination. Defaults to 0.
-        page_size : int, optional
-            Number of results per page. Defaults to 0 (no limit).
         output_format : str, optional
             Format for output. Defaults to "JSON".
         report_spec : str | dict, optional
             Report specification for formatting.
-        property_names: list[str], optional
-            The names of properties to search for.
         body : dict, optional
             Request body for additional parameters.
 
         Returns
         -------
         list | str
-            List of business capabilities matching the search criteria.
-
-        Raises
-        ------
-        PyegeriaException
-            If there are issues in communications, message format, or Egeria errors.
         """
         loop = asyncio.get_event_loop()
         return loop.run_until_complete(
             self._async_find_business_capabilities(
                 search_string=search_string,
-                body=body,
                 starts_with=starts_with,
                 ends_with=ends_with,
                 ignore_case=ignore_case,
+                metadata_element_type_name=metadata_element_type_name,
+                metadata_element_subtypes=metadata_element_subtypes,
+                include_only_relationships=include_only_relationships,
+                skip_relationships=skip_relationships,
+                graph_query_depth=graph_query_depth,
+                as_of_time=as_of_time,
                 start_from=start_from,
                 page_size=page_size,
+                sequencing_order=sequencing_order,
+                sequencing_property=sequencing_property,
                 output_format=output_format,
                 report_spec=report_spec,
-                **kwargs
+                body=body,
+                **kwargs,
             )
         )
 

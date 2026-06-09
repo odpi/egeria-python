@@ -21,24 +21,31 @@ async def _async_find_xxx(
     ends_with: bool = False,
     ignore_case: bool = True,
     metadata_element_type_name: str | None = None,
+    metadata_element_subtypes: list[str] | None = None,
+    include_only_relationships: list[str] | None = None,
+    skip_relationships: list[str] | None = None,
     graph_query_depth: int = 3,
     as_of_time: datetime | str | None = None,
     start_from: int = 0,
     page_size: int = 0,
+    sequencing_order: str | None = None,
+    sequencing_property: str | None = None,
     output_format: str = "JSON",
     report_spec: str | dict | None = None,
     body: dict | SearchStringRequestBody | FindRequestBody | None = None,
     **kwargs
 )
 ```
-==> Include metadata_element_subtypes, include_only_relationships, skip_relationships, sequencing_order, sequencing_property
-==> I removed effective_time.
+
 ### get_xxx_by_name (Filtering)
 ```python
 async def _async_get_xxx_by_name(
     self,
     name: str,
     metadata_element_type_name: str | None = None,
+    metadata_element_subtypes: list[str] | None = None,
+    include_only_relationships: list[str] | None = None,
+    skip_relationships: list[str] | None = None,
     graph_query_depth: int = 3,
     start_from: int = 0,
     page_size: int = 0,
@@ -48,13 +55,14 @@ async def _async_get_xxx_by_name(
     **kwargs
 )
 ```
-==> Include metadata_element_subtypes, include_only_relationships, skip_relationships
+
 ### get_xxx_by_guid (Retrieval)
 ```python
 async def _async_get_xxx_by_guid(
     self,
     guid: str,
-    metadata_element_type_name: str | None = None,
+    include_only_relationships: list[str] | None = None,
+    skip_relationships: list[str] | None = None,
     graph_query_depth: int = 3,
     output_format: str = "JSON",
     report_spec: str | dict | None = None,
@@ -62,7 +70,6 @@ async def _async_get_xxx_by_guid(
     **kwargs
 )
 ```
-==> don't include metadata_element_type_name here since it's not relevant for a direct GUID lookup, but include graph_query_depth, include_only_relationships, skip_relationships.
 ## Phase Estimates
 
 | Phase | Description | Estimated Effort |

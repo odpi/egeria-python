@@ -434,77 +434,197 @@ class SecurityOfficer(ServerClient):
     @dynamic_catch
     async def _async_find_security_roles(
         self,
-        search_string: str,
-        graph_query_depth: int = 0,
+        search_string: str = "*",
+        starts_with: bool = True,
+        ends_with: bool = False,
+        ignore_case: bool = True,
+        metadata_element_type_name: str | None = "SecurityRole",
+        metadata_element_subtypes: list[str] | None = None,
+        include_only_relationships: list[str] | None = None,
+        skip_relationships: list[str] | None = None,
+        graph_query_depth: int = 3,
+        as_of_time: Optional[str] = None,
         start_from: int = 0,
-        page_size: int = 0,
-    ) -> list[dict]:
+        page_size: int = 100,
+        sequencing_order: Optional[str] = None,
+        sequencing_property: Optional[str] = None,
+        output_format: str = "JSON",
+        report_spec: Optional[str | dict] = "SecurityRole",
+        body: Optional[dict | SearchStringRequestBody] = None,
+        **kwargs,
+    ) -> list | str:
         """Return the list of security roles matching the search string. Async version."""
         url = f"{self.security_officer_base_url}/collections/by-search-string"
-        body = SearchStringRequestBody(
-            class_="SearchStringRequestBody",
-            search_string=search_string,
-            graph_query_depth=graph_query_depth,
-            start_from=start_from,
-            page_size=page_size,
-            metadata_element_type_name="SecurityRole",
+        params = {
+            "search_string": search_string,
+            "starts_with": starts_with,
+            "ends_with": ends_with,
+            "ignore_case": ignore_case,
+            "metadata_element_type": metadata_element_type_name,
+            "metadata_element_subtypes": metadata_element_subtypes,
+            "include_only_relationships": include_only_relationships,
+            "skip_relationships": skip_relationships,
+            "graph_query_depth": graph_query_depth,
+            "as_of_time": as_of_time,
+            "start_from": start_from,
+            "page_size": page_size,
+            "sequencing_order": sequencing_order,
+            "sequencing_property": sequencing_property,
+            "output_format": output_format,
+            "report_spec": report_spec,
+            "body": body,
+        }
+        params.update(kwargs)
+        params = {k: v for k, v in params.items() if v is not None or k == "search_string"}
+
+        return await self._async_find_request(
+            url,
+            _type="SecurityRole",
+            _gen_output=self._generate_referenceable_output,
+            **params,
         )
-        payload = body.model_dump_json(exclude_none=True, by_alias=True)
-        response = await self._async_make_request("POST", url, payload)
-        if response:
-            return response.json().get("elements", [])
-        return []
 
     def find_security_roles(
         self,
-        search_string: str,
-        graph_query_depth: int = 0,
+        search_string: str = "*",
+        starts_with: bool = True,
+        ends_with: bool = False,
+        ignore_case: bool = True,
+        metadata_element_type_name: str | None = "SecurityRole",
+        metadata_element_subtypes: list[str] | None = None,
+        include_only_relationships: list[str] | None = None,
+        skip_relationships: list[str] | None = None,
+        graph_query_depth: int = 3,
+        as_of_time: Optional[str] = None,
         start_from: int = 0,
-        page_size: int = 0,
-    ) -> list[dict]:
+        page_size: int = 100,
+        sequencing_order: Optional[str] = None,
+        sequencing_property: Optional[str] = None,
+        output_format: str = "JSON",
+        report_spec: Optional[str | dict] = "SecurityRole",
+        body: Optional[dict | SearchStringRequestBody] = None,
+        **kwargs,
+    ) -> list | str:
         """Return the list of security roles matching the search string."""
         loop = asyncio.get_event_loop()
         return loop.run_until_complete(
             self._async_find_security_roles(
-                search_string, graph_query_depth, start_from, page_size
+                search_string=search_string,
+                starts_with=starts_with,
+                ends_with=ends_with,
+                ignore_case=ignore_case,
+                metadata_element_type_name=metadata_element_type_name,
+                metadata_element_subtypes=metadata_element_subtypes,
+                include_only_relationships=include_only_relationships,
+                skip_relationships=skip_relationships,
+                graph_query_depth=graph_query_depth,
+                as_of_time=as_of_time,
+                start_from=start_from,
+                page_size=page_size,
+                sequencing_order=sequencing_order,
+                sequencing_property=sequencing_property,
+                output_format=output_format,
+                report_spec=report_spec,
+                body=body,
+                **kwargs,
             )
         )
 
     @dynamic_catch
     async def _async_find_security_groups(
         self,
-        search_string: str,
-        graph_query_depth: int = 0,
+        search_string: str = "*",
+        starts_with: bool = True,
+        ends_with: bool = False,
+        ignore_case: bool = True,
+        metadata_element_type_name: str | None = "SecurityGroup",
+        metadata_element_subtypes: list[str] | None = None,
+        include_only_relationships: list[str] | None = None,
+        skip_relationships: list[str] | None = None,
+        graph_query_depth: int = 3,
+        as_of_time: Optional[str] = None,
         start_from: int = 0,
-        page_size: int = 0,
-    ) -> list[dict]:
+        page_size: int = 100,
+        sequencing_order: Optional[str] = None,
+        sequencing_property: Optional[str] = None,
+        output_format: str = "JSON",
+        report_spec: Optional[str | dict] = "SecurityGroup",
+        body: Optional[dict | SearchStringRequestBody] = None,
+        **kwargs,
+    ) -> list | str:
         """Return the list of security groups matching the search string. Async version."""
         url = f"{self.security_officer_base_url}/collections/by-search-string"
-        body = SearchStringRequestBody(
-            class_="SearchStringRequestBody",
-            search_string=search_string,
-            graph_query_depth=graph_query_depth,
-            start_from=start_from,
-            page_size=page_size,
-            metadata_element_type_name="SecurityGroup",
+        params = {
+            "search_string": search_string,
+            "starts_with": starts_with,
+            "ends_with": ends_with,
+            "ignore_case": ignore_case,
+            "metadata_element_type": metadata_element_type_name,
+            "metadata_element_subtypes": metadata_element_subtypes,
+            "include_only_relationships": include_only_relationships,
+            "skip_relationships": skip_relationships,
+            "graph_query_depth": graph_query_depth,
+            "as_of_time": as_of_time,
+            "start_from": start_from,
+            "page_size": page_size,
+            "sequencing_order": sequencing_order,
+            "sequencing_property": sequencing_property,
+            "output_format": output_format,
+            "report_spec": report_spec,
+            "body": body,
+        }
+        params.update(kwargs)
+        params = {k: v for k, v in params.items() if v is not None or k == "search_string"}
+
+        return await self._async_find_request(
+            url,
+            _type="SecurityGroup",
+            _gen_output=self._generate_referenceable_output,
+            **params,
         )
-        payload = body.model_dump_json(exclude_none=True, by_alias=True)
-        response = await self._async_make_request("POST", url, payload)
-        if response:
-            return response.json().get("elements", [])
-        return []
 
     def find_security_groups(
         self,
-        search_string: str,
-        graph_query_depth: int = 0,
+        search_string: str = "*",
+        starts_with: bool = True,
+        ends_with: bool = False,
+        ignore_case: bool = True,
+        metadata_element_type_name: str | None = "SecurityGroup",
+        metadata_element_subtypes: list[str] | None = None,
+        include_only_relationships: list[str] | None = None,
+        skip_relationships: list[str] | None = None,
+        graph_query_depth: int = 3,
+        as_of_time: Optional[str] = None,
         start_from: int = 0,
-        page_size: int = 0,
-    ) -> list[dict]:
+        page_size: int = 100,
+        sequencing_order: Optional[str] = None,
+        sequencing_property: Optional[str] = None,
+        output_format: str = "JSON",
+        report_spec: Optional[str | dict] = "SecurityGroup",
+        body: Optional[dict | SearchStringRequestBody] = None,
+        **kwargs,
+    ) -> list | str:
         """Return the list of security groups matching the search string."""
         loop = asyncio.get_event_loop()
         return loop.run_until_complete(
             self._async_find_security_groups(
-                search_string, graph_query_depth, start_from, page_size
+                search_string=search_string,
+                starts_with=starts_with,
+                ends_with=ends_with,
+                ignore_case=ignore_case,
+                metadata_element_type_name=metadata_element_type_name,
+                metadata_element_subtypes=metadata_element_subtypes,
+                include_only_relationships=include_only_relationships,
+                skip_relationships=skip_relationships,
+                graph_query_depth=graph_query_depth,
+                as_of_time=as_of_time,
+                start_from=start_from,
+                page_size=page_size,
+                sequencing_order=sequencing_order,
+                sequencing_property=sequencing_property,
+                output_format=output_format,
+                report_spec=report_spec,
+                body=body,
+                **kwargs,
             )
         )

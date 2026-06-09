@@ -361,14 +361,19 @@ class CollectionManager(ServerClient):
     async def _async_find_collections(
             self,
             search_string: str = "*",
-            body: Optional[dict | SearchStringRequestBody] = None,
             starts_with: bool = True,
             ends_with: bool = False,
-            ignore_case: bool = False,
+            ignore_case: bool = True,
+            metadata_element_type_name: Optional[str] = None,
+            metadata_element_subtypes: Optional[list[str]] = None,
+            include_only_relationships: Optional[list[str]] = None,
+            skip_relationships: Optional[list[str]] = None,
+            graph_query_depth: int = 3,
             start_from: int = 0,
             page_size: int = 100,
             output_format: str = "JSON",
-            report_spec: str | dict = None,
+            report_spec: Optional[str | dict] = None,
+            body: Optional[dict | SearchStringRequestBody] = None,
             _type: str = "Collection",
             **kwargs
     ) -> list | str:
@@ -378,14 +383,22 @@ class CollectionManager(ServerClient):
         ----------
         search_string : str, default "*"
             Search string to match against - None or '*' indicate match against all collections.
-        body : dict | SearchStringRequestBody, optional
-            Request body. If provided, overrides other parameters.
         starts_with : bool, default True
             Starts with the supplied string.
         ends_with : bool, default False
             Ends with the supplied string.
-        ignore_case : bool, default False
+        ignore_case : bool, default True
             Ignore case when searching.
+        metadata_element_type_name : str, optional
+            Specific metadata element type to filter on.
+        metadata_element_subtypes : list[str], optional
+            List of metadata element subtypes.
+        include_only_relationships : list[str], optional
+            Only include these relationship types.
+        skip_relationships : list[str], optional
+            Relationship types to skip.
+        graph_query_depth : int, default 3
+            Depth of graph traversal.
         start_from : int, default 0
             Starting index for pagination.
         page_size : int, default 100
@@ -394,27 +407,12 @@ class CollectionManager(ServerClient):
             Output format: "MD", "LIST", "FORM", "REPORT", "DICT", "MERMAID" or "JSON".
         report_spec : str | dict, optional
             Report specification for output formatting.
+        body : dict | SearchStringRequestBody, optional
+            Request body. If provided, overrides other parameters.
         _type : str, default "Collection"
             The type of element to search for.
         **kwargs : dict, optional
-            Additional parameters supported by the underlying find request:
-            
-            - anchor_domain : str - Domain to anchor the search
-            - metadata_element_type : str - Specific metadata element type
-            - metadata_element_subtypes : list[str] - List of metadata element subtypes
-            - skip_relationships : list[str] - Relationship types to skip
-            - include_only_relationships : list[str] - Only include these relationship types
-            - skip_classified_elements : list[str] - Skip elements with these classifications
-            - include_only_classified_elements : list[str] - Only include elements with these classifications
-            - graph_query_depth : int - Depth of graph traversal (default 3)
-            - governance_zone_filter : list[str] - Filter by governance zones
-            - as_of_time : str - Historical query time (ISO 8601 format)
-            - effective_time : str - Effective time for the query (ISO 8601 format)
-            - relationship_page_size : int - Page size for relationships
-            - limit_results_by_status : list[str] - Filter by element status
-            - sequencing_order : str - Order of results
-            - sequencing_property : str - Property to sequence by
-            - property_names : list[str] - Specific properties to search
+            Additional query parameters.
 
         Returns
         -------
@@ -432,6 +430,8 @@ class CollectionManager(ServerClient):
         """
         url = str(HttpUrl(f"{self.collection_command_root}/by-search-string"))
         
+        metadata_element_type = kwargs.pop("metadata_element_type", metadata_element_type_name)
+
         # Merge explicit parameters with kwargs
         params = {
             'search_string': search_string,
@@ -439,6 +439,11 @@ class CollectionManager(ServerClient):
             'starts_with': starts_with,
             'ends_with': ends_with,
             'ignore_case': ignore_case,
+            'metadata_element_type': metadata_element_type,
+            'metadata_element_subtypes': metadata_element_subtypes,
+            'include_only_relationships': include_only_relationships,
+            'skip_relationships': skip_relationships,
+            'graph_query_depth': graph_query_depth,
             'start_from': start_from,
             'page_size': page_size,
             'output_format': output_format,
@@ -453,18 +458,22 @@ class CollectionManager(ServerClient):
                                                   **params)
         return response
 
-    @dynamic_catch
     def find_collections(
             self,
             search_string: str = "*",
-            body: Optional[dict | SearchStringRequestBody] = None,
             starts_with: bool = True,
             ends_with: bool = False,
-            ignore_case: bool = False,
+            ignore_case: bool = True,
+            metadata_element_type_name: Optional[str] = None,
+            metadata_element_subtypes: Optional[list[str]] = None,
+            include_only_relationships: Optional[list[str]] = None,
+            skip_relationships: Optional[list[str]] = None,
+            graph_query_depth: int = 3,
             start_from: int = 0,
             page_size: int = 100,
             output_format: str = "JSON",
-            report_spec: str | dict = None,
+            report_spec: Optional[str | dict] = None,
+            body: Optional[dict | SearchStringRequestBody] = None,
             _type: str = "Collection",
             **kwargs
     ) -> list | str:
@@ -474,14 +483,22 @@ class CollectionManager(ServerClient):
         ----------
         search_string : str, default "*"
             Search string to match against - None or '*' indicate match against all collections.
-        body : dict | SearchStringRequestBody, optional
-            Request body. If provided, overrides other parameters.
         starts_with : bool, default True
             Starts with the supplied string.
         ends_with : bool, default False
             Ends with the supplied string.
-        ignore_case : bool, default False
+        ignore_case : bool, default True
             Ignore case when searching.
+        metadata_element_type_name : str, optional
+            Specific metadata element type to filter on.
+        metadata_element_subtypes : list[str], optional
+            List of metadata element subtypes.
+        include_only_relationships : list[str], optional
+            Only include these relationship types.
+        skip_relationships : list[str], optional
+            Relationship types to skip.
+        graph_query_depth : int, default 3
+            Depth of graph traversal.
         start_from : int, default 0
             Starting index for pagination.
         page_size : int, default 100
@@ -490,27 +507,12 @@ class CollectionManager(ServerClient):
             Output format: "MD", "LIST", "FORM", "REPORT", "DICT", "MERMAID" or "JSON".
         report_spec : str | dict, optional
             Report specification for output formatting.
+        body : dict | SearchStringRequestBody, optional
+            Request body. If provided, overrides other parameters.
         _type : str, default "Collection"
             The type of element to search for.
         **kwargs : dict, optional
-            Additional parameters supported by the underlying find request:
-            
-            - anchor_domain : str - Domain to anchor the search
-            - metadata_element_type : str - Specific metadata element type
-            - metadata_element_subtypes : list[str] - List of metadata element subtypes
-            - skip_relationships : list[str] - Relationship types to skip
-            - include_only_relationships : list[str] - Only include these relationship types
-            - skip_classified_elements : list[str] - Skip elements with these classifications
-            - include_only_classified_elements : list[str] - Only include elements with these classifications
-            - graph_query_depth : int - Depth of graph traversal (default 3)
-            - governance_zone_filter : list[str] - Filter by governance zones
-            - as_of_time : str - Historical query time (ISO 8601 format)
-            - effective_time : str - Effective time for the query (ISO 8601 format)
-            - relationship_page_size : int - Page size for relationships
-            - limit_results_by_status : list[str] - Filter by element status
-            - sequencing_order : str - Order of results
-            - sequencing_property : str - Property to sequence by
-            - property_names : list[str] - Specific properties to search
+            Additional query parameters.
 
         Returns
         -------
@@ -529,8 +531,22 @@ class CollectionManager(ServerClient):
         loop = asyncio.get_event_loop()
         return loop.run_until_complete(
             self._async_find_collections(
-                search_string, body, starts_with, ends_with, ignore_case,
-                start_from, page_size, output_format, report_spec, _type, **kwargs
+                search_string=search_string,
+                starts_with=starts_with,
+                ends_with=ends_with,
+                ignore_case=ignore_case,
+                metadata_element_type_name=metadata_element_type_name,
+                metadata_element_subtypes=metadata_element_subtypes,
+                include_only_relationships=include_only_relationships,
+                skip_relationships=skip_relationships,
+                graph_query_depth=graph_query_depth,
+                start_from=start_from,
+                page_size=page_size,
+                output_format=output_format,
+                report_spec=report_spec,
+                body=body,
+                _type=_type,
+                **kwargs
             )
         )
 
@@ -539,15 +555,21 @@ class CollectionManager(ServerClient):
     async def _async_find_digital_products(
         self,
         search_string: str = "*",
-        deployment_status_list: Optional[list[str]] = None,
         starts_with: bool = True,
         ends_with: bool = False,
-        ignore_case: bool = False,
+        ignore_case: bool = True,
+        metadata_element_type_name: Optional[str] = None,
+        metadata_element_subtypes: Optional[list[str]] = None,
+        include_only_relationships: Optional[list[str]] = None,
+        skip_relationships: Optional[list[str]] = None,
+        graph_query_depth: int = 3,
         start_from: int = 0,
         page_size: int = 100,
         output_format: str = "JSON",
-        report_spec: str | dict = None,
+        report_spec: Optional[str | dict] = None,
         body: Optional[dict | DeploymentStatusSearchString] = None,
+        deployment_status_list: Optional[list[str]] = None,
+        **kwargs,
     ) -> list | str:
         """
         Returns the list of digital products matching the search string and optional deployment status.
@@ -556,14 +578,22 @@ class CollectionManager(ServerClient):
         ----------
         search_string: str, default = "*"
             - the search string to use to find matching digital products
-        deployment_status_list: list[str], optional
-            - optional deployment status list to filter by
         starts_with: bool, default = True
             - if True, the search string must match the start of the property value
         ends_with: bool, default = False
             - if True, the search string must match the end of the property value
-        ignore_case: bool, default = False
+        ignore_case: bool, default = True
             - if True, the search is case-insensitive
+        metadata_element_type_name : str, optional
+            - Specific metadata element type to filter on
+        metadata_element_subtypes : list[str], optional
+            - List of metadata element subtypes
+        include_only_relationships : list[str], optional
+            - Only include these relationship types
+        skip_relationships : list[str], optional
+            - Relationship types to skip
+        graph_query_depth : int, default 3
+            - Depth of graph traversal
         start_from: int, default = 0
             - the starting point in the results list
         page_size: int, default = 100
@@ -574,40 +604,31 @@ class CollectionManager(ServerClient):
             - the report specification to use for the output
         body: dict | DeploymentStatusSearchString, optional
             - the request body to use for the request. If specified, this takes precedence over other parameters.
+        deployment_status_list: list[str], optional
+            - optional deployment status list to filter by
+        **kwargs : dict, optional
+            - Additional query parameters
 
         Returns
         -------
         list | str
             - a list of digital products or a string message if no products are found
-
-        Note:
-        -----
-        Sample body:
-        {
-          "class": "DeploymentStatusSearchString",
-          "searchString" : "add search string here",
-          "deploymentStatusList" : ["ACTIVE"],
-          "startsWith" : false,
-          "endsWith" : false,
-          "ignoreCase" : true,
-          "startFrom" : 0,
-          "pageSize": 0
-        }
         """
         url = (
             f"{self.platform_url}/servers/{self.view_server}/api/open-metadata/collection-manager"
             f"/digital-products/by-search-string"
         )
+        kwargs.pop("effective_time", None)
 
         if isinstance(body, DeploymentStatusSearchString):
             validated_body = body
         elif isinstance(body, dict):
             validated_body = self._deployment_status_search_request_adapter.validate_python(body)
         else:
-            search_string = None if search_string == "*" else search_string
+            search_str = None if search_string == "*" else search_string
             body_dict = {
                 "class": "DeploymentStatusSearchString",
-                "searchString": search_string,
+                "searchString": search_str,
                 "deploymentStatusList": deployment_status_list,
                 "startsWith": starts_with,
                 "endsWith": ends_with,
@@ -634,33 +655,44 @@ class CollectionManager(ServerClient):
     def find_digital_products(
         self,
         search_string: str = "*",
-        deployment_status_list: Optional[list[str]] = None,
         starts_with: bool = True,
         ends_with: bool = False,
-        ignore_case: bool = False,
+        ignore_case: bool = True,
+        metadata_element_type_name: Optional[str] = None,
+        metadata_element_subtypes: Optional[list[str]] = None,
+        include_only_relationships: Optional[list[str]] = None,
+        skip_relationships: Optional[list[str]] = None,
+        graph_query_depth: int = 3,
         start_from: int = 0,
         page_size: int = 100,
         output_format: str = "JSON",
-        report_spec: str | dict = None,
+        report_spec: Optional[str | dict] = None,
         body: Optional[dict | DeploymentStatusSearchString] = None,
+        deployment_status_list: Optional[list[str]] = None,
+        **kwargs,
     ) -> list | str:
         """
         Returns the list of digital products matching the search string and optional deployment status. Sync version.
-
-        See _async_find_digital_products for more details.
         """
-        return asyncio.get_event_loop().run_until_complete(
+        loop = asyncio.get_event_loop()
+        return loop.run_until_complete(
             self._async_find_digital_products(
-                search_string,
-                deployment_status_list,
-                starts_with,
-                ends_with,
-                ignore_case,
-                start_from,
-                page_size,
-                output_format,
-                report_spec,
-                body,
+                search_string=search_string,
+                starts_with=starts_with,
+                ends_with=ends_with,
+                ignore_case=ignore_case,
+                metadata_element_type_name=metadata_element_type_name,
+                metadata_element_subtypes=metadata_element_subtypes,
+                include_only_relationships=include_only_relationships,
+                skip_relationships=skip_relationships,
+                graph_query_depth=graph_query_depth,
+                start_from=start_from,
+                page_size=page_size,
+                output_format=output_format,
+                report_spec=report_spec,
+                body=body,
+                deployment_status_list=deployment_status_list,
+                **kwargs,
             )
         )
 
@@ -772,62 +804,87 @@ class CollectionManager(ServerClient):
         )
 
     @dynamic_catch
-    async def _async_get_collections_by_name(self, filter_string: Optional[str] = None, classification_names: Optional[list[str]] = None,
-                                             body: Optional[dict | FilterRequestBody] = None,
-                                             start_from: int = 0, page_size: int = 0,
-                                             output_format: str = 'JSON',
-                                             report_spec: str | dict = None) -> list | str:
-        """ Returns the list of collections with a particular name.
+    @dynamic_catch
+    async def _async_get_collections_by_name(
+        self,
+        name: str = None,
+        metadata_element_type_name: str | None = "Collection",
+        metadata_element_subtypes: list[str] | None = None,
+        include_only_relationships: list[str] | None = None,
+        skip_relationships: list[str] | None = None,
+        graph_query_depth: int = 3,
+        start_from: int = 0,
+        page_size: int = 100,
+        output_format: str = "JSON",
+        report_spec: Optional[str | dict] = None,
+        body: Optional[dict | FilterRequestBody] = None,
+        **kwargs,
+    ) -> list | str:
+        """Returns the list of collections with a particular name. Async version."""
+        if name is None and "filter_string" in kwargs:
+            name = kwargs.pop("filter_string")
 
-            Parameters
-            ----------
-            name: str,
-                name to use to find matching collections.
-            classification_names: list[str], optional, default = None
-                type of collection to filter by - e.g., DataDict, Folder, Root
-            body: dict, optional, default = None
-                Provides, a full request body. If specified, the body supercedes the name parameter.
-            start_from: int, [default=0], optional
-                        When multiple pages of results are available, the page number to start from.
-            page_size: int, [default=None]
-                The number of items to return in a single page. If not specified, the default will be taken from
-                the class instance.
-            output_format: str, default = "JSON"
-                - one of "DICT", "MERMAID" or "JSON"
-            report_spec: dict , optional, default = None
-                The desired output columns/fields to include.
+        classification_names = kwargs.pop("classification_names", None)
+        if metadata_element_subtypes is None and classification_names is not None:
+            metadata_element_subtypes = classification_names
 
-            Returns
-            -------
-            List | str
-
-            A list of collections match matching the name. Returns a string if none found.
-
-            Raises
-            ------
-
-            PyegeriaInvalidParameterException
-              If the client passes incorrect parameters on the request - such as bad URLs or invalid values
-            PyegeriaAPIException
-              Raised by the server when an issue arises in processing a valid request
-            NotAuthorizedException
-              The principle specified by the user_id does not have authorization for the requested action
-        """
         url = str(HttpUrl(f"{self.collection_command_root}/by-name"))
-        response = await self._async_get_name_request(url, _type="Collection",
-                                                      _gen_output=self._generate_collection_output,
-                                                      filter_string=filter_string,
-                                                      classification_names=classification_names, start_from=start_from,
-                                                      page_size=page_size, output_format=output_format,
-                                                      report_spec=report_spec, body=body)
+        params = {
+            "filter_string": name,
+            "metadata_element_type": metadata_element_type_name,
+            "metadata_element_subtypes": metadata_element_subtypes,
+            "include_only_relationships": include_only_relationships,
+            "skip_relationships": skip_relationships,
+            "graph_query_depth": graph_query_depth,
+            "start_from": start_from,
+            "page_size": page_size,
+            "output_format": output_format,
+            "report_spec": report_spec,
+            "body": body,
+        }
+        params.update(kwargs)
+        params = {k: v for k, v in params.items() if v is not None}
 
-        return response
+        return await self._async_get_name_request(
+            url,
+            _type="Collection",
+            _gen_output=self._generate_collection_output,
+            **params,
+        )
 
-
-    def get_collections_by_name(self, filter_string: Optional[str] = None, classification_names: Optional[list[str]] = None,
-                                body: Optional[dict | FilterRequestBody] = None,
-                                start_from: int = 0, page_size: int = 0, output_format: str = 'JSON',
-                                report_spec: str | dict = None) -> list | str:
+    def get_collections_by_name(
+        self,
+        name: str = None,
+        metadata_element_type_name: str | None = "Collection",
+        metadata_element_subtypes: list[str] | None = None,
+        include_only_relationships: list[str] | None = None,
+        skip_relationships: list[str] | None = None,
+        graph_query_depth: int = 3,
+        start_from: int = 0,
+        page_size: int = 100,
+        output_format: str = "JSON",
+        report_spec: Optional[str | dict] = None,
+        body: Optional[dict | FilterRequestBody] = None,
+        **kwargs,
+    ) -> list | str:
+        """Returns the list of collections matching the search string."""
+        loop = asyncio.get_event_loop()
+        return loop.run_until_complete(
+            self._async_get_collections_by_name(
+                name=name,
+                metadata_element_type_name=metadata_element_type_name,
+                metadata_element_subtypes=metadata_element_subtypes,
+                include_only_relationships=include_only_relationships,
+                skip_relationships=skip_relationships,
+                graph_query_depth=graph_query_depth,
+                start_from=start_from,
+                page_size=page_size,
+                output_format=output_format,
+                report_spec=report_spec,
+                body=body,
+                **kwargs,
+            )
+        )
         """Returns the list of collections matching the search string. Async version.
             The search string is located in the request body and is interpreted as a plain string.
             The request parameters, startsWith, endsWith and ignoreCase can be used to allow a fuzzy search.
@@ -997,114 +1054,67 @@ class CollectionManager(ServerClient):
 
 
     @dynamic_catch
-    async def _async_get_collection_by_guid(self, collection_guid: str, element_type: Optional[str] = None,
-                                            body: Optional[dict | GetRequestBody] = None,
-                                            output_format: str = 'JSON',
-                                            report_spec: str | dict = None) -> dict | str:
-        """Return the properties of a specific collection. Async version.
+    async def _async_get_collection_by_guid(
+        self,
+        guid: str = None,
+        include_only_relationships: list[str] | None = None,
+        skip_relationships: list[str] | None = None,
+        graph_query_depth: int = 3,
+        output_format: str = "JSON",
+        report_spec: Optional[str | dict] = None,
+        body: Optional[dict | GetRequestBody] = None,
+        **kwargs,
+    ) -> dict | str:
+        """Return the properties of a specific collection. Async version."""
+        if guid is None and "collection_guid" in kwargs:
+            guid = kwargs.pop("collection_guid")
 
-        Parameters
-        ----------
-        collection_guid: str,
-            unique identifier of the collection.
-        element_type: str, default = None, optional
-            type of collection - Collection, DataSpec, Agreement, etc.
-        body: dict | GetRequestBody, optional, default = None
-            full request body.
-        output_format: str, default = "JSON"
-            - one of "DICT", "MERMAID" or "JSON"
-         report_spec: str | dict, optional, default = None
-                The desired output columns/fields to include.
+        type_name = kwargs.pop("element_type", "Collection")
 
-        Returns
-        -------
-        dict | str
-
-        A JSON dict representing the specified collection. Returns a string if none found.
-
-        Raises
-        ------
-
-        PyegeriaInvalidParameterException
-          If the client passes incorrect parameters on the request - such as bad URLs or invalid values
-        PyegeriaAPIException
-          Raised by the server when an issue arises in processing a valid request
-        NotAuthorizedException
-          The principle specified by the user_id does not have authorization for the requested action
-
-        Notes
-        ----
-        Body sample:
-        {
-          "class": "GetRequestBody",
-          "asOfTime": "{{$isoTimestamp}}",
-          "effectiveTime": "{{$isoTimestamp}}",
-          "forLineage": false,
-          "forDuplicateProcessing": false
+        url = str(HttpUrl(f"{self.collection_command_root}/{guid}/retrieve"))
+        params = {
+            "include_only_relationships": include_only_relationships,
+            "skip_relationships": skip_relationships,
+            "graph_query_depth": graph_query_depth,
+            "output_format": output_format,
+            "report_spec": report_spec,
+            "body": body,
         }
-        """
+        params.update(kwargs)
+        params = {k: v for k, v in params.items() if v is not None}
 
-        url = str(HttpUrl(f"{self.collection_command_root}/{collection_guid}/retrieve"))
-        type = element_type if element_type else "Collection"
+        return await self._async_get_guid_request(
+            url,
+            _type=type_name,
+            _gen_output=self._generate_collection_output,
+            **params,
+        )
 
-        response = await self._async_get_guid_request(url, _type=type,
-                                                  _gen_output=self._generate_collection_output,
-                                                  output_format=output_format, report_spec=report_spec,
-                                                  body=body)
-
-        return response
-
-
-
-
-    def get_collection_by_guid(self, collection_guid: str, element_type: Optional[str] = None, body: dict | GetRequestBody= None,
-                               output_format: str = 'JSON', report_spec: str | dict = None) -> dict | str:
-        """ Return the properties of a specific collection. Async version.
-
-            Parameters
-            ----------
-            collection_guid: str,
-                unique identifier of the collection.
-            element_type: str, default = None, optional
-                type of element - Collection, DataSpec, Agreement, etc.
-            body: dict | GetRequestBody, optional, default = None
-                full request body.
-            output_format: str, default = "JSON"
-                - one of "DICT", "MERMAID" or "JSON"
-            report_spec: dict , optional, default = None
-                The desired output columns/fields to include.
-
-
-            Returns
-            -------
-            dict | str
-
-            A JSON dict representing the specified collection. Returns a string if none found.
-
-            Raises
-            ------
-
-            PyegeriaInvalidParameterException
-              If the client passes incorrect parameters on the request - such as bad URLs or invalid values
-            PyegeriaAPIException
-              Raised by the server when an issue arises in processing a valid request
-            NotAuthorizedException
-              The principle specified by the user_id does not have authorization for the requested action
-
-            Notes
-            ----
-            Body sample:
-            {
-              "class": "AnyTimeRequestBody",
-              "asOfTime": "{{$isoTimestamp}}",
-              "effectiveTime": "{{$isoTimestamp}}",
-              "forLineage": false,
-              "forDuplicateProcessing": false
-            }
-        """
-        return asyncio.get_event_loop().run_until_complete(
-            self._async_get_collection_by_guid(collection_guid, element_type, body,
-                                               output_format, report_spec))
+    def get_collection_by_guid(
+        self,
+        guid: str = None,
+        include_only_relationships: list[str] | None = None,
+        skip_relationships: list[str] | None = None,
+        graph_query_depth: int = 3,
+        output_format: str = "JSON",
+        report_spec: Optional[str | dict] = None,
+        body: Optional[dict | GetRequestBody] = None,
+        **kwargs,
+    ) -> dict | str:
+        """Return the properties of a specific collection."""
+        loop = asyncio.get_event_loop()
+        return loop.run_until_complete(
+            self._async_get_collection_by_guid(
+                guid=guid,
+                include_only_relationships=include_only_relationships,
+                skip_relationships=skip_relationships,
+                graph_query_depth=graph_query_depth,
+                output_format=output_format,
+                report_spec=report_spec,
+                body=body,
+                **kwargs,
+            )
+        )
 
 
     @dynamic_catch

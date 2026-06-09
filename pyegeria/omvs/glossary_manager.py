@@ -3460,537 +3460,537 @@ class GlossaryManager(CollectionManager):
     async def _async_find_glossaries(
         self,
         search_string: str = "*",
-        body: Optional[dict | SearchStringRequestBody] = None,
         starts_with: bool = True,
         ends_with: bool = False,
-        ignore_case: bool = False,
+        ignore_case: bool = True,
+        metadata_element_type_name: str | None = "Glossary",
+        metadata_element_subtypes: list[str] | None = None,
+        include_only_relationships: list[str] | None = None,
+        skip_relationships: list[str] | None = None,
+        graph_query_depth: int = 3,
+        as_of_time: Optional[str] = None,
         start_from: int = 0,
         page_size: int = 100,
+        sequencing_order: Optional[str] = None,
+        sequencing_property: Optional[str] = None,
         output_format: str = "JSON",
-        report_spec: str | dict = None,
-        **kwargs
+        report_spec: Optional[str | dict] = None,
+        body: Optional[dict | SearchStringRequestBody] = None,
+        **kwargs,
     ) -> list | str:
-        """ Retrieve the list of glossary metadata elements that contain the search string. Async Version.
+        """Retrieve the list of glossary metadata elements that contain the search string. Async Version.
 
         Parameters
         ----------
-        search_string: str
-            Search string to match against - None or '*' indicate match against all glossaries.
-        starts_with : bool, [default=True], optional
-            Starts with the supplied string.
-        ends_with : bool, [default=False], optional
-            Ends with the supplied string
-        ignore_case : bool, [default=False], optional
-            Ignore case when searching
-        anchor_domain: str, optional
-            The anchor domain to search in.
-        metadata_element_type: str, optional, [default="Glossary"]
-            The type of metadata element to search for.
-        metadata_element_subtypes: list[str], optional
+        search_string: str, default="*"
+            Search string to match against. Use '*' to match all glossaries.
+        starts_with : bool, default=True
+            Whether to match glossaries starting with the search string.
+        ends_with : bool, default=False
+            Whether to match glossaries ending with the search string.
+        ignore_case : bool, default=True
+            Whether to ignore case when searching.
+        metadata_element_type_name : str, default="Glossary"
+            The metadata element type to search for.
+        metadata_element_subtypes : list[str], optional
             The subtypes of metadata element to search for.
-        skip_relationships: list[str], optional
-            The types of relationships to skip.
-        include_only_relationships: list[str], optional
-            The types of relationships to include.
-        skip_classified_elements: list[str], optional
-            The types of classified elements to skip.
-        include_only_classified_elements: list[str], optional
-            The types of classified elements to include.
-        graph_query_depth: int, [default=3], optional
-            The depth of the graph query.
-        governance_zone_filter: list[str], optional
-            The governance zones to search in.
-        as_of_time: str, optional
-            The time to search as of.
-        effective_time: str, optional
-            The effective time to search at.
-        relationship_page_size: int, [default=0], optional
-            The page size for relationships.
-        limit_results_by_status: list[str], optional
-            The statuses to limit results by.
-        sequencing_order: str, optional
-            The order to sequence results by.
-        sequencing_property: str, optional
-            The property to sequence results by.
-        output_format: str, default = "JSON"
-            - one of "MD", "LIST", "FORM", "REPORT", "DICT", "MERMAID" or "JSON"
-        report_spec: str | dict , optional, default = None
-            - The desired output columns/fields to include.
-        start_from: int, [default=0], optional
-            When multiple pages of results are available, the page number to start from.
-        page_size: int, [default=100]
-            The number of items to return in a single page.
-        property_names: list[str], optional
-            The names of properties to search for.
-        body: dict | SearchStringRequestBody, optional, default = None
-            - if provided, the search parameters in the body will supercede other attributes, such as "search_string"
+        include_only_relationships : list[str], optional
+            Relationship types to include exclusively.
+        skip_relationships : list[str], optional
+            Relationship types to skip.
+        graph_query_depth : int, default=3
+            Depth of the graph query.
+        as_of_time : str, optional
+            Historical time for the query.
+        start_from : int, default=0
+            Page number to start from when paginating results.
+        page_size : int, default=100
+            Number of items to return per page.
+        sequencing_order : str, optional
+            Order for sequencing results.
+        sequencing_property : str, optional
+            Property to use for sequencing.
+        output_format : str, default="JSON"
+            Format of the output. Options: "JSON", "MD", "LIST", "FORM", "REPORT", "DICT", "MERMAID".
+        report_spec : str | dict, optional
+            Specification for custom report output columns/fields.
+        body : dict | SearchStringRequestBody, optional
+            Request body containing search parameters. If provided, overrides other search parameters.
+        **kwargs : dict, optional
+            Additional parameters supported by the find request.
 
         Returns
         -------
-        List | str
-
-        Output depends on the output format specified.
-
-        Raises
-        ------
-
-        ValidationError
-          If the client passes incorrect parameters on the request that don't conform to the data model.
-        PyegeriaException
-          Issues raised in communicating or server side processing.
-        NotAuthorizedException
-          The principle specified by the user_id does not have authorization for the requested action
-
+        list | str
+            List of glossary metadata elements or formatted string.
         """
-        metadata_element_type = kwargs.pop("metadata_element_type", "Glossary")
+        url = f"{self.collection_command_root}/by-search-string"
 
-        response = await self._async_find_collections(
+        response = await self._async_find_request(
+            url,
+            _type="Glossary",
+            _gen_output=self._generate_glossary_output,
             search_string=search_string,
-            body=body,
             starts_with=starts_with,
             ends_with=ends_with,
             ignore_case=ignore_case,
+            metadata_element_type_name=metadata_element_type_name,
+            metadata_element_subtypes=metadata_element_subtypes,
+            include_only_relationships=include_only_relationships,
+            skip_relationships=skip_relationships,
+            graph_query_depth=graph_query_depth,
+            as_of_time=as_of_time,
             start_from=start_from,
             page_size=page_size,
+            sequencing_order=sequencing_order,
+            sequencing_property=sequencing_property,
             output_format=output_format,
             report_spec=report_spec,
-            metadata_element_type=metadata_element_type,
-            **kwargs
+            body=body,
+            **kwargs,
         )
         return response
 
     @dynamic_catch
-    def find_glossaries(self, search_string: str = "*",
-                        starts_with: bool = True, ends_with: bool = False,
-                        ignore_case: bool = False,
-                        anchor_domain: Optional[str] = None,
-                        metadata_element_type: str = "Glossary",
-                        metadata_element_subtypes: Optional[list[str]] = None,
-                        skip_relationships: Optional[list[str]] = None,
-                        include_only_relationships: Optional[list[str]] = None,
-                        skip_classified_elements: Optional[list[str]] = None,
-                        include_only_classified_elements: Optional[list[str]] = None,
-                        graph_query_depth: int = 3,
-                        governance_zone_filter: Optional[list[str]] = None, as_of_time: Optional[str] = None,
-                        effective_time: Optional[str] = None, relationship_page_size: int = 0,
-                        limit_results_by_status: Optional[list[str]] = None, sequencing_order: Optional[str] = None,
-                        sequencing_property: Optional[str] = None,
-                        output_format: str = "JSON",
-                        report_spec: str | dict = None,
-                        start_from: int = 0, page_size: int = 100,
-                        property_names: Optional[list[str]] = None,
-                        body: Optional[dict | SearchStringRequestBody] = None) -> list | str:
-        """ Retrieve the list of glossary metadata elements that contain the search string.
-
-        Parameters
-        ----------
-        search_string: str
-            Search string to match against - None or '*' indicate match against all glossaries.
-        starts_with : bool, [default=True], optional
-            Starts with the supplied string.
-        ends_with : bool, [default=False], optional
-            Ends with the supplied string
-        ignore_case : bool, [default=False], optional
-            Ignore case when searching
-        anchor_domain: str, optional
-            The anchor domain to search in.
-        metadata_element_type: str, optional, [default="Glossary"]
-            The type of metadata element to search for.
-        metadata_element_subtypes: list[str], optional
-            The subtypes of metadata element to search for.
-        skip_relationships: list[str], optional
-            The types of relationships to skip.
-        include_only_relationships: list[str], optional
-            The types of relationships to include.
-        skip_classified_elements: list[str], optional
-            The types of classified elements to skip.
-        include_only_classified_elements: list[str], optional
-            The types of classified elements to include.
-        graph_query_depth: int, [default=3], optional
-            The depth of the graph query.
-        governance_zone_filter: list[str], optional
-            The governance zones to search in.
-        as_of_time: str, optional
-            The time to search as of.
-        effective_time: str, optional
-            The effective time to search at.
-        relationship_page_size: int, [default=0], optional
-            The page size for relationships.
-        limit_results_by_status: list[str], optional
-            The statuses to limit results by.
-        sequencing_order: str, optional
-            The order to sequence results by.
-        sequencing_property: str, optional
-            The property to sequence results by.
-        output_format: str, default = "JSON"
-            - one of "MD", "LIST", "FORM", "REPORT", "DICT", "MERMAID" or "JSON"
-        report_spec: str | dict , optional, default = None
-            - The desired output columns/fields to include.
-        start_from: int, [default=0], optional
-            When multiple pages of results are available, the page number to start from.
-        page_size: int, [default=100]
-            The number of items to return in a single page.
-        property_names: list[str], optional
-            The names of properties to search for.
-        body: dict | SearchStringRequestBody, optional, default = None
-            - if provided, the search parameters in the body will supercede other attributes, such as "search_string"
-
-        Returns
--------
-        List | str
-
-        Output depends on the output format specified.
-
-        Raises
--------
-
-        ValidationError
-          If the client passes incorrect parameters on the request that don't conform to the data model.
-        PyegeriaException
-          Issues raised in communicating or server side processing.
-        NotAuthorizedException
-          The principle specified by the user_id does not have authorization for the requested action
-
-        """
+    def find_glossaries(
+        self,
+        search_string: str = "*",
+        starts_with: bool = True,
+        ends_with: bool = False,
+        ignore_case: bool = True,
+        metadata_element_type_name: str | None = "Glossary",
+        metadata_element_subtypes: list[str] | None = None,
+        include_only_relationships: list[str] | None = None,
+        skip_relationships: list[str] | None = None,
+        graph_query_depth: int = 3,
+        as_of_time: Optional[str] = None,
+        start_from: int = 0,
+        page_size: int = 100,
+        sequencing_order: Optional[str] = None,
+        sequencing_property: Optional[str] = None,
+        output_format: str = "JSON",
+        report_spec: Optional[str | dict] = None,
+        body: Optional[dict | SearchStringRequestBody] = None,
+        **kwargs,
+    ) -> list | str:
+        """Retrieve the list of glossary metadata elements that contain the search string."""
         loop = asyncio.get_event_loop()
-        return loop.run_until_complete(self._async_find_glossaries(search_string=search_string,
-                                                                  starts_with=starts_with,
-                                                                  ends_with=ends_with,
-                                                                  ignore_case=ignore_case,
-                                                                  anchor_domain=anchor_domain,
-                                                                  metadata_element_type=metadata_element_type,
-                                                                  metadata_element_subtypes=metadata_element_subtypes,
-                                                                  skip_relationships=skip_relationships,
-                                                                  include_only_relationships=include_only_relationships,
-                                                                  skip_classified_elements=skip_classified_elements,
-                                                                  include_only_classified_elements=include_only_classified_elements,
-                                                                  graph_query_depth=graph_query_depth,
-                                                                  governance_zone_filter=governance_zone_filter,
-                                                                  as_of_time=as_of_time,
-                                                                  effective_time=effective_time,
-                                                                  relationship_page_size=relationship_page_size,
-                                                                  limit_results_by_status=limit_results_by_status,
-                                                                  sequencing_order=sequencing_order,
-                                                                  sequencing_property=sequencing_property,
-                                                                  output_format=output_format,
-                                                                  report_spec=report_spec,
-                                                                  start_from=start_from,
-                                                                  page_size=page_size,
-                                                                  property_names=property_names,
-                                                                  body=body))
+        return loop.run_until_complete(
+            self._async_find_glossaries(
+                search_string=search_string,
+                starts_with=starts_with,
+                ends_with=ends_with,
+                ignore_case=ignore_case,
+                metadata_element_type_name=metadata_element_type_name,
+                metadata_element_subtypes=metadata_element_subtypes,
+                include_only_relationships=include_only_relationships,
+                skip_relationships=skip_relationships,
+                graph_query_depth=graph_query_depth,
+                as_of_time=as_of_time,
+                start_from=start_from,
+                page_size=page_size,
+                sequencing_order=sequencing_order,
+                sequencing_property=sequencing_property,
+                output_format=output_format,
+                report_spec=report_spec,
+                body=body,
+                **kwargs,
+            )
+        )
 
     @dynamic_catch
-    async def _async_get_glossaries_by_name(self, filter_string: Optional[str] = None, classification_names: Optional[list[str]] = None,
-                                             body: Optional[dict | FilterRequestBody] = None,
-                                             start_from: int = 0, page_size: int = 0,
-                                             output_format: str = 'JSON',
-                                             report_spec: str | dict = None) -> dict | str:
-        return await self._async_get_collections_by_name(filter_string, classification_names, body, start_from, page_size, output_format, report_spec)
+    async def _async_get_glossaries_by_name(
+        self,
+        filter_string: Optional[str] = None,
+        classification_names: Optional[list[str]] = None,
+        metadata_element_subtypes: list[str] | None = None,
+        include_only_relationships: list[str] | None = None,
+        skip_relationships: list[str] | None = None,
+        graph_query_depth: int = 3,
+        start_from: int = 0,
+        page_size: int = 0,
+        output_format: str = "JSON",
+        report_spec: str | dict | None = None,
+        body: Optional[dict | FilterRequestBody] = None,
+        **kwargs,
+    ) -> dict | str:
+        url = f"{self.collection_command_root}/by-name"
+        response = await self._async_get_name_request(
+            url,
+            _type="Glossary",
+            _gen_output=self._generate_glossary_output,
+            filter_string=filter_string,
+            metadata_element_type_name="Glossary",
+            metadata_element_subtypes=metadata_element_subtypes,
+            classification_names=classification_names,
+            include_only_relationships=include_only_relationships,
+            skip_relationships=skip_relationships,
+            graph_query_depth=graph_query_depth,
+            start_from=start_from,
+            page_size=page_size,
+            output_format=output_format,
+            report_spec=report_spec,
+            body=body,
+            **kwargs,
+        )
+        return response
 
     @dynamic_catch
-    def get_glossaries_by_name(self, filter_string: Optional[str] = None, classification_names: Optional[list[str]] = None,
-                                             body: Optional[dict | FilterRequestBody] = None,
-                                             start_from: int = 0, page_size: int = 0,
-                                             output_format: str = 'JSON',
-                                             report_spec: str | dict = None) -> dict | str:
+    def get_glossaries_by_name(
+        self,
+        filter_string: Optional[str] = None,
+        classification_names: Optional[list[str]] = None,
+        metadata_element_subtypes: list[str] | None = None,
+        include_only_relationships: list[str] | None = None,
+        skip_relationships: list[str] | None = None,
+        graph_query_depth: int = 3,
+        start_from: int = 0,
+        page_size: int = 0,
+        output_format: str = "JSON",
+        report_spec: str | dict | None = None,
+        body: Optional[dict | FilterRequestBody] = None,
+        **kwargs,
+    ) -> dict | str:
         loop = asyncio.get_event_loop()
         response = loop.run_until_complete(
-            self._async_get_glossaries_by_name(filter_string, classification_names, body,start_from, page_size,
-                                               output_format, report_spec))
+            self._async_get_glossaries_by_name(
+                filter_string=filter_string,
+                classification_names=classification_names,
+                metadata_element_subtypes=metadata_element_subtypes,
+                include_only_relationships=include_only_relationships,
+                skip_relationships=skip_relationships,
+                graph_query_depth=graph_query_depth,
+                start_from=start_from,
+                page_size=page_size,
+                output_format=output_format,
+                report_spec=report_spec,
+                body=body,
+                **kwargs,
+            )
+        )
         return response
 
     @dynamic_catch
-    async def _async_get_glossary_by_guid(self, glossary_guid: str, element_type: str = "Glossary", body: Optional[dict | GetRequestBody] = None,
-                                          output_format: str = "JSON", report_spec: str | dict = None) -> dict | str:
-
-        return await self._async_get_collection_by_guid(glossary_guid, element_type, body, output_format, report_spec)
+    async def _async_get_glossary_by_guid(
+        self,
+        glossary_guid: str,
+        include_only_relationships: list[str] | None = None,
+        skip_relationships: list[str] | None = None,
+        graph_query_depth: int = 3,
+        output_format: str = "JSON",
+        report_spec: str | dict | None = None,
+        body: Optional[dict | GetRequestBody] = None,
+        **kwargs,
+    ) -> dict | str:
+        url = f"{self.collection_command_root}/{glossary_guid}/retrieve"
+        response = await self._async_get_guid_request(
+            url,
+            _type="Glossary",
+            _gen_output=self._generate_glossary_output,
+            include_only_relationships=include_only_relationships,
+            skip_relationships=skip_relationships,
+            graph_query_depth=graph_query_depth,
+            output_format=output_format,
+            report_spec=report_spec,
+            body=body,
+            **kwargs,
+        )
+        return response
 
     @dynamic_catch
-    def get_glossary_by_guid(self, glossary_guid: str, element_type: str = "Glossary", body: dict| GetRequestBody=None,
-                             output_format: str = "JSON", report_spec: str | dict = None) -> dict | str:
+    def get_glossary_by_guid(
+        self,
+        glossary_guid: str,
+        include_only_relationships: list[str] | None = None,
+        skip_relationships: list[str] | None = None,
+        graph_query_depth: int = 3,
+        output_format: str = "JSON",
+        report_spec: str | dict | None = None,
+        body: Optional[dict | GetRequestBody] = None,
+        **kwargs,
+    ) -> dict | str:
         loop = asyncio.get_event_loop()
         response = loop.run_until_complete(
-            self._async_get_glossary_by_guid(glossary_guid, element_type, body,output_format, report_spec))
+            self._async_get_glossary_by_guid(
+                glossary_guid=glossary_guid,
+                include_only_relationships=include_only_relationships,
+                skip_relationships=skip_relationships,
+                graph_query_depth=graph_query_depth,
+                output_format=output_format,
+                report_spec=report_spec,
+                body=body,
+                **kwargs,
+            )
+        )
         return response
 
     @dynamic_catch
-    async def _async_get_terms_by_name(self, filter_string: Optional[str] = None, classification_names: Optional[list[str]] = None,
-                                             body: Optional[dict | FilterRequestBody] = None,
-                                             start_from: int = 0, page_size: int = 0,
-                                             output_format: str = 'JSON',
-                                             report_spec: str | dict = None) -> list:
-        url = (f"{self.platform_url}/servers/{self.view_server}/api/open-metadata/glossary-manager/glossaries/"
-               f"terms/by-name")
-        response = await self._async_get_name_request(url, _type="GlossaryTerm", _gen_output=self._generate_term_output,
-                                                      filter_string=filter_string,
-                                                      classification_names=classification_names, start_from=start_from,
-                                                      page_size=page_size, output_format=output_format,
-                                                      report_spec=report_spec, body=body)
+    async def _async_get_terms_by_name(
+        self,
+        filter_string: Optional[str] = None,
+        metadata_element_subtypes: list[str] | None = None,
+        classification_names: Optional[list[str]] = None,
+        include_only_relationships: list[str] | None = None,
+        skip_relationships: list[str] | None = None,
+        graph_query_depth: int = 3,
+        start_from: int = 0,
+        page_size: int = 0,
+        output_format: str = "JSON",
+        report_spec: str | dict | None = None,
+        body: Optional[dict | FilterRequestBody] = None,
+        **kwargs,
+    ) -> list | str:
+        url = f"{self.platform_url}/servers/{self.view_server}/api/open-metadata/glossary-manager/glossaries/terms/by-name"
+        response = await self._async_get_name_request(
+            url,
+            _type="GlossaryTerm",
+            _gen_output=self._generate_term_output,
+            filter_string=filter_string,
+            metadata_element_subtypes=metadata_element_subtypes,
+            classification_names=classification_names,
+            include_only_relationships=include_only_relationships,
+            skip_relationships=skip_relationships,
+            graph_query_depth=graph_query_depth,
+            start_from=start_from,
+            page_size=page_size,
+            output_format=output_format,
+            report_spec=report_spec,
+            body=body,
+            **kwargs,
+        )
         return response
 
     @dynamic_catch
-    def get_terms_by_name(self, filter_string: Optional[str] = None, classification_names: Optional[list[str]] = None,
-                                             body: Optional[dict | FilterRequestBody] = None,
-                                             start_from: int = 0, page_size: int = 0,
-                                             output_format: str = 'JSON',
-                                             report_spec: str | dict = None) -> list:
+    def get_terms_by_name(
+        self,
+        filter_string: Optional[str] = None,
+        metadata_element_subtypes: list[str] | None = None,
+        classification_names: Optional[list[str]] = None,
+        include_only_relationships: list[str] | None = None,
+        skip_relationships: list[str] | None = None,
+        graph_query_depth: int = 3,
+        start_from: int = 0,
+        page_size: int = 0,
+        output_format: str = "JSON",
+        report_spec: str | dict | None = None,
+        body: Optional[dict | FilterRequestBody] = None,
+        **kwargs,
+    ) -> list | str:
         loop = asyncio.get_event_loop()
         response = loop.run_until_complete(
-            self._async_get_terms_by_name(filter_string, classification_names, body,start_from, page_size,
-                                           output_format, report_spec))
+            self._async_get_terms_by_name(
+                filter_string=filter_string,
+                metadata_element_subtypes=metadata_element_subtypes,
+                classification_names=classification_names,
+                include_only_relationships=include_only_relationships,
+                skip_relationships=skip_relationships,
+                graph_query_depth=graph_query_depth,
+                start_from=start_from,
+                page_size=page_size,
+                output_format=output_format,
+                report_spec=report_spec,
+                body=body,
+                **kwargs,
+            )
+        )
         return response
 
     @dynamic_catch
-    async def _async_get_term_by_guid(self, term_guid: str, element_type: str = "GlossaryTerm", body: dict| GetRequestBody=None,
-                             output_format: str = "JSON", report_spec: str | dict = None) -> dict | str:
-        url = (f"{self.platform_url}/servers/{self.view_server}/api/open-metadata/glossary-manager/glossaries/terms/"
-               f"{term_guid}")
-        response = await self._async_get_guid_request(url, _type=element_type,
-                                                      _gen_output=self._generate_term_output,
-                                                      output_format=output_format, report_spec=report_spec,
-                                                      body=body)
+    async def _async_get_term_by_guid(
+        self,
+        term_guid: str,
+        include_only_relationships: list[str] | None = None,
+        skip_relationships: list[str] | None = None,
+        graph_query_depth: int = 3,
+        output_format: str = "JSON",
+        report_spec: str | dict | None = None,
+        body: Optional[dict | GetRequestBody] = None,
+        **kwargs,
+    ) -> dict | str:
+        url = f"{self.platform_url}/servers/{self.view_server}/api/open-metadata/glossary-manager/glossaries/terms/{term_guid}"
+        response = await self._async_get_guid_request(
+            url,
+            _type="GlossaryTerm",
+            _gen_output=self._generate_term_output,
+            include_only_relationships=include_only_relationships,
+            skip_relationships=skip_relationships,
+            graph_query_depth=graph_query_depth,
+            output_format=output_format,
+            report_spec=report_spec,
+            body=body,
+            **kwargs,
+        )
         return response
 
     @dynamic_catch
-    def get_term_by_guid(self, term_guid: str, element_type: str = "GlossaryTerm", body: dict| GetRequestBody=None,
-                             output_format: str = "JSON", report_spec: str | dict = None) -> dict | str:
+    def get_term_by_guid(
+        self,
+        term_guid: str,
+        include_only_relationships: list[str] | None = None,
+        skip_relationships: list[str] | None = None,
+        graph_query_depth: int = 3,
+        output_format: str = "JSON",
+        report_spec: str | dict | None = None,
+        body: Optional[dict | GetRequestBody] = None,
+        **kwargs,
+    ) -> dict | str:
         loop = asyncio.get_event_loop()
-        response = loop.run_until_complete(self._async_get_term_by_guid(term_guid, element_type, body,  output_format, report_spec))
+        response = loop.run_until_complete(
+            self._async_get_term_by_guid(
+                term_guid=term_guid,
+                include_only_relationships=include_only_relationships,
+                skip_relationships=skip_relationships,
+                graph_query_depth=graph_query_depth,
+                output_format=output_format,
+                report_spec=report_spec,
+                body=body,
+                **kwargs,
+            )
+        )
         return response
 
     @dynamic_catch
     async def _async_find_glossary_terms(
         self,
         search_string: str = "*",
-        body: Optional[dict | SearchStringRequestBody] = None,
         starts_with: bool = True,
         ends_with: bool = False,
-        ignore_case: bool = False,
+        ignore_case: bool = True,
+        metadata_element_type_name: str | None = "GlossaryTerm",
+        metadata_element_subtypes: list[str] | None = None,
+        include_only_relationships: list[str] | None = None,
+        skip_relationships: list[str] | None = None,
+        graph_query_depth: int = 3,
+        as_of_time: Optional[str] = None,
         start_from: int = 0,
         page_size: int = 100,
+        sequencing_order: Optional[str] = None,
+        sequencing_property: Optional[str] = None,
         output_format: str = "JSON",
-        report_spec: str | dict = "Glossary-Term-DrE",
-        **kwargs
+        report_spec: Optional[str | dict] = "Glossary-Term-DrE",
+        body: Optional[dict | SearchStringRequestBody] = None,
+        **kwargs,
     ) -> list | str:
-        """ Retrieve the list of glossary term metadata elements that contain the search string. Async Version.
+        """Retrieve the list of glossary term metadata elements that contain the search string. Async Version.
 
         Parameters
         ----------
-        search_string: str
-            Search string to match against - None or '*' indicate match against all glossary terms.
-        starts_with : bool, [default=True], optional
-            Starts with the supplied string.
-        ends_with : bool, [default=False], optional
-            Ends with the supplied string
-        ignore_case : bool, [default=False], optional
-            Ignore case when searching
-        anchor_domain: str, optional
-            The anchor domain to search in.
-        metadata_element_type: str, optional, [default="GlossaryTerm"]
-            The type of metadata element to search for.
-        metadata_element_subtypes: list[str], optional
+        search_string: str, default="*"
+            Search string to match against. Use '*' to match all glossary terms.
+        starts_with : bool, default=True
+            Whether to match terms starting with the search string.
+        ends_with : bool, default=False
+            Whether to match terms ending with the search string.
+        ignore_case : bool, default=True
+            Whether to ignore case when searching.
+        metadata_element_type_name : str, default="GlossaryTerm"
+            The metadata element type to search for.
+        metadata_element_subtypes : list[str], optional
             The subtypes of metadata element to search for.
-        skip_relationships: list[str], optional
-            The types of relationships to skip.
-        include_only_relationships: list[str], optional
-            The types of relationships to include.
-        skip_classified_elements: list[str], optional
-            The types of classified elements to skip.
-        include_only_classified_elements: list[str], optional
-            The types of classified elements to include.
-        graph_query_depth: int, [default=3], optional
-            The depth of the graph query.
-        governance_zone_filter: list[str], optional
-            The governance zones to search in.
-        as_of_time: str, optional
-            The time to search as of.
-        effective_time: str, optional
-            The effective time to search at.
-        relationship_page_size: int, [default=0], optional
-            The page size for relationships.
-        limit_results_by_status: list[str], optional
-            The statuses to limit results by.
-        sequencing_order: str, optional
-            The order to sequence results by.
-        sequencing_property: str, optional
-            The property to sequence results by.
-        output_format: str, default = "JSON"
-            - one of "MD", "LIST", "FORM", "REPORT", "DICT", "MERMAID" or "JSON"
-        report_spec: str | dict , optional, default = "Glossary-Term-DrE"
-            - The desired output columns/fields to include.
-        start_from: int, [default=0], optional
-            When multiple pages of results are available, the page number to start from.
-        page_size: int, [default=100]
-            The number of items to return in a single page.
-        property_names: list[str], optional
-            The names of properties to search for.
-        body: dict | SearchStringRequestBody, optional, default = None
-            - if provided, the search parameters in the body will supercede other attributes, such as "search_string"
+        include_only_relationships : list[str], optional
+            Relationship types to include exclusively.
+        skip_relationships : list[str], optional
+            Relationship types to skip.
+        graph_query_depth : int, default=3
+            Depth of the graph query.
+        as_of_time : str, optional
+            Historical time for the query.
+        start_from : int, default=0
+            Page number to start from when paginating results.
+        page_size : int, default=100
+            Number of items to return per page.
+        sequencing_order : str, optional
+            Order for sequencing results.
+        sequencing_property : str, optional
+            Property to use for sequencing.
+        output_format : str, default="JSON"
+            Format of the output. Options: "JSON", "MD", "LIST", "FORM", "REPORT", "DICT", "MERMAID".
+        report_spec : str | dict, default="Glossary-Term-DrE"
+            Specification for custom report output columns/fields.
+        body : dict | SearchStringRequestBody, optional
+            Request body containing search parameters. If provided, overrides other search parameters.
+        **kwargs : dict, optional
+            Additional parameters supported by the find request.
 
         Returns
         -------
-        List | str
-
-        Output depends on the output format specified.
-
-        Raises
-        ------
-
-        ValidationError
-          If the client passes incorrect parameters on the request that don't conform to the data model.
-        PyegeriaException
-          Issues raised in communicating or server side processing.
-        NotAuthorizedException
-          The principle specified by the user_id does not have authorization for the requested action
-
+        list | str
+            List of glossary term metadata elements or formatted string.
         """
-        url = (f"{self.platform_url}/servers/{self.view_server}/api/open-metadata/glossary-manager/glossaries/terms/"
-               f"by-search-string")
-        
-        # Merge explicit parameters with kwargs
-        params = {
-            'search_string': search_string,
-            'body': body,
-            'starts_with': starts_with,
-            'ends_with': ends_with,
-            'ignore_case': ignore_case,
-            'start_from': start_from,
-            'page_size': page_size,
-            'output_format': output_format,
-            'report_spec': report_spec
-        }
-        params.update(kwargs)
-        
-        # Filter out None values, but keep search_string even if None (it's required)
-        params = {k: v for k, v in params.items() if v is not None or k == 'search_string'}
-        
-        # Get metadata_element_type from kwargs or use default
-        metadata_element_type = kwargs.get('metadata_element_type', 'GlossaryTerm')
-        
-        response = await self._async_find_request(url, _type=metadata_element_type,
-                                                  _gen_output=self._generate_term_output, **params)
+        url = f"{self.platform_url}/servers/{self.view_server}/api/open-metadata/glossary-manager/glossaries/terms/by-search-string"
+
+        response = await self._async_find_request(
+            url,
+            _type=metadata_element_type_name,
+            _gen_output=self._generate_term_output,
+            search_string=search_string,
+            starts_with=starts_with,
+            ends_with=ends_with,
+            ignore_case=ignore_case,
+            metadata_element_type_name=metadata_element_type_name,
+            metadata_element_subtypes=metadata_element_subtypes,
+            include_only_relationships=include_only_relationships,
+            skip_relationships=skip_relationships,
+            graph_query_depth=graph_query_depth,
+            as_of_time=as_of_time,
+            start_from=start_from,
+            page_size=page_size,
+            sequencing_order=sequencing_order,
+            sequencing_property=sequencing_property,
+            output_format=output_format,
+            report_spec=report_spec,
+            body=body,
+            **kwargs,
+        )
 
         return response
 
     @dynamic_catch
-    def find_glossary_terms(self, search_string: str = "*",
-                            starts_with: bool = True, ends_with: bool = False,
-                            ignore_case: bool = False,
-                            anchor_domain: Optional[str] = None,
-                            metadata_element_type: str = "GlossaryTerm",
-                            metadata_element_subtypes: Optional[list[str]] = None,
-                            skip_relationships: Optional[list[str]] = None,
-                            include_only_relationships: Optional[list[str]] = None,
-                            skip_classified_elements: Optional[list[str]] = None,
-                            include_only_classified_elements: Optional[list[str]] = None,
-                            graph_query_depth: int = 3,
-                            governance_zone_filter: Optional[list[str]] = None, as_of_time: Optional[str] = None,
-                            effective_time: Optional[str] = None, relationship_page_size: int = 0,
-                            limit_results_by_status: Optional[list[str]] = None, sequencing_order: Optional[str] = None,
-                            sequencing_property: Optional[str] = None,
-                            output_format: str = "JSON",
-                            report_spec: str | dict = "Glossary-Term-DrE",
-                            start_from: int = 0, page_size: int = 100,
-                            property_names: Optional[list[str]] = None,
-                            body: Optional[dict | SearchStringRequestBody] = None) -> list | str:
-        """ Retrieve the list of glossary term metadata elements that contain the search string.
-
-        Parameters
-        ----------
-        search_string: str
-            Search string to match against - None or '*' indicate match against all glossary terms.
-        starts_with : bool, [default=True], optional
-            Starts with the supplied string.
-        ends_with : bool, [default=False], optional
-            Ends with the supplied string
-        ignore_case : bool, [default=False], optional
-            Ignore case when searching
-        anchor_domain: str, optional
-            The anchor domain to search in.
-        metadata_element_type: str, optional, [default="GlossaryTerm"]
-            The type of metadata element to search for.
-        metadata_element_subtypes: list[str], optional
-            The subtypes of metadata element to search for.
-        skip_relationships: list[str], optional
-            The types of relationships to skip.
-        include_only_relationships: list[str], optional
-            The types of relationships to include.
-        skip_classified_elements: list[str], optional
-            The types of classified elements to skip.
-        include_only_classified_elements: list[str], optional
-            The types of classified elements to include.
-        graph_query_depth: int, [default=3], optional
-            The depth of the graph query.
-        governance_zone_filter: list[str], optional
-            The governance zones to search in.
-        as_of_time: str, optional
-            The time to search as of.
-        effective_time: str, optional
-            The effective time to search at.
-        relationship_page_size: int, [default=0], optional
-            The page size for relationships.
-        limit_results_by_status: list[str], optional
-            The statuses to limit results by.
-        sequencing_order: str, optional
-            The order to sequence results by.
-        sequencing_property: str, optional
-            The property to sequence results by.
-        output_format: str, default = "JSON"
-            - one of "MD", "LIST", "FORM", "REPORT", "DICT", "MERMAID" or "JSON"
-        report_spec: str | dict , optional, default = "Glossary-Term-DrE"
-            - The desired output columns/fields to include.
-        start_from: int, [default=0], optional
-            When multiple pages of results are available, the page number to start from.
-        page_size: int, [default=100]
-            The number of items to return in a single page.
-        property_names: list[str], optional
-            The names of properties to search for.
-        body: dict | SearchStringRequestBody, optional, default = None
-            - if provided, the search parameters in the body will supercede other attributes, such as "search_string"
-
-        Returns
--------
-        List | str
-
-        Output depends on the output format specified.
-
-        Raises
--------
-
-        ValidationError
-          If the client passes incorrect parameters on the request that don't conform to the data model.
-        PyegeriaException
-          Issues raised in communicating or server side processing.
-        NotAuthorizedException
-          The principle specified by the user_id does not have authorization for the requested action
-
-        """
+    def find_glossary_terms(
+        self,
+        search_string: str = "*",
+        starts_with: bool = True,
+        ends_with: bool = False,
+        ignore_case: bool = True,
+        metadata_element_type_name: str | None = "GlossaryTerm",
+        metadata_element_subtypes: list[str] | None = None,
+        include_only_relationships: list[str] | None = None,
+        skip_relationships: list[str] | None = None,
+        graph_query_depth: int = 3,
+        as_of_time: Optional[str] = None,
+        start_from: int = 0,
+        page_size: int = 100,
+        sequencing_order: Optional[str] = None,
+        sequencing_property: Optional[str] = None,
+        output_format: str = "JSON",
+        report_spec: Optional[str | dict] = "Glossary-Term-DrE",
+        body: Optional[dict | SearchStringRequestBody] = None,
+        **kwargs,
+    ) -> list | str:
+        """Retrieve the list of glossary term metadata elements that contain the search string."""
         loop = asyncio.get_event_loop()
-        return loop.run_until_complete(self._async_find_glossary_terms(search_string=search_string,
-                                                                      starts_with=starts_with,
-                                                                      ends_with=ends_with,
-                                                                      ignore_case=ignore_case,
-                                                                      anchor_domain=anchor_domain,
-                                                                      metadata_element_type=metadata_element_type,
-                                                                      metadata_element_subtypes=metadata_element_subtypes,
-                                                                      skip_relationships=skip_relationships,
-                                                                      include_only_relationships=include_only_relationships,
-                                                                      skip_classified_elements=skip_classified_elements,
-                                                                      include_only_classified_elements=include_only_classified_elements,
-                                                                      graph_query_depth=graph_query_depth,
-                                                                      governance_zone_filter=governance_zone_filter,
-                                                                      as_of_time=as_of_time,
-                                                                      effective_time=effective_time,
-                                                                      relationship_page_size=relationship_page_size,
-                                                                      limit_results_by_status=limit_results_by_status,
-                                                                      sequencing_order=sequencing_order,
-                                                                      sequencing_property=sequencing_property,
-                                                                      output_format=output_format,
-                                                                      report_spec=report_spec,
-                                                                      start_from=start_from,
-                                                                      page_size=page_size,
-                                                                      property_names=property_names,
-                                                                      body=body))
+        return loop.run_until_complete(
+            self._async_find_glossary_terms(
+                search_string=search_string,
+                starts_with=starts_with,
+                ends_with=ends_with,
+                ignore_case=ignore_case,
+                metadata_element_type_name=metadata_element_type_name,
+                metadata_element_subtypes=metadata_element_subtypes,
+                include_only_relationships=include_only_relationships,
+                skip_relationships=skip_relationships,
+                graph_query_depth=graph_query_depth,
+                as_of_time=as_of_time,
+                start_from=start_from,
+                page_size=page_size,
+                sequencing_order=sequencing_order,
+                sequencing_property=sequencing_property,
+                output_format=output_format,
+                report_spec=report_spec,
+                body=body,
+                **kwargs,
+            )
+        )
 
 
 if __name__ == "__main__":

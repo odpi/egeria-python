@@ -106,14 +106,19 @@ class AssetCatalog(ServerClient):
     async def _async_find_in_asset_domain(
             self,
             search_string: str = "*",
-            body: Optional[dict | SearchStringRequestBody] = None,
             starts_with: bool = True,
             ends_with: bool = False,
-            ignore_case: bool = False,
+            ignore_case: bool = True,
+            metadata_element_type_name: Optional[str] = None,
+            metadata_element_subtypes: Optional[list[str]] = None,
+            include_only_relationships: Optional[list[str]] = None,
+            skip_relationships: Optional[list[str]] = None,
+            graph_query_depth: int = 3,
             start_from: int = 0,
             page_size: int = 100,
             output_format: str = "JSON",
-            report_spec: str | dict = "Referenceable",
+            report_spec: Optional[str | dict] = "Referenceable",
+            body: Optional[dict | SearchStringRequestBody] = None,
             **kwargs
     ) -> list | str:
         """ Retrieve the list of asset metadata elements that contain the search string. Async Version.
@@ -122,14 +127,22 @@ class AssetCatalog(ServerClient):
         ----------
         search_string : str, default "*"
             Search string to match against - None or '*' indicate match against all assets.
-        body : dict | SearchStringRequestBody, optional
-            Request body. If provided, overrides other parameters.
         starts_with : bool, default True
             Starts with the supplied string.
         ends_with : bool, default False
             Ends with the supplied string.
-        ignore_case : bool, default False
+        ignore_case : bool, default True
             Ignore case when searching.
+        metadata_element_type_name : str, optional
+            Specific metadata element type to filter on.
+        metadata_element_subtypes : list[str], optional
+            List of metadata element subtypes to filter on.
+        include_only_relationships : list[str], optional
+            Only include these relationship types.
+        skip_relationships : list[str], optional
+            Relationship types to skip.
+        graph_query_depth : int, default 3
+            Depth of graph traversal.
         start_from : int, default 0
             Starting index for pagination.
         page_size : int, default 100
@@ -138,25 +151,10 @@ class AssetCatalog(ServerClient):
             Output format: "MD", "LIST", "FORM", "REPORT", "DICT", "MERMAID" or "JSON".
         report_spec : str | dict, default "Referenceable"
             Report specification for output formatting.
+        body : dict | SearchStringRequestBody, optional
+            Request body. If provided, overrides other parameters.
         **kwargs : dict, optional
-            Additional parameters supported by the underlying find request:
-            
-            - anchor_domain : str - Domain to anchor the search
-            - metadata_element_type : str - Specific metadata element type
-            - metadata_element_subtypes : list[str] - List of metadata element subtypes
-            - skip_relationships : list[str] - Relationship types to skip
-            - include_only_relationships : list[str] - Only include these relationship types
-            - skip_classified_elements : list[str] - Skip elements with these classifications
-            - include_only_classified_elements : list[str] - Only include elements with these classifications
-            - graph_query_depth : int - Depth of graph traversal (default 3)
-            - governance_zone_filter : list[str] - Filter by governance zones
-            - as_of_time : str - Historical query time (ISO 8601 format)
-            - effective_time : str - Effective time for the query (ISO 8601 format)
-            - relationship_page_size : int - Page size for relationships
-            - limit_results_by_status : list[str] - Filter by element status
-            - sequencing_order : str - Order of results
-            - sequencing_property : str - Property to sequence by
-            - property_names : list[str] - Specific properties to search
+            Additional parameters supported by the underlying find request.
 
         Returns
         -------
@@ -174,6 +172,8 @@ class AssetCatalog(ServerClient):
         """
         url = f"{self.platform_url}/servers/{self.view_server}/api/open-metadata/asset-catalog/assets/in-domain/by-search-string"
         
+        metadata_element_type = kwargs.pop("metadata_element_type", metadata_element_type_name)
+
         # Merge explicit parameters with kwargs
         params = {
             'search_string': search_string,
@@ -181,6 +181,11 @@ class AssetCatalog(ServerClient):
             'starts_with': starts_with,
             'ends_with': ends_with,
             'ignore_case': ignore_case,
+            'metadata_element_type': metadata_element_type,
+            'metadata_element_subtypes': metadata_element_subtypes,
+            'include_only_relationships': include_only_relationships,
+            'skip_relationships': skip_relationships,
+            'graph_query_depth': graph_query_depth,
             'start_from': start_from,
             'page_size': page_size,
             'output_format': output_format,
@@ -198,14 +203,19 @@ class AssetCatalog(ServerClient):
     def find_in_asset_domain(
             self,
             search_string: str = "*",
-            body: Optional[dict | SearchStringRequestBody] = None,
             starts_with: bool = True,
             ends_with: bool = False,
-            ignore_case: bool = False,
+            ignore_case: bool = True,
+            metadata_element_type_name: Optional[str] = None,
+            metadata_element_subtypes: Optional[list[str]] = None,
+            include_only_relationships: Optional[list[str]] = None,
+            skip_relationships: Optional[list[str]] = None,
+            graph_query_depth: int = 3,
             start_from: int = 0,
             page_size: int = 100,
             output_format: str = "JSON",
-            report_spec: str | dict = "Referenceable",
+            report_spec: Optional[str | dict] = "Referenceable",
+            body: Optional[dict | SearchStringRequestBody] = None,
             **kwargs
     ) -> list | str:
         """ Retrieve the list of asset metadata elements that contain the search string.
@@ -214,14 +224,22 @@ class AssetCatalog(ServerClient):
         ----------
         search_string : str, default "*"
             Search string to match against - None or '*' indicate match against all assets.
-        body : dict | SearchStringRequestBody, optional
-            Request body. If provided, overrides other parameters.
         starts_with : bool, default True
             Starts with the supplied string.
         ends_with : bool, default False
             Ends with the supplied string.
-        ignore_case : bool, default False
+        ignore_case : bool, default True
             Ignore case when searching.
+        metadata_element_type_name : str, optional
+            Specific metadata element type to filter on.
+        metadata_element_subtypes : list[str], optional
+            List of metadata element subtypes to filter on.
+        include_only_relationships : list[str], optional
+            Only include these relationship types.
+        skip_relationships : list[str], optional
+            Relationship types to skip.
+        graph_query_depth : int, default 3
+            Depth of graph traversal.
         start_from : int, default 0
             Starting index for pagination.
         page_size : int, default 100
@@ -230,25 +248,10 @@ class AssetCatalog(ServerClient):
             Output format: "MD", "LIST", "FORM", "REPORT", "DICT", "MERMAID" or "JSON".
         report_spec : str | dict, default "Referenceable"
             Report specification for output formatting.
+        body : dict | SearchStringRequestBody, optional
+            Request body. If provided, overrides other parameters.
         **kwargs : dict, optional
-            Additional parameters supported by the underlying find request:
-            
-            - anchor_domain : str - Domain to anchor the search
-            - metadata_element_type : str - Specific metadata element type
-            - metadata_element_subtypes : list[str] - List of metadata element subtypes
-            - skip_relationships : list[str] - Relationship types to skip
-            - include_only_relationships : list[str] - Only include these relationship types
-            - skip_classified_elements : list[str] - Skip elements with these classifications
-            - include_only_classified_elements : list[str] - Only include elements with these classifications
-            - graph_query_depth : int - Depth of graph traversal (default 3)
-            - governance_zone_filter : list[str] - Filter by governance zones
-            - as_of_time : str - Historical query time (ISO 8601 format)
-            - effective_time : str - Effective time for the query (ISO 8601 format)
-            - relationship_page_size : int - Page size for relationships
-            - limit_results_by_status : list[str] - Filter by element status
-            - sequencing_order : str - Order of results
-            - sequencing_property : str - Property to sequence by
-            - property_names : list[str] - Specific properties to search
+            Additional parameters supported by the underlying find request.
 
         Returns
         -------
@@ -267,8 +270,21 @@ class AssetCatalog(ServerClient):
         loop = asyncio.get_event_loop()
         return loop.run_until_complete(
             self._async_find_in_asset_domain(
-                search_string, body, starts_with, ends_with, ignore_case,
-                start_from, page_size, output_format, report_spec, **kwargs
+                search_string=search_string,
+                starts_with=starts_with,
+                ends_with=ends_with,
+                ignore_case=ignore_case,
+                metadata_element_type_name=metadata_element_type_name,
+                metadata_element_subtypes=metadata_element_subtypes,
+                include_only_relationships=include_only_relationships,
+                skip_relationships=skip_relationships,
+                graph_query_depth=graph_query_depth,
+                start_from=start_from,
+                page_size=page_size,
+                output_format=output_format,
+                report_spec=report_spec,
+                body=body,
+                **kwargs
             )
         )
 
@@ -602,12 +618,16 @@ class AssetCatalog(ServerClient):
     async def _async_get_assets_by_metadata_collection_id(
         self,
         metadata_collection_id: str,
-        type_name: Optional[str] = None,
-        effective_time: Optional[str] = None,
+        metadata_element_type_name: Optional[str] = None,
+        include_only_relationships: Optional[list[str]] = None,
+        skip_relationships: Optional[list[str]] = None,
+        graph_query_depth: int = 3,
         start_from: int = 0,
         page_size: int = 0,
         output_format: str = "JSON",
-        report_spec: str = "Referenceable",
+        report_spec: Optional[str | dict] = "Referenceable",
+        body: Optional[dict] = None,
+        **kwargs,
     ) -> str | list:
         """Return a list of assets from the requested metadata collection. Async version.
 
@@ -615,18 +635,26 @@ class AssetCatalog(ServerClient):
         ----------
         metadata_collection_id : str
             The unique identity of the metadata collection to return assets from.
-        type_name : str, optional
+        metadata_element_type_name : str, optional
             An asset type to filter on. If not specified, all assets in the collection are returned.
-        effective_time : str, optional
-            The effective time to filter on. If not specified, the current time is used.
+        include_only_relationships : list[str], optional
+            Only include these relationship types.
+        skip_relationships : list[str], optional
+            Relationship types to skip.
+        graph_query_depth : int, default 3
+            Depth of graph traversal.
         start_from : int, optional
             The index from which to start fetching. Default is 0.
         page_size : int, optional
             The maximum number of assets to fetch in a single request. Default is 0 (all).
         output_format : str, optional
             The desired output format. Default is "JSON".
-        report_spec : str, optional
+        report_spec : str | dict, optional
             The desired output columns/fields to include. Default is "Referenceable".
+        body : dict, optional
+            Request body to pass to Egeria.
+        **kwargs : dict, optional
+            Additional query parameters.
 
         Returns
         -------
@@ -638,17 +666,20 @@ class AssetCatalog(ServerClient):
         PyegeriaException
             If there are issues in communications, message format, or Egeria errors.
         """
+        type_name = kwargs.pop("type_name", metadata_element_type_name)
+        kwargs.pop("effective_time", None)
 
         url = (
             f"{self.platform_url}/servers/{self.view_server}/api/open-metadata/asset-catalog/assets/by-metadata-collection-id/"
             f"{metadata_collection_id}"
         )
 
-        body = {"filter": type_name,
-                "effectiveTime": effective_time,
+        if body is None:
+            body = {
+                "filter": type_name,
                 "startFrom": start_from,
                 "pageSize": page_size,
-                }
+            }
         body_s = body_slimmer(body)
         response = await self._async_make_request("POST", url, body_s)
         elements =  response.json().get("elements", "NO_ASSETS_FOUND")
@@ -665,12 +696,16 @@ class AssetCatalog(ServerClient):
     def get_assets_by_metadata_collection_id(
         self,
         metadata_collection_id: str,
-        type_name: Optional[str] = None,
-        effective_time: Optional[str] = None,
+        metadata_element_type_name: Optional[str] = None,
+        include_only_relationships: Optional[list[str]] = None,
+        skip_relationships: Optional[list[str]] = None,
+        graph_query_depth: int = 3,
         start_from: int = 0,
         page_size: int = max_paging_size,
         output_format: str = "JSON",
-        report_spec: str = "Referenceable",
+        report_spec: Optional[str | dict] = "Referenceable",
+        body: Optional[dict] = None,
+        **kwargs,
     ) -> str | list:
         """Return a list of assets from the requested metadata collection.
 
@@ -678,18 +713,26 @@ class AssetCatalog(ServerClient):
         ----------
         metadata_collection_id : str
             The unique identity of the metadata collection to return assets from.
-        type_name : str, optional
+        metadata_element_type_name : str, optional
             An asset type to filter on. If not specified, all assets in the collection are returned.
-        effective_time : str, optional
-            The effective time to filter on. If not specified, the current time is used.
+        include_only_relationships : list[str], optional
+            Only include these relationship types.
+        skip_relationships : list[str], optional
+            Relationship types to skip.
+        graph_query_depth : int, default 3
+            Depth of graph traversal.
         start_from : int, optional
             The index from which to start fetching. Default is 0.
         page_size : int, optional
             The maximum number of assets to fetch in a single request. Default is `max_paging_size`.
         output_format : str, optional
             The desired output format. Default is "JSON".
-        report_spec : str, optional
+        report_spec : str | dict, optional
             The desired output columns/fields to include. Default is "Referenceable".
+        body : dict, optional
+            Request body to pass to Egeria.
+        **kwargs : dict, optional
+            Additional query parameters.
 
         Returns
         -------
@@ -701,17 +744,20 @@ class AssetCatalog(ServerClient):
         PyegeriaException
             If there are issues in communications, message format, or Egeria errors.
         """
-
         loop = asyncio.get_event_loop()
         response = loop.run_until_complete(
             self._async_get_assets_by_metadata_collection_id(
-                metadata_collection_id,
-                type_name,
-                effective_time,
-                start_from,
-                page_size,
-                output_format,
-                report_spec,
+                metadata_collection_id=metadata_collection_id,
+                metadata_element_type_name=metadata_element_type_name,
+                include_only_relationships=include_only_relationships,
+                skip_relationships=skip_relationships,
+                graph_query_depth=graph_query_depth,
+                start_from=start_from,
+                page_size=page_size,
+                output_format=output_format,
+                report_spec=report_spec,
+                body=body,
+                **kwargs,
             )
         )
         return response

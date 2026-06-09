@@ -961,17 +961,25 @@ class LocationArena(ServerClient):
     async def _async_find_locations(
         self,
         search_string: str = "*",
-        body: Optional[dict | SearchStringRequestBody] = None,
         starts_with: bool = True,
         ends_with: bool = False,
-        ignore_case: bool = False,
+        ignore_case: bool = True,
+        metadata_element_type_name: str | None = "Location",
+        metadata_element_subtypes: list[str] | None = None,
+        include_only_relationships: list[str] | None = None,
+        skip_relationships: list[str] | None = None,
+        graph_query_depth: int = 3,
+        as_of_time: Optional[str] = None,
         start_from: int = 0,
         page_size: int = 100,
+        sequencing_order: Optional[str] = None,
+        sequencing_property: Optional[str] = None,
         output_format: str = "JSON",
-        report_spec: str | dict = "Referenceable",
-        **kwargs
+        report_spec: Optional[str | dict] = "Locations",
+        body: Optional[dict | SearchStringRequestBody] = None,
+        **kwargs,
     ) -> list | str:
-        """ Retrieve the list of location metadata elements that contain the search string. Async Version.
+        """Retrieve the list of location metadata elements that contain the search string. Async Version.
 
         Parameters
         ----------
@@ -981,107 +989,93 @@ class LocationArena(ServerClient):
             Starts with the supplied string.
         ends_with : bool, [default=False], optional
             Ends with the supplied string
-        ignore_case : bool, [default=False], optional
+        ignore_case : bool, [default=True], optional
             Ignore case when searching
-        anchor_domain: str, optional
-            The anchor domain to search in.
-        metadata_element_type: str, optional
+        metadata_element_type_name: str, optional
             The type of metadata element to search for.
         metadata_element_subtypes: list[str], optional
             The subtypes of metadata element to search for.
-        skip_relationships: list[str], optional
-            The types of relationships to skip.
         include_only_relationships: list[str], optional
             The types of relationships to include.
-        skip_classified_elements: list[str], optional
-            The types of classified elements to skip.
-        include_only_classified_elements: list[str], optional
-            The types of classified elements to include.
+        skip_relationships: list[str], optional
+            The types of relationships to skip.
         graph_query_depth: int, [default=3], optional
             The depth of the graph query.
-        governance_zone_filter: list[str], optional
-            The governance zones to search in.
         as_of_time: str, optional
             The time to search as of.
-        effective_time: str, optional
-            The effective time to search at.
-        relationship_page_size: int, [default=0], optional
-            The page size for relationships.
-        limit_results_by_status: list[str], optional
-            The statuses to limit results by.
+        start_from: int, [default=0], optional
+            When paged results are available, the starting index.
+        page_size: int, [default=100]
+            The number of items to return.
         sequencing_order: str, optional
             The order to sequence results by.
         sequencing_property: str, optional
             The property to sequence results by.
         output_format: str, default = "JSON"
             - one of "MD", "LIST", "FORM", "REPORT", "DICT", "MERMAID" or "JSON"
-        report_spec: str | dict , optional, default = "Referenceable"
+        report_spec: str | dict, optional
             - The desired output columns/fields to include.
-        start_from: int, [default=0], optional
-            When multiple pages of results are available, the page number to start from.
-        page_size: int, [default=100]
-            The number of items to return in a single page.
-        property_names: list[str], optional
-            The names of properties to search for.
-        body: dict | SearchStringRequestBody, optional, default = None
-            - if provided, the search parameters in the body will supercede other attributes, such as "search_string"
+        body: dict | SearchStringRequestBody, optional
+            - if provided, the search parameters in the body will supercede other attributes.
 
         Returns
         -------
         List | str
-
-        Output depends on the output format specified.
-
-        Raises
-        ------
-
-        ValidationError
-          If the client passes incorrect parameters on the request that don't conform to the data model.
-        PyegeriaException
-          Issues raised in communicating or server side processing.
-        NotAuthorizedException
-          The principle specified by the user_id does not have authorization for the requested action
-
         """
         url = f"{self.ref_location_command_base}/locations/by-search-string"
-        
-        # Merge explicit parameters with kwargs
+
         params = {
-            'search_string': search_string,
-            'body': body,
-            'starts_with': starts_with,
-            'ends_with': ends_with,
-            'ignore_case': ignore_case,
-            'start_from': start_from,
-            'page_size': page_size,
-            'output_format': output_format,
-            'report_spec': report_spec
+            "search_string": search_string,
+            "starts_with": starts_with,
+            "ends_with": ends_with,
+            "ignore_case": ignore_case,
+            "metadata_element_type": metadata_element_type_name,
+            "metadata_element_subtypes": metadata_element_subtypes,
+            "include_only_relationships": include_only_relationships,
+            "skip_relationships": skip_relationships,
+            "graph_query_depth": graph_query_depth,
+            "as_of_time": as_of_time,
+            "start_from": start_from,
+            "page_size": page_size,
+            "sequencing_order": sequencing_order,
+            "sequencing_property": sequencing_property,
+            "output_format": output_format,
+            "report_spec": report_spec,
+            "body": body,
         }
         params.update(kwargs)
-        
-        # Filter out None values, but keep search_string even if None (it's required)
-        params = {k: v for k, v in params.items() if v is not None or k == 'search_string'}
-        
-        response = await self._async_find_request(url, _type="Referenceable",
-                                                  _gen_output=self._generate_location_output, **params)
+        params = {k: v for k, v in params.items() if v is not None or k == "search_string"}
 
-        return response
+        return await self._async_find_request(
+            url,
+            _type="Referenceable",
+            _gen_output=self._generate_location_output,
+            **params,
+        )
 
     @dynamic_catch
     def find_locations(
         self,
         search_string: str = "*",
-        body: Optional[dict | SearchStringRequestBody] = None,
         starts_with: bool = True,
         ends_with: bool = False,
-        ignore_case: bool = False,
+        ignore_case: bool = True,
+        metadata_element_type_name: str | None = "Location",
+        metadata_element_subtypes: list[str] | None = None,
+        include_only_relationships: list[str] | None = None,
+        skip_relationships: list[str] | None = None,
+        graph_query_depth: int = 3,
+        as_of_time: Optional[str] = None,
         start_from: int = 0,
         page_size: int = 100,
+        sequencing_order: Optional[str] = None,
+        sequencing_property: Optional[str] = None,
         output_format: str = "JSON",
-        report_spec: str | dict = "Referenceable",
-        **kwargs
+        report_spec: Optional[str | dict] = "Locations",
+        body: Optional[dict | SearchStringRequestBody] = None,
+        **kwargs,
     ) -> list | str:
-        """ Retrieve the list of location metadata elements that contain the search string.
+        """Retrieve the list of location metadata elements that contain the search string.
 
         Parameters
         ----------
@@ -1091,291 +1085,321 @@ class LocationArena(ServerClient):
             Starts with the supplied string.
         ends_with : bool, [default=False], optional
             Ends with the supplied string
-        ignore_case : bool, [default=False], optional
+        ignore_case : bool, [default=True], optional
             Ignore case when searching
-        anchor_domain: str, optional
-            The anchor domain to search in.
-        metadata_element_type: str, optional
+        metadata_element_type_name: str, optional
             The type of metadata element to search for.
         metadata_element_subtypes: list[str], optional
             The subtypes of metadata element to search for.
-        skip_relationships: list[str], optional
-            The types of relationships to skip.
         include_only_relationships: list[str], optional
             The types of relationships to include.
-        skip_classified_elements: list[str], optional
-            The types of classified elements to skip.
-        include_only_classified_elements: list[str], optional
-            The types of classified elements to include.
+        skip_relationships: list[str], optional
+            The types of relationships to skip.
         graph_query_depth: int, [default=3], optional
             The depth of the graph query.
-        governance_zone_filter: list[str], optional
-            The governance zones to search in.
         as_of_time: str, optional
             The time to search as of.
-        effective_time: str, optional
-            The effective time to search at.
-        relationship_page_size: int, [default=0], optional
-            The page size for relationships.
-        limit_results_by_status: list[str], optional
-            The statuses to limit results by.
+        start_from: int, [default=0], optional
+            When paged results are available, the starting index.
+        page_size: int, [default=100]
+            The number of items to return.
         sequencing_order: str, optional
             The order to sequence results by.
         sequencing_property: str, optional
             The property to sequence results by.
         output_format: str, default = "JSON"
             - one of "MD", "LIST", "FORM", "REPORT", "DICT", "MERMAID" or "JSON"
-        report_spec: str | dict , optional, default = "Referenceable"
+        report_spec: str | dict, optional
             - The desired output columns/fields to include.
-        start_from: int, [default=0], optional
-            When multiple pages of results are available, the page number to start from.
-        page_size: int, [default=100]
-            The number of items to return in a single page.
-        property_names: list[str], optional
-            The names of properties to search for.
-        body: dict | SearchStringRequestBody, optional, default = None
-            - if provided, the search parameters in the body will supercede other attributes, such as "search_string"
+        body: dict | SearchStringRequestBody, optional
+            - if provided, the search parameters in the body will supercede other attributes.
 
         Returns
         -------
         List | str
-
-        Output depends on the output format specified.
-
-        Raises
-        ------
-
-        ValidationError
-          If the client passes incorrect parameters on the request that don't conform to the data model.
-        PyegeriaException
-          Issues raised in communicating or server side processing.
-        NotAuthorizedException
-          The principle specified by the user_id does not have authorization for the requested action
-
         """
         loop = asyncio.get_event_loop()
         return loop.run_until_complete(
             self._async_find_locations(
                 search_string=search_string,
-                body=body,
                 starts_with=starts_with,
                 ends_with=ends_with,
                 ignore_case=ignore_case,
+                metadata_element_type_name=metadata_element_type_name,
+                metadata_element_subtypes=metadata_element_subtypes,
+                include_only_relationships=include_only_relationships,
+                skip_relationships=skip_relationships,
+                graph_query_depth=graph_query_depth,
+                as_of_time=as_of_time,
                 start_from=start_from,
                 page_size=page_size,
+                sequencing_order=sequencing_order,
+                sequencing_property=sequencing_property,
                 output_format=output_format,
                 report_spec=report_spec,
-                **kwargs
+                body=body,
+                **kwargs,
             )
         )
 
     @dynamic_catch
-    async def _async_get_locations_by_name(self, filter_string: Optional[str] = None,
-                                           classification_names: Optional[list[str]] = None,
-                                           body: Optional[dict | FilterRequestBody] = None,
-                                           start_from: int = 0, page_size: int = 0,
-                                           output_format: str = 'JSON',
-                                           report_spec: str | dict = "Locations") -> list | str:
-        """ Returns the list of Locations with a particular name. Async version.
+    async def _async_get_locations_by_name(
+        self,
+        name: str = None,
+        metadata_element_type_name: str | None = "Location",
+        metadata_element_subtypes: list[str] | None = None,
+        include_only_relationships: list[str] | None = None,
+        skip_relationships: list[str] | None = None,
+        graph_query_depth: int = 3,
+        start_from: int = 0,
+        page_size: int = 0,
+        output_format: str = "JSON",
+        report_spec: Optional[str | dict] = "Locations",
+        body: Optional[dict | FilterRequestBody] = None,
+        **kwargs,
+    ) -> list | str:
+        """Returns the list of Locations with a particular name. Async version.
 
-            Parameters
-            ----------
-            filter_string: str,
-                name to use to find matching locations.
-            classification_names: list[str], optional, default = None
-                type of collection to filter by - e.g., DataDict, Folder, Root
-            body: dict, optional, default = None
-                Provides, a full request body. If specified, the body supercedes the name parameter.
-            start_from: int, [default=0], optional
-                        When multiple pages of results are available, the page number to start from.
-            page_size: int, [default=None]
-                The number of items to return in a single page. If not specified, the default will be taken from
-                the class instance.
-            output_format: str, default = "JSON"
-                - one of "DICT", "MERMAID" or "JSON"
-            report_spec: dict , optional, default = None
-                The desired output columns/fields to include.
+        Parameters
+        ----------
+        name: str, optional
+            name to use to find matching locations.
+        metadata_element_type_name : str, optional
+            The type of metadata element.
+        metadata_element_subtypes : list[str], optional
+            The list of subtypes to filter by.
+        include_only_relationships : list[str], optional
+            The list of relationship type names to include.
+        skip_relationships : list[str], optional
+            The list of relationship type names to skip.
+        graph_query_depth : int, optional
+            The query depth for relationships.
+        start_from: int, [default=0], optional
+            When multiple pages of results are available, the page number to start from.
+        page_size: int, [default=0]
+            The number of items to return in a single page.
+        output_format: str, default = "JSON"
+            - one of "DICT", "MERMAID" or "JSON"
+        report_spec: dict, optional, default = "Locations"
+            The desired output columns/fields to include.
+        body: dict, optional
+            Provides a full request body. If specified, the body supercedes other attributes.
 
-            Returns
-            -------
-            List | str
-
-            A list of collections match matching the name. Returns a string if none found.
-
-            Raises
-            ------
-
-            PyegeriaInvalidParameterException
-              If the client passes incorrect parameters on the request - such as bad URLs or invalid values
-            PyegeriaAPIException
-              Raised by the server when an issue arises in processing a valid request
-            NotAuthorizedException
-              The principle specified by the user_id does not have authorization for the requested action
+        Returns
+        -------
+        List | str
         """
+        # Handle backward-compatible positional or keyword args
+        if name is not None and not isinstance(name, str):
+            body = name
+            name = None
+
+        if name is None:
+            name = kwargs.pop("filter_string", None)
+
+        if name is None and body is None:
+            name = "*"
         url = f"{self.ref_location_command_base}/locations/by-name"
-        response = await self._async_get_name_request(url, _type="Referenceable",
-                                                      _gen_output=self._generate_location_output,
-                                                      filter_string=filter_string,
-                                                      classification_names=classification_names, start_from=start_from,
-                                                      page_size=page_size, output_format=output_format,
-                                                      report_spec=report_spec, body=body)
+        params = {
+            "filter_string": name,
+            "metadata_element_type": metadata_element_type_name,
+            "metadata_element_subtypes": metadata_element_subtypes,
+            "include_only_relationships": include_only_relationships,
+            "skip_relationships": skip_relationships,
+            "graph_query_depth": graph_query_depth,
+            "start_from": start_from,
+            "page_size": page_size,
+            "output_format": output_format,
+            "report_spec": report_spec,
+            "body": body,
+        }
+        params.update(kwargs)
+        params = {k: v for k, v in params.items() if v is not None or k == "filter_string"}
 
-        return response
+        return await self._async_get_name_request(
+            url,
+            _type="Referenceable",
+            _gen_output=self._generate_location_output,
+            **params,
+        )
 
-    def get_locations_by_name(self, filter_string: Optional[str] = None, classification_names: Optional[list[str]] = None,
-                              body: Optional[dict | FilterRequestBody] = None,
-                              start_from: int = 0, page_size: int = 0, output_format: str = 'JSON',
-                              report_spec: str | dict = "Locations") -> list | str:
-        """ Returns the list of Locations with a particular name.
+    def get_locations_by_name(
+        self,
+        name: str = None,
+        metadata_element_type_name: str | None = "Location",
+        metadata_element_subtypes: list[str] | None = None,
+        include_only_relationships: list[str] | None = None,
+        skip_relationships: list[str] | None = None,
+        graph_query_depth: int = 3,
+        start_from: int = 0,
+        page_size: int = 0,
+        output_format: str = "JSON",
+        report_spec: Optional[str | dict] = "Locations",
+        body: Optional[dict | FilterRequestBody] = None,
+        **kwargs,
+    ) -> list | str:
+        """Returns the list of Locations with a particular name.
 
-            Parameters
-            ----------
-            filter_string: str,
-                name to use to find matching locations.
-            classification_names: list[str], optional, default = None
-                type of collection to filter by - e.g., DataDict, Folder, Root
-            body: dict, optional, default = None
-                Provides, a full request body. If specified, the body supercedes the name parameter.
-            start_from: int, [default=0], optional
-                        When multiple pages of results are available, the page number to start from.
-            page_size: int, [default=None]
-                The number of items to return in a single page. If not specified, the default will be taken from
-                the class instance.
-            output_format: str, default = "JSON"
-                - one of "DICT", "MERMAID" or "JSON"
-            report_spec: dict , optional, default = None
-                The desired output columns/fields to include.
+        Parameters
+        ----------
+        name: str, optional
+            name to use to find matching locations.
+        metadata_element_type_name : str, optional
+            The type of metadata element.
+        metadata_element_subtypes : list[str], optional
+            The list of subtypes to filter by.
+        include_only_relationships : list[str], optional
+            The list of relationship type names to include.
+        skip_relationships : list[str], optional
+            The list of relationship type names to skip.
+        graph_query_depth : int, optional
+            The query depth for relationships.
+        start_from: int, [default=0], optional
+            When multiple pages of results are available, the page number to start from.
+        page_size: int, [default=0]
+            The number of items to return in a single page.
+        output_format: str, default = "JSON"
+            - one of "DICT", "MERMAID" or "JSON"
+        report_spec: dict, optional, default = "Locations"
+            The desired output columns/fields to include.
+        body: dict, optional
+            Provides a full request body. If specified, the body supercedes other attributes.
 
-            Returns
-            -------
-            List | str
-
-            A list of collections match matching the name. Returns a string if none found.
-
-            Raises
-            ------
-
-            PyegeriaInvalidParameterException
-              If the client passes incorrect parameters on the request - such as bad URLs or invalid values
-            PyegeriaAPIException
-              Raised by the server when an issue arises in processing a valid request
-            NotAuthorizedException
-              The principle specified by the user_id does not have authorization for the requested action
+        Returns
+        -------
+        List | str
         """
-        return asyncio.get_event_loop().run_until_complete(
-            self._async_get_locations_by_name(filter_string, classification_names, body, start_from, page_size,
-                                              output_format, report_spec))
+        # Handle backward-compatible positional or keyword args
+        if name is not None and not isinstance(name, str):
+            body = name
+            name = None
+
+        if name is None:
+            name = kwargs.pop("filter_string", None)
+
+        if name is None and body is None:
+            name = "*"
+
+        loop = asyncio.get_event_loop()
+        return loop.run_until_complete(
+            self._async_get_locations_by_name(
+                name=name,
+                metadata_element_type_name=metadata_element_type_name,
+                metadata_element_subtypes=metadata_element_subtypes,
+                include_only_relationships=include_only_relationships,
+                skip_relationships=skip_relationships,
+                graph_query_depth=graph_query_depth,
+                start_from=start_from,
+                page_size=page_size,
+                output_format=output_format,
+                report_spec=report_spec,
+                body=body,
+                **kwargs,
+            )
+        )
 
     @dynamic_catch
-    async def _async_get_location_by_guid(self, location_guid: str, element_type: Optional[str] = None,
-                                          body: Optional[dict | GetRequestBody] = None, output_format: str = 'JSON',
-                                          report_spec: str | dict = "Locations") -> dict | str:
+    async def _async_get_location_by_guid(
+        self,
+        guid: str,
+        include_only_relationships: list[str] | None = None,
+        skip_relationships: list[str] | None = None,
+        graph_query_depth: int = 3,
+        output_format: str = "JSON",
+        report_spec: Optional[str | dict] = "Locations",
+        body: Optional[dict | GetRequestBody] = None,
+        **kwargs,
+    ) -> dict | str:
         """Return the properties of a specific location. Async version.
 
         Parameters
         ----------
-        location_guid: str,
+        guid: str
             unique identifier of the location to retrieve.
-        element_type: str, default = None, optional
-             type of element, etc.
-        body: dict | GetRequestBody, optional, default = None
-            full request body.
+        include_only_relationships : list[str], optional
+            The list of relationship type names to include.
+        skip_relationships : list[str], optional
+            The list of relationship type names to skip.
+        graph_query_depth : int, optional
+            The query depth for relationships.
         output_format: str, default = "JSON"
             - one of "DICT", "MERMAID" or "JSON"
-         report_spec: str | dict, optional, default = None
-                The desired output columns/fields to include.
+        report_spec: str | dict, optional, default = "Locations"
+            The desired output columns/fields to include.
+        body: dict | GetRequestBody, optional
+            full request body.
 
         Returns
         -------
         dict | str
-
-        A JSON dict representing the specified collection. Returns a string if none found.
-
-        Raises
-        ------
-
-        PyegeriaInvalidParameterException
-          If the client passes incorrect parameters on the request - such as bad URLs or invalid values
-        PyegeriaAPIException
-          Raised by the server when an issue arises in processing a valid request
-        NotAuthorizedException
-          The principle specified by the user_id does not have authorization for the requested action
-
-        Notes
-        ----
-        Body sample:
-        {
-          "class": "GetRequestBody",
-          "asOfTime": "{{$isoTimestamp}}",
-          "effectiveTime": "{{$isoTimestamp}}",
-          "forLineage": false,
-          "forDuplicateProcessing": false
-        }
         """
+        url = f"{self.ref_location_command_base}/locations/{guid}/retrieve"
+        params = {
+            "include_only_relationships": include_only_relationships,
+            "skip_relationships": skip_relationships,
+            "graph_query_depth": graph_query_depth,
+            "output_format": output_format,
+            "report_spec": report_spec,
+            "body": body,
+        }
+        params.update(kwargs)
+        params = {k: v for k, v in params.items() if v is not None}
 
-        url = f"{self.ref_location_command_base}/locations/{location_guid}/retrieve"
-        type = element_type if element_type else "Referenceable"
-
-        response = await self._async_get_guid_request(url, _type=type,
-                                                      _gen_output=self._generate_location_output,
-                                                      output_format=output_format, report_spec=report_spec,
-                                                      body=body)
-
-        return response
+        return await self._async_get_guid_request(
+            url,
+            _type="Referenceable",
+            _gen_output=self._generate_location_output,
+            **params,
+        )
 
     @dynamic_catch
-    def get_location_by_guid(self, location_guid: str, element_type: Optional[str] = None, body: Optional[dict | GetRequestBody] = None,
-                             output_format: str = 'JSON', report_spec: str | dict = "Locations") -> dict | str:
-        """Return the properties of a specific location. Async version.
+    def get_location_by_guid(
+        self,
+        guid: str,
+        include_only_relationships: list[str] | None = None,
+        skip_relationships: list[str] | None = None,
+        graph_query_depth: int = 3,
+        output_format: str = "JSON",
+        report_spec: Optional[str | dict] = "Locations",
+        body: Optional[dict | GetRequestBody] = None,
+        **kwargs,
+    ) -> dict | str:
+        """Return the properties of a specific location.
 
         Parameters
         ----------
-        location_guid: str,
+        guid: str
             unique identifier of the location to retrieve.
-        element_type: str, default = None, optional
-             type of element, etc.
-        body: dict | GetRequestBody, optional, default = None
-            full request body.
+        include_only_relationships : list[str], optional
+            The list of relationship type names to include.
+        skip_relationships : list[str], optional
+            The list of relationship type names to skip.
+        graph_query_depth : int, optional
+            The query depth for relationships.
         output_format: str, default = "JSON"
             - one of "DICT", "MERMAID" or "JSON"
-         report_spec: str | dict, optional, default = None
-                The desired output columns/fields to include.
+        report_spec: str | dict, optional, default = "Locations"
+            The desired output columns/fields to include.
+        body: dict | GetRequestBody, optional
+            full request body.
 
         Returns
         -------
         dict | str
-
-        A JSON dict representing the specified collection. Returns a string if none found.
-
-        Raises
-        ------
-
-        PyegeriaInvalidParameterException
-          If the client passes incorrect parameters on the request - such as bad URLs or invalid values
-        PyegeriaAPIException
-          Raised by the server when an issue arises in processing a valid request
-        NotAuthorizedException
-          The principle specified by the user_id does not have authorization for the requested action
-
-        Notes
-        ----
-        Body sample:
-        {
-          "class": "FilterRequestBody",
-          "filter": "Add name here",
-          "startFrom": 0,
-          "pageSize": 10,
-          "asOfTime": "{{$isoTimestamp}}",
-          "effectiveTime": "{{$isoTimestamp}}",
-          "forLineage": false,
-          "forDuplicateProcessing": false,
-          "limitResultsByStatus": ["ACTIVE"],
-          "sequencingOrder": "PROPERTY_ASCENDING",
-          "sequencingProperty": "qualifiedName"
-        }
         """
-        return asyncio.get_event_loop().run_until_complete(
-            self._async_get_location_by_guid(location_guid, element_type, body, output_format, report_spec))
+        loop = asyncio.get_event_loop()
+        return loop.run_until_complete(
+            self._async_get_location_by_guid(
+                guid=guid,
+                include_only_relationships=include_only_relationships,
+                skip_relationships=skip_relationships,
+                graph_query_depth=graph_query_depth,
+                output_format=output_format,
+                report_spec=report_spec,
+                body=body,
+                **kwargs,
+            )
+        )
 
     @dynamic_catch
     def _extract_location_properties(self, element: dict, columns_struct: dict) -> dict:
