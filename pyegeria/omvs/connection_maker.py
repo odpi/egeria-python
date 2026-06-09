@@ -74,29 +74,36 @@ class ConnectionMaker(ServerClient):
 
     async def _async_get_connection_by_guid(
         self,
-        connection_guid: str,
-        output_format: str = "DICT",
+        guid: str,
+        include_only_relationships: list[str] | None = None,
+        skip_relationships: list[str] | None = None,
+        graph_query_depth: int = 3,
+        output_format: str = "JSON",
         report_spec: Optional[str | dict] = None,
         body: Union[GetRequestBody, dict] = None,
         **kwargs,
     ) -> dict | list | str:
-        url = f"{self.base_url}/connections/{connection_guid}/retrieve"
-        kwargs.setdefault("start_from", 0)
-        kwargs.setdefault("page_size", 0)
+        url = f"{self.base_url}/connections/{guid}/retrieve"
         return await self._async_get_guid_request(
             url,
             "Connection",
             self._generate_referenceable_output,
-            output_format,
-            report_spec,
-            body,
+            include_only_relationships=include_only_relationships,
+            skip_relationships=skip_relationships,
+            graph_query_depth=graph_query_depth,
+            output_format=output_format,
+            report_spec=report_spec,
+            body=body,
             **kwargs,
         )
 
     def get_connection_by_guid(
         self,
-        connection_guid: str,
-        output_format: str = "DICT",
+        guid: str,
+        include_only_relationships: list[str] | None = None,
+        skip_relationships: list[str] | None = None,
+        graph_query_depth: int = 3,
+        output_format: str = "JSON",
         report_spec: Optional[str | dict] = None,
         body: Union[GetRequestBody, dict] = None,
         **kwargs,
@@ -104,41 +111,59 @@ class ConnectionMaker(ServerClient):
         loop = asyncio.get_event_loop()
         return loop.run_until_complete(
             self._async_get_connection_by_guid(
-                connection_guid, output_format, report_spec, body, **kwargs
+                guid=guid,
+                include_only_relationships=include_only_relationships,
+                skip_relationships=skip_relationships,
+                graph_query_depth=graph_query_depth,
+                output_format=output_format,
+                report_spec=report_spec,
+                body=body,
+                **kwargs
             )
         )
 
     async def _async_get_connections_by_name(
         self,
-        search_string: str = "*",
-        output_format: str = "DICT",
+        name: str,
+        metadata_element_subtypes: list[str] | None = None,
+        include_only_relationships: list[str] | None = None,
+        skip_relationships: list[str] | None = None,
+        graph_query_depth: int = 3,
+        start_from: int = 0,
+        page_size: int = 0,
+        output_format: str = "JSON",
         report_spec: Optional[str | dict] = None,
         body: Union[FilterRequestBody, dict] = None,
         **kwargs,
     ) -> dict | list | str:
         url = f"{self.base_url}/connections/by-name"
-        kwargs.setdefault("start_from", 0)
-        kwargs.setdefault("page_size", 0)
-        if body is None:
-            body = {"class": "FilterRequestBody", "filter": search_string}
-        elif isinstance(body, dict):
-            body.setdefault("filter", search_string)
-
         return await self._async_get_name_request(
             url,
             "Connection",
             self._generate_referenceable_output,
+            filter_string=name,
+            metadata_element_subtypes=metadata_element_subtypes,
+            include_only_relationships=include_only_relationships,
+            skip_relationships=skip_relationships,
+            graph_query_depth=graph_query_depth,
+            start_from=start_from,
+            page_size=page_size,
             output_format=output_format,
             report_spec=report_spec,
-            search_string=search_string,
             body=body,
             **kwargs,
         )
 
     def get_connections_by_name(
         self,
-        search_string: str = "*",
-        output_format: str = "DICT",
+        name: str,
+        metadata_element_subtypes: list[str] | None = None,
+        include_only_relationships: list[str] | None = None,
+        skip_relationships: list[str] | None = None,
+        graph_query_depth: int = 3,
+        start_from: int = 0,
+        page_size: int = 0,
+        output_format: str = "JSON",
         report_spec: Optional[str | dict] = None,
         body: Union[FilterRequestBody, dict] = None,
         **kwargs,
@@ -146,26 +171,60 @@ class ConnectionMaker(ServerClient):
         loop = asyncio.get_event_loop()
         return loop.run_until_complete(
             self._async_get_connections_by_name(
-                search_string, output_format, report_spec, body, **kwargs
+                name=name,
+                metadata_element_subtypes=metadata_element_subtypes,
+                include_only_relationships=include_only_relationships,
+                skip_relationships=skip_relationships,
+                graph_query_depth=graph_query_depth,
+                start_from=start_from,
+                page_size=page_size,
+                output_format=output_format,
+                report_spec=report_spec,
+                body=body,
+                **kwargs
             )
         )
 
     async def _async_find_connections(
         self,
         search_string: str = "*",
-        output_format: str = "DICT",
+        starts_with: bool = True,
+        ends_with: bool = False,
+        ignore_case: bool = True,
+        metadata_element_type: str | None = None,
+        metadata_element_subtypes: list[str] | None = None,
+        include_only_relationships: list[str] | None = None,
+        skip_relationships: list[str] | None = None,
+        graph_query_depth: int = 3,
+        as_of_time: Optional[str] = None,
+        start_from: int = 0,
+        page_size: int = 0,
+        sequencing_order: Optional[str] = None,
+        sequencing_property: Optional[str] = None,
+        output_format: str = "JSON",
         report_spec: Optional[str | dict] = None,
         body: Union[SearchStringRequestBody, dict] = None,
         **kwargs,
     ) -> dict | list | str:
         url = f"{self.base_url}/connections/by-search-string"
-        kwargs.setdefault("start_from", 0)
-        kwargs.setdefault("page_size", 0)
         return await self._async_find_request(
             url,
             "Connection",
             self._generate_referenceable_output,
             search_string=search_string,
+            starts_with=starts_with,
+            ends_with=ends_with,
+            ignore_case=ignore_case,
+            metadata_element_type=metadata_element_type,
+            metadata_element_subtypes=metadata_element_subtypes,
+            include_only_relationships=include_only_relationships,
+            skip_relationships=skip_relationships,
+            graph_query_depth=graph_query_depth,
+            as_of_time=as_of_time,
+            start_from=start_from,
+            page_size=page_size,
+            sequencing_order=sequencing_order,
+            sequencing_property=sequencing_property,
             body=body,
             output_format=output_format,
             report_spec=report_spec,
@@ -175,7 +234,20 @@ class ConnectionMaker(ServerClient):
     def find_connections(
         self,
         search_string: str = "*",
-        output_format: str = "DICT",
+        starts_with: bool = True,
+        ends_with: bool = False,
+        ignore_case: bool = True,
+        metadata_element_type: str | None = None,
+        metadata_element_subtypes: list[str] | None = None,
+        include_only_relationships: list[str] | None = None,
+        skip_relationships: list[str] | None = None,
+        graph_query_depth: int = 3,
+        as_of_time: Optional[str] = None,
+        start_from: int = 0,
+        page_size: int = 0,
+        sequencing_order: Optional[str] = None,
+        sequencing_property: Optional[str] = None,
+        output_format: str = "JSON",
         report_spec: Optional[str | dict] = None,
         body: Union[SearchStringRequestBody, dict] = None,
         **kwargs,
@@ -183,7 +255,24 @@ class ConnectionMaker(ServerClient):
         loop = asyncio.get_event_loop()
         return loop.run_until_complete(
             self._async_find_connections(
-                search_string, output_format, report_spec, body, **kwargs
+                search_string=search_string,
+                starts_with=starts_with,
+                ends_with=ends_with,
+                ignore_case=ignore_case,
+                metadata_element_type=metadata_element_type,
+                metadata_element_subtypes=metadata_element_subtypes,
+                include_only_relationships=include_only_relationships,
+                skip_relationships=skip_relationships,
+                graph_query_depth=graph_query_depth,
+                as_of_time=as_of_time,
+                start_from=start_from,
+                page_size=page_size,
+                sequencing_order=sequencing_order,
+                sequencing_property=sequencing_property,
+                output_format=output_format,
+                report_spec=report_spec,
+                body=body,
+                **kwargs
             )
         )
 
@@ -223,29 +312,36 @@ class ConnectionMaker(ServerClient):
 
     async def _async_get_connector_type_by_guid(
         self,
-        connector_type_guid: str,
-        output_format: str = "DICT",
+        guid: str,
+        include_only_relationships: list[str] | None = None,
+        skip_relationships: list[str] | None = None,
+        graph_query_depth: int = 3,
+        output_format: str = "JSON",
         report_spec: Optional[str | dict] = None,
         body: Union[GetRequestBody, dict] = None,
         **kwargs,
     ) -> dict | list | str:
-        url = f"{self.base_url}/connector-types/{connector_type_guid}/retrieve"
-        kwargs.setdefault("start_from", 0)
-        kwargs.setdefault("page_size", 0)
+        url = f"{self.base_url}/connector-types/{guid}/retrieve"
         return await self._async_get_guid_request(
             url,
             "ConnectorType",
             self._generate_referenceable_output,
-            output_format,
-            report_spec,
-            body,
+            include_only_relationships=include_only_relationships,
+            skip_relationships=skip_relationships,
+            graph_query_depth=graph_query_depth,
+            output_format=output_format,
+            report_spec=report_spec,
+            body=body,
             **kwargs,
         )
 
     def get_connector_type_by_guid(
         self,
-        connector_type_guid: str,
-        output_format: str = "DICT",
+        guid: str,
+        include_only_relationships: list[str] | None = None,
+        skip_relationships: list[str] | None = None,
+        graph_query_depth: int = 3,
+        output_format: str = "JSON",
         report_spec: Optional[str | dict] = None,
         body: Union[GetRequestBody, dict] = None,
         **kwargs,
@@ -253,41 +349,59 @@ class ConnectionMaker(ServerClient):
         loop = asyncio.get_event_loop()
         return loop.run_until_complete(
             self._async_get_connector_type_by_guid(
-                connector_type_guid, output_format, report_spec, body, **kwargs
+                guid=guid,
+                include_only_relationships=include_only_relationships,
+                skip_relationships=skip_relationships,
+                graph_query_depth=graph_query_depth,
+                output_format=output_format,
+                report_spec=report_spec,
+                body=body,
+                **kwargs
             )
         )
 
     async def _async_get_connector_types_by_name(
         self,
-        search_string: str = "*",
-        output_format: str = "DICT",
+        name: str,
+        metadata_element_subtypes: list[str] | None = None,
+        include_only_relationships: list[str] | None = None,
+        skip_relationships: list[str] | None = None,
+        graph_query_depth: int = 3,
+        start_from: int = 0,
+        page_size: int = 0,
+        output_format: str = "JSON",
         report_spec: Optional[str | dict] = None,
         body: Union[FilterRequestBody, dict] = None,
         **kwargs,
     ) -> dict | list | str:
         url = f"{self.base_url}/connector-types/by-name"
-        kwargs.setdefault("start_from", 0)
-        kwargs.setdefault("page_size", 0)
-        if body is None:
-            body = {"class": "FilterRequestBody", "filter": search_string}
-        elif isinstance(body, dict):
-            body.setdefault("filter", search_string)
-
         return await self._async_get_name_request(
             url,
             "ConnectorType",
             self._generate_referenceable_output,
+            filter_string=name,
+            metadata_element_subtypes=metadata_element_subtypes,
+            include_only_relationships=include_only_relationships,
+            skip_relationships=skip_relationships,
+            graph_query_depth=graph_query_depth,
+            start_from=start_from,
+            page_size=page_size,
             output_format=output_format,
             report_spec=report_spec,
-            search_string=search_string,
             body=body,
             **kwargs,
         )
 
     def get_connector_types_by_name(
         self,
-        search_string: str = "*",
-        output_format: str = "DICT",
+        name: str,
+        metadata_element_subtypes: list[str] | None = None,
+        include_only_relationships: list[str] | None = None,
+        skip_relationships: list[str] | None = None,
+        graph_query_depth: int = 3,
+        start_from: int = 0,
+        page_size: int = 0,
+        output_format: str = "JSON",
         report_spec: Optional[str | dict] = None,
         body: Union[FilterRequestBody, dict] = None,
         **kwargs,
@@ -295,26 +409,60 @@ class ConnectionMaker(ServerClient):
         loop = asyncio.get_event_loop()
         return loop.run_until_complete(
             self._async_get_connector_types_by_name(
-                search_string, output_format, report_spec, body, **kwargs
+                name=name,
+                metadata_element_subtypes=metadata_element_subtypes,
+                include_only_relationships=include_only_relationships,
+                skip_relationships=skip_relationships,
+                graph_query_depth=graph_query_depth,
+                start_from=start_from,
+                page_size=page_size,
+                output_format=output_format,
+                report_spec=report_spec,
+                body=body,
+                **kwargs
             )
         )
 
     async def _async_find_connector_types(
         self,
         search_string: str = "*",
-        output_format: str = "DICT",
+        starts_with: bool = True,
+        ends_with: bool = False,
+        ignore_case: bool = True,
+        metadata_element_type: str | None = None,
+        metadata_element_subtypes: list[str] | None = None,
+        include_only_relationships: list[str] | None = None,
+        skip_relationships: list[str] | None = None,
+        graph_query_depth: int = 3,
+        as_of_time: Optional[str] = None,
+        start_from: int = 0,
+        page_size: int = 0,
+        sequencing_order: Optional[str] = None,
+        sequencing_property: Optional[str] = None,
+        output_format: str = "JSON",
         report_spec: Optional[str | dict] = None,
         body: Union[SearchStringRequestBody, dict] = None,
         **kwargs,
     ) -> dict | list | str:
         url = f"{self.base_url}/connector-types/by-search-string"
-        kwargs.setdefault("start_from", 0)
-        kwargs.setdefault("page_size", 0)
         return await self._async_find_request(
             url,
             "ConnectorType",
             self._generate_referenceable_output,
             search_string=search_string,
+            starts_with=starts_with,
+            ends_with=ends_with,
+            ignore_case=ignore_case,
+            metadata_element_type=metadata_element_type,
+            metadata_element_subtypes=metadata_element_subtypes,
+            include_only_relationships=include_only_relationships,
+            skip_relationships=skip_relationships,
+            graph_query_depth=graph_query_depth,
+            as_of_time=as_of_time,
+            start_from=start_from,
+            page_size=page_size,
+            sequencing_order=sequencing_order,
+            sequencing_property=sequencing_property,
             body=body,
             output_format=output_format,
             report_spec=report_spec,
@@ -324,7 +472,20 @@ class ConnectionMaker(ServerClient):
     def find_connector_types(
         self,
         search_string: str = "*",
-        output_format: str = "DICT",
+        starts_with: bool = True,
+        ends_with: bool = False,
+        ignore_case: bool = True,
+        metadata_element_type: str | None = None,
+        metadata_element_subtypes: list[str] | None = None,
+        include_only_relationships: list[str] | None = None,
+        skip_relationships: list[str] | None = None,
+        graph_query_depth: int = 3,
+        as_of_time: Optional[str] = None,
+        start_from: int = 0,
+        page_size: int = 0,
+        sequencing_order: Optional[str] = None,
+        sequencing_property: Optional[str] = None,
+        output_format: str = "JSON",
         report_spec: Optional[str | dict] = None,
         body: Union[SearchStringRequestBody, dict] = None,
         **kwargs,
@@ -332,7 +493,24 @@ class ConnectionMaker(ServerClient):
         loop = asyncio.get_event_loop()
         return loop.run_until_complete(
             self._async_find_connector_types(
-                search_string, output_format, report_spec, body, **kwargs
+                search_string=search_string,
+                starts_with=starts_with,
+                ends_with=ends_with,
+                ignore_case=ignore_case,
+                metadata_element_type=metadata_element_type,
+                metadata_element_subtypes=metadata_element_subtypes,
+                include_only_relationships=include_only_relationships,
+                skip_relationships=skip_relationships,
+                graph_query_depth=graph_query_depth,
+                as_of_time=as_of_time,
+                start_from=start_from,
+                page_size=page_size,
+                sequencing_order=sequencing_order,
+                sequencing_property=sequencing_property,
+                output_format=output_format,
+                report_spec=report_spec,
+                body=body,
+                **kwargs
             )
         )
 
@@ -372,29 +550,36 @@ class ConnectionMaker(ServerClient):
 
     async def _async_get_endpoint_by_guid(
         self,
-        endpoint_guid: str,
-        output_format: str = "DICT",
+        guid: str,
+        include_only_relationships: list[str] | None = None,
+        skip_relationships: list[str] | None = None,
+        graph_query_depth: int = 3,
+        output_format: str = "JSON",
         report_spec: Optional[str | dict] = None,
         body: Union[GetRequestBody, dict] = None,
         **kwargs,
     ) -> dict | list | str:
-        url = f"{self.base_url}/endpoints/{endpoint_guid}/retrieve"
-        kwargs.setdefault("start_from", 0)
-        kwargs.setdefault("page_size", 0)
+        url = f"{self.base_url}/endpoints/{guid}/retrieve"
         return await self._async_get_guid_request(
             url,
             "Endpoint",
             self._generate_referenceable_output,
-            output_format,
-            report_spec,
-            body,
+            include_only_relationships=include_only_relationships,
+            skip_relationships=skip_relationships,
+            graph_query_depth=graph_query_depth,
+            output_format=output_format,
+            report_spec=report_spec,
+            body=body,
             **kwargs,
         )
 
     def get_endpoint_by_guid(
         self,
-        endpoint_guid: str,
-        output_format: str = "DICT",
+        guid: str,
+        include_only_relationships: list[str] | None = None,
+        skip_relationships: list[str] | None = None,
+        graph_query_depth: int = 3,
+        output_format: str = "JSON",
         report_spec: Optional[str | dict] = None,
         body: Union[GetRequestBody, dict] = None,
         **kwargs,
@@ -402,41 +587,59 @@ class ConnectionMaker(ServerClient):
         loop = asyncio.get_event_loop()
         return loop.run_until_complete(
             self._async_get_endpoint_by_guid(
-                endpoint_guid, output_format, report_spec, body, **kwargs
+                guid=guid,
+                include_only_relationships=include_only_relationships,
+                skip_relationships=skip_relationships,
+                graph_query_depth=graph_query_depth,
+                output_format=output_format,
+                report_spec=report_spec,
+                body=body,
+                **kwargs
             )
         )
 
     async def _async_get_endpoints_by_name(
         self,
-        search_string: str = "*",
-        output_format: str = "DICT",
+        name: str,
+        metadata_element_subtypes: list[str] | None = None,
+        include_only_relationships: list[str] | None = None,
+        skip_relationships: list[str] | None = None,
+        graph_query_depth: int = 3,
+        start_from: int = 0,
+        page_size: int = 0,
+        output_format: str = "JSON",
         report_spec: Optional[str | dict] = None,
         body: Union[FilterRequestBody, dict] = None,
         **kwargs,
     ) -> dict | list | str:
         url = f"{self.base_url}/endpoints/by-name"
-        kwargs.setdefault("start_from", 0)
-        kwargs.setdefault("page_size", 0)
-        if body is None:
-            body = {"class": "FilterRequestBody", "filter": search_string}
-        elif isinstance(body, dict):
-            body.setdefault("filter", search_string)
-
         return await self._async_get_name_request(
             url,
             "Endpoint",
             self._generate_referenceable_output,
+            filter_string=name,
+            metadata_element_subtypes=metadata_element_subtypes,
+            include_only_relationships=include_only_relationships,
+            skip_relationships=skip_relationships,
+            graph_query_depth=graph_query_depth,
+            start_from=start_from,
+            page_size=page_size,
             output_format=output_format,
             report_spec=report_spec,
-            search_string=search_string,
             body=body,
             **kwargs,
         )
 
     def get_endpoints_by_name(
         self,
-        search_string: str = "*",
-        output_format: str = "DICT",
+        name: str,
+        metadata_element_subtypes: list[str] | None = None,
+        include_only_relationships: list[str] | None = None,
+        skip_relationships: list[str] | None = None,
+        graph_query_depth: int = 3,
+        start_from: int = 0,
+        page_size: int = 0,
+        output_format: str = "JSON",
         report_spec: Optional[str | dict] = None,
         body: Union[FilterRequestBody, dict] = None,
         **kwargs,
@@ -444,41 +647,62 @@ class ConnectionMaker(ServerClient):
         loop = asyncio.get_event_loop()
         return loop.run_until_complete(
             self._async_get_endpoints_by_name(
-                search_string, output_format, report_spec, body, **kwargs
+                name=name,
+                metadata_element_subtypes=metadata_element_subtypes,
+                include_only_relationships=include_only_relationships,
+                skip_relationships=skip_relationships,
+                graph_query_depth=graph_query_depth,
+                start_from=start_from,
+                page_size=page_size,
+                output_format=output_format,
+                report_spec=report_spec,
+                body=body,
+                **kwargs
             )
         )
 
     async def _async_get_endpoints_by_network_address(
         self,
-        search_string: str = "*",
-        output_format: str = "DICT",
+        network_address: str,
+        metadata_element_subtypes: list[str] | None = None,
+        include_only_relationships: list[str] | None = None,
+        skip_relationships: list[str] | None = None,
+        graph_query_depth: int = 3,
+        start_from: int = 0,
+        page_size: int = 0,
+        output_format: str = "JSON",
         report_spec: Optional[str | dict] = None,
         body: Union[FilterRequestBody, dict] = None,
         **kwargs,
     ) -> dict | list | str:
         url = f"{self.base_url}/endpoints/by-network-address"
-        kwargs.setdefault("start_from", 0)
-        kwargs.setdefault("page_size", 0)
-        if body is None:
-            body = {"class": "FilterRequestBody", "filter": search_string}
-        elif isinstance(body, dict):
-            body.setdefault("filter", search_string)
-
         return await self._async_get_name_request(
             url,
             "Endpoint",
             self._generate_referenceable_output,
+            filter_string=network_address,
+            metadata_element_subtypes=metadata_element_subtypes,
+            include_only_relationships=include_only_relationships,
+            skip_relationships=skip_relationships,
+            graph_query_depth=graph_query_depth,
+            start_from=start_from,
+            page_size=page_size,
             output_format=output_format,
             report_spec=report_spec,
-            search_string=search_string,
             body=body,
             **kwargs,
         )
 
     def get_endpoints_by_network_address(
         self,
-        search_string: str = "*",
-        output_format: str = "DICT",
+        network_address: str,
+        metadata_element_subtypes: list[str] | None = None,
+        include_only_relationships: list[str] | None = None,
+        skip_relationships: list[str] | None = None,
+        graph_query_depth: int = 3,
+        start_from: int = 0,
+        page_size: int = 0,
+        output_format: str = "JSON",
         report_spec: Optional[str | dict] = None,
         body: Union[FilterRequestBody, dict] = None,
         **kwargs,
@@ -486,26 +710,60 @@ class ConnectionMaker(ServerClient):
         loop = asyncio.get_event_loop()
         return loop.run_until_complete(
             self._async_get_endpoints_by_network_address(
-                search_string, output_format, report_spec, body, **kwargs
+                network_address=network_address,
+                metadata_element_subtypes=metadata_element_subtypes,
+                include_only_relationships=include_only_relationships,
+                skip_relationships=skip_relationships,
+                graph_query_depth=graph_query_depth,
+                start_from=start_from,
+                page_size=page_size,
+                output_format=output_format,
+                report_spec=report_spec,
+                body=body,
+                **kwargs
             )
         )
 
     async def _async_find_endpoints(
         self,
         search_string: str = "*",
-        output_format: str = "DICT",
+        starts_with: bool = True,
+        ends_with: bool = False,
+        ignore_case: bool = True,
+        metadata_element_type: str | None = None,
+        metadata_element_subtypes: list[str] | None = None,
+        include_only_relationships: list[str] | None = None,
+        skip_relationships: list[str] | None = None,
+        graph_query_depth: int = 3,
+        as_of_time: Optional[str] = None,
+        start_from: int = 0,
+        page_size: int = 0,
+        sequencing_order: Optional[str] = None,
+        sequencing_property: Optional[str] = None,
+        output_format: str = "JSON",
         report_spec: Optional[str | dict] = None,
         body: Union[SearchStringRequestBody, dict] = None,
         **kwargs,
     ) -> dict | list | str:
         url = f"{self.base_url}/endpoints/by-search-string"
-        kwargs.setdefault("start_from", 0)
-        kwargs.setdefault("page_size", 0)
         return await self._async_find_request(
             url,
             "Endpoint",
             self._generate_referenceable_output,
             search_string=search_string,
+            starts_with=starts_with,
+            ends_with=ends_with,
+            ignore_case=ignore_case,
+            metadata_element_type=metadata_element_type,
+            metadata_element_subtypes=metadata_element_subtypes,
+            include_only_relationships=include_only_relationships,
+            skip_relationships=skip_relationships,
+            graph_query_depth=graph_query_depth,
+            as_of_time=as_of_time,
+            start_from=start_from,
+            page_size=page_size,
+            sequencing_order=sequencing_order,
+            sequencing_property=sequencing_property,
             body=body,
             output_format=output_format,
             report_spec=report_spec,
@@ -515,7 +773,20 @@ class ConnectionMaker(ServerClient):
     def find_endpoints(
         self,
         search_string: str = "*",
-        output_format: str = "DICT",
+        starts_with: bool = True,
+        ends_with: bool = False,
+        ignore_case: bool = True,
+        metadata_element_type: str | None = None,
+        metadata_element_subtypes: list[str] | None = None,
+        include_only_relationships: list[str] | None = None,
+        skip_relationships: list[str] | None = None,
+        graph_query_depth: int = 3,
+        as_of_time: Optional[str] = None,
+        start_from: int = 0,
+        page_size: int = 0,
+        sequencing_order: Optional[str] = None,
+        sequencing_property: Optional[str] = None,
+        output_format: str = "JSON",
         report_spec: Optional[str | dict] = None,
         body: Union[SearchStringRequestBody, dict] = None,
         **kwargs,
@@ -523,34 +794,56 @@ class ConnectionMaker(ServerClient):
         loop = asyncio.get_event_loop()
         return loop.run_until_complete(
             self._async_find_endpoints(
-                search_string, output_format, report_spec, body, **kwargs
+                search_string=search_string,
+                starts_with=starts_with,
+                ends_with=ends_with,
+                ignore_case=ignore_case,
+                metadata_element_type=metadata_element_type,
+                metadata_element_subtypes=metadata_element_subtypes,
+                include_only_relationships=include_only_relationships,
+                skip_relationships=skip_relationships,
+                graph_query_depth=graph_query_depth,
+                as_of_time=as_of_time,
+                start_from=start_from,
+                page_size=page_size,
+                sequencing_order=sequencing_order,
+                sequencing_property=sequencing_property,
+                output_format=output_format,
+                report_spec=report_spec,
+                body=body,
+                **kwargs
             )
         )
 
     async def _async_get_endpoints_for_asset(
         self,
         asset_guid: str,
-        search_string: str = "*",
-        output_format: str = "DICT",
+        name: str = "*",
+        metadata_element_subtypes: list[str] | None = None,
+        include_only_relationships: list[str] | None = None,
+        skip_relationships: list[str] | None = None,
+        graph_query_depth: int = 3,
+        start_from: int = 0,
+        page_size: int = 0,
+        output_format: str = "JSON",
         report_spec: Optional[str | dict] = None,
         body: Union[FilterRequestBody, dict] = None,
         **kwargs,
     ) -> dict | list | str:
         url = f"{self.base_url}/assets/{asset_guid}/endpoints/retrieve"
-        kwargs.setdefault("start_from", 0)
-        kwargs.setdefault("page_size", 0)
-        if body is None:
-            body = {"class": "FilterRequestBody", "filter": search_string}
-        elif isinstance(body, dict):
-            body.setdefault("filter", search_string)
-
         return await self._async_get_name_request(
             url,
             "Endpoint",
             self._generate_referenceable_output,
+            filter_string=name,
+            metadata_element_subtypes=metadata_element_subtypes,
+            include_only_relationships=include_only_relationships,
+            skip_relationships=skip_relationships,
+            graph_query_depth=graph_query_depth,
+            start_from=start_from,
+            page_size=page_size,
             output_format=output_format,
             report_spec=report_spec,
-            search_string=search_string,
             body=body,
             **kwargs,
         )
@@ -558,8 +851,14 @@ class ConnectionMaker(ServerClient):
     def get_endpoints_for_asset(
         self,
         asset_guid: str,
-        search_string: str = "*",
-        output_format: str = "DICT",
+        name: str = "*",
+        metadata_element_subtypes: list[str] | None = None,
+        include_only_relationships: list[str] | None = None,
+        skip_relationships: list[str] | None = None,
+        graph_query_depth: int = 3,
+        start_from: int = 0,
+        page_size: int = 0,
+        output_format: str = "JSON",
         report_spec: Optional[str | dict] = None,
         body: Union[FilterRequestBody, dict] = None,
         **kwargs,
@@ -567,7 +866,18 @@ class ConnectionMaker(ServerClient):
         loop = asyncio.get_event_loop()
         return loop.run_until_complete(
             self._async_get_endpoints_for_asset(
-                asset_guid, search_string, output_format, report_spec, body, **kwargs
+                asset_guid=asset_guid,
+                name=name,
+                metadata_element_subtypes=metadata_element_subtypes,
+                include_only_relationships=include_only_relationships,
+                skip_relationships=skip_relationships,
+                graph_query_depth=graph_query_depth,
+                start_from=start_from,
+                page_size=page_size,
+                output_format=output_format,
+                report_spec=report_spec,
+                body=body,
+                **kwargs
             )
         )
 

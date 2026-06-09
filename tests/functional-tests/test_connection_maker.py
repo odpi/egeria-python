@@ -158,7 +158,7 @@ async def test_find_connections(connection_maker):
 async def test_get_connections_by_name(connection_maker):
     await connection_maker._async_create_egeria_bearer_token(USER_ID, USER_PWD)
     output_format = "DICT"
-    response = await connection_maker._async_get_connections_by_name(search_string="*", output_format=output_format, graph_query_depth=0, page_size=10)
+    response = await connection_maker._async_get_connections_by_name(name="*", output_format=output_format, graph_query_depth=0, page_size=10)
     print(f"\nGet Connections By Name Result ({output_format}):")
     if isinstance(response, (dict, list)):
         print(json.dumps(response, indent=2))
@@ -192,7 +192,7 @@ async def test_find_connector_types(connection_maker):
 async def test_get_connector_types_by_name(connection_maker):
     await connection_maker._async_create_egeria_bearer_token(USER_ID, USER_PWD)
     output_format = "DICT"
-    response = await connection_maker._async_get_connector_types_by_name(search_string="*", output_format=output_format, graph_query_depth=0, page_size=10)
+    response = await connection_maker._async_get_connector_types_by_name(name="*", output_format=output_format, graph_query_depth=0, page_size=10)
     print(f"\nGet Connector Types By Name Result ({output_format}):")
     if isinstance(response, (dict, list)):
         print(json.dumps(response, indent=2))
@@ -216,7 +216,7 @@ async def test_find_endpoints(connection_maker):
 async def test_get_endpoints_by_name(connection_maker):
     await connection_maker._async_create_egeria_bearer_token(USER_ID, USER_PWD)
     output_format = "DICT"
-    response = await connection_maker._async_get_endpoints_by_name(search_string="*", output_format=output_format, graph_query_depth=0, page_size=10)
+    response = await connection_maker._async_get_endpoints_by_name(name="*", output_format=output_format, graph_query_depth=0, page_size=10)
     print(f"\nGet Endpoints By Name Result ({output_format}):")
     if isinstance(response, (dict, list)):
         print(json.dumps(response, indent=2))
@@ -228,7 +228,7 @@ async def test_get_endpoints_by_name(connection_maker):
 async def test_get_endpoints_by_network_address(connection_maker):
     await connection_maker._async_create_egeria_bearer_token(USER_ID, USER_PWD)
     output_format = "JSON"
-    response = await connection_maker._async_get_endpoints_by_network_address(search_string="*", output_format=output_format, graph_query_depth=0, page_size=10)
+    response = await connection_maker._async_get_endpoints_by_network_address(network_address="*", output_format=output_format, graph_query_depth=0, page_size=10)
     print(f"\nGet Endpoints By Network Address Result ({output_format}):")
     if isinstance(response, (dict, list)):
         print(json.dumps(response, indent=2))
@@ -241,7 +241,7 @@ async def test_get_endpoints_for_asset(connection_maker):
     await connection_maker._async_create_egeria_bearer_token(USER_ID, USER_PWD)
     output_format = "DICT"
     try:
-        response = await connection_maker._async_get_endpoints_for_asset("dummy-asset-guid", search_string="*", output_format=output_format, graph_query_depth=0, page_size=10)
+        response = await connection_maker._async_get_endpoints_for_asset("dummy-asset-guid", name="*", output_format=output_format, graph_query_depth=0, page_size=10)
         print(f"\nGet Endpoints For Asset Result ({output_format}):")
         if isinstance(response, (dict, list)):
             print(json.dumps(response, indent=2))

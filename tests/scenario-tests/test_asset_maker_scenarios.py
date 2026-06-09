@@ -503,7 +503,7 @@ class AssetMakerScenarioTester:
             assert cap_guid is not None
 
             # Step 2: Retrieve by GUID
-            result = self.client.get_software_capability_by_guid(software_capability_guid=cap_guid, output_format="DICT")
+            result = self.client.get_software_capability_by_guid(guid=cap_guid, output_format="DICT")
             console.print(f"  ✓ Retrieved software capability by GUID")
             assert result is not None
 

@@ -239,7 +239,7 @@ class TestAssetCatalog:
             token = asset_client.create_egeria_bearer_token(self.good_user_2, "secret")
             start_time = time.perf_counter()
 
-            asset_guid = "8be11e8d-3964-40c7-88cd-403526725523"
+            asset_guid = "90ad9864-b763-4c8a-8f4c-56239adf2233"
             effective_time = None
             as_of_time = None
             relationship_types = None
@@ -256,7 +256,7 @@ class TestAssetCatalog:
                 all_anchors=False,
                 start_from=0,
                 page_size=0,
-                output_format="DICT",
+                output_format="JSON",
                 report_spec="Common-Mermaid"
             )
             duration = time.perf_counter() - start_time
@@ -297,7 +297,7 @@ class TestAssetCatalog:
             token = asset_client.create_egeria_bearer_token(self.good_user_2, "secret")
             start_time = time.perf_counter()
 
-            asset_guid = "8a578f0d-f7ae-4255-b4a5-236241fa5449"
+            asset_guid = "90ad9864-b763-4c8a-8f4c-56239adf2233"
 
             response = asset_client.get_asset_lineage_mermaid_graph(asset_guid)
             duration = time.perf_counter() - start_time

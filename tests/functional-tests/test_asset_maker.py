@@ -158,6 +158,7 @@ class TestAssetMaker:
             }
             
             asset_guid = a_client.create_asset(body=body)
+            # asset_guid = "a47906f0-67f0-46ed-890d-85cb049ffa60"
             print(f"\nCreated test asset with GUID: {asset_guid}")
             
             # Now retrieve it
@@ -179,6 +180,43 @@ class TestAssetMaker:
             assert response is not None, "Should retrieve the asset"
             assert isinstance(response, dict), "Response should be a dictionary"
             
+        except PyegeriaException as e:
+            print_exception_table(e)
+            assert False, "Invalid request"
+        finally:
+            a_client.close_session()
+
+    def test_get_asset_by_guid_simple(self):
+        """Test retrieving an asset by GUID"""
+        try:
+            a_client = AssetMaker(
+                self.good_view_server_2,
+                self.good_platform1_url,
+                user_id=self.good_user_2,
+                user_pwd=self.good_user_2_pwd,
+            )
+
+            token = a_client.create_egeria_bearer_token(
+                self.good_user_2, self.good_user_2_pwd
+            )
+
+            asset_guid = "a47906f0-67f0-46ed-890d-85cb049ffa60"
+
+            start_time = time.perf_counter()
+            response = a_client.get_asset_by_guid(
+                asset_guid,
+                graph_query_depth = 2,
+                output_format="JSON"
+            )
+            duration = time.perf_counter() - start_time
+
+            print(f"\n\tDuration was {duration} seconds")
+            print(f"\n\nRetrieved asset: {response.get('properties', {}).get('displayName', 'Unknown')}")
+
+            assert response is not None, "Should retrieve the asset"
+            assert isinstance(response, dict), "Response should be a dictionary"
+            print(json.dumps(response, indent=4))
+
         except PyegeriaException as e:
             print_exception_table(e)
             assert False, "Invalid request"
@@ -315,8 +353,9 @@ class TestAssetMaker:
             a_client = AssetMaker(self.good_view_server_2, self.good_platform1_url, user_id=self.good_user_2,
                                   user_pwd=self.good_user_2_pwd)
             a_client.create_egeria_bearer_token(self.good_user_2, self.good_user_2_pwd)
-            response = a_client.find_infrastructure(search_string="*", output_format="JSON")
+            response = a_client.find_infrastructure(search_string="OMAG Server", output_format="JSON")
             assert response is not None
+            print(json.dumps(response, indent=2))
         except PyegeriaException as e:
             print_exception_table(e)
             assert False, "Invalid request"
@@ -486,7 +525,7 @@ class TestAssetMaker:
             a_client = AssetMaker(self.good_view_server_2, self.good_platform1_url, user_id=self.good_user_2,
                                   user_pwd=self.good_user_2_pwd)
             a_client.create_egeria_bearer_token(self.good_user_2, self.good_user_2_pwd)
-            response = a_client.get_software_capabilities_by_name(filter_string="OMAG Server Platform", output_format="JSON")
+            response = a_client.get_software_capabilities_by_name(name="OMAG Server Platform", output_format="JSON")
             if isinstance(response, (dict, list)):
                 print(f"\n\tSoftware capabilities by name: {json.dumps(response, indent=2)[:500]}")
             else:
@@ -505,7 +544,7 @@ class TestAssetMaker:
                                   user_pwd=self.good_user_2_pwd)
             a_client.create_egeria_bearer_token(self.good_user_2, self.good_user_2_pwd)
             response = a_client.get_software_capabilities_by_deployed_implementation_type(
-                filter_string="OMAG Server", output_format="JSON"
+                deployed_implementation_type="OMAG Server", output_format="JSON"
             )
             if isinstance(response, (dict, list)):
                 print(f"\n\tSoftware capabilities by type: {json.dumps(response, indent=2)[:500]}")
@@ -590,7 +629,7 @@ class TestAssetMaker:
                 }
             }
             guid = a_client.create_software_capability(body=create_body)
-            response = a_client.get_software_capability_by_guid(software_capability_guid=guid, output_format="DICT")
+            response = a_client.get_software_capability_by_guid(guid=guid, output_format="DICT")
             if isinstance(response, (dict, list)):
                 print(f"\n\tRetrieved software capability: {json.dumps(response, indent=2)[:500]}")
             else:

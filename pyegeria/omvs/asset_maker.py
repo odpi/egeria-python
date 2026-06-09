@@ -13,6 +13,7 @@ from pyegeria.core._server_client import ServerClient
 from pyegeria.core._globals import max_paging_size, NO_ELEMENTS_FOUND, NO_GUID_RETURNED
 from pyegeria.models import (
     GetRequestBody,
+    ResultsRequestBody,
     SearchStringRequestBody,
     FilterRequestBody,
     NewElementRequestBody,
@@ -550,12 +551,18 @@ class AssetMaker(ServerClient):
     async def _async_get_assets_by_name(
         self,
         filter_string: str,
-        classification_names: Optional[list[str]] = None,
-        body: dict | FilterRequestBody | None = None,
+        metadata_element_type_name: str | None = "Asset",
+        metadata_element_subtypes: list[str] | None = None,
+        include_only_classified_elements: list[str] | None = None,
+        include_only_relationships: list[str] | None = None,
+        skip_relationships: list[str] | None = None,
+        graph_query_depth: int = 3,
         start_from: int = 0,
         page_size: int = 0,
-        output_format: str = "DICT",
+        output_format: str = "JSON",
         report_spec: dict | str | None = None,
+        body: dict | FilterRequestBody | None = None,
+        **kwargs
     ) -> list | dict | str:
         """Returns the list of assets with a particular name. Async version.
 
@@ -563,18 +570,28 @@ class AssetMaker(ServerClient):
         ----------
         filter_string: str
             String to find in the asset properties.
-        classification_names: list[str], optional
-            Classification/type filters to include in the request body.
-        body: dict | FilterRequestBody, optional
-            Additional filter parameters.
-        start_from: int, optional
-            Index of the first result to return. Default is 0.
-        page_size: int, optional
-            Maximum number of results to return. Default is None (server default).
-        output_format: str, optional
-            Format of the output. Default is "DICT".
+        metadata_element_type_name: str, default "Asset"
+            The type of asset to filter by.
+        metadata_element_subtypes: list[str], optional
+            The subtypes of asset to filter by.
+        include_only_classified_elements: list[str], optional
+            Classification filters to include in the request body.
+        include_only_relationships: list[str], optional
+            List of relationship types to include.
+        skip_relationships: list[str], optional
+            List of relationship types to skip.
+        graph_query_depth: int, default 3
+            The depth of the graph query.
+        start_from: int, default 0
+            Index of the first result to return.
+        page_size: int, default 0
+            Maximum number of results to return.
+        output_format: str, default "JSON"
+            Format of the output.
         report_spec: dict | str, optional
             Specification for report formatting.
+        body: dict | FilterRequestBody, optional
+            Additional filter parameters.
 
         Returns
         -------
@@ -615,20 +632,32 @@ class AssetMaker(ServerClient):
         url = f"{self.asset_command_root}/assets/by-name"
         return await self._async_get_name_request(url, _type="Asset", _gen_output=self._generate_referenceable_output,
                                                   filter_string=filter_string,
-                                                  classification_names=classification_names, start_from=start_from,
+                                                  metadata_element_type_name=metadata_element_type_name,
+                                                  metadata_element_subtypes=metadata_element_subtypes,
+                                                  classification_names=include_only_classified_elements,
+                                                  include_only_relationships=include_only_relationships,
+                                                  skip_relationships=skip_relationships,
+                                                  graph_query_depth=graph_query_depth,
+                                                  start_from=start_from,
                                                   page_size=page_size, output_format=output_format,
-                                                  report_spec=report_spec, body=body)
+                                                  report_spec=report_spec, body=body, **kwargs)
 
     @dynamic_catch
     def get_assets_by_name(
         self,
         filter_string: str,
-        classification_names: Optional[list[str]] = None,
-        body: dict | FilterRequestBody | None = None,
+        metadata_element_type_name: str | None = "Asset",
+        metadata_element_subtypes: list[str] | None = None,
+        include_only_classified_elements: list[str] | None = None,
+        include_only_relationships: list[str] | None = None,
+        skip_relationships: list[str] | None = None,
+        graph_query_depth: int = 3,
         start_from: int = 0,
         page_size: int = 0,
-        output_format: str = "DICT",
+        output_format: str = "JSON",
         report_spec: dict | str | None = None,
+        body: dict | FilterRequestBody | None = None,
+        **kwargs
     ) -> list | dict | str:
         """Returns the list of assets with a particular name.
 
@@ -636,18 +665,28 @@ class AssetMaker(ServerClient):
         ----------
         filter_string: str
             String to find in the asset properties.
-        classification_names: list[str], optional
-            Classification/type filters to include in the request body.
-        body: dict | FilterRequestBody, optional
-            Additional filter parameters.
-        start_from: int, optional
-            Index of the first result to return. Default is 0.
-        page_size: int, optional
-            Maximum number of results to return. Default is None (server default).
-        output_format: str, optional
-            Format of the output. Default is "DICT".
+        metadata_element_type_name: str, default "Asset"
+            The type of asset to filter by.
+        metadata_element_subtypes: list[str], optional
+            The subtypes of asset to filter by.
+        include_only_classified_elements: list[str], optional
+            Classification filters to include in the request body.
+        include_only_relationships: list[str], optional
+            List of relationship types to include.
+        skip_relationships: list[str], optional
+            List of relationship types to skip.
+        graph_query_depth: int, default 3
+            The depth of the graph query.
+        start_from: int, default 0
+            Index of the first result to return.
+        page_size: int, default 0
+            Maximum number of results to return.
+        output_format: str, default "JSON"
+            Format of the output.
         report_spec: dict | str, optional
             Specification for report formatting.
+        body: dict | FilterRequestBody, optional
+            Additional filter parameters.
 
         Returns
         -------
@@ -687,31 +726,34 @@ class AssetMaker(ServerClient):
         """
         loop = asyncio.get_event_loop()
         return loop.run_until_complete(
-            self._async_get_assets_by_name(
-                filter_string,
-                classification_names,
-                body,
-                start_from,
-                page_size,
-                output_format,
-                report_spec,
-            )
+            self._async_get_assets_by_name(filter_string=filter_string,
+                                           metadata_element_type_name=metadata_element_type_name,
+                                           metadata_element_subtypes=metadata_element_subtypes,
+                                           include_only_classified_elements=include_only_classified_elements,
+                                           include_only_relationships=include_only_relationships,
+                                           skip_relationships=skip_relationships,
+                                           graph_query_depth=graph_query_depth,
+                                           start_from=start_from, page_size=page_size,
+                                           output_format=output_format, report_spec=report_spec, body=body, **kwargs)
         )
 
     @dynamic_catch
-    async def _async_find_assets(self, search_string: str = "*", starts_with: bool = False, ends_with: bool = False,
-                                 ignore_case: bool = True, anchor_domain: Optional[str] = None, metadata_element_type: Optional[str] = None,
-                                 metadata_element_subtypes: Optional[list[str]] = None, skip_relationships: Optional[list[str]] = None,
+    async def _async_find_assets(self, search_string: str = "*", starts_with: bool = True, ends_with: bool = False,
+                                 ignore_case: bool = True, anchor_domain: Optional[str] = None,
+                                 metadata_element_type: Optional[str] = None,
+                                 metadata_element_subtypes: Optional[list[str]] = None,
+                                 skip_relationships: Optional[list[str]] = None,
                                  include_only_relationships: Optional[list[str]] = None,
                                  skip_classified_elements: Optional[list[str]] = None,
-                                 include_only_classified_elements: Optional[list[str]] = None, graph_query_depth: int = 3,
+                                 include_only_classified_elements: Optional[list[str]] = None,
+                                 graph_query_depth: int = 3,
                                  governance_zone_filter: Optional[list[str]] = None, as_of_time: Optional[str] = None,
-                                 effective_time: Optional[str] = None, relationship_page_size: int = 0,
+                                 relationship_page_size: int = 0,
                                  limit_results_by_status: Optional[list[str]] = None, sequencing_order: Optional[str] = None,
-                                 sequencing_property: Optional[str] = None, output_format: str = "DICT",
+                                 sequencing_property: Optional[str] = None, output_format: str = "JSON",
                                  report_spec: dict | str | None = None, start_from: int = 0,
                                  page_size: int = 0, property_names: Optional[list[str]] = None,
-                                 body: dict | SearchStringRequestBody | None = None) -> list | dict | str:
+                                 body: dict | SearchStringRequestBody | None = None, **kwargs) -> list | dict | str:
         """Retrieve the list of asset metadata elements that contain the search string. Async version.
 
         Parameters
@@ -719,7 +761,7 @@ class AssetMaker(ServerClient):
         search_string: str, optional
             String to search for in asset properties. Default is "*".
         starts_with: bool, optional
-            Whether to match only at the start. Default is False.
+            Whether to match only at the start. Default is True.
         ends_with: bool, optional
             Whether to match only at the end. Default is False.
         ignore_case: bool, optional
@@ -727,9 +769,9 @@ class AssetMaker(ServerClient):
         start_from: int, optional
             Index of the first result to return. Default is 0.
         page_size: int, optional
-            Maximum number of results to return. Default is None (server default).
+            Maximum number of results to return. Default is 0 (server default).
         output_format: str, optional
-            Format of the output. Default is "DICT".
+            Format of the output. Default is "JSON".
         report_spec: dict | str, optional
             Specification for report formatting.
         body: dict | SearchStringRequestBody, optional
@@ -785,25 +827,30 @@ class AssetMaker(ServerClient):
                                                 include_only_classified_elements=include_only_classified_elements,
                                                 graph_query_depth=graph_query_depth,
                                                 governance_zone_filter=governance_zone_filter, as_of_time=as_of_time,
-                                                effective_time=effective_time,
                                                 relationship_page_size=relationship_page_size,
                                                 limit_results_by_status=limit_results_by_status,
                                                 sequencing_order=sequencing_order,
                                                 sequencing_property=sequencing_property, output_format=output_format,
                                                 report_spec=report_spec, start_from=start_from, page_size=page_size,
-                                                body=body)
+                                                body=body, **kwargs)
 
     @dynamic_catch
-    def find_assets(self, search_string: str = "*", starts_with: bool = False, ends_with: bool = False,
-                    ignore_case: bool = True, anchor_domain: Optional[str] = None, metadata_element_type: Optional[str] = None,
-                    metadata_element_subtypes: Optional[list[str]] = None, skip_relationships: Optional[list[str]] = None,
-                    include_only_relationships: Optional[list[str]] = None, skip_classified_elements: Optional[list[str]] = None,
-                    include_only_classified_elements: Optional[list[str]] = None, graph_query_depth: int = 3,
-                    governance_zone_filter: Optional[list[str]] = None, as_of_time: Optional[str] = None, effective_time: Optional[str] = None,
+    def find_assets(self, search_string: str = "*", starts_with: bool = True, ends_with: bool = False,
+                    ignore_case: bool = True, anchor_domain: Optional[str] = None,
+                    metadata_element_type: Optional[str] = None,
+                    metadata_element_subtypes: Optional[list[str]] = None,
+                    skip_relationships: Optional[list[str]] = None,
+                    include_only_relationships: Optional[list[str]] = None,
+                    skip_classified_elements: Optional[list[str]] = None,
+                    include_only_classified_elements: Optional[list[str]] = None,
+                    graph_query_depth: int = 3,
+                    governance_zone_filter: Optional[list[str]] = None, as_of_time: Optional[str] = None,
                     relationship_page_size: int = 0, limit_results_by_status: Optional[list[str]] = None,
-                    sequencing_order: Optional[str] = None, sequencing_property: Optional[str] = None, output_format: str = "DICT",
+                    sequencing_order: Optional[str] = None, sequencing_property: Optional[str] = None,
+                    output_format: str = "JSON",
                     report_spec: dict | str | None = None, start_from: int = 0, page_size: int = 0,
-                    property_names: Optional[list[str]] = None, body: dict | SearchStringRequestBody | None = None) -> list | dict | str:
+                    property_names: Optional[list[str]] = None,
+                    body: dict | SearchStringRequestBody | None = None, **kwargs) -> list | dict | str:
         """Retrieve the list of asset metadata elements that contain the search string.
 
         Parameters
@@ -811,7 +858,7 @@ class AssetMaker(ServerClient):
         search_string: str, optional
             String to search for in asset properties. Default is "*".
         starts_with: bool, optional
-            Whether to match only at the start. Default is False.
+            Whether to match only at the start. Default is True.
         ends_with: bool, optional
             Whether to match only at the end. Default is False.
         ignore_case: bool, optional
@@ -819,9 +866,9 @@ class AssetMaker(ServerClient):
         start_from: int, optional
             Index of the first result to return. Default is 0.
         page_size: int, optional
-            Maximum number of results to return. Default is None (server default).
+            Maximum number of results to return. Default is 0 (server default).
         output_format: str, optional
-            Format of the output. Default is "DICT".
+            Format of the output. Default is "JSON".
         report_spec: dict | str, optional
             Specification for report formatting.
         body: dict | SearchStringRequestBody, optional
@@ -875,33 +922,40 @@ class AssetMaker(ServerClient):
                                    skip_classified_elements=skip_classified_elements,
                                    include_only_classified_elements=include_only_classified_elements,
                                    graph_query_depth=graph_query_depth, governance_zone_filter=governance_zone_filter,
-                                   as_of_time=as_of_time, effective_time=effective_time,
+                                   as_of_time=as_of_time,
                                    relationship_page_size=relationship_page_size,
                                    limit_results_by_status=limit_results_by_status, sequencing_order=sequencing_order,
                                    sequencing_property=sequencing_property, output_format=output_format,
-                                   report_spec=report_spec, start_from=start_from, page_size=page_size, body=body)
+                                   report_spec=report_spec, start_from=start_from, page_size=page_size, body=body, **kwargs)
 
     @dynamic_catch
     async def _async_get_asset_by_guid(
         self,
-        asset_guid: str,
-        element_type: Optional[str] = None,
-        body: dict | GetRequestBody | None = None,
-        output_format: str = "DICT",
+        guid: str,
+        include_only_relationships: list[str] | None = None,
+        skip_relationships: list[str] | None = None,
+        graph_query_depth: int = 3,
+        output_format: str = "JSON",
         report_spec: dict | str | None = None,
+        body: dict | GetRequestBody | None = None,
+        **kwargs
     ) -> dict | str:
         """Return the properties of a specific asset. Async version.
 
         Parameters
         ----------
-        asset_guid: str
+        guid: str
             Unique identifier of the asset.
-        element_type: str, optional
-            Metadata element type name to include in the request body.
+        include_only_relationships: list[str], optional
+            List of relationship types to include.
+        skip_relationships: list[str], optional
+            List of relationship types to skip.
+        graph_query_depth: int, default 3
+            The depth of the graph query.
         body: dict | GetRequestBody, optional
             Additional parameters for the request.
         output_format: str, optional
-            Format of the output. Default is "DICT".
+            Format of the output. Default is "JSON".
         report_spec: dict | str, optional
             Specification for report formatting.
 
@@ -935,37 +989,48 @@ class AssetMaker(ServerClient):
           "forDuplicateProcessing" : false
         }
         """
-        url = f"{self.asset_command_root}/assets/{asset_guid}/retrieve"
+        url = f"{self.asset_command_root}/assets/{guid}/retrieve"
         return await self._async_get_guid_request(
             url,
-            _type=element_type or "Asset",
+            _type="Asset",
             _gen_output=self._generate_referenceable_output,
+            include_only_relationships=include_only_relationships,
+            skip_relationships=skip_relationships,
+            graph_query_depth=graph_query_depth,
             output_format=output_format,
             report_spec=report_spec,
             body=body,
+            **kwargs
         )
 
     @dynamic_catch
     def get_asset_by_guid(
         self,
-        asset_guid: str,
-        element_type: Optional[str] = None,
-        body: dict | GetRequestBody | None = None,
-        output_format: str = "DICT",
+        guid: str,
+        include_only_relationships: list[str] | None = None,
+        skip_relationships: list[str] | None = None,
+        graph_query_depth: int = 3,
+        output_format: str = "JSON",
         report_spec: dict | str | None = None,
+        body: dict | GetRequestBody | None = None,
+        **kwargs
     ) -> dict | str:
         """Return the properties of a specific asset.
 
         Parameters
         ----------
-        asset_guid: str
+        guid: str
             Unique identifier of the asset.
-        element_type: str, optional
-            Metadata element type name to include in the request body.
+        include_only_relationships: list[str], optional
+            List of relationship types to include.
+        skip_relationships: list[str], optional
+            List of relationship types to skip.
+        graph_query_depth: int, default 3
+            The depth of the graph query.
         body: dict | GetRequestBody, optional
             Additional parameters for the request.
         output_format: str, optional
-            Format of the output. Default is "DICT".
+            Format of the output. Default is "JSON".
         report_spec: dict | str, optional
             Specification for report formatting.
 
@@ -1001,7 +1066,16 @@ class AssetMaker(ServerClient):
         """
         loop = asyncio.get_event_loop()
         return loop.run_until_complete(
-            self._async_get_asset_by_guid(asset_guid, element_type, body, output_format, report_spec)
+            self._async_get_asset_by_guid(
+                guid=guid,
+                include_only_relationships=include_only_relationships,
+                skip_relationships=skip_relationships,
+                graph_query_depth=graph_query_depth,
+                output_format=output_format,
+                report_spec=report_spec,
+                body=body,
+                **kwargs
+            )
         )
 
     #
@@ -1252,20 +1326,27 @@ class AssetMaker(ServerClient):
     @dynamic_catch
     async def _async_get_catalog_target(
         self,
-        relationship_guid: str,
-        output_format: str = "DICT",
+        guid: str,
+        graph_query_depth: int = 3,
+        output_format: str = "JSON",
         report_spec: dict | str | None = None,
+        body: dict | GetRequestBody | None = None,
+        **kwargs
     ) -> dict | str:
         """Retrieve a specific catalog target associated with an integration connector. Async version.
 
         Parameters
         ----------
-        relationship_guid: str
+        guid: str
             Unique identifier of the catalog target relationship.
-        output_format: str, optional
-            Format of the output. Default is "DICT".
+        graph_query_depth: int, default 3
+            The depth of the graph query.
+        output_format: str, default "JSON"
+            Format of the output.
         report_spec: dict | str, optional
             Specification for report formatting.
+        body: dict | GetRequestBody, optional
+            Additional parameters for the request.
 
         Returns
         -------
@@ -1282,32 +1363,42 @@ class AssetMaker(ServerClient):
         -----
         See: https://egeria-project.org/concepts/integration-connector/
         """
-        url = f"{self.curation_command_root}/catalog-targets/{relationship_guid}"
+        url = f"{self.curation_command_root}/catalog-targets/{guid}"
         return await self._async_get_guid_request(
             url,
             _type="CatalogTarget",
             _gen_output=self._generate_referenceable_output,
+            graph_query_depth=graph_query_depth,
             output_format=output_format,
             report_spec=report_spec,
+            body=body,
+            **kwargs
         )
 
     @dynamic_catch
     def get_catalog_target(
         self,
-        relationship_guid: str,
-        output_format: str = "DICT",
+        guid: str,
+        graph_query_depth: int = 3,
+        output_format: str = "JSON",
         report_spec: dict | str | None = None,
+        body: dict | GetRequestBody | None = None,
+        **kwargs
     ) -> dict | str:
         """Retrieve a specific catalog target associated with an integration connector.
 
         Parameters
         ----------
-        relationship_guid: str
+        guid: str
             Unique identifier of the catalog target relationship.
-        output_format: str, optional
-            Format of the output. Default is "DICT".
+        graph_query_depth: int, default 3
+            The depth of the graph query.
+        output_format: str, default "JSON"
+            Format of the output.
         report_spec: dict | str, optional
             Specification for report formatting.
+        body: dict | GetRequestBody, optional
+            Additional parameters for the request.
 
         Returns
         -------
@@ -1326,17 +1417,22 @@ class AssetMaker(ServerClient):
         """
         loop = asyncio.get_event_loop()
         return loop.run_until_complete(
-            self._async_get_catalog_target(relationship_guid, output_format, report_spec)
+            self._async_get_catalog_target(guid=guid, graph_query_depth=graph_query_depth,
+                                           output_format=output_format, report_spec=report_spec,
+                                           body=body, **kwargs)
         )
 
     @dynamic_catch
     async def _async_get_catalog_targets(
         self,
         integration_connector_guid: str,
+        graph_query_depth: int = 3,
         start_from: int = 0,
         page_size: int = 0,
-        output_format: str = "DICT",
+        output_format: str = "JSON",
         report_spec: dict | str | None = None,
+        body: dict | ResultsRequestBody | None = None,
+        **kwargs
     ) -> list | dict | str:
         """Retrieve the details of the metadata elements identified as catalog targets with an integration connector.
         Async version.
@@ -1345,14 +1441,18 @@ class AssetMaker(ServerClient):
         ----------
         integration_connector_guid: str
             Unique identifier of the integration connector.
+        graph_query_depth: int, default 3
+            The depth of the graph query.
         start_from: int, optional
             Index of the first result to return. Default is 0.
         page_size: int, optional
-            Maximum number of results to return. Default is None (server default).
+            Maximum number of results to return. Default is 0.
         output_format: str, optional
-            Format of the output. Default is "DICT".
+            Format of the output. Default is "JSON".
         report_spec: dict | str, optional
             Specification for report formatting.
+        body: dict | ResultsRequestBody, optional
+            Additional filter parameters.
 
         Returns
         -------
@@ -1377,20 +1477,26 @@ class AssetMaker(ServerClient):
             url,
             _type="CatalogTarget",
             _gen_output=self._generate_referenceable_output,
+            graph_query_depth=graph_query_depth,
             start_from=start_from,
             page_size=page_size,
             output_format=output_format,
             report_spec=report_spec,
+            body=body,
+            **kwargs
         )
 
     @dynamic_catch
     def get_catalog_targets(
         self,
         integration_connector_guid: str,
+        graph_query_depth: int = 3,
         start_from: int = 0,
         page_size: int = 0,
-        output_format: str = "DICT",
+        output_format: str = "JSON",
         report_spec: dict | str | None = None,
+        body: dict | ResultsRequestBody | None = None,
+        **kwargs
     ) -> list | dict | str:
         """Retrieve the details of the metadata elements identified as catalog targets with an integration connector.
 
@@ -1398,14 +1504,18 @@ class AssetMaker(ServerClient):
         ----------
         integration_connector_guid: str
             Unique identifier of the integration connector.
+        graph_query_depth: int, default 3
+            The depth of the graph query.
         start_from: int, optional
             Index of the first result to return. Default is 0.
         page_size: int, optional
-            Maximum number of results to return. Default is None (server default).
+            Maximum number of results to return. Default is 0.
         output_format: str, optional
-            Format of the output. Default is "DICT".
+            Format of the output. Default is "JSON".
         report_spec: dict | str, optional
             Specification for report formatting.
+        body: dict | ResultsRequestBody, optional
+            Additional filter parameters.
 
         Returns
         -------
@@ -1425,7 +1535,14 @@ class AssetMaker(ServerClient):
         loop = asyncio.get_event_loop()
         return loop.run_until_complete(
             self._async_get_catalog_targets(
-                integration_connector_guid, start_from, page_size, output_format, report_spec
+                integration_connector_guid=integration_connector_guid,
+                graph_query_depth=graph_query_depth,
+                start_from=start_from,
+                page_size=page_size,
+                output_format=output_format,
+                report_spec=report_spec,
+                body=body,
+                **kwargs
             )
         )
 
@@ -1504,7 +1621,7 @@ class AssetMaker(ServerClient):
         self,
         search_string: str = "*",
         content_status_list: list[str] = ["ACTIVE"],
-        starts_with: bool = False,
+        starts_with: bool = True,
         ends_with: bool = False,
         ignore_case: bool = True,
         anchor_domain: Optional[str] = None,
@@ -1527,6 +1644,7 @@ class AssetMaker(ServerClient):
         output_format: str = "JSON",
         report_spec: str | dict = None,
         body: Optional[dict | ContentStatusSearchString] = None,
+        **kwargs
     ) -> list | str:
         """
         Returns the list of data assets matching the search string and optional content status. Async version.
@@ -1624,14 +1742,14 @@ class AssetMaker(ServerClient):
                                                                sequencing_order=sequencing_order,
                                                                sequencing_property=sequencing_property,
                                                                output_format=output_format, report_spec=report_spec,
-                                                               start_from=start_from, page_size=page_size, body=body)
+                                                               start_from=start_from, page_size=page_size, body=body, **kwargs)
 
     @dynamic_catch
     def find_data_assets(
         self,
         search_string: str = "*",
         content_status_list: list[str] = ["ACTIVE"],
-        starts_with: bool = False,
+        starts_with: bool = True,
         ends_with: bool = False,
         ignore_case: bool = True,
         anchor_domain: Optional[str] = None,
@@ -1654,6 +1772,7 @@ class AssetMaker(ServerClient):
         output_format: str = "JSON",
         report_spec: str | dict = None,
         body: Optional[dict | ContentStatusSearchString] = None,
+        **kwargs
     ) -> list | str:
         """
         Returns the list of data assets matching the search string and optional content status. Sync version.
@@ -1733,31 +1852,32 @@ class AssetMaker(ServerClient):
         loop = asyncio.get_event_loop()
         return loop.run_until_complete(
             self._async_find_data_assets(
-                search_string,
-                content_status_list,
-                starts_with,
-                ends_with,
-                ignore_case,
-                anchor_domain,
-                metadata_element_type,
-                metadata_element_subtypes,
-                skip_relationships,
-                include_only_relationships,
-                skip_classified_elements,
-                include_only_classified_elements,
-                graph_query_depth,
-                governance_zone_filter,
-                as_of_time,
-                effective_time,
-                relationship_page_size,
-                limit_results_by_status,
-                sequencing_order,
-                sequencing_property,
-                start_from,
-                page_size,
-                output_format,
-                report_spec,
-                body,
+                search_string=search_string,
+                content_status_list=content_status_list,
+                starts_with=starts_with,
+                ends_with=ends_with,
+                ignore_case=ignore_case,
+                anchor_domain=anchor_domain,
+                metadata_element_type=metadata_element_type,
+                metadata_element_subtypes=metadata_element_subtypes,
+                skip_relationships=skip_relationships,
+                include_only_relationships=include_only_relationships,
+                skip_classified_elements=skip_classified_elements,
+                include_only_classified_elements=include_only_classified_elements,
+                graph_query_depth=graph_query_depth,
+                governance_zone_filter=governance_zone_filter,
+                as_of_time=as_of_time,
+                effective_time=effective_time,
+                relationship_page_size=relationship_page_size,
+                limit_results_by_status=limit_results_by_status,
+                sequencing_order=sequencing_order,
+                sequencing_property=sequencing_property,
+                start_from=start_from,
+                page_size=page_size,
+                output_format=output_format,
+                report_spec=report_spec,
+                body=body,
+                **kwargs
             )
         )
 
@@ -1766,11 +1886,13 @@ class AssetMaker(ServerClient):
         self,
         category: str,
         content_status_list: list[str] = ["ACTIVE"],
+        graph_query_depth: int = 3,
         start_from: int = 0,
         page_size: int = 0,
         output_format: str = "JSON",
         report_spec: str | dict = None,
         body: Optional[dict | ContentStatusFilterRequestBody] = None,
+        **kwargs
     ) -> list | str:
         """
         Returns the list of data assets matching the category and optional content status. Async version.
@@ -1781,6 +1903,8 @@ class AssetMaker(ServerClient):
             - the category to filter by
         content_status_list: list[str], default = ["ACTIVE"]
             - optional content status list to filter by
+        graph_query_depth: int, default = 3
+            - depth for relationship traversal
         start_from: int, default = 0
             - starting point in the results
         page_size: int, default = 0
@@ -1815,11 +1939,13 @@ class AssetMaker(ServerClient):
             _gen_output=self._generate_referenceable_output,
             filter_string=category,
             content_status_list=content_status_list,
+            graph_query_depth=graph_query_depth,
             start_from=start_from,
             page_size=page_size,
             output_format=output_format,
             report_spec=report_spec,
             body=body,
+            **kwargs
         )
 
     @dynamic_catch
@@ -1827,11 +1953,13 @@ class AssetMaker(ServerClient):
         self,
         category: str,
         content_status_list: list[str] = ["ACTIVE"],
+        graph_query_depth: int = 3,
         start_from: int = 0,
         page_size: int = 0,
         output_format: str = "JSON",
         report_spec: str | dict = None,
         body: Optional[dict | ContentStatusFilterRequestBody] = None,
+        **kwargs
     ) -> list | str:
         """
         Returns the list of data assets matching the category and optional content status. Sync version.
@@ -1842,6 +1970,8 @@ class AssetMaker(ServerClient):
             - category name to filter by
         content_status_list: list[str], default = ["ACTIVE"]
             - optional content status list to filter by
+        graph_query_depth: int, default = 3
+            - depth for relationship traversal
         start_from: int, default = 0
             - the starting point in the results list
         page_size: int, default = 0
@@ -1872,7 +2002,15 @@ class AssetMaker(ServerClient):
         loop = asyncio.get_event_loop()
         return loop.run_until_complete(
             self._async_get_data_assets_by_category(
-                category, content_status_list, start_from, page_size, output_format, report_spec, body
+                category=category,
+                content_status_list=content_status_list,
+                graph_query_depth=graph_query_depth,
+                start_from=start_from,
+                page_size=page_size,
+                output_format=output_format,
+                report_spec=report_spec,
+                body=body,
+                **kwargs
             )
         )
 
@@ -2533,7 +2671,7 @@ class AssetMaker(ServerClient):
         self,
         search_string: str = "*",
         deployment_status_list: list[str] = ["ACTIVE"],
-        starts_with: bool = False,
+        starts_with: bool = True,
         ends_with: bool = False,
         ignore_case: bool = True,
         anchor_domain: Optional[str] = None,
@@ -2556,6 +2694,7 @@ class AssetMaker(ServerClient):
         output_format: str = "JSON",
         report_spec: str | dict = None,
         body: Optional[dict | DeploymentStatusSearchString] = None,
+        **kwargs
     ) -> list | str:
         """
         Returns the list of infrastructure assets matching the search string and optional deployment status. Async version.
@@ -2653,14 +2792,14 @@ class AssetMaker(ServerClient):
                                                                   sequencing_order=sequencing_order,
                                                                   sequencing_property=sequencing_property,
                                                                   output_format=output_format, report_spec=report_spec,
-                                                                  start_from=start_from, page_size=page_size, body=body)
+                                                                  start_from=start_from, page_size=page_size, body=body, **kwargs)
 
     @dynamic_catch
     def find_infrastructure(
         self,
         search_string: str = "*",
         deployment_status_list: list[str] = ["ACTIVE"],
-        starts_with: bool = False,
+        starts_with: bool = True,
         ends_with: bool = False,
         ignore_case: bool = True,
         anchor_domain: Optional[str] = None,
@@ -2683,6 +2822,7 @@ class AssetMaker(ServerClient):
         output_format: str = "JSON",
         report_spec: str | dict = None,
         body: Optional[dict | DeploymentStatusSearchString] = None,
+        **kwargs
     ) -> list | str:
         """
         Returns the list of infrastructure assets matching the search string and optional deployment status. Sync version.
@@ -2693,7 +2833,7 @@ class AssetMaker(ServerClient):
             - the search string to use to find matching infrastructure assets
         deployment_status_list: list[str], default = ["ACTIVE"]
             - optional deployment status list to filter by
-        starts_with: bool, default = False
+        starts_with: bool, default = True
             - if True, the search string must match the start of the property value
         ends_with: bool, default = False
             - if True, the search string must match the end of the property value
@@ -2732,31 +2872,32 @@ class AssetMaker(ServerClient):
         loop = asyncio.get_event_loop()
         return loop.run_until_complete(
             self._async_find_infrastructure(
-                search_string,
-                deployment_status_list,
-                starts_with,
-                ends_with,
-                ignore_case,
-                anchor_domain,
-                metadata_element_type,
-                metadata_element_subtypes,
-                skip_relationships,
-                include_only_relationships,
-                skip_classified_elements,
-                include_only_classified_elements,
-                graph_query_depth,
-                governance_zone_filter,
-                as_of_time,
-                effective_time,
-                relationship_page_size,
-                limit_results_by_status,
-                sequencing_order,
-                sequencing_property,
-                start_from,
-                page_size,
-                output_format,
-                report_spec,
-                body,
+                search_string=search_string,
+                deployment_status_list=deployment_status_list,
+                starts_with=starts_with,
+                ends_with=ends_with,
+                ignore_case=ignore_case,
+                anchor_domain=anchor_domain,
+                metadata_element_type=metadata_element_type,
+                metadata_element_subtypes=metadata_element_subtypes,
+                skip_relationships=skip_relationships,
+                include_only_relationships=include_only_relationships,
+                skip_classified_elements=skip_classified_elements,
+                include_only_classified_elements=include_only_classified_elements,
+                graph_query_depth=graph_query_depth,
+                governance_zone_filter=governance_zone_filter,
+                as_of_time=as_of_time,
+                effective_time=effective_time,
+                relationship_page_size=relationship_page_size,
+                limit_results_by_status=limit_results_by_status,
+                sequencing_order=sequencing_order,
+                sequencing_property=sequencing_property,
+                start_from=start_from,
+                page_size=page_size,
+                output_format=output_format,
+                report_spec=report_spec,
+                body=body,
+                **kwargs
             )
         )
 
@@ -2765,11 +2906,13 @@ class AssetMaker(ServerClient):
         self,
         category: str,
         deployment_status_list: list[str] = ["ACTIVE"],
+        graph_query_depth: int = 3,
         start_from: int = 0,
         page_size: int = 0,
         output_format: str = "JSON",
         report_spec: str | dict = None,
         body: Optional[dict | DeploymentStatusFilterRequestBody] = None,
+        **kwargs
     ) -> list | str:
         """
         Returns the list of infrastructure assets matching the category and optional deployment status. Async version.
@@ -2780,6 +2923,8 @@ class AssetMaker(ServerClient):
             - the category to filter by
         deployment_status_list: list[str], default = ["ACTIVE"]
             - optional deployment status list to filter by
+        graph_query_depth: int, default = 3
+            - depth for relationship traversal
         start_from: int, default = 0
             - starting point in the results
         page_size: int, default = 0
@@ -2814,11 +2959,13 @@ class AssetMaker(ServerClient):
             _gen_output=self._generate_referenceable_output,
             filter_string=category,
             deployment_status_list=deployment_status_list,
+            graph_query_depth=graph_query_depth,
             start_from=start_from,
             page_size=page_size,
             output_format=output_format,
             report_spec=report_spec,
             body=body,
+            **kwargs
         )
 
     @dynamic_catch
@@ -2826,11 +2973,13 @@ class AssetMaker(ServerClient):
         self,
         category: str,
         deployment_status_list: list[str] = ["ACTIVE"],
+        graph_query_depth: int = 3,
         start_from: int = 0,
         page_size: int = 0,
         output_format: str = "JSON",
         report_spec: str | dict = None,
         body: Optional[dict | DeploymentStatusFilterRequestBody] = None,
+        **kwargs
     ) -> list | str:
         """
         Returns the list of infrastructure assets matching the category and optional deployment status. Sync version.
@@ -2841,6 +2990,8 @@ class AssetMaker(ServerClient):
             - category name to filter by
         deployment_status_list: list[str], default = ["ACTIVE"]
             - optional deployment status list to filter by
+        graph_query_depth: int, default = 3
+            - depth for relationship traversal
         start_from: int, default = 0
             - the starting point in the results list
         page_size: int, default = 0
@@ -2871,7 +3022,15 @@ class AssetMaker(ServerClient):
         loop = asyncio.get_event_loop()
         return loop.run_until_complete(
             self._async_get_infrastructure_by_category(
-                category, deployment_status_list, start_from, page_size, output_format, report_spec, body
+                category=category,
+                deployment_status_list=deployment_status_list,
+                graph_query_depth=graph_query_depth,
+                start_from=start_from,
+                page_size=page_size,
+                output_format=output_format,
+                report_spec=report_spec,
+                body=body,
+                **kwargs
             )
         )
 
@@ -3209,7 +3368,7 @@ class AssetMaker(ServerClient):
         self,
         search_string: str = "*",
         activity_status_list: list[str] = [],
-        starts_with: bool = False,
+        starts_with: bool = True,
         ends_with: bool = False,
         ignore_case: bool = True,
         anchor_domain: Optional[str] = None,
@@ -3232,6 +3391,7 @@ class AssetMaker(ServerClient):
         output_format: str = "JSON",
         report_spec: str | dict = None,
         body: Optional[dict | ActivityStatusSearchString] = None,
+        **kwargs
     ) -> list | str:
         """
         Retrieve the processes that match the search string and activity status. Async version.
@@ -3240,9 +3400,9 @@ class AssetMaker(ServerClient):
         ----------
         search_string: str, default = "*"
             - search string for process properties
-        activity_status_list: list[str], default = ["IN_PROGRESS"]
+        activity_status_list: list[str], default = []
             - optional activity status list to filter by
-        starts_with: bool, default = False
+        starts_with: bool, default = True
         ends_with: bool, default = False
         ignore_case: bool, default = True
         start_from: int, default = 0
@@ -3300,6 +3460,7 @@ class AssetMaker(ServerClient):
             start_from=start_from,
             page_size=page_size,
             body=body,
+            **kwargs
         )
 
     @dynamic_catch
@@ -3307,7 +3468,7 @@ class AssetMaker(ServerClient):
         self,
         search_string: str = "*",
         activity_status_list: list[str] = ["IN_PROGRESS"],
-        starts_with: bool = False,
+        starts_with: bool = True,
         ends_with: bool = False,
         ignore_case: bool = True,
         anchor_domain: Optional[str] = None,
@@ -3330,6 +3491,7 @@ class AssetMaker(ServerClient):
         output_format: str = "JSON",
         report_spec: str | dict = None,
         body: Optional[dict | ActivityStatusSearchString] = None,
+        **kwargs
     ) -> list | str:
         """
         Retrieve the processes that match the search string and activity status. Sync version.
@@ -3340,7 +3502,7 @@ class AssetMaker(ServerClient):
             - the search string to use to find matching processes
         activity_status_list: list[str], default = ["IN_PROGRESS"]
             - optional activity status list to filter by
-        starts_with: bool, default = False
+        starts_with: bool, default = True
             - if True, the search string must match the start of the property value
         ends_with: bool, default = False
             - if True, the search string must match the end of the property value
@@ -3379,31 +3541,32 @@ class AssetMaker(ServerClient):
         loop = asyncio.get_event_loop()
         return loop.run_until_complete(
             self._async_find_processes(
-                search_string,
-                activity_status_list,
-                starts_with,
-                ends_with,
-                ignore_case,
-                anchor_domain,
-                metadata_element_type,
-                metadata_element_subtypes,
-                skip_relationships,
-                include_only_relationships,
-                skip_classified_elements,
-                include_only_classified_elements,
-                graph_query_depth,
-                governance_zone_filter,
-                as_of_time,
-                effective_time,
-                relationship_page_size,
-                limit_results_by_status,
-                sequencing_order,
-                sequencing_property,
-                start_from,
-                page_size,
-                output_format,
-                report_spec,
-                body,
+                search_string=search_string,
+                activity_status_list=activity_status_list,
+                starts_with=starts_with,
+                ends_with=ends_with,
+                ignore_case=ignore_case,
+                anchor_domain=anchor_domain,
+                metadata_element_type=metadata_element_type,
+                metadata_element_subtypes=metadata_element_subtypes,
+                skip_relationships=skip_relationships,
+                include_only_relationships=include_only_relationships,
+                skip_classified_elements=skip_classified_elements,
+                include_only_classified_elements=include_only_classified_elements,
+                graph_query_depth=graph_query_depth,
+                governance_zone_filter=governance_zone_filter,
+                as_of_time=as_of_time,
+                effective_time=effective_time,
+                relationship_page_size=relationship_page_size,
+                limit_results_by_status=limit_results_by_status,
+                sequencing_order=sequencing_order,
+                sequencing_property=sequencing_property,
+                start_from=start_from,
+                page_size=page_size,
+                output_format=output_format,
+                report_spec=report_spec,
+                body=body,
+                **kwargs
             )
         )
 
@@ -3412,11 +3575,13 @@ class AssetMaker(ServerClient):
         self,
         category: str,
         activity_status_list: list[str] = ["IN_PROGRESS"],
+        graph_query_depth: int = 3,
         start_from: int = 0,
         page_size: int = 0,
         output_format: str = "JSON",
         report_spec: str | dict = None,
         body: Optional[dict | ActivityStatusFilterRequestBody] = None,
+        **kwargs
     ) -> list | str:
         """
         Retrieve the processes that match the category name and status. Async version.
@@ -3425,6 +3590,8 @@ class AssetMaker(ServerClient):
         ----------
         category: str
         activity_status_list: list[str], default = ["IN_PROGRESS"]
+        graph_query_depth: int, default = 3
+            - depth for relationship traversal
         start_from: int, default = 0
         page_size: int, default = 0
         output_format: str, default = "JSON"
@@ -3454,11 +3621,13 @@ class AssetMaker(ServerClient):
             _gen_output=self._generate_referenceable_output,
             filter_string=category,
             activity_status_list=activity_status_list,
+            graph_query_depth=graph_query_depth,
             start_from=start_from,
             page_size=page_size,
             output_format=output_format,
             report_spec=report_spec,
             body=body,
+            **kwargs
         )
 
     @dynamic_catch
@@ -3466,11 +3635,13 @@ class AssetMaker(ServerClient):
         self,
         category: str,
         activity_status_list: list[str] = ["IN_PROGRESS"],
+        graph_query_depth: int = 3,
         start_from: int = 0,
         page_size: int = 0,
         output_format: str = "JSON",
         report_spec: str | dict = None,
         body: Optional[dict | ActivityStatusFilterRequestBody] = None,
+        **kwargs
     ) -> list | str:
         """
         Retrieve the processes that match the category name and status. Sync version.
@@ -3481,6 +3652,8 @@ class AssetMaker(ServerClient):
             - category name to filter by
         activity_status_list: list[str], default = ["IN_PROGRESS"]
             - optional activity status list to filter by
+        graph_query_depth: int, default = 3
+            - depth for relationship traversal
         start_from: int, default = 0
             - the starting point in the results list
         page_size: int, default = 0
@@ -3511,7 +3684,15 @@ class AssetMaker(ServerClient):
         loop = asyncio.get_event_loop()
         return loop.run_until_complete(
             self._async_get_processes_by_category(
-                category, activity_status_list, start_from, page_size, output_format, report_spec, body
+                category=category,
+                activity_status_list=activity_status_list,
+                graph_query_depth=graph_query_depth,
+                start_from=start_from,
+                page_size=page_size,
+                output_format=output_format,
+                report_spec=report_spec,
+                body=body,
+                **kwargs
             )
         )
 
@@ -3849,9 +4030,11 @@ class AssetMaker(ServerClient):
     async def _async_get_action_target(
         self,
         action_target_guid: str,
-        body: dict | GetRequestBody | None = None,
+        graph_query_depth: int = 3,
         output_format: str = "JSON",
         report_spec: str | dict = None,
+        body: dict | GetRequestBody | None = None,
+        **kwargs
     ) -> list | dict | str:
         """
         Retrieve a specific action target associated with an action. Async version.
@@ -3859,6 +4042,8 @@ class AssetMaker(ServerClient):
         Parameters
         ----------
         action_target_guid: str
+        graph_query_depth: int, default 3
+            - depth for relationship traversal
         body: dict | GetRequestBody, optional
         output_format: str, default = "JSON"
         report_spec: str | dict, optional
@@ -3873,18 +4058,22 @@ class AssetMaker(ServerClient):
             url,
             _type="ActionTarget",
             _gen_output=self._generate_referenceable_output,
+            graph_query_depth=graph_query_depth,
             output_format=output_format,
             report_spec=report_spec,
             body=body,
+            **kwargs
         )
 
     @dynamic_catch
     def get_action_target(
         self,
         action_target_guid: str,
-        body: dict | GetRequestBody | None = None,
+        graph_query_depth: int = 3,
         output_format: str = "JSON",
         report_spec: str | dict = None,
+        body: dict | GetRequestBody | None = None,
+        **kwargs
     ) -> list | dict | str:
         """
         Retrieve a specific action target associated with an action. Sync version.
@@ -3892,6 +4081,8 @@ class AssetMaker(ServerClient):
         Parameters
         ----------
         action_target_guid: str
+        graph_query_depth: int, default 3
+            - depth for relationship traversal
         body: dict | GetRequestBody, optional
         output_format: str, default = "JSON"
         report_spec: str | dict, optional
@@ -3913,7 +4104,8 @@ class AssetMaker(ServerClient):
         """
         loop = asyncio.get_event_loop()
         return loop.run_until_complete(
-            self._async_get_action_target(action_target_guid, body, output_format, report_spec)
+            self._async_get_action_target(action_target_guid=action_target_guid, graph_query_depth=graph_query_depth,
+                                          output_format=output_format, report_spec=report_spec, body=body, **kwargs)
         )
 
     @dynamic_catch
@@ -3921,6 +4113,7 @@ class AssetMaker(ServerClient):
         self,
         action_guid: str,
         activity_status_list: list[str] = ["IN_PROGRESS"],
+        graph_query_depth: int = 3,
         start_from: int = 0,
         page_size: int = 0,
         limit_results_by_status: Optional[list[str]] = None,
@@ -3929,6 +4122,7 @@ class AssetMaker(ServerClient):
         body: dict | ActivityStatusRequestBody | None = None,
         output_format: str = "JSON",
         report_spec: str | dict = None,
+        **kwargs
     ) -> list | dict | str:
         """
         Return a list of elements that are target elements for an action. Async version.
@@ -3937,6 +4131,8 @@ class AssetMaker(ServerClient):
         ----------
         action_guid: str
         activity_status_list: list[str], default = ["IN_PROGRESS"]
+        graph_query_depth: int, default = 3
+            - depth for relationship traversal
         body: dict | ActivityStatusRequestBody, optional
         output_format: str, default = "JSON"
         report_spec: str | dict, optional
@@ -3951,6 +4147,7 @@ class AssetMaker(ServerClient):
             _type="ActionTarget",
             _gen_output=self._generate_referenceable_output,
             activity_status_list=activity_status_list,
+            graph_query_depth=graph_query_depth,
             start_from=start_from,
             page_size=page_size,
             limit_results_by_status=limit_results_by_status,
@@ -3959,6 +4156,7 @@ class AssetMaker(ServerClient):
             output_format=output_format,
             report_spec=report_spec,
             body=body,
+            **kwargs
         )
 
     @dynamic_catch
@@ -3966,6 +4164,7 @@ class AssetMaker(ServerClient):
         self,
         action_guid: str,
         activity_status_list: list[str] = ["IN_PROGRESS"],
+        graph_query_depth: int = 3,
         start_from: int = 0,
         page_size: int = 0,
         limit_results_by_status: Optional[list[str]] = None,
@@ -3974,6 +4173,7 @@ class AssetMaker(ServerClient):
         body: dict | ActivityStatusRequestBody | None = None,
         output_format: str = "JSON",
         report_spec: str | dict = None,
+        **kwargs
     ) -> list | dict | str:
         """
         Return a list of elements that are target elements for an action. Sync version.
@@ -3982,6 +4182,8 @@ class AssetMaker(ServerClient):
         ----------
         action_guid: str
         activity_status_list: list[str], default = ["IN_PROGRESS"]
+        graph_query_depth: int, default = 3
+            - depth for relationship traversal
         start_from: int, default = 0
         page_size: int, default = 0
         limit_results_by_status: list[str], optional
@@ -4006,16 +4208,18 @@ class AssetMaker(ServerClient):
         loop = asyncio.get_event_loop()
         return loop.run_until_complete(
             self._async_get_action_targets(
-                action_guid,
-                activity_status_list,
-                start_from,
-                page_size,
-                limit_results_by_status,
-                sequencing_order,
-                sequencing_property,
-                body,
-                output_format,
-                report_spec,
+                action_guid=action_guid,
+                activity_status_list=activity_status_list,
+                graph_query_depth=graph_query_depth,
+                start_from=start_from,
+                page_size=page_size,
+                limit_results_by_status=limit_results_by_status,
+                sequencing_order=sequencing_order,
+                sequencing_property=sequencing_property,
+                body=body,
+                output_format=output_format,
+                report_spec=report_spec,
+                **kwargs
             )
         )
 
@@ -4024,6 +4228,7 @@ class AssetMaker(ServerClient):
         self,
         metadata_element_guid: str,
         activity_status_list: list[str] = ["IN_PROGRESS"],
+        graph_query_depth: int = 3,
         start_from: int = 0,
         page_size: int = 0,
         limit_results_by_status: Optional[list[str]] = None,
@@ -4032,6 +4237,7 @@ class AssetMaker(ServerClient):
         body: dict | ActivityStatusRequestBody | None = None,
         output_format: str = "JSON",
         report_spec: str | dict = None,
+        **kwargs
     ) -> list | dict | str:
         """
         Retrieve the "Actions" that are chained off of an action target element. Async version.
@@ -4040,6 +4246,8 @@ class AssetMaker(ServerClient):
         ----------
         metadata_element_guid: str
         activity_status_list: list[str], default = ["IN_PROGRESS"]
+        graph_query_depth: int, default = 3
+            - depth for relationship traversal
         body: dict | ActivityStatusRequestBody, optional
         output_format: str, default = "JSON"
         report_spec: str | dict, optional
@@ -4054,6 +4262,7 @@ class AssetMaker(ServerClient):
             _type="Action",
             _gen_output=self._generate_referenceable_output,
             activity_status_list=activity_status_list,
+            graph_query_depth=graph_query_depth,
             start_from=start_from,
             page_size=page_size,
             limit_results_by_status=limit_results_by_status,
@@ -4062,6 +4271,7 @@ class AssetMaker(ServerClient):
             output_format=output_format,
             report_spec=report_spec,
             body=body,
+            **kwargs
         )
 
     @dynamic_catch
@@ -4069,6 +4279,7 @@ class AssetMaker(ServerClient):
         self,
         metadata_element_guid: str,
         activity_status_list: list[str] = ["IN_PROGRESS"],
+        graph_query_depth: int = 3,
         start_from: int = 0,
         page_size: int = 0,
         limit_results_by_status: Optional[list[str]] = None,
@@ -4077,6 +4288,7 @@ class AssetMaker(ServerClient):
         body: dict | ActivityStatusRequestBody | None = None,
         output_format: str = "JSON",
         report_spec: str | dict = None,
+        **kwargs
     ) -> list | dict | str:
         """
         Retrieve the "Actions" that are chained off of an action target element. Sync version.
@@ -4085,6 +4297,8 @@ class AssetMaker(ServerClient):
         ----------
         metadata_element_guid: str
         activity_status_list: list[str], default = ["IN_PROGRESS"]
+        graph_query_depth: int, default = 3
+            - depth for relationship traversal
         start_from: int, default = 0
         page_size: int, default = 0
         limit_results_by_status: list[str], optional
@@ -4109,16 +4323,18 @@ class AssetMaker(ServerClient):
         loop = asyncio.get_event_loop()
         return loop.run_until_complete(
             self._async_get_actions_for_action_target(
-                metadata_element_guid,
-                activity_status_list,
-                start_from,
-                page_size,
-                limit_results_by_status,
-                sequencing_order,
-                sequencing_property,
-                body,
-                output_format,
-                report_spec,
+                metadata_element_guid=metadata_element_guid,
+                activity_status_list=activity_status_list,
+                graph_query_depth=graph_query_depth,
+                start_from=start_from,
+                page_size=page_size,
+                limit_results_by_status=limit_results_by_status,
+                sequencing_order=sequencing_order,
+                sequencing_property=sequencing_property,
+                body=body,
+                output_format=output_format,
+                report_spec=report_spec,
+                **kwargs
             )
         )
 
@@ -4296,6 +4512,7 @@ class AssetMaker(ServerClient):
         self,
         actor_guid: str,
         activity_status_list: list[str] = ["IN_PROGRESS"],
+        graph_query_depth: int = 3,
         start_from: int = 0,
         page_size: int = 0,
         limit_results_by_status: Optional[list[str]] = None,
@@ -4304,6 +4521,7 @@ class AssetMaker(ServerClient):
         body: dict | ActivityStatusRequestBody | None = None,
         output_format: str = "JSON",
         report_spec: str | dict = None,
+        **kwargs
     ) -> list | dict | str:
         """
         Retrieve the actions for a particular actor. Async version.
@@ -4312,6 +4530,8 @@ class AssetMaker(ServerClient):
         ----------
         actor_guid: str
         activity_status_list: list[str], default = ["IN_PROGRESS"]
+        graph_query_depth: int, default = 3
+            - depth for relationship traversal
         body: dict | ActivityStatusRequestBody, optional
         output_format: str, default = "JSON"
         report_spec: str | dict, optional
@@ -4326,6 +4546,7 @@ class AssetMaker(ServerClient):
             _type="Action",
             _gen_output=self._generate_referenceable_output,
             activity_status_list=activity_status_list,
+            graph_query_depth=graph_query_depth,
             start_from=start_from,
             page_size=page_size,
             limit_results_by_status=limit_results_by_status,
@@ -4334,6 +4555,7 @@ class AssetMaker(ServerClient):
             output_format=output_format,
             report_spec=report_spec,
             body=body,
+            **kwargs
         )
 
     @dynamic_catch
@@ -4341,6 +4563,7 @@ class AssetMaker(ServerClient):
         self,
         actor_guid: str,
         activity_status_list: list[str] = ["IN_PROGRESS"],
+        graph_query_depth: int = 3,
         start_from: int = 0,
         page_size: int = 0,
         limit_results_by_status: Optional[list[str]] = None,
@@ -4349,6 +4572,7 @@ class AssetMaker(ServerClient):
         body: dict | ActivityStatusRequestBody | None = None,
         output_format: str = "JSON",
         report_spec: str | dict = None,
+        **kwargs
     ) -> list | dict | str:
         """
         Retrieve the actions for a particular actor. Sync version.
@@ -4357,6 +4581,8 @@ class AssetMaker(ServerClient):
         ----------
         actor_guid: str
         activity_status_list: list[str], default = ["IN_PROGRESS"]
+        graph_query_depth: int, default = 3
+            - depth for relationship traversal
         start_from: int, default = 0
         page_size: int, default = 0
         limit_results_by_status: list[str], optional
@@ -4381,16 +4607,18 @@ class AssetMaker(ServerClient):
         loop = asyncio.get_event_loop()
         return loop.run_until_complete(
             self._async_get_assigned_actions(
-                actor_guid,
-                activity_status_list,
-                start_from,
-                page_size,
-                limit_results_by_status,
-                sequencing_order,
-                sequencing_property,
-                body,
-                output_format,
-                report_spec,
+                actor_guid=actor_guid,
+                activity_status_list=activity_status_list,
+                graph_query_depth=graph_query_depth,
+                start_from=start_from,
+                page_size=page_size,
+                limit_results_by_status=limit_results_by_status,
+                sequencing_order=sequencing_order,
+                sequencing_property=sequencing_property,
+                body=body,
+                output_format=output_format,
+                report_spec=report_spec,
+                **kwargs
             )
         )
 
@@ -4399,6 +4627,7 @@ class AssetMaker(ServerClient):
         self,
         metadata_element_guid: str,
         activity_status_list: list[str] = ["IN_PROGRESS"],
+        graph_query_depth: int = 3,
         start_from: int = 0,
         page_size: int = 0,
         limit_results_by_status: Optional[list[str]] = None,
@@ -4407,6 +4636,7 @@ class AssetMaker(ServerClient):
         body: dict | ActivityStatusRequestBody | None = None,
         output_format: str = "JSON",
         report_spec: str | dict = None,
+        **kwargs
     ) -> list | dict | str:
         """
         Retrieve the "Actions" that are chained off of a sponsor's element. Async version.
@@ -4415,6 +4645,8 @@ class AssetMaker(ServerClient):
         ----------
         metadata_element_guid: str
         activity_status_list: list[str], default = ["IN_PROGRESS"]
+        graph_query_depth: int, default = 3
+            - depth for relationship traversal
         body: dict | ActivityStatusRequestBody, optional
         output_format: str, default = "JSON"
         report_spec: str | dict, optional
@@ -4429,6 +4661,7 @@ class AssetMaker(ServerClient):
             _type="Action",
             _gen_output=self._generate_referenceable_output,
             activity_status_list=activity_status_list,
+            graph_query_depth=graph_query_depth,
             start_from=start_from,
             page_size=page_size,
             limit_results_by_status=limit_results_by_status,
@@ -4437,6 +4670,7 @@ class AssetMaker(ServerClient):
             output_format=output_format,
             report_spec=report_spec,
             body=body,
+            **kwargs
         )
 
     @dynamic_catch
@@ -4444,6 +4678,7 @@ class AssetMaker(ServerClient):
         self,
         metadata_element_guid: str,
         activity_status_list: list[str] = ["IN_PROGRESS"],
+        graph_query_depth: int = 3,
         start_from: int = 0,
         page_size: int = 0,
         limit_results_by_status: Optional[list[str]] = None,
@@ -4452,6 +4687,7 @@ class AssetMaker(ServerClient):
         body: dict | ActivityStatusRequestBody | None = None,
         output_format: str = "JSON",
         report_spec: str | dict = None,
+        **kwargs
     ) -> list | dict | str:
         """
         Retrieve the "Actions" that are chained off of a sponsor's element. Sync version.
@@ -4460,6 +4696,8 @@ class AssetMaker(ServerClient):
         ----------
         metadata_element_guid: str
         activity_status_list: list[str], default = ["IN_PROGRESS"]
+        graph_query_depth: int, default = 3
+            - depth for relationship traversal
         start_from: int, default = 0
         page_size: int, default = 0
         limit_results_by_status: list[str], optional
@@ -4484,16 +4722,18 @@ class AssetMaker(ServerClient):
         loop = asyncio.get_event_loop()
         return loop.run_until_complete(
             self._async_get_actions_for_sponsor(
-                metadata_element_guid,
-                activity_status_list,
-                start_from,
-                page_size,
-                limit_results_by_status,
-                sequencing_order,
-                sequencing_property,
-                body,
-                output_format,
-                report_spec,
+                metadata_element_guid=metadata_element_guid,
+                activity_status_list=activity_status_list,
+                graph_query_depth=graph_query_depth,
+                start_from=start_from,
+                page_size=page_size,
+                limit_results_by_status=limit_results_by_status,
+                sequencing_order=sequencing_order,
+                sequencing_property=sequencing_property,
+                body=body,
+                output_format=output_format,
+                report_spec=report_spec,
+                **kwargs
             )
         )
 
@@ -4502,6 +4742,7 @@ class AssetMaker(ServerClient):
         self,
         metadata_element_guid: str,
         activity_status_list: list[str] = ["IN_PROGRESS"],
+        graph_query_depth: int = 3,
         start_from: int = 0,
         page_size: int = 0,
         limit_results_by_status: Optional[list[str]] = None,
@@ -4510,6 +4751,7 @@ class AssetMaker(ServerClient):
         body: dict | ActivityStatusRequestBody | None = None,
         output_format: str = "JSON",
         report_spec: str | dict = None,
+        **kwargs
     ) -> list | dict | str:
         """
         Retrieve the "Actions" that are chained off of a requestor's element. Async version.
@@ -4518,6 +4760,8 @@ class AssetMaker(ServerClient):
         ----------
         metadata_element_guid: str
         activity_status_list: list[str], default = ["IN_PROGRESS"]
+        graph_query_depth: int, default = 3
+            - depth for relationship traversal
         body: dict | ActivityStatusRequestBody, optional
         output_format: str, default = "JSON"
         report_spec: str | dict, optional
@@ -4532,6 +4776,7 @@ class AssetMaker(ServerClient):
             _type="Action",
             _gen_output=self._generate_referenceable_output,
             activity_status_list=activity_status_list,
+            graph_query_depth=graph_query_depth,
             start_from=start_from,
             page_size=page_size,
             limit_results_by_status=limit_results_by_status,
@@ -4540,6 +4785,7 @@ class AssetMaker(ServerClient):
             output_format=output_format,
             report_spec=report_spec,
             body=body,
+            **kwargs
         )
 
     @dynamic_catch
@@ -4547,6 +4793,7 @@ class AssetMaker(ServerClient):
         self,
         metadata_element_guid: str,
         activity_status_list: list[str] = ["IN_PROGRESS"],
+        graph_query_depth: int = 3,
         start_from: int = 0,
         page_size: int = 0,
         limit_results_by_status: Optional[list[str]] = None,
@@ -4555,6 +4802,7 @@ class AssetMaker(ServerClient):
         body: dict | ActivityStatusRequestBody | None = None,
         output_format: str = "JSON",
         report_spec: str | dict = None,
+        **kwargs
     ) -> list | dict | str:
         """
         Retrieve the "Actions" that are chained off of a requestor's element. Sync version.
@@ -4563,6 +4811,8 @@ class AssetMaker(ServerClient):
         ----------
         metadata_element_guid: str
         activity_status_list: list[str], default = ["IN_PROGRESS"]
+        graph_query_depth: int, default = 3
+            - depth for relationship traversal
         start_from: int, default = 0
         page_size: int, default = 0
         limit_results_by_status: list[str], optional
@@ -4586,17 +4836,19 @@ class AssetMaker(ServerClient):
         """
         loop = asyncio.get_event_loop()
         return loop.run_until_complete(
-            self._async_get_actions_for_requester(
-                metadata_element_guid,
-                activity_status_list,
-                start_from,
-                page_size,
-                limit_results_by_status,
-                sequencing_order,
-                sequencing_property,
-                body,
-                output_format,
-                report_spec,
+            self._async_get_actions_for_requestor(
+                metadata_element_guid=metadata_element_guid,
+                activity_status_list=activity_status_list,
+                graph_query_depth=graph_query_depth,
+                start_from=start_from,
+                page_size=page_size,
+                limit_results_by_status=limit_results_by_status,
+                sequencing_order=sequencing_order,
+                sequencing_property=sequencing_property,
+                body=body,
+                output_format=output_format,
+                report_spec=report_spec,
+                **kwargs
             )
         )
 
@@ -4858,21 +5110,28 @@ class AssetMaker(ServerClient):
     @dynamic_catch
     async def _async_get_software_capability_by_guid(
         self,
-        software_capability_guid: str,
-        body: dict | GetRequestBody | None = None,
-        output_format: str = "DICT",
+        guid: str,
+        metadata_element_type_name: str | None = "SoftwareCapability",
+        graph_query_depth: int = 3,
+        output_format: str = "JSON",
         report_spec: dict | str | None = None,
+        body: dict | GetRequestBody | None = None,
+        **kwargs
     ) -> dict | str:
         """Retrieve a specific software capability. Async version.
 
         Parameters
         ----------
-        software_capability_guid: str
+        guid: str
             Unique identifier of the software capability.
+        metadata_element_type_name: str, default "SoftwareCapability"
+            Metadata element type name to include in the request body.
+        graph_query_depth: int, default 3
+            The depth of the graph query.
         body: dict | GetRequestBody, optional
             Additional parameters for the request.
         output_format: str, optional
-            Format of the output. Default is "DICT".
+            Format of the output. Default is "JSON".
         report_spec: dict | str, optional
             Specification for report formatting.
 
@@ -4891,34 +5150,43 @@ class AssetMaker(ServerClient):
         -----
         See: https://egeria-project.org/concepts/software-capability
         """
-        url = f"{self.asset_command_root}/software-capabilities/{software_capability_guid}"
+        url = f"{self.asset_command_root}/software-capabilities/{guid}"
         return await self._async_get_guid_request(
             url,
-            _type="SoftwareCapability",
+            _type=metadata_element_type_name,
             _gen_output=self._generate_referenceable_output,
+            graph_query_depth=graph_query_depth,
             output_format=output_format,
             report_spec=report_spec,
             body=body,
+            **kwargs
         )
 
     @dynamic_catch
     def get_software_capability_by_guid(
         self,
-        software_capability_guid: str,
-        body: dict | GetRequestBody | None = None,
-        output_format: str = "DICT",
+        guid: str,
+        metadata_element_type_name: str | None = "SoftwareCapability",
+        graph_query_depth: int = 3,
+        output_format: str = "JSON",
         report_spec: dict | str | None = None,
+        body: dict | GetRequestBody | None = None,
+        **kwargs
     ) -> dict | str:
         """Retrieve a specific software capability.
 
         Parameters
         ----------
-        software_capability_guid: str
+        guid: str
             Unique identifier of the software capability.
+        metadata_element_type_name: str, default "SoftwareCapability"
+            Metadata element type name to include in the request body.
+        graph_query_depth: int, default 3
+            The depth of the graph query.
         body: dict | GetRequestBody, optional
             Additional parameters for the request.
         output_format: str, optional
-            Format of the output. Default is "DICT".
+            Format of the output. Default is "JSON".
         report_spec: dict | str, optional
             Specification for report formatting.
 
@@ -4940,7 +5208,13 @@ class AssetMaker(ServerClient):
         loop = asyncio.get_event_loop()
         return loop.run_until_complete(
             self._async_get_software_capability_by_guid(
-                software_capability_guid, body, output_format, report_spec
+                guid=guid,
+                metadata_element_type_name=metadata_element_type_name,
+                graph_query_depth=graph_query_depth,
+                output_format=output_format,
+                report_spec=report_spec,
+                body=body,
+                **kwargs
             )
         )
 
@@ -4948,7 +5222,7 @@ class AssetMaker(ServerClient):
     async def _async_find_software_capabilities(
         self,
         search_string: str = "*",
-        starts_with: bool = False,
+        starts_with: bool = True,
         ends_with: bool = False,
         ignore_case: bool = True,
         anchor_domain: Optional[str] = None,
@@ -4966,7 +5240,7 @@ class AssetMaker(ServerClient):
         limit_results_by_status: Optional[list[str]] = None,
         sequencing_order: Optional[str] = None,
         sequencing_property: Optional[str] = None,
-        output_format: str = "DICT",
+        output_format: str = "JSON",
         report_spec: dict | str | None = None,
         start_from: int = 0,
         page_size: int = 0,
@@ -5105,7 +5379,7 @@ class AssetMaker(ServerClient):
     def find_software_capabilities(
         self,
         search_string: str = "*",
-        starts_with: bool = False,
+        starts_with: bool = True,
         ends_with: bool = False,
         ignore_case: bool = True,
         anchor_domain: Optional[str] = None,
@@ -5123,7 +5397,7 @@ class AssetMaker(ServerClient):
         limit_results_by_status: Optional[list[str]] = None,
         sequencing_order: Optional[str] = None,
         sequencing_property: Optional[str] = None,
-        output_format: str = "DICT",
+        output_format: str = "JSON",
         report_spec: dict | str | None = None,
         start_from: int = 0,
         page_size: int = 0,
@@ -5232,19 +5506,26 @@ class AssetMaker(ServerClient):
     @dynamic_catch
     async def _async_get_software_capabilities_by_name(
         self,
-        filter_string: str,
+        name: str,
+        metadata_element_type_name: str | None = "SoftwareCapability",
+        graph_query_depth: int = 3,
         start_from: int = 0,
         page_size: int = 0,
         output_format: str = "JSON",
         report_spec: str | dict = None,
         body: Optional[dict | FilterRequestBody] = None,
+        **kwargs
     ) -> list | str:
         """Retrieve the list of software capabilities with a particular name. Async version.
 
         Parameters
         ----------
-        filter_string: str
+        name: str
             Name to filter software capabilities by.
+        metadata_element_type_name: str, default "SoftwareCapability"
+            Metadata element type name to include in the request body.
+        graph_query_depth: int, default 3
+            The depth of the graph query.
         start_from: int, default = 0
         page_size: int, default = 0
         output_format: str, default = "JSON"
@@ -5271,30 +5552,40 @@ class AssetMaker(ServerClient):
             url,
             _type="SoftwareCapability",
             _gen_output=self._generate_referenceable_output,
-            filter_string=filter_string,
+            filter_string=name,
+            metadata_element_type_name=metadata_element_type_name,
+            graph_query_depth=graph_query_depth,
             start_from=start_from,
             page_size=page_size,
             output_format=output_format,
             report_spec=report_spec,
             body=body,
+            **kwargs
         )
 
     @dynamic_catch
     def get_software_capabilities_by_name(
         self,
-        filter_string: str,
+        name: str,
+        metadata_element_type_name: str | None = "SoftwareCapability",
+        graph_query_depth: int = 3,
         start_from: int = 0,
         page_size: int = 0,
         output_format: str = "JSON",
         report_spec: str | dict = None,
         body: Optional[dict | FilterRequestBody] = None,
+        **kwargs
     ) -> list | str:
         """Retrieve the list of software capabilities with a particular name.
 
         Parameters
         ----------
-        filter_string: str
+        name: str
             Name to filter software capabilities by.
+        metadata_element_type_name: str, default "SoftwareCapability"
+            Metadata element type name to include in the request body.
+        graph_query_depth: int, default 3
+            The depth of the graph query.
         start_from: int, default = 0
         page_size: int, default = 0
         output_format: str, default = "JSON"
@@ -5319,26 +5610,41 @@ class AssetMaker(ServerClient):
         loop = asyncio.get_event_loop()
         return loop.run_until_complete(
             self._async_get_software_capabilities_by_name(
-                filter_string, start_from, page_size, output_format, report_spec, body
+                name=name,
+                metadata_element_type_name=metadata_element_type_name,
+                graph_query_depth=graph_query_depth,
+                start_from=start_from,
+                page_size=page_size,
+                output_format=output_format,
+                report_spec=report_spec,
+                body=body,
+                **kwargs
             )
         )
 
     @dynamic_catch
     async def _async_get_software_capabilities_by_deployed_implementation_type(
         self,
-        filter_string: str,
+        deployed_implementation_type: str,
+        metadata_element_type_name: str | None = "SoftwareCapability",
+        graph_query_depth: int = 3,
         start_from: int = 0,
         page_size: int = 0,
         output_format: str = "JSON",
         report_spec: str | dict = None,
         body: Optional[dict | FilterRequestBody] = None,
+        **kwargs
     ) -> list | str:
         """Retrieve the list of software capabilities with a particular deployed implementation type. Async version.
 
         Parameters
         ----------
-        filter_string: str
+        deployed_implementation_type: str
             Deployed implementation type to filter by (e.g., "Software Server").
+        metadata_element_type_name: str, default "SoftwareCapability"
+            Metadata element type name to include in the request body.
+        graph_query_depth: int, default 3
+            The depth of the graph query.
         start_from: int, default = 0
         page_size: int, default = 0
         output_format: str, default = "JSON"
@@ -5365,30 +5671,40 @@ class AssetMaker(ServerClient):
             url,
             _type="SoftwareCapability",
             _gen_output=self._generate_referenceable_output,
-            filter_string=filter_string,
+            filter_string=deployed_implementation_type,
+            metadata_element_type_name=metadata_element_type_name,
+            graph_query_depth=graph_query_depth,
             start_from=start_from,
             page_size=page_size,
             output_format=output_format,
             report_spec=report_spec,
             body=body,
+            **kwargs
         )
 
     @dynamic_catch
     def get_software_capabilities_by_deployed_implementation_type(
         self,
-        filter_string: str,
+        deployed_implementation_type: str,
+        metadata_element_type_name: str | None = "SoftwareCapability",
+        graph_query_depth: int = 3,
         start_from: int = 0,
         page_size: int = 0,
         output_format: str = "JSON",
         report_spec: str | dict = None,
         body: Optional[dict | FilterRequestBody] = None,
+        **kwargs
     ) -> list | str:
         """Retrieve the list of software capabilities with a particular deployed implementation type.
 
         Parameters
         ----------
-        filter_string: str
+        deployed_implementation_type: str
             Deployed implementation type to filter by (e.g., "Software Server").
+        metadata_element_type_name: str, default "SoftwareCapability"
+            Metadata element type name to include in the request body.
+        graph_query_depth: int, default 3
+            The depth of the graph query.
         start_from: int, default = 0
         page_size: int, default = 0
         output_format: str, default = "JSON"
@@ -5413,7 +5729,15 @@ class AssetMaker(ServerClient):
         loop = asyncio.get_event_loop()
         return loop.run_until_complete(
             self._async_get_software_capabilities_by_deployed_implementation_type(
-                filter_string, start_from, page_size, output_format, report_spec, body
+                deployed_implementation_type=deployed_implementation_type,
+                metadata_element_type_name=metadata_element_type_name,
+                graph_query_depth=graph_query_depth,
+                start_from=start_from,
+                page_size=page_size,
+                output_format=output_format,
+                report_spec=report_spec,
+                body=body,
+                **kwargs
             )
         )
 
@@ -5421,10 +5745,13 @@ class AssetMaker(ServerClient):
     async def _async_get_software_capabilities_for_infrastructure(
         self,
         infrastructure_guid: str,
+        graph_query_depth: int = 3,
         start_from: int = 0,
         page_size: int = 0,
-        output_format: str = "DICT",
+        output_format: str = "JSON",
         report_spec: dict | str | None = None,
+        body: dict | ResultsRequestBody | None = None,
+        **kwargs
     ) -> list | dict | str:
         """Retrieve the list of software capabilities attached to a specific infrastructure element. Async version.
 
@@ -5432,9 +5759,11 @@ class AssetMaker(ServerClient):
         ----------
         infrastructure_guid: str
             Unique identifier of the infrastructure element.
+        graph_query_depth: int, default 3
+            The depth of the graph query.
         start_from: int, optional
         page_size: int, optional
-        output_format: str, optional
+        output_format: str, default "JSON"
         report_spec: dict | str, optional
 
         Returns
@@ -5457,20 +5786,26 @@ class AssetMaker(ServerClient):
             url,
             _type="SoftwareCapability",
             _gen_output=self._generate_referenceable_output,
+            graph_query_depth=graph_query_depth,
             start_from=start_from,
             page_size=page_size,
             output_format=output_format,
             report_spec=report_spec,
+            body=body,
+            **kwargs
         )
 
     @dynamic_catch
     def get_software_capabilities_for_infrastructure(
         self,
         infrastructure_guid: str,
+        graph_query_depth: int = 3,
         start_from: int = 0,
         page_size: int = 0,
-        output_format: str = "DICT",
+        output_format: str = "JSON",
         report_spec: dict | str | None = None,
+        body: dict | ResultsRequestBody | None = None,
+        **kwargs
     ) -> list | dict | str:
         """Retrieve the list of software capabilities attached to a specific infrastructure element.
 
@@ -5478,9 +5813,11 @@ class AssetMaker(ServerClient):
         ----------
         infrastructure_guid: str
             Unique identifier of the infrastructure element.
+        graph_query_depth: int, default 3
+            The depth of the graph query.
         start_from: int, optional
         page_size: int, optional
-        output_format: str, optional
+        output_format: str, default "JSON"
         report_spec: dict | str, optional
 
         Returns
@@ -5501,7 +5838,14 @@ class AssetMaker(ServerClient):
         loop = asyncio.get_event_loop()
         return loop.run_until_complete(
             self._async_get_software_capabilities_for_infrastructure(
-                infrastructure_guid, start_from, page_size, output_format, report_spec
+                infrastructure_guid=infrastructure_guid,
+                graph_query_depth=graph_query_depth,
+                start_from=start_from,
+                page_size=page_size,
+                output_format=output_format,
+                report_spec=report_spec,
+                body=body,
+                **kwargs
             )
         )
 
@@ -5681,10 +6025,13 @@ class AssetMaker(ServerClient):
     async def _async_get_capability_use(
         self,
         asset_guid: str,
+        graph_query_depth: int = 3,
         start_from: int = 0,
         page_size: int = 0,
-        output_format: str = "DICT",
+        output_format: str = "JSON",
         report_spec: dict | str | None = None,
+        body: dict | ResultsRequestBody | None = None,
+        **kwargs
     ) -> list | dict | str:
         """Retrieve the software capabilities using a particular asset. Async version.
 
@@ -5692,9 +6039,11 @@ class AssetMaker(ServerClient):
         ----------
         asset_guid: str
             Unique identifier of the asset.
+        graph_query_depth: int, default 3
+            The depth of the graph query.
         start_from: int, optional
         page_size: int, optional
-        output_format: str, optional
+        output_format: str, default "JSON"
         report_spec: dict | str, optional
 
         Returns
@@ -5717,20 +6066,26 @@ class AssetMaker(ServerClient):
             url,
             _type="SoftwareCapability",
             _gen_output=self._generate_referenceable_output,
+            graph_query_depth=graph_query_depth,
             start_from=start_from,
             page_size=page_size,
             output_format=output_format,
             report_spec=report_spec,
+            body=body,
+            **kwargs
         )
 
     @dynamic_catch
     def get_capability_use(
         self,
         asset_guid: str,
+        graph_query_depth: int = 3,
         start_from: int = 0,
         page_size: int = 0,
-        output_format: str = "DICT",
+        output_format: str = "JSON",
         report_spec: dict | str | None = None,
+        body: dict | ResultsRequestBody | None = None,
+        **kwargs
     ) -> list | dict | str:
         """Retrieve the software capabilities using a particular asset.
 
@@ -5738,9 +6093,11 @@ class AssetMaker(ServerClient):
         ----------
         asset_guid: str
             Unique identifier of the asset.
+        graph_query_depth: int, default 3
+            The depth of the graph query.
         start_from: int, optional
         page_size: int, optional
-        output_format: str, optional
+        output_format: str, default "JSON"
         report_spec: dict | str, optional
 
         Returns
@@ -5760,17 +6117,29 @@ class AssetMaker(ServerClient):
         """
         loop = asyncio.get_event_loop()
         return loop.run_until_complete(
-            self._async_get_capability_use(asset_guid, start_from, page_size, output_format, report_spec)
+            self._async_get_capability_use(
+                asset_guid=asset_guid,
+                graph_query_depth=graph_query_depth,
+                start_from=start_from,
+                page_size=page_size,
+                output_format=output_format,
+                report_spec=report_spec,
+                body=body,
+                **kwargs
+            )
         )
 
     @dynamic_catch
     async def _async_get_governance_engines(
         self,
         governance_service_guid: str,
+        graph_query_depth: int = 3,
         start_from: int = 0,
         page_size: int = 0,
-        output_format: str = "DICT",
+        output_format: str = "JSON",
         report_spec: dict | str | None = None,
+        body: dict | ResultsRequestBody | None = None,
+        **kwargs
     ) -> list | dict | str:
         """Retrieve the governance engines connected to a particular governance service. Async version.
 
@@ -5778,9 +6147,11 @@ class AssetMaker(ServerClient):
         ----------
         governance_service_guid: str
             Unique identifier of the governance service.
+        graph_query_depth: int, default 3
+            The depth of the graph query.
         start_from: int, optional
         page_size: int, optional
-        output_format: str, optional
+        output_format: str, default "JSON"
         report_spec: dict | str, optional
 
         Returns
@@ -5803,20 +6174,26 @@ class AssetMaker(ServerClient):
             url,
             _type="GovernanceEngine",
             _gen_output=self._generate_referenceable_output,
+            graph_query_depth=graph_query_depth,
             start_from=start_from,
             page_size=page_size,
             output_format=output_format,
             report_spec=report_spec,
+            body=body,
+            **kwargs
         )
 
     @dynamic_catch
     def get_governance_engines(
         self,
         governance_service_guid: str,
+        graph_query_depth: int = 3,
         start_from: int = 0,
         page_size: int = 0,
-        output_format: str = "DICT",
+        output_format: str = "JSON",
         report_spec: dict | str | None = None,
+        body: dict | ResultsRequestBody | None = None,
+        **kwargs
     ) -> list | dict | str:
         """Retrieve the governance engines connected to a particular governance service.
 
@@ -5824,9 +6201,11 @@ class AssetMaker(ServerClient):
         ----------
         governance_service_guid: str
             Unique identifier of the governance service.
+        graph_query_depth: int, default 3
+            The depth of the graph query.
         start_from: int, optional
         page_size: int, optional
-        output_format: str, optional
+        output_format: str, default "JSON"
         report_spec: dict | str, optional
 
         Returns
@@ -5847,7 +6226,14 @@ class AssetMaker(ServerClient):
         loop = asyncio.get_event_loop()
         return loop.run_until_complete(
             self._async_get_governance_engines(
-                governance_service_guid, start_from, page_size, output_format, report_spec
+                governance_service_guid=governance_service_guid,
+                graph_query_depth=graph_query_depth,
+                start_from=start_from,
+                page_size=page_size,
+                output_format=output_format,
+                report_spec=report_spec,
+                body=body,
+                **kwargs
             )
         )
 
@@ -5855,10 +6241,13 @@ class AssetMaker(ServerClient):
     async def _async_get_integration_groups(
         self,
         integration_connector_guid: str,
+        graph_query_depth: int = 3,
         start_from: int = 0,
         page_size: int = 0,
-        output_format: str = "DICT",
+        output_format: str = "JSON",
         report_spec: dict | str | None = None,
+        body: dict | ResultsRequestBody | None = None,
+        **kwargs
     ) -> list | dict | str:
         """Retrieve the integration groups connected to a particular integration connector. Async version.
 
@@ -5866,9 +6255,11 @@ class AssetMaker(ServerClient):
         ----------
         integration_connector_guid: str
             Unique identifier of the integration connector.
+        graph_query_depth: int, default 3
+            The depth of the graph query.
         start_from: int, optional
         page_size: int, optional
-        output_format: str, optional
+        output_format: str, default "JSON"
         report_spec: dict | str, optional
 
         Returns
@@ -5891,20 +6282,26 @@ class AssetMaker(ServerClient):
             url,
             _type="IntegrationGroup",
             _gen_output=self._generate_referenceable_output,
+            graph_query_depth=graph_query_depth,
             start_from=start_from,
             page_size=page_size,
             output_format=output_format,
             report_spec=report_spec,
+            body=body,
+            **kwargs
         )
 
     @dynamic_catch
     def get_integration_groups(
         self,
         integration_connector_guid: str,
+        graph_query_depth: int = 3,
         start_from: int = 0,
         page_size: int = 0,
-        output_format: str = "DICT",
+        output_format: str = "JSON",
         report_spec: dict | str | None = None,
+        body: dict | ResultsRequestBody | None = None,
+        **kwargs
     ) -> list | dict | str:
         """Retrieve the integration groups connected to a particular integration connector.
 
@@ -5912,9 +6309,11 @@ class AssetMaker(ServerClient):
         ----------
         integration_connector_guid: str
             Unique identifier of the integration connector.
+        graph_query_depth: int, default 3
+            The depth of the graph query.
         start_from: int, optional
         page_size: int, optional
-        output_format: str, optional
+        output_format: str, default "JSON"
         report_spec: dict | str, optional
 
         Returns
@@ -5935,7 +6334,14 @@ class AssetMaker(ServerClient):
         loop = asyncio.get_event_loop()
         return loop.run_until_complete(
             self._async_get_integration_groups(
-                integration_connector_guid, start_from, page_size, output_format, report_spec
+                integration_connector_guid=integration_connector_guid,
+                graph_query_depth=graph_query_depth,
+                start_from=start_from,
+                page_size=page_size,
+                output_format=output_format,
+                report_spec=report_spec,
+                body=body,
+                **kwargs
             )
         )
 
