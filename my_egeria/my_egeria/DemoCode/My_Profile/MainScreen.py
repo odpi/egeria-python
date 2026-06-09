@@ -41,7 +41,7 @@ class MainScreen(Screen):
             Static(f"Other Functions"),
             Static(f"[b]Select a function[/b]"),
             OptionList(
-                Option("User Identities", disabled=True),
+                Option("User Identities"),
                 Option("Catalogs/Shop for Data"),
                 Option("Edit Profile", disabled=True),
                 Option("Subscriptions", disabled=True),
