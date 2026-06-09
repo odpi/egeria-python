@@ -1190,7 +1190,7 @@ class ExternalReferences(ServerClient):
         ignore_case: bool = False,
         start_from: int = 0,
         page_size: int = 100,
-        output_format: str = 'JSON',
+        graph_query_depth: int = 3, output_format: str = 'JSON',
         report_spec: str | dict = "ExternalReference",
         **kwargs
     ) -> list | str:
@@ -1270,6 +1270,7 @@ class ExternalReferences(ServerClient):
 
         # Merge explicit parameters with kwargs
         params = {
+            'graph_query_depth': graph_query_depth,
             'search_string': search_string,
             'body': body,
             'starts_with': starts_with,
@@ -1300,7 +1301,7 @@ class ExternalReferences(ServerClient):
         ignore_case: bool = False,
         start_from: int = 0,
         page_size: int = 100,
-        output_format: str = 'JSON',
+        graph_query_depth: int = 3, output_format: str = 'JSON',
         report_spec: str | dict = "ExternalReference",
         **kwargs
     ) -> list | str:
@@ -1380,6 +1381,7 @@ class ExternalReferences(ServerClient):
         return loop.run_until_complete(
             self._async_find_external_references(
                 search_string=search_string,
+                graph_query_depth=graph_query_depth,
                 body=body,
                 starts_with=starts_with,
                 ends_with=ends_with,
@@ -1397,7 +1399,7 @@ class ExternalReferences(ServerClient):
                                                      classification_names: Optional[list[str]] = None,
                                                      body: Optional[dict | FilterRequestBody] = None,
                                                      start_from: int = 0, page_size: int = 0,
-                                                     output_format: str = 'JSON',
+                                                     graph_query_depth: int = 3, output_format: str = 'JSON',
                                                      report_spec: str | dict = "ExternalReference",
                                                      **kwargs) -> list | str:
         """ Returns the list of external references with a particular name.
@@ -1442,6 +1444,7 @@ class ExternalReferences(ServerClient):
         url = str(HttpUrl(f"{self.command_root}/external-references/by-name"))
 
         params = {
+            'graph_query_depth': graph_query_depth,
             'classification_names': classification_names,
             'start_from': start_from,
             'page_size': page_size,
@@ -1460,7 +1463,7 @@ class ExternalReferences(ServerClient):
 
     def get_external_references_by_name(self, name: Optional[str] = None, classification_names: Optional[list[str]] = None,
                                         body: Optional[dict | FilterRequestBody] = None,
-                                        start_from: int = 0, page_size: int = 0, output_format: str = 'JSON',
+                                        start_from: int = 0, page_size: int = 0, graph_query_depth: int = 3, output_format: str = 'JSON',
                                         report_spec: str | dict = "ExternalReference",
                                         **kwargs) -> list | str:
         """Returns the list of external references matching the filter string. Async version.
@@ -1498,6 +1501,7 @@ class ExternalReferences(ServerClient):
         """
         return asyncio.get_event_loop().run_until_complete(
             self._async_get_external_references_by_name(name=name, classification_names=classification_names,
+                                                        graph_query_depth=graph_query_depth,
                                                         body=body, start_from=start_from, page_size=page_size,
                                                         output_format=output_format, report_spec=report_spec,
                                                         **kwargs))
@@ -1505,7 +1509,7 @@ class ExternalReferences(ServerClient):
     @dynamic_catch
     async def _async_get_external_reference_by_guid(self, guid: str, element_type: Optional[str] = None,
                                                     body: Optional[dict | GetRequestBody] = None,
-                                                    output_format: str = 'JSON',
+                                                    graph_query_depth: int = 3, output_format: str = 'JSON',
                                                     report_spec: str | dict = "ExternalReference",
                                                     **kwargs) -> dict | str:
         """Return the properties of a specific external reference. Async version.
@@ -1557,6 +1561,7 @@ class ExternalReferences(ServerClient):
         type_ = element_type if element_type else "ExternalReference"
 
         params = {
+            'graph_query_depth': graph_query_depth,
             'output_format': output_format,
             'report_spec': report_spec,
             'body': body
@@ -1573,7 +1578,7 @@ class ExternalReferences(ServerClient):
     @dynamic_catch
     def get_external_reference_by_guid(self, guid: str, element_type: Optional[str] = None,
                                        body: Optional[dict | GetRequestBody] = None,
-                                       output_format: str = 'JSON',
+                                       graph_query_depth: int = 3, output_format: str = 'JSON',
                                        report_spec: str | dict = "ExternalReference",
                                        **kwargs) -> dict | str:
         """ Return the properties of a specific external reference. Async version.
@@ -1621,6 +1626,7 @@ class ExternalReferences(ServerClient):
         """
         return asyncio.get_event_loop().run_until_complete(
             self._async_get_external_reference_by_guid(guid=guid, element_type=element_type, body=body,
+                                                       graph_query_depth=graph_query_depth,
                                                        output_format=output_format, report_spec=report_spec,
                                                        **kwargs))
 

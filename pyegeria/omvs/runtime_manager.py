@@ -1624,7 +1624,7 @@ class RuntimeManager(ServerClient):
         filter_string: Optional[str] = None,
         start_from: int = 0,
         page_size: int = max_paging_size,
-        output_format: str = "JSON",
+        graph_query_depth: int = 3, output_format: str = "JSON",
         report_spec: str | dict = "Platforms",
         body: Optional[dict | FilterRequestBody] = None,
     ) -> str | list | dict:
@@ -1655,6 +1655,7 @@ class RuntimeManager(ServerClient):
         loop = asyncio.get_event_loop()
         response = loop.run_until_complete(
             self._async_get_platforms_by_name(
+                graph_query_depth,
                 filter_string, start_from, page_size, output_format, report_spec, body
             )
         )
@@ -1666,7 +1667,7 @@ class RuntimeManager(ServerClient):
         filter_string: Optional[str] = None,
         start_from: int = 0,
         page_size: int = 0,
-        output_format: str = "JSON",
+        graph_query_depth: int = 3, output_format: str = "JSON",
         report_spec: str | dict = "Platforms",
         body: Optional[dict | FilterRequestBody] = None,
     ) -> str | list | dict:
@@ -2010,7 +2011,7 @@ class RuntimeManager(ServerClient):
     async def _async_get_platform_by_guid(
         self,
         platform_guid: str,
-        output_format: str = "JSON",
+        graph_query_depth: int = 3, output_format: str = "JSON",
         report_spec: str | dict = "Platforms",
         body: Optional[dict | GetRequestBody] = None
     ) -> str | list:
@@ -2049,7 +2050,7 @@ class RuntimeManager(ServerClient):
     def get_platform_by_guid(
         self,
         platform_guid: str,
-        output_format: str = "JSON", report_spec: str | dict = "Platforms",
+        graph_query_depth: int = 3, output_format: str = "JSON", report_spec: str | dict = "Platforms",
         body: Optional[dict | GetRequestBody] = None,
     ) -> str | list:
         """Returns details about the platform's catalog entry (asset).
@@ -2079,7 +2080,7 @@ class RuntimeManager(ServerClient):
         """
         loop = asyncio.get_event_loop()
         response = loop.run_until_complete(
-            self._async_get_platform_by_guid(platform_guid, output_format, report_spec, body)
+            self._async_get_platform_by_guid(platform_guid, graph_query_depth, output_format, report_spec, body)
         )
         return response
 
@@ -2087,7 +2088,7 @@ class RuntimeManager(ServerClient):
     async def _async_get_server_by_guid(
         self,
         server_guid: Optional[str] = None,
-        output_format: str = "JSON",
+        graph_query_depth: int = 3, output_format: str = "JSON",
         report_spec: str | dict = "OMAGServers",
         body: Optional[dict | GetRequestBody] = None,
     ) -> str | dict:
@@ -2131,7 +2132,7 @@ class RuntimeManager(ServerClient):
     def get_server_by_guid(
         self,
         server_guid: Optional[str] = None,
-        output_format: str = "JSON",
+        graph_query_depth: int = 3, output_format: str = "JSON",
         report_spec: str | dict = "OMAGServers",
         body: Optional[dict | GetRequestBody] = None,
     ) -> str | dict:
@@ -2162,6 +2163,7 @@ class RuntimeManager(ServerClient):
         loop = asyncio.get_event_loop()
         response = loop.run_until_complete(
             self._async_get_server_by_guid(server_guid, output_format=output_format,
+                                           graph_query_depth=graph_query_depth,
                                            report_spec=report_spec, body=body)
         )
         return response
@@ -2172,7 +2174,7 @@ class RuntimeManager(ServerClient):
         filter_string: Optional[str] = None,
         start_from: int = 0,
         page_size: int = max_paging_size,
-        output_format: str = "JSON",
+        graph_query_depth: int = 3, output_format: str = "JSON",
         report_spec: str | dict = "OMAGServers",
         body: Optional[dict | FilterRequestBody] = None,
     ) -> str | list | dict:
@@ -2221,7 +2223,7 @@ class RuntimeManager(ServerClient):
         filter_string: str,
         start_from: int = 0,
         page_size: int = 0,
-        output_format: str = "JSON",
+        graph_query_depth: int = 3, output_format: str = "JSON",
         report_spec: str | dict = "OMAGServers",
         body: Optional[dict | SearchStringRequestBody] = None,
     ) -> str | list | dict:
@@ -2257,6 +2259,7 @@ class RuntimeManager(ServerClient):
         loop = asyncio.get_event_loop()
         response = loop.run_until_complete(
             self._async_get_servers_by_name(
+                graph_query_depth,
                 filter_string, start_from, page_size, output_format, report_spec, body
             )
         )

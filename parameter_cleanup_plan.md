@@ -84,93 +84,93 @@ async def _async_get_xxx_by_guid(
 ## Method Checklist
 
 ### actor_manager.py
-- [ ] `_async_find_actor_profiles(self, search_string='*', body=None, starts_with=True, ends_with=False, ignore_case=False, start_from=0, page_size=100, output_format='JSON', report_spec='Actor-Profiles', **kwargs)`
+- [x] `_async_find_actor_profiles(self, search_string='*', body=None, starts_with=True, ends_with=False, ignore_case=False, start_from=0, page_size=100, output_format='JSON', report_spec='Actor-Profiles', **kwargs)`
   - **Planned**: Standard Find Pattern
-- [ ] `_async_find_actor_roles(self, search_string='*', body=None, starts_with=True, ends_with=False, ignore_case=False, start_from=0, page_size=0, output_format='JSON', report_spec='Actor-Roles', **kwargs)`
+- [x] `_async_find_actor_roles(self, search_string='*', body=None, starts_with=True, ends_with=False, ignore_case=False, start_from=0, page_size=0, output_format='JSON', report_spec='Actor-Roles', **kwargs)`
   - **Planned**: Standard Find Pattern
-- [ ] `_async_find_contact_details(self, body=None)`
+- [x] `_async_find_contact_details(self, body=None)`
   - **Planned**: Standard Find Pattern
-- [ ] `_async_find_contribution_records(self, body=None)`
+- [x] `_async_find_contribution_records(self, body=None)`
   - **Planned**: Standard Find Pattern
-- [ ] `_async_find_perspectives(self, search_string='*', body=None, starts_with=True, ends_with=False, ignore_case=False, start_from=0, page_size=0, output_format='JSON', report_spec=None, **kwargs)`
+- [x] `_async_find_perspectives(self, search_string='*', body=None, starts_with=True, ends_with=False, ignore_case=False, start_from=0, page_size=0, output_format='JSON', report_spec=None, **kwargs)`
   - **Planned**: Standard Find Pattern
-- [ ] `_async_find_skills(self, search_string='*', body=None, starts_with=True, ends_with=False, ignore_case=False, start_from=0, page_size=0, output_format='JSON', report_spec=None, **kwargs)`
+- [x] `_async_find_skills(self, search_string='*', body=None, starts_with=True, ends_with=False, ignore_case=False, start_from=0, page_size=0, output_format='JSON', report_spec=None, **kwargs)`
   - **Planned**: Standard Find Pattern
-- [ ] `_async_find_user_identities(self, search_string='*', body=None, starts_with=True, ends_with=False, ignore_case=False, start_from=0, page_size=0, output_format='JSON', report_spec='User-Identities', **kwargs)`
+- [x] `_async_find_user_identities(self, search_string='*', body=None, starts_with=True, ends_with=False, ignore_case=False, start_from=0, page_size=0, output_format='JSON', report_spec='User-Identities', **kwargs)`
   - **Planned**: Standard Find Pattern
-- [ ] `_async_get_actor_profile_by_guid(self, actor_profile_guid, element_type=None, body=None, output_format='JSON', report_spec=None)`
+- [x] `_async_get_actor_profile_by_guid(self, actor_profile_guid, element_type=None, body=None, output_format='JSON', report_spec=None)`
   - **Planned**: Standard Get By GUID Pattern
-- [ ] `_async_get_actor_profiles_by_name(self, filter_string=None, classification_names=None, body=None, start_from=0, page_size=0, output_format='JSON', report_spec='Actor-Profiles')`
+- [x] `_async_get_actor_profiles_by_name(self, filter_string=None, classification_names=None, body=None, start_from=0, page_size=0, output_format='JSON', report_spec='Actor-Profiles')`
   - **Planned**: Standard Get By Name Pattern
-- [ ] `_async_get_actor_role_by_guid(self, actor_role_guid, element_type=None, body=None, output_format='JSON', report_spec=None)`
+- [x] `_async_get_actor_role_by_guid(self, actor_role_guid, element_type=None, body=None, output_format='JSON', report_spec=None)`
   - **Planned**: Standard Get By GUID Pattern
-- [ ] `_async_get_actor_roles_by_name(self, filter_string=None, classification_names=None, body=None, start_from=0, page_size=0, output_format='JSON', report_spec='Actor-Roles')`
+- [x] `_async_get_actor_roles_by_name(self, filter_string=None, classification_names=None, body=None, start_from=0, page_size=0, output_format='JSON', report_spec='Actor-Roles')`
   - **Planned**: Standard Get By Name Pattern
-- [ ] `_async_get_contact_details_by_guid(self, contact_details_guid, body=None)`
+- [x] `_async_get_contact_details_by_guid(self, contact_details_guid, body=None)`
   - **Planned**: Standard Get By GUID Pattern
-- [ ] `_async_get_contact_details_by_name(self, body=None)`
+- [x] `_async_get_contact_details_by_name(self, body=None)`
   - **Planned**: Standard Get By Name Pattern
-- [ ] `_async_get_contribution_record_by_guid(self, contribution_record_guid, body=None)`
+- [x] `_async_get_contribution_record_by_guid(self, contribution_record_guid, body=None)`
   - **Planned**: Standard Get By GUID Pattern
-- [ ] `_async_get_contribution_records_by_name(self, body=None)`
+- [x] `_async_get_contribution_records_by_name(self, body=None)`
   - **Planned**: Standard Get By Name Pattern
-- [ ] `_async_get_perspective_by_guid(self, perspective_guid, body=None)`
+- [x] `_async_get_perspective_by_guid(self, perspective_guid, body=None)`
   - **Planned**: Standard Get By GUID Pattern
-- [ ] `_async_get_perspectives_by_name(self, filter_string=None, body=None, start_from=0, page_size=0, output_format='JSON', report_spec=None)`
+- [x] `_async_get_perspectives_by_name(self, filter_string=None, body=None, start_from=0, page_size=0, output_format='JSON', report_spec=None)`
   - **Planned**: Standard Get By Name Pattern
-- [ ] `_async_get_skill_by_guid(self, skill_guid, body=None)`
+- [x] `_async_get_skill_by_guid(self, skill_guid, body=None)`
   - **Planned**: Standard Get By GUID Pattern
-- [ ] `_async_get_skills_by_name(self, filter_string=None, body=None, start_from=0, page_size=0, output_format='JSON', report_spec=None)`
+- [x] `_async_get_skills_by_name(self, filter_string=None, body=None, start_from=0, page_size=0, output_format='JSON', report_spec=None)`
   - **Planned**: Standard Get By Name Pattern
-- [ ] `_async_get_user_identities_by_name(self, filter_string=None, classification_names=None, body=None, start_from=0, page_size=0, output_format='JSON', report_spec='User-Identities')`
+- [x] `_async_get_user_identities_by_name(self, filter_string=None, classification_names=None, body=None, start_from=0, page_size=0, output_format='JSON', report_spec='User-Identities')`
   - **Planned**: Standard Get By Name Pattern
-- [ ] `_async_get_user_identity_by_guid(self, user_identity_guid, element_type=None, body=None, output_format='JSON', report_spec='User-Identities')`
+- [x] `_async_get_user_identity_by_guid(self, user_identity_guid, element_type=None, body=None, output_format='JSON', report_spec='User-Identities')`
   - **Planned**: Standard Get By GUID Pattern
-- [ ] `find_actor_profiles(self, search_string='*', body=None, starts_with=True, ends_with=False, ignore_case=False, start_from=0, page_size=100, output_format='JSON', report_spec='Actor-Profiles', **kwargs)`
+- [x] `find_actor_profiles(self, search_string='*', body=None, starts_with=True, ends_with=False, ignore_case=False, start_from=0, page_size=100, output_format='JSON', report_spec='Actor-Profiles', **kwargs)`
   - **Planned**: Standard Find Pattern
-- [ ] `find_actor_roles(self, search_string='*', body=None, starts_with=True, ends_with=False, ignore_case=False, start_from=0, page_size=0, output_format='JSON', report_spec='Actor-Roles', **kwargs)`
+- [x] `find_actor_roles(self, search_string='*', body=None, starts_with=True, ends_with=False, ignore_case=False, start_from=0, page_size=0, output_format='JSON', report_spec='Actor-Roles', **kwargs)`
   - **Planned**: Standard Find Pattern
-- [ ] `find_contact_details(self, body=None)`
+- [x] `find_contact_details(self, body=None)`
   - **Planned**: Standard Find Pattern
-- [ ] `find_contribution_records(self, body=None)`
+- [x] `find_contribution_records(self, body=None)`
   - **Planned**: Standard Find Pattern
-- [ ] `find_perspectives(self, search_string='*', body=None, starts_with=True, ends_with=False, ignore_case=False, start_from=0, page_size=0, output_format='JSON', report_spec=None, **kwargs)`
+- [x] `find_perspectives(self, search_string='*', body=None, starts_with=True, ends_with=False, ignore_case=False, start_from=0, page_size=0, output_format='JSON', report_spec=None, **kwargs)`
   - **Planned**: Standard Find Pattern
-- [ ] `find_skills(self, search_string='*', body=None, starts_with=True, ends_with=False, ignore_case=False, start_from=0, page_size=0, output_format='JSON', report_spec=None, **kwargs)`
+- [x] `find_skills(self, search_string='*', body=None, starts_with=True, ends_with=False, ignore_case=False, start_from=0, page_size=0, output_format='JSON', report_spec=None, **kwargs)`
   - **Planned**: Standard Find Pattern
-- [ ] `find_user_identities(self, search_string='*', body=None, starts_with=True, ends_with=False, ignore_case=False, start_from=0, page_size=0, output_format='JSON', report_spec='User-Identities', **kwargs)`
+- [x] `find_user_identities(self, search_string='*', body=None, starts_with=True, ends_with=False, ignore_case=False, start_from=0, page_size=0, output_format='JSON', report_spec='User-Identities', **kwargs)`
   - **Planned**: Standard Find Pattern
-- [ ] `get_actor_profile_by_guid(self, actor_profile_guid, element_type=None, body=None, output_format='JSON', report_spec=None)`
+- [x] `get_actor_profile_by_guid(self, actor_profile_guid, element_type=None, body=None, output_format='JSON', report_spec=None)`
   - **Planned**: Standard Get By GUID Pattern
-- [ ] `get_actor_profiles_by_name(self, filter_string=None, classification_names=None, body=None, start_from=0, page_size=0, output_format='JSON', report_spec='Actor-Profiles')`
+- [x] `get_actor_profiles_by_name(self, filter_string=None, classification_names=None, body=None, start_from=0, page_size=0, output_format='JSON', report_spec='Actor-Profiles')`
   - **Planned**: Standard Get By Name Pattern
-- [ ] `get_actor_role_by_guid(self, actor_role_guid, element_type=None, body=None, output_format='JSON', report_spec=None)`
+- [x] `get_actor_role_by_guid(self, actor_role_guid, element_type=None, body=None, output_format='JSON', report_spec=None)`
   - **Planned**: Standard Get By GUID Pattern
-- [ ] `get_actor_roles_by_name(self, filter_string=None, classification_names=None, body=None, start_from=0, page_size=0, output_format='JSON', report_spec='Actor-Roles')`
+- [x] `get_actor_roles_by_name(self, filter_string=None, classification_names=None, body=None, start_from=0, page_size=0, output_format='JSON', report_spec='Actor-Roles')`
   - **Planned**: Standard Get By Name Pattern
-- [ ] `get_contact_details_by_guid(self, contact_details_guid, body=None)`
+- [x] `get_contact_details_by_guid(self, contact_details_guid, body=None)`
   - **Planned**: Standard Get By GUID Pattern
-- [ ] `get_contact_details_by_name(self, body=None)`
+- [x] `get_contact_details_by_name(self, body=None)`
   - **Planned**: Standard Get By Name Pattern
-- [ ] `get_contribution_record_by_guid(self, contribution_record_guid, body=None)`
+- [x] `get_contribution_record_by_guid(self, contribution_record_guid, body=None)`
   - **Planned**: Standard Get By GUID Pattern
-- [ ] `get_contribution_records_by_name(self, body=None)`
+- [x] `get_contribution_records_by_name(self, body=None)`
   - **Planned**: Standard Get By Name Pattern
-- [ ] `get_perspective_by_guid(self, perspective_guid, body=None)`
+- [x] `get_perspective_by_guid(self, perspective_guid, body=None)`
   - **Planned**: Standard Get By GUID Pattern
-- [ ] `get_perspectives_by_name(self, filter_string=None, body=None, start_from=0, page_size=0, output_format='JSON', report_spec=None)`
+- [x] `get_perspectives_by_name(self, filter_string=None, body=None, start_from=0, page_size=0, output_format='JSON', report_spec=None)`
   - **Planned**: Standard Get By Name Pattern
-- [ ] `get_skill_by_guid(self, skill_guid, body=None)`
+- [x] `get_skill_by_guid(self, skill_guid, body=None)`
   - **Planned**: Standard Get By GUID Pattern
-- [ ] `get_skills_by_name(self, filter_string=None, body=None, start_from=0, page_size=0, output_format='JSON', report_spec=None)`
+- [x] `get_skills_by_name(self, filter_string=None, body=None, start_from=0, page_size=0, output_format='JSON', report_spec=None)`
   - **Planned**: Standard Get By Name Pattern
-- [ ] `get_user_identities_by_name(self, filter_string=None, classification_names=None, body=None, start_from=0, page_size=0, output_format='JSON', report_spec='User-Identities')`
+- [x] `get_user_identities_by_name(self, filter_string=None, classification_names=None, body=None, start_from=0, page_size=0, output_format='JSON', report_spec='User-Identities')`
   - **Planned**: Standard Get By Name Pattern
-- [ ] `get_user_identity_by_guid(self, user_identity_guid, element_type=None, body=None, output_format='JSON', report_spec='User-Identities')`
+- [x] `get_user_identity_by_guid(self, user_identity_guid, element_type=None, body=None, output_format='JSON', report_spec='User-Identities')`
   - **Planned**: Standard Get By GUID Pattern
 
 ### asset_catalog.py
-- [ ] `_async_find_in_asset_domain(self, search_string='*', body=None, starts_with=True, ends_with=False, ignore_case=False, start_from=0, page_size=100, output_format='JSON', report_spec='Referenceable', **kwargs)`
+- [x] `_async_find_in_asset_domain(self, search_string='*', body=None, starts_with=True, ends_with=False, ignore_case=False, start_from=0, page_size=100, output_format='JSON', report_spec='Referenceable', **kwargs)`
   - **Planned**: Standard Find Pattern
 - [ ] `_async_get_asset_graph(self, asset_guid, start_from=0, page_size=0, output_format='MERMAID', report_spec='Common-Mermaid', body=None)`
   - **Planned**: TODO
@@ -180,7 +180,7 @@ async def _async_get_xxx_by_guid(
   - **Planned**: TODO
 - [ ] `_async_get_assets_by_metadata_collection_id(self, metadata_collection_id, type_name=None, effective_time=None, start_from=0, page_size=0, output_format='JSON', report_spec='Referenceable')`
   - **Planned**: TODO
-- [ ] `find_in_asset_domain(self, search_string='*', body=None, starts_with=True, ends_with=False, ignore_case=False, start_from=0, page_size=100, output_format='JSON', report_spec='Referenceable', **kwargs)`
+- [x] `find_in_asset_domain(self, search_string='*', body=None, starts_with=True, ends_with=False, ignore_case=False, start_from=0, page_size=100, output_format='JSON', report_spec='Referenceable', **kwargs)`
   - **Planned**: Standard Find Pattern
 - [ ] `get_asset_graph(self, asset_guid, start_from=0, page_size=0, output_format='MERMAID', report_spec='Common-Mermaid', body=None)`
   - **Planned**: TODO
@@ -206,43 +206,43 @@ async def _async_get_xxx_by_guid(
   - **Planned**: Standard Find Pattern
 - [x] `_async_find_software_capabilities(self, search_string: str = "*", starts_with: bool = True, ends_with: bool = False, ignore_case: bool = True, anchor_domain: Optional[str] = None, metadata_element_type: Optional[str] = None, metadata_element_subtypes: Optional[list[str]] = None, skip_relationships: Optional[list[str]] = None, include_only_relationships: Optional[list[str]] = None, skip_classified_elements: Optional[list[str]] = None, include_only_classified_elements: Optional[list[str]] = None, graph_query_depth: int = 3, governance_zone_filter: Optional[list[str]] = None, as_of_time: Optional[str] = None, relationship_page_size: int = 0, limit_results_by_status: Optional[list[str]] = None, sequencing_order: Optional[str] = None, sequencing_property: Optional[str] = None, output_format: str = "JSON", report_spec: dict | str | None = None, start_from: int = 0, page_size: int = 0, property_names: Optional[list[str]] = None, body: dict | SearchStringRequestBody | None = None, **kwargs)`
   - **Planned**: Standard Find Pattern
-- [x] `_async_get_action_target(self, action_target_guid: str, include_only_relationships: list[str] | None = None, skip_relationships: list[str] | None = None, graph_query_depth: int = 3, output_format: str = "JSON", report_spec: str | dict = None, body: dict | GetRequestBody | None = None, **kwargs)`
+- [ ] `_async_get_action_target(self, action_target_guid: str, include_only_relationships: list[str] | None = None, skip_relationships: list[str] | None = None, graph_query_depth: int = 3, output_format: str = "JSON", report_spec: str | dict = None, body: dict | GetRequestBody | None = None, **kwargs)`
   - **Planned**: Standard Get By GUID Pattern
-- [x] `_async_get_action_targets(self, action_guid: str, activity_status_list: list[str] = ["IN_PROGRESS"], graph_query_depth: int = 3, start_from: int = 0, page_size: int = 0, limit_results_by_status: Optional[list[str]] = None, sequencing_order: Optional[str] = None, sequencing_property: Optional[str] = None, body: dict | ActivityStatusRequestBody | None = None, output_format: str = "JSON", report_spec: str | dict = None, **kwargs)`
+- [ ] `_async_get_action_targets(self, action_guid: str, activity_status_list: list[str] = ["IN_PROGRESS"], graph_query_depth: int = 3, start_from: int = 0, page_size: int = 0, limit_results_by_status: Optional[list[str]] = None, sequencing_order: Optional[str] = None, sequencing_property: Optional[str] = None, body: dict | ActivityStatusRequestBody | None = None, output_format: str = "JSON", report_spec: str | dict = None, **kwargs)`
   - **Planned**: TODO
-- [x] `_async_get_actions_for_action_target(self, metadata_element_guid: str, activity_status_list: list[str] = ["IN_PROGRESS"], graph_query_depth: int = 3, start_from: int = 0, page_size: int = 0, limit_results_by_status: Optional[list[str]] = None, sequencing_order: Optional[str] = None, sequencing_property: Optional[str] = None, body: dict | ActivityStatusRequestBody | None = None, output_format: str = "JSON", report_spec: str | dict = None, **kwargs)`
+- [ ] `_async_get_actions_for_action_target(self, metadata_element_guid: str, activity_status_list: list[str] = ["IN_PROGRESS"], graph_query_depth: int = 3, start_from: int = 0, page_size: int = 0, limit_results_by_status: Optional[list[str]] = None, sequencing_order: Optional[str] = None, sequencing_property: Optional[str] = None, body: dict | ActivityStatusRequestBody | None = None, output_format: str = "JSON", report_spec: str | dict = None, **kwargs)`
   - **Planned**: TODO
-- [x] `_async_get_actions_for_requestor(self, metadata_element_guid: str, activity_status_list: list[str] = ["IN_PROGRESS"], graph_query_depth: int = 3, start_from: int = 0, page_size: int = 0, limit_results_by_status: Optional[list[str]] = None, sequencing_order: Optional[str] = None, sequencing_property: Optional[str] = None, body: dict | ActivityStatusRequestBody | None = None, output_format: str = "JSON", report_spec: str | dict = None, **kwargs)`
+- [ ] `_async_get_actions_for_requestor(self, metadata_element_guid: str, activity_status_list: list[str] = ["IN_PROGRESS"], graph_query_depth: int = 3, start_from: int = 0, page_size: int = 0, limit_results_by_status: Optional[list[str]] = None, sequencing_order: Optional[str] = None, sequencing_property: Optional[str] = None, body: dict | ActivityStatusRequestBody | None = None, output_format: str = "JSON", report_spec: str | dict = None, **kwargs)`
   - **Planned**: TODO
-- [x] `_async_get_actions_for_sponsor(self, metadata_element_guid: str, activity_status_list: list[str] = ["IN_PROGRESS"], graph_query_depth: int = 3, start_from: int = 0, page_size: int = 0, limit_results_by_status: Optional[list[str]] = None, sequencing_order: Optional[str] = None, sequencing_property: Optional[str] = None, body: dict | ActivityStatusRequestBody | None = None, output_format: str = "JSON", report_spec: str | dict = None, **kwargs)`
+- [ ] `_async_get_actions_for_sponsor(self, metadata_element_guid: str, activity_status_list: list[str] = ["IN_PROGRESS"], graph_query_depth: int = 3, start_from: int = 0, page_size: int = 0, limit_results_by_status: Optional[list[str]] = None, sequencing_order: Optional[str] = None, sequencing_property: Optional[str] = None, body: dict | ActivityStatusRequestBody | None = None, output_format: str = "JSON", report_spec: str | dict = None, **kwargs)`
   - **Planned**: TODO
 - [x] `_async_get_asset_by_guid(self, guid: str, include_only_relationships: list[str] | None = None, skip_relationships: list[str] | None = None, graph_query_depth: int = 3, output_format: str = "JSON", report_spec: dict | str | None = None, body: dict | GetRequestBody | None = None, **kwargs)`
   - **Planned**: Standard Get By GUID Pattern
 - [x] `_async_get_assets_by_name(self, name: str, metadata_element_type_name: str | None = "Asset", metadata_element_subtypes: list[str] | None = None, include_only_classified_elements: list[str] | None = None, include_only_relationships: list[str] | None = None, skip_relationships: list[str] | None = None, graph_query_depth: int = 3, start_from: int = 0, page_size: int = 0, output_format: str = "JSON", report_spec: dict | str | None = None, body: dict | FilterRequestBody | None = None, **kwargs)`
   - **Planned**: Standard Get By Name Pattern
-- [x] `_async_get_assigned_actions(self, actor_guid: str, activity_status_list: list[str] = ["IN_PROGRESS"], graph_query_depth: int = 3, start_from: int = 0, page_size: int = 0, limit_results_by_status: Optional[list[str]] = None, sequencing_order: Optional[str] = None, sequencing_property: Optional[str] = None, body: dict | ActivityStatusRequestBody | None = None, output_format: str = "JSON", report_spec: str | dict = None, **kwargs)`
+- [ ] `_async_get_assigned_actions(self, actor_guid: str, activity_status_list: list[str] = ["IN_PROGRESS"], graph_query_depth: int = 3, start_from: int = 0, page_size: int = 0, limit_results_by_status: Optional[list[str]] = None, sequencing_order: Optional[str] = None, sequencing_property: Optional[str] = None, body: dict | ActivityStatusRequestBody | None = None, output_format: str = "JSON", report_spec: str | dict = None, **kwargs)`
   - **Planned**: TODO
-- [x] `_async_get_capability_use(self, asset_guid: str, graph_query_depth: int = 3, start_from: int = 0, page_size: int = 0, output_format: str = "JSON", report_spec: dict | str | None = None, body: dict | ResultsRequestBody | None = None, **kwargs)`
+- [ ] `_async_get_capability_use(self, asset_guid: str, graph_query_depth: int = 3, start_from: int = 0, page_size: int = 0, output_format: str = "JSON", report_spec: dict | str | None = None, body: dict | ResultsRequestBody | None = None, **kwargs)`
   - **Planned**: TODO
-- [x] `_async_get_catalog_target(self, guid: str, graph_query_depth: int = 3, output_format: str = "JSON", report_spec: dict | str | None = None, body: dict | GetRequestBody | None = None, **kwargs)`
+- [ ] `_async_get_catalog_target(self, guid: str, graph_query_depth: int = 3, output_format: str = "JSON", report_spec: dict | str | None = None, body: dict | GetRequestBody | None = None, **kwargs)`
   - **Planned**: TODO
-- [x] `_async_get_catalog_targets(self, integration_connector_guid: str, graph_query_depth: int = 3, start_from: int = 0, page_size: int = 0, output_format: str = "JSON", report_spec: dict | str | None = None, body: dict | ResultsRequestBody | None = None, **kwargs)`
+- [ ] `_async_get_catalog_targets(self, integration_connector_guid: str, graph_query_depth: int = 3, start_from: int = 0, page_size: int = 0, output_format: str = "JSON", report_spec: dict | str | None = None, body: dict | ResultsRequestBody | None = None, **kwargs)`
   - **Planned**: TODO
-- [x] `_async_get_data_assets_by_category(self, category: str, content_status_list: list[str] = ["ACTIVE"], graph_query_depth: int = 3, start_from: int = 0, page_size: int = 0, output_format: str = "JSON", report_spec: str | dict = None, body: Optional[dict | ContentStatusFilterRequestBody] = None, **kwargs)`
+- [ ] `_async_get_data_assets_by_category(self, category: str, content_status_list: list[str] = ["ACTIVE"], graph_query_depth: int = 3, start_from: int = 0, page_size: int = 0, output_format: str = "JSON", report_spec: str | dict = None, body: Optional[dict | ContentStatusFilterRequestBody] = None, **kwargs)`
   - **Planned**: TODO
-- [x] `_async_get_governance_engines(self, governance_service_guid: str, graph_query_depth: int = 3, start_from: int = 0, page_size: int = 0, output_format: str = "JSON", report_spec: dict | str | None = None, body: dict | ResultsRequestBody | None = None, **kwargs)`
+- [ ] `_async_get_governance_engines(self, governance_service_guid: str, graph_query_depth: int = 3, start_from: int = 0, page_size: int = 0, output_format: str = "JSON", report_spec: dict | str | None = None, body: dict | ResultsRequestBody | None = None, **kwargs)`
   - **Planned**: TODO
-- [x] `_async_get_infrastructure_by_category(self, category: str, deployment_status_list: list[str] = ["ACTIVE"], graph_query_depth: int = 3, start_from: int = 0, page_size: int = 0, output_format: str = "JSON", report_spec: str | dict = None, body: Optional[dict | DeploymentStatusFilterRequestBody] = None, **kwargs)`
+- [ ] `_async_get_infrastructure_by_category(self, category: str, deployment_status_list: list[str] = ["ACTIVE"], graph_query_depth: int = 3, start_from: int = 0, page_size: int = 0, output_format: str = "JSON", report_spec: str | dict = None, body: Optional[dict | DeploymentStatusFilterRequestBody] = None, **kwargs)`
   - **Planned**: TODO
-- [x] `_async_get_integration_groups(self, integration_connector_guid: str, graph_query_depth: int = 3, start_from: int = 0, page_size: int = 0, output_format: str = "JSON", report_spec: dict | str | None = None, body: dict | ResultsRequestBody | None = None, **kwargs)`
+- [ ] `_async_get_integration_groups(self, integration_connector_guid: str, graph_query_depth: int = 3, start_from: int = 0, page_size: int = 0, output_format: str = "JSON", report_spec: dict | str | None = None, body: dict | ResultsRequestBody | None = None, **kwargs)`
   - **Planned**: TODO
-- [x] `_async_get_processes_by_category(self, category: str, activity_status_list: list[str] = ["IN_PROGRESS"], graph_query_depth: int = 3, start_from: int = 0, page_size: int = 0, output_format: str = "JSON", report_spec: str | dict = None, body: Optional[dict | ActivityStatusFilterRequestBody] = None, **kwargs)`
+- [ ] `_async_get_processes_by_category(self, category: str, activity_status_list: list[str] = ["IN_PROGRESS"], graph_query_depth: int = 3, start_from: int = 0, page_size: int = 0, output_format: str = "JSON", report_spec: str | dict = None, body: Optional[dict | ActivityStatusFilterRequestBody] = None, **kwargs)`
   - **Planned**: TODO
-- [x] `_async_get_software_capabilities_by_deployed_implementation_type(self, deployed_implementation_type: str, metadata_element_type_name: str | None = "SoftwareCapability", metadata_element_subtypes: list[str] | None = None, include_only_relationships: list[str] | None = None, skip_relationships: list[str] | None = None, graph_query_depth: int = 3, start_from: int = 0, page_size: int = 0, output_format: str = "JSON", report_spec: str | dict = None, body: Optional[dict | FilterRequestBody] = None, **kwargs)`
+- [ ] `_async_get_software_capabilities_by_deployed_implementation_type(self, deployed_implementation_type: str, metadata_element_type_name: str | None = "SoftwareCapability", metadata_element_subtypes: list[str] | None = None, include_only_relationships: list[str] | None = None, skip_relationships: list[str] | None = None, graph_query_depth: int = 3, start_from: int = 0, page_size: int = 0, output_format: str = "JSON", report_spec: str | dict = None, body: Optional[dict | FilterRequestBody] = None, **kwargs)`
   - **Planned**: TODO
 - [x] `_async_get_software_capabilities_by_name(self, name: str, metadata_element_type_name: str | None = "SoftwareCapability", metadata_element_subtypes: list[str] | None = None, include_only_relationships: list[str] | None = None, skip_relationships: list[str] | None = None, graph_query_depth: int = 3, start_from: int = 0, page_size: int = 0, output_format: str = "JSON", report_spec: str | dict = None, body: Optional[dict | FilterRequestBody] = None, **kwargs)`
   - **Planned**: Standard Get By Name Pattern
-- [x] `_async_get_software_capabilities_for_infrastructure(self, infrastructure_guid: str, graph_query_depth: int = 3, start_from: int = 0, page_size: int = 0, output_format: str = "JSON", report_spec: dict | str | None = None, body: dict | ResultsRequestBody | None = None, **kwargs)`
+- [ ] `_async_get_software_capabilities_for_infrastructure(self, infrastructure_guid: str, graph_query_depth: int = 3, start_from: int = 0, page_size: int = 0, output_format: str = "JSON", report_spec: dict | str | None = None, body: dict | ResultsRequestBody | None = None, **kwargs)`
   - **Planned**: TODO
 - [x] `_async_get_software_capability_by_guid(self, guid: str, include_only_relationships: list[str] | None = None, skip_relationships: list[str] | None = None, graph_query_depth: int = 3, output_format: str = "JSON", report_spec: dict | str | None = None, body: dict | GetRequestBody | None = None, **kwargs)`
   - **Planned**: Standard Get By GUID Pattern
@@ -256,49 +256,49 @@ async def _async_get_xxx_by_guid(
   - **Planned**: Standard Find Pattern
 - [x] `find_software_capabilities(self, search_string: str = "*", starts_with: bool = True, ends_with: bool = False, ignore_case: bool = True, anchor_domain: Optional[str] = None, metadata_element_type: Optional[str] = None, metadata_element_subtypes: Optional[list[str]] = None, skip_relationships: Optional[list[str]] = None, include_only_relationships: Optional[list[str]] = None, skip_classified_elements: Optional[list[str]] = None, include_only_classified_elements: Optional[list[str]] = None, graph_query_depth: int = 3, governance_zone_filter: Optional[list[str]] = None, as_of_time: Optional[str] = None, relationship_page_size: int = 0, limit_results_by_status: Optional[list[str]] = None, sequencing_order: Optional[str] = None, sequencing_property: Optional[str] = None, output_format: str = "JSON", report_spec: dict | str | None = None, start_from: int = 0, page_size: int = 0, property_names: Optional[list[str]] = None, body: dict | SearchStringRequestBody | None = None, **kwargs)`
   - **Planned**: Standard Find Pattern
-- [x] `get_action_target(self, action_target_guid: str, include_only_relationships: list[str] | None = None, skip_relationships: list[str] | None = None, graph_query_depth: int = 3, output_format: str = "JSON", report_spec: str | dict = None, body: dict | GetRequestBody | None = None, **kwargs)`
+- [ ] `get_action_target(self, action_target_guid: str, include_only_relationships: list[str] | None = None, skip_relationships: list[str] | None = None, graph_query_depth: int = 3, output_format: str = "JSON", report_spec: str | dict = None, body: dict | GetRequestBody | None = None, **kwargs)`
   - **Planned**: TODO
-- [x] `get_action_targets(self, action_guid: str, activity_status_list: list[str] = ["IN_PROGRESS"], graph_query_depth: int = 3, start_from: int = 0, page_size: int = 0, limit_results_by_status: Optional[list[str]] = None, sequencing_order: Optional[str] = None, sequencing_property: Optional[str] = None, body: dict | ActivityStatusRequestBody | None = None, output_format: str = "JSON", report_spec: str | dict = None, **kwargs)`
+- [ ] `get_action_targets(self, action_guid: str, activity_status_list: list[str] = ["IN_PROGRESS"], graph_query_depth: int = 3, start_from: int = 0, page_size: int = 0, limit_results_by_status: Optional[list[str]] = None, sequencing_order: Optional[str] = None, sequencing_property: Optional[str] = None, body: dict | ActivityStatusRequestBody | None = None, output_format: str = "JSON", report_spec: str | dict = None, **kwargs)`
   - **Planned**: TODO
-- [x] `get_actions_for_action_target(self, metadata_element_guid: str, activity_status_list: list[str] = ["IN_PROGRESS"], graph_query_depth: int = 3, start_from: int = 0, page_size: int = 0, limit_results_by_status: Optional[list[str]] = None, sequencing_order: Optional[str] = None, sequencing_property: Optional[str] = None, body: dict | ActivityStatusRequestBody | None = None, output_format: str = "JSON", report_spec: str | dict = None, **kwargs)`
+- [ ] `get_actions_for_action_target(self, metadata_element_guid: str, activity_status_list: list[str] = ["IN_PROGRESS"], graph_query_depth: int = 3, start_from: int = 0, page_size: int = 0, limit_results_by_status: Optional[list[str]] = None, sequencing_order: Optional[str] = None, sequencing_property: Optional[str] = None, body: dict | ActivityStatusRequestBody | None = None, output_format: str = "JSON", report_spec: str | dict = None, **kwargs)`
   - **Planned**: TODO
-- [x] `get_actions_for_requestor(self, metadata_element_guid: str, activity_status_list: list[str] = ["IN_PROGRESS"], graph_query_depth: int = 3, start_from: int = 0, page_size: int = 0, limit_results_by_status: Optional[list[str]] = None, sequencing_order: Optional[str] = None, sequencing_property: Optional[str] = None, body: dict | ActivityStatusRequestBody | None = None, output_format: str = "JSON", report_spec: str | dict = None, **kwargs)`
+- [ ] `get_actions_for_requestor(self, metadata_element_guid: str, activity_status_list: list[str] = ["IN_PROGRESS"], graph_query_depth: int = 3, start_from: int = 0, page_size: int = 0, limit_results_by_status: Optional[list[str]] = None, sequencing_order: Optional[str] = None, sequencing_property: Optional[str] = None, body: dict | ActivityStatusRequestBody | None = None, output_format: str = "JSON", report_spec: str | dict = None, **kwargs)`
   - **Planned**: TODO
-- [x] `get_actions_for_sponsor(self, metadata_element_guid: str, activity_status_list: list[str] = ["IN_PROGRESS"], graph_query_depth: int = 3, start_from: int = 0, page_size: int = 0, limit_results_by_status: Optional[list[str]] = None, sequencing_order: Optional[str] = None, sequencing_property: Optional[str] = None, body: dict | ActivityStatusRequestBody | None = None, output_format: str = "JSON", report_spec: str | dict = None, **kwargs)`
+- [ ] `get_actions_for_sponsor(self, metadata_element_guid: str, activity_status_list: list[str] = ["IN_PROGRESS"], graph_query_depth: int = 3, start_from: int = 0, page_size: int = 0, limit_results_by_status: Optional[list[str]] = None, sequencing_order: Optional[str] = None, sequencing_property: Optional[str] = None, body: dict | ActivityStatusRequestBody | None = None, output_format: str = "JSON", report_spec: str | dict = None, **kwargs)`
   - **Planned**: TODO
 - [x] `get_asset_by_guid(self, guid: str, include_only_relationships: list[str] | None = None, skip_relationships: list[str] | None = None, graph_query_depth: int = 3, output_format: str = "JSON", report_spec: dict | str | None = None, body: dict | GetRequestBody | None = None, **kwargs)`
   - **Planned**: Standard Get By GUID Pattern
 - [x] `get_assets_by_name(self, name: str, metadata_element_type_name: str | None = "Asset", metadata_element_subtypes: list[str] | None = None, include_only_classified_elements: list[str] | None = None, include_only_relationships: list[str] | None = None, skip_relationships: list[str] | None = None, graph_query_depth: int = 3, start_from: int = 0, page_size: int = 0, output_format: str = "JSON", report_spec: dict | str | None = None, body: dict | FilterRequestBody | None = None, **kwargs)`
   - **Planned**: Standard Get By Name Pattern
-- [x] `get_assigned_actions(self, actor_guid: str, activity_status_list: list[str] = ["IN_PROGRESS"], graph_query_depth: int = 3, start_from: int = 0, page_size: int = 0, limit_results_by_status: Optional[list[str]] = None, sequencing_order: Optional[str] = None, sequencing_property: Optional[str] = None, body: dict | ActivityStatusRequestBody | None = None, output_format: str = "JSON", report_spec: str | dict = None, **kwargs)`
+- [ ] `get_assigned_actions(self, actor_guid: str, activity_status_list: list[str] = ["IN_PROGRESS"], graph_query_depth: int = 3, start_from: int = 0, page_size: int = 0, limit_results_by_status: Optional[list[str]] = None, sequencing_order: Optional[str] = None, sequencing_property: Optional[str] = None, body: dict | ActivityStatusRequestBody | None = None, output_format: str = "JSON", report_spec: str | dict = None, **kwargs)`
   - **Planned**: TODO
-- [x] `get_capability_use(self, asset_guid: str, graph_query_depth: int = 3, start_from: int = 0, page_size: int = 0, output_format: str = "JSON", report_spec: dict | str | None = None, body: dict | ResultsRequestBody | None = None, **kwargs)`
+- [ ] `get_capability_use(self, asset_guid: str, graph_query_depth: int = 3, start_from: int = 0, page_size: int = 0, output_format: str = "JSON", report_spec: dict | str | None = None, body: dict | ResultsRequestBody | None = None, **kwargs)`
   - **Planned**: TODO
-- [x] `get_catalog_target(self, guid: str, graph_query_depth: int = 3, output_format: str = "JSON", report_spec: dict | str | None = None, body: dict | GetRequestBody | None = None, **kwargs)`
+- [ ] `get_catalog_target(self, guid: str, graph_query_depth: int = 3, output_format: str = "JSON", report_spec: dict | str | None = None, body: dict | GetRequestBody | None = None, **kwargs)`
   - **Planned**: TODO
-- [x] `get_catalog_targets(self, integration_connector_guid: str, graph_query_depth: int = 3, start_from: int = 0, page_size: int = 0, output_format: str = "JSON", report_spec: dict | str | None = None, body: dict | ResultsRequestBody | None = None, **kwargs)`
+- [ ] `get_catalog_targets(self, integration_connector_guid: str, graph_query_depth: int = 3, start_from: int = 0, page_size: int = 0, output_format: str = "JSON", report_spec: dict | str | None = None, body: dict | ResultsRequestBody | None = None, **kwargs)`
   - **Planned**: TODO
-- [x] `get_data_assets_by_category(self, category: str, content_status_list: list[str] = ["ACTIVE"], graph_query_depth: int = 3, start_from: int = 0, page_size: int = 0, output_format: str = "JSON", report_spec: str | dict = None, body: Optional[dict | ContentStatusFilterRequestBody] = None, **kwargs)`
+- [ ] `get_data_assets_by_category(self, category: str, content_status_list: list[str] = ["ACTIVE"], graph_query_depth: int = 3, start_from: int = 0, page_size: int = 0, output_format: str = "JSON", report_spec: str | dict = None, body: Optional[dict | ContentStatusFilterRequestBody] = None, **kwargs)`
   - **Planned**: TODO
-- [x] `get_governance_engines(self, governance_service_guid: str, graph_query_depth: int = 3, start_from: int = 0, page_size: int = 0, output_format: str = "JSON", report_spec: dict | str | None = None, body: dict | ResultsRequestBody | None = None, **kwargs)`
+- [ ] `get_governance_engines(self, governance_service_guid: str, graph_query_depth: int = 3, start_from: int = 0, page_size: int = 0, output_format: str = "JSON", report_spec: dict | str | None = None, body: dict | ResultsRequestBody | None = None, **kwargs)`
   - **Planned**: TODO
-- [x] `get_infrastructure_by_category(self, category: str, deployment_status_list: list[str] = ["ACTIVE"], graph_query_depth: int = 3, start_from: int = 0, page_size: int = 0, output_format: str = "JSON", report_spec: str | dict = None, body: Optional[dict | DeploymentStatusFilterRequestBody] = None, **kwargs)`
+- [ ] `get_infrastructure_by_category(self, category: str, deployment_status_list: list[str] = ["ACTIVE"], graph_query_depth: int = 3, start_from: int = 0, page_size: int = 0, output_format: str = "JSON", report_spec: str | dict = None, body: Optional[dict | DeploymentStatusFilterRequestBody] = None, **kwargs)`
   - **Planned**: TODO
-- [x] `get_integration_groups(self, integration_connector_guid: str, graph_query_depth: int = 3, start_from: int = 0, page_size: int = 0, output_format: str = "JSON", report_spec: dict | str | None = None, body: dict | ResultsRequestBody | None = None, **kwargs)`
+- [ ] `get_integration_groups(self, integration_connector_guid: str, graph_query_depth: int = 3, start_from: int = 0, page_size: int = 0, output_format: str = "JSON", report_spec: dict | str | None = None, body: dict | ResultsRequestBody | None = None, **kwargs)`
   - **Planned**: TODO
-- [x] `get_processes_by_category(self, category: str, activity_status_list: list[str] = ["IN_PROGRESS"], graph_query_depth: int = 3, start_from: int = 0, page_size: int = 0, output_format: str = "JSON", report_spec: str | dict = None, body: Optional[dict | ActivityStatusFilterRequestBody] = None, **kwargs)`
+- [ ] `get_processes_by_category(self, category: str, activity_status_list: list[str] = ["IN_PROGRESS"], graph_query_depth: int = 3, start_from: int = 0, page_size: int = 0, output_format: str = "JSON", report_spec: str | dict = None, body: Optional[dict | ActivityStatusFilterRequestBody] = None, **kwargs)`
   - **Planned**: TODO
-- [x] `get_software_capabilities_by_deployed_implementation_type(self, deployed_implementation_type: str, metadata_element_type_name: str | None = "SoftwareCapability", metadata_element_subtypes: list[str] | None = None, include_only_relationships: list[str] | None = None, skip_relationships: list[str] | None = None, graph_query_depth: int = 3, start_from: int = 0, page_size: int = 0, output_format: str = "JSON", report_spec: str | dict = None, body: Optional[dict | FilterRequestBody] = None, **kwargs)`
+- [ ] `get_software_capabilities_by_deployed_implementation_type(self, deployed_implementation_type: str, metadata_element_type_name: str | None = "SoftwareCapability", metadata_element_subtypes: list[str] | None = None, include_only_relationships: list[str] | None = None, skip_relationships: list[str] | None = None, graph_query_depth: int = 3, start_from: int = 0, page_size: int = 0, output_format: str = "JSON", report_spec: str | dict = None, body: Optional[dict | FilterRequestBody] = None, **kwargs)`
   - **Planned**: TODO
 - [x] `get_software_capabilities_by_name(self, name: str, metadata_element_type_name: str | None = "SoftwareCapability", metadata_element_subtypes: list[str] | None = None, include_only_relationships: list[str] | None = None, skip_relationships: list[str] | None = None, graph_query_depth: int = 3, start_from: int = 0, page_size: int = 0, output_format: str = "JSON", report_spec: str | dict = None, body: Optional[dict | FilterRequestBody] = None, **kwargs)`
   - **Planned**: Standard Get By Name Pattern
-- [x] `get_software_capabilities_for_infrastructure(self, infrastructure_guid: str, graph_query_depth: int = 3, start_from: int = 0, page_size: int = 0, output_format: str = "JSON", report_spec: dict | str | None = None, body: dict | ResultsRequestBody | None = None, **kwargs)`
+- [ ] `get_software_capabilities_for_infrastructure(self, infrastructure_guid: str, graph_query_depth: int = 3, start_from: int = 0, page_size: int = 0, output_format: str = "JSON", report_spec: dict | str | None = None, body: dict | ResultsRequestBody | None = None, **kwargs)`
   - **Planned**: TODO
 - [x] `get_software_capability_by_guid(self, guid: str, include_only_relationships: list[str] | None = None, skip_relationships: list[str] | None = None, graph_query_depth: int = 3, output_format: str = "JSON", report_spec: dict | str | None = None, body: dict | GetRequestBody | None = None, **kwargs)`
   - **Planned**: Standard Get By GUID Pattern
 
 ### automated_curation.py
-- [ ] `_async_find_engine_actions(self, search_string='*', body=None, starts_with=True, ends_with=False, ignore_case=False, start_from=0, page_size=100, output_format='JSON', report_spec='EngineAction', **kwargs)`
+- [x] `_async_find_engine_actions(self, search_string='*', body=None, starts_with=True, ends_with=False, ignore_case=False, start_from=0, page_size=100, output_format='JSON', report_spec='EngineAction', **kwargs)`
   - **Planned**: Standard Find Pattern
 - [ ] `_async_get_active_engine_actions(self, start_from=0, page_size=0, output_format='JSON', report_spec='Engine-Actions')`
   - **Planned**: TODO
@@ -312,7 +312,7 @@ async def _async_get_xxx_by_guid(
   - **Planned**: TODO
 - [ ] `_async_get_engine_actions(self, start_from=0, page_size=0, output_format='JSON', report_spec='EngineAction', body=None)`
   - **Planned**: TODO
-- [ ] `_async_get_engine_actions_by_name(self, name, start_from=0, page_size=0, output_format='JSON', report_spec='EngineAction', body=None)`
+- [x] `_async_get_engine_actions_by_name(self, name, start_from=0, page_size=0, output_format='JSON', report_spec='EngineAction', body=None)`
   - **Planned**: Standard Get By Name Pattern
 - [ ] `_async_get_tech_type_detail(self, filter_string=None, body=None, output_format='JSON', report_spec='TechType', **kwargs)`
   - **Planned**: TODO
@@ -324,11 +324,11 @@ async def _async_get_xxx_by_guid(
   - **Planned**: TODO
 - [ ] `_async_get_template_guid_for_technology_type(self, type_name)`
   - **Planned**: TODO
-- [ ] `find_engine_actions(self, search_string='*', body=None, starts_with=True, ends_with=False, ignore_case=False, start_from=0, page_size=100, output_format='JSON', report_spec='EngineAction', **kwargs)`
+- [x] `find_engine_actions(self, search_string='*', body=None, starts_with=True, ends_with=False, ignore_case=False, start_from=0, page_size=100, output_format='JSON', report_spec='EngineAction', **kwargs)`
   - **Planned**: Standard Find Pattern
-- [ ] `find_technology_types(self, search_string='*', body=None, starts_with=False, ends_with=False, ignore_case=True, start_from=0, page_size=0, output_format='JSON', report_spec='TechType', **kwargs)`
+- [x] `find_technology_types(self, search_string='*', body=None, starts_with=False, ends_with=False, ignore_case=True, start_from=0, page_size=0, output_format='JSON', report_spec='TechType', **kwargs)`
   - **Planned**: Standard Find Pattern
-- [ ] `find_technology_types_body(self, search_string='*', starts_with=False, ends_with=False, ignore_case=True, anchor_domain=None, metadata_element_type=None, metadata_element_subtypes=None, skip_relationships=None, include_only_relationships=None, skip_classified_elements=None, include_only_classified_elements=None, graph_query_depth=3, governance_zone_filter=None, as_of_time=None, effective_time=None, relationship_page_size=0, limit_results_by_status=[], sequencing_order='PROPERTY_ASCENDING', sequencing_property='qualifiedName', output_format='JSON', report_spec='TechType', start_from=0, page_size=0, property_names=None, body=None)`
+- [x] `find_technology_types_body(self, search_string='*', starts_with=False, ends_with=False, ignore_case=True, anchor_domain=None, metadata_element_type=None, metadata_element_subtypes=None, skip_relationships=None, include_only_relationships=None, skip_classified_elements=None, include_only_classified_elements=None, graph_query_depth=3, governance_zone_filter=None, as_of_time=None, effective_time=None, relationship_page_size=0, limit_results_by_status=[], sequencing_order='PROPERTY_ASCENDING', sequencing_property='qualifiedName', output_format='JSON', report_spec='TechType', start_from=0, page_size=0, property_names=None, body=None)`
   - **Planned**: Standard Find Pattern
 - [ ] `get_active_engine_actions(self, start_from=0, page_size=0, output_format='JSON', report_spec='EngineAction')`
   - **Planned**: TODO
@@ -342,7 +342,7 @@ async def _async_get_xxx_by_guid(
   - **Planned**: TODO
 - [ ] `get_engine_actions(self, start_from=0, page_size=0, output_format='JSON', report_spec='EngineAction', body=None)`
   - **Planned**: TODO
-- [ ] `get_engine_actions_by_name(self, name, start_from=0, page_size=0, output_format='JSON', report_spec='EngineAction', body=None)`
+- [x] `get_engine_actions_by_name(self, name, start_from=0, page_size=0, output_format='JSON', report_spec='EngineAction', body=None)`
   - **Planned**: Standard Get By Name Pattern
 - [ ] `get_tech_type_detail(self, filter_string=None, body=None, output_format='JSON', report_spec='TechType', **kwargs)`
   - **Planned**: TODO
@@ -356,19 +356,19 @@ async def _async_get_xxx_by_guid(
   - **Planned**: TODO
 
 ### classification_explorer.py
-- [ ] `_async_find_authored_elements(self, search_string='*', content_status_list=[], starts_with=True, ends_with=False, ignore_case=False, anchor_domain=None, metadata_element_type=None, metadata_element_subtypes=None, skip_relationships=None, include_only_relationships=None, skip_classified_elements=None, include_only_classified_elements=None, graph_query_depth=3, governance_zone_filter=None, as_of_time=None, effective_time=None, relationship_page_size=0, limit_results_by_status=None, sequencing_order=None, sequencing_property=None, start_from=0, page_size=0, output_format='JSON', report_spec=None, body=None)`
+- [x] `_async_find_authored_elements(self, search_string='*', content_status_list=[], starts_with=True, ends_with=False, ignore_case=False, anchor_domain=None, metadata_element_type=None, metadata_element_subtypes=None, skip_relationships=None, include_only_relationships=None, skip_classified_elements=None, include_only_classified_elements=None, graph_query_depth=3, governance_zone_filter=None, as_of_time=None, effective_time=None, relationship_page_size=0, limit_results_by_status=None, sequencing_order=None, sequencing_property=None, start_from=0, page_size=0, output_format='JSON', report_spec=None, body=None)`
   - **Planned**: Standard Find Pattern
-- [ ] `_async_find_authored_elements_by_category(self, filter_string='*', content_status_list=[], start_from=0, page_size=0, output_format='JSON', report_spec=None, body=None)`
+- [x] `_async_find_authored_elements_by_category(self, filter_string='*', content_status_list=[], start_from=0, page_size=0, output_format='JSON', report_spec=None, body=None)`
   - **Planned**: Standard Find Pattern
-- [ ] `_async_find_elements_by_classification_with_property_value(self, classification_name, property_value, property_names, metadata_element_type_name=None, starts_with=True, ends_with=False, ignore_case=False, anchor_domain=None, metadata_element_subtypes=None, skip_relationships=None, include_only_relationships=None, skip_classified_elements=None, include_only_classified_elements=None, graph_query_depth=3, governance_zone_filter=None, as_of_time=None, effective_time=None, relationship_page_size=0, limit_results_by_status=None, sequencing_order=None, sequencing_property=None, output_format='JSON', report_spec=None, start_from=0, page_size=0, time_out=default_time_out, body=None)`
+- [x] `_async_find_elements_by_classification_with_property_value(self, classification_name, property_value, property_names, metadata_element_type_name=None, starts_with=True, ends_with=False, ignore_case=False, anchor_domain=None, metadata_element_subtypes=None, skip_relationships=None, include_only_relationships=None, skip_classified_elements=None, include_only_classified_elements=None, graph_query_depth=3, governance_zone_filter=None, as_of_time=None, effective_time=None, relationship_page_size=0, limit_results_by_status=None, sequencing_order=None, sequencing_property=None, output_format='JSON', report_spec=None, start_from=0, page_size=0, time_out=default_time_out, body=None)`
   - **Planned**: Standard Find Pattern
-- [ ] `_async_find_elements_by_property_value(self, property_value, property_names, metadata_element_type_name=None, starts_with=True, ends_with=False, ignore_case=False, anchor_domain=None, metadata_element_subtypes=None, skip_relationships=None, include_only_relationships=None, skip_classified_elements=None, include_only_classified_elements=None, graph_query_depth=3, governance_zone_filter=None, as_of_time=None, effective_time=None, relationship_page_size=0, limit_results_by_status=None, sequencing_order=None, sequencing_property=None, output_format='JSON', report_spec=None, start_from=0, page_size=0, time_out=default_time_out, body=None)`
+- [x] `_async_find_elements_by_property_value(self, property_value, property_names, metadata_element_type_name=None, starts_with=True, ends_with=False, ignore_case=False, anchor_domain=None, metadata_element_subtypes=None, skip_relationships=None, include_only_relationships=None, skip_classified_elements=None, include_only_classified_elements=None, graph_query_depth=3, governance_zone_filter=None, as_of_time=None, effective_time=None, relationship_page_size=0, limit_results_by_status=None, sequencing_order=None, sequencing_property=None, output_format='JSON', report_spec=None, start_from=0, page_size=0, time_out=default_time_out, body=None)`
   - **Planned**: Standard Find Pattern
-- [ ] `_async_find_related_elements_with_property_value(self, element_guid, relationship_type, property_value, property_names, metadata_element_type_name=None, start_at_end=1, starts_with=True, ends_with=False, ignore_case=False, anchor_domain=None, metadata_element_subtypes=None, skip_relationships=None, include_only_relationships=None, skip_classified_elements=None, include_only_classified_elements=None, graph_query_depth=3, governance_zone_filter=None, as_of_time=None, effective_time=None, relationship_page_size=0, limit_results_by_status=None, sequencing_order=None, sequencing_property=None, output_format='JSON', report_spec=None, start_from=0, page_size=0, time_out=default_time_out, body=None)`
+- [x] `_async_find_related_elements_with_property_value(self, element_guid, relationship_type, property_value, property_names, metadata_element_type_name=None, start_at_end=1, starts_with=True, ends_with=False, ignore_case=False, anchor_domain=None, metadata_element_subtypes=None, skip_relationships=None, include_only_relationships=None, skip_classified_elements=None, include_only_classified_elements=None, graph_query_depth=3, governance_zone_filter=None, as_of_time=None, effective_time=None, relationship_page_size=0, limit_results_by_status=None, sequencing_order=None, sequencing_property=None, output_format='JSON', report_spec=None, start_from=0, page_size=0, time_out=default_time_out, body=None)`
   - **Planned**: Standard Find Pattern
-- [ ] `_async_find_relationships_with_property_value(self, property_value, property_names, relationship_type=None, starts_with=True, ends_with=False, ignore_case=False, anchor_domain=None, metadata_element_subtypes=None, skip_relationships=None, include_only_relationships=None, skip_classified_elements=None, include_only_classified_elements=None, graph_query_depth=3, governance_zone_filter=None, as_of_time=None, effective_time=None, relationship_page_size=0, limit_results_by_status=None, sequencing_order=None, sequencing_property=None, output_format='JSON', report_spec=None, start_from=0, page_size=0, body=None)`
+- [x] `_async_find_relationships_with_property_value(self, property_value, property_names, relationship_type=None, starts_with=True, ends_with=False, ignore_case=False, anchor_domain=None, metadata_element_subtypes=None, skip_relationships=None, include_only_relationships=None, skip_classified_elements=None, include_only_classified_elements=None, graph_query_depth=3, governance_zone_filter=None, as_of_time=None, effective_time=None, relationship_page_size=0, limit_results_by_status=None, sequencing_order=None, sequencing_property=None, output_format='JSON', report_spec=None, start_from=0, page_size=0, body=None)`
   - **Planned**: Standard Find Pattern
-- [ ] `_async_find_root_elements(self, metadata_element_type_name=None, search_properties=None, match_classifications=None, start_from=0, page_size=0, output_format='JSON', report_spec=None, time_out=default_time_out, body=None)`
+- [x] `_async_find_root_elements(self, metadata_element_type_name=None, search_properties=None, match_classifications=None, start_from=0, page_size=0, output_format='JSON', report_spec=None, time_out=default_time_out, body=None)`
   - **Planned**: Standard Find Pattern
 - [ ] `_async_get_certifications(self, element_guid, body=None, output_format='JSON', report_spec=None, start_from=0, page_size=0)`
   - **Planned**: TODO
@@ -376,7 +376,7 @@ async def _async_get_xxx_by_guid(
   - **Planned**: TODO
 - [ ] `_async_get_classified_elements_by(self, classification_name, body=None, output_format='JSON', report_spec=None)`
   - **Planned**: TODO
-- [ ] `_async_get_element_by_guid(self, element_guid, element_type_name=None, output_format='JSON', report_spec='Referenceable', body=None)`
+- [x] `_async_get_element_by_guid(self, element_guid, element_type_name=None, output_format='JSON', report_spec='Referenceable', body=None)`
   - **Planned**: Standard Get By GUID Pattern
 - [ ] `_async_get_element_by_unique_name(self, name, property_name=None, output_format='JSON', report_spec='Referenceable', body=None)`
   - **Planned**: TODO
@@ -428,19 +428,19 @@ async def _async_get_xxx_by_guid(
   - **Planned**: TODO
 - [ ] `_async_get_subject_area_members(self, subject_area, body, output_format='JSON', report_spec=None)`
   - **Planned**: TODO
-- [ ] `find_authored_elements(self, search_string='*', content_status_list=[], starts_with=True, ends_with=False, ignore_case=False, anchor_domain=None, metadata_element_type=None, metadata_element_subtypes=None, skip_relationships=None, include_only_relationships=None, skip_classified_elements=None, include_only_classified_elements=None, graph_query_depth=3, governance_zone_filter=None, as_of_time=None, effective_time=None, relationship_page_size=0, limit_results_by_status=None, sequencing_order=None, sequencing_property=None, start_from=0, page_size=0, output_format='JSON', report_spec=None, body=None)`
+- [x] `find_authored_elements(self, search_string='*', content_status_list=[], starts_with=True, ends_with=False, ignore_case=False, anchor_domain=None, metadata_element_type=None, metadata_element_subtypes=None, skip_relationships=None, include_only_relationships=None, skip_classified_elements=None, include_only_classified_elements=None, graph_query_depth=3, governance_zone_filter=None, as_of_time=None, effective_time=None, relationship_page_size=0, limit_results_by_status=None, sequencing_order=None, sequencing_property=None, start_from=0, page_size=0, output_format='JSON', report_spec=None, body=None)`
   - **Planned**: Standard Find Pattern
-- [ ] `find_authored_elements_by_category(self, filter_string='*', content_status_list=[], start_from=0, page_size=0, output_format='JSON', report_spec=None, body=None)`
+- [x] `find_authored_elements_by_category(self, filter_string='*', content_status_list=[], start_from=0, page_size=0, output_format='JSON', report_spec=None, body=None)`
   - **Planned**: Standard Find Pattern
-- [ ] `find_elements_by_classification_with_property_value(self, classification_name, property_value, property_names, metadata_element_type_name=None, starts_with=True, ends_with=False, ignore_case=False, anchor_domain=None, metadata_element_subtypes=None, skip_relationships=None, include_only_relationships=None, skip_classified_elements=None, include_only_classified_elements=None, graph_query_depth=3, governance_zone_filter=None, as_of_time=None, effective_time=None, relationship_page_size=0, limit_results_by_status=None, sequencing_order=None, sequencing_property=None, output_format='JSON', report_spec=None, start_from=0, page_size=0, time_out=default_time_out, body=None)`
+- [x] `find_elements_by_classification_with_property_value(self, classification_name, property_value, property_names, metadata_element_type_name=None, starts_with=True, ends_with=False, ignore_case=False, anchor_domain=None, metadata_element_subtypes=None, skip_relationships=None, include_only_relationships=None, skip_classified_elements=None, include_only_classified_elements=None, graph_query_depth=3, governance_zone_filter=None, as_of_time=None, effective_time=None, relationship_page_size=0, limit_results_by_status=None, sequencing_order=None, sequencing_property=None, output_format='JSON', report_spec=None, start_from=0, page_size=0, time_out=default_time_out, body=None)`
   - **Planned**: Standard Find Pattern
-- [ ] `find_elements_by_property_value(self, property_value, property_names, metadata_element_type_name=None, starts_with=True, ends_with=False, ignore_case=False, anchor_domain=None, metadata_element_subtypes=None, skip_relationships=None, include_only_relationships=None, skip_classified_elements=None, include_only_classified_elements=None, graph_query_depth=3, governance_zone_filter=None, as_of_time=None, effective_time=None, relationship_page_size=0, limit_results_by_status=None, sequencing_order=None, sequencing_property=None, output_format='JSON', report_spec=None, start_from=0, page_size=0, time_out=default_time_out, body=None)`
+- [x] `find_elements_by_property_value(self, property_value, property_names, metadata_element_type_name=None, starts_with=True, ends_with=False, ignore_case=False, anchor_domain=None, metadata_element_subtypes=None, skip_relationships=None, include_only_relationships=None, skip_classified_elements=None, include_only_classified_elements=None, graph_query_depth=3, governance_zone_filter=None, as_of_time=None, effective_time=None, relationship_page_size=0, limit_results_by_status=None, sequencing_order=None, sequencing_property=None, output_format='JSON', report_spec=None, start_from=0, page_size=0, time_out=default_time_out, body=None)`
   - **Planned**: Standard Find Pattern
-- [ ] `find_related_elements_with_property_value(self, element_guid, relationship_type, property_value, property_names, metadata_element_type_name=None, start_at_end=1, starts_with=True, ends_with=False, ignore_case=False, anchor_domain=None, metadata_element_subtypes=None, skip_relationships=None, include_only_relationships=None, skip_classified_elements=None, include_only_classified_elements=None, graph_query_depth=3, governance_zone_filter=None, as_of_time=None, effective_time=None, relationship_page_size=0, limit_results_by_status=None, sequencing_order=None, sequencing_property=None, output_format='JSON', report_spec=None, start_from=0, page_size=0, time_out=default_time_out, body=None)`
+- [x] `find_related_elements_with_property_value(self, element_guid, relationship_type, property_value, property_names, metadata_element_type_name=None, start_at_end=1, starts_with=True, ends_with=False, ignore_case=False, anchor_domain=None, metadata_element_subtypes=None, skip_relationships=None, include_only_relationships=None, skip_classified_elements=None, include_only_classified_elements=None, graph_query_depth=3, governance_zone_filter=None, as_of_time=None, effective_time=None, relationship_page_size=0, limit_results_by_status=None, sequencing_order=None, sequencing_property=None, output_format='JSON', report_spec=None, start_from=0, page_size=0, time_out=default_time_out, body=None)`
   - **Planned**: Standard Find Pattern
-- [ ] `find_relationships_with_property_value(self, property_value, property_names, relationship_type=None, starts_with=True, ends_with=False, ignore_case=False, anchor_domain=None, metadata_element_subtypes=None, skip_relationships=None, include_only_relationships=None, skip_classified_elements=None, include_only_classified_elements=None, graph_query_depth=3, governance_zone_filter=None, as_of_time=None, effective_time=None, relationship_page_size=0, limit_results_by_status=None, sequencing_order=None, sequencing_property=None, output_format='JSON', report_spec=None, start_from=0, page_size=0, body=None)`
+- [x] `find_relationships_with_property_value(self, property_value, property_names, relationship_type=None, starts_with=True, ends_with=False, ignore_case=False, anchor_domain=None, metadata_element_subtypes=None, skip_relationships=None, include_only_relationships=None, skip_classified_elements=None, include_only_classified_elements=None, graph_query_depth=3, governance_zone_filter=None, as_of_time=None, effective_time=None, relationship_page_size=0, limit_results_by_status=None, sequencing_order=None, sequencing_property=None, output_format='JSON', report_spec=None, start_from=0, page_size=0, body=None)`
   - **Planned**: Standard Find Pattern
-- [ ] `find_root_elements(self, metadata_element_type_name=None, search_properties=None, match_classifications=None, start_from=0, page_size=0, output_format='JSON', report_spec=None, time_out=default_time_out, body=None)`
+- [x] `find_root_elements(self, metadata_element_type_name=None, search_properties=None, match_classifications=None, start_from=0, page_size=0, output_format='JSON', report_spec=None, time_out=default_time_out, body=None)`
   - **Planned**: Standard Find Pattern
 - [ ] `get_actor_for_guid(self, guid)`
   - **Planned**: TODO
@@ -450,7 +450,7 @@ async def _async_get_xxx_by_guid(
   - **Planned**: TODO
 - [ ] `get_classified_elements_by(self, classification_name, body=None, output_format='JSON', report_spec=None)`
   - **Planned**: TODO
-- [ ] `get_element_by_guid(self, element_guid, element_type_name=None, output_format='JSON', report_spec=None, body=None)`
+- [x] `get_element_by_guid(self, element_guid, element_type_name=None, output_format='JSON', report_spec=None, body=None)`
   - **Planned**: Standard Get By GUID Pattern
 - [ ] `get_element_by_unique_name(self, name, property_name=None, output_format='JSON', report_spec='Referenceable', body=None)`
   - **Planned**: TODO
@@ -504,13 +504,13 @@ async def _async_get_xxx_by_guid(
   - **Planned**: TODO
 
 ### collection_manager.py
-- [ ] `_async_find_collections(self, search_string='*', body=None, starts_with=True, ends_with=False, ignore_case=False, start_from=0, page_size=100, output_format='JSON', report_spec=None, _type='Collection', **kwargs)`
+- [x] `_async_find_collections(self, search_string='*', body=None, starts_with=True, ends_with=False, ignore_case=False, start_from=0, page_size=100, output_format='JSON', report_spec=None, _type='Collection', **kwargs)`
   - **Planned**: Standard Find Pattern
-- [ ] `_async_find_digital_products(self, search_string='*', deployment_status_list=None, starts_with=True, ends_with=False, ignore_case=False, start_from=0, page_size=100, output_format='JSON', report_spec=None, body=None)`
+- [x] `_async_find_digital_products(self, search_string='*', deployment_status_list=None, starts_with=True, ends_with=False, ignore_case=False, start_from=0, page_size=100, output_format='JSON', report_spec=None, body=None)`
   - **Planned**: Standard Find Pattern
 - [ ] `_async_get_attached_collections(self, parent_guid, start_from=0, page_size=0, category=None, classification_names=None, body=None, output_format='JSON', report_spec=None)`
   - **Planned**: TODO
-- [ ] `_async_get_collection_by_guid(self, collection_guid, element_type=None, body=None, output_format='JSON', report_spec=None)`
+- [x] `_async_get_collection_by_guid(self, collection_guid, element_type=None, body=None, output_format='JSON', report_spec=None)`
   - **Planned**: Standard Get By GUID Pattern
 - [ ] `_async_get_collection_hierarchy(self, collection_guid, body=None, start_from=0, page_size=0, output_format='JSON', report_spec=None)`
   - **Planned**: TODO
@@ -518,19 +518,19 @@ async def _async_get_xxx_by_guid(
   - **Planned**: TODO
 - [ ] `_async_get_collections_by_category(self, category, classification_names=None, body=None, start_from=0, page_size=0, output_format='JSON', report_spec=None)`
   - **Planned**: TODO
-- [ ] `_async_get_collections_by_name(self, filter_string=None, classification_names=None, body=None, start_from=0, page_size=0, output_format='JSON', report_spec=None)`
+- [x] `_async_get_collections_by_name(self, filter_string=None, classification_names=None, body=None, start_from=0, page_size=0, output_format='JSON', report_spec=None)`
   - **Planned**: Standard Get By Name Pattern
 - [ ] `_async_get_digital_products_by_category(self, category, deployment_status_list=None, start_from=0, page_size=100, output_format='JSON', report_spec=None, body=None)`
   - **Planned**: TODO
 - [ ] `_async_get_member_list(self, collection_guid=None, collection_name=None, collection_qname=None)`
   - **Planned**: TODO
-- [ ] `find_collections(self, search_string='*', body=None, starts_with=True, ends_with=False, ignore_case=False, start_from=0, page_size=100, output_format='JSON', report_spec=None, _type='Collection', **kwargs)`
+- [x] `find_collections(self, search_string='*', body=None, starts_with=True, ends_with=False, ignore_case=False, start_from=0, page_size=100, output_format='JSON', report_spec=None, _type='Collection', **kwargs)`
   - **Planned**: Standard Find Pattern
-- [ ] `find_digital_products(self, search_string='*', deployment_status_list=None, starts_with=True, ends_with=False, ignore_case=False, start_from=0, page_size=100, output_format='JSON', report_spec=None, body=None)`
+- [x] `find_digital_products(self, search_string='*', deployment_status_list=None, starts_with=True, ends_with=False, ignore_case=False, start_from=0, page_size=100, output_format='JSON', report_spec=None, body=None)`
   - **Planned**: Standard Find Pattern
 - [ ] `get_attached_collections(self, parent_guid, start_from=0, page_size=0, body=None, output_format='JSON', report_spec=None)`
   - **Planned**: TODO
-- [ ] `get_collection_by_guid(self, collection_guid, element_type=None, body=None, output_format='JSON', report_spec=None)`
+- [x] `get_collection_by_guid(self, collection_guid, element_type=None, body=None, output_format='JSON', report_spec=None)`
   - **Planned**: Standard Get By GUID Pattern
 - [ ] `get_collection_hierarchy(self, collection_guid=None, body=None, start_from=0, page_size=0, output_format='JSON', report_spec=None)`
   - **Planned**: TODO
@@ -538,7 +538,7 @@ async def _async_get_xxx_by_guid(
   - **Planned**: TODO
 - [ ] `get_collections_by_category(self, category, classification_names=None, body=None, start_from=0, page_size=0, output_format='JSON', report_spec=None)`
   - **Planned**: TODO
-- [ ] `get_collections_by_name(self, filter_string=None, classification_names=None, body=None, start_from=0, page_size=0, output_format='JSON', report_spec=None)`
+- [x] `get_collections_by_name(self, filter_string=None, classification_names=None, body=None, start_from=0, page_size=0, output_format='JSON', report_spec=None)`
   - **Planned**: Standard Get By Name Pattern
 - [ ] `get_digital_products_by_category(self, category, deployment_status_list=None, start_from=0, page_size=100, output_format='JSON', report_spec=None, body=None)`
   - **Planned**: TODO
@@ -546,17 +546,17 @@ async def _async_get_xxx_by_guid(
   - **Planned**: TODO
 
 ### community_matters_omvs.py
-- [ ] `_async_find_communities(self, search_string='*', body=None, starts_with=True, ends_with=False, ignore_case=False, start_from=0, page_size=100, output_format='JSON', report_spec=None, **kwargs)`
+- [x] `_async_find_communities(self, search_string='*', body=None, starts_with=True, ends_with=False, ignore_case=False, start_from=0, page_size=100, output_format='JSON', report_spec=None, **kwargs)`
   - **Planned**: Standard Find Pattern
-- [ ] `_async_get_communities_by_name(self, filter_string=None, body=None, start_from=0, page_size=0, output_format='JSON', report_spec=None)`
+- [x] `_async_get_communities_by_name(self, filter_string=None, body=None, start_from=0, page_size=0, output_format='JSON', report_spec=None)`
   - **Planned**: Standard Get By Name Pattern
-- [ ] `_async_get_community_by_guid(self, community_guid, body=None, output_format='JSON', report_spec=None)`
+- [x] `_async_get_community_by_guid(self, community_guid, body=None, output_format='JSON', report_spec=None)`
   - **Planned**: Standard Get By GUID Pattern
-- [ ] `find_communities(self, search_string='*', body=None, starts_with=True, ends_with=False, ignore_case=False, start_from=0, page_size=100, output_format='JSON', report_spec=None, **kwargs)`
+- [x] `find_communities(self, search_string='*', body=None, starts_with=True, ends_with=False, ignore_case=False, start_from=0, page_size=100, output_format='JSON', report_spec=None, **kwargs)`
   - **Planned**: Standard Find Pattern
-- [ ] `get_communities_by_name(self, filter_string=None, body=None, start_from=0, page_size=0, output_format='JSON', report_spec=None)`
+- [x] `get_communities_by_name(self, filter_string=None, body=None, start_from=0, page_size=0, output_format='JSON', report_spec=None)`
   - **Planned**: Standard Get By Name Pattern
-- [ ] `get_community_by_guid(self, community_guid, body=None, output_format='JSON', report_spec=None)`
+- [x] `get_community_by_guid(self, community_guid, body=None, output_format='JSON', report_spec=None)`
   - **Planned**: Standard Get By GUID Pattern
 
 ### connection_maker.py
@@ -578,9 +578,9 @@ async def _async_get_xxx_by_guid(
   - **Planned**: Standard Get By GUID Pattern
 - [x] `_async_get_endpoints_by_name(self, name: str, metadata_element_subtypes: list[str] | None = None, include_only_relationships: list[str] | None = None, skip_relationships: list[str] | None = None, graph_query_depth: int = 3, start_from: int = 0, page_size: int = 0, output_format: str = "JSON", report_spec: Optional[str | dict] = None, body: Union[FilterRequestBody, dict] = None, **kwargs)`
   - **Planned**: Standard Get By Name Pattern
-- [x] `_async_get_endpoints_by_network_address(self, network_address: str, metadata_element_subtypes: list[str] | None = None, include_only_relationships: list[str] | None = None, skip_relationships: list[str] | None = None, graph_query_depth: int = 3, start_from: int = 0, page_size: int = 0, output_format: str = "JSON", report_spec: Optional[str | dict] = None, body: Union[FilterRequestBody, dict] = None, **kwargs)`
+- [ ] `_async_get_endpoints_by_network_address(self, network_address: str, metadata_element_subtypes: list[str] | None = None, include_only_relationships: list[str] | None = None, skip_relationships: list[str] | None = None, graph_query_depth: int = 3, start_from: int = 0, page_size: int = 0, output_format: str = "JSON", report_spec: Optional[str | dict] = None, body: Union[FilterRequestBody, dict] = None, **kwargs)`
   - **Planned**: TODO
-- [x] `_async_get_endpoints_for_asset(self, asset_guid: str, name: str = "*", metadata_element_subtypes: list[str] | None = None, include_only_relationships: list[str] | None = None, skip_relationships: list[str] | None = None, graph_query_depth: int = 3, start_from: int = 0, page_size: int = 0, output_format: str = "JSON", report_spec: Optional[str | dict] = None, body: Union[FilterRequestBody, dict] = None, **kwargs)`
+- [ ] `_async_get_endpoints_for_asset(self, asset_guid: str, name: str = "*", metadata_element_subtypes: list[str] | None = None, include_only_relationships: list[str] | None = None, skip_relationships: list[str] | None = None, graph_query_depth: int = 3, start_from: int = 0, page_size: int = 0, output_format: str = "JSON", report_spec: Optional[str | dict] = None, body: Union[FilterRequestBody, dict] = None, **kwargs)`
   - **Planned**: TODO
 - [x] `find_connections(self, search_string: str = "*", starts_with: bool = True, ends_with: bool = False, ignore_case: bool = True, metadata_element_type: str | None = None, metadata_element_subtypes: list[str] | None = None, include_only_relationships: list[str] | None = None, skip_relationships: list[str] | None = None, graph_query_depth: int = 3, as_of_time: Optional[str] = None, start_from: int = 0, page_size: int = 0, sequencing_order: Optional[str] = None, sequencing_property: Optional[str] = None, output_format: str = "JSON", report_spec: Optional[str | dict] = None, body: Union[SearchStringRequestBody, dict] = None, **kwargs)`
   - **Planned**: Standard Find Pattern
@@ -600,9 +600,9 @@ async def _async_get_xxx_by_guid(
   - **Planned**: Standard Get By GUID Pattern
 - [x] `get_endpoints_by_name(self, name: str, metadata_element_subtypes: list[str] | None = None, include_only_relationships: list[str] | None = None, skip_relationships: list[str] | None = None, graph_query_depth: int = 3, start_from: int = 0, page_size: int = 0, output_format: str = "JSON", report_spec: Optional[str | dict] = None, body: Union[FilterRequestBody, dict] = None, **kwargs)`
   - **Planned**: Standard Get By Name Pattern
-- [x] `get_endpoints_by_network_address(self, network_address: str, metadata_element_subtypes: list[str] | None = None, include_only_relationships: list[str] | None = None, skip_relationships: list[str] | None = None, graph_query_depth: int = 3, start_from: int = 0, page_size: int = 0, output_format: str = "JSON", report_spec: Optional[str | dict] = None, body: Union[FilterRequestBody, dict] = None, **kwargs)`
+- [ ] `get_endpoints_by_network_address(self, network_address: str, metadata_element_subtypes: list[str] | None = None, include_only_relationships: list[str] | None = None, skip_relationships: list[str] | None = None, graph_query_depth: int = 3, start_from: int = 0, page_size: int = 0, output_format: str = "JSON", report_spec: Optional[str | dict] = None, body: Union[FilterRequestBody, dict] = None, **kwargs)`
   - **Planned**: TODO
-- [x] `get_endpoints_for_asset(self, asset_guid: str, name: str = "*", metadata_element_subtypes: list[str] | None = None, include_only_relationships: list[str] | None = None, skip_relationships: list[str] | None = None, graph_query_depth: int = 3, start_from: int = 0, page_size: int = 0, output_format: str = "JSON", report_spec: Optional[str | dict] = None, body: Union[FilterRequestBody, dict] = None, **kwargs)`
+- [ ] `get_endpoints_for_asset(self, asset_guid: str, name: str = "*", metadata_element_subtypes: list[str] | None = None, include_only_relationships: list[str] | None = None, skip_relationships: list[str] | None = None, graph_query_depth: int = 3, start_from: int = 0, page_size: int = 0, output_format: str = "JSON", report_spec: Optional[str | dict] = None, body: Union[FilterRequestBody, dict] = None, **kwargs)`
   - **Planned**: TODO
 
 ### core_omag_server_config.py
@@ -650,53 +650,53 @@ async def _async_get_xxx_by_guid(
   - **Planned**: TODO
 
 ### data_designer.py
-- [ ] `_async_find_all_data_fields(self, output_format='JSON', report_spec=None, body=None)`
+- [x] `_async_find_all_data_fields(self, output_format='JSON', report_spec=None, body=None)`
   - **Planned**: Standard Find Pattern
-- [ ] `_async_find_all_data_structures(self, output_format='JSON', report_spec=None)`
+- [x] `_async_find_all_data_structures(self, output_format='JSON', report_spec=None)`
   - **Planned**: Standard Find Pattern
-- [ ] `_async_find_data_fields(self, search_string, body=None, starts_with=True, ends_with=False, ignore_case=False, start_from=0, page_size=100, output_format='JSON', report_spec=None, **kwargs)`
+- [x] `_async_find_data_fields(self, search_string, body=None, starts_with=True, ends_with=False, ignore_case=False, start_from=0, page_size=100, output_format='JSON', report_spec=None, **kwargs)`
   - **Planned**: Standard Find Pattern
-- [ ] `_async_find_data_structures(self, search_string, body=None, starts_with=True, ends_with=False, ignore_case=False, start_from=0, page_size=100, output_format='JSON', report_spec=None, **kwargs)`
+- [x] `_async_find_data_structures(self, search_string, body=None, starts_with=True, ends_with=False, ignore_case=False, start_from=0, page_size=100, output_format='JSON', report_spec=None, **kwargs)`
   - **Planned**: Standard Find Pattern
-- [ ] `_async_find_data_value_specifications(self, search_string, body=None, starts_with=True, ends_with=False, ignore_case=False, start_from=0, page_size=100, output_format='JSON', report_spec=None, **kwargs)`
+- [x] `_async_find_data_value_specifications(self, search_string, body=None, starts_with=True, ends_with=False, ignore_case=False, start_from=0, page_size=100, output_format='JSON', report_spec=None, **kwargs)`
   - **Planned**: Standard Find Pattern
-- [ ] `_async_get_data_class_by_guid(self, guid, element_type=None, body=None, output_format='JSON', report_spec=None)`
+- [x] `_async_get_data_class_by_guid(self, guid, element_type=None, body=None, output_format='JSON', report_spec=None)`
   - **Planned**: Standard Get By GUID Pattern
-- [ ] `_async_get_data_field_by_guid(self, guid, element_type=None, body=None, output_format='JSON', report_spec=None)`
+- [x] `_async_get_data_field_by_guid(self, guid, element_type=None, body=None, output_format='JSON', report_spec=None)`
   - **Planned**: Standard Get By GUID Pattern
 - [ ] `_async_get_data_field_rel_elements(self, guid)`
   - **Planned**: TODO
-- [ ] `_async_get_data_fields_by_name(self, filter_string, classification_names=None, body=..., start_from=0, page_size=0, output_format='JSON', report_spec=None)`
+- [x] `_async_get_data_fields_by_name(self, filter_string, classification_names=None, body=..., start_from=0, page_size=0, output_format='JSON', report_spec=None)`
   - **Planned**: Standard Get By Name Pattern
-- [ ] `_async_get_data_structure_by_guid(self, guid, element_type=None, body=None, output_format='JSON', report_spec=None)`
+- [x] `_async_get_data_structure_by_guid(self, guid, element_type=None, body=None, output_format='JSON', report_spec=None)`
   - **Planned**: Standard Get By GUID Pattern
-- [ ] `_async_get_data_structures_by_name(self, filter_string, classification_names=None, body=None, start_from=0, page_size=0, output_format='JSON', report_spec=None)`
+- [x] `_async_get_data_structures_by_name(self, filter_string, classification_names=None, body=None, start_from=0, page_size=0, output_format='JSON', report_spec=None)`
   - **Planned**: Standard Get By Name Pattern
-- [ ] `_async_get_data_value_specification_by_guid(self, guid, element_type=None, body=None, output_format='JSON', report_spec=None)`
+- [x] `_async_get_data_value_specification_by_guid(self, guid, element_type=None, body=None, output_format='JSON', report_spec=None)`
   - **Planned**: Standard Get By GUID Pattern
-- [ ] `_async_get_data_value_specifications_by_name(self, filter_string, classification_names, body=None, start_from=0, page_size=0, output_format='JSON', report_spec=None)`
+- [x] `_async_get_data_value_specifications_by_name(self, filter_string, classification_names, body=None, start_from=0, page_size=0, output_format='JSON', report_spec=None)`
   - **Planned**: Standard Get By Name Pattern
-- [ ] `find_all_data_fields(self, output_format='JSON', report_spec=None, body=None)`
+- [x] `find_all_data_fields(self, output_format='JSON', report_spec=None, body=None)`
   - **Planned**: Standard Find Pattern
-- [ ] `find_all_data_structures(self, output_format='JSON', report_spec=None)`
+- [x] `find_all_data_structures(self, output_format='JSON', report_spec=None)`
   - **Planned**: Standard Find Pattern
-- [ ] `find_data_fields(self, search_string, starts_with=True, ends_with=False, ignore_case=False, anchor_domain=None, metadata_element_type=None, metadata_element_subtypes=None, skip_relationships=None, include_only_relationships=None, skip_classified_elements=None, include_only_classified_elements=None, graph_query_depth=3, governance_zone_filter=None, as_of_time=None, effective_time=None, relationship_page_size=0, limit_results_by_status=None, sequencing_order=None, sequencing_property=None, output_format='JSON', report_spec=None, start_from=0, page_size=100, property_names=None, body=None, **kwargs)`
+- [x] `find_data_fields(self, search_string, starts_with=True, ends_with=False, ignore_case=False, anchor_domain=None, metadata_element_type=None, metadata_element_subtypes=None, skip_relationships=None, include_only_relationships=None, skip_classified_elements=None, include_only_classified_elements=None, graph_query_depth=3, governance_zone_filter=None, as_of_time=None, effective_time=None, relationship_page_size=0, limit_results_by_status=None, sequencing_order=None, sequencing_property=None, output_format='JSON', report_spec=None, start_from=0, page_size=100, property_names=None, body=None, **kwargs)`
   - **Planned**: Standard Find Pattern
-- [ ] `find_data_structures(self, search_string, body=None, starts_with=True, ends_with=False, ignore_case=False, start_from=0, page_size=100, output_format='JSON', report_spec=None, **kwargs)`
+- [x] `find_data_structures(self, search_string, body=None, starts_with=True, ends_with=False, ignore_case=False, start_from=0, page_size=100, output_format='JSON', report_spec=None, **kwargs)`
   - **Planned**: Standard Find Pattern
-- [ ] `find_data_value_specifications(self, search_string, body=None, starts_with=True, ends_with=False, ignore_case=False, start_from=0, page_size=100, output_format='JSON', report_spec=None, **kwargs)`
+- [x] `find_data_value_specifications(self, search_string, body=None, starts_with=True, ends_with=False, ignore_case=False, start_from=0, page_size=100, output_format='JSON', report_spec=None, **kwargs)`
   - **Planned**: Standard Find Pattern
-- [ ] `get_data_class_by_guid(self, guid, element_type=None, body=None, output_format='JSON', report_spec=None)`
+- [x] `get_data_class_by_guid(self, guid, element_type=None, body=None, output_format='JSON', report_spec=None)`
   - **Planned**: Standard Get By GUID Pattern
 - [ ] `get_data_class_rel_elements(self, guid)`
   - **Planned**: TODO
-- [ ] `get_data_field_by_guid(self, guid, element_type=None, body=None, output_format='JSON', report_spec=None)`
+- [x] `get_data_field_by_guid(self, guid, element_type=None, body=None, output_format='JSON', report_spec=None)`
   - **Planned**: Standard Get By GUID Pattern
 - [ ] `get_data_field_rel_elements(self, guid)`
   - **Planned**: TODO
-- [ ] `get_data_fields_by_name(self, filter_string, classification_names=None, body=None, start_from=0, page_size=max_paging_size, output_format='JSON', report_spec=None)`
+- [x] `get_data_fields_by_name(self, filter_string, classification_names=None, body=None, start_from=0, page_size=max_paging_size, output_format='JSON', report_spec=None)`
   - **Planned**: Standard Get By Name Pattern
-- [ ] `get_data_grain_by_guid(self, guid, element_type=None, body=None, output_format='JSON', report_spec=None)`
+- [x] `get_data_grain_by_guid(self, guid, element_type=None, body=None, output_format='JSON', report_spec=None)`
   - **Planned**: Standard Get By GUID Pattern
 - [ ] `get_data_grain_rel_elements(self, guid)`
   - **Planned**: TODO
@@ -706,67 +706,67 @@ async def _async_get_xxx_by_guid(
   - **Planned**: TODO
 - [ ] `get_data_rel_elements_dict(self, el_struct)`
   - **Planned**: TODO
-- [ ] `get_data_structure_by_guid(self, guid, element_type=None, body=None, output_format='JSON', report_spec=None)`
+- [x] `get_data_structure_by_guid(self, guid, element_type=None, body=None, output_format='JSON', report_spec=None)`
   - **Planned**: Standard Get By GUID Pattern
-- [ ] `get_data_structures_by_name(self, filter_string, classification_names=None, body=None, start_from=0, page_size=max_paging_size, output_format='JSON', report_spec=None)`
+- [x] `get_data_structures_by_name(self, filter_string, classification_names=None, body=None, start_from=0, page_size=max_paging_size, output_format='JSON', report_spec=None)`
   - **Planned**: Standard Get By Name Pattern
-- [ ] `get_data_value_specification_by_guid(self, guid, element_type=None, body=None, output_format='JSON', report_spec=None)`
+- [x] `get_data_value_specification_by_guid(self, guid, element_type=None, body=None, output_format='JSON', report_spec=None)`
   - **Planned**: Standard Get By GUID Pattern
 - [ ] `get_data_value_specification_rel_elements(self, guid)`
   - **Planned**: TODO
-- [ ] `get_data_value_specifications_by_name(self, filter_string, classification_names=None, body=None, start_from=0, page_size=max_paging_size, output_format='JSON', report_spec=None)`
+- [x] `get_data_value_specifications_by_name(self, filter_string, classification_names=None, body=None, start_from=0, page_size=max_paging_size, output_format='JSON', report_spec=None)`
   - **Planned**: Standard Get By Name Pattern
 
 ### data_discovery.py
-- [ ] `_async_find_annotations(self, search_string='*', body=None, starts_with=True, ends_with=False, ignore_case=False, start_from=0, page_size=100, output_format='JSON', report_spec='Referenceable', **kwargs)`
+- [x] `_async_find_annotations(self, search_string='*', body=None, starts_with=True, ends_with=False, ignore_case=False, start_from=0, page_size=100, output_format='JSON', report_spec='Referenceable', **kwargs)`
   - **Planned**: Standard Find Pattern
-- [ ] `_async_get_annotation_by_guid(self, annotation_guid, element_type='Annotation', body=None, output_format='JSON', report_spec='Annotations')`
+- [x] `_async_get_annotation_by_guid(self, annotation_guid, element_type='Annotation', body=None, output_format='JSON', report_spec='Annotations')`
   - **Planned**: Standard Get By GUID Pattern
-- [ ] `_async_get_annotations_by_name(self, filter_string=None, classification_names=None, body=None, start_from=0, page_size=0, output_format='JSON', report_spec='Annotations')`
+- [x] `_async_get_annotations_by_name(self, filter_string=None, classification_names=None, body=None, start_from=0, page_size=0, output_format='JSON', report_spec='Annotations')`
   - **Planned**: Standard Get By Name Pattern
-- [ ] `find_annotations(self, search_string='*', body=None, starts_with=True, ends_with=False, ignore_case=False, start_from=0, page_size=100, output_format='JSON', report_spec='Referenceable', **kwargs)`
+- [x] `find_annotations(self, search_string='*', body=None, starts_with=True, ends_with=False, ignore_case=False, start_from=0, page_size=100, output_format='JSON', report_spec='Referenceable', **kwargs)`
   - **Planned**: Standard Find Pattern
-- [ ] `get_annotation_by_guid(self, annotation_guid, element_type='Annotation', body=None, output_format='JSON', report_spec='Annotations')`
+- [x] `get_annotation_by_guid(self, annotation_guid, element_type='Annotation', body=None, output_format='JSON', report_spec='Annotations')`
   - **Planned**: Standard Get By GUID Pattern
-- [ ] `get_annotations_by_name(self, filter_string=None, classification_names=None, body=None, start_from=0, page_size=0, output_format='JSON', report_spec='Annotations')`
+- [x] `get_annotations_by_name(self, filter_string=None, classification_names=None, body=None, start_from=0, page_size=0, output_format='JSON', report_spec='Annotations')`
   - **Planned**: Standard Get By Name Pattern
 
 ### data_engineer.py
-- [ ] `_async_find_tabular_data_sets(self, search_string='*', body=None, starts_with=True, ends_with=False, ignore_case=False, start_from=0, page_size=100, output_format='JSON', report_spec='Referenceable', **kwargs)`
+- [x] `_async_find_tabular_data_sets(self, search_string='*', body=None, starts_with=True, ends_with=False, ignore_case=False, start_from=0, page_size=100, output_format='JSON', report_spec='Referenceable', **kwargs)`
   - **Planned**: Standard Find Pattern
 - [ ] `_async_get_tabular_data_set(self, tabular_data_set_guid, start_from_row=0, max_row_count=5000, output_format='JSON')`
   - **Planned**: TODO
-- [ ] `find_tabular_data_sets(self, search_string='*', body=None, starts_with=True, ends_with=False, ignore_case=False, start_from=0, page_size=100, output_format='JSON', report_spec='Referenceable', **kwargs)`
+- [x] `find_tabular_data_sets(self, search_string='*', body=None, starts_with=True, ends_with=False, ignore_case=False, start_from=0, page_size=100, output_format='JSON', report_spec='Referenceable', **kwargs)`
   - **Planned**: Standard Find Pattern
 - [ ] `get_tabular_data_set(self, tabular_data_set_guid, start_from_row=0, max_row_count=5000, output_format='JSON')`
   - **Planned**: TODO
 
 ### digital_business.py
-- [ ] `_async_find_business_capabilities(self, search_string='*', body=None, starts_with=False, ends_with=False, ignore_case=True, start_from=0, page_size=0, output_format='JSON', report_spec=None, **kwargs)`
+- [x] `_async_find_business_capabilities(self, search_string='*', body=None, starts_with=False, ends_with=False, ignore_case=True, start_from=0, page_size=0, output_format='JSON', report_spec=None, **kwargs)`
   - **Planned**: Standard Find Pattern
-- [ ] `_async_get_business_capabilities_by_name(self, filter_string=None, classification_names=None, body=None, start_from=0, page_size=0, output_format='JSON', report_spec=None)`
+- [x] `_async_get_business_capabilities_by_name(self, filter_string=None, classification_names=None, body=None, start_from=0, page_size=0, output_format='JSON', report_spec=None)`
   - **Planned**: Standard Get By Name Pattern
-- [ ] `_async_get_business_capability_by_guid(self, business_capability_guid, body=None, output_format='JSON', report_spec=None)`
+- [x] `_async_get_business_capability_by_guid(self, business_capability_guid, body=None, output_format='JSON', report_spec=None)`
   - **Planned**: Standard Get By GUID Pattern
-- [ ] `find_business_capabilities(self, search_string='*', body=None, starts_with=False, ends_with=False, ignore_case=True, start_from=0, page_size=0, output_format='JSON', report_spec=None, **kwargs)`
+- [x] `find_business_capabilities(self, search_string='*', body=None, starts_with=False, ends_with=False, ignore_case=True, start_from=0, page_size=0, output_format='JSON', report_spec=None, **kwargs)`
   - **Planned**: Standard Find Pattern
-- [ ] `get_business_capabilities_by_name(self, filter_string=None, classification_names=None, body=None, start_from=0, page_size=0, output_format='JSON', report_spec=None)`
+- [x] `get_business_capabilities_by_name(self, filter_string=None, classification_names=None, body=None, start_from=0, page_size=0, output_format='JSON', report_spec=None)`
   - **Planned**: Standard Get By Name Pattern
-- [ ] `get_business_capability_by_guid(self, business_capability_guid, body=None, output_format='JSON', report_spec=None)`
+- [x] `get_business_capability_by_guid(self, business_capability_guid, body=None, output_format='JSON', report_spec=None)`
   - **Planned**: Standard Get By GUID Pattern
 
 ### external_links.py
-- [ ] `_async_find_external_references(self, search_string='*', body=None, starts_with=True, ends_with=False, ignore_case=False, start_from=0, page_size=100, output_format='JSON', report_spec='ExternalReference', **kwargs)`
+- [x] `_async_find_external_references(self, search_string='*', body=None, starts_with=True, ends_with=False, ignore_case=False, start_from=0, page_size=100, output_format='JSON', report_spec='ExternalReference', **kwargs)`
   - **Planned**: Standard Find Pattern
-- [ ] `_async_get_external_reference_by_guid(self, ext_ref_guid, element_type=None, body=None, output_format='JSON', report_spec='ExternalReference')`
+- [x] `_async_get_external_reference_by_guid(self, ext_ref_guid, element_type=None, body=None, output_format='JSON', report_spec='ExternalReference')`
   - **Planned**: Standard Get By GUID Pattern
-- [ ] `_async_get_external_references_by_name(self, filter_string=None, classification_names=None, body=None, start_from=0, page_size=0, output_format='JSON', report_spec='ExternalReference')`
+- [x] `_async_get_external_references_by_name(self, filter_string=None, classification_names=None, body=None, start_from=0, page_size=0, output_format='JSON', report_spec='ExternalReference')`
   - **Planned**: Standard Get By Name Pattern
-- [ ] `find_external_references(self, search_string='*', body=None, starts_with=True, ends_with=False, ignore_case=False, start_from=0, page_size=100, output_format='JSON', report_spec='ExternalReference', **kwargs)`
+- [x] `find_external_references(self, search_string='*', body=None, starts_with=True, ends_with=False, ignore_case=False, start_from=0, page_size=100, output_format='JSON', report_spec='ExternalReference', **kwargs)`
   - **Planned**: Standard Find Pattern
-- [ ] `get_external_reference_by_guid(self, ext_ref_guid, element_type=None, body=None, output_format='JSON', report_spec='ExternalReference')`
+- [x] `get_external_reference_by_guid(self, ext_ref_guid, element_type=None, body=None, output_format='JSON', report_spec='ExternalReference')`
   - **Planned**: Standard Get By GUID Pattern
-- [ ] `get_external_references_by_name(self, filter_string=None, classification_names=None, body=None, start_from=0, page_size=0, output_format='JSON', report_spec='ExternalReference')`
+- [x] `get_external_references_by_name(self, filter_string=None, classification_names=None, body=None, start_from=0, page_size=0, output_format='JSON', report_spec='ExternalReference')`
   - **Planned**: Standard Get By Name Pattern
 
 ### full_omag_server_config.py
@@ -786,13 +786,13 @@ async def _async_get_xxx_by_guid(
   - **Planned**: TODO
 
 ### glossary_manager.py
-- [ ] `_async_find_glossaries(self, search_string='*', body=None, starts_with=True, ends_with=False, ignore_case=False, start_from=0, page_size=100, output_format='JSON', report_spec=None, **kwargs)`
+- [x] `_async_find_glossaries(self, search_string='*', body=None, starts_with=True, ends_with=False, ignore_case=False, start_from=0, page_size=100, output_format='JSON', report_spec=None, **kwargs)`
   - **Planned**: Standard Find Pattern
-- [ ] `_async_find_glossary_terms(self, search_string='*', body=None, starts_with=True, ends_with=False, ignore_case=False, start_from=0, page_size=100, output_format='JSON', report_spec='Glossary-Term-DrE', **kwargs)`
+- [x] `_async_find_glossary_terms(self, search_string='*', body=None, starts_with=True, ends_with=False, ignore_case=False, start_from=0, page_size=100, output_format='JSON', report_spec='Glossary-Term-DrE', **kwargs)`
   - **Planned**: Standard Find Pattern
-- [ ] `_async_get_glossaries_by_name(self, filter_string=None, classification_names=None, body=None, start_from=0, page_size=0, output_format='JSON', report_spec=None)`
+- [x] `_async_get_glossaries_by_name(self, filter_string=None, classification_names=None, body=None, start_from=0, page_size=0, output_format='JSON', report_spec=None)`
   - **Planned**: Standard Get By Name Pattern
-- [ ] `_async_get_glossary_by_guid(self, glossary_guid, element_type='Glossary', body=None, output_format='JSON', report_spec=None)`
+- [x] `_async_get_glossary_by_guid(self, glossary_guid, element_type='Glossary', body=None, output_format='JSON', report_spec=None)`
   - **Planned**: Standard Get By GUID Pattern
 - [ ] `_async_get_glossary_term_activity_types(self)`
   - **Planned**: TODO
@@ -800,19 +800,19 @@ async def _async_get_xxx_by_guid(
   - **Planned**: TODO
 - [ ] `_async_get_glossary_term_statuses(self)`
   - **Planned**: TODO
-- [ ] `_async_get_term_by_guid(self, term_guid, element_type='GlossaryTerm', body=None, output_format='JSON', report_spec=None)`
+- [x] `_async_get_term_by_guid(self, term_guid, element_type='GlossaryTerm', body=None, output_format='JSON', report_spec=None)`
   - **Planned**: Standard Get By GUID Pattern
 - [ ] `_async_get_term_relationship_types(self)`
   - **Planned**: TODO
-- [ ] `_async_get_terms_by_name(self, filter_string=None, classification_names=None, body=None, start_from=0, page_size=0, output_format='JSON', report_spec=None)`
+- [x] `_async_get_terms_by_name(self, filter_string=None, classification_names=None, body=None, start_from=0, page_size=0, output_format='JSON', report_spec=None)`
   - **Planned**: Standard Get By Name Pattern
-- [ ] `find_glossaries(self, search_string='*', starts_with=True, ends_with=False, ignore_case=False, anchor_domain=None, metadata_element_type='Glossary', metadata_element_subtypes=None, skip_relationships=None, include_only_relationships=None, skip_classified_elements=None, include_only_classified_elements=None, graph_query_depth=3, governance_zone_filter=None, as_of_time=None, effective_time=None, relationship_page_size=0, limit_results_by_status=None, sequencing_order=None, sequencing_property=None, output_format='JSON', report_spec=None, start_from=0, page_size=100, property_names=None, body=None)`
+- [x] `find_glossaries(self, search_string='*', starts_with=True, ends_with=False, ignore_case=False, anchor_domain=None, metadata_element_type='Glossary', metadata_element_subtypes=None, skip_relationships=None, include_only_relationships=None, skip_classified_elements=None, include_only_classified_elements=None, graph_query_depth=3, governance_zone_filter=None, as_of_time=None, effective_time=None, relationship_page_size=0, limit_results_by_status=None, sequencing_order=None, sequencing_property=None, output_format='JSON', report_spec=None, start_from=0, page_size=100, property_names=None, body=None)`
   - **Planned**: Standard Find Pattern
-- [ ] `find_glossary_terms(self, search_string='*', starts_with=True, ends_with=False, ignore_case=False, anchor_domain=None, metadata_element_type='GlossaryTerm', metadata_element_subtypes=None, skip_relationships=None, include_only_relationships=None, skip_classified_elements=None, include_only_classified_elements=None, graph_query_depth=3, governance_zone_filter=None, as_of_time=None, effective_time=None, relationship_page_size=0, limit_results_by_status=None, sequencing_order=None, sequencing_property=None, output_format='JSON', report_spec='Glossary-Term-DrE', start_from=0, page_size=100, property_names=None, body=None)`
+- [x] `find_glossary_terms(self, search_string='*', starts_with=True, ends_with=False, ignore_case=False, anchor_domain=None, metadata_element_type='GlossaryTerm', metadata_element_subtypes=None, skip_relationships=None, include_only_relationships=None, skip_classified_elements=None, include_only_classified_elements=None, graph_query_depth=3, governance_zone_filter=None, as_of_time=None, effective_time=None, relationship_page_size=0, limit_results_by_status=None, sequencing_order=None, sequencing_property=None, output_format='JSON', report_spec='Glossary-Term-DrE', start_from=0, page_size=100, property_names=None, body=None)`
   - **Planned**: Standard Find Pattern
-- [ ] `get_glossaries_by_name(self, filter_string=None, classification_names=None, body=None, start_from=0, page_size=0, output_format='JSON', report_spec=None)`
+- [x] `get_glossaries_by_name(self, filter_string=None, classification_names=None, body=None, start_from=0, page_size=0, output_format='JSON', report_spec=None)`
   - **Planned**: Standard Get By Name Pattern
-- [ ] `get_glossary_by_guid(self, glossary_guid, element_type='Glossary', body=None, output_format='JSON', report_spec=None)`
+- [x] `get_glossary_by_guid(self, glossary_guid, element_type='Glossary', body=None, output_format='JSON', report_spec=None)`
   - **Planned**: Standard Get By GUID Pattern
 - [ ] `get_glossary_term_activity_types(self)`
   - **Planned**: TODO
@@ -820,57 +820,57 @@ async def _async_get_xxx_by_guid(
   - **Planned**: TODO
 - [ ] `get_glossary_term_statuses(self)`
   - **Planned**: TODO
-- [ ] `get_term_by_guid(self, term_guid, element_type='GlossaryTerm', body=None, output_format='JSON', report_spec=None)`
+- [x] `get_term_by_guid(self, term_guid, element_type='GlossaryTerm', body=None, output_format='JSON', report_spec=None)`
   - **Planned**: Standard Get By GUID Pattern
 - [ ] `get_term_relationship_types(self)`
   - **Planned**: TODO
-- [ ] `get_terms_by_name(self, filter_string=None, classification_names=None, body=None, start_from=0, page_size=0, output_format='JSON', report_spec=None)`
+- [x] `get_terms_by_name(self, filter_string=None, classification_names=None, body=None, start_from=0, page_size=0, output_format='JSON', report_spec=None)`
   - **Planned**: Standard Get By Name Pattern
 
 ### governance_officer.py
-- [ ] `_async_find_governance_definitions(self, search_string='*', body=None, starts_with=True, ends_with=False, ignore_case=False, start_from=0, page_size=100, output_format='JSON', report_spec=None, **kwargs)`
+- [x] `_async_find_governance_definitions(self, search_string='*', body=None, starts_with=True, ends_with=False, ignore_case=False, start_from=0, page_size=100, output_format='JSON', report_spec=None, **kwargs)`
   - **Planned**: Standard Find Pattern
-- [ ] `_async_get_governance_definition_by_guid(self, definition_guid, element_type=None, body=None, output_format='JSON', report_spec=None)`
+- [x] `_async_get_governance_definition_by_guid(self, definition_guid, element_type=None, body=None, output_format='JSON', report_spec=None)`
   - **Planned**: Standard Get By GUID Pattern
-- [ ] `_async_get_governance_definitions_by_name(self, filter_string, classification_names=None, body=None, start_from=0, page_size=0, output_format='JSON', report_spec=None)`
+- [x] `_async_get_governance_definitions_by_name(self, filter_string, classification_names=None, body=None, start_from=0, page_size=0, output_format='JSON', report_spec=None)`
   - **Planned**: Standard Get By Name Pattern
 - [ ] `_async_get_governance_process_graph(self, guid, element_type=None, body=None, output_format='JSON', report_spec=None)`
   - **Planned**: TODO
-- [ ] `find_governance_definitions(self, search_string='*', body=None, starts_with=True, ends_with=False, ignore_case=False, start_from=0, page_size=100, output_format='JSON', report_spec=None, **kwargs)`
+- [x] `find_governance_definitions(self, search_string='*', body=None, starts_with=True, ends_with=False, ignore_case=False, start_from=0, page_size=100, output_format='JSON', report_spec=None, **kwargs)`
   - **Planned**: Standard Find Pattern
-- [ ] `get_governance_definition_by_guid(self, definition_guid, element_type=None, body=None, output_format='JSON', report_spec=None)`
+- [x] `get_governance_definition_by_guid(self, definition_guid, element_type=None, body=None, output_format='JSON', report_spec=None)`
   - **Planned**: Standard Get By GUID Pattern
-- [ ] `get_governance_definitions_by_name(self, filter_string, classification_names=None, body=None, start_from=0, page_size=0, output_format='JSON', report_spec=None)`
+- [x] `get_governance_definitions_by_name(self, filter_string, classification_names=None, body=None, start_from=0, page_size=0, output_format='JSON', report_spec=None)`
   - **Planned**: Standard Get By Name Pattern
 - [ ] `get_governance_process_graph(self, guid, element_type=None, body=None, output_format='JSON', report_spec=None)`
   - **Planned**: TODO
 
 ### location_arena.py
-- [ ] `_async_find_locations(self, search_string='*', body=None, starts_with=True, ends_with=False, ignore_case=False, start_from=0, page_size=100, output_format='JSON', report_spec='Referenceable', **kwargs)`
+- [x] `_async_find_locations(self, search_string='*', body=None, starts_with=True, ends_with=False, ignore_case=False, start_from=0, page_size=100, output_format='JSON', report_spec='Referenceable', **kwargs)`
   - **Planned**: Standard Find Pattern
-- [ ] `_async_get_location_by_guid(self, location_guid, element_type=None, body=None, output_format='JSON', report_spec='Locations')`
+- [x] `_async_get_location_by_guid(self, location_guid, element_type=None, body=None, output_format='JSON', report_spec='Locations')`
   - **Planned**: Standard Get By GUID Pattern
-- [ ] `_async_get_locations_by_name(self, filter_string=None, classification_names=None, body=None, start_from=0, page_size=0, output_format='JSON', report_spec='Locations')`
+- [x] `_async_get_locations_by_name(self, filter_string=None, classification_names=None, body=None, start_from=0, page_size=0, output_format='JSON', report_spec='Locations')`
   - **Planned**: Standard Get By Name Pattern
-- [ ] `find_locations(self, search_string='*', body=None, starts_with=True, ends_with=False, ignore_case=False, start_from=0, page_size=100, output_format='JSON', report_spec='Referenceable', **kwargs)`
+- [x] `find_locations(self, search_string='*', body=None, starts_with=True, ends_with=False, ignore_case=False, start_from=0, page_size=100, output_format='JSON', report_spec='Referenceable', **kwargs)`
   - **Planned**: Standard Find Pattern
-- [ ] `get_location_by_guid(self, location_guid, element_type=None, body=None, output_format='JSON', report_spec='Locations')`
+- [x] `get_location_by_guid(self, location_guid, element_type=None, body=None, output_format='JSON', report_spec='Locations')`
   - **Planned**: Standard Get By GUID Pattern
-- [ ] `get_locations_by_name(self, filter_string=None, classification_names=None, body=None, start_from=0, page_size=0, output_format='JSON', report_spec='Locations')`
+- [x] `get_locations_by_name(self, filter_string=None, classification_names=None, body=None, start_from=0, page_size=0, output_format='JSON', report_spec='Locations')`
   - **Planned**: Standard Get By Name Pattern
 
 ### metadata_expert.py
-- [ ] `_async_find_elements_for_anchor(self, anchor_guid, search_string='*', starts_with=True, ends_with=False, ignore_case=False, anchor_domain=None, zone_filter=None, metadata_element_type=None, metadata_element_sub_type=None, skip_relationships=None, include_only_relationships=None, relationship_page_size=10, skip_classified_elements=None, include_only_classified_elements=None, graph_query_depth=5, as_of_time=None, effective_time=None, limit_results_by_status=None, sequencing_order='PROPERTY_ASCENDING', sequencing_property='qualifiedName', start_from=0, page_size=0, body=None)`
+- [x] `_async_find_elements_for_anchor(self, anchor_guid, search_string='*', starts_with=True, ends_with=False, ignore_case=False, anchor_domain=None, zone_filter=None, metadata_element_type=None, metadata_element_sub_type=None, skip_relationships=None, include_only_relationships=None, relationship_page_size=10, skip_classified_elements=None, include_only_classified_elements=None, graph_query_depth=5, as_of_time=None, effective_time=None, limit_results_by_status=None, sequencing_order='PROPERTY_ASCENDING', sequencing_property='qualifiedName', start_from=0, page_size=0, body=None)`
   - **Planned**: Standard Find Pattern
-- [ ] `_async_find_elements_in_anchor_domain(self, search_string='*', starts_with=True, ends_with=False, ignore_case=False, anchor_domain=None, zone_filter=None, metadata_element_type=None, metadata_element_sub_type=None, skip_relationships=None, include_only_relationships=None, relationship_page_size=10, skip_classified_elements=None, include_only_classified_elements=None, graph_query_depth=5, as_of_time=None, effective_time=None, limit_results_by_status=None, sequencing_order='PROPERTY_ASCENDING', sequencing_property='qualifiedName', start_from=0, page_size=0, body=None)`
+- [x] `_async_find_elements_in_anchor_domain(self, search_string='*', starts_with=True, ends_with=False, ignore_case=False, anchor_domain=None, zone_filter=None, metadata_element_type=None, metadata_element_sub_type=None, skip_relationships=None, include_only_relationships=None, relationship_page_size=10, skip_classified_elements=None, include_only_classified_elements=None, graph_query_depth=5, as_of_time=None, effective_time=None, limit_results_by_status=None, sequencing_order='PROPERTY_ASCENDING', sequencing_property='qualifiedName', start_from=0, page_size=0, body=None)`
   - **Planned**: Standard Find Pattern
-- [ ] `_async_find_elements_in_anchor_scope(self, anchor_scope_guid, search_string='*', starts_with=True, ends_with=False, ignore_case=False, anchor_domain=None, zone_filter=None, metadata_element_type=None, metadata_element_sub_type=None, skip_relationships=None, include_only_relationships=None, relationship_page_size=10, skip_classified_elements=None, include_only_classified_elements=None, graph_query_depth=5, as_of_time=None, effective_time=None, limit_results_by_status=None, sequencing_order='PROPERTY_ASCENDING', sequencing_property='qualifiedName', start_from=0, page_size=0, body=None)`
+- [x] `_async_find_elements_in_anchor_scope(self, anchor_scope_guid, search_string='*', starts_with=True, ends_with=False, ignore_case=False, anchor_domain=None, zone_filter=None, metadata_element_type=None, metadata_element_sub_type=None, skip_relationships=None, include_only_relationships=None, relationship_page_size=10, skip_classified_elements=None, include_only_classified_elements=None, graph_query_depth=5, as_of_time=None, effective_time=None, limit_results_by_status=None, sequencing_order='PROPERTY_ASCENDING', sequencing_property='qualifiedName', start_from=0, page_size=0, body=None)`
   - **Planned**: Standard Find Pattern
-- [ ] `_async_find_metadata_elements(self, body, for_lineage=None, for_duplicate_processing=None, start_from=0, page_size=max_paging_size, time_out=default_time_out)`
+- [x] `_async_find_metadata_elements(self, body, for_lineage=None, for_duplicate_processing=None, start_from=0, page_size=max_paging_size, time_out=default_time_out)`
   - **Planned**: Standard Find Pattern
-- [ ] `_async_find_metadata_elements_with_string(self, search_string='*', starts_with=True, ends_with=False, ignore_case=False, anchor_domain=None, zone_filter=None, metadata_element_type=None, metadata_element_sub_type=None, skip_relationships=None, include_only_relationships=None, relationship_page_size=10, skip_classified_elements=None, include_only_classified_elements=None, graph_query_depth=5, as_of_time=None, effective_time=None, limit_results_by_status=None, sequencing_order='PROPERTY_ASCENDING', sequencing_property='qualifiedName', start_from=0, page_size=0, body=None)`
+- [x] `_async_find_metadata_elements_with_string(self, search_string='*', starts_with=True, ends_with=False, ignore_case=False, anchor_domain=None, zone_filter=None, metadata_element_type=None, metadata_element_sub_type=None, skip_relationships=None, include_only_relationships=None, relationship_page_size=10, skip_classified_elements=None, include_only_classified_elements=None, graph_query_depth=5, as_of_time=None, effective_time=None, limit_results_by_status=None, sequencing_order='PROPERTY_ASCENDING', sequencing_property='qualifiedName', start_from=0, page_size=0, body=None)`
   - **Planned**: Standard Find Pattern
-- [ ] `_async_find_relationships_between_elements(self, body, for_lineage=None, for_duplicate_processing=None, start_from=0, page_size=max_paging_size, time_out=default_time_out, mermaid_only=False)`
+- [x] `_async_find_relationships_between_elements(self, body, for_lineage=None, for_duplicate_processing=None, start_from=0, page_size=max_paging_size, time_out=default_time_out, mermaid_only=False)`
   - **Planned**: Standard Find Pattern
 - [ ] `_async_get_all_metadata_element_relationships(self, end1_guid, end2_guid, body, for_lineage=None, for_duplicate_processing=None, starting_at_end=0, start_from=0, page_size=max_paging_size, time_out=default_time_out, mermaid_only=False)`
   - **Planned**: TODO
@@ -882,7 +882,7 @@ async def _async_get_xxx_by_guid(
   - **Planned**: TODO
 - [ ] `_async_get_element_history(self, guid, effective_time=None, oldest_first=False, from_time=None, to_time=None, start_from=0, page_size=0, body=None)`
   - **Planned**: TODO
-- [ ] `_async_get_metadata_element_by_guid(self, guid, effective_time=None, as_of_time=None, body=None)`
+- [x] `_async_get_metadata_element_by_guid(self, guid, effective_time=None, as_of_time=None, body=None)`
   - **Planned**: Standard Get By GUID Pattern
 - [ ] `_async_get_metadata_element_by_unique_name(self, name, property_name='qualifiedName', effective_time=None, body=None)`
   - **Planned**: TODO
@@ -892,21 +892,21 @@ async def _async_get_xxx_by_guid(
   - **Planned**: TODO
 - [ ] `_async_get_related_metadata_elements(self, element_guid, relationship_type, body, for_lineage=None, for_duplicate_processing=None, starting_at_end=0, start_from=0, page_size=max_paging_size, time_out=default_time_out, mermaid_only=False)`
   - **Planned**: TODO
-- [ ] `_async_get_relationship_by_guid(self, guid, effective_time=None, as_of_time=None, for_lineage=None, for_duplicate_processing=None)`
+- [x] `_async_get_relationship_by_guid(self, guid, effective_time=None, as_of_time=None, for_lineage=None, for_duplicate_processing=None)`
   - **Planned**: Standard Get By GUID Pattern
 - [ ] `_async_get_relationship_history(self, guid, effective_time=None, oldest_first=False, from_time=None, to_time=None, for_lineage=None, for_duplicate_processing=None, start_from=0, page_size=max_paging_size, time_out=default_time_out, mermaid_only=False)`
   - **Planned**: TODO
-- [ ] `find_elements_for_anchor(self, anchor_guid, search_string='*', starts_with=True, ends_with=False, ignore_case=False, anchor_domain=None, zone_filter=None, metadata_element_type=None, metadata_element_sub_type=None, skip_relationships=None, include_only_relationships=None, relationship_page_size=10, skip_classified_elements=None, include_only_classified_elements=None, graph_query_depth=5, as_of_time=None, effective_time=None, limit_results_by_status=None, sequencing_order='PROPERTY_ASCENDING', sequencing_property='qualifiedName', start_from=0, page_size=0, body=None)`
+- [x] `find_elements_for_anchor(self, anchor_guid, search_string='*', starts_with=True, ends_with=False, ignore_case=False, anchor_domain=None, zone_filter=None, metadata_element_type=None, metadata_element_sub_type=None, skip_relationships=None, include_only_relationships=None, relationship_page_size=10, skip_classified_elements=None, include_only_classified_elements=None, graph_query_depth=5, as_of_time=None, effective_time=None, limit_results_by_status=None, sequencing_order='PROPERTY_ASCENDING', sequencing_property='qualifiedName', start_from=0, page_size=0, body=None)`
   - **Planned**: Standard Find Pattern
-- [ ] `find_elements_in_anchor_domain(self, search_string='*', starts_with=True, ends_with=False, ignore_case=False, anchor_domain=None, zone_filter=None, metadata_element_type=None, metadata_element_sub_type=None, skip_relationships=None, include_only_relationships=None, relationship_page_size=10, skip_classified_elements=None, include_only_classified_elements=None, graph_query_depth=5, as_of_time=None, effective_time=None, limit_results_by_status=None, sequencing_order='PROPERTY_ASCENDING', sequencing_property='qualifiedName', start_from=0, page_size=0, body=None)`
+- [x] `find_elements_in_anchor_domain(self, search_string='*', starts_with=True, ends_with=False, ignore_case=False, anchor_domain=None, zone_filter=None, metadata_element_type=None, metadata_element_sub_type=None, skip_relationships=None, include_only_relationships=None, relationship_page_size=10, skip_classified_elements=None, include_only_classified_elements=None, graph_query_depth=5, as_of_time=None, effective_time=None, limit_results_by_status=None, sequencing_order='PROPERTY_ASCENDING', sequencing_property='qualifiedName', start_from=0, page_size=0, body=None)`
   - **Planned**: Standard Find Pattern
-- [ ] `find_elements_in_anchor_scope(self, anchor_scope_guid, search_string='*', starts_with=True, ends_with=False, ignore_case=False, anchor_domain=None, zone_filter=None, metadata_element_type=None, metadata_element_sub_type=None, skip_relationships=None, include_only_relationships=None, relationship_page_size=10, skip_classified_elements=None, include_only_classified_elements=None, graph_query_depth=5, as_of_time=None, effective_time=None, limit_results_by_status=None, sequencing_order='PROPERTY_ASCENDING', sequencing_property='qualifiedName', start_from=0, page_size=0, body=None)`
+- [x] `find_elements_in_anchor_scope(self, anchor_scope_guid, search_string='*', starts_with=True, ends_with=False, ignore_case=False, anchor_domain=None, zone_filter=None, metadata_element_type=None, metadata_element_sub_type=None, skip_relationships=None, include_only_relationships=None, relationship_page_size=10, skip_classified_elements=None, include_only_classified_elements=None, graph_query_depth=5, as_of_time=None, effective_time=None, limit_results_by_status=None, sequencing_order='PROPERTY_ASCENDING', sequencing_property='qualifiedName', start_from=0, page_size=0, body=None)`
   - **Planned**: Standard Find Pattern
-- [ ] `find_metadata_elements(self, body, for_lineage=None, for_duplicate_processing=None, start_from=0, page_size=max_paging_size, time_out=default_time_out)`
+- [x] `find_metadata_elements(self, body, for_lineage=None, for_duplicate_processing=None, start_from=0, page_size=max_paging_size, time_out=default_time_out)`
   - **Planned**: Standard Find Pattern
-- [ ] `find_metadata_elements_with_string(self, search_string='*', starts_with=True, ends_with=False, ignore_case=False, anchor_domain=None, zone_filter=None, metadata_element_type=None, metadata_element_sub_type=None, skip_relationships=None, include_only_relationships=None, relationship_page_size=10, skip_classified_elements=None, include_only_classified_elements=None, graph_query_depth=5, as_of_time=None, effective_time=None, limit_results_by_status=None, sequencing_order='PROPERTY_ASCENDING', sequencing_property='qualifiedName', start_from=0, page_size=0, body=None)`
+- [x] `find_metadata_elements_with_string(self, search_string='*', starts_with=True, ends_with=False, ignore_case=False, anchor_domain=None, zone_filter=None, metadata_element_type=None, metadata_element_sub_type=None, skip_relationships=None, include_only_relationships=None, relationship_page_size=10, skip_classified_elements=None, include_only_classified_elements=None, graph_query_depth=5, as_of_time=None, effective_time=None, limit_results_by_status=None, sequencing_order='PROPERTY_ASCENDING', sequencing_property='qualifiedName', start_from=0, page_size=0, body=None)`
   - **Planned**: Standard Find Pattern
-- [ ] `find_relationships_between_elements(self, body, for_lineage=None, for_duplicate_processing=None, start_from=0, page_size=max_paging_size, time_out=default_time_out, mermaid_only=False)`
+- [x] `find_relationships_between_elements(self, body, for_lineage=None, for_duplicate_processing=None, start_from=0, page_size=max_paging_size, time_out=default_time_out, mermaid_only=False)`
   - **Planned**: Standard Find Pattern
 - [ ] `get_all_metadata_element_relationships(self, end1_guid, end2_guid, body, for_lineage=None, for_duplicate_processing=None, starting_at_end=0, start_from=0, page_size=max_paging_size, time_out=default_time_out, mermaid_only=False)`
   - **Planned**: TODO
@@ -918,7 +918,7 @@ async def _async_get_xxx_by_guid(
   - **Planned**: TODO
 - [ ] `get_element_history(self, guid, effective_time=None, oldest_first=False, from_time=None, to_time=None, start_from=0, page_size=max_paging_size, body=None)`
   - **Planned**: TODO
-- [ ] `get_metadata_element_by_guid(self, guid, effective_time=None, as_of_time=None, body=None)`
+- [x] `get_metadata_element_by_guid(self, guid, effective_time=None, as_of_time=None, body=None)`
   - **Planned**: Standard Get By GUID Pattern
 - [ ] `get_metadata_element_by_unique_name(self, name, property_name='qualifiedName', effective_time=None, body=None)`
   - **Planned**: TODO
@@ -928,7 +928,7 @@ async def _async_get_xxx_by_guid(
   - **Planned**: TODO
 - [ ] `get_related_metadata_elements(self, guid, relationship_type, body, for_lineage=None, for_duplicate_processing=None, starting_at_end=0, start_from=0, page_size=max_paging_size, time_out=default_time_out, mermaid_only=False)`
   - **Planned**: TODO
-- [ ] `get_relationship_by_guid(self, guid, effective_time=None, for_lineage=None, for_duplicate_processing=None)`
+- [x] `get_relationship_by_guid(self, guid, effective_time=None, for_lineage=None, for_duplicate_processing=None)`
   - **Planned**: Standard Get By GUID Pattern
 - [ ] `get_relationship_history(self, guid, effective_time=None, oldest_first=False, from_time=None, to_time=None, for_lineage=None, for_duplicate_processing=None, start_from=0, page_size=max_paging_size, time_out=default_time_out, mermaid_only=False)`
   - **Planned**: TODO
@@ -996,39 +996,39 @@ async def _async_get_xxx_by_guid(
   - **Planned**: TODO
 
 ### product_manager.py
-- [ ] `_async_find_digital_product_catalogs(self, search_string='*', body=None, starts_with=False, ends_with=False, ignore_case=True, start_from=0, page_size=0, output_format='JSON', report_spec=None, **kwargs)`
+- [x] `_async_find_digital_product_catalogs(self, search_string='*', body=None, starts_with=False, ends_with=False, ignore_case=True, start_from=0, page_size=0, output_format='JSON', report_spec=None, **kwargs)`
   - **Planned**: Standard Find Pattern
-- [ ] `_async_find_digital_products(self, search_string='*', body=None, starts_with=True, ends_with=False, ignore_case=False, start_from=0, page_size=100, output_format='JSON', report_spec=None, metadata_element_subtype=None, **kwargs)`
+- [x] `_async_find_digital_products(self, search_string='*', body=None, starts_with=True, ends_with=False, ignore_case=False, start_from=0, page_size=100, output_format='JSON', report_spec=None, metadata_element_subtype=None, **kwargs)`
   - **Planned**: Standard Find Pattern
-- [ ] `_async_get_digital_product_by_guid(self, digital_product_guid, body=None, output_format='JSON', report_spec=None)`
+- [x] `_async_get_digital_product_by_guid(self, digital_product_guid, body=None, output_format='JSON', report_spec=None)`
   - **Planned**: Standard Get By GUID Pattern
-- [ ] `_async_get_digital_product_catalog_by_guid(self, digital_product_catalog_guid, body=None, output_format='JSON', report_spec=None)`
+- [x] `_async_get_digital_product_catalog_by_guid(self, digital_product_catalog_guid, body=None, output_format='JSON', report_spec=None)`
   - **Planned**: Standard Get By GUID Pattern
-- [ ] `_async_get_digital_product_catalogs_by_name(self, filter_string=None, classification_names=None, body=None, start_from=0, page_size=0, output_format='JSON', report_spec=None)`
+- [x] `_async_get_digital_product_catalogs_by_name(self, filter_string=None, classification_names=None, body=None, start_from=0, page_size=0, output_format='JSON', report_spec=None)`
   - **Planned**: Standard Get By Name Pattern
-- [ ] `_async_get_digital_products_by_name(self, filter_string, classification_names=None, body=None, start_from=0, page_size=0, output_format='JSON', report_spec=None)`
+- [x] `_async_get_digital_products_by_name(self, filter_string, classification_names=None, body=None, start_from=0, page_size=0, output_format='JSON', report_spec=None)`
   - **Planned**: Standard Get By Name Pattern
-- [ ] `find_digital_product_catalogs(self, search_string='*', body=None, starts_with=False, ends_with=False, ignore_case=True, start_from=0, page_size=0, output_format='JSON', report_spec=None, **kwargs)`
+- [x] `find_digital_product_catalogs(self, search_string='*', body=None, starts_with=False, ends_with=False, ignore_case=True, start_from=0, page_size=0, output_format='JSON', report_spec=None, **kwargs)`
   - **Planned**: Standard Find Pattern
-- [ ] `find_digital_products(self, search_string='*', body=None, starts_with=True, ends_with=False, ignore_case=False, start_from=0, page_size=100, output_format='JSON', report_spec=None, metadata_element_subtype=None, **kwargs)`
+- [x] `find_digital_products(self, search_string='*', body=None, starts_with=True, ends_with=False, ignore_case=False, start_from=0, page_size=100, output_format='JSON', report_spec=None, metadata_element_subtype=None, **kwargs)`
   - **Planned**: Standard Find Pattern
-- [ ] `get_digital_product_by_guid(self, digital_product_guid, body=None, output_format='JSON', report_spec=None)`
+- [x] `get_digital_product_by_guid(self, digital_product_guid, body=None, output_format='JSON', report_spec=None)`
   - **Planned**: Standard Get By GUID Pattern
-- [ ] `get_digital_product_catalog_by_guid(self, digital_product_catalog_guid, body=None, output_format='JSON', report_spec=None)`
+- [x] `get_digital_product_catalog_by_guid(self, digital_product_catalog_guid, body=None, output_format='JSON', report_spec=None)`
   - **Planned**: Standard Get By GUID Pattern
-- [ ] `get_digital_product_catalogs_by_name(self, filter_string=None, classification_names=None, body=None, start_from=0, page_size=0, output_format='JSON', report_spec=None)`
+- [x] `get_digital_product_catalogs_by_name(self, filter_string=None, classification_names=None, body=None, start_from=0, page_size=0, output_format='JSON', report_spec=None)`
   - **Planned**: Standard Get By Name Pattern
-- [ ] `get_digital_products_by_name(self, filter_string, classification_names=None, body=None, start_from=0, page_size=0, output_format='JSON', report_spec=None)`
+- [x] `get_digital_products_by_name(self, filter_string, classification_names=None, body=None, start_from=0, page_size=0, output_format='JSON', report_spec=None)`
   - **Planned**: Standard Get By Name Pattern
 
 ### project_manager.py
-- [ ] `_async_find_projects(self, search_string='*', body=None, starts_with=True, ends_with=False, ignore_case=False, start_from=0, page_size=100, output_format='JSON', report_spec='Referenceable', **kwargs)`
+- [x] `_async_find_projects(self, search_string='*', body=None, starts_with=True, ends_with=False, ignore_case=False, start_from=0, page_size=100, output_format='JSON', report_spec='Referenceable', **kwargs)`
   - **Planned**: Standard Find Pattern
 - [ ] `_async_get_classified_projects(self, project_classification, start_from=0, page_size=0, output_format='JSON', report_spec=None, body=None)`
   - **Planned**: TODO
 - [ ] `_async_get_linked_projects(self, parent_guid, body=None, output_format='JSON', report_spec=None)`
   - **Planned**: TODO
-- [ ] `_async_get_project_by_guid(self, project_guid, element_type=None, body=None, output_format='JSON', report_spec=None)`
+- [x] `_async_get_project_by_guid(self, project_guid, element_type=None, body=None, output_format='JSON', report_spec=None)`
   - **Planned**: Standard Get By GUID Pattern
 - [ ] `_async_get_project_graph(self, project_guid, element_type=None, body=None, output_format='JSON', report_spec=None)`
   - **Planned**: TODO
@@ -1036,15 +1036,15 @@ async def _async_get_xxx_by_guid(
   - **Planned**: TODO
 - [ ] `_async_get_projects_by_classification_properties(self, approach=None, management_style=None, results_usage=None, start_from=0, page_size=0, output_format='JSON', report_spec=None, body=None)`
   - **Planned**: TODO
-- [ ] `_async_get_projects_by_name(self, filter_string=None, classification_names=None, body=None, start_from=0, page_size=0, output_format='JSON', report_spec=None)`
+- [x] `_async_get_projects_by_name(self, filter_string=None, classification_names=None, body=None, start_from=0, page_size=0, output_format='JSON', report_spec=None)`
   - **Planned**: Standard Get By Name Pattern
-- [ ] `find_projects(self, search_string='*', body=None, starts_with=True, ends_with=False, ignore_case=False, start_from=0, page_size=100, output_format='JSON', report_spec='Referenceable', **kwargs)`
+- [x] `find_projects(self, search_string='*', body=None, starts_with=True, ends_with=False, ignore_case=False, start_from=0, page_size=100, output_format='JSON', report_spec='Referenceable', **kwargs)`
   - **Planned**: Standard Find Pattern
 - [ ] `get_classified_projects(self, project_classification, start_from=0, page_size=0, output_format='JSON', report_spec=None, body=None)`
   - **Planned**: TODO
 - [ ] `get_linked_projects(self, parent_guid, body=None, output_format='JSON', report_spec=None)`
   - **Planned**: TODO
-- [ ] `get_project_by_guid(self, project_guid, element_type=None, body=None, output_format='JSON', report_spec=None)`
+- [x] `get_project_by_guid(self, project_guid, element_type=None, body=None, output_format='JSON', report_spec=None)`
   - **Planned**: Standard Get By GUID Pattern
 - [ ] `get_project_graph(self, project_guid, element_type=None, body=None, output_format='JSON', report_spec=None)`
   - **Planned**: TODO
@@ -1052,37 +1052,37 @@ async def _async_get_xxx_by_guid(
   - **Planned**: TODO
 - [ ] `get_projects_by_classification_properties(self, approach=None, management_style=None, results_usage=None, start_from=0, page_size=0, output_format='JSON', report_spec=None, body=None)`
   - **Planned**: TODO
-- [ ] `get_projects_by_name(self, filter_string=None, classification_names=None, body=None, start_from=0, page_size=0, output_format='JSON', report_spec=None)`
+- [x] `get_projects_by_name(self, filter_string=None, classification_names=None, body=None, start_from=0, page_size=0, output_format='JSON', report_spec=None)`
   - **Planned**: Standard Get By Name Pattern
 
 ### reference_data.py
-- [ ] `_async_find_valid_value_definitions(self, search_string, body=None, starts_with=False, ends_with=False, ignore_case=False, start_from=0, page_size=0, output_format='json', report_spec=None, **kwargs)`
+- [x] `_async_find_valid_value_definitions(self, search_string, body=None, starts_with=False, ends_with=False, ignore_case=False, start_from=0, page_size=0, output_format='json', report_spec=None, **kwargs)`
   - **Planned**: Standard Find Pattern
-- [ ] `_async_get_valid_value_definition_by_guid(self, vv_def_guid, element_type=None, body=None, output_format='JSON', report_spec=None)`
+- [x] `_async_get_valid_value_definition_by_guid(self, vv_def_guid, element_type=None, body=None, output_format='JSON', report_spec=None)`
   - **Planned**: Standard Get By GUID Pattern
-- [ ] `_async_get_valid_value_definitions_by_name(self, filter_string=None, classification_names=None, body=None, start_from=0, page_size=0, output_format='JSON', report_spec=None)`
+- [x] `_async_get_valid_value_definitions_by_name(self, filter_string=None, classification_names=None, body=None, start_from=0, page_size=0, output_format='JSON', report_spec=None)`
   - **Planned**: Standard Get By Name Pattern
-- [ ] `find_valid_value_definitions(self, search_string, body=None, starts_with=False, ends_with=False, ignore_case=False, start_from=0, page_size=0, output_format='json', report_spec=None, **kwargs)`
+- [x] `find_valid_value_definitions(self, search_string, body=None, starts_with=False, ends_with=False, ignore_case=False, start_from=0, page_size=0, output_format='json', report_spec=None, **kwargs)`
   - **Planned**: Standard Find Pattern
-- [ ] `get_valid_value_definition_by_guid(self, vv_def_guid, element_type=None, body=None, output_format='JSON', report_spec=None)`
+- [x] `get_valid_value_definition_by_guid(self, vv_def_guid, element_type=None, body=None, output_format='JSON', report_spec=None)`
   - **Planned**: Standard Get By GUID Pattern
-- [ ] `get_valid_value_definitions_by_name(self, filter_string=None, classification_names=None, body=None, start_from=0, page_size=0, output_format='JSON', report_spec=None)`
+- [x] `get_valid_value_definitions_by_name(self, filter_string=None, classification_names=None, body=None, start_from=0, page_size=0, output_format='JSON', report_spec=None)`
   - **Planned**: Standard Get By Name Pattern
 
 ### runtime_manager.py
 - [ ] `_async_get_integration_connector_config_properties(self, connector_name, server_guid=None, server_name=None, qualified_name=None, organization_name=None, output_format='JSON', report_spec='IntegrationConnector', body=None)`
   - **Planned**: TODO
-- [ ] `_async_get_platform_by_guid(self, platform_guid, output_format='JSON', report_spec='Platforms', body=None)`
+- [x] `_async_get_platform_by_guid(self, platform_guid, output_format='JSON', report_spec='Platforms', body=None)`
   - **Planned**: Standard Get By GUID Pattern
 - [ ] `_async_get_platform_report(self, platform_guid=None, platform_name=None, output_format='JSON', report_spec='Platform-Report')`
   - **Planned**: TODO
 - [ ] `_async_get_platform_templates_by_type(self, filter_string=None, effective_time=None, start_from=0, page_size=max_paging_size, output_format='JSON', report_spec='Platforms', body=None)`
   - **Planned**: TODO
-- [ ] `_async_get_platforms_by_name(self, filter_string=None, start_from=0, page_size=0, output_format='JSON', report_spec='Platforms', body=None)`
+- [x] `_async_get_platforms_by_name(self, filter_string=None, start_from=0, page_size=0, output_format='JSON', report_spec='Platforms', body=None)`
   - **Planned**: Standard Get By Name Pattern
 - [ ] `_async_get_platforms_by_type(self, filter_string=None, start_from=0, page_size=max_paging_size, output_format='JSON', report_spec='Platforms', body=None)`
   - **Planned**: TODO
-- [ ] `_async_get_server_by_guid(self, server_guid=None, output_format='JSON', report_spec='OMAGServers', body=None)`
+- [x] `_async_get_server_by_guid(self, server_guid=None, output_format='JSON', report_spec='OMAGServers', body=None)`
   - **Planned**: Standard Get By GUID Pattern
 - [ ] `_async_get_server_report(self, server_guid=None, server_name=None, output_format='JSON', report_spec='OMAGServers', organization_name=None)`
   - **Planned**: TODO
@@ -1090,21 +1090,21 @@ async def _async_get_xxx_by_guid(
   - **Planned**: TODO
 - [ ] `_async_get_servers_by_dep_impl_type(self, filter_string, start_from=0, page_size=0, output_format='JSON', report_spec='OMAGServers', body=None)`
   - **Planned**: TODO
-- [ ] `_async_get_servers_by_name(self, filter_string=None, start_from=0, page_size=max_paging_size, output_format='JSON', report_spec='OMAGServers', body=None)`
+- [x] `_async_get_servers_by_name(self, filter_string=None, start_from=0, page_size=max_paging_size, output_format='JSON', report_spec='OMAGServers', body=None)`
   - **Planned**: Standard Get By Name Pattern
 - [ ] `get_integration_connector_config_properties(self, connector_name, server_guid=None, server_name=None, qualified_name=None, organization_name=None, output_format='JSON', report_spec='IntegrationConnector', body=None)`
   - **Planned**: TODO
-- [ ] `get_platform_by_guid(self, platform_guid, output_format='JSON', report_spec='Platforms', body=None)`
+- [x] `get_platform_by_guid(self, platform_guid, output_format='JSON', report_spec='Platforms', body=None)`
   - **Planned**: Standard Get By GUID Pattern
 - [ ] `get_platform_report(self, platform_guid=None, platform_name=None, output_format='JSON', report_spec='Platform-Report')`
   - **Planned**: TODO
 - [ ] `get_platform_templates_by_type(self, filter_string=None, effective_time=None, start_from=0, page_size=max_paging_size, output_format='JSON', report_spec='Platforms', body=None)`
   - **Planned**: TODO
-- [ ] `get_platforms_by_name(self, filter_string=None, start_from=0, page_size=max_paging_size, output_format='JSON', report_spec='Platforms', body=None)`
+- [x] `get_platforms_by_name(self, filter_string=None, start_from=0, page_size=max_paging_size, output_format='JSON', report_spec='Platforms', body=None)`
   - **Planned**: Standard Get By Name Pattern
 - [ ] `get_platforms_by_type(self, filter_string=None, start_from=0, page_size=max_paging_size, output_format='JSON', report_spec='Platforms', body=None)`
   - **Planned**: TODO
-- [ ] `get_server_by_guid(self, server_guid=None, output_format='JSON', report_spec='OMAGServers', body=None)`
+- [x] `get_server_by_guid(self, server_guid=None, output_format='JSON', report_spec='OMAGServers', body=None)`
   - **Planned**: Standard Get By GUID Pattern
 - [ ] `get_server_report(self, server_guid=None, server_name=None, output_format='JSON', report_spec='OMAGServers', organization_name=None)`
   - **Planned**: TODO
@@ -1112,23 +1112,23 @@ async def _async_get_xxx_by_guid(
   - **Planned**: TODO
 - [ ] `get_servers_by_dep_impl_type(self, search_string='*', effective_time=None, start_from=0, page_size=0, output_format='JSON', report_spec='OMAGServers', body=None)`
   - **Planned**: TODO
-- [ ] `get_servers_by_name(self, filter_string, start_from=0, page_size=0, output_format='JSON', report_spec='OMAGServers', body=None)`
+- [x] `get_servers_by_name(self, filter_string, start_from=0, page_size=0, output_format='JSON', report_spec='OMAGServers', body=None)`
   - **Planned**: Standard Get By Name Pattern
 
 ### schema_maker.py
-- [ ] `_async_find_schema_types(self, search_string='*', body=None, starts_with=True, ends_with=False, ignore_case=False, start_from=0, page_size=100, output_format='JSON', report_spec='Referenceable', **kwargs)`
+- [x] `_async_find_schema_types(self, search_string='*', body=None, starts_with=True, ends_with=False, ignore_case=False, start_from=0, page_size=100, output_format='JSON', report_spec='Referenceable', **kwargs)`
   - **Planned**: Standard Find Pattern
-- [ ] `_async_get_schema_type_by_guid(self, schema_type_guid, element_type='SchemaType', body=None, output_format='JSON', report_spec='SchemaTypes')`
+- [x] `_async_get_schema_type_by_guid(self, schema_type_guid, element_type='SchemaType', body=None, output_format='JSON', report_spec='SchemaTypes')`
   - **Planned**: Standard Get By GUID Pattern
-- [ ] `find_schema_types(self, search_string='*', body=None, starts_with=True, ends_with=False, ignore_case=False, start_from=0, page_size=100, output_format='JSON', report_spec='Referenceable', **kwargs)`
+- [x] `find_schema_types(self, search_string='*', body=None, starts_with=True, ends_with=False, ignore_case=False, start_from=0, page_size=100, output_format='JSON', report_spec='Referenceable', **kwargs)`
   - **Planned**: Standard Find Pattern
-- [ ] `get_schema_type_by_guid(self, schema_type_guid, element_type='SchemaType', body=None, output_format='JSON', report_spec='SchemaTypes')`
+- [x] `get_schema_type_by_guid(self, schema_type_guid, element_type='SchemaType', body=None, output_format='JSON', report_spec='SchemaTypes')`
   - **Planned**: Standard Get By GUID Pattern
 
 ### security_officer.py
-- [ ] `_async_find_security_groups(self, search_string, graph_query_depth=0, start_from=0, page_size=0)`
+- [x] `_async_find_security_groups(self, search_string, graph_query_depth=0, start_from=0, page_size=0)`
   - **Planned**: Standard Find Pattern
-- [ ] `_async_find_security_roles(self, search_string, graph_query_depth=0, start_from=0, page_size=0)`
+- [x] `_async_find_security_roles(self, search_string, graph_query_depth=0, start_from=0, page_size=0)`
   - **Planned**: Standard Find Pattern
 - [ ] `_async_get_security_access_control(self, platform_name, control_name, platform_guid=None)`
   - **Planned**: TODO
@@ -1136,9 +1136,9 @@ async def _async_get_xxx_by_guid(
   - **Planned**: TODO
 - [ ] `_async_get_user_list(self, platform_name, status=None, user_type=None, platform_guid=None)`
   - **Planned**: TODO
-- [ ] `find_security_groups(self, search_string, graph_query_depth=0, start_from=0, page_size=0)`
+- [x] `find_security_groups(self, search_string, graph_query_depth=0, start_from=0, page_size=0)`
   - **Planned**: Standard Find Pattern
-- [ ] `find_security_roles(self, search_string, graph_query_depth=0, start_from=0, page_size=0)`
+- [x] `find_security_roles(self, search_string, graph_query_depth=0, start_from=0, page_size=0)`
   - **Planned**: Standard Find Pattern
 - [ ] `get_security_access_control(self, platform_name, control_name, platform_guid=None)`
   - **Planned**: TODO
@@ -1176,111 +1176,111 @@ async def _async_get_xxx_by_guid(
   - **Planned**: TODO
 
 ### solution_architect.py
-- [ ] `_async_find_design_patterns(self, search_string='*', body=None, starts_with=True, ends_with=False, ignore_case=False, start_from=0, page_size=100, output_format='JSON', report_spec='Design-Pattern-DrE', **kwargs)`
+- [x] `_async_find_design_patterns(self, search_string='*', body=None, starts_with=True, ends_with=False, ignore_case=False, start_from=0, page_size=100, output_format='JSON', report_spec='Design-Pattern-DrE', **kwargs)`
   - **Planned**: Standard Find Pattern
-- [ ] `_async_find_information_supply_chains(self, search_string='*', add_implementation=True, body=None, starts_with=True, ends_with=False, ignore_case=False, start_from=0, page_size=100, output_format='JSON', report_spec=None, **kwargs)`
+- [x] `_async_find_information_supply_chains(self, search_string='*', add_implementation=True, body=None, starts_with=True, ends_with=False, ignore_case=False, start_from=0, page_size=100, output_format='JSON', report_spec=None, **kwargs)`
   - **Planned**: Standard Find Pattern
-- [ ] `_async_find_solution_blueprints(self, search_string='*', body=None, starts_with=True, ends_with=False, ignore_case=False, start_from=0, page_size=100, output_format='JSON', report_spec='Solution-Blueprint', **kwargs)`
+- [x] `_async_find_solution_blueprints(self, search_string='*', body=None, starts_with=True, ends_with=False, ignore_case=False, start_from=0, page_size=100, output_format='JSON', report_spec='Solution-Blueprint', **kwargs)`
   - **Planned**: Standard Find Pattern
-- [ ] `_async_find_solution_components(self, search_string='*', body=None, starts_with=True, ends_with=False, ignore_case=False, start_from=0, page_size=100, output_format='JSON', report_spec=None, **kwargs)`
+- [x] `_async_find_solution_components(self, search_string='*', body=None, starts_with=True, ends_with=False, ignore_case=False, start_from=0, page_size=100, output_format='JSON', report_spec=None, **kwargs)`
   - **Planned**: Standard Find Pattern
-- [ ] `_async_find_solution_roles(self, search_string='*', body=None, starts_with=True, ends_with=False, ignore_case=False, start_from=0, page_size=100, output_format='JSON', report_spec=None, **kwargs)`
+- [x] `_async_find_solution_roles(self, search_string='*', body=None, starts_with=True, ends_with=False, ignore_case=False, start_from=0, page_size=100, output_format='JSON', report_spec=None, **kwargs)`
   - **Planned**: Standard Find Pattern
-- [ ] `_async_get_design_pattern_by_guid(self, guid, body=None, output_format='JSON', report_spec='Design-Pattern-DrE', **kwargs)`
+- [x] `_async_get_design_pattern_by_guid(self, guid, body=None, output_format='JSON', report_spec='Design-Pattern-DrE', **kwargs)`
   - **Planned**: Standard Get By GUID Pattern
-- [ ] `_async_get_design_patterns_by_name(self, name, body=None, start_from=0, page_size=max_paging_size, output_format='JSON', report_spec='Design-Pattern-DrE', **kwargs)`
+- [x] `_async_get_design_patterns_by_name(self, name, body=None, start_from=0, page_size=max_paging_size, output_format='JSON', report_spec='Design-Pattern-DrE', **kwargs)`
   - **Planned**: Standard Get By Name Pattern
-- [ ] `_async_get_info_supply_chain_by_guid(self, guid, body=None, add_implementation=True, output_format='JSON', report_spec=None)`
+- [x] `_async_get_info_supply_chain_by_guid(self, guid, body=None, add_implementation=True, output_format='JSON', report_spec=None)`
   - **Planned**: Standard Get By GUID Pattern
-- [ ] `_async_get_info_supply_chain_by_name(self, search_filter, body=None, add_implementation=True, start_from=0, page_size=max_paging_size, output_format='JSON', report_spec=None)`
+- [x] `_async_get_info_supply_chain_by_name(self, search_filter, body=None, add_implementation=True, start_from=0, page_size=max_paging_size, output_format='JSON', report_spec=None)`
   - **Planned**: Standard Get By Name Pattern
-- [ ] `_async_get_solution_blueprint_by_guid(self, guid, body=None, output_format='JSON', report_spec='Solution-Blueprint')`
+- [x] `_async_get_solution_blueprint_by_guid(self, guid, body=None, output_format='JSON', report_spec='Solution-Blueprint')`
   - **Planned**: Standard Get By GUID Pattern
-- [ ] `_async_get_solution_blueprints_by_name(self, search_filter, body=None, start_from=0, page_size=max_paging_size, output_format='JSON', report_spec='Solution-Blueprint')`
+- [x] `_async_get_solution_blueprints_by_name(self, search_filter, body=None, start_from=0, page_size=max_paging_size, output_format='JSON', report_spec='Solution-Blueprint')`
   - **Planned**: Standard Get By Name Pattern
-- [ ] `_async_get_solution_component_by_guid(self, guid, body=None, output_format='JSON', report_spec='Solution-Component-DrE')`
+- [x] `_async_get_solution_component_by_guid(self, guid, body=None, output_format='JSON', report_spec='Solution-Component-DrE')`
   - **Planned**: Standard Get By GUID Pattern
 - [ ] `_async_get_solution_component_implementations(self, solution_component_guid, body=None, start_from=0, page_size=0, output_format='JSON')`
   - **Planned**: TODO
-- [ ] `_async_get_solution_components_by_name(self, search_filter, body=None, start_from=0, page_size=0, output_format='JSON', report_spec=None)`
+- [x] `_async_get_solution_components_by_name(self, search_filter, body=None, start_from=0, page_size=0, output_format='JSON', report_spec=None)`
   - **Planned**: Standard Get By Name Pattern
-- [ ] `_async_get_solution_role_by_guid(self, guid, body=None, output_format='JSON', report_spec=None)`
+- [x] `_async_get_solution_role_by_guid(self, guid, body=None, output_format='JSON', report_spec=None)`
   - **Planned**: Standard Get By GUID Pattern
-- [ ] `_async_get_solution_roles_by_name(self, search_filter, body=None, start_from=0, page_size=max_paging_size, output_format='JSON', report_spec=None)`
+- [x] `_async_get_solution_roles_by_name(self, search_filter, body=None, start_from=0, page_size=max_paging_size, output_format='JSON', report_spec=None)`
   - **Planned**: Standard Get By Name Pattern
-- [ ] `find_all_information_supply_chains(self, add_implementation=True, starts_with=True, ends_with=False, ignore_case=False, anchor_domain=None, metadata_element_type=None, metadata_element_subtypes=None, skip_relationships=None, include_only_relationships=None, skip_classified_elements=None, include_only_classified_elements=None, graph_query_depth=3, governance_zone_filter=None, as_of_time=None, effective_time=None, relationship_page_size=0, limit_results_by_status=None, sequencing_order=None, sequencing_property=None, output_format='JSON', report_spec=None, start_from=0, page_size=100, property_names=None, body=None)`
+- [x] `find_all_information_supply_chains(self, add_implementation=True, starts_with=True, ends_with=False, ignore_case=False, anchor_domain=None, metadata_element_type=None, metadata_element_subtypes=None, skip_relationships=None, include_only_relationships=None, skip_classified_elements=None, include_only_classified_elements=None, graph_query_depth=3, governance_zone_filter=None, as_of_time=None, effective_time=None, relationship_page_size=0, limit_results_by_status=None, sequencing_order=None, sequencing_property=None, output_format='JSON', report_spec=None, start_from=0, page_size=100, property_names=None, body=None)`
   - **Planned**: Standard Find Pattern
-- [ ] `find_all_solution_blueprints(self, classification_names=None, metadata_element_subtypes=None, starts_with=True, ends_with=False, ignore_case=False, start_from=0, page_size=0, output_format='JSON', report_spec=None, body=None)`
+- [x] `find_all_solution_blueprints(self, classification_names=None, metadata_element_subtypes=None, starts_with=True, ends_with=False, ignore_case=False, start_from=0, page_size=0, output_format='JSON', report_spec=None, body=None)`
   - **Planned**: Standard Find Pattern
-- [ ] `find_all_solution_components(self, classification_names=None, metadata_element_subtypes=None, starts_with=True, ends_with=False, ignore_case=False, start_from=0, page_size=0, output_format='JSON', report_spec=None, body=None)`
+- [x] `find_all_solution_components(self, classification_names=None, metadata_element_subtypes=None, starts_with=True, ends_with=False, ignore_case=False, start_from=0, page_size=0, output_format='JSON', report_spec=None, body=None)`
   - **Planned**: Standard Find Pattern
-- [ ] `find_all_solution_roles(self, classification_names=None, metadata_element_subtypes=None, starts_with=True, ends_with=False, ignore_case=False, start_from=0, page_size=0, output_format='JSON', report_spec=None, body=None)`
+- [x] `find_all_solution_roles(self, classification_names=None, metadata_element_subtypes=None, starts_with=True, ends_with=False, ignore_case=False, start_from=0, page_size=0, output_format='JSON', report_spec=None, body=None)`
   - **Planned**: Standard Find Pattern
-- [ ] `find_design_patterns(self, search_string='*', body=None, starts_with=True, ends_with=False, ignore_case=False, start_from=0, page_size=100, output_format='JSON', report_spec='Design-Pattern-DrE', **kwargs)`
+- [x] `find_design_patterns(self, search_string='*', body=None, starts_with=True, ends_with=False, ignore_case=False, start_from=0, page_size=100, output_format='JSON', report_spec='Design-Pattern-DrE', **kwargs)`
   - **Planned**: Standard Find Pattern
-- [ ] `find_information_supply_chains(self, search_string='*', add_implementation=True, body=None, starts_with=True, ends_with=False, ignore_case=False, start_from=0, page_size=100, output_format='JSON', report_spec=None, **kwargs)`
+- [x] `find_information_supply_chains(self, search_string='*', add_implementation=True, body=None, starts_with=True, ends_with=False, ignore_case=False, start_from=0, page_size=100, output_format='JSON', report_spec=None, **kwargs)`
   - **Planned**: Standard Find Pattern
-- [ ] `find_solution_blueprints(self, search_string='*', body=None, starts_with=True, ends_with=False, ignore_case=False, start_from=0, page_size=100, output_format='JSON', report_spec='Solution-Blueprint', **kwargs)`
+- [x] `find_solution_blueprints(self, search_string='*', body=None, starts_with=True, ends_with=False, ignore_case=False, start_from=0, page_size=100, output_format='JSON', report_spec='Solution-Blueprint', **kwargs)`
   - **Planned**: Standard Find Pattern
-- [ ] `find_solution_components(self, search_string='*', body=None, starts_with=True, ends_with=False, ignore_case=False, start_from=0, page_size=100, output_format='JSON', report_spec=None, **kwargs)`
+- [x] `find_solution_components(self, search_string='*', body=None, starts_with=True, ends_with=False, ignore_case=False, start_from=0, page_size=100, output_format='JSON', report_spec=None, **kwargs)`
   - **Planned**: Standard Find Pattern
-- [ ] `find_solution_roles(self, search_string='*', body=None, starts_with=True, ends_with=False, ignore_case=False, start_from=0, page_size=100, output_format='JSON', report_spec=None, **kwargs)`
+- [x] `find_solution_roles(self, search_string='*', body=None, starts_with=True, ends_with=False, ignore_case=False, start_from=0, page_size=100, output_format='JSON', report_spec=None, **kwargs)`
   - **Planned**: Standard Find Pattern
 - [ ] `get_component_related_elements(self, guid)`
   - **Planned**: TODO
-- [ ] `get_design_pattern_by_guid(self, guid, body=None, output_format='JSON', report_spec='Design-Pattern-DrE', **kwargs)`
+- [x] `get_design_pattern_by_guid(self, guid, body=None, output_format='JSON', report_spec='Design-Pattern-DrE', **kwargs)`
   - **Planned**: Standard Get By GUID Pattern
-- [ ] `get_design_patterns_by_name(self, name, body=None, start_from=0, page_size=max_paging_size, output_format='JSON', report_spec='Design-Pattern-DrE', **kwargs)`
+- [x] `get_design_patterns_by_name(self, name, body=None, start_from=0, page_size=max_paging_size, output_format='JSON', report_spec='Design-Pattern-DrE', **kwargs)`
   - **Planned**: Standard Get By Name Pattern
-- [ ] `get_info_supply_chain_by_guid(self, guid, body=None, add_implementation=True, output_format='JSON', report_spec=None)`
+- [x] `get_info_supply_chain_by_guid(self, guid, body=None, add_implementation=True, output_format='JSON', report_spec=None)`
   - **Planned**: Standard Get By GUID Pattern
-- [ ] `get_info_supply_chain_by_name(self, search_filter, body=None, add_implementation=True, start_from=0, page_size=max_paging_size, output_format='JSON', report_spec=None)`
+- [x] `get_info_supply_chain_by_name(self, search_filter, body=None, add_implementation=True, start_from=0, page_size=max_paging_size, output_format='JSON', report_spec=None)`
   - **Planned**: Standard Get By Name Pattern
-- [ ] `get_solution_blueprint_by_guid(self, guid, body=None, output_format='JSON', report_spec='Solution-Blueprint')`
+- [x] `get_solution_blueprint_by_guid(self, guid, body=None, output_format='JSON', report_spec='Solution-Blueprint')`
   - **Planned**: Standard Get By GUID Pattern
-- [ ] `get_solution_blueprints_by_name(self, search_filter, body=None, start_from=0, page_size=max_paging_size, output_format='JSON', report_spec='Solution-Blueprint')`
+- [x] `get_solution_blueprints_by_name(self, search_filter, body=None, start_from=0, page_size=max_paging_size, output_format='JSON', report_spec='Solution-Blueprint')`
   - **Planned**: Standard Get By Name Pattern
-- [ ] `get_solution_component_by_guid(self, guid, body=None, output_format='JSON', report_spec='Solution-Component-DrE')`
+- [x] `get_solution_component_by_guid(self, guid, body=None, output_format='JSON', report_spec='Solution-Component-DrE')`
   - **Planned**: Standard Get By GUID Pattern
 - [ ] `get_solution_component_implementations(self, solution_component_guid, body=None, start_from=0, page_size=max_paging_size, output_format='JSON')`
   - **Planned**: TODO
-- [ ] `get_solution_components_by_name(self, search_filter, body=None, start_from=0, page_size=max_paging_size, output_format='JSON', report_spec=None)`
+- [x] `get_solution_components_by_name(self, search_filter, body=None, start_from=0, page_size=max_paging_size, output_format='JSON', report_spec=None)`
   - **Planned**: Standard Get By Name Pattern
-- [ ] `get_solution_role_by_guid(self, guid, body=None, output_format='JSON', report_spec=None)`
+- [x] `get_solution_role_by_guid(self, guid, body=None, output_format='JSON', report_spec=None)`
   - **Planned**: Standard Get By GUID Pattern
-- [ ] `get_solution_roles_by_name(self, search_filter, body=None, start_from=0, page_size=max_paging_size, output_format='JSON', report_spec=None)`
+- [x] `get_solution_roles_by_name(self, search_filter, body=None, start_from=0, page_size=max_paging_size, output_format='JSON', report_spec=None)`
   - **Planned**: Standard Get By Name Pattern
 
 ### subject_area.py
-- [ ] `_async_find_subject_areas(self, search_string='*', body=None, starts_with=True, ends_with=False, ignore_case=False, start_from=0, page_size=100, output_format='JSON', report_spec='Referenceable', **kwargs)`
+- [x] `_async_find_subject_areas(self, search_string='*', body=None, starts_with=True, ends_with=False, ignore_case=False, start_from=0, page_size=100, output_format='JSON', report_spec='Referenceable', **kwargs)`
   - **Planned**: Standard Find Pattern
-- [ ] `_async_get_subject_area_by_guid(self, subject_area_guid, element_type='SubjectArea', body=None, output_format='JSON', report_spec='SubjectAreas')`
+- [x] `_async_get_subject_area_by_guid(self, subject_area_guid, element_type='SubjectArea', body=None, output_format='JSON', report_spec='SubjectAreas')`
   - **Planned**: Standard Get By GUID Pattern
-- [ ] `_async_get_subject_areas_by_name(self, filter_string=None, classification_names=None, body=None, start_from=0, page_size=0, output_format='JSON', report_spec='SubjectAreas')`
+- [x] `_async_get_subject_areas_by_name(self, filter_string=None, classification_names=None, body=None, start_from=0, page_size=0, output_format='JSON', report_spec='SubjectAreas')`
   - **Planned**: Standard Get By Name Pattern
-- [ ] `find_subject_areas(self, search_string='*', body=None, starts_with=True, ends_with=False, ignore_case=False, start_from=0, page_size=100, output_format='JSON', report_spec='Referenceable', **kwargs)`
+- [x] `find_subject_areas(self, search_string='*', body=None, starts_with=True, ends_with=False, ignore_case=False, start_from=0, page_size=100, output_format='JSON', report_spec='Referenceable', **kwargs)`
   - **Planned**: Standard Find Pattern
-- [ ] `get_subject_area_by_guid(self, subject_area_guid, element_type='SubjectArea', body=None, output_format='JSON', report_spec='SubjectAreas')`
+- [x] `get_subject_area_by_guid(self, subject_area_guid, element_type='SubjectArea', body=None, output_format='JSON', report_spec='SubjectAreas')`
   - **Planned**: Standard Get By GUID Pattern
-- [ ] `get_subject_areas_by_name(self, filter_string=None, classification_names=None, body=None, start_from=0, page_size=0, output_format='JSON', report_spec='SubjectAreas')`
+- [x] `get_subject_areas_by_name(self, filter_string=None, classification_names=None, body=None, start_from=0, page_size=0, output_format='JSON', report_spec='SubjectAreas')`
   - **Planned**: Standard Get By Name Pattern
 
 ### time_keeper.py
-- [ ] `_async_find_context_events(self, search_string='*', body=None, starts_with=True, ends_with=False, ignore_case=False, start_from=0, page_size=100, output_format='JSON', report_spec='Referenceable', **kwargs)`
+- [x] `_async_find_context_events(self, search_string='*', body=None, starts_with=True, ends_with=False, ignore_case=False, start_from=0, page_size=100, output_format='JSON', report_spec='Referenceable', **kwargs)`
   - **Planned**: Standard Find Pattern
-- [ ] `_async_get_context_event_by_guid(self, context_event_guid, element_type='ContextEvent', body=None, output_format='JSON', report_spec='ContextEvents')`
+- [x] `_async_get_context_event_by_guid(self, context_event_guid, element_type='ContextEvent', body=None, output_format='JSON', report_spec='ContextEvents')`
   - **Planned**: Standard Get By GUID Pattern
-- [ ] `_async_get_context_events_by_name(self, filter_string=None, classification_names=None, body=None, start_from=0, page_size=0, output_format='JSON', report_spec='ContextEvents')`
+- [x] `_async_get_context_events_by_name(self, filter_string=None, classification_names=None, body=None, start_from=0, page_size=0, output_format='JSON', report_spec='ContextEvents')`
   - **Planned**: Standard Get By Name Pattern
-- [ ] `find_context_events(self, search_string='*', body=None, starts_with=True, ends_with=False, ignore_case=False, start_from=0, page_size=100, output_format='JSON', report_spec='Referenceable', **kwargs)`
+- [x] `find_context_events(self, search_string='*', body=None, starts_with=True, ends_with=False, ignore_case=False, start_from=0, page_size=100, output_format='JSON', report_spec='Referenceable', **kwargs)`
   - **Planned**: Standard Find Pattern
-- [ ] `get_context_event_by_guid(self, context_event_guid, element_type='ContextEvent', body=None, output_format='JSON', report_spec='ContextEvents')`
+- [x] `get_context_event_by_guid(self, context_event_guid, element_type='ContextEvent', body=None, output_format='JSON', report_spec='ContextEvents')`
   - **Planned**: Standard Get By GUID Pattern
-- [ ] `get_context_events_by_name(self, filter_string=None, classification_names=None, body=None, start_from=0, page_size=0, output_format='JSON', report_spec='ContextEvents')`
+- [x] `get_context_events_by_name(self, filter_string=None, classification_names=None, body=None, start_from=0, page_size=0, output_format='JSON', report_spec='ContextEvents')`
   - **Planned**: Standard Get By Name Pattern
 
 ### valid_metadata.py
-- [ ] `_async_find_specification_property(self, search_string='*', body=None, starts_with=True, ends_with=False, ignore_case=False, start_from=0, page_size=100, output_format='JSON', report_spec='Referenceable', **kwargs)`
+- [x] `_async_find_specification_property(self, search_string='*', body=None, starts_with=True, ends_with=False, ignore_case=False, start_from=0, page_size=100, output_format='JSON', report_spec='Referenceable', **kwargs)`
   - **Planned**: Standard Find Pattern
 - [ ] `_async_get_all_classification_defs(self, get_inherited_attributes=False, get_relationship_attributes=False, output_format='JSON', report_spec=None)`
   - **Planned**: TODO
@@ -1292,9 +1292,9 @@ async def _async_get_xxx_by_guid(
   - **Planned**: TODO
 - [ ] `_async_get_consistent_metadata_values(self, property_name, type_name, map_name, preferred_value, start_from=0, page_size=0, output_format='JSON', report_spec=None)`
   - **Planned**: TODO
-- [ ] `_async_get_specification_property_by_guid(self, spec_property_guid, element_type=None, body=None, output_format='JSON', report_spec=None)`
+- [x] `_async_get_specification_property_by_guid(self, spec_property_guid, element_type=None, body=None, output_format='JSON', report_spec=None)`
   - **Planned**: Standard Get By GUID Pattern
-- [ ] `_async_get_specification_property_by_name(self, name, start_from=0, page_size=0, category=None, classification_names=None, body=None, output_format='JSON', report_spec=None)`
+- [x] `_async_get_specification_property_by_name(self, name, start_from=0, page_size=0, category=None, classification_names=None, body=None, output_format='JSON', report_spec=None)`
   - **Planned**: Standard Get By Name Pattern
 - [ ] `_async_get_specification_property_by_type(self, spec_property_type, body=None, start_from=0, page_size=0, output_format='JSON', report_spec=None)`
   - **Planned**: TODO
@@ -1302,7 +1302,7 @@ async def _async_get_xxx_by_guid(
   - **Planned**: TODO
 - [ ] `_async_get_sub_types(self, type_name, get_inherited_attributes=False, get_relationship_attributes=False, output_format='JSON', report_spec=None)`
   - **Planned**: TODO
-- [ ] `_async_get_typedef_by_name(self, entity_type, get_inherited_attributes=False, get_relationship_attributes=False, output_format='JSON', report_spec=None)`
+- [x] `_async_get_typedef_by_name(self, entity_type, get_inherited_attributes=False, get_relationship_attributes=False, output_format='JSON', report_spec=None)`
   - **Planned**: Standard Get By Name Pattern
 - [ ] `_async_get_valid_classification_types(self, entity_type, get_inherited_attributes=False, get_relationship_attributes=False, output_format='JSON', report_spec=None)`
   - **Planned**: TODO
@@ -1316,7 +1316,7 @@ async def _async_get_xxx_by_guid(
   - **Planned**: TODO
 - [ ] `_async_get_valid_relationship_types(self, entity_type, get_inherited_attributes=False, get_relationship_attributes=False, output_format='JSON', report_spec=None)`
   - **Planned**: TODO
-- [ ] `find_specification_property(self, search_string='*', body=None, starts_with=True, ends_with=False, ignore_case=False, start_from=0, page_size=100, output_format='JSON', report_spec='Referenceable', **kwargs)`
+- [x] `find_specification_property(self, search_string='*', body=None, starts_with=True, ends_with=False, ignore_case=False, start_from=0, page_size=100, output_format='JSON', report_spec='Referenceable', **kwargs)`
   - **Planned**: Standard Find Pattern
 - [ ] `get_all_classification_defs(self, get_inherited_attributes=False, get_relationship_attributes=False, output_format='JSON', report_spec=None)`
   - **Planned**: TODO
@@ -1328,9 +1328,9 @@ async def _async_get_xxx_by_guid(
   - **Planned**: TODO
 - [ ] `get_consistent_metadata_values(self, property_name, type_name, map_name, preferred_value, start_from=0, page_size=0, output_format='JSON', report_spec=None)`
   - **Planned**: TODO
-- [ ] `get_specification_property_by_guid(self, spec_property_guid, element_type=None, body=None, output_format='JSON', report_spec=None)`
+- [x] `get_specification_property_by_guid(self, spec_property_guid, element_type=None, body=None, output_format='JSON', report_spec=None)`
   - **Planned**: Standard Get By GUID Pattern
-- [ ] `get_specification_property_by_name(self, name, start_from=0, page_size=0, category=None, classification_names=None, body=None, output_format='JSON', report_spec=None)`
+- [x] `get_specification_property_by_name(self, name, start_from=0, page_size=0, category=None, classification_names=None, body=None, output_format='JSON', report_spec=None)`
   - **Planned**: Standard Get By Name Pattern
 - [ ] `get_specification_property_by_type(self, spec_property_type, body=None, start_from=0, page_size=0, output_format='JSON', report_spec=None)`
   - **Planned**: TODO
@@ -1338,7 +1338,7 @@ async def _async_get_xxx_by_guid(
   - **Planned**: TODO
 - [ ] `get_sub_types(self, type_name, get_inherited_attributes=False, get_relationship_attributes=False, output_format='JSON', report_spec=None)`
   - **Planned**: TODO
-- [ ] `get_typedef_by_name(self, entity_type, get_inherited_attributes=False, get_relationship_attributes=False, output_format='JSON', report_spec=None)`
+- [x] `get_typedef_by_name(self, entity_type, get_inherited_attributes=False, get_relationship_attributes=False, output_format='JSON', report_spec=None)`
   - **Planned**: Standard Get By Name Pattern
 - [ ] `get_valid_classification_types(self, entity_type, get_inherited_attributes=False, get_relationship_attributes=False, output_format='JSON', report_spec=None)`
   - **Planned**: TODO

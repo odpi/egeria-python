@@ -184,7 +184,7 @@ class SchemaMaker(ServerClient):
         ignore_case: bool = False,
         start_from: int = 0,
         page_size: int = 100,
-        output_format: str = "JSON",
+        graph_query_depth: int = 3, output_format: str = "JSON",
         report_spec: str | dict = "Referenceable",
         **kwargs
     ) -> list | str:
@@ -264,6 +264,7 @@ class SchemaMaker(ServerClient):
         
         # Merge explicit parameters with kwargs
         params = {
+            'graph_query_depth': graph_query_depth,
             'search_string': search_string,
             'body': body,
             'starts_with': starts_with,
@@ -294,7 +295,7 @@ class SchemaMaker(ServerClient):
         ignore_case: bool = False,
         start_from: int = 0,
         page_size: int = 100,
-        output_format: str = "JSON",
+        graph_query_depth: int = 3, output_format: str = "JSON",
         report_spec: str | dict = "Referenceable",
         **kwargs
     ) -> list | str:
@@ -374,6 +375,7 @@ class SchemaMaker(ServerClient):
         return loop.run_until_complete(
             self._async_find_schema_types(
                 search_string=search_string,
+                graph_query_depth=graph_query_depth,
                 body=body,
                 starts_with=starts_with,
                 ends_with=ends_with,
@@ -393,7 +395,7 @@ class SchemaMaker(ServerClient):
         guid: str,
         element_type: str = "SchemaType",
         body: Optional[dict | GetRequestBody] = None,
-        output_format: str = "JSON",
+        graph_query_depth: int = 3, output_format: str = "JSON",
         report_spec: str | dict = "SchemaTypes",
         **kwargs,
     ) -> dict | str:
@@ -403,6 +405,7 @@ class SchemaMaker(ServerClient):
         url = f"{self.platform_url}/servers/{self.view_server}/api/open-metadata/schema-maker/schema-types/{guid}/retrieve"
         
         params = {
+            'graph_query_depth': graph_query_depth,
             'output_format': output_format,
             'report_spec': report_spec,
             'body': body
@@ -422,13 +425,14 @@ class SchemaMaker(ServerClient):
         guid: str,
         element_type: str = "SchemaType",
         body: Optional[dict | GetRequestBody] = None,
-        output_format: str = "JSON",
+        graph_query_depth: int = 3, output_format: str = "JSON",
         report_spec: str | dict = "SchemaTypes",
         **kwargs,
     ) -> dict | str:
         loop = asyncio.get_event_loop()
         return loop.run_until_complete(
             self._async_get_schema_type_by_guid(
+                graph_query_depth=graph_query_depth,
                 guid=guid, element_type=element_type, body=body, output_format=output_format, report_spec=report_spec,
                 **kwargs,
             )

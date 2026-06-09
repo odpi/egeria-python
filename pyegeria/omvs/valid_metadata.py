@@ -2350,7 +2350,7 @@ class ValidMetadataManager(ServerClient):
     async def _async_get_typedef_by_name(self, name: str = None,
                                          get_inherited_attributes: bool = False,
                                          get_relationship_attributes: bool = False,
-                                         output_format: str = "JSON",
+                                         graph_query_depth: int = 3, output_format: str = "JSON",
                                          report_spec: dict | str | None = None, **kwargs) -> dict | str | list[dict]:
         """Return the TypeDef identified by the unique name.
             Async version.
@@ -2403,7 +2403,7 @@ class ValidMetadataManager(ServerClient):
     def get_typedef_by_name(self, name: str = None,
                             get_inherited_attributes: bool = False,
                             get_relationship_attributes: bool = False,
-                            output_format: str = "JSON",
+                            graph_query_depth: int = 3, output_format: str = "JSON",
                             report_spec: dict | str | None = None, **kwargs) -> dict | str | list[dict]:
         """Return the TypeDef identified by the unique name.
 
@@ -2654,7 +2654,7 @@ class ValidMetadataManager(ServerClient):
         ignore_case: bool = False,
         start_from: int = 0,
         page_size: int = 100,
-        output_format: str = "JSON",
+        graph_query_depth: int = 3, output_format: str = "JSON",
         report_spec: str | dict = "Referenceable",
         **kwargs
     ) -> list | str:
@@ -2734,6 +2734,7 @@ class ValidMetadataManager(ServerClient):
         
         # Merge explicit parameters with kwargs
         params = {
+            'graph_query_depth': graph_query_depth,
             'search_string': search_string,
             'body': body,
             'starts_with': starts_with,
@@ -2765,7 +2766,7 @@ class ValidMetadataManager(ServerClient):
         ignore_case: bool = False,
         start_from: int = 0,
         page_size: int = 100,
-        output_format: str = "JSON",
+        graph_query_depth: int = 3, output_format: str = "JSON",
         report_spec: str | dict = "Referenceable",
         **kwargs
     ) -> list | str:
@@ -2845,6 +2846,7 @@ class ValidMetadataManager(ServerClient):
         return loop.run_until_complete(
             self._async_find_specification_property(
                 search_string=search_string,
+                graph_query_depth=graph_query_depth,
                 body=body,
                 starts_with=starts_with,
                 ends_with=ends_with,
@@ -2972,7 +2974,7 @@ class ValidMetadataManager(ServerClient):
     @dynamic_catch
     async def _async_get_specification_property_by_name(self, name: Optional[str] = None, start_from: int = 0, page_size: int = 0,
                                                category: Optional[str] = None, classification_names: list[str]= None,
-                                               body: Optional[dict | FilterRequestBody] = None, output_format: str = "JSON",
+                                               body: Optional[dict | FilterRequestBody] = None, graph_query_depth: int = 3, output_format: str = "JSON",
                                                report_spec: str | dict = None, **kwargs) -> list | str:
         """ Return the list of specification properties containing the supplied name. Async version.
 
@@ -3024,6 +3026,7 @@ class ValidMetadataManager(ServerClient):
         url = (f"{self.platform_url}/servers/{self.view_server}/api/open-metadata/valid-metadata/"
                f"specification-properties/by-name")
         params = {
+            'graph_query_depth': graph_query_depth,
             'classification_names': classification_names,
             'start_from': start_from,
             'page_size': page_size,
@@ -3042,7 +3045,7 @@ class ValidMetadataManager(ServerClient):
 
     def get_specification_property_by_name(self, name: Optional[str] = None, start_from: int = 0, page_size: int = 0,
                                               category: Optional[str] = None, classification_names: list[str]= None,
-                                              body: Optional[dict | FilterRequestBody] = None, output_format: str = "JSON",
+                                              body: Optional[dict | FilterRequestBody] = None, graph_query_depth: int = 3, output_format: str = "JSON",
                                               report_spec: str | dict = None, **kwargs) -> list:
         """ Return the list of specification properties containing the supplied name.
 
@@ -3095,13 +3098,14 @@ class ValidMetadataManager(ServerClient):
         return asyncio.get_event_loop().run_until_complete(
             self._async_get_specification_property_by_name(name=name, start_from=start_from, page_size=page_size,
                                                            category=category, classification_names=classification_names,
+                                                           graph_query_depth=graph_query_depth,
                                                            body=body, output_format=output_format, report_spec=report_spec, **kwargs)
         )
 
     @dynamic_catch
     async def _async_get_specification_property_by_guid(self, guid: str = None, element_type: Optional[str] = None,
                                             body: Optional[dict | GetRequestBody] = None,
-                                            output_format: str = 'JSON',
+                                            graph_query_depth: int = 3, output_format: str = 'JSON',
                                             report_spec: str | dict = None, **kwargs) -> dict | str:
         """Return the properties of a specific collection. Async version.
 
@@ -3147,6 +3151,7 @@ class ValidMetadataManager(ServerClient):
         url = (f"{self.platform_url}/servers/{self.view_server}/api/open-metadata/valid-metadata/"
                f"specification-properties/{guid}/retrieve")
         params = {
+            'graph_query_depth': graph_query_depth,
             'output_format': output_format,
             'report_spec': report_spec,
             'body': body
@@ -3161,7 +3166,7 @@ class ValidMetadataManager(ServerClient):
 
     @dynamic_catch
     def get_specification_property_by_guid(self, guid: str = None, element_type: Optional[str] = None, body: dict | GetRequestBody= None,
-                               output_format: str = 'JSON', report_spec: str | dict = None, **kwargs) -> dict | str:
+                               graph_query_depth: int = 3, output_format: str = 'JSON', report_spec: str | dict = None, **kwargs) -> dict | str:
         """ Return the properties of a specific collection. Async version.
 
             Parameters
@@ -3201,6 +3206,7 @@ class ValidMetadataManager(ServerClient):
         """
         return asyncio.get_event_loop().run_until_complete(
             self._async_get_specification_property_by_guid(guid=guid, element_type=element_type, body=body,
+                                               graph_query_depth=graph_query_depth,
                                                output_format=output_format, report_spec=report_spec, **kwargs))
 
 

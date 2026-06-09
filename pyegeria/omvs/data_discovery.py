@@ -406,7 +406,7 @@ class DataDiscovery(ServerClient):
         body: Optional[dict | FilterRequestBody] = None,
         start_from: int = 0,
         page_size: int = 0,
-        output_format: str = "JSON",
+        graph_query_depth: int = 3, output_format: str = "JSON",
         report_spec: str | dict = "Annotations",
         **kwargs,
     ) -> list | str:
@@ -457,6 +457,7 @@ class DataDiscovery(ServerClient):
         url = f"{self.platform_url}/servers/{self.view_server}/api/open-metadata/data-discovery/annotations/by-name"
         
         params = {
+            'graph_query_depth': graph_query_depth,
             'classification_names': classification_names,
             'start_from': start_from,
             'page_size': page_size,
@@ -477,7 +478,7 @@ class DataDiscovery(ServerClient):
         body: Optional[dict | FilterRequestBody] = None,
         start_from: int = 0,
         page_size: int = 0,
-        output_format: str = "JSON",
+        graph_query_depth: int = 3, output_format: str = "JSON",
         report_spec: str | dict = "Annotations",
         **kwargs,
     ) -> list | str:
@@ -546,7 +547,7 @@ class DataDiscovery(ServerClient):
         ignore_case: bool = False,
         start_from: int = 0,
         page_size: int = 100,
-        output_format: str = "JSON",
+        graph_query_depth: int = 3, output_format: str = "JSON",
         report_spec: str | dict = "Referenceable",
         **kwargs
     ) -> list | str:
@@ -626,6 +627,7 @@ class DataDiscovery(ServerClient):
         
         # Merge explicit parameters with kwargs
         params = {
+            'graph_query_depth': graph_query_depth,
             'search_string': search_string,
             'body': body,
             'starts_with': starts_with,
@@ -655,7 +657,7 @@ class DataDiscovery(ServerClient):
         ignore_case: bool = False,
         start_from: int = 0,
         page_size: int = 100,
-        output_format: str = "JSON",
+        graph_query_depth: int = 3, output_format: str = "JSON",
         report_spec: str | dict = "Referenceable",
         **kwargs
     ) -> list | str:
@@ -735,6 +737,7 @@ class DataDiscovery(ServerClient):
         return loop.run_until_complete(
             self._async_find_annotations(
                 search_string=search_string,
+                graph_query_depth=graph_query_depth,
                 body=body,
                 starts_with=starts_with,
                 ends_with=ends_with,
@@ -753,7 +756,7 @@ class DataDiscovery(ServerClient):
         guid: str,
         element_type: str = "Annotation",
         body: Optional[dict | GetRequestBody] = None,
-        output_format: str = "JSON",
+        graph_query_depth: int = 3, output_format: str = "JSON",
         report_spec: str | dict = "Annotations",
         **kwargs,
     ) -> dict | str:
@@ -798,6 +801,7 @@ class DataDiscovery(ServerClient):
         url = f"{self.platform_url}/servers/{self.view_server}/api/open-metadata/data-discovery/annotations/{guid}/retrieve"
         
         params = {
+            'graph_query_depth': graph_query_depth,
             'output_format': output_format,
             'report_spec': report_spec,
             'body': body
@@ -817,7 +821,7 @@ class DataDiscovery(ServerClient):
         guid: str,
         element_type: str = "Annotation",
         body: Optional[dict | GetRequestBody] = None,
-        output_format: str = "JSON",
+        graph_query_depth: int = 3, output_format: str = "JSON",
         report_spec: str | dict = "Annotations",
         **kwargs,
     ) -> dict | str:

@@ -223,10 +223,11 @@ class SolutionArchitect(ServerClient):
 
     async def _async_find_design_patterns(self, search_string: str = "*", body: Optional[dict | SearchStringRequestBody] = None,
                                   starts_with: bool = True, ends_with: bool = False, ignore_case: bool = False,
-                                  start_from: int = 0, page_size: int = 100, output_format: str = "JSON",
+                                  start_from: int = 0, page_size: int = 100, graph_query_depth: int = 3, output_format: str = "JSON",
                                   report_spec: str | dict = "Design-Pattern-DrE", **kwargs):
         url = f"{self.solution_architect_command_root}/design-patterns/by-search-string"
         params = {
+            'graph_query_depth': graph_query_depth,
             'search_string': search_string,
             'body': body,
             'starts_with': starts_with,
@@ -245,20 +246,22 @@ class SolutionArchitect(ServerClient):
 
     def find_design_patterns(self, search_string: str = "*", body: Optional[dict | SearchStringRequestBody] = None,
                            starts_with: bool = True, ends_with: bool = False, ignore_case: bool = False,
-                           start_from: int = 0, page_size: int = 100, output_format: str = "JSON",
+                           start_from: int = 0, page_size: int = 100, graph_query_depth: int = 3, output_format: str = "JSON",
                            report_spec: str | dict = "Design-Pattern-DrE", **kwargs):
         """Find design patterns."""
         return asyncio.run(self._async_find_design_patterns(search_string, body, starts_with, ends_with,
                                                          ignore_case, start_from, page_size,
+                                                         graph_query_depth,
                                                          output_format, report_spec, **kwargs))
 
     async def _async_get_design_patterns_by_name(self, name: Optional[str] = None, body: Optional[dict | SearchStringRequestBody] = None,
                                          start_from: int = 0, page_size: int = max_paging_size,
-                                         output_format: str = "JSON", report_spec: str | dict = "Design-Pattern-DrE", **kwargs):
+                                         graph_query_depth: int = 3, output_format: str = "JSON", report_spec: str | dict = "Design-Pattern-DrE", **kwargs):
         if name is None and "filter_string" in kwargs:
             name = kwargs.pop("filter_string")
         url = f"{self.solution_architect_command_root}/design-patterns/by-name/{name}"
         params = {
+            'graph_query_depth': graph_query_depth,
             'filter_string': name,
             'body': body,
             'start_from': start_from,
@@ -273,18 +276,20 @@ class SolutionArchitect(ServerClient):
 
     def get_design_patterns_by_name(self, name: Optional[str] = None, body: Optional[dict | SearchStringRequestBody] = None,
                                   start_from: int = 0, page_size: int = max_paging_size,
-                                  output_format: str = "JSON", report_spec: str | dict = "Design-Pattern-DrE", **kwargs):
+                                  graph_query_depth: int = 3, output_format: str = "JSON", report_spec: str | dict = "Design-Pattern-DrE", **kwargs):
         """Get design patterns by name."""
         return asyncio.run(self._async_get_design_patterns_by_name(name=name, body=body, start_from=start_from, page_size=page_size,
+                                                                graph_query_depth=graph_query_depth,
                                                                 output_format=output_format, report_spec=report_spec, **kwargs))
 
     async def _async_get_design_pattern_by_guid(self, guid: str = None, body: Optional[dict | GetRequestBody] = None,
-                                        output_format: str = "JSON", report_spec: str | dict = "Design-Pattern-DrE", **kwargs):
+                                        graph_query_depth: int = 3, output_format: str = "JSON", report_spec: str | dict = "Design-Pattern-DrE", **kwargs):
         if guid is None and "design_pattern_guid" in kwargs:
             guid = kwargs.pop("design_pattern_guid")
         validate_guid(guid)
         url = f"{self.solution_architect_command_root}/design-patterns/{guid}"
         params = {
+            'graph_query_depth': graph_query_depth,
             'output_format': output_format,
             'report_spec': report_spec,
             'body': body
@@ -295,9 +300,9 @@ class SolutionArchitect(ServerClient):
                                                  _gen_output=self.generate_design_pattern_output, **params)
 
     def get_design_pattern_by_guid(self, guid: str = None, body: Optional[dict | GetRequestBody] = None,
-                                 output_format: str = "JSON", report_spec: str | dict = "Design-Pattern-DrE", **kwargs):
+                                 graph_query_depth: int = 3, output_format: str = "JSON", report_spec: str | dict = "Design-Pattern-DrE", **kwargs):
         """Get a design pattern by GUID."""
-        return asyncio.run(self._async_get_design_pattern_by_guid(guid=guid, body=body, output_format=output_format, report_spec=report_spec, **kwargs))
+        return asyncio.run(self._async_get_design_pattern_by_guid(guid=guid, body=body, graph_query_depth=graph_query_depth, output_format=output_format, report_spec=report_spec, **kwargs))
 
     async def _async_update_solution_blueprint_status(self, guid: str, body: dict | UpdateElementRequestBody):
         validate_guid(guid)
@@ -1692,7 +1697,7 @@ class SolutionArchitect(ServerClient):
         ignore_case: bool = False,
         start_from: int = 0,
         page_size: int = 100,
-        output_format: str = "JSON",
+        graph_query_depth: int = 3, output_format: str = "JSON",
         report_spec: str | dict = None,
         **kwargs
     ) -> list[dict] | str:
@@ -1794,6 +1799,7 @@ class SolutionArchitect(ServerClient):
         
         # Merge explicit parameters with kwargs
         params = {
+            'graph_query_depth': graph_query_depth,
             'search_string': search_string,
             'body': body,
             'starts_with': starts_with,
@@ -1824,7 +1830,7 @@ class SolutionArchitect(ServerClient):
         ignore_case: bool = False,
         start_from: int = 0,
         page_size: int = 100,
-        output_format: str = "JSON",
+        graph_query_depth: int = 3, output_format: str = "JSON",
         report_spec: str | dict = None,
         **kwargs
     ) -> list[dict] | str:
@@ -1942,7 +1948,7 @@ class SolutionArchitect(ServerClient):
     async def _async_get_info_supply_chain_by_name(self, name: Optional[str] = None, body: dict = None,
                                                    add_implementation: bool = True, start_from: int = 0,
                                                    page_size: int = max_paging_size,
-                                                   output_format: str = "JSON", report_spec: str | dict = None, **kwargs) -> dict | str:
+                                                   graph_query_depth: int = 3, output_format: str = "JSON", report_spec: str | dict = None, **kwargs) -> dict | str:
         """ Returns the list of information supply chains with a particular name. Async Version.
 
             Parameters
@@ -2002,6 +2008,7 @@ class SolutionArchitect(ServerClient):
 
         if body is None:
             body = {
+                'graphQueryDepth': graph_query_depth,
                 "filter": name,
                 }
         else:
@@ -2019,7 +2026,7 @@ class SolutionArchitect(ServerClient):
 
     def get_info_supply_chain_by_name(self, name: Optional[str] = None, body: dict = None, add_implementation: bool = True,
                                       start_from: int = 0, page_size: int = max_paging_size,
-                                      output_format: str = "JSON", report_spec: str | dict = None, **kwargs) -> dict | str:
+                                      graph_query_depth: int = 3, output_format: str = "JSON", report_spec: str | dict = None, **kwargs) -> dict | str:
         """ Returns the list of information supply chains with a particular name. Async Version.
 
             Parameters
@@ -2076,11 +2083,12 @@ class SolutionArchitect(ServerClient):
         loop = asyncio.get_event_loop()
         response = loop.run_until_complete(
             self._async_get_info_supply_chain_by_name(name=name, body=body, add_implementation=add_implementation, start_from=start_from, page_size=page_size,
+                                                      graph_query_depth=graph_query_depth,
                                                       output_format=output_format, report_spec=report_spec, **kwargs))
         return response
 
     async def _async_get_info_supply_chain_by_guid(self, guid: str = None, body: dict = None, add_implementation: bool = True,
-                                                   output_format: str = "JSON", report_spec: str | dict = None, **kwargs) -> dict | str:
+                                                   graph_query_depth: int = 3, output_format: str = "JSON", report_spec: str | dict = None, **kwargs) -> dict | str:
         """Return the properties of a specific information supply chain. Async Version.
 
             Parameters
@@ -2143,7 +2151,7 @@ class SolutionArchitect(ServerClient):
         return element
 
     def get_info_supply_chain_by_guid(self, guid: str = None, body: dict = None, add_implementation: bool = True,
-                                      output_format: str = "JSON", report_spec: str | dict = None, **kwargs) -> dict | str:
+                                      graph_query_depth: int = 3, output_format: str = "JSON", report_spec: str | dict = None, **kwargs) -> dict | str:
         """ Return the properties of a specific information supply chain.
 
             Parameters
@@ -2189,6 +2197,7 @@ class SolutionArchitect(ServerClient):
         """
         loop = asyncio.get_event_loop()
         response = loop.run_until_complete(self._async_get_info_supply_chain_by_guid(guid=guid, body=body,
+                                                                                      graph_query_depth=graph_query_depth,
                                                                                       add_implementation=add_implementation, output_format=output_format, report_spec=report_spec, **kwargs))
         return response
 
@@ -3065,7 +3074,7 @@ class SolutionArchitect(ServerClient):
         ignore_case: bool = False,
         start_from: int = 0,
         page_size: int = 100,
-        output_format: str = "JSON",
+        graph_query_depth: int = 3, output_format: str = "JSON",
         report_spec: str | dict = "Solution-Blueprint",
         **kwargs
     ) -> list[dict] | str:
@@ -3164,6 +3173,7 @@ class SolutionArchitect(ServerClient):
         
         # Merge explicit parameters with kwargs
         params = {
+            'graph_query_depth': graph_query_depth,
             'search_string': search_string,
             'body': body,
             'starts_with': starts_with,
@@ -3192,7 +3202,7 @@ class SolutionArchitect(ServerClient):
         ignore_case: bool = False,
         start_from: int = 0,
         page_size: int = 100,
-        output_format: str = "JSON",
+        graph_query_depth: int = 3, output_format: str = "JSON",
         report_spec: str | dict = "Solution-Blueprint",
         **kwargs
     ) -> list[dict] | str:
@@ -3257,6 +3267,7 @@ class SolutionArchitect(ServerClient):
         response = loop.run_until_complete(
             self._async_find_solution_blueprints(
                 search_string=search_string,
+                graph_query_depth=graph_query_depth,
                 body=body,
                 starts_with=starts_with,
                 ends_with=ends_with,
@@ -3274,7 +3285,7 @@ class SolutionArchitect(ServerClient):
                                     metadata_element_subtypes: Optional[list[str]] = None,
                                     starts_with: bool = True, ends_with: bool = False,
                                     ignore_case: bool = False, start_from: int = 0,
-                                    page_size: int = 0, output_format: str = 'JSON',
+                                    page_size: int = 0, graph_query_depth: int = 3, output_format: str = 'JSON',
                                     report_spec: Optional[str] = None,
                                     body: dict| SearchStringRequestBody = None) -> list[dict] | str:
         """Retrieve a list of all solution blueprint elements
@@ -3286,7 +3297,7 @@ class SolutionArchitect(ServerClient):
 
 
     async def _async_get_solution_blueprint_by_guid(self, guid: str = None, body: dict = None,
-                                                    output_format: str = "JSON",
+                                                    graph_query_depth: int = 3, output_format: str = "JSON",
                                                     report_spec: str| Dict = "Solution-Blueprint", **kwargs) -> dict | str:
         """Return the properties of a specific solution blueprint. Async Version.
 
@@ -3349,7 +3360,7 @@ class SolutionArchitect(ServerClient):
                                                            output_format, report_spec=report_spec)
         return response.json().get("element", NO_ELEMENTS_FOUND)
 
-    def get_solution_blueprint_by_guid(self, guid: str = None, body: dict = None, output_format: str = "JSON",
+    def get_solution_blueprint_by_guid(self, guid: str = None, body: dict = None, graph_query_depth: int = 3, output_format: str = "JSON",
                                        report_spec: str| Dict = "Solution-Blueprint", **kwargs) -> dict | str:
         """ Return the properties of a specific solution blueprint.
 
@@ -3396,12 +3407,13 @@ class SolutionArchitect(ServerClient):
         """
         loop = asyncio.get_event_loop()
         response = loop.run_until_complete(self._async_get_solution_blueprint_by_guid(guid=guid, body=body,
+                                                                                      graph_query_depth=graph_query_depth,
                                                                                       output_format=output_format, report_spec=report_spec, **kwargs))
         return response
 
     async def _async_get_solution_blueprints_by_name(self, name: Optional[str] = None, body: dict = None, start_from: int = 0,
                                                      page_size: int = max_paging_size,
-                                                     output_format: str = "JSON", report_spec: str| Dict = "Solution-Blueprint", **kwargs) -> dict | str:
+                                                     graph_query_depth: int = 3, output_format: str = "JSON", report_spec: str| Dict = "Solution-Blueprint", **kwargs) -> dict | str:
         """ Returns the list of solution blueprints with a particular name. Async Version.
 
             Parameters
@@ -3457,6 +3469,7 @@ class SolutionArchitect(ServerClient):
 
         if body is None:
             body = {
+                'graphQueryDepth': graph_query_depth,
                 "filter": name,
                 }
         else:
@@ -3473,7 +3486,7 @@ class SolutionArchitect(ServerClient):
         return response.json().get("elements", NO_ELEMENTS_FOUND)
 
     def get_solution_blueprints_by_name(self, name: Optional[str] = None, body: dict = None, start_from: int = 0,
-                                        page_size: int = max_paging_size, output_format: str = "JSON",
+                                        page_size: int = max_paging_size, graph_query_depth: int = 3, output_format: str = "JSON",
                                         report_spec: str| Dict = "Solution-Blueprint", **kwargs) -> dict | str:
         """ Returns the list of solution blueprints with a particular name.
 
@@ -3530,7 +3543,7 @@ class SolutionArchitect(ServerClient):
         """
         loop = asyncio.get_event_loop()
         response = loop.run_until_complete(
-            self._async_get_solution_blueprints_by_name(name=name, body=body, start_from=start_from, page_size=page_size, output_format=output_format, report_spec=report_spec, **kwargs))
+            self._async_get_solution_blueprints_by_name(name=name, body=body, start_from=start_from, page_size=page_size, graph_query_depth=graph_query_depth, output_format=output_format, report_spec=report_spec, **kwargs))
         return response
 
 
@@ -4461,7 +4474,7 @@ class SolutionArchitect(ServerClient):
         ignore_case: bool = False,
         start_from: int = 0,
         page_size: int = 100,
-        output_format: str = "JSON",
+        graph_query_depth: int = 3, output_format: str = "JSON",
         report_spec: str | dict = None,
         **kwargs
     ) -> list[dict] | str:
@@ -4562,6 +4575,7 @@ class SolutionArchitect(ServerClient):
         
         # Merge explicit parameters with kwargs
         params = {
+            'graph_query_depth': graph_query_depth,
             'search_string': search_string,
             'body': body,
             'starts_with': starts_with,
@@ -4589,7 +4603,7 @@ class SolutionArchitect(ServerClient):
         ignore_case: bool = False,
         start_from: int = 0,
         page_size: int = 100,
-        output_format: str = "JSON",
+        graph_query_depth: int = 3, output_format: str = "JSON",
         report_spec: str | dict = None,
         **kwargs
     ) -> list[dict] | str:
@@ -4652,6 +4666,7 @@ class SolutionArchitect(ServerClient):
         response = loop.run_until_complete(
             self._async_find_solution_components(
                 search_string=search_string,
+                graph_query_depth=graph_query_depth,
                 body=body,
                 starts_with=starts_with,
                 ends_with=ends_with,
@@ -4669,7 +4684,7 @@ class SolutionArchitect(ServerClient):
                                     metadata_element_subtypes: Optional[list[str]] = None,
                                     starts_with: bool = True, ends_with: bool = False,
                                     ignore_case: bool = False, start_from: int = 0,
-                                    page_size: int = 0, output_format: str = 'JSON',
+                                    page_size: int = 0, graph_query_depth: int = 3, output_format: str = 'JSON',
                                     report_spec: Optional[str] = None,
                                     body: dict| SearchStringRequestBody = None) -> list[dict] | str:
         """Retrieve a list of all solution component elements
@@ -4679,7 +4694,7 @@ class SolutionArchitect(ServerClient):
 
 
     async def _async_get_solution_components_by_name(self, name: Optional[str] = None, body: dict = None, start_from: int = 0,
-                                                     page_size: int = 0, output_format: str = "JSON", report_spec: str | dict = None, **kwargs) -> dict | str:
+                                                     page_size: int = 0, graph_query_depth: int = 3, output_format: str = "JSON", report_spec: str | dict = None, **kwargs) -> dict | str:
         """ Returns the list of solution components with a particular name. Async Version.
 
             Parameters
@@ -4735,6 +4750,7 @@ class SolutionArchitect(ServerClient):
 
         if body is None:
             body = {
+                'graphQueryDepth': graph_query_depth,
                 "filter": name,
                 }
         else:
@@ -4751,7 +4767,7 @@ class SolutionArchitect(ServerClient):
         return response.json().get("elements", NO_ELEMENTS_FOUND)
 
     def get_solution_components_by_name(self, name: Optional[str] = None, body: dict = None, start_from: int = 0,
-                                        page_size: int = max_paging_size, output_format: str = "JSON",
+                                        page_size: int = max_paging_size, graph_query_depth: int = 3, output_format: str = "JSON",
                                         report_spec: str | dict = None, **kwargs) -> dict | str:
         """ Returns the list of solution components with a particular name.
 
@@ -4809,11 +4825,11 @@ class SolutionArchitect(ServerClient):
         """
         loop = asyncio.get_event_loop()
         response = loop.run_until_complete(
-            self._async_get_solution_components_by_name(name=name, body=body, start_from=start_from, page_size=page_size, output_format=output_format, report_spec=report_spec, **kwargs))
+            self._async_get_solution_components_by_name(name=name, body=body, start_from=start_from, page_size=page_size, graph_query_depth=graph_query_depth, output_format=output_format, report_spec=report_spec, **kwargs))
         return response
 
     async def _async_get_solution_component_by_guid(self, guid: str = None, body: dict = None,
-                                                    output_format: str = "JSON", report_spec: str = "Solution-Component-DrE", **kwargs) -> dict | str:
+                                                    graph_query_depth: int = 3, output_format: str = "JSON", report_spec: str = "Solution-Component-DrE", **kwargs) -> dict | str:
         """ Return the properties of a specific solution component. Async Version.
 
             Parameters
@@ -4863,6 +4879,7 @@ class SolutionArchitect(ServerClient):
         url = (f"{self.platform_url}/servers/{self.view_server}/api/open-metadata/solution-architect/"
                f"solution-components/{guid}/retrieve")
         params = {
+            'graph_query_depth': graph_query_depth,
             'output_format': output_format,
             'report_spec': report_spec,
             'body': body
@@ -4885,7 +4902,7 @@ class SolutionArchitect(ServerClient):
         #     return self.generate_solution_components_output(element, None, output_format)
         # return response.json().get("element", NO_ELEMENTS_FOUND)
 
-    def get_solution_component_by_guid(self, guid: str = None, body: dict = None, output_format: str = "JSON", report_spec: str | dict = "Solution-Component-DrE", **kwargs) -> dict | str:
+    def get_solution_component_by_guid(self, guid: str = None, body: dict = None, graph_query_depth: int = 3, output_format: str = "JSON", report_spec: str | dict = "Solution-Component-DrE", **kwargs) -> dict | str:
         """ Return the properties of a specific solution component.
 
             Parameters
@@ -4929,7 +4946,7 @@ class SolutionArchitect(ServerClient):
         """
         loop = asyncio.get_event_loop()
         response = loop.run_until_complete(
-            self._async_get_solution_component_by_guid(guid=guid, body=body, output_format=output_format, report_spec=report_spec, **kwargs))
+            self._async_get_solution_component_by_guid(guid=guid, body=body, graph_query_depth=graph_query_depth, output_format=output_format, report_spec=report_spec, **kwargs))
         return response
 
 
@@ -5852,7 +5869,7 @@ class SolutionArchitect(ServerClient):
         ignore_case: bool = False,
         start_from: int = 0,
         page_size: int = 100,
-        output_format: str = "JSON",
+        graph_query_depth: int = 3, output_format: str = "JSON",
         report_spec: str | dict = None,
         **kwargs
     ) -> list[dict] | str:
@@ -5953,6 +5970,7 @@ class SolutionArchitect(ServerClient):
         
         # Merge explicit parameters with kwargs
         params = {
+            'graph_query_depth': graph_query_depth,
             'search_string': search_string,
             'body': body,
             'starts_with': starts_with,
@@ -5980,7 +5998,7 @@ class SolutionArchitect(ServerClient):
         ignore_case: bool = False,
         start_from: int = 0,
         page_size: int = 100,
-        output_format: str = "JSON",
+        graph_query_depth: int = 3, output_format: str = "JSON",
         report_spec: str | dict = None,
         **kwargs
     ) -> list[dict] | str:
@@ -6079,6 +6097,7 @@ class SolutionArchitect(ServerClient):
         return loop.run_until_complete(
             self._async_find_solution_roles(
                 search_string=search_string,
+                graph_query_depth=graph_query_depth,
                 body=body,
                 starts_with=starts_with,
                 ends_with=ends_with,
@@ -6100,7 +6119,7 @@ class SolutionArchitect(ServerClient):
         ignore_case: bool = False,
         start_from: int = 0,
         page_size: int = 0,
-        output_format: str = 'JSON',
+        graph_query_depth: int = 3, output_format: str = 'JSON',
         report_spec: Optional[str] = None,
         body: Optional[dict | SearchStringRequestBody] = None
     ) -> list[dict] | str:
@@ -6124,7 +6143,7 @@ class SolutionArchitect(ServerClient):
 
     async def _async_get_solution_roles_by_name(self, name: Optional[str] = None, body: dict = None, start_from: int = 0,
                                                 page_size: int = max_paging_size,
-                                                output_format: str = "JSON", report_spec: str | dict = None, **kwargs) -> dict | str:
+                                                graph_query_depth: int = 3, output_format: str = "JSON", report_spec: str | dict = None, **kwargs) -> dict | str:
         """ Returns the list of solution roles with a particular name. Async Version.
 
             Parameters
@@ -6180,6 +6199,7 @@ class SolutionArchitect(ServerClient):
 
         if body is None:
             body = {
+                'graphQueryDepth': graph_query_depth,
                 "filter": name,
                 }
         else:
@@ -6196,7 +6216,7 @@ class SolutionArchitect(ServerClient):
         return response.json().get("elements", NO_ELEMENTS_FOUND)
 
     def get_solution_roles_by_name(self, name: Optional[str] = None, body: dict = None, start_from: int = 0,
-                                   page_size: int = max_paging_size, output_format: str = "JSON", report_spec: str | dict = None, **kwargs) -> dict | str:
+                                   page_size: int = max_paging_size, graph_query_depth: int = 3, output_format: str = "JSON", report_spec: str | dict = None, **kwargs) -> dict | str:
         """ Returns the list of solution roles with a particular name.
 
             Parameters
@@ -6249,12 +6269,12 @@ class SolutionArchitect(ServerClient):
         """
         loop = asyncio.get_event_loop()
         response = loop.run_until_complete(
-            self._async_get_solution_roles_by_name(name=name, body=body, start_from=start_from, page_size=page_size, output_format=output_format, report_spec=report_spec, **kwargs))
+            self._async_get_solution_roles_by_name(name=name, body=body, start_from=start_from, page_size=page_size, graph_query_depth=graph_query_depth, output_format=output_format, report_spec=report_spec, **kwargs))
         return response
 
 
     async def _async_get_solution_role_by_guid(self, guid: str = None, body: dict = None,
-                                               output_format: str = "JSON", report_spec: str | dict = None, **kwargs) -> dict | str:
+                                               graph_query_depth: int = 3, output_format: str = "JSON", report_spec: str | dict = None, **kwargs) -> dict | str:
         """ Return the properties of a specific solution role. Async Version.
 
             Parameters
@@ -6312,7 +6332,7 @@ class SolutionArchitect(ServerClient):
             return self.generate_solution_roles_output(element, None, output_format, report_spec=report_spec)
         return response.json().get("element", NO_ELEMENTS_FOUND)
 
-    def get_solution_role_by_guid(self, guid: str = None, body: dict = None, output_format: str = "JSON", report_spec: str | dict = None, **kwargs) -> dict | str:
+    def get_solution_role_by_guid(self, guid: str = None, body: dict = None, graph_query_depth: int = 3, output_format: str = "JSON", report_spec: str | dict = None, **kwargs) -> dict | str:
         """ Return the properties of a specific solution role.
 
             Parameters
@@ -6354,7 +6374,7 @@ class SolutionArchitect(ServerClient):
 
         """
         loop = asyncio.get_event_loop()
-        response = loop.run_until_complete(self._async_get_solution_role_by_guid(guid=guid, body=body, output_format=output_format, report_spec=report_spec, **kwargs))
+        response = loop.run_until_complete(self._async_get_solution_role_by_guid(guid=guid, body=body, graph_query_depth=graph_query_depth, output_format=output_format, report_spec=report_spec, **kwargs))
         return response
 
 

@@ -137,14 +137,15 @@ class ReferenceDataManager(ServerClient):
     @dynamic_catch
     async def _async_find_valid_value_definitions(
             self,
-            search_string: str,
+            search_string: str = "*",
             body: Optional[dict | SearchStringRequestBody] = None,
             starts_with: bool = False,
             ends_with: bool = False,
             ignore_case: bool = False,
             start_from: int = 0,
             page_size: int = 0,
-            output_format: str = "json",
+            graph_query_depth: int = 3,
+            output_format: str = "JSON",
             report_spec: str | dict = None,
             **kwargs
     ) -> list | str:
@@ -193,6 +194,7 @@ class ReferenceDataManager(ServerClient):
 
         # Merge explicit parameters with kwargs
         params = {
+            'graph_query_depth': graph_query_depth,
             'search_string': search_string,
             'body': body,
             'starts_with': starts_with,
@@ -216,14 +218,15 @@ class ReferenceDataManager(ServerClient):
     @dynamic_catch
     def find_valid_value_definitions(
             self,
-            search_string: str,
+            search_string: str = "*",
             body: Optional[dict | SearchStringRequestBody] = None,
             starts_with: bool = False,
             ends_with: bool = False,
             ignore_case: bool = False,
             start_from: int = 0,
             page_size: int = 0,
-            output_format: str = "json",
+            graph_query_depth: int = 3,
+            output_format: str = "JSON",
             report_spec: str | dict = None,
             **kwargs
     ) -> list | str:
@@ -267,6 +270,7 @@ class ReferenceDataManager(ServerClient):
         resp = loop.run_until_complete(
             self._async_find_valid_value_definitions(
                 search_string=search_string,
+                graph_query_depth=graph_query_depth,
                 body=body,
                 starts_with=starts_with,
                 ends_with=ends_with,
@@ -287,7 +291,7 @@ class ReferenceDataManager(ServerClient):
             self, name: Optional[str] = None, classification_names: Optional[list[str]] = None,
             body: Optional[dict | FilterRequestBody] = None,
             start_from: int = 0, page_size: int = 0,
-            output_format: str = 'JSON',
+            graph_query_depth: int = 3, output_format: str = 'JSON',
             report_spec: str | dict = None,
             **kwargs) -> list | str:
         if name is None and "filter_string" in kwargs:
@@ -296,6 +300,7 @@ class ReferenceDataManager(ServerClient):
         url = f"{self.ref_data_command_base}/valid-value-definitions/by-name"
 
         params = {
+            'graph_query_depth': graph_query_depth,
             'classification_names': classification_names,
             'start_from': start_from,
             'page_size': page_size,
@@ -317,7 +322,7 @@ class ReferenceDataManager(ServerClient):
             self, name: Optional[str] = None, classification_names: Optional[list[str]] = None,
             body: Optional[dict | FilterRequestBody] = None,
             start_from: int = 0, page_size: int = 0,
-            output_format: str = 'JSON',
+            graph_query_depth: int = 3, output_format: str = 'JSON',
             report_spec: str | dict = None,
             **kwargs) -> list | str:
 
@@ -339,7 +344,7 @@ class ReferenceDataManager(ServerClient):
     @dynamic_catch
     async def _async_get_valid_value_definition_by_guid(self, guid: str, element_type: Optional[str] = None,
                                          body: Optional[dict | GetRequestBody] = None,
-                                         output_format: str = 'JSON',
+                                         graph_query_depth: int = 3, output_format: str = 'JSON',
                                          report_spec: str | dict = None,
                                          **kwargs) -> dict | str:
         """Return the properties of a specific project. Async version.
@@ -386,6 +391,7 @@ class ReferenceDataManager(ServerClient):
         type_ = element_type if element_type else "ValidValueDefinition"
 
         params = {
+            'graph_query_depth': graph_query_depth,
             'output_format': output_format,
             'report_spec': report_spec,
             'body': body
@@ -402,7 +408,7 @@ class ReferenceDataManager(ServerClient):
     @dynamic_catch
     def get_valid_value_definition_by_guid(self, guid: str, element_type: Optional[str] = None,
                             body: Optional[dict | GetRequestBody] = None,
-                            output_format: str = 'JSON',
+                            graph_query_depth: int = 3, output_format: str = 'JSON',
                             report_spec: str | dict = None,
                             **kwargs) -> dict | str:
         """Return the properties of a specific project.
@@ -450,6 +456,7 @@ class ReferenceDataManager(ServerClient):
         loop = asyncio.get_event_loop()
         resp = loop.run_until_complete(
             self._async_get_valid_value_definition_by_guid(guid=guid, element_type=element_type, body=body,
+                                                           graph_query_depth=graph_query_depth,
                                                            output_format=output_format, report_spec=report_spec,
                                                            **kwargs)
         )

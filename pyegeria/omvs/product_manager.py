@@ -375,7 +375,7 @@ class ProductManager(CollectionManager):
         self,
         guid: str = None,
         body: Optional[dict] = None,
-        output_format: str = "JSON",
+        graph_query_depth: int = 3, output_format: str = "JSON",
         report_spec: Optional[str | dict] = None,
         **kwargs,
     ) -> dict | str:
@@ -417,6 +417,7 @@ class ProductManager(CollectionManager):
             guid = kwargs.pop("digital_product_guid")
         url = f"{self.product_manager_command_root}/collections/{guid}/retrieve"
         params = {
+            'graph_query_depth': graph_query_depth,
             'output_format': output_format,
             'report_spec': report_spec,
             'body': body
@@ -435,7 +436,7 @@ class ProductManager(CollectionManager):
         self,
         guid: str = None,
         body: Optional[dict] = None,
-        output_format: str = "JSON",
+        graph_query_depth: int = 3, output_format: str = "JSON",
         report_spec: Optional[str | dict] = None,
         **kwargs,
     ) -> dict | str:
@@ -465,6 +466,7 @@ class ProductManager(CollectionManager):
         loop = asyncio.get_event_loop()
         return loop.run_until_complete(
             self._async_get_digital_product_by_guid(
+                graph_query_depth=graph_query_depth,
                 guid=guid, body=body, output_format=output_format, report_spec=report_spec, **kwargs
             )
         )
@@ -477,7 +479,7 @@ class ProductManager(CollectionManager):
         body: Optional[dict] = None,
         start_from: int = 0,
         page_size: int = 0,
-        output_format: str = "JSON",
+        graph_query_depth: int = 3, output_format: str = "JSON",
         report_spec: Optional[str | dict] = None,
         **kwargs,
     ) -> list | str:
@@ -528,7 +530,7 @@ class ProductManager(CollectionManager):
         body: Optional[dict] = None,
         start_from: int = 0,
         page_size: int = 0,
-        output_format: str = "JSON",
+        graph_query_depth: int = 3, output_format: str = "JSON",
         report_spec: Optional[str | dict] = None,
         **kwargs,
     ) -> list | str:
@@ -564,6 +566,7 @@ class ProductManager(CollectionManager):
         loop = asyncio.get_event_loop()
         return loop.run_until_complete(
             self._async_get_digital_products_by_name(
+                graph_query_depth=graph_query_depth,
                 name=name, classification_names=classification_names, body=body, start_from=start_from, page_size=page_size, output_format=output_format, report_spec=report_spec, **kwargs
             )
         )
@@ -578,7 +581,7 @@ class ProductManager(CollectionManager):
         ignore_case: bool = False,
         start_from: int = 0,
         page_size: int = 100,
-        output_format: str = "JSON",
+        graph_query_depth: int = 3, output_format: str = "JSON",
         report_spec: Optional[str | dict] = None,
         metadata_element_subtype: Optional[list[str]] = None,
         **kwargs
@@ -655,6 +658,7 @@ class ProductManager(CollectionManager):
         
         # Merge explicit parameters with kwargs
         params = {
+            'graph_query_depth': graph_query_depth,
             'search_string': search_string,
             'body': body,
             'starts_with': starts_with,
@@ -684,7 +688,7 @@ class ProductManager(CollectionManager):
         ignore_case: bool = False,
         start_from: int = 0,
         page_size: int = 100,
-        output_format: str = "JSON",
+        graph_query_depth: int = 3, output_format: str = "JSON",
         report_spec: Optional[str | dict] = None,
         metadata_element_subtype: Optional[list[str]] = None,
         **kwargs
@@ -758,6 +762,7 @@ class ProductManager(CollectionManager):
         return loop.run_until_complete(
             self._async_find_digital_products(
                 search_string=search_string,
+                graph_query_depth=graph_query_depth,
                 body=body,
                 starts_with=starts_with,
                 ends_with=ends_with,
@@ -1366,7 +1371,7 @@ class ProductManager(CollectionManager):
         self,
         guid: str = None,
         body: Optional[dict] = None,
-        output_format: str = "JSON",
+        graph_query_depth: int = 3, output_format: str = "JSON",
         report_spec: Optional[str | dict] = None,
         **kwargs,
     ) -> dict | str:
@@ -1401,6 +1406,7 @@ class ProductManager(CollectionManager):
             guid = kwargs.pop("digital_product_catalog_guid")
         url = f"{self.product_manager_command_root}/collections/{guid}/retrieve"
         params = {
+            'graph_query_depth': graph_query_depth,
             'output_format': output_format,
             'report_spec': report_spec,
             'body': body
@@ -1419,7 +1425,7 @@ class ProductManager(CollectionManager):
         self,
         guid: str = None,
         body: Optional[dict] = None,
-        output_format: str = "JSON",
+        graph_query_depth: int = 3, output_format: str = "JSON",
         report_spec: Optional[str | dict] = None,
         **kwargs,
     ) -> dict | str:
@@ -1449,6 +1455,7 @@ class ProductManager(CollectionManager):
         loop = asyncio.get_event_loop()
         return loop.run_until_complete(
             self._async_get_digital_product_catalog_by_guid(
+                graph_query_depth=graph_query_depth,
                 guid=guid, body=body, output_format=output_format, report_spec=report_spec, **kwargs
             )
         )
@@ -1461,7 +1468,7 @@ class ProductManager(CollectionManager):
         body: Optional[dict] = None,
         start_from: int = 0,
         page_size: int = 0,
-        output_format: str = "JSON",
+        graph_query_depth: int = 3, output_format: str = "JSON",
         report_spec: Optional[str | dict] = None,
         **kwargs,
     ) -> list | str:
@@ -1511,7 +1518,7 @@ class ProductManager(CollectionManager):
         body: Optional[dict] = None,
         start_from: int = 0,
         page_size: int = 0,
-        output_format: str = "JSON",
+        graph_query_depth: int = 3, output_format: str = "JSON",
         report_spec: Optional[str | dict] = None,
         **kwargs,
     ) -> list | str:
@@ -1547,6 +1554,7 @@ class ProductManager(CollectionManager):
         loop = asyncio.get_event_loop()
         return loop.run_until_complete(
             self._async_get_digital_product_catalogs_by_name(
+                graph_query_depth=graph_query_depth,
                 name=name, classification_names=classification_names, body=body, start_from=start_from, page_size=page_size, output_format=output_format, report_spec=report_spec, **kwargs
             )
         )
@@ -1561,7 +1569,7 @@ class ProductManager(CollectionManager):
         ignore_case: bool = True,
         start_from: int = 0,
         page_size: int = 0,
-        output_format: str = "JSON",
+        graph_query_depth: int = 3, output_format: str = "JSON",
         report_spec: Optional[str | dict] = None,
         **kwargs
     ) -> list | str:
@@ -1634,6 +1642,7 @@ class ProductManager(CollectionManager):
         
         # Merge explicit parameters with kwargs
         params = {
+            'graph_query_depth': graph_query_depth,
             'search_string': search_string,
             'body': body,
             'starts_with': starts_with,
@@ -1661,7 +1670,7 @@ class ProductManager(CollectionManager):
         ignore_case: bool = True,
         start_from: int = 0,
         page_size: int = 0,
-        output_format: str = "JSON",
+        graph_query_depth: int = 3, output_format: str = "JSON",
         report_spec: Optional[str | dict] = None,
         **kwargs
     ) -> list | str:
@@ -1734,6 +1743,7 @@ class ProductManager(CollectionManager):
         return loop.run_until_complete(
             self._async_find_digital_product_catalogs(
                 search_string=search_string,
+                graph_query_depth=graph_query_depth,
                 body=body,
                 starts_with=starts_with,
                 ends_with=ends_with,

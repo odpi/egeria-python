@@ -1834,7 +1834,7 @@ class GovernanceOfficer(ServerClient):
         ignore_case: bool = False,
         start_from: int = 0,
         page_size: int = 100,
-        output_format: str = "JSON",
+        graph_query_depth: int = 3, output_format: str = "JSON",
         report_spec: str | dict = None,
         **kwargs
     ) -> list | str:
@@ -1917,6 +1917,7 @@ class GovernanceOfficer(ServerClient):
         
         # Merge explicit parameters with kwargs
         params = {
+            'graph_query_depth': graph_query_depth,
             'search_string': search_string,
             'body': body,
             'starts_with': starts_with,
@@ -1947,7 +1948,7 @@ class GovernanceOfficer(ServerClient):
         ignore_case: bool = False,
         start_from: int = 0,
         page_size: int = 100,
-        output_format: str = "JSON",
+        graph_query_depth: int = 3, output_format: str = "JSON",
         report_spec: str | dict = None,
         **kwargs
     ) -> list | str:
@@ -2027,6 +2028,7 @@ class GovernanceOfficer(ServerClient):
         return loop.run_until_complete(
             self._async_find_governance_definitions(
                 search_string=search_string,
+                graph_query_depth=graph_query_depth,
                 body=body,
                 starts_with=starts_with,
                 ends_with=ends_with,
@@ -2045,7 +2047,7 @@ class GovernanceOfficer(ServerClient):
                                                         classification_names: Optional[list[str]] = None,
                                                         body: Optional[dict | FilterRequestBody] = None,
                                                         start_from: int = 0, page_size: int = 0,
-                                                        output_format: str = "JSON",
+                                                        graph_query_depth: int = 3, output_format: str = "JSON",
                                                         report_spec: dict = None,
                                                         **kwargs) -> list | str:
         """ Returns the list of governance definitions with a particular name. Async Version.
@@ -2104,6 +2106,7 @@ class GovernanceOfficer(ServerClient):
             f"{self.url_marker}/governance-definitions/by-name")
         
         params = {
+            'graph_query_depth': graph_query_depth,
             'classification_names': classification_names,
             'start_from': start_from,
             'page_size': page_size,
@@ -2124,7 +2127,7 @@ class GovernanceOfficer(ServerClient):
     def get_governance_definitions_by_name(self, name: Optional[str] = None, classification_names: Optional[list[str]] = None,
                                            body: Optional[dict | FilterRequestBody] = None,
                                            start_from: int = 0, page_size: int = 0,
-                                           output_format: str = "JSON",
+                                           graph_query_depth: int = 3, output_format: str = "JSON",
                                            report_spec: dict = None,
                                            **kwargs) -> list | str:
         """ Returns the list of governance definitions with a particular name.
@@ -2184,6 +2187,7 @@ class GovernanceOfficer(ServerClient):
         loop = asyncio.get_event_loop()
         response = loop.run_until_complete(
             self._async_get_governance_definitions_by_name(name=name, classification_names=classification_names, body=body,
+                                                           graph_query_depth=graph_query_depth,
                                                            start_from=start_from, page_size=page_size, output_format=output_format, report_spec=report_spec,
                                                            **kwargs))
         return response
@@ -2191,7 +2195,7 @@ class GovernanceOfficer(ServerClient):
     async def _async_get_governance_definition_by_guid(self, guid: str, 
                                                        element_type: Optional[str] = None,
                                                         body: Optional[dict | GetRequestBody] = None,
-                                                        output_format: str = "JSON",
+                                                        graph_query_depth: int = 3, output_format: str = "JSON",
                                                         report_spec: dict = None,
                                                         **kwargs) -> list | str:
         """ Returns the  governance definitions with a particular GUID. Async Version.
@@ -2254,6 +2258,7 @@ class GovernanceOfficer(ServerClient):
         element_type = element_type if element_type else "GovernanceDefinition"
         
         params = {
+            'graph_query_depth': graph_query_depth,
             'output_format': output_format,
             'report_spec': report_spec,
             'body': body
@@ -2271,7 +2276,7 @@ class GovernanceOfficer(ServerClient):
     def get_governance_definition_by_guid(self, guid: str, 
                                            element_type: Optional[str] = None,
                                            body: Optional[dict | GetRequestBody] = None,
-                                           output_format: str = "JSON",
+                                           graph_query_depth: int = 3, output_format: str = "JSON",
                                            report_spec: dict = None,
                                            **kwargs) -> list | str:
         """ Returns the a governance definitions with a particular GUID. 
@@ -2328,6 +2333,7 @@ class GovernanceOfficer(ServerClient):
         loop = asyncio.get_event_loop()
         response = loop.run_until_complete(
             self._async_get_governance_definition_by_guid(guid=guid, element_type=element_type, body=body,
+                                                            graph_query_depth=graph_query_depth,
                                                             output_format=output_format, report_spec=report_spec,
                                                             **kwargs))
         return response

@@ -320,7 +320,7 @@ class DigitalBusiness(CollectionManager):
     async def _async_get_business_capability_by_guid(
         self,
         guid: str,
-        output_format: str = "JSON",
+        graph_query_depth: int = 3, output_format: str = "JSON",
         report_spec: Optional[str | dict] = "BusinessCapabilities",
         body: Optional[dict] = None,
         **kwargs,
@@ -354,6 +354,7 @@ class DigitalBusiness(CollectionManager):
         """
         url = f"{self.digital_business_command_root}/collections/{guid}/retrieve"
         params = {
+            'graph_query_depth': graph_query_depth,
             "output_format": output_format,
             "report_spec": report_spec,
             "body": body,
@@ -371,7 +372,7 @@ class DigitalBusiness(CollectionManager):
     def get_business_capability_by_guid(
         self,
         guid: str,
-        output_format: str = "JSON",
+        graph_query_depth: int = 3, output_format: str = "JSON",
         report_spec: Optional[str | dict] = "BusinessCapabilities",
         body: Optional[dict] = None,
         **kwargs,
@@ -403,6 +404,7 @@ class DigitalBusiness(CollectionManager):
         return loop.run_until_complete(
             self._async_get_business_capability_by_guid(
                 guid=guid,
+                graph_query_depth=graph_query_depth,
                 output_format=output_format,
                 report_spec=report_spec,
                 body=body,

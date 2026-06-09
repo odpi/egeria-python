@@ -879,6 +879,8 @@ class MetadataExpert(ServerClient):
         self,
         guid: Optional[str] = None,
         as_of_time: Optional[str] = None,
+        graph_query_depth: int = 3,
+        output_format: str = "JSON",
         body: Optional[dict | GetRequestBody] = None,
         **kwargs,
     ) -> dict | str:
@@ -925,6 +927,7 @@ class MetadataExpert(ServerClient):
 
         if body is None:
             body = {
+                'graphQueryDepth': graph_query_depth,
                 "class": "GetRequestBody",
                 "effectiveTime": effective_time,
                 "asOfTime": as_of_time,
@@ -933,7 +936,7 @@ class MetadataExpert(ServerClient):
         url = f"{base_path(self, self.view_server)}/metadata-elements/{guid}"
         response = await self._async_get_guid_request(url=url, _type="Referenceable",
                                                       _gen_output=self._generate_referenceable_output,
-                                                      output_format="JSON",
+                                                      output_format=output_format,
                                                       report_spec=None, body=body)
         return response
 
@@ -942,6 +945,8 @@ class MetadataExpert(ServerClient):
         self,
         guid: Optional[str] = None,
         as_of_time: Optional[str] = None,
+        graph_query_depth: int = 3,
+        output_format: str = "JSON",
         body: Optional[dict | GetRequestBody] = None,
         **kwargs,
     ) -> dict | str:
@@ -976,6 +981,8 @@ class MetadataExpert(ServerClient):
         loop = asyncio.get_event_loop()
         response = loop.run_until_complete(
             self._async_get_metadata_element_by_guid(
+                graph_query_depth=graph_query_depth,
+                output_format=output_format,
                 guid=guid, as_of_time=as_of_time, body=body, **kwargs
             )
         )
@@ -1582,6 +1589,7 @@ class MetadataExpert(ServerClient):
                                                         sequencing_order: str = "PROPERTY_ASCENDING",
                                                         sequencing_property: str = "qualifiedName",
                                                         start_from: int = 0, page_size: int = 0,
+                                                        output_format: str = "JSON",
                                                         body: SearchStringRequestBody | dict = None,
                                                         **kwargs) -> list | str:
         """ Searches for metadata elements based on a string pattern with a comprehensive filtering
@@ -1657,7 +1665,7 @@ class MetadataExpert(ServerClient):
                                                   relationship_page_size=relationship_page_size,
                                                   limit_results_by_status=limit_results_by_status,
                                                   sequencing_order=sequencing_order,
-                                                  sequencing_property=sequencing_property, output_format="JSON",
+                                                  sequencing_property=sequencing_property, output_format=output_format,
                                                   report_spec=None, start_from=start_from, page_size=page_size,
                                                   body=body, **kwargs)
         return response
@@ -1677,6 +1685,7 @@ class MetadataExpert(ServerClient):
                                            sequencing_order: str = "PROPERTY_ASCENDING",
                                            sequencing_property: str = "qualifiedName",
                                            start_from: int = 0, page_size: int = 0,
+                                           output_format: str = "JSON",
                                            body: SearchStringRequestBody | dict = None,
                                            **kwargs) -> list | str:
         """
@@ -1741,6 +1750,7 @@ class MetadataExpert(ServerClient):
                 graph_query_depth=graph_query_depth, as_of_time=as_of_time,
                 limit_results_by_status=limit_results_by_status, sequencing_order=sequencing_order,
                 sequencing_property=sequencing_property, start_from=start_from, page_size=page_size,
+                output_format=output_format,
                 body=body, **kwargs
             )
         )
@@ -1762,6 +1772,7 @@ class MetadataExpert(ServerClient):
                                               sequencing_order: str = "PROPERTY_ASCENDING",
                                               sequencing_property: str = "qualifiedName",
                                               start_from: int = 0, page_size: int = 0,
+                                              output_format: str = "JSON",
                                               body: SearchStringRequestBody | dict = None,
                                               **kwargs) -> list | str:
         """ Return a list of elements with the requested search string in their (display, resource) name, qualified name,
@@ -1838,7 +1849,7 @@ class MetadataExpert(ServerClient):
                                                   relationship_page_size=relationship_page_size,
                                                   limit_results_by_status=limit_results_by_status,
                                                   sequencing_order=sequencing_order,
-                                                  sequencing_property=sequencing_property, output_format="JSON",
+                                                  sequencing_property=sequencing_property, output_format=output_format,
                                                   report_spec=None, start_from=start_from, page_size=page_size,
                                                   body=body, **kwargs)
         return response
@@ -1856,6 +1867,7 @@ class MetadataExpert(ServerClient):
                                  sequencing_order: str = "PROPERTY_ASCENDING",
                                  sequencing_property: str = "qualifiedName",
                                  start_from: int = 0, page_size: int = 0,
+                                 output_format: str = "JSON",
                                  body: SearchStringRequestBody | dict = None,
                                  **kwargs) -> list | str:
         """ Return a list of elements with the requested search string in their (display, resource) name, qualified name,
@@ -1920,6 +1932,7 @@ class MetadataExpert(ServerClient):
                 graph_query_depth=graph_query_depth, as_of_time=as_of_time,
                 limit_results_by_status=limit_results_by_status, sequencing_order=sequencing_order,
                 sequencing_property=sequencing_property, start_from=start_from, page_size=page_size,
+                output_format=output_format,
                 body=body, **kwargs
             )
         )
@@ -1941,6 +1954,7 @@ class MetadataExpert(ServerClient):
                                                     sequencing_order: str = "PROPERTY_ASCENDING",
                                                     sequencing_property: str = "qualifiedName",
                                                     start_from: int = 0, page_size: int = 0,
+                                                    output_format: str = "JSON",
                                                     body: SearchStringRequestBody | dict = None,
                                                     **kwargs) -> list | str:
         """ Return a list of elements with the requested search string in their (display, resource) name, qualified name,
@@ -2017,7 +2031,7 @@ class MetadataExpert(ServerClient):
                                                   relationship_page_size=relationship_page_size,
                                                   limit_results_by_status=limit_results_by_status,
                                                   sequencing_order=sequencing_order,
-                                                  sequencing_property=sequencing_property, output_format="JSON",
+                                                  sequencing_property=sequencing_property, output_format=output_format,
                                                   report_spec=None, start_from=start_from, page_size=page_size,
                                                   body=body, **kwargs)
         return response
@@ -2035,6 +2049,7 @@ class MetadataExpert(ServerClient):
                                        sequencing_order: str = "PROPERTY_ASCENDING",
                                        sequencing_property: str = "qualifiedName",
                                        start_from: int = 0, page_size: int = 0,
+                                       output_format: str = "JSON",
                                        body: SearchStringRequestBody | dict = None,
                                        **kwargs) -> list | str:
         """ Return a list of elements with the requested search string in their (display, resource) name, qualified name,
@@ -2098,6 +2113,7 @@ class MetadataExpert(ServerClient):
                 graph_query_depth=graph_query_depth, as_of_time=as_of_time,
                 limit_results_by_status=limit_results_by_status, sequencing_order=sequencing_order,
                 sequencing_property=sequencing_property, start_from=start_from, page_size=page_size,
+                output_format=output_format,
                 body=body, **kwargs
             )
         )
@@ -2119,6 +2135,7 @@ class MetadataExpert(ServerClient):
                                                    sequencing_order: str = "PROPERTY_ASCENDING",
                                                    sequencing_property: str = "qualifiedName",
                                                    start_from: int = 0, page_size: int = 0,
+                                                   output_format: str = "JSON",
                                                    body: SearchStringRequestBody | dict = None,
                                                    **kwargs) -> list | str:
         """ Return a list of elements with the requested search string in their (display, resource) name, qualified name,
@@ -2199,7 +2216,7 @@ class MetadataExpert(ServerClient):
                                                   relationship_page_size=relationship_page_size,
                                                   limit_results_by_status=limit_results_by_status,
                                                   sequencing_order=sequencing_order,
-                                                  sequencing_property=sequencing_property, output_format="JSON",
+                                                  sequencing_property=sequencing_property, output_format=output_format,
                                                   report_spec=None, start_from=start_from, page_size=page_size,
                                                   body=body, **kwargs)
         return response
@@ -2217,6 +2234,7 @@ class MetadataExpert(ServerClient):
                                       sequencing_order: str = "PROPERTY_ASCENDING",
                                       sequencing_property: str = "qualifiedName",
                                       start_from: int = 0, page_size: int = 0,
+                                      output_format: str = "JSON",
                                       body: SearchStringRequestBody | dict = None,
                                       **kwargs) -> list | str:
         """ Return a list of elements with the requested search string in their (display, resource) name, qualified name,
@@ -2281,6 +2299,7 @@ class MetadataExpert(ServerClient):
                 graph_query_depth=graph_query_depth, as_of_time=as_of_time,
                 limit_results_by_status=limit_results_by_status, sequencing_order=sequencing_order,
                 sequencing_property=sequencing_property, start_from=start_from, page_size=page_size,
+                output_format=output_format,
                 body=body, **kwargs
             )
         )
@@ -2954,6 +2973,8 @@ class MetadataExpert(ServerClient):
     async def _async_find_metadata_elements(
         self,
         body: dict,
+        graph_query_depth: int = 3,
+        output_format: str = "JSON",
         for_lineage: bool = None,
         for_duplicate_processing: bool = None,
         start_from: int = 0,
@@ -3067,6 +3088,8 @@ class MetadataExpert(ServerClient):
     def find_metadata_elements(
         self,
         body: dict,
+        graph_query_depth: int = 3,
+        output_format: str = "JSON",
         for_lineage: bool = None,
         for_duplicate_processing: bool = None,
         start_from: int = 0,
@@ -3166,6 +3189,8 @@ class MetadataExpert(ServerClient):
         response = loop.run_until_complete(
             self._async_find_metadata_elements(
                 body,
+                graph_query_depth=graph_query_depth,
+                output_format=output_format,
                 for_lineage=for_lineage,
                 for_duplicate_processing=for_duplicate_processing,
                 start_from=start_from,
@@ -3179,6 +3204,8 @@ class MetadataExpert(ServerClient):
     async def _async_find_relationships_between_elements(
         self,
         body: dict,
+        graph_query_depth: int = 3,
+        output_format: str = "JSON",
         for_lineage: bool = None,
         for_duplicate_processing: bool = None,
         start_from: int = 0,
@@ -3272,6 +3299,8 @@ class MetadataExpert(ServerClient):
     def find_relationships_between_elements(
         self,
         body: dict,
+        graph_query_depth: int = 3,
+        output_format: str = "JSON",
         for_lineage: bool = None,
         for_duplicate_processing: bool = None,
         start_from: int = 0,
@@ -3354,6 +3383,8 @@ class MetadataExpert(ServerClient):
         response = loop.run_until_complete(
             self._async_find_relationships_between_elements(
                 body,
+                graph_query_depth=graph_query_depth,
+                output_format=output_format,
                 for_lineage=for_lineage,
                 for_duplicate_processing=for_duplicate_processing,
                 start_from=start_from,
@@ -3371,6 +3402,8 @@ class MetadataExpert(ServerClient):
         as_of_time: Optional[str] = None,
         for_lineage: bool = None,
         for_duplicate_processing: bool = None,
+        graph_query_depth: int = 3,
+        output_format: str = "JSON",
         **kwargs,
     ) -> dict | str:
         """
@@ -3406,6 +3439,7 @@ class MetadataExpert(ServerClient):
         as_of_time = kwargs.pop("as_of_time", as_of_time)
 
         body = {
+            'graphQueryDepth': graph_query_depth,
             "class": "AnyTimeRequestBody",
             "effectiveTime": effective_time,
             "asOfTime": as_of_time,
@@ -3422,8 +3456,11 @@ class MetadataExpert(ServerClient):
     def get_relationship_by_guid(
         self,
         guid: str,
+        as_of_time: Optional[str] = None,
         for_lineage: bool = None,
         for_duplicate_processing: bool = None,
+        graph_query_depth: int = 3,
+        output_format: str = "JSON",
         **kwargs,
     ) -> dict | str:
         """
@@ -3458,9 +3495,12 @@ class MetadataExpert(ServerClient):
         loop = asyncio.get_event_loop()
         response = loop.run_until_complete(
             self._async_get_relationship_by_guid(
-                guid,
+                guid=guid,
+                as_of_time=as_of_time,
                 for_lineage=for_lineage,
                 for_duplicate_processing=for_duplicate_processing,
+                graph_query_depth=graph_query_depth,
+                output_format=output_format,
                 **kwargs,
             )
         )
