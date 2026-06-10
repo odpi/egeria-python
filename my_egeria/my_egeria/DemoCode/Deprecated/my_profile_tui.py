@@ -11,9 +11,7 @@ import datetime
 import re
 from typing import Any
 
-from prompt_toolkit import PromptSession
-from prompt_toolkit.clipboard import ClipboardData
-from prompt_toolkit.clipboard.pyperclip import PyperclipClipboard
+from pyegeria import copy_to_clipboard
 
 from pyegeria.view.format_set_executor import exec_report_spec
 from pyegeria import MyProfile, PyegeriaException, print_basic_exception, AutomatedCuration
@@ -374,7 +372,6 @@ class StatusScreen(ModalScreen[Any]):
         """Initialize the StatusScreen screen."""
         super().__init__()
         self.status_message = status_message
-        self.clipboard = PyperclipClipboard()
 
     def compose(self) -> ComposeResult:
         """ Compose the UI components for the StatusScreen screen."""
@@ -397,7 +394,7 @@ class StatusScreen(ModalScreen[Any]):
         self.log(f"Match: {match}")
         if match:
             guid = match.group(1)
-            self.clipboard.set_data(ClipboardData(text = guid))
+            copy_to_clipboard(guid)
             self.log(f"Copied GUID to clipboard: {guid}")
         else:
             self.dismiss(400)
@@ -1226,7 +1223,6 @@ class MyProfileTui(App):
         """Load profile; if missing, prompt to create it; then populate tables."""
         # DOMInfo.attach_to(self)
         # Initiate clipboard session
-        clipboard = PyperclipClipboard()
 
         await self._load_or_create_profile()
         await self._populate_tables()

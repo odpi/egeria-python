@@ -17,16 +17,16 @@
 import os
 import re
 import sys
+from pathlib import Path
+
+# Add the project root to sys.path to allow running this script from any directory
+root_path = Path(__file__).resolve().parents[4]
+if str(root_path) not in sys.path:
+    sys.path.append(str(root_path))
 
 from rich.text import Text
-
 from textual.css.query import NoMatches
 from textual.widget import WidgetError, MountError
-
-# Ensure we're using the local pyegeria, not an installed version
-project_root = os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
-sys.path.insert(0, project_root)
-
 from loguru import logger
 
 from commands.cat.run_report import list_generic

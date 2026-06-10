@@ -20,7 +20,7 @@ class ShopForDataScreen(Screen):
                 ("s", "sample_data_source", "Sample data source"),
                 ("b", "back", "Go back")]
 
-    CSS_PATH = "my_profile.tcss"
+    CSS_PATH = "../My_Profile/my_profile.tcss"
 
     def __init__ (self, glossary_table, digital_product_catalog_table, data_dictionary_table, business_domain_table, root_collection_table,
                   user_name, user_password, view_server, platform_url):
