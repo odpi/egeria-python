@@ -344,15 +344,7 @@ class AssetCatalog(ServerClient):
         )
         return response
 
-    def get_asset_graph(
-        self,
-        asset_guid: str,
-        start_from: int = 0,
-        page_size: int = 0,
-        output_format: str = "MERMAID",
-        report_spec: str = "Common-Mermaid",
-        body: Optional[dict | ResultsRequestBody] = None
-    ) -> str | dict:
+
         """Return all the elements that are anchored to an asset plus relationships between these elements and to
         other elements.
 
