@@ -83,8 +83,12 @@ def list_related_elements_with_prop_value(
         table.add_column("Properties")
         table.add_column("Element Header")
 
-        elements = c_client.get_related_elements(
-            element_guid, relationship_type, om_type
+        elements = c_client.get_related_elements_with_property_value(
+            element_guid,
+            relationship_type,
+            property_value,
+            property_names,
+            metadata_element_type_name=om_type,
         )
 
         if type(elements) is list:

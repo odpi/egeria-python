@@ -458,8 +458,15 @@ class ClassificationExplorer(ServerClient):
         url = (f"{self.platform_url}/servers/{self.view_server}/api/open-metadata/"
                f"classification-explorer/elements/by-ownership")
 
-        response = await self._async_get_name_request(url, "Referenceable", self._generate_referenceable_output,
-                                                      owner_name, None, 0, 0, output_format, report_spec, body)
+        response = await self._async_get_name_request(
+            url=url,
+            _type="Referenceable",
+            _gen_output=self._generate_referenceable_output,
+            filter_string=owner_name,
+            output_format=output_format,
+            report_spec=report_spec,
+            body=body,
+        )
         return response
 
     @dynamic_catch
@@ -574,8 +581,15 @@ body: Optional[dict | FilterRequestBody] = None,
         url = (f"{self.platform_url}/servers/{self.view_server}/api/open-metadata/"
                f"classification-explorer/elements/by-ownership")
 
-        response = await self._async_get_name_request(url, "Referenceable", self._generate_referenceable_output,
-                                                      subject_area, None, 0, 0, output_format, report_spec, body)
+        response = await self._async_get_name_request(
+            url=url,
+            _type="Referenceable",
+            _gen_output=self._generate_referenceable_output,
+            filter_string=subject_area,
+            output_format=output_format,
+            report_spec=report_spec,
+            body=body,
+        )
         return response
 
     @dynamic_catch
@@ -2717,7 +2731,6 @@ body: Optional[dict | FilterRequestBody] = None,
         graph_query_depth: int = 3,
         governance_zone_filter: Optional[list[str]] = None,
         as_of_time: Optional[str] = None,
-        effective_time: Optional[str] = None,
         relationship_page_size: int = 0,
         limit_results_by_status: Optional[list[str]] = None,
         sequencing_order: Optional[str] = None,
@@ -2728,6 +2741,7 @@ body: Optional[dict | FilterRequestBody] = None,
         page_size: int = 0,
         time_out: int = default_time_out,
         body: Optional[dict | FindPropertyNamesRequestBody] = None,
+        **kwargs,
     ) -> list | str:
         """
         Retrieve elements by a value found in one of the properties specified. The value must only be contained in the
@@ -2831,25 +2845,36 @@ body: Optional[dict | FilterRequestBody] = None,
 
         url = f"{self.platform_url}/servers/{self.view_server}/api/open-metadata/classification-explorer/elements/by-property-value-search"
 
+        params = {
+            'starts_with': starts_with,
+            'ends_with': ends_with,
+            'ignore_case': ignore_case,
+            'anchor_domain': anchor_domain,
+            'metadata_element_type': metadata_element_type_name,
+            'metadata_element_subtypes': metadata_element_subtypes,
+            'skip_relationships': skip_relationships,
+            'include_only_relationships': include_only_relationships,
+            'skip_classified_elements': skip_classified_elements,
+            'include_only_classified_elements': include_only_classified_elements,
+            'graph_query_depth': graph_query_depth,
+            'governance_zone_filter': governance_zone_filter,
+            'as_of_time': as_of_time,
+            'relationship_page_size': relationship_page_size,
+            'limit_results_by_status': limit_results_by_status,
+            'sequencing_order': sequencing_order,
+            'sequencing_property': sequencing_property,
+            'output_format': output_format,
+            'report_spec': report_spec,
+            'start_from': start_from,
+            'page_size': page_size,
+            'property_names': property_names,
+            'body': body
+        }
+        params.update(kwargs)
+        params = {k: v for k, v in params.items() if v is not None}
         return await self._async_find_request(url, _type=metadata_element_type_name,
                                               _gen_output=self._generate_referenceable_output,
-                                              search_string=property_value, starts_with=starts_with,
-                                              ends_with=ends_with, ignore_case=ignore_case, anchor_domain=anchor_domain,
-                                              metadata_element_type=metadata_element_type_name,
-                                              metadata_element_subtypes=metadata_element_subtypes,
-                                              skip_relationships=skip_relationships,
-                                              include_only_relationships=include_only_relationships,
-                                              skip_classified_elements=skip_classified_elements,
-                                              include_only_classified_elements=include_only_classified_elements,
-                                              graph_query_depth=graph_query_depth,
-                                              governance_zone_filter=governance_zone_filter, as_of_time=as_of_time,
-                                              effective_time=effective_time,
-                                              relationship_page_size=relationship_page_size,
-                                              limit_results_by_status=limit_results_by_status,
-                                              sequencing_order=sequencing_order,
-                                              sequencing_property=sequencing_property, output_format=output_format,
-                                              report_spec=report_spec, start_from=start_from, page_size=page_size,
-                                              property_names=property_names, body=body)
+                                              search_string=property_value, **params)
 
     def find_elements_by_property_value(
         self,
@@ -2868,7 +2893,6 @@ body: Optional[dict | FilterRequestBody] = None,
         graph_query_depth: int = 3,
         governance_zone_filter: Optional[list[str]] = None,
         as_of_time: Optional[str] = None,
-        effective_time: Optional[str] = None,
         relationship_page_size: int = 0,
         limit_results_by_status: Optional[list[str]] = None,
         sequencing_order: Optional[str] = None,
@@ -2879,6 +2903,7 @@ body: Optional[dict | FilterRequestBody] = None,
         page_size: int = 0,
         time_out: int = default_time_out,
         body: Optional[dict | FindPropertyNamesRequestBody] = None,
+        **kwargs,
     ) -> list | str:
         """
         Retrieve elements by a value found in one of the properties specified. The value must only be contained in the
@@ -2969,11 +2994,12 @@ body: Optional[dict | FilterRequestBody] = None,
 
     async def _async_get_element_by_guid(
             self,
-            element_guid: str,
+            guid: str = None,
             element_type_name: Optional[str] = None,
-            output_format: str = "JSON",
+            graph_query_depth: int = 3, output_format: str = "JSON",
             report_spec: dict | str = "Referenceable",
             body: Optional[dict | GetRequestBody] = None,
+            **kwargs,
     ) -> dict | str:
         """
         Retrieve element by its unique identifier.  Async version.
@@ -3002,22 +3028,35 @@ body: Optional[dict | FilterRequestBody] = None,
         ------
         PyegeriaException
         """
+        if guid is None and "element_guid" in kwargs:
+            guid = kwargs.pop("element_guid")
+
         element_type_name = element_type_name if element_type_name else "Referenceable"
         url = (f"{self.platform_url}/servers/{self.view_server}/api/open-metadata/"
-               f"classification-explorer/elements/{element_guid}")
+               f"classification-explorer/elements/{guid}")
 
-        response = await self._async_get_guid_request(url, element_type_name,
-                                                      self._generate_referenceable_output, output_format,
-                                                      report_spec, body)
+        params = {
+            'graph_query_depth': graph_query_depth,
+            'output_format': output_format,
+            'report_spec': report_spec,
+            'body': body
+        }
+        params.update(kwargs)
+        params = {k: v for k, v in params.items() if v is not None}
+
+        response = await self._async_get_guid_request(url, _type=element_type_name,
+                                                      _gen_output=self._generate_referenceable_output,
+                                                      **params)
         return response
 
     def get_element_by_guid(
             self,
-            element_guid: str,
+            guid: str = None,
             element_type_name: Optional[str] = None,
-            output_format: str = "JSON",
+            graph_query_depth: int = 3, output_format: str = "JSON",
             report_spec: dict | str = None,
-            body: Optional[dict | GetRequestBody] = None
+            body: Optional[dict | GetRequestBody] = None,
+            **kwargs,
     ) -> dict | str:
         """
         Retrieve element by its unique identifier.
@@ -3050,8 +3089,12 @@ body: Optional[dict | FilterRequestBody] = None,
         loop = asyncio.get_event_loop()
         response = loop.run_until_complete(
             self._async_get_element_by_guid(
-                element_guid,
-                element_type_name, output_format, report_spec, body
+                guid=guid,
+                element_type_name=element_type_name,
+                output_format=output_format,
+                report_spec=report_spec,
+                body=body,
+                **kwargs,
             )
         )
         return response
@@ -3718,7 +3761,6 @@ body: Optional[dict | FilterRequestBody] = None,
         graph_query_depth: int = 3,
         governance_zone_filter: Optional[list[str]] = None,
         as_of_time: Optional[str] = None,
-        effective_time: Optional[str] = None,
         relationship_page_size: int = 0,
         limit_results_by_status: Optional[list[str]] = None,
         sequencing_order: Optional[str] = None,
@@ -3729,6 +3771,7 @@ body: Optional[dict | FilterRequestBody] = None,
         page_size: int = 0,
         time_out: int = default_time_out,
         body: Optional[dict | SearchStringRequestBody] = None,
+        **kwargs,
     ) -> list | str:
         """
         Retrieve elements with the requested classification name and with the requested value found in
@@ -3794,25 +3837,36 @@ body: Optional[dict | FilterRequestBody] = None,
             f"with-property-value-search"
         )
 
+        params = {
+            'starts_with': starts_with,
+            'ends_with': ends_with,
+            'ignore_case': ignore_case,
+            'anchor_domain': anchor_domain,
+            'metadata_element_type': metadata_element_type_name,
+            'metadata_element_subtypes': metadata_element_subtypes,
+            'skip_relationships': skip_relationships,
+            'include_only_relationships': include_only_relationships,
+            'skip_classified_elements': skip_classified_elements,
+            'include_only_classified_elements': include_only_classified_elements,
+            'graph_query_depth': graph_query_depth,
+            'governance_zone_filter': governance_zone_filter,
+            'as_of_time': as_of_time,
+            'relationship_page_size': relationship_page_size,
+            'limit_results_by_status': limit_results_by_status,
+            'sequencing_order': sequencing_order,
+            'sequencing_property': sequencing_property,
+            'output_format': output_format,
+            'report_spec': report_spec,
+            'start_from': start_from,
+            'page_size': page_size,
+            'property_names': property_names,
+            'body': body
+        }
+        params.update(kwargs)
+        params = {k: v for k, v in params.items() if v is not None}
         return await self._async_find_request(url, _type=metadata_element_type_name,
                                               _gen_output=self._generate_referenceable_output,
-                                              search_string=property_value, starts_with=starts_with,
-                                              ends_with=ends_with, ignore_case=ignore_case, anchor_domain=anchor_domain,
-                                              metadata_element_type=metadata_element_type_name,
-                                              metadata_element_subtypes=metadata_element_subtypes,
-                                              skip_relationships=skip_relationships,
-                                              include_only_relationships=include_only_relationships,
-                                              skip_classified_elements=skip_classified_elements,
-                                              include_only_classified_elements=include_only_classified_elements,
-                                              graph_query_depth=graph_query_depth,
-                                              governance_zone_filter=governance_zone_filter, as_of_time=as_of_time,
-                                              effective_time=effective_time,
-                                              relationship_page_size=relationship_page_size,
-                                              limit_results_by_status=limit_results_by_status,
-                                              sequencing_order=sequencing_order,
-                                              sequencing_property=sequencing_property, output_format=output_format,
-                                              report_spec=report_spec, start_from=start_from, page_size=page_size,
-                                              property_names=property_names, body=body)
+                                              search_string=property_value, **params)
 
     def find_elements_by_classification_with_property_value(
         self,
@@ -3832,7 +3886,6 @@ body: Optional[dict | FilterRequestBody] = None,
         graph_query_depth: int = 3,
         governance_zone_filter: Optional[list[str]] = None,
         as_of_time: Optional[str] = None,
-        effective_time: Optional[str] = None,
         relationship_page_size: int = 0,
         limit_results_by_status: Optional[list[str]] = None,
         sequencing_order: Optional[str] = None,
@@ -3843,6 +3896,7 @@ body: Optional[dict | FilterRequestBody] = None,
         page_size: int = 0,
         time_out: int = default_time_out,
         body: Optional[dict | SearchStringRequestBody] = None,
+        **kwargs,
     ) -> list | str:
         """
         Retrieve elements with the requested classification name and with the requested value found in
@@ -4326,7 +4380,6 @@ body: Optional[dict | FilterRequestBody] = None,
         graph_query_depth: int = 3,
         governance_zone_filter: Optional[list[str]] = None,
         as_of_time: Optional[str] = None,
-        effective_time: Optional[str] = None,
         relationship_page_size: int = 0,
         limit_results_by_status: Optional[list[str]] = None,
         sequencing_order: Optional[str] = None,
@@ -4337,6 +4390,7 @@ body: Optional[dict | FilterRequestBody] = None,
         page_size: int = 0,
         time_out: int = default_time_out,
         body: Optional[dict | SearchStringRequestBody] = None,
+        **kwargs,
     ) -> list | str:
         """
         Retrieve elements linked via the requested relationship type name and with the requested value found in one of
@@ -4409,25 +4463,36 @@ body: Optional[dict | FilterRequestBody] = None,
             f"{relationship_type}/with-property-value-search?startAtEnd={start_at_end}"
         )
 
+        params = {
+            'starts_with': starts_with,
+            'ends_with': ends_with,
+            'ignore_case': ignore_case,
+            'anchor_domain': anchor_domain,
+            'metadata_element_type': metadata_element_type_name,
+            'metadata_element_subtypes': metadata_element_subtypes,
+            'skip_relationships': skip_relationships,
+            'include_only_relationships': include_only_relationships,
+            'skip_classified_elements': skip_classified_elements,
+            'include_only_classified_elements': include_only_classified_elements,
+            'graph_query_depth': graph_query_depth,
+            'governance_zone_filter': governance_zone_filter,
+            'as_of_time': as_of_time,
+            'relationship_page_size': relationship_page_size,
+            'limit_results_by_status': limit_results_by_status,
+            'sequencing_order': sequencing_order,
+            'sequencing_property': sequencing_property,
+            'output_format': output_format,
+            'report_spec': report_spec,
+            'start_from': start_from,
+            'page_size': page_size,
+            'property_names': property_names,
+            'body': body
+        }
+        params.update(kwargs)
+        params = {k: v for k, v in params.items() if v is not None}
         return await self._async_find_request(url, _type=metadata_element_type_name,
                                               _gen_output=self._generate_referenceable_output,
-                                              search_string=property_value, starts_with=starts_with,
-                                              ends_with=ends_with, ignore_case=ignore_case, anchor_domain=anchor_domain,
-                                              metadata_element_type=metadata_element_type_name,
-                                              metadata_element_subtypes=metadata_element_subtypes,
-                                              skip_relationships=skip_relationships,
-                                              include_only_relationships=include_only_relationships,
-                                              skip_classified_elements=skip_classified_elements,
-                                              include_only_classified_elements=include_only_classified_elements,
-                                              graph_query_depth=graph_query_depth,
-                                              governance_zone_filter=governance_zone_filter, as_of_time=as_of_time,
-                                              effective_time=effective_time,
-                                              relationship_page_size=relationship_page_size,
-                                              limit_results_by_status=limit_results_by_status,
-                                              sequencing_order=sequencing_order,
-                                              sequencing_property=sequencing_property, output_format=output_format,
-                                              report_spec=report_spec, start_from=start_from, page_size=page_size,
-                                              property_names=property_names, body=body)
+                                              search_string=property_value, **params)
 
     def find_related_elements_with_property_value(
         self,
@@ -4449,7 +4514,6 @@ body: Optional[dict | FilterRequestBody] = None,
         graph_query_depth: int = 3,
         governance_zone_filter: Optional[list[str]] = None,
         as_of_time: Optional[str] = None,
-        effective_time: Optional[str] = None,
         relationship_page_size: int = 0,
         limit_results_by_status: Optional[list[str]] = None,
         sequencing_order: Optional[str] = None,
@@ -4460,6 +4524,7 @@ body: Optional[dict | FilterRequestBody] = None,
         page_size: int = 0,
         time_out: int = default_time_out,
         body: Optional[dict | SearchStringRequestBody] = None,
+        **kwargs,
     ) -> list | str:
         """
         Retrieve elements linked via the requested relationship type name and with the requested a value found in one of
@@ -4849,7 +4914,6 @@ body: Optional[dict | FilterRequestBody] = None,
             graph_query_depth: int = 3,
             governance_zone_filter: Optional[list[str]] = None,
             as_of_time: Optional[str] = None,
-            effective_time: Optional[str] = None,
             relationship_page_size: int = 0,
             limit_results_by_status: Optional[list[str]] = None,
             sequencing_order: Optional[str] = None,
@@ -4859,6 +4923,7 @@ body: Optional[dict | FilterRequestBody] = None,
             start_from: int = 0,
             page_size: int = 0,
             body: Optional[dict | SearchStringRequestBody] = None,
+            **kwargs,
     ) -> list | str:
         """
         Retrieve relationships of the requested relationship type name and with the requested a value found in
@@ -4992,7 +5057,6 @@ body: Optional[dict | FilterRequestBody] = None,
             graph_query_depth: int = 3,
             governance_zone_filter: Optional[list[str]] = None,
             as_of_time: Optional[str] = None,
-            effective_time: Optional[str] = None,
             relationship_page_size: int = 0,
             limit_results_by_status: Optional[list[str]] = None,
             sequencing_order: Optional[str] = None,
@@ -5002,6 +5066,7 @@ body: Optional[dict | FilterRequestBody] = None,
             start_from: int = 0,
             page_size: int = 0,
             body: Optional[dict | SearchStringRequestBody] = None,
+            **kwargs,
     ) -> list | str:
         """
         Retrieve relationships of the requested relationship type name and with the requested a value found in
@@ -11484,10 +11549,11 @@ body: Optional[dict | FilterRequestBody] = None,
         match_classifications: dict = None,
         start_from: int = 0,
         page_size: int = 0,
-        output_format: str = "JSON",
+        graph_query_depth: int = 3, output_format: str = "JSON",
         report_spec: str | dict = None,
         time_out: int = default_time_out,
         body: dict | FindRequestBody = None,
+        **kwargs,
     ) -> list | str:
         """Return a list of metadata elements that match the supplied criteria.
         The results can be returned over many pages. Async version.
@@ -11549,6 +11615,7 @@ body: Optional[dict | FilterRequestBody] = None,
             validated_body = self._find_request_adapter.validate_python(body)
         else:
             body_dict = {
+                'graphQueryDepth': graph_query_depth,
                 "class": "FindRequestBody",
                 "metadataElementTypeName": metadata_element_type_name,
                 "searchProperties": search_properties,
@@ -11581,10 +11648,11 @@ body: Optional[dict | FilterRequestBody] = None,
         match_classifications: dict = None,
         start_from: int = 0,
         page_size: int = 0,
-        output_format: str = "JSON",
+        graph_query_depth: int = 3, output_format: str = "JSON",
         report_spec: str | dict = None,
         time_out: int = default_time_out,
         body: dict | FindRequestBody = None,
+        **kwargs,
     ) -> list | str:
         """Return a list of metadata elements that match the supplied criteria.
         The results can be returned over many pages.
@@ -11648,7 +11716,6 @@ body: Optional[dict | FilterRequestBody] = None,
         graph_query_depth: int = 3,
         governance_zone_filter: Optional[list[str]] = None,
         as_of_time: Optional[str] = None,
-        effective_time: Optional[str] = None,
         relationship_page_size: int = 0,
         limit_results_by_status: Optional[list[str]] = None,
         sequencing_order: Optional[str] = None,
@@ -11658,6 +11725,7 @@ body: Optional[dict | FilterRequestBody] = None,
         output_format: str = "JSON",
         report_spec: str | dict = None,
         body: dict | ContentStatusSearchString = None,
+        **kwargs,
     ) -> list | str:
         """Returns the list of authored elements matching the search string and optional content status.
         Async version.
@@ -11708,26 +11776,36 @@ body: Optional[dict | FilterRequestBody] = None,
             f"{base_path(self, self.view_server)}/authored-elements/by-search-string"
         )
 
+        params = {
+            'content_status_list': content_status_list,
+            'starts_with': starts_with,
+            'ends_with': ends_with,
+            'ignore_case': ignore_case,
+            'anchor_domain': anchor_domain,
+            'metadata_element_type': metadata_element_type,
+            'metadata_element_subtypes': metadata_element_subtypes,
+            'skip_relationships': skip_relationships,
+            'include_only_relationships': include_only_relationships,
+            'skip_classified_elements': skip_classified_elements,
+            'include_only_classified_elements': include_only_classified_elements,
+            'graph_query_depth': graph_query_depth,
+            'governance_zone_filter': governance_zone_filter,
+            'as_of_time': as_of_time,
+            'relationship_page_size': relationship_page_size,
+            'limit_results_by_status': limit_results_by_status,
+            'sequencing_order': sequencing_order,
+            'sequencing_property': sequencing_property,
+            'output_format': output_format,
+            'report_spec': report_spec,
+            'start_from': start_from,
+            'page_size': page_size,
+            'body': body
+        }
+        params.update(kwargs)
+        params = {k: v for k, v in params.items() if v is not None}
         return await self._async_content_status_search_request(url, "Referenceable",
                                                                self._generate_referenceable_output, search_string,
-                                                               content_status_list=content_status_list,
-                                                               starts_with=starts_with, ends_with=ends_with,
-                                                               ignore_case=ignore_case, anchor_domain=anchor_domain,
-                                                               metadata_element_type=metadata_element_type,
-                                                               metadata_element_subtypes=metadata_element_subtypes,
-                                                               skip_relationships=skip_relationships,
-                                                               include_only_relationships=include_only_relationships,
-                                                               skip_classified_elements=skip_classified_elements,
-                                                               include_only_classified_elements=include_only_classified_elements,
-                                                               graph_query_depth=graph_query_depth,
-                                                               governance_zone_filter=governance_zone_filter,
-                                                               as_of_time=as_of_time, effective_time=effective_time,
-                                                               relationship_page_size=relationship_page_size,
-                                                               limit_results_by_status=limit_results_by_status,
-                                                               sequencing_order=sequencing_order,
-                                                               sequencing_property=sequencing_property,
-                                                               output_format=output_format, report_spec=report_spec,
-                                                               start_from=start_from, page_size=page_size, body=body)
+                                                               **params)
 
     @dynamic_catch
     def find_authored_elements(
@@ -11747,7 +11825,6 @@ body: Optional[dict | FilterRequestBody] = None,
         graph_query_depth: int = 3,
         governance_zone_filter: Optional[list[str]] = None,
         as_of_time: Optional[str] = None,
-        effective_time: Optional[str] = None,
         relationship_page_size: int = 0,
         limit_results_by_status: Optional[list[str]] = None,
         sequencing_order: Optional[str] = None,
@@ -11757,6 +11834,7 @@ body: Optional[dict | FilterRequestBody] = None,
         output_format: str = "JSON",
         report_spec: str | dict = None,
         body: dict | ContentStatusSearchString = None,
+        **kwargs,
     ) -> list | str:
         """Returns the list of authored elements matching the search string and optional content status.
 
@@ -11791,44 +11869,45 @@ body: Optional[dict | FilterRequestBody] = None,
         loop = asyncio.get_event_loop()
         return loop.run_until_complete(
             self._async_find_authored_elements(
-                search_string,
-                content_status_list,
-                starts_with,
-                ends_with,
-                ignore_case,
-                anchor_domain,
-                metadata_element_type,
-                metadata_element_subtypes,
-                skip_relationships,
-                include_only_relationships,
-                skip_classified_elements,
-                include_only_classified_elements,
-                graph_query_depth,
-                governance_zone_filter,
-                as_of_time,
-                effective_time,
-                relationship_page_size,
-                limit_results_by_status,
-                sequencing_order,
-                sequencing_property,
-                start_from,
-                page_size,
-                output_format,
-                report_spec,
-                body,
+                search_string=search_string,
+                content_status_list=content_status_list,
+                starts_with=starts_with,
+                ends_with=ends_with,
+                ignore_case=ignore_case,
+                anchor_domain=anchor_domain,
+                metadata_element_type=metadata_element_type,
+                metadata_element_subtypes=metadata_element_subtypes,
+                skip_relationships=skip_relationships,
+                include_only_relationships=include_only_relationships,
+                skip_classified_elements=skip_classified_elements,
+                include_only_classified_elements=include_only_classified_elements,
+                graph_query_depth=graph_query_depth,
+                governance_zone_filter=governance_zone_filter,
+                as_of_time=as_of_time,
+                relationship_page_size=relationship_page_size,
+                limit_results_by_status=limit_results_by_status,
+                sequencing_order=sequencing_order,
+                sequencing_property=sequencing_property,
+                start_from=start_from,
+                page_size=page_size,
+                output_format=output_format,
+                report_spec=report_spec,
+                body=body,
+                **kwargs,
             )
         )
 
     @dynamic_catch
     async def _async_find_authored_elements_by_category(
         self,
-        filter_string: str = "*",
+        search_string: str = "*",
         content_status_list: list[str] = ["ACTIVE"],
         start_from: int = 0,
         page_size: int = 0,
-        output_format: str = "JSON",
+        graph_query_depth: int = 3, output_format: str = "JSON",
         report_spec: str | dict = None,
         body: dict | ContentStatusFilterRequestBody = None,
+        **kwargs,
     ) -> list | str:
         """Returns the list of authored elements matching the category and optional content status.
         Async version.
@@ -11870,29 +11949,38 @@ body: Optional[dict | FilterRequestBody] = None,
             f"{base_path(self, self.view_server)}/authored-elements/by-category"
         )
 
+        if "filter_string" in kwargs:
+            search_string = kwargs.pop("filter_string")
+        params = {
+            'graph_query_depth': graph_query_depth,
+            'content_status_list': content_status_list,
+            'start_from': start_from,
+            'page_size': page_size,
+            'output_format': output_format,
+            'report_spec': report_spec,
+            'body': body
+        }
+        params.update(kwargs)
+        params = {k: v for k, v in params.items() if v is not None}
         return await self._async_content_status_filter_request(
             url,
             "Referenceable",
             self._generate_referenceable_output,
-            filter_string,
-            content_status_list=content_status_list,
-            start_from=start_from,
-            page_size=page_size,
-            output_format=output_format,
-            report_spec=report_spec,
-            body=body,
+            filter_string=search_string,
+            **params,
         )
 
     @dynamic_catch
     def find_authored_elements_by_category(
         self,
-        filter_string: str = "*",
+        search_string: str = "*",
         content_status_list: list[str] = ["ACTIVE"],
         start_from: int = 0,
         page_size: int = 0,
-        output_format: str = "JSON",
+        graph_query_depth: int = 3, output_format: str = "JSON",
         report_spec: str | dict = None,
         body: dict | ContentStatusFilterRequestBody = None,
+        **kwargs,
     ) -> list | str:
         """Returns the list of authored elements matching the category and optional content status.
 

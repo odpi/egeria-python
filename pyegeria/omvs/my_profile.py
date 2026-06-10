@@ -590,323 +590,206 @@ class MyProfile(AssetMaker):
     @dynamic_catch
     async def _async_get_my_actors(
         self,
-        body: dict | ResultsRequestBody | None = None,
+        graph_query_depth: int = 3,
+        start_from: int = 0,
+        page_size: int = 100,
         output_format: str = "JSON",
-        report_spec: str | dict = None,
+        report_spec: Optional[str | dict] = None,
+        body: Optional[dict | ResultsRequestBody] = None,
+        **kwargs,
     ) -> list | str:
-        """Return the list of actors linked to the user's profile. Async version.
-
-        Parameters
-        ----------
-        body : dict | ResultsRequestBody, optional
-            A dict or ResultsRequestBody representing the request options.
-        output_format: str, default = "JSON"
-            - one of "DICT", "JSON"
-        report_spec: str | dict, optional, default = None
-            - The desired output columns/field options.
-
-        Notes
-        -----
-        Sample JSON body:
-        ```json
-        {
-          "class" : "ResultsRequestBody",
-          "asOfTime" : "{{$isoTimestamp}}",
-          "effectiveTime" : "{{$isoTimestamp}}",
-          "forLineage" : false,
-          "forDuplicateProcessing" : false,
-          "startFrom": 0,
-          "pageSize": 0
-        }
-        ```
-        """
+        """Return the list of actors linked to the user's profile. Async version."""
         url = f"{self.my_profile_command_root}/actors"
         return await self._async_get_results_body_request(
             url,
             _type="ActorProfile",
             _gen_output=self._generate_my_profile_output,
+            graph_query_depth=graph_query_depth,
+            start_from=start_from,
+            page_size=page_size,
             output_format=output_format,
             report_spec=report_spec,
             body=body,
+            **kwargs,
         )
 
     @dynamic_catch
     def get_my_actors(
         self,
-        body: dict | ResultsRequestBody | None = None,
+        graph_query_depth: int = 3,
+        start_from: int = 0,
+        page_size: int = 100,
         output_format: str = "JSON",
-        report_spec: str | dict = None,
+        report_spec: Optional[str | dict] = None,
+        body: Optional[dict | ResultsRequestBody] = None,
+        **kwargs,
     ) -> list | str:
-        """Return the list of actors linked to the user's profile.
-
-        Parameters
-        ----------
-        body : dict | ResultsRequestBody, optional
-            A dict or ResultsRequestBody representing the request options.
-        output_format: str, default = "JSON"
-            - one of "DICT", "JSON"
-        report_spec: str | dict, optional, default = None
-            - The desired output columns/field options.
-
-        Notes
-        -----
-        Sample JSON body:
-        ```json
-        {
-          "class" : "ResultsRequestBody",
-          "asOfTime" : "{{$isoTimestamp}}",
-          "effectiveTime" : "{{$isoTimestamp}}",
-          "forLineage" : false,
-          "forDuplicateProcessing" : false,
-          "startFrom": 0,
-          "pageSize": 0
-        }
-        ```
-        """
-        return asyncio.get_event_loop().run_until_complete(
-            self._async_get_my_actors(body, output_format, report_spec)
+        """Return the list of actors linked to the user's profile."""
+        loop = asyncio.get_event_loop()
+        return loop.run_until_complete(
+            self._async_get_my_actors(
+                graph_query_depth=graph_query_depth,
+                start_from=start_from,
+                page_size=page_size,
+                output_format=output_format,
+                report_spec=report_spec,
+                body=body,
+                **kwargs,
+            )
         )
 
     @dynamic_catch
     async def _async_get_my_user_identities(
         self,
-        body: dict | ResultsRequestBody | None = None,
+        graph_query_depth: int = 3,
+        start_from: int = 0,
+        page_size: int = 100,
         output_format: str = "JSON",
-        report_spec: str | dict = None,
+        report_spec: Optional[str | dict] = None,
+        body: Optional[dict | ResultsRequestBody] = None,
+        **kwargs,
     ) -> list | str:
-        """Return the list of user identities linked to the user's profile. Async version.
-
-        Parameters
-        ----------
-        body : dict | ResultsRequestBody, optional
-            A dict or ResultsRequestBody representing the request options.
-        output_format: str, default = "JSON"
-            - one of "DICT", "JSON"
-        report_spec: str | dict, optional, default = None
-            - The desired output columns/field options.
-
-        Notes
-        -----
-        Sample JSON body:
-        ```json
-        {
-          "class" : "ResultsRequestBody",
-          "asOfTime" : "{{$isoTimestamp}}",
-          "effectiveTime" : "{{$isoTimestamp}}",
-          "forLineage" : false,
-          "forDuplicateProcessing" : false,
-          "startFrom": 0,
-          "pageSize": 0
-        }
-        ```
-        """
+        """Return the list of user identities linked to the user's profile. Async version."""
         url = f"{self.my_profile_command_root}/actors/user-identities"
         return await self._async_get_results_body_request(
             url,
             _type="UserIdentity",
             _gen_output=self._generate_my_profile_output,
+            graph_query_depth=graph_query_depth,
+            start_from=start_from,
+            page_size=page_size,
             output_format=output_format,
             report_spec=report_spec,
             body=body,
+            **kwargs,
         )
 
     @dynamic_catch
     def get_my_user_identities(
         self,
-        body: dict | ResultsRequestBody | None = None,
+        graph_query_depth: int = 3,
+        start_from: int = 0,
+        page_size: int = 100,
         output_format: str = "JSON",
-        report_spec: str | dict = None,
+        report_spec: Optional[str | dict] = None,
+        body: Optional[dict | ResultsRequestBody] = None,
+        **kwargs,
     ) -> list | str:
-        """Return the list of user identities linked to the user's profile.
-
-        Parameters
-        ----------
-        body : dict | ResultsRequestBody, optional
-            A dict or ResultsRequestBody representing the request options.
-        output_format: str, default = "JSON"
-            - one of "DICT", "JSON"
-        report_spec: str | dict, optional, default = None
-            - The desired output columns/field options.
-
-        Notes
-        -----
-        Sample JSON body:
-        ```json
-        {
-          "class" : "ResultsRequestBody",
-          "asOfTime" : "{{$isoTimestamp}}",
-          "effectiveTime" : "{{$isoTimestamp}}",
-          "forLineage" : false,
-          "forDuplicateProcessing" : false,
-          "startFrom": 0,
-          "pageSize": 0
-        }
-        ```
-        """
-        return asyncio.get_event_loop().run_until_complete(
-            self._async_get_my_user_identities(body, output_format, report_spec)
+        """Return the list of user identities linked to the user's profile."""
+        loop = asyncio.get_event_loop()
+        return loop.run_until_complete(
+            self._async_get_my_user_identities(
+                graph_query_depth=graph_query_depth,
+                start_from=start_from,
+                page_size=page_size,
+                output_format=output_format,
+                report_spec=report_spec,
+                body=body,
+                **kwargs,
+            )
         )
 
     @dynamic_catch
     async def _async_get_my_roles(
         self,
-        body: dict | ResultsRequestBody | None = None,
+        graph_query_depth: int = 3,
+        start_from: int = 0,
+        page_size: int = 100,
         output_format: str = "JSON",
-        report_spec: str | dict = None,
+        report_spec: Optional[str | dict] = None,
+        body: Optional[dict | ResultsRequestBody] = None,
+        **kwargs,
     ) -> list | str:
-        """Return the list of assigned roles linked to the user's profile. Async version.
-
-        Parameters
-        ----------
-        body : dict | ResultsRequestBody, optional
-            A dict or ResultsRequestBody representing the request options.
-        output_format: str, default = "JSON"
-            - one of "DICT", "JSON"
-        report_spec: str | dict, optional, default = None
-            - The desired output columns/field options.
-
-        Notes
-        -----
-        Sample JSON body:
-        ```json
-        {
-          "class" : "ResultsRequestBody",
-          "asOfTime" : "{{$isoTimestamp}}",
-          "effectiveTime" : "{{$isoTimestamp}}",
-          "forLineage" : false,
-          "forDuplicateProcessing" : false,
-          "startFrom": 0,
-          "pageSize": 0
-        }
-        ```
-        """
+        """Return the list of assigned roles linked to the user's profile. Async version."""
         url = f"{self.my_profile_command_root}/actors/assigned-roles"
         return await self._async_get_results_body_request(
             url,
             _type="GovernanceRole",
             _gen_output=self._generate_my_profile_output,
+            graph_query_depth=graph_query_depth,
+            start_from=start_from,
+            page_size=page_size,
             output_format=output_format,
             report_spec=report_spec,
             body=body,
+            **kwargs,
         )
 
     @dynamic_catch
     def get_my_roles(
         self,
-        body: dict | ResultsRequestBody | None = None,
+        graph_query_depth: int = 3,
+        start_from: int = 0,
+        page_size: int = 100,
         output_format: str = "JSON",
-        report_spec: str | dict = None,
+        report_spec: Optional[str | dict] = None,
+        body: Optional[dict | ResultsRequestBody] = None,
+        **kwargs,
     ) -> list | str:
-        """Return the list of assigned roles linked to the user's profile.
-
-        Parameters
-        ----------
-        body : dict | ResultsRequestBody, optional
-            A dict or ResultsRequestBody representing the request options.
-        output_format: str, default = "JSON"
-            - one of "DICT", "JSON"
-        report_spec: str | dict, optional, default = None
-            - The desired output columns/field options.
-
-        Notes
-        -----
-        Sample JSON body:
-        ```json
-        {
-          "class" : "ResultsRequestBody",
-          "asOfTime" : "{{$isoTimestamp}}",
-          "effectiveTime" : "{{$isoTimestamp}}",
-          "forLineage" : false,
-          "forDuplicateProcessing" : false,
-          "startFrom": 0,
-          "pageSize": 0
-        }
-        ```
-        """
-        return asyncio.get_event_loop().run_until_complete(
-            self._async_get_my_roles(body, output_format, report_spec)
+        """Return the list of assigned roles linked to the user's profile."""
+        loop = asyncio.get_event_loop()
+        return loop.run_until_complete(
+            self._async_get_my_roles(
+                graph_query_depth=graph_query_depth,
+                start_from=start_from,
+                page_size=page_size,
+                output_format=output_format,
+                report_spec=report_spec,
+                body=body,
+                **kwargs,
+            )
         )
 
     @dynamic_catch
     async def _async_get_my_resources(
         self,
-        body: dict | ResultsRequestBody | None = None,
+        graph_query_depth: int = 3,
+        start_from: int = 0,
+        page_size: int = 100,
         output_format: str = "JSON",
-        report_spec: str | dict = None,
+        report_spec: Optional[str | dict] = None,
+        body: Optional[dict | ResultsRequestBody] = None,
+        **kwargs,
     ) -> list | str:
-        """Return the list of assigned resources linked to the user's profile. Async version.
-
-        Parameters
-        ----------
-        body : dict | ResultsRequestBody, optional
-            A dict or ResultsRequestBody representing the request options.
-        output_format: str, default = "JSON"
-            - one of "DICT", "JSON"
-        report_spec: str | dict, optional, default = None
-            - The desired output columns/field options.
-
-        Notes
-        -----
-        Sample JSON body:
-        ```json
-        {
-          "class" : "ResultsRequestBody",
-          "asOfTime" : "{{$isoTimestamp}}",
-          "effectiveTime" : "{{$isoTimestamp}}",
-          "forLineage" : false,
-          "forDuplicateProcessing" : false,
-          "startFrom": 0,
-          "pageSize": 0
-        }
-        ```
-        """
+        """Return the list of assigned resources linked to the user's profile. Async version."""
         url = f"{self.my_profile_command_root}/assigned-resources?includeUserIds=true&includeRoles=true"
         return await self._async_get_results_body_request(
             url,
             _type="Resource",
             _gen_output=self._generate_my_profile_output,
+            graph_query_depth=graph_query_depth,
+            start_from=start_from,
+            page_size=page_size,
             output_format=output_format,
             report_spec=report_spec,
             body=body,
+            **kwargs,
         )
 
     @dynamic_catch
     def get_my_resources(
         self,
-        body: dict | ResultsRequestBody | None = None,
+        graph_query_depth: int = 3,
+        start_from: int = 0,
+        page_size: int = 100,
         output_format: str = "JSON",
-        report_spec: str | dict = None,
+        report_spec: Optional[str | dict] = None,
+        body: Optional[dict | ResultsRequestBody] = None,
+        **kwargs,
     ) -> list | str:
-        """Return the list of assigned resources linked to the user's profile.
-
-        Parameters
-        ----------
-        body : dict | ResultsRequestBody, optional
-            A dict or ResultsRequestBody representing the request options.
-        output_format: str, default = "JSON"
-            - one of "DICT", "JSON"
-        report_spec: str | dict, optional, default = None
-            - The desired output columns/field options.
-
-        Notes
-        -----
-        Sample JSON body:
-        ```json
-        {
-          "class" : "ResultsRequestBody",
-          "asOfTime" : "{{$isoTimestamp}}",
-          "effectiveTime" : "{{$isoTimestamp}}",
-          "forLineage" : false,
-          "forDuplicateProcessing" : false,
-          "startFrom": 0,
-          "pageSize": 0
-        }
-        """
-        return asyncio.get_event_loop().run_until_complete(
-            self._async_get_my_resources(body, output_format, report_spec)
+        """Return the list of assigned resources linked to the user's profile."""
+        loop = asyncio.get_event_loop()
+        return loop.run_until_complete(
+            self._async_get_my_resources(
+                graph_query_depth=graph_query_depth,
+                start_from=start_from,
+                page_size=page_size,
+                output_format=output_format,
+                report_spec=report_spec,
+                body=body,
+                **kwargs,
+            )
         )
-
-
 
     @dynamic_catch
     async def _async_get_my_assigned_actions(
@@ -915,42 +798,16 @@ class MyProfile(AssetMaker):
         metadata_element_subtypes: Optional[list[str]] = [],
         activity_status_list: list[str] = ["REQUESTED", "WAITING", "IN_PROGRESS"],
         start_from: int = 0,
-        page_size: int = 0,
+        page_size: int = 100,
         limit_results_by_status: Optional[list[str]] = None,
         sequencing_order: Optional[str] = None,
         sequencing_property: Optional[str] = None,
-        body: dict | ActivityStatusRequestBody | None = None,
         output_format: str = "JSON",
-        report_spec: str | dict = None,
+        report_spec: Optional[str | dict] = None,
+        body: Optional[dict | ActivityStatusRequestBody] = None,
         **kwargs,
     ) -> list | str:
-        """Get assigned actions for the user profile. Async version.
-
-        Parameters
-        ----------
-        metadata_element_type : str, default = "Action"
-
-        metadtata_element_subtypes : list[str], default = []
-            The subtypes of the metadata element to filter on.
-        activity_status_list: list[str], default = ["REQUESTED", "WAITING", "IN_PROGRESS"]
-            The status of the action to filter on.
-        start_from: int, default = 0
-            The index from which to start retrieving the actions.
-        page_size: int, default = 0
-            The number of actions to retrieve per page.
-        body: dict | ActivityStatusRequestBody, optional
-            A dict or ActivityStatusRequestBody representing the request options.
-        output_format: str, default = "JSON"
-            - one of "DICT", "JSON"
-        report_spec: str | dict, optional, default = None
-            - The desired output columns/field options.
-
-        Returns
-        -------
-        list or str
-            A list of assigned actions is returned. If there aren't any, a string is returned indicating that.
-
-        """
+        """Get assigned actions for the user profile. Async version."""
         url = f"{self.my_profile_command_root}/assigned-actions?includeUserIds=true&includeRoles=true"
         return await self._async_activity_status_request(
             url,
@@ -977,30 +834,32 @@ class MyProfile(AssetMaker):
         metadata_element_subtypes: list[str] = [],
         activity_status_list: list[str] = ["REQUESTED", "WAITING", "IN_PROGRESS"],
         start_from: int = 0,
-        page_size: int = 0,
+        page_size: int = 100,
         limit_results_by_status: Optional[list[str]] = None,
         sequencing_order: Optional[str] = None,
         sequencing_property: Optional[str] = None,
-        body: dict | ActivityStatusRequestBody | None = None,
         output_format: str = "JSON",
-        report_spec: str | dict = None,
+        report_spec: Optional[str | dict] = None,
+        body: Optional[dict | ActivityStatusRequestBody] = None,
         **kwargs,
     ) -> list | str:
-        """Get assigned actions for the user profile.
-
-        Args:
-            metadata_element_subtypes ():
-            metadata_element_type ():
-        """
+        """Get assigned actions for the user profile."""
         loop = asyncio.get_event_loop()
         return loop.run_until_complete(
-            self._async_get_my_assigned_actions(metadata_element_type=metadata_element_type,
-                                                metadata_element_subtypes=metadata_element_subtypes,
-                                                activity_status_list=activity_status_list, start_from=start_from,
-                                                page_size=page_size, limit_results_by_status=limit_results_by_status,
-                                                sequencing_order=sequencing_order,
-                                                sequencing_property=sequencing_property, body=body,
-                                                output_format=output_format, report_spec=report_spec, **kwargs)
+            self._async_get_my_assigned_actions(
+                metadata_element_type=metadata_element_type,
+                metadata_element_subtypes=metadata_element_subtypes,
+                activity_status_list=activity_status_list,
+                start_from=start_from,
+                page_size=page_size,
+                limit_results_by_status=limit_results_by_status,
+                sequencing_order=sequencing_order,
+                sequencing_property=sequencing_property,
+                body=body,
+                output_format=output_format,
+                report_spec=report_spec,
+                **kwargs,
+            )
         )
 
     @dynamic_catch
@@ -1008,13 +867,13 @@ class MyProfile(AssetMaker):
         self,
         activity_status_list: list[str] = ["REQUESTED", "WAITING", "IN_PROGRESS"],
         start_from: int = 0,
-        page_size: int = 0,
+        page_size: int = 100,
         limit_results_by_status: Optional[list[str]] = None,
         sequencing_order: Optional[str] = None,
         sequencing_property: Optional[str] = None,
-        body: dict | ActivityStatusRequestBody | None = None,
         output_format: str = "JSON",
-        report_spec: str | dict = None,
+        report_spec: Optional[str | dict] = None,
+        body: Optional[dict | ActivityStatusRequestBody] = None,
         **kwargs,
     ) -> list | str:
         """Get actions sponsored by the user profile. Async version."""
@@ -1040,28 +899,28 @@ class MyProfile(AssetMaker):
         self,
         activity_status_list: list[str] = ["REQUESTED", "WAITING", "IN_PROGRESS"],
         start_from: int = 0,
-        page_size: int = 0,
+        page_size: int = 100,
         limit_results_by_status: Optional[list[str]] = None,
         sequencing_order: Optional[str] = None,
         sequencing_property: Optional[str] = None,
-        body: dict | ActivityStatusRequestBody | None = None,
         output_format: str = "JSON",
-        report_spec: str | dict = None,
+        report_spec: Optional[str | dict] = None,
+        body: Optional[dict | ActivityStatusRequestBody] = None,
         **kwargs,
     ) -> list | str:
         """Get actions sponsored by the user profile."""
         loop = asyncio.get_event_loop()
         return loop.run_until_complete(
             self._async_get_my_sponsored_actions(
-                activity_status_list,
-                start_from,
-                page_size,
-                limit_results_by_status,
-                sequencing_order,
-                sequencing_property,
-                body,
-                output_format,
-                report_spec,
+                activity_status_list=activity_status_list,
+                start_from=start_from,
+                page_size=page_size,
+                limit_results_by_status=limit_results_by_status,
+                sequencing_order=sequencing_order,
+                sequencing_property=sequencing_property,
+                body=body,
+                output_format=output_format,
+                report_spec=report_spec,
                 **kwargs,
             )
         )
@@ -1071,13 +930,13 @@ class MyProfile(AssetMaker):
         self,
         activity_status_list: list[str] = ["REQUESTED", "WAITING", "IN_PROGRESS"],
         start_from: int = 0,
-        page_size: int = 0,
+        page_size: int = 100,
         limit_results_by_status: Optional[list[str]] = None,
         sequencing_order: Optional[str] = None,
         sequencing_property: Optional[str] = None,
-        body: dict | ActivityStatusRequestBody | None = None,
         output_format: str = "JSON",
-        report_spec: str | dict = None,
+        report_spec: Optional[str | dict] = None,
+        body: Optional[dict | ActivityStatusRequestBody] = None,
         **kwargs,
     ) -> list | str:
         """Get actions requested by the user profile. Async version."""
@@ -1103,28 +962,28 @@ class MyProfile(AssetMaker):
         self,
         activity_status_list: list[str] = ["REQUESTED", "WAITING", "IN_PROGRESS"],
         start_from: int = 0,
-        page_size: int = 0,
+        page_size: int = 100,
         limit_results_by_status: Optional[list[str]] = None,
         sequencing_order: Optional[str] = None,
         sequencing_property: Optional[str] = None,
-        body: dict | ActivityStatusRequestBody | None = None,
         output_format: str = "JSON",
-        report_spec: str | dict = None,
+        report_spec: Optional[str | dict] = None,
+        body: Optional[dict | ActivityStatusRequestBody] = None,
         **kwargs,
     ) -> list | str:
         """Get actions requested by the user profile."""
         loop = asyncio.get_event_loop()
         return loop.run_until_complete(
             self._async_get_my_requested_actions(
-                activity_status_list,
-                start_from,
-                page_size,
-                limit_results_by_status,
-                sequencing_order,
-                sequencing_property,
-                body,
-                output_format,
-                report_spec,
+                activity_status_list=activity_status_list,
+                start_from=start_from,
+                page_size=page_size,
+                limit_results_by_status=limit_results_by_status,
+                sequencing_order=sequencing_order,
+                sequencing_property=sequencing_property,
+                body=body,
+                output_format=output_format,
+                report_spec=report_spec,
                 **kwargs,
             )
         )
@@ -1286,92 +1145,51 @@ class MyProfile(AssetMaker):
 
     @dynamic_catch
     async def _async_get_my_to_dos(
-            self,
+        self,
         activity_status_list: list[str] = ["REQUESTED", "WAITING", "IN_PROGRESS"],
         metadata_element_type: Optional[str] = "Action",
         metadata_element_subtypes: list[str] = ["ToDo"],
-
         output_format: str = "JSON",
-        report_spec: str | dict = None,
+        report_spec: Optional[str | dict] = None,
         start_from: int = 0,
-        page_size: int = 0,
-
+        page_size: int = 100,
+        **kwargs,
     ) -> list | str:
-        """find To-Do items. Async version.
-        Parameters
-        ----------
-          starts_with : bool, [default=False], optional
-             Starts with the supplied string.
-          ends_with : bool, [default=False], optional
-                 Ends with the supplied string
-          ignore_case : bool, [default=False], optional
-                 Ignore case when searching
-        Returns
-        -------
-        None
-         List of To-Do items that match the criteria
-
-        Raises
-        ------
-        PyegeriaInvalidParameterException
-        If the client passes incorrect parameters on the request - such as bad URLs or invalid values
-        PyegeriaAPIException
-        Raised by the server when an issue arises in processing a valid request
-        NotAuthorizedException
-        The principle specified by the user_id does not have authorization for the requested action
-        """
-
-
-        return await self._async_get_my_assigned_actions(metadata_element_type, metadata_element_subtypes,
-                                                    activity_status_list,
-                                                    start_from, page_size, output_format=output_format,
-                                                    report_spec=report_spec)
-
+        """find To-Do items. Async version."""
+        return await self._async_get_my_assigned_actions(
+            metadata_element_type=metadata_element_type,
+            metadata_element_subtypes=metadata_element_subtypes,
+            activity_status_list=activity_status_list,
+            start_from=start_from,
+            page_size=page_size,
+            output_format=output_format,
+            report_spec=report_spec,
+            **kwargs,
+        )
 
     @dynamic_catch
-
-    def get_my_to_dos(self,
-
-                      activity_status_list: list[str] = ["REQUESTED", "WAITING", "IN_PROGRESS"],
-                      metadata_element_type: Optional[str] = "Action",
-                      metadata_element_subtypes: list[str] = ["ToDo"],
-
-                      output_format: str = "JSON",
-                      report_spec: str | dict = None,
-                      start_from: int = 0,
-                      page_size: int = 0,
-
-                      ) -> list | str:
-        """find To-Do items. Async version.
-        Parameters
-        ----------
-          search_string: str
-             String to search against. If '*' then all to-do items will match.
-          starts_with : bool, [default=False], optional
-             Starts with the supplied string.
-          ends_with : bool, [default=False], optional
-                 Ends with the supplied string
-          ignore_case : bool, [default=False], optional
-                 Ignore case when searching
-        Returns
-        -------
-        None
-         List of To-Do items that match the criteria
-
-        Raises
-        ------
-        PyegeriaInvalidParameterException
-        If the client passes incorrect parameters on the request - such as bad URLs or invalid values
-        PyegeriaAPIException
-        Raised by the server when an issue arises in processing a valid request
-        NotAuthorizedException
-        The principle specified by the user_id does not have authorization for the requested action
-        """
-
-        return self.get_my_assigned_actions(metadata_element_type, metadata_element_subtypes,
-                                                         activity_status_list,
-                                                         start_from, page_size, output_format=output_format,
-                                                         report_spec=report_spec)
+    def get_my_to_dos(
+        self,
+        activity_status_list: list[str] = ["REQUESTED", "WAITING", "IN_PROGRESS"],
+        metadata_element_type: Optional[str] = "Action",
+        metadata_element_subtypes: list[str] = ["ToDo"],
+        output_format: str = "JSON",
+        report_spec: Optional[str | dict] = None,
+        start_from: int = 0,
+        page_size: int = 100,
+        **kwargs,
+    ) -> list | str:
+        """find To-Do items."""
+        return self.get_my_assigned_actions(
+            metadata_element_type=metadata_element_type,
+            metadata_element_subtypes=metadata_element_subtypes,
+            activity_status_list=activity_status_list,
+            start_from=start_from,
+            page_size=page_size,
+            output_format=output_format,
+            report_spec=report_spec,
+            **kwargs,
+        )
 
 
 #

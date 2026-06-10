@@ -73,7 +73,7 @@ def display_certifications(
         table.add_column("Details")
         table.add_column("Related Elements")
 
-        certs = g_client.get_elements(search_string, page_size=100, time_out=time_out)
+        certs = g_client.get_elements(search_string, page_size=100)
         if type(certs) is str:
             return table
 

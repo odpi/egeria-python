@@ -184,7 +184,7 @@ class SchemaMaker(ServerClient):
         ignore_case: bool = False,
         start_from: int = 0,
         page_size: int = 100,
-        output_format: str = "JSON",
+        graph_query_depth: int = 3, output_format: str = "JSON",
         report_spec: str | dict = "Referenceable",
         **kwargs
     ) -> list | str:
@@ -264,6 +264,7 @@ class SchemaMaker(ServerClient):
         
         # Merge explicit parameters with kwargs
         params = {
+            'graph_query_depth': graph_query_depth,
             'search_string': search_string,
             'body': body,
             'starts_with': starts_with,
@@ -294,7 +295,7 @@ class SchemaMaker(ServerClient):
         ignore_case: bool = False,
         start_from: int = 0,
         page_size: int = 100,
-        output_format: str = "JSON",
+        graph_query_depth: int = 3, output_format: str = "JSON",
         report_spec: str | dict = "Referenceable",
         **kwargs
     ) -> list | str:
@@ -374,6 +375,7 @@ class SchemaMaker(ServerClient):
         return loop.run_until_complete(
             self._async_find_schema_types(
                 search_string=search_string,
+                graph_query_depth=graph_query_depth,
                 body=body,
                 starts_with=starts_with,
                 ends_with=ends_with,
@@ -387,35 +389,51 @@ class SchemaMaker(ServerClient):
         )
 
     @dynamic_catch
+    @dynamic_catch
     async def _async_get_schema_type_by_guid(
         self,
-        schema_type_guid: str,
+        guid: str,
         element_type: str = "SchemaType",
         body: Optional[dict | GetRequestBody] = None,
-        output_format: str = "JSON",
+        graph_query_depth: int = 3, output_format: str = "JSON",
         report_spec: str | dict = "SchemaTypes",
+        **kwargs,
     ) -> dict | str:
-        url = f"{self.platform_url}/servers/{self.view_server}/api/open-metadata/schema-maker/schema-types/{schema_type_guid}/retrieve"
+        if guid is None and "schema_type_guid" in kwargs:
+            guid = kwargs.pop("schema_type_guid")
+
+        url = f"{self.platform_url}/servers/{self.view_server}/api/open-metadata/schema-maker/schema-types/{guid}/retrieve"
+        
+        params = {
+            'graph_query_depth': graph_query_depth,
+            'output_format': output_format,
+            'report_spec': report_spec,
+            'body': body
+        }
+        params.update(kwargs)
+        params = {k: v for k, v in params.items() if v is not None}
+
         return await self._async_get_guid_request(
             url,
             _type=element_type,
             _gen_output=self._generate_schema_output,
-            output_format=output_format,
-            report_spec=report_spec,
-            body=body,
+            **params,
         )
 
     def get_schema_type_by_guid(
         self,
-        schema_type_guid: str,
+        guid: str,
         element_type: str = "SchemaType",
         body: Optional[dict | GetRequestBody] = None,
-        output_format: str = "JSON",
+        graph_query_depth: int = 3, output_format: str = "JSON",
         report_spec: str | dict = "SchemaTypes",
+        **kwargs,
     ) -> dict | str:
         loop = asyncio.get_event_loop()
         return loop.run_until_complete(
             self._async_get_schema_type_by_guid(
-                schema_type_guid, element_type, body, output_format, report_spec
+                graph_query_depth=graph_query_depth,
+                guid=guid, element_type=element_type, body=body, output_format=output_format, report_spec=report_spec,
+                **kwargs,
             )
         )

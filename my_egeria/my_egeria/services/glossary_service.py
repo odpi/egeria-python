@@ -160,7 +160,7 @@ class GlossaryService(BaseService):
         res = self._invoke(
             "find_glossary_terms",
             args=((search or "*"),),
-            kwargs={"glossary_guid": glossary_guid, "output_format": "DICT"},
+            kwargs={"anchor_guid": glossary_guid, "output_format": "DICT"},
         )
         return self._ensure_list_like(
             res, keys=("terms", "elements", "results", "items")

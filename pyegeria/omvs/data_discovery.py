@@ -401,19 +401,20 @@ class DataDiscovery(ServerClient):
     @dynamic_catch
     async def _async_get_annotations_by_name(
         self,
-        filter_string: Optional[str] = None,
+        name: Optional[str] = None,
         classification_names: Optional[list[str]] = None,
         body: Optional[dict | FilterRequestBody] = None,
         start_from: int = 0,
         page_size: int = 0,
-        output_format: str = "JSON",
+        graph_query_depth: int = 3, output_format: str = "JSON",
         report_spec: str | dict = "Annotations",
+        **kwargs,
     ) -> list | str:
         """Get annotations by name. Async version.
 
         Parameters
         ----------
-        filter_string : str, optional
+        name : str, optional
             The string to find in the properties.
         classification_names : list[str], optional
             The list of classification names to filter by.
@@ -450,28 +451,42 @@ class DataDiscovery(ServerClient):
         }
         ```
         """
+        if name is None and "filter_string" in kwargs:
+            name = kwargs.pop("filter_string")
+
         url = f"{self.platform_url}/servers/{self.view_server}/api/open-metadata/data-discovery/annotations/by-name"
+        
+        params = {
+            'graph_query_depth': graph_query_depth,
+            'classification_names': classification_names,
+            'start_from': start_from,
+            'page_size': page_size,
+            'output_format': output_format,
+            'report_spec': report_spec,
+            'body': body
+        }
+        params.update(kwargs)
+        params = {k: v for k, v in params.items() if v is not None}
+
         return await self._async_get_name_request(url, _type="Annotation", _gen_output=self._generate_annotation_output,
-                                                  filter_string=filter_string,
-                                                  classification_names=classification_names, start_from=start_from,
-                                                  page_size=page_size, output_format=output_format,
-                                                  report_spec=report_spec, body=body)
+                                                   filter_string=name, **params)
 
     def get_annotations_by_name(
         self,
-        filter_string: Optional[str] = None,
+        name: Optional[str] = None,
         classification_names: Optional[list[str]] = None,
         body: Optional[dict | FilterRequestBody] = None,
         start_from: int = 0,
         page_size: int = 0,
-        output_format: str = "JSON",
+        graph_query_depth: int = 3, output_format: str = "JSON",
         report_spec: str | dict = "Annotations",
+        **kwargs,
     ) -> list | str:
         """Get annotations by name.
 
         Parameters
         ----------
-        filter_string : str, optional
+        name : str, optional
             The string to find in the properties.
         classification_names : list[str], optional
             The list of classification names to filter by.
@@ -511,13 +526,14 @@ class DataDiscovery(ServerClient):
         loop = asyncio.get_event_loop()
         return loop.run_until_complete(
             self._async_get_annotations_by_name(
-                filter_string,
-                classification_names,
-                body,
-                start_from,
-                page_size,
-                output_format,
-                report_spec,
+                name=name,
+                classification_names=classification_names,
+                body=body,
+                start_from=start_from,
+                page_size=page_size,
+                output_format=output_format,
+                report_spec=report_spec,
+                **kwargs,
             )
         )
 
@@ -531,7 +547,7 @@ class DataDiscovery(ServerClient):
         ignore_case: bool = False,
         start_from: int = 0,
         page_size: int = 100,
-        output_format: str = "JSON",
+        graph_query_depth: int = 3, output_format: str = "JSON",
         report_spec: str | dict = "Referenceable",
         **kwargs
     ) -> list | str:
@@ -611,6 +627,7 @@ class DataDiscovery(ServerClient):
         
         # Merge explicit parameters with kwargs
         params = {
+            'graph_query_depth': graph_query_depth,
             'search_string': search_string,
             'body': body,
             'starts_with': starts_with,
@@ -640,7 +657,7 @@ class DataDiscovery(ServerClient):
         ignore_case: bool = False,
         start_from: int = 0,
         page_size: int = 100,
-        output_format: str = "JSON",
+        graph_query_depth: int = 3, output_format: str = "JSON",
         report_spec: str | dict = "Referenceable",
         **kwargs
     ) -> list | str:
@@ -720,6 +737,7 @@ class DataDiscovery(ServerClient):
         return loop.run_until_complete(
             self._async_find_annotations(
                 search_string=search_string,
+                graph_query_depth=graph_query_depth,
                 body=body,
                 starts_with=starts_with,
                 ends_with=ends_with,
@@ -735,17 +753,18 @@ class DataDiscovery(ServerClient):
     @dynamic_catch
     async def _async_get_annotation_by_guid(
         self,
-        annotation_guid: str,
+        guid: str,
         element_type: str = "Annotation",
         body: Optional[dict | GetRequestBody] = None,
-        output_format: str = "JSON",
+        graph_query_depth: int = 3, output_format: str = "JSON",
         report_spec: str | dict = "Annotations",
+        **kwargs,
     ) -> dict | str:
         """Get annotation by GUID. Async version.
 
         Parameters
         ----------
-        annotation_guid : str
+        guid : str
             The unique identifier of the required element.
         element_type : str, optional
             The type of metadata element.
@@ -776,29 +795,41 @@ class DataDiscovery(ServerClient):
         }
         ```
         """
-        url = f"{self.platform_url}/servers/{self.view_server}/api/open-metadata/data-discovery/annotations/{annotation_guid}/retrieve"
+        if guid is None and "annotation_guid" in kwargs:
+            guid = kwargs.pop("annotation_guid")
+
+        url = f"{self.platform_url}/servers/{self.view_server}/api/open-metadata/data-discovery/annotations/{guid}/retrieve"
+        
+        params = {
+            'graph_query_depth': graph_query_depth,
+            'output_format': output_format,
+            'report_spec': report_spec,
+            'body': body
+        }
+        params.update(kwargs)
+        params = {k: v for k, v in params.items() if v is not None}
+
         return await self._async_get_guid_request(
             url,
             _type=element_type,
             _gen_output=self._generate_annotation_output,
-            output_format=output_format,
-            report_spec=report_spec,
-            body=body,
+            **params,
         )
 
     def get_annotation_by_guid(
         self,
-        annotation_guid: str,
+        guid: str,
         element_type: str = "Annotation",
         body: Optional[dict | GetRequestBody] = None,
-        output_format: str = "JSON",
+        graph_query_depth: int = 3, output_format: str = "JSON",
         report_spec: str | dict = "Annotations",
+        **kwargs,
     ) -> dict | str:
         """Get annotation by GUID.
 
         Parameters
         ----------
-        annotation_guid : str
+        guid : str
             The unique identifier of the required element.
         element_type : str, optional
             The type of metadata element.
@@ -832,6 +863,11 @@ class DataDiscovery(ServerClient):
         loop = asyncio.get_event_loop()
         return loop.run_until_complete(
             self._async_get_annotation_by_guid(
-                annotation_guid, element_type, body, output_format, report_spec
+                guid=guid,
+                element_type=element_type,
+                body=body,
+                output_format=output_format,
+                report_spec=report_spec,
+                **kwargs,
             )
         )

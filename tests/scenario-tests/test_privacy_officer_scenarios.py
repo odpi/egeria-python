@@ -163,17 +163,28 @@ class PrivacyOfficerScenarioTester:
         console.print("\n")
         console.print(table)
 
-    def run_all(self):
+    def run_all(self) -> List[TestResult]:
         if not self.setup():
-            return
+            return [TestResult("Setup", "FAILED", 0.0, "Setup failed", Exception("Setup failed"))]
         
         self.results.append(self.run_lifecycle_scenario())
         self.display_results()
-        
-        if any(r.status == "FAILED" for r in self.results):
-            sys.exit(1)
+        return self.results
+
+
+def test_privacy_officer_scenarios():
+    """Pytest entry point for privacy officer scenario tests"""
+    tester = PrivacyOfficerScenarioTester()
+    results = tester.run_all()
+    assert all(r.status == "PASSED" for r in results), "Some scenarios failed"
+
+
+def main():
+    tester = PrivacyOfficerScenarioTester()
+    results = tester.run_all()
+    failed = any(r.status == "FAILED" for r in results)
+    sys.exit(1 if failed else 0)
 
 
 if __name__ == "__main__":
-    tester = PrivacyOfficerScenarioTester()
-    tester.run_all()
+    main()

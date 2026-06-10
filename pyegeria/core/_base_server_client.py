@@ -140,8 +140,11 @@ class BaseServerClient:
             response = await self.async_get_platform_origin()
             return response
 
-        except PyegeriaConnectionException as e:
+        except (PyegeriaConnectionException, PyegeriaTimeoutException):
             raise
+        except Exception as e:
+            logger.debug(f"Connection check returned an exception (server is active but check failed): {e}")
+            return ""
     def check_connection(self) -> str:
         """Check if the connection is working.
 
