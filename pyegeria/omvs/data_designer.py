@@ -1855,6 +1855,13 @@ class DataDesigner(ServerClient):
             return None
         return self.get_data_rel_elements_dict(data_class_entry)
 
+    async def _async_get_data_class_rel_elements(self, guid: str) -> dict | None:
+        """Async version: return the lists of objects related to a data class."""
+        data_class_entry = await self._async_get_data_class_by_guid(guid, output_format="JSON")
+        if isinstance(data_class_entry, str) or data_class_entry is None:
+            return None
+        return self.get_data_rel_elements_dict(data_class_entry)
+
     def get_data_value_specification_rel_elements(self, guid: str) -> dict | str:
         """return the lists of objects related to a data value specification"""
 
@@ -1863,11 +1870,25 @@ class DataDesigner(ServerClient):
             return None
         return self.get_data_rel_elements_dict(spec_entry)
 
+    async def _async_get_data_value_specification_rel_elements(self, guid: str) -> dict | None:
+        """Async version: return the lists of objects related to a data value specification."""
+        spec_entry = await self._async_get_data_value_specification_by_guid(guid, output_format="JSON")
+        if isinstance(spec_entry, str) or spec_entry is None:
+            return None
+        return self.get_data_rel_elements_dict(spec_entry)
+
     def get_data_grain_rel_elements(self, guid: str) -> dict | str:
         """return the lists of objects related to a data grain"""
 
         grain_entry = self.get_data_grain_by_guid(guid, output_format="JSON")
         if isinstance(grain_entry, str):
+            return None
+        return self.get_data_rel_elements_dict(grain_entry)
+
+    async def _async_get_data_grain_rel_elements(self, guid: str) -> dict | None:
+        """Async version: return the lists of objects related to a data grain."""
+        grain_entry = await self._async_get_data_grain_by_guid(guid, output_format="JSON")
+        if isinstance(grain_entry, str) or grain_entry is None:
             return None
         return self.get_data_rel_elements_dict(grain_entry)
 

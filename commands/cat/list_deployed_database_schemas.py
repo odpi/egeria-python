@@ -153,7 +153,7 @@ def list_deployed_database_schemas(
 
             # Now get property facets related to us
             el_facets = c_client.get_related_elements(
-                el_guid, "ReferenceableFacet", None
+                el_guid, "ReferenceableFacet"
             )
             el_facets_md = "---\n**Property Facets:**\n"
             if type(el_facets) is list:
@@ -165,7 +165,7 @@ def list_deployed_database_schemas(
             el_props_out = Markdown(f"{el_props_md}{el_facets_md}")
             # get the Content within our schema
             rel_elements = c_client.get_related_elements(
-                el_guid, "DataContentForDataSet", None
+                el_guid, "DataContentForDataSet"
             )
 
             schema_md = ""

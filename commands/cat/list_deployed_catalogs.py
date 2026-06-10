@@ -100,7 +100,7 @@ def list_deployed_catalogs(
 
         if catalog_server in [None, "*"]:
             cats = c_client.get_elements_by_classification(
-                "Anchors", "DataAccessManager"
+                "Anchors", body={"class": "ResultsRequestBody", "metadata_element_type_name": "DataAccessManager"}
             )
         else:
             server_guid = c_client.get_guid_for_name(catalog_server)

@@ -546,7 +546,7 @@ class DataClassProcessor(AsyncBaseCommandProcessor):
         return self.command.raw_block
 
     async def _sync_all_rels(self, guid: str, cont_guids: set, term_guids: set, spec_guids: set, dict_guids: set, replace_all: bool):
-        rel_els = self.client.data_designer.get_data_class_rel_elements(guid) or {}
+        rel_els = await self.client.data_designer._async_get_data_class_rel_elements(guid) or {}
         
         # 1. Containing Classes
         as_is_cont = set(rel_els.get("nested_data_class_guids", []))

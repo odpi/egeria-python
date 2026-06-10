@@ -3992,6 +3992,62 @@ class GlossaryManager(CollectionManager):
             )
         )
 
+    async def _async_get_glossary_for_term(self, term_guid: str) -> dict:
+        """Returns the glossary containing the term with the supplied GUID. Async version.
+
+        Parameters
+        ----------
+        term_guid : str
+            The unique identifier of the term to find the glossary for.
+
+        Returns
+        -------
+        dict
+            The glossary properties.
+
+        Raises
+        ------
+        PyegeriaException
+            If the term is not found, or it is not anchored to any glossary.
+        """
+        term = await self._async_get_term_by_guid(term_guid, output_format="JSON")
+        if not isinstance(term, dict):
+            raise PyegeriaException("Term not found or invalid format returned")
+
+        classifications = term.get("elementHeader", {}).get("classifications", []) or []
+        glossary_guid = None
+        for c in classifications:
+            if c.get("classificationName") == "Anchors":
+                glossary_guid = c.get("classificationProperties", {}).get("anchorScopeGUID")
+                break
+
+        if not glossary_guid:
+            raise PyegeriaException(f"Term '{term_guid}' is not anchored to any glossary")
+
+        return await self._async_get_glossary_by_guid(glossary_guid)
+
+    @dynamic_catch
+    def get_glossary_for_term(self, term_guid: str) -> dict:
+        """Returns the glossary containing the term with the supplied GUID.
+
+        Parameters
+        ----------
+        term_guid : str
+            The unique identifier of the term to find the glossary for.
+
+        Returns
+        -------
+        dict
+            The glossary properties.
+
+        Raises
+        ------
+        PyegeriaException
+            If the term is not found, or it is not anchored to any glossary.
+        """
+        loop = asyncio.get_event_loop()
+        return loop.run_until_complete(self._async_get_glossary_for_term(term_guid))
+
 
 if __name__ == "__main__":
     print("Main-Glossary Manager")

@@ -82,7 +82,7 @@ def list_relationships(
         table.add_column("End 2 Type")
         table.add_column("Properties", min_width=40)
 
-        rel_list = g_client.get_relationships(search_string, page_size=0, time_out=time_out,
+        rel_list = g_client.get_relationships(search_string, page_size=0,
                                               output_format="JSON")
         if type(rel_list) is str:
             return table

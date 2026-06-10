@@ -2337,7 +2337,92 @@ class GovernanceOfficer(ServerClient):
                                                             output_format=output_format, report_spec=report_spec,
                                                             **kwargs))
         return response
- 
+
+    async def _async_get_gov_def_in_context(self, guid: str, 
+                                            element_type: Optional[str] = None,
+                                            body: Optional[dict | GetRequestBody] = None,
+                                            graph_query_depth: int = 3, output_format: str = "JSON",
+                                            report_spec: dict = None,
+                                            **kwargs) -> list | str:
+        """ Returns the governance definitions in context. Async Version.
+
+            Parameters
+            ----------
+            guid: str
+                identity of the information governance definition to retrieve.
+            body: dict, optional
+                A dictionary containing parameters of the retrieval.
+            output_format: str, default = 'JSON'
+                Type of output to produce include:
+                JSON - output standard json
+                MD - output standard markdown with no preamble
+                FORM - output markdown with a preamble for a form
+                REPORT - output markdown with a preamble for a report
+                MERMAID - output mermaid markdown
+
+            Returns
+            -------
+            [dict] | str
+                A list of information governance definitions matching the name.
+        """
+        if guid is None and "definition_guid" in kwargs:
+            guid = kwargs.pop("definition_guid")
+
+        url = (
+            f"{self.platform_url}/servers/{self.view_server}/api/open-metadata/"
+            f"{self.url_marker}/governance-definitions/{guid}/retrieve-context")
+        
+        element_type = element_type if element_type else "GovernanceDefinition"
+        
+        params = {
+            'graph_query_depth': graph_query_depth,
+            'output_format': output_format,
+            'report_spec': report_spec,
+            'body': body
+        }
+        params.update(kwargs)
+        params = {k: v for k, v in params.items() if v is not None}
+
+        response = await self._async_get_guid_request(url, _type=element_type,
+                                                      _gen_output=self._generate_governance_definition_output,
+                                                      **params)
+
+        return response
+
+    @dynamic_catch
+    def get_gov_def_in_context(self, guid: str, 
+                               element_type: Optional[str] = None,
+                               body: Optional[dict | GetRequestBody] = None,
+                               graph_query_depth: int = 3, output_format: str = "JSON",
+                               report_spec: dict = None,
+                               **kwargs) -> list | str:
+        """ Returns the governance definitions in context.
+
+            Parameters
+            ----------
+            guid: str
+                GUID of the information governance definition to retrieve.
+            element_type: str
+                Type of element to retrieve.
+            body: dict, optional
+                A dictionary containing parameters of the retrieval.
+            
+            output_format: str, default = 'JSON'
+                Type of output to produce:
+                JSON - output standard json
+                MD - output standard markdown with no preamble
+                FORM - output markdown with a preamble for a form
+                REPORT - output markdown with a preamble for a report
+                MERMAID - output mermaid markdown
+        """
+        loop = asyncio.get_event_loop()
+        response = loop.run_until_complete(
+            self._async_get_gov_def_in_context(guid=guid, element_type=element_type, body=body,
+                                                graph_query_depth=graph_query_depth,
+                                                output_format=output_format, report_spec=report_spec,
+                                                **kwargs))
+        return response
+
 
 
     @dynamic_catch

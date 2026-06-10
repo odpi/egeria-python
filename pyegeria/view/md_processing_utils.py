@@ -1810,16 +1810,16 @@ def process_term_list_command(egeria_client: EgeriaTech, txt: str, directive: st
 
             term_list_md = f"\n# Term List for search string: `{search_string}`\n\n"
             if output_format == "DICT":
-                struct = egeria_client.find_glossary_terms(search_string, glossary_guid, output_format=output_format)
+                struct = egeria_client.find_glossary_terms(search_string, anchor_guid=glossary_guid, output_format=output_format)
                 term_list_md += f"```{json.dumps(struct, indent=4)}```\n"
             else:
-                term_list_md += egeria_client.find_glossary_terms(search_string, glossary_guid,
+                term_list_md += egeria_client.find_glossary_terms(search_string, anchor_guid=glossary_guid,
                                                                   output_format=output_format)
             print_msg("ALWAYS", f"Wrote Term List for search string: `{search_string}`", debug_level)
 
             return term_list_md
 
-            md_table = egeria_client.find_glossary_terms(search_string, glossary_guid, output_format=output_format)
+            md_table = egeria_client.find_glossary_terms(search_string, anchor_guid=glossary_guid, output_format=output_format)
 
             print_msg("ALWAYS", f"Wrote Term list for search string `{search_string}`", debug_level)
             return md_table

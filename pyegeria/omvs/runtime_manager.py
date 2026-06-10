@@ -1655,8 +1655,13 @@ class RuntimeManager(ServerClient):
         loop = asyncio.get_event_loop()
         response = loop.run_until_complete(
             self._async_get_platforms_by_name(
-                graph_query_depth,
-                filter_string, start_from, page_size, output_format, report_spec, body
+                filter_string=filter_string,
+                start_from=start_from,
+                page_size=page_size,
+                graph_query_depth=graph_query_depth,
+                output_format=output_format,
+                report_spec=report_spec,
+                body=body
             )
         )
         return response
@@ -1816,7 +1821,12 @@ class RuntimeManager(ServerClient):
         loop = asyncio.get_event_loop()
         return loop.run_until_complete(
             self._async_get_platforms_by_type(
-                filter_string, start_from, page_size, output_format, report_spec, body
+                filter_string=filter_string,
+                start_from=start_from,
+                page_size=page_size,
+                output_format=output_format,
+                report_spec=report_spec,
+                body=body
             )
         )
 
@@ -1919,7 +1929,15 @@ class RuntimeManager(ServerClient):
         """
         loop = asyncio.get_event_loop()
         response = loop.run_until_complete(
-            self._async_get_platform_templates_by_type(filter_string, effective_time, start_from, page_size, body=body)
+            self._async_get_platform_templates_by_type(
+                filter_string=filter_string,
+                effective_time=effective_time,
+                start_from=start_from,
+                page_size=page_size,
+                output_format=output_format,
+                report_spec=report_spec,
+                body=body
+            )
         )
         return response
 
@@ -2259,8 +2277,13 @@ class RuntimeManager(ServerClient):
         loop = asyncio.get_event_loop()
         response = loop.run_until_complete(
             self._async_get_servers_by_name(
-                graph_query_depth,
-                filter_string, start_from, page_size, output_format, report_spec, body
+                filter_string=filter_string,
+                start_from=start_from,
+                page_size=page_size,
+                graph_query_depth=graph_query_depth,
+                output_format=output_format,
+                report_spec=report_spec,
+                body=body
             )
         )
         return response
@@ -2451,7 +2474,12 @@ class RuntimeManager(ServerClient):
         loop = asyncio.get_event_loop()
         response = loop.run_until_complete(
             self._async_get_server_templates_by_dep_impl_type(
-                filter_string, start_from, page_size, output_format,report_spec,body
+                filter_string=filter_string,
+                start_from=start_from,
+                page_size=page_size,
+                output_format=output_format,
+                report_spec=report_spec,
+                body=body
             )
         )
         return response

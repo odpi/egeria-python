@@ -161,18 +161,28 @@ class PyegeriaException(Exception):
         self.response_egeria_msg_id = ""
         self.response_egeria_msg = ""
         if response:
-            self.response = response
-            self.response_url = getattr(response, "url", "unknown URL")
-            self.response_code = getattr(response, "status_code", "unknown status code")
-            self.response_reason_phrase = getattr(response, "reason_phrase", "unknown reason")
-            self.http_status_code = getattr(response, "status_code", "unknown status code")
-            if self.http_status_code == 200:
-                try:
-                    self.response_egeria_msg_id = response.json().get("exceptionErrorMessageId", "")
-                    self.response_egeria_msg = response.json().get("exceptionErrorMessage", "")
-                except Exception:
-                    self.response_egeria_msg_id = ""
-                    self.response_egeria_msg = ""
+            if isinstance(response, str):
+                self.response = None
+                self.response_url = ""
+                self.response_code = ""
+                self.response_reason_phrase = ""
+                self.http_status_code = None
+                self.response_egeria_msg_id = ""
+                self.response_egeria_msg = ""
+                self._custom_message = response
+            else:
+                self.response = response
+                self.response_url = getattr(response, "url", "unknown URL")
+                self.response_code = getattr(response, "status_code", "unknown status code")
+                self.response_reason_phrase = getattr(response, "reason_phrase", "unknown reason")
+                self.http_status_code = getattr(response, "status_code", "unknown status code")
+                if self.http_status_code == 200:
+                    try:
+                        self.response_egeria_msg_id = response.json().get("exceptionErrorMessageId", "")
+                        self.response_egeria_msg = response.json().get("exceptionErrorMessage", "")
+                    except Exception:
+                        self.response_egeria_msg_id = ""
+                        self.response_egeria_msg = ""
         else:
             self.response = None
             self.response_url = additional_info.get("endpoint", "") if additional_info else ""
@@ -185,7 +195,10 @@ class PyegeriaException(Exception):
         self.error_details = self.error_code.value
         self.pyegeria_code = self.error_details.get("message_id", "UNKNOWN_ERROR")
 
-        self.message = self.error_details["message_template"].format(self.response_url, self.response_code)
+        if hasattr(self, "_custom_message"):
+            self.message = self._custom_message
+        else:
+            self.message = self.error_details["message_template"].format(self.response_url, self.response_code)
         self.system_action = self.error_details.get("system_action", "")
         self.user_action = self.error_details.get("user_action", "")
         # self.original_exception = context.get("exception", {}) if context else None

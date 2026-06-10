@@ -124,7 +124,7 @@ def display_anchored_elements(
             if template:  # Not interested in template elements in this method
                 continue
 
-            relationship = g_client.get_related_elements(guid, None, None)
+            relationship = g_client.get_related_elements(guid)
 
             if type(relationship) is list:
                 rel_md = ""

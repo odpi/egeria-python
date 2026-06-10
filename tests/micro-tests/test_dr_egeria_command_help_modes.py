@@ -11,7 +11,7 @@ class FakeClient:
         pass
     def create_egeria_bearer_token(self, *a, **kw):
         return "token"
-    def find_glossary_terms(self, search_string, page_size=500, output_format=None, glossary_guid=None):
+    def find_glossary_terms(self, search_string, page_size=500, output_format=None, anchor_guid=None, **kwargs):
         # Return two fake terms with Markdown usage table
         term1 = {
             "elementHeader": {"guid": "g1"},
