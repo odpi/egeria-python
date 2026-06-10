@@ -7,6 +7,13 @@
 """
 import ast
 import os
+import sys
+from pathlib import Path
+
+# Add the project root to sys.path to allow running this script from any directory
+root_path = Path(__file__).resolve().parents[4]
+if str(root_path) not in sys.path:
+    sys.path.append(str(root_path))
 
 from textual.css.query import NoMatches
 from textual.screen import ModalScreen

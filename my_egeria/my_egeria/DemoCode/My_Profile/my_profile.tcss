@@ -215,7 +215,19 @@ SelectionOverviewScreen > Footer {
 #technology_type_templates_input {
     width: auto;
     height: auto;
+    border: solid white;
 }
+#technology_type_processes_input {
+    width: auto;
+    height: auto;
+    border: solid white;
+}
+#user_identities_container {
+    width: auto;
+    height: auto;
+    border: solid white;
+}
+#user_identities_table {}
 #technology_types_tree {
     width: auto;
     height: auto;
