@@ -507,9 +507,10 @@ class TestAssetMaker:
             a_client = AssetMaker(self.good_view_server_2, self.good_platform1_url, user_id=self.good_user_2,
                                   user_pwd=self.good_user_2_pwd)
             a_client.create_egeria_bearer_token(self.good_user_2, self.good_user_2_pwd)
-            response = a_client.find_software_capabilities(search_string="*", output_format="JSON")
+            cap = "PostgreSQL Governance Engine"
+            response = a_client.find_software_capabilities(search_string=cap, output_format="JSON")
             if isinstance(response, (dict, list)):
-                print(f"\n\tFound software capabilities: {json.dumps(response, indent=2)[:500]}")
+                print(f"\n\tFound software capabilities: {json.dumps(response, indent=2)}")
             else:
                 print(f"\n\t{response}")
             assert response is not None

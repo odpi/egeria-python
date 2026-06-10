@@ -61,13 +61,13 @@ class TestAssetCatalog:
             token = asset_client.create_egeria_bearer_token(self.good_user_2, "secret")
             start_time = time.perf_counter()
 
-            search_string = "Postgres"
+            search_string = "CSV Data File:::/deployments/loading-bay/sample-data/old-market-drop-foot-weekly-measurements/week3.restatement.csv"
             response = asset_client.find_in_asset_domain(
                 search_string,
                 starts_with=True,
                 ends_with=False,
                 ignore_case=True,
-                output_format="DICT",
+                output_format="JSON",
                 report_spec="Referenceable"
             )
             duration = time.perf_counter() - start_time
@@ -79,6 +79,8 @@ class TestAssetCatalog:
                 print("\n\n" + json.dumps(response, indent=4))
             elif type(response) is str:
                 print("\n\nResponse: " + response)
+            elif type(response) is dict:
+                print("\n\n" + json.dumps(response, indent=4))
             assert True
 
         except (
@@ -122,6 +124,9 @@ class TestAssetCatalog:
                 if type(response) is list:
                     count = len(response)
                     print(f"Found {count} assets for search '{term}' in {duration:.2f} seconds")
+                    print(json.dumps(response, indent=4))
+                elif type(response) is dict:
+                    print(json.dumps(response, indent=4))
                 elif type(response) is str:
                     print(f"Response for '{term}': {response}")
 
@@ -154,7 +159,7 @@ class TestAssetCatalog:
             start_time = time.perf_counter()
 
             # Use a known asset GUID from your environment
-            asset_guid = "8be11e8d-3964-40c7-88cd-403526725523"
+            asset_guid = "73dd23df-6312-4a4f-af5f-e7cb8312a04d"
 
             response = asset_client.get_asset_graph(
                 asset_guid,
@@ -199,16 +204,17 @@ class TestAssetCatalog:
             token = asset_client.create_egeria_bearer_token(self.good_user_2, "secret")
             start_time = time.perf_counter()
 
-            asset_guid = "8be11e8d-3964-40c7-88cd-403526725523"
+            asset_guid = "73dd23df-6312-4a4f-af5f-e7cb8312a04d"
 
             response = asset_client.get_asset_mermaid_graph(asset_guid)
             duration = time.perf_counter() - start_time
 
             print(f"\n\tDuration was {duration} seconds")
             print(f"Response type: {type(response)}")
-            if type(response) is dict:
+            if isinstance(response, (dict, list)):
                 print("\n\n" + json.dumps(response, indent=4))
-                print(f"Found {len(response)} elements")
+                if isinstance(response, list):
+                    print(f"Found {len(response)} elements in asset graph")
             elif type(response) is str:
                 console.print("\n\n" + response)
             assert True
@@ -239,7 +245,7 @@ class TestAssetCatalog:
             token = asset_client.create_egeria_bearer_token(self.good_user_2, "secret")
             start_time = time.perf_counter()
 
-            asset_guid = "90ad9864-b763-4c8a-8f4c-56239adf2233"
+            asset_guid = "73dd23df-6312-4a4f-af5f-e7cb8312a04d"
             effective_time = None
             as_of_time = None
             relationship_types = None
@@ -293,20 +299,21 @@ class TestAssetCatalog:
         """Test retrieving asset lineage in Mermaid format"""
         asset_client = None
         try:
-            asset_client = AssetCatalog(self.good_view_server_1, self.good_platform1_url, user_id=self.good_user_2)
+            asset_client = AssetCatalog(self.good_view_server_2, self.good_platform1_url, user_id=self.good_user_2)
             token = asset_client.create_egeria_bearer_token(self.good_user_2, "secret")
             start_time = time.perf_counter()
 
-            asset_guid = "90ad9864-b763-4c8a-8f4c-56239adf2233"
+            asset_guid = "73dd23df-6312-4a4f-af5f-e7cb8312a04d"
 
             response = asset_client.get_asset_lineage_mermaid_graph(asset_guid)
             duration = time.perf_counter() - start_time
 
             print(f"\n\tDuration was {duration} seconds")
             print(f"Response type: {type(response)}")
-            if type(response) is dict:
+            if isinstance(response, (dict, list)):
                 print("\n\n" + json.dumps(response, indent=4))
-                print(f"Found {len(response)} elements")
+                if isinstance(response, list):
+                    print(f"Found {len(response)} elements")
             elif type(response) is str:
                 print("\n\nResponse: " + response)
             assert True

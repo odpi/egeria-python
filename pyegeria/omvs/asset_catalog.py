@@ -344,7 +344,15 @@ class AssetCatalog(ServerClient):
         )
         return response
 
-
+    def get_asset_graph(
+            self,
+            asset_guid: str,
+            start_from: int = 0,
+            page_size: int = 0,
+            output_format: str = "MERMAID",
+            report_spec: str = "Common-Mermaid",
+            body: Optional[dict | ResultsRequestBody] = None
+    ) -> str | dict:
         """Return all the elements that are anchored to an asset plus relationships between these elements and to
         other elements.
 
@@ -390,30 +398,28 @@ class AssetCatalog(ServerClient):
         page_size: int = 0,
     ) -> str:
         """Return the asset graph as mermaid markdown string.
-         Parameters
-         ----------
-         asset_guid : str
-             The unique identity of the asset to get the graph for.
 
-         start_from : int, optional
-             The index from which to start fetching the engine actions. Default is 0.
+        Parameters
+        ----------
+        asset_guid : str
+            The unique identity of the asset to get the graph for.
+        start_from : int, optional
+            The index from which to start fetching. Default is 0.
+        page_size : int, optional
+            The maximum number of items to fetch. Default is 0 (all).
 
-         page_size : int, optional
-             The maximum number of engine actions to fetch in a single request. Default is `max_paging_size`.
-
-         Returns
-         -------
+        Returns
+        -------
         str
-             A mermaid string representing the asset graph.
+            A mermaid string representing the asset graph.
 
-         Raises
-         ------
-         PyegeriaException
-             One of the pyegeria exceptions will be raised if there are issues in communications, message format, or
-             Egeria errors.
-         PyegeriaNotAuthorizedException
-             The principle specified by the user_id does not have authorization for the requested action
-
+        Raises
+        ------
+        PyegeriaException
+            One of the pyegeria exceptions will be raised if there are issues in communications, message format, or
+            Egeria errors.
+        PyegeriaNotAuthorizedException
+            The principle specified by the user_id does not have authorization for the requested action.
         """
 
         asset_graph = self.get_asset_graph(asset_guid, start_from, page_size)
@@ -569,49 +575,58 @@ class AssetCatalog(ServerClient):
         relationship_types: [str] = None,
         limit_to_isc_q_name: Optional[str] = None,
         hilight_isc_q_name: Optional[str] = None,
+        all_anchors: bool = False,
         start_from: int = 0,
-        page_size: int = max_paging_size,
-        ) -> str:
-        """Return the asset lineage including a mermaid markdown string. Async Version.
-         Parameters
-         ----------
-         asset_guid : str
-             The unique identity of the asset to get the graph for.
-        effective_time: str, default is None
+        page_size: int = 0,
+    ) -> str:
+        """Return the asset lineage including a mermaid markdown string.
+
+        Parameters
+        ----------
+        asset_guid : str
+            The unique identity of the asset to get the graph for.
+        effective_time : str, optional
             Effective time to query on. If not specified, the current time is used.
-        as_of_time: str = None
-            as_of_time to query on. If not specified, the current time is used.
-        relationship_types: [str], default is None,
-            relationship types to include in the lineage graph. If not specified, all relationship types are included.
-        limit_to_isc_q_name: Optional[str] = None,
-            if specified, filters results to only include information supply chains with the given name.
-        hilight_isc_q_name: Optional[str] = None,
-            if specified, highlights the information supply chain with the given name.
-
-         start_from : int, optional
-             The index from which to start fetching the engine actions. Default is 0.
-
-         page_size : int, optional
-             The maximum number of elements to fetch in a single request.
-             Default is `max_paging_size`.
+        as_of_time : str, optional
+            As-of time to query on. If not specified, the current time is used.
+        relationship_types : list[str], optional
+            Relationship types to include in the lineage graph. If not specified, all relationship types are included.
+        limit_to_isc_q_name : str, optional
+            If specified, filters results to only include information supply chains with the given qualified name.
+        hilight_isc_q_name : str, optional
+            If specified, highlights the information supply chain with the given qualified name.
+        all_anchors : bool, optional
+            Whether to include all anchors. Default is False.
+        start_from : int, optional
+            The index from which to start fetching. Default is 0.
+        page_size : int, optional
+            The maximum number of items to fetch. Default is 0 (all).
 
         Returns
-         -------
+        -------
         str
-             A mermaid string representing the lineage.
+            A mermaid string representing the lineage.
 
-         Raises:
-         ------
-         PyegeriaInvalidParameterException
-         PyegeriaAPIException
-         PyegeriaUnauthorizedException
+        Raises
+        ------
+        PyegeriaException
+            If there are issues in communications, message format, or Egeria errors.
+        PyegeriaNotAuthorizedException
+            The principle specified by the user_id does not have authorization for the requested action.
+        """
 
-    """
-
-        asset_graph = self.get_asset_lineage_graph(asset_guid, effective_time,
-                                                   as_of_time, relationship_types,
-                                                   limit_to_isc_q_name, hilight_isc_q_name,
-                                                   start_from, page_size, "JSON")
+        asset_graph = self.get_asset_lineage_graph(
+            asset_guid,
+            effective_time,
+            as_of_time,
+            relationship_types,
+            limit_to_isc_q_name,
+            hilight_isc_q_name,
+            all_anchors,
+            start_from,
+            page_size,
+            "JSON",
+        )
         return asset_graph.get("mermaidGraph")
 
 
