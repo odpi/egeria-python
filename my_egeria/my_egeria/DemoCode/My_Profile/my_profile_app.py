@@ -28,6 +28,11 @@ from textual.containers import ScrollableContainer
 from textual.widgets import DataTable, OptionList, Header, Static, Footer, Tree
 
 from CreateProfileScreen import CreateProfileScreen
+from EditProfileScreen import EditProfileScreen
+from EditCommunitiesScreen import EditCommunitiesScreen
+from EditIdentitiesScreen import EditIdentitiesScreen
+from EditRolesScreen import EditRolesScreen
+from EditTeamsScreen import EditTeamsScreen
 from TechnologyTypesScreen import TechnologyTypesScreen
 from TechnologyTypeOptionsScreen import TechnologyTypeOptionsScreen
 from TechnologyTypeTemplatesScreen import TechnologyTypeTemplatesScreen
@@ -59,6 +64,11 @@ class MyProfileApp(App):
         "main": MainScreen,
         "_default": MainScreen,
         "create_profile": CreateProfileScreen,
+        "edit_profile": EditProfileScreen,
+        "edit_communities": EditCommunitiesScreen,
+        "edit_identities": EditIdentitiesScreen,
+        "edit_roles": EditRolesScreen,
+        "edit_teams": EditTeamsScreen,
         "tech_types": TechnologyTypesScreen,
         "tech_type_options": TechnologyTypeOptionsScreen,
         "tech_type_templates": TechnologyTypeTemplatesScreen,
@@ -116,6 +126,7 @@ class MyProfileApp(App):
         self.team_members: list[list] = []
         self.max_mermaid_node_count = 0  # This is to tell egeria we dont want mermaid graphs in the response packet.
         self.graph_query_depth = 0  # This tell egeria not to include relationships in the response packet
+        # self.user_identities = None
 
     def compose(self) -> ComposeResult:
         yield Header()
@@ -557,7 +568,16 @@ class MyProfileApp(App):
                                                      self.view_server,
                                                      self.platform_url),
                                    callback = self.shop_for_data_callback)
-
+        elif selected_option == "Edit Profile":
+            await self.push_screen(EditProfileScreen(
+                self.user_name,
+                                                      self.user_password,
+                                                      self.view_server,
+                                                      self.platform_url,
+                                                      self.karma_points,
+                                                      self.user_profile
+                                                    ),
+                                   callback = self.edit_profile_callback)
         elif selected_option == "User Bookmarks":
             pass
         elif selected_option == "Subscriptions":
@@ -1779,9 +1799,32 @@ class MyProfileApp(App):
             push the main screen again"""
         self.push_screen("main")
 
+    def edit_profile_callback(self, return_c):
+        """ Callback routine for the edit profile screen """
+        if isinstance(return_c, int):
+            if return_c == 200:
+                self.push_screen("main")
+            else:
+                self.log(f"Error returned from EditProfileScreen: {return_c}")
+                self.log("Returning to main screen")
+                self.push_screen("main")
+        elif isinstance(return_c, str):
+            if return_c == "identity":
+                self.push_screen("edit_identities")
+            elif return_c == "community":
+                self.push_screen("edit_communities")
+            elif return_c == "role":
+                self.push_screen("edit_roles")
+            elif return_c == "team":
+                self.push_screen("edit_teams")
+        else:
+            self.log(f"Unexpected return type from EditProfileScreen: {type(return_c)}")
+            self.push_screen("main")
+
+
 if __name__ == "__main__":
     app = MyProfileApp()
     app.run()
-
-if __name__ == "__main__":
-    main()
+#
+# if __name__ == "__main__":
+#     main()

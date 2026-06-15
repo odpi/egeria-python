@@ -46,7 +46,8 @@ class CreateProfileScreen(ModalScreen[int]):
 
     def compose(self) -> ComposeResult:
         yield Header(show_clock=True)
-        yield Static("Create a new profile in Egeria")
+        yield Static("Create a new profile in Egeria", classes="span-3", id="create_profile_title")
+        yield Static()
         yield ScrollableContainer(
             Static("Fill in your information below:"),
             Input(placeholder="Courtesy Title", id="user_title"),
@@ -63,7 +64,7 @@ class CreateProfileScreen(ModalScreen[int]):
             Button("Create Profile", id="create_profile_btn"),
             id="create_profile_form",
         )
-
+        yield Static()
         yield Footer()
 
     @on(Button.Pressed, "#create_profile_btn")
