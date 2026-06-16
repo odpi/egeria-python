@@ -491,7 +491,8 @@ class AssetCatalog(ServerClient):
             "highlightISCQualifiedName": hilight_isc_q_name,
             "allAnchors": all_anchors,
             "startFrom": start_from,
-            "pageSize": page_size
+            "pageSize": page_size,
+            "queryGraphDepth": 5
             }
 
         response = await self._async_make_request("POST", url, body_slimmer(body))

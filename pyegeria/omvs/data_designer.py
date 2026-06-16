@@ -21,30 +21,37 @@ from pyegeria.view.output_formatter import (extract_mermaid_only, extract_basic_
 from pyegeria.core.utils import dynamic_catch
 from typing import Any, Optional
 
-def query_seperator(current_string):
-    if current_string == "":
-        return "?"
-    else:
-        return "&"
-
-
-# ("params are in the form of [(paramName, value), (param2Name, value)] if the value is not None, it will be added to "
-# "the query string")
-
-
-def query_string(params):
-    result = ""
-    for i in range(len(params)):
-        if params[i][1] is not None:
-            result = f"{result}{query_seperator(result)}{params[i][0]}={params[i][1]}"
-    return result
-
-
-def base_path(client, view_server: str):
-    return f"{client.platform_url}/servers/{view_server}/api/open-metadata/data-designer"
-
 
 class DataDesigner(ServerClient):
+    """
+    The DataDesigner OMVS client provides access to the data designer view service.
+
+    Notes
+    -----
+    - Most high-level list/report methods accept an `output_format` and an optional `report_spec` and
+      delegate rendering to `pyegeria.output_formatter.generate_output` along with shared helpers such as
+      `populate_common_columns`.
+    - Private extractor methods follow the convention: `_extract_<entity>_properties(element, columns_struct)` and
+      must return the same `columns_struct` with per-column `value` fields populated.
+    """
+
+    def __init__(
+        self,
+        view_server_name: str,
+        platform_url: str,
+        user_id: Optional[str] = None,
+        user_pwd: Optional[str] = None,
+        token: Optional[str] = None,
+    ):
+        ServerClient.__init__(self, view_server_name, platform_url, user_id, user_pwd, token)
+        self.view_server = self.server_name
+        self.platform_url = self.platform_url
+        self.user_id = self.user_id
+        self.user_pwd = self.user_pwd
+        self.ref_data_designer_command_base: str = (
+            f"{self.platform_url}/servers/{self.view_server}/api/open-metadata/data-designer"
+        )
+
     @dynamic_catch
     async def _async_find_data_value_specifications(
         self,
@@ -55,27 +62,57 @@ class DataDesigner(ServerClient):
         ignore_case: bool = False,
         start_from: int = 0,
         page_size: int = 100,
-        graph_query_depth: int = 3, output_format: str = "JSON",
+        graph_query_depth: int = 3,
+        output_format: str = "JSON",
         report_spec: str | dict = None,
-        **kwargs
+        **kwargs,
     ) -> list | str:
-        """Find data value specifications by search string. Async version."""
-        url = f"{base_path(self, self.view_server)}/data-value-specifications/by-search-string"
+        """Find data value specifications by search string. Async version.
+
+        Parameters
+        ----------
+        search_string : str, default="*"
+            The search string to use.
+        body : dict | SearchStringRequestBody, optional
+            The search request body.
+        starts_with : bool, default=True
+            Whether the search string should match the start of the property.
+        ends_with : bool, default=False
+            Whether the search string should match the end of the property.
+        ignore_case : bool, default=False
+            Whether to ignore case in the search.
+        start_from : int, default=0
+            The starting element for the results.
+        page_size : int, default=100
+            The maximum number of results to return.
+        graph_query_depth : int, default=3
+            The depth of the graph query.
+        output_format : str, default="JSON"
+            The format of the output.
+        report_spec : str | dict, optional
+            The report specification.
+
+        Returns
+        -------
+        list | str
+            The search results.
+        """
+        url = f"{self.ref_data_designer_command_base}/data-value-specifications/by-search-string"
 
         params = {
-            'graph_query_depth': graph_query_depth,
-            'search_string': search_string,
-            'body': body,
-            'starts_with': starts_with,
-            'ends_with': ends_with,
-            'ignore_case': ignore_case,
-            'start_from': start_from,
-            'page_size': page_size,
-            'output_format': output_format,
-            'report_spec': report_spec,
+            "graph_query_depth": graph_query_depth,
+            "search_string": search_string,
+            "body": body,
+            "starts_with": starts_with,
+            "ends_with": ends_with,
+            "ignore_case": ignore_case,
+            "start_from": start_from,
+            "page_size": page_size,
+            "output_format": output_format,
+            "report_spec": report_spec,
         }
         params.update(kwargs)
-        params = {k: v for k, v in params.items() if v is not None or k == 'search_string'}
+        params = {k: v for k, v in params.items() if v is not None or k == "search_string"}
 
         return await self._async_find_request(
             url, "DataValueSpecification", self._generate_data_value_specification_output, **params
@@ -91,11 +128,41 @@ class DataDesigner(ServerClient):
         ignore_case: bool = False,
         start_from: int = 0,
         page_size: int = 100,
-        graph_query_depth: int = 3, output_format: str = "JSON",
+        graph_query_depth: int = 3,
+        output_format: str = "JSON",
         report_spec: str | dict = None,
-        **kwargs
+        **kwargs,
     ) -> list | str:
-        """Find data value specifications by search string."""
+        """Find data value specifications by search string.
+
+        Parameters
+        ----------
+        search_string : str, default="*"
+            The search string to use.
+        body : dict | SearchStringRequestBody, optional
+            The search request body.
+        starts_with : bool, default=True
+            Whether the search string should match the start of the property.
+        ends_with : bool, default=False
+            Whether the search string should match the end of the property.
+        ignore_case : bool, default=False
+            Whether to ignore case in the search.
+        start_from : int, default=0
+            The starting element for the results.
+        page_size : int, default=100
+            The maximum number of results to return.
+        graph_query_depth : int, default=3
+            The depth of the graph query.
+        output_format : str, default="JSON"
+            The format of the output.
+        report_spec : str | dict, optional
+            The report specification.
+
+        Returns
+        -------
+        list | str
+            The search results.
+        """
         loop = asyncio.get_event_loop()
         return loop.run_until_complete(
             self._async_find_data_value_specifications(
@@ -109,84 +176,229 @@ class DataDesigner(ServerClient):
                 page_size=page_size,
                 output_format=output_format,
                 report_spec=report_spec,
-                **kwargs
+                **kwargs,
             )
         )
     @dynamic_catch
-    async def _async_link_specialized_data_value_specification(self, spec_guid: str, grain_guid: str, body: dict | None = None) -> None:
+    async def _async_link_specialized_data_value_specification(
+        self, spec_guid: str, grain_guid: str, body: dict | None = None
+    ) -> None:
         """
         Link a specialized data value specification (grain) to a data value specification. Async version.
+
+        Parameters
+        ----------
+        spec_guid : str
+            The unique identifier of the data value specification.
+        grain_guid : str
+            The unique identifier of the specialized data value specification (grain).
+        body : dict, optional
+            The properties for the link.
+
+        Returns
+        -------
+        None
+
+        Raises
+        ------
+        PyegeriaException
+            If there are issues in communications, message format, or Egeria errors.
         """
-        url = f"{base_path(self, self.view_server)}/data-value-specifications/{spec_guid}/specialized-data-value-specifications/{grain_guid}/attach"
+        url = (
+            f"{self.ref_data_designer_command_base}/data-value-specifications/{spec_guid}"
+            f"/specialized-data-value-specifications/{grain_guid}/attach"
+        )
         await self._async_new_relationship_request(url, ["DataValueHierarchyProperties"], body)
 
     @dynamic_catch
-    def link_specialized_data_value_specification(self, spec_guid: str, grain_guid: str, body: dict | None = None) -> None:
+    def link_specialized_data_value_specification(
+        self, spec_guid: str, grain_guid: str, body: dict | None = None
+    ) -> None:
         """
         Link a specialized data value specification (grain) to a data value specification.
+
+        Parameters
+        ----------
+        spec_guid : str
+            The unique identifier of the data value specification.
+        grain_guid : str
+            The unique identifier of the specialized data value specification (grain).
+        body : dict, optional
+            The properties for the link.
+
+        Returns
+        -------
+        None
+
+        Raises
+        ------
+        PyegeriaException
+            If there are issues in communications, message format, or Egeria errors.
         """
         loop = asyncio.get_event_loop()
         loop.run_until_complete(self._async_link_specialized_data_value_specification(spec_guid, grain_guid, body))
 
     @dynamic_catch
-    async def _async_detach_specialized_data_value_specification(self, spec_guid: str, grain_guid: str, body: dict | None = None, cascade_delete: bool = False) -> None:
+    async def _async_detach_specialized_data_value_specification(
+        self, spec_guid: str, grain_guid: str, body: dict | None = None, cascade_delete: bool = False
+    ) -> None:
         """
         Detach a specialized data value specification (grain) from a data value specification. Async version.
+
+        Parameters
+        ----------
+        spec_guid : str
+            The unique identifier of the data value specification.
+        grain_guid : str
+            The unique identifier of the specialized data value specification (grain).
+        body : dict, optional
+            The properties for the detach request.
+        cascade_delete : bool, default=False
+            Whether to cascade delete the relationship.
+
+        Returns
+        -------
+        None
+
+        Raises
+        ------
+        PyegeriaException
+            If there are issues in communications, message format, or Egeria errors.
         """
-        url = f"{base_path(self, self.view_server)}/data-value-specifications/{spec_guid}/specialized-data-value-specification-definition/{grain_guid}/detach"
+        url = (
+            f"{self.ref_data_designer_command_base}/data-value-specifications/{spec_guid}"
+            f"/specialized-data-value-specification-definition/{grain_guid}/detach"
+        )
         await self._async_delete_relationship_request(url, body, cascade_delete)
 
     @dynamic_catch
-    def detach_specialized_data_value_specification(self, spec_guid: str, grain_guid: str, body: dict | None = None, cascade_delete: bool = False) -> None:
+    def detach_specialized_data_value_specification(
+        self, spec_guid: str, grain_guid: str, body: dict | None = None, cascade_delete: bool = False
+    ) -> None:
         """
         Detach a specialized data value specification (grain) from a data value specification.
+
+        Parameters
+        ----------
+        spec_guid : str
+            The unique identifier of the data value specification.
+        grain_guid : str
+            The unique identifier of the specialized data value specification (grain).
+        body : dict, optional
+            The properties for the detach request.
+        cascade_delete : bool, default=False
+            Whether to cascade delete the relationship.
+
+        Returns
+        -------
+        None
+
+        Raises
+        ------
+        PyegeriaException
+            If there are issues in communications, message format, or Egeria errors.
         """
         loop = asyncio.get_event_loop()
-        loop.run_until_complete(self._async_detach_specialized_data_value_specification(spec_guid, grain_guid, body, cascade_delete))
+        loop.run_until_complete(
+            self._async_detach_specialized_data_value_specification(spec_guid, grain_guid, body, cascade_delete)
+        )
 
     @dynamic_catch
-    async def _async_delete_data_value_specification(self, guid: str, body: dict | None = None, cascade_delete: bool = False) -> None:
+    async def _async_delete_data_value_specification(
+        self, guid: str, body: dict | None = None, cascade_delete: bool = False
+    ) -> None:
         """
         Delete a data value specification, data class, or data grain by GUID. Async version.
+
+        Parameters
+        ----------
+        guid : str
+            The unique identifier of the element to delete.
+        body : dict, optional
+            The properties for the delete request.
+        cascade_delete : bool, default=False
+            Whether to cascade delete the element.
+
+        Returns
+        -------
+        None
+
+        Raises
+        ------
+        PyegeriaException
+            If there are issues in communications, message format, or Egeria errors.
         """
-        url = f"{base_path(self, self.view_server)}/data-value-specifications/{guid}/delete"
+        url = f"{self.ref_data_designer_command_base}/data-value-specifications/{guid}/delete"
         await self._async_delete_element_request(url, body, cascade_delete)
 
     @dynamic_catch
     def delete_data_value_specification(self, guid: str, body: dict | None = None, cascade_delete: bool = False) -> None:
         """
         Delete a data value specification, data class, or data grain by GUID.
+
+        Parameters
+        ----------
+        guid : str
+            The unique identifier of the element to delete.
+        body : dict, optional
+            The properties for the delete request.
+        cascade_delete : bool, default=False
+            Whether to cascade delete the element.
+
+        Returns
+        -------
+        None
+
+        Raises
+        ------
+        PyegeriaException
+            If there are issues in communications, message format, or Egeria errors.
         """
         loop = asyncio.get_event_loop()
         loop.run_until_complete(self._async_delete_data_value_specification(guid, body, cascade_delete))
+
     @dynamic_catch
     async def _async_create_data_value_specification(self, body: dict | NewElementRequestBody) -> str:
         """
-        Create a new data value specification with parameters defined in the body. Async version.
+        Create a new data value specification. Async version.
+
         Parameters
         ----------
-        body: dict
-            - a dictionary containing the properties of the data value specification to be created.
+        body : dict | NewElementRequestBody
+            The properties of the data value specification to be created.
+
         Returns
         -------
         str
-            The GUID of the element - or "No element found"
+            The unique identifier of the newly created data value specification.
+
+        Raises
+        ------
+        PyegeriaException
+            If there are issues in communications, message format, or Egeria errors.
         """
-        url = f"{base_path(self, self.view_server)}/data-value-specifications"
+        url = f"{self.ref_data_designer_command_base}/data-value-specifications"
         return await self._async_create_element_body_request(url, ["DataValueSpecification"], body)
 
     @dynamic_catch
     def create_data_value_specification(self, body: dict | NewElementRequestBody) -> str:
         """
-        Create a new data value specification with parameters defined in the body.
+        Create a new data value specification.
+
         Parameters
         ----------
-        body: dict
-            - a dictionary containing the properties of the data value specification to be created.
+        body : dict | NewElementRequestBody
+            The properties of the data value specification to be created.
+
         Returns
         -------
         str
-            The GUID of the element - or "No element found"
+            The unique identifier of the newly created data value specification.
+
+        Raises
+        ------
+        PyegeriaException
+            If there are issues in communications, message format, or Egeria errors.
         """
         loop = asyncio.get_event_loop()
         return loop.run_until_complete(self._async_create_data_value_specification(body))
@@ -194,32 +406,45 @@ class DataDesigner(ServerClient):
     @dynamic_catch
     async def _async_create_data_grain(self, body: dict | NewElementRequestBody) -> str:
         """
-        Create a new data grain with parameters defined in the body. Async version.
+        Create a new data grain. Async version.
+
         Parameters
         ----------
-        body: dict
-            - a dictionary containing the properties of the data grain to be created.
+        body : dict | NewElementRequestBody
+            The properties of the data grain to be created.
+
         Returns
         -------
         str
-            The GUID of the element - or "No element found"
+            The unique identifier of the newly created data grain.
+
+        Raises
+        ------
+        PyegeriaException
+            If there are issues in communications, message format, or Egeria errors.
         """
-        # Ensure the correct type is set for grain
-        url = f"{base_path(self, self.view_server)}/data-value-specifications"
+        url = f"{self.ref_data_designer_command_base}/data-value-specifications"
         return await self._async_create_element_body_request(url, ["DataGrain"], body)
 
     @dynamic_catch
     def create_data_grain(self, body: dict | NewElementRequestBody) -> str:
         """
-        Create a new data grain with parameters defined in the body.
+        Create a new data grain.
+
         Parameters
         ----------
-        body: dict
-            - a dictionary containing the properties of the data grain to be created.
+        body : dict | NewElementRequestBody
+            The properties of the data grain to be created.
+
         Returns
         -------
         str
-            The GUID of the element - or "No element found"
+            The unique identifier of the newly created data grain.
+
+        Raises
+        ------
+        PyegeriaException
+            If there are issues in communications, message format, or Egeria errors.
         """
         loop = asyncio.get_event_loop()
         return loop.run_until_complete(self._async_create_data_grain(body))
@@ -244,7 +469,7 @@ class DataDesigner(ServerClient):
         str
             The GUID of the element - or "No element found"
         """
-        url = f"{base_path(self, self.view_server)}/data-value-specifications"
+        url = f"{self.ref_data_designer_command_base}/data-value-specifications"
         return await self._async_create_element_body_request(url, ["DataClass"], body)
 
     @dynamic_catch
@@ -294,7 +519,7 @@ class DataDesigner(ServerClient):
         PyegeriaUnauthorizedException
             the requesting user is not authorized to issue this request.
         """
-        url = f"{base_path(self, self.view_server)}/data-value-specifications/{data_class_guid}/delete"
+        url = f"{self.ref_data_designer_command_base}/data-value-specifications/{data_class_guid}/delete"
         await self._async_delete_element_request(url, body, cascade_delete)
         logger.info(f"Data class {data_class_guid} deleted.")
 
@@ -328,16 +553,6 @@ class DataDesigner(ServerClient):
         """
         loop = asyncio.get_event_loop()
         loop.run_until_complete(self._async_delete_data_class(data_class_guid, body, cascade_delete))
-
-    def __init__(self, view_server_name: str, platform_url: str, user_id: Optional[str] = None, user_pwd: Optional[str] = None,
-                 token: Optional[str] = None, ):
-        self.view_server = view_server_name
-        self.platform_url = platform_url
-        self.user_id = user_id
-        self.user_pwd = user_pwd
-        self.data_designer_root: str = (
-            f"{self.platform_url}/servers/{self.view_server}/api/open-metadata/data-designer")
-        ServerClient.__init__(self, view_server_name, platform_url, user_id=user_id, user_pwd=user_pwd, token=token, )
 
     #
     #    Data Structures
@@ -410,7 +625,7 @@ class DataDesigner(ServerClient):
 
         """
 
-        url = f"{base_path(self, self.view_server)}/data-structures"
+        url = f"{self.ref_data_designer_command_base}/data-structures"
 
         return await self._async_create_element_body_request(url, ["DataStructure"], body)
 
@@ -557,7 +772,7 @@ class DataDesigner(ServerClient):
         }
 
         """
-        url = f"{self.data_designer_root}/data-structures/from-template"
+        url = f"{self.ref_data_designer_command_base}/data-structures/from-template"
         return await self._async_create_element_from_template(url, body)
 
     @dynamic_catch
@@ -688,7 +903,7 @@ class DataDesigner(ServerClient):
 
         """
 
-        url = f"{base_path(self, self.view_server)}/data-structures/{data_struct_guid}/update"
+        url = f"{self.ref_data_designer_command_base}/data-structures/{data_struct_guid}/update"
         await self._async_update_element_body_request(url, ["DataStructure"], body)
         logger.info(f"Data structure {data_struct_guid} updated.")
 
@@ -800,7 +1015,7 @@ class DataDesigner(ServerClient):
 
         """
 
-        url = (f"{base_path(self, self.view_server)}/data-structures/{parent_data_struct_guid}"
+        url = (f"{self.ref_data_designer_command_base}/data-structures/{parent_data_struct_guid}"
                f"/member-data-fields/{member_data_field_guid}/attach")
         await self._async_new_relationship_request(url, ["MemberDataFieldProperties"], body)
         logger.info(f"Data field {member_data_field_guid} attached to Data structure {parent_data_struct_guid}.")
@@ -910,7 +1125,7 @@ class DataDesigner(ServerClient):
 
         """
 
-        url = (f"{self.data_designer_root}/data-structures/{parent_data_struct_guid}"
+        url = (f"{self.ref_data_designer_command_base}/data-structures/{parent_data_struct_guid}"
                f"/member-data-fields/{member_data_field_guid}/detach")
 
         await self._async_delete_relationship_request(url, body, cascade_delete)
@@ -972,7 +1187,7 @@ class DataDesigner(ServerClient):
     async def _async_link_nested_data_field(self, parent_data_field_guid: str, nested_data_field_guid: str,
                                              body: Optional[dict | NewRelationshipRequestBody] = None) -> None:
         """Link a nested data field to a parent data field (NestedDataField relationship). Async version."""
-        url = (f"{base_path(self, self.view_server)}/data-fields/{parent_data_field_guid}"
+        url = (f"{self.ref_data_designer_command_base}/data-fields/{parent_data_field_guid}"
                f"/nested-data-fields/{nested_data_field_guid}/attach")
         await self._async_new_relationship_request(url, ["NestedDataFieldProperties"], body)
         logger.info(f"Nested data field {nested_data_field_guid} linked to parent {parent_data_field_guid}.")
@@ -988,7 +1203,7 @@ class DataDesigner(ServerClient):
     async def _async_detach_nested_data_field(self, parent_data_field_guid: str, nested_data_field_guid: str,
                                                body: Optional[dict] = None, cascade_delete: bool = False) -> None:
         """Detach a nested data field from its parent data field. Async version."""
-        url = (f"{base_path(self, self.view_server)}/data-fields/{parent_data_field_guid}"
+        url = (f"{self.ref_data_designer_command_base}/data-fields/{parent_data_field_guid}"
                f"/nested-data-fields/{nested_data_field_guid}/detach")
         await self._async_delete_relationship_request(url, body, cascade_delete)
         logger.info(f"Nested data field {nested_data_field_guid} detached from parent {parent_data_field_guid}.")
@@ -1048,7 +1263,7 @@ class DataDesigner(ServerClient):
 
         """
 
-        url = f"{self.data_designer_root}/data-structures/{data_struct_guid}/delete"
+        url = f"{self.ref_data_designer_command_base}/data-structures/{data_struct_guid}/delete"
 
         await self._async_delete_element_request(url, body, cascade_delete)
         logger.info(f"Data structure {data_struct_guid} deleted.")
@@ -1238,7 +1453,7 @@ class DataDesigner(ServerClient):
 
         """
 
-        url = f"{base_path(self, self.view_server)}/data-structures/by-search-string"
+        url = f"{self.ref_data_designer_command_base}/data-structures/by-search-string"
         
         # Merge explicit parameters with kwargs
         params = {
@@ -1406,7 +1621,7 @@ class DataDesigner(ServerClient):
 
         if name is None and "filter_string" in kwargs:
             name = kwargs.pop("filter_string")
-        url = f"{base_path(self, self.view_server)}/data-structures/by-name"
+        url = f"{self.ref_data_designer_command_base}/data-structures/by-name"
         params = {
             'graph_query_depth': graph_query_depth,
             'classification_names': classification_names,
@@ -1523,7 +1738,7 @@ class DataDesigner(ServerClient):
 
         if guid is None and "data_struct_guid" in kwargs:
             guid = kwargs.pop("data_struct_guid")
-        url = (f"{base_path(self, self.view_server)}/data-structures/{guid}/retrieve")
+        url = (f"{self.ref_data_designer_command_base}/data-structures/{guid}/retrieve")
         type_ = element_type if element_type else "DataStructure"
         params = {
             'graph_query_depth': graph_query_depth,
@@ -2005,7 +2220,7 @@ class DataDesigner(ServerClient):
 
         """
 
-        url = f"{base_path(self, self.view_server)}/data-fields"
+        url = f"{self.ref_data_designer_command_base}/data-fields"
 
         return await self._async_create_element_body_request(url, ["DataField"], body)
 
@@ -2151,7 +2366,7 @@ class DataDesigner(ServerClient):
         PyegeriaUnauthorizedException
             the requesting user is not authorized to issue this request.
         """
-        url = f"{base_path(self, self.view_server)}/data-fields/{data_field_guid}/delete"
+        url = f"{self.ref_data_designer_command_base}/data-fields/{data_field_guid}/delete"
         await self._async_delete_element_request(url, body, cascade_delete)
         logger.info(f"Data field {data_field_guid} deleted.")
 
@@ -2255,7 +2470,7 @@ class DataDesigner(ServerClient):
 
         """
 
-        url = f"{base_path(self, self.view_server)}/data-fields/from-template"
+        url = f"{self.ref_data_designer_command_base}/data-fields/from-template"
 
         return await self._async_create_element_from_template(url, body)
 
@@ -2385,7 +2600,7 @@ class DataDesigner(ServerClient):
 
         """
 
-        url = f"{base_path(self, self.view_server)}/data-structures/{data_struct_guid}/update"
+        url = f"{self.ref_data_designer_command_base}/data-structures/{data_struct_guid}/update"
         await self._async_update_element_body_request(url, ["DataStructure"], body)
         logger.info(f"Data structure {data_struct_guid} updated.")
 
@@ -2497,7 +2712,7 @@ class DataDesigner(ServerClient):
 
         """
 
-        url = (f"{base_path(self, self.view_server)}/data-structures/{parent_data_struct_guid}"
+        url = (f"{self.ref_data_designer_command_base}/data-structures/{parent_data_struct_guid}"
                f"/member-data-fields/{member_data_field_guid}/attach")
         await self._async_new_relationship_request(url, ["MemberDataFieldProperties"], body)
         logger.info(f"Data field {member_data_field_guid} attached to Data structure {parent_data_struct_guid}.")
@@ -2607,7 +2822,7 @@ class DataDesigner(ServerClient):
 
         """
 
-        url = (f"{self.data_designer_root}/data-structures/{parent_data_struct_guid}"
+        url = (f"{self.ref_data_designer_command_base}/data-structures/{parent_data_struct_guid}"
                f"/member-data-fields/{member_data_field_guid}/detach")
 
         await self._async_delete_relationship_request(url, body, cascade_delete)
@@ -2669,7 +2884,7 @@ class DataDesigner(ServerClient):
     async def _async_link_nested_data_field(self, parent_data_field_guid: str, nested_data_field_guid: str,
                                              body: Optional[dict | NewRelationshipRequestBody] = None) -> None:
         """Link a nested data field to a parent data field (NestedDataField relationship). Async version."""
-        url = (f"{base_path(self, self.view_server)}/data-fields/{parent_data_field_guid}"
+        url = (f"{self.ref_data_designer_command_base}/data-fields/{parent_data_field_guid}"
                f"/nested-data-fields/{nested_data_field_guid}/attach")
         await self._async_new_relationship_request(url, ["NestedDataFieldProperties", "MemberDataFieldProperties"], body)
         logger.info(f"Nested data field {nested_data_field_guid} linked to parent {parent_data_field_guid}.")
@@ -2685,7 +2900,7 @@ class DataDesigner(ServerClient):
     async def _async_detach_nested_data_field(self, parent_data_field_guid: str, nested_data_field_guid: str,
                                                body: Optional[dict] = None, cascade_delete: bool = False) -> None:
         """Detach a nested data field from its parent data field. Async version."""
-        url = (f"{base_path(self, self.view_server)}/data-fields/{parent_data_field_guid}"
+        url = (f"{self.ref_data_designer_command_base}/data-fields/{parent_data_field_guid}"
                f"/nested-data-fields/{nested_data_field_guid}/detach")
         await self._async_delete_relationship_request(url, body, cascade_delete)
         logger.info(f"Nested data field {nested_data_field_guid} detached from parent {parent_data_field_guid}.")
@@ -2745,7 +2960,7 @@ class DataDesigner(ServerClient):
 
         """
 
-        url = f"{self.data_designer_root}/data-structures/{data_struct_guid}/delete"
+        url = f"{self.ref_data_designer_command_base}/data-structures/{data_struct_guid}/delete"
 
         await self._async_delete_element_request(url, body, cascade_delete)
         logger.info(f"Data structure {data_struct_guid} deleted.")
@@ -2960,7 +3175,7 @@ class DataDesigner(ServerClient):
 
         """
 
-        url = f"{base_path(self, self.view_server)}/data-fields/by-search-string"
+        url = f"{self.ref_data_designer_command_base}/data-fields/by-search-string"
         
         # Merge explicit parameters with kwargs
         params = {
@@ -3147,7 +3362,7 @@ class DataDesigner(ServerClient):
         }
         """
 
-        url = f"{base_path(self, self.view_server)}/data-fields/by-name"
+        url = f"{self.ref_data_designer_command_base}/data-fields/by-name"
 
         response = await self._async_get_name_request(url, _type="DataField",
                                                       _gen_output=self._generate_data_field_output,
@@ -3211,7 +3426,7 @@ class DataDesigner(ServerClient):
                                              graph_query_depth: int = 3, output_format: str = 'JSON',
                                              report_spec: str | dict = None) -> list | str:
         """Get a data field by its GUID. Async version."""
-        url = f"{base_path(self, self.view_server)}/data-fields/{guid}/retrieve"
+        url = f"{self.ref_data_designer_command_base}/data-fields/{guid}/retrieve"
         _type = element_type if element_type else "DataField"
         return await self._async_get_guid_request(url, _type=_type,
                                                    _gen_output=self._generate_data_field_output,
@@ -3279,7 +3494,7 @@ class DataDesigner(ServerClient):
         }
         """
 
-        url = f"{base_path(self, self.view_server)}/data-value-specifications/by-name"
+        url = f"{self.ref_data_designer_command_base}/data-value-specifications/by-name"
 
         response = await self._async_get_name_request(url, _type="DataValueSpecification",
                                                       _gen_output=self._generate_data_value_specification_output,
@@ -3387,7 +3602,7 @@ class DataDesigner(ServerClient):
 
         """
 
-        url = (f"{base_path(self, self.view_server)}/data-value-specifications/{guid}/retrieve")
+        url = (f"{self.ref_data_designer_command_base}/data-value-specifications/{guid}/retrieve")
         type = element_type if element_type else "DataValueSpecification"
 
         response = await self._async_get_guid_request(url, _type=type,
@@ -3461,7 +3676,7 @@ class DataDesigner(ServerClient):
         """
         if guid is None and "data_class_guid" in kwargs:
             guid = kwargs.pop("data_class_guid")
-        url = f"{base_path(self, self.view_server)}/data-value-specifications/{guid}/retrieve"
+        url = f"{self.ref_data_designer_command_base}/data-value-specifications/{guid}/retrieve"
         _type = element_type if element_type else "DataClass"
         params = {
             'graph_query_depth': graph_query_depth,
@@ -3575,7 +3790,7 @@ class DataDesigner(ServerClient):
 
         """
 
-        url = f"{base_path(self, self.view_server)}/data-classifications"
+        url = f"{self.ref_data_designer_command_base}/data-classifications"
 
         return await self._async_create_element_body_request(url, ["DataClassification"], body)
 
@@ -3727,7 +3942,7 @@ class DataDesigner(ServerClient):
 
         """
 
-        url = f"{base_path(self, self.view_server)}/data-classifications/{data_classification_guid}/update"
+        url = f"{self.ref_data_designer_command_base}/data-classifications/{data_classification_guid}/update"
         await self._async_update_element_body_request(url, ["DataClassification"], body)
         logger.info(f"Data classification {data_classification_guid} updated.")
 
@@ -3848,7 +4063,7 @@ class DataDesigner(ServerClient):
 
         """
 
-        url = (f"{base_path(self, self.view_server)}/data-classifications/{data_classification_guid}"
+        url = (f"{self.ref_data_designer_command_base}/data-classifications/{data_classification_guid}"
                f"/data-fields/{data_field_guid}/attach")
         await self._async_new_relationship_request(url, ["DataFieldClassificationProperties"], body)
         logger.info(f"Data classification {data_classification_guid} linked to data field {data_field_guid}.")
@@ -3953,7 +4168,7 @@ class DataDesigner(ServerClient):
 
         """
 
-        url = (f"{base_path(self, self.view_server)}/data-classifications/{data_classification_guid}"
+        url = (f"{self.ref_data_designer_command_base}/data-classifications/{data_classification_guid}"
                f"/data-fields/{data_field_guid}/detach")
 
         await self._async_delete_relationship_request(url, body, cascade_delete)
@@ -4060,7 +4275,7 @@ class DataDesigner(ServerClient):
 
         """
 
-        url = (f"{base_path(self, self.view_server)}/data-definitions/{data_definition_guid}"
+        url = (f"{self.ref_data_designer_command_base}/data-definitions/{data_definition_guid}"
                f"/data-value-specification-definition/{data_class_guid}/attach")
 
         await self._async_new_relationship_request(url, ["DataValueDefinitionProperties"], body)
@@ -4161,7 +4376,7 @@ class DataDesigner(ServerClient):
 
         """
 
-        url = (f"{base_path(self, self.view_server)}/data-definitions/{data_definition_guid}"
+        url = (f"{self.ref_data_designer_command_base}/data-definitions/{data_definition_guid}"
                f"/data-value-specification-definition/{data_class_guid}/detach")
 
         await self._async_delete_relationship_request(url, body, cascade_delete)
@@ -4221,7 +4436,7 @@ class DataDesigner(ServerClient):
     async def _async_link_nested_data_class(self, parent_data_class_guid: str, child_data_class_guid: str,
                                              body: Optional[dict | NewRelationshipRequestBody] = None) -> None:
         """Link a child data class to a parent via DataClassComposition relationship. Async version."""
-        url = (f"{base_path(self, self.view_server)}/data-classes/{parent_data_class_guid}"
+        url = (f"{self.ref_data_designer_command_base}/data-classes/{parent_data_class_guid}"
                f"/nested-data-classes/{child_data_class_guid}/attach")
         await self._async_new_relationship_request(url, ["DataClassCompositionProperties"], body)
         logger.info(f"Nested data class {child_data_class_guid} linked to parent {parent_data_class_guid}.")
@@ -4237,7 +4452,7 @@ class DataDesigner(ServerClient):
     async def _async_detach_nested_data_class(self, parent_data_class_guid: str, child_data_class_guid: str,
                                                body: Optional[dict] = None, cascade_delete: bool = False) -> None:
         """Detach a child data class from its parent (DataClassComposition). Async version."""
-        url = (f"{base_path(self, self.view_server)}/data-classes/{parent_data_class_guid}"
+        url = (f"{self.ref_data_designer_command_base}/data-classes/{parent_data_class_guid}"
                f"/nested-data-classes/{child_data_class_guid}/detach")
         await self._async_delete_relationship_request(url, body, cascade_delete)
         logger.info(f"Nested data class {child_data_class_guid} detached from parent {parent_data_class_guid}.")
@@ -4254,7 +4469,7 @@ class DataDesigner(ServerClient):
     async def _async_link_specialist_data_class(self, parent_data_class_guid: str, child_data_class_guid: str,
                                                  body: Optional[dict | NewRelationshipRequestBody] = None) -> None:
         """Link a specialized (child) data class to a parent via SpecializedDataClass relationship. Async version."""
-        url = (f"{base_path(self, self.view_server)}/data-classes/{parent_data_class_guid}"
+        url = (f"{self.ref_data_designer_command_base}/data-classes/{parent_data_class_guid}"
                f"/specialized-data-classes/{child_data_class_guid}/attach")
         await self._async_new_relationship_request(url, ["SpecializedDataClassProperties"], body)
         logger.info(f"Specialized data class {child_data_class_guid} linked to parent {parent_data_class_guid}.")
@@ -4271,7 +4486,7 @@ class DataDesigner(ServerClient):
     async def _async_detach_specialist_data_class(self, parent_data_class_guid: str, child_data_class_guid: str,
                                                    body: Optional[dict] = None, cascade_delete: bool = False) -> None:
         """Detach a specialized (child) data class from its parent. Async version."""
-        url = (f"{base_path(self, self.view_server)}/data-classes/{parent_data_class_guid}"
+        url = (f"{self.ref_data_designer_command_base}/data-classes/{parent_data_class_guid}"
                f"/specialized-data-classes/{child_data_class_guid}/detach")
         await self._async_delete_relationship_request(url, body, cascade_delete)
         logger.info(f"Specialized data class {child_data_class_guid} detached from parent {parent_data_class_guid}.")
@@ -4330,7 +4545,7 @@ class DataDesigner(ServerClient):
 
         """
 
-        url = (f"{base_path(self, self.view_server)}/data-definitions/{data_definition_guid}"
+        url = (f"{self.ref_data_designer_command_base}/data-definitions/{data_definition_guid}"
                f"/semantic-definition/{glossary_term_guid}/attach")
 
         await self._async_new_relationship_request(url, ["SemanticDefinitionProperties"], body)
@@ -4431,7 +4646,7 @@ class DataDesigner(ServerClient):
 
         """
 
-        url = (f"{base_path(self, self.view_server)}/data-definitions/{data_definition_guid}"
+        url = (f"{self.ref_data_designer_command_base}/data-definitions/{data_definition_guid}"
                f"/semantic-definition/{glossary_term_guid}/detach")
         await self._async_delete_relationship_request(url, body, cascade_delete)
         logger.info(f"Data definition {data_definition_guid} detached from term {glossary_term_guid}.")
@@ -4536,7 +4751,7 @@ class DataDesigner(ServerClient):
 
         """
 
-        url = (f"{base_path(self, self.view_server)}/certification-types/{certification_type_guid}"
+        url = (f"{self.ref_data_designer_command_base}/certification-types/{certification_type_guid}"
                f"/data-structure-definition/{data_structure_guid}/attach")
         await self._async_new_relationship_request(url, ["CertificationTypeProperties"], body)
         logger.info(f"Certification type {certification_type_guid} linked to {data_structure_guid}.")
@@ -4637,7 +4852,7 @@ class DataDesigner(ServerClient):
 
         """
 
-        url = (f"{base_path(self, self.view_server)}/certification-stypes/{certification_type_guid}"
+        url = (f"{self.ref_data_designer_command_base}/certification-stypes/{certification_type_guid}"
                f"/data-structure-definition/{data_structure_guid}/detach")
 
         await self._async_delete_relationship_request(url, body, cascade_delete)
@@ -5053,7 +5268,7 @@ class DataDesigner(ServerClient):
         """
         Link a Data Value Specification to an element (DataValueAssignment relationship). Async version.
         """
-        url = f"{base_path(self, self.view_server)}/elements/{element_guid}/data-value-specifications/{spec_guid}/attach"
+        url = f"{self.ref_data_designer_command_base}/elements/{element_guid}/data-value-specifications/{spec_guid}/attach"
         await self._async_new_relationship_request(url, ["DataValueAssignmentProperties"], body)
         logger.info(f"Data Value Specification {spec_guid} assigned to element {element_guid}.")
 
@@ -5077,7 +5292,7 @@ class DataDesigner(ServerClient):
         body: dict | UpdateElementRequestBody
             - a dictionary containing the properties to update.
         """
-        url = f"{base_path(self, self.view_server)}/data-fields/{data_field_guid}/update"
+        url = f"{self.ref_data_designer_command_base}/data-fields/{data_field_guid}/update"
         await self._async_update_element_body_request(url, ["DataField"], body)
         logger.info(f"Data field {data_field_guid} updated.")
 
@@ -5101,7 +5316,7 @@ class DataDesigner(ServerClient):
         -------
         None
         """
-        url = f"{base_path(self, self.view_server)}/data-value-specifications/{guid}/update"
+        url = f"{self.ref_data_designer_command_base}/data-value-specifications/{guid}/update"
         await self._async_update_element_body_request(url, ["DataValueSpecification"], body)
 
     @dynamic_catch

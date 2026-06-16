@@ -42,7 +42,7 @@ console = Console(width=250)
 def jprint(info, comment=None):
     if comment:
         print(comment)
-    print(json.dumps(info, indent=2))
+    print_json(data=info)
 
 
 def valid_guid(guid):
@@ -109,9 +109,9 @@ class TestDataDesigner:
             print(
                 f"\n\tDuration was {duration:.2f} seconds, Type: {type(response)}"
             )
-            if type(response) is list:
+            if isinstance(response, (list, dict)):
                 print_json(data=response)
-            elif type(response) is str:
+            elif isinstance(response, str):
                 console.print("\n\n\t Response is: " + response)
 
             assert True
@@ -253,9 +253,9 @@ class TestDataDesigner:
             print(
                 f"\n\tDuration was {duration:.2f} seconds, Type: {type(response)}"
                 )
-            if type(response) is list:
+            if isinstance(response, (list, dict)):
                 print_json(data=response)
-            elif type(response) is str:
+            elif isinstance(response, str):
                 console.print("\n\n\t Response is: " + response)
 
             assert True
@@ -297,9 +297,9 @@ class TestDataDesigner:
             print(
                 f"\n\tDuration was {duration:.2f} seconds, Type: {type(response)}"
                 )
-            if type(response) is list:
+            if isinstance(response, (list, dict)):
                 print_json(data=response)
-            elif type(response) is str:
+            elif isinstance(response, str):
                 console.print("\n\n\t Response is: " + response)
 
             assert True
@@ -354,9 +354,9 @@ class TestDataDesigner:
             print(
                 f"\n\tDuration was {duration:.2f} seconds, Type: {type(response)}"
                 )
-            if type(response) is list:
+            if isinstance(response, (list, dict)):
                 print_json(data=response)
-            elif type(response) is str:
+            elif isinstance(response, str):
                 console.print("\n\n\t Response is: " + response)
 
             assert True
@@ -441,9 +441,9 @@ class TestDataDesigner:
             print(
                 f"\n\tDuration was {duration:.2f} seconds, Type: {type(response)}"
             )
-            if type(response) is list:
+            if isinstance(response, (list, dict)):
                 print_json(data=response)
-            elif type(response) is str:
+            elif isinstance(response, str):
                 console.print("\n\n\t Response is: " + response)
 
             assert True
@@ -636,9 +636,9 @@ class TestDataDesigner:
             print(
                 f"\n\tDuration was {duration:.2f} seconds, Type: {type(response)}"
                 )
-            if type(response) is list:
+            if isinstance(response, (list, dict)):
                 print_json(data=response)
-            elif type(response) is str:
+            elif isinstance(response, str):
                 console.print("\n\n\t Response is: " + response)
 
             assert True
@@ -677,9 +677,9 @@ class TestDataDesigner:
             print(
                 f"\n\tDuration was {duration:.2f} seconds, Type: {type(response)}"
                 )
-            if type(response) is list:
+            if isinstance(response, (list, dict)):
                 print_json(data=response)
-            elif type(response) is str:
+            elif isinstance(response, str):
                 console.print("\n\n\t Response is: " + response)
 
             assert True
@@ -732,9 +732,9 @@ class TestDataDesigner:
             print(
                 f"\n\tDuration was {duration:.2f} seconds, Type: {type(response)}"
                 )
-            if type(response) is list:
+            if isinstance(response, (list, dict)):
                 print_json(data=response)
-            elif type(response) is str:
+            elif isinstance(response, str):
                 console.print("\n\n\t Response is: " + response)
 
             assert True
@@ -761,18 +761,18 @@ class TestDataDesigner:
             print(
                 f"\n\tDuration was {duration:.2f} seconds, Type: {type(response)}"
                 )
-            if type(response) is list:
+            if isinstance(response, (list, dict)):
                 print_json(data=response)
-            elif type(response) is str:
+            elif isinstance(response, str):
                 console.print("\n\n\t Response is: " + response)
             duration = time.perf_counter() - start_time
             print(
                 f"\n\tDuration was {duration:.2f} seconds, Type: {type(response)}"
                 )
 
-            if type(response) is list:
+            if isinstance(response, (list, dict)):
                 print_json(data=response)
-            elif type(response) is str:
+            elif isinstance(response, str):
                 console.print("\n\n\t Response is: " + response)
 
             assert True
@@ -797,9 +797,9 @@ class TestDataDesigner:
             print(
                 f"\n\tDuration was {duration:.2f} seconds, Type: {type(response)}"
                 )
-            if type(response) is list:
+            if isinstance(response, (list, dict)):
                 print_json(data=response)
-            elif type(response) is str:
+            elif isinstance(response, str):
                 console.print("\n\n\t Response is: " + response)
 
             assert True
@@ -936,7 +936,7 @@ class TestDataDesigner:
             m_client = DataDesigner(self.view_server, self.platform_url)
             m_client.create_egeria_bearer_token(self.user, self.password)
             response = m_client.find_data_value_specifications(search_string="*", output_format="JSON", report_spec="Data-Value-Spec")
-            print(json.dumps(response, indent=4))
+            print_json(data=response)
             assert isinstance(response, (list, str))
         except Exception as e:
             print_basic_exception(e)
