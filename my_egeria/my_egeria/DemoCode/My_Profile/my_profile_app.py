@@ -126,7 +126,8 @@ class MyProfileApp(App):
         self.team_members: list[list] = []
         self.max_mermaid_node_count = 0  # This is to tell egeria we dont want mermaid graphs in the response packet.
         self.graph_query_depth = 0  # This tell egeria not to include relationships in the response packet
-        # self.user_identities = None
+        self.user_GUID = ""
+        self.user_data = {}
 
     def compose(self) -> ComposeResult:
         yield Header()
@@ -225,6 +226,26 @@ class MyProfileApp(App):
         except PyegeriaException as e:
             self.log(f"Error retrieving User-Identities: {e!s}")
             self.user_identities = {}
+
+        # User GUID
+
+        try:
+            self.user_data  = exec_report_spec(format_set_name="Actor-Profiles",
+                                                       output_format="DICT",
+                                                       params = {"search_string" : self.user_name},
+                                                       view_server=self.view_server,
+                                                       view_url=self.platform_url,
+                                                       user=self.user_name,
+                                                       user_pass=self.user_password)
+        except PyegeriaException as e:
+            print_basic_exception(e)
+            self.log(f"Error retrieving actor profile: {e!s}")
+            self.exit(420)
+        self.log(f"Actor Profile retrieved: {self.user_data}")
+        self.user_data = self.user_data.get("data")
+        self.log(f"Extracted data : {self.user_data}")
+        self.user_GUID = self.user_data[0].get("GUID")
+        self.log(f"User GUID retrieved: {self.user_GUID}")
 
         # Normalize expected keys
         self.full_name = self.user_profile.get("Full Name") or ""
@@ -575,7 +596,8 @@ class MyProfileApp(App):
                                                       self.view_server,
                                                       self.platform_url,
                                                       self.karma_points,
-                                                      self.user_profile
+                                                      self.user_profile,
+                                                      self.user_GUID
                                                     ),
                                    callback = self.edit_profile_callback)
         elif selected_option == "User Bookmarks":

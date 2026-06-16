@@ -35,7 +35,7 @@ class EditTeamsScreen(ModalScreen):
         yield ScrollableContainer(id="edit_teams_container")
         yield Footer()
 
-    def on_mount(self):
+    async def on_mount(self):
         self.log("Edit teams screen mounted")
         self.title = "Egeria - my_profile"
         self.sub_title = "Edit Teams"
@@ -44,18 +44,23 @@ class EditTeamsScreen(ModalScreen):
             main_screen = self.app.get_screen("main")
             self.log(f"Main screen found: {main_screen}")
             # Access the teams table in the main screen class
-            self.my_teams_table = main_screen.query_one("#teams_table", DataTable)
-            self.log(f"Teams table found: {self.my_teams_table}")
-            self.my_teams_table.cursor_type = "row"
-            self.my_teams_table.zebra = True
-            self.my_teams_table.display = True
-            self.my_teams_table.visible = True
+            try:
+                self.my_teams_table = main_screen.query_one("#teams_table", DataTable)
+                self.log(f"Teams table found: {self.my_teams_table}")
+                self.my_teams_table.cursor_type = "row"
+                self.my_teams_table.zebra_stripes = True
+                self.my_teams_table.display = True
+                self.my_teams_table.visible = True
+            except NoMatches as e:
+                # If there is an error finding the teams table
+                self.log(f"Teams data table not found, possible timing error: {e}")
+                await self.dismiss(401)
             try:
                 # Access the edit teams container in the screen composition objects
                 self.teams_container = self.query_one("#edit_teams_container", ScrollableContainer)
                 self.log(f"Teams container found: {self.teams_container}")
                 # Mount the table into the container
-                self.teams_container.mount(self.my_teams_table)
+                await self.teams_container.mount(self.my_teams_table)
                 self.log("Table mounted into container")
                 # To make sure, refresh the container object on the display
                 self.teams_container.refresh(layout=True)
@@ -65,18 +70,20 @@ class EditTeamsScreen(ModalScreen):
             except NoMatches as e:
                 # If there is an error finding the container
                 self.log(f"Edit teams container not found - Error: {e}")
-                self.dismiss(400)
+                await self.dismiss(400)
         except NoMatches as e:
             # If there is an error finding the teams table
-            self.log(f"Teams table not found, possible timing error: {e}")
-            self.dismiss(401)
+            self.log(f"Link to Main Screen object failed: {e}")
+            await self.dismiss(402)
 
     def on_unmount(self):
         """ When the screen is unmounted move the table back to the main screen"""
         try:
             main_screen = self.app.get_screen("main")
             main_container = main_screen.query_one("#main_teams_container", ScrollableContainer)
+            main_container.remove_children()
             main_container.mount(self.my_teams_table)
+            main_container.refresh(layout=True)
         except NoMatches:
             self.log("Error moving teams table back to main screen")
 
@@ -87,13 +94,15 @@ class EditTeamsScreen(ModalScreen):
 
     def action_delete_row(self):
         """ The user has selected the delete row option """
+        self.log(f"Delete row selected, row key: {self.row_key}")
         # If there is a row selected, delete it and clear the row key variable
         if self.row_key:
             self.my_teams_table.remove_row(self.row_key)
             self.my_teams_table.refresh()
+            self.teams_container.refresh(layout=True)
             self.row_key = None
         # If there is no row key in the variable, inform the user by mounting a message into the container
         # and wait for any further actions.
         else:
             self.teams_container.mount(Static("Please select a row to delete prior to using the hot key!"))
-            self.teams_container.refresh()
+            self.teams_container.refresh(layout=True)

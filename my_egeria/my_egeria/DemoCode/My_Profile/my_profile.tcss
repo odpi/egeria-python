@@ -19,7 +19,8 @@ Screen {
     layout: grid;
     grid-size: 3;
     grid-columns: 1fr 1fr 1fr;
-    grid-rows: 3 1fr 1fr 1fr 1;
+    /*grid-rows: 3 1fr 1fr 1fr 1;*/
+    grid-rows: 1fr 1fr 1fr;
     grid-gutter: 1;
 }
 
@@ -43,15 +44,15 @@ ModalScreen {
     grid-gutter: 2;
 }
 
-EditProfileScreen {
+.EditProfileScreen {
     grid-rows: auto auto 1fr auto;
 }
 
-EditTeamsScreen {
+.EditTeamsScreen {
     grid-rows: auto auto auto 1fr auto;
 }
 
-EditRolesScreen, EditCommunitiesScreen, EditIdentitiesScreen, StatusScreen {
+.EditRolesScreen, .EditCommunitiesScreen, .EditIdentitiesScreen,.StatusScreen {
     grid-rows: auto auto 1fr auto;
 }
 

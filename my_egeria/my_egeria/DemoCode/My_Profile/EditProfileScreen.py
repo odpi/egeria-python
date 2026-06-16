@@ -40,7 +40,8 @@ class EditProfileScreen(ModalScreen[int]):
                         view_server,
                         platform_url,
                         karma_points,
-                        user_profile
+                        user_profile,
+                        user_GUID
                  ):
         super().__init__()
         load_app_config()
@@ -51,6 +52,7 @@ class EditProfileScreen(ModalScreen[int]):
         self.platform_url = platform_url
         self.karma_points = karma_points
         self.user_profile = user_profile
+        self.user_GUID = user_GUID
         print("Platform:", self.platform_url)
         print("View Server:", self.view_server)
 
@@ -130,11 +132,6 @@ class EditProfileScreen(ModalScreen[int]):
     @on(Button.Pressed, "#edit_profile_btn")
     def create_profile(self) -> Any:
         """Update profile in Egeria from data provided in Input fields."""
-        profile_guid = self.user_profile.get("guid") or self.user_profile.get("GUID")
-        if not profile_guid:
-            self.log("Error: Profile GUID not found, cannot update.")
-            self.dismiss(401)
-            return (401)
 
         input_q_name = "Person" + self.query_one("#user_employee_id", Input).value + \
                         self.query_one("#user_resident_country", Input).value + \
@@ -212,8 +209,8 @@ class EditProfileScreen(ModalScreen[int]):
         try:
             new_profile_inst = Egeria(self.view_server, self.platform_url, self.user_name, self.user_password)
             new_profile_inst.create_egeria_bearer_token(self.user_name, self.user_password)
-            new_profile_inst.update_actor_profile(profile_guid, self.update_element_request_body)
-            self.log(f"Profile updated for GUID: {profile_guid}")
+            new_profile_inst.update_actor_profile(self.user_GUID, self.update_element_request_body)
+            self.log(f"Profile updated for GUID: {self.user_GUID}")
             self.dismiss(200)
             return (200)
         except PyegeriaException as e:
