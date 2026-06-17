@@ -74,6 +74,7 @@ class BaseServerClient:
             page_size: int = None,
             local_qualifier: str = None,
             organization_name: str = None,
+            time_out: int = None,
     ):
         server_name = server_name or settings.Environment.egeria_view_server
         platform_url = platform_url or settings.Environment.egeria_platform_url
@@ -90,6 +91,7 @@ class BaseServerClient:
         self.token = token
         self.local_qualifier = local_qualifier or settings.User_Profile.egeria_local_qualifier
         self.organization_name = organization_name or settings.Environment.organization_name
+        self.time_out = time_out or settings.Debug.timeout_seconds or 30
         self._valid_value_cache = {}
 
         self.exc_type = None
@@ -452,7 +454,7 @@ class BaseServerClient:
             request_type: str,
             endpoint: str,
             payload: str | dict = None,
-            time_out: int = 30,
+            time_out: int = None,
             is_json: bool = True,
             params: dict | None = None
     ) -> Response | str:
@@ -487,6 +489,9 @@ class BaseServerClient:
         PyegeriaInvalidParameterException
             If the request parameters are invalid.
         """
+        if time_out is None:
+            time_out = self.time_out
+        
         context: dict = {}
         context['class name'] = __class__.__name__
         context['caller method'] = inspect.currentframe().f_back.f_code.co_name

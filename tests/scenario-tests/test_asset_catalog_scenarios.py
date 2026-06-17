@@ -68,7 +68,7 @@ class AssetCatalogScenarioTester:
         """Initialize connection to Egeria"""
         try:
             console.print("\n[bold cyan]═══ Setting up Asset Catalog Test Environment ═══[/bold cyan]\n")
-            self.client = AssetCatalog(VIEW_SERVER, PLATFORM_URL, user_id=USER_ID, user_pwd=USER_PWD)
+            self.client = AssetCatalog(VIEW_SERVER, PLATFORM_URL, user_id=USER_ID, user_pwd=USER_PWD, time_out=120)
             token = self.client.create_egeria_bearer_token(USER_ID, USER_PWD)
             console.print(f"✓ Connected to {PLATFORM_URL}")
             console.print(f"✓ Authenticated as {USER_ID}")
@@ -216,7 +216,7 @@ class AssetCatalogScenarioTester:
                     
                     # Get asset graph
                     try:
-                        graph = self.client.get_asset_graph(
+                        graph = self.client.get_asset_graph_by_guid(
                             asset_guid,
                             output_format="JSON"
                         )
@@ -234,7 +234,7 @@ class AssetCatalogScenarioTester:
                     
                     # Try to get lineage
                     try:
-                        lineage = self.client.get_asset_lineage_graph(
+                        lineage = self.client.get_asset_lineage_graph_by_guid(
                             asset_guid,
                             output_format="JSON"
                         )

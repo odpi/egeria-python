@@ -34,10 +34,11 @@ notelog_for_testing = {
 }
 
 note_for_testing = {
-    "class": "NoteProperties",
+    "class": "NotificationProperties",
+    "typeName": "Notification",
     "qualifiedName": "ready for testing",
-    "title": "Ready for Testing",
-    "text": "This element has been reviewed and is ready for further testing",
+    "displayName": "Ready for Testing",
+    "description": "This element has been reviewed and is ready for further testing",
     "additionalProperties": {"status": "Testing Ready", "isCritical?": "No"},
 }
 

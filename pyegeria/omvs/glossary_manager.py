@@ -78,8 +78,9 @@ class GlossaryManager(CollectionManager):
             user_id: str = None,
             user_pwd: Optional[str] = None,
             token: Optional[str] = None,
+            time_out: int = None,
             ):
-        CollectionManager.__init__(self, view_server, platform_url, user_id, user_pwd, token)
+        CollectionManager.__init__(self, view_server, platform_url, user_id, user_pwd, token, time_out=time_out)
         self.view_server = self.server_name
         self.platform_url = self.platform_url
         self.user_id = self.user_id
@@ -3534,7 +3535,7 @@ class GlossaryManager(CollectionManager):
             starts_with=starts_with,
             ends_with=ends_with,
             ignore_case=ignore_case,
-            metadata_element_type_name=metadata_element_type_name,
+            metadata_element_type=metadata_element_type_name,
             metadata_element_subtypes=metadata_element_subtypes,
             include_only_relationships=include_only_relationships,
             skip_relationships=skip_relationships,
@@ -3927,7 +3928,7 @@ class GlossaryManager(CollectionManager):
             starts_with=starts_with,
             ends_with=ends_with,
             ignore_case=ignore_case,
-            metadata_element_type_name=metadata_element_type_name,
+            metadata_element_type=metadata_element_type_name,
             metadata_element_subtypes=metadata_element_subtypes,
             include_only_relationships=include_only_relationships,
             skip_relationships=skip_relationships,

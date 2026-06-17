@@ -163,10 +163,11 @@ class ServerClient(BaseServerClient):
             page_size: int = None,
             local_qualifier: str = None,
             organization_name: str = None,
+            time_out: int = None,
     ):
 
         super().__init__(server_name, platform_url, user_id, user_pwd, token,
-                         token_src, api_key, page_size, local_qualifier, organization_name)
+                         token_src, api_key, page_size, local_qualifier, organization_name, time_out)
 
         self.command_root: str = f"{self.platform_url}/servers/{self.server_name}/api/open-metadata/"
         self._search_string_request_adapter = TypeAdapter(SearchStringRequestBody)
@@ -1591,7 +1592,7 @@ class ServerClient(BaseServerClient):
         """
 
         url = f"{self.command_root}feedback-manager/elements/{element_guid}/comments/retrieve"
-        return await self._async_get_results_body_request(url, _type="Comment",
+        return await self._async_get_results_body_request(url, _type=metadata_element_type_name,
                                                          _gen_output=self._generate_comment_output,
                                                          graph_query_depth=graph_query_depth,
                                                          start_from=start_from,
@@ -1995,28 +1996,42 @@ class ServerClient(BaseServerClient):
 
 
         """
-        if body is None and element_guid:
-            body = {
-                "class": "NewAttachmentRequestBody",
-                "properties": {
-                    "class": "NoteLogProperties",
-                    "typeName": "NoteLog",
-                    "displayName": display_name,
-                    "qualifiedName": self.make_feedback_qn("NoteLog", element_guid, display_name),
-                    "description": description,
+        if body is None:
+            if element_guid:
+                body = {
+                    "class": "NewAttachmentRequestBody",
+                    "properties": {
+                        "class": "NoteLogProperties",
+                        "typeName": "NoteLog",
+                        "displayName": display_name,
+                        "qualifiedName": self.make_feedback_qn("NoteLog", element_guid, display_name),
+                        "description": description,
+                    }
                 }
-            }
-        elif body is None and not element_guid:
-            body = {
-                "class": "NewAElementRequestBody",
-                "properties": {
-                    "class": "NoteLogProperties",
-                    "typeName": "NoteLog",
-                    "displayName": display_name,
-                    "qualifiedName": self.make_feedback_qn("NoteLog", element_guid, display_name),
-                    "description": description,
+            else:
+                body = {
+                    "class": "NewElementRequestBody",
+                    "properties": {
+                        "class": "NoteLogProperties",
+                        "typeName": "NoteLog",
+                        "displayName": display_name,
+                        "qualifiedName": self.make_feedback_qn("NoteLog", None, display_name),
+                        "description": description,
+                    }
                 }
-            }
+
+        elif body is not None and body.get("class") not in ["NewAttachmentRequestBody", "NewElementRequestBody"]:
+            # Wrap properties in a request body if they aren't already
+            if element_guid:
+                body = {
+                    "class": "NewAttachmentRequestBody",
+                    "properties": body
+                }
+            else:
+                body = {
+                    "class": "NewElementRequestBody",
+                    "properties": body
+                }
 
         elif body is None and display_name is None:
             context = {"issue": "Invalid display name and body not provided"}
@@ -2024,10 +2039,10 @@ class ServerClient(BaseServerClient):
 
         if element_guid:
             url = f"{self.command_root}feedback-manager/elements/{element_guid}/note-logs"
+            return await self._async_create_attachment_body_request(url, ["NoteLogProperties"], body)
         else:
-            url = f"{self.command_root}feedback-manager/note-logs"
-        response = await self._async_make_request("POST", url, body_slimmer(body))
-        return response.json()
+            url = f"{self.command_root}feedback-manager/assets"
+            return await self._async_create_element_body_request(url, ["NoteLogProperties"], body)
 
     @dynamic_catch
     def create_note_log(
@@ -2198,8 +2213,8 @@ class ServerClient(BaseServerClient):
             context = {"issue": "Invalid display name and body not provided"}
             raise PyegeriaInvalidParameterException(context=context)
 
-        url = f"{self.command_root}feedback-manager/note-logs/note-logs/{note_log_guid}"
-        await self._async_make_request("POST", url, body_slimmer(body))
+        url = f"{self.command_root}feedback-manager/note-logs/{note_log_guid}"
+        await self._async_update_element_body_request(url, ["NoteLogProperties"], body)
 
     @dynamic_catch
     def update_note_log(
@@ -2259,7 +2274,7 @@ class ServerClient(BaseServerClient):
         """
         loop = asyncio.get_event_loop()
         response = loop.run_until_complete(
-            self.update_note_log(note_log_guid, display_name, description, body, merge_update)
+            self._async_update_note_log(note_log_guid, display_name, description, body, merge_update)
         )
         return response
 
@@ -2653,7 +2668,7 @@ class ServerClient(BaseServerClient):
         """
 
         url = f"{self.command_root}feedback-manager/elements/{element_guid}/note-logs/retrieve"
-        return await self._async_get_results_body_request(url, _type="NoteLog",
+        return await self._async_get_results_body_request(url, _type=metadata_element_type_name,
                                                          _gen_output=self._generate_feedback_output,
                                                          graph_query_depth=graph_query_depth,
                                                          start_from=start_from,
@@ -2770,7 +2785,7 @@ class ServerClient(BaseServerClient):
 
         """
 
-        if body is None and display_name:
+        if body is None:
             body = {
                 "class": "NewElementRequestBody",
                 "anchorGUID": associated_element if associated_element else note_log_guid,
@@ -2789,22 +2804,37 @@ class ServerClient(BaseServerClient):
                 "forDuplicateProcessing": False
             }
 
+        elif body is not None and body.get("class") != "NewElementRequestBody":
+            # Wrap properties in a request body if they aren't already
+            body = {
+                "class": "NewElementRequestBody",
+                "anchorGUID": associated_element if associated_element else note_log_guid,
+                "isOwnAnchor": False,
+                "parentGUID": note_log_guid,
+                "parentRelationshipTypeName": "AttachedNoteLogEntry",
+                "parentAtEnd1": True,
+                "properties": body,
+                "forLineage": False,
+                "forDuplicateProcessing": False
+            }
+
         elif body is None and display_name is None:
             context = {"issue": "Invalid display name and body not provided"}
             raise PyegeriaInvalidParameterException(context=context)
 
         url = f"{self.command_root}feedback-manager/assets"
-        response = await self._async_create_element_body_request(url, ['Notification'], body)
-        return response
+        return await self._async_create_element_body_request(url, ['NotificationProperties'], body)
 
     @dynamic_catch
     def create_note(
-            self, note_log_guid:
-            str, display_name: Optional[str] = None, description: Optional[str] = None,
+            self, note_log_guid: str,
+            display_name: Optional[str] = None,
+            description: Optional[str] = None,
+            associated_element: Optional[str] = None,
             body: Optional[dict | NewElementRequestBody] = None) -> str:
         """
         Creates a new note for a note log and returns the unique identifier for it.
-    
+
         Parameters
         ----------
         note_log_guid
@@ -2813,20 +2843,22 @@ class ServerClient(BaseServerClient):
             - optional display name for the note
         description
             - optional description for the note
+        associated_element: str, default is None
+            - guid of the element to associate with the note - if provided, the note will be anchored to this element.
         body
             - optional body for the note
-    
+
         Returns
         -------
         Guid for the note
-    
+
         Raises
         ------
         PyegeriaException
-    
+
         Notes
         _____
-    
+
         Sample body (a note is an asset)
         {
           "class" : "NewElementRequestBody",
@@ -2862,11 +2894,11 @@ class ServerClient(BaseServerClient):
           "forLineage" : false,
           "forDuplicateProcessing" : false
         }
-    
+
         """
         loop = asyncio.get_event_loop()
         response = loop.run_until_complete(
-            self._async_create_note(note_log_guid, display_name, body)
+            self._async_create_note(note_log_guid, display_name, description, associated_element, body)
         )
         return response
 
@@ -2963,7 +2995,7 @@ class ServerClient(BaseServerClient):
                     raise PyegeriaException(error_code = PyegeriaErrorCode.VALIDATION_ERROR, context = context)
 
             note_log = await self._async_create_note_log(element_guid = element_guid, display_name = note_log_display_name)
-            note_log_guid = note_log["guid"]
+            note_log_guid = note_log
 
         # Create the Journal Entry (Note)
         if journal_entry_display_name is None:
@@ -3279,7 +3311,7 @@ class ServerClient(BaseServerClient):
             starts_with: bool = True, ends_with: bool = False,
             ignore_case: bool = True,
             anchor_domain: Optional[str] = None,
-            metadata_element_type: Optional[str] = None,
+            metadata_element_type: Optional[str] = "Action",
             metadata_element_subtypes: Optional[list[str]] = None,
             skip_relationships: Optional[list[str]] = None,
             include_only_relationships: Optional[list[str]] = None,
@@ -3423,7 +3455,7 @@ class ServerClient(BaseServerClient):
         # Filter out None values, but keep search_string even if None (it's required)
         params = {k: v for k, v in params.items() if v is not None or k == 'search_string'}
         
-        response = await self._async_find_request(url, _type="NoteLog", _gen_output=self._generate_feedback_output,
+        response = await self._async_find_request(url, _type=metadata_element_type or "Action", _gen_output=self._generate_feedback_output,
                                                   **params)
         return response
 
@@ -3471,8 +3503,10 @@ class ServerClient(BaseServerClient):
         """
         loop = asyncio.get_event_loop()
         response = loop.run_until_complete(
-            self._async_find_notes(search_string, starts_with, ends_with, ignore_case, output_format=output_format,
-                                   report_spec=report_spec, start_from=start_from, page_size=page_size, body=body, **kwargs)
+            self._async_find_notes(search_string=search_string, body=body, starts_with=starts_with,
+                                   ends_with=ends_with, ignore_case=ignore_case, start_from=start_from,
+                                   page_size=page_size, output_format=output_format,
+                                   report_spec=report_spec, **kwargs)
         )
         return response
 
@@ -3480,6 +3514,7 @@ class ServerClient(BaseServerClient):
     async def _async_get_note_by_guid(
             self,
             guid: str,
+            metadata_element_type_name: str | None = "Action",
             graph_query_depth: int = 3,
             output_format: str = "JSON",
             report_spec: Optional[str | dict] = None,
@@ -3493,6 +3528,8 @@ class ServerClient(BaseServerClient):
         ----------
         guid: str
             - unique identifier for the note object.
+        metadata_element_type_name : str, optional
+            - type name for the note object (default is "Action").
         body
             - optional effective time
 
@@ -3506,45 +3543,20 @@ class ServerClient(BaseServerClient):
 
         """
 
-        url = f"{self.command_root}feedback-manager/notes/{guid}/retrieve"
-        response = await self._async_get_guid_request(url, _type="Note",
+        url = f"{self.command_root}feedback-manager/assets/{guid}/retrieve"
+        response = await self._async_get_guid_request(url, _type=metadata_element_type_name,
                                                       _gen_output=self._generate_feedback_output,
                                                       graph_query_depth=graph_query_depth,
                                                       output_format=output_format, report_spec=report_spec,
                                                       body=body, **kwargs)
 
         return response
-        """
-        Retrieve the note metadata element with the supplied unique identifier.
-
-        Parameters
-        ----------
-        note_guid
-             - unique identifier of the requested metadata element
-        body: dict | GetRequestBody
-            - optional details of the request.
-        O=output_format: str, default = "JSON"
-            - output type - JSON, MD, MERMAID, REPORT, LIST...
-        report_spec: str, optional = None
-            - Report specification for the returned output
-         Returns
-         -------
-         matching metadata element
-
-         Raises
-         ------
-         PyegeriaException
-        """
-
-        url = f"{self.command_root}feedback-manager/assets/{note_guid}/retrieve"
-        response = await self._async_get_guid_request(url, "Notification", self._generate_feedback_output,
-                                                      output_format, report_spec, body)
-        return response
 
     @dynamic_catch
     def get_note_by_guid(
             self,
             guid: str,
+            metadata_element_type_name: str | None = "Action",
             graph_query_depth: int = 3,
             output_format: str = "JSON",
             report_spec: Optional[str | dict] = None,
@@ -3558,6 +3570,8 @@ class ServerClient(BaseServerClient):
         ----------
         guid: str
              - unique identifier of the requested metadata element
+        metadata_element_type_name : str, optional
+            - type name for the note object (default is "Action").
         body: dict | GetRequestBody
             - optional details of the request.
         output_format: str, default = "JSON"
@@ -3574,7 +3588,7 @@ class ServerClient(BaseServerClient):
         """
         loop = asyncio.get_event_loop()
         response = loop.run_until_complete(
-            self._async_get_note_by_guid(guid, graph_query_depth, output_format, report_spec, body, **kwargs)
+            self._async_get_note_by_guid(guid, metadata_element_type_name, graph_query_depth, output_format, report_spec, body, **kwargs)
         )
         return response
 
@@ -3582,7 +3596,7 @@ class ServerClient(BaseServerClient):
     async def _async_get_notes_for_note_log(
             self,
             note_log_guid: str,
-            metadata_element_type_name: str | None = "Note",
+            metadata_element_type_name: str | None = "Action",
             graph_query_depth: int = 3,
             start_from: int = 0, page_size: int = 0,
             output_format: str = "JSON",
@@ -3614,8 +3628,8 @@ class ServerClient(BaseServerClient):
 
         """
 
-        url = f"{self.command_root}feedback-manager/note-logs/{note_log_guid}/retrieve"
-        response = await self._async_get_results_body_request(url, _type="Note",
+        url = f"{self.command_root}feedback-manager/note-logs/{note_log_guid}/notes/retrieve"
+        response = await self._async_get_results_body_request(url, _type=metadata_element_type_name,
                                                              _gen_output=self._generate_feedback_output,
                                                              graph_query_depth=graph_query_depth,
                                                              start_from=start_from,
@@ -3628,7 +3642,7 @@ class ServerClient(BaseServerClient):
     def get_notes_for_note_log(
             self,
             note_log_guid: str,
-            metadata_element_type_name: str | None = "Note",
+            metadata_element_type_name: str | None = "Action",
             graph_query_depth: int = 3,
             start_from: int = 0, page_size: int = 0,
             output_format: str = "JSON",
@@ -4278,6 +4292,8 @@ class ServerClient(BaseServerClient):
             ignore_case: bool = True,
             start_from: int = 0,
             page_size: int = 0,
+            output_format: str = "JSON",
+            report_spec: Optional[str | dict] = None,
             **kwargs
     ) -> dict | str:
         """
@@ -4286,9 +4302,9 @@ class ServerClient(BaseServerClient):
         Parameters
         ----------
         search_string: str
-        - string to search for.
+            - string to search for.
         body: dict | SearchStringRequestBody
-        - details of the request. Supersedes other parameters if present.
+            - details of the request. Supersedes other parameters if present.
         starts_with
             - does the value start with the supplied string?
         ends_with
@@ -4299,6 +4315,10 @@ class ServerClient(BaseServerClient):
             - index of the list to start from (0 for start).
         page_size
             - maximum number of elements to return.
+        output_format : str, default "JSON"
+            - format of the returned output.
+        report_spec : str | dict, optional
+            - report specification for the returned output.
 
         Returns
         -------
@@ -4309,8 +4329,27 @@ class ServerClient(BaseServerClient):
         PyegeriaException
         """
 
-        url = f"{self.command_root}feedback-manager/tags/update"
-        response = await self._async_make_request("POST", url, body)
+        url = f"{self.command_root}feedback-manager/tags/private/by-search-string"
+
+        # Build params dict with explicit parameters
+        params = {
+            'search_string': search_string,
+            'starts_with': starts_with,
+            'ends_with': ends_with,
+            'ignore_case': ignore_case,
+            'start_from': start_from,
+            'page_size': page_size,
+            'output_format': output_format,
+            'report_spec': report_spec,
+            'body': body
+        }
+        # Merge with any additional kwargs, removing None values
+        params.update(kwargs)
+        # Filter out None values, but keep search_string even if None (it's required)
+        params = {k: v for k, v in params.items() if v is not None or k == 'search_string'}
+
+        response = await self._async_find_request(url, _type="InformalTag", _gen_output=self._generate_feedback_output,
+                                                  **params)
         return response
 
     @dynamic_catch
@@ -4323,6 +4362,8 @@ class ServerClient(BaseServerClient):
             ignore_case: bool = True,
             start_from: int = 0,
             page_size: int = 0,
+            output_format: str = "JSON",
+            report_spec: Optional[str | dict] = None,
             **kwargs
     ) -> dict | str:
         """
@@ -4343,6 +4384,10 @@ class ServerClient(BaseServerClient):
             - index of the list to start from (0 for start).
         page_size
             - maximum number of elements to return.
+        output_format : str, default "JSON"
+            - format of the returned output.
+        report_spec : str | dict, optional
+            - report specification for the returned output.
 
         Returns
         -------
@@ -4362,6 +4407,8 @@ class ServerClient(BaseServerClient):
                 ignore_case=ignore_case,
                 start_from=start_from,
                 page_size=page_size,
+                output_format=output_format,
+                report_spec=report_spec,
                 **kwargs
             )
         )
@@ -4565,7 +4612,7 @@ class ServerClient(BaseServerClient):
         PyegeriaException
         """
         url = f"{self.command_root}feedback-manager/elements/{element_guid}/tags/retrieve"
-        return await self._async_get_results_body_request(url, _type="InformalTag",
+        return await self._async_get_results_body_request(url, _type=metadata_element_type_name,
                                                          _gen_output=self._generate_feedback_output,
                                                          graph_query_depth=graph_query_depth,
                                                          start_from=start_from,
@@ -4866,7 +4913,7 @@ class ServerClient(BaseServerClient):
         PyegeriaException
         """
         url = f"{self.command_root}feedback-manager/elements/{element_guid}/likes/retrieve"
-        return await self._async_get_results_body_request(url, _type="Like",
+        return await self._async_get_results_body_request(url, _type=metadata_element_type_name,
                                                          _gen_output=self._generate_feedback_output,
                                                          graph_query_depth=graph_query_depth,
                                                          start_from=start_from,
@@ -5137,7 +5184,7 @@ class ServerClient(BaseServerClient):
         PyegeriaException
         """
         url = f"{self.command_root}feedback-manager/elements/{element_guid}/ratings/retrieve"
-        return await self._async_get_results_body_request(url, _type="Rating",
+        return await self._async_get_results_body_request(url, _type=metadata_element_type_name,
                                                          _gen_output=self._generate_feedback_output,
                                                          graph_query_depth=graph_query_depth,
                                                          start_from=start_from,

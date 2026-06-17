@@ -989,40 +989,115 @@ class MyProfile(AssetMaker):
         )
 
     @dynamic_catch
-    async def _async_log_my_activity(self, body: Optional[dict | NewAttachmentRequestBody] = None) -> str:
+    async def _async_log_my_activity(self, text: str = None, display_name: str = None,
+                                     body: Optional[dict | NewAttachmentRequestBody] = None) -> str:
         """Add a notification to the user's activity log. Async version."""
+        if body is None:
+            if text is None:
+                context = {"issue": "Invalid text and body not provided"}
+                raise PyegeriaInvalidParameterException(context=context)
+            if display_name is None:
+                display_name = f"Log-{int(time.time())}"
+
+            body = {
+                "class": "NewAttachmentRequestBody",
+                "properties": {
+                    "class": "NotificationProperties",
+                    "typeName": "Notification",
+                    "qualifiedName": self.make_feedback_qn("Log", self.user_id, display_name),
+                    "displayName": display_name,
+                    "description": text,
+                }
+            }
+        elif body is not None and isinstance(body, dict) and body.get("class") != "NewAttachmentRequestBody":
+            body = {
+                "class": "NewAttachmentRequestBody",
+                "properties": body
+            }
+
         url = f"{self.my_profile_command_root}/log-my-activity"
         return await self._async_create_attachment_body_request(url, ["NotificationProperties"], body)
 
     @dynamic_catch
-    def log_my_activity(self, body: Optional[dict | NewAttachmentRequestBody] = None) -> str:
+    def log_my_activity(self, text: str = None, display_name: str = None,
+                        body: Optional[dict | NewAttachmentRequestBody] = None) -> str:
         """Add a notification to the user's activity log."""
         loop = asyncio.get_event_loop()
-        return loop.run_until_complete(self._async_log_my_activity(body))
+        return loop.run_until_complete(self._async_log_my_activity(text, display_name, body))
 
     @dynamic_catch
-    async def _async_journal_my_activity(self, body: Optional[dict | NewAttachmentRequestBody] = None) -> str:
+    async def _async_journal_my_activity(self, text: str = None, display_name: str = None,
+                                         body: Optional[dict | NewAttachmentRequestBody] = None) -> str:
         """Add a notification to the user's journal. Async version."""
+        if body is None:
+            if text is None:
+                context = {"issue": "Invalid text and body not provided"}
+                raise PyegeriaInvalidParameterException(context=context)
+            if display_name is None:
+                display_name = f"Journal-{int(time.time())}"
+
+            body = {
+                "class": "NewAttachmentRequestBody",
+                "properties": {
+                    "class": "NotificationProperties",
+                    "typeName": "Notification",
+                    "qualifiedName": self.make_feedback_qn("Journal", self.user_id, display_name),
+                    "displayName": display_name,
+                    "description": text,
+                }
+            }
+        elif body is not None and isinstance(body, dict) and body.get("class") != "NewAttachmentRequestBody":
+            body = {
+                "class": "NewAttachmentRequestBody",
+                "properties": body
+            }
+
         url = f"{self.my_profile_command_root}/journal-my-activity"
         return await self._async_create_attachment_body_request(url, ["NotificationProperties"], body)
 
     @dynamic_catch
-    def journal_my_activity(self, body: Optional[dict | NewAttachmentRequestBody] = None) -> str:
+    def journal_my_activity(self, text: str = None, display_name: str = None,
+                            body: Optional[dict | NewAttachmentRequestBody] = None) -> str:
         """Add a notification to the user's journal."""
         loop = asyncio.get_event_loop()
-        return loop.run_until_complete(self._async_journal_my_activity(body))
+        return loop.run_until_complete(self._async_journal_my_activity(text, display_name, body))
 
     @dynamic_catch
-    async def _async_blog_my_activity(self, body: Optional[dict | NewAttachmentRequestBody] = None) -> str:
+    async def _async_blog_my_activity(self, text: str = None, display_name: str = None,
+                                      body: Optional[dict | NewAttachmentRequestBody] = None) -> str:
         """Add a notification to the user's blog. Async version."""
+        if body is None:
+            if text is None:
+                context = {"issue": "Invalid text and body not provided"}
+                raise PyegeriaInvalidParameterException(context=context)
+            if display_name is None:
+                display_name = f"Blog-{int(time.time())}"
+
+            body = {
+                "class": "NewAttachmentRequestBody",
+                "properties": {
+                    "class": "NotificationProperties",
+                    "typeName": "Notification",
+                    "qualifiedName": self.make_feedback_qn("Blog", self.user_id, display_name),
+                    "displayName": display_name,
+                    "description": text,
+                }
+            }
+        elif body is not None and isinstance(body, dict) and body.get("class") != "NewAttachmentRequestBody":
+            body = {
+                "class": "NewAttachmentRequestBody",
+                "properties": body
+            }
+
         url = f"{self.my_profile_command_root}/blog-my-activity"
         return await self._async_create_attachment_body_request(url, ["NotificationProperties"], body)
 
     @dynamic_catch
-    def blog_my_activity(self, body: Optional[dict | NewAttachmentRequestBody] = None) -> str:
+    def blog_my_activity(self, text: str = None, display_name: str = None,
+                         body: Optional[dict | NewAttachmentRequestBody] = None) -> str:
         """Add a notification to the user's blog."""
         loop = asyncio.get_event_loop()
-        return loop.run_until_complete(self._async_blog_my_activity(body))
+        return loop.run_until_complete(self._async_blog_my_activity(text, display_name, body))
 
     #
     # Lifecycle

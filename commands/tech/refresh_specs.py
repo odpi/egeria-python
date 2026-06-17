@@ -36,7 +36,8 @@ def run_command(cmd_args: list[str], description: str):
 def main():
     parser = argparse.ArgumentParser(description="Refresh generated specs and templates for Dr. Egeria.")
     parser.add_argument("--usage-level", choices=["Basic", "Advanced"], default=None,
-                        help="Egeria usage level (Basic or Advanced)")
+                        help="Egeria usage level (Basic or Advanced). "
+                             "If omitted, both Basic and Advanced are generated.")
     parser.add_argument("--family", type=str, default=None,
                         help="Generate only for a specific family (applies to cmd templates)")
     parser.add_argument("--merge-reports", action="store_true", default=False,
@@ -46,25 +47,29 @@ def main():
     # Base executable path for scripts
     python_exec = sys.executable
 
-    # 1. Generate Markdown Command Templates
-    cmd_templates = [
-        python_exec,
-        "-m", "commands.tech.generate_md_cmd_templates"
-    ]
-    if args.usage_level:
-        cmd_templates.extend(["--usage-level", args.usage_level])
-    if args.family:
-        cmd_templates.extend(["--family", args.family])
-    run_command(cmd_templates, "Markdown Command Templates Generation")
+    # When no usage level is requested, refresh both Basic and Advanced.
+    usage_levels = [args.usage_level] if args.usage_level else ["Basic", "Advanced"]
 
-    # 2. Generate Dr. Egeria Help
-    cmd_help = [
-        python_exec,
-        "-m", "commands.tech.generate_dr_help"
-    ]
-    if args.usage_level == "Advanced":
-        cmd_help.append("--advanced")
-    run_command(cmd_help, "Dr. Egeria Help Generation")
+    # 1. Generate Markdown Command Templates (per usage level)
+    for usage_level in usage_levels:
+        cmd_templates = [
+            python_exec,
+            "-m", "commands.tech.generate_md_cmd_templates",
+            "--usage-level", usage_level,
+        ]
+        if args.family:
+            cmd_templates.extend(["--family", args.family])
+        run_command(cmd_templates, f"Markdown Command Templates Generation ({usage_level})")
+
+    # 2. Generate Dr. Egeria Help (per usage level)
+    for usage_level in usage_levels:
+        cmd_help = [
+            python_exec,
+            "-m", "commands.tech.generate_dr_help"
+        ]
+        if usage_level == "Advanced":
+            cmd_help.append("--advanced")
+        run_command(cmd_help, f"Dr. Egeria Help Generation ({usage_level})")
 
     # 3. Generate Report Specifications
     cmd_reports = [

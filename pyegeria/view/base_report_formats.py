@@ -846,7 +846,7 @@ base_report_specs = FormatSetDict({
         ],
     ),
     "My-User-Note-Logs-Detail": FormatSet(
-        target_type="NoteLogEntry",
+        target_type="Action",
         heading="Note Log Entries",
         description="Detailed Note Log Entries",
         family="MyProfile",
