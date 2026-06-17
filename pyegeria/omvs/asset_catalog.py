@@ -43,8 +43,8 @@ class AssetCatalog(ServerClient):
     """
 
     def __init__(self, view_server: str, platform_url: str, user_id: str, user_pwd: Optional[str] = None,
-                 token: str = None):
-        super().__init__(view_server, platform_url, user_id, user_pwd, token)
+                 token: str = None, time_out: int = None):
+        super().__init__(view_server, platform_url, user_id, user_pwd, token, time_out=time_out)
         self.view_server = view_server
         self.platform_url = platform_url
         self.user_id = user_id
@@ -288,32 +288,37 @@ class AssetCatalog(ServerClient):
             )
         )
 
-    async def _async_get_asset_graph(
+    async def _async_get_asset_graph_by_guid(
         self,
-        asset_guid: str,
+        guid: str,
         start_from: int = 0,
         page_size: int = 0,
         output_format: str = "MERMAID",
-        report_spec: str = "Common-Mermaid",
-        body: Optional[dict | ResultsRequestBody] = None
+        report_spec: str | dict = "Common-Mermaid",
+        body: Optional[dict | ResultsRequestBody] = None,
+        **kwargs,
     ) -> str | dict:
         """Return all the elements that are anchored to an asset plus relationships between these elements and to
-        other elements. Async version.
+        other elements.
+
+        Async version.
 
         Parameters
         ----------
-        asset_guid : str
+        guid : str
             The unique identity of the asset to get the graph for.
-        start_from : int, optional
-            The index from which to start fetching. Default is 0.
-        page_size : int, optional
-            The maximum number of items to fetch. Default is 0 (all).
-        output_format : str, default = "MERMAID"
+        start_from : int, default 0
+            The index from which to start fetching.
+        page_size : int, default 0
+            The maximum number of items to fetch.
+        output_format : str, default "MERMAID"
             The desired output format. One of "MD", "LIST", "FORM", "REPORT", "DICT", "MERMAID", or "JSON".
-        report_spec : str | dict, optional
-            The desired output columns/fields to include. Default is "Common-Mermaid".
+        report_spec : str | dict, default "Common-Mermaid"
+            The desired output columns/fields to include.
         body : dict | ResultsRequestBody, optional
             If provided, the search parameters in the body will supersede other attributes.
+        **kwargs : dict, optional
+            Additional query parameters.
 
         Returns
         -------
@@ -328,10 +333,7 @@ class AssetCatalog(ServerClient):
             The principle specified by the user_id does not have authorization.
         """
 
-        url = (
-            f"{self.platform_url}/servers/{self.view_server}/api/open-metadata/asset-catalog/assets/{asset_guid}/"
-            f"as-graph"
-        )
+        url = f"{self.platform_url}/servers/{self.view_server}/api/open-metadata/asset-catalog/assets/{guid}/as-graph"
         response = await self._async_get_results_body_request(
             url=url,
             _type="Asset",
@@ -341,35 +343,39 @@ class AssetCatalog(ServerClient):
             output_format=output_format,
             report_spec=report_spec,
             body=body,
+            **kwargs,
         )
         return response
 
-    def get_asset_graph(
-            self,
-            asset_guid: str,
-            start_from: int = 0,
-            page_size: int = 0,
-            output_format: str = "MERMAID",
-            report_spec: str = "Common-Mermaid",
-            body: Optional[dict | ResultsRequestBody] = None
+    def get_asset_graph_by_guid(
+        self,
+        guid: str,
+        start_from: int = 0,
+        page_size: int = 0,
+        output_format: str = "MERMAID",
+        report_spec: str | dict = "Common-Mermaid",
+        body: Optional[dict | ResultsRequestBody] = None,
+        **kwargs,
     ) -> str | dict:
         """Return all the elements that are anchored to an asset plus relationships between these elements and to
         other elements.
 
         Parameters
         ----------
-        asset_guid : str
+        guid : str
             The unique identity of the asset to get the graph for.
-        start_from : int, optional
-            The index from which to start fetching. Default is 0.
-        page_size : int, optional
-            The maximum number of items to fetch. Default is 0 (all).
-        output_format : str, default = "MERMAID"
+        start_from : int, default 0
+            The index from which to start fetching.
+        page_size : int, default 0
+            The maximum number of items to fetch.
+        output_format : str, default "MERMAID"
             The desired output format. One of "MD", "LIST", "FORM", "REPORT", "DICT", "MERMAID", or "JSON".
-        report_spec : str | dict, optional
-            The desired output columns/fields to include. Default is "Common-Mermaid".
+        report_spec : str | dict, default "Common-Mermaid"
+            The desired output columns/fields to include.
         body : dict | ResultsRequestBody, optional
             If provided, the search parameters in the body will supersede other attributes.
+        **kwargs : dict, optional
+            Additional query parameters.
 
         Returns
         -------
@@ -386,14 +392,21 @@ class AssetCatalog(ServerClient):
 
         loop = asyncio.get_event_loop()
         response = loop.run_until_complete(
-            self._async_get_asset_graph(asset_guid, start_from, page_size, output_format,
-                                        report_spec, body)
+            self._async_get_asset_graph_by_guid(
+                guid=guid,
+                start_from=start_from,
+                page_size=page_size,
+                output_format=output_format,
+                report_spec=report_spec,
+                body=body,
+                **kwargs,
+            )
         )
         return response
 
     def get_asset_mermaid_graph(
         self,
-        asset_guid: str,
+        guid: str,
         start_from: int = 0,
         page_size: int = 0,
     ) -> str:
@@ -401,12 +414,12 @@ class AssetCatalog(ServerClient):
 
         Parameters
         ----------
-        asset_guid : str
+        guid : str
             The unique identity of the asset to get the graph for.
-        start_from : int, optional
-            The index from which to start fetching. Default is 0.
-        page_size : int, optional
-            The maximum number of items to fetch. Default is 0 (all).
+        start_from : int, default 0
+            The index from which to start fetching.
+        page_size : int, default 0
+            The maximum number of items to fetch.
 
         Returns
         -------
@@ -422,29 +435,31 @@ class AssetCatalog(ServerClient):
             The principle specified by the user_id does not have authorization for the requested action.
         """
 
-        asset_graph = self.get_asset_graph(asset_guid, start_from, page_size)
+        asset_graph = self.get_asset_graph_by_guid(guid=guid, start_from=start_from, page_size=page_size)
         return asset_graph[0]
 
-    async def _async_get_asset_lineage_graph(
+    async def _async_get_asset_lineage_graph_by_guid(
         self,
-        asset_guid: str,
+        guid: str,
         effective_time: Optional[str] = None,
         as_of_time: Optional[str] = None,
-        relationship_types: [str] = None,
+        relationship_types: Optional[list[str]] = None,
         limit_to_isc_q_name: Optional[str] = None,
         hilight_isc_q_name: Optional[str] = None,
         all_anchors: bool = False,
         start_from: int = 0,
-        page_size: int =0,
+        page_size: int = 0,
         output_format: str = "DICT",
-        report_spec: str = "Common-Mermaid",
-
+        report_spec: str | dict = "Common-Mermaid",
+        **kwargs,
     ) -> str | dict:
-        """Return the asset lineage including a mermaid markdown string. Async version.
+        """Return the asset lineage including a mermaid markdown string.
+
+        Async version.
 
         Parameters
         ----------
-        asset_guid : str
+        guid : str
             The unique identity of the asset to get the graph for.
         effective_time : str, optional
             Effective time to query on. If not specified, the current time is used.
@@ -456,16 +471,18 @@ class AssetCatalog(ServerClient):
             If specified, filters results to only include information supply chains with the given qualified name.
         hilight_isc_q_name : str, optional
             If specified, highlights the information supply chain with the given qualified name.
-        all_anchors : bool, optional
-            Whether to include all anchors. Default is False.
-        start_from : int, optional
-            The index from which to start fetching. Default is 0.
-        page_size : int, optional
-            The maximum number of items to fetch. Default is 0 (all).
-        output_format : str, optional
-            The desired output format. Default is "DICT".
-        report_spec : str, optional
-            The desired output columns/fields to include. Default is "Common-Mermaid".
+        all_anchors : bool, default False
+            Whether to include all anchors.
+        start_from : int, default 0
+            The index from which to start fetching.
+        page_size : int, default 0
+            The maximum number of items to fetch.
+        output_format : str, default "DICT"
+            The desired output format.
+        report_spec : str | dict, default "Common-Mermaid"
+            The desired output columns/fields to include.
+        **kwargs : dict, optional
+            Additional query parameters.
 
         Returns
         -------
@@ -478,10 +495,7 @@ class AssetCatalog(ServerClient):
             If there are issues in communications, message format, or Egeria errors.
         """
 
-        url = (
-            f"{self.platform_url}/servers/{self.view_server}/api/open-metadata/asset-catalog/assets/{asset_guid}/"
-            f"as-lineage-graph"
-        )
+        url = f"{self.platform_url}/servers/{self.view_server}/api/open-metadata/asset-catalog/assets/{guid}/as-lineage-graph"
         body = {
             "class": "AssetLineageGraphRequestBody",
             "effectiveTime": effective_time,
@@ -492,41 +506,44 @@ class AssetCatalog(ServerClient):
             "allAnchors": all_anchors,
             "startFrom": start_from,
             "pageSize": page_size,
-            "queryGraphDepth": 5
-            }
+            "queryGraphDepth": 5,
+        }
 
         response = await self._async_make_request("POST", url, body_slimmer(body))
-        element = response.json().get("element",NO_ASSETS_FOUND)
-        if type(element) is str:
+        element = response.json().get("element", NO_ASSETS_FOUND)
+        if isinstance(element, str):
             logger.info(NO_ELEMENTS_FOUND)
             return NO_ELEMENTS_FOUND
 
-        if output_format != 'JSON':  # return a simplified markdown representation
-            logger.info(f"Found elements, output format: {output_format} and report_spec: {report_spec}")
-            return self._generate_asset_output(element, None, "Asset",
-                               output_format, report_spec)
+        if output_format != "JSON":  # return a simplified markdown representation
+            logger.info(
+                f"Found elements, output format: {output_format} and report_spec: {report_spec}"
+            )
+            return self._generate_asset_output(
+                element, None, "Asset", output_format, report_spec
+            )
         return element
 
-
-    def get_asset_lineage_graph(
+    def get_asset_lineage_graph_by_guid(
         self,
-        asset_guid: str,
+        guid: str,
         effective_time: Optional[str] = None,
         as_of_time: Optional[str] = None,
-        relationship_types: [str] = None,
+        relationship_types: Optional[list[str]] = None,
         limit_to_isc_q_name: Optional[str] = None,
         hilight_isc_q_name: Optional[str] = None,
         all_anchors: bool = False,
         start_from: int = 0,
         page_size: int = 0,
         output_format: str = "DICT",
-        report_spec: str = "Common-Mermaid",
-        ) -> str | dict:
+        report_spec: str | dict = "Common-Mermaid",
+        **kwargs,
+    ) -> str | dict:
         """Return the asset lineage including a mermaid markdown string.
 
         Parameters
         ----------
-        asset_guid : str
+        guid : str
             The unique identity of the asset to get the graph for.
         effective_time : str, optional
             Effective time to query on. If not specified, the current time is used.
@@ -538,16 +555,18 @@ class AssetCatalog(ServerClient):
             If specified, filters results to only include information supply chains with the given qualified name.
         hilight_isc_q_name : str, optional
             If specified, highlights the information supply chain with the given qualified name.
-        all_anchors : bool, optional
-            Whether to include all anchors. Default is False.
-        start_from : int, optional
-            The index from which to start fetching. Default is 0.
-        page_size : int, optional
-            The maximum number of items to fetch. Default is 0 (all).
-        output_format : str, optional
-            The desired output format. Default is "DICT".
-        report_spec : str, optional
-            The desired output columns/fields to include. Default is "Common-Mermaid".
+        all_anchors : bool, default False
+            Whether to include all anchors.
+        start_from : int, default 0
+            The index from which to start fetching.
+        page_size : int, default 0
+            The maximum number of items to fetch.
+        output_format : str, default "DICT"
+            The desired output format.
+        report_spec : str | dict, default "Common-Mermaid"
+            The desired output columns/fields to include.
+        **kwargs : dict, optional
+            Additional query parameters.
 
         Returns
         -------
@@ -562,18 +581,29 @@ class AssetCatalog(ServerClient):
 
         loop = asyncio.get_event_loop()
         response = loop.run_until_complete(
-            self._async_get_asset_lineage_graph(asset_guid, effective_time, as_of_time, relationship_types,
-                                                limit_to_isc_q_name, hilight_isc_q_name, all_anchors,
-                                                start_from, page_size, output_format, report_spec)
+            self._async_get_asset_lineage_graph_by_guid(
+                guid=guid,
+                effective_time=effective_time,
+                as_of_time=as_of_time,
+                relationship_types=relationship_types,
+                limit_to_isc_q_name=limit_to_isc_q_name,
+                hilight_isc_q_name=hilight_isc_q_name,
+                all_anchors=all_anchors,
+                start_from=start_from,
+                page_size=page_size,
+                output_format=output_format,
+                report_spec=report_spec,
+                **kwargs,
+            )
         )
         return response
 
     def get_asset_lineage_mermaid_graph(
         self,
-        asset_guid: str,
+        guid: str,
         effective_time: Optional[str] = None,
         as_of_time: Optional[str] = None,
-        relationship_types: [str] = None,
+        relationship_types: Optional[list[str]] = None,
         limit_to_isc_q_name: Optional[str] = None,
         hilight_isc_q_name: Optional[str] = None,
         all_anchors: bool = False,
@@ -584,7 +614,7 @@ class AssetCatalog(ServerClient):
 
         Parameters
         ----------
-        asset_guid : str
+        guid : str
             The unique identity of the asset to get the graph for.
         effective_time : str, optional
             Effective time to query on. If not specified, the current time is used.
@@ -596,12 +626,12 @@ class AssetCatalog(ServerClient):
             If specified, filters results to only include information supply chains with the given qualified name.
         hilight_isc_q_name : str, optional
             If specified, highlights the information supply chain with the given qualified name.
-        all_anchors : bool, optional
-            Whether to include all anchors. Default is False.
-        start_from : int, optional
-            The index from which to start fetching. Default is 0.
-        page_size : int, optional
-            The maximum number of items to fetch. Default is 0 (all).
+        all_anchors : bool, default False
+            Whether to include all anchors.
+        start_from : int, default 0
+            The index from which to start fetching.
+        page_size : int, default 0
+            The maximum number of items to fetch.
 
         Returns
         -------
@@ -616,17 +646,17 @@ class AssetCatalog(ServerClient):
             The principle specified by the user_id does not have authorization for the requested action.
         """
 
-        asset_graph = self.get_asset_lineage_graph(
-            asset_guid,
-            effective_time,
-            as_of_time,
-            relationship_types,
-            limit_to_isc_q_name,
-            hilight_isc_q_name,
-            all_anchors,
-            start_from,
-            page_size,
-            "JSON",
+        asset_graph = self.get_asset_lineage_graph_by_guid(
+            guid=guid,
+            effective_time=effective_time,
+            as_of_time=as_of_time,
+            relationship_types=relationship_types,
+            limit_to_isc_q_name=limit_to_isc_q_name,
+            hilight_isc_q_name=hilight_isc_q_name,
+            all_anchors=all_anchors,
+            start_from=start_from,
+            page_size=page_size,
+            output_format="JSON",
         )
         return asset_graph.get("mermaidGraph")
 

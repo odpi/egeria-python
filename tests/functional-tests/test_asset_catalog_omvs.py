@@ -159,12 +159,11 @@ class TestAssetCatalog:
             token = asset_client.create_egeria_bearer_token(self.good_user_2, "secret")
             start_time = time.perf_counter()
 
-            # Use a known asset GUID from your environment
             # asset_guid = "73dd23df-6312-4a4f-af5f-e7cb8312a04d"
             # asset_guid = "9b82b3d0-c61b-4a43-8f90-8b2f5b882e84"
             asset_guid = "71ee27bb-7030-441b-8689-fd0f9605beeb"
-            response = asset_client.get_asset_graph(
-                asset_guid,
+            response = asset_client.get_asset_graph_by_guid(
+                guid=asset_guid,
                 output_format="DICT",
                 report_spec="Asset-Graph"
             )
@@ -208,7 +207,7 @@ class TestAssetCatalog:
 
             # asset_guid = "73dd23df-6312-4a4f-af5f-e7cb8312a04d"
             asset_guid = "71ee27bb-7030-441b-8689-fd0f9605beeb"
-            response = asset_client.get_asset_mermaid_graph(asset_guid)
+            response = asset_client.get_asset_mermaid_graph(guid=asset_guid)
             duration = time.perf_counter() - start_time
 
             print(f"\n\tDuration was {duration} seconds")
@@ -256,13 +255,13 @@ class TestAssetCatalog:
             limit_to_isc_q_name = None
             hilight_isc_q_name = None
 
-            response = asset_client.get_asset_lineage_graph(
-                asset_guid,
-                effective_time,
-                as_of_time,
-                relationship_types,
-                limit_to_isc_q_name,
-                hilight_isc_q_name,
+            response = asset_client.get_asset_lineage_graph_by_guid(
+                guid=asset_guid,
+                effective_time=effective_time,
+                as_of_time=as_of_time,
+                relationship_types=relationship_types,
+                limit_to_isc_q_name=limit_to_isc_q_name,
+                hilight_isc_q_name=hilight_isc_q_name,
                 all_anchors=False,
                 start_from=0,
                 page_size=0,
@@ -309,7 +308,7 @@ class TestAssetCatalog:
 
             asset_guid = "73dd23df-6312-4a4f-af5f-e7cb8312a04d"
 
-            response = asset_client.get_asset_lineage_mermaid_graph(asset_guid)
+            response = asset_client.get_asset_lineage_mermaid_graph(guid=asset_guid)
             duration = time.perf_counter() - start_time
 
             print(f"\n\tDuration was {duration} seconds")
@@ -453,8 +452,8 @@ class TestAssetCatalog:
                 if asset_guid:
                     # GET GRAPH
                     print("\n\n=== GET ASSET GRAPH ===")
-                    graph = asset_client.get_asset_graph(
-                        asset_guid,
+                    graph = asset_client.get_asset_graph_by_guid(
+                        guid=asset_guid,
                         output_format="JSON"
                     )
                     print(f"Retrieved asset graph for {asset_guid}")
@@ -462,8 +461,8 @@ class TestAssetCatalog:
                     # GET LINEAGE
                     print("\n\n=== GET ASSET LINEAGE ===")
                     try:
-                        lineage = asset_client.get_asset_lineage_graph(
-                            asset_guid,
+                        lineage = asset_client.get_asset_lineage_graph_by_guid(
+                            guid=asset_guid,
                             output_format="JSON"
                         )
                         print(f"Retrieved asset lineage for {asset_guid}")

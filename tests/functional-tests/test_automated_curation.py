@@ -413,12 +413,9 @@ class TestAutomatedCuration:
             duration = time.perf_counter() - start_time
             print(f"\n\tDuration was {duration} seconds")
             print(f"The type of response is: {type(response)}")
-            if type(response) is list:
-                out = "\n\n" + json.dumps(response, indent=4)
-                count = len(response)
-                console.log(f"Found {count} elements")
-                print_json(out)
-            elif type(response) is str:
+            if isinstance(response, (list, dict)):
+                print_json(data=response)
+            elif isinstance(response, str):
                 console.log("\n\n" + response)
             assert True
 
@@ -543,12 +540,9 @@ class TestAutomatedCuration:
             duration = time.perf_counter() - start_time
             print(f"\n\tDuration was {duration} seconds")
             print(f"\n Type of response is {type(response)}")
-            if type(response) is list:
-                out = "\n\n" + json.dumps(response, indent=4)
-                count = len(response)
-                console.log(f"Found {count} elements")
-                print_json(out)
-            elif type(response) is str:
+            if isinstance(response, (list, dict)):
+                print_json(data=response)
+            elif isinstance(response, str):
                 console.log("\n\n" + response)
             assert True
 
@@ -577,21 +571,15 @@ class TestAutomatedCuration:
             response = a_client.find_engine_actions("*", output_format = "JSON", report_spec = "Referenceable", page_size=2)
             duration = time.perf_counter() - start_time
             print(f"\n\tDuration was {duration} seconds")
-            if type(response) is list:
-                out = "\n\n" + json.dumps(response, indent=4)
-                count = len(response)
-                console.log(f"Found {count} elements")
-                print_json(out)
-            elif type(response) is str:
+            if isinstance(response, (list, dict)):
+                print_json(data=response)
+            elif isinstance(response, str):
                 console.log("\n\n" + response)
             duration = time.perf_counter() - start_time
             print(f"\n\tDuration was {duration} seconds")
-            if type(response) is list:
-                out = "\n\n" + json.dumps(response, indent=4)
-                count = len(response)
-                console.log(f"Found {count} elements")
-                print_json(out)
-            elif type(response) is str:
+            if isinstance(response, (list, dict)):
+                print_json(data=response)
+            elif isinstance(response, str):
                 console.log("\n\n" + response)
             assert True
 
@@ -711,12 +699,9 @@ class TestAutomatedCuration:
             duration = time.perf_counter() - start_time
             print(f"\n\tDuration was {duration} seconds")
             print(f"\n Type of response is {type(response)}")
-            if type(response) is list:
-                out = "\n\n" + json.dumps(response, indent=4)
-                count = len(response)
-                console.log(f"Found {count} elements")
-                print_json(out)
-            elif type(response) is str:
+            if isinstance(response, (list, dict)):
+                print_json(data=response)
+            elif isinstance(response, str):
                 console.log("\n\n" + response)
             assert True
 
@@ -750,12 +735,9 @@ class TestAutomatedCuration:
             response = a_client.get_all_technology_types(output_format = "JSON", report_spec = "Referenceable")
             duration = time.perf_counter() - start_time
             print(f"\n\tDuration was {duration} seconds")
-            if type(response) is list:
-                out = "\n\n" + json.dumps(response, indent=4)
-                count = len(response)
-                console.log(f"Found {count} elements")
-                print_json(out)
-            elif type(response) is str:
+            if isinstance(response, (list, dict)):
+                print_json(data=response)
+            elif isinstance(response, str):
                 console.log("\n\n" + response)
             assert True
 
@@ -819,12 +801,9 @@ class TestAutomatedCuration:
             )
             duration = time.perf_counter() - start_time
             print(f"\n\tDuration was {duration} seconds")
-            if type(response) is list:
-                out = "\n\n" + json.dumps(response, indent=4)
-                count = len(response)
-                console.log(f"Found {count} elements")
-                print_json(out)
-            elif type(response) is str:
+            if isinstance(response, (list, dict)):
+                print_json(data=response)
+            elif isinstance(response, str):
                 console.log("\n\n" + response)
             assert True
 
@@ -853,12 +832,9 @@ class TestAutomatedCuration:
                                                      report_spec="Tech-Type-Details-MD")
             duration = time.perf_counter() - start_time
             print(f"\n\tDuration was {duration} seconds")
-            if type(response) is list:
-                out = "\n\n" + json.dumps(response, indent=4)
-                count = len(response)
-                console.log(f"Found {count} elements")
-                print_json(out)
-            elif type(response) is str:
+            if isinstance(response, (list, dict)):
+                print_json(data=response)
+            elif isinstance(response, str):
                 console.log("\n\n" + response)
 
             duration = time.perf_counter() - start_time
@@ -1398,19 +1374,16 @@ class TestAutomatedCuration:
             token = a_client.create_egeria_bearer_token()
 
             start_time = time.perf_counter()
-            # filter_string = "CSV Data File"
-            filter_string = "File System Directory"
+            filter_string = "CSV Data File"
+            # filter_string = "Fileserver"
             response = a_client.get_technology_type_elements(filter_string, get_templates=True, output_format="JSON",
                                                              report_spec="Tech-Type-Elements")
                                                              # report_spec="Common-Mermaid")
             duration = time.perf_counter() - start_time
             print(f"\n\tDuration was {duration} seconds")
-            if type(response) is list:
-                out = "\n\n" + json.dumps(response, indent=4)
-                count = len(response)
-                console.log(f"Found {count} elements")
-                print_json(out)
-            elif type(response) is str:
+            if isinstance(response, (list, dict)):
+                print_json(data=response)
+            elif isinstance(response, str):
                 console.log("\n\n" + response)
             assert True
 
