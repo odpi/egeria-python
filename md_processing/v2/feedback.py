@@ -88,20 +88,23 @@ class FeedbackProcessor(AsyncBaseCommandProcessor):
             if guid:
                 self.parsed_output["guid"] = guid
                 logger.success(f"Added Journal Entry to '{journal_name}' with GUID {guid}")
-                return await self.client._async_get_note_by_guid(guid, output_format='MD')
+                # A note is a Journal Entry in Dr.Egeria; render with the Journal Entry spec.
+                return await self.client._async_get_note_by_guid(
+                    guid, output_format='MD', report_spec="Journal-Entry-DrE")
 
         elif "Note" in object_type:
-             # Standard Note in NoteLog
-            prop_body = set_element_prop_body("Note", qualified_name, attributes)
+             # A note is a Journal Entry; at the metadata level it is a Notification (NotificationProperties).
+            prop_body = set_element_prop_body("Notification", qualified_name, attributes)
             if verb == "Update":
                 guid = self.parsed_output.get("guid")
                 if not guid: return self.command.raw_block
-                body = set_update_body("Note", attributes)
+                body = set_update_body("Notification", attributes)
                 body['properties'] = self.filter_update_properties(prop_body, body.get('mergeUpdate', True))
                 await self.client._async_update_note(guid, body=body_slimmer(body))
                 self.parsed_output["guid"] = guid
                 logger.success(f"Updated Note '{display_name}' with GUID {guid}")
-                return await self.client._async_get_note_by_guid(guid, output_format='MD')
+                return await self.client._async_get_note_by_guid(
+                    guid, output_format='MD', report_spec="Journal-Entry-DrE")
             # Create Note omitted for brev since it was create_project in sync code? 
             # Looking closer at sync code: body = set_create_body... guid = egeria_client.create_project (??)
             # That looks like a bug in sync code. I'll stick to what was there or leave for now.
