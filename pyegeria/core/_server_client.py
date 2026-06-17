@@ -1996,28 +1996,42 @@ class ServerClient(BaseServerClient):
 
 
         """
-        if body is None and element_guid:
-            body = {
-                "class": "NewAttachmentRequestBody",
-                "properties": {
-                    "class": "NoteLogProperties",
-                    "typeName": "NoteLog",
-                    "displayName": display_name,
-                    "qualifiedName": self.make_feedback_qn("NoteLog", element_guid, display_name),
-                    "description": description,
+        if body is None:
+            if element_guid:
+                body = {
+                    "class": "NewAttachmentRequestBody",
+                    "properties": {
+                        "class": "NoteLogProperties",
+                        "typeName": "NoteLog",
+                        "displayName": display_name,
+                        "qualifiedName": self.make_feedback_qn("NoteLog", element_guid, display_name),
+                        "description": description,
+                    }
                 }
-            }
-        elif body is None and not element_guid:
-            body = {
-                "class": "NewAElementRequestBody",
-                "properties": {
-                    "class": "NoteLogProperties",
-                    "typeName": "NoteLog",
-                    "displayName": display_name,
-                    "qualifiedName": self.make_feedback_qn("NoteLog", element_guid, display_name),
-                    "description": description,
+            else:
+                body = {
+                    "class": "NewElementRequestBody",
+                    "properties": {
+                        "class": "NoteLogProperties",
+                        "typeName": "NoteLog",
+                        "displayName": display_name,
+                        "qualifiedName": self.make_feedback_qn("NoteLog", None, display_name),
+                        "description": description,
+                    }
                 }
-            }
+
+        elif body is not None and body.get("class") not in ["NewAttachmentRequestBody", "NewElementRequestBody"]:
+            # Wrap properties in a request body if they aren't already
+            if element_guid:
+                body = {
+                    "class": "NewAttachmentRequestBody",
+                    "properties": body
+                }
+            else:
+                body = {
+                    "class": "NewElementRequestBody",
+                    "properties": body
+                }
 
         elif body is None and display_name is None:
             context = {"issue": "Invalid display name and body not provided"}
@@ -2025,10 +2039,10 @@ class ServerClient(BaseServerClient):
 
         if element_guid:
             url = f"{self.command_root}feedback-manager/elements/{element_guid}/note-logs"
+            return await self._async_create_attachment_body_request(url, ["NoteLogProperties"], body)
         else:
-            url = f"{self.command_root}feedback-manager/note-logs"
-        response = await self._async_make_request("POST", url, body_slimmer(body))
-        return response.json()
+            url = f"{self.command_root}feedback-manager/assets"
+            return await self._async_create_element_body_request(url, ["NoteLogProperties"], body)
 
     @dynamic_catch
     def create_note_log(
@@ -2199,8 +2213,8 @@ class ServerClient(BaseServerClient):
             context = {"issue": "Invalid display name and body not provided"}
             raise PyegeriaInvalidParameterException(context=context)
 
-        url = f"{self.command_root}feedback-manager/note-logs/note-logs/{note_log_guid}"
-        await self._async_make_request("POST", url, body_slimmer(body))
+        url = f"{self.command_root}feedback-manager/note-logs/{note_log_guid}"
+        await self._async_update_element_body_request(url, ["NoteLogProperties"], body)
 
     @dynamic_catch
     def update_note_log(
@@ -2260,7 +2274,7 @@ class ServerClient(BaseServerClient):
         """
         loop = asyncio.get_event_loop()
         response = loop.run_until_complete(
-            self.update_note_log(note_log_guid, display_name, description, body, merge_update)
+            self._async_update_note_log(note_log_guid, display_name, description, body, merge_update)
         )
         return response
 
@@ -2771,7 +2785,7 @@ class ServerClient(BaseServerClient):
 
         """
 
-        if body is None and display_name:
+        if body is None:
             body = {
                 "class": "NewElementRequestBody",
                 "anchorGUID": associated_element if associated_element else note_log_guid,
@@ -2790,22 +2804,37 @@ class ServerClient(BaseServerClient):
                 "forDuplicateProcessing": False
             }
 
+        elif body is not None and body.get("class") != "NewElementRequestBody":
+            # Wrap properties in a request body if they aren't already
+            body = {
+                "class": "NewElementRequestBody",
+                "anchorGUID": associated_element if associated_element else note_log_guid,
+                "isOwnAnchor": False,
+                "parentGUID": note_log_guid,
+                "parentRelationshipTypeName": "AttachedNoteLogEntry",
+                "parentAtEnd1": True,
+                "properties": body,
+                "forLineage": False,
+                "forDuplicateProcessing": False
+            }
+
         elif body is None and display_name is None:
             context = {"issue": "Invalid display name and body not provided"}
             raise PyegeriaInvalidParameterException(context=context)
 
         url = f"{self.command_root}feedback-manager/assets"
-        response = await self._async_create_element_body_request(url, ['Notification'], body)
-        return response
+        return await self._async_create_element_body_request(url, ['NotificationProperties'], body)
 
     @dynamic_catch
     def create_note(
-            self, note_log_guid:
-            str, display_name: Optional[str] = None, description: Optional[str] = None,
+            self, note_log_guid: str,
+            display_name: Optional[str] = None,
+            description: Optional[str] = None,
+            associated_element: Optional[str] = None,
             body: Optional[dict | NewElementRequestBody] = None) -> str:
         """
         Creates a new note for a note log and returns the unique identifier for it.
-    
+
         Parameters
         ----------
         note_log_guid
@@ -2814,20 +2843,22 @@ class ServerClient(BaseServerClient):
             - optional display name for the note
         description
             - optional description for the note
+        associated_element: str, default is None
+            - guid of the element to associate with the note - if provided, the note will be anchored to this element.
         body
             - optional body for the note
-    
+
         Returns
         -------
         Guid for the note
-    
+
         Raises
         ------
         PyegeriaException
-    
+
         Notes
         _____
-    
+
         Sample body (a note is an asset)
         {
           "class" : "NewElementRequestBody",
@@ -2863,11 +2894,11 @@ class ServerClient(BaseServerClient):
           "forLineage" : false,
           "forDuplicateProcessing" : false
         }
-    
+
         """
         loop = asyncio.get_event_loop()
         response = loop.run_until_complete(
-            self._async_create_note(note_log_guid, display_name, body)
+            self._async_create_note(note_log_guid, display_name, description, associated_element, body)
         )
         return response
 
@@ -2964,7 +2995,7 @@ class ServerClient(BaseServerClient):
                     raise PyegeriaException(error_code = PyegeriaErrorCode.VALIDATION_ERROR, context = context)
 
             note_log = await self._async_create_note_log(element_guid = element_guid, display_name = note_log_display_name)
-            note_log_guid = note_log["guid"]
+            note_log_guid = note_log
 
         # Create the Journal Entry (Note)
         if journal_entry_display_name is None:
@@ -3472,8 +3503,10 @@ class ServerClient(BaseServerClient):
         """
         loop = asyncio.get_event_loop()
         response = loop.run_until_complete(
-            self._async_find_notes(search_string, starts_with, ends_with, ignore_case, output_format=output_format,
-                                   report_spec=report_spec, start_from=start_from, page_size=page_size, body=body, **kwargs)
+            self._async_find_notes(search_string=search_string, body=body, starts_with=starts_with,
+                                   ends_with=ends_with, ignore_case=ignore_case, start_from=start_from,
+                                   page_size=page_size, output_format=output_format,
+                                   report_spec=report_spec, **kwargs)
         )
         return response
 
@@ -3510,7 +3543,7 @@ class ServerClient(BaseServerClient):
 
         """
 
-        url = f"{self.command_root}feedback-manager/notes/{guid}/retrieve"
+        url = f"{self.command_root}feedback-manager/assets/{guid}/retrieve"
         response = await self._async_get_guid_request(url, _type=metadata_element_type_name,
                                                       _gen_output=self._generate_feedback_output,
                                                       graph_query_depth=graph_query_depth,
@@ -3595,7 +3628,7 @@ class ServerClient(BaseServerClient):
 
         """
 
-        url = f"{self.command_root}feedback-manager/note-logs/{note_log_guid}/retrieve"
+        url = f"{self.command_root}feedback-manager/note-logs/{note_log_guid}/notes/retrieve"
         response = await self._async_get_results_body_request(url, _type=metadata_element_type_name,
                                                              _gen_output=self._generate_feedback_output,
                                                              graph_query_depth=graph_query_depth,
