@@ -1821,6 +1821,46 @@ class MyProfileApp(App):
             push the main screen again"""
         self.push_screen("main")
 
+    def edit_identities_callback(self, rows_with_keys):
+        """ Callback for EditIdentitiesScreen """
+        if isinstance(rows_with_keys, list):
+            main_screen = self.get_screen("main")
+            table = main_screen.query_one("#user_identity_table", DataTable)
+            table.clear()
+            for key_str, cell_values in rows_with_keys:
+                table.add_row(*cell_values, key=key_str)
+        self.push_screen("main")
+
+    def edit_communities_callback(self, rows_with_keys):
+        """ Callback for EditCommunitiesScreen """
+        if isinstance(rows_with_keys, list):
+            main_screen = self.get_screen("main")
+            table = main_screen.query_one("#communities_table", DataTable)
+            table.clear()
+            for key_str, cell_values in rows_with_keys:
+                table.add_row(*cell_values, key=key_str)
+        self.push_screen("main")
+
+    def edit_roles_callback(self, rows_with_keys):
+        """ Callback for EditRolesScreen """
+        if isinstance(rows_with_keys, list):
+            main_screen = self.get_screen("main")
+            table = main_screen.query_one("#roles_table", DataTable)
+            table.clear()
+            for key_str, cell_values in rows_with_keys:
+                table.add_row(*cell_values, key=key_str)
+        self.push_screen("main")
+
+    def edit_teams_callback(self, rows_with_keys):
+        """ Callback for EditTeamsScreen """
+        if isinstance(rows_with_keys, list):
+            main_screen = self.get_screen("main")
+            table = main_screen.query_one("#teams_table", DataTable)
+            table.clear()
+            for key_str, cell_values in rows_with_keys:
+                table.add_row(*cell_values, key=key_str)
+        self.push_screen("main")
+
     def edit_profile_callback(self, return_c):
         """ Callback routine for the edit profile screen """
         if isinstance(return_c, int):
@@ -1832,13 +1872,47 @@ class MyProfileApp(App):
                 self.push_screen("main")
         elif isinstance(return_c, str):
             if return_c == "identity":
-                self.push_screen("edit_identities")
+                main_screen = self.get_screen("main")
+                self.identities_table = main_screen.query_one("#user_identity_table", DataTable)
+                # Extract Columns from table
+                columns = [col.label.plain for col in self.identities_table.columns.values()]
+                # Extract row keys and data simultaneously
+                rows_with_keys = []
+                for row_key in self.identities_table.rows:
+                    rows_with_keys.append((row_key.value, self.identities_table.get_row(row_key)))
+                self.push_screen(EditIdentitiesScreen(columns, rows_with_keys), callback=self.edit_identities_callback)
             elif return_c == "community":
-                self.push_screen("edit_communities")
+                main_screen = self.get_screen("main")
+                self.communities_table = main_screen.query_one("#communities_table", DataTable)
+                # Extract Columns from table
+                columns = [col.label.plain for col in self.communities_table.columns.values()]
+                # Extract row keys and data simultaneously
+                rows_with_keys = []
+                for row_key in self.communities_table.rows:
+                    rows_with_keys.append((row_key.value, self.communities_table.get_row(row_key)))
+                self.push_screen(EditCommunitiesScreen(columns, rows_with_keys), callback=self.edit_communities_callback)
             elif return_c == "role":
-                self.push_screen("edit_roles")
+                main_screen = self.get_screen("main")
+                self.roles_table = main_screen.query_one("#roles_table", DataTable)
+                # Extract Columns from table
+                columns = [col.label.plain for col in self.roles_table.columns.values()]
+                # Extract row keys and data simultaneously
+                rows_with_keys = []
+                for row_key in self.roles_table.rows:
+                    rows_with_keys.append((row_key.value, self.roles_table.get_row(row_key)))
+                self.push_screen(EditRolesScreen(columns, rows_with_keys), callback=self.edit_roles_callback)
             elif return_c == "team":
-                self.push_screen("edit_teams")
+                main_screen = self.get_screen("main")
+                self.teams_table = main_screen.query_one("#teams_table", DataTable)
+                # Extract Columns from table
+                columns = [col.label.plain for col in self.teams_table.columns.values()]
+                # Extract row keys and data simultaneously
+                rows_with_keys = []
+                for row_key in self.teams_table.rows:
+                    # row_key.value gets the string representation of the RowKey
+                    # get_row() returns the list of cell values for that row
+                    rows_with_keys.append((row_key.value, self.teams_table.get_row(row_key)))
+                self.push_screen(EditTeamsScreen(columns, rows_with_keys), callback=self.edit_teams_callback)
         else:
             self.log(f"Unexpected return type from EditProfileScreen: {type(return_c)}")
             self.push_screen("main")

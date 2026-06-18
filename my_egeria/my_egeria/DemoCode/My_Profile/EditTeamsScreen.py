@@ -18,14 +18,16 @@ class EditTeamsScreen(ModalScreen):
         they belong too."""
 
     BINDINGS = [
-        ("escape", "app.pop_screen", "Exit"),
+        ("escape", "exit_screen", "Exit"),
         ("d", "delete_row", "Delete Row")
     ]
 
-    def __init__(self, *args, **kwargs):
+    def __init__(self, columns, rows_with_keys, *args, **kwargs):
         super().__init__(*args, **kwargs)
-        self.my_teams_table: DataTable
+        self.my_teams_table: DataTable = DataTable(id="teams_destination")
         self.row_key = None
+        self.columns = columns
+        self.rows_with_keys = rows_with_keys
         self.teams_container: ScrollableContainer
 
     def compose(self) -> ComposeResult:
@@ -39,58 +41,39 @@ class EditTeamsScreen(ModalScreen):
         self.log("Edit teams screen mounted")
         self.title = "Egeria - my_profile"
         self.sub_title = "Edit Teams"
+        # Polulate DataTable
+        self.my_teams_table.clear(columns=True)
+        self.my_teams_table.add_columns(*self.columns)
+        for key_str, cell_values in self.rows_with_keys:
+            self.my_teams_table.add_row(*cell_values, key=key_str)
         try:
-            # Establish awareness of the MainScreen where the teams table exists
-            main_screen = self.app.get_screen("main")
-            self.log(f"Main screen found: {main_screen}")
-            # Access the teams table in the main screen class
-            try:
-                self.my_teams_table = main_screen.query_one("#teams_table", DataTable)
-                self.log(f"Teams table found: {self.my_teams_table}")
-                self.my_teams_table.cursor_type = "row"
-                self.my_teams_table.zebra_stripes = True
-                self.my_teams_table.display = True
-                self.my_teams_table.visible = True
-            except NoMatches as e:
-                # If there is an error finding the teams table
-                self.log(f"Teams data table not found, possible timing error: {e}")
-                await self.dismiss(401)
-            try:
-                # Access the edit teams container in the screen composition objects
-                self.teams_container = self.query_one("#edit_teams_container", ScrollableContainer)
-                self.log(f"Teams container found: {self.teams_container}")
-                # Mount the table into the container
-                await self.teams_container.mount(self.my_teams_table)
-                self.log("Table mounted into container")
-                # To make sure, refresh the container object on the display
-                self.teams_container.refresh(layout=True)
-                self.my_teams_table.refresh(layout=True)
-                self.focus()
-                self.call_after_refresh(self.my_teams_table.focus)
-            except NoMatches as e:
-                # If there is an error finding the container
-                self.log(f"Edit teams container not found - Error: {e}")
-                await self.dismiss(400)
+            # Access the edit teams container in the screen composition objects
+            self.teams_container = self.query_one("#edit_teams_container", ScrollableContainer)
+            self.log(f"Teams container found: {self.teams_container}")
+            # Mount the table into the container
+            await self.teams_container.mount(self.my_teams_table)
+            self.log("Table mounted into container")
+            # To make sure, refresh the container object on the display
+            self.teams_container.refresh(layout=True)
+            self.my_teams_table.refresh(layout=True)
+            self.focus()
+            self.call_after_refresh(self.my_teams_table.focus)
         except NoMatches as e:
-            # If there is an error finding the teams table
-            self.log(f"Link to Main Screen object failed: {e}")
-            await self.dismiss(402)
+            # If there is an error finding the container
+            self.log(f"Edit teams container not found - Error: {e}")
+            await self.dismiss(400)
 
-    def on_unmount(self):
-        """ When the screen is unmounted move the table back to the main screen"""
-        try:
-            main_screen = self.app.get_screen("main")
-            main_container = main_screen.query_one("#main_teams_container", ScrollableContainer)
-            main_container.remove_children()
-            main_container.mount(self.my_teams_table)
-            main_container.refresh(layout=True)
-        except NoMatches:
-            self.log("Error moving teams table back to main screen")
-
-    @on(DataTable.RowSelected, "#teams_table")
+    @on(DataTable.RowSelected, "#teams_destination")
     def row_selected(self, event: DataTable.RowSelected):
         """ When the user selects a row in the data table store the row key"""
         self.row_key = event.row_key
+
+    def action_exit_screen(self):
+        """ The user has requested to exit the screen, return the current table data """
+        rows_with_keys = []
+        for row_key in self.my_teams_table.rows:
+            rows_with_keys.append((row_key.value, self.my_teams_table.get_row(row_key)))
+        self.dismiss(rows_with_keys)
 
     def action_delete_row(self):
         """ The user has selected the delete row option """
