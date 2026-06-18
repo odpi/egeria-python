@@ -53,7 +53,7 @@ def display_related_specification(
     c_client = ClassificationExplorer(server, url, user_id=username, user_pwd=password)
     token = c_client.create_egeria_bearer_token()
     rel_el = c_client.get_related_elements(
-        element_guid, "SpecificationPropertyAssignment", None
+        element_guid, "SpecificationPropertyAssignment"
     )
 
     if type(rel_el) is str:

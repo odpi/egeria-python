@@ -720,423 +720,425 @@ class ActorManager(ServerClient):
 
     @dynamic_catch
     async def _async_find_actor_profiles(
-            self,
-            search_string: str = "*",
-            body: Optional[dict | SearchStringRequestBody] = None,
-            starts_with: bool = True,
-            ends_with: bool = False,
-            ignore_case: bool = False,
-            start_from: int = 0,
-            page_size: int = 100,
-            output_format: str = 'JSON',
-            report_spec: str | dict = "Actor-Profiles",
-            **kwargs
+        self,
+        search_string: str = "*",
+        starts_with: bool = True,
+        ends_with: bool = False,
+        ignore_case: bool = True,
+        metadata_element_type_name: str | None = "ActorProfile",
+        metadata_element_subtypes: list[str] | None = None,
+        include_only_relationships: list[str] | None = None,
+        skip_relationships: list[str] | None = None,
+        graph_query_depth: int = 3,
+        as_of_time: Optional[str] = None,
+        start_from: int = 0,
+        page_size: int = 100,
+        sequencing_order: Optional[str] = None,
+        sequencing_property: Optional[str] = None,
+        output_format: str = "JSON",
+        report_spec: Optional[str | dict] = "Actor-Profiles",
+        body: Optional[dict | SearchStringRequestBody] = None,
+        **kwargs,
     ) -> list | str:
-        """ Retrieve the list of actor profile metadata elements that contain the search string. Async Version.
+        """Retrieve the list of actor profile metadata elements that contain the search string. Async Version.
 
         Parameters
         ----------
-        search_string : str, default "*"
+        search_string: str
             Search string to match against - None or '*' indicate match against all profiles.
-        body : dict | SearchStringRequestBody, optional
-            Request body. If provided, overrides other parameters.
-        starts_with : bool, default True
+        starts_with : bool, [default=True], optional
             Starts with the supplied string.
-        ends_with : bool, default False
-            Ends with the supplied string.
-        ignore_case : bool, default False
-            Ignore case when searching.
-        start_from : int, default 0
-            Starting index for pagination.
-        page_size : int, default 100
-            Number of items to return in a single page.
-        output_format : str, default "JSON"
-            Output format: "MD", "LIST", "FORM", "REPORT", "DICT", "MERMAID" or "JSON".
-        report_spec : str | dict, default "Actor-Profiles"
-            Report specification for output formatting.
-        **kwargs : dict, optional
-            Additional parameters supported by the underlying find request:
-            
-            - anchor_domain : str - Domain to anchor the search
-            - metadata_element_type : str - Specific metadata element type
-            - metadata_element_subtypes : list[str] - List of metadata element subtypes
-            - skip_relationships : list[str] - Relationship types to skip
-            - include_only_relationships : list[str] - Only include these relationship types
-            - skip_classified_elements : list[str] - Skip elements with these classifications
-            - include_only_classified_elements : list[str] - Only include elements with these classifications
-            - graph_query_depth : int - Depth of graph traversal (default 3)
-            - governance_zone_filter : list[str] - Filter by governance zones
-            - as_of_time : str - Historical query time (ISO 8601 format)
-            - effective_time : str - Effective time for the query (ISO 8601 format)
-            - relationship_page_size : int - Page size for relationships
-            - limit_results_by_status : list[str] - Filter by element status
-            - sequencing_order : str - Order of results
-            - sequencing_property : str - Property to sequence by
-            - property_names : list[str] - Specific properties to search
+        ends_with : bool, [default=False], optional
+            Ends with the supplied string
+        ignore_case : bool, [default=True], optional
+            Ignore case when searching
+        metadata_element_type_name: str, optional
+            The type of metadata element to search for.
+        metadata_element_subtypes: list[str], optional
+            The subtypes of metadata element to search for.
+        include_only_relationships: list[str], optional
+            The types of relationships to include.
+        skip_relationships: list[str], optional
+            The types of relationships to skip.
+        graph_query_depth: int, [default=3], optional
+            The depth of the graph query.
+        as_of_time: str, optional
+            The time to search as of.
+        start_from: int, [default=0], optional
+            When paged results are available, the starting index.
+        page_size: int, [default=100]
+            The number of items to return.
+        sequencing_order: str, optional
+            The order to sequence results by.
+        sequencing_property: str, optional
+            The property to sequence results by.
+        output_format: str, default = "JSON"
+            - one of "MD", "LIST", "FORM", "REPORT", "DICT", "MERMAID" or "JSON"
+        report_spec: str | dict, optional
+            - The desired output columns/fields to include.
+        body: dict | SearchStringRequestBody, optional
+            - if provided, the search parameters in the body will supercede other attributes.
 
         Returns
         -------
         list | str
-            List of actor profiles in the requested format.
-
-        Raises
-        ------
-        PyegeriaException
-            One of the pyegeria exceptions will be raised if there are issues in communications, message format, or
-            Egeria errors.
-        ValidationError
-            Pydantic validation errors are raised if the body does not conform to the request body.
-        PyegeriaNotAuthorizedException
-            The principle specified by the user_id does not have authorization for the requested action.
         """
         url = str(HttpUrl(f"{self.command_root}/actor-profiles/by-search-string"))
-        
-        # Build params dict with explicit parameters
+
         params = {
-            'search_string': search_string,
-            'starts_with': starts_with,
-            'ends_with': ends_with,
-            'ignore_case': ignore_case,
-            'start_from': start_from,
-            'page_size': page_size,
-            'output_format': output_format,
-            'report_spec': report_spec,
-            'body': body
+            "search_string": search_string,
+            "starts_with": starts_with,
+            "ends_with": ends_with,
+            "ignore_case": ignore_case,
+            "metadata_element_type": metadata_element_type_name,
+            "metadata_element_subtypes": metadata_element_subtypes,
+            "include_only_relationships": include_only_relationships,
+            "skip_relationships": skip_relationships,
+            "graph_query_depth": graph_query_depth,
+            "as_of_time": as_of_time,
+            "start_from": start_from,
+            "page_size": page_size,
+            "sequencing_order": sequencing_order,
+            "sequencing_property": sequencing_property,
+            "output_format": output_format,
+            "report_spec": report_spec,
+            "body": body,
         }
-        # Merge with any additional kwargs, removing None values
         params.update(kwargs)
-        # Filter out None values, but keep search_string even if None (it's required)
-        params = {k: v for k, v in params.items() if v is not None or k == 'search_string'}
-        
-        response = await self._async_find_request(url, _type="ActorProfile",
-                                                  _gen_output=self._generate_actor_profile_output, **params)
+        params = {k: v for k, v in params.items() if v is not None or k == "search_string"}
+
+        response = await self._async_find_request(
+            url,
+            _type="ActorProfile",
+            _gen_output=self._generate_actor_profile_output,
+            **params,
+        )
         return response
 
-    @dynamic_catch
     def find_actor_profiles(
-            self,
-            search_string: str = "*",
-            body: Optional[dict | SearchStringRequestBody] = None,
-            starts_with: bool = True,
-            ends_with: bool = False,
-            ignore_case: bool = False,
-            start_from: int = 0,
-            page_size: int = 100,
-            output_format: str = 'JSON',
-            report_spec: str | dict = "Actor-Profiles",
-            **kwargs
+        self,
+        search_string: str = "*",
+        starts_with: bool = True,
+        ends_with: bool = False,
+        ignore_case: bool = True,
+        metadata_element_type_name: str | None = "ActorProfile",
+        metadata_element_subtypes: list[str] | None = None,
+        include_only_relationships: list[str] | None = None,
+        skip_relationships: list[str] | None = None,
+        graph_query_depth: int = 3,
+        as_of_time: Optional[str] = None,
+        start_from: int = 0,
+        page_size: int = 100,
+        sequencing_order: Optional[str] = None,
+        sequencing_property: Optional[str] = None,
+        output_format: str = "JSON",
+        report_spec: Optional[str | dict] = "Actor-Profiles",
+        body: Optional[dict | SearchStringRequestBody] = None,
+        **kwargs,
     ) -> list | str:
-        """ Retrieve the list of actor profile metadata elements that contain the search string.
+        """Retrieve the list of actor profile metadata elements that contain the search string.
 
         Parameters
         ----------
         search_string : str, default "*"
             Search string to match against - None or '*' indicate match against all profiles.
-        body : dict | SearchStringRequestBody, optional
-            Request body. If provided, overrides other parameters.
         starts_with : bool, default True
             Starts with the supplied string.
         ends_with : bool, default False
             Ends with the supplied string.
-        ignore_case : bool, default False
+        ignore_case : bool, default True
             Ignore case when searching.
-        start_from : int, default 0
-            Starting index for pagination.
-        page_size : int, default 100
-            Number of items to return in a single page.
-        output_format : str, default "JSON"
-            Output format: "MD", "LIST", "FORM", "REPORT", "DICT", "MERMAID" or "JSON".
-        report_spec : str | dict, default "Actor-Profiles"
-            Report specification for output formatting.
-        **kwargs : dict, optional
-            Additional parameters supported by the underlying find request:
-            
-            - anchor_domain : str - Domain to anchor the search
-            - metadata_element_type : str - Specific metadata element type
-            - metadata_element_subtypes : list[str] - List of metadata element subtypes
-            - skip_relationships : list[str] - Relationship types to skip
-            - include_only_relationships : list[str] - Only include these relationship types
-            - skip_classified_elements : list[str] - Skip elements with these classifications
-            - include_only_classified_elements : list[str] - Only include elements with these classifications
-            - graph_query_depth : int - Depth of graph traversal (default 3)
-            - governance_zone_filter : list[str] - Filter by governance zones
-            - as_of_time : str - Historical query time (ISO 8601 format)
-            - effective_time : str - Effective time for the query (ISO 8601 format)
-            - relationship_page_size : int - Page size for relationships
-            - limit_results_by_status : list[str] - Filter by element status
-            - sequencing_order : str - Order of results
-            - sequencing_property : str - Property to sequence by
-            - property_names : list[str] - Specific properties to search
+        metadata_element_type_name : str, optional
+            The type of metadata element.
+        metadata_element_subtypes : list[str], optional
+            The subtypes to filter by.
+        include_only_relationships : list[str], optional
+            Only include these relationships.
+        skip_relationships : list[str], optional
+            Relationships to skip in the graph.
+        graph_query_depth : int, optional
+            The query depth for relationships.
+        as_of_time : str, optional
+            Historical time for the query.
+        start_from : int, optional
+            Starting index for pagination. Defaults to 0.
+        page_size : int, optional
+            Number of results per page. Defaults to 100.
+        sequencing_order : str, optional
+            Order for sequencing results.
+        sequencing_property : str, optional
+            Property to sequence by.
+        output_format : str, optional
+            Format for output. Defaults to "JSON".
+        report_spec : str | dict, optional
+            Report specification for formatting.
+        body : dict, optional
+            Request body for additional parameters.
 
         Returns
         -------
         list | str
-            List of actor profiles in the requested format.
-
-        Raises
-        ------
-        PyegeriaException
-            One of the pyegeria exceptions will be raised if there are issues in communications, message format, or
-            Egeria errors.
-        ValidationError
-            Pydantic validation errors are raised if the body does not conform to the request body.
-        PyegeriaNotAuthorizedException
-            The principle specified by the user_id does not have authorization for the requested action.
         """
         loop = asyncio.get_event_loop()
         return loop.run_until_complete(
             self._async_find_actor_profiles(
-                search_string, body, starts_with, ends_with, ignore_case,
-                start_from, page_size, output_format, report_spec, **kwargs
+                search_string=search_string,
+                starts_with=starts_with,
+                ends_with=ends_with,
+                ignore_case=ignore_case,
+                metadata_element_type_name=metadata_element_type_name,
+                metadata_element_subtypes=metadata_element_subtypes,
+                include_only_relationships=include_only_relationships,
+                skip_relationships=skip_relationships,
+                graph_query_depth=graph_query_depth,
+                as_of_time=as_of_time,
+                start_from=start_from,
+                page_size=page_size,
+                sequencing_order=sequencing_order,
+                sequencing_property=sequencing_property,
+                output_format=output_format,
+                report_spec=report_spec,
+                body=body,
+                **kwargs,
             )
         )
 
     @dynamic_catch
-    async def _async_get_actor_profiles_by_name(self, filter_string: Optional[str] = None,
-                                                classification_names: Optional[list[str]] = None,
-                                                body: Optional[dict | FilterRequestBody] = None,
-                                                start_from: int = 0, page_size: int = 0,
-                                                output_format: str = 'JSON',
-                                                report_spec: str | dict = "Actor-Profiles") -> list | str:
-        """ Retrieve the list of actor profile metadata elements with a particular name. Async Version.
+    async def _async_get_actor_profiles_by_name(
+        self,
+        name: str,
+        metadata_element_type_name: str | None = "ActorProfile",
+        metadata_element_subtypes: list[str] | None = None,
+        include_only_relationships: list[str] | None = None,
+        skip_relationships: list[str] | None = None,
+        graph_query_depth: int = 3,
+        start_from: int = 0,
+        page_size: int = 0,
+        output_format: str = "JSON",
+        report_spec: Optional[str | dict] = "Actor-Profiles",
+        body: Optional[dict | FilterRequestBody] = None,
+        **kwargs,
+    ) -> list | str:
+        """Retrieve the list of actor profile metadata elements with a particular name. Async Version.
 
-            Parameters
-            ----------
-            filter_string: str,
-                name to use to find matching profiles.
-            classification_names: list[str], optional, default = None
-                type of collection to filter by - e.g., DataDict, Folder, Root
-            body: dict, optional, default = None
-                Provides, a full request body. If specified, the body supercedes the name parameter.
-            start_from: int, [default=0], optional
-                        When multiple pages of results are available, the page number to start from.
-            page_size: int, [default=None]
-                The number of items to return in a single page. If not specified, the default will be taken from
-                the class instance.
-            output_format: str, default = "JSON"
-                - one of "DICT", "MERMAID" or "JSON"
-            report_spec: dict , optional, default = None
-                The desired output columns/fields to include.
+        Parameters
+        ----------
+        name: str
+            name to use to find matching profiles.
+        metadata_element_type_name : str, optional
+            The type of metadata element.
+        metadata_element_subtypes : list[str], optional
+            The list of subtypes to filter by.
+        include_only_relationships : list[str], optional
+            The list of relationship type names to include.
+        skip_relationships : list[str], optional
+            The list of relationship type names to skip.
+        graph_query_depth : int, optional
+            The query depth for relationships.
+        start_from: int, [default=0], optional
+            When multiple pages of results are available, the page number to start from.
+        page_size: int, [default=0]
+            The number of items to return in a single page.
+        output_format: str, default = "JSON"
+            - one of "DICT", "MERMAID" or "JSON"
+        report_spec: dict, optional, default = "Actor-Profiles"
+            The desired output columns/fields to include.
+        body: dict, optional
+            Provides a full request body. If specified, the body supercedes other attributes.
 
-            Returns
-            -------
-            List | str
-
-            A list of profiles matching the name. Returns a string if none found.
-
-            Raises
-            ------
-            PyegeriaException
-                One of the pyegeria exceptions will be raised if there are issues in communications, message format, or
-                Egeria errors.
-            ValidationError
-                Pydantic validation errors are raised if the body does not conform to the NewElementRequestBody.
-            PyegeriaNotAuthorizedException
-                The principle specified by the user_id does not have authorization for the requested action
-
-            Notes
-            _____
-            {
-              "class" : "SearchStringRequestBody",
-              "searchString": "xxx",
-              "startsWith" : false,
-              "endsWith" : false,
-              "ignoreCase" : true,
-              "startFrom" : 0,
-              "pageSize": 0,
-              "asOfTime" : "{{$isoTimestamp}}",
-              "effectiveTime" : "{{$isoTimestamp}}",
-              "forLineage" : false,
-              "forDuplicateProcessing" : false,
-              "limitResultsByStatus" : ["ACTIVE"],
-              "sequencingOrder" : "PROPERTY_ASCENDING",
-              "sequencingProperty" : "qualifiedName"
-            }
-
+        Returns
+        -------
+        list | str
         """
         url = str(HttpUrl(f"{self.command_root}/actor-profiles/by-name"))
-        response = await self._async_get_name_request(url, _type="ACTOR_PROFILES",
-                                                      _gen_output=self._generate_actor_profile_output,
-                                                      filter_string=filter_string,
-                                                      classification_names=classification_names, start_from=start_from,
-                                                      page_size=page_size, output_format=output_format,
-                                                      report_spec=report_spec, body=body)
+        params = {
+            "filter_string": name,
+            "metadata_element_type": metadata_element_type_name,
+            "metadata_element_subtypes": metadata_element_subtypes,
+            "include_only_relationships": include_only_relationships,
+            "skip_relationships": skip_relationships,
+            "graph_query_depth": graph_query_depth,
+            "start_from": start_from,
+            "page_size": page_size,
+            "output_format": output_format,
+            "report_spec": report_spec,
+            "body": body,
+        }
+        params.update(kwargs)
+        params = {k: v for k, v in params.items() if v is not None or k == "filter_string"}
 
-        return response
+        return await self._async_get_name_request(
+            url,
+            _type="ActorProfile",
+            _gen_output=self._generate_actor_profile_output,
+            **params,
+        )
 
-    def get_actor_profiles_by_name(self, filter_string: Optional[str] = None, classification_names: Optional[list[str]] = None,
-                                   body: Optional[dict | FilterRequestBody] = None,
-                                   start_from: int = 0, page_size: int = 0, output_format: str = 'JSON',
-                                   report_spec: str | dict = "Actor-Profiles") -> list | str:
-        """ Retrieve the list of actor profile metadata elements with a particular name. Async Version.
-
-            Parameters
-            ----------
-            filter_string: str,
-                name to use to find matching profiles.
-            classification_names: list[str], optional, default = None
-                type of collection to filter by - e.g., DataDict, Folder, Root
-            body: dict, optional, default = None
-                Provides, a full request body. If specified, the body supercedes the name parameter.
-            start_from: int, [default=0], optional
-                        When multiple pages of results are available, the page number to start from.
-            page_size: int, [default=None]
-                The number of items to return in a single page. If not specified, the default will be taken from
-                the class instance.
-            output_format: str, default = "JSON"
-                - one of "DICT", "MERMAID" or "JSON"
-            report_spec: dict , optional, default = None
-                The desired output columns/fields to include.
-
-            Returns
-            -------
-            List | str
-
-            A list of profiles matching the name. Returns a string if none found.
-
-            Raises
-            ------
-            PyegeriaException
-                One of the pyegeria exceptions will be raised if there are issues in communications, message format, or
-                Egeria errors.
-            ValidationError
-                Pydantic validation errors are raised if the body does not conform to the NewElementRequestBody.
-            PyegeriaNotAuthorizedException
-              The principle specified by the user_id does not have authorization for the requested action
-
-            Notes
-            _____
-            {
-              "class" : "SearchStringRequestBody",
-              "searchString": "xxx",
-              "startsWith" : false,
-              "endsWith" : false,
-              "ignoreCase" : true,
-              "startFrom" : 0,
-              "pageSize": 0,
-              "asOfTime" : "{{$isoTimestamp}}",
-              "effectiveTime" : "{{$isoTimestamp}}",
-              "forLineage" : false,
-              "forDuplicateProcessing" : false,
-              "limitResultsByStatus" : ["ACTIVE"],
-              "sequencingOrder" : "PROPERTY_ASCENDING",
-              "sequencingProperty" : "qualifiedName"
-            }
-
-        """
-        return asyncio.get_event_loop().run_until_complete(
-            self._async_get_actor_profiles_by_name(filter_string, classification_names, body, start_from,
-                                                   page_size,
-                                                   output_format, report_spec))
-
-    @dynamic_catch
-    async def _async_get_actor_profile_by_guid(self, actor_profile_guid: str, element_type: Optional[str] = None,
-                                               body: Optional[dict | GetRequestBody] = None,
-                                               output_format: str = 'JSON',
-                                               report_spec: Optional[dict | str] = None) -> dict | str:
-        """ Retrieve the properties of a specific actor profile. Async version.
+    def get_actor_profiles_by_name(
+        self,
+        name: str,
+        metadata_element_type_name: str | None = "ActorProfile",
+        metadata_element_subtypes: list[str] | None = None,
+        include_only_relationships: list[str] | None = None,
+        skip_relationships: list[str] | None = None,
+        graph_query_depth: int = 3,
+        start_from: int = 0,
+        page_size: int = 0,
+        output_format: str = "JSON",
+        report_spec: Optional[str | dict] = "Actor-Profiles",
+        body: Optional[dict | FilterRequestBody] = None,
+        **kwargs,
+    ) -> list | str:
+        """Retrieve the list of actor profile metadata elements with a particular name.
 
         Parameters
         ----------
-        actor_profile_guid: str,
-            unique identifier of the actor profile to retrieve.
-        element_type: str, default = None, optional
-            type of actor profile to retrieve.
-        body: dict | GetRequestBody, optional, default = None
-            full request body.
+        name: str
+            name to use to find matching profiles.
+        metadata_element_type_name : str, optional
+            The type of metadata element.
+        metadata_element_subtypes : list[str], optional
+            The list of subtypes to filter by.
+        include_only_relationships : list[str], optional
+            The list of relationship type names to include.
+        skip_relationships : list[str], optional
+            The list of relationship type names to skip.
+        graph_query_depth : int, optional
+            The query depth for relationships.
+        start_from: int, [default=0], optional
+            When multiple pages of results are available, the page number to start from.
+        page_size: int, [default=0]
+            The number of items to return in a single page.
         output_format: str, default = "JSON"
             - one of "DICT", "MERMAID" or "JSON"
-         report_spec: dict , optional, default = None
-                The desired output columns/fields to include.
+        report_spec: dict, optional, default = "Actor-Profiles"
+            The desired output columns/fields to include.
+        body: dict, optional
+            Provides a full request body. If specified, the body supercedes other attributes.
+
+        Returns
+        -------
+        list | str
+        """
+        loop = asyncio.get_event_loop()
+        return loop.run_until_complete(
+            self._async_get_actor_profiles_by_name(
+                name=name,
+                metadata_element_type_name=metadata_element_type_name,
+                metadata_element_subtypes=metadata_element_subtypes,
+                include_only_relationships=include_only_relationships,
+                skip_relationships=skip_relationships,
+                graph_query_depth=graph_query_depth,
+                start_from=start_from,
+                page_size=page_size,
+                output_format=output_format,
+                report_spec=report_spec,
+                body=body,
+                **kwargs,
+            )
+        )
+
+    @dynamic_catch
+    async def _async_get_actor_profile_by_guid(
+        self,
+        guid: str,
+        include_only_relationships: list[str] | None = None,
+        skip_relationships: list[str] | None = None,
+        graph_query_depth: int = 3,
+        output_format: str = "JSON",
+        report_spec: Optional[str | dict] = "Actor-Profiles",
+        body: Optional[dict | GetRequestBody] = None,
+        **kwargs,
+    ) -> dict | str:
+        """Retrieve the properties of a specific actor profile. Async version.
+
+        Parameters
+        ----------
+        guid: str
+            unique identifier of the actor profile to retrieve.
+        include_only_relationships : list[str], optional
+            The list of relationship type names to include.
+        skip_relationships : list[str], optional
+            The list of relationship type names to skip.
+        graph_query_depth : int, optional
+            The query depth for relationships.
+        output_format: str, default = "JSON"
+            - one of "DICT", "MERMAID" or "JSON"
+        report_spec: dict, optional, default = "Actor-Profiles"
+            The desired output columns/fields to include.
+        body: dict | GetRequestBody, optional, default = None
+            full request body.
 
         Returns
         -------
         dict | str
-
-        A JSON dict representing the specified actor profile. Returns a string if none found.
-
-        Raises
-        ------
-        PyegeriaException
-            One of the pyegeria exceptions will be raised if there are issues in communications, message format, or
-            Egeria errors.
-        ValidationError
-            Pydantic validation errors are raised if the body does not conform to the NewElementRequestBody.
-        PyegeriaNotAuthorizedException
-            The principle specified by the user_id does not have authorization for the requested action
-
-        Notes
-        ----
-        Body sample:
-        {
-          "class": "GetRequestBody",
-          "asOfTime": "{{$isoTimestamp}}",
-          "effectiveTime": "{{$isoTimestamp}}",
-          "forLineage": false,
-          "forDuplicateProcessing": false
-        }
         """
+        url = str(HttpUrl(f"{self.command_root}/actor-profiles/{guid}/retrieve"))
+        params = {
+            "include_only_relationships": include_only_relationships,
+            "skip_relationships": skip_relationships,
+            "graph_query_depth": graph_query_depth,
+            "output_format": output_format,
+            "report_spec": report_spec,
+            "body": body,
+        }
+        params.update(kwargs)
+        params = {k: v for k, v in params.items() if v is not None}
 
-        url = str(HttpUrl(f"{self.command_root}/actor-profiles/{actor_profile_guid}/retrieve"))
-        _type = element_type if element_type else "ActorProfile"
+        return await self._async_get_guid_request(
+            url,
+            _type="ActorProfile",
+            _gen_output=self._generate_actor_profile_output,
+            **params,
+        )
 
-        response = await self._async_get_guid_request(url, _type=_type,
-                                                      _gen_output=self._generate_actor_profile_output,
-                                                      output_format=output_format, report_spec=report_spec,
-                                                      body=body)
-
-        return response
-
-    @dynamic_catch
-    def get_actor_profile_by_guid(self, actor_profile_guid: str, element_type: Optional[str] = None,
-                                  body: Optional[dict | GetRequestBody] = None,
-                                  output_format: str = 'JSON',
-                                  report_spec: Optional[dict | str] = None) -> dict | str:
-        """ Retrieve the properties of a specific actor profile.
+    def get_actor_profile_by_guid(
+        self,
+        guid: str,
+        include_only_relationships: list[str] | None = None,
+        skip_relationships: list[str] | None = None,
+        graph_query_depth: int = 3,
+        output_format: str = "JSON",
+        report_spec: Optional[str | dict] = "Actor-Profiles",
+        body: Optional[dict | GetRequestBody] = None,
+        **kwargs,
+    ) -> dict | str:
+        """Retrieve the properties of a specific actor profile.
 
         Parameters
         ----------
-        actor_profile_guid: str,
+        guid: str
             unique identifier of the actor profile to retrieve.
-        element_type: str, default = None, optional
-            type of actor profile to retrieve.
-        body: dict | GetRequestBody, optional, default = None
-            full request body.
+        include_only_relationships : list[str], optional
+            The list of relationship type names to include.
+        skip_relationships : list[str], optional
+            The list of relationship type names to skip.
+        graph_query_depth : int, optional
+            The query depth for relationships.
         output_format: str, default = "JSON"
             - one of "DICT", "MERMAID" or "JSON"
-         report_spec: dict , optional, default = None
-                The desired output columns/fields to include.
+        report_spec: dict, optional, default = "Actor-Profiles"
+            The desired output columns/fields to include.
+        body: dict | GetRequestBody, optional, default = None
+            full request body.
 
         Returns
         -------
         dict | str
-
-        A JSON dict representing the specified actor profile. Returns a string if none found.
-
-        Raises
-        ------
-        PyegeriaException
-            One of the pyegeria exceptions will be raised if there are issues in communications, message format, or
-            Egeria errors.
-        ValidationError
-            Pydantic validation errors are raised if the body does not conform to the NewElementRequestBody.
-        PyegeriaNotAuthorizedException
-            The principle specified by the user_id does not have authorization for the requested action
-
-        Notes
-        ----
-        Body sample:
-        {
-          "class": "GetRequestBody",
-          "asOfTime": "{{$isoTimestamp}}",
-          "effectiveTime": "{{$isoTimestamp}}",
-          "forLineage": false,
-          "forDuplicateProcessing": false
-        }
         """
-        return asyncio.get_event_loop().run_until_complete(
-            self._async_get_actor_profile_by_guid(actor_profile_guid, element_type, body,
-                                                  output_format, report_spec))
+        loop = asyncio.get_event_loop()
+        return loop.run_until_complete(
+            self._async_get_actor_profile_by_guid(
+                guid=guid,
+                include_only_relationships=include_only_relationships,
+                skip_relationships=skip_relationships,
+                graph_query_depth=graph_query_depth,
+                output_format=output_format,
+                report_spec=report_spec,
+                body=body,
+                **kwargs,
+            )
+        )
 
     def _extract_actor_profile_properties(self, element: dict, columns_struct: dict) -> dict:
         """
@@ -2279,423 +2281,425 @@ class ActorManager(ServerClient):
 
     @dynamic_catch
     async def _async_find_actor_roles(
-            self,
-            search_string: str = "*",
-            body: Optional[dict | SearchStringRequestBody] = None,
-            starts_with: bool = True,
-            ends_with: bool = False,
-            ignore_case: bool = False,
-            start_from: int = 0,
-            page_size: int = 0,
-            output_format: str = 'JSON',
-            report_spec: str | dict = "Actor-Roles",
-            **kwargs
+        self,
+        search_string: str = "*",
+        starts_with: bool = True,
+        ends_with: bool = False,
+        ignore_case: bool = True,
+        metadata_element_type_name: str | None = "ActorRole",
+        metadata_element_subtypes: list[str] | None = None,
+        include_only_relationships: list[str] | None = None,
+        skip_relationships: list[str] | None = None,
+        graph_query_depth: int = 3,
+        as_of_time: Optional[str] = None,
+        start_from: int = 0,
+        page_size: int = 100,
+        sequencing_order: Optional[str] = None,
+        sequencing_property: Optional[str] = None,
+        output_format: str = "JSON",
+        report_spec: Optional[str | dict] = "Actor-Roles",
+        body: Optional[dict | SearchStringRequestBody] = None,
+        **kwargs,
     ) -> list | str:
-        """ Retrieve the list of actor role metadata elements that contain the search string. Async Version.
+        """Retrieve the list of actor role metadata elements that contain the search string. Async Version.
 
         Parameters
         ----------
-        search_string : str, default "*"
+        search_string: str
             Search string to match against - None or '*' indicate match against all roles.
-        body : dict | SearchStringRequestBody, optional
-            Request body. If provided, overrides other parameters.
-        starts_with : bool, default True
+        starts_with : bool, [default=True], optional
             Starts with the supplied string.
-        ends_with : bool, default False
-            Ends with the supplied string.
-        ignore_case : bool, default False
-            Ignore case when searching.
-        start_from : int, default 0
-            Starting index for pagination.
-        page_size : int, default 0
-            Number of items to return in a single page.
-        output_format : str, default "JSON"
-            Output format: "MD", "LIST", "FORM", "REPORT", "DICT", "MERMAID" or "JSON".
-        report_spec : str | dict, default "Actor-Roles"
-            Report specification for output formatting.
-        **kwargs : dict, optional
-            Additional parameters supported by the underlying find request:
-            
-            - classification_names : list[str] - Filter by classification names
-            - metadata_element_subtypes : list[str] - List of metadata element subtypes
-            - anchor_domain : str - Domain to anchor the search
-            - skip_relationships : list[str] - Relationship types to skip
-            - include_only_relationships : list[str] - Only include these relationship types
-            - skip_classified_elements : list[str] - Skip elements with these classifications
-            - include_only_classified_elements : list[str] - Only include elements with these classifications
-            - graph_query_depth : int - Depth of graph traversal (default 3)
-            - governance_zone_filter : list[str] - Filter by governance zones
-            - as_of_time : str - Historical query time (ISO 8601 format)
-            - effective_time : str - Effective time for the query (ISO 8601 format)
-            - relationship_page_size : int - Page size for relationships
-            - limit_results_by_status : list[str] - Filter by element status
-            - sequencing_order : str - Order of results
-            - sequencing_property : str - Property to sequence by
-            - property_names : list[str] - Specific properties to search
+        ends_with : bool, [default=False], optional
+            Ends with the supplied string
+        ignore_case : bool, [default=True], optional
+            Ignore case when searching
+        metadata_element_type_name: str, optional
+            The type of metadata element to search for.
+        metadata_element_subtypes: list[str], optional
+            The subtypes of metadata element to search for.
+        include_only_relationships: list[str], optional
+            The types of relationships to include.
+        skip_relationships: list[str], optional
+            The types of relationships to skip.
+        graph_query_depth: int, [default=3], optional
+            The depth of the graph query.
+        as_of_time: str, optional
+            The time to search as of.
+        start_from: int, [default=0], optional
+            When paged results are available, the starting index.
+        page_size: int, [default=100]
+            The number of items to return.
+        sequencing_order: str, optional
+            The order to sequence results by.
+        sequencing_property: str, optional
+            The property to sequence results by.
+        output_format: str, default = "JSON"
+            - one of "MD", "LIST", "FORM", "REPORT", "DICT", "MERMAID" or "JSON"
+        report_spec: str | dict, optional
+            - The desired output columns/fields to include.
+        body: dict | SearchStringRequestBody, optional
+            - if provided, the search parameters in the body will supercede other attributes.
 
         Returns
         -------
         list | str
-            List of actor roles in the requested format.
-
-        Raises
-        ------
-        PyegeriaException
-            One of the pyegeria exceptions will be raised if there are issues in communications, message format, or
-            Egeria errors.
-        ValidationError
-            Pydantic validation errors are raised if the body does not conform to the request body.
-        PyegeriaNotAuthorizedException
-            The principle specified by the user_id does not have authorization for the requested action.
         """
         url = str(HttpUrl(f"{self.command_root}/actor-roles/by-search-string"))
-        
-        # Merge explicit parameters with kwargs
+
         params = {
-            'search_string': search_string,
-            'body': body,
-            'starts_with': starts_with,
-            'ends_with': ends_with,
-            'ignore_case': ignore_case,
-            'start_from': start_from,
-            'page_size': page_size,
-            'output_format': output_format,
-            'report_spec': report_spec
+            "search_string": search_string,
+            "starts_with": starts_with,
+            "ends_with": ends_with,
+            "ignore_case": ignore_case,
+            "metadata_element_type": metadata_element_type_name,
+            "metadata_element_subtypes": metadata_element_subtypes,
+            "include_only_relationships": include_only_relationships,
+            "skip_relationships": skip_relationships,
+            "graph_query_depth": graph_query_depth,
+            "as_of_time": as_of_time,
+            "start_from": start_from,
+            "page_size": page_size,
+            "sequencing_order": sequencing_order,
+            "sequencing_property": sequencing_property,
+            "output_format": output_format,
+            "report_spec": report_spec,
+            "body": body,
         }
         params.update(kwargs)
-        
-        # Filter out None values, but keep search_string even if None (it's required)
-        params = {k: v for k, v in params.items() if v is not None or k == 'search_string'}
-        
-        response = await self._async_find_request(url, _type="ActorRole", _gen_output=self._generate_actor_role_output,
-                                                  **params)
+        params = {k: v for k, v in params.items() if v is not None or k == "search_string"}
+
+        response = await self._async_find_request(
+            url,
+            _type="ActorRole",
+            _gen_output=self._generate_actor_role_output,
+            **params,
+        )
         return response
 
-    @dynamic_catch
     def find_actor_roles(
-            self,
-            search_string: str = '*',
-            body: Optional[dict | SearchStringRequestBody] = None,
-            starts_with: bool = True,
-            ends_with: bool = False,
-            ignore_case: bool = False,
-            start_from: int = 0,
-            page_size: int = 0,
-            output_format: str = 'JSON',
-            report_spec: str | dict = "Actor-Roles",
-            **kwargs
+        self,
+        search_string: str = "*",
+        starts_with: bool = True,
+        ends_with: bool = False,
+        ignore_case: bool = True,
+        metadata_element_type_name: str | None = "ActorRole",
+        metadata_element_subtypes: list[str] | None = None,
+        include_only_relationships: list[str] | None = None,
+        skip_relationships: list[str] | None = None,
+        graph_query_depth: int = 3,
+        as_of_time: Optional[str] = None,
+        start_from: int = 0,
+        page_size: int = 100,
+        sequencing_order: Optional[str] = None,
+        sequencing_property: Optional[str] = None,
+        output_format: str = "JSON",
+        report_spec: Optional[str | dict] = "Actor-Roles",
+        body: Optional[dict | SearchStringRequestBody] = None,
+        **kwargs,
     ) -> list | str:
-        """ Retrieve the list of actor role metadata elements that contain the search string.
+        """Retrieve the list of actor role metadata elements that contain the search string.
 
         Parameters
         ----------
         search_string : str, default "*"
             Search string to match against - None or '*' indicate match against all roles.
-        body : dict | SearchStringRequestBody, optional
-            Request body. If provided, overrides other parameters.
         starts_with : bool, default True
             Starts with the supplied string.
         ends_with : bool, default False
             Ends with the supplied string.
-        ignore_case : bool, default False
+        ignore_case : bool, default True
             Ignore case when searching.
-        start_from : int, default 0
-            Starting index for pagination.
-        page_size : int, default 0
-            Number of items to return in a single page.
-        output_format : str, default "JSON"
-            Output format: "MD", "LIST", "FORM", "REPORT", "DICT", "MERMAID" or "JSON".
-        report_spec : str | dict, default "Actor-Roles"
-            Report specification for output formatting.
-        **kwargs : dict, optional
-            Additional parameters supported by the underlying find request:
-            
-            - classification_names : list[str] - Filter by classification names
-            - metadata_element_subtypes : list[str] - List of metadata element subtypes
-            - anchor_domain : str - Domain to anchor the search
-            - skip_relationships : list[str] - Relationship types to skip
-            - include_only_relationships : list[str] - Only include these relationship types
-            - skip_classified_elements : list[str] - Skip elements with these classifications
-            - include_only_classified_elements : list[str] - Only include elements with these classifications
-            - graph_query_depth : int - Depth of graph traversal (default 3)
-            - governance_zone_filter : list[str] - Filter by governance zones
-            - as_of_time : str - Historical query time (ISO 8601 format)
-            - effective_time : str - Effective time for the query (ISO 8601 format)
-            - relationship_page_size : int - Page size for relationships
-            - limit_results_by_status : list[str] - Filter by element status
-            - sequencing_order : str - Order of results
-            - sequencing_property : str - Property to sequence by
-            - property_names : list[str] - Specific properties to search
+        metadata_element_type_name : str, optional
+            The type of metadata element.
+        metadata_element_subtypes : list[str], optional
+            The subtypes to filter by.
+        include_only_relationships : list[str], optional
+            Only include these relationships.
+        skip_relationships : list[str], optional
+            Relationships to skip in the graph.
+        graph_query_depth : int, optional
+            The query depth for relationships.
+        as_of_time : str, optional
+            Historical time for the query.
+        start_from : int, optional
+            Starting index for pagination. Defaults to 0.
+        page_size : int, optional
+            Number of results per page. Defaults to 100.
+        sequencing_order : str, optional
+            Order for sequencing results.
+        sequencing_property : str, optional
+            Property to sequence by.
+        output_format : str, optional
+            Format for output. Defaults to "JSON".
+        report_spec : str | dict, optional
+            Report specification for formatting.
+        body : dict, optional
+            Request body for additional parameters.
 
         Returns
         -------
         list | str
-            List of actor roles in the requested format.
-
-        Raises
-        ------
-        PyegeriaException
-            One of the pyegeria exceptions will be raised if there are issues in communications, message format, or
-            Egeria errors.
-        ValidationError
-            Pydantic validation errors are raised if the body does not conform to the request body.
-        PyegeriaNotAuthorizedException
-            The principle specified by the user_id does not have authorization for the requested action.
         """
         loop = asyncio.get_event_loop()
         return loop.run_until_complete(
             self._async_find_actor_roles(
-                search_string, body, starts_with, ends_with, ignore_case,
-                start_from, page_size, output_format, report_spec, **kwargs
+                search_string=search_string,
+                starts_with=starts_with,
+                ends_with=ends_with,
+                ignore_case=ignore_case,
+                metadata_element_type_name=metadata_element_type_name,
+                metadata_element_subtypes=metadata_element_subtypes,
+                include_only_relationships=include_only_relationships,
+                skip_relationships=skip_relationships,
+                graph_query_depth=graph_query_depth,
+                as_of_time=as_of_time,
+                start_from=start_from,
+                page_size=page_size,
+                sequencing_order=sequencing_order,
+                sequencing_property=sequencing_property,
+                output_format=output_format,
+                report_spec=report_spec,
+                body=body,
+                **kwargs,
             )
         )
 
     @dynamic_catch
-    async def _async_get_actor_roles_by_name(self, filter_string: Optional[str] = None,
-                                             classification_names: Optional[list[str]] = None,
-                                             body: Optional[dict | FilterRequestBody] = None,
-                                             start_from: int = 0, page_size: int = 0,
-                                             output_format: str = 'JSON',
-                                             report_spec: str | dict = "Actor-Roles") -> list | str:
-        """ Retrieve the list of actor role metadata elements with a particular name. Async Version.
+    async def _async_get_actor_roles_by_name(
+        self,
+        name: str,
+        metadata_element_type_name: str | None = "ActorRole",
+        metadata_element_subtypes: list[str] | None = None,
+        include_only_relationships: list[str] | None = None,
+        skip_relationships: list[str] | None = None,
+        graph_query_depth: int = 3,
+        start_from: int = 0,
+        page_size: int = 0,
+        output_format: str = "JSON",
+        report_spec: Optional[str | dict] = "Actor-Roles",
+        body: Optional[dict | FilterRequestBody] = None,
+        **kwargs,
+    ) -> list | str:
+        """Retrieve the list of actor role metadata elements with a particular name. Async Version.
 
-            Parameters
-            ----------
-            filter_string: str,
-                name to use to find matching roles.
-            classification_names: list[str], optional, default = None
-                type of collection to filter by - e.g., DataDict, Folder, Root
-            body: dict, optional, default = None
-                Provides, a full request body. If specified, the body supercedes the name parameter.
-            start_from: int, [default=0], optional
-                        When multiple pages of results are available, the page number to start from.
-            page_size: int, [default=None]
-                The number of items to return in a single page. If not specified, the default will be taken from
-                the class instance.
-            output_format: str, default = "JSON"
-                - one of "DICT", "MERMAID" or "JSON"
-            report_spec: dict , optional, default = None
-                The desired output columns/fields to include.
+        Parameters
+        ----------
+        name: str
+            name to use to find matching roles.
+        metadata_element_type_name : str, optional
+            The type of metadata element.
+        metadata_element_subtypes : list[str], optional
+            The list of subtypes to filter by.
+        include_only_relationships : list[str], optional
+            The list of relationship type names to include.
+        skip_relationships : list[str], optional
+            The list of relationship type names to skip.
+        graph_query_depth : int, optional
+            The query depth for relationships.
+        start_from: int, [default=0], optional
+            When multiple pages of results are available, the page number to start from.
+        page_size: int, [default=0]
+            The number of items to return in a single page.
+        output_format: str, default = "JSON"
+            - one of "DICT", "MERMAID" or "JSON"
+        report_spec: dict, optional, default = "Actor-Roles"
+            The desired output columns/fields to include.
+        body: dict, optional
+            Provides a full request body. If specified, the body supercedes other attributes.
 
-            Returns
-            -------
-            List | str
-
-            A list of profiles matching the name. Returns a string if none found.
-
-            Raises
-            ------
-            PyegeriaException
-                One of the pyegeria exceptions will be raised if there are issues in communications, message format, or
-                Egeria errors.
-            ValidationError
-                Pydantic validation errors are raised if the body does not conform to the NewElementRequestBody.
-            PyegeriaNotAuthorizedException
-               The principle specified by the user_id does not have authorization for the requested action
-
-            Notes
-            _____
-            {
-              "class" : "SearchStringRequestBody",
-              "searchString": "xxx",
-              "startsWith" : false,
-              "endsWith" : false,
-              "ignoreCase" : true,
-              "startFrom" : 0,
-              "pageSize": 0,
-              "asOfTime" : "{{$isoTimestamp}}",
-              "effectiveTime" : "{{$isoTimestamp}}",
-              "forLineage" : false,
-              "forDuplicateProcessing" : false,
-              "limitResultsByStatus" : ["ACTIVE"],
-              "sequencingOrder" : "PROPERTY_ASCENDING",
-              "sequencingProperty" : "qualifiedName"
-            }
-
+        Returns
+        -------
+        list | str
         """
         url = str(HttpUrl(f"{self.command_root}/actor-roles/by-name"))
-        response = await self._async_get_name_request(url, _type="ActorRole",
-                                                      _gen_output=self._generate_actor_role_output,
-                                                      filter_string=filter_string,
-                                                      classification_names=classification_names, start_from=start_from,
-                                                      page_size=page_size, output_format=output_format,
-                                                      report_spec=report_spec, body=body)
-
-        return response
-
-    def get_actor_roles_by_name(self, filter_string: Optional[str] = None, classification_names: Optional[list[str]] = None,
-                                body: Optional[dict | FilterRequestBody] = None,
-                                start_from: int = 0, page_size: int = 0, output_format: str = 'JSON',
-                                report_spec: str | dict = "Actor-Roles") -> list | str:
-        """ Retrieve the list of actor role metadata elements with a particular name. Async Version.
-
-            Parameters
-            ----------
-            filter_string: str,
-                name to use to find matching roles.
-            classification_names: list[str], optional, default = None
-                type of collection to filter by - e.g., DataDict, Folder, Root
-            body: dict, optional, default = None
-                Provides, a full request body. If specified, the body supercedes the name parameter.
-            start_from: int, [default=0], optional
-                When multiple pages of results are available, the page number to start from.
-            page_size: int, [default=None]
-                The number of items to return in a single page. If not specified, the default will be taken from
-                the class instance.
-            output_format: str, default = "JSON"
-                - one of "DICT", "MERMAID" or "JSON"
-            report_spec: dict , optional, default = None
-                The desired output columns/fields to include.
-
-            Returns
-            -------
-            List | str
-
-            A list of profiles matching the name. Returns a string if none found.
-
-            Raises
-            ------
-            PyegeriaException
-            One of the pyegeria exceptions will be raised if there are issues in communications, message format, or
-            Egeria errors.
-        ValidationError
-            Pydantic validation errors are raised if the body does not conform to the NewElementRequestBody.
-        PyegeriaNotAuthorizedException
-          The principle specified by the user_id does not have authorization for the requested action
-
-            Notes
-            _____
-            {
-              "class" : "SearchStringRequestBody",
-              "searchString": "xxx",
-              "startsWith" : false,
-              "endsWith" : false,
-              "ignoreCase" : true,
-              "startFrom" : 0,
-              "pageSize": 0,
-              "asOfTime" : "{{$isoTimestamp}}",
-              "effectiveTime" : "{{$isoTimestamp}}",
-              "forLineage" : false,
-              "forDuplicateProcessing" : false,
-              "limitResultsByStatus" : ["ACTIVE"],
-              "sequencingOrder" : "PROPERTY_ASCENDING",
-              "sequencingProperty" : "qualifiedName"
-            }
-
-        """
-        return asyncio.get_event_loop().run_until_complete(
-            self._async_get_actor_roles_by_name(filter_string, classification_names, body, start_from,
-                                                page_size,
-                                                output_format, report_spec))
-
-    @dynamic_catch
-    async def _async_get_actor_role_by_guid(self, actor_role_guid: str, element_type: Optional[str] = None,
-                                            body: Optional[dict | GetRequestBody] = None,
-                                            output_format: str = 'JSON',
-                                            report_spec: Optional[dict | str] = None) -> dict | str:
-        """ Retrieve the properties of a specific actor role. Async version.
-
-        Parameters
-        ----------
-        actor_role_guid: str,
-            unique identifier of the actor role to retrieve.
-        element_type: str, default = None, optional
-            type of actor role to retrieve.
-        body: dict | GetRequestBody, optional, default = None
-            full request body.
-        output_format: str, default = "JSON"
-            - one of "DICT", "MERMAID" or "JSON"
-         report_spec: dict , optional, default = None
-                The desired output columns/fields to include.
-
-        Returns
-        -------
-        dict | str
-
-        A JSON dict representing the specified actor role. Returns a string if none found.
-
-        Raises
-        ------
-        PyegeriaException
-            One of the pyegeria exceptions will be raised if there are issues in communications, message format, or
-            Egeria errors.
-        ValidationError
-            Pydantic validation errors are raised if the body does not conform to the NewElementRequestBody.
-        PyegeriaNotAuthorizedException
-            The principle specified by the user_id does not have authorization for the requested action
-
-        Notes
-        ----
-        Body sample:
-        {
-          "class": "GetRequestBody",
-          "asOfTime": "{{$isoTimestamp}}",
-          "effectiveTime": "{{$isoTimestamp}}",
-          "forLineage": false,
-          "forDuplicateProcessing": false
+        params = {
+            "filter_string": name,
+            "metadata_element_type": metadata_element_type_name,
+            "metadata_element_subtypes": metadata_element_subtypes,
+            "include_only_relationships": include_only_relationships,
+            "skip_relationships": skip_relationships,
+            "graph_query_depth": graph_query_depth,
+            "start_from": start_from,
+            "page_size": page_size,
+            "output_format": output_format,
+            "report_spec": report_spec,
+            "body": body,
         }
-        """
+        params.update(kwargs)
+        params = {k: v for k, v in params.items() if v is not None or k == "filter_string"}
 
-        url = str(HttpUrl(f"{self.command_root}/actor-roles/{actor_role_guid}/retrieve"))
-        type = element_type if element_type else "ActorRole"
+        return await self._async_get_name_request(
+            url,
+            _type="ActorRole",
+            _gen_output=self._generate_actor_role_output,
+            **params,
+        )
 
-        response = await self._async_get_guid_request(url, _type=type,
-                                                      _gen_output=self._generate_actor_role_output,
-                                                      output_format=output_format, report_spec=report_spec,
-                                                      body=body)
-
-        return response
-
-    @dynamic_catch
-    def get_actor_role_by_guid(self, actor_role_guid: str, element_type: Optional[str] = None,
-                               body: Optional[dict | GetRequestBody] = None,
-                               output_format: str = 'JSON',
-                               report_spec: Optional[dict | str] = None) -> dict | str:
-        """ Retrieve the properties of a specific actor role. Async version.
+    def get_actor_roles_by_name(
+        self,
+        name: str,
+        metadata_element_type_name: str | None = "ActorRole",
+        metadata_element_subtypes: list[str] | None = None,
+        include_only_relationships: list[str] | None = None,
+        skip_relationships: list[str] | None = None,
+        graph_query_depth: int = 3,
+        start_from: int = 0,
+        page_size: int = 0,
+        output_format: str = "JSON",
+        report_spec: Optional[str | dict] = "Actor-Roles",
+        body: Optional[dict | FilterRequestBody] = None,
+        **kwargs,
+    ) -> list | str:
+        """Retrieve the list of actor role metadata elements with a particular name.
 
         Parameters
         ----------
-        actor_role_guid: str,
-            unique identifier of the actor role to retrieve.
-        element_type: str, default = None, optional
-            type of actor role to retrieve.
-        body: dict | GetRequestBody, optional, default = None
-            full request body.
+        name: str
+            name to use to find matching roles.
+        metadata_element_type_name : str, optional
+            The type of metadata element.
+        metadata_element_subtypes : list[str], optional
+            The list of subtypes to filter by.
+        include_only_relationships : list[str], optional
+            The list of relationship type names to include.
+        skip_relationships : list[str], optional
+            The list of relationship type names to skip.
+        graph_query_depth : int, optional
+            The query depth for relationships.
+        start_from: int, [default=0], optional
+            When multiple pages of results are available, the page number to start from.
+        page_size: int, [default=0]
+            The number of items to return in a single page.
         output_format: str, default = "JSON"
             - one of "DICT", "MERMAID" or "JSON"
-        report_spec: dict , optional, default = None
+        report_spec: dict, optional, default = "Actor-Roles"
             The desired output columns/fields to include.
+        body: dict, optional
+            Provides a full request body. If specified, the body supercedes other attributes.
+
+        Returns
+        -------
+        list | str
+        """
+        loop = asyncio.get_event_loop()
+        return loop.run_until_complete(
+            self._async_get_actor_roles_by_name(
+                name=name,
+                metadata_element_type_name=metadata_element_type_name,
+                metadata_element_subtypes=metadata_element_subtypes,
+                include_only_relationships=include_only_relationships,
+                skip_relationships=skip_relationships,
+                graph_query_depth=graph_query_depth,
+                start_from=start_from,
+                page_size=page_size,
+                output_format=output_format,
+                report_spec=report_spec,
+                body=body,
+                **kwargs,
+            )
+        )
+
+    @dynamic_catch
+    async def _async_get_actor_role_by_guid(
+        self,
+        guid: str,
+        include_only_relationships: list[str] | None = None,
+        skip_relationships: list[str] | None = None,
+        graph_query_depth: int = 3,
+        output_format: str = "JSON",
+        report_spec: Optional[str | dict] = "Actor-Roles",
+        body: Optional[dict | GetRequestBody] = None,
+        **kwargs,
+    ) -> dict | str:
+        """Retrieve the properties of a specific actor role. Async version.
+
+        Parameters
+        ----------
+        guid: str
+            unique identifier of the actor role to retrieve.
+        include_only_relationships : list[str], optional
+            The list of relationship type names to include.
+        skip_relationships : list[str], optional
+            The list of relationship type names to skip.
+        graph_query_depth : int, optional
+            The query depth for relationships.
+        output_format: str, default = "JSON"
+            - one of "DICT", "MERMAID" or "JSON"
+        report_spec: dict, optional, default = "Actor-Roles"
+            The desired output columns/fields to include.
+        body: dict | GetRequestBody, optional, default = None
+            full request body.
 
         Returns
         -------
         dict | str
-
-        A JSON dict representing the specified actor role. Returns a string if none found.
-
-        Raises
-        ------
-        PyegeriaException
-            One of the pyegeria exceptions will be raised if there are issues in communications, message format, or
-            Egeria errors.
-        ValidationError
-            Pydantic validation errors are raised if the body does not conform to the NewElementRequestBody.
-        PyegeriaNotAuthorizedException
-            The principle specified by the user_id does not have authorization for the requested action
-
-        Notes
-        ----
-            Body sample:
-            {
-              "class": "GetRequestBody",
-              "asOfTime": "{{$isoTimestamp}}",
-              "effectiveTime": "{{$isoTimestamp}}",
-              "forLineage": false,
-              "forDuplicateProcessing": false
-            }
         """
-        return asyncio.get_event_loop().run_until_complete(
-            self._async_get_actor_role_by_guid(actor_role_guid, element_type, body,
-                                               output_format, report_spec))
+        url = str(HttpUrl(f"{self.command_root}/actor-roles/{guid}/retrieve"))
+        params = {
+            "include_only_relationships": include_only_relationships,
+            "skip_relationships": skip_relationships,
+            "graph_query_depth": graph_query_depth,
+            "output_format": output_format,
+            "report_spec": report_spec,
+            "body": body,
+        }
+        params.update(kwargs)
+        params = {k: v for k, v in params.items() if v is not None}
+
+        return await self._async_get_guid_request(
+            url,
+            _type="ActorRole",
+            _gen_output=self._generate_actor_role_output,
+            **params,
+        )
+
+    def get_actor_role_by_guid(
+        self,
+        guid: str,
+        include_only_relationships: list[str] | None = None,
+        skip_relationships: list[str] | None = None,
+        graph_query_depth: int = 3,
+        output_format: str = "JSON",
+        report_spec: Optional[str | dict] = "Actor-Roles",
+        body: Optional[dict | GetRequestBody] = None,
+        **kwargs,
+    ) -> dict | str:
+        """Retrieve the properties of a specific actor role.
+
+        Parameters
+        ----------
+        guid: str
+            unique identifier of the actor role to retrieve.
+        include_only_relationships : list[str], optional
+            The list of relationship type names to include.
+        skip_relationships : list[str], optional
+            The list of relationship type names to skip.
+        graph_query_depth : int, optional
+            The query depth for relationships.
+        output_format: str, default = "JSON"
+            - one of "DICT", "MERMAID" or "JSON"
+        report_spec: dict, optional, default = "Actor-Roles"
+            The desired output columns/fields to include.
+        body: dict | GetRequestBody, optional, default = None
+            full request body.
+
+        Returns
+        -------
+        dict | str
+        """
+        loop = asyncio.get_event_loop()
+        return loop.run_until_complete(
+            self._async_get_actor_role_by_guid(
+                guid=guid,
+                include_only_relationships=include_only_relationships,
+                skip_relationships=skip_relationships,
+                graph_query_depth=graph_query_depth,
+                output_format=output_format,
+                report_spec=report_spec,
+                body=body,
+                **kwargs,
+            )
+        )
 
     def _extract_actor_role_properties(self, element: dict, columns_struct: dict) -> dict:
         """
@@ -3945,429 +3949,438 @@ class ActorManager(ServerClient):
 
     @dynamic_catch
     async def _async_find_user_identities(
-            self,
-            search_string: str = "*",
-            body: Optional[dict | SearchStringRequestBody] = None,
-            starts_with: bool = True,
-            ends_with: bool = False,
-            ignore_case: bool = False,
-            start_from: int = 0,
-            page_size: int = 0,
-            output_format: str = 'JSON',
-            report_spec: str | dict = "User-Identities",
-            **kwargs
+        self,
+        search_string: str = "*",
+        starts_with: bool = True,
+        ends_with: bool = False,
+        ignore_case: bool = True,
+        metadata_element_type_name: str | None = "UserIdentity",
+        metadata_element_subtypes: list[str] | None = None,
+        include_only_relationships: list[str] | None = None,
+        skip_relationships: list[str] | None = None,
+        graph_query_depth: int = 3,
+        as_of_time: Optional[str] = None,
+        start_from: int = 0,
+        page_size: int = 100,
+        sequencing_order: Optional[str] = None,
+        sequencing_property: Optional[str] = None,
+        output_format: str = "JSON",
+        report_spec: Optional[str | dict] = "User-Identities",
+        body: Optional[dict | SearchStringRequestBody] = None,
+        **kwargs,
     ) -> list | str:
-        """ Retrieve the list of user identity metadata elements that contain the search string. Async Version.
+        """Retrieve the list of user identity metadata elements that contain the search string. Async Version.
 
         Parameters
         ----------
-        search_string : str, default "*"
+        search_string: str
             Search string to match against - None or '*' indicate match against all user identities.
-        body : dict | SearchStringRequestBody, optional
-            Request body. If provided, overrides other parameters.
-        starts_with : bool, default True
+        starts_with : bool, [default=True], optional
             Starts with the supplied string.
-        ends_with : bool, default False
-            Ends with the supplied string.
-        ignore_case : bool, default False
-            Ignore case when searching.
-        start_from : int, default 0
-            Starting index for pagination.
-        page_size : int, default 0
-            Number of items to return in a single page.
-        output_format : str, default "JSON"
-            Output format: "MD", "LIST", "FORM", "REPORT", "DICT", "MERMAID" or "JSON".
-        report_spec : str | dict, default "User-Identities"
-            Report specification for output formatting.
-        **kwargs : dict, optional
-            Additional parameters supported by the underlying find request:
-            
-            - classification_names : list[str] - Filter by classification names
-            - metadata_element_subtypes : list[str] - List of metadata element subtypes (default ["UserIdentity"])
-            - anchor_domain : str - Domain to anchor the search
-            - skip_relationships : list[str] - Relationship types to skip
-            - include_only_relationships : list[str] - Only include these relationship types
-            - skip_classified_elements : list[str] - Skip elements with these classifications
-            - include_only_classified_elements : list[str] - Only include elements with these classifications
-            - graph_query_depth : int - Depth of graph traversal (default 3)
-            - governance_zone_filter : list[str] - Filter by governance zones
-            - as_of_time : str - Historical query time (ISO 8601 format)
-            - effective_time : str - Effective time for the query (ISO 8601 format)
-            - relationship_page_size : int - Page size for relationships
-            - limit_results_by_status : list[str] - Filter by element status
-            - sequencing_order : str - Order of results
-            - sequencing_property : str - Property to sequence by
-            - property_names : list[str] - Specific properties to search
+        ends_with : bool, [default=False], optional
+            Ends with the supplied string
+        ignore_case : bool, [default=True], optional
+            Ignore case when searching
+        metadata_element_type_name: str, optional
+            The type of metadata element to search for.
+        metadata_element_subtypes: list[str], optional
+            The subtypes of metadata element to search for.
+        include_only_relationships: list[str], optional
+            The types of relationships to include.
+        skip_relationships: list[str], optional
+            The types of relationships to skip.
+        graph_query_depth: int, [default=3], optional
+            The depth of the graph query.
+        as_of_time: str, optional
+            The time to search as of.
+        start_from: int, [default=0], optional
+            When paged results are available, the starting index.
+        page_size: int, [default=100]
+            The number of items to return.
+        sequencing_order: str, optional
+            The order to sequence results by.
+        sequencing_property: str, optional
+            The property to sequence results by.
+        output_format: str, default = "JSON"
+            - one of "MD", "LIST", "FORM", "REPORT", "DICT", "MERMAID" or "JSON"
+        report_spec: str | dict, optional
+            - The desired output columns/fields to include.
+        body: dict | SearchStringRequestBody, optional
+            - if provided, the search parameters in the body will supercede other attributes.
 
         Returns
         -------
         list | str
-            List of user identities in the requested format.
-
-        Raises
-        ------
-        PyegeriaException
-            One of the pyegeria exceptions will be raised if there are issues in communications, message format, or
-            Egeria errors.
-        ValidationError
-            Pydantic validation errors are raised if the body does not conform to the request body.
-        PyegeriaNotAuthorizedException
-            The principle specified by the user_id does not have authorization for the requested action.
         """
         url = str(HttpUrl(f"{self.command_root}/user-identities/by-search-string"))
-        
-        # Set default for metadata_element_subtypes if not provided
-        if 'metadata_element_subtypes' not in kwargs:
-            kwargs['metadata_element_subtypes'] = ["UserIdentity"]
-        
-        # Merge explicit parameters with kwargs
         params = {
-            'search_string': search_string,
-            'body': body,
-            'starts_with': starts_with,
-            'ends_with': ends_with,
-            'ignore_case': ignore_case,
-            'start_from': start_from,
-            'page_size': page_size,
-            'output_format': output_format,
-            'report_spec': report_spec
+            "search_string": search_string,
+            "starts_with": starts_with,
+            "ends_with": ends_with,
+            "ignore_case": ignore_case,
+            "metadata_element_type": metadata_element_type_name,
+            "metadata_element_subtypes": metadata_element_subtypes,
+            "include_only_relationships": include_only_relationships,
+            "skip_relationships": skip_relationships,
+            "graph_query_depth": graph_query_depth,
+            "as_of_time": as_of_time,
+            "start_from": start_from,
+            "page_size": page_size,
+            "sequencing_order": sequencing_order,
+            "sequencing_property": sequencing_property,
+            "output_format": output_format,
+            "report_spec": report_spec,
+            "body": body,
         }
         params.update(kwargs)
-        
-        # Filter out None values, but keep search_string even if None (it's required)
-        params = {k: v for k, v in params.items() if v is not None or k == 'search_string'}
-        
-        response = await self._async_find_request(url, _type="UserIdentity",
-                                                  _gen_output=self._generate_user_identity_output, **params)
+        params = {k: v for k, v in params.items() if v is not None or k == "search_string"}
+
+        response = await self._async_find_request(
+            url,
+            _type="UserIdentity",
+            _gen_output=self._generate_user_identity_output,
+            **params,
+        )
         return response
 
     @dynamic_catch
     def find_user_identities(
-            self,
-            search_string: str = '*',
-            body: Optional[dict | SearchStringRequestBody] = None,
-            starts_with: bool = True,
-            ends_with: bool = False,
-            ignore_case: bool = False,
-            start_from: int = 0,
-            page_size: int = 0,
-            output_format: str = 'JSON',
-            report_spec: str | dict = "User-Identities",
-            **kwargs
+        self,
+        search_string: str = "*",
+        starts_with: bool = True,
+        ends_with: bool = False,
+        ignore_case: bool = True,
+        metadata_element_type_name: str | None = "UserIdentity",
+        metadata_element_subtypes: list[str] | None = None,
+        include_only_relationships: list[str] | None = None,
+        skip_relationships: list[str] | None = None,
+        graph_query_depth: int = 3,
+        as_of_time: Optional[str] = None,
+        start_from: int = 0,
+        page_size: int = 100,
+        sequencing_order: Optional[str] = None,
+        sequencing_property: Optional[str] = None,
+        output_format: str = "JSON",
+        report_spec: Optional[str | dict] = "User-Identities",
+        body: Optional[dict | SearchStringRequestBody] = None,
+        **kwargs,
     ) -> list | str:
-        """ Retrieve the list of user identity metadata elements that contain the search string.
+        """Retrieve the list of user identity metadata elements that contain the search string.
 
         Parameters
         ----------
-        search_string : str, default "*"
+        search_string: str
             Search string to match against - None or '*' indicate match against all user identities.
-        body : dict | SearchStringRequestBody, optional
-            Request body. If provided, overrides other parameters.
-        starts_with : bool, default True
+        starts_with : bool, [default=True], optional
             Starts with the supplied string.
-        ends_with : bool, default False
-            Ends with the supplied string.
-        ignore_case : bool, default False
-            Ignore case when searching.
-        start_from : int, default 0
-            Starting index for pagination.
-        page_size : int, default 0
-            Number of items to return in a single page.
-        output_format : str, default "JSON"
-            Output format: "MD", "LIST", "FORM", "REPORT", "DICT", "MERMAID" or "JSON".
-        report_spec : str | dict, default "User-Identities"
-            Report specification for output formatting.
-        **kwargs : dict, optional
-            Additional parameters supported by the underlying find request:
-            
-            - classification_names : list[str] - Filter by classification names
-            - metadata_element_subtypes : list[str] - List of metadata element subtypes (default ["UserIdentity"])
-            - anchor_domain : str - Domain to anchor the search
-            - skip_relationships : list[str] - Relationship types to skip
-            - include_only_relationships : list[str] - Only include these relationship types
-            - skip_classified_elements : list[str] - Skip elements with these classifications
-            - include_only_classified_elements : list[str] - Only include elements with these classifications
-            - graph_query_depth : int - Depth of graph traversal (default 3)
-            - governance_zone_filter : list[str] - Filter by governance zones
-            - as_of_time : str - Historical query time (ISO 8601 format)
-            - effective_time : str - Effective time for the query (ISO 8601 format)
-            - relationship_page_size : int - Page size for relationships
-            - limit_results_by_status : list[str] - Filter by element status
-            - sequencing_order : str - Order of results
-            - sequencing_property : str - Property to sequence by
-            - property_names : list[str] - Specific properties to search
+        ends_with : bool, [default=False], optional
+            Ends with the supplied string
+        ignore_case : bool, [default=True], optional
+            Ignore case when searching
+        metadata_element_type_name: str, optional
+            The type of metadata element to search for.
+        metadata_element_subtypes: list[str], optional
+            The subtypes of metadata element to search for.
+        include_only_relationships: list[str], optional
+            The types of relationships to include.
+        skip_relationships: list[str], optional
+            The types of relationships to skip.
+        graph_query_depth: int, [default=3], optional
+            The depth of the graph query.
+        as_of_time: str, optional
+            The time to search as of.
+        start_from: int, [default=0], optional
+            When paged results are available, the starting index.
+        page_size: int, [default=100]
+            The number of items to return.
+        sequencing_order: str, optional
+            The order to sequence results by.
+        sequencing_property: str, optional
+            The property to sequence results by.
+        output_format: str, default = "JSON"
+            - one of "MD", "LIST", "FORM", "REPORT", "DICT", "MERMAID" or "JSON"
+        report_spec: str | dict, optional
+            - The desired output columns/fields to include.
+        body: dict | SearchStringRequestBody, optional
+            - if provided, the search parameters in the body will supercede other attributes.
 
         Returns
         -------
         list | str
-            List of user identities in the requested format.
-
-        Raises
-        ------
-        PyegeriaException
-            One of the pyegeria exceptions will be raised if there are issues in communications, message format, or
-            Egeria errors.
-        ValidationError
-            Pydantic validation errors are raised if the body does not conform to the request body.
-        PyegeriaNotAuthorizedException
-            The principle specified by the user_id does not have authorization for the requested action.
         """
         loop = asyncio.get_event_loop()
         return loop.run_until_complete(
             self._async_find_user_identities(
-                search_string, body, starts_with, ends_with, ignore_case,
-                start_from, page_size, output_format, report_spec, **kwargs
+                search_string=search_string,
+                starts_with=starts_with,
+                ends_with=ends_with,
+                ignore_case=ignore_case,
+                metadata_element_type_name=metadata_element_type_name,
+                metadata_element_subtypes=metadata_element_subtypes,
+                include_only_relationships=include_only_relationships,
+                skip_relationships=skip_relationships,
+                graph_query_depth=graph_query_depth,
+                as_of_time=as_of_time,
+                start_from=start_from,
+                page_size=page_size,
+                sequencing_order=sequencing_order,
+                sequencing_property=sequencing_property,
+                output_format=output_format,
+                report_spec=report_spec,
+                body=body,
+                **kwargs,
             )
         )
 
     @dynamic_catch
-    async def _async_get_user_identities_by_name(self, filter_string: Optional[str] = None,
-                                                 classification_names: Optional[list[str]] = None,
-                                                 body: Optional[dict | FilterRequestBody] = None,
-                                                 start_from: int = 0, page_size: int = 0,
-                                                 output_format: str = 'JSON',
-                                                 report_spec: str | dict = "User-Identities") -> list | str:
-        """ Retrieve the list of user identity metadata elements with a particular name. Async Version.
+    async def _async_get_user_identities_by_name(
+        self,
+        name: str = None,
+        metadata_element_type_name: str | None = "UserIdentity",
+        metadata_element_subtypes: list[str] | None = None,
+        include_only_relationships: list[str] | None = None,
+        skip_relationships: list[str] | None = None,
+        graph_query_depth: int = 3,
+        start_from: int = 0,
+        page_size: int = 100,
+        output_format: str = "JSON",
+        report_spec: Optional[str | dict] = "User-Identities",
+        body: Optional[dict | FilterRequestBody] = None,
+        **kwargs,
+    ) -> list | str:
+        """Retrieve the list of user identity metadata elements with a particular name. Async Version.
 
-            Parameters
-            ----------
-            filter_string: str,
-                name to use to find matching profiles.
-            classification_names: list[str], optional, default = None
-                type of collection to filter by - e.g., DataDict, Folder, Root
-            body: dict | FilterRequestBody, optional, default = None
-                Provides, a full request body. If specified, the body supercedes the name parameter.
-            start_from: int, [default=0], optional
-                        When multiple pages of results are available, the page number to start from.
-            page_size: int, [default=None]
-                The number of items to return in a single page. If not specified, the default will be taken from
-                the class instance.
-            output_format: str, default = "JSON"
-                - one of "DICT", "MERMAID" or "JSON"
-            report_spec: str | dict , optional, default = User-Identities
-                The desired output columns/fields to include.
+        Parameters
+        ----------
+        name: str, optional
+            name to use to find matching user identities.
+        metadata_element_type_name : str, optional
+            The type of metadata element.
+        metadata_element_subtypes : list[str], optional
+            The list of subtypes to filter by.
+        include_only_relationships : list[str], optional
+            The list of relationship type names to include.
+        skip_relationships : list[str], optional
+            The list of relationship type names to skip.
+        graph_query_depth : int, optional
+            The query depth for relationships.
+        start_from: int, [default=0], optional
+            When multiple pages of results are available, the page number to start from.
+        page_size: int, [default=100]
+            The number of items to return in a single page.
+        output_format: str, default = "JSON"
+            - one of "DICT", "MERMAID" or "JSON"
+        report_spec: dict, optional, default = "User-Identities"
+            The desired output columns/fields to include.
+        body: dict, optional
+            Provides a full request body. If specified, the body supercedes other attributes.
 
-            Returns
-            -------
-            List | str
-
-            A list of profiles matching the name. Returns a string if none found.
-
-            Raises
-            ------
-            PyegeriaException
-                One of the pyegeria exceptions will be raised if there are issues in communications, message format, or
-                Egeria errors.
-            ValidationError
-                Pydantic validation errors are raised if the body does not conform to the NewElementRequestBody.
-            PyegeriaNotAuthorizedException
-              The principle specified by the user_id does not have authorization for the requested action
-
-            Notes
-            _____
-            {
-              "class" : "SearchStringRequestBody",
-              "searchString": "xxx",
-              "startsWith" : false,
-              "endsWith" : false,
-              "ignoreCase" : true,
-              "startFrom" : 0,
-              "pageSize": 0,
-              "asOfTime" : "{{$isoTimestamp}}",
-              "effectiveTime" : "{{$isoTimestamp}}",
-              "forLineage" : false,
-              "forDuplicateProcessing" : false,
-              "limitResultsByStatus" : ["ACTIVE"],
-              "sequencingOrder" : "PROPERTY_ASCENDING",
-              "sequencingProperty" : "qualifiedName"
-            }
-
+        Returns
+        -------
+        list | str
         """
+        # Handle backward-compatible positional or keyword args
+        if name is not None and not isinstance(name, str):
+            body = name
+            name = None
+
+        if name is None:
+            name = kwargs.pop("filter_string", None)
+
+        if name is None and body is None:
+            name = "*"
+
         url = str(HttpUrl(f"{self.command_root}/user-identities/by-name"))
-        response = await self._async_get_name_request(url, _type="UserIdentity",
-                                                      _gen_output=self._generate_user_identity_output,
-                                                      filter_string=filter_string,
-                                                      classification_names=classification_names, start_from=start_from,
-                                                      page_size=page_size, output_format=output_format,
-                                                      report_spec=report_spec, body=body)
+        params = {
+            "filter_string": name,
+            "metadata_element_type": metadata_element_type_name,
+            "metadata_element_subtypes": metadata_element_subtypes,
+            "include_only_relationships": include_only_relationships,
+            "skip_relationships": skip_relationships,
+            "graph_query_depth": graph_query_depth,
+            "start_from": start_from,
+            "page_size": page_size,
+            "output_format": output_format,
+            "report_spec": report_spec,
+            "body": body,
+        }
+        params.update(kwargs)
+        params = {k: v for k, v in params.items() if v is not None or k == "filter_string"}
 
-        return response
-
-    def get_user_identities_by_name(self, filter_string: Optional[str] = None, classification_names: Optional[list[str]] = None,
-                                    body: Optional[dict | FilterRequestBody] = None,
-                                    start_from: int = 0, page_size: int = 0, output_format: str = 'JSON',
-                                    report_spec: str | dict = "User-Identities") -> list | str:
-        """ Retrieve the list of user identity metadata elements with a particular name. Async Version.
-
-            Parameters
-            ----------
-            filter_string: str, optional, default = None
-                name to use to find matching profiles.
-            classification_names: list[str], optional, default = None
-                type of collection to filter by - e.g., DataDict, Folder, Root
-            body: dict | FilterRequestBody, optional, default = None
-                Provides, a full request body. If specified, the body supercedes the name parameter.
-            start_from: int, [default=0], optional
-                        When multiple pages of results are available, the page number to start from.
-            page_size: int, [default=None]
-                The number of items to return in a single page. If not specified, the default will be taken from
-                the class instance.
-            output_format: str, default = "JSON"
-                - one of "DICT", "MERMAID" or "JSON"
-            report_spec: dict , optional, default = User-Identities
-                The desired output columns/fields to include.
-
-            Returns
-            -------
-            List | str
-
-            A list of profiles matching the name. Returns a string if none found.
-
-            Raises
-            ------
-            PyegeriaException
-                One of the pyegeria exceptions will be raised if there are issues in communications, message format, or
-                Egeria errors.
-            ValidationError
-                Pydantic validation errors are raised if the body does not conform to the NewElementRequestBody.
-            PyegeriaNotAuthorizedException
-              The principle specified by the user_id does not have authorization for the requested action
-
-            Notes
-            _____
-            {
-              "class" : "SearchStringRequestBody",
-              "searchString": "xxx",
-              "startsWith" : false,
-              "endsWith" : false,
-              "ignoreCase" : true,
-              "startFrom" : 0,
-              "pageSize": 0,
-              "asOfTime" : "{{$isoTimestamp}}",
-              "effectiveTime" : "{{$isoTimestamp}}",
-              "forLineage" : false,
-              "forDuplicateProcessing" : false,
-              "limitResultsByStatus" : ["ACTIVE"],
-              "sequencingOrder" : "PROPERTY_ASCENDING",
-              "sequencingProperty" : "qualifiedName"
-            }
-
-        """
-        return asyncio.get_event_loop().run_until_complete(
-            self._async_get_user_identities_by_name(filter_string, classification_names, body, start_from,
-                                                    page_size,
-                                                    output_format, report_spec))
+        return await self._async_get_name_request(
+            url,
+            _type="UserIdentity",
+            _gen_output=self._generate_user_identity_output,
+            **params,
+        )
 
     @dynamic_catch
-    async def _async_get_user_identity_by_guid(self, user_identity_guid: str, element_type: Optional[str] = None,
-                                               body: Optional[dict | GetRequestBody] = None,
-                                               output_format: str = 'JSON',
-                                               report_spec: dict = "User-Identities") -> dict | str:
-        """ Retrieve the properties of a specific user identity. Async version.
+    def get_user_identities_by_name(
+        self,
+        name: str = None,
+        metadata_element_type_name: str | None = "UserIdentity",
+        metadata_element_subtypes: list[str] | None = None,
+        include_only_relationships: list[str] | None = None,
+        skip_relationships: list[str] | None = None,
+        graph_query_depth: int = 3,
+        start_from: int = 0,
+        page_size: int = 100,
+        output_format: str = "JSON",
+        report_spec: Optional[str | dict] = "User-Identities",
+        body: Optional[dict | FilterRequestBody] = None,
+        **kwargs,
+    ) -> list | str:
+        """Retrieve the list of user identity metadata elements with a particular name.
 
         Parameters
         ----------
-        user_identity_guid: str,
-            unique identifier of the user identity to retrieve.
-        element_type: str, default = None, optional
-            type of user identity to retrieve.
-        body: dict | GetRequestBody, optional, default = None
-            full request body.
+        name: str, optional
+            name to use to find matching user identities.
+        metadata_element_type_name : str, optional
+            The type of metadata element.
+        metadata_element_subtypes : list[str], optional
+            The list of subtypes to filter by.
+        include_only_relationships : list[str], optional
+            The list of relationship type names to include.
+        skip_relationships : list[str], optional
+            The list of relationship type names to skip.
+        graph_query_depth : int, optional
+            The query depth for relationships.
+        start_from: int, [default=0], optional
+            When multiple pages of results are available, the page number to start from.
+        page_size: int, [default=100]
+            The number of items to return in a single page.
         output_format: str, default = "JSON"
             - one of "DICT", "MERMAID" or "JSON"
-         report_spec: dict , optional, default = User-Identities
-                The desired output columns/fields to include.
+        report_spec: dict, optional, default = "User-Identities"
+            The desired output columns/fields to include.
+        body: dict, optional
+            Provides a full request body. If specified, the body supercedes other attributes.
+
+        Returns
+        -------
+        list | str
+        """
+        loop = asyncio.get_event_loop()
+        return loop.run_until_complete(
+            self._async_get_user_identities_by_name(
+                name=name,
+                metadata_element_type_name=metadata_element_type_name,
+                metadata_element_subtypes=metadata_element_subtypes,
+                include_only_relationships=include_only_relationships,
+                skip_relationships=skip_relationships,
+                graph_query_depth=graph_query_depth,
+                start_from=start_from,
+                page_size=page_size,
+                output_format=output_format,
+                report_spec=report_spec,
+                body=body,
+                **kwargs,
+            )
+        )
+
+    @dynamic_catch
+    async def _async_get_user_identity_by_guid(
+        self,
+        guid: str,
+        include_only_relationships: list[str] | None = None,
+        skip_relationships: list[str] | None = None,
+        graph_query_depth: int = 3,
+        output_format: str = "JSON",
+        report_spec: Optional[str | dict] = "User-Identities",
+        body: Optional[dict | GetRequestBody] = None,
+        **kwargs,
+    ) -> dict | str:
+        """Retrieve the properties of a specific user identity. Async version.
+
+        Parameters
+        ----------
+        guid: str
+            unique identifier of the user identity to retrieve.
+        include_only_relationships : list[str], optional
+            The list of relationship type names to include.
+        skip_relationships : list[str], optional
+            The list of relationship type names to skip.
+        graph_query_depth : int, optional
+            The query depth for relationships.
+        output_format: str, default = "JSON"
+            - one of "DICT", "MERMAID" or "JSON"
+        report_spec: dict, optional, default = "User-Identities"
+            The desired output columns/fields to include.
+        body: dict | GetRequestBody, optional, default = None
+            full request body.
 
         Returns
         -------
         dict | str
-
-        A JSON dict representing the specified user identity. Returns a string if none found.
-
-        Raises
-        ------
-        PyegeriaException
-            One of the pyegeria exceptions will be raised if there are issues in communications, message format, or
-            Egeria errors.
-        ValidationError
-            Pydantic validation errors are raised if the body does not conform to the NewElementRequestBody.
-        PyegeriaNotAuthorizedException
-            The principle specified by the user_id does not have authorization for the requested action
-
-        Notes
-        ----
-        Body sample:
-        {
-          "class": "GetRequestBody",
-          "asOfTime": "{{$isoTimestamp}}",
-          "effectiveTime": "{{$isoTimestamp}}",
-          "forLineage": false,
-          "forDuplicateProcessing": false
-        }
         """
+        url = str(HttpUrl(f"{self.command_root}/user-identities/{guid}/retrieve"))
+        params = {
+            "include_only_relationships": include_only_relationships,
+            "skip_relationships": skip_relationships,
+            "graph_query_depth": graph_query_depth,
+            "output_format": output_format,
+            "report_spec": report_spec,
+            "body": body,
+        }
+        params.update(kwargs)
+        params = {k: v for k, v in params.items() if v is not None}
 
-        url = str(HttpUrl(f"{self.command_root}/user-identities/{user_identity_guid}/retrieve"))
-        type = element_type if element_type else "UserIdentity"
-
-        response = await self._async_get_guid_request(url, _type=type,
-                                                      _gen_output=self._generate_user_identity_output,
-                                                      output_format=output_format, report_spec=report_spec,
-                                                      body=body)
-
-        return response
+        return await self._async_get_guid_request(
+            url,
+            _type="UserIdentity",
+            _gen_output=self._generate_user_identity_output,
+            **params,
+        )
 
     @dynamic_catch
-    def get_user_identity_by_guid(self, user_identity_guid: str, element_type: Optional[str] = None,
-                                  body: Optional[dict | GetRequestBody] = None,
-                                  output_format: str = 'JSON',
-                                  report_spec: dict = "User-Identities") -> dict | str:
-        """ Retrieve the properties of a specific user identity. Async version.
+    def get_user_identity_by_guid(
+        self,
+        guid: str,
+        include_only_relationships: list[str] | None = None,
+        skip_relationships: list[str] | None = None,
+        graph_query_depth: int = 3,
+        output_format: str = "JSON",
+        report_spec: Optional[str | dict] = "User-Identities",
+        body: Optional[dict | GetRequestBody] = None,
+        **kwargs,
+    ) -> dict | str:
+        """Retrieve the properties of a specific user identity.
 
         Parameters
         ----------
-        user_identity_guid: str,
+        guid: str
             unique identifier of the user identity to retrieve.
-        element_type: str, default = None, optional
-            type of user identity to retrieve.
-        body: dict | GetRequestBody, optional, default = None
-            full request body.
+        include_only_relationships : list[str], optional
+            The list of relationship type names to include.
+        skip_relationships : list[str], optional
+            The list of relationship type names to skip.
+        graph_query_depth : int, optional
+            The query depth for relationships.
         output_format: str, default = "JSON"
             - one of "DICT", "MERMAID" or "JSON"
-        report_spec: dict , optional, default = User-Identities
-                The desired output columns/fields to include.
+        report_spec: dict, optional, default = "User-Identities"
+            The desired output columns/fields to include.
+        body: dict | GetRequestBody, optional, default = None
+            full request body.
 
         Returns
         -------
         dict | str
-
-        A JSON dict representing the specified user identity. Returns a string if none found.
-
-        Raises
-        ------
-        PyegeriaException
-            One of the pyegeria exceptions will be raised if there are issues in communications, message format, or
-            Egeria errors.
-        ValidationError
-            Pydantic validation errors are raised if the body does not conform to the NewElementRequestBody.
-        PyegeriaNotAuthorizedException
-          The principle specified by the user_id does not have authorization for the requested action
-
-        Notes
-        ----
-        Body sample:
-        {
-          "class": "GetRequestBody",
-          "asOfTime": "{{$isoTimestamp}}",
-          "effectiveTime": "{{$isoTimestamp}}",
-          "forLineage": false,
-          "forDuplicateProcessing": false
-        }
-
-        Args:
-            report_spec ():
         """
-        return asyncio.get_event_loop().run_until_complete(
-            self._async_get_user_identity_by_guid(user_identity_guid, element_type, body, output_format, report_spec))
+        loop = asyncio.get_event_loop()
+        return loop.run_until_complete(
+            self._async_get_user_identity_by_guid(
+                guid=guid,
+                include_only_relationships=include_only_relationships,
+                skip_relationships=skip_relationships,
+                graph_query_depth=graph_query_depth,
+                output_format=output_format,
+                report_spec=report_spec,
+                body=body,
+                **kwargs,
+            )
+        )
 
     def _extract_user_identity_properties(self, element: dict, columns_struct: dict) -> dict:
         """
@@ -4812,257 +4825,438 @@ class ActorManager(ServerClient):
         return asyncio.run(self._async_delete_contribution_record(contribution_record_guid, body))
 
     @dynamic_catch
-    async def _async_get_contribution_records_by_name(self, body: Optional[dict | FilterRequestBody] = None) -> list[dict]:
-        """ Returns the list of contribution records with a particular name. Async version.
+    async def _async_get_contribution_records_by_name(
+        self,
+        name: str = None,
+        metadata_element_type_name: str | None = "ContributionRecord",
+        metadata_element_subtypes: list[str] | None = None,
+        include_only_relationships: list[str] | None = None,
+        skip_relationships: list[str] | None = None,
+        graph_query_depth: int = 3,
+        start_from: int = 0,
+        page_size: int = 100,
+        output_format: str = "JSON",
+        report_spec: Optional[str | dict] = "Contribution-Records",
+        body: Optional[dict | FilterRequestBody] = None,
+        **kwargs,
+    ) -> list | str:
+        """Retrieve the list of contribution record metadata elements with a particular name. Async Version.
 
         Parameters
         ----------
-        body: dict | FilterRequestBody, optional
-            A dict or FilterRequestBody representing the search filter.
+        name: str, optional
+            name to use to find matching contribution records.
+        metadata_element_type_name : str, optional
+            The type of metadata element.
+        metadata_element_subtypes : list[str], optional
+            The list of subtypes to filter by.
+        include_only_relationships : list[str], optional
+            The list of relationship type names to include.
+        skip_relationships : list[str], optional
+            The list of relationship type names to skip.
+        graph_query_depth : int, optional
+            The query depth for relationships.
+        start_from: int, [default=0], optional
+            When multiple pages of results are available, the page number to start from.
+        page_size: int, [default=100]
+            The number of items to return in a single page.
+        output_format: str, default = "JSON"
+            - one of "DICT", "MERMAID" or "JSON"
+        report_spec: dict, optional, default = "Contribution-Records"
+            The desired output columns/fields to include.
+        body: dict, optional
+            Provides a full request body. If specified, the body supercedes other attributes.
 
         Returns
         -------
-        list[dict] - the list of contribution records with a particular name
-
-        Raises
-        ------
-        PyegeriaException
-            One of the pyegeria exceptions will be raised if there are issues in communications, message format, or
-            Egeria errors.
-        ValidationError
-            Pydantic validation errors are raised if the body does not conform to the FilterRequestBody.
-        PyegeriaNotAuthorizedException
-          The principle specified by the user_id does not have authorization for the requested action
-
-        Notes:
-        -----
-        example:
-        {
-          "class" : "FilterRequestBody",
-          "filter" : "Add name here",
-          "startFrom": 0,
-          "pageSize": 10,
-          "asOfTime" : "{{$isoTimestamp}}",
-          "effectiveTime" : "{{$isoTimestamp}}",
-          "forLineage" : false,
-          "forDuplicateProcessing" : false,
-          "limitResultsByStatus" : ["ACTIVE"],
-          "sequencingOrder" : "PROPERTY_ASCENDING",
-          "sequencingProperty" : "qualifiedName"
-        }
+        list | str
         """
+        # Handle backward-compatible positional or keyword args
+        if name is not None and not isinstance(name, str):
+            body = name
+            name = None
+
+        if name is None:
+            name = kwargs.pop("filter_string", None)
+
+        if name is None and body is None:
+            name = "*"
+
         url = f"{self.command_root}/contribution-records/by-name"
-        return await self._async_get_results_body_request(url, "ContributionRecord", self._generate_referenceable_output, body=body)
+        params = {
+            "filter_string": name,
+            "metadata_element_type": metadata_element_type_name,
+            "metadata_element_subtypes": metadata_element_subtypes,
+            "include_only_relationships": include_only_relationships,
+            "skip_relationships": skip_relationships,
+            "graph_query_depth": graph_query_depth,
+            "start_from": start_from,
+            "page_size": page_size,
+            "output_format": output_format,
+            "report_spec": report_spec,
+            "body": body,
+        }
+        params.update(kwargs)
+        params = {k: v for k, v in params.items() if v is not None or k == "filter_string"}
+
+        return await self._async_get_name_request(
+            url,
+            _type="ContributionRecord",
+            _gen_output=self._generate_referenceable_output,
+            **params,
+        )
 
     @dynamic_catch
-    def get_contribution_records_by_name(self, body: Optional[dict | FilterRequestBody] = None) -> list[dict]:
-        """ Returns the list of contribution records with a particular name.
+    def get_contribution_records_by_name(
+        self,
+        name: str = None,
+        metadata_element_type_name: str | None = "ContributionRecord",
+        metadata_element_subtypes: list[str] | None = None,
+        include_only_relationships: list[str] | None = None,
+        skip_relationships: list[str] | None = None,
+        graph_query_depth: int = 3,
+        start_from: int = 0,
+        page_size: int = 100,
+        output_format: str = "JSON",
+        report_spec: Optional[str | dict] = "Contribution-Records",
+        body: Optional[dict | FilterRequestBody] = None,
+        **kwargs,
+    ) -> list | str:
+        """Retrieve the list of contribution record metadata elements with a particular name.
 
         Parameters
         ----------
-        body: dict | FilterRequestBody, optional
-            A dict or FilterRequestBody representing the search filter.
+        name: str, optional
+            name to use to find matching contribution records.
+        metadata_element_type_name : str, optional
+            The type of metadata element.
+        metadata_element_subtypes : list[str], optional
+            The list of subtypes to filter by.
+        include_only_relationships : list[str], optional
+            The list of relationship type names to include.
+        skip_relationships : list[str], optional
+            The list of relationship type names to skip.
+        graph_query_depth : int, optional
+            The query depth for relationships.
+        start_from: int, [default=0], optional
+            When multiple pages of results are available, the page number to start from.
+        page_size: int, [default=100]
+            The number of items to return in a single page.
+        output_format: str, default = "JSON"
+            - one of "DICT", "MERMAID" or "JSON"
+        report_spec: dict, optional, default = "Contribution-Records"
+            The desired output columns/fields to include.
+        body: dict, optional
+            Provides a full request body. If specified, the body supercedes other attributes.
 
         Returns
         -------
-        list[dict] - the list of contribution records with a particular name
-
-        Raises
-        ------
-        PyegeriaException
-            One of the pyegeria exceptions will be raised if there are issues in communications, message format, or
-            Egeria errors.
-        ValidationError
-            Pydantic validation errors are raised if the body does not conform to the FilterRequestBody.
-        PyegeriaNotAuthorizedException
-          The principle specified by the user_id does not have authorization for the requested action
-
-        Notes:
-        -----
-        example:
-        {
-          "class" : "FilterRequestBody",
-          "filter" : "Add name here",
-          "startFrom": 0,
-          "pageSize": 10,
-          "asOfTime" : "{{$isoTimestamp}}",
-          "effectiveTime" : "{{$isoTimestamp}}",
-          "forLineage" : false,
-          "forDuplicateProcessing" : false,
-          "limitResultsByStatus" : ["ACTIVE"],
-          "sequencingOrder" : "PROPERTY_ASCENDING",
-          "sequencingProperty" : "qualifiedName"
-        }
+        list | str
         """
-        return asyncio.run(self._async_get_contribution_records_by_name(body))
+        loop = asyncio.get_event_loop()
+        return loop.run_until_complete(
+            self._async_get_contribution_records_by_name(
+                name=name,
+                metadata_element_type_name=metadata_element_type_name,
+                metadata_element_subtypes=metadata_element_subtypes,
+                include_only_relationships=include_only_relationships,
+                skip_relationships=skip_relationships,
+                graph_query_depth=graph_query_depth,
+                start_from=start_from,
+                page_size=page_size,
+                output_format=output_format,
+                report_spec=report_spec,
+                body=body,
+                **kwargs,
+            )
+        )
 
     @dynamic_catch
-    async def _async_find_contribution_records(self, body: Optional[dict | SearchStringRequestBody] = None) -> list[dict]:
-        """ Retrieve the list of contribution records that contain the search string. Async version.
+    async def _async_find_contribution_records(
+        self,
+        search_string: str = "*",
+        starts_with: bool = True,
+        ends_with: bool = False,
+        ignore_case: bool = True,
+        metadata_element_type_name: str | None = "ContributionRecord",
+        metadata_element_subtypes: list[str] | None = None,
+        include_only_relationships: list[str] | None = None,
+        skip_relationships: list[str] | None = None,
+        graph_query_depth: int = 3,
+        as_of_time: Optional[str] = None,
+        start_from: int = 0,
+        page_size: int = 100,
+        sequencing_order: Optional[str] = None,
+        sequencing_property: Optional[str] = None,
+        output_format: str = "JSON",
+        report_spec: Optional[str | dict] = "Contribution-Records",
+        body: Optional[dict | SearchStringRequestBody] = None,
+        **kwargs,
+    ) -> list | str:
+        """Retrieve the list of contribution record metadata elements that contain the search string. Async Version.
 
         Parameters
         ----------
+        search_string: str
+            Search string to match against - None or '*' indicate match against all contribution records.
+        starts_with : bool, [default=True], optional
+            Starts with the supplied string.
+        ends_with : bool, [default=False], optional
+            Ends with the supplied string
+        ignore_case : bool, [default=True], optional
+            Ignore case when searching
+        metadata_element_type_name: str, optional
+            The type of metadata element to search for.
+        metadata_element_subtypes: list[str], optional
+            The subtypes of metadata element to search for.
+        include_only_relationships: list[str], optional
+            The types of relationships to include.
+        skip_relationships: list[str], optional
+            The types of relationships to skip.
+        graph_query_depth: int, [default=3], optional
+            The depth of the graph query.
+        as_of_time: str, optional
+            The time to search as of.
+        start_from: int, [default=0], optional
+            When paged results are available, the starting index.
+        page_size: int, [default=100]
+            The number of items to return.
+        sequencing_order: str, optional
+            The order to sequence results by.
+        sequencing_property: str, optional
+            The property to sequence results by.
+        output_format: str, default = "JSON"
+            - one of "MD", "LIST", "FORM", "REPORT", "DICT", "MERMAID" or "JSON"
+        report_spec: str | dict, optional
+            - The desired output columns/fields to include.
         body: dict | SearchStringRequestBody, optional
-            A dict or SearchStringRequestBody representing the search criteria.
+            - if provided, the search parameters in the body will supercede other attributes.
 
         Returns
         -------
-        list[dict] - the list of contribution records that contain the search string
-
-        Raises
-        ------
-        PyegeriaException
-            One of the pyegeria exceptions will be raised if there are issues in communications, message format, or
-            Egeria errors.
-        ValidationError
-            Pydantic validation errors are raised if the body does not conform to the SearchStringRequestBody.
-        PyegeriaNotAuthorizedException
-          The principle specified by the user_id does not have authorization for the requested action
-
-        Notes:
-        -----
-        example:
-        {
-          "class" : "SearchStringRequestBody",
-          "searchString": "xxx",
-          "startsWith" : false,
-          "endsWith" : false,
-          "ignoreCase" : true,
-          "startFrom" : 0,
-          "pageSize": 0,
-          "asOfTime" : "{{$isoTimestamp}}",
-          "effectiveTime" : "{{$isoTimestamp}}",
-          "forLineage" : false,
-          "forDuplicateProcessing" : false,
-          "limitResultsByStatus" : ["ACTIVE"],
-          "sequencingOrder" : "PROPERTY_ASCENDING",
-          "sequencingProperty" : "qualifiedName"
-        }
+        list | str
         """
         url = f"{self.command_root}/contribution-records/by-search-string"
-        return await self._async_get_results_body_request(url, "ContributionRecord", self._generate_referenceable_output, body=body)
+        params = {
+            "search_string": search_string,
+            "starts_with": starts_with,
+            "ends_with": ends_with,
+            "ignore_case": ignore_case,
+            "metadata_element_type": metadata_element_type_name,
+            "metadata_element_subtypes": metadata_element_subtypes,
+            "include_only_relationships": include_only_relationships,
+            "skip_relationships": skip_relationships,
+            "graph_query_depth": graph_query_depth,
+            "as_of_time": as_of_time,
+            "start_from": start_from,
+            "page_size": page_size,
+            "sequencing_order": sequencing_order,
+            "sequencing_property": sequencing_property,
+            "output_format": output_format,
+            "report_spec": report_spec,
+            "body": body,
+        }
+        params.update(kwargs)
+        params = {k: v for k, v in params.items() if v is not None or k == "search_string"}
+
+        return await self._async_find_request(
+            url,
+            _type="ContributionRecord",
+            _gen_output=self._generate_referenceable_output,
+            **params,
+        )
 
     @dynamic_catch
-    def find_contribution_records(self, body: Optional[dict | SearchStringRequestBody] = None) -> list[dict]:
-        """ Retrieve the list of contribution records that contain the search string.
+    def find_contribution_records(
+        self,
+        search_string: str = "*",
+        starts_with: bool = True,
+        ends_with: bool = False,
+        ignore_case: bool = True,
+        metadata_element_type_name: str | None = "ContributionRecord",
+        metadata_element_subtypes: list[str] | None = None,
+        include_only_relationships: list[str] | None = None,
+        skip_relationships: list[str] | None = None,
+        graph_query_depth: int = 3,
+        as_of_time: Optional[str] = None,
+        start_from: int = 0,
+        page_size: int = 100,
+        sequencing_order: Optional[str] = None,
+        sequencing_property: Optional[str] = None,
+        output_format: str = "JSON",
+        report_spec: Optional[str | dict] = "Contribution-Records",
+        body: Optional[dict | SearchStringRequestBody] = None,
+        **kwargs,
+    ) -> list | str:
+        """Retrieve the list of contribution record metadata elements that contain the search string.
 
         Parameters
         ----------
+        search_string: str
+            Search string to match against - None or '*' indicate match against all contribution records.
+        starts_with : bool, [default=True], optional
+            Starts with the supplied string.
+        ends_with : bool, [default=False], optional
+            Ends with the supplied string
+        ignore_case : bool, [default=True], optional
+            Ignore case when searching
+        metadata_element_type_name: str, optional
+            The type of metadata element to search for.
+        metadata_element_subtypes: list[str], optional
+            The subtypes of metadata element to search for.
+        include_only_relationships: list[str], optional
+            The types of relationships to include.
+        skip_relationships: list[str], optional
+            The types of relationships to skip.
+        graph_query_depth: int, [default=3], optional
+            The depth of the graph query.
+        as_of_time: str, optional
+            The time to search as of.
+        start_from: int, [default=0], optional
+            When paged results are available, the starting index.
+        page_size: int, [default=100]
+            The number of items to return.
+        sequencing_order: str, optional
+            The order to sequence results by.
+        sequencing_property: str, optional
+            The property to sequence results by.
+        output_format: str, default = "JSON"
+            - one of "MD", "LIST", "FORM", "REPORT", "DICT", "MERMAID" or "JSON"
+        report_spec: str | dict, optional
+            - The desired output columns/fields to include.
         body: dict | SearchStringRequestBody, optional
-            A dict or SearchStringRequestBody representing the search criteria.
+            - if provided, the search parameters in the body will supercede other attributes.
 
         Returns
         -------
-        list[dict] - the list of contribution records that contain the search string
-
-        Raises
-        ------
-        PyegeriaException
-            One of the pyegeria exceptions will be raised if there are issues in communications, message format, or
-            Egeria errors.
-        ValidationError
-            Pydantic validation errors are raised if the body does not conform to the SearchStringRequestBody.
-        PyegeriaNotAuthorizedException
-          The principle specified by the user_id does not have authorization for the requested action
-
-        Notes:
-        -----
-        example:
-        {
-          "class" : "SearchStringRequestBody",
-          "searchString": "xxx",
-          "startsWith" : false,
-          "endsWith" : false,
-          "ignoreCase" : true,
-          "startFrom" : 0,
-          "pageSize": 0,
-          "asOfTime" : "{{$isoTimestamp}}",
-          "effectiveTime" : "{{$isoTimestamp}}",
-          "forLineage" : false,
-          "forDuplicateProcessing" : false,
-          "limitResultsByStatus" : ["ACTIVE"],
-          "sequencingOrder" : "PROPERTY_ASCENDING",
-          "sequencingProperty" : "qualifiedName"
-        }
+        list | str
         """
-        return asyncio.run(self._async_find_contribution_records(body))
+        loop = asyncio.get_event_loop()
+        return loop.run_until_complete(
+            self._async_find_contribution_records(
+                search_string=search_string,
+                starts_with=starts_with,
+                ends_with=ends_with,
+                ignore_case=ignore_case,
+                metadata_element_type_name=metadata_element_type_name,
+                metadata_element_subtypes=metadata_element_subtypes,
+                include_only_relationships=include_only_relationships,
+                skip_relationships=skip_relationships,
+                graph_query_depth=graph_query_depth,
+                as_of_time=as_of_time,
+                start_from=start_from,
+                page_size=page_size,
+                sequencing_order=sequencing_order,
+                sequencing_property=sequencing_property,
+                output_format=output_format,
+                report_spec=report_spec,
+                body=body,
+                **kwargs,
+            )
+        )
 
     @dynamic_catch
-    async def _async_get_contribution_record_by_guid(self, contribution_record_guid: str, body: Optional[dict | GetRequestBody] = None) -> dict:
-        """ Return the properties of a specific contribution record. Async version.
+    async def _async_get_contribution_record_by_guid(
+        self,
+        guid: str,
+        include_only_relationships: list[str] | None = None,
+        skip_relationships: list[str] | None = None,
+        graph_query_depth: int = 3,
+        output_format: str = "JSON",
+        report_spec: Optional[str | dict] = "Contribution-Records",
+        body: Optional[dict | GetRequestBody] = None,
+        **kwargs,
+    ) -> dict | str:
+        """Return the properties of a specific contribution record. Async version.
 
         Parameters
         ----------
-        contribution_record_guid: str
-            The unique identifier of the contribution record to retrieve.
-        body: dict | GetRequestBody, optional
-            A dict or GetRequestBody representing the retrieval options.
+        guid: str
+            unique identifier of the contribution record to retrieve.
+        include_only_relationships : list[str], optional
+            The list of relationship type names to include.
+        skip_relationships : list[str], optional
+            The list of relationship type names to skip.
+        graph_query_depth : int, optional
+            The query depth for relationships.
+        output_format: str, default = "JSON"
+            - one of "DICT", "MERMAID" or "JSON"
+        report_spec: dict, optional, default = "Contribution-Records"
+            The desired output columns/fields to include.
+        body: dict | GetRequestBody, optional, default = None
+            full request body.
 
         Returns
         -------
-        dict - the properties of a specific contribution record
-
-        Raises
-        ------
-        PyegeriaException
-            One of the pyegeria exceptions will be raised if there are issues in communications, message format, or
-            Egeria errors.
-        ValidationError
-            Pydantic validation errors are raised if the body does not conform to the GetRequestBody.
-        PyegeriaNotAuthorizedException
-          The principle specified by the user_id does not have authorization for the requested action
-
-        Notes:
-        -----
-        example:
-        {
-          "class" : "GetRequestBody",
-          "asOfTime" : "{{$isoTimestamp}}",
-          "effectiveTime" : "{{$isoTimestamp}}",
-          "forLineage" : false,
-          "forDuplicateProcessing" : false
-        }
+        dict | str
         """
-        url = f"{self.command_root}/contribution-records/{contribution_record_guid}/retrieve"
-        return await self._async_get_guid_request(url, "ContributionRecord", self._generate_referenceable_output, body=body)
+        url = f"{self.command_root}/contribution-records/{guid}/retrieve"
+        params = {
+            "include_only_relationships": include_only_relationships,
+            "skip_relationships": skip_relationships,
+            "graph_query_depth": graph_query_depth,
+            "output_format": output_format,
+            "report_spec": report_spec,
+            "body": body,
+        }
+        params.update(kwargs)
+        params = {k: v for k, v in params.items() if v is not None}
+
+        return await self._async_get_guid_request(
+            url,
+            _type="ContributionRecord",
+            _gen_output=self._generate_referenceable_output,
+            **params,
+        )
 
     @dynamic_catch
-    def get_contribution_record_by_guid(self, contribution_record_guid: str, body: Optional[dict | GetRequestBody] = None) -> dict:
-        """ Return the properties of a specific contribution record.
+    def get_contribution_record_by_guid(
+        self,
+        guid: str,
+        include_only_relationships: list[str] | None = None,
+        skip_relationships: list[str] | None = None,
+        graph_query_depth: int = 3,
+        output_format: str = "JSON",
+        report_spec: Optional[str | dict] = "Contribution-Records",
+        body: Optional[dict | GetRequestBody] = None,
+        **kwargs,
+    ) -> dict | str:
+        """Return the properties of a specific contribution record.
 
         Parameters
         ----------
-        contribution_record_guid: str
-            The unique identifier of the contribution record to retrieve.
-        body: dict | GetRequestBody, optional
-            A dict or GetRequestBody representing the retrieval options.
+        guid: str
+            unique identifier of the contribution record to retrieve.
+        include_only_relationships : list[str], optional
+            The list of relationship type names to include.
+        skip_relationships : list[str], optional
+            The list of relationship type names to skip.
+        graph_query_depth : int, optional
+            The query depth for relationships.
+        output_format: str, default = "JSON"
+            - one of "DICT", "MERMAID" or "JSON"
+        report_spec: dict, optional, default = "Contribution-Records"
+            The desired output columns/fields to include.
+        body: dict | GetRequestBody, optional, default = None
+            full request body.
 
         Returns
         -------
-        dict - the properties of a specific contribution record
-
-        Raises
-        ------
-        PyegeriaException
-            One of the pyegeria exceptions will be raised if there are issues in communications, message format, or
-            Egeria errors.
-        ValidationError
-            Pydantic validation errors are raised if the body does not conform to the GetRequestBody.
-        PyegeriaNotAuthorizedException
-          The principle specified by the user_id does not have authorization for the requested action
-
-        Notes:
-        -----
-        example:
-        {
-          "class" : "GetRequestBody",
-          "asOfTime" : "{{$isoTimestamp}}",
-          "effectiveTime" : "{{$isoTimestamp}}",
-          "forLineage" : false,
-          "forDuplicateProcessing" : false
-        }
+        dict | str
         """
-        return asyncio.run(self._async_get_contribution_record_by_guid(contribution_record_guid, body))
+        loop = asyncio.get_event_loop()
+        return loop.run_until_complete(
+            self._async_get_contribution_record_by_guid(
+                guid=guid,
+                include_only_relationships=include_only_relationships,
+                skip_relationships=skip_relationships,
+                graph_query_depth=graph_query_depth,
+                output_format=output_format,
+                report_spec=report_spec,
+                body=body,
+                **kwargs,
+            )
+        )
 
     @dynamic_catch
     async def _async_create_contact_details(self, body: Optional[dict | NewElementRequestBody] = None) -> str:
@@ -5743,257 +5937,438 @@ class ActorManager(ServerClient):
         loop.run_until_complete(self._async_detach_contact_details(element_guid, contact_details_guid, body))
 
     @dynamic_catch
-    async def _async_get_contact_details_by_name(self, body: Optional[dict | FilterRequestBody] = None) -> list[dict]:
-        """ Returns the list of contact details with a particular name. Async version.
+    async def _async_get_contact_details_by_name(
+        self,
+        name: str = None,
+        metadata_element_type_name: str | None = "ContactDetails",
+        metadata_element_subtypes: list[str] | None = None,
+        include_only_relationships: list[str] | None = None,
+        skip_relationships: list[str] | None = None,
+        graph_query_depth: int = 3,
+        start_from: int = 0,
+        page_size: int = 100,
+        output_format: str = "JSON",
+        report_spec: Optional[str | dict] = "Contact-Details",
+        body: Optional[dict | FilterRequestBody] = None,
+        **kwargs,
+    ) -> list | str:
+        """Retrieve the list of contact details metadata elements with a particular name. Async Version.
 
         Parameters
         ----------
-        body: dict | FilterRequestBody, optional
-            A dict or FilterRequestBody representing the search filter.
+        name: str, optional
+            name to use to find matching contact details.
+        metadata_element_type_name : str, optional
+            The type of metadata element.
+        metadata_element_subtypes : list[str], optional
+            The list of subtypes to filter by.
+        include_only_relationships : list[str], optional
+            The list of relationship type names to include.
+        skip_relationships : list[str], optional
+            The list of relationship type names to skip.
+        graph_query_depth : int, optional
+            The query depth for relationships.
+        start_from: int, [default=0], optional
+            When multiple pages of results are available, the page number to start from.
+        page_size: int, [default=100]
+            The number of items to return in a single page.
+        output_format: str, default = "JSON"
+            - one of "DICT", "MERMAID" or "JSON"
+        report_spec: dict, optional, default = "Contact-Details"
+            The desired output columns/fields to include.
+        body: dict, optional
+            Provides a full request body. If specified, the body supercedes other attributes.
 
         Returns
         -------
-        list[dict] - the list of matching contact details
-
-        Raises
-        ------
-        PyegeriaException
-            One of the pyegeria exceptions will be raised if there are issues in communications, message format, or
-            Egeria errors.
-        ValidationError
-            Pydantic validation errors are raised if the body does not conform to the FilterRequestBody.
-        PyegeriaNotAuthorizedException
-          The principle specified by the user_id does not have authorization for the requested action
-
-        Notes:
-        -----
-        example:
-        {
-          "class" : "FilterRequestBody",
-          "filter" : "Add name here",
-          "startFrom": 0,
-          "pageSize": 10,
-          "asOfTime" : "{{$isoTimestamp}}",
-          "effectiveTime" : "{{$isoTimestamp}}",
-          "forLineage" : false,
-          "forDuplicateProcessing" : false,
-          "limitResultsByStatus" : ["ACTIVE"],
-          "sequencingOrder" : "PROPERTY_ASCENDING",
-          "sequencingProperty" : "qualifiedName"
-        }
+        list | str
         """
+        # Handle backward-compatible positional or keyword args
+        if name is not None and not isinstance(name, str):
+            body = name
+            name = None
+
+        if name is None:
+            name = kwargs.pop("filter_string", None)
+
+        if name is None and body is None:
+            name = "*"
+
         url = f"{self.command_root}/contact-details/by-name"
-        return await self._async_get_results_body_request(url, "ContactDetails", self._generate_referenceable_output, body=body)
+        params = {
+            "filter_string": name,
+            "metadata_element_type": metadata_element_type_name,
+            "metadata_element_subtypes": metadata_element_subtypes,
+            "include_only_relationships": include_only_relationships,
+            "skip_relationships": skip_relationships,
+            "graph_query_depth": graph_query_depth,
+            "start_from": start_from,
+            "page_size": page_size,
+            "output_format": output_format,
+            "report_spec": report_spec,
+            "body": body,
+        }
+        params.update(kwargs)
+        params = {k: v for k, v in params.items() if v is not None or k == "filter_string"}
+
+        return await self._async_get_name_request(
+            url,
+            _type="ContactDetails",
+            _gen_output=self._generate_referenceable_output,
+            **params,
+        )
 
     @dynamic_catch
-    def get_contact_details_by_name(self, body: Optional[dict | FilterRequestBody] = None) -> list[dict]:
-        """ Returns the list of contact details with a particular name.
+    def get_contact_details_by_name(
+        self,
+        name: str = None,
+        metadata_element_type_name: str | None = "ContactDetails",
+        metadata_element_subtypes: list[str] | None = None,
+        include_only_relationships: list[str] | None = None,
+        skip_relationships: list[str] | None = None,
+        graph_query_depth: int = 3,
+        start_from: int = 0,
+        page_size: int = 100,
+        output_format: str = "JSON",
+        report_spec: Optional[str | dict] = "Contact-Details",
+        body: Optional[dict | FilterRequestBody] = None,
+        **kwargs,
+    ) -> list | str:
+        """Retrieve the list of contact details metadata elements with a particular name.
 
         Parameters
         ----------
-        body: dict | FilterRequestBody, optional
-            A dict or FilterRequestBody representing the search filter.
+        name: str, optional
+            name to use to find matching contact details.
+        metadata_element_type_name : str, optional
+            The type of metadata element.
+        metadata_element_subtypes : list[str], optional
+            The list of subtypes to filter by.
+        include_only_relationships : list[str], optional
+            The list of relationship type names to include.
+        skip_relationships : list[str], optional
+            The list of relationship type names to skip.
+        graph_query_depth : int, optional
+            The query depth for relationships.
+        start_from: int, [default=0], optional
+            When multiple pages of results are available, the page number to start from.
+        page_size: int, [default=100]
+            The number of items to return in a single page.
+        output_format: str, default = "JSON"
+            - one of "DICT", "MERMAID" or "JSON"
+        report_spec: dict, optional, default = "Contact-Details"
+            The desired output columns/fields to include.
+        body: dict, optional
+            Provides a full request body. If specified, the body supercedes other attributes.
 
         Returns
         -------
-        list[dict] - the list of matching contact details
-
-        Raises
-        ------
-        PyegeriaException
-            One of the pyegeria exceptions will be raised if there are issues in communications, message format, or
-            Egeria errors.
-        ValidationError
-            Pydantic validation errors are raised if the body does not conform to the FilterRequestBody.
-        PyegeriaNotAuthorizedException
-          The principle specified by the user_id does not have authorization for the requested action
-
-        Notes:
-        -----
-        example:
-        {
-          "class" : "FilterRequestBody",
-          "filter" : "Add name here",
-          "startFrom": 0,
-          "pageSize": 10,
-          "asOfTime" : "{{$isoTimestamp}}",
-          "effectiveTime" : "{{$isoTimestamp}}",
-          "forLineage" : false,
-          "forDuplicateProcessing" : false,
-          "limitResultsByStatus" : ["ACTIVE"],
-          "sequencingOrder" : "PROPERTY_ASCENDING",
-          "sequencingProperty" : "qualifiedName"
-        }
+        list | str
         """
-        return asyncio.run(self._async_get_contact_details_by_name(body))
+        loop = asyncio.get_event_loop()
+        return loop.run_until_complete(
+            self._async_get_contact_details_by_name(
+                name=name,
+                metadata_element_type_name=metadata_element_type_name,
+                metadata_element_subtypes=metadata_element_subtypes,
+                include_only_relationships=include_only_relationships,
+                skip_relationships=skip_relationships,
+                graph_query_depth=graph_query_depth,
+                start_from=start_from,
+                page_size=page_size,
+                output_format=output_format,
+                report_spec=report_spec,
+                body=body,
+                **kwargs,
+            )
+        )
 
     @dynamic_catch
-    async def _async_find_contact_details(self, body: Optional[dict | SearchStringRequestBody] = None) -> list[dict]:
-        """ Retrieve the list of contact details metadata elements that contain the search string. Async version.
+    async def _async_find_contact_details(
+        self,
+        search_string: str = "*",
+        starts_with: bool = True,
+        ends_with: bool = False,
+        ignore_case: bool = True,
+        metadata_element_type_name: str | None = "ContactDetails",
+        metadata_element_subtypes: list[str] | None = None,
+        include_only_relationships: list[str] | None = None,
+        skip_relationships: list[str] | None = None,
+        graph_query_depth: int = 3,
+        as_of_time: Optional[str] = None,
+        start_from: int = 0,
+        page_size: int = 100,
+        sequencing_order: Optional[str] = None,
+        sequencing_property: Optional[str] = None,
+        output_format: str = "JSON",
+        report_spec: Optional[str | dict] = "Contact-Details",
+        body: Optional[dict | SearchStringRequestBody] = None,
+        **kwargs,
+    ) -> list | str:
+        """Retrieve the list of contact details metadata elements that contain the search string. Async Version.
 
         Parameters
         ----------
+        search_string: str
+            Search string to match against - None or '*' indicate match against all contact details.
+        starts_with : bool, [default=True], optional
+            Starts with the supplied string.
+        ends_with : bool, [default=False], optional
+            Ends with the supplied string
+        ignore_case : bool, [default=True], optional
+            Ignore case when searching
+        metadata_element_type_name: str, optional
+            The type of metadata element to search for.
+        metadata_element_subtypes: list[str], optional
+            The subtypes of metadata element to search for.
+        include_only_relationships: list[str], optional
+            The types of relationships to include.
+        skip_relationships: list[str], optional
+            The types of relationships to skip.
+        graph_query_depth: int, [default=3], optional
+            The depth of the graph query.
+        as_of_time: str, optional
+            The time to search as of.
+        start_from: int, [default=0], optional
+            When paged results are available, the starting index.
+        page_size: int, [default=100]
+            The number of items to return.
+        sequencing_order: str, optional
+            The order to sequence results by.
+        sequencing_property: str, optional
+            The property to sequence results by.
+        output_format: str, default = "JSON"
+            - one of "MD", "LIST", "FORM", "REPORT", "DICT", "MERMAID" or "JSON"
+        report_spec: str | dict, optional
+            - The desired output columns/fields to include.
         body: dict | SearchStringRequestBody, optional
-            A dict or SearchStringRequestBody representing the search criteria.
+            - if provided, the search parameters in the body will supercede other attributes.
 
         Returns
         -------
-        list[dict] - the list of contact details metadata elements that contain the search string
-
-        Raises
-        ------
-        PyegeriaException
-            One of the pyegeria exceptions will be raised if there are issues in communications, message format, or
-            Egeria errors.
-        ValidationError
-            Pydantic validation errors are raised if the body does not conform to the SearchStringRequestBody.
-        PyegeriaNotAuthorizedException
-          The principle specified by the user_id does not have authorization for the requested action
-
-        Notes:
-        -----
-        example:
-        {
-          "class" : "SearchStringRequestBody",
-          "searchString": "xxx",
-          "startsWith" : false,
-          "endsWith" : false,
-          "ignoreCase" : true,
-          "startFrom" : 0,
-          "pageSize": 0,
-          "asOfTime" : "{{$isoTimestamp}}",
-          "effectiveTime" : "{{$isoTimestamp}}",
-          "forLineage" : false,
-          "forDuplicateProcessing" : false,
-          "limitResultsByStatus" : ["ACTIVE"],
-          "sequencingOrder" : "PROPERTY_ASCENDING",
-          "sequencingProperty" : "qualifiedName"
-        }
+        list | str
         """
         url = f"{self.command_root}/contact-details/by-search-string"
-        return await self._async_get_results_body_request(url, "ContactDetails", self._generate_referenceable_output, body=body)
+        params = {
+            "search_string": search_string,
+            "starts_with": starts_with,
+            "ends_with": ends_with,
+            "ignore_case": ignore_case,
+            "metadata_element_type": metadata_element_type_name,
+            "metadata_element_subtypes": metadata_element_subtypes,
+            "include_only_relationships": include_only_relationships,
+            "skip_relationships": skip_relationships,
+            "graph_query_depth": graph_query_depth,
+            "as_of_time": as_of_time,
+            "start_from": start_from,
+            "page_size": page_size,
+            "sequencing_order": sequencing_order,
+            "sequencing_property": sequencing_property,
+            "output_format": output_format,
+            "report_spec": report_spec,
+            "body": body,
+        }
+        params.update(kwargs)
+        params = {k: v for k, v in params.items() if v is not None or k == "search_string"}
+
+        return await self._async_find_request(
+            url,
+            _type="ContactDetails",
+            _gen_output=self._generate_referenceable_output,
+            **params,
+        )
 
     @dynamic_catch
-    def find_contact_details(self, body: Optional[dict | SearchStringRequestBody] = None) -> list[dict]:
-        """ Retrieve the list of contact details metadata elements that contain the search string.
+    def find_contact_details(
+        self,
+        search_string: str = "*",
+        starts_with: bool = True,
+        ends_with: bool = False,
+        ignore_case: bool = True,
+        metadata_element_type_name: str | None = "ContactDetails",
+        metadata_element_subtypes: list[str] | None = None,
+        include_only_relationships: list[str] | None = None,
+        skip_relationships: list[str] | None = None,
+        graph_query_depth: int = 3,
+        as_of_time: Optional[str] = None,
+        start_from: int = 0,
+        page_size: int = 100,
+        sequencing_order: Optional[str] = None,
+        sequencing_property: Optional[str] = None,
+        output_format: str = "JSON",
+        report_spec: Optional[str | dict] = "Contact-Details",
+        body: Optional[dict | SearchStringRequestBody] = None,
+        **kwargs,
+    ) -> list | str:
+        """Retrieve the list of contact details metadata elements that contain the search string.
 
         Parameters
         ----------
+        search_string: str
+            Search string to match against - None or '*' indicate match against all contact details.
+        starts_with : bool, [default=True], optional
+            Starts with the supplied string.
+        ends_with : bool, [default=False], optional
+            Ends with the supplied string
+        ignore_case : bool, [default=True], optional
+            Ignore case when searching
+        metadata_element_type_name: str, optional
+            The type of metadata element to search for.
+        metadata_element_subtypes: list[str], optional
+            The subtypes of metadata element to search for.
+        include_only_relationships: list[str], optional
+            The types of relationships to include.
+        skip_relationships: list[str], optional
+            The types of relationships to skip.
+        graph_query_depth: int, [default=3], optional
+            The depth of the graph query.
+        as_of_time: str, optional
+            The time to search as of.
+        start_from: int, [default=0], optional
+            When paged results are available, the starting index.
+        page_size: int, [default=100]
+            The number of items to return.
+        sequencing_order: str, optional
+            The order to sequence results by.
+        sequencing_property: str, optional
+            The property to sequence results by.
+        output_format: str, default = "JSON"
+            - one of "MD", "LIST", "FORM", "REPORT", "DICT", "MERMAID" or "JSON"
+        report_spec: str | dict, optional
+            - The desired output columns/fields to include.
         body: dict | SearchStringRequestBody, optional
-            A dict or SearchStringRequestBody representing the search criteria.
+            - if provided, the search parameters in the body will supercede other attributes.
 
         Returns
         -------
-        list[dict] - the list of contact details metadata elements that contain the search string
-
-        Raises
-        ------
-        PyegeriaException
-            One of the pyegeria exceptions will be raised if there are issues in communications, message format, or
-            Egeria errors.
-        ValidationError
-            Pydantic validation errors are raised if the body does not conform to the SearchStringRequestBody.
-        PyegeriaNotAuthorizedException
-          The principle specified by the user_id does not have authorization for the requested action
-
-        Notes:
-        -----
-        example:
-        {
-          "class" : "SearchStringRequestBody",
-          "searchString": "xxx",
-          "startsWith" : false,
-          "endsWith" : false,
-          "ignoreCase" : true,
-          "startFrom" : 0,
-          "pageSize": 0,
-          "asOfTime" : "{{$isoTimestamp}}",
-          "effectiveTime" : "{{$isoTimestamp}}",
-          "forLineage" : false,
-          "forDuplicateProcessing" : false,
-          "limitResultsByStatus" : ["ACTIVE"],
-          "sequencingOrder" : "PROPERTY_ASCENDING",
-          "sequencingProperty" : "qualifiedName"
-        }
+        list | str
         """
-        return asyncio.run(self._async_find_contact_details(body))
+        loop = asyncio.get_event_loop()
+        return loop.run_until_complete(
+            self._async_find_contact_details(
+                search_string=search_string,
+                starts_with=starts_with,
+                ends_with=ends_with,
+                ignore_case=ignore_case,
+                metadata_element_type_name=metadata_element_type_name,
+                metadata_element_subtypes=metadata_element_subtypes,
+                include_only_relationships=include_only_relationships,
+                skip_relationships=skip_relationships,
+                graph_query_depth=graph_query_depth,
+                as_of_time=as_of_time,
+                start_from=start_from,
+                page_size=page_size,
+                sequencing_order=sequencing_order,
+                sequencing_property=sequencing_property,
+                output_format=output_format,
+                report_spec=report_spec,
+                body=body,
+                **kwargs,
+            )
+        )
 
     @dynamic_catch
-    async def _async_get_contact_details_by_guid(self, contact_details_guid: str, body: Optional[dict | GetRequestBody] = None) -> dict:
-        """ Return the properties of a specific contact details. Async version.
+    async def _async_get_contact_details_by_guid(
+        self,
+        guid: str,
+        include_only_relationships: list[str] | None = None,
+        skip_relationships: list[str] | None = None,
+        graph_query_depth: int = 3,
+        output_format: str = "JSON",
+        report_spec: Optional[str | dict] = "Contact-Details",
+        body: Optional[dict | GetRequestBody] = None,
+        **kwargs,
+    ) -> dict | str:
+        """Return the properties of a specific contact details. Async version.
 
         Parameters
         ----------
-        contact_details_guid: str
-            The unique identifier of the contact details to retrieve.
-        body: dict | GetRequestBody, optional
-            A dict or GetRequestBody representing the retrieval options.
+        guid: str
+            unique identifier of the contact details to retrieve.
+        include_only_relationships : list[str], optional
+            The list of relationship type names to include.
+        skip_relationships : list[str], optional
+            The list of relationship type names to skip.
+        graph_query_depth : int, optional
+            The query depth for relationships.
+        output_format: str, default = "JSON"
+            - one of "DICT", "MERMAID" or "JSON"
+        report_spec: dict, optional, default = "Contact-Details"
+            The desired output columns/fields to include.
+        body: dict | GetRequestBody, optional, default = None
+            full request body.
 
         Returns
         -------
-        dict - the properties of a specific contact details
-
-        Raises
-        ------
-        PyegeriaException
-            One of the pyegeria exceptions will be raised if there are issues in communications, message format, or
-            Egeria errors.
-        ValidationError
-            Pydantic validation errors are raised if the body does not conform to the GetRequestBody.
-        PyegeriaNotAuthorizedException
-          The principle specified by the user_id does not have authorization for the requested action
-
-        Notes:
-        -----
-        example:
-        {
-          "class" : "GetRequestBody",
-          "asOfTime" : "{{$isoTimestamp}}",
-          "effectiveTime" : "{{$isoTimestamp}}",
-          "forLineage" : false,
-          "forDuplicateProcessing" : false
-        }
+        dict | str
         """
-        url = f"{self.command_root}/contact-details/{contact_details_guid}/retrieve"
-        return await self._async_get_guid_request(url, "ContactDetails", self._generate_referenceable_output, body=body)
+        url = f"{self.command_root}/contact-details/{guid}/retrieve"
+        params = {
+            "include_only_relationships": include_only_relationships,
+            "skip_relationships": skip_relationships,
+            "graph_query_depth": graph_query_depth,
+            "output_format": output_format,
+            "report_spec": report_spec,
+            "body": body,
+        }
+        params.update(kwargs)
+        params = {k: v for k, v in params.items() if v is not None}
+
+        return await self._async_get_guid_request(
+            url,
+            _type="ContactDetails",
+            _gen_output=self._generate_referenceable_output,
+            **params,
+        )
 
     @dynamic_catch
-    def get_contact_details_by_guid(self, contact_details_guid: str, body: Optional[dict | GetRequestBody] = None) -> dict:
-        """ Return the properties of a specific contact details.
+    def get_contact_details_by_guid(
+        self,
+        guid: str,
+        include_only_relationships: list[str] | None = None,
+        skip_relationships: list[str] | None = None,
+        graph_query_depth: int = 3,
+        output_format: str = "JSON",
+        report_spec: Optional[str | dict] = "Contact-Details",
+        body: Optional[dict | GetRequestBody] = None,
+        **kwargs,
+    ) -> dict | str:
+        """Return the properties of a specific contact details.
 
         Parameters
         ----------
-        contact_details_guid: str
-            The unique identifier of the contact details to retrieve.
-        body: dict | GetRequestBody, optional
-            A dict or GetRequestBody representing the retrieval options.
+        guid: str
+            unique identifier of the contact details to retrieve.
+        include_only_relationships : list[str], optional
+            The list of relationship type names to include.
+        skip_relationships : list[str], optional
+            The list of relationship type names to skip.
+        graph_query_depth : int, optional
+            The query depth for relationships.
+        output_format: str, default = "JSON"
+            - one of "DICT", "MERMAID" or "JSON"
+        report_spec: dict, optional, default = "Contact-Details"
+            The desired output columns/fields to include.
+        body: dict | GetRequestBody, optional, default = None
+            full request body.
 
         Returns
         -------
-        dict - the properties of a specific contact details
-
-        Raises
-        ------
-        PyegeriaException
-            One of the pyegeria exceptions will be raised if there are issues in communications, message format, or
-            Egeria errors.
-        ValidationError
-            Pydantic validation errors are raised if the body does not conform to the GetRequestBody.
-        PyegeriaNotAuthorizedException
-          The principle specified by the user_id does not have authorization for the requested action
-
-        Notes:
-        -----
-        example:
-        {
-          "class" : "GetRequestBody",
-          "asOfTime" : "{{$isoTimestamp}}",
-          "effectiveTime" : "{{$isoTimestamp}}",
-          "forLineage" : false,
-          "forDuplicateProcessing" : false
-        }
+        dict | str
         """
-        return asyncio.run(self._async_get_contact_details_by_guid(contact_details_guid, body))
+        loop = asyncio.get_event_loop()
+        return loop.run_until_complete(
+            self._async_get_contact_details_by_guid(
+                guid=guid,
+                include_only_relationships=include_only_relationships,
+                skip_relationships=skip_relationships,
+                graph_query_depth=graph_query_depth,
+                output_format=output_format,
+                report_spec=report_spec,
+                body=body,
+                **kwargs,
+            )
+        )
 
     # =====================================================================================================================
     # Work with Perspectives
@@ -6368,302 +6743,438 @@ class ActorManager(ServerClient):
         return asyncio.run(self._async_delete_perspective(perspective_guid, body))
 
     @dynamic_catch
-    async def _async_get_perspectives_by_name(self, filter_string: Optional[str] = None,
-                                              body: Optional[dict | FilterRequestBody] = None,
-                                              start_from: int = 0, page_size: int = 0,
-                                              output_format: str = 'JSON',
-                                              report_spec: Optional[str | dict] = None) -> list | str:
-        """ Returns the list of perspectives with a particular name. Async version.
+    async def _async_get_perspectives_by_name(
+        self,
+        name: str = None,
+        metadata_element_type_name: str | None = "Perspective",
+        metadata_element_subtypes: list[str] | None = None,
+        include_only_relationships: list[str] | None = None,
+        skip_relationships: list[str] | None = None,
+        graph_query_depth: int = 3,
+        start_from: int = 0,
+        page_size: int = 100,
+        output_format: str = "JSON",
+        report_spec: Optional[str | dict] = "Perspectives",
+        body: Optional[dict | FilterRequestBody] = None,
+        **kwargs,
+    ) -> list | str:
+        """Retrieve the list of perspective metadata elements with a particular name. Async Version.
 
         Parameters
         ----------
-        filter_string: str, optional
-            Name to filter perspectives by. Pass None or '*' to match all.
-        body: dict | FilterRequestBody, optional
-            Full request body. If provided, overrides filter_string and other parameters.
-        start_from: int, default 0
-            Starting index for pagination.
-        page_size: int, default 0
-            Number of items to return in a single page.
-        output_format: str, default "JSON"
-            Output format: "MD", "LIST", "FORM", "REPORT", "DICT", "MERMAID" or "JSON".
-        report_spec: str | dict, optional
-            Report specification for output formatting.
+        name: str, optional
+            name to use to find matching perspectives.
+        metadata_element_type_name : str, optional
+            The type of metadata element.
+        metadata_element_subtypes : list[str], optional
+            The list of subtypes to filter by.
+        include_only_relationships : list[str], optional
+            The list of relationship type names to include.
+        skip_relationships : list[str], optional
+            The list of relationship type names to skip.
+        graph_query_depth : int, optional
+            The query depth for relationships.
+        start_from: int, [default=0], optional
+            When multiple pages of results are available, the page number to start from.
+        page_size: int, [default=100]
+            The number of items to return in a single page.
+        output_format: str, default = "JSON"
+            - one of "DICT", "MERMAID" or "JSON"
+        report_spec: dict, optional, default = "Perspectives"
+            The desired output columns/fields to include.
+        body: dict, optional
+            Provides a full request body. If specified, the body supercedes other attributes.
 
         Returns
         -------
-        list | str - the list of matching perspectives
-
-        Raises
-        ------
-        PyegeriaException
-            One of the pyegeria exceptions will be raised if there are issues in communications, message format, or
-            Egeria errors.
-        ValidationError
-            Pydantic validation errors are raised if the body does not conform to the FilterRequestBody.
-        PyegeriaNotAuthorizedException
-          The principle specified by the user_id does not have authorization for the requested action
-
-        Notes:
-        -----
-        example body (if using body parameter):
-        {
-          "class" : "FilterRequestBody",
-          "filter" : "Add name here",
-          "startFrom": 0,
-          "pageSize": 10,
-          "limitResultsByStatus" : ["ACTIVE"],
-          "sequencingOrder" : "PROPERTY_ASCENDING",
-          "sequencingProperty" : "qualifiedName"
-        }
+        list | str
         """
+        # Handle backward-compatible positional or keyword args
+        if name is not None and not isinstance(name, str):
+            body = name
+            name = None
+
+        if name is None:
+            name = kwargs.pop("filter_string", None)
+
+        if name is None and body is None:
+            name = "*"
+
         url = str(HttpUrl(f"{self.command_root}/perspectives/by-name"))
-        return await self._async_get_name_request(url, _type="Perspective",
-                                                  _gen_output=self._generate_referenceable_output,
-                                                  filter_string=filter_string, start_from=start_from,
-                                                  page_size=page_size, output_format=output_format,
-                                                  report_spec=report_spec, body=body)
-
-    @dynamic_catch
-    def get_perspectives_by_name(self, filter_string: Optional[str] = None,
-                                 body: Optional[dict | FilterRequestBody] = None,
-                                 start_from: int = 0, page_size: int = 0,
-                                 output_format: str = 'JSON',
-                                 report_spec: Optional[str | dict] = None) -> list | str:
-        """ Returns the list of perspectives with a particular name.
-
-        Parameters
-        ----------
-        filter_string: str, optional
-            Name to filter perspectives by. Pass None or '*' to match all.
-        body: dict | FilterRequestBody, optional
-            Full request body. If provided, overrides filter_string and other parameters.
-        start_from: int, default 0
-            Starting index for pagination.
-        page_size: int, default 0
-            Number of items to return in a single page.
-        output_format: str, default "JSON"
-            Output format: "MD", "LIST", "FORM", "REPORT", "DICT", "MERMAID" or "JSON".
-        report_spec: str | dict, optional
-            Report specification for output formatting.
-
-        Returns
-        -------
-        list | str - the list of matching perspectives
-
-        Raises
-        ------
-        PyegeriaException
-            One of the pyegeria exceptions will be raised if there are issues in communications, message format, or
-            Egeria errors.
-        ValidationError
-            Pydantic validation errors are raised if the body does not conform to the FilterRequestBody.
-        PyegeriaNotAuthorizedException
-          The principle specified by the user_id does not have authorization for the requested action
-
-        Notes:
-        -----
-        example body (if using body parameter):
-        {
-          "class" : "FilterRequestBody",
-          "filter" : "Add name here",
-          "startFrom": 0,
-          "pageSize": 10,
-          "limitResultsByStatus" : ["ACTIVE"],
-          "sequencingOrder" : "PROPERTY_ASCENDING",
-          "sequencingProperty" : "qualifiedName"
+        params = {
+            "filter_string": name,
+            "metadata_element_type": metadata_element_type_name,
+            "metadata_element_subtypes": metadata_element_subtypes,
+            "include_only_relationships": include_only_relationships,
+            "skip_relationships": skip_relationships,
+            "graph_query_depth": graph_query_depth,
+            "start_from": start_from,
+            "page_size": page_size,
+            "output_format": output_format,
+            "report_spec": report_spec,
+            "body": body,
         }
-        """
-        return asyncio.run(self._async_get_perspectives_by_name(filter_string, body, start_from,
-                                                                page_size, output_format, report_spec))
+        params.update(kwargs)
+        params = {k: v for k, v in params.items() if v is not None or k == "filter_string"}
+
+        return await self._async_get_name_request(
+            url,
+            _type="Perspective",
+            _gen_output=self._generate_referenceable_output,
+            **params,
+        )
 
     @dynamic_catch
-    async def _async_find_perspectives(self, search_string: str = "*",
-                                       body: Optional[dict | SearchStringRequestBody] = None,
-                                       starts_with: bool = True, ends_with: bool = False,
-                                       ignore_case: bool = False, start_from: int = 0,
-                                       page_size: int = 0, output_format: str = 'JSON',
-                                       report_spec: Optional[str | dict] = None,
-                                       **kwargs) -> list | str:
-        """ Retrieve the list of perspective metadata elements that contain the search string. Async version.
+    def get_perspectives_by_name(
+        self,
+        name: str = None,
+        metadata_element_type_name: str | None = "Perspective",
+        metadata_element_subtypes: list[str] | None = None,
+        include_only_relationships: list[str] | None = None,
+        skip_relationships: list[str] | None = None,
+        graph_query_depth: int = 3,
+        start_from: int = 0,
+        page_size: int = 100,
+        output_format: str = "JSON",
+        report_spec: Optional[str | dict] = "Perspectives",
+        body: Optional[dict | FilterRequestBody] = None,
+        **kwargs,
+    ) -> list | str:
+        """Retrieve the list of perspective metadata elements with a particular name.
 
         Parameters
         ----------
-        search_string: str, default "*"
-            Search string to match against. None or '*' matches all perspectives.
-        body: dict | SearchStringRequestBody, optional
-            Full request body. If provided, overrides other search parameters.
-        starts_with: bool, default True
-            Match elements that start with the search string.
-        ends_with: bool, default False
-            Match elements that end with the search string.
-        ignore_case: bool, default False
-            Ignore case when searching.
-        start_from: int, default 0
-            Starting index for pagination.
-        page_size: int, default 0
-            Number of items to return in a single page.
-        output_format: str, default "JSON"
-            Output format: "MD", "LIST", "FORM", "REPORT", "DICT", "MERMAID" or "JSON".
-        report_spec: str | dict, optional
-            Report specification for output formatting.
+        name: str, optional
+            name to use to find matching perspectives.
+        metadata_element_type_name : str, optional
+            The type of metadata element.
+        metadata_element_subtypes : list[str], optional
+            The list of subtypes to filter by.
+        include_only_relationships : list[str], optional
+            The list of relationship type names to include.
+        skip_relationships : list[str], optional
+            The list of relationship type names to skip.
+        graph_query_depth : int, optional
+            The query depth for relationships.
+        start_from: int, [default=0], optional
+            When multiple pages of results are available, the page number to start from.
+        page_size: int, [default=100]
+            The number of items to return in a single page.
+        output_format: str, default = "JSON"
+            - one of "DICT", "MERMAID" or "JSON"
+        report_spec: dict, optional, default = "Perspectives"
+            The desired output columns/fields to include.
+        body: dict, optional
+            Provides a full request body. If specified, the body supercedes other attributes.
 
         Returns
         -------
-        list | str - the list of perspective metadata elements that match the search string
+        list | str
+        """
+        loop = asyncio.get_event_loop()
+        return loop.run_until_complete(
+            self._async_get_perspectives_by_name(
+                name=name,
+                metadata_element_type_name=metadata_element_type_name,
+                metadata_element_subtypes=metadata_element_subtypes,
+                include_only_relationships=include_only_relationships,
+                skip_relationships=skip_relationships,
+                graph_query_depth=graph_query_depth,
+                start_from=start_from,
+                page_size=page_size,
+                output_format=output_format,
+                report_spec=report_spec,
+                body=body,
+                **kwargs,
+            )
+        )
 
-        Raises
-        ------
-        PyegeriaException
-            One of the pyegeria exceptions will be raised if there are issues in communications, message format, or
-            Egeria errors.
-        ValidationError
-            Pydantic validation errors are raised if the body does not conform to the SearchStringRequestBody.
-        PyegeriaNotAuthorizedException
-          The principle specified by the user_id does not have authorization for the requested action
+    @dynamic_catch
+    async def _async_find_perspectives(
+        self,
+        search_string: str = "*",
+        starts_with: bool = True,
+        ends_with: bool = False,
+        ignore_case: bool = True,
+        metadata_element_type_name: str | None = "Perspective",
+        metadata_element_subtypes: list[str] | None = None,
+        include_only_relationships: list[str] | None = None,
+        skip_relationships: list[str] | None = None,
+        graph_query_depth: int = 3,
+        as_of_time: Optional[str] = None,
+        start_from: int = 0,
+        page_size: int = 100,
+        sequencing_order: Optional[str] = None,
+        sequencing_property: Optional[str] = None,
+        output_format: str = "JSON",
+        report_spec: Optional[str | dict] = "Perspectives",
+        body: Optional[dict | SearchStringRequestBody] = None,
+        **kwargs,
+    ) -> list | str:
+        """Retrieve the list of perspective metadata elements that contain the search string. Async Version.
+
+        Parameters
+        ----------
+        search_string: str
+            Search string to match against - None or '*' indicate match against all perspectives.
+        starts_with : bool, [default=True], optional
+            Starts with the supplied string.
+        ends_with : bool, [default=False], optional
+            Ends with the supplied string
+        ignore_case : bool, [default=True], optional
+            Ignore case when searching
+        metadata_element_type_name: str, optional
+            The type of metadata element to search for.
+        metadata_element_subtypes: list[str], optional
+            The subtypes of metadata element to search for.
+        include_only_relationships: list[str], optional
+            The types of relationships to include.
+        skip_relationships: list[str], optional
+            The types of relationships to skip.
+        graph_query_depth: int, [default=3], optional
+            The depth of the graph query.
+        as_of_time: str, optional
+            The time to search as of.
+        start_from: int, [default=0], optional
+            When paged results are available, the starting index.
+        page_size: int, [default=100]
+            The number of items to return.
+        sequencing_order: str, optional
+            The order to sequence results by.
+        sequencing_property: str, optional
+            The property to sequence results by.
+        output_format: str, default = "JSON"
+            - one of "MD", "LIST", "FORM", "REPORT", "DICT", "MERMAID" or "JSON"
+        report_spec: str | dict, optional
+            - The desired output columns/fields to include.
+        body: dict | SearchStringRequestBody, optional
+            - if provided, the search parameters in the body will supercede other attributes.
+
+        Returns
+        -------
+        list | str
         """
         url = str(HttpUrl(f"{self.command_root}/perspectives/by-search-string"))
         params = {
-            'search_string': search_string,
-            'body': body,
-            'starts_with': starts_with,
-            'ends_with': ends_with,
-            'ignore_case': ignore_case,
-            'start_from': start_from,
-            'page_size': page_size,
-            'output_format': output_format,
-            'report_spec': report_spec,
+            "search_string": search_string,
+            "starts_with": starts_with,
+            "ends_with": ends_with,
+            "ignore_case": ignore_case,
+            "metadata_element_type": metadata_element_type_name,
+            "metadata_element_subtypes": metadata_element_subtypes,
+            "include_only_relationships": include_only_relationships,
+            "skip_relationships": skip_relationships,
+            "graph_query_depth": graph_query_depth,
+            "as_of_time": as_of_time,
+            "start_from": start_from,
+            "page_size": page_size,
+            "sequencing_order": sequencing_order,
+            "sequencing_property": sequencing_property,
+            "output_format": output_format,
+            "report_spec": report_spec,
+            "body": body,
         }
         params.update(kwargs)
-        params = {k: v for k, v in params.items() if v is not None or k == 'search_string'}
-        return await self._async_find_request(url, _type="Perspective",
-                                              _gen_output=self._generate_referenceable_output, **params)
+        params = {k: v for k, v in params.items() if v is not None or k == "search_string"}
+
+        return await self._async_find_request(
+            url,
+            _type="Perspective",
+            _gen_output=self._generate_referenceable_output,
+            **params,
+        )
 
     @dynamic_catch
-    def find_perspectives(self, search_string: str = "*",
-                          body: Optional[dict | SearchStringRequestBody] = None,
-                          starts_with: bool = True, ends_with: bool = False,
-                          ignore_case: bool = False, start_from: int = 0,
-                          page_size: int = 0, output_format: str = 'JSON',
-                          report_spec: Optional[str | dict] = None,
-                          **kwargs) -> list | str:
-        """ Retrieve the list of perspective metadata elements that contain the search string.
+    def find_perspectives(
+        self,
+        search_string: str = "*",
+        starts_with: bool = True,
+        ends_with: bool = False,
+        ignore_case: bool = True,
+        metadata_element_type_name: str | None = "Perspective",
+        metadata_element_subtypes: list[str] | None = None,
+        include_only_relationships: list[str] | None = None,
+        skip_relationships: list[str] | None = None,
+        graph_query_depth: int = 3,
+        as_of_time: Optional[str] = None,
+        start_from: int = 0,
+        page_size: int = 100,
+        sequencing_order: Optional[str] = None,
+        sequencing_property: Optional[str] = None,
+        output_format: str = "JSON",
+        report_spec: Optional[str | dict] = "Perspectives",
+        body: Optional[dict | SearchStringRequestBody] = None,
+        **kwargs,
+    ) -> list | str:
+        """Retrieve the list of perspective metadata elements that contain the search string.
 
         Parameters
         ----------
-        search_string: str, default "*"
-            Search string to match against. None or '*' matches all perspectives.
-        body: dict | SearchStringRequestBody, optional
-            Full request body. If provided, overrides other search parameters.
-        starts_with: bool, default True
-            Match elements that start with the search string.
-        ends_with: bool, default False
-            Match elements that end with the search string.
-        ignore_case: bool, default False
-            Ignore case when searching.
-        start_from: int, default 0
-            Starting index for pagination.
-        page_size: int, default 0
-            Number of items to return in a single page.
-        output_format: str, default "JSON"
-            Output format: "MD", "LIST", "FORM", "REPORT", "DICT", "MERMAID" or "JSON".
+        search_string: str
+            Search string to match against - None or '*' indicate match against all perspectives.
+        starts_with : bool, [default=True], optional
+            Starts with the supplied string.
+        ends_with : bool, [default=False], optional
+            Ends with the supplied string
+        ignore_case : bool, [default=True], optional
+            Ignore case when searching
+        metadata_element_type_name: str, optional
+            The type of metadata element to search for.
+        metadata_element_subtypes: list[str], optional
+            The subtypes of metadata element to search for.
+        include_only_relationships: list[str], optional
+            The types of relationships to include.
+        skip_relationships: list[str], optional
+            The types of relationships to skip.
+        graph_query_depth: int, [default=3], optional
+            The depth of the graph query.
+        as_of_time: str, optional
+            The time to search as of.
+        start_from: int, [default=0], optional
+            When paged results are available, the starting index.
+        page_size: int, [default=100]
+            The number of items to return.
+        sequencing_order: str, optional
+            The order to sequence results by.
+        sequencing_property: str, optional
+            The property to sequence results by.
+        output_format: str, default = "JSON"
+            - one of "MD", "LIST", "FORM", "REPORT", "DICT", "MERMAID" or "JSON"
         report_spec: str | dict, optional
-            Report specification for output formatting.
+            - The desired output columns/fields to include.
+        body: dict | SearchStringRequestBody, optional
+            - if provided, the search parameters in the body will supercede other attributes.
 
         Returns
         -------
-        list | str - the list of perspective metadata elements that match the search string
-
-        Raises
-        ------
-        PyegeriaException
-            One of the pyegeria exceptions will be raised if there are issues in communications, message format, or
-            Egeria errors.
-        ValidationError
-            Pydantic validation errors are raised if the body does not conform to the SearchStringRequestBody.
-        PyegeriaNotAuthorizedException
-          The principle specified by the user_id does not have authorization for the requested action
+        list | str
         """
-        return asyncio.run(self._async_find_perspectives(search_string, body, starts_with, ends_with,
-                                                         ignore_case, start_from, page_size,
-                                                         output_format, report_spec, **kwargs))
+        loop = asyncio.get_event_loop()
+        return loop.run_until_complete(
+            self._async_find_perspectives(
+                search_string=search_string,
+                starts_with=starts_with,
+                ends_with=ends_with,
+                ignore_case=ignore_case,
+                metadata_element_type_name=metadata_element_type_name,
+                metadata_element_subtypes=metadata_element_subtypes,
+                include_only_relationships=include_only_relationships,
+                skip_relationships=skip_relationships,
+                graph_query_depth=graph_query_depth,
+                as_of_time=as_of_time,
+                start_from=start_from,
+                page_size=page_size,
+                sequencing_order=sequencing_order,
+                sequencing_property=sequencing_property,
+                output_format=output_format,
+                report_spec=report_spec,
+                body=body,
+                **kwargs,
+            )
+        )
 
     @dynamic_catch
-    async def _async_get_perspective_by_guid(self, perspective_guid: str, body: Optional[dict | GetRequestBody] = None) -> dict:
-        """ Return the properties of a specific perspective. Async version.
+    async def _async_get_perspective_by_guid(
+        self,
+        guid: str,
+        include_only_relationships: list[str] | None = None,
+        skip_relationships: list[str] | None = None,
+        graph_query_depth: int = 3,
+        output_format: str = "JSON",
+        report_spec: Optional[str | dict] = "Perspectives",
+        body: Optional[dict | GetRequestBody] = None,
+        **kwargs,
+    ) -> dict | str:
+        """Return the properties of a specific perspective. Async version.
 
         Parameters
         ----------
-        perspective_guid: str
-            The unique identifier of the perspective to retrieve.
-        body: dict | GetRequestBody, optional
-            A dict or GetRequestBody representing the retrieval options.
+        guid: str
+            unique identifier of the perspective to retrieve.
+        include_only_relationships : list[str], optional
+            The list of relationship type names to include.
+        skip_relationships : list[str], optional
+            The list of relationship type names to skip.
+        graph_query_depth : int, optional
+            The query depth for relationships.
+        output_format: str, default = "JSON"
+            - one of "DICT", "MERMAID" or "JSON"
+        report_spec: dict, optional, default = "Perspectives"
+            The desired output columns/fields to include.
+        body: dict | GetRequestBody, optional, default = None
+            full request body.
 
         Returns
         -------
-        dict - the properties of a specific perspective
-
-        Raises
-        ------
-        PyegeriaException
-            One of the pyegeria exceptions will be raised if there are issues in communications, message format, or
-            Egeria errors.
-        ValidationError
-            Pydantic validation errors are raised if the body does not conform to the GetRequestBody.
-        PyegeriaNotAuthorizedException
-          The principle specified by the user_id does not have authorization for the requested action
-
-        Notes:
-        -----
-        example:
-        {
-          "class" : "GetRequestBody",
-          "asOfTime" : "2024-01-01T00:00:00Z",
-          "effectiveTime" : "2024-01-01T00:00:00Z",
-          "forLineage" : false,
-          "forDuplicateProcessing" : false
-        }
+        dict | str
         """
-        url = f"{self.command_root}/perspectives/{perspective_guid}/retrieve"
-        return await self._async_get_guid_request(url, "Perspective", self._generate_referenceable_output, body=body)
+        url = f"{self.command_root}/perspectives/{guid}/retrieve"
+        params = {
+            "include_only_relationships": include_only_relationships,
+            "skip_relationships": skip_relationships,
+            "graph_query_depth": graph_query_depth,
+            "output_format": output_format,
+            "report_spec": report_spec,
+            "body": body,
+        }
+        params.update(kwargs)
+        params = {k: v for k, v in params.items() if v is not None}
+
+        return await self._async_get_guid_request(
+            url,
+            _type="Perspective",
+            _gen_output=self._generate_referenceable_output,
+            **params,
+        )
 
     @dynamic_catch
-    def get_perspective_by_guid(self, perspective_guid: str, body: Optional[dict | GetRequestBody] = None) -> dict:
-        """ Return the properties of a specific perspective.
+    def get_perspective_by_guid(
+        self,
+        guid: str,
+        include_only_relationships: list[str] | None = None,
+        skip_relationships: list[str] | None = None,
+        graph_query_depth: int = 3,
+        output_format: str = "JSON",
+        report_spec: Optional[str | dict] = "Perspectives",
+        body: Optional[dict | GetRequestBody] = None,
+        **kwargs,
+    ) -> dict | str:
+        """Return the properties of a specific perspective.
 
         Parameters
         ----------
-        perspective_guid: str
-            The unique identifier of the perspective to retrieve.
-        body: dict | GetRequestBody, optional
-            A dict or GetRequestBody representing the retrieval options.
+        guid: str
+            unique identifier of the perspective to retrieve.
+        include_only_relationships : list[str], optional
+            The list of relationship type names to include.
+        skip_relationships : list[str], optional
+            The list of relationship type names to skip.
+        graph_query_depth : int, optional
+            The query depth for relationships.
+        output_format: str, default = "JSON"
+            - one of "DICT", "MERMAID" or "JSON"
+        report_spec: dict, optional, default = "Perspectives"
+            The desired output columns/fields to include.
+        body: dict | GetRequestBody, optional, default = None
+            full request body.
 
         Returns
         -------
-        dict - the properties of a specific perspective
-
-        Raises
-        ------
-        PyegeriaException
-            One of the pyegeria exceptions will be raised if there are issues in communications, message format, or
-            Egeria errors.
-        ValidationError
-            Pydantic validation errors are raised if the body does not conform to the GetRequestBody.
-        PyegeriaNotAuthorizedException
-          The principle specified by the user_id does not have authorization for the requested action
-
-        Notes:
-        -----
-        example:
-        {
-          "class" : "GetRequestBody",
-          "asOfTime" : "2024-01-01T00:00:00Z",
-          "effectiveTime" : "2024-01-01T00:00:00Z",
-          "forLineage" : false,
-          "forDuplicateProcessing" : false
-        }
+        dict | str
         """
-        return asyncio.run(self._async_get_perspective_by_guid(perspective_guid, body))
+        loop = asyncio.get_event_loop()
+        return loop.run_until_complete(
+            self._async_get_perspective_by_guid(
+                guid=guid,
+                include_only_relationships=include_only_relationships,
+                skip_relationships=skip_relationships,
+                graph_query_depth=graph_query_depth,
+                output_format=output_format,
+                report_spec=report_spec,
+                body=body,
+                **kwargs,
+            )
+        )
 
     # =====================================================================================================================
     # Work with Skills
@@ -7038,302 +7549,438 @@ class ActorManager(ServerClient):
         return asyncio.run(self._async_delete_skill(skill_guid, body))
 
     @dynamic_catch
-    async def _async_get_skills_by_name(self, filter_string: Optional[str] = None,
-                                        body: Optional[dict | FilterRequestBody] = None,
-                                        start_from: int = 0, page_size: int = 0,
-                                        output_format: str = 'JSON',
-                                        report_spec: Optional[str | dict] = None) -> list | str:
-        """ Returns the list of skills with a particular name. Async version.
+    async def _async_get_skills_by_name(
+        self,
+        name: str = None,
+        metadata_element_type_name: str | None = "Skill",
+        metadata_element_subtypes: list[str] | None = None,
+        include_only_relationships: list[str] | None = None,
+        skip_relationships: list[str] | None = None,
+        graph_query_depth: int = 3,
+        start_from: int = 0,
+        page_size: int = 100,
+        output_format: str = "JSON",
+        report_spec: Optional[str | dict] = "Skills",
+        body: Optional[dict | FilterRequestBody] = None,
+        **kwargs,
+    ) -> list | str:
+        """Retrieve the list of skill metadata elements with a particular name. Async Version.
 
         Parameters
         ----------
-        filter_string: str, optional
-            Name to filter skills by. Pass None or '*' to match all.
-        body: dict | FilterRequestBody, optional
-            Full request body. If provided, overrides filter_string and other parameters.
-        start_from: int, default 0
-            Starting index for pagination.
-        page_size: int, default 0
-            Number of items to return in a single page.
-        output_format: str, default "JSON"
-            Output format: "MD", "LIST", "FORM", "REPORT", "DICT", "MERMAID" or "JSON".
-        report_spec: str | dict, optional
-            Report specification for output formatting.
+        name: str, optional
+            name to use to find matching skills.
+        metadata_element_type_name : str, optional
+            The type of metadata element.
+        metadata_element_subtypes : list[str], optional
+            The list of subtypes to filter by.
+        include_only_relationships : list[str], optional
+            The list of relationship type names to include.
+        skip_relationships : list[str], optional
+            The list of relationship type names to skip.
+        graph_query_depth : int, optional
+            The query depth for relationships.
+        start_from: int, [default=0], optional
+            When multiple pages of results are available, the page number to start from.
+        page_size: int, [default=100]
+            The number of items to return in a single page.
+        output_format: str, default = "JSON"
+            - one of "DICT", "MERMAID" or "JSON"
+        report_spec: dict, optional, default = "Skills"
+            The desired output columns/fields to include.
+        body: dict, optional
+            Provides a full request body. If specified, the body supercedes other attributes.
 
         Returns
         -------
-        list | str - the list of matching skills
-
-        Raises
-        ------
-        PyegeriaException
-            One of the pyegeria exceptions will be raised if there are issues in communications, message format, or
-            Egeria errors.
-        ValidationError
-            Pydantic validation errors are raised if the body does not conform to the FilterRequestBody.
-        PyegeriaNotAuthorizedException
-          The principle specified by the user_id does not have authorization for the requested action
-
-        Notes:
-        -----
-        example body (if using body parameter):
-        {
-          "class" : "FilterRequestBody",
-          "filter" : "Add name here",
-          "startFrom": 0,
-          "pageSize": 10,
-          "limitResultsByStatus" : ["ACTIVE"],
-          "sequencingOrder" : "PROPERTY_ASCENDING",
-          "sequencingProperty" : "qualifiedName"
-        }
+        list | str
         """
+        # Handle backward-compatible positional or keyword args
+        if name is not None and not isinstance(name, str):
+            body = name
+            name = None
+
+        if name is None:
+            name = kwargs.pop("filter_string", None)
+
+        if name is None and body is None:
+            name = "*"
+
         url = str(HttpUrl(f"{self.command_root}/skills/by-name"))
-        return await self._async_get_name_request(url, _type="Skill",
-                                                  _gen_output=self._generate_referenceable_output,
-                                                  filter_string=filter_string, start_from=start_from,
-                                                  page_size=page_size, output_format=output_format,
-                                                  report_spec=report_spec, body=body)
-
-    @dynamic_catch
-    def get_skills_by_name(self, filter_string: Optional[str] = None,
-                           body: Optional[dict | FilterRequestBody] = None,
-                           start_from: int = 0, page_size: int = 0,
-                           output_format: str = 'JSON',
-                           report_spec: Optional[str | dict] = None) -> list | str:
-        """ Returns the list of skills with a particular name.
-
-        Parameters
-        ----------
-        filter_string: str, optional
-            Name to filter skills by. Pass None or '*' to match all.
-        body: dict | FilterRequestBody, optional
-            Full request body. If provided, overrides filter_string and other parameters.
-        start_from: int, default 0
-            Starting index for pagination.
-        page_size: int, default 0
-            Number of items to return in a single page.
-        output_format: str, default "JSON"
-            Output format: "MD", "LIST", "FORM", "REPORT", "DICT", "MERMAID" or "JSON".
-        report_spec: str | dict, optional
-            Report specification for output formatting.
-
-        Returns
-        -------
-        list | str - the list of matching skills
-
-        Raises
-        ------
-        PyegeriaException
-            One of the pyegeria exceptions will be raised if there are issues in communications, message format, or
-            Egeria errors.
-        ValidationError
-            Pydantic validation errors are raised if the body does not conform to the FilterRequestBody.
-        PyegeriaNotAuthorizedException
-          The principle specified by the user_id does not have authorization for the requested action
-
-        Notes:
-        -----
-        example body (if using body parameter):
-        {
-          "class" : "FilterRequestBody",
-          "filter" : "Add name here",
-          "startFrom": 0,
-          "pageSize": 10,
-          "limitResultsByStatus" : ["ACTIVE"],
-          "sequencingOrder" : "PROPERTY_ASCENDING",
-          "sequencingProperty" : "qualifiedName"
+        params = {
+            "filter_string": name,
+            "metadata_element_type": metadata_element_type_name,
+            "metadata_element_subtypes": metadata_element_subtypes,
+            "include_only_relationships": include_only_relationships,
+            "skip_relationships": skip_relationships,
+            "graph_query_depth": graph_query_depth,
+            "start_from": start_from,
+            "page_size": page_size,
+            "output_format": output_format,
+            "report_spec": report_spec,
+            "body": body,
         }
-        """
-        return asyncio.run(self._async_get_skills_by_name(filter_string, body, start_from,
-                                                          page_size, output_format, report_spec))
+        params.update(kwargs)
+        params = {k: v for k, v in params.items() if v is not None or k == "filter_string"}
+
+        return await self._async_get_name_request(
+            url,
+            _type="Skill",
+            _gen_output=self._generate_referenceable_output,
+            **params,
+        )
 
     @dynamic_catch
-    async def _async_find_skills(self, search_string: str = "*",
-                                 body: Optional[dict | SearchStringRequestBody] = None,
-                                 starts_with: bool = True, ends_with: bool = False,
-                                 ignore_case: bool = False, start_from: int = 0,
-                                 page_size: int = 0, output_format: str = 'JSON',
-                                 report_spec: Optional[str | dict] = None,
-                                 **kwargs) -> list | str:
-        """ Retrieve the list of skill metadata elements that contain the search string. Async version.
+    def get_skills_by_name(
+        self,
+        name: str = None,
+        metadata_element_type_name: str | None = "Skill",
+        metadata_element_subtypes: list[str] | None = None,
+        include_only_relationships: list[str] | None = None,
+        skip_relationships: list[str] | None = None,
+        graph_query_depth: int = 3,
+        start_from: int = 0,
+        page_size: int = 100,
+        output_format: str = "JSON",
+        report_spec: Optional[str | dict] = "Skills",
+        body: Optional[dict | FilterRequestBody] = None,
+        **kwargs,
+    ) -> list | str:
+        """Retrieve the list of skill metadata elements with a particular name.
 
         Parameters
         ----------
-        search_string: str, default "*"
-            Search string to match against. None or '*' matches all skills.
-        body: dict | SearchStringRequestBody, optional
-            Full request body. If provided, overrides other search parameters.
-        starts_with: bool, default True
-            Match elements that start with the search string.
-        ends_with: bool, default False
-            Match elements that end with the search string.
-        ignore_case: bool, default False
-            Ignore case when searching.
-        start_from: int, default 0
-            Starting index for pagination.
-        page_size: int, default 0
-            Number of items to return in a single page.
-        output_format: str, default "JSON"
-            Output format: "MD", "LIST", "FORM", "REPORT", "DICT", "MERMAID" or "JSON".
-        report_spec: str | dict, optional
-            Report specification for output formatting.
+        name: str, optional
+            name to use to find matching skills.
+        metadata_element_type_name : str, optional
+            The type of metadata element.
+        metadata_element_subtypes : list[str], optional
+            The list of subtypes to filter by.
+        include_only_relationships : list[str], optional
+            The list of relationship type names to include.
+        skip_relationships : list[str], optional
+            The list of relationship type names to skip.
+        graph_query_depth : int, optional
+            The query depth for relationships.
+        start_from: int, [default=0], optional
+            When multiple pages of results are available, the page number to start from.
+        page_size: int, [default=100]
+            The number of items to return in a single page.
+        output_format: str, default = "JSON"
+            - one of "DICT", "MERMAID" or "JSON"
+        report_spec: dict, optional, default = "Skills"
+            The desired output columns/fields to include.
+        body: dict, optional
+            Provides a full request body. If specified, the body supercedes other attributes.
 
         Returns
         -------
-        list | str - the list of skill metadata elements that match the search string
+        list | str
+        """
+        loop = asyncio.get_event_loop()
+        return loop.run_until_complete(
+            self._async_get_skills_by_name(
+                name=name,
+                metadata_element_type_name=metadata_element_type_name,
+                metadata_element_subtypes=metadata_element_subtypes,
+                include_only_relationships=include_only_relationships,
+                skip_relationships=skip_relationships,
+                graph_query_depth=graph_query_depth,
+                start_from=start_from,
+                page_size=page_size,
+                output_format=output_format,
+                report_spec=report_spec,
+                body=body,
+                **kwargs,
+            )
+        )
 
-        Raises
-        ------
-        PyegeriaException
-            One of the pyegeria exceptions will be raised if there are issues in communications, message format, or
-            Egeria errors.
-        ValidationError
-            Pydantic validation errors are raised if the body does not conform to the SearchStringRequestBody.
-        PyegeriaNotAuthorizedException
-          The principle specified by the user_id does not have authorization for the requested action
+    @dynamic_catch
+    async def _async_find_skills(
+        self,
+        search_string: str = "*",
+        starts_with: bool = True,
+        ends_with: bool = False,
+        ignore_case: bool = True,
+        metadata_element_type_name: str | None = "Skill",
+        metadata_element_subtypes: list[str] | None = None,
+        include_only_relationships: list[str] | None = None,
+        skip_relationships: list[str] | None = None,
+        graph_query_depth: int = 3,
+        as_of_time: Optional[str] = None,
+        start_from: int = 0,
+        page_size: int = 100,
+        sequencing_order: Optional[str] = None,
+        sequencing_property: Optional[str] = None,
+        output_format: str = "JSON",
+        report_spec: Optional[str | dict] = "Skills",
+        body: Optional[dict | SearchStringRequestBody] = None,
+        **kwargs,
+    ) -> list | str:
+        """Retrieve the list of skill metadata elements that contain the search string. Async Version.
+
+        Parameters
+        ----------
+        search_string: str
+            Search string to match against - None or '*' indicate match against all skills.
+        starts_with : bool, [default=True], optional
+            Starts with the supplied string.
+        ends_with : bool, [default=False], optional
+            Ends with the supplied string
+        ignore_case : bool, [default=True], optional
+            Ignore case when searching
+        metadata_element_type_name: str, optional
+            The type of metadata element to search for.
+        metadata_element_subtypes: list[str], optional
+            The subtypes of metadata element to search for.
+        include_only_relationships: list[str], optional
+            The types of relationships to include.
+        skip_relationships: list[str], optional
+            The types of relationships to skip.
+        graph_query_depth: int, [default=3], optional
+            The depth of the graph query.
+        as_of_time: str, optional
+            The time to search as of.
+        start_from: int, [default=0], optional
+            When paged results are available, the starting index.
+        page_size: int, [default=100]
+            The number of items to return.
+        sequencing_order: str, optional
+            The order to sequence results by.
+        sequencing_property: str, optional
+            The property to sequence results by.
+        output_format: str, default = "JSON"
+            - one of "MD", "LIST", "FORM", "REPORT", "DICT", "MERMAID" or "JSON"
+        report_spec: str | dict, optional
+            - The desired output columns/fields to include.
+        body: dict | SearchStringRequestBody, optional
+            - if provided, the search parameters in the body will supercede other attributes.
+
+        Returns
+        -------
+        list | str
         """
         url = str(HttpUrl(f"{self.command_root}/skills/by-search-string"))
         params = {
-            'search_string': search_string,
-            'body': body,
-            'starts_with': starts_with,
-            'ends_with': ends_with,
-            'ignore_case': ignore_case,
-            'start_from': start_from,
-            'page_size': page_size,
-            'output_format': output_format,
-            'report_spec': report_spec,
+            "search_string": search_string,
+            "starts_with": starts_with,
+            "ends_with": ends_with,
+            "ignore_case": ignore_case,
+            "metadata_element_type": metadata_element_type_name,
+            "metadata_element_subtypes": metadata_element_subtypes,
+            "include_only_relationships": include_only_relationships,
+            "skip_relationships": skip_relationships,
+            "graph_query_depth": graph_query_depth,
+            "as_of_time": as_of_time,
+            "start_from": start_from,
+            "page_size": page_size,
+            "sequencing_order": sequencing_order,
+            "sequencing_property": sequencing_property,
+            "output_format": output_format,
+            "report_spec": report_spec,
+            "body": body,
         }
         params.update(kwargs)
-        params = {k: v for k, v in params.items() if v is not None or k == 'search_string'}
-        return await self._async_find_request(url, _type="Skill",
-                                              _gen_output=self._generate_referenceable_output, **params)
+        params = {k: v for k, v in params.items() if v is not None or k == "search_string"}
+
+        return await self._async_find_request(
+            url,
+            _type="Skill",
+            _gen_output=self._generate_referenceable_output,
+            **params,
+        )
 
     @dynamic_catch
-    def find_skills(self, search_string: str = "*",
-                    body: Optional[dict | SearchStringRequestBody] = None,
-                    starts_with: bool = True, ends_with: bool = False,
-                    ignore_case: bool = False, start_from: int = 0,
-                    page_size: int = 0, output_format: str = 'JSON',
-                    report_spec: Optional[str | dict] = None,
-                    **kwargs) -> list | str:
-        """ Retrieve the list of skill metadata elements that contain the search string.
+    def find_skills(
+        self,
+        search_string: str = "*",
+        starts_with: bool = True,
+        ends_with: bool = False,
+        ignore_case: bool = True,
+        metadata_element_type_name: str | None = "Skill",
+        metadata_element_subtypes: list[str] | None = None,
+        include_only_relationships: list[str] | None = None,
+        skip_relationships: list[str] | None = None,
+        graph_query_depth: int = 3,
+        as_of_time: Optional[str] = None,
+        start_from: int = 0,
+        page_size: int = 100,
+        sequencing_order: Optional[str] = None,
+        sequencing_property: Optional[str] = None,
+        output_format: str = "JSON",
+        report_spec: Optional[str | dict] = "Skills",
+        body: Optional[dict | SearchStringRequestBody] = None,
+        **kwargs,
+    ) -> list | str:
+        """Retrieve the list of skill metadata elements that contain the search string.
 
         Parameters
         ----------
-        search_string: str, default "*"
-            Search string to match against. None or '*' matches all skills.
-        body: dict | SearchStringRequestBody, optional
-            Full request body. If provided, overrides other search parameters.
-        starts_with: bool, default True
-            Match elements that start with the search string.
-        ends_with: bool, default False
-            Match elements that end with the search string.
-        ignore_case: bool, default False
-            Ignore case when searching.
-        start_from: int, default 0
-            Starting index for pagination.
-        page_size: int, default 0
-            Number of items to return in a single page.
-        output_format: str, default "JSON"
-            Output format: "MD", "LIST", "FORM", "REPORT", "DICT", "MERMAID" or "JSON".
+        search_string: str
+            Search string to match against - None or '*' indicate match against all skills.
+        starts_with : bool, [default=True], optional
+            Starts with the supplied string.
+        ends_with : bool, [default=False], optional
+            Ends with the supplied string
+        ignore_case : bool, [default=True], optional
+            Ignore case when searching
+        metadata_element_type_name: str, optional
+            The type of metadata element to search for.
+        metadata_element_subtypes: list[str], optional
+            The subtypes of metadata element to search for.
+        include_only_relationships: list[str], optional
+            The types of relationships to include.
+        skip_relationships: list[str], optional
+            The types of relationships to skip.
+        graph_query_depth: int, [default=3], optional
+            The depth of the graph query.
+        as_of_time: str, optional
+            The time to search as of.
+        start_from: int, [default=0], optional
+            When paged results are available, the starting index.
+        page_size: int, [default=100]
+            The number of items to return.
+        sequencing_order: str, optional
+            The order to sequence results by.
+        sequencing_property: str, optional
+            The property to sequence results by.
+        output_format: str, default = "JSON"
+            - one of "MD", "LIST", "FORM", "REPORT", "DICT", "MERMAID" or "JSON"
         report_spec: str | dict, optional
-            Report specification for output formatting.
+            - The desired output columns/fields to include.
+        body: dict | SearchStringRequestBody, optional
+            - if provided, the search parameters in the body will supercede other attributes.
 
         Returns
         -------
-        list | str - the list of skill metadata elements that match the search string
-
-        Raises
-        ------
-        PyegeriaException
-            One of the pyegeria exceptions will be raised if there are issues in communications, message format, or
-            Egeria errors.
-        ValidationError
-            Pydantic validation errors are raised if the body does not conform to the SearchStringRequestBody.
-        PyegeriaNotAuthorizedException
-          The principle specified by the user_id does not have authorization for the requested action
+        list | str
         """
-        return asyncio.run(self._async_find_skills(search_string, body, starts_with, ends_with,
-                                                   ignore_case, start_from, page_size,
-                                                   output_format, report_spec, **kwargs))
+        loop = asyncio.get_event_loop()
+        return loop.run_until_complete(
+            self._async_find_skills(
+                search_string=search_string,
+                starts_with=starts_with,
+                ends_with=ends_with,
+                ignore_case=ignore_case,
+                metadata_element_type_name=metadata_element_type_name,
+                metadata_element_subtypes=metadata_element_subtypes,
+                include_only_relationships=include_only_relationships,
+                skip_relationships=skip_relationships,
+                graph_query_depth=graph_query_depth,
+                as_of_time=as_of_time,
+                start_from=start_from,
+                page_size=page_size,
+                sequencing_order=sequencing_order,
+                sequencing_property=sequencing_property,
+                output_format=output_format,
+                report_spec=report_spec,
+                body=body,
+                **kwargs,
+            )
+        )
 
     @dynamic_catch
-    async def _async_get_skill_by_guid(self, skill_guid: str, body: Optional[dict | GetRequestBody] = None) -> dict:
-        """ Return the properties of a specific skill. Async version.
+    async def _async_get_skill_by_guid(
+        self,
+        guid: str,
+        include_only_relationships: list[str] | None = None,
+        skip_relationships: list[str] | None = None,
+        graph_query_depth: int = 3,
+        output_format: str = "JSON",
+        report_spec: Optional[str | dict] = "Skills",
+        body: Optional[dict | GetRequestBody] = None,
+        **kwargs,
+    ) -> dict | str:
+        """Return the properties of a specific skill. Async version.
 
         Parameters
         ----------
-        skill_guid: str
-            The unique identifier of the skill to retrieve.
-        body: dict | GetRequestBody, optional
-            A dict or GetRequestBody representing the retrieval options.
+        guid: str
+            unique identifier of the skill to retrieve.
+        include_only_relationships : list[str], optional
+            The list of relationship type names to include.
+        skip_relationships : list[str], optional
+            The list of relationship type names to skip.
+        graph_query_depth : int, optional
+            The query depth for relationships.
+        output_format: str, default = "JSON"
+            - one of "DICT", "MERMAID" or "JSON"
+        report_spec: dict, optional, default = "Skills"
+            The desired output columns/fields to include.
+        body: dict | GetRequestBody, optional, default = None
+            full request body.
 
         Returns
         -------
-        dict - the properties of a specific skill
-
-        Raises
-        ------
-        PyegeriaException
-            One of the pyegeria exceptions will be raised if there are issues in communications, message format, or
-            Egeria errors.
-        ValidationError
-            Pydantic validation errors are raised if the body does not conform to the GetRequestBody.
-        PyegeriaNotAuthorizedException
-          The principle specified by the user_id does not have authorization for the requested action
-
-        Notes:
-        -----
-        example:
-        {
-          "class" : "GetRequestBody",
-          "asOfTime" : "2024-01-01T00:00:00Z",
-          "effectiveTime" : "2024-01-01T00:00:00Z",
-          "forLineage" : false,
-          "forDuplicateProcessing" : false
-        }
+        dict | str
         """
-        url = f"{self.command_root}/skills/{skill_guid}/retrieve"
-        return await self._async_get_guid_request(url, "Skill", self._generate_referenceable_output, body=body)
+        url = f"{self.command_root}/skills/{guid}/retrieve"
+        params = {
+            "include_only_relationships": include_only_relationships,
+            "skip_relationships": skip_relationships,
+            "graph_query_depth": graph_query_depth,
+            "output_format": output_format,
+            "report_spec": report_spec,
+            "body": body,
+        }
+        params.update(kwargs)
+        params = {k: v for k, v in params.items() if v is not None}
+
+        return await self._async_get_guid_request(
+            url,
+            _type="Skill",
+            _gen_output=self._generate_referenceable_output,
+            **params,
+        )
 
     @dynamic_catch
-    def get_skill_by_guid(self, skill_guid: str, body: Optional[dict | GetRequestBody] = None) -> dict:
-        """ Return the properties of a specific skill.
+    def get_skill_by_guid(
+        self,
+        guid: str,
+        include_only_relationships: list[str] | None = None,
+        skip_relationships: list[str] | None = None,
+        graph_query_depth: int = 3,
+        output_format: str = "JSON",
+        report_spec: Optional[str | dict] = "Skills",
+        body: Optional[dict | GetRequestBody] = None,
+        **kwargs,
+    ) -> dict | str:
+        """Return the properties of a specific skill.
 
         Parameters
         ----------
-        skill_guid: str
-            The unique identifier of the skill to retrieve.
-        body: dict | GetRequestBody, optional
-            A dict or GetRequestBody representing the retrieval options.
+        guid: str
+            unique identifier of the skill to retrieve.
+        include_only_relationships : list[str], optional
+            The list of relationship type names to include.
+        skip_relationships : list[str], optional
+            The list of relationship type names to skip.
+        graph_query_depth : int, optional
+            The query depth for relationships.
+        output_format: str, default = "JSON"
+            - one of "DICT", "MERMAID" or "JSON"
+        report_spec: dict, optional, default = "Skills"
+            The desired output columns/fields to include.
+        body: dict | GetRequestBody, optional, default = None
+            full request body.
 
         Returns
         -------
-        dict - the properties of a specific skill
-
-        Raises
-        ------
-        PyegeriaException
-            One of the pyegeria exceptions will be raised if there are issues in communications, message format, or
-            Egeria errors.
-        ValidationError
-            Pydantic validation errors are raised if the body does not conform to the GetRequestBody.
-        PyegeriaNotAuthorizedException
-          The principle specified by the user_id does not have authorization for the requested action
-
-        Notes:
-        -----
-        example:
-        {
-          "class" : "GetRequestBody",
-          "asOfTime" : "2024-01-01T00:00:00Z",
-          "effectiveTime" : "2024-01-01T00:00:00Z",
-          "forLineage" : false,
-          "forDuplicateProcessing" : false
-        }
+        dict | str
         """
-        return asyncio.run(self._async_get_skill_by_guid(skill_guid, body))
+        loop = asyncio.get_event_loop()
+        return loop.run_until_complete(
+            self._async_get_skill_by_guid(
+                guid=guid,
+                include_only_relationships=include_only_relationships,
+                skip_relationships=skip_relationships,
+                graph_query_depth=graph_query_depth,
+                output_format=output_format,
+                report_spec=report_spec,
+                body=body,
+                **kwargs,
+            )
+        )
 
 from typing import Union, Dict, List, Optional
 

@@ -3,7 +3,7 @@
 
 [project]
 name = "pyegeria"
-version = "6.0.13.2"
+version = "6.0.14.7"
 license = 'Apache-2.0'
 license-files = ["LICENSE"]
 authors = [{name = "Dan Wolfson", email = "dan.wolfson@pdr-associates.com"},]

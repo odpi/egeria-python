@@ -66,7 +66,7 @@ class AutomatedCuration(ServerClient):
         self.user_id = user_id
         self.user_pwd = user_pwd
         ServerClient.__init__(self, view_server, platform_url, user_id, user_pwd, token=token)
-        self.curation_command_root = f"{self.platform_url}/servers/{self.view_server}/api/open-metadata/automated-curation"
+        self.ref_curation_command_base = f"{self.platform_url}/servers/{self.view_server}/api/open-metadata/automated-curation"
 
         # Default entity label used by the output formatter for Technology Types
         self.TECH_TYPE_ENTITY_LABEL = "TechType"
@@ -620,7 +620,7 @@ class AutomatedCuration(ServerClient):
            }
         """
 
-        url = f"{self.curation_command_root}/catalog-templates/new-element"
+        url = f"{self.ref_curation_command_base}/catalog-templates/new-element"
         return await self._async_create_element_from_template(url, body)
 
     def create_elem_from_template(self, body: Optional[dict | TemplateRequestBody] = None) -> str:
@@ -2138,7 +2138,7 @@ class AutomatedCuration(ServerClient):
         ```
         """
         validate_guid(secrets_store_guid)
-        url = f"{self.curation_command_root}/secrets-stores/{secrets_store_guid}/client-side-secret/save"
+        url = f"{self.ref_curation_command_base}/secrets-stores/{secrets_store_guid}/client-side-secret/save"
         new_body = body_slimmer(body)
         await self._async_make_request("POST", url, new_body)
 
@@ -2228,7 +2228,7 @@ class AutomatedCuration(ServerClient):
         See: https://egeria-project.org/concepts/client-side-secret
         """
         validate_guid(secrets_store_guid)
-        url = f"{self.curation_command_root}/secrets-stores/{secrets_store_guid}/client-side-secret/delete"
+        url = f"{self.ref_curation_command_base}/secrets-stores/{secrets_store_guid}/client-side-secret/delete"
         body = {"class": "NameRequestBody", "name": secret_name}
         await self._async_make_request("POST", url, body)
 
@@ -2291,10 +2291,7 @@ class AutomatedCuration(ServerClient):
 
         validate_guid(engine_action_guid)
 
-        url = (
-            f"{self.curation_command_root}/engine-actions/"
-            f"{engine_action_guid}/cancel"
-        )
+        url = f"{self.ref_curation_command_base}/engine-actions/{engine_action_guid}/cancel"
 
         await self._async_make_request("POST", url)
 
@@ -2323,7 +2320,6 @@ class AutomatedCuration(ServerClient):
         loop.run_until_complete(self._async_cancel_engine_action(engine_action_guid))
         return
 
-    @dynamic_catch
     async def _async_get_engine_actions(
             self,
             start_from: int = 0,
@@ -2332,38 +2328,39 @@ class AutomatedCuration(ServerClient):
             report_spec: str | dict = "EngineAction",
             body: Optional[dict | FilterRequestBody] = None,
     ) -> list | str:
-        """Retrieve the list of engine action metadata elements. Async Version.
+        """Retrieve the list of engine action metadata elements.
+
+        Async version.
 
         Parameters
         ----------
-        start_from : int, optional
-            The index to start retrieving engine actions from. If not provided, the default value will be used.
-        page_size : int, optional
-            The maximum number of engine actions to retrieve in a single request. If not provided, the default global
-            maximum paging size will be used.
-        output_format: str, default = "JSON"
-            - one of "DICT", "MERMAID" or "JSON"
-        report_spec: dict , optional, default = None
-            The desired output columns/fields to include.
-        body: dict, optional, default = None
-            Provides, a full request body.
+        start_from : int, default 0
+            The index from which to start fetching.
+        page_size : int, default 0
+            The maximum number to fetch in a single request.
+        output_format : str, default "JSON"
+            The desired output format (e.g., "JSON", "DICT").
+        report_spec : str | dict, default "EngineAction"
+            The report specification to use for formatting.
+        body : dict | FilterRequestBody, optional
+            The request body.
 
         Returns
         -------
-        list of dict | str
+        list | str
             A list of dictionaries representing the retrieved engine actions.
-        Raises:
+
+        Raises
         ------
         PyegeriaException
+            If there is an error in communication or processing.
+
         Notes
         -----
         For more information see: https://egeria-project.org/concepts/engine-action
-
         """
 
-        url = (
-            f"{self.curation_command_root}/engine-actions"
-        )
+        url = f"{self.ref_curation_command_base}/engine-actions"
         response = await self._async_get_name_request(url, _type=self.ENGINE_ACTION_LABEL,
                                                       _gen_output=self._generate_engine_action_output,
                                                       filter_string=None, start_from=start_from, page_size=page_size,
@@ -2412,44 +2409,52 @@ class AutomatedCuration(ServerClient):
         )
         return response
 
-    @dynamic_catch
     async def _async_get_active_engine_actions(
-            self, start_from: int = 0, page_size: int = 0,
-            output_format: str = "JSON", report_spec: str | dict = "Engine-Actions") -> list | str:
-        """Retrieve the engine actions that are still in process. Async Version.
+            self,
+            start_from: int = 0,
+            page_size: int = 0,
+            output_format: str = "JSON",
+            report_spec: str | dict = "EngineAction",
+    ) -> list | str:
+        """Retrieve the engine actions that are still in process.
 
-        Parameters:
+        Async version.
+
+        Parameters
         ----------
-
-        start_from : int, optional
-            The starting index of the actions to retrieve. Default is 0.
-        page_size : int, optional
-            The maximum number of actions to retrieve per page. Default is the global maximum paging size.
-        output_format: str, default = "JSON"
-            - one of "DICT", "MERMAID" or "JSON"
-        report_spec: dict , optional, default = None
+        start_from : int, default 0
+            The starting index of the actions to retrieve.
+        page_size : int, default 0
+            The maximum number of actions to retrieve per page.
+        output_format : str, default "JSON"
+            The desired output format (e.g., "JSON", "DICT").
+        report_spec : str | dict, default "EngineAction"
             The desired output columns/fields to include.
 
-        Returns:
+        Returns
         -------
-            List[dict]: A list of JSON representations of governance action processes matching the provided name.
+        list | str
+            A list of JSON representations of governance action processes matching the provided name.
 
-        Raises:
+        Raises
         ------
-            PyegeriaInvalidParameterException: If the API response indicates an error (non-200 status code),
-            this exception is raised with details from the response content.
+        PyegeriaInvalidParameterException
+            If the API response indicates an error (non-200 status code).
 
         Notes
         -----
         For more information see: https://egeria-project.org/concepts/engine-action
-
         """
 
         url = (
-            f"{self.curation_command_root}/engine-actions/active?startFrom={start_from}&pageSize={page_size}"
+            f"{self.ref_curation_command_base}/engine-actions/active"
         )
+        params = {
+            "startFrom": start_from,
+            "pageSize": page_size
+        }
 
-        response = await self._async_make_request('GET', url)
+        response = await self._async_make_request('GET', url, params=params)
         elements = response.json().get("elements", NO_ELEMENTS_FOUND)
         if type(elements) is str:
             logger.info(NO_ELEMENTS_FOUND)
@@ -2495,68 +2500,111 @@ class AutomatedCuration(ServerClient):
         )
         return response
 
-    @dynamic_catch
     async def _async_get_engine_actions_by_name(
             self,
-            name: str,
+            name: str = None,
+            metadata_element_type_name: str | None = "EngineAction",
+            metadata_element_subtypes: list[str] | None = None,
+            include_only_relationships: list[str] | None = None,
+            skip_relationships: list[str] | None = None,
+            graph_query_depth: int = 3,
             start_from: int = 0,
             page_size: int = 0,
             output_format: str = "JSON",
-            report_spec: str | dict = "EngineAction",
+            report_spec: Optional[str | dict] = "EngineAction",
             body: Optional[dict | FilterRequestBody] = None,
+            **kwargs,
     ) -> list | str:
         """Retrieve the list of engine action metadata elements with a matching qualified or display name.
-        There are no wildcards supported on this request. Async Version.
+
+        There are no wildcards supported on this request. Async version.
+
         Parameters
         ----------
-        name : str
+        name : str, optional
             The name of the engine action to retrieve.
-
-        start_from : int, optional
-            The index to start retrieving engine actions from. If not provided, the default value will be used.
-        page_size : int, optional
-            The maximum number of engine actions to retrieve in a single request. If not provided, the default global
-            maximum paging size will be used.
-        output_format: str, default = "JSON"
-            - one of "DICT", "MERMAID" or "JSON"
-        report_spec: dict , optional, default = None
+        metadata_element_type_name : str, default "EngineAction"
+            The metadata element type to filter on.
+        metadata_element_subtypes : list[str], optional
+            Subtypes to filter on.
+        include_only_relationships : list[str], optional
+            Only include these relationship types.
+        skip_relationships : list[str], optional
+            Relationship types to skip.
+        graph_query_depth : int, default 3
+            Depth of graph traversal.
+        start_from : int, default 0
+            The index to start retrieving engine actions from.
+        page_size : int, default 0
+            The maximum number of engine actions to retrieve in a single request.
+        output_format : str, default "JSON"
+            The desired output format (e.g., "JSON", "DICT").
+        report_spec : str | dict, default "EngineAction"
             The desired output columns/fields to include.
-        body: dict, optional, default = None
-            Provides, a full request body. If specified, the body supercedes the name parameter.
+        body : dict | FilterRequestBody, optional
+            Provides a full request body. If specified, the body supersedes the name parameter.
+        **kwargs : dict, optional
+            Additional query parameters.
 
         Returns
         -------
-        list of dict | str
+        list | str
             A list of dictionaries representing the retrieved engine actions, or "no actions" if no engine actions were
-             found with the given name.
-        Raises:
+            found with the given name.
+
+        Raises
         ------
         PyegeriaException
+            If there is an error in communication or processing.
+
         Notes
         -----
         For more information see: https://egeria-project.org/concepts/engine-action
-
         """
+        if name is None and "filter_string" in kwargs:
+            name = kwargs.pop("filter_string")
 
         validate_name(name)
 
-        url = (
-            f"{self.curation_command_root}/assets/by-name"
-        )
+        url = f"{self.ref_curation_command_base}/assets/by-name"
+
+        metadata_element_type = kwargs.pop("metadata_element_type", metadata_element_type_name)
+
+        params = {
+            'filter_string': name,
+            'metadata_element_type': metadata_element_type,
+            'metadata_element_subtypes': metadata_element_subtypes,
+            'include_only_relationships': include_only_relationships,
+            'skip_relationships': skip_relationships,
+            'graph_query_depth': graph_query_depth,
+            'start_from': start_from,
+            'page_size': page_size,
+            'output_format': output_format,
+            'report_spec': report_spec,
+            'body': body
+        }
+        params.update(kwargs)
+        params = {k: v for k, v in params.items() if v is not None}
+
         response = await self._async_get_name_request(url, _type=self.ENGINE_ACTION_LABEL,
                                                       _gen_output=self._generate_engine_action_output,
-                                                      filter_string=name, start_from=start_from, page_size=page_size,
-                                                      output_format=output_format, report_spec=report_spec, body=body)
+                                                      **params)
         return response
 
     def get_engine_actions_by_name(
             self,
-            name: str,
+            name: str = None,
+            metadata_element_type_name: str | None = "EngineAction",
+            metadata_element_subtypes: list[str] | None = None,
+            include_only_relationships: list[str] | None = None,
+            skip_relationships: list[str] | None = None,
+            graph_query_depth: int = 3,
             start_from: int = 0,
             page_size: int = 0,
             output_format: str = "JSON",
-            report_spec: str | dict = "EngineAction",
+            report_spec: Optional[str | dict] = "EngineAction",
             body: Optional[dict | FilterRequestBody] = None,
+            **kwargs,
     ) -> list | str:
         """Retrieve the list of engine action metadata elements with a matching qualified or display name.
         There are no wildcards supported on this request.
@@ -2565,7 +2613,16 @@ class AutomatedCuration(ServerClient):
         ----------
         name : str
             The name of the engine action to retrieve.
-
+        metadata_element_type_name : str, default "EngineAction"
+            The metadata element type to filter on.
+        metadata_element_subtypes : list[str], optional
+            Subtypes to filter on.
+        include_only_relationships : list[str], optional
+            Only include these relationship types.
+        skip_relationships : list[str], optional
+            Relationship types to skip.
+        graph_query_depth : int, default 3
+            Depth of graph traversal.
         start_from : int, optional
             The index to start retrieving engine actions from. If not provided, the default value will be used.
         page_size : int, optional
@@ -2573,10 +2630,12 @@ class AutomatedCuration(ServerClient):
              maximum paging size will be used.
         output_format: str, default = "JSON"
             - one of "DICT", "MERMAID" or "JSON"
-        report_spec: dict , optional, default = None
+        report_spec: dict , optional, default = "EngineAction"
             The desired output columns/fields to include.
         body: dict, optional, default = None
             Provides, a full request body. If specified, the body supercedes the name parameter.
+        **kwargs : dict, optional
+            Additional query parameters.
 
         Returns
         -------
@@ -2589,42 +2648,67 @@ class AutomatedCuration(ServerClient):
         Notes
         -----
         For more information see: https://egeria-project.org/concepts/engine-action
-
         """
         loop = asyncio.get_event_loop()
-        response = loop.run_until_complete(
-            self._async_get_engine_actions_by_name(name, start_from, page_size, output_format, report_spec, body)
+        return loop.run_until_complete(
+            self._async_get_engine_actions_by_name(
+                name=name,
+                metadata_element_type_name=metadata_element_type_name,
+                metadata_element_subtypes=metadata_element_subtypes,
+                include_only_relationships=include_only_relationships,
+                skip_relationships=skip_relationships,
+                graph_query_depth=graph_query_depth,
+                start_from=start_from,
+                page_size=page_size,
+                output_format=output_format,
+                report_spec=report_spec,
+                body=body,
+                **kwargs,
+            )
         )
-        return response
 
-    @dynamic_catch
     async def _async_find_engine_actions(
             self,
             search_string: str = "*",
-            body: Optional[dict | SearchStringRequestBody] = None,
             starts_with: bool = True,
             ends_with: bool = False,
-            ignore_case: bool = False,
+            ignore_case: bool = True,
+            metadata_element_type_name: Optional[str] = "EngineAction",
+            metadata_element_subtypes: Optional[list[str]] = None,
+            include_only_relationships: Optional[list[str]] = None,
+            skip_relationships: Optional[list[str]] = None,
+            graph_query_depth: int = 3,
             start_from: int = 0,
             page_size: int = 100,
             output_format: str = "JSON",
-            report_spec: str | dict = "EngineAction",
+            report_spec: Optional[str | dict] = "EngineAction",
+            body: Optional[dict | SearchStringRequestBody] = None,
             **kwargs
     ) -> list | str:
-        """ Retrieve the list of engine action metadata elements that contain the search string. Async Version.
+        """Retrieve the list of engine action metadata elements that contain the search string.
+
+        Async version.
 
         Parameters
         ----------
         search_string : str, default "*"
             Search string to match against - None or '*' indicate match against all engine actions.
-        body : dict | SearchStringRequestBody, optional
-            Request body. If provided, overrides other parameters.
         starts_with : bool, default True
             Starts with the supplied string.
         ends_with : bool, default False
             Ends with the supplied string.
-        ignore_case : bool, default False
+        ignore_case : bool, default True
             Ignore case when searching.
+        metadata_element_type_name : str, default "EngineAction"
+            The metadata element type to filter on.
+        metadata_element_subtypes : list[str], optional
+            List of metadata element subtypes.
+        include_only_relationships : list[str], optional
+            Only include these relationship types.
+        skip_relationships : list[str], optional
+            Relationship types to skip.
+        graph_query_depth : int, default 3
+            Depth of graph traversal.
         start_from : int, default 0
             Starting index for pagination.
         page_size : int, default 100
@@ -2633,24 +2717,10 @@ class AutomatedCuration(ServerClient):
             Output format: "MD", "LIST", "FORM", "REPORT", "DICT", "MERMAID" or "JSON".
         report_spec : str | dict, default "EngineAction"
             Report specification for output formatting.
+        body : dict | SearchStringRequestBody, optional
+            Request body. If provided, overrides other parameters.
         **kwargs : dict, optional
-            Additional parameters supported by the underlying find request:
-            
-            - anchor_domain : str - Domain to anchor the search
-            - metadata_element_subtypes : list[str] - List of metadata element subtypes
-            - skip_relationships : list[str] - Relationship types to skip
-            - include_only_relationships : list[str] - Only include these relationship types
-            - skip_classified_elements : list[str] - Skip elements with these classifications
-            - include_only_classified_elements : list[str] - Only include elements with these classifications
-            - graph_query_depth : int - Depth of graph traversal (default 3)
-            - governance_zone_filter : list[str] - Filter by governance zones
-            - as_of_time : str - Historical query time (ISO 8601 format)
-            - effective_time : str - Effective time for the query (ISO 8601 format)
-            - relationship_page_size : int - Page size for relationships
-            - limit_results_by_status : list[str] - Filter by element status
-            - sequencing_order : str - Order of results
-            - sequencing_property : str - Property to sequence by
-            - property_names : list[str] - Specific properties to search
+            Additional query parameters.
 
         Returns
         -------
@@ -2659,19 +2729,17 @@ class AutomatedCuration(ServerClient):
 
         Raises
         ------
-        ValidationError
-            If the client passes incorrect parameters on the request that don't conform to the data model.
         PyegeriaException
-            Issues raised in communicating or server side processing.
-        NotAuthorizedException
-            The principle specified by the user_id does not have authorization for the requested action.
+            If there is an error in communication or processing.
+
+        Notes
+        -----
+        For more information see: https://egeria-project.org/concepts/engine-action
         """
-        url = str(HttpUrl(f"{self.curation_command_root}/assets/by-search-string"))
-        
-        # Set metadata_element_type to 'EngineAction' if not provided
-        if 'metadata_element_type' not in kwargs:
-            kwargs['metadata_element_type'] = 'EngineAction'
-        
+        url = f"{self.ref_curation_command_base}/assets/by-search-string"
+
+        metadata_element_type = kwargs.pop("metadata_element_type", metadata_element_type_name)
+
         # Merge explicit parameters with kwargs
         params = {
             'search_string': search_string,
@@ -2679,16 +2747,21 @@ class AutomatedCuration(ServerClient):
             'starts_with': starts_with,
             'ends_with': ends_with,
             'ignore_case': ignore_case,
+            'metadata_element_type': metadata_element_type,
+            'metadata_element_subtypes': metadata_element_subtypes,
+            'include_only_relationships': include_only_relationships,
+            'skip_relationships': skip_relationships,
+            'graph_query_depth': graph_query_depth,
             'start_from': start_from,
             'page_size': page_size,
             'output_format': output_format,
             'report_spec': report_spec
         }
         params.update(kwargs)
-        
+
         # Filter out None values, but keep search_string even if None (it's required)
         params = {k: v for k, v in params.items() if v is not None or k == 'search_string'}
-        
+
         response = await self._async_find_request(url, _type=self.ENGINE_ACTION_LABEL,
                                                   _gen_output=self._generate_engine_action_output, **params)
         return response
@@ -2697,14 +2770,19 @@ class AutomatedCuration(ServerClient):
     def find_engine_actions(
             self,
             search_string: str = "*",
-            body: Optional[dict | SearchStringRequestBody] = None,
             starts_with: bool = True,
             ends_with: bool = False,
-            ignore_case: bool = False,
+            ignore_case: bool = True,
+            metadata_element_type_name: Optional[str] = "EngineAction",
+            metadata_element_subtypes: Optional[list[str]] = None,
+            include_only_relationships: Optional[list[str]] = None,
+            skip_relationships: Optional[list[str]] = None,
+            graph_query_depth: int = 3,
             start_from: int = 0,
             page_size: int = 100,
             output_format: str = "JSON",
-            report_spec: str | dict = "EngineAction",
+            report_spec: Optional[str | dict] = "EngineAction",
+            body: Optional[dict | SearchStringRequestBody] = None,
             **kwargs
     ) -> list | str:
         """ Retrieve the list of engine action metadata elements that contain the search string.
@@ -2713,14 +2791,22 @@ class AutomatedCuration(ServerClient):
         ----------
         search_string : str, default "*"
             Search string to match against - None or '*' indicate match against all engine actions.
-        body : dict | SearchStringRequestBody, optional
-            Request body. If provided, overrides other parameters.
         starts_with : bool, default True
             Starts with the supplied string.
         ends_with : bool, default False
             Ends with the supplied string.
-        ignore_case : bool, default False
+        ignore_case : bool, default True
             Ignore case when searching.
+        metadata_element_type_name : str, default "EngineAction"
+            The metadata element type to filter on.
+        metadata_element_subtypes : list[str], optional
+            List of metadata element subtypes.
+        include_only_relationships : list[str], optional
+            Only include these relationship types.
+        skip_relationships : list[str], optional
+            Relationship types to skip.
+        graph_query_depth : int, default 3
+            Depth of graph traversal.
         start_from : int, default 0
             Starting index for pagination.
         page_size : int, default 100
@@ -2729,24 +2815,10 @@ class AutomatedCuration(ServerClient):
             Output format: "MD", "LIST", "FORM", "REPORT", "DICT", "MERMAID" or "JSON".
         report_spec : str | dict, default "EngineAction"
             Report specification for output formatting.
+        body : dict | SearchStringRequestBody, optional
+            Request body. If provided, overrides other parameters.
         **kwargs : dict, optional
-            Additional parameters supported by the underlying find request:
-            
-            - anchor_domain : str - Domain to anchor the search
-            - metadata_element_subtypes : list[str] - List of metadata element subtypes
-            - skip_relationships : list[str] - Relationship types to skip
-            - include_only_relationships : list[str] - Only include these relationship types
-            - skip_classified_elements : list[str] - Skip elements with these classifications
-            - include_only_classified_elements : list[str] - Only include elements with these classifications
-            - graph_query_depth : int - Depth of graph traversal (default 3)
-            - governance_zone_filter : list[str] - Filter by governance zones
-            - as_of_time : str - Historical query time (ISO 8601 format)
-            - effective_time : str - Effective time for the query (ISO 8601 format)
-            - relationship_page_size : int - Page size for relationships
-            - limit_results_by_status : list[str] - Filter by element status
-            - sequencing_order : str - Order of results
-            - sequencing_property : str - Property to sequence by
-            - property_names : list[str] - Specific properties to search
+            Additional query parameters.
 
         Returns
         -------
@@ -2765,8 +2837,21 @@ class AutomatedCuration(ServerClient):
         loop = asyncio.get_event_loop()
         return loop.run_until_complete(
             self._async_find_engine_actions(
-                search_string, body, starts_with, ends_with, ignore_case,
-                start_from, page_size, output_format, report_spec, **kwargs
+                search_string=search_string,
+                starts_with=starts_with,
+                ends_with=ends_with,
+                ignore_case=ignore_case,
+                metadata_element_type_name=metadata_element_type_name,
+                metadata_element_subtypes=metadata_element_subtypes,
+                include_only_relationships=include_only_relationships,
+                skip_relationships=skip_relationships,
+                graph_query_depth=graph_query_depth,
+                start_from=start_from,
+                page_size=page_size,
+                output_format=output_format,
+                report_spec=report_spec,
+                body=body,
+                **kwargs
             )
         )
 
@@ -2785,39 +2870,47 @@ class AutomatedCuration(ServerClient):
             orig_service_name: Optional[str] = None,
             orig_engine_name: Optional[str] = None,
     ) -> str:
-        """Using the named governance action process as a template, initiate a chain of engine actions. Async version.
+        """Initiate a governance action process using a template.
+
+        Async version.
 
         Parameters
         ----------
-        action_type_qualified_name: str
-            - unique name for the governance process
-        request_source_guids: [str], optional
-            - request source elements for the resulting governance action service
-        action_targets: [str], optional
-            -list of action target names to GUIDs for the resulting governance action service
-        start_time: datetime, optional
-            - time to start the process
-        request_parameters: [str], optional
-            - parameters passed into the process
-        orig_service_name: str, optional
-            - unique name of the requesting governance service (if initiated by a governance engine)
-        orig_engine_name: str, optional
-            - optional unique name of the governance engine (if initiated by a governance engine).
+        action_type_qualified_name : str
+            The unique name for the governance process.
+        request_source_guids : list[str], optional
+            The request source elements for the resulting governance action service.
+        action_targets : list[str], optional
+            The list of action target names to GUIDs for the resulting governance action service.
+        start_time : datetime, optional
+            The time to start the process. Defaults to current time if not specified.
+        request_parameters : dict, optional
+            The parameters passed into the process.
+        orig_service_name : str, optional
+            The unique name of the requesting governance service.
+        orig_engine_name : str, optional
+            The unique name of the governance engine.
 
         Returns
         -------
-        Unique id (guid) of the newly started governance engine process
+        str
+            The GUID of the newly started governance engine process, or "Action not initiated".
 
         Raises
         ------
         PyegeriaException
+            If there is an error in communication or processing.
+
+        Notes
+        -----
+        For more information see: https://egeria-project.org/concepts/governance-action-process
         """
 
-        start_time: datetime = (
-            datetime.datetime.now() if start_time is None else start_time
+        start_time = (
+            datetime.now() if start_time is None else start_time
         )
 
-        url = f"{self.curation_command_root}/governance-action-processes/initiate"
+        url = f"{self.ref_curation_command_base}/governance-action-processes/initiate"
         body = {
             "class": "GovernanceActionProcessRequestBody",
             "processQualifiedName": action_type_qualified_name,
@@ -2842,43 +2935,40 @@ class AutomatedCuration(ServerClient):
             orig_service_name: Optional[str] = None,
             orig_engine_name: Optional[str] = None,
     ) -> str:
-        """Using the named governance action process as a template, initiate a chain of engine actions.
+        """Initiate a governance action process using a template.
 
         Parameters
         ----------
-        action_type_qualified_name: str
-            - unique name for the governance process
-        request_source_guids: [str], optional
-            - request source elements for the resulting governance action service
-        action_targets: [str], optional
-            -list of action target names to GUIDs for the resulting governance action service
-        start_time: datetime, optional
-            - time to start the process
-        request_parameters: [str], optional
-            - parameters passed into the process
-        orig_service_name: str, optional
-            - unique name of the requesting governance service (if initiated by a governance engine)
-        orig_engine_name: str, optional
-            - optional unique name of the governance engine (if initiated by a governance engine).
+        action_type_qualified_name : str
+            The unique name for the governance process.
+        request_source_guids : list[str], optional
+            The request source elements for the resulting governance action service.
+        action_targets : list[str], optional
+            The list of action target names to GUIDs for the resulting governance action service.
+        start_time : datetime, optional
+            The time to start the process. Defaults to current time if not specified.
+        request_parameters : dict, optional
+            The parameters passed into the process.
+        orig_service_name : str, optional
+            The unique name of the requesting governance service.
+        orig_engine_name : str, optional
+            The unique name of the governance engine.
 
         Returns
         -------
-        Unique id (guid) of the newly started governance engine process
-
-        Raises
-        ------
-        PyegeriaException
+        str
+            The GUID of the newly started governance engine process, or "Action not initiated".
         """
         loop = asyncio.get_event_loop()
         response = loop.run_until_complete(
             self._async_initiate_gov_action_process(
-                action_type_qualified_name,
-                request_source_guids,
-                action_targets,
-                start_time,
-                request_parameters,
-                orig_service_name,
-                orig_engine_name,
+                action_type_qualified_name=action_type_qualified_name,
+                request_source_guids=request_source_guids,
+                action_targets=action_targets,
+                start_time=start_time,
+                request_parameters=request_parameters,
+                orig_service_name=orig_service_name,
+                orig_engine_name=orig_engine_name,
             )
         )
         return response
@@ -2895,35 +2985,43 @@ class AutomatedCuration(ServerClient):
             orig_service_name: Optional[str] = None,
             orig_engine_name: Optional[str] = None,
     ) -> str:
-        """Using the named governance action type as a template, initiate an engine action. Async version.
+        """Initiate a governance action process using a governance action type.
+
+        Async version.
 
         Parameters
         ----------
-        action_type_qualified_name: str
-            - unique name for the governance process
-        request_source_guids: [str]
-            - request source elements for the resulting governance action service
-        action_targets: [str]
-            -list of action target names to GUIDs for the resulting governance action service
-        start_time: datetime, default = None
-            - time to start the process, no earlier than start time. None means now.
-        request_parameters: [str]
-            - parameters passed into the process
-        orig_service_name: str
-            - unique name of the requesting governance service (if initiated by a governance engine)
-        orig_engine_name: str
-            - optional unique name of the governance engine (if initiated by a governance engine).
+        action_type_qualified_name : str
+            The unique name for the governance action type.
+        request_source_guids : list[str]
+            The request source elements for the resulting governance action service.
+        action_targets : list[dict]
+            The list of action target names to GUIDs for the resulting governance action service.
+        start_time : datetime, optional
+            The time to start the process. Defaults to current time if not specified.
+        request_parameters : dict, optional
+            The parameters passed into the process.
+        orig_service_name : str, optional
+            The unique name of the requesting governance service.
+        orig_engine_name : str, optional
+            The unique name of the governance engine.
 
         Returns
         -------
-        Unique id (guid) of the newly started governance engine process
+        str
+            The GUID of the newly started governance engine process, or "Action not initiated".
 
         Raises
         ------
         PyegeriaException
+            If there is an error in communication or processing.
+
+        Notes
+        -----
+        For more information see: https://egeria-project.org/concepts/governance-action-type
         """
 
-        url = f"{self.curation_command_root}/governance-action-types/initiate"
+        url = f"{self.ref_curation_command_base}/governance-action-types/initiate"
         start = int(start_time.timestamp() * 1000) if start_time else None
         body = {
             "class": "InitiateGovernanceActionTypeRequestBody",
@@ -2949,42 +3047,40 @@ class AutomatedCuration(ServerClient):
             orig_service_name: Optional[str] = None,
             orig_engine_name: Optional[str] = None,
     ) -> str:
-        """Using the named governance action type as a template, initiate an engine action.
+        """Initiate a governance action process using a governance action type.
 
         Parameters
         ----------
-        action_type_qualified_name: str
-            - unique name for the governance process
-        request_source_guids: [str]
-            - request source elements for the resulting governance action service
-        action_targets: [str]
-            -list of action target names to GUIDs for the resulting governance action service
-        start_time: datetime, default = None
-            - time to start the process, no earlier than start time. None means now.
-        request_parameters: [str]
-            - parameters passed into the process
-        orig_service_name: str
-            - unique name of the requesting governance service (if initiated by a governance engine)
-        orig_engine_name: str
-            - optional unique name of the governance engine (if initiated by a governance engine).
+        action_type_qualified_name : str
+            The unique name for the governance action type.
+        request_source_guids : list[str]
+            The request source elements for the resulting governance action service.
+        action_targets : list[dict]
+            The list of action target names to GUIDs for the resulting governance action service.
+        start_time : datetime, optional
+            The time to start the process. Defaults to current time if not specified.
+        request_parameters : dict, optional
+            The parameters passed into the process.
+        orig_service_name : str, optional
+            The unique name of the requesting governance service.
+        orig_engine_name : str, optional
+            The unique name of the governance engine.
 
         Returns
         -------
-        Unique id (guid) of the newly started governance engine process
-
-        Raises
-        ------
-        PyegeriaException        """
+        str
+            The GUID of the newly started governance engine process, or "Action not initiated".
+        """
         loop = asyncio.get_event_loop()
         response = loop.run_until_complete(
             self._async_initiate_gov_action_type(
-                action_type_qualified_name,
-                request_source_guids,
-                action_targets,
-                start_time,
-                request_parameters,
-                orig_service_name,
-                orig_engine_name,
+                action_type_qualified_name=action_type_qualified_name,
+                request_source_guids=request_source_guids,
+                action_targets=action_targets,
+                start_time=start_time,
+                request_parameters=request_parameters,
+                orig_service_name=orig_service_name,
+                orig_engine_name=orig_engine_name,
             )
         )
         return response
@@ -2994,11 +3090,13 @@ class AutomatedCuration(ServerClient):
     #
 
     async def _async_initiate_survey(self, survey_name: str, resource_guid: str) -> str:
-        """Initiate a survey of the survey_name on the target resource. Async Version.
+        """Initiate a survey of a resource.
+
+        Async version.
 
         Parameters
         ----------
-        survey_name: str
+        survey_name : str
             The name of the survey to initiate.
         resource_guid : str
             The GUID of the resource to be surveyed.
@@ -3006,11 +3104,19 @@ class AutomatedCuration(ServerClient):
         Returns
         -------
         str
-            The GUID of the initiated action or "Action not initiated" if the action was not initiated.
+            The GUID of the engine action created to run the survey, or "Action not initiated".
 
+        Raises
+        ------
+        PyegeriaException
+            If there is an error in communication or processing.
+
+        Notes
+        -----
+        For more information see: https://egeria-project.org/concepts/survey-action-service
         """
 
-        url = f"{self.curation_command_root}/governance-action-types/initiate"
+        url = f"{self.ref_curation_command_base}/governance-action-types/initiate"
 
         body = {
             "class": "InitiateGovernanceActionTypeRequestBody",
@@ -3316,9 +3422,9 @@ class AutomatedCuration(ServerClient):
             domain_identifier: int,
             display_name: str,
             description: str,
-            request_source_guids: str,
-            action_targets: str,
-            received_guards: [str],
+            request_source_guids: list[str],
+            action_targets: list[dict],
+            received_guards: list[str],
             start_time: datetime,
             request_type: str,
             request_parameters: dict,
@@ -3327,48 +3433,58 @@ class AutomatedCuration(ServerClient):
             originator_svc_name: Optional[str] = None,
             originator_eng_name: Optional[str] = None,
     ) -> str:
-        """Create an engine action in the metadata store that will trigger the governance service associated with
-        the supplied request type. The engine action remains to act as a record of the actions taken for auditing.
+        """Initiate an engine action.
+
         Async version.
 
         Parameters
         ----------
-            qualified_name (str): The qualified name of the governance action.
-            domain_identifier (int): The domain identifier for the governance action.
-            display_name (str): The display name of the governance action.
-            description (str): The description of the governance action.
-            request_source_guids (str): GUIDs of the sources initiating the request.
-            action_targets (str): Targets of the governance action.
-            received_guards (List[str]): List of guards received for the action.
-            start_time (datetime): The start time for the governance action.
-            request_type (str): The type of the governance action request.
-            request_parameters (dict): Additional parameters for the governance action.
-            process_name (str): The name of the associated governance action process.
-            request_src_name (str, optional): The name of the request source. Defaults to None.
-            originator_svc_name (str, optional): The name of the originator service. Defaults to None.
-            originator_eng_name (str, optional): The name of the originator engine. Defaults to None.
+        qualified_name : str
+            The unique name for the engine action.
+        domain_identifier : int
+            The domain identifier.
+        display_name : str
+            The display name.
+        description : str
+            The description.
+        request_source_guids : list[str]
+            The GUIDs of the request sources.
+        action_targets : list[dict]
+            The action targets.
+        received_guards : list[str]
+            The received guards.
+        start_time : datetime
+            The start time.
+        request_type : str
+            The request type.
+        request_parameters : dict
+            The request parameters.
+        process_name : str
+            The process name.
+        request_src_name : str, optional
+            The request source name.
+        originator_svc_name : str, optional
+            The originator service name.
+        originator_eng_name : str, optional
+            The originator engine name.
 
         Returns
         -------
-            str: The GUID (Globally Unique Identifier) of the initiated governance action.
+        str
+            The GUID of the initiated action, or "Action not initiated".
 
         Raises
         ------
-            PyegeriaInvalidParameterException: If the API response indicates an error (non-200 status code),
-            this exception is raised with details from the response content.
+        PyegeriaException
+            If there is an error in communication or processing.
 
-        Note
-        ----
-            The `start_time` parameter should be a `datetime` object representing the start time of the
-            governance action.
-
-
+        Notes
+        -----
+        For more information see: https://egeria-project.org/concepts/engine-action
         """
 
-        url = (
-            f"{self.curation_command_root}/governance-engines/"
-            f"engine-actions/initiate"
-        )
+        url = f"{self.ref_curation_command_base}/governance-engines/engine-actions/initiate"
+
         body = {
             "class": "GovernanceActionRequestBody",
             "qualifiedName": qualified_name + str(int(start_time.timestamp())),
@@ -3386,7 +3502,9 @@ class AutomatedCuration(ServerClient):
             "originatorServiceName": originator_svc_name,
             "originatorEngineName": originator_eng_name,
         }
+
         new_body = body_slimmer(body)
+
         response = await self._async_make_request("POST", url, new_body)
         return response.json().get("guid", "Action not initiated")
 
@@ -3396,9 +3514,9 @@ class AutomatedCuration(ServerClient):
             domain_identifier: int,
             display_name: str,
             description: str,
-            request_source_guids: str,
-            action_targets: str,
-            received_guards: [str],
+            request_source_guids: list[str],
+            action_targets: list[dict],
+            received_guards: list[str],
             start_time: datetime,
             request_type: str,
             request_parameters: dict,
@@ -3407,63 +3525,65 @@ class AutomatedCuration(ServerClient):
             originator_svc_name: Optional[str] = None,
             originator_eng_name: Optional[str] = None,
     ) -> str:
-        """Create an engine action in the metadata store that will trigger the governance service associated with
-        the supplied request type. The engine action remains to act as a record of the actions taken for auditing.
+        """Initiate an engine action.
 
         Parameters
         ----------
-            qualified_name (str): The qualified name of the governance action.
-            domain_identifier (int): The domain identifier for the governance action.
-            display_name (str): The display name of the governance action.
-            description (str): The description of the governance action.
-            request_source_guids (str): GUIDs of the sources initiating the request.
-            action_targets (str): Targets of the governance action.
-            received_guards (List[str]): List of guards received for the action.
-            start_time (datetime): The start time for the governance action.
-            gov_engine_name (str): The name of the governance engine associated with the action.
-            request_type (str): The type of the governance action request.
-            request_parameters (dict): Additional parameters for the governance action.
-            process_name (str): The name of the associated governance action process.
-            request_src_name (str, optional): The name of the request source. Defaults to None.
-            originator_svc_name (str, optional): The name of the originator service. Defaults to None.
-            originator_eng_name (str, optional): The name of the originator engine. Defaults to None.
+        qualified_name : str
+            The unique name for the engine action.
+        domain_identifier : int
+            The domain identifier.
+        display_name : str
+            The display name.
+        description : str
+            The description.
+        request_source_guids : list[str]
+            The GUIDs of the request sources.
+        action_targets : list[dict]
+            The action targets.
+        received_guards : list[str]
+            The received guards.
+        start_time : datetime
+            The start time.
+        request_type : str
+            The request type.
+        request_parameters : dict
+            The request parameters.
+        process_name : str
+            The process name.
+        request_src_name : str, optional
+            The request source name.
+        originator_svc_name : str, optional
+            The originator service name.
+        originator_eng_name : str, optional
+            The originator engine name.
 
         Returns
         -------
-            str: The GUID (Globally Unique Identifier) of the initiated governance action.
-
-        Raises
-        ------
-            PyegeriaInvalidParameterException: If the API response indicates an error (non-200 status code),
-            this exception is raised with details from the response content.
-
-        Note
-        ----
-            The `start_time` parameter should be a `datetime` object representing the start time of the
-            governance action.
+        str
+            The GUID of the initiated action, or "Action not initiated".
         """
         loop = asyncio.get_event_loop()
         response = loop.run_until_complete(
             self._async_initiate_engine_action(
-                qualified_name,
-                domain_identifier,
-                display_name,
-                description,
-                request_source_guids,
-                action_targets,
-                received_guards,
-                start_time,
-                request_type,
-                request_parameters,
-                process_name,
-                request_src_name,
-                originator_svc_name,
-                originator_eng_name,
+                qualified_name=qualified_name,
+                domain_identifier=domain_identifier,
+                display_name=display_name,
+                description=description,
+                request_source_guids=request_source_guids,
+                action_targets=action_targets,
+                received_guards=received_guards,
+                start_time=start_time,
+                request_type=request_type,
+                request_parameters=request_parameters,
+                process_name=process_name,
+                request_src_name=request_src_name,
+                originator_svc_name=originator_svc_name,
+                originator_eng_name=originator_eng_name,
             )
         )
         return response
 
-    @dynamic_catch
     async def _async_get_catalog_targets(
             self,
             integ_connector_guid: str,
@@ -3473,38 +3593,47 @@ class AutomatedCuration(ServerClient):
             report_spec: str | dict = "CatalogTarget",
             body: Optional[dict | FilterRequestBody] = None,
     ) -> list | str:
-        """Retrieve the details of the metadata elements identified as catalog targets with an integration connector.
+        """Retrieve the list of catalog target metadata elements.
+
         Async version.
 
-        Parameters:
+        Parameters
         ----------
-            integ_connector_guid: str
-              The GUID (Globally Unique Identifier) of the integration connector used to retrieve catalog targets.
-            start_from : int, optional
-                The starting index of the actions to retrieve. Default is 0.
-            page_size : int, optional
-                The maximum number of actions to retrieve per page. Default is the global maximum paging size.
-            output_format: str, default = "JSON"
-                - one of "DICT", "MERMAID" or "JSON"
-            report_spec: dict , optional, default = None
-                The desired output columns/fields to include.
-            body: dict, optional, default = None
-                Provides, a full request body. If specified, the body supercedes the name parameter.
-        Returns:
-        -------
-            [dict]: The list of catalog targets JSON objects.
+        integ_connector_guid : str
+            The GUID of the integration connector to retrieve catalog targets for.
+        start_from : int, default 0
+            The index from which to start fetching.
+        page_size : int, default 0
+            The maximum number to fetch.
+        output_format : str, default "JSON"
+            The desired output format (e.g., "JSON", "DICT").
+        report_spec : str | dict, default "CatalogTarget"
+            The report specification to use for formatting.
+        body : dict | FilterRequestBody, optional
+            The request body.
 
-        Raises:
+        Returns
+        -------
+        list | str
+            List of catalog targets.
+
+        Raises
         ------
-            PyegeriaInvalidParameterException: If the API response indicates an error (non-200 status code),
-                                       this exception is raised with details from the response content.
-            PyegeriaAPIException: If the API response indicates a server side error.
-            PyegeriaUnauthorizedException:
+        PyegeriaInvalidParameterException
+            If the API response indicates an error (non-200 status code).
+        PyegeriaAPIException
+            If the API response indicates a server side error.
+        PyegeriaUnauthorizedException
+            If the user is not authorized.
+
+        Notes
+        -----
+        For more information see: https://egeria-project.org/concepts/catalog-target
         """
 
         validate_guid(integ_connector_guid)
 
-        url = f"{self.curation_command_root}/integration-connectors/{integ_connector_guid}/catalog-targets"
+        url = f"{self.ref_curation_command_base}/integration-connectors/{integ_connector_guid}/catalog-targets"
 
         response = await self._async_get_name_request(url, _type=self.CATALOG_TARGET_LABEL,
                                                       _gen_output=self._generate_catalog_target_output,
@@ -3522,69 +3651,86 @@ class AutomatedCuration(ServerClient):
             report_spec: str | dict = "CatalogTarget",
             body: Optional[dict | FilterRequestBody] = None,
     ) -> list | str:
-        """Retrieve the details of the metadata elements identified as catalog targets with an integration connector.
+        """Retrieve the list of catalog target metadata elements.
 
-        Parameters:
+        Parameters
         ----------
-            integ_connector_guid: str
-              The GUID (Globally Unique Identifier) of the integration connector used to retrieve catalog targets.
-            start_from : int, optional
-                The starting index of the actions to retrieve. Default is 0.
-            page_size : int, optional
-                The maximum number of actions to retrieve per page. Default is the global maximum paging size.
-            output_format: str, default = "JSON"
-                - one of "DICT", "MERMAID" or "JSON"
-            report_spec: dict , optional, default = None
-                The desired output columns/fields to include.
-            body: dict, optional, default = None
-                Provides, a full request body. If specified, the body supercedes the name parameter.
-        Returns:
-        -------
-            [dict]: The list of catalog targets JSON objects.
+        integ_connector_guid : str
+            The GUID of the integration connector to retrieve catalog targets for.
+        start_from : int, default 0
+            The index from which to start fetching.
+        page_size : int, default 0
+            The maximum number to fetch.
+        output_format : str, default "JSON"
+            The desired output format (e.g., "JSON", "DICT").
+        report_spec : str | dict, default "CatalogTarget"
+            The report specification to use for formatting.
+        body : dict | FilterRequestBody, optional
+            The request body.
 
-        Raises:
-        ------
-            PyegeriaInvalidParameterException: If the API response indicates an error (non-200 status code),
-                                       this exception is raised with details from the response content.
-            PyegeriaAPIException: If the API response indicates a server side error.
-            PyegeriaUnauthorizedException:
+        Returns
+        -------
+        list | str
+            List of catalog targets.
         """
 
         loop = asyncio.get_event_loop()
         response = loop.run_until_complete(
-            self._async_get_catalog_targets(integ_connector_guid, start_from, page_size,
-                                            output_format=output_format,
-                                            report_spec=report_spec, body=body)
+            self._async_get_catalog_targets(
+                integ_connector_guid=integ_connector_guid,
+                start_from=start_from,
+                page_size=page_size,
+                output_format=output_format,
+                report_spec=report_spec,
+                body=body,
+            )
         )
         return response
 
-    async def _async_get_catalog_target(self, relationship_guid: str,
-                                        output_format: str = "JSON",
-                                        report_spec: str | dict = "CatalogTarget",
-                                        body: Optional[dict | GetRequestBody] = None) -> dict | str:
-        """Retrieve a specific catalog target associated with an integration connector. Further Information:
-        https://egeria-project.org/concepts/integration-connector/ .    Async version.
+    async def _async_get_catalog_target(
+            self,
+            relationship_guid: str,
+            output_format: str = "JSON",
+            report_spec: str | dict = "CatalogTarget",
+            body: Optional[dict | GetRequestBody] = None,
+    ) -> dict | str:
+        """Retrieve a specific catalog target associated with an integration connector.
 
-        Parameters:
+        Async version.
+
+        Parameters
         ----------
-            relationship_guid: str
-                The GUID (Globally Unique Identifier) identifying the catalog targets for an integration connector.
+        relationship_guid : str
+            The GUID of the catalog target relationship to retrieve.
+        output_format : str, default "JSON"
+            The desired output format.
+        report_spec : str | dict, default "CatalogTarget"
+            The report specification.
+        body : dict | GetRequestBody, optional
+            The request body.
 
-        Returns:
+        Returns
         -------
-            dict: JSON structure of the catalog target.
+        dict | str
+            JSON structure of the catalog target.
 
-        Raises:
+        Raises
         ------
-            PyegeriaInvalidParameterException: If the API response indicates an error (non-200 status code),
-                                       this exception is raised with details from the response content.
-            PyegeriaAPIException: If the API response indicates a server side error.
-            PyegeriaUnauthorizedException:
+        PyegeriaInvalidParameterException
+            If the API response indicates an error (non-200 status code).
+        PyegeriaAPIException
+            If the API response indicates a server side error.
+        PyegeriaUnauthorizedException
+            If the user is not authorized.
+
+        Notes
+        -----
+        For more information see: https://egeria-project.org/concepts/catalog-target
         """
 
         validate_guid(relationship_guid)
 
-        url = str(HttpUrl(f"{self.curation_command_root}/catalog-targets/{relationship_guid}"))
+        url = f"{self.ref_curation_command_base}/catalog-targets/{relationship_guid}"
         response = await self._async_get_guid_request(
             url,
             _type=self.CATALOG_TARGET_LABEL,
@@ -3595,36 +3741,40 @@ class AutomatedCuration(ServerClient):
         )
         return response
 
-    def get_catalog_target(self, relationship_guid: str,
-                           output_format: str = "JSON",
-                           report_spec: str | dict = "CatalogTarget",
-                           body: Optional[dict | GetRequestBody] = None) -> dict | str:
-        """Retrieve a specific catalog target associated with an integration connector.  Further Information:
-        https://egeria-project.org/concepts/integration-connector/ .
+    def get_catalog_target(
+            self,
+            relationship_guid: str,
+            output_format: str = "JSON",
+            report_spec: str | dict = "CatalogTarget",
+            body: Optional[dict | GetRequestBody] = None,
+    ) -> dict | str:
+        """Retrieve a specific catalog target associated with an integration connector.
 
-        Parameters:
+        Parameters
         ----------
-            relationship_guid: str
-                The GUID (Globally Unique Identifier) identifying the catalog targets for an integration connector.
+        relationship_guid : str
+            The GUID of the catalog target relationship to retrieve.
+        output_format : str, default "JSON"
+            The desired output format.
+        report_spec : str | dict, default "CatalogTarget"
+            The report specification.
+        body : dict | GetRequestBody, optional
+            The request body.
 
-        Returns:
+        Returns
         -------
-            dict: JSON structure of the catalog target.
-
-        Raises:
-        ------
-            PyegeriaInvalidParameterException: If the API response indicates an error (non-200 status code),
-                                       this exception is raised with details from the response content.
-            PyegeriaAPIException: If the API response indicates a server side error.
-            PyegeriaUnauthorizedException:
+        dict | str
+            JSON structure of the catalog target.
         """
 
         loop = asyncio.get_event_loop()
         response = loop.run_until_complete(
-            self._async_get_catalog_target(relationship_guid,
-                                           output_format=output_format,
-                                           report_spec=report_spec,
-                                           body=body)
+            self._async_get_catalog_target(
+                relationship_guid=relationship_guid,
+                output_format=output_format,
+                report_spec=report_spec,
+                body=body,
+            )
         )
         return response
 
@@ -3640,54 +3790,58 @@ class AutomatedCuration(ServerClient):
             permitted_sync: str = "BOTH_DIRECTIONS",
             delete_method: str = "ARCHIVE",
     ) -> str:
-        """Add a catalog target to an integration connector and .
+        """Add a catalog target to an integration connector.
+
         Async version.
 
-        Parameters:
+        Parameters
         ----------
-        integ_connector_guid: str
-            The GUID (Globally Unique Identifier) of the integration connector used to retrieve catalog targets.
-        metadata_element_guid: str
-            The specific metadata element target we want to retrieve.
-        catalog_target_name : dict
-            Name of the catalog target to add.
-        connection_name: str, default = None
-            Optional name of connection to use for this catalog target when multiple connections defined.
-        metadata_src_qual_name: str
-            The qualified name of the metadata source for the catalog target
-        config_properties: dict
-            Configuration properties for the catalog target
-        template_properties: dict
-            Template properties to pass
-        permitted_sync: str, default = BOTH_DIRECTIONS
-            Direction the metadata is allowed to flow (BOTH_DIRECTIONS, FROM_THIRD_PARTH, TO_THIRD_PARTY
-        delete_method: str, default = ARCHIVE
-            Controls the type of delete. Use ARCHIVE for lineage considerations. Alternative is SOFT_DELETE.
-                Returns:
-        -------
-            Relationship GUID for the catalog target,
+        integ_connector_guid : str
+            The GUID of the integration connector.
+        metadata_element_guid : str
+            The GUID of the metadata element to be cataloged.
+        catalog_target_name : str
+            The name of the catalog target.
+        connection_name : str, optional
+            The name of the connection to use.
+        metadata_src_qual_name : str, optional
+            The qualified name of the metadata source.
+        config_properties : dict, optional
+            Configuration properties for the catalog target.
+        template_properties : dict, optional
+            Template properties for the catalog target.
+        permitted_sync : str, default "BOTH_DIRECTIONS"
+            The permitted synchronization direction.
+        delete_method : str, default "ARCHIVE"
+            The delete method for the catalog target.
 
-        Raises:
+        Returns
+        -------
+        str
+            The GUID of the relationship created.
+
+        Raises
         ------
-        PyegeriaInvalidParameterException: If the API response indicates an error (non-200 status code),
-                                   this exception is raised with details from the response content.
-        PyegeriaAPIException: If the API response indicates a server side error.
-        PyegeriaUnauthorizedException:
+        PyegeriaException
+            If there is an error in communication or processing.
+
+        Notes
+        -----
+        For more information see: https://egeria-project.org/concepts/catalog-target
         """
 
         validate_guid(integ_connector_guid)
         validate_guid(metadata_element_guid)
 
-        url = (
-            f"{self.curation_command_root}/integration-connectors/"
-            f"{integ_connector_guid}/catalog-targets/{metadata_element_guid}"
-        )
+        url = f"{self.ref_curation_command_base}/integration-connectors/{integ_connector_guid}/catalog-targets/{metadata_element_guid}"
+
         body = {
+            "class": "CatalogTargetRequestBody",
             "catalogTargetName": catalog_target_name,
-            "metadataSourceQualifiedName": metadata_src_qual_name,
-            "configProperties": config_properties,
-            "templateProperties": template_properties,
             "connectionName": connection_name,
+            "metadataSourceQualifiedName": metadata_src_qual_name,
+            "configurationProperties": config_properties,
+            "templateProperties": template_properties,
             "permittedSynchronization": permitted_sync,
             "deleteMethod": delete_method,
         }
@@ -3707,51 +3861,47 @@ class AutomatedCuration(ServerClient):
             permitted_sync: str = "BOTH_DIRECTIONS",
             delete_method: str = "ARCHIVE",
     ) -> str:
-        """Add a catalog target to an integration connector and .
+        """Add a catalog target to an integration connector.
 
-        Parameters:
+        Parameters
         ----------
-        integ_connector_guid: str
-            The GUID (Globally Unique Identifier) of the integration connector used to retrieve catalog targets.
-        metadata_element_guid: str
-            The specific metadata element target we want to retrieve.
-        catalog_target_name : dict
-            Name of the catalog target to add.
-        connection_name: str, default = None
-            Optional name of connection to use for this catalog target when multiple connections defined.
-        metadata_src_qual_name: str
-            The qualified name of the metadata source for the catalog target
-        config_properties: dict
-            Configuration properties for the catalog target
-        template_properties: dict
-            Template properties to pass
-        permitted_sync: str, default = BOTH_DIRECTIONS
-            Direction the metadata is allowed to flow (BOTH_DIRECTIONS, FROM_THIRD_PARTH, TO_THIRD_PARTY
-        delete_method: str, default = ARCHIVE
-            Controls the type of delete. Use ARCHIVE for lineage considerations. Alternative is SOFT_DELETE.
-                Returns:
-        -------
-            Relationship GUID for the catalog target,
+        integ_connector_guid : str
+            The GUID of the integration connector.
+        metadata_element_guid : str
+            The GUID of the metadata element to be cataloged.
+        catalog_target_name : str
+            The name of the catalog target.
+        connection_name : str, optional
+            The name of the connection to use.
+        metadata_src_qual_name : str, optional
+            The qualified name of the metadata source.
+        config_properties : dict, optional
+            Configuration properties for the catalog target.
+        template_properties : dict, optional
+            Template properties for the catalog target.
+        permitted_sync : str, default "BOTH_DIRECTIONS"
+            The permitted synchronization direction.
+        delete_method : str, default "ARCHIVE"
+            The delete method for the catalog target.
 
-        Raises:
-        ------
-        PyegeriaInvalidParameterException: If the API response indicates an error (non-200 status code),
-                                   this exception is raised with details from the response content.
-        PyegeriaAPIException: If the API response indicates a server side error.
-        PyegeriaUnauthorizedException:
+        Returns
+        -------
+        str
+            The GUID of the relationship created.
         """
+
         loop = asyncio.get_event_loop()
         response = loop.run_until_complete(
             self._async_add_catalog_target(
-                integ_connector_guid,
-                metadata_element_guid,
-                catalog_target_name,
-                connection_name,
-                metadata_src_qual_name,
-                config_properties,
-                template_properties,
-                permitted_sync,
-                delete_method,
+                integ_connector_guid=integ_connector_guid,
+                metadata_element_guid=metadata_element_guid,
+                catalog_target_name=catalog_target_name,
+                connection_name=connection_name,
+                metadata_src_qual_name=metadata_src_qual_name,
+                config_properties=config_properties,
+                template_properties=template_properties,
+                permitted_sync=permitted_sync,
+                delete_method=delete_method,
             )
         )
         return response
@@ -3767,56 +3917,59 @@ class AutomatedCuration(ServerClient):
             permitted_sync: str = "BOTH_DIRECTIONS",
             delete_method: str = "ARCHIVE",
     ) -> None:
-        """Update a catalog target to an integration connector.
+        """Update a catalog target.
+
         Async version.
 
-        Parameters:
+        Parameters
         ----------
-        relationship_guid: str
-            The GUID (Globally Unique Identifier) of the relationship used to retrieve catalog targets.
-        catalog_target_name : dict
-            Name of the catalog target to add.
-        connection_name: str, default = None
-            Optional name of connection to use for this catalog target when multiple connections defined.
-        metadata_src_qual_name: str
-            The qualified name of the metadata source for the catalog target
-        config_properties: dict
-            Configuration properties for the catalog target
-        template_properties: dict
-            Template properties to pass
-        permitted_sync: str, default = BOTH_DIRECTIONS
-            Direction the metadata is allowed to flow (BOTH_DIRECTIONS, FROM_THIRD_PARTH, TO_THIRD_PARTY
-        delete_method: str, default = ARCHIVE
-            Controls the type of delete. Use ARCHIVE for lineage considerations. Alternative is SOFT_DELETE.
-        Returns:
-        -------
-            None
+        relationship_guid : str
+            The GUID of the catalog target relationship to update.
+        catalog_target_name : str
+            The name of the catalog target.
+        connection_name : str, optional
+            The name of the connection to use.
+        metadata_src_qual_name : str, optional
+            The qualified name of the metadata source.
+        config_properties : dict, optional
+            Configuration properties for the catalog target.
+        template_properties : dict, optional
+            Template properties for the catalog target.
+        permitted_sync : str, default "BOTH_DIRECTIONS"
+            The permitted synchronization direction.
+        delete_method : str, default "ARCHIVE"
+            The delete method for the catalog target.
 
-        Raises:
+        Returns
+        -------
+        None
+
+        Raises
         ------
-        PyegeriaInvalidParameterException: If the API response indicates an error (non-200 status code),
-                                   this exception is raised with details from the response content.
-        PyegeriaAPIException: If the API response indicates a server side error.
-        PyegeriaUnauthorizedException:
+        PyegeriaException
+            If there is an error in communication or processing.
+
+        Notes
+        -----
+        For more information see: https://egeria-project.org/concepts/catalog-target
         """
 
         validate_guid(relationship_guid)
 
-        url = (
-            f"{self.curation_command_root}/catalog-targets/"
-            f"{relationship_guid}/update"
-        )
+        url = f"{self.ref_curation_command_base}/catalog-targets/{relationship_guid}/update"
+
         body = {
+            "class": "CatalogTargetRequestBody",
             "catalogTargetName": catalog_target_name,
-            "metadataSourceQualifiedName": metadata_src_qual_name,
-            "configProperties": config_properties,
-            "templateProperties": template_properties,
             "connectionName": connection_name,
+            "metadataSourceQualifiedName": metadata_src_qual_name,
+            "configurationProperties": config_properties,
+            "templateProperties": template_properties,
             "permittedSynchronization": permitted_sync,
             "deleteMethod": delete_method,
         }
+
         await self._async_make_request("POST", url, body)
-        return
 
     def update_catalog_target(
             self,
@@ -3829,103 +3982,95 @@ class AutomatedCuration(ServerClient):
             permitted_sync: str = "BOTH_DIRECTIONS",
             delete_method: str = "ARCHIVE",
     ) -> None:
-        """Update a catalog target to an integration connector.
+        """Update a catalog target.
 
-        Parameters:
+        Parameters
         ----------
-        relationship_guid: str
-            The GUID (Globally Unique Identifier) of the relationship used to retrieve catalog targets.
-        catalog_target_name : dict
-            Name of the catalog target to add.
-        connection_name: str, default = None
-            Optional name of connection to use for this catalog target when multiple connections defined.
-        metadata_src_qual_name: str
-            The qualified name of the metadata source for the catalog target
-        config_properties: dict
-            Configuration properties for the catalog target
-        template_properties: dict
-            Template properties to pass
-        permitted_sync: str, default = BOTH_DIRECTIONS
-            Direction the metadata is allowed to flow (BOTH_DIRECTIONS, FROM_THIRD_PARTH, TO_THIRD_PARTY
-        delete_method: str, default = ARCHIVE
-            Controls the type of delete. Use ARCHIVE for lineage considerations. Alternative is SOFT_DELETE.
-        server: str, optional
+        relationship_guid : str
+            The GUID of the catalog target relationship to update.
+        catalog_target_name : str
+            The name of the catalog target.
+        connection_name : str, optional
+            The name of the connection to use.
+        metadata_src_qual_name : str, optional
+            The qualified name of the metadata source.
+        config_properties : dict, optional
+            Configuration properties for the catalog target.
+        template_properties : dict, optional
+            Template properties for the catalog target.
+        permitted_sync : str, default "BOTH_DIRECTIONS"
+            The permitted synchronization direction.
+        delete_method : str, default "ARCHIVE"
+            The delete method for the catalog target.
+
+        Returns
+        -------
+        None
         """
 
         loop = asyncio.get_event_loop()
         loop.run_until_complete(
             self._async_update_catalog_target(
-                relationship_guid,
-                catalog_target_name,
-                connection_name,
-                metadata_src_qual_name,
-                config_properties,
-                template_properties,
-                permitted_sync,
-                delete_method,
+                relationship_guid=relationship_guid,
+                catalog_target_name=catalog_target_name,
+                connection_name=connection_name,
+                metadata_src_qual_name=metadata_src_qual_name,
+                config_properties=config_properties,
+                template_properties=template_properties,
+                permitted_sync=permitted_sync,
+                delete_method=delete_method,
             )
         )
-        return
 
     async def _async_remove_catalog_target(self, relationship_guid: str) -> None:
-        """Remove a catalog target to an integration connector. Async version.
+        """Remove a catalog target.
 
-        Parameters:
+        Async version.
+
+        Parameters
         ----------
-        relationship_guid: str
-            The GUID (Globally Unique Identifier) identifying the catalog target relationship.
+        relationship_guid : str
+            The GUID of the catalog target relationship to remove.
 
-        Returns:
+        Returns
         -------
-            None
+        None
 
-        Raises:
+        Raises
         ------
-        PyegeriaInvalidParameterException: If the API response indicates an error (non-200 status code),
-                                   this exception is raised with details from the response content.
-        PyegeriaAPIException: If the API response indicates a server side error.
-        PyegeriaUnauthorizedException:
+        PyegeriaException
+            If there is an error in communication or processing.
+
+        Notes
+        -----
+        For more information see: https://egeria-project.org/concepts/catalog-target
         """
 
         validate_guid(relationship_guid)
 
-        url = (
-            f"{self.curation_command_root}/catalog-targets/"
-            f"{relationship_guid}/remove"
-        )
+        url = f"{self.ref_curation_command_base}/catalog-targets/{relationship_guid}/remove"
 
         await self._async_make_request("POST", url)
-        return
 
     def remove_catalog_target(self, relationship_guid: str) -> None:
-        """Remove a catalog target to an integration connector.
+        """Remove a catalog target.
 
-        Parameters:
+        Parameters
         ----------
-        relationship_guid: str
-            The GUID (Globally Unique Identifier) identifying the catalog target relationship.
+        relationship_guid : str
+            The GUID of the catalog target relationship to remove.
 
-        Returns:
+        Returns
         -------
-            None
-
-        Raises:
-        ------
-        PyegeriaInvalidParameterException: If the API response indicates an error (non-200 status code),
-                                   this exception is raised with details from the response content.
-        PyegeriaAPIException: If the API response indicates a server side error.
-        PyegeriaUnauthorizedException:
+        None
         """
-
         loop = asyncio.get_event_loop()
         loop.run_until_complete(self._async_remove_catalog_target(relationship_guid))
-        return
 
     #
     #   Get information about technologies
     #
 
-    @dynamic_catch
     async def _async_get_tech_types_for_open_metadata_type(
             self,
             type_name: str,
@@ -3936,48 +4081,43 @@ class AutomatedCuration(ServerClient):
             report_spec: str | dict = "TechType",
             body: Optional[dict | FilterRequestBody] = None,
     ) -> list | str:
-        """Retrieve the list of deployed implementation type metadata elements linked to a particular
-        open metadata type.. Async version.
+        """Retrieve the list of technology types linked to an open metadata type.
 
-        Parameters:
+        Async version.
+
+        Parameters
         ----------
-        type_name: str
-            The technology type we are looking for.
-        tech_name: str
-            The technology name we are looking for.
-        start_from: int, [default=0], optional
-                    When multiple pages of results are available, the page number to start from.
-        page_size: int, [default=None]
-            The number of items to return in a single page. If not specified, the default will be taken from
-            the class instance.
-        output_format: str, default = "JSON"
-            - one of "DICT", "MERMAID" or "JSON"
-        report_spec: dict , optional, default = None
-            The desired output columns/fields to include.
-        body: dict, optional, default = None
-            Provides, a full request body. If specified, the body supercedes the name parameter.
+        type_name : str
+            The name of the open metadata type.
+        tech_name : str
+            The name of the technology type to filter by.
+        start_from : int, default 0
+            The index from which to start fetching.
+        page_size : int, default 0
+            The maximum number to fetch.
+        output_format : str, default "JSON"
+            The desired output format.
+        report_spec : str | dict, default "TechType"
+            The report specification to use for formatting.
+        body : dict | FilterRequestBody, optional
+            The request body.
 
-        Returns:
+        Returns
         -------
-            [dict] | str: List of elements describing the technology - or "no tech found" if not found.
+        list | str
+            List of technology types.
 
-        Raises:
+        Raises
         ------
-        PyegeriaInvalidParameterException: If the API response indicates an error (non-200 status code),
-                                   this exception is raised with details from the response content.
-        PyegeriaAPIException: If the API response indicates a server side error.
-        PyegeriaUnauthorizedException:
+        PyegeriaException
+            If there is an error in communication or processing.
 
         Notes
         -----
         More information can be found at: https://egeria-project.org/types
         """
 
-        # validate_name(type_name)
-        url = (
-            f"{self.curation_command_root}/open-metadata-types/"
-            f"{type_name}/technology-types"
-        )
+        url = f"{self.ref_curation_command_base}/open-metadata-types/{type_name}/technology-types"
         response = await self._async_get_name_request(url, _type=self.TECH_TYPE_ENTITY_LABEL,
                                                       _gen_output=self._generate_tech_type_output,
                                                       filter_string=tech_name, start_from=start_from,
@@ -3996,94 +4136,86 @@ class AutomatedCuration(ServerClient):
             report_spec: str | dict = "TechType",
             body: Optional[dict | FilterRequestBody] = None,
     ) -> list | str:
-        """Retrieve the list of deployed implementation type metadata elements linked to a particular
-        open metadata type.
+        """Retrieve the list of technology types linked to an open metadata type.
 
-        Parameters:
+        Parameters
         ----------
-        type_name: str
-            The technology type we are looking for.
-        tech_name: str
-            The technology name we are looking for.
-        start_from: int, [default=0], optional
-                    When multiple pages of results are available, the page number to start from.
-        page_size: int, [default=None]
-            The number of items to return in a single page. If not specified, the default will be taken from
-            the class instance.
-        output_format: str, default = "JSON"
-            - one of "DICT", "MERMAID" or "JSON"
-        report_spec: dict , optional, default = None
-            The desired output columns/fields to include.
-        body: dict, optional, default = None
-            Provides, a full request body. If specified, the body supercedes the name parameter.
+        type_name : str
+            The name of the open metadata type.
+        tech_name : str
+            The name of the technology type to filter by.
+        start_from : int, default 0
+            The index from which to start fetching.
+        page_size : int, default 0
+            The maximum number to fetch.
+        output_format : str, default "JSON"
+            The desired output format.
+        report_spec : str | dict, default "TechType"
+            The report specification to use for formatting.
+        body : dict | FilterRequestBody, optional
+            The request body.
 
-        Returns:
+        Returns
         -------
-            [dict] | str: List of elements describing the technology - or "no tech found" if not found.
-
-        Raises:
-        ------
-        PyegeriaInvalidParameterException: If the API response indicates an error (non-200 status code),
-                                   this exception is raised with details from the response content.
-        PyegeriaAPIException: If the API response indicates a server side error.
-        PyegeriaUnauthorizedException:
-
-        Notes
-        -----
-        More information can be found at: https://egeria-project.org/types
+        list | str
+            List of technology types.
         """
         loop = asyncio.get_event_loop()
         response = loop.run_until_complete(
             self._async_get_tech_types_for_open_metadata_type(
-                type_name, tech_name, start_from, page_size, output_format, report_spec, body
+                type_name=type_name,
+                tech_name=tech_name,
+                start_from=start_from,
+                page_size=page_size,
+                output_format=output_format,
+                report_spec=report_spec,
+                body=body,
             )
         )
         return response
 
-    async def _async_get_tech_type_detail(self, filter_string: Optional[str] = None, body: Optional[dict | FilterRequestBody] = None,
-                                          output_format: str = "JSON", report_spec: str | dict = "TechType",
-                                          **kwargs) -> list | str:
-        """Retrieve the details of the named technology type. This name should be the name of the technology type
-            and contain no wild cards. Async version.
+    async def _async_get_tech_type_detail(
+            self,
+            filter_string: Optional[str] = None,
+            body: Optional[dict | FilterRequestBody] = None,
+            output_format: str = "JSON",
+            report_spec: str | dict = "TechType",
+            **kwargs,
+    ) -> list | str:
+        """Retrieve the details of the named technology type.
+
+        This name should be the name of the technology type and contain no wild cards.
+        Async version.
+
         Parameters
         ----------
-        filter_string : str
+        filter_string : str, optional
             The name of the technology type to retrieve detailed information for.
-        body: dict | FilterRequestBody
-            If provided, the information in the body supersedes the other parameters and allows more advanced requests.
+        body : dict | FilterRequestBody, optional
+            The request body. If provided, it overrides other parameters.
+        output_format : str, default "JSON"
+            The desired output format.
+        report_spec : str | dict, default "TechType"
+            The report specification to use for formatting.
+        **kwargs : dict, optional
+            Additional query parameters.
 
         Returns
         -------
-        list[dict] | str
-            A list of dictionaries containing the detailed information for the specified technology type.
-            If the technology type is not found, returns the string "no type found".
+        list | str
+            Detailed information for the specified technology type, or "no type found".
+
         Raises
         ------
-                PyegeriaException
-        ValidationError
+        PyegeriaException
+            If there is an error in communication or processing.
 
         Notes
         -----
         More information can be found at: https://egeria-project.org/concepts/deployed-implementation-type
-        Sample body:
-        {
-          "class" : "FilterRequestBody",
-          "filter" : "Root Technology Type",
-          "startFrom": 0,
-          "pageSize": 10,
-          "asOfTime" : "{{$isoTimestamp}}",
-          "effectiveTime" : "{{$isoTimestamp}}",
-          "includeOnlyClassifiedElements" : ["Template"]
-          "forLineage" : false,
-          "forDuplicateProcessing" : false,
-          "limitResultsByStatus" : ["ACTIVE"],
-          "sequencingOrder" : "PROPERTY_ASCENDING",
-          "sequencingProperty" : "qualifiedName"
-        }
         """
 
-        # validate_name(type_name)
-        url = str(HttpUrl(f"{self.curation_command_root}/technology-types/by-name"))
+        url = f"{self.ref_curation_command_base}/technology-types/by-name"
         if body is None:
             body = {
                 "class": "FilterRequestBody",
@@ -4096,169 +4228,160 @@ class AutomatedCuration(ServerClient):
             logger.info(NO_ELEMENTS_FOUND)
             return NO_ELEMENTS_FOUND
 
-        if output_format != 'JSON':  # return a simplified markdown representation
+        if output_format != 'JSON':
             logger.info(f"Found elements, output format: {output_format} and report_spec: {report_spec}")
             return self._generate_tech_type_output(element, filter_string, "ValidMetadataValue",
                                                    output_format, report_spec)
         return element
 
-    def get_tech_type_detail(self, filter_string: Optional[str] = None, body: Optional[dict | FilterRequestBody] = None,
-                             output_format: str = "JSON", report_spec: str | dict = "TechType", **kwargs) -> list | str:
-        """Retrieve the details of the named technology type. This name should be the name of the technology type
-                 and contain no wild cards.
-             Parameters
-             ----------
-             filter_string : str
-                 The name of the technology type to retrieve detailed information for.
-             body: dict | FilterRequestBody
-                 If provided, the information in the body supersedes the other parameters and allows more advanced requests.
+    def get_tech_type_detail(
+            self,
+            filter_string: Optional[str] = None,
+            body: Optional[dict | FilterRequestBody] = None,
+            output_format: str = "JSON",
+            report_spec: str | dict = "TechType",
+            **kwargs,
+    ) -> list | str:
+        """Retrieve the details of the named technology type.
 
-             Returns
-             -------
-             list[dict] | str
-                 A list of dictionaries containing the detailed information for the specified technology type.
-                 If the technology type is not found, returns the string "no type found".
-             Raises
-             ------
-                     PyegeriaException
-             ValidationError
+        This name should be the name of the technology type and contain no wild cards.
 
-             Notes
-             -----
-             More information can be found at: https://egeria-project.org/concepts/deployed-implementation-type
-             Sample body:
-             {
-               "class" : "FilterRequestBody",
-               "filter" : "Root Technology Type",
-               "startFrom": 0,
-               "pageSize": 10,
-               "asOfTime" : "{{$isoTimestamp}}",
-               "effectiveTime" : "{{$isoTimestamp}}",
-               "includeOnlyClassifiedElements" : ["Template"]
-               "forLineage" : false,
-               "forDuplicateProcessing" : false,
-               "limitResultsByStatus" : ["ACTIVE"],
-               "sequencingOrder" : "PROPERTY_ASCENDING",
-               "sequencingProperty" : "qualifiedName"
-             }
-             """
+        Parameters
+        ----------
+        filter_string : str, optional
+            The name of the technology type to retrieve detailed information for.
+        body : dict | FilterRequestBody, optional
+            The request body. If provided, it overrides other parameters.
+        output_format : str, default "JSON"
+            The desired output format.
+        report_spec : str | dict, default "TechType"
+            The report specification to use for formatting.
+        **kwargs : dict, optional
+            Additional query parameters.
+
+        Returns
+        -------
+        list | str
+            Detailed information for the specified technology type, or "no type found".
+        """
 
         loop = asyncio.get_event_loop()
         response = loop.run_until_complete(
-            self._async_get_tech_type_detail(filter_string, body=body, output_format=output_format, report_spec=report_spec)
+            self._async_get_tech_type_detail(
+                filter_string=filter_string,
+                body=body,
+                output_format=output_format,
+                report_spec=report_spec,
+                **kwargs,
+            )
         )
         return response
 
 
-    async def _async_get_tech_type_hierarchy(self, filter_string: Optional[str] = None, body: Optional[dict | FilterRequestBody] = None,
-                                          output_format: str = "JSON", report_spec: str | dict = "TechType",
-                                          **kwargs) -> list | str:
-        """Retrieve the details of the named technology type. This name should be the name of the technology type
-            and contain no wild cards. Async version.
+    async def _async_get_tech_type_hierarchy(
+            self,
+            filter_string: Optional[str] = None,
+            body: Optional[dict | FilterRequestBody] = None,
+            output_format: str = "JSON",
+            report_spec: str | dict = "TechType",
+            **kwargs,
+    ) -> list | str:
+        """Retrieve the hierarchy of the named technology type.
+
+        This name should be the name of the technology type and contain no wild cards.
+        Async version.
+
         Parameters
         ----------
-        filter_string : str
-            The name of the technology type to retrieve detailed information for.
-        body: dict | FilterRequestBody
-            If provided, the information in the body supersedes the other parameters and allows more advanced requests.
+        filter_string : str, optional
+            The name of the technology type to retrieve the hierarchy for.
+        body : dict | FilterRequestBody, optional
+            The request body. If provided, it overrides other parameters.
+        output_format : str, default "JSON"
+            The desired output format.
+        report_spec : str | dict, default "TechType"
+            The report specification to use for formatting.
+        **kwargs : dict, optional
+            Additional query parameters.
 
         Returns
         -------
-        list[dict] | str
-            A list of dictionaries containing the detailed information for the specified technology type.
-            If the technology type is not found, returns the string "no type found".
+        list | str
+            The hierarchy of technology types, or "no type found".
+
         Raises
         ------
-                PyegeriaException
-        ValidationError
+        PyegeriaException
+            If there is an error in communication or processing.
 
         Notes
         -----
         More information can be found at: https://egeria-project.org/concepts/deployed-implementation-type
-        Sample body:
-        {
-          "class" : "FilterRequestBody",
-          "filter" : "Root Technology Type",
-          "startFrom": 0,
-          "pageSize": 10,
-          "asOfTime" : "{{$isoTimestamp}}",
-          "effectiveTime" : "{{$isoTimestamp}}",
-          "includeOnlyClassifiedElements" : ["Template"]
-          "forLineage" : false,
-          "forDuplicateProcessing" : false,
-          "limitResultsByStatus" : ["ACTIVE"],
-          "sequencingOrder" : "PROPERTY_ASCENDING",
-          "sequencingProperty" : "qualifiedName"
-        }
         """
 
-        # validate_name(type_name)
         if filter_string == "*":
             filter_string = "Root Technology Type"
 
-        url = str(HttpUrl(f"{self.curation_command_root}/technology-types/hierarchy"))
+        url = f"{self.ref_curation_command_base}/technology-types/hierarchy"
         if body is None:
             body = {
                 "class": "FilterRequestBody",
                 "filter": filter_string
             }
         body_s = body_slimmer(body)
+
         response = await self._async_make_request("POST", url, body_s)
         element = response.json().get("element", NO_ELEMENTS_FOUND)
         if type(element) is str:
             logger.info(NO_ELEMENTS_FOUND)
             return NO_ELEMENTS_FOUND
 
-        if output_format != 'JSON':  # return a simplified markdown representation
+        if output_format != 'JSON':
             logger.info(f"Found elements, output format: {output_format} and report_spec: {report_spec}")
             return self._generate_tech_type_output(element, filter_string, "ValidMetadataValue",
                                                    output_format, report_spec)
         return element
 
-    def get_tech_type_hierarchy(self, filter_string: Optional[str] = None, body: Optional[dict | FilterRequestBody] = None,
-                             output_format: str = "JSON", report_spec: str | dict = "TechType", **kwargs) -> list | str:
-        """Retrieve the details of the named technology type. This name should be the name of the technology type
-                 and contain no wild cards.
-             Parameters
-             ----------
-             filter_string : str
-                 The name of the technology type to retrieve detailed information for.
-             body: dict | FilterRequestBody
-                 If provided, the information in the body supersedes the other parameters and allows more advanced requests.
+    def get_tech_type_hierarchy(
+            self,
+            filter_string: Optional[str] = None,
+            body: Optional[dict | FilterRequestBody] = None,
+            output_format: str = "JSON",
+            report_spec: str | dict = "TechType",
+            **kwargs,
+    ) -> list | str:
+        """Retrieve the hierarchy of the named technology type.
 
-             Returns
-             -------
-             list[dict] | str
-                 A list of dictionaries containing the detailed information for the specified technology type.
-                 If the technology type is not found, returns the string "no type found".
-             Raises
-             ------
-                     PyegeriaException
-             ValidationError
+        This name should be the name of the technology type and contain no wild cards.
 
-             Notes
-             -----
-             More information can be found at: https://egeria-project.org/concepts/deployed-implementation-type
-             Sample body:
-             {
-               "class" : "FilterRequestBody",
-               "filter" : "Root Technology Type",
-               "startFrom": 0,
-               "pageSize": 10,
-               "asOfTime" : "{{$isoTimestamp}}",
-               "effectiveTime" : "{{$isoTimestamp}}",
-               "includeOnlyClassifiedElements" : ["Template"]
-               "forLineage" : false,
-               "forDuplicateProcessing" : false,
-               "limitResultsByStatus" : ["ACTIVE"],
-               "sequencingOrder" : "PROPERTY_ASCENDING",
-               "sequencingProperty" : "qualifiedName"
-             }
-             """
+        Parameters
+        ----------
+        filter_string : str, optional
+            The name of the technology type to retrieve the hierarchy for.
+        body : dict | FilterRequestBody, optional
+            The request body. If provided, it overrides other parameters.
+        output_format : str, default "JSON"
+            The desired output format.
+        report_spec : str | dict, default "TechType"
+            The report specification to use for formatting.
+        **kwargs : dict, optional
+            Additional query parameters.
+
+        Returns
+        -------
+        list | str
+            The hierarchy of technology types, or "no type found".
+        """
 
         loop = asyncio.get_event_loop()
         response = loop.run_until_complete(
-            self._async_get_tech_type_hierarchy(filter_string, body=body, output_format=output_format, report_spec=report_spec)
+            self._async_get_tech_type_hierarchy(
+                filter_string=filter_string,
+                body=body,
+                output_format=output_format,
+                report_spec=report_spec,
+                **kwargs,
+            )
         )
         return response
 
@@ -4275,69 +4398,95 @@ class AutomatedCuration(ServerClient):
             return None
 
     def get_template_guid_for_technology_type(self, type_name: str) -> str:
+        """Retrieve the template GUID associated with the given technology type.
+
+        Parameters
+        ----------
+        type_name : str
+            The name of the technology type.
+
+        Returns
+        -------
+        str
+            The GUID of the template, or None if not found.
+        """
         loop = asyncio.get_event_loop()
         response = loop.run_until_complete(
             self._async_get_template_guid_for_technology_type(type_name)
         )
         return response
 
-    async def async_find_technology_types(
+    async def _async_find_technology_types(
         self,
         search_string: str = "*",
-        body: Optional[dict | SearchStringRequestBody] = None,
         starts_with: bool = False,
         ends_with: bool = False,
         ignore_case: bool = True,
+        metadata_element_type_name: Optional[str] = None,
+        metadata_element_subtypes: Optional[list[str]] = None,
+        include_only_relationships: Optional[list[str]] = None,
+        skip_relationships: Optional[list[str]] = None,
+        graph_query_depth: int = 3,
         start_from: int = 0,
         page_size: int = 0,
         output_format: str = "JSON",
-        report_spec: str | dict = "TechType",
+        report_spec: Optional[str | dict] = "TechType",
+        body: Optional[dict | SearchStringRequestBody] = None,
         **kwargs
     ) -> list | str:
-        """Retrieve the list of technology types that contain the search string. Async version.
+        """Retrieve the list of technology types that contain the search string.
 
-        Parameters:
+        Async version.
+
+        Parameters
         ----------
-        search_string: str
+        search_string : str, default "*"
             The search string we are looking for.
-        starts_with : bool, optional
-           Whether to search engine actions that start with the given search string. Default is False.
-        ends_with : bool, optional
-           Whether to search engine actions that end with the given search string. Default is False.
-        ignore_case : bool, optional
-           Whether to ignore case while searching engine actions. Default is True.
-        start_from : int, optional
-           The index from which to start fetching the engine actions. Default is 0.
-        page_size : int, optional
-           The maximum number of engine actions to fetch in a single request. Default is `0`.
-        output_format: str, optional
-            The format of the output. Default is "JSON".
-        report_spec: str | dict, optional
-            The report specification. Default is "TechType".
-        body: dict | SearchStringRequestBody, optional
-            The request body. Default is None.
+        starts_with : bool, default False
+            Whether to search technology types that start with the given search string.
+        ends_with : bool, default False
+            Whether to search technology types that end with the given search string.
+        ignore_case : bool, default True
+            Whether to ignore case while searching technology types.
+        metadata_element_type_name : str, optional
+            Metadata element type to search for.
+        metadata_element_subtypes : list[str], optional
+            Subtypes to filter.
+        include_only_relationships : list[str], optional
+            Only include these relationship types.
+        skip_relationships : list[str], optional
+            Relationship types to skip.
+        graph_query_depth : int, default 3
+            Depth of graph traversal.
+        start_from : int, default 0
+            The index from which to start fetching.
+        page_size : int, default 0
+            The maximum number to fetch in a single request.
+        output_format : str, default "JSON"
+            The format of the output.
+        report_spec : str | dict, default "TechType"
+            The report specification.
+        body : dict | SearchStringRequestBody, optional
+            The request body.
+        **kwargs : dict, optional
+            Additional parameters.
 
-        Returns:
+        Returns
         -------
-            [dict] | str: List of elements describing the technology - or "no tech found" if not found.
+        list | str
+            List of elements describing the technology - or "no tech found" if not found.
 
-        Raises:
+        Raises
         ------
-        PyegeriaInvalidParameterException: If the API response indicates an error (non-200 status code),
-                                   this exception is raised with details from the response content.
-        PyegeriaAPIException: If the API response indicates a server side error.
-        PyegeriaUnauthorizedException:
+        PyegeriaException
+            If there is an error in communication or processing.
 
         Notes
         -----
         For more information see: https://egeria-project.org/concepts/deployed-implementation-type
         """
+        url = f"{self.ref_curation_command_base}/technology-types/by-search-string"
 
-        if search_string == "*":
-            search_string = None
-
-        url = f"{self.curation_command_root}/technology-types/by-search-string"
-        
         # Set defaults for technology types if not provided in kwargs
         if 'limit_results_by_status' not in kwargs:
             kwargs['limit_results_by_status'] = ["ACTIVE"]
@@ -4345,38 +4494,51 @@ class AutomatedCuration(ServerClient):
             kwargs['sequencing_order'] = "PROPERTY_ASCENDING"
         if 'sequencing_property' not in kwargs:
             kwargs['sequencing_property'] = "qualifiedName"
-        
+
+        metadata_element_type = kwargs.pop("metadata_element_type", metadata_element_type_name)
+
         # Merge explicit parameters with kwargs
         params = {
-            'search_string': search_string,  # Always include, even if None
+            'search_string': search_string,
             'body': body,
             'starts_with': starts_with,
             'ends_with': ends_with,
             'ignore_case': ignore_case,
+            'metadata_element_type': metadata_element_type,
+            'metadata_element_subtypes': metadata_element_subtypes,
+            'include_only_relationships': include_only_relationships,
+            'skip_relationships': skip_relationships,
+            'graph_query_depth': graph_query_depth,
             'start_from': start_from,
             'page_size': page_size,
             'output_format': output_format,
             'report_spec': report_spec
         }
         params.update(kwargs)
-        
+
         # Filter out None values, but keep search_string even if None (it's required)
         params = {k: v for k, v in params.items() if v is not None or k == 'search_string'}
-        
+
         return await self._async_find_request(url, _type="TechType", _gen_output=self._generate_tech_type_output,
                                               **params)
+
 
     def find_technology_types(
             self,
             search_string: str = "*",
-            body: Optional[dict | SearchStringRequestBody] = None,
             starts_with: bool = False,
             ends_with: bool = False,
             ignore_case: bool = True,
+            metadata_element_type_name: Optional[str] = None,
+            metadata_element_subtypes: Optional[list[str]] = None,
+            include_only_relationships: Optional[list[str]] = None,
+            skip_relationships: Optional[list[str]] = None,
+            graph_query_depth: int = 3,
             start_from: int = 0,
             page_size: int = 0,
             output_format: str = "JSON",
-            report_spec: str | dict = "TechType",
+            report_spec: Optional[str | dict] = "TechType",
+            body: Optional[dict | SearchStringRequestBody] = None,
             **kwargs
     ) -> list | str:
         """Retrieve the list of technology types that contain the search string.
@@ -4385,14 +4547,22 @@ class AutomatedCuration(ServerClient):
         ----------
         search_string : str, default "*"
             The search string we are looking for.
-        body : dict | SearchStringRequestBody, optional
-            Request body. If provided, overrides other parameters.
         starts_with : bool, default False
-            Whether to search that start with the given search string.
+            Whether to search technology types that start with the given search string.
         ends_with : bool, default False
-            Whether to search that end with the given search string.
+            Whether to search technology types that end with the given search string.
         ignore_case : bool, default True
             Whether to ignore case while searching.
+        metadata_element_type_name : str, optional
+            Metadata element type to search for.
+        metadata_element_subtypes : list[str], optional
+            List of metadata element subtypes.
+        include_only_relationships : list[str], optional
+            Only include these relationship types.
+        skip_relationships : list[str], optional
+            Relationship types to skip.
+        graph_query_depth : int, default 3
+            Depth of graph traversal.
         start_from : int, default 0
             The index from which to start fetching results.
         page_size : int, default 0
@@ -4401,60 +4571,46 @@ class AutomatedCuration(ServerClient):
             Output format: "MD", "LIST", "FORM", "REPORT", "DICT", "MERMAID" or "JSON".
         report_spec : str | dict, default "TechType"
             Report specification for output formatting.
+        body : dict | SearchStringRequestBody, optional
+            Request body. If provided, overrides other parameters.
         **kwargs : dict, optional
-            Additional parameters supported by the underlying find request:
-            
-            - anchor_domain : str - Domain to anchor the search
-            - metadata_element_type : str - Specific metadata element type
-            - metadata_element_subtypes : list[str] - List of metadata element subtypes
-            - skip_relationships : list[str] - Relationship types to skip
-            - include_only_relationships : list[str] - Only include these relationship types
-            - skip_classified_elements : list[str] - Skip elements with these classifications
-            - include_only_classified_elements : list[str] - Only include elements with these classifications
-            - graph_query_depth : int - Depth of graph traversal (default 3)
-            - governance_zone_filter : list[str] - Filter by governance zones
-            - as_of_time : str - Historical query time (ISO 8601 format)
-            - effective_time : str - Effective time for the query (ISO 8601 format)
-            - relationship_page_size : int - Page size for relationships
-            - limit_results_by_status : list[str] - Filter by element status (default ["ACTIVE"])
-            - sequencing_order : str - Order of results (default "PROPERTY_ASCENDING")
-            - sequencing_property : str - Property to sequence by (default "qualifiedName")
-            - property_names : list[str] - Specific properties to search
+            Additional query parameters.
 
         Returns
         -------
         list | str
             List of technology types in the requested format.
-
-        Raises
-        ------
-        PyegeriaInvalidParameterException
-            If the API response indicates an error (non-200 status code).
-        PyegeriaAPIException
-            If the API response indicates a server side error.
-        PyegeriaUnauthorizedException
-            If the user is not authorized.
-
-        Notes
-        -----
-        For more information see: https://egeria-project.org/concepts/deployed-implementation-type
         """
         loop = asyncio.get_event_loop()
         return loop.run_until_complete(
-            self.async_find_technology_types(
-                search_string, body, starts_with, ends_with, ignore_case,
-                start_from, page_size, output_format, report_spec, **kwargs
+            self._async_find_technology_types(
+                search_string=search_string,
+                starts_with=starts_with,
+                ends_with=ends_with,
+                ignore_case=ignore_case,
+                metadata_element_type_name=metadata_element_type_name,
+                metadata_element_subtypes=metadata_element_subtypes,
+                include_only_relationships=include_only_relationships,
+                skip_relationships=skip_relationships,
+                graph_query_depth=graph_query_depth,
+                start_from=start_from,
+                page_size=page_size,
+                output_format=output_format,
+                report_spec=report_spec,
+                body=body,
+                **kwargs
             )
         )
 
-    async def async_find_technology_types_body(
+    @dynamic_catch
+    async def _async_find_technology_types_body(
         self,
         search_string: str = "*",
         starts_with: bool = False,
         ends_with: bool = False,
         ignore_case: bool = True,
         anchor_domain: Optional[str] = None,
-        metadata_element_type: Optional[str] = None,
+        metadata_element_type_name: Optional[str] = None,
         metadata_element_subtypes: Optional[list[str]] = None,
         skip_relationships: Optional[list[str]] = None,
         include_only_relationships: Optional[list[str]] = None,
@@ -4463,7 +4619,6 @@ class AutomatedCuration(ServerClient):
         graph_query_depth: int = 3,
         governance_zone_filter: Optional[list[str]] = None,
         as_of_time: Optional[str] = None,
-        effective_time: Optional[str] = None,
         relationship_page_size: int = 0,
         limit_results_by_status: list[str] = ["ACTIVE"],
         sequencing_order: str = "PROPERTY_ASCENDING",
@@ -4474,47 +4629,13 @@ class AutomatedCuration(ServerClient):
         page_size: int = 0,
         property_names: Optional[list[str]] = None,
         body: Optional[dict | SearchStringRequestBody] = None,
+        **kwargs
     ) -> list | str:
-        """Retrieve the list of technology types that contain the search string. Async version.
+        """Retrieve the list of technology types that contain the search string. Async version."""
+        metadata_element_type = kwargs.pop("metadata_element_type", metadata_element_type_name)
+        kwargs.pop("effective_time", None)
 
-        Parameters:
-        ----------
-        search_string: str
-            The search string we are looking for.
-        starts_with : bool, optional
-           Whether to search engine actions that start with the given search string. Default is False.
-        ends_with : bool, optional
-           Whether to search engine actions that end with the given search string. Default is False.
-        ignore_case : bool, optional
-           Whether to ignore case while searching engine actions. Default is True.
-        start_from : int, optional
-           The index from which to start fetching the engine actions. Default is 0.
-        page_size : int, optional
-           The maximum number of engine actions to fetch in a single request. Default is `0`.
-        output_format: str, optional
-            The format of the output. Default is "JSON".
-        report_spec: str | dict, optional
-            The report specification. Default is "TechType".
-        body: dict | SearchStringRequestBody, optional
-            The request body. Default is None.
-
-        Returns:
-        -------
-            [dict] | str: List of elements describing the technology - or "no tech found" if not found.
-
-        Raises:
-        ------
-        PyegeriaInvalidParameterException: If the API response indicates an error (non-200 status code),
-                                   this exception is raised with details from the response content.
-        PyegeriaAPIException: If the API response indicates a server side error.
-        PyegeriaUnauthorizedException:
-
-        Notes
-        -----
-        For more information see: https://egeria-project.org/concepts/deployed-implementation-type
-        """
-
-        return await self.async_find_technology_types(
+        return await self._async_find_technology_types(
             search_string=search_string,
             starts_with=starts_with,
             ends_with=ends_with,
@@ -4529,7 +4650,6 @@ class AutomatedCuration(ServerClient):
             graph_query_depth=graph_query_depth,
             governance_zone_filter=governance_zone_filter,
             as_of_time=as_of_time,
-            effective_time=effective_time,
             relationship_page_size=relationship_page_size,
             limit_results_by_status=limit_results_by_status,
             sequencing_order=sequencing_order,
@@ -4540,7 +4660,9 @@ class AutomatedCuration(ServerClient):
             page_size=page_size,
             property_names=property_names,
             body=body,
+            **kwargs
         )
+
 
     def find_technology_types_body(
         self,
@@ -4549,7 +4671,7 @@ class AutomatedCuration(ServerClient):
         ends_with: bool = False,
         ignore_case: bool = True,
         anchor_domain: Optional[str] = None,
-        metadata_element_type: Optional[str] = None,
+        metadata_element_type_name: Optional[str] = None,
         metadata_element_subtypes: Optional[list[str]] = None,
         skip_relationships: Optional[list[str]] = None,
         include_only_relationships: Optional[list[str]] = None,
@@ -4558,7 +4680,6 @@ class AutomatedCuration(ServerClient):
         graph_query_depth: int = 3,
         governance_zone_filter: Optional[list[str]] = None,
         as_of_time: Optional[str] = None,
-        effective_time: Optional[str] = None,
         relationship_page_size: int = 0,
         limit_results_by_status: list[str] = ["ACTIVE"],
         sequencing_order: str = "PROPERTY_ASCENDING",
@@ -4569,55 +4690,86 @@ class AutomatedCuration(ServerClient):
         page_size: int = 0,
         property_names: Optional[list[str]] = None,
         body: Optional[dict | SearchStringRequestBody] = None,
+        **kwargs
     ) -> list | str:
-        """Retrieve the list of technology types that contain the search string.
+        """Retrieve the list of technology types using a full request body.
 
-        Parameters:
+        Parameters
         ----------
-        search_string: str
+        search_string : str, default "*"
             The search string we are looking for.
-        starts_with : bool, optional
-           Whether to search engine actions that start with the given search string. Default is False.
-        ends_with : bool, optional
-           Whether to search engine actions that end with the given search string. Default is False.
-        ignore_case : bool, optional
-           Whether to ignore case while searching engine actions. Default is True.
-        start_from : int, optional
-           The index from which to start fetching the engine actions. Default is 0.
-        page_size : int, optional
-           The maximum number of engine actions to fetch in a single request. Default is `0`.
-        output_format: str, optional
-            The format of the output. Default is "JSON".
-        report_spec: str | dict, optional
-            The report specification. Default is "TechType".
-        body: dict | SearchStringRequestBody, optional
-            The request body. Default is None.
+        starts_with : bool, default False
+            Whether to search technology types that start with the given search string.
+        ends_with : bool, default False
+            Whether to search technology types that end with the given search string.
+        ignore_case : bool, default True
+            Whether to ignore case while searching.
+        anchor_domain : str, optional
+            Anchor domain to filter.
+        metadata_element_type_name : str, optional
+            Metadata element type to search for.
+        metadata_element_subtypes : list[str], optional
+            Subtypes to filter.
+        skip_relationships : list[str], optional
+            Relationship types to skip.
+        include_only_relationships : list[str], optional
+            Only include these relationship types.
+        skip_classified_elements : list[str], optional
+            Skip elements with these classifications.
+        include_only_classified_elements : list[str], optional
+            Only include elements with these classifications.
+        graph_query_depth : int, default 3
+            Depth of graph traversal.
+        governance_zone_filter : list[str], optional
+            Governance zones to filter.
+        as_of_time : str, optional
+            As of time for the query.
+        relationship_page_size : int, default 0
+            Page size for relationships.
+        limit_results_by_status : list[str], default ["ACTIVE"]
+            Limit results by status.
+        sequencing_order : str, default "PROPERTY_ASCENDING"
+            Sequencing order.
+        sequencing_property : str, default "qualifiedName"
+            Sequencing property.
+        output_format : str, default "JSON"
+            The desired output format.
+        report_spec : str | dict, default "TechType"
+            The report specification.
+        start_from : int, default 0
+            The index from which to start fetching.
+        page_size : int, default 0
+            The maximum number to fetch.
+        property_names : list[str], optional
+            List of property names to include.
+        body : dict | SearchStringRequestBody, optional
+            The request body.
+        **kwargs : dict, optional
+            Additional parameters.
 
-        Returns:
+        Returns
         -------
-            [dict] | str: List of elements describing the technology - or "no tech found" if not found.
+        list | str
+            List of technology types in the requested format.
 
-        Raises:
+        Raises
         ------
-        PyegeriaInvalidParameterException: If the API response indicates an error (non-200 status code),
-                                   this exception is raised with details from the response content.
-        PyegeriaAPIException: If the API response indicates a server side error.
-        PyegeriaUnauthorizedException:
+        PyegeriaException
+            If there is an error in communication or processing.
 
         Notes
         -----
         For more information see: https://egeria-project.org/concepts/deployed-implementation-type
         """
-
         loop = asyncio.get_event_loop()
-        response = loop.run_until_complete(
-            self.async_find_technology_types_body(
+        return loop.run_until_complete(
+            self._async_find_technology_types_body(
                 search_string=search_string,
                 starts_with=starts_with,
                 ends_with=ends_with,
                 ignore_case=ignore_case,
                 anchor_domain=anchor_domain,
-                metadata_element_type=metadata_element_type,
+                metadata_element_type_name=metadata_element_type_name,
                 metadata_element_subtypes=metadata_element_subtypes,
                 skip_relationships=skip_relationships,
                 include_only_relationships=include_only_relationships,
@@ -4626,7 +4778,6 @@ class AutomatedCuration(ServerClient):
                 graph_query_depth=graph_query_depth,
                 governance_zone_filter=governance_zone_filter,
                 as_of_time=as_of_time,
-                effective_time=effective_time,
                 relationship_page_size=relationship_page_size,
                 limit_results_by_status=limit_results_by_status,
                 sequencing_order=sequencing_order,
@@ -4637,85 +4788,95 @@ class AutomatedCuration(ServerClient):
                 page_size=page_size,
                 property_names=property_names,
                 body=body,
+                **kwargs
             )
         )
-        return response
 
     async def _async_get_all_technology_types(
-            self, start_from: int = 0, page_size: int = 0, output_format: str = "JSON", report_spec: str = "TechType"
+            self,
+            start_from: int = 0,
+            page_size: int = 0,
+            output_format: str = "JSON",
+            report_spec: str = "TechType",
     ) -> list | str:
-        """Get all technology types - async version"""
-        return await self._async_find_technology_types(search_string = "*", start_from = start_from,
-                                                       page_size = page_size, output_format = output_format,
-                                                       report_spec = report_spec)
+        """Retrieve all technology types.
 
-    def get_all_technology_types(
-            self, start_from: int = 0, page_size: int = 0, output_format: str = "JSON", report_spec: str = "TechType"
-    ) -> list | str:
-        """Get all technology types"""
-        return self.find_technology_types(search_string = "*", start_from = start_from, page_size = page_size,
-                                          output_format = output_format, report_spec = report_spec)
-
-    def print_engine_action_summary(self, governance_action: dict):
-        """print_governance_action_summary
-
-        Print all the governance actions with their status, in the server.
+        Async version.
 
         Parameters
         ----------
+        start_from : int, default 0
+            The index from which to start fetching.
+        page_size : int, default 0
+            The maximum number to fetch.
+        output_format : str, default "JSON"
+            The desired output format.
+        report_spec : str, default "TechType"
+            The report specification.
 
         Returns
         -------
+        list | str
+            List of all technology types.
+        """
+        return await self._async_find_technology_types(search_string="*", start_from=start_from,
+                                                       page_size=page_size, output_format=output_format,
+                                                       report_spec=report_spec)
 
-        Raises
-        ------
-        PyegeriaException        """
+    def get_all_technology_types(
+            self,
+            start_from: int = 0,
+            page_size: int = 0,
+            output_format: str = "JSON",
+            report_spec: str = "TechType",
+    ) -> list | str:
+        """Retrieve all technology types.
+
+        Parameters
+        ----------
+        start_from : int, default 0
+            The index from which to start fetching.
+        page_size : int, default 0
+            The maximum number to fetch.
+        output_format : str, default "JSON"
+            The desired output format.
+        report_spec : str, default "TechType"
+            The report specification.
+
+        Returns
+        -------
+        list | str
+            List of all technology types.
+        """
+        return self.find_technology_types(search_string="*", start_from=start_from, page_size=page_size,
+                                          output_format=output_format, report_spec=report_spec)
+
+    def print_engine_action_summary(self, governance_action: dict):
+        """Print a summary of a governance engine action.
+
+        Parameters
+        ----------
+        governance_action : dict
+            The governance action to print a summary for.
+        """
         if governance_action:
             name = governance_action.get("displayName")
             if not name:
                 name = governance_action.get("qualifiedName")
             action_status = governance_action.get("action_status")
-            if governance_action.get("completion_guards"):
-                completion_guards = governance_action.get("completion_guards")
-            else:
-                completion_guards = "\t"
-            if governance_action.get("process_name"):
-                process_name = governance_action.get("process_name")
-            else:
-                process_name = "\t"
-            if governance_action.get("completion_message"):
-                completion_message = governance_action.get("completion_message")
-            else:
-                completion_message = ""
+            completion_guards = governance_action.get("completion_guards", [])
+            process_name = governance_action.get("process_name", "\t")
+            completion_message = governance_action.get("completion_message", "")
+
             print(
-                action_status
-                + "\n\t| "
-                + name
-                + "\t| "
-                + process_name
-                + "\t| "
-                + "%s" % ", ".join(map(str, completion_guards))
-                + "\t| "
-                + completion_message
+                f"{action_status}\n\t| {name}\t| {process_name}\t| "
+                f"{', '.join(map(str, completion_guards))}\t| {completion_message}"
             )
 
     def print_engine_actions(self):
-        """print_governance_actions
-
-        Print all the governance actions with their status, in the server.
-
-        Parameters
-        ----------
-
-        Returns
-        -------
-
-        Raises
-        ------
-        PyegeriaException
-        """
+        """Print all the engine actions."""
         governance_actions = self.get_engine_actions()
-        if governance_actions is not None:
+        if governance_actions is not None and isinstance(governance_actions, list):
             for x in range(len(governance_actions)):
                 self.print_engine_action_summary(governance_actions[x])
 
@@ -4729,61 +4890,81 @@ class AutomatedCuration(ServerClient):
             output_format: str = "JSON", report_spec: str = "Tech-Type-Elements",
             body: Optional[dict | FilterRequestBody] = None,
     ) -> list | str:
-        """Retrieve the elements for the requested deployed implementation type. There are no wildcards allowed
-        in the name. Async version.
+        """Retrieve the elements for the requested deployed implementation type.
 
-        Parameters:
-            output_format ():
-            report_spec ():
-            body ():
+        There are no wildcards allowed in the name. Async version.
+
+        Parameters
         ----------
-        filter_string: str
+        filter_string : str
             The name of the deployed technology implementation type to retrieve elements for.
-                effective_time: datetime, [default=None], optional
-            Effective time of the query. If not specified will default to any effective time. Time format is
-            "YYYY-MM-DDTHH:MM:SS" (ISO 8601)
+        effective_time : str, optional
+            Effective time of the query. If not specified will default to any effective time.
+            Time format is "YYYY-MM-DDTHH:MM:SS" (ISO 8601).
+        start_from : int, default 0
+            The index from which to start fetching the results.
+        page_size : int, default 0
+            The maximum number of results to fetch in a single request. Default is `0`.
+        get_templates : bool, default False
+            Whether to include templates in the results.
+        output_format : str, default "JSON"
+            The desired output format (e.g., "JSON", "DICT").
+        report_spec : str, default "Tech-Type-Elements"
+            The report specification to use for formatting.
+        body : dict | FilterRequestBody, optional
+            The request body. If provided, it overrides other parameters.
 
-        start_from : int, optional
-           The index from which to start fetching the engine actions. Default is 0.
-
-        page_size : int, optional
-           The maximum number of engine actions to fetch in a single request. Default is `0`.
-
-        Returns:
+        Returns
         -------
-            [dict] | str: List of elements describing the technology - or "no tech found" if not found.
+        list | str
+            List of elements describing the technology - or "no tech found" if not found.
 
-        Raises:
+        Raises
         ------
-        PyegeriaInvalidParameterException: If the API response indicates an error (non-200 status code),
-                                   this exception is raised with details from the response content.
-        PyegeriaAPIException: If the API response indicates a server side error.
-        PyegeriaUnauthorizedException:
+        PyegeriaInvalidParameterException
+            If the API response indicates an error (non-200 status code).
+        PyegeriaAPIException
+            If the API response indicates a server side error.
+        PyegeriaUnauthorizedException
+            If the user is not authorized.
 
         Notes
         -----
         For more information see: https://egeria-project.org/concepts/deployed-implementation-type
+
+        Sample JSON Body:
+        ```json
+        {
+          "class": "FilterRequestBody",
+          "filter": "File System Directory",
+          "effectiveTime": "2023-10-27T10:00:00",
+          "skipClassifiedElements": [""],
+          "startFrom": 0,
+          "pageSize": 100
+        }
+        ```
         """
 
         skip_templates = "Template" if not get_templates else ""
         validate_name(filter_string)
 
         url = (
-            f"{self.curation_command_root}/technology-types/elements"
+            f"{self.ref_curation_command_base}/technology-types/elements"
         )
         if body is None:
             body = {
                     "class" : "FilterRequestBody",
                     "filter": filter_string,
-                    "effective_time": effective_time,
+                    "effectiveTime": effective_time,
                     "skipClassifiedElements": [skip_templates],
                     "startFrom": start_from,
                     "pageSize": page_size
                     }
 
         response = await self._async_get_name_request(url, "TechTypeElement", self._generate_tech_type_element_output,
-                                                      filter_string, None, start_from, page_size, output_format,
-                                                      report_spec, body)
+                                                      filter_string=None, start_from=start_from, page_size=page_size, 
+                                                      output_format=output_format,
+                                                      report_spec=report_spec, body=body)
         return response
 
 
@@ -4797,36 +4978,43 @@ class AutomatedCuration(ServerClient):
             output_format: str = "JSON", report_spec: str = "Tech-Type-Elements",
             body: Optional[dict | FilterRequestBody] = None,
     ) -> list | str:
-        """Retrieve the elements for the requested deployed implementation type. There are no wildcards allowed
-        in the name.
+        """Retrieve the elements for the requested deployed implementation type.
 
-        Parameters:
-            output_format ():
-            report_spec ():
-            body ():
+        There are no wildcards allowed in the name.
+
+        Parameters
         ----------
-        filter_string: str
+        filter_string : str
             The name of the deployed technology implementation type to retrieve elements for.
-                effective_time: datetime, [default=None], optional
-            Effective time of the query. If not specified will default to any effective time. Time format is
-            "YYYY-MM-DDTHH:MM:SS" (ISO 8601)
+        effective_time : str, optional
+            Effective time of the query. If not specified will default to any effective time.
+            Time format is "YYYY-MM-DDTHH:MM:SS" (ISO 8601).
+        start_from : int, default 0
+            The index from which to start fetching the results.
+        page_size : int, default 0
+            The maximum number of results to fetch in a single request. Default is `0`.
+        get_templates : bool, default False
+            Whether to include templates in the results.
+        output_format : str, default "JSON"
+            The desired output format (e.g., "JSON", "DICT").
+        report_spec : str, default "Tech-Type-Elements"
+            The report specification to use for formatting.
+        body : dict | FilterRequestBody, optional
+            The request body. If provided, it overrides other parameters.
 
-        start_from : int, optional
-           The index from which to start fetching the engine actions. Default is 0.
-
-        page_size : int, optional
-           The maximum number of engine actions to fetch in a single request. Default is `0`.
-
-        Returns:
+        Returns
         -------
-            [dict] | str: List of elements describing the technology - or "no tech found" if not found.
+        list | str
+            List of elements describing the technology - or "no tech found" if not found.
 
-        Raises:
+        Raises
         ------
-        PyegeriaInvalidParameterException: If the API response indicates an error (non-200 status code),
-                                   this exception is raised with details from the response content.
-        PyegeriaAPIException: If the API response indicates a server side error.
-        PyegeriaUnauthorizedException:
+        PyegeriaInvalidParameterException
+            If the API response indicates an error (non-200 status code).
+        PyegeriaAPIException
+            If the API response indicates a server side error.
+        PyegeriaUnauthorizedException
+            If the user is not authorized.
 
         Notes
         -----
@@ -4835,8 +5023,16 @@ class AutomatedCuration(ServerClient):
 
         loop = asyncio.get_event_loop()
         response = loop.run_until_complete(
-            self._async_get_technology_type_elements(filter_string, effective_time, start_from, page_size, get_templates, output_format,
-                                                     report_spec, body)
+            self._async_get_technology_type_elements(
+                filter_string=filter_string,
+                effective_time=effective_time,
+                start_from=start_from,
+                page_size=page_size,
+                get_templates=get_templates,
+                output_format=output_format,
+                report_spec=report_spec,
+                body=body,
+            )
         )
         return response
 

@@ -185,3 +185,6 @@ dmypy.json
 /.aiassistant/
 .output.txt
 .aider*
+
+# Accidental pip install output files (from `pip install pkg =version` typos)
+/=*

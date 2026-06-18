@@ -84,8 +84,9 @@ def list_related_elements(
         table.add_column("Properties")
         table.add_column("Element Header")
 
+        body = {"class": "ResultsRequestBody", "metadataElementTypeName": om_type} if om_type else None
         elements = c_client.get_related_elements(
-            element_guid, relationship_type, om_type
+            element_guid, relationship_type, body=body
         )
 
         if type(elements) is list:

@@ -368,7 +368,9 @@ class ValidMetadataScenarioTester:
             try:
                 consistent_values = self.client.get_consistent_metadata_values(
                     type_name="Project",
-                    property_name="projectStatus"
+                    property_name="projectStatus",
+                    map_name="default",
+                    preferred_value="ACTIVE"
                 )
                 if isinstance(consistent_values, list):
                     console.print(f"[green]✓[/green] Found {len(consistent_values)} consistent values")

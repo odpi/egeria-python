@@ -1,6 +1,6 @@
 {
   "family": "Collections",
-  "exported": "Jun 1, 2026 at 5:05:21 PM",
+  "exported": "Jun 5, 2026 at 9:54:06 AM",
   "attribute_definitions": {
     "Activity Status": {
       "variable_name": "activity_status",
@@ -2266,10 +2266,12 @@
       "custom_attributes": [],
       "Journal Entry": "If the collection folder  is in another collection, the Parent Relationship Type Name is CollectionMembership."
     },
-    "Create DataHub": {
+    "Create Data Hub": {
       "display_name": "Data Hub",
       "qn_prefix": "DataHub",
-      "alternate_names": [],
+      "alternate_names": [
+        "DataHub"
+      ],
       "family": "Collections",
       "description": "Create a DataHub entity - a collection of data assets that are availble for sharing, as long as the requester satisfies the requirements laid down by the data owner.",
       "verb": "Create",
@@ -2285,10 +2287,12 @@
       "custom_attributes": [],
       "Journal Entry": ""
     },
-    "Create DataSharingRequest": {
+    "Create Data Sharing Request": {
       "display_name": "Data Sharing Request",
       "qn_prefix": "DataSharingRequest",
-      "alternate_names": [],
+      "alternate_names": [
+        "DataSharingRequest"
+      ],
       "family": "Collections",
       "description": "The DataSharingRequest entity describes a request for data sharing. It is used to track the status of the request and gather the details of the request (such as the requested data specification) and the data sharing agreement and related resources.",
       "verb": "Create",

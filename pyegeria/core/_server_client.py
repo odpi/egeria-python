@@ -163,10 +163,11 @@ class ServerClient(BaseServerClient):
             page_size: int = None,
             local_qualifier: str = None,
             organization_name: str = None,
+            time_out: int = None,
     ):
 
         super().__init__(server_name, platform_url, user_id, user_pwd, token,
-                         token_src, api_key, page_size, local_qualifier, organization_name)
+                         token_src, api_key, page_size, local_qualifier, organization_name, time_out)
 
         self.command_root: str = f"{self.platform_url}/servers/{self.server_name}/api/open-metadata/"
         self._search_string_request_adapter = TypeAdapter(SearchStringRequestBody)
@@ -564,18 +565,22 @@ class ServerClient(BaseServerClient):
         )
         return response
 
+    @dynamic_catch
     async def _async_get_elements_by_property_value(
             self,
             property_value: str,
             property_names: list[str],
-            metadata_element_name: Optional[str] = None,
+            metadata_element_type: Optional[str] = None,
             effective_time: Optional[str] = None,
             for_lineage: Optional[bool] = None,
             for_duplicate_processing: Optional[bool] = None,
             start_from: int = 0,
             page_size: int = 0,
+            output_format: str = "JSON",
+            report_spec: str | dict | None = None,
             time_out: int = default_time_out,
-    ) -> list | str:
+            **kwargs
+    ) -> list | dict | str:
         """
         Retrieve elements by a value found in one of the properties specified.  The value must match exactly.
         An open metadata type name may be supplied to restrict the results. Async version.
@@ -588,7 +593,7 @@ class ServerClient(BaseServerClient):
             - property value to be searched.
         property_names: [str]
             - property names to search in.
-        metadata_element_name : str, default = None
+        metadata_element_type : str, default = None
             - open metadata type to be used to restrict the search
         effective_time: str, default = None
             - Time format is "YYYY-MM-DDTHH:MM:SS" (ISO 8601)
@@ -598,9 +603,12 @@ class ServerClient(BaseServerClient):
             - Normally false. Set true when the caller is part of a deduplication function
         start_from: int, default = 0
             - index of the list to start from (0 for start).
-        page_size
+        page_size: int, default = 0
             - maximum number of elements to return.
-
+        output_format: str, default = "JSON"
+            - output type - JSON, MD, MERMAID, REPORT, LIST...
+        report_spec: str, optional = None
+            - Report specification for the returned output
         time_out: int, default = default_time_out
             - http request timeout for this request
 
@@ -617,7 +625,7 @@ class ServerClient(BaseServerClient):
 
         body = {
             "class": "FindPropertyNamesProperties",
-            "metadataElementTypeName": metadata_element_name,
+            "metadataElementTypeName": metadata_element_type,
             "propertyValue": property_value,
             "propertyNames": property_names,
             "effectiveTime": effective_time,
@@ -636,9 +644,18 @@ class ServerClient(BaseServerClient):
         elements = response.json().get("elements", NO_ELEMENTS_FOUND)
         if type(elements) is list:
             if len(elements) == 0:
-                return NO_ELEMENTS_FOUND
+                elements = NO_ELEMENTS_FOUND
+        
+        if elements == NO_ELEMENTS_FOUND:
+            return NO_ELEMENTS_FOUND
+
+        if output_format.upper() != 'JSON':
+            return self._generate_referenceable_output(elements=elements, search_string=property_value,
+                                                       element_type_name=metadata_element_type,
+                                                       output_format=output_format, report_spec=report_spec, **kwargs)
         return elements
 
+    @dynamic_catch
     def get_elements_by_property_value(
             self,
             property_value: str,
@@ -649,8 +666,11 @@ class ServerClient(BaseServerClient):
             for_duplicate_processing: Optional[bool] = None,
             start_from: int = 0,
             page_size: int = 0,
+            output_format: str = "JSON",
+            report_spec: str | dict | None = None,
             time_out: int = default_time_out,
-    ) -> list | str:
+            **kwargs
+    ) -> list | dict | str:
         """
         Retrieve elements by a value found in one of the properties specified.  The value must match exactly.
         An open metadata type name may be supplied to restrict the results.
@@ -675,6 +695,10 @@ class ServerClient(BaseServerClient):
             - index of the list to start from (0 for start).
         page_size: int, default = 0
             - maximum number of elements to return.
+        output_format: str, default = "JSON"
+            - output type - JSON, MD, MERMAID, REPORT, LIST...
+        report_spec: str, optional = None
+            - Report specification for the returned output
         time_out: int, default = default_time_out
             - http request timeout for this request
 
@@ -692,7 +716,7 @@ class ServerClient(BaseServerClient):
         response = loop.run_until_complete(
             self._async_get_elements_by_property_value(property_value, property_names, metadata_element_type,
                                                        effective_time, for_lineage, for_duplicate_processing,
-                                                       start_from, page_size, time_out)
+                                                       start_from, page_size, output_format, report_spec, time_out, **kwargs)
         )
         return response
 
@@ -1457,19 +1481,22 @@ class ServerClient(BaseServerClient):
             self._async_remove_comment_from_element(comment_guid, body, cascade_delete=cascade_delete)
         )
 
+    @dynamic_catch
     async def _async_get_comment_by_guid(
             self,
-            comment_guid: str, element_type: str = "Comment",
-            body: Optional[dict | GetRequestBody] = None,
+            guid: str,
+            graph_query_depth: int = 3,
             output_format: str = "JSON",
-            report_spec: Optional[str | dict] = None
+            report_spec: Optional[str | dict] = None,
+            body: Optional[dict | GetRequestBody] = None,
+            **kwargs
     ) -> dict | str:
         """
-        Return the requested comment.
+        Return the requested comment. Async Version.
 
         Parameters
         ----------
-        comment_guid
+        guid: str
             - unique identifier for the comment object.
         body
             - optional effective time
@@ -1480,36 +1507,35 @@ class ServerClient(BaseServerClient):
 
         Raises
         ------
-        PyegeriaInvalidParameterException
-            one of the parameters is null or invalid or
-        PyegeriaAPIException
-            There is a problem adding the element properties to the metadata repository or
-        PyegeriaUnauthorizedException
-            the requesting user is not authorized to issue this request.
+        PyegeriaException
 
         """
 
-        url = f"{self.command_root}feedback-manager/comments/{comment_guid}/retrieve"
-        response = await self._async_get_guid_request(url, _type=element_type,
+        url = f"{self.command_root}feedback-manager/comments/{guid}/retrieve"
+        response = await self._async_get_guid_request(url, _type="Comment",
                                                       _gen_output=self._generate_comment_output,
+                                                      graph_query_depth=graph_query_depth,
                                                       output_format=output_format, report_spec=report_spec,
-                                                      body=body)
+                                                      body=body, **kwargs)
 
         return response
 
+    @dynamic_catch
     def get_comment_by_guid(
             self,
-            comment_guid: str, element_type: str = "Comment",
-            body: Optional[dict | GetRequestBody] = None,
+            guid: str,
+            graph_query_depth: int = 3,
             output_format: str = "JSON",
-            report_spec: Optional[str | dict] = None
+            report_spec: Optional[str | dict] = None,
+            body: Optional[dict | GetRequestBody] = None,
+            **kwargs
     ) -> dict | str:
         """
         Return the requested comment.
 
         Parameters
         ----------
-        comment_guid
+        guid: str
             - unique identifier for the comment object.
         body
             - optional effective time
@@ -1520,49 +1546,40 @@ class ServerClient(BaseServerClient):
 
         Raises
         ------
-        PyegeriaInvalidParameterException
-            one of the parameters is null or invalid or
-        PyegeriaAPIException
-            There is a problem adding the element properties to the metadata repository or
-        PyegeriaUnauthorizedException
-            The requesting user is not authorized to issue this request.
-
-        Args:
-            element_type ():
-            output_format ():
-            report_spec ():
+        PyegeriaException
         """
         loop = asyncio.get_event_loop()
         response = loop.run_until_complete(
-            self._async_get_comment_by_guid(comment_guid, element_type, body, output_format, report_spec)
+            self._async_get_comment_by_guid(guid, graph_query_depth, output_format, report_spec, body, **kwargs)
         )
         return response
 
+    @dynamic_catch
     async def _async_get_attached_comments(
             self,
             element_guid: str,
-            element_type: str = "Comment",
-            body: dict = {},
+            metadata_element_type_name: str | None = "Comment",
+            graph_query_depth: int = 3,
             start_from: int = 0,
             page_size: int = 0,
             output_format: str = "JSON",
-            report_spec: Optional[str | dict] = None
-
+            report_spec: Optional[str | dict] = None,
+            body: Optional[dict | ResultsRequestBody] = None,
+            **kwargs
     ) -> dict | str:
         """
-        Return the comments attached to an element.
+        Return the comments attached to an element. Async Version.
 
         Parameters
         ----------
-        element_guid
-            - unique identifier for the element that the comments are connected to (maybe a comment too).
+        element_guid: str
+            - unique identifier for the element that the comments are connected to.
         body
             - optional effective time
         start_from
             - index of the list to start from (0 for start)
         page_size
             - maximum number of elements to return.
-
 
         Returns
         -------
@@ -1575,30 +1592,33 @@ class ServerClient(BaseServerClient):
         """
 
         url = f"{self.command_root}feedback-manager/elements/{element_guid}/comments/retrieve"
-        response = await self._async_make_request("POST", url, body)
-        element = response.json().get("elements", NO_ELEMENTS_FOUND)
-        if element == NO_ELEMENTS_FOUND:
-            return NO_ELEMENTS_FOUND
-        if output_format.upper() != 'JSON':  # return a simplified markdown representation
-            return self._generate_comment_output(element, None, output_format, report_spec)
-        return response.json().get("elements", NO_ELEMENTS_FOUND)
+        return await self._async_get_results_body_request(url, _type=metadata_element_type_name,
+                                                         _gen_output=self._generate_comment_output,
+                                                         graph_query_depth=graph_query_depth,
+                                                         start_from=start_from,
+                                                         page_size=page_size, output_format=output_format,
+                                                         report_spec=report_spec,
+                                                         body=body, **kwargs)
 
+    @dynamic_catch
     def get_attached_comments(
             self, element_guid: str,
-            element_type: Optional[str] = None,
-            body: dict = {},
+            metadata_element_type_name: str | None = "Comment",
+            graph_query_depth: int = 3,
             start_from: int = 0,
             page_size: int = 0,
             output_format: str = "JSON",
-            report_spec: Optional[str | dict] = None
+            report_spec: Optional[str | dict] = None,
+            body: Optional[dict | ResultsRequestBody] = None,
+            **kwargs
     ) -> dict | str:
         """
         Return the comments attached to an element.
 
         Parameters
         ----------
-        element_guid
-            - unique identifier for the element that the comments are connected to (maybe a comment too).
+        element_guid: str
+            - unique identifier for the element that the comments are connected to.
         body
             - optional effective time
         start_from
@@ -1612,35 +1632,25 @@ class ServerClient(BaseServerClient):
 
         Raises
         ------
-        PyegeriaInvalidParameterException
-            one of the parameters is null or invalid or
-        PyegeriaAPIException
-            There is a problem adding the element properties to the metadata repository or
-        PyegeriaUnauthorizedException
-            the requesting user is not authorized to issue this request.
-
-        Args:
-            element_type ():
-            output_format ():
-            report_spec ():
+        PyegeriaException
         """
         loop = asyncio.get_event_loop()
         response = loop.run_until_complete(
-            self._async_get_attached_comments(element_guid, element_type, body, start_from, page_size, output_format,
-                                              report_spec)
+            self._async_get_attached_comments(element_guid, metadata_element_type_name, graph_query_depth,
+                                              start_from, page_size, output_format, report_spec, body, **kwargs)
         )
         return response
 
     async def _async_find_comments(
             self,
-            search_string: Optional[str] = None,
+            search_string: str = "*",
             classification_names: Optional[list[str]] = None,
             metadata_element_subtypes: list[str] = ["Comment"],
-            starts_with: Optional[bool] = None,
-            ends_with: Optional[bool] = None,
-            ignore_case: Optional[bool] = None,
+            starts_with: bool = True,
+            ends_with: bool = False,
+            ignore_case: bool = True,
             start_from: int = 0,
-            page_size: int = max_paging_size,
+            page_size: int = 0,
             output_format: str = "JSON",
             report_spec: Optional[str | dict] = None,
             body: Optional[dict | SearchStringRequestBody] = None,
@@ -1751,16 +1761,17 @@ class ServerClient(BaseServerClient):
 
     def find_comments(
             self,
-            search_string: Optional[str] = None,
+            search_string: str = "*",
             classification_names: Optional[list[str]] = None, metadata_element_subtypes: list[str] = ["Comment"],
             starts_with: bool = True,
             ends_with: bool = False,
-            ignore_case: bool = False,
+            ignore_case: bool = True,
             start_from: int = 0,
-            page_size: int = max_paging_size,
+            page_size: int = 0,
             output_format: str = "JSON",
             report_spec: Optional[str | dict] = None,
-            body: Optional[dict | SearchStringRequestBody] = None
+            body: Optional[dict | SearchStringRequestBody] = None,
+            **kwargs
     ) -> dict | str:
         """
         Return the list of comments containing the supplied string. Async Version.
@@ -1804,7 +1815,7 @@ class ServerClient(BaseServerClient):
         loop = asyncio.get_event_loop()
         resp = loop.run_until_complete(
             self._async_find_comments(search_string, classification_names, metadata_element_subtypes, starts_with,
-                                      ends_with, ignore_case, start_from, page_size, output_format, report_spec, body)
+                                      ends_with, ignore_case, start_from, page_size, output_format, report_spec, body, **kwargs)
         )
 
         return resp
@@ -1985,28 +1996,42 @@ class ServerClient(BaseServerClient):
 
 
         """
-        if body is None and element_guid:
-            body = {
-                "class": "NewAttachmentRequestBody",
-                "properties": {
-                    "class": "NoteLogProperties",
-                    "typeName": "NoteLog",
-                    "displayName": display_name,
-                    "qualifiedName": self.make_feedback_qn("NoteLog", element_guid, display_name),
-                    "description": description,
+        if body is None:
+            if element_guid:
+                body = {
+                    "class": "NewAttachmentRequestBody",
+                    "properties": {
+                        "class": "NoteLogProperties",
+                        "typeName": "NoteLog",
+                        "displayName": display_name,
+                        "qualifiedName": self.make_feedback_qn("NoteLog", element_guid, display_name),
+                        "description": description,
+                    }
                 }
-            }
-        elif body is None and not element_guid:
-            body = {
-                "class": "NewAElementRequestBody",
-                "properties": {
-                    "class": "NoteLogProperties",
-                    "typeName": "NoteLog",
-                    "displayName": display_name,
-                    "qualifiedName": self.make_feedback_qn("NoteLog", element_guid, display_name),
-                    "description": description,
+            else:
+                body = {
+                    "class": "NewElementRequestBody",
+                    "properties": {
+                        "class": "NoteLogProperties",
+                        "typeName": "NoteLog",
+                        "displayName": display_name,
+                        "qualifiedName": self.make_feedback_qn("NoteLog", None, display_name),
+                        "description": description,
+                    }
                 }
-            }
+
+        elif body is not None and body.get("class") not in ["NewAttachmentRequestBody", "NewElementRequestBody"]:
+            # Wrap properties in a request body if they aren't already
+            if element_guid:
+                body = {
+                    "class": "NewAttachmentRequestBody",
+                    "properties": body
+                }
+            else:
+                body = {
+                    "class": "NewElementRequestBody",
+                    "properties": body
+                }
 
         elif body is None and display_name is None:
             context = {"issue": "Invalid display name and body not provided"}
@@ -2014,10 +2039,10 @@ class ServerClient(BaseServerClient):
 
         if element_guid:
             url = f"{self.command_root}feedback-manager/elements/{element_guid}/note-logs"
+            return await self._async_create_attachment_body_request(url, ["NoteLogProperties"], body)
         else:
-            url = f"{self.command_root}feedback-manager/note-logs"
-        response = await self._async_make_request("POST", url, body_slimmer(body))
-        return response.json()
+            url = f"{self.command_root}feedback-manager/assets"
+            return await self._async_create_element_body_request(url, ["NoteLogProperties"], body)
 
     @dynamic_catch
     def create_note_log(
@@ -2188,8 +2213,8 @@ class ServerClient(BaseServerClient):
             context = {"issue": "Invalid display name and body not provided"}
             raise PyegeriaInvalidParameterException(context=context)
 
-        url = f"{self.command_root}feedback-manager/note-logs/note-logs/{note_log_guid}"
-        await self._async_make_request("POST", url, body_slimmer(body))
+        url = f"{self.command_root}feedback-manager/note-logs/{note_log_guid}"
+        await self._async_update_element_body_request(url, ["NoteLogProperties"], body)
 
     @dynamic_catch
     def update_note_log(
@@ -2249,7 +2274,7 @@ class ServerClient(BaseServerClient):
         """
         loop = asyncio.get_event_loop()
         response = loop.run_until_complete(
-            self.update_note_log(note_log_guid, display_name, description, body, merge_update)
+            self._async_update_note_log(note_log_guid, display_name, description, body, merge_update)
         )
         return response
 
@@ -2321,14 +2346,14 @@ class ServerClient(BaseServerClient):
     @dynamic_catch
     async def _async_find_note_logs(
             self,
-            search_string: str,
+            search_string: str = "*",
             classification_names: Optional[list[str]] = None,
             metadata_element_subtypes: list[str] = ["NoteLog"],
-            starts_with: Optional[bool] = None,
-            ends_with: Optional[bool] = None,
-            ignore_case: Optional[bool] = None,
+            starts_with: bool = True,
+            ends_with: bool = False,
+            ignore_case: bool = True,
             start_from: int = 0,
-            page_size: int = max_paging_size,
+            page_size: int = 0,
             output_format: str = "JSON",
             report_spec: Optional[str | dict] = None,
             body: Optional[dict | SearchStringRequestBody] = None,
@@ -2458,15 +2483,16 @@ class ServerClient(BaseServerClient):
     @dynamic_catch
     def find_note_logs(
             self,
-            search_string: str,
+            search_string: str = "*",
             classification_names: Optional[list[str]] = None, metadata_element_subtypes: list[str] = ["NoteLog"],
             starts_with: bool = True,
             ends_with: bool = False,
-            ignore_case: bool = False,
+            ignore_case: bool = True,
             start_from: int = 0,
-            page_size: int = max_paging_size,
+            page_size: int = 0,
             output_format: str = "JSON", report_spec: Optional[str | dict] = None,
-            body: Optional[dict | SearchStringRequestBody] = None
+            body: Optional[dict | SearchStringRequestBody] = None,
+            **kwargs
     ) -> dict | str:
         """
         Return the list of comments containing the supplied string. Async Version.
@@ -2510,28 +2536,31 @@ class ServerClient(BaseServerClient):
         loop = asyncio.get_event_loop()
         resp = loop.run_until_complete(
             self._async_find_note_logs(search_string, classification_names, metadata_element_subtypes, starts_with,
-                                       ends_with, ignore_case, start_from, page_size, output_format, report_spec, body)
+                                       ends_with, ignore_case, start_from, page_size, output_format, report_spec, body, **kwargs)
         )
 
         return resp
 
     @dynamic_catch
     async def _async_get_note_logs_by_name(
-            self, filter_string: str,
-            element_type: str = "NoteLog",
-            body: Optional[dict | FilterRequestBody] = None,
+            self, name: str = "*",
+            metadata_element_type_name: str | None = "NoteLog",
+            metadata_element_subtypes: list[str] | None = None,
+            graph_query_depth: int = 3,
+            start_from: int = 0, page_size: int = 0,
             output_format: str = "JSON",
             report_spec: Optional[str | dict] = None,
-            start_from: int = 0, page_size: int = 0
+            body: Optional[dict | FilterRequestBody] = None,
+            **kwargs
     ) -> dict | str:
         """
         Retrieve the list of note log metadata elements with an exact matching qualifiedName or name. Asymc Version.
 
         Parameters
         ----------
-        filter_string : str
+        name : str
             - the name to filter on.
-        element_type: str
+        metadata_element_type_name: str
             - NoteLog element type.
         body: dict | FilterRequestBody
             - optional effective time. If present, values supercede other parameters.
@@ -2547,30 +2576,39 @@ class ServerClient(BaseServerClient):
         """
 
         url = f"{self.command_root}feedback-manager/note-logs/by-name"
-        response = await self._async_get_name_request(url, _type=element_type,
-                                                      _gen_output=self._generate_feedback_output, start_from=0,
-                                                      page_size=0, output_format="JSON", report_spec=report_spec,
-                                                      body=body, filter_string=filter_string)
+        response = await self._async_get_name_request(url, _type="NoteLog",
+                                                      _gen_output=self._generate_feedback_output,
+                                                      filter_string=name,
+                                                      metadata_element_type_name=metadata_element_type_name,
+                                                      metadata_element_subtypes=metadata_element_subtypes,
+                                                      graph_query_depth=graph_query_depth,
+                                                      start_from=start_from,
+                                                      page_size=page_size, output_format=output_format,
+                                                      report_spec=report_spec,
+                                                      body=body, **kwargs)
 
         return response
 
     @dynamic_catch
     def get_note_logs_by_name(
-            self, filter_string: str,
-            element_type: str = "NoteLog",
-            body: Optional[dict | FilterRequestBody] = None,
+            self, name: str = "*",
+            metadata_element_type_name: str | None = "NoteLog",
+            metadata_element_subtypes: list[str] | None = None,
+            graph_query_depth: int = 3,
+            start_from: int = 0, page_size: int = 0,
             output_format: str = "JSON",
             report_spec: Optional[str | dict] = None,
-            start_from: int = 0, page_size: int = 0
+            body: Optional[dict | FilterRequestBody] = None,
+            **kwargs
     ) -> dict | str:
         """
         Retrieve the list of note log metadata elements with an exact matching qualifiedName or name.
 
         Parameters
         ----------
-        filter_string : str
+        name : str
             - the name to filter on.
-        element_type: str
+        metadata_element_type_name: str
             - NoteLog element type.
         body: dict | FilterRequestBody
             - optional effective time. If present, values supercede other parameters.
@@ -2586,8 +2624,9 @@ class ServerClient(BaseServerClient):
         """
         loop = asyncio.get_event_loop()
         response = loop.run_until_complete(
-            self._async_get_note_logs_by_name(filter, element_type, body, output_format, report_spec, start_from,
-                                             page_size)
+            self._async_get_note_logs_by_name(name, metadata_element_type_name, metadata_element_subtypes,
+                                             graph_query_depth, start_from, page_size, output_format,
+                                             report_spec, body, **kwargs)
         )
         return response
 
@@ -2595,21 +2634,22 @@ class ServerClient(BaseServerClient):
     async def _async_get_attached_note_logs(
             self,
             element_guid: str,
-            element_type: str = "NoteLog",
-            body: dict = None,
+            metadata_element_type_name: str | None = "NoteLog",
+            graph_query_depth: int = 3,
             start_from: int = 0,
             page_size: int = 0,
             output_format: str = "JSON",
-            report_spec: Optional[str | dict] = None
-
+            report_spec: Optional[str | dict] = None,
+            body: Optional[dict | ResultsRequestBody] = None,
+            **kwargs
     ) -> dict | str:
         """
         Return the note logs attached to an element. Async version.
 
         Parameters
         ----------
-        element_guid
-            - a unique identifier for the element that the note logs are connected to (maybe a comment too).
+        element_guid: str
+            - a unique identifier for the element that the note logs are connected to.
         body
             - optional effective time
         start_from
@@ -2617,10 +2657,9 @@ class ServerClient(BaseServerClient):
         page_size
             - maximum number of elements to return.
 
-
         Returns
         -------
-        list of comments
+        list of note logs
 
         Raises
         ------
@@ -2629,31 +2668,33 @@ class ServerClient(BaseServerClient):
         """
 
         url = f"{self.command_root}feedback-manager/elements/{element_guid}/note-logs/retrieve"
-        response = await self._async_make_request("POST", url, body)
-        element = response.json().get("elements", NO_ELEMENTS_FOUND)
-        if element == NO_ELEMENTS_FOUND:
-            return NO_ELEMENTS_FOUND
-        if output_format.upper() != 'JSON':  # return a simplified markdown representation
-            return self._generate_feedback_output(element, None, output_format, report_spec)
-        return response.json().get("elements", NO_ELEMENTS_FOUND)
+        return await self._async_get_results_body_request(url, _type=metadata_element_type_name,
+                                                         _gen_output=self._generate_feedback_output,
+                                                         graph_query_depth=graph_query_depth,
+                                                         start_from=start_from,
+                                                         page_size=page_size, output_format=output_format,
+                                                         report_spec=report_spec,
+                                                         body=body, **kwargs)
 
     @dynamic_catch
     def get_attached_note_logs(
             self, element_guid: str,
-            element_type: Optional[str] = None,
-            body: dict = None,
+            metadata_element_type_name: str | None = "NoteLog",
+            graph_query_depth: int = 3,
             start_from: int = 0,
             page_size: int = 0,
             output_format: str = "JSON",
-            report_spec: Optional[str | dict] = None
+            report_spec: Optional[str | dict] = None,
+            body: Optional[dict | ResultsRequestBody] = None,
+            **kwargs
     ) -> dict | str:
         """
         Return the Note Logs attached to an element.
 
         Parameters
         ----------
-        element_guid
-            - a unique identifier for the element that the note logs are connected to (maybe a comment too).
+        element_guid: str
+            - a unique identifier for the element that the note logs are connected to.
         body
             - optional effective time
         start_from
@@ -2663,26 +2704,16 @@ class ServerClient(BaseServerClient):
 
         Returns
         -------
-        list of comments
+        list of note logs
 
         Raises
         ------
-        PyegeriaInvalidParameterException
-            one of the parameters is null or invalid or
-        PyegeriaAPIException
-            There is a problem adding the element properties to the metadata repository or
-        PyegeriaUnauthorizedException
-            the requesting user is not authorized to issue this request.
-
-        Args:
-            element_type ():
-            output_format ():
-            report_spec ():
+        PyegeriaException
         """
         loop = asyncio.get_event_loop()
         response = loop.run_until_complete(
-            self._async_get_attached_comments(element_guid, element_type, body, start_from, page_size, output_format,
-                                              report_spec)
+            self._async_get_attached_note_logs(element_guid, metadata_element_type_name, graph_query_depth,
+                                               start_from, page_size, output_format, report_spec, body, **kwargs)
         )
         return response
 
@@ -2754,7 +2785,7 @@ class ServerClient(BaseServerClient):
 
         """
 
-        if body is None and display_name:
+        if body is None:
             body = {
                 "class": "NewElementRequestBody",
                 "anchorGUID": associated_element if associated_element else note_log_guid,
@@ -2773,22 +2804,37 @@ class ServerClient(BaseServerClient):
                 "forDuplicateProcessing": False
             }
 
+        elif body is not None and body.get("class") != "NewElementRequestBody":
+            # Wrap properties in a request body if they aren't already
+            body = {
+                "class": "NewElementRequestBody",
+                "anchorGUID": associated_element if associated_element else note_log_guid,
+                "isOwnAnchor": False,
+                "parentGUID": note_log_guid,
+                "parentRelationshipTypeName": "AttachedNoteLogEntry",
+                "parentAtEnd1": True,
+                "properties": body,
+                "forLineage": False,
+                "forDuplicateProcessing": False
+            }
+
         elif body is None and display_name is None:
             context = {"issue": "Invalid display name and body not provided"}
             raise PyegeriaInvalidParameterException(context=context)
 
         url = f"{self.command_root}feedback-manager/assets"
-        response = await self._async_create_element_body_request(url, ['Notification'], body)
-        return response
+        return await self._async_create_element_body_request(url, ['NotificationProperties'], body)
 
     @dynamic_catch
     def create_note(
-            self, note_log_guid:
-            str, display_name: Optional[str] = None, description: Optional[str] = None,
+            self, note_log_guid: str,
+            display_name: Optional[str] = None,
+            description: Optional[str] = None,
+            associated_element: Optional[str] = None,
             body: Optional[dict | NewElementRequestBody] = None) -> str:
         """
         Creates a new note for a note log and returns the unique identifier for it.
-    
+
         Parameters
         ----------
         note_log_guid
@@ -2797,20 +2843,22 @@ class ServerClient(BaseServerClient):
             - optional display name for the note
         description
             - optional description for the note
+        associated_element: str, default is None
+            - guid of the element to associate with the note - if provided, the note will be anchored to this element.
         body
             - optional body for the note
-    
+
         Returns
         -------
         Guid for the note
-    
+
         Raises
         ------
         PyegeriaException
-    
+
         Notes
         _____
-    
+
         Sample body (a note is an asset)
         {
           "class" : "NewElementRequestBody",
@@ -2846,11 +2894,11 @@ class ServerClient(BaseServerClient):
           "forLineage" : false,
           "forDuplicateProcessing" : false
         }
-    
+
         """
         loop = asyncio.get_event_loop()
         response = loop.run_until_complete(
-            self._async_create_note(note_log_guid, display_name, body)
+            self._async_create_note(note_log_guid, display_name, description, associated_element, body)
         )
         return response
 
@@ -2947,7 +2995,7 @@ class ServerClient(BaseServerClient):
                     raise PyegeriaException(error_code = PyegeriaErrorCode.VALIDATION_ERROR, context = context)
 
             note_log = await self._async_create_note_log(element_guid = element_guid, display_name = note_log_display_name)
-            note_log_guid = note_log["guid"]
+            note_log_guid = note_log
 
         # Create the Journal Entry (Note)
         if journal_entry_display_name is None:
@@ -3261,9 +3309,9 @@ class ServerClient(BaseServerClient):
     async def _async_find_notes(
             self, search_string: str = "*",
             starts_with: bool = True, ends_with: bool = False,
-            ignore_case: bool = False,
+            ignore_case: bool = True,
             anchor_domain: Optional[str] = None,
-            metadata_element_type: Optional[str] = None,
+            metadata_element_type: Optional[str] = "Action",
             metadata_element_subtypes: Optional[list[str]] = None,
             skip_relationships: Optional[list[str]] = None,
             include_only_relationships: Optional[list[str]] = None,
@@ -3277,7 +3325,7 @@ class ServerClient(BaseServerClient):
             sequencing_property: Optional[str] = None,
             output_format: str = "JSON",
             report_spec: str | dict = None,
-            start_from: int = 0, page_size: int = 100,
+            start_from: int = 0, page_size: int = 0,
             property_names: Optional[list[str]] = None,
             body: Optional[dict | SearchStringRequestBody] = None,
             **kwargs
@@ -3407,29 +3455,30 @@ class ServerClient(BaseServerClient):
         # Filter out None values, but keep search_string even if None (it's required)
         params = {k: v for k, v in params.items() if v is not None or k == 'search_string'}
         
-        response = await self._async_find_request(url, _type="NoteLog", _gen_output=self._generate_feedback_output,
+        response = await self._async_find_request(url, _type=metadata_element_type or "Action", _gen_output=self._generate_feedback_output,
                                                   **params)
         return response
 
     @dynamic_catch
     def find_notes(
-            self, search_string: Optional[str] = None,
+            self, search_string: str = "*",
             body: Optional[dict | SearchStringRequestBody] = None,
             starts_with: bool = True,
             ends_with: bool = False,
-            ignore_case: bool = False,
+            ignore_case: bool = True,
             start_from: int = 0,
             page_size: int = 0,
             output_format: str = "JSON",
-            report_spec: str = None
+            report_spec: str | dict = None,
+            **kwargs
     ) -> dict | str:
         """
         Retrieve the list of note metadata elements that contain the search string.
 
         Parameters
         ----------
-        search_string: str, optional = None
-            - optional search string to search for. If none, all elements are returned.
+        search_string: str
+            - optional search string to search for. If "*", all elements are returned.
         body
             - search string and effective time.
 
@@ -3442,7 +3491,7 @@ class ServerClient(BaseServerClient):
         start_from
             - Index of the list to start from (0 for start).
         page_size
-            -Maximum number of elements to return.
+            - Maximum number of elements to return.
 
         Returns
         -------
@@ -3451,70 +3500,78 @@ class ServerClient(BaseServerClient):
         Raises
         ------
         PyegeriaException
-
-        Args:
-            output_format ():
-            report_spec ():
-
-
         """
         loop = asyncio.get_event_loop()
         response = loop.run_until_complete(
-            self._async_find_notes(search_string, starts_with, ends_with, ignore_case, output_format=output_format,
-                                   report_spec=report_spec, start_from=start_from, page_size=page_size, body=body)
+            self._async_find_notes(search_string=search_string, body=body, starts_with=starts_with,
+                                   ends_with=ends_with, ignore_case=ignore_case, start_from=start_from,
+                                   page_size=page_size, output_format=output_format,
+                                   report_spec=report_spec, **kwargs)
         )
         return response
 
     @dynamic_catch
     async def _async_get_note_by_guid(
             self,
-            note_guid: str,
-            body: Optional[dict | GetRequestBody] = None,
+            guid: str,
+            metadata_element_type_name: str | None = "Action",
+            graph_query_depth: int = 3,
             output_format: str = "JSON",
-            report_spec: Optional[str] = None,
+            report_spec: Optional[str | dict] = None,
+            body: Optional[dict | GetRequestBody] = None,
+            **kwargs
     ) -> dict | str:
         """
-        Retrieve the note metadata element with the supplied unique identifier.
+        Return the requested note. Async Version.
 
         Parameters
         ----------
-        note_guid
-             - unique identifier of the requested metadata element
-        body: dict | GetRequestBody
-            - optional details of the request.
-        O=output_format: str, default = "JSON"
-            - output type - JSON, MD, MERMAID, REPORT, LIST...
-        report_spec: str, optional = None
-            - Report specification for the returned output
-         Returns
-         -------
-         matching metadata element
+        guid: str
+            - unique identifier for the note object.
+        metadata_element_type_name : str, optional
+            - type name for the note object (default is "Action").
+        body
+            - optional effective time
 
-         Raises
-         ------
-         PyegeriaException
+        Returns
+        -------
+        note properties
+
+        Raises
+        ------
+        PyegeriaException
+
         """
 
-        url = f"{self.command_root}feedback-manager/assets/{note_guid}/retrieve"
-        response = await self._async_get_guid_request(url, "Notification", self._generate_feedback_output,
-                                                      output_format, report_spec, body)
+        url = f"{self.command_root}feedback-manager/assets/{guid}/retrieve"
+        response = await self._async_get_guid_request(url, _type=metadata_element_type_name,
+                                                      _gen_output=self._generate_feedback_output,
+                                                      graph_query_depth=graph_query_depth,
+                                                      output_format=output_format, report_spec=report_spec,
+                                                      body=body, **kwargs)
+
         return response
 
     @dynamic_catch
     def get_note_by_guid(
             self,
-            note_guid: str,
-            body: Optional[dict | GetRequestBody] = None,
+            guid: str,
+            metadata_element_type_name: str | None = "Action",
+            graph_query_depth: int = 3,
             output_format: str = "JSON",
-            report_spec: Optional[str] = None,
+            report_spec: Optional[str | dict] = None,
+            body: Optional[dict | GetRequestBody] = None,
+            **kwargs
     ) -> dict | str:
         """
         Retrieve the note metadata element with the supplied unique identifier.
 
         Parameters
         ----------
-        note_guid
+        guid: str
              - unique identifier of the requested metadata element
+        metadata_element_type_name : str, optional
+            - type name for the note object (default is "Action").
         body: dict | GetRequestBody
             - optional details of the request.
         output_format: str, default = "JSON"
@@ -3531,7 +3588,7 @@ class ServerClient(BaseServerClient):
         """
         loop = asyncio.get_event_loop()
         response = loop.run_until_complete(
-            self._async_get_note_by_guid(note_guid, body, output_format, report_spec)
+            self._async_get_note_by_guid(guid, metadata_element_type_name, graph_query_depth, output_format, report_spec, body, **kwargs)
         )
         return response
 
@@ -3539,61 +3596,74 @@ class ServerClient(BaseServerClient):
     async def _async_get_notes_for_note_log(
             self,
             note_log_guid: str,
-            body: Optional[dict | ResultsRequestBody] = None,
+            metadata_element_type_name: str | None = "Action",
+            graph_query_depth: int = 3,
             start_from: int = 0, page_size: int = 0,
             output_format: str = "JSON",
-            report_spec: Optional[str] = None,
+            report_spec: Optional[str | dict] = None,
+            body: Optional[dict | ResultsRequestBody] = None,
+            **kwargs
     ) -> dict | str:
         """
-        Retrieve the notes for the note_name.
+        Retrieve the notes for the note_log. Async Version.
 
         Parameters
         ----------
-        note_log_guid
+        note_log_guid: str
              - id of the note log to retrieve notes for.
         body: dict | ResultsRequestBody
             - optional details of the request.
-        O=output_format: str, default = "JSON"
+        output_format: str, default = "JSON"
             - output type - JSON, MD, MERMAID, REPORT, LIST...
         report_spec: str, optional = None
             - Report specification for the returned output
-         Returns
-         -------
-         matching metadata element
 
-         Raises
-         ------
-         PyegeriaException
+        Returns
+        -------
+        matching metadata element
+
+        Raises
+        ------
+        PyegeriaException
 
         """
 
-        url = f"{self.command_root}feedback-manager/note-logs/{note_log_guid}/retrieve"
-        response = await self._async_get_results_body_request(url, "Notification", self._generate_feedback_output,
-                                                              0, 0, output_format, report_spec, body)
+        url = f"{self.command_root}feedback-manager/note-logs/{note_log_guid}/notes/retrieve"
+        response = await self._async_get_results_body_request(url, _type=metadata_element_type_name,
+                                                             _gen_output=self._generate_feedback_output,
+                                                             graph_query_depth=graph_query_depth,
+                                                             start_from=start_from,
+                                                             page_size=page_size, output_format=output_format,
+                                                             report_spec=report_spec,
+                                                             body=body, **kwargs)
         return response
 
     @dynamic_catch
     def get_notes_for_note_log(
             self,
             note_log_guid: str,
-            body: Optional[dict | ResultsRequestBody] = None,
+            metadata_element_type_name: str | None = "Action",
+            graph_query_depth: int = 3,
             start_from: int = 0, page_size: int = 0,
             output_format: str = "JSON",
-            report_spec: Optional[str] = None,
+            report_spec: Optional[str | dict] = None,
+            body: Optional[dict | ResultsRequestBody] = None,
+            **kwargs
     ) -> dict | str:
         """
-         Retrieve the notes for the note_name.
+         Retrieve the notes for the note_log.
 
          Parameters
          ----------
-         note_log_guid
+         note_log_guid: str
               - note_log id to find notes for.
          body: dict | ResultsRequestBody
              - optional details of the request.
-         O=output_format: str, default = "JSON"
+         output_format: str, default = "JSON"
              - output type - JSON, MD, MERMAID, REPORT, LIST...
          report_spec: str, optional = None
              - Report specification for the returned output
+
           Returns
           -------
           matching metadata element
@@ -3605,8 +3675,8 @@ class ServerClient(BaseServerClient):
          """
         loop = asyncio.get_event_loop()
         response = loop.run_until_complete(
-            self._async_get_notes_for_note_log(note_log_guid, body, start_from, page_size,
-                                               output_format, report_spec)
+            self._async_get_notes_for_note_log(note_log_guid, metadata_element_type_name, graph_query_depth,
+                                              start_from, page_size, output_format, report_spec, body, **kwargs)
         )
         return response
 
@@ -3845,10 +3915,43 @@ class ServerClient(BaseServerClient):
     @dynamic_catch
     async def _async_get_tag_by_guid(
             self,
-            tag_guid: str,
+            guid: str,
+            graph_query_depth: int = 3,
+            output_format: str = "JSON",
+            report_spec: Optional[str | dict] = None,
             body: Optional[dict | GetRequestBody] = None,
-            output_format: str = "json",
-            report_spec: Optional[str] = None) -> dict | str:
+            **kwargs
+    ) -> dict | str:
+        """
+        Return the informal tag for the supplied unique identifier (guid). Async Version.
+
+        Parameters
+        ----------
+        guid: str
+            - unique identifier of the meaning.
+        body: dict | GetRequestBody, Optional
+            - details of the request.
+        output_format: str, Optional, default = "JSON"
+            - format of the response
+        report_spec: str, Optional
+            - specification for the report
+
+        Returns
+        -------
+        list of tag objects
+
+        Raises
+        ------
+        PyegeriaException
+        """
+
+        url = f"{self.command_root}feedback-manager/tags/{guid}/retrieve"
+
+        response = await self._async_get_guid_request(url, "InformalTag", self._generate_feedback_output,
+                                                      graph_query_depth=graph_query_depth,
+                                                      output_format=output_format, report_spec=report_spec,
+                                                      body=body, **kwargs)
+        return response
         """
         Return the informal tag for the supplied unique identifier (tag_guid).
 
@@ -3887,55 +3990,61 @@ class ServerClient(BaseServerClient):
     @dynamic_catch
     def get_tag_by_guid(
             self,
-            tag_guid: str,
+            guid: str,
+            graph_query_depth: int = 3,
+            output_format: str = "JSON",
+            report_spec: Optional[str | dict] = None,
             body: Optional[dict | GetRequestBody] = None,
-            output_format: str = "json",
-            report_spec: Optional[str] = None,
+            **kwargs
     ) -> dict | str:
         """
-                Return the informal tag for the supplied unique identifier (tag_guid).
+        Return the informal tag for the supplied unique identifier (guid).
 
-                Parameters
-                ----------
-                tag_guid
-                    - unique identifier of the meaning.
-                body: dict | GetRequestBody, Optional
-                    - details of the request.
-                output_format: str, Optional, default = "JSON"
-                    - format of the response
-                report_spec: str, Optional
-                    - specification for the report
+        Parameters
+        ----------
+        guid: str
+            - unique identifier of the meaning.
+        body: dict | GetRequestBody, Optional
+            - details of the request.
+        output_format: str, Optional, default = "JSON"
+            - format of the response
+        report_spec: str, Optional
+            - specification for the report
 
-                Returns
-                -------
-                list of tag objects
+        Returns
+        -------
+        list of tag objects
 
-                Raises
-                ------
-                PyegeriaException
-            """
+        Raises
+        ------
+        PyegeriaException
+        """
         loop = asyncio.get_event_loop()
         response = loop.run_until_complete(
-            self._async_get_tag_by_guid(tag_guid, body, output_format, report_spec)
+            self._async_get_tag_by_guid(guid, graph_query_depth, output_format, report_spec, body, **kwargs)
         )
         return response
 
     @dynamic_catch
     async def _async_get_tags_by_name(
             self,
-            tag_name: str,
-            body: Optional[dict | FilterRequestBody] = None,
+            name: str = "*",
+            metadata_element_type_name: str | None = "InformalTag",
+            metadata_element_subtypes: list[str] | None = None,
+            graph_query_depth: int = 3,
             start_from: int = 0,
             page_size: int = 0,
-            output_format: str = "json",
-            report_spec: Optional[str] = None,
+            output_format: str = "JSON",
+            report_spec: Optional[str | dict] = None,
+            body: Optional[dict | FilterRequestBody] = None,
+            **kwargs
     ) -> dict | str:
         """
         Return the tags exactly matching the supplied name. Async Version.
 
         Parameters
         ----------
-        tag_name: str
+        name: str
             - name of the informal tag to filter on.
         body
             - name of tag.
@@ -3957,28 +4066,36 @@ class ServerClient(BaseServerClient):
 
         response = await self._async_get_name_request(url, _type="InformalTag",
                                                       _gen_output=self._generate_feedback_output,
-                                                      filter_string=tag_name, start_from=start_from,
+                                                      filter_string=name,
+                                                      metadata_element_type_name=metadata_element_type_name,
+                                                      metadata_element_subtypes=metadata_element_subtypes,
+                                                      graph_query_depth=graph_query_depth,
+                                                      start_from=start_from,
                                                       page_size=page_size, output_format=output_format,
                                                       report_spec=report_spec,
-                                                      body=body)
+                                                      body=body, **kwargs)
         return response
 
     @dynamic_catch
     def get_tags_by_name(
             self,
-            tag_name: str,
-            body: Optional[dict | FilterRequestBody] = None,
+            name: str = "*",
+            metadata_element_type_name: str | None = "InformalTag",
+            metadata_element_subtypes: list[str] | None = None,
+            graph_query_depth: int = 3,
             start_from: int = 0,
             page_size: int = 0,
-            output_format: str = "json",
-            report_spec: Optional[str] = None,
+            output_format: str = "JSON",
+            report_spec: Optional[str | dict] = None,
+            body: Optional[dict | FilterRequestBody] = None,
+            **kwargs
     ) -> dict | str:
         """
         Return the tags exactly matching the supplied name.
 
         Parameters
         ----------
-        tag_name: str
+        name: str
             - name of the informal tag to filter on.
         body
             - name of tag.
@@ -3997,27 +4114,23 @@ class ServerClient(BaseServerClient):
         """
         loop = asyncio.get_event_loop()
         response = loop.run_until_complete(
-            self._async_get_tags_by_name(
-                tag_name, body,
-                start_from,
-                page_size,
-                output_format,
-                report_spec,
-            )
+            self._async_get_tags_by_name(name, metadata_element_type_name, metadata_element_subtypes,
+                                         graph_query_depth, start_from, page_size, output_format,
+                                         report_spec, body, **kwargs)
         )
         return response
 
     @dynamic_catch
     async def _async_find_tags(
             self,
-            search_string: Optional[str] = None,
+            search_string: str = "*",
             body: Optional[dict | SearchStringRequestBody] = None,
             starts_with: bool = True,
             ends_with: bool = False,
-            ignore_case: bool = False,
+            ignore_case: bool = True,
             start_from: int = 0,
-            page_size: int = max_paging_size,
-            output_format: str = "json",
+            page_size: int = 0,
+            output_format: str = "JSON",
             report_spec: Optional[str] = None,
             **kwargs
     ) -> dict | str:
@@ -4124,19 +4237,19 @@ class ServerClient(BaseServerClient):
     @dynamic_catch
     def find_tags(
             self,
-            search_string: Optional[str] = None,
+            search_string: str = "*",
             body: Optional[dict | SearchStringRequestBody] = None,
             starts_with: bool = True,
             ends_with: bool = False,
-            ignore_case: bool = False,
+            ignore_case: bool = True,
             start_from: int = 0,
-            page_size: int = max_paging_size, output_format: str = "json", report_spec: Optional[str] = None,
+            page_size: int = 0,
+            output_format: str = "JSON",
+            report_spec: Optional[str | dict] = None,
+            **kwargs
     ) -> dict | str:
         """
-        Return the list of informal tags containing the supplied string in their name or description. The search string
-        is located in the request body and is interpreted as a plain string.  The request parameters,
-        startsWith, endsWith and ignoreCase can be used to allow a fuzzy search.  The request body also supports the
-        specification of an effective time to restrict the search to element that are/were effective at a particular time.
+        Return the list of informal tags containing the supplied string.
 
         Parameters
         ----------
@@ -4162,25 +4275,26 @@ class ServerClient(BaseServerClient):
         Raises
         ------
         PyegeriaException
-
-"""
+        """
         loop = asyncio.get_event_loop()
         response = loop.run_until_complete(
             self._async_find_tags(search_string, body, starts_with, ends_with, ignore_case,
-                                  start_from, page_size, output_format, report_spec)
+                                  start_from, page_size, output_format, report_spec, **kwargs)
         )
         return response
 
     async def _async_find_my_tags(
             self,
-            search_string: Optional[str] = None,
+            search_string: str = "*",
             body: Optional[dict | SearchStringRequestBody] = None,
-            starts_with: Optional[bool] = None,
-            ends_with: Optional[bool] = None,
-            ignore_case: Optional[bool] = None,
+            starts_with: bool = True,
+            ends_with: bool = False,
+            ignore_case: bool = True,
             start_from: int = 0,
-            page_size: int = max_paging_size,
-
+            page_size: int = 0,
+            output_format: str = "JSON",
+            report_spec: Optional[str | dict] = None,
+            **kwargs
     ) -> dict | str:
         """
         Return the list of the calling user's private tags containing the supplied string in either the name or description.
@@ -4188,9 +4302,9 @@ class ServerClient(BaseServerClient):
         Parameters
         ----------
         search_string: str
-        - string to search for.
+            - string to search for.
         body: dict | SearchStringRequestBody
-        - details of the request. Supersedes other parameters if present.
+            - details of the request. Supersedes other parameters if present.
         starts_with
             - does the value start with the supplied string?
         ends_with
@@ -4201,6 +4315,10 @@ class ServerClient(BaseServerClient):
             - index of the list to start from (0 for start).
         page_size
             - maximum number of elements to return.
+        output_format : str, default "JSON"
+            - format of the returned output.
+        report_spec : str | dict, optional
+            - report specification for the returned output.
 
         Returns
         -------
@@ -4211,23 +4329,45 @@ class ServerClient(BaseServerClient):
         PyegeriaException
         """
 
-        url = f"{self.command_root}feedback-manager/tags/update"
-        response = await self._async_make_request("POST", url, body)
+        url = f"{self.command_root}feedback-manager/tags/private/by-search-string"
+
+        # Build params dict with explicit parameters
+        params = {
+            'search_string': search_string,
+            'starts_with': starts_with,
+            'ends_with': ends_with,
+            'ignore_case': ignore_case,
+            'start_from': start_from,
+            'page_size': page_size,
+            'output_format': output_format,
+            'report_spec': report_spec,
+            'body': body
+        }
+        # Merge with any additional kwargs, removing None values
+        params.update(kwargs)
+        # Filter out None values, but keep search_string even if None (it's required)
+        params = {k: v for k, v in params.items() if v is not None or k == 'search_string'}
+
+        response = await self._async_find_request(url, _type="InformalTag", _gen_output=self._generate_feedback_output,
+                                                  **params)
         return response
 
+    @dynamic_catch
     def find_my_tags(
             self,
-            search_string: Optional[str] = None,
+            search_string: str = "*",
             body: Optional[dict | SearchStringRequestBody] = None,
-            starts_with: Optional[bool] = None,
-            ends_with: Optional[bool] = None,
-            ignore_case: Optional[bool] = None,
+            starts_with: bool = True,
+            ends_with: bool = False,
+            ignore_case: bool = True,
             start_from: int = 0,
-            page_size: int = max_paging_size,
-
+            page_size: int = 0,
+            output_format: str = "JSON",
+            report_spec: Optional[str | dict] = None,
+            **kwargs
     ) -> dict | str:
         """
-        Return the list of the calling user's private tags containing the supplied string in either the name or description.
+        Return the list of the calling user's private tags containing the supplied string.
 
         Parameters
         ----------
@@ -4244,7 +4384,10 @@ class ServerClient(BaseServerClient):
             - index of the list to start from (0 for start).
         page_size
             - maximum number of elements to return.
-
+        output_format : str, default "JSON"
+            - format of the returned output.
+        report_spec : str | dict, optional
+            - report specification for the returned output.
 
         Returns
         -------
@@ -4252,12 +4395,7 @@ class ServerClient(BaseServerClient):
 
         Raises
         ------
-        PyegeriaInvalidParameterException
-            one of the parameters is null or invalid or
-        PyegeriaAPIException
-            There is a problem adding the element properties to the metadata repository or
-        PyegeriaUnauthorizedException
-            the requesting user is not authorized to issue this request.
+        PyegeriaException
         """
         loop = asyncio.get_event_loop()
         response = loop.run_until_complete(
@@ -4269,7 +4407,9 @@ class ServerClient(BaseServerClient):
                 ignore_case=ignore_case,
                 start_from=start_from,
                 page_size=page_size,
-
+                output_format=output_format,
+                report_spec=report_spec,
+                **kwargs
             )
         )
         return response
@@ -4355,17 +4495,20 @@ class ServerClient(BaseServerClient):
     async def _async_get_elements_by_tag(
             self,
             tag_guid: str,
-            body: dict = {},
+            graph_query_depth: int = 3,
             start_from: int = 0,
-            page_size: int = max_paging_size,
-
+            page_size: int = 0,
+            output_format: str = "JSON",
+            report_spec: Optional[str | dict] = None,
+            body: Optional[dict | ResultsRequestBody] = None,
+            **kwargs
     ) -> dict | str:
         """
-        Return the list of unique identifiers for elements that are linked to a specific tag either directly, or via one of its schema elements.
+        Return the list of unique identifiers for elements that are linked to a specific tag. Async Version.
 
         Parameters
         ----------
-        tag_guid
+        tag_guid: str
             - unique identifier of tag.
         body
             - optional effective time
@@ -4380,33 +4523,35 @@ class ServerClient(BaseServerClient):
 
         Raises
         ------
-        PyegeriaInvalidParameterException
-            one of the parameters is null or invalid or
-        PyegeriaAPIException
-            There is a problem adding the element properties to the metadata repository or
-        PyegeriaUnauthorizedException
-            the requesting user is not authorized to issue this request.
+        PyegeriaException
         """
-        # Todo - fix the output format here when ready
-        url = f"{self.command_root}feedback-manager/elements/by-tag/{tag_guid}?startFrom={start_from}&pageSize={page_size}"
-        response = await self._async_make_request("POST", url, body)
-        return response.json()
+        url = f"{self.command_root}feedback-manager/elements/by-tag/{tag_guid}"
+        return await self._async_get_results_body_request(url, _type="Referenceable",
+                                                         _gen_output=self._generate_feedback_output,
+                                                         graph_query_depth=graph_query_depth,
+                                                         start_from=start_from,
+                                                         page_size=page_size, output_format=output_format,
+                                                         report_spec=report_spec,
+                                                         body=body, **kwargs)
 
     @dynamic_catch
     def get_elements_by_tag(
             self,
             tag_guid: str,
-            body: dict = {},
+            graph_query_depth: int = 3,
             start_from: int = 0,
             page_size: int = 0,
-
+            output_format: str = "JSON",
+            report_spec: Optional[str | dict] = None,
+            body: Optional[dict | ResultsRequestBody] = None,
+            **kwargs
     ) -> dict | str:
         """
-        Return the list of unique identifiers for elements that are linked to a specific tag either directly, or via one of its schema elements.
+        Return the list of unique identifiers for elements that are linked to a specific tag.
 
         Parameters
         ----------
-        tag_guid
+        tag_guid: str
             - unique identifier of tag.
         body
             - optional effective time
@@ -4421,16 +4566,12 @@ class ServerClient(BaseServerClient):
 
         Raises
         ------
-        PyegeriaInvalidParameterException
-            one of the parameters is null or invalid or
-        PyegeriaAPIException
-            There is a problem adding the element properties to the metadata repository or
-        PyegeriaUnauthorizedException
-            the requesting user is not authorized to issue this request.
+        PyegeriaException
         """
         loop = asyncio.get_event_loop()
         response = loop.run_until_complete(
-            self._async_get_elements_by_tag(tag_guid, body, start_from, page_size)
+            self._async_get_elements_by_tag(tag_guid, graph_query_depth, start_from, page_size,
+                                           output_format, report_spec, body, **kwargs)
         )
         return response
 
@@ -4438,17 +4579,21 @@ class ServerClient(BaseServerClient):
     async def _async_get_attached_tags(
             self,
             element_guid: str,
-            body: dict = {},
+            metadata_element_type_name: str | None = "InformalTag",
+            graph_query_depth: int = 3,
             start_from: int = 0,
-            page_size: int = max_paging_size,
-
+            page_size: int = 0,
+            output_format: str = "JSON",
+            report_spec: Optional[str | dict] = None,
+            body: Optional[dict | ResultsRequestBody] = None,
+            **kwargs
     ) -> dict | str:
         """
-        Return the informal tags attached to an element.
+        Return the informal tags attached to an element. Async Version.
 
         Parameters
         ----------
-        element_guid
+        element_guid: str
             - unique identifier for the element that the ratings are connected to
 
         body
@@ -4466,26 +4611,34 @@ class ServerClient(BaseServerClient):
         ------
         PyegeriaException
         """
-        # Todo clean up and add output format stuff when ready
         url = f"{self.command_root}feedback-manager/elements/{element_guid}/tags/retrieve"
-        response = await self._async_make_request("POST", url, body)
-        return response.json()
+        return await self._async_get_results_body_request(url, _type=metadata_element_type_name,
+                                                         _gen_output=self._generate_feedback_output,
+                                                         graph_query_depth=graph_query_depth,
+                                                         start_from=start_from,
+                                                         page_size=page_size, output_format=output_format,
+                                                         report_spec=report_spec,
+                                                         body=body, **kwargs)
 
     @dynamic_catch
     def get_attached_tags(
             self,
             element_guid: str,
-            body: dict = {},
+            metadata_element_type_name: str | None = "InformalTag",
+            graph_query_depth: int = 3,
             start_from: int = 0,
-            page_size: int = max_paging_size,
-
+            page_size: int = 0,
+            output_format: str = "JSON",
+            report_spec: Optional[str | dict] = None,
+            body: Optional[dict | ResultsRequestBody] = None,
+            **kwargs
     ) -> dict | str:
         """
         Return the informal tags attached to an element.
 
         Parameters
         ----------
-        element_guid
+        element_guid: str
             - unique identifier for the element that the ratings are connected to
 
         body
@@ -4501,21 +4654,12 @@ class ServerClient(BaseServerClient):
 
         Raises
         ------
-        PyegeriaInvalidParameterException
-            one of the parameters is null or invalid or
-        PyegeriaAPIException
-            There is a problem adding the element properties to the metadata repository or
-        PyegeriaUnauthorizedException
-            the requesting user is not authorized to issue this request.
+        PyegeriaException
         """
         loop = asyncio.get_event_loop()
         response = loop.run_until_complete(
-            self._async_get_attached_tags(
-                element_guid,
-                body,
-                start_from,
-                page_size,
-            )
+            self._async_get_attached_tags(element_guid, metadata_element_type_name, graph_query_depth,
+                                          start_from, page_size, output_format, report_spec, body, **kwargs)
         )
         return response
 
@@ -4732,11 +4876,14 @@ class ServerClient(BaseServerClient):
     async def _async_get_attached_likes(
             self,
             element_guid: str,
-            body: Optional[dict] = None,
+            metadata_element_type_name: str | None = "Like",
+            graph_query_depth: int = 3,
             start_from: int = 0,
-            page_size: int = max_paging_size,
-            output_format: str = "json",
-            report_spec: Optional[str] = None
+            page_size: int = 0,
+            output_format: str = "JSON",
+            report_spec: Optional[str | dict] = None,
+            body: Optional[dict | ResultsRequestBody] = None,
+            **kwargs
     ) -> dict | str:
         """
         Return the likes attached to an element. Async version.
@@ -4749,9 +4896,9 @@ class ServerClient(BaseServerClient):
             Optional effective time.
         start_from : int, default 0
             Index of the list to start from (0 for start).
-        page_size : int, default max_paging_size
+        page_size : int, default 0
             Maximum number of elements to return.
-        output_format : str, default "json"
+        output_format : str, default "JSON"
             Format of the returned output.
         report_spec : str, optional
             Report specification for the returned output.
@@ -4763,30 +4910,29 @@ class ServerClient(BaseServerClient):
 
         Raises
         ------
-        PyegeriaInvalidParameterException
-            One of the parameters is null or invalid.
-        PyegeriaAPIException
-            There is a problem retrieving information from the metadata repository.
-        PyegeriaUnauthorizedException
-            The requesting user is not authorized to issue this request.
+        PyegeriaException
         """
-        if body is None:
-            body = {}
-        
-        url = (f"{self.command_root}feedback-manager/elements/{element_guid}/likes/retrieve"
-               f"?startFrom={start_from}&pageSize={page_size}")
-        
-        response = await self._async_make_request("POST", url, body)
-        return response.json()
+        url = f"{self.command_root}feedback-manager/elements/{element_guid}/likes/retrieve"
+        return await self._async_get_results_body_request(url, _type=metadata_element_type_name,
+                                                         _gen_output=self._generate_feedback_output,
+                                                         graph_query_depth=graph_query_depth,
+                                                         start_from=start_from,
+                                                         page_size=page_size, output_format=output_format,
+                                                         report_spec=report_spec,
+                                                         body=body, **kwargs)
 
+    @dynamic_catch
     def get_attached_likes(
             self,
             element_guid: str,
-            body: Optional[dict] = None,
+            metadata_element_type_name: str | None = "Like",
+            graph_query_depth: int = 3,
             start_from: int = 0,
-            page_size: int = max_paging_size,
-            output_format: str = "json",
-            report_spec: Optional[str] = None
+            page_size: int = 0,
+            output_format: str = "JSON",
+            report_spec: Optional[str | dict] = None,
+            body: Optional[dict | ResultsRequestBody] = None,
+            **kwargs
     ) -> dict | str:
         """
         Return the likes attached to an element.
@@ -4799,9 +4945,9 @@ class ServerClient(BaseServerClient):
             Optional effective time.
         start_from : int, default 0
             Index of the list to start from (0 for start).
-        page_size : int, default max_paging_size
+        page_size : int, default 0
             Maximum number of elements to return.
-        output_format : str, default "json"
+        output_format : str, default "JSON"
             Format of the returned output.
         report_spec : str, optional
             Report specification for the returned output.
@@ -4813,17 +4959,12 @@ class ServerClient(BaseServerClient):
 
         Raises
         ------
-        PyegeriaInvalidParameterException
-            One of the parameters is null or invalid.
-        PyegeriaAPIException
-            There is a problem retrieving information from the metadata repository.
-        PyegeriaUnauthorizedException
-            The requesting user is not authorized to issue this request.
+        PyegeriaException
         """
         loop = asyncio.get_event_loop()
         response = loop.run_until_complete(
-            self._async_get_attached_likes(element_guid, body, start_from, page_size,
-                                          output_format, report_spec)
+            self._async_get_attached_likes(element_guid, metadata_element_type_name, graph_query_depth,
+                                           start_from, page_size, output_format, report_spec, body, **kwargs)
         )
         return response
 
@@ -5006,11 +5147,14 @@ class ServerClient(BaseServerClient):
     async def _async_get_attached_ratings(
             self,
             element_guid: str,
-            body: Optional[dict] = None,
+            metadata_element_type_name: str | None = "Rating",
+            graph_query_depth: int = 3,
             start_from: int = 0,
-            page_size: int = max_paging_size,
-            output_format: str = "json",
-            report_spec: Optional[str] = None
+            page_size: int = 0,
+            output_format: str = "JSON",
+            report_spec: Optional[str | dict] = None,
+            body: Optional[dict | ResultsRequestBody] = None,
+            **kwargs
     ) -> dict | str:
         """
         Return the ratings attached to an element. Async version.
@@ -5023,9 +5167,9 @@ class ServerClient(BaseServerClient):
             Optional effective time.
         start_from : int, default 0
             Index of the list to start from (0 for start).
-        page_size : int, default max_paging_size
+        page_size : int, default 0
             Maximum number of elements to return.
-        output_format : str, default "json"
+        output_format : str, default "JSON"
             Format of the returned output.
         report_spec : str, optional
             Report specification for the returned output.
@@ -5037,30 +5181,29 @@ class ServerClient(BaseServerClient):
 
         Raises
         ------
-        PyegeriaInvalidParameterException
-            One of the parameters is null or invalid.
-        PyegeriaAPIException
-            There is a problem retrieving information from the metadata repository.
-        PyegeriaUnauthorizedException
-            The requesting user is not authorized to issue this request.
+        PyegeriaException
         """
-        if body is None:
-            body = {}
-        
-        url = (f"{self.command_root}feedback-manager/elements/{element_guid}/ratings/retrieve"
-               f"?startFrom={start_from}&pageSize={page_size}")
-        
-        response = await self._async_make_request("POST", url, body)
-        return response.json()
+        url = f"{self.command_root}feedback-manager/elements/{element_guid}/ratings/retrieve"
+        return await self._async_get_results_body_request(url, _type=metadata_element_type_name,
+                                                         _gen_output=self._generate_feedback_output,
+                                                         graph_query_depth=graph_query_depth,
+                                                         start_from=start_from,
+                                                         page_size=page_size, output_format=output_format,
+                                                         report_spec=report_spec,
+                                                         body=body, **kwargs)
 
+    @dynamic_catch
     def get_attached_ratings(
             self,
             element_guid: str,
-            body: Optional[dict] = None,
+            metadata_element_type_name: str | None = "Rating",
+            graph_query_depth: int = 3,
             start_from: int = 0,
-            page_size: int = max_paging_size,
-            output_format: str = "json",
-            report_spec: Optional[str] = None
+            page_size: int = 0,
+            output_format: str = "JSON",
+            report_spec: Optional[str | dict] = None,
+            body: Optional[dict | ResultsRequestBody] = None,
+            **kwargs
     ) -> dict | str:
         """
         Return the ratings attached to an element.
@@ -5073,9 +5216,9 @@ class ServerClient(BaseServerClient):
             Optional effective time.
         start_from : int, default 0
             Index of the list to start from (0 for start).
-        page_size : int, default max_paging_size
+        page_size : int, default 0
             Maximum number of elements to return.
-        output_format : str, default "json"
+        output_format : str, default "JSON"
             Format of the returned output.
         report_spec : str, optional
             Report specification for the returned output.
@@ -5087,17 +5230,12 @@ class ServerClient(BaseServerClient):
 
         Raises
         ------
-        PyegeriaInvalidParameterException
-            One of the parameters is null or invalid.
-        PyegeriaAPIException
-            There is a problem retrieving information from the metadata repository.
-        PyegeriaUnauthorizedException
-            The requesting user is not authorized to issue this request.
+        PyegeriaException
         """
         loop = asyncio.get_event_loop()
         response = loop.run_until_complete(
-            self._async_get_attached_ratings(element_guid, body, start_from, page_size,
-                                            output_format, report_spec)
+            self._async_get_attached_ratings(element_guid, metadata_element_type_name, graph_query_depth,
+                                             start_from, page_size, output_format, report_spec, body, **kwargs)
         )
         return response
 
@@ -5424,16 +5562,19 @@ class ServerClient(BaseServerClient):
     @dynamic_catch
     async def _async_get_search_keyword_by_guid(
             self,
-            keyword_guid: str,
-            output_format: str | None = "JSON",
-            report_spec: dict | str = None
+            guid: str,
+            graph_query_depth: int = 3,
+            output_format: str = "JSON",
+            report_spec: dict | str = None,
+            body: Optional[dict | GetRequestBody] = None,
+            **kwargs
     ) -> dict | str:
         """
-        Return information about the specified search keyword.
+        Return information about the specified search keyword. Async Version.
 
         Parameters
         ----------
-        keyword_guid: str
+        guid: str
             - unique identifier of tag.
         output_format: str, default "JSON"
             - output format for the response
@@ -5450,112 +5591,70 @@ class ServerClient(BaseServerClient):
 
         """
 
-        url = f"{self.command_root}classification-explorer/search-keywords/{keyword_guid}"
+        url = f"{self.command_root}classification-explorer/search-keywords/{guid}"
         response = await self._async_get_guid_request(url, "SearchKeyword", self._generate_feedback_output,
-                                                      output_format, report_spec)
+                                                      graph_query_depth=graph_query_depth,
+                                                      output_format=output_format, report_spec=report_spec,
+                                                      body=body, **kwargs)
         return response
 
     @dynamic_catch
     def get_search_keyword_by_guid(
             self,
-            keyword_guid: str,
-            output_format: str | None = "JSON",
-            report_spec: dict | str = None
-
-    ) -> dict | str:
-        """
-               Return information about the specified search keyword.
-
-               Parameters
-               ----------
-               keyword_guid: str
-                   - unique identifier of tag.
-               output_format: str, default "JSON"
-                   - output format for the response
-               report_spec: str | dict, default None
-                   - report specification
-
-               Returns
-               -------
-               Details of the search keyword in the requested format.
-
-               Raises
-               ------
-               PyegeriaException
-
-               """
-        loop = asyncio.get_event_loop()
-        response = loop.run_until_complete(
-            self._async_get_search_keyword_by_guid(keyword_guid, output_format, report_spec)
-        )
-        return response
-
-    @dynamic_catch
-    async def _async_get_search_keyword_by_keyword(
-            self,
-            keyword: str,
-            start_from: int = 0,
-            page_size: int = 0,
-            output_format: str | None = "JSON",
+            guid: str,
+            graph_query_depth: int = 3,
+            output_format: str = "JSON",
             report_spec: dict | str = None,
-            body: Optional[dict | FilterRequestBody] = None
-    ) -> dict | str:
-        """
-        Return information about the specified search keyword. Async Version.
-
-        Parameters
-        ----------
-        keyword : str
-            - keyword to search for.
-        start_from: int, default 0
-            - start index of the search keyword
-        page size
-            - output_format: str, default "JSON
-        output_format: str, default "JSON"
-            - output format for the response
-        report_spec: str | dict, default None
-            - report specification
-        body: dict | FilterRequestBody, optional
-            - structure containing detailed request information.
-
-        Returns
-        -------
-        Details of the search keyword in the requested format.
-
-        Raises
-        ------
-        PyegeriaException
-
-        """
-        if body is None and keyword:
-            body = {
-                "class": "FilterRequestBody",
-                "filter": keyword,
-                "startFrom": start_from,
-                "pageSize": page_size
-            }
-        url = f"{self.command_root}classification-explorer/search-keywords/by-keyword"
-        response = await self._async_get_name_request(url, "SearchKeyword", self._generate_feedback_output,
-                                                      start_from=0, page_size=0, output_format="JSON",
-                                                      report_spec=keyword, body=None, max_mermaid_node_count=None)
-        return response
-
-    @dynamic_catch
-    def get_search_keyword_by_keyword(
-            self,
-            keyword: str,
-            start_from: int = 0,
-            page_size: int = 0,
-            output_format: str | None = "JSON",
-            report_spec: dict | str = None,
-            body: Optional[dict | FilterRequestBody] = None
+            body: Optional[dict | GetRequestBody] = None,
+            **kwargs
     ) -> dict | str:
         """
         Return information about the specified search keyword.
 
         Parameters
         ----------
-        keyword : str
+        guid: str
+            - unique identifier of tag.
+        output_format: str, default "JSON"
+            - output format for the response
+        report_spec: str | dict, default None
+            - report specification
+
+        Returns
+        -------
+        Details of the search keyword in the requested format.
+
+        Raises
+        ------
+        PyegeriaException
+
+        """
+        loop = asyncio.get_event_loop()
+        response = loop.run_until_complete(
+            self._async_get_search_keyword_by_guid(guid, graph_query_depth, output_format, report_spec, body, **kwargs)
+        )
+        return response
+
+    @dynamic_catch
+    async def _async_get_search_keyword_by_keyword(
+            self,
+            name: str,
+            metadata_element_type_name: str | None = "SearchKeyword",
+            metadata_element_subtypes: list[str] | None = None,
+            graph_query_depth: int = 3,
+            start_from: int = 0,
+            page_size: int = 0,
+            output_format: str = "JSON",
+            report_spec: dict | str = None,
+            body: Optional[dict | FilterRequestBody] = None,
+            **kwargs
+    ) -> dict | str:
+        """
+        Return information about the specified search keyword. Async Version.
+
+        Parameters
+        ----------
+        name : str
             - keyword to search for.
         start_from: int, default 0
             - start index of the search keyword
@@ -5577,23 +5676,76 @@ class ServerClient(BaseServerClient):
         PyegeriaException
 
         """
+        url = f"{self.command_root}classification-explorer/search-keywords/by-keyword"
+        response = await self._async_get_name_request(url, _type="SearchKeyword",
+                                                      _gen_output=self._generate_feedback_output,
+                                                      filter_string=name,
+                                                      metadata_element_type_name=metadata_element_type_name,
+                                                      metadata_element_subtypes=metadata_element_subtypes,
+                                                      graph_query_depth=graph_query_depth,
+                                                      start_from=start_from,
+                                                      page_size=page_size, output_format=output_format,
+                                                      report_spec=report_spec,
+                                                      body=body, **kwargs)
+        return response
+
+    @dynamic_catch
+    def get_search_keyword_by_keyword(
+            self,
+            name: str = "*",
+            metadata_element_type_name: str | None = "SearchKeyword",
+            metadata_element_subtypes: list[str] | None = None,
+            graph_query_depth: int = 3,
+            start_from: int = 0,
+            page_size: int = 0,
+            output_format: str = "JSON",
+            report_spec: dict | str = None,
+            body: Optional[dict | FilterRequestBody] = None,
+            **kwargs
+    ) -> dict | str:
+        """
+        Return information about the specified search keyword.
+
+        Parameters
+        ----------
+        name : str
+            - keyword to search for.
+        start_from: int, default 0
+            - start index of the search keyword
+        output_format: str, default "JSON"
+            - output format for the response
+        report_spec: str | dict, default None
+            - report specification
+        body: dict | FilterRequestBody, optional
+            - structure containing detailed request information.
+
+        Returns
+        -------
+        Details of the search keyword in the requested format.
+
+        Raises
+        ------
+        PyegeriaException
+
+        """
         loop = asyncio.get_event_loop()
         response = loop.run_until_complete(
-            self._async_find_search_keywords(keyword, body, start_from=start_from, page_size=page_size,
-                                            output_format=output_format, report_spec=report_spec)
+            self._async_get_search_keyword_by_keyword(name, metadata_element_type_name, metadata_element_subtypes,
+                                                     graph_query_depth, start_from, page_size,
+                                                     output_format, report_spec, body, **kwargs)
         )
         return response
 
     async def _async_find_search_keywords(
             self,
-            search_string: str,
+            search_string: str = "*",
             body: Optional[dict | SearchStringRequestBody] = None,
-            starts_with: bool = False,
+            starts_with: bool = True,
             ends_with: bool = False,
             ignore_case: bool = True,
             start_from: int = 0,
             page_size: int = 0,
-            output_format: str | None = "JSON",
+            output_format: str = "JSON",
             report_spec: dict | str = None,
             **kwargs
     ) -> dict | str:
@@ -5706,18 +5858,16 @@ class ServerClient(BaseServerClient):
     @dynamic_catch
     def find_search_keywords(
             self,
-            search_string: str,
+            search_string: str = "*",
             start_from: int = 0,
             page_size: int = 0,
-            output_format: str | None = "JSON",
+            output_format: str = "JSON",
             report_spec: dict | str = None,
-            body: Optional[dict | SearchStringRequestBody] = None
+            body: Optional[dict | SearchStringRequestBody] = None,
+            **kwargs
     ) -> dict | str:
         """
-        Return the list of search keywords containing the supplied string. The search string is located in the request
-         body and is interpreted as a plain string.  The request parameters, startsWith, endsWith and ignoreCase can
-         be used to allow a fuzzy search.  The request body also supports the specification of an effective time to
-         restrict the search to element that are/were effective at a particular time. Async Version.
+        Return the list of search keywords containing the supplied string.
 
         Parameters
         ----------
@@ -5725,8 +5875,6 @@ class ServerClient(BaseServerClient):
             - keyword to search for.
         start_from: int, default 0
             - start index of the search keyword
-        page size
-            - output_format: str, default "JSON
         output_format: str, default "JSON"
             - output format for the response
         report_spec: str | dict, default None
@@ -5746,7 +5894,7 @@ class ServerClient(BaseServerClient):
         loop = asyncio.get_event_loop()
         response = loop.run_until_complete(
             self._async_find_search_keywords(search_string, body, start_from=start_from, page_size=page_size,
-                                            output_format=output_format, report_spec=report_spec)
+                                             output_format=output_format, report_spec=report_spec, **kwargs)
         )
         return response
 
@@ -6138,38 +6286,26 @@ class ServerClient(BaseServerClient):
         return validated_body
 
     @dynamic_catch
-    async def _async_find_request(self, url: str, _type: str, _gen_output: Callable[..., Any], search_string: str,
-                                  starts_with: bool = True, ends_with: bool = False, ignore_case: bool = False,
-                                  anchor_domain: Optional[str] = None, anchor_type_name: Optional[str]=None,
-                                  anchor_guid: Optional[str]=None,
+    async def _async_find_request(self, url: str, _type: str, _gen_output: Callable[..., Any], search_string: str = "*",
+                                  starts_with: bool = True, ends_with: bool = False, ignore_case: bool = True,
+                                  anchor_domain: Optional[str] = None, anchor_type_name: Optional[str] = None,
+                                  anchor_guid: Optional[str] = None,
                                   anchor_scope_guid=None, metadata_element_type: Optional[str] = None,
                                   metadata_element_subtypes: Optional[list[str]] = None,
                                   skip_relationships: Optional[list[str]] = None,
                                   include_only_relationships: Optional[list[str]] = None,
                                   skip_classified_elements: Optional[list[str]] = None,
                                   include_only_classified_elements: Optional[list[str]] = None,
-                                  graph_query_depth: int = 5, max_mermaid_node_count: int = 5,
+                                  graph_query_depth: int = 3, max_mermaid_node_count: int = 5,
                                   governance_zone_filter: Optional[list[str]] = None, as_of_time: Optional[str] = None,
                                   effective_time: Optional[str] = None, relationship_page_size: int = 0,
                                   limit_results_by_status: Optional[list[str]] = None,
                                   sequencing_order: Optional[str] = None, sequencing_property: Optional[str] = None,
                                   output_format: str = "JSON", report_spec: Optional[str | dict] = None,
-                                  start_from: int = 0, page_size: int | None = 100,
+                                  start_from: int = 0, page_size: int | None = 0,
                                   property_names: Optional[list[str]] = None,
                                   body: dict | SearchStringRequestBody | FindPropertyNamesRequestBody = None,
                                   **kwargs) -> Any:
-
-        if kwargs:
-            invalid_keys = ", ".join(kwargs.keys())
-            raise PyegeriaInvalidParameterException(
-                additional_info={
-                    "reason": f"Invalid find parameter(s) provided: {invalid_keys}. "
-                              f"Please check the Pyegeria documentation for valid find property parameters."
-                }
-            )
-
-        if isinstance(metadata_element_type, str) and not metadata_element_type.strip():
-            metadata_element_type = None
 
         if isinstance(body, (SearchStringRequestBody, FindPropertyNamesRequestBody)):
             validated_body = body
@@ -6263,25 +6399,36 @@ class ServerClient(BaseServerClient):
 
     @dynamic_catch
     async def _async_get_name_request(self, url: str, _type: str, _gen_output: Callable[..., Any],
-                                      filter_string: str = None, classification_names: list[str] = None,
-                                      start_from: int = None, page_size: int = None, output_format: str = "JSON",
+                                      filter_string: str = "*",
+                                      metadata_element_type_name: str | None = None,
+                                      metadata_element_subtypes: list[str] | None = None,
+                                      classification_names: list[str] | None = None,
+                                      include_only_relationships: list[str] | None = None,
+                                      skip_relationships: list[str] | None = None,
+                                      graph_query_depth: int = 3,
+                                      start_from: int = 0, page_size: int = 0, output_format: str = "JSON",
                                       report_spec: Optional[str | dict] = None,
                                       body: Optional[dict | FilterRequestBody] = None,
-                                    max_mermaid_node_count=5, **kwargs) -> Any:
+                                      max_mermaid_node_count=5, **kwargs) -> Any:
 
         if isinstance(body, FilterRequestBody):
             validated_body = body
         elif isinstance(body, dict):
             validated_body = self._filter_request_adapter.validate_python(body)
         else:
-            filter_string = None if filter_string == "*" else filter_string
+            filter_string = ".*" if filter_string == "*" else filter_string
             classification_names = None if classification_names == [] else classification_names
             body = {
                 "class": "FilterRequestBody",
                 "filter": filter_string,
-                "start_from": start_from,
-                "page_size": page_size,
-                "include_only_classified_elements": classification_names,
+                "metadataElementTypeName": metadata_element_type_name,
+                "metadataElementSubtypeNames": metadata_element_subtypes,
+                "includeOnlyRelationships": include_only_relationships,
+                "skipRelationships": skip_relationships,
+                "graphQueryDepth": graph_query_depth,
+                "startFrom": start_from,
+                "pageSize": page_size,
+                "includeOnlyClassifiedElements": classification_names,
                 "maxMermaidNodeCount": max_mermaid_node_count
             }
             validated_body = FilterRequestBody.model_validate(body)
@@ -6305,6 +6452,9 @@ class ServerClient(BaseServerClient):
 
     @dynamic_catch
     async def _async_get_guid_request(self, url: str, _type: str, _gen_output: Callable[..., Any],
+                                      include_only_relationships: list[str] | None = None,
+                                      skip_relationships: list[str] | None = None,
+                                      graph_query_depth: int = 3,
                                       output_format: str = 'JSON', report_spec: Optional[str | dict] = None,
                                       body: Optional[dict | GetRequestBody] = None, max_mermaid_node_count=5,
                                       **kwargs) -> Any:
@@ -6318,6 +6468,9 @@ class ServerClient(BaseServerClient):
             body = {
                 "class": "GetRequestBody",
                 "metadataElementTypeName": _type,
+                "includeOnlyRelationships": include_only_relationships,
+                "skipRelationships": skip_relationships,
+                "graphQueryDepth": graph_query_depth,
                 "maxMermaidNodeCount": max_mermaid_node_count
             }
             validated_body = GetRequestBody.model_validate(body)
@@ -6386,11 +6539,11 @@ class ServerClient(BaseServerClient):
         url: str,
         _type: str,
         _gen_output: Callable[..., Any],
-        search_string: str,
+        search_string: str = "*",
         activity_status_list: Optional[list[str]] = None,
         starts_with: bool = True,
         ends_with: bool = False,
-        ignore_case: bool = False,
+        ignore_case: bool = True,
         anchor_domain: Optional[str] = None,
         metadata_element_type: Optional[str] = None,
         metadata_element_subtypes: Optional[list[str]] = None,
@@ -6407,10 +6560,10 @@ class ServerClient(BaseServerClient):
         limit_results_by_status: Optional[list[str]] = None,
         sequencing_order: Optional[str] = None,
         sequencing_property: Optional[str] = None,
-        output_format: Optional[str] = None,
+        output_format: str = "JSON",
         report_spec: Optional[str | dict] = None,
         start_from: int = 0,
-        page_size: int | None = 100,
+        page_size: int | None = 0,
         body: dict | ActivityStatusSearchString | None = None,
         **kwargs
     ) -> Any:
@@ -6446,7 +6599,7 @@ class ServerClient(BaseServerClient):
                 "sequencingOrder": sequencing_order,
                 "sequencingProperty": sequencing_property,
                 "start_from": start_from,
-                "pageSize": page_size,
+                "page_size": page_size,
             }
             validated_body = ActivityStatusSearchString.model_validate(body)
 
@@ -6458,7 +6611,8 @@ class ServerClient(BaseServerClient):
             return NO_ELEMENTS_FOUND
 
         if output_format.upper() != "JSON":
-            return _gen_output(elements, search_string, _type, output_format, report_spec)
+            return _gen_output(elements=elements, search_string=search_string, element_type_name=_type,
+                               output_format=output_format, report_spec=report_spec, **kwargs)
         return elements
 
     @dynamic_catch
@@ -6467,7 +6621,7 @@ class ServerClient(BaseServerClient):
         url: str,
         _type: str,
         _gen_output: Callable[..., Any],
-        filter_string: str,
+        filter_string: str = "*",
         activity_status_list: Optional[list[str]] = None,
         start_from: int = 0,
         page_size: int = 0,
@@ -6486,8 +6640,8 @@ class ServerClient(BaseServerClient):
                 "class": "ActivityStatusFilterRequestBody",
                 "filter": filter_string,
                 "activityStatusList": activity_status_list,
-                "startFrom": start_from,
-                "pageSize": page_size,
+                "start_from": start_from,
+                "page_size": page_size,
             }
             validated_body = ActivityStatusFilterRequestBody.model_validate(body)
 
@@ -6499,7 +6653,8 @@ class ServerClient(BaseServerClient):
             return NO_ELEMENTS_FOUND
 
         if output_format.upper() != "JSON":
-            return _gen_output(elements, filter_string, _type, output_format, report_spec)
+            return _gen_output(elements=elements, filter_string=filter_string, element_type_name=_type,
+                               output_format=output_format, report_spec=report_spec, **kwargs)
         return elements
 
     @dynamic_catch
@@ -6527,8 +6682,8 @@ class ServerClient(BaseServerClient):
             body = {
                 "class": "ActivityStatusRequestBody",
                 "activityStatusList": activity_status_list,
-                "startFrom": start_from,
-                "pageSize": page_size,
+                "start_from": start_from,
+                "page_size": page_size,
                 "limitResultsByStatus": limit_results_by_status,
                 "sequencingOrder": sequencing_order,
                 "sequencingProperty": sequencing_property,
@@ -6543,7 +6698,8 @@ class ServerClient(BaseServerClient):
             return NO_ELEMENTS_FOUND
 
         if output_format.upper() != "JSON":
-            return _gen_output(elements, "Members", _type, output_format, report_spec)
+            return _gen_output(elements=elements, filter_string="Status", element_type_name=_type,
+                               output_format=output_format, report_spec=report_spec, **kwargs)
         return elements
 
     @dynamic_catch
@@ -6552,11 +6708,11 @@ class ServerClient(BaseServerClient):
         url: str,
         _type: str,
         _gen_output: Callable[..., Any],
-        search_string: str,
+        search_string: str = "*",
         content_status_list: Optional[list[str]] = None,
         starts_with: bool = True,
         ends_with: bool = False,
-        ignore_case: bool = False,
+        ignore_case: bool = True,
         anchor_domain: Optional[str] = None,
         metadata_element_type: Optional[str] = None,
         metadata_element_subtypes: Optional[list[str]] = None,
@@ -6573,10 +6729,10 @@ class ServerClient(BaseServerClient):
         limit_results_by_status: Optional[list[str]] = None,
         sequencing_order: Optional[str] = None,
         sequencing_property: Optional[str] = None,
-        output_format: Optional[str] = None,
+        output_format: str = "JSON",
         report_spec: Optional[str | dict] = None,
         start_from: int = 0,
-        page_size: int | None = 100,
+        page_size: int | None = 0,
         body: dict | ContentStatusSearchString | None = None,
         **kwargs
     ) -> Any:
@@ -6612,7 +6768,7 @@ class ServerClient(BaseServerClient):
                 "sequencingOrder": sequencing_order,
                 "sequencingProperty": sequencing_property,
                 "start_from": start_from,
-                "pageSize": page_size,
+                "page_size": page_size,
             }
             validated_body = ContentStatusSearchString.model_validate(body)
 
@@ -6624,7 +6780,8 @@ class ServerClient(BaseServerClient):
             return NO_ELEMENTS_FOUND
 
         if output_format.upper() != "JSON":
-            return _gen_output(elements, search_string, _type, output_format, report_spec)
+            return _gen_output(elements=elements, search_string=search_string, element_type_name=_type,
+                               output_format=output_format, report_spec=report_spec, **kwargs)
         return elements
 
     @dynamic_catch
@@ -6633,7 +6790,7 @@ class ServerClient(BaseServerClient):
         url: str,
         _type: str,
         _gen_output: Callable[..., Any],
-        filter_string: str,
+        filter_string: str = "*",
         content_status_list: Optional[list[str]] = None,
         start_from: int = 0,
         page_size: int = 0,
@@ -6652,8 +6809,8 @@ class ServerClient(BaseServerClient):
                 "class": "ContentStatusFilterRequestBody",
                 "filter": filter_string,
                 "contentStatusList": content_status_list,
-                "startFrom": start_from,
-                "pageSize": page_size,
+                "start_from": start_from,
+                "page_size": page_size,
             }
             validated_body = ContentStatusFilterRequestBody.model_validate(body)
 
@@ -6665,7 +6822,8 @@ class ServerClient(BaseServerClient):
             return NO_ELEMENTS_FOUND
 
         if output_format.upper() != "JSON":
-            return _gen_output(elements, filter_string, _type, output_format, report_spec)
+            return _gen_output(elements=elements, filter_string=filter_string, element_type_name=_type,
+                               output_format=output_format, report_spec=report_spec, **kwargs)
         return elements
 
     @dynamic_catch
@@ -6674,11 +6832,11 @@ class ServerClient(BaseServerClient):
         url: str,
         _type: str,
         _gen_output: Callable[..., Any],
-        search_string: str,
+        search_string: str = "*",
         deployment_status_list: Optional[list[str]] = None,
         starts_with: bool = True,
         ends_with: bool = False,
-        ignore_case: bool = False,
+        ignore_case: bool = True,
         anchor_domain: Optional[str] = None,
         metadata_element_type: Optional[str] = None,
         metadata_element_subtypes: Optional[list[str]] = None,
@@ -6695,11 +6853,12 @@ class ServerClient(BaseServerClient):
         limit_results_by_status: Optional[list[str]] = None,
         sequencing_order: Optional[str] = None,
         sequencing_property: Optional[str] = None,
-        output_format: Optional[str] = None,
+        output_format: str = "JSON",
         report_spec: Optional[str | dict] = None,
         start_from: int = 0,
-        page_size: int | None = 100,
+        page_size: int | None = 0,
         body: dict | DeploymentStatusSearchString | None = None,
+        **kwargs
     ) -> Any:
         if isinstance(body, DeploymentStatusSearchString):
             validated_body = body
@@ -6733,7 +6892,7 @@ class ServerClient(BaseServerClient):
                 "sequencingOrder": sequencing_order,
                 "sequencingProperty": sequencing_property,
                 "start_from": start_from,
-                "pageSize": page_size,
+                "page_size": page_size,
             }
             validated_body = DeploymentStatusSearchString.model_validate(body)
 
@@ -6745,7 +6904,8 @@ class ServerClient(BaseServerClient):
             return NO_ELEMENTS_FOUND
 
         if output_format.upper() != "JSON":
-            return _gen_output(elements, search_string, _type, output_format, report_spec)
+            return _gen_output(elements=elements, search_string=search_string, element_type_name=_type,
+                               output_format=output_format, report_spec=report_spec, **kwargs)
         return elements
 
     @dynamic_catch
@@ -6754,13 +6914,14 @@ class ServerClient(BaseServerClient):
         url: str,
         _type: str,
         _gen_output: Callable[..., Any],
-        filter_string: str,
+        filter_string: str = "*",
         deployment_status_list: Optional[list[str]] = None,
         start_from: int = 0,
         page_size: int = 0,
         output_format: str = "JSON",
         report_spec: Optional[str | dict] = None,
         body: Optional[dict | DeploymentStatusFilterRequestBody] = None,
+        **kwargs
     ) -> Any:
         if isinstance(body, DeploymentStatusFilterRequestBody):
             validated_body = body
@@ -6772,8 +6933,8 @@ class ServerClient(BaseServerClient):
                 "class": "DeploymentStatusFilterRequestBody",
                 "filter": filter_string,
                 "deploymentStatusList": deployment_status_list,
-                "startFrom": start_from,
-                "pageSize": page_size,
+                "start_from": start_from,
+                "page_size": page_size,
             }
             validated_body = DeploymentStatusFilterRequestBody.model_validate(body)
 
@@ -6785,11 +6946,13 @@ class ServerClient(BaseServerClient):
             return NO_ELEMENTS_FOUND
 
         if output_format.upper() != "JSON":
-            return _gen_output(elements, filter_string, _type, output_format, report_spec)
+            return _gen_output(elements=elements, filter_string=filter_string, element_type_name=_type,
+                               output_format=output_format, report_spec=report_spec, **kwargs)
         return elements
 
     @dynamic_catch
     async def _async_get_results_body_request(self, url: str, _type: str, _gen_output: Callable[..., Any],
+                                              graph_query_depth: int = 3,
                                               start_from: int = 0, page_size: int = 0, output_format: str = 'JSON',
                                               report_spec: Optional[str | dict] = None,
                                               body: Optional[dict | ResultsRequestBody] = None,
@@ -6803,6 +6966,7 @@ class ServerClient(BaseServerClient):
             body = {
                 "class": "ResultsRequestBody",
                 "metadataElementTypeName": _type,
+                "graphQueryDepth": graph_query_depth,
                 "start_from": start_from,
                 "page_size": page_size,
             }
@@ -6940,12 +7104,11 @@ class ServerClient(BaseServerClient):
     @dynamic_catch
     async def _async_delete_element_request(self, url: str, body: Optional[dict | DeleteElementRequestBody] = None,
                                             cascade_delete: bool = False) -> None:
-        if body:
-            validated_body = self.validate_delete_element_request(body, cascade_delete)
-            if validated_body:
-                json_body = validated_body.model_dump_json(indent=2, exclude_none=True)
-                logger.info(json_body)
-                await self._async_make_request("POST", url, json_body)
+        validated_body = self.validate_delete_element_request(body, cascade_delete)
+        if validated_body:
+            json_body = validated_body.model_dump_json(indent=2, exclude_none=True)
+            logger.info(json_body)
+            await self._async_make_request("POST", url, json_body)
         else:
             await self._async_make_request("POST", url)
 
@@ -7383,12 +7546,12 @@ class ServerClient(BaseServerClient):
             self,
             search_string: str = "*",
             body: dict | SearchStringRequestBody | None = None,
-            starts_with: bool = False,
+            starts_with: bool = True,
             ends_with: bool = False,
             ignore_case: bool = True,
             start_from: int = 0,
             page_size: int = 0,
-            output_format: str = "DICT",
+            output_format: str = "JSON",
             report_spec: dict | str | None = None,
             **kwargs
     ) -> list | dict | str:
@@ -7502,16 +7665,16 @@ class ServerClient(BaseServerClient):
         return await self._async_find_request(url, _type="Asset", _gen_output=_generate_default_output, **params)
 
     @dynamic_catch
-    def find_assets(self, search_string: str = "*", starts_with: bool = False, ends_with: bool = False,
+    def find_assets(self, search_string: str = "*", starts_with: bool = True, ends_with: bool = False,
                     ignore_case: bool = True, anchor_domain: Optional[str] = None, metadata_element_type: Optional[str] = None,
                     metadata_element_subtypes: Optional[list[str]] = None, skip_relationships: Optional[list[str]] = None,
                     include_only_relationships: Optional[list[str]] = None, skip_classified_elements: Optional[list[str]] = None,
                     include_only_classified_elements: Optional[list[str]] = None, graph_query_depth: int = 3,
                     governance_zone_filter: Optional[list[str]] = None, as_of_time: Optional[str] = None, effective_time: Optional[str] = None,
                     relationship_page_size: int = 0, limit_results_by_status: Optional[list[str]] = None,
-                    sequencing_order: Optional[str] = None, sequencing_property: Optional[str] = None, output_format: str = "DICT",
+                    sequencing_order: Optional[str] = None, sequencing_property: Optional[str] = None, output_format: str = "JSON",
                     report_spec: dict | str | None = None, start_from: int = 0, page_size: int = 0,
-                    body: dict | SearchStringRequestBody | None = None) -> list | dict | str:
+                    body: dict | SearchStringRequestBody | None = None, **kwargs) -> list | dict | str:
         """Retrieve the list of asset metadata elements that contain the search string.
 
         Parameters
@@ -7519,7 +7682,7 @@ class ServerClient(BaseServerClient):
         search_string: str, optional
             String to search for in asset properties. Default is "*".
         starts_with: bool, optional
-            Whether to match only at the start. Default is False.
+            Whether to match only at the start. Default is True.
         ends_with: bool, optional
             Whether to match only at the end. Default is False.
         ignore_case: bool, optional
@@ -7527,9 +7690,9 @@ class ServerClient(BaseServerClient):
         start_from: int, optional
             Index of the first result to return. Default is 0.
         page_size: int, optional
-            Maximum number of results to return. Default is None (server default).
+            Maximum number of results to return. Default is 0 (server default).
         output_format: str, optional
-            Format of the output. Default is "DICT".
+            Format of the output. Default is "JSON".
         report_spec: dict | str, optional
             Specification for report formatting.
         body: dict | SearchStringRequestBody, optional
@@ -7562,7 +7725,7 @@ class ServerClient(BaseServerClient):
                                     relationship_page_size=relationship_page_size,
                                     limit_results_by_status=limit_results_by_status, sequencing_order=sequencing_order,
                                     sequencing_property=sequencing_property, output_format=output_format,
-                                    report_spec=report_spec, start_from=start_from, page_size=page_size, body=body)
+                                    report_spec=report_spec, start_from=start_from, page_size=page_size, body=body, **kwargs)
         )
 
 

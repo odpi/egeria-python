@@ -152,7 +152,7 @@ def display_command_terms(
             file_name = f"Command-Help-{time.strftime('%Y-%m-%d-%H-%M-%S')}-{action}.md"
             full_file_path = os.path.join(file_path, file_name)
             os.makedirs(os.path.dirname(full_file_path), exist_ok=True)
-            output = g_client.find_glossary_terms(search_string,  output_format=output_format, report_spec="Help-Terms")
+            output = g_client.find_glossary_terms(search_string, anchor_guid=glossary_guid, output_format=output_format, report_spec="Help-Terms")
             if output == "NO_TERMS_FOUND":
                 print(f"\n==> No commands found for search string '{search_string}'")
                 return
@@ -192,6 +192,7 @@ def display_command_terms(
 
         terms = g_client.find_glossary_terms(
             search_string,
+            anchor_guid=glossary_guid,
             page_size=500,
         )
 
@@ -225,22 +226,28 @@ def display_command_terms(
             usage = props.get("usage", "---")
             # ex_us_out = Markdown(f"Example:\n{example}\n---\nUsage: \n{usage}")
 
-            classifications = term["elementHeader"].get("classifications",None)
+            classifications = term["elementHeader"].get("classifications", None)
             glossary_guid = None
-
+            if classifications:
+                for c in classifications:
+                    if c.get("classificationName") == "Anchors":
+                        glossary_guid = c.get("classificationProperties", {}).get("anchorScopeGUID")
 
             if glossary_guid and glossary_guid in glossary_info:
                 glossary_name = glossary_info[glossary_guid]
             elif glossary_guid:
-                g = g_client.get_glossary_for_term(term_guid)
-                glossary_name = g["glossaryProperties"].get("displayName", "---")
-                glossary_info[glossary_guid] = glossary_name
+                try:
+                    g = g_client.get_glossary_for_term(term_guid)
+                    glossary_name = g["glossaryProperties"].get("displayName", "---")
+                    glossary_info[glossary_guid] = glossary_name
+                except Exception:
+                    glossary_name = "---"
             else:
                 glossary_name = "---"
 
             term_abb_ver_out = Markdown(f"{display_name}\n---\n{abbrev}\n---\n{version}")
 
-            term_status = term["elementHeader"].get("status","---")
+            term_status = term["elementHeader"].get("status", "---")
             table.add_row(
                 Markdown(display_name),
                 # summary,
@@ -248,11 +255,6 @@ def display_command_terms(
                 Markdown(usage),
                 style="bold white on black",
             )
-            if not classifications:
-                continue
-            for c in classifications:
-                if c["classificationName"] == "Anchors":
-                    glossary_guid = c["classificationProperties"]["anchorScopeGUID"]
 
         g_client.close_session()
         return table
@@ -260,7 +262,7 @@ def display_command_terms(
     # Shared fetch for md modes
     if mode in ("md", "md-html"):
         try:
-            terms = g_client.find_glossary_terms(search_string, page_size=500)
+            terms = g_client.find_glossary_terms(search_string, anchor_guid=glossary_guid, page_size=500)
         except Exception:
             terms = []
         if isinstance(terms, str) and terms == "NO_TERMS_FOUND":

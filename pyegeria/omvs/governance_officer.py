@@ -96,8 +96,8 @@ class GovernanceOfficer(ServerClient):
     """
 
     def __init__(self, view_server: str = None, platform_url: str = None, user_id: Optional[str] = None, user_pwd: Optional[str] = None,
-                 token: Optional[str] = None, ):
-        ServerClient.__init__(self, view_server, platform_url, user_id=user_id, user_pwd=user_pwd, token=token)
+                 token: Optional[str] = None, time_out: int = None):
+        ServerClient.__init__(self, view_server, platform_url, user_id=user_id, user_pwd=user_pwd, token=token, time_out=time_out)
         self.view_server = self.server_name
         self.platform_url = self.platform_url
         self.user_id = self.user_id
@@ -1834,7 +1834,7 @@ class GovernanceOfficer(ServerClient):
         ignore_case: bool = False,
         start_from: int = 0,
         page_size: int = 100,
-        output_format: str = "JSON",
+        graph_query_depth: int = 3, output_format: str = "JSON",
         report_spec: str | dict = None,
         **kwargs
     ) -> list | str:
@@ -1917,6 +1917,7 @@ class GovernanceOfficer(ServerClient):
         
         # Merge explicit parameters with kwargs
         params = {
+            'graph_query_depth': graph_query_depth,
             'search_string': search_string,
             'body': body,
             'starts_with': starts_with,
@@ -1947,7 +1948,7 @@ class GovernanceOfficer(ServerClient):
         ignore_case: bool = False,
         start_from: int = 0,
         page_size: int = 100,
-        output_format: str = "JSON",
+        graph_query_depth: int = 3, output_format: str = "JSON",
         report_spec: str | dict = None,
         **kwargs
     ) -> list | str:
@@ -2027,6 +2028,7 @@ class GovernanceOfficer(ServerClient):
         return loop.run_until_complete(
             self._async_find_governance_definitions(
                 search_string=search_string,
+                graph_query_depth=graph_query_depth,
                 body=body,
                 starts_with=starts_with,
                 ends_with=ends_with,
@@ -2040,17 +2042,19 @@ class GovernanceOfficer(ServerClient):
         )
 
     @dynamic_catch
-    async def _async_get_governance_definitions_by_name(self, filter_string: str,
+    @dynamic_catch
+    async def _async_get_governance_definitions_by_name(self, name: Optional[str] = None,
                                                         classification_names: Optional[list[str]] = None,
                                                         body: Optional[dict | FilterRequestBody] = None,
                                                         start_from: int = 0, page_size: int = 0,
-                                                        output_format: str = "JSON",
-                                                        report_spec: dict = None) -> list | str:
+                                                        graph_query_depth: int = 3, output_format: str = "JSON",
+                                                        report_spec: dict = None,
+                                                        **kwargs) -> list | str:
         """ Returns the list of governance definitions with a particular name. Async Version.
 
             Parameters
             ----------
-            filter_string: str
+            name: str
                 name of the information governance definition to retrieve.
             body: dict, optional
                 A dictionary containing parameters of the retrieval.
@@ -2094,32 +2098,43 @@ class GovernanceOfficer(ServerClient):
             }
 
         """
+        if name is None and "filter_string" in kwargs:
+            name = kwargs.pop("filter_string")
 
         url = (
             f"{self.platform_url}/servers/{self.view_server}/api/open-metadata/"
             f"{self.url_marker}/governance-definitions/by-name")
+        
+        params = {
+            'graph_query_depth': graph_query_depth,
+            'classification_names': classification_names,
+            'start_from': start_from,
+            'page_size': page_size,
+            'output_format': output_format,
+            'report_spec': report_spec,
+            'body': body
+        }
+        params.update(kwargs)
+        params = {k: v for k, v in params.items() if v is not None}
+
         response = await self._async_get_name_request(url, _type="GovernanceDefinition",
                                                       _gen_output=self._generate_governance_definition_output,
-                                                      filter_string=filter_string,
-                                                      classification_names=classification_names, start_from=start_from,
-                                                      page_size=page_size, output_format=output_format,
-                                                      report_spec=report_spec, body=body)
+                                                      filter_string=name, **params)
 
         return response
 
     @dynamic_catch
-    def get_governance_definitions_by_name(self, filter_string: str, classification_names: Optional[list[str]] = None,
+    def get_governance_definitions_by_name(self, name: Optional[str] = None, classification_names: Optional[list[str]] = None,
                                            body: Optional[dict | FilterRequestBody] = None,
                                            start_from: int = 0, page_size: int = 0,
-                                           output_format: str = "JSON",
-                                           report_spec: dict = None) -> list | str:
-        """ Returns the list of governance definitions with a particular name."""
-
-        """ Returns the list of information governance definitions with a particular name. Async Version.
+                                           graph_query_depth: int = 3, output_format: str = "JSON",
+                                           report_spec: dict = None,
+                                           **kwargs) -> list | str:
+        """ Returns the list of governance definitions with a particular name.
 
             Parameters
             ----------
-            filter_string: str
+            name: str
                 name of the information governance definition to retrieve.
             body: dict, optional
                 A dictionary containing parameters of the retrieval.
@@ -2171,21 +2186,23 @@ class GovernanceOfficer(ServerClient):
         """
         loop = asyncio.get_event_loop()
         response = loop.run_until_complete(
-            self._async_get_governance_definitions_by_name(filter_string, classification_names, body,
-                                                           start_from, page_size, output_format, report_spec))
+            self._async_get_governance_definitions_by_name(name=name, classification_names=classification_names, body=body,
+                                                           graph_query_depth=graph_query_depth,
+                                                           start_from=start_from, page_size=page_size, output_format=output_format, report_spec=report_spec,
+                                                           **kwargs))
         return response
- 
 
-    async def _async_get_governance_definition_by_guid(self, definition_guid: str, 
+    async def _async_get_governance_definition_by_guid(self, guid: str, 
                                                        element_type: Optional[str] = None,
                                                         body: Optional[dict | GetRequestBody] = None,
-                                                        output_format: str = "JSON",
-                                                        report_spec: dict = None) -> list | str:
+                                                        graph_query_depth: int = 3, output_format: str = "JSON",
+                                                        report_spec: dict = None,
+                                                        **kwargs) -> list | str:
         """ Returns the  governance definitions with a particular GUID. Async Version.
 
             Parameters
             ----------
-            definition_guid: str
+            guid: str
                 identity of the information governance definition to retrieve.
             body: dict, optional
                 A dictionary containing parameters of the retrieval.
@@ -2231,30 +2248,42 @@ class GovernanceOfficer(ServerClient):
             }
 
         """
+        if guid is None and "definition_guid" in kwargs:
+            guid = kwargs.pop("definition_guid")
 
         url = (
             f"{self.platform_url}/servers/{self.view_server}/api/open-metadata/"
-            f"{self.url_marker}/governance-definitions/{definition_guid}/retrieve")
+            f"{self.url_marker}/governance-definitions/{guid}/retrieve")
         
         element_type = element_type if element_type else "GovernanceDefinition"
+        
+        params = {
+            'graph_query_depth': graph_query_depth,
+            'output_format': output_format,
+            'report_spec': report_spec,
+            'body': body
+        }
+        params.update(kwargs)
+        params = {k: v for k, v in params.items() if v is not None}
+
         response = await self._async_get_guid_request(url, _type=element_type,
                                                       _gen_output=self._generate_governance_definition_output,
-                                                      output_format=output_format, report_spec=report_spec,
-                                                      body=body)
+                                                      **params)
 
         return response
 
     @dynamic_catch
-    def get_governance_definition_by_guid(self, definition_guid: str, 
+    def get_governance_definition_by_guid(self, guid: str, 
                                            element_type: Optional[str] = None,
                                            body: Optional[dict | GetRequestBody] = None,
-                                           output_format: str = "JSON",
-                                           report_spec: dict = None) -> list | str:
+                                           graph_query_depth: int = 3, output_format: str = "JSON",
+                                           report_spec: dict = None,
+                                           **kwargs) -> list | str:
         """ Returns the a governance definitions with a particular GUID. 
 
             Parameters
             ----------
-            definition_guid: str
+            guid: str
                 GUID of the information governance definition to retrieve.
             element_type: str
                 Type of element to retrieve.
@@ -2303,10 +2332,97 @@ class GovernanceOfficer(ServerClient):
         """
         loop = asyncio.get_event_loop()
         response = loop.run_until_complete(
-            self._async_get_governance_definition_by_guid(definition_guid, element_type, body,
-                                                            output_format, report_spec))
+            self._async_get_governance_definition_by_guid(guid=guid, element_type=element_type, body=body,
+                                                            graph_query_depth=graph_query_depth,
+                                                            output_format=output_format, report_spec=report_spec,
+                                                            **kwargs))
         return response
- 
+
+    async def _async_get_gov_def_in_context(self, guid: str, 
+                                            element_type: Optional[str] = None,
+                                            body: Optional[dict | GetRequestBody] = None,
+                                            graph_query_depth: int = 3, output_format: str = "JSON",
+                                            report_spec: dict = None,
+                                            **kwargs) -> list | str:
+        """ Returns the governance definitions in context. Async Version.
+
+            Parameters
+            ----------
+            guid: str
+                identity of the information governance definition to retrieve.
+            body: dict, optional
+                A dictionary containing parameters of the retrieval.
+            output_format: str, default = 'JSON'
+                Type of output to produce include:
+                JSON - output standard json
+                MD - output standard markdown with no preamble
+                FORM - output markdown with a preamble for a form
+                REPORT - output markdown with a preamble for a report
+                MERMAID - output mermaid markdown
+
+            Returns
+            -------
+            [dict] | str
+                A list of information governance definitions matching the name.
+        """
+        if guid is None and "definition_guid" in kwargs:
+            guid = kwargs.pop("definition_guid")
+
+        url = (
+            f"{self.platform_url}/servers/{self.view_server}/api/open-metadata/"
+            f"{self.url_marker}/governance-definitions/{guid}/retrieve-context")
+        
+        element_type = element_type if element_type else "GovernanceDefinition"
+        
+        params = {
+            'graph_query_depth': graph_query_depth,
+            'output_format': output_format,
+            'report_spec': report_spec,
+            'body': body
+        }
+        params.update(kwargs)
+        params = {k: v for k, v in params.items() if v is not None}
+
+        response = await self._async_get_guid_request(url, _type=element_type,
+                                                      _gen_output=self._generate_governance_definition_output,
+                                                      **params)
+
+        return response
+
+    @dynamic_catch
+    def get_gov_def_in_context(self, guid: str, 
+                               element_type: Optional[str] = None,
+                               body: Optional[dict | GetRequestBody] = None,
+                               graph_query_depth: int = 3, output_format: str = "JSON",
+                               report_spec: dict = None,
+                               **kwargs) -> list | str:
+        """ Returns the governance definitions in context.
+
+            Parameters
+            ----------
+            guid: str
+                GUID of the information governance definition to retrieve.
+            element_type: str
+                Type of element to retrieve.
+            body: dict, optional
+                A dictionary containing parameters of the retrieval.
+            
+            output_format: str, default = 'JSON'
+                Type of output to produce:
+                JSON - output standard json
+                MD - output standard markdown with no preamble
+                FORM - output markdown with a preamble for a form
+                REPORT - output markdown with a preamble for a report
+                MERMAID - output mermaid markdown
+        """
+        loop = asyncio.get_event_loop()
+        response = loop.run_until_complete(
+            self._async_get_gov_def_in_context(guid=guid, element_type=element_type, body=body,
+                                                graph_query_depth=graph_query_depth,
+                                                output_format=output_format, report_spec=report_spec,
+                                                **kwargs))
+        return response
+
 
 
     @dynamic_catch

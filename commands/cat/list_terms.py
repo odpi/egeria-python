@@ -106,7 +106,7 @@ def display_glossary_terms(
             file_name = f"Terms-{time.strftime('%Y-%m-%d-%H-%M-%S')}-{action}.md"
             full_file_path = os.path.join(file_path, file_name)
             os.makedirs(os.path.dirname(full_file_path), exist_ok=True)
-            output = g_client.find_glossary_terms(search_string, glossary_guid, output_format=output_format)
+            output = g_client.find_glossary_terms(search_string, anchor_guid=glossary_guid, output_format=output_format)
             if output == "NO_TERMS_FOUND":
                 print(f"\n==> No terms found for search string '{search_string}'")
                 return
@@ -145,6 +145,7 @@ def display_glossary_terms(
 
         terms = g_client.find_glossary_terms(
             search_string,
+            anchor_guid=glossary_guid,
             page_size=500,
         )
 

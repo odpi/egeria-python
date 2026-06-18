@@ -158,6 +158,7 @@ class TestAssetMaker:
             }
             
             asset_guid = a_client.create_asset(body=body)
+            # asset_guid = "a47906f0-67f0-46ed-890d-85cb049ffa60"
             print(f"\nCreated test asset with GUID: {asset_guid}")
             
             # Now retrieve it
@@ -179,6 +180,43 @@ class TestAssetMaker:
             assert response is not None, "Should retrieve the asset"
             assert isinstance(response, dict), "Response should be a dictionary"
             
+        except PyegeriaException as e:
+            print_exception_table(e)
+            assert False, "Invalid request"
+        finally:
+            a_client.close_session()
+
+    def test_get_asset_by_guid_simple(self):
+        """Test retrieving an asset by GUID"""
+        try:
+            a_client = AssetMaker(
+                self.good_view_server_2,
+                self.good_platform1_url,
+                user_id=self.good_user_2,
+                user_pwd=self.good_user_2_pwd,
+            )
+
+            token = a_client.create_egeria_bearer_token(
+                self.good_user_2, self.good_user_2_pwd
+            )
+
+            asset_guid = "a47906f0-67f0-46ed-890d-85cb049ffa60"
+
+            start_time = time.perf_counter()
+            response = a_client.get_asset_by_guid(
+                asset_guid,
+                graph_query_depth = 2,
+                output_format="JSON"
+            )
+            duration = time.perf_counter() - start_time
+
+            print(f"\n\tDuration was {duration} seconds")
+            print(f"\n\nRetrieved asset: {response.get('properties', {}).get('displayName', 'Unknown')}")
+
+            assert response is not None, "Should retrieve the asset"
+            assert isinstance(response, dict), "Response should be a dictionary"
+            print(json.dumps(response, indent=4))
+
         except PyegeriaException as e:
             print_exception_table(e)
             assert False, "Invalid request"
@@ -287,7 +325,7 @@ class TestAssetMaker:
             a_client = AssetMaker(self.good_view_server_2, self.good_platform1_url, user_id=self.good_user_2,
                                   user_pwd=self.good_user_2_pwd)
             a_client.create_egeria_bearer_token(self.good_user_2, self.good_user_2_pwd)
-            response = a_client.find_data_assets(search_string="*", output_format="JSON")
+            response = a_client.find_data_assets(search_string="Coco", metadata_element_subtypes = ["DataAsset"],output_format="JSON")
             assert response is not None
         except PyegeriaException as e:
             print_exception_table(e)
@@ -315,8 +353,9 @@ class TestAssetMaker:
             a_client = AssetMaker(self.good_view_server_2, self.good_platform1_url, user_id=self.good_user_2,
                                   user_pwd=self.good_user_2_pwd)
             a_client.create_egeria_bearer_token(self.good_user_2, self.good_user_2_pwd)
-            response = a_client.find_infrastructure(search_string="*", output_format="JSON")
+            response = a_client.find_infrastructure(search_string="OMAG Server", output_format="JSON")
             assert response is not None
+            print(json.dumps(response, indent=2))
         except PyegeriaException as e:
             print_exception_table(e)
             assert False, "Invalid request"
@@ -468,9 +507,10 @@ class TestAssetMaker:
             a_client = AssetMaker(self.good_view_server_2, self.good_platform1_url, user_id=self.good_user_2,
                                   user_pwd=self.good_user_2_pwd)
             a_client.create_egeria_bearer_token(self.good_user_2, self.good_user_2_pwd)
-            response = a_client.find_software_capabilities(search_string="*", output_format="JSON")
+            cap = "PostgreSQL Governance Engine"
+            response = a_client.find_software_capabilities(search_string=cap, output_format="JSON")
             if isinstance(response, (dict, list)):
-                print(f"\n\tFound software capabilities: {json.dumps(response, indent=2)[:500]}")
+                print(f"\n\tFound software capabilities: {json.dumps(response, indent=2)}")
             else:
                 print(f"\n\t{response}")
             assert response is not None
@@ -486,7 +526,7 @@ class TestAssetMaker:
             a_client = AssetMaker(self.good_view_server_2, self.good_platform1_url, user_id=self.good_user_2,
                                   user_pwd=self.good_user_2_pwd)
             a_client.create_egeria_bearer_token(self.good_user_2, self.good_user_2_pwd)
-            response = a_client.get_software_capabilities_by_name(filter_string="OMAG Server Platform", output_format="JSON")
+            response = a_client.get_software_capabilities_by_name(name="OMAG Server Platform", output_format="JSON")
             if isinstance(response, (dict, list)):
                 print(f"\n\tSoftware capabilities by name: {json.dumps(response, indent=2)[:500]}")
             else:
@@ -505,7 +545,7 @@ class TestAssetMaker:
                                   user_pwd=self.good_user_2_pwd)
             a_client.create_egeria_bearer_token(self.good_user_2, self.good_user_2_pwd)
             response = a_client.get_software_capabilities_by_deployed_implementation_type(
-                filter_string="OMAG Server", output_format="JSON"
+                deployed_implementation_type="OMAG Server", output_format="JSON"
             )
             if isinstance(response, (dict, list)):
                 print(f"\n\tSoftware capabilities by type: {json.dumps(response, indent=2)[:500]}")
@@ -590,7 +630,7 @@ class TestAssetMaker:
                 }
             }
             guid = a_client.create_software_capability(body=create_body)
-            response = a_client.get_software_capability_by_guid(software_capability_guid=guid, output_format="DICT")
+            response = a_client.get_software_capability_by_guid(guid=guid, output_format="DICT")
             if isinstance(response, (dict, list)):
                 print(f"\n\tRetrieved software capability: {json.dumps(response, indent=2)[:500]}")
             else:
@@ -740,6 +780,8 @@ class TestAssetMaker:
             }
             a_client.deploy_it_asset(asset_guid=asset_guid, destination_guid=destination_guid, body=body)
             print("\n\tdeploy_it_asset completed (skipped: placeholder GUIDs)")
+            a_client.undeploy_it_asset(asset_guid=asset_guid, destination_guid=destination_guid)
+            print("\n\tundeploy_it_asset completed (skipped: placeholder GUIDs)")
         except Exception as e:
             print(f"\n\tExpected error with placeholder GUIDs: {e}")
         finally:
@@ -763,6 +805,8 @@ class TestAssetMaker:
             }
             a_client.link_report_originator(originator_guid=originator_guid, report_guid=report_guid, body=body)
             print("\n\tlink_report_originator completed (skipped: placeholder GUIDs)")
+            a_client.unlink_report_originator(originator_guid=originator_guid, report_guid=report_guid)
+            print("\n\tunlink_report_originator completed (skipped: placeholder GUIDs)")
         except Exception as e:
             print(f"\n\tExpected error with placeholder GUIDs: {e}")
         finally:
@@ -786,6 +830,8 @@ class TestAssetMaker:
             }
             a_client.link_report_dependency(prior_report_guid=prior_report_guid, report_guid=report_guid, body=body)
             print("\n\tlink_report_dependency completed (skipped: placeholder GUIDs)")
+            a_client.unlink_report_dependency(prior_report_guid=prior_report_guid, report_guid=report_guid)
+            print("\n\tunlink_report_dependency completed (skipped: placeholder GUIDs)")
         except Exception as e:
             print(f"\n\tExpected error with placeholder GUIDs: {e}")
         finally:
@@ -809,8 +855,179 @@ class TestAssetMaker:
             }
             a_client.link_report_subject(subject_guid=subject_guid, report_guid=report_guid, body=body)
             print("\n\tlink_report_subject completed (skipped: placeholder GUIDs)")
+            a_client.unlink_report_subject(subject_guid=subject_guid, report_guid=report_guid)
+            print("\n\tunlink_report_subject completed (skipped: placeholder GUIDs)")
         except Exception as e:
             print(f"\n\tExpected error with placeholder GUIDs: {e}")
+        finally:
+            a_client.close_session()
+
+    def test_create_asset_from_template(self):
+        """Test creating an asset from a template"""
+        try:
+            a_client = AssetMaker(self.good_view_server_2, self.good_platform1_url, user_id=self.good_user_2,
+                                  user_pwd=self.good_user_2_pwd)
+            a_client.create_egeria_bearer_token(self.good_user_2, self.good_user_2_pwd)
+            body = {
+                "class": "TemplateRequestBody",
+                "templateGUID": "some-template-guid",
+                "properties": {
+                    "class": "AssetProperties",
+                    "qualifiedName": f"test-asset-from-template-{int(time.time())}",
+                    "displayName": "Test Asset from Template",
+                }
+            }
+            a_client.create_asset_from_template(body=body)
+        except Exception as e:
+            print(f"\n\tExpected error with placeholder template GUID: {e}")
+        finally:
+            a_client.close_session()
+
+    def test_get_assets_by_name(self):
+        """Test getting assets by name"""
+        try:
+            a_client = AssetMaker(self.good_view_server_2, self.good_platform1_url, user_id=self.good_user_2,
+                                  user_pwd=self.good_user_2_pwd)
+            a_client.create_egeria_bearer_token(self.good_user_2, self.good_user_2_pwd)
+            response = a_client.get_assets_by_name(filter_string="*", output_format="JSON")
+            assert response is not None
+        except PyegeriaException as e:
+            print_exception_table(e)
+            pass
+        finally:
+            a_client.close_session()
+
+    def test_catalog_target_lifecycle(self):
+        """Test catalog target methods: add, update, get, remove"""
+        try:
+            a_client = AssetMaker(self.good_view_server_2, self.good_platform1_url, user_id=self.good_user_2,
+                                  user_pwd=self.good_user_2_pwd)
+            a_client.create_egeria_bearer_token(self.good_user_2, self.good_user_2_pwd)
+            connector_guid = "connector-guid"
+            element_guid = "element-guid"
+            add_body = {
+                "class": "NewRelationshipRequestBody",
+                "properties": {
+                    "class": "CatalogTargetProperties",
+                    "catalogTargetName": "Test Catalog Target",
+                }
+            }
+            a_client.add_catalog_target(connector_guid, element_guid, body=add_body)
+            a_client.update_catalog_target("dummy-rel-guid", body={"class": "UpdateRelationshipRequestBody"})
+            a_client.get_catalog_target("dummy-rel-guid")
+            a_client.get_catalog_targets(connector_guid)
+            a_client.remove_catalog_target("dummy-rel-guid")
+        except Exception as e:
+            print(f"\n\tCatalog target operations expected error: {e}")
+        finally:
+            a_client.close_session()
+
+    def test_detach_data_set_content(self):
+        """Test detaching data set content"""
+        try:
+            a_client = AssetMaker(self.good_view_server_2, self.good_platform1_url, user_id=self.good_user_2,
+                                  user_pwd=self.good_user_2_pwd)
+            a_client.create_egeria_bearer_token(self.good_user_2, self.good_user_2_pwd)
+            a_client.detach_data_set_content("data-set-guid", "data-content-guid")
+        except Exception as e:
+            print(f"\n\tdetach_data_set_content expected error: {e}")
+        finally:
+            a_client.close_session()
+
+    def test_get_infrastructure_by_category(self):
+        """Test getting infrastructure by category"""
+        try:
+            a_client = AssetMaker(self.good_view_server_2, self.good_platform1_url, user_id=self.good_user_2,
+                                  user_pwd=self.good_user_2_pwd)
+            a_client.create_egeria_bearer_token(self.good_user_2, self.good_user_2_pwd)
+            response = a_client.get_infrastructure_by_category(category="test", output_format="JSON")
+            assert response is not None
+        except PyegeriaException as e:
+            print_exception_table(e)
+            pass
+        finally:
+            a_client.close_session()
+
+    def test_software_capability_asset_link(self):
+        """Test linking and detaching software capability to/from asset"""
+        try:
+            a_client = AssetMaker(self.good_view_server_2, self.good_platform1_url, user_id=self.good_user_2,
+                                  user_pwd=self.good_user_2_pwd)
+            a_client.create_egeria_bearer_token(self.good_user_2, self.good_user_2_pwd)
+            asset_guid = "asset-guid"
+            cap_guid = "cap-guid"
+            a_client.link_software_capability_to_asset(asset_guid, cap_guid)
+            a_client.detach_software_capability_from_asset(asset_guid, cap_guid)
+        except Exception as e:
+            print(f"\n\tSoftware capability asset link expected error: {e}")
+        finally:
+            a_client.close_session()
+
+    def test_get_processes_by_category(self):
+        """Test getting processes by category"""
+        try:
+            a_client = AssetMaker(self.good_view_server_2, self.good_platform1_url, user_id=self.good_user_2,
+                                  user_pwd=self.good_user_2_pwd)
+            a_client.create_egeria_bearer_token(self.good_user_2, self.good_user_2_pwd)
+            response = a_client.get_processes_by_category(category="test", output_format="JSON")
+            assert response is not None
+        except PyegeriaException as e:
+            print_exception_table(e)
+            pass
+        finally:
+            a_client.close_session()
+
+    def test_action_target_operations(self):
+        """Test action target methods"""
+        try:
+            a_client = AssetMaker(self.good_view_server_2, self.good_platform1_url, user_id=self.good_user_2,
+                                  user_pwd=self.good_user_2_pwd)
+            a_client.create_egeria_bearer_token(self.good_user_2, self.good_user_2_pwd)
+            action_guid = "action-guid"
+            element_guid = "element-guid"
+            a_client.add_action_target(action_guid, element_guid)
+            a_client.update_action_target_properties("dummy-guid", body={"class": "UpdateRelationshipRequestBody"})
+            a_client.get_action_target("dummy-guid")
+            a_client.get_action_targets(action_guid)
+            a_client.get_actions_for_action_target(element_guid)
+        except Exception as e:
+            print(f"\n\tAction target operations expected error: {e}")
+        finally:
+            a_client.close_session()
+
+    def test_action_management(self):
+        """Test action reassign, unassign, and get actions for requestor"""
+        try:
+            a_client = AssetMaker(self.good_view_server_2, self.good_platform1_url, user_id=self.good_user_2,
+                                  user_pwd=self.good_user_2_pwd)
+            a_client.create_egeria_bearer_token(self.good_user_2, self.good_user_2_pwd)
+            action_guid = "action-guid"
+            actor_guid = "actor-guid"
+            a_client.reassign_action(action_guid, actor_guid)
+            a_client.unassign_action(action_guid, actor_guid)
+            a_client.get_actions_for_requestor(metadata_element_guid=actor_guid, output_format="JSON")
+        except Exception as e:
+            print(f"\n\tAction management expected error: {e}")
+        finally:
+            a_client.close_session()
+
+    def test_create_software_capability_from_template(self):
+        """Test creating a software capability from a template"""
+        try:
+            a_client = AssetMaker(self.good_view_server_2, self.good_platform1_url, user_id=self.good_user_2,
+                                  user_pwd=self.good_user_2_pwd)
+            a_client.create_egeria_bearer_token(self.good_user_2, self.good_user_2_pwd)
+            body = {
+                "class": "TemplateRequestBody",
+                "templateGUID": "template-guid",
+                "properties": {
+                    "class": "SoftwareCapabilityProperties",
+                    "qualifiedName": f"TestSWCapFromTemplate:{int(time.time())}",
+                }
+            }
+            a_client.create_software_capability_from_template(body=body)
+        except Exception as e:
+            print(f"\n\tcreate_software_capability_from_template expected error: {e}")
         finally:
             a_client.close_session()
 

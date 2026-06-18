@@ -48,7 +48,7 @@ def list_classified_elements(om_type: str, classification: str, server: str, url
         print(f"The type name '{om_type}' is not known to the Egeria platform at {url} - {server}")
         sys.exit(1)
     try:
-        elements = c_client.get_elements_by_classification(classification, om_type)
+        elements = c_client.get_elements_by_classification(classification, body={"class": "ResultsRequestBody", "metadata_element_type_name": om_type})
     except PyegeriaException as e:
         if e.response_egeria_msg_id == "OMAG-COMMON-400-018":
             print(f"\n ===> Looks like the classification {classification} isn't known...\n")

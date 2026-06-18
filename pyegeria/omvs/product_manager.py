@@ -373,10 +373,11 @@ class ProductManager(CollectionManager):
     @dynamic_catch
     async def _async_get_digital_product_by_guid(
         self,
-        digital_product_guid: str,
+        guid: str = None,
         body: Optional[dict] = None,
-        output_format: str = "JSON",
+        graph_query_depth: int = 3, output_format: str = "JSON",
         report_spec: Optional[str | dict] = None,
+        **kwargs,
     ) -> dict | str:
         """Return the properties of a specific digital product. Async version.
 
@@ -412,23 +413,32 @@ class ProductManager(CollectionManager):
           "forDuplicateProcessing": false
         }
         """
-        url = f"{self.product_manager_command_root}/collections/{digital_product_guid}/retrieve"
+        if guid is None and "digital_product_guid" in kwargs:
+            guid = kwargs.pop("digital_product_guid")
+        url = f"{self.product_manager_command_root}/collections/{guid}/retrieve"
+        params = {
+            'graph_query_depth': graph_query_depth,
+            'output_format': output_format,
+            'report_spec': report_spec,
+            'body': body
+        }
+        params.update(kwargs)
+        params = {k: v for k, v in params.items() if v is not None}
         response = await self._async_get_guid_request(
             url,
             _type="DigitalProduct",
             _gen_output=self._generate_collection_output,
-            output_format=output_format,
-            report_spec=report_spec,
-            body=body,
+            **params,
         )
         return response
 
     def get_digital_product_by_guid(
         self,
-        digital_product_guid: str,
+        guid: str = None,
         body: Optional[dict] = None,
-        output_format: str = "JSON",
+        graph_query_depth: int = 3, output_format: str = "JSON",
         report_spec: Optional[str | dict] = None,
+        **kwargs,
     ) -> dict | str:
         """Return the properties of a specific digital product. Sync version.
 
@@ -456,20 +466,22 @@ class ProductManager(CollectionManager):
         loop = asyncio.get_event_loop()
         return loop.run_until_complete(
             self._async_get_digital_product_by_guid(
-                digital_product_guid, body, output_format, report_spec
+                graph_query_depth=graph_query_depth,
+                guid=guid, body=body, output_format=output_format, report_spec=report_spec, **kwargs
             )
         )
 
     @dynamic_catch
     async def _async_get_digital_products_by_name(
         self,
-        filter_string: str,
+        name: Optional[str] = None,
         classification_names: Optional[list[str]] = None,
         body: Optional[dict] = None,
         start_from: int = 0,
         page_size: int = 0,
-        output_format: str = "JSON",
+        graph_query_depth: int = 3, output_format: str = "JSON",
         report_spec: Optional[str | dict] = None,
+        **kwargs,
     ) -> list | str:
         """Returns the list of digital products with a particular name. Async version.
 
@@ -500,10 +512,12 @@ class ProductManager(CollectionManager):
         PyegeriaException
             If there are issues in communications, message format, or Egeria errors.
         """
+        if "filter_string" in kwargs:
+            name = kwargs.pop("filter_string")
         url = f"{self.product_manager_command_root}/collections/by-name"
         response = await self._async_get_name_request(url, _type="DigitalProduct",
                                                       _gen_output=self._generate_collection_output,
-                                                      filter_string=filter_string,
+                                                      filter_string=name,
                                                       classification_names=classification_names, start_from=start_from,
                                                       page_size=page_size, output_format=output_format,
                                                       report_spec=report_spec, body=body)
@@ -511,13 +525,14 @@ class ProductManager(CollectionManager):
 
     def get_digital_products_by_name(
         self,
-        filter_string: str,
+        name: Optional[str] = None,
         classification_names: Optional[list[str]] = None,
         body: Optional[dict] = None,
         start_from: int = 0,
         page_size: int = 0,
-        output_format: str = "JSON",
+        graph_query_depth: int = 3, output_format: str = "JSON",
         report_spec: Optional[str | dict] = None,
+        **kwargs,
     ) -> list | str:
         """Returns the list of digital products with a particular name. Sync version.
 
@@ -551,7 +566,8 @@ class ProductManager(CollectionManager):
         loop = asyncio.get_event_loop()
         return loop.run_until_complete(
             self._async_get_digital_products_by_name(
-                filter_string, classification_names, body, start_from, page_size, output_format, report_spec
+                graph_query_depth=graph_query_depth,
+                name=name, classification_names=classification_names, body=body, start_from=start_from, page_size=page_size, output_format=output_format, report_spec=report_spec, **kwargs
             )
         )
 
@@ -565,7 +581,7 @@ class ProductManager(CollectionManager):
         ignore_case: bool = False,
         start_from: int = 0,
         page_size: int = 100,
-        output_format: str = "JSON",
+        graph_query_depth: int = 3, output_format: str = "JSON",
         report_spec: Optional[str | dict] = None,
         metadata_element_subtype: Optional[list[str]] = None,
         **kwargs
@@ -642,6 +658,7 @@ class ProductManager(CollectionManager):
         
         # Merge explicit parameters with kwargs
         params = {
+            'graph_query_depth': graph_query_depth,
             'search_string': search_string,
             'body': body,
             'starts_with': starts_with,
@@ -671,7 +688,7 @@ class ProductManager(CollectionManager):
         ignore_case: bool = False,
         start_from: int = 0,
         page_size: int = 100,
-        output_format: str = "JSON",
+        graph_query_depth: int = 3, output_format: str = "JSON",
         report_spec: Optional[str | dict] = None,
         metadata_element_subtype: Optional[list[str]] = None,
         **kwargs
@@ -745,6 +762,7 @@ class ProductManager(CollectionManager):
         return loop.run_until_complete(
             self._async_find_digital_products(
                 search_string=search_string,
+                graph_query_depth=graph_query_depth,
                 body=body,
                 starts_with=starts_with,
                 ends_with=ends_with,
@@ -1340,7 +1358,8 @@ class ProductManager(CollectionManager):
             If there are issues in communications, message format, or Egeria errors.
         """
         digital_product_catalog_guid = str(digital_product_catalog_guid)
-        body = self._prepare_body(body)
+        if body is not None:
+            body = self._prepare_body(body)
         cascade = bool(cascade)
         loop = asyncio.get_event_loop()
         loop.run_until_complete(
@@ -1350,10 +1369,11 @@ class ProductManager(CollectionManager):
     @dynamic_catch
     async def _async_get_digital_product_catalog_by_guid(
         self,
-        digital_product_catalog_guid: str,
+        guid: str = None,
         body: Optional[dict] = None,
-        output_format: str = "JSON",
+        graph_query_depth: int = 3, output_format: str = "JSON",
         report_spec: Optional[str | dict] = None,
+        **kwargs,
     ) -> dict | str:
         """Return the properties of a specific digital product catalog by GUID. Async version.
 
@@ -1382,23 +1402,32 @@ class ProductManager(CollectionManager):
         PyegeriaNotAuthorizedException
             If the user is not authorized for the requested action.
         """
-        url = f"{self.product_manager_command_root}/collections/{digital_product_catalog_guid}/retrieve"
+        if guid is None and "digital_product_catalog_guid" in kwargs:
+            guid = kwargs.pop("digital_product_catalog_guid")
+        url = f"{self.product_manager_command_root}/collections/{guid}/retrieve"
+        params = {
+            'graph_query_depth': graph_query_depth,
+            'output_format': output_format,
+            'report_spec': report_spec,
+            'body': body
+        }
+        params.update(kwargs)
+        params = {k: v for k, v in params.items() if v is not None}
         response = await self._async_get_guid_request(
             url,
             _type="DigitalProductCatalog",
             _gen_output=None,
-            output_format=output_format,
-            report_spec=report_spec,
-            body=body,
+            **params,
         )
         return response
 
     def get_digital_product_catalog_by_guid(
         self,
-        digital_product_catalog_guid: str,
+        guid: str = None,
         body: Optional[dict] = None,
-        output_format: str = "JSON",
+        graph_query_depth: int = 3, output_format: str = "JSON",
         report_spec: Optional[str | dict] = None,
+        **kwargs,
     ) -> dict | str:
         """Return the properties of a specific digital product catalog by GUID. Sync version.
 
@@ -1426,20 +1455,22 @@ class ProductManager(CollectionManager):
         loop = asyncio.get_event_loop()
         return loop.run_until_complete(
             self._async_get_digital_product_catalog_by_guid(
-                digital_product_catalog_guid, body, output_format, report_spec
+                graph_query_depth=graph_query_depth,
+                guid=guid, body=body, output_format=output_format, report_spec=report_spec, **kwargs
             )
         )
 
     @dynamic_catch
     async def _async_get_digital_product_catalogs_by_name(
         self,
-        filter_string: Optional[str] = None,
+        name: Optional[str] = None,
         classification_names: Optional[list[str]] = None,
         body: Optional[dict] = None,
         start_from: int = 0,
         page_size: int = 0,
-        output_format: str = "JSON",
+        graph_query_depth: int = 3, output_format: str = "JSON",
         report_spec: Optional[str | dict] = None,
+        **kwargs,
     ) -> list | str:
         """Returns the list of digital product catalogs with a particular name. Async version.
 
@@ -1470,9 +1501,11 @@ class ProductManager(CollectionManager):
         PyegeriaException
             If there are issues in communications, message format, or Egeria errors.
         """
+        if "filter_string" in kwargs:
+            name = kwargs.pop("filter_string")
         url = f"{self.product_manager_command_root}/collections/by-name"
         response = await self._async_get_name_request(url, _type="DigitalProductCatalog", _gen_output=None,
-                                                      filter_string=filter_string,
+                                                      filter_string=name,
                                                       classification_names=classification_names, start_from=start_from,
                                                       page_size=page_size, output_format=output_format,
                                                       report_spec=report_spec, body=body)
@@ -1480,13 +1513,14 @@ class ProductManager(CollectionManager):
 
     def get_digital_product_catalogs_by_name(
         self,
-        filter_string: Optional[str] = None,
+        name: Optional[str] = None,
         classification_names: Optional[list[str]] = None,
         body: Optional[dict] = None,
         start_from: int = 0,
         page_size: int = 0,
-        output_format: str = "JSON",
+        graph_query_depth: int = 3, output_format: str = "JSON",
         report_spec: Optional[str | dict] = None,
+        **kwargs,
     ) -> list | str:
         """Returns the list of digital product catalogs with a particular name. Sync version.
 
@@ -1520,7 +1554,8 @@ class ProductManager(CollectionManager):
         loop = asyncio.get_event_loop()
         return loop.run_until_complete(
             self._async_get_digital_product_catalogs_by_name(
-                filter_string, classification_names, body, start_from, page_size, output_format, report_spec
+                graph_query_depth=graph_query_depth,
+                name=name, classification_names=classification_names, body=body, start_from=start_from, page_size=page_size, output_format=output_format, report_spec=report_spec, **kwargs
             )
         )
 
@@ -1534,7 +1569,7 @@ class ProductManager(CollectionManager):
         ignore_case: bool = True,
         start_from: int = 0,
         page_size: int = 0,
-        output_format: str = "JSON",
+        graph_query_depth: int = 3, output_format: str = "JSON",
         report_spec: Optional[str | dict] = None,
         **kwargs
     ) -> list | str:
@@ -1607,6 +1642,7 @@ class ProductManager(CollectionManager):
         
         # Merge explicit parameters with kwargs
         params = {
+            'graph_query_depth': graph_query_depth,
             'search_string': search_string,
             'body': body,
             'starts_with': starts_with,
@@ -1634,7 +1670,7 @@ class ProductManager(CollectionManager):
         ignore_case: bool = True,
         start_from: int = 0,
         page_size: int = 0,
-        output_format: str = "JSON",
+        graph_query_depth: int = 3, output_format: str = "JSON",
         report_spec: Optional[str | dict] = None,
         **kwargs
     ) -> list | str:
@@ -1707,6 +1743,7 @@ class ProductManager(CollectionManager):
         return loop.run_until_complete(
             self._async_find_digital_product_catalogs(
                 search_string=search_string,
+                graph_query_depth=graph_query_depth,
                 body=body,
                 starts_with=starts_with,
                 ends_with=ends_with,

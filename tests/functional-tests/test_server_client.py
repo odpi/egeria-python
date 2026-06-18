@@ -10,6 +10,7 @@ A running Egeria environment is needed to run these tests.
 
 import json
 import time
+from datetime import datetime
 
 from pydantic import ValidationError
 
@@ -25,6 +26,7 @@ from pyegeria.core._exceptions import (
     PyegeriaUnauthorizedException,
 )
 from pyegeria.core._server_client import ServerClient
+from pyegeria.omvs.my_profile import MyProfile
 
 disable_ssl_warnings = True
 
@@ -32,7 +34,7 @@ disable_ssl_warnings = True
 class TestServerClientFeedback:
     """Test class for ServerClient feedback methods (likes and ratings)"""
     
-    good_platform1_url = "https://laz.local:9443"
+    good_platform1_url = "https://localhost:9443"
     good_platform2_url = "https://oak.local:9443"
     bad_platform1_url = "https://localhost:9443"
 
@@ -393,6 +395,216 @@ class TestServerClientFeedback:
         finally:
             if s_client:
                 s_client.close_session()
+
+
+class TestServerClientNoteLogs:
+    """Test class for ServerClient NoteLog and Note methods"""
+
+    good_platform1_url = "https://localhost:9443"
+    good_view_server_2 = "qs-view-server"
+    good_user_2 = "erinoverview"
+    good_user_2_pwd = "secret"
+    test_element_guid = "8bd082dc-b2a9-48c8-8dfb-31d32980662a"
+
+    def test_notelog_lifecycle(self):
+        """Test NoteLog lifecycle: create, update, find, get attached, remove"""
+        s_client = None
+        try:
+            s_client = ServerClient(
+                self.good_view_server_2,
+                self.good_platform1_url,
+                user_id=self.good_user_2,
+                user_pwd=self.good_user_2_pwd,
+            )
+            s_client.create_egeria_bearer_token()
+
+            display_name = f"Test Note Log {int(time.time())}"
+
+            # 1. Create NoteLog attached to an element (using convenience parameters)
+            note_log_guid = s_client.create_note_log(
+                self.test_element_guid,
+                display_name=display_name,
+                description="Functional test note log",
+            )
+            assert note_log_guid, "NoteLog was not created"
+            print(f"\n\tCreated NoteLog GUID: {note_log_guid}")
+
+            # 2. Update NoteLog (description supersedes nothing - merge update by default)
+            s_client.update_note_log(
+                note_log_guid,
+                description="Updated functional test note log",
+            )
+            print("\n\tUpdated NoteLog")
+
+            # 3. Find NoteLogs - returns dict (elements) or str ("no elements found")
+            find_response = s_client.find_note_logs(display_name)
+            assert find_response is not None, "find_note_logs returned None"
+            print(f"\n\tfind_note_logs response: {json.dumps(find_response, indent=2)}")
+
+            # 4. Get NoteLogs attached to the element
+            attached_response = s_client.get_attached_note_logs(self.test_element_guid)
+            assert attached_response is not None, "get_attached_note_logs returned None"
+            print(f"\n\tget_attached_note_logs response: {json.dumps(attached_response, indent=2)}")
+
+            # 5. Remove NoteLog
+            s_client.remove_note_log(note_log_guid)
+            print("\n\tRemoved NoteLog")
+
+        except PyegeriaException as e:
+            print_basic_exception(e)
+            assert False, "Unexpected Pyegeria exception"
+        except ValidationError as e:
+            print_validation_error(e)
+            assert False, "Validation error"
+        finally:
+            if s_client:
+                s_client.close_session()
+
+    def test_note_lifecycle(self):
+        """Test Note lifecycle: create note log, create note, get note, list notes, remove"""
+        s_client = None
+        try:
+            s_client = ServerClient(
+                self.good_view_server_2,
+                self.good_platform1_url,
+                user_id=self.good_user_2,
+                user_pwd=self.good_user_2_pwd,
+            )
+            s_client.create_egeria_bearer_token()
+
+            # Create a NoteLog first to hold the notes
+            note_log_guid = s_client.create_note_log(
+                self.test_element_guid,
+                display_name=f"Test Note Log for Notes {int(time.time())}",
+                description="Holds notes for the note lifecycle test",
+            )
+            assert note_log_guid, "NoteLog was not created"
+            print(f"\n\tCreated NoteLog GUID: {note_log_guid}")
+
+            # 1. Create a Note within the NoteLog
+            note_guid = s_client.create_note(
+                note_log_guid,
+                display_name=f"Test Note {int(time.time())}",
+                description="Functional test note content",
+            )
+            assert note_guid, "Note was not created"
+            print(f"\n\tCreated Note GUID: {note_guid}")
+
+            # 2. Retrieve the Note by GUID (notes are of type Notification)
+            note = s_client.get_note_by_guid(note_guid, metadata_element_type_name="Notification")
+            assert note is not None, "get_note_by_guid returned None"
+            print(f"\n\tget_note_by_guid response: {json.dumps(note, indent=2)}")
+
+            # 3. List the Notes attached to the NoteLog
+            notes = s_client.get_notes_for_note_log(note_log_guid, metadata_element_type_name="Notification")
+            assert notes is not None, "get_notes_for_note_log returned None"
+            print(f"\n\tget_notes_for_note_log response: {json.dumps(notes, indent=2)}")
+
+            # Cleanup - cascade delete removes the contained notes with the note log
+            s_client.remove_note_log(note_log_guid, cascade_delete=True)
+            print("\n\tRemoved NoteLog")
+
+        except PyegeriaException as e:
+            print_basic_exception(e)
+            assert False, "Unexpected Pyegeria exception"
+        except ValidationError as e:
+            print_validation_error(e)
+            assert False, "Validation error"
+        finally:
+            if s_client:
+                s_client.close_session()
+
+
+class TestServerClientJournal:
+    """Test class for ServerClient Journal methods"""
+
+    good_platform1_url = "https://laz.local:9443"
+    good_view_server_2 = "qs-view-server"
+    good_user_2 = "erinoverview"
+    good_user_2_pwd = "secret"
+    test_element_guid = "71e67a50-ced4-40ed-b25e-98142a009604"
+
+    def test_add_journal_entry(self):
+        """Test adding a journal entry"""
+        s_client = None
+        try:
+            s_client = ServerClient(
+                self.good_view_server_2,
+                self.good_platform1_url,
+                user_id=self.good_user_2,
+                user_pwd=self.good_user_2_pwd,
+            )
+
+            journal_qn = f"test-journal-{int(time.time())}"
+            note_entry = "This is a test journal entry"
+
+            journal_guid = s_client.add_journal_entry(
+                note_log_qn=journal_qn,
+                journal_entry_display_name="Test Journal Entry",
+                note_entry=note_entry
+            )
+            assert journal_guid is not None
+            print(f"\n\tCreated Journal Entry GUID: {journal_guid}")
+
+        except Exception as e:
+            print(f"Exception: {e}")
+            assert False, f"Test failed with exception: {e}"
+        finally:
+            if s_client:
+                s_client.close_session()
+
+
+class TestMyProfileActivity:
+    """Test class for MyProfile activity methods (Blog, Journal, Log)"""
+
+    good_platform1_url = "https://laz.local:9443"
+    good_view_server_2 = "qs-view-server"
+    good_user_2 = "erinoverview"
+    good_user_2_pwd = "secret"
+
+    def test_activity_methods(self):
+        """Test blog, journal, and log activity methods"""
+        m_client = None
+        try:
+            m_client = MyProfile(
+                self.good_view_server_2,
+                self.good_platform1_url,
+                user_id=self.good_user_2,
+                user_pwd=self.good_user_2_pwd,
+            )
+
+            activity_body = {
+                "class": "NewAttachmentRequestBody",
+                "properties": {
+                    "class": "NotificationProperties",
+                    "typeName": "Notification",
+                    "qualifiedName": f"test-activity-{int(time.time())}",
+                    "displayName": "Test Activity",
+                    "description": "Functional test activity"
+                }
+            }
+
+            # 1. Blog my activity
+            blog_guid = m_client.blog_my_activity(body=activity_body)
+            assert blog_guid is not None
+            print(f"\n\tBlogged activity GUID: {blog_guid}")
+
+            # 2. Journal my activity
+            journal_guid = m_client.journal_my_activity(body=activity_body)
+            assert journal_guid is not None
+            print(f"\n\tJournaled activity GUID: {journal_guid}")
+
+            # 3. Log my activity
+            log_guid = m_client.log_my_activity(body=activity_body)
+            assert log_guid is not None
+            print(f"\n\tLogged activity GUID: {log_guid}")
+
+        except Exception as e:
+            print(f"Exception: {e}")
+            assert False, f"Test failed with exception: {e}"
+        finally:
+            if m_client:
+                m_client.close_session()
 
 
 if __name__ == "__main__":
