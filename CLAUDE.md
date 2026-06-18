@@ -53,7 +53,8 @@ dr_egeria <file> --process --debug         # prints every Egeria API call + body
 dr_egeria <file> --process --summary-only  # suppress per-command analysis
 
 # Regenerate report specs after adding/changing compact command JSON
-refresh_specs
+refresh_specs                           # both Basic + Advanced (default)
+refresh_specs --usage-level Basic       # restrict to a single usage level
 
 # Validate compact command JSON files
 validate_compact_specs
