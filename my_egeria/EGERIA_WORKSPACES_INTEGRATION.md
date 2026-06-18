@@ -3,6 +3,10 @@
 Design notes for what needs to be implemented in the egeria-workspaces repo
 to host my_egeria Textual apps as browser-accessible tools via the portal.
 
+> **Per-app hand-offs:** for the concrete, copy-paste steps to wire a specific
+> app, see the `HANDOFF_egeria_workspaces_*.md` files. The main MyEgeria app is
+> in `HANDOFF_egeria_workspaces_my_egeria.md`.
+
 ---
 
 ## How it works
@@ -65,10 +69,11 @@ quickstart `.env` file so the persona is baked in at stack startup.
 
 ### Port allocation (proposed)
 
-| App             | Port |
-|-----------------|------|
-| my_profile      | 8020 |
-| *(next app)*    | 8021 |
+| App             | Port | Serve entry point   |
+|-----------------|------|---------------------|
+| my_profile      | 8020 | `serve_my_profile`  |
+| my_egeria       | 8021 | `serve_my_egeria`   |
+| *(next app)*    | 8022 |                     |
 
 ---
 

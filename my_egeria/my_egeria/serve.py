@@ -4,8 +4,9 @@ Copyright Contributors to the ODPi Egeria project.
 
 Entry points for running my_egeria Textual apps via `textual serve` (browser mode).
 Host and port are controlled by environment variables:
-  MY_EGERIA_HOST   (default: 0.0.0.0)
-  MY_PROFILE_PORT  (default: 8020)
+  MY_EGERIA_HOST   (default: 0.0.0.0)   -- shared by all served apps
+  MY_PROFILE_PORT  (default: 8020)      -- my_profile demo app
+  MY_EGERIA_PORT   (default: 8021)      -- main MyEgeria app
 """
 import importlib.util
 import os
@@ -28,3 +29,7 @@ def _serve(app_module: str, port_env: str, default_port: str) -> None:
 
 def serve_my_profile() -> None:
     _serve("my_egeria.DemoCode.My_Profile.my_profile_app", "MY_PROFILE_PORT", "8020")
+
+
+def serve_my_egeria() -> None:
+    _serve("my_egeria.my_egeria_app", "MY_EGERIA_PORT", "8021")

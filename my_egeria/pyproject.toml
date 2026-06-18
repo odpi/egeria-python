@@ -32,7 +32,14 @@ include = ["my_egeria", "my_egeria.*"]
 "my_egeria" = ["**/*.tcss"]
 
 [project.scripts]
+# Terminal mode
 my-egeria = "my_egeria.main:main"
+# Browser mode (textual serve); env: MY_EGERIA_HOST, MY_EGERIA_PORT, MY_PROFILE_PORT
+serve-my-egeria = "my_egeria.serve:serve_my_egeria"
+serve-my-profile = "my_egeria.serve:serve_my_profile"
+
+[app.my-egeria]
+command = "serve_my_egeria"
 
 [app.my-profile]
 command = "python my_egeria.DemoCode.My_Profile.my_profile_app:main"

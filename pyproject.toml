@@ -127,8 +127,10 @@ dependencies = [
     list_archives = "commands.ops.list_archives:main"
 
     # my_egeria TUI apps — terminal mode
+    my_egeria = "my_egeria.main:main"
     my_profile = "my_egeria.DemoCode.My_Profile.my_profile_app:main"
-    # my_egeria TUI apps — browser mode (textual serve); env: MY_EGERIA_HOST, MY_PROFILE_PORT
+    # my_egeria TUI apps — browser mode (textual serve); env: MY_EGERIA_HOST, MY_EGERIA_PORT, MY_PROFILE_PORT
+    serve_my_egeria = "my_egeria.serve:serve_my_egeria"
     serve_my_profile = "my_egeria.serve:serve_my_profile"
 
     list_my_profile = "commands.my.get_my_profile:main"
