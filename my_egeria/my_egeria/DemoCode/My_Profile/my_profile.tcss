@@ -11,284 +11,125 @@
 
 Screen {
     layout: grid;
-    grid-size: 3 2;
-    grid-columns: 1fr 1fr;
-    outline: aqua;
+    grid-size: 3;
+    grid-gutter: 1;
+}
+
+#main_screen {
+    layout: grid;
+    grid-size: 3;
+    grid-columns: 1fr 1fr 1fr;
+    /*grid-rows: 3 1fr 1fr 1fr 1;*/
+    grid-rows: 1fr 1fr 1fr;
+    grid-gutter: 1;
+}
+
+#main_header {
+    column-span: 3;
+    height: 3;
+    width: 100%;
+}
+
+#main_footer {
+    column-span: 3;
+    height: 1;
+    width: 100%;
+}
+
+ModalScreen {
+    layout: grid;
+    grid-size: 3;
+    grid-rows: auto;
+    outline: chartreuse;
     grid-gutter: 2;
 }
-#other_functions {
-    height: auto;
-    width: auto;
+
+.EditProfileScreen {
+    grid-rows: auto auto 1fr auto;
 }
-SelectionList {
-    width: 80%;
-    height: 80%;
+
+.EditTeamsScreen {
+    grid-rows: auto auto auto 1fr auto;
 }
-#other_functions_container {
-    grid-rows: 2;
-    height: 100%;
+
+.EditRolesScreen, .EditCommunitiesScreen, .EditIdentitiesScreen,.StatusScreen {
+    grid-rows: auto auto 1fr auto;
+}
+
+ModalScreen > Header, ModalScreen > Footer {
+    column-span: 3;
+}
+
+#edit_profile_title, #create_profile_title, #edit_teams_title, #edit_roles_title, #edit_communities_title, #edit_identities_title, #status_title, .span-3 {
+    column-span: 3;
+    text-align: center;
+    background: darkblue;
+    color: white;
+}
+
+#main_projects_container,
+#main_communities_container,
+#main_roles_container,
+#main_teams_container,
+#main_actions_container,
+#main_identities_container,
+#other_function_container,
+#other_function_list {
     width: 100%;
-}
-.CreateProfileScreen {
-    grid-rows: 2;
     height: 100%;
-    width: 100%;
 }
-#technology_types_table {
-    grid-rows: 2;
+
+#edit_roles_container, #edit_communities_container, #edit_identities_container, #edit_teams_container, #status_container, #user_identities_container, #main_identities_container {
+    column-span: 3;
     width: 100%;
     height: 100%;
 }
+
+#technology_types_table, #business_domain_table, #communities_table, #data_dictionary_table, #data_specification_table, #digital_product_catalog_table, #glossary_table, #projects_table, #roles_table, #teams_table, #actions_table, #user_identity_table, #user_identity_datatable, #status_table, #root_collection_table {
+    width: 100%;
+    height: 100%;
+}
+
 Button {
     background: greenyellow;
     color: black;
 }
-#data_specification_details {
-    height: auto;
-    width: auto;
-    background: cadetblue;
-}
-#glossary_details_tree {
-    height: auto;
-    width: auto;
-    background: cadetblue;
-}
-#catalog_details {
-    height: auto;
-    width: auto;
-    background: cadetblue;
-}
-#instruction_static {
-    column-span: 2;
-    height: auto;
+
+DataTable, TextArea, SelectionList, Tree, OptionList {
+    color: white;
+    background: black;
 }
 
-SelectionOverviewScreen {
-    layout: grid;
-    grid-size: 2 3;
-    grid-columns: 1fr 1fr;
-    grid-rows: auto 1fr auto;
+DataTable {
+    text-style: bold;
 }
 
-SelectionOverviewScreen > Header {
-    column-span: 2;
+DataTable > .datatable--header {
+    background: darkblue;
+    color: white;
+    text-style: bold;
 }
 
-SelectionOverviewScreen > Footer {
-    column-span: 2;
+DataTable > .datatable--cursor, OptionList > .option-list--cursor {
+    background: greenyellow;
+    color: black;
 }
-#business_domain_details_text_area {
+
+#edit_profile_form Horizontal {
+    height: auto;
     width: 100%;
-    height: 100%;
 }
-#business_domain_table {
-    width: auto;
-    height: auto;
+
+#edit_profile_form Horizontal Static {
+    width: 22;
 }
-#communities_table {
-    width: auto;
-    height: auto;
-}
-#create_profile_btn {
-    width: auto;
-    height: auto;
-}
-#create_profile_form {
-    width: auto;
-    height: auto;
-}
-#data_details_placeholder {
-    width: 100%;
-    height: 100%;
-}
-#data_details_placeholder_container {
+
+#edit_profile_form Horizontal Input {
     width: 1fr;
-    height: 50%;
-    border: solid blue;
 }
-#data_sample_placeholder {
-    width:100%;
-    height: 100%;
-}
-#data_sample_placeholder_container {
+
+Input {
     width: 1fr;
-    height: 50%;
-    border: solid green;
-}
-#data_dictionary_details_text_area {
-    width: 100%;
-    height: 100%;
-}
-#data_dictionary_table {
-    width: auto;
-    height: auto;
-}
-#data_specification_details_text_area {
-    width: 100%;
-    height: 100%;
-}
-#data_specification_table {
-    width: auto;
-    height: auto;
-}
-#data_tree_container {
-    width: 1fr;
-    height: 100%;
-    border: solid green;
-}
-#digital_product_catalog_table {
-    width: auto;
-    height: auto;
-}
-#digital_product_details_text_area {
-    width: 100%;
-    height: 100%;
-}
-#glossary_table {
-    width: auto;
-    height: auto;
-}
-#glossary_term_details_text_area {
-    width: 100%;
-    height: 100%;
-}
-#number_of_processes_label {
-    width: auto;
-    height: auto;
-}
-#number_of_templates_label {
-    width: auto;
-    height: auto;
-}
-#other_function_container {
-    width: auto;
-    height: auto;
-}
-#other_function_list {
-    width: auto;
-    height: auto;
-}
-#process_options {
-    width: auto;
-    height: auto;
-}
-#process_options_container {
-    width: auto;
-    height: auto;
-}
-#process_options_label {
-    width: auto;
-    height: auto;
-}
-#projects_table {
-    width: auto;
-    height: auto;
-}
-#roles_table {
-    width: auto;
-    height: auto;
-}
-#select_process_btn {
-    width: auto;
-    height: auto;
-}
-#select_tech_type_btn {
-    width: auto;
-    height: auto;
-}
-#select_template_btn {
-    width: auto;
-    height: auto;
-}
-#status_message_text_area {
-    width: auto;
-    height: auto;
-}
-#submit_button {
-    width: auto;
-    height: auto;
-}
-#teams_table {
-    width: auto;
-    height: auto;
-}
-#technology_type_templates_input {
-    width: auto;
     height: auto;
     border: solid white;
-}
-#technology_type_processes_input {
-    width: auto;
-    height: auto;
-    border: solid white;
-}
-#user_identities_container {
-    width: auto;
-    height: auto;
-    border: solid white;
-}
-#user_identities_table {}
-#technology_types_tree {
-    width: auto;
-    height: auto;
-}
-#template_options {
-    width: auto;
-    height: auto;
-}
-#template_options_container {
-    width: auto;
-    height: auto;
-}
-#template_options_label {
-    width: auto;
-    height: auto;
-}
-#user_description {
-    width: auto;
-    height: auto;
-}
-#user_employee_id {
-    width: auto;
-    height: auto;
-}
-#user_family_name {
-    width: auto;
-    height: auto;
-}
-#user_given_names {
-    width: auto;
-    height: auto;
-}
-#user_identity_table {
-    width: auto;
-    height: auto;
-}
-#user_job_title {
-    width: auto;
-    height: auto;
-}
-#user_preferred_language {
-    width: auto;
-    height: auto;
-}
-#user_preferred_name {
-    width: auto;
-    height: auto;
-}
-#user_pronouns {
-    width: auto;
-    height: auto;
-}
-#user_resident_country {
-    width: auto;
-    height: auto;
-}
-#user_time_zone {
-    width: auto;
-    height: auto;
-}
-#user_title {
-    width: auto;
-    height: auto;
 }

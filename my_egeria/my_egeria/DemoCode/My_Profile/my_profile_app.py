@@ -28,6 +28,11 @@ from textual.containers import ScrollableContainer
 from textual.widgets import DataTable, OptionList, Header, Static, Footer, Tree
 
 from CreateProfileScreen import CreateProfileScreen
+from EditProfileScreen import EditProfileScreen
+from EditCommunitiesScreen import EditCommunitiesScreen
+from EditIdentitiesScreen import EditIdentitiesScreen
+from EditRolesScreen import EditRolesScreen
+from EditTeamsScreen import EditTeamsScreen
 from TechnologyTypesScreen import TechnologyTypesScreen
 from TechnologyTypeOptionsScreen import TechnologyTypeOptionsScreen
 from TechnologyTypeTemplatesScreen import TechnologyTypeTemplatesScreen
@@ -59,6 +64,11 @@ class MyProfileApp(App):
         "main": MainScreen,
         "_default": MainScreen,
         "create_profile": CreateProfileScreen,
+        "edit_profile": EditProfileScreen,
+        "edit_communities": EditCommunitiesScreen,
+        "edit_identities": EditIdentitiesScreen,
+        "edit_roles": EditRolesScreen,
+        "edit_teams": EditTeamsScreen,
         "tech_types": TechnologyTypesScreen,
         "tech_type_options": TechnologyTypeOptionsScreen,
         "tech_type_templates": TechnologyTypeTemplatesScreen,
@@ -116,6 +126,8 @@ class MyProfileApp(App):
         self.team_members: list[list] = []
         self.max_mermaid_node_count = 0  # This is to tell egeria we dont want mermaid graphs in the response packet.
         self.graph_query_depth = 0  # This tell egeria not to include relationships in the response packet
+        self.user_GUID = ""
+        self.user_data = {}
 
     def compose(self) -> ComposeResult:
         yield Header()
@@ -214,6 +226,26 @@ class MyProfileApp(App):
         except PyegeriaException as e:
             self.log(f"Error retrieving User-Identities: {e!s}")
             self.user_identities = {}
+
+        # User GUID
+
+        try:
+            self.user_data  = exec_report_spec(format_set_name="Actor-Profiles",
+                                                       output_format="DICT",
+                                                       params = {"search_string" : self.user_name},
+                                                       view_server=self.view_server,
+                                                       view_url=self.platform_url,
+                                                       user=self.user_name,
+                                                       user_pass=self.user_password)
+        except PyegeriaException as e:
+            print_basic_exception(e)
+            self.log(f"Error retrieving actor profile: {e!s}")
+            self.exit(420)
+        self.log(f"Actor Profile retrieved: {self.user_data}")
+        self.user_data = self.user_data.get("data")
+        self.log(f"Extracted data : {self.user_data}")
+        self.user_GUID = self.user_data[0].get("GUID")
+        self.log(f"User GUID retrieved: {self.user_GUID}")
 
         # Normalize expected keys
         self.full_name = self.user_profile.get("Full Name") or ""
@@ -557,7 +589,17 @@ class MyProfileApp(App):
                                                      self.view_server,
                                                      self.platform_url),
                                    callback = self.shop_for_data_callback)
-
+        elif selected_option == "Edit Profile":
+            await self.push_screen(EditProfileScreen(
+                self.user_name,
+                                                      self.user_password,
+                                                      self.view_server,
+                                                      self.platform_url,
+                                                      self.karma_points,
+                                                      self.user_profile,
+                                                      self.user_GUID
+                                                    ),
+                                   callback = self.edit_profile_callback)
         elif selected_option == "User Bookmarks":
             pass
         elif selected_option == "Subscriptions":
@@ -1779,9 +1821,106 @@ class MyProfileApp(App):
             push the main screen again"""
         self.push_screen("main")
 
+    def edit_identities_callback(self, rows_with_keys):
+        """ Callback for EditIdentitiesScreen """
+        if isinstance(rows_with_keys, list):
+            main_screen = self.get_screen("main")
+            table = main_screen.query_one("#user_identity_table", DataTable)
+            table.clear()
+            for key_str, cell_values in rows_with_keys:
+                table.add_row(*cell_values, key=key_str)
+        self.push_screen("main")
+
+    def edit_communities_callback(self, rows_with_keys):
+        """ Callback for EditCommunitiesScreen """
+        if isinstance(rows_with_keys, list):
+            main_screen = self.get_screen("main")
+            table = main_screen.query_one("#communities_table", DataTable)
+            table.clear()
+            for key_str, cell_values in rows_with_keys:
+                table.add_row(*cell_values, key=key_str)
+        self.push_screen("main")
+
+    def edit_roles_callback(self, rows_with_keys):
+        """ Callback for EditRolesScreen """
+        if isinstance(rows_with_keys, list):
+            main_screen = self.get_screen("main")
+            table = main_screen.query_one("#roles_table", DataTable)
+            table.clear()
+            for key_str, cell_values in rows_with_keys:
+                table.add_row(*cell_values, key=key_str)
+        self.push_screen("main")
+
+    def edit_teams_callback(self, rows_with_keys):
+        """ Callback for EditTeamsScreen """
+        if isinstance(rows_with_keys, list):
+            main_screen = self.get_screen("main")
+            table = main_screen.query_one("#teams_table", DataTable)
+            table.clear()
+            for key_str, cell_values in rows_with_keys:
+                table.add_row(*cell_values, key=key_str)
+        self.push_screen("main")
+
+    def edit_profile_callback(self, return_c):
+        """ Callback routine for the edit profile screen """
+        if isinstance(return_c, int):
+            if return_c == 200:
+                self.push_screen("main")
+            else:
+                self.log(f"Error returned from EditProfileScreen: {return_c}")
+                self.log("Returning to main screen")
+                self.push_screen("main")
+        elif isinstance(return_c, str):
+            if return_c == "identity":
+                main_screen = self.get_screen("main")
+                self.identities_table = main_screen.query_one("#user_identity_table", DataTable)
+                # Extract Columns from table
+                columns = [col.label.plain for col in self.identities_table.columns.values()]
+                # Extract row keys and data simultaneously
+                rows_with_keys = []
+                for row_key in self.identities_table.rows:
+                    rows_with_keys.append((row_key.value, self.identities_table.get_row(row_key)))
+                self.push_screen(EditIdentitiesScreen(columns, rows_with_keys), callback=self.edit_identities_callback)
+            elif return_c == "community":
+                main_screen = self.get_screen("main")
+                self.communities_table = main_screen.query_one("#communities_table", DataTable)
+                # Extract Columns from table
+                columns = [col.label.plain for col in self.communities_table.columns.values()]
+                # Extract row keys and data simultaneously
+                rows_with_keys = []
+                for row_key in self.communities_table.rows:
+                    rows_with_keys.append((row_key.value, self.communities_table.get_row(row_key)))
+                self.push_screen(EditCommunitiesScreen(columns, rows_with_keys), callback=self.edit_communities_callback)
+            elif return_c == "role":
+                main_screen = self.get_screen("main")
+                self.roles_table = main_screen.query_one("#roles_table", DataTable)
+                # Extract Columns from table
+                columns = [col.label.plain for col in self.roles_table.columns.values()]
+                # Extract row keys and data simultaneously
+                rows_with_keys = []
+                for row_key in self.roles_table.rows:
+                    rows_with_keys.append((row_key.value, self.roles_table.get_row(row_key)))
+                self.push_screen(EditRolesScreen(columns, rows_with_keys), callback=self.edit_roles_callback)
+            elif return_c == "team":
+                main_screen = self.get_screen("main")
+                self.teams_table = main_screen.query_one("#teams_table", DataTable)
+                # Extract Columns from table
+                columns = [col.label.plain for col in self.teams_table.columns.values()]
+                # Extract row keys and data simultaneously
+                rows_with_keys = []
+                for row_key in self.teams_table.rows:
+                    # row_key.value gets the string representation of the RowKey
+                    # get_row() returns the list of cell values for that row
+                    rows_with_keys.append((row_key.value, self.teams_table.get_row(row_key)))
+                self.push_screen(EditTeamsScreen(columns, rows_with_keys), callback=self.edit_teams_callback)
+        else:
+            self.log(f"Unexpected return type from EditProfileScreen: {type(return_c)}")
+            self.push_screen("main")
+
+
 if __name__ == "__main__":
     app = MyProfileApp()
     app.run()
-
-if __name__ == "__main__":
-    main()
+#
+# if __name__ == "__main__":
+#     main()

@@ -21,7 +21,7 @@ class StatusScreen(ModalScreen):
     BINDINGS = [("q", "quit", "Quit"),
                 ("return", "successful", "Continue"),
                 ("b", "unsuccessful", "Bad result"),
-                ("c", "copy GUID to clipboard", "Copy GUID to clipboard", )
+                ("c", "copy_guid_to_clipboard", "Copy GUID to clipboard"),
                 ]
 
     CSS_PATH = "my_profile.tcss"
@@ -34,10 +34,12 @@ class StatusScreen(ModalScreen):
     def compose(self) -> ComposeResult:
         """ Compose the UI components for the StatusScreen screen."""
         yield Header(show_clock=True)
+        yield Static("Status", classes="span-3", id="status_title")
         yield ScrollableContainer(
             Static("Status"),
             TextArea(self.status_message, id="status_message_text_area", read_only=True),
-            Static("End of Status"))
+            Static("End of Status"),
+            id="status_container")
         yield Footer()
 
     def action_quit(self) -> None:

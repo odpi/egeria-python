@@ -19,22 +19,24 @@ class MainScreen(Screen):
     CSS_PATH = "my_profile.tcss"
 
     def __init__(self):
-        super().__init__()
+        super().__init__(id="main_screen")
         self.title = "Egeria"
         self.sub_title = "My Profile"
 
     def compose(self) -> ComposeResult:
         # place widgets into grid on screen, note sequence determines position!
-        yield Header(show_clock=True)
+        yield Header(show_clock=True, id="main_header")
 
         yield ScrollableContainer(
             Static("Projects"),
-            DataTable(id="projects_table")
+            DataTable(id="projects_table"),
+            id="main_projects_container"
         )
 
         yield ScrollableContainer(
             Static("Communities"),
-            DataTable(id="communities_table")
+            DataTable(id="communities_table"),
+            id="main_communities_container"
         )
 
         yield ScrollableContainer(
@@ -43,7 +45,7 @@ class MainScreen(Screen):
             OptionList(
                 Option("User Identities"),
                 Option("Catalogs/Shop for Data"),
-                Option("Edit Profile", disabled=True),
+                Option("Edit Profile"),
                 Option("Subscriptions", disabled=True),
                 Option("Technology Types"),
                 Option("User Bookmarks", disabled=True),
@@ -54,22 +56,26 @@ class MainScreen(Screen):
 
         yield ScrollableContainer(
             Static("Roles"),
-            DataTable(id="roles_table")
+            DataTable(id="roles_table"),
+            id="main_roles_container"
         )
 
         yield ScrollableContainer(
             Static("Teams"),
-            DataTable(id="teams_table")
+            DataTable(id="teams_table"),
+            id="main_teams_container"
         )
 
         yield ScrollableContainer(
             Static("Actions"),
-            DataTable(id="actions_table")
+            DataTable(id="actions_table"),
+            id="main_actions_container"
         )
 
         yield ScrollableContainer(
             Static("User Identity"),
-            DataTable(id="user_identity_table")
+            DataTable(id="user_identity_table"),
+            id="main_identities_container"
         )
 
-        yield Footer()
+        yield Footer(id="main_footer")
