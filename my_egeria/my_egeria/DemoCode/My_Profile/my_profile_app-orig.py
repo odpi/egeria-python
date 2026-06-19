@@ -227,36 +227,25 @@ class MyProfileApp(App):
             self.log(f"Error retrieving User-Identities: {e!s}")
             self.user_identities = {}
 
-        # User GUID — resolve self-scoped; never let a missing/empty lookup crash
-        # the app (this runs in on_mount, before first paint, so an unguarded
-        # TypeError here kills the whole session).
-        self.user_GUID = ""
-        # Preferred: the current user's own profile already carries its GUID when
-        # the My-User-MD format set includes it — no directory search required.
-        if isinstance(self.user_profile, dict) and self.user_profile.get("GUID"):
-            self.user_GUID = self.user_profile.get("GUID")
-        else:
-            # Fallback: actor-profile directory lookup. Egeria's Actor-Profiles
-            # search matches the display *name*, so a userId search legitimately
-            # returns {'kind': 'empty'} → guard against None / empty data.
-            try:
-                actor = exec_report_spec(format_set_name="Actor-Profiles",
-                                         output_format="DICT",
-                                         params={"search_string": self.user_name},
-                                         view_server=self.view_server,
-                                         view_url=self.platform_url,
-                                         user=self.user_name,
-                                         user_pass=self.user_password)
-            except PyegeriaException as e:
-                print_basic_exception(e)
-                self.log(f"Error retrieving actor profile: {e!s}")
-                actor = None
-            data = actor.get("data") if isinstance(actor, dict) else None
-            if data:
-                self.user_GUID = data[0].get("GUID") or ""
-            else:
-                self.log("Actor-Profiles lookup returned no data; user_GUID left unset.")
-        self.log(f"User GUID retrieved: {self.user_GUID!r}")
+        # User GUID
+
+        try:
+            self.user_data  = exec_report_spec(format_set_name="Actor-Profiles",
+                                                       output_format="DICT",
+                                                       params = {"search_string" : self.user_name},
+                                                       view_server=self.view_server,
+                                                       view_url=self.platform_url,
+                                                       user=self.user_name,
+                                                       user_pass=self.user_password)
+        except PyegeriaException as e:
+            print_basic_exception(e)
+            self.log(f"Error retrieving actor profile: {e!s}")
+            self.exit(420)
+        self.log(f"Actor Profile retrieved: {self.user_data}")
+        self.user_data = self.user_data.get("data")
+        self.log(f"Extracted data : {self.user_data}")
+        self.user_GUID = self.user_data[0].get("GUID")
+        self.log(f"User GUID retrieved: {self.user_GUID}")
 
         # Normalize expected keys
         self.full_name = self.user_profile.get("Full Name") or ""

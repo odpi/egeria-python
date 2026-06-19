@@ -821,6 +821,8 @@ base_report_specs = FormatSetDict({
                     Column(name="Activity", key="activity_entries", detail_spec="My-User-Note-Logs-Detail"),
                     Column(name="Blogs", key="blog_entries", detail_spec="My-User-Note-Logs-Detail"),
                     Column(name="Journal", key="journal_entries", detail_spec="My-User-Note-Logs-Detail"),
+                    Column(name="GUID", key="guid", format=True),
+
                 ],
             )
         ],
