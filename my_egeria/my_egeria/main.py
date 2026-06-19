@@ -7,7 +7,7 @@
 
 from my_egeria.startup_check import check_connection
 from my_egeria.error_popup_app import ErrorPopupApp
-from my_egeria.my_egeria import MyEgeria
+from my_egeria.my_egeria_app import MyEgeria
 
 
 def on_mount(self):

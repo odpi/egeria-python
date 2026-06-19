@@ -584,7 +584,7 @@ pyegeria includes powerful tooling to automatically generate report specificatio
 The easiest way to keep your documentation, templates, and report specs fully synchronized with your compact command schemas is to use the `refresh_specs.py` utility. This script executes all three generation steps in sequence.
 
 ```bash
-## Run the complete refresh process
+## Run the complete refresh process (generates both Basic and Advanced)
 uv run commands/tech/refresh_specs.py
 
 # Automatically persist generated report specs to base_report_formats.py
@@ -594,7 +594,12 @@ uv run commands/tech/refresh_specs.py --merge-reports
 uv run commands/tech/refresh_specs.py --usage-level Advanced --family AssetCatalog
 ```
 
-The script will automatically pick up all `.json` files inside the `md_processing/data/compact_commands` directory, resolve attributes across inherited bundles, and regenerate all artifacts.
+When `--usage-level` is omitted, the script refreshes **both** Basic and Advanced
+templates and help (each usage level is written to its own folder); pass
+`--usage-level Basic` or `--usage-level Advanced` to restrict generation to a
+single level. The script automatically picks up all `.json` files inside the
+`md_processing/data/compact_commands` directory, resolves attributes across
+inherited bundles, and regenerates all artifacts.
 
 ### Using the individual CLI Tools
 

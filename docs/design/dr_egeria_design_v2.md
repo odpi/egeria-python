@@ -155,7 +155,7 @@ To provide a consistent experience between creating metadata with Dr.Egeria and 
 The utility script `refresh_specs.py` (located in `commands/tech/`) executes all generation tools in sequence:
 - Resolves all attributes from command bundles and definitions natively using the `compact_loader`.
 - Generates standard `FormatSet` report specs for each command (updating `pyegeria/view/base_report_formats.py`).
-- Generates Markdown command templates for authors to use.
+- Generates Markdown command templates for authors to use (both Basic and Advanced usage levels by default; pass `--usage-level` to restrict to one).
 - Generates Dr.Egeria Glossary terms that define every recognized command attribute.
 
 Running `uv run commands/tech/refresh_specs.py --merge-reports` ensures that the `Display Names`, `keys`, and `descriptions` used in Dr.Egeria markdown files are identical to the labels and data fields used in pyegeria reports and documentation.
