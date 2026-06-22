@@ -169,7 +169,7 @@ class SecurityOfficer(ServerClient):
 
         response = await self._async_make_request("GET", url, params=params)
         if response:
-            return response.json().get("userIds", [])
+            return response.json().get("names", [])
         return []
 
     def get_user_list(
