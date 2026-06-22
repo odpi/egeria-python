@@ -155,7 +155,8 @@ class ClassificationExplorer(ServerClient):
             classification_name: str,
             body: Optional[dict | LevelIdentifierQueryBody] = None,
             output_format: str = "JSON",
-            report_spec: dict | str = None
+            report_spec: dict | str = None,
+            **kwargs
     ) -> list | str:
         """
         Return information about the elements classified with the specified classification. Async version.
@@ -208,7 +209,7 @@ class ClassificationExplorer(ServerClient):
 
         response = await self._async_get_level_identifier_query_body_request(
             url=url, _gen_output=self._generate_referenceable_output, output_format=output_format,
-            report_spec=report_spec, body=body
+            report_spec=report_spec, body=body, **kwargs
         )
         return response
 
@@ -218,7 +219,8 @@ class ClassificationExplorer(ServerClient):
             classification_name: str,
             body: Optional[dict | LevelIdentifierQueryBody] = None,
             output_format: str = "JSON",
-            report_spec: dict | str = None
+            report_spec: dict | str = None,
+            **kwargs
     ) -> list | str:
         """
         Return information about the elements classified with the specified classification.
@@ -267,7 +269,7 @@ class ClassificationExplorer(ServerClient):
         loop = asyncio.get_event_loop()
         response = loop.run_until_complete(
             self._async_get_classified_elements_by(
-                classification_name, body, output_format, report_spec
+                classification_name, body, output_format, report_spec, **kwargs
             )
         )
         return response
@@ -277,7 +279,8 @@ class ClassificationExplorer(ServerClient):
             self,
             body: dict,
             output_format: str = "JSON",
-            report_spec: dict | str = None
+            report_spec: dict | str = None,
+            **kwargs
     ) -> list | str:
         """
         Return information about the elements classified with the security tags classification. Async version.
@@ -328,7 +331,7 @@ class ClassificationExplorer(ServerClient):
         url = (f"{self.platform_url}/servers/{self.view_server}/api/open-metadata/"
                f"classification-explorer/elements/by-security-tags")
 
-        response = await self._async_make_request("POST", url, body_slimmer(body))
+        response = await self._async_make_request("POST", url, body_slimmer(body), **kwargs)
         elements = response.json().get("elements", None)
         if elements is None:
             elements = response.json().get("element", NO_ELEMENTS_FOUND)
@@ -340,7 +343,7 @@ class ClassificationExplorer(ServerClient):
         if output_format != 'JSON':  # return a simplified markdown representation
             logger.info(f"Found elements, output format: {output_format} and report_spec: {report_spec}")
             return self._generate_referenceable_output(elements, "", "Referenceable",
-                                                       output_format, report_spec)
+                                                       output_format, report_spec, **kwargs)
         return elements
 
     @dynamic_catch
@@ -348,7 +351,8 @@ class ClassificationExplorer(ServerClient):
             self,
             body: dict,
             output_format: str = "JSON",
-            report_spec: dict | str = None
+            report_spec: dict | str = None,
+            **kwargs
     ) -> list | str:
         """
         Return information about the elements classified with the specified classification.
@@ -399,7 +403,7 @@ class ClassificationExplorer(ServerClient):
         loop = asyncio.get_event_loop()
         response = loop.run_until_complete(
             self._async_get_security_tagged_elements(
-                body, output_format, report_spec
+                body, output_format, report_spec, **kwargs
             )
         )
         return response
@@ -410,7 +414,8 @@ class ClassificationExplorer(ServerClient):
             owner_name: str,
             body: Optional[dict | FilterRequestBody] = None,
             output_format: str = "JSON",
-            report_spec: dict | str = None
+            report_spec: dict | str = None,
+            **kwargs
     ) -> list | str:
         """
         Return information about the elements classified with the ownership classification. Async version.
@@ -466,6 +471,7 @@ class ClassificationExplorer(ServerClient):
             output_format=output_format,
             report_spec=report_spec,
             body=body,
+            **kwargs
         )
         return response
 
@@ -473,9 +479,10 @@ class ClassificationExplorer(ServerClient):
     def get_owners_elements(
             self,
             owner_name: str,
-body: Optional[dict | FilterRequestBody] = None,
+            body: Optional[dict | FilterRequestBody] = None,
             output_format: str = "JSON",
-            report_spec: dict | str = None
+            report_spec: dict | str = None,
+            **kwargs
     ) -> list | str:
         """
         Return information about the elements classified with the ownership classification.
@@ -522,7 +529,7 @@ body: Optional[dict | FilterRequestBody] = None,
 
         loop = asyncio.get_event_loop()
         response = loop.run_until_complete(
-            self._async_get_owners_elements(owner_name, body, output_format, report_spec)
+            self._async_get_owners_elements(owner_name, body, output_format, report_spec, **kwargs)
         )
         return response
 
@@ -532,7 +539,8 @@ body: Optional[dict | FilterRequestBody] = None,
             subject_area: str,
             body: dict | FilterRequestBody,
             output_format: str = "JSON",
-            report_spec: dict | str = None
+            report_spec: dict | str = None,
+            **kwargs
     ) -> list | str:
         """
         Return information about the elements classified with the subject area classification. Async version.
@@ -589,6 +597,7 @@ body: Optional[dict | FilterRequestBody] = None,
             output_format=output_format,
             report_spec=report_spec,
             body=body,
+            **kwargs
         )
         return response
 
@@ -598,7 +607,8 @@ body: Optional[dict | FilterRequestBody] = None,
             subject_area: str,
             body: dict | FilterRequestBody,
             output_format: str = "JSON",
-            report_spec: dict | str = None
+            report_spec: dict | str = None,
+            **kwargs
     ) -> list | str:
         """
         Return information about the elements classified with the subject area classification.
@@ -648,7 +658,7 @@ body: Optional[dict | FilterRequestBody] = None,
         loop = asyncio.get_event_loop()
         response = loop.run_until_complete(
             self._async_get_subject_area_members(
-                subject_area, body, output_format, report_spec
+                subject_area, body, output_format, report_spec, **kwargs
             )
         )
         return response
@@ -658,7 +668,8 @@ body: Optional[dict | FilterRequestBody] = None,
             self,
             body: dict,
             output_format: str = "JSON",
-            report_spec: dict | str = None
+            report_spec: dict | str = None,
+            **kwargs
     ) -> list | str:
         """
         Return information about the digital resources from a specific origin. Async version.
@@ -709,7 +720,7 @@ body: Optional[dict | FilterRequestBody] = None,
         url = (f"{self.platform_url}/servers/{self.view_server}/api/open-metadata/"
                f"classification-explorer/elements/by-digital-resource-origin")
 
-        response = await self._async_make_request("POST", url, body_slimmer(body), time_out=default_time_out)
+        response = await self._async_make_request("POST", url, body_slimmer(body), time_out=default_time_out, **kwargs)
         elements = response.json().get("elements", None)
         if elements is None:
             elements = response.json().get("element", NO_ELEMENTS_FOUND)
@@ -721,7 +732,7 @@ body: Optional[dict | FilterRequestBody] = None,
         if output_format != 'JSON':  # return a simplified markdown representation
             logger.info(f"Found elements, output format: {output_format} and report_spec: {report_spec}")
             return self._generate_referenceable_output(elements, "", "Referenceable",
-                                                       output_format, report_spec)
+                                                       output_format, report_spec, **kwargs)
         return elements
 
     @dynamic_catch
@@ -729,7 +740,8 @@ body: Optional[dict | FilterRequestBody] = None,
             self,
             body: dict,
             output_format: str = "JSON",
-            report_spec: dict | str = None
+            report_spec: dict | str = None,
+            **kwargs
     ) -> list | str:
         """
         Return information about the digital resources from a specific origin.
@@ -780,8 +792,7 @@ body: Optional[dict | FilterRequestBody] = None,
 
         loop = asyncio.get_event_loop()
         response = loop.run_until_complete(
-            self._async_get_elements_by_origin(body, output_format, report_spec
-                                              )
+            self._async_get_elements_by_origin(body, output_format, report_spec, **kwargs)
         )
         return response
 
@@ -791,7 +802,8 @@ body: Optional[dict | FilterRequestBody] = None,
             element_guid: str,
             body: dict,
             output_format: str = "JSON",
-            report_spec: dict | str = None
+            report_spec: dict | str = None,
+            **kwargs
     ) -> list | str:
         """
         Retrieve the glossary terms linked via a "SemanticAssignment" relationship to the requested element. Async version.
@@ -846,7 +858,7 @@ body: Optional[dict | FilterRequestBody] = None,
         url = (f"{self.platform_url}/servers/{self.view_server}/api/open-metadata/"
                f"classification-explorer/glossaries/terms/by-semantic-assignment/{element_guid}")
 
-        response = await self._async_make_request("POST", url, body_slimmer(body), time_out=default_time_out)
+        response = await self._async_make_request("POST", url, body_slimmer(body), time_out=default_time_out, **kwargs)
         elements = response.json().get("elements", None)
         if elements is None:
             elements = response.json().get("element", NO_ELEMENTS_FOUND)
@@ -858,7 +870,7 @@ body: Optional[dict | FilterRequestBody] = None,
         if output_format != 'JSON':  # return a simplified markdown representation
             logger.info(f"Found elements, output format: {output_format} and report_spec: {report_spec}")
             return self._generate_referenceable_output(elements, "", "Referenceable",
-                                                       output_format, report_spec)
+                                                       output_format, report_spec, **kwargs)
         return elements
 
     @dynamic_catch
@@ -867,7 +879,8 @@ body: Optional[dict | FilterRequestBody] = None,
             element_guid: str,
             body: dict,
             output_format: str = "JSON",
-            report_spec: dict | str = None
+            report_spec: dict | str = None,
+            **kwargs
     ) -> list | str:
         """
         Retrieve the glossary terms linked via a "SemanticAssignment" relationship to the requested element.
@@ -921,7 +934,7 @@ body: Optional[dict | FilterRequestBody] = None,
 
         loop = asyncio.get_event_loop()
         response = loop.run_until_complete(
-            self._async_get_meanings(element_guid, body, output_format, report_spec
+            self._async_get_meanings(element_guid, body, output_format, report_spec, **kwargs
                                     )
         )
         return response
@@ -932,7 +945,8 @@ body: Optional[dict | FilterRequestBody] = None,
             term_guid: str,
             body: dict,
             output_format: str = "JSON",
-            report_spec: dict | str = None
+            report_spec: dict | str = None,
+            **kwargs
     ) -> list | str:
         """
         Retrieve the elements linked via a "SemanticAssignment" relationship to the requested glossary term. Async version.
@@ -987,7 +1001,7 @@ body: Optional[dict | FilterRequestBody] = None,
         url = (f"{self.platform_url}/servers/{self.view_server}/api/open-metadata/"
                f"classification-explorer/glossaries/elements/by-semantic-assignment/{term_guid}")
 
-        response = await self._async_make_request("POST", url, body_slimmer(body), time_out=default_time_out)
+        response = await self._async_make_request("POST", url, body_slimmer(body), time_out=default_time_out, **kwargs)
         elements = response.json().get("elements", None)
         if elements is None:
             elements = response.json().get("element", NO_ELEMENTS_FOUND)
@@ -999,7 +1013,7 @@ body: Optional[dict | FilterRequestBody] = None,
         if output_format != 'JSON':  # return a simplified markdown representation
             logger.info(f"Found elements, output format: {output_format} and report_spec: {report_spec}")
             return self._generate_referenceable_output(elements, "", "Referenceable",
-                                                       output_format, report_spec)
+                                                       output_format, report_spec, **kwargs)
         return elements
 
     @dynamic_catch
@@ -1008,7 +1022,8 @@ body: Optional[dict | FilterRequestBody] = None,
             term_guid: str,
             body: dict,
             output_format: str = "JSON",
-            report_spec: dict | str = None
+            report_spec: dict | str = None,
+            **kwargs
     ) -> list | str:
         """
         Retrieve the elements linked via a "SemanticAssignment" relationship to the requested glossary term.
@@ -1062,7 +1077,7 @@ body: Optional[dict | FilterRequestBody] = None,
 
         loop = asyncio.get_event_loop()
         response = loop.run_until_complete(
-            self._async_get_semantic_asignees(term_guid, body, output_format, report_spec
+            self._async_get_semantic_asignees(term_guid, body, output_format, report_spec, **kwargs
                                              )
         )
         return response
@@ -1075,7 +1090,8 @@ body: Optional[dict | FilterRequestBody] = None,
             output_format: str = "JSON",
             report_spec: dict | str = None,
             start_from: int = 0,
-            page_size: int = 0
+            page_size: int = 0,
+            **kwargs
     ) -> list | str:
         """
         Retrieve the elements linked via a "governed-by" relationship to the requested governance definition. Async version.
@@ -1128,7 +1144,7 @@ body: Optional[dict | FilterRequestBody] = None,
 
         response = await self._async_get_results_body_request(url, "Referenceable", self._generate_referenceable_output,
                                                               start_from, page_size, output_format,
-                                                              report_spec, body)
+                                                              report_spec, body, **kwargs)
         return response
 
     @dynamic_catch
@@ -1139,7 +1155,8 @@ body: Optional[dict | FilterRequestBody] = None,
             output_format: str = "JSON",
             report_spec: dict | str = None,
             start_from: int = 0,
-            page_size: int = 0
+            page_size: int = 0,
+            **kwargs
     ) -> list | str:
         """
         Retrieve the elements linked via a "governed-by" relationship to the requested governance definition.
@@ -1190,7 +1207,7 @@ body: Optional[dict | FilterRequestBody] = None,
         loop = asyncio.get_event_loop()
         response = loop.run_until_complete(
             self._async_get_governed_elements(gov_def_guid, body, output_format, report_spec,
-                                             start_from, page_size)
+                                             start_from, page_size, **kwargs)
         )
         return response
 
@@ -1202,7 +1219,8 @@ body: Optional[dict | FilterRequestBody] = None,
             output_format: str = "JSON",
             report_spec: dict | str = None,
             start_from: int = 0,
-            page_size: int = 0
+            page_size: int = 0,
+            **kwargs
     ) -> list | str:
         """
         Retrieve the governance definitions linked via a "governed-by" relationship to the specified element. Async version.
@@ -1255,7 +1273,7 @@ body: Optional[dict | FilterRequestBody] = None,
 
         response = await self._async_get_results_body_request(url, "Referenceable", self._generate_referenceable_output,
                                                               start_from, page_size, output_format,
-                                                              report_spec, body)
+                                                              report_spec, body, **kwargs)
         return response
 
     @dynamic_catch
@@ -1266,7 +1284,8 @@ body: Optional[dict | FilterRequestBody] = None,
             output_format: str = "JSON",
             report_spec: dict | str = None,
             start_from: int = 0,
-            page_size: int = 0
+            page_size: int = 0,
+            **kwargs
     ) -> list | str:
         """
         Retrieve the governance definitions linked via a "governed-by" relationship to the specified element.
@@ -1317,7 +1336,7 @@ body: Optional[dict | FilterRequestBody] = None,
         loop = asyncio.get_event_loop()
         response = loop.run_until_complete(
             self._async_get_governed_by_definitions(element_guid, body, output_format, report_spec,
-                                                   start_from, page_size)
+                                                   start_from, page_size, **kwargs)
         )
         return response
 
@@ -1329,7 +1348,8 @@ body: Optional[dict | FilterRequestBody] = None,
             output_format: str = "JSON",
             report_spec: dict | str = None,
             start_from: int = 0,
-            page_size: int = 0
+            page_size: int = 0,
+            **kwargs
     ) -> list | str:
         """
             Retrieve the elements linked via a SourceFrom relationship to the requested element.
@@ -1385,7 +1405,7 @@ body: Optional[dict | FilterRequestBody] = None,
 
         response = await self._async_get_results_body_request(url, "Referenceable", self._generate_referenceable_output,
                                                               start_from, page_size, output_format,
-                                                              report_spec, body)
+                                                              report_spec, body, **kwargs)
         return response
 
     @dynamic_catch
@@ -1396,7 +1416,8 @@ body: Optional[dict | FilterRequestBody] = None,
             output_format: str = "JSON",
             report_spec: dict | str = None,
             start_from: int = 0,
-            page_size: int = 0
+            page_size: int = 0,
+            **kwargs
     ) -> list | str:
         """
             Retrieve the elements linked via a SourceFrom relationship to the requested element.
@@ -1450,7 +1471,7 @@ body: Optional[dict | FilterRequestBody] = None,
         loop = asyncio.get_event_loop()
         response = loop.run_until_complete(
             self._async_get_source_elements(element_guid, body, output_format, report_spec, start_from,
-                                              page_size)
+                                              page_size, **kwargs)
         )
         return response
 
@@ -1462,7 +1483,8 @@ body: Optional[dict | FilterRequestBody] = None,
             output_format: str = "JSON",
             report_spec: dict | str = None,
             start_from: int = 0,
-            page_size: int = 0
+            page_size: int = 0,
+            **kwargs
     ) -> list | str:
         """
             Retrieve the elements linked via the SourcedFrom relationship to the requested element. The elements
@@ -1517,7 +1539,7 @@ body: Optional[dict | FilterRequestBody] = None,
 
         response = await self._async_get_results_body_request(url, "Referenceable", self._generate_referenceable_output,
                                                               start_from, page_size, output_format,
-                                                              report_spec, body)
+                                                              report_spec, body, **kwargs)
         return response
 
     @dynamic_catch
@@ -1528,7 +1550,8 @@ body: Optional[dict | FilterRequestBody] = None,
             output_format: str = "JSON",
             report_spec: dict | str = None,
             start_from: int = 0,
-            page_size: int = 0
+            page_size: int = 0,
+            **kwargs
     ) -> list | str:
         """
           Retrieve the elements linked via the SourcedFrom relationship to the requested element. The elements
@@ -1581,7 +1604,7 @@ body: Optional[dict | FilterRequestBody] = None,
         loop = asyncio.get_event_loop()
         response = loop.run_until_complete(
             self._async_get_elements_sourced_from(element_guid, body, output_format, report_spec,
-                                                 start_from, page_size)
+                                                 start_from, page_size, **kwargs)
         )
         return response
 
@@ -1593,7 +1616,8 @@ body: Optional[dict | FilterRequestBody] = None,
             output_format: str = "JSON",
             report_spec: dict | str = None,
             start_from: int = 0,
-            page_size: int = 0
+            page_size: int = 0,
+            **kwargs
     ) -> list | str:
         """
         Retrieve the scopes linked via the ScopedBy relationship to the requested element. Async version.
@@ -1646,7 +1670,7 @@ body: Optional[dict | FilterRequestBody] = None,
 
         response = await self._async_get_results_body_request(url, "Referenceable", self._generate_referenceable_output,
                                                               start_from, page_size, output_format,
-                                                              report_spec, body)
+                                                              report_spec, body, **kwargs)
         return response
 
     @dynamic_catch
@@ -1657,7 +1681,8 @@ body: Optional[dict | FilterRequestBody] = None,
             output_format: str = "JSON",
             report_spec: dict | str = None,
             start_from: int = 0,
-            page_size: int = 0
+            page_size: int = 0,
+            **kwargs
     ) -> list | str:
         """
         Retrieve the scopes linked via the ScopedBy relationship to the requested element.
@@ -1708,7 +1733,7 @@ body: Optional[dict | FilterRequestBody] = None,
         loop = asyncio.get_event_loop()
         response = loop.run_until_complete(
             self._async_get_scopes(element_guid, body, output_format, report_spec, start_from,
-                                              page_size)
+                                              page_size, **kwargs)
         )
         return response
 
@@ -1720,7 +1745,8 @@ body: Optional[dict | FilterRequestBody] = None,
             output_format: str = "JSON",
             report_spec: dict | str = None,
             start_from: int = 0,
-            page_size: int = 0
+            page_size: int = 0,
+            **kwargs
     ) -> list | str:
         """
             Retrieve the elements linked via the ScopedBy relationship to the scope. Async version.
@@ -1773,7 +1799,7 @@ body: Optional[dict | FilterRequestBody] = None,
 
         response = await self._async_get_results_body_request(url, "Referenceable", self._generate_referenceable_output,
                                                               start_from, page_size, output_format,
-                                                              report_spec, body)
+                                                              report_spec, body, **kwargs)
         return response
 
     @dynamic_catch
@@ -1784,7 +1810,8 @@ body: Optional[dict | FilterRequestBody] = None,
             output_format: str = "JSON",
             report_spec: dict | str = None,
             start_from: int = 0,
-            page_size: int = 0
+            page_size: int = 0,
+            **kwargs
     ) -> list | str:
         """
              Retrieve the elements linked via the ScopedBy relationship to the scope.
@@ -1834,7 +1861,7 @@ body: Optional[dict | FilterRequestBody] = None,
 
         loop = asyncio.get_event_loop()
         response = loop.run_until_complete(
-            self._async_get_scoped_elements(scope_guid, body, output_format, report_spec, start_from, page_size)
+            self._async_get_scoped_elements(scope_guid, body, output_format, report_spec, start_from, page_size, **kwargs)
         )
         return response
 
@@ -1846,7 +1873,8 @@ body: Optional[dict | FilterRequestBody] = None,
             output_format: str = "JSON",
             report_spec: dict | str = None,
             start_from: int = 0,
-            page_size: int = 0
+            page_size: int = 0,
+            **kwargs
     ) -> list | str:
         """
             Retrieve the elements linked via a License relationship to the requested LicenseType. Async version.
@@ -1898,7 +1926,7 @@ body: Optional[dict | FilterRequestBody] = None,
 
         response = await self._async_get_results_body_request(url, "Referenceable", self._generate_referenceable_output,
                                                               start_from, page_size, output_format,
-                                                              report_spec, body)
+                                                              report_spec, body, **kwargs)
         return response
 
     @dynamic_catch
@@ -1909,7 +1937,8 @@ body: Optional[dict | FilterRequestBody] = None,
             output_format: str = "JSON",
             report_spec: dict | str = None,
             start_from: int = 0,
-            page_size: int = 0
+            page_size: int = 0,
+            **kwargs
     ) -> list | str:
         """
             Retrieve the elements linked via a License relationship to the requested LicenseType.
@@ -1959,7 +1988,7 @@ body: Optional[dict | FilterRequestBody] = None,
 
         loop = asyncio.get_event_loop()
         response = loop.run_until_complete(
-            self._async_get_licensed_elements(license_type_guid, body, output_format, report_spec, start_from, page_size)
+            self._async_get_licensed_elements(license_type_guid, body, output_format, report_spec, start_from, page_size, **kwargs)
         )
         return response
 
@@ -1971,7 +2000,8 @@ body: Optional[dict | FilterRequestBody] = None,
             output_format: str = "JSON",
             report_spec: dict | str = None,
             start_from: int = 0,
-            page_size: int = 0
+            page_size: int = 0,
+            **kwargs
     ) -> list | str:
         """
             Retrieve the license types linked via a License relationship to the requested element. Async version.
@@ -2024,7 +2054,7 @@ body: Optional[dict | FilterRequestBody] = None,
 
         response = await self._async_get_results_body_request(url, "Referenceable", self._generate_referenceable_output,
                                                               start_from, page_size, output_format,
-                                                              report_spec, body)
+                                                              report_spec, body, **kwargs)
         return response
 
     @dynamic_catch
@@ -2035,7 +2065,8 @@ body: Optional[dict | FilterRequestBody] = None,
             output_format: str = "JSON",
             report_spec: dict | str = None,
             start_from: int = 0,
-            page_size: int = 0
+            page_size: int = 0,
+            **kwargs
     ) -> list | str:
         """
             Retrieve the license types linked via a License relationship to the requested element.
@@ -2086,7 +2117,7 @@ body: Optional[dict | FilterRequestBody] = None,
         loop = asyncio.get_event_loop()
         response = loop.run_until_complete(
             self._async_get_licenses(element_guid, body, output_format, report_spec,
-                                    start_from, page_size)
+                                    start_from, page_size, **kwargs)
         )
         return response
 
@@ -2098,7 +2129,8 @@ body: Optional[dict | FilterRequestBody] = None,
             output_format: str = "JSON",
             report_spec: dict | str = None,
             start_from: int = 0,
-            page_size: int = 0
+            page_size: int = 0,
+            **kwargs
     ) -> list | str:
         """
             Retrieve the elements linked via a Certification relationship to the requested CertificationType. Async version.
@@ -2151,7 +2183,7 @@ body: Optional[dict | FilterRequestBody] = None,
 
         response = await self._async_get_results_body_request(url, "Referenceable", self._generate_referenceable_output,
                                                               start_from, page_size, output_format,
-                                                              report_spec, body)
+                                                              report_spec, body, **kwargs)
         return response
 
     @dynamic_catch
@@ -2162,7 +2194,8 @@ body: Optional[dict | FilterRequestBody] = None,
             output_format: str = "JSON",
             report_spec: dict | str = None,
             start_from: int = 0,
-            page_size: int = 0
+            page_size: int = 0,
+            **kwargs
     ) -> list | str:
         """
             Retrieve the elements linked via a Certification relationship to the requested CertificationType.
@@ -2213,7 +2246,7 @@ body: Optional[dict | FilterRequestBody] = None,
         loop = asyncio.get_event_loop()
         response = loop.run_until_complete(
             self._async_get_certified_elements(certification_type_guid, body, output_format, report_spec,
-                                              start_from, page_size)
+                                              start_from, page_size, **kwargs)
         )
         return response
 
@@ -2225,7 +2258,8 @@ body: Optional[dict | FilterRequestBody] = None,
             output_format: str = "JSON",
             report_spec: dict | str = None,
             start_from: int = 0,
-            page_size: int = 0
+            page_size: int = 0,
+            **kwargs
     ) -> list | str:
         """
             Retrieve the certification types linked via a Certification relationship to the requested element.
@@ -2279,7 +2313,7 @@ body: Optional[dict | FilterRequestBody] = None,
 
         response = await self._async_get_results_body_request(url, "Referenceable", self._generate_referenceable_output,
                                                               start_from, page_size, output_format,
-                                                              report_spec, body)
+                                                              report_spec, body, **kwargs)
         return response
 
     @dynamic_catch
@@ -2290,7 +2324,8 @@ body: Optional[dict | FilterRequestBody] = None,
             output_format: str = "JSON",
             report_spec: dict | str = None,
             start_from: int = 0,
-            page_size: int = 0
+            page_size: int = 0,
+            **kwargs
     ) -> list | str:
         """
             Retrieve the certification types linked via a Certification relationship to the requested element.
@@ -2341,7 +2376,7 @@ body: Optional[dict | FilterRequestBody] = None,
         loop = asyncio.get_event_loop()
         response = loop.run_until_complete(
             self._async_get_certifications(element_guid, body, output_format, report_spec, start_from,
-                                          page_size)
+                                          page_size, **kwargs)
         )
         return response
 
@@ -2356,6 +2391,7 @@ body: Optional[dict | FilterRequestBody] = None,
             output_format: str = "JSON",
             report_spec: dict | str = None,
             body: Optional[dict | ResultsRequestBody] = None,
+            **kwargs
     ) -> list | str:
         """
         Retrieve elements of the requested type name. If no type name is specified, then any type of element may
@@ -2398,6 +2434,7 @@ body: Optional[dict | FilterRequestBody] = None,
             output_format=output_format,
             report_spec=report_spec,
             body=body,
+            **kwargs
         )
 
 
@@ -2409,6 +2446,7 @@ body: Optional[dict | FilterRequestBody] = None,
             output_format: str = "JSON",
             report_spec: dict | str = None,
             body: Optional[dict | ResultsRequestBody] = None,
+            **kwargs
     ) -> list | str:
         """
         Retrieve elements of the requested type name. If no type name is specified, then any type of element may
@@ -2450,6 +2488,7 @@ body: Optional[dict | FilterRequestBody] = None,
                 output_format,
                 report_spec,
                 body,
+                **kwargs
             )
         )
 
@@ -2483,6 +2522,7 @@ body: Optional[dict | FilterRequestBody] = None,
             start_from: int = 0,
             page_size: int = 0,
             body: Optional[dict | FindPropertyNamesRequestBody | SearchStringRequestBody] = None,
+            **kwargs
     ) -> list | str:
         """
         Retrieve elements by a value found in one of the properties specified.  The value must match exactly.
@@ -2581,7 +2621,7 @@ body: Optional[dict | FilterRequestBody] = None,
                                               sequencing_order=sequencing_order,
                                               sequencing_property=sequencing_property, output_format=output_format,
                                               report_spec=report_spec, start_from=start_from, page_size=page_size,
-                                              property_names=property_names, body=body)
+                                              property_names=property_names, body=body, **kwargs)
 
     def get_elements_by_property_value(
             self,
@@ -2611,6 +2651,7 @@ body: Optional[dict | FilterRequestBody] = None,
             start_from: int = 0,
             page_size: int = 0,
             body: Optional[dict | FindPropertyNamesRequestBody | SearchStringRequestBody] = None,
+            **kwargs
     ) -> list | str:
         """
         Retrieve elements by a value found in one of the properties specified.  The value must match exactly.
@@ -2710,6 +2751,7 @@ body: Optional[dict | FilterRequestBody] = None,
                 start_from,
                 page_size,
                 body,
+                **kwargs
             )
         )
         return response
@@ -2988,6 +3030,7 @@ body: Optional[dict | FilterRequestBody] = None,
                 page_size=page_size,
                 time_out=time_out,
                 body=body,
+                **kwargs
             )
         )
         return response
@@ -3114,7 +3157,8 @@ body: Optional[dict | FilterRequestBody] = None,
             property_name: Optional[str] = None,
             output_format: str = "JSON",
             report_spec: dict | str = "Referenceable",
-            body: dict = None
+            body: dict = None,
+            **kwargs
     ) -> list | str:
         """
         Retrieve the metadata element using the suppl
@@ -3156,7 +3200,7 @@ body: Optional[dict | FilterRequestBody] = None,
                f"classification-explorer/elements/by-unique-name")
 
         response: Response = await self._async_make_request(
-            "POST", url, body_slimmer(body)
+            "POST", url, body_slimmer(body), **kwargs
         )
         elements = response.json().get("element", NO_ELEMENTS_FOUND)
         if type(elements) is str:
@@ -3165,7 +3209,7 @@ body: Optional[dict | FilterRequestBody] = None,
 
         if output_format != 'JSON':  # return a simplified markdown representation
             logger.info(f"Found element, output format: {output_format} and report_spec: {report_spec}")
-            return self._generate_referenceable_output(elements, "GUID", "Referenceable", output_format, report_spec)
+            return self._generate_referenceable_output(elements, "GUID", "Referenceable", output_format, report_spec, **kwargs)
         return elements
 
     def get_element_by_unique_name(
@@ -3174,7 +3218,8 @@ body: Optional[dict | FilterRequestBody] = None,
             property_name: Optional[str] = None,
             output_format: str = "JSON",
             report_spec: dict | str = "Referenceable",
-            body: dict = None
+            body: dict = None,
+            **kwargs
     ) -> list | str:
         """
         Retrieve the metadata element using the supplied unique element name (typically the qualifiedName,
@@ -3206,7 +3251,7 @@ body: Optional[dict | FilterRequestBody] = None,
 
         loop = asyncio.get_event_loop()
         response = loop.run_until_complete(
-            self._async_get_element_by_unique_name(name, property_name, output_format, report_spec, body)
+            self._async_get_element_by_unique_name(name, property_name, output_format, report_spec, body, **kwargs)
         )
         return response
 
@@ -3214,7 +3259,8 @@ body: Optional[dict | FilterRequestBody] = None,
             self,
             name: str,
             property_name: Optional[str] = None,
-            body: dict = None) -> list | str:
+            body: dict = None,
+            **kwargs) -> list | str:
         """
         Retrieve the guid associated with the supplied unique element name.
         If more than one element returned, an exception is thrown. Async version.
@@ -3250,7 +3296,7 @@ body: Optional[dict | FilterRequestBody] = None,
                f"classification-explorer/elements/guid-by-unique-name")
 
         response: Response = await self._async_make_request(
-            "POST", url, body_slimmer(body)
+            "POST", url, body_slimmer(body), **kwargs
         )
 
         return response.json().get("guid", NO_ELEMENTS_FOUND)
@@ -3259,7 +3305,8 @@ body: Optional[dict | FilterRequestBody] = None,
             self,
             name: str,
             property_name: Optional[str] = None,
-            body: dict = None) -> list | str:
+            body: dict = None,
+            **kwargs) -> list | str:
         """
         Retrieve the guid associated with the supplied unique element name.
         If more than one element returned, an exception is thrown.
@@ -3287,13 +3334,14 @@ body: Optional[dict | FilterRequestBody] = None,
             self._async_get_element_guid_by_unique_name(
                 name,
                 property_name,
-                body
+                body,
+                **kwargs
             )
         )
         return response
 
     async def _async_get_guid_for_name(self, name: str, property_name: list[str] = ["qualifiedName", "displayName"],
-                                       type_name: str = None) -> str:
+                                       type_name: str = None, **kwargs) -> str:
         """
         Retrieve the guid associated with the supplied element name.
         If more than one element returned, an exception is thrown. Async version.
@@ -3317,7 +3365,7 @@ body: Optional[dict | FilterRequestBody] = None,
         PyegeriaException
         """
 
-        elements = await self._async_get_elements_by_property_value(name, property_name, type_name)
+        elements = await self._async_get_elements_by_property_value(name, property_name, type_name, **kwargs)
 
         if type(elements) is list:
             if len(elements) == 0:
@@ -3330,7 +3378,7 @@ body: Optional[dict | FilterRequestBody] = None,
 
     def get_guid_for_name(
             self, name: str, property_name: list[str] = ["qualifiedName", "displayName"],
-            type_name: str = None
+            type_name: str = None, **kwargs
     ) -> str:
         """
         Retrieve the guid associated with the supplied element name.
@@ -3357,7 +3405,7 @@ body: Optional[dict | FilterRequestBody] = None,
 
         loop = asyncio.get_event_loop()
         response = loop.run_until_complete(
-            self._async_get_guid_for_name(name, property_name, type_name)
+            self._async_get_guid_for_name(name, property_name, type_name, **kwargs)
         )
         return response
 
@@ -3372,6 +3420,7 @@ body: Optional[dict | FilterRequestBody] = None,
             output_format: str = "JSON",
             report_spec: str | dict = None,
             body: Optional[dict | ResultsRequestBody] = None,
+            **kwargs
     ) -> list | str:
         """
          Retrieve elements with the requested classification name. It is also possible to limit the results
@@ -3420,6 +3469,7 @@ body: Optional[dict | FilterRequestBody] = None,
             output_format=output_format,
             report_spec=report_spec,
             body=body,
+            **kwargs
         )
 
     def get_elements_by_classification(
@@ -3430,6 +3480,7 @@ body: Optional[dict | FilterRequestBody] = None,
             output_format: str = "JSON",
             report_spec: dict | str = None,
             body: Optional[dict | ResultsRequestBody] = None,
+            **kwargs
     ) -> list | str:
         """
         Retrieve elements with the requested classification name. It is also possible to limit the results
@@ -3472,6 +3523,7 @@ body: Optional[dict | FilterRequestBody] = None,
                 output_format,
                 report_spec,
                 body,
+                **kwargs
             )
         )
         return response
@@ -3505,6 +3557,7 @@ body: Optional[dict | FilterRequestBody] = None,
             start_from: int = 0,
             page_size: int = 0,
             body: Optional[dict | FindPropertyNamesRequestBody | SearchStringRequestBody] = None,
+            **kwargs
     ) -> list | str:
         """
         Retrieve elements with the requested classification name and with the requested a value found in one of the
@@ -3608,7 +3661,7 @@ body: Optional[dict | FilterRequestBody] = None,
                                               sequencing_order=sequencing_order,
                                               sequencing_property=sequencing_property, output_format=output_format,
                                               report_spec=report_spec, start_from=start_from, page_size=page_size,
-                                              property_names=property_names, body=body)
+                                              property_names=property_names, body=body, **kwargs)
 
     def get_elements_by_classification_with_property_value(
             self,
@@ -3638,6 +3691,7 @@ body: Optional[dict | FilterRequestBody] = None,
             start_from: int = 0,
             page_size: int = 0,
             body: Optional[dict | FindPropertyNamesRequestBody | SearchStringRequestBody] = None,
+            **kwargs
     ) -> list | str:
         """
         Retrieve elements by a value found in one of the properties specified.  The value must match exactly.
@@ -3739,6 +3793,7 @@ body: Optional[dict | FilterRequestBody] = None,
                 start_from,
                 page_size,
                 body,
+                **kwargs
             )
         )
         return response
@@ -3971,6 +4026,7 @@ body: Optional[dict | FilterRequestBody] = None,
                 page_size=page_size,
                 time_out=time_out,
                 body=body,
+                **kwargs
             )
         )
         return response
@@ -3989,6 +4045,7 @@ body: Optional[dict | FilterRequestBody] = None,
             output_format: str = "JSON",
             report_spec: dict | str = None,
             body: Optional[dict | ResultsRequestBody] = None,
+            **kwargs
     ) -> list | str:
         """
         Retrieve elements linked by relationship type name. If the relationship type is None, then all related elements
@@ -4046,6 +4103,7 @@ body: Optional[dict | FilterRequestBody] = None,
             output_format=output_format,
             report_spec=report_spec,
             body=body,
+            **kwargs
         )
 
     def get_related_elements(
@@ -4058,6 +4116,7 @@ body: Optional[dict | FilterRequestBody] = None,
             output_format: str = "JSON",
             report_spec: dict | str = None,
             body: Optional[dict | ResultsRequestBody] = None,
+            **kwargs
     ) -> list | str:
         """
         Retrieve elements linked by relationship type name. If the relationship type is None, then all related elements
@@ -4106,6 +4165,7 @@ body: Optional[dict | FilterRequestBody] = None,
                 output_format,
                 report_spec,
                 body,
+                **kwargs
             )
         )
         return response
@@ -4140,6 +4200,7 @@ body: Optional[dict | FilterRequestBody] = None,
             start_from: int = 0,
             page_size: int = 0,
             body: Optional[dict | FindPropertyNamesRequestBody | SearchStringRequestBody] = None,
+            **kwargs
     ) -> list | str:
         """
         Retrieve elements linked via the requested relationship type name and with the requested a value found in one of
@@ -4243,7 +4304,7 @@ body: Optional[dict | FilterRequestBody] = None,
                                               sequencing_order=sequencing_order,
                                               sequencing_property=sequencing_property, output_format=output_format,
                                               report_spec=report_spec, start_from=start_from, page_size=page_size,
-                                              property_names=property_names, body=body)
+                                              property_names=property_names, body=body, **kwargs)
 
     def get_related_elements_with_property_value(
             self,
@@ -4275,6 +4336,7 @@ body: Optional[dict | FilterRequestBody] = None,
             start_from: int = 0,
             page_size: int = 0,
             body: Optional[dict | FindPropertyNamesRequestBody | SearchStringRequestBody] = None,
+            **kwargs
     ) -> list | str:
         """
         Retrieve elements linked via the requested relationship type name and with the requested a value found in one of
@@ -4355,6 +4417,7 @@ body: Optional[dict | FilterRequestBody] = None,
                 start_from,
                 page_size,
                 body,
+                **kwargs
             )
         )
         return response
@@ -4594,7 +4657,6 @@ body: Optional[dict | FilterRequestBody] = None,
                 graph_query_depth=graph_query_depth,
                 governance_zone_filter=governance_zone_filter,
                 as_of_time=as_of_time,
-                effective_time=effective_time,
                 relationship_page_size=relationship_page_size,
                 limit_results_by_status=limit_results_by_status,
                 sequencing_order=sequencing_order,
@@ -4605,6 +4667,7 @@ body: Optional[dict | FilterRequestBody] = None,
                 page_size=page_size,
                 time_out=time_out,
                 body=body,
+                **kwargs
             )
         )
         return response
@@ -4620,6 +4683,7 @@ body: Optional[dict | FilterRequestBody] = None,
             output_format: str = "JSON",
             report_spec: dict | str = None,
             body: Optional[dict | ResultsRequestBody] = None,
+            **kwargs
     ) -> list | str:
         """
         Retrieve relationships of the requested relationship type name. Async version.
@@ -4666,7 +4730,7 @@ body: Optional[dict | FilterRequestBody] = None,
             url = f"{base_path(self, self.view_server)}/relationships/{relationship_type}"
 
         response: Response = await self._async_make_request(
-            "POST", url, body_slimmer(body)
+            "POST", url, body_slimmer(body), **kwargs
         )
         rels = response.json().get("relationships", "No relationships found")
 
@@ -4675,7 +4739,7 @@ body: Optional[dict | FilterRequestBody] = None,
         if output_format != 'JSON':  # return a simplified markdown representation
             logger.info(f"Found elements, output format: {output_format} and report_spec: {report_spec}")
             return self._generate_referenceable_output(rels, "Referenceable",
-                                                       output_format, report_spec)
+                                                       output_format, report_spec, **kwargs)
 
         return rels
 
@@ -4687,6 +4751,7 @@ body: Optional[dict | FilterRequestBody] = None,
             output_format: str = "JSON",
             report_spec: dict | str = None,
             body: Optional[dict | ResultsRequestBody] = None,
+            **kwargs
     ) -> list | str:
         """
         Retrieve relationships of the requested relationship type name.
@@ -4729,6 +4794,7 @@ body: Optional[dict | FilterRequestBody] = None,
                 output_format,
                 report_spec,
                 body,
+                **kwargs
             )
         )
         return response
@@ -4745,6 +4811,7 @@ body: Optional[dict | FilterRequestBody] = None,
             page_size: int = 0,
             time_out: int = default_time_out,
             output_format: str = "JSON", report_spec: dict | str = None,
+            **kwargs
     ) -> list | str:
         """
         Retrieve relationships of the requested relationship type name and with the requested a value found in
@@ -4812,7 +4879,7 @@ body: Optional[dict | FilterRequestBody] = None,
             )
 
         response: Response = await self._async_make_request(
-            "POST", url, body_slimmer(body), time_out=time_out
+            "POST", url, body_slimmer(body), time_out=time_out, **kwargs
         )
         rels = response.json().get("relationships", NO_ELEMENTS_FOUND)
         if type(rels) is list and len(rels) == 0:
@@ -4820,7 +4887,7 @@ body: Optional[dict | FilterRequestBody] = None,
         if output_format != 'JSON':  # return a simplified markdown representation
             logger.info(f"Found elements, output format: {output_format} and report_spec: {report_spec}")
             return self._generate_referenceable_output(rels, "Referenceable",
-                                                       output_format, report_spec)
+                                                       output_format, report_spec, **kwargs)
 
         return rels
 
@@ -4837,6 +4904,7 @@ body: Optional[dict | FilterRequestBody] = None,
             time_out: int = default_time_out,
             output_format: str = "JSON",
             report_spec: dict | str = None,
+            **kwargs
     ) -> list | str:
         """
         Retrieve relationships of the requested relationship type name and with the requested a value found in
@@ -4893,6 +4961,7 @@ body: Optional[dict | FilterRequestBody] = None,
                 time_out,
                 output_format,
                 report_spec,
+                **kwargs
             )
         )
         return response
@@ -5038,7 +5107,7 @@ body: Optional[dict | FilterRequestBody] = None,
                                               sequencing_order=sequencing_order,
                                               sequencing_property=sequencing_property, output_format=output_format,
                                               report_spec=report_spec, start_from=start_from, page_size=page_size,
-                                              property_names=property_names, body=body)
+                                              property_names=property_names, body=body, **kwargs)
 
     def find_relationships_with_property_value(
             self,
@@ -5164,6 +5233,7 @@ body: Optional[dict | FilterRequestBody] = None,
                 start_from=start_from,
                 page_size=page_size,
                 body=body,
+                **kwargs
             )
         )
         return response
@@ -5180,7 +5250,8 @@ body: Optional[dict | FilterRequestBody] = None,
             for_duplicate_processing: bool = False,
             time_out: int = default_time_out,
             output_format: str = "JSON",
-            report_spec: dict | str = None
+            report_spec: dict | str = None,
+            **kwargs
 
     ) -> list | str:
         """
@@ -5225,13 +5296,13 @@ body: Optional[dict | FilterRequestBody] = None,
 
         url = f"{base_path(self, self.view_server)}/guids/{guid}"
         response: Response = await self._async_make_request(
-            "POST", url, body_slimmer(body), time_out=time_out
+            "POST", url, body_slimmer(body), time_out=time_out, **kwargs
         )
         element = response.json().get("element", NO_ELEMENTS_FOUND)
         if output_format != 'JSON':  # return a simplified markdown representation
             logger.info(f"Found elements, output format: {output_format} and report_spec: {report_spec}")
             return self._generate_referenceable_output(element, "Referenceable",
-                                                       output_format, report_spec)
+                                                       output_format, report_spec, **kwargs)
 
         return element
 
@@ -5243,7 +5314,8 @@ body: Optional[dict | FilterRequestBody] = None,
             for_duplicate_processing: bool = False,
             time_out: int = default_time_out,
             output_format: str = "JSON",
-            report_spec: dict | str = None
+            report_spec: dict | str = None,
+            **kwargs
     ) -> list | str:
         """
          Retrieve the header for the instance identified by the supplied unique identifier.
@@ -5281,7 +5353,7 @@ body: Optional[dict | FilterRequestBody] = None,
         loop = asyncio.get_event_loop()
         response = loop.run_until_complete(
             self._async_retrieve_instance_for_guid(guid, effective_time, for_lineage, for_duplicate_processing,
-                                                   time_out, output_format, report_spec)
+                                                   time_out, output_format, report_spec, **kwargs)
         )
         return response
 
@@ -11695,6 +11767,7 @@ body: Optional[dict | FilterRequestBody] = None,
                 report_spec,
                 time_out,
                 body,
+                **kwargs
             )
         )
 
@@ -12009,13 +12082,15 @@ body: Optional[dict | FilterRequestBody] = None,
         loop = asyncio.get_event_loop()
         return loop.run_until_complete(
             self._async_find_authored_elements_by_category(
-                filter_string,
+                search_string,
                 content_status_list,
                 start_from,
                 page_size,
+                graph_query_depth,
                 output_format,
                 report_spec,
                 body,
+                **kwargs
             )
         )
 

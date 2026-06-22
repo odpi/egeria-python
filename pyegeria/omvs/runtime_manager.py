@@ -898,6 +898,7 @@ class RuntimeManager(ServerClient):
         display_name: Optional[str] = None,
         qualified_name: Optional[str] = None,
         body: Optional[dict | FilterRequestBody] = None,
+        **kwargs,
     ) -> None:
         """Request that the governance engine refresh its configuration by calling the metadata server. This request is
             useful if the metadata server has an outage, particularly while the governance server is initializing.
@@ -952,7 +953,7 @@ class RuntimeManager(ServerClient):
                 f"{server_guid}/governance-engines/{gov_engine_name}/refresh-config"
             )
 
-        await self._async_make_request("GET", url, body=body)
+        await self._async_make_request("GET", url, body=body, **kwargs)
         return
 
     def refresh_gov_eng_config(
@@ -962,6 +963,7 @@ class RuntimeManager(ServerClient):
         display_name: Optional[str] = None,
         qualified_name: Optional[str] = None,
         body: Optional[dict] = None,
+        **kwargs,
     ) -> None:
         """Request that the governance engine refresh its configuration by calling the metadata access server.
             Changes to the engine configuration will result in the affected engines being restarted.
@@ -998,7 +1000,7 @@ class RuntimeManager(ServerClient):
         loop = asyncio.get_event_loop()
         loop.run_until_complete(
             self._async_refresh_gov_eng_config(
-                gov_engine_name, server_guid, display_name, qualified_name, body
+                gov_engine_name, server_guid, display_name, qualified_name, body, **kwargs
             )
         )
         return
@@ -1011,6 +1013,7 @@ class RuntimeManager(ServerClient):
         qualified_name: Optional[str] = None,
         organization_name: Optional[str] = None,
         body: Optional[dict | FilterRequestBody] = None,
+        **kwargs,
     ) -> None:
         """Request that the integration group refresh its configuration by calling the metadata access server.
             Changes to the connector configuration will result in the affected connectors being restarted.
@@ -1056,7 +1059,7 @@ class RuntimeManager(ServerClient):
             f"{server_guid}/integration-groups/{integ_group_name}/refresh-config"
         )
 
-        await self._async_make_request("GET", url, body=body)
+        await self._async_make_request("GET", url, body=body, **kwargs)
         return
 
     def refresh_integ_group_config(
@@ -1067,6 +1070,7 @@ class RuntimeManager(ServerClient):
         qualified_name: Optional[str] = None,
         organization_name: Optional[str] = None,
         body: Optional[dict] = None,
+        **kwargs,
     ) -> None:
         """Request that the integration group refresh its configuration by calling the metadata access server.
             Changes to the connector configuration will result in the affected connectors being restarted.
@@ -1103,7 +1107,238 @@ class RuntimeManager(ServerClient):
         loop = asyncio.get_event_loop()
         loop.run_until_complete(
             self._async_refresh_integ_group_config(
-                integ_group_name, server_guid, display_name, qualified_name, organization_name, body
+                integ_group_name, server_guid, display_name, qualified_name, organization_name, body, **kwargs
+            )
+        )
+        return
+
+    async def _async_refresh_integration_connectors(
+        self,
+        connector_name: Optional[str] = None,
+        server_guid: Optional[str] = None,
+        display_name: Optional[str] = None,
+        qualified_name: Optional[str] = None,
+        organization_name: Optional[str] = None,
+        body: Optional[dict] = None,
+        **kwargs,
+    ) -> None:
+        """Issue a refresh() request on all connectors running in the integration daemon, or a specific connector
+            if the connector name is specified. Async version.
+
+            https://egeria-project.org/concepts/integration-connector/
+
+        Parameters
+        ----------
+        connector_name : str, default = None
+            Name of the integration connector to refresh. If none, all connectors will be refreshed.
+        server_guid : str, default = None
+            Identity of the server to act on. If not specified, qualified_name or display_name must be.
+        display_name: str, default = None
+            Name of server to act on. If not specified, server_guid or qualified_name must be.
+        qualified_name: str, default = None
+            Unique name of server to act on. If not specified, server_guid or display_name must be.
+
+        body : dict, optional
+            Request body to pass directly to the API.
+
+        Returns
+        -------
+           None
+
+        Raises
+        ------
+        PyegeriaInvalidParameterException
+        PyegeriaAPIException
+        PyegeriaUnauthorizedException
+
+        """
+        server_guid = self.__get_guid__(
+            server_guid,
+            display_name,
+            "resourceName",
+            qualified_name,
+            "Integration Daemon",
+            organization_name,
+        )
+        url = (
+            f"{self.runtime_command_root}/integration-daemons/"
+            f"{server_guid}/integration-connectors/refresh"
+        )
+
+        if body is None:
+            if connector_name:
+                body = {"class": "NameRequestBody", "name": connector_name}
+
+        await self._async_make_request("POST", url, body, **kwargs)
+        return
+
+    def refresh_integration_connectors(
+        self,
+        connector_name: Optional[str] = None,
+        server_guid: Optional[str] = None,
+        display_name: Optional[str] = None,
+        qualified_name: Optional[str] = None,
+        organization_name: Optional[str] = None,
+        body: Optional[dict] = None,
+        **kwargs,
+    ) -> None:
+        """Issue a refresh() request on all connectors running in the integration daemon, or a specific connector
+            if the connector name is specified.
+
+            https://egeria-project.org/concepts/integration-connector/
+
+        Parameters
+        ----------
+        connector_name : str, default = None
+            Name of the integration connector to refresh. If none, all connectors will be refreshed.
+        server_guid : str, default = None
+            Identity of the server to act on. If not specified, qualified_name or display_name must be.
+        display_name: str, default = None
+            Name of server to act on. If not specified, server_guid or qualified_name must be.
+        qualified_name: str, default = None
+            Unique name of server to act on. If not specified, server_guid or display_name must be.
+
+        body : dict, optional
+            Request body to pass directly to the API.
+
+        Returns
+        -------
+           None
+
+        Raises
+        ------
+        PyegeriaInvalidParameterException
+        PyegeriaAPIException
+        PyegeriaUnauthorizedException
+
+        """
+        loop = asyncio.get_event_loop()
+        loop.run_until_complete(
+            self._async_refresh_integration_connectors(
+                connector_name,
+                server_guid,
+                display_name,
+                qualified_name,
+                organization_name,
+                body,
+                **kwargs,
+            )
+        )
+        return
+
+    async def _async_refresh_gov_engine(
+        self,
+        gov_engine_name: Optional[str] = None,
+        server_guid: Optional[str] = None,
+        display_name: Optional[str] = None,
+        qualified_name: Optional[str] = None,
+        organization_name: Optional[str] = None,
+        body: Optional[dict] = None,
+        **kwargs,
+    ) -> None:
+        """Request that the governance engine refresh its configuration by calling the metadata server.
+            This request just ensures that the latest configuration is in use. Async version.
+
+            https://egeria-project.org/concepts/governance-engine-definition/
+
+        Parameters
+        ----------
+        gov_engine_name: str, default = None
+            Name of the governance engine to refresh. If None, all engines are refreshed.
+        server_guid : str, default = None
+            Identity of the server to act on. If not specified, qualified_name or display_name must be.
+        display_name: str, default = None
+            Name of server to act on. If not specified, server_guid or qualified_name must be.
+        qualified_name: str, default = None
+            Unique name of server to act on. If not specified, server_guid or display_name must be.
+
+        body : dict, optional
+            Request body to pass directly to the API.
+
+        Returns
+        -------
+           None
+
+        Raises
+        ------
+        PyegeriaInvalidParameterException
+        PyegeriaAPIException
+        PyegeriaUnauthorizedException
+
+        """
+        server_guid = self.__get_guid__(
+            server_guid,
+            display_name,
+            "resourceName",
+            qualified_name,
+            "Engine Host",
+            organization_name,
+        )
+
+        if gov_engine_name is None:
+            url = (
+                f"{self.runtime_command_root}/engine-hosts/"
+                f"{server_guid}/governance-engines/refresh-config"
+            )
+        else:
+            url = (
+                f"{self.runtime_command_root}/engine-hosts/"
+                f"{server_guid}/governance-engines/{gov_engine_name}/refresh-config"
+            )
+
+        await self._async_make_request("GET", url, body=body, **kwargs)
+        return
+
+    def refresh_governance_engine(
+        self,
+        gov_engine_name: Optional[str] = None,
+        server_guid: Optional[str] = None,
+        display_name: Optional[str] = None,
+        qualified_name: Optional[str] = None,
+        organization_name: Optional[str] = None,
+        body: Optional[dict] = None,
+        **kwargs,
+    ) -> None:
+        """Request that the governance engine refresh its configuration by calling the metadata server.
+            This request just ensures that the latest configuration is in use.
+
+            https://egeria-project.org/concepts/governance-engine-definition/
+
+        Parameters
+        ----------
+        gov_engine_name: str, default = None
+            Name of the governance engine to refresh. If None, all engines are refreshed.
+        server_guid : str, default = None
+            Identity of the server to act on. If not specified, qualified_name or display_name must be.
+        display_name: str, default = None
+            Name of server to act on. If not specified, server_guid or qualified_name must be.
+        qualified_name: str, default = None
+            Unique name of server to act on. If not specified, server_guid or display_name must be.
+
+        body : dict, optional
+            Request body to pass directly to the API.
+
+        Returns
+        -------
+           None
+
+        Raises
+        ------
+        PyegeriaInvalidParameterException
+        PyegeriaAPIException
+        PyegeriaUnauthorizedException
+
+        """
+        loop = asyncio.get_event_loop()
+        loop.run_until_complete(
+            self._async_refresh_gov_engine(
+                gov_engine_name,
+                server_guid,
+                display_name,
+                qualified_name,
+                organization_name,
+                body,
+                **kwargs,
             )
         )
         return

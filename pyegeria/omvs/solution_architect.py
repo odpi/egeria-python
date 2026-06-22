@@ -1577,7 +1577,7 @@ class SolutionArchitect(ServerClient):
                                            output_format: str = "JSON", report_spec: str | dict = None,
                                            start_from: int = 0, page_size: int = 100,
                                            property_names: Optional[list[str]] = None,
-                                           body: Optional[dict | SearchStringRequestBody] = None) -> (list[dict] | str):
+                                           body: Optional[dict | SearchStringRequestBody] = None, **kwargs) -> (list[dict] | str):
         """ Retrieve a list of all information supply chains
              Parameters
                 ----------
@@ -1685,7 +1685,7 @@ class SolutionArchitect(ServerClient):
                                                    sequencing_property,
                                                    output_format, report_spec,
                                                    start_from, page_size,
-                                                   property_names, body)
+                                                   property_names, body, **kwargs)
 
     async def _async_find_information_supply_chains(
         self,
@@ -2016,7 +2016,7 @@ class SolutionArchitect(ServerClient):
 
         url = (f"{self.solution_architect_command_root}/information-supply-chains/by-name"
                f"{possible_query_params}")
-        response: Response = await self._async_make_request("POST", url, body_slimmer(body))
+        response: Response = await self._async_make_request("POST", url, body_slimmer(body), **kwargs)
         element = response.json().get("elements", NO_ELEMENTS_FOUND)
         if element == NO_ELEMENTS_FOUND:
             return NO_ELEMENTS_FOUND
@@ -2140,9 +2140,9 @@ class SolutionArchitect(ServerClient):
                f"information-supply-chains/{guid}/retrieve?addImplementation={add_impl}")
 
         if body is None:
-            response = await self._async_make_request("POST", url)
+            response = await self._async_make_request("POST", url, **kwargs)
         else:
-            response = await self._async_make_request("POST", url, body_slimmer(body))
+            response = await self._async_make_request("POST", url, body_slimmer(body), **kwargs)
         element = response.json().get("element", NO_ELEMENTS_FOUND)
         if element == NO_ELEMENTS_FOUND:
             return NO_ELEMENTS_FOUND
@@ -3287,13 +3287,13 @@ class SolutionArchitect(ServerClient):
                                     ignore_case: bool = False, start_from: int = 0,
                                     page_size: int = 0, graph_query_depth: int = 3, output_format: str = 'JSON',
                                     report_spec: Optional[str] = None,
-                                    body: dict| SearchStringRequestBody = None) -> list[dict] | str:
+                                    body: dict| SearchStringRequestBody = None, **kwargs) -> list[dict] | str:
         """Retrieve a list of all solution blueprint elements
         https://egeria-project.org/concepts/solution-blueprint
         """
         return self.find_solution_blueprints("*", classification_names, metadata_element_subtypes,
                                               starts_with, ends_with, ignore_case, start_from,
-                                              page_size, output_format, report_spec, body)
+                                              page_size, output_format, report_spec, body, **kwargs)
 
 
     async def _async_get_solution_blueprint_by_guid(self, guid: str = None, body: dict = None,
@@ -3349,9 +3349,9 @@ class SolutionArchitect(ServerClient):
                f"solution-blueprints/{guid}/retrieve")
 
         if body is None:
-            response = await self._async_make_request("POST", url)
+            response = await self._async_make_request("POST", url, **kwargs)
         else:
-            response = await self._async_make_request("POST", url, body_slimmer(body))
+            response = await self._async_make_request("POST", url, body_slimmer(body), **kwargs)
         element = response.json().get("element", NO_ELEMENTS_FOUND)
         if element == NO_ELEMENTS_FOUND:
             return NO_ELEMENTS_FOUND
@@ -4686,11 +4686,11 @@ class SolutionArchitect(ServerClient):
                                     ignore_case: bool = False, start_from: int = 0,
                                     page_size: int = 0, graph_query_depth: int = 3, output_format: str = 'JSON',
                                     report_spec: Optional[str] = None,
-                                    body: dict| SearchStringRequestBody = None) -> list[dict] | str:
+                                    body: dict| SearchStringRequestBody = None, **kwargs) -> list[dict] | str:
         """Retrieve a list of all solution component elements
         https://egeria-project.org/concepts/solution-components
         """
-        return self.find_solution_components("*", classification_names, metadata_element_subtypes, starts_with, ends_with, ignore_case, start_from, page_size, output_format, report_spec, body)
+        return self.find_solution_components("*", classification_names, metadata_element_subtypes, starts_with, ends_with, ignore_case, start_from, page_size, output_format, report_spec, body, **kwargs)
 
 
     async def _async_get_solution_components_by_name(self, name: Optional[str] = None, body: dict = None, start_from: int = 0,
@@ -4758,7 +4758,7 @@ class SolutionArchitect(ServerClient):
 
         url = (f"{self.solution_architect_command_root}/solution-components/by-name"
                f"{possible_query_params}")
-        response: Response = await self._async_make_request("POST", url, body_slimmer(body))
+        response: Response = await self._async_make_request("POST", url, body_slimmer(body), **kwargs)
         element = response.json().get("elements", NO_ELEMENTS_FOUND)
         if element == NO_ELEMENTS_FOUND:
             return NO_ELEMENTS_FOUND
@@ -4951,9 +4951,9 @@ class SolutionArchitect(ServerClient):
 
 
 
-    def get_component_related_elements(self, guid: str) -> dict:
+    def get_component_related_elements(self, guid: str, **kwargs) -> dict:
         """ Get related elements about the component"""
-        response = self.get_solution_component_by_guid(guid, output_format='JSON')
+        response = self.get_solution_component_by_guid(guid, output_format='JSON', **kwargs)
 
         if isinstance(response, str):
             return None
@@ -5084,9 +5084,9 @@ class SolutionArchitect(ServerClient):
                f"solution-components/{guid}/implementations{possible_query_params}")
 
         if body is None:
-            response = await self._async_make_request("POST", url)
+            response = await self._async_make_request("POST", url, **kwargs)
         else:
-            response = await self._async_make_request("POST", url, body_slimmer(body))
+            response = await self._async_make_request("POST", url, body_slimmer(body), **kwargs)
         element = response.json().get("elements", NO_ELEMENTS_FOUND)
         if element == NO_ELEMENTS_FOUND:
             return NO_ELEMENTS_FOUND
@@ -6121,7 +6121,7 @@ class SolutionArchitect(ServerClient):
         page_size: int = 0,
         graph_query_depth: int = 3, output_format: str = 'JSON',
         report_spec: Optional[str] = None,
-        body: Optional[dict | SearchStringRequestBody] = None
+        body: Optional[dict | SearchStringRequestBody] = None, **kwargs
     ) -> list[dict] | str:
         """Retrieve a list of all solution blueprint elements
         https://egeria-project.org/concepts/actor
@@ -6137,7 +6137,8 @@ class SolutionArchitect(ServerClient):
             output_format=output_format,
             report_spec=report_spec,
             skip_classified_elements=classification_names,
-            metadata_element_subtypes=metadata_element_subtypes
+            metadata_element_subtypes=metadata_element_subtypes,
+            **kwargs
         )
 
 
@@ -6207,7 +6208,7 @@ class SolutionArchitect(ServerClient):
 
         url = (f"{self.solution_architect_command_root}/solution-roles/by-name"
                f"{possible_query_params}")
-        response: Response = await self._async_make_request("POST", url, body_slimmer(body))
+        response: Response = await self._async_make_request("POST", url, body_slimmer(body), **kwargs)
         element = response.json().get("elements", NO_ELEMENTS_FOUND)
         if element == NO_ELEMENTS_FOUND:
             return NO_ELEMENTS_FOUND
@@ -6322,9 +6323,9 @@ class SolutionArchitect(ServerClient):
                f"solution-roles/{guid}/retrieve")
 
         if body is None:
-            response = await self._async_make_request("POST", url)
+            response = await self._async_make_request("POST", url, **kwargs)
         else:
-            response = await self._async_make_request("POST", url, body_slimmer(body))
+            response = await self._async_make_request("POST", url, body_slimmer(body), **kwargs)
         element = response.json().get("element", NO_ELEMENTS_FOUND)
         if element == NO_ELEMENTS_FOUND:
             return NO_ELEMENTS_FOUND
