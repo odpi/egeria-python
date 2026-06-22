@@ -31,6 +31,7 @@ from CreateProfileScreen import CreateProfileScreen
 from EditProfileScreen import EditProfileScreen
 from EditCommunitiesScreen import EditCommunitiesScreen
 from AddCommentScreen import AddCommentScreen
+from ShowCommentScreen import ShowCommentScreen
 from EditIdentitiesScreen import EditIdentitiesScreen
 from EditProjectsScreen import EditProjectsScreen
 from EditTodosScreen import EditTodosScreen
@@ -72,6 +73,7 @@ class MyProfileApp(App):
         "edit_profile": EditProfileScreen,
         "edit_communities": EditCommunitiesScreen,
         "add_comment": AddCommentScreen,
+        "show_comment": ShowCommentScreen,
         "edit_identities": EditIdentitiesScreen,
         "edit_roles": EditRolesScreen,
         "edit_teams": EditTeamsScreen,
@@ -442,12 +444,22 @@ class MyProfileApp(App):
 
     @on(DataTable.RowSelected, "#communities_table")
     async def handle_community_table_row_selected(self, event: DataTable.RowSelected):
-        self.log(f"Community table row selected: {event.row}")
+        self.log(f"Community table row selected: {event.row_key}")
         self.sel_row_key = event.row_key
+        main_screen = self.get_screen("main")
+        self.communities_table=main_screen.query_one("#communities_table", DataTable)
         selected_row = self.communities_table.get_row(event.row_key)
-        selected_GUID = selected_row[4]
+        self.log(f"Selected Community row: {selected_row}")
+        selected_GUID = selected_row[3]
         self.log(f"Selected Community GUID: {selected_GUID}")
-        await self.push_screen(AddCommentScreen(selected_GUID), callback=self.add_comment_callback)
+        try:
+            fclient=Egeria(self.view_server, self.platform_url, self.user_name, self.user_password)
+            token = fclient.create_egeria_bearer_token(self.user_name, self.user_password)
+            attached_messages=(fclient.get_attached_comments(selected_GUID))
+        except(PyegeriaException) as e:
+            self.log(f"Error retrieving attached messages : {e}")
+            attached_messages = None
+        await self.push_screen(ShowCommentScreen(selected_GUID, attached_messages), callback=self.show_comment_callback)
 
     def add_comment_callback(self, result):
         self.log(f"Comment to be added: {result}")
@@ -455,12 +467,27 @@ class MyProfileApp(App):
         self.community_GUID = result[0]
         self.comment = result[1]
         fclient = Egeria(self.view_server, self.platform_url, self.user_name, self.user_password)
-        token = fclient.create_bearer_token(self.user_name, self.user_password)
-        addresult = fclient.add_comment_to_community(self.community_GUID, self.comment)
+        token = fclient.create_egeria_bearer_token(self.user_name, self.user_password)
+        addresult = fclient.add_comment_to_element(self.community_GUID, self.comment)
+        self.log(f"Comment added: {addresult}")
         self.refresh()
+
+    async def show_comment_callback(self, result):
+        self.result = result
+        self.rc = result[0]
+        self.selected_GUID = result[1]
+        if self.rc != 200:
+            return(self.rc)
+        else:
+            if self.selected_GUID:
+                await self.push_screen(AddCommentScreen(self.selected_GUID), callback=self.add_comment_callback)
+            else:
+                return(self.rc)
+
 
     @on(OptionList.OptionSelected, "#other_function_list")
     async def handle_option_selected(self, event: OptionList.OptionSelected):
+        """ Process the selected option from the Other Functions OptionList. """
         # option selected by user
         selected_option = event.option.prompt
         selected_option_id = event.option.id
