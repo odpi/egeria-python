@@ -955,6 +955,54 @@ class RuntimeManager(ServerClient):
         await self._async_make_request("GET", url, body=body)
         return
 
+    def refresh_gov_eng_config(
+        self,
+        gov_engine_name: Optional[str] = None,
+        server_guid: Optional[str] = None,
+        display_name: Optional[str] = None,
+        qualified_name: Optional[str] = None,
+        body: Optional[dict] = None,
+    ) -> None:
+        """Request that the governance engine refresh its configuration by calling the metadata access server.
+            Changes to the engine configuration will result in the affected engines being restarted.
+            This request is useful if the metadata access server has an outage, particularly while the engine-host
+            is initializing. This request just ensures that the latest configuration is in use.
+
+            https://egeria-project.org/concepts/governance-engine/
+
+        Parameters
+        ----------
+        server_guid : str, default = None
+            Identity of the server to act on. If not specified, qualified_name or server_name must be.
+        display_name: str, default = None
+            Name of server to act on. If not specified, server_guid or qualified_name must be.
+        qualified_name: str, default = None
+            Unique name of server to act on. If not specified, server_guid or server_name must be.
+        gov_engine_name : str, opt, default = None
+            Name of the governance engine to refresh. If None, all engines are refreshed.
+
+        body : dict, optional
+            Request body to pass directly to the API.
+
+        Returns
+        -------
+           None
+
+        Raises
+        ------
+        PyegeriaInvalidParameterException
+        PyegeriaAPIException
+        PyegeriaUnauthorizedException
+
+        """
+        loop = asyncio.get_event_loop()
+        loop.run_until_complete(
+            self._async_refresh_gov_eng_config(
+                gov_engine_name, server_guid, display_name, qualified_name, body
+            )
+        )
+        return
+
     async def _async_refresh_integ_group_config(
         self,
         integ_group_name: Optional[str] = None,
@@ -2525,12 +2573,14 @@ class RuntimeManager(ServerClient):
         url = f"{self.runtime_command_root}/omag-servers/{server_guid}/instance/report"
 
         response = await self._async_make_request("GET",url)
-        elements = response.json().get("element", NO_ELEMENTS_FOUND)
-        if type(elements) is str:
-            elements = response.json().get("elementGraph", NO_ELEMENTS_FOUND)
+        elements = response.json().get("serverReport")
+        if elements is None:
+            elements = response.json().get("element", NO_ELEMENTS_FOUND)
             if type(elements) is str:
-                logger.info(NO_ELEMENTS_FOUND)
-                return NO_ELEMENTS_FOUND
+                elements = response.json().get("elementGraph", NO_ELEMENTS_FOUND)
+                if type(elements) is str:
+                    logger.info(NO_ELEMENTS_FOUND)
+                    return NO_ELEMENTS_FOUND
 
         if output_format != 'JSON':  # return a simplified markdown representation
             logger.info(f"Found elements, output format: {output_format} and report_spec: {report_spec}")

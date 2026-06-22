@@ -2004,6 +2004,38 @@ base_report_specs = FormatSetDict({
             spec_params={"output_format": "DICT"},
         )
     ),
+    "Solution-Blueprint-Mermaid": FormatSet(
+        target_type="SolutionBlueprint",
+        heading="Solution Blueprint Mermaid",
+        description="Details of a Solution Blueprint.",
+        aliases=[],
+        annotations={"Wikilinks": ["[[Solution-Blueprint-Mermaid]]"]},
+        family="Solution Architect",
+formats=[
+            Format(
+                types=["DICT", "TABLE", "LIST", "MD", "FORM"],
+                attributes=COLLECTIONS_MEMBERS_COLUMNS
+            ),
+            Format(
+                types=["REPORT", "HTML"],
+                attributes=COLLECTIONS_MEMBERS_COLUMNS + [
+                    Column(name="GUID", key='GUID'),
+                    Column(name="Mermaid", key='mermaidGraph'),
+                    Column(name="Solution Blueprint Mermaid Graph", key='solutionBlueprintMermaidGraph'),
+                ]),
+            Format(
+                types=["MERMAID"],
+                attributes=[
+                    Column(name="Solution Blueprint Mermaid Graph", key='solutionBlueprintMermaidGraph'),
+                ])
+        ],
+        action=ActionParameter(
+            function="SolutionArchitect.find_solution_blueprints",
+            required_params=["search_string"],
+            optional_params=OPTIONAL_SEARCH_PARAMS,
+            spec_params={},
+        ),
+    ),
     "Solution-Blueprint": FormatSet(
         target_type="SolutionBlueprint",
         heading="Solution Blueprint Report",

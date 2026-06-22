@@ -35,6 +35,7 @@ from pyegeria.omvs.reference_data import ReferenceDataManager
 from pyegeria.omvs.registered_info import RegisteredInfo
 from pyegeria.omvs.runtime_manager import RuntimeManager
 from pyegeria.omvs.schema_maker import SchemaMaker
+from pyegeria.omvs.server_operations import ServerOps
 from pyegeria.omvs.security_officer import SecurityOfficer
 from pyegeria.omvs.solution_architect import SolutionArchitect
 from pyegeria.omvs.specification_properties import SpecificationProperties
@@ -124,6 +125,7 @@ class EgeriaTech:
             "digital_business": DigitalBusiness,
             "lineage_linker": LineageLinker,
             "schema_maker": SchemaMaker,
+            "server_ops": ServerOps,
             "valid_types": ValidTypeLists,
             "valid_type_lists": ValidTypeLists,
             "valid_metadata_lists": ValidMetadataLists,

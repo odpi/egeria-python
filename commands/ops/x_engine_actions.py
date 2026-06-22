@@ -66,7 +66,7 @@ def refresh(ctx):
     token = p_client.create_egeria_bearer_token()
     try:
         engine_host_guid = p_client.get_guid_for_name(c.engine_host)
-        p_client.refresh_gov_eng_config(engine_host_guid)
+        p_client.refresh_gov_eng_config(server_guid=engine_host_guid)
 
         click.echo(f"Refreshed server {c.engine_host}")
 

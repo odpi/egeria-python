@@ -3311,10 +3311,10 @@ class DataDesigner(ServerClient):
 
     @dynamic_catch
     async def _async_get_data_fields_by_name(self, filter_string: str, classification_names: Optional[list[str]] = None,
-                                             body: dict = None | FilterRequestBody, start_from: int = 0,
+                                             body: Optional[dict | FilterRequestBody] = None, start_from: int = 0,
                                              page_size: int = 0,
                                              graph_query_depth: int = 3, output_format: str = 'JSON',
-                                             report_spec: str | dict = None) -> list | str:
+                                             report_spec: str | dict = None, **kwargs) -> list | str:
         """ Get the list of data class metadata elements with a matching name to the search string filter.
             Async version.
 
@@ -3369,7 +3369,7 @@ class DataDesigner(ServerClient):
                                                       filter_string=filter_string,
                                                       classification_names=classification_names, start_from=start_from,
                                                       page_size=page_size, output_format=output_format,
-                                                      report_spec=report_spec, body=body)
+                                                      report_spec=report_spec, body=body, **kwargs)
 
         return response
 
@@ -3377,7 +3377,7 @@ class DataDesigner(ServerClient):
     def get_data_fields_by_name(self, filter_string: str, classification_names: Optional[list[str]] = None, body: dict = None,
                                 start_from: int = 0,
                                 page_size: int = max_paging_size, graph_query_depth: int = 3, output_format: str = 'JSON',
-                                report_spec: str | dict = None) -> list | str:
+                                report_spec: str | dict = None, **kwargs) -> list | str:
         """ Get the list of data class elements with a matching name to the search string filter.
 
         Parameters
@@ -3414,7 +3414,7 @@ class DataDesigner(ServerClient):
 
         loop = asyncio.get_event_loop()
         response = loop.run_until_complete(
-            self._async_get_data_fields_by_name(name=name, classification_names=classification_names, body=body, start_from=start_from, page_size=page_size,
+            self._async_get_data_fields_by_name(filter_string=filter_string, classification_names=classification_names, body=body, start_from=start_from, page_size=page_size,
                                                 graph_query_depth=graph_query_depth,
                                                 output_format=output_format, report_spec=report_spec, **kwargs))
         return response
@@ -3424,30 +3424,30 @@ class DataDesigner(ServerClient):
     async def _async_get_data_field_by_guid(self, guid: str, element_type: Optional[str] = None,
                                              body: Optional[dict] = None,
                                              graph_query_depth: int = 3, output_format: str = 'JSON',
-                                             report_spec: str | dict = None) -> list | str:
+                                             report_spec: str | dict = None, **kwargs) -> list | str:
         """Get a data field by its GUID. Async version."""
         url = f"{self.ref_data_designer_command_base}/data-fields/{guid}/retrieve"
         _type = element_type if element_type else "DataField"
         return await self._async_get_guid_request(url, _type=_type,
                                                    _gen_output=self._generate_data_field_output,
                                                    output_format=output_format, report_spec=report_spec,
-                                                   body=body)
+                                                   body=body, **kwargs)
 
     @dynamic_catch
     def get_data_field_by_guid(self, guid: str, element_type: Optional[str] = None,
                                 body: Optional[dict] = None,
-                                graph_query_depth: int = 3, output_format: str = 'JSON', report_spec: str | dict = None) -> list | str:
+                                graph_query_depth: int = 3, output_format: str = 'JSON', report_spec: str | dict = None, **kwargs) -> list | str:
         """Get a data field by its GUID."""
         loop = asyncio.get_event_loop()
         return loop.run_until_complete(
-            self._async_get_data_field_by_guid(guid, element_type, body, graph_query_depth, output_format, report_spec))
+            self._async_get_data_field_by_guid(guid, element_type, body, graph_query_depth, output_format, report_spec, **kwargs))
 
     @dynamic_catch
     async def _async_get_data_value_specifications_by_name(self, filter_string: str, classification_names: list[str],
                                                            body: Optional[dict | FilterRequestBody] = None, start_from: int = 0,
                                                            page_size: int = 0,
                                                            graph_query_depth: int = 3, output_format: str = 'JSON',
-                                                           report_spec: str | dict = None) -> list | str:
+                                                           report_spec: str | dict = None, **kwargs) -> list | str:
         """ Get data value specifications by name. Async version.
 
         Parameters
@@ -3501,7 +3501,7 @@ class DataDesigner(ServerClient):
                                                       filter_string=filter_string,
                                                       classification_names=classification_names, start_from=start_from,
                                                       page_size=page_size, output_format=output_format,
-                                                      report_spec=report_spec, body=body)
+                                                      report_spec=report_spec, body=body, **kwargs)
 
         return response
 
@@ -3509,7 +3509,7 @@ class DataDesigner(ServerClient):
     def get_data_value_specifications_by_name(self, filter_string: str, classification_names: Optional[list[str]] = None, body: dict = None,
                                               start_from: int = 0,
                                               page_size: int = max_paging_size, graph_query_depth: int = 3, output_format: str = 'JSON',
-                                              report_spec: str | dict = None) -> list | str:
+                                              report_spec: str | dict = None, **kwargs) -> list | str:
         """ Get data value specifications by name.
 
         Parameters
@@ -3549,14 +3549,14 @@ class DataDesigner(ServerClient):
         response = loop.run_until_complete(
             self._async_get_data_value_specifications_by_name(filter_string, classification_names, body, start_from, page_size,
                                                              graph_query_depth,
-                                                             output_format, report_spec))
+                                                             output_format, report_spec, **kwargs))
         return response
 
     @dynamic_catch
     async def _async_get_data_value_specification_by_guid(self, guid: str, element_type: Optional[str] = None,
                                                            body: Optional[dict | GetRequestBody] = None,
                                                            graph_query_depth: int = 3, output_format: str = 'JSON',
-                                                           report_spec: str | dict = None) -> list | str:
+                                                           report_spec: str | dict = None, **kwargs) -> list | str:
         """ Get the  data value specification metadata elements for the specified GUID.
             Async version.
 
@@ -3608,14 +3608,14 @@ class DataDesigner(ServerClient):
         response = await self._async_get_guid_request(url, _type=type,
                                                       _gen_output=self._generate_data_value_specification_output,
                                                       output_format=output_format, report_spec=report_spec,
-                                                      body=body)
+                                                      body=body, **kwargs)
 
         return response
 
     @dynamic_catch
     def get_data_value_specification_by_guid(self, guid: str, element_type: Optional[str] = None,
                                              body: Optional[dict | GetRequestBody] = None,
-                                             graph_query_depth: int = 3, output_format: str = 'JSON', report_spec: str | dict = None) -> list | str:
+                                             graph_query_depth: int = 3, output_format: str = 'JSON', report_spec: str | dict = None, **kwargs) -> list | str:
         """ Get the data value specification metadata element with the specified unique identifier..
 
         Parameters
@@ -3661,7 +3661,7 @@ class DataDesigner(ServerClient):
 
         loop = asyncio.get_event_loop()
         response = loop.run_until_complete(
-            self._async_get_data_value_specification_by_guid(guid, element_type, body, graph_query_depth, output_format, report_spec))
+            self._async_get_data_value_specification_by_guid(guid, element_type, body, graph_query_depth, output_format, report_spec, **kwargs))
         return response
 
 
