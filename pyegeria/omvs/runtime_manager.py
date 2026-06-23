@@ -516,7 +516,7 @@ class RuntimeManager(ServerClient):
                 f"{server_guid}/integration-connectors/{connector_name}/stop"
             )
 
-        await self._async_make_request("GET", url, body=body)
+        await self._async_make_request("GET", url, platform=body)
         return
 
     def stop_connector(
@@ -619,7 +619,7 @@ class RuntimeManager(ServerClient):
                 f"{server_guid}/integration-connectors/{connector_name}/start"
             )
 
-        await self._async_make_request("GET", url, body=body)
+        await self._async_make_request("GET", url, platform=body)
         return
 
     def start_connector(
@@ -703,7 +703,7 @@ class RuntimeManager(ServerClient):
             f"{self.runtime_command_root}/omag-servers/"
             f"{server_guid}/cohorts/{cohort_name}"
         )
-        await self._async_make_request("POST", url, body=body)
+        await self._async_make_request("POST", url, platform=body)
         return
 
     def connect_to_cohort(
@@ -778,7 +778,7 @@ class RuntimeManager(ServerClient):
             f"{self.runtime_command_root}/omag-servers/"
             f"{server_guid}/cohorts/{cohort_name}"
         )
-        await self._async_make_request("DELETE", url, body=body)
+        await self._async_make_request("DELETE", url, platform=body)
         return
 
     def disconnect_from_cohort(
@@ -853,7 +853,7 @@ class RuntimeManager(ServerClient):
             f"{self.runtime_command_root}/omag-servers/"
             f"{server_guid}/cohorts/{cohort_name}/unregister"
         )
-        await self._async_make_request("POST", url, body=body)
+        await self._async_make_request("POST", url, platform=body)
         return
 
     def unregister_from_cohort(
@@ -953,7 +953,7 @@ class RuntimeManager(ServerClient):
                 f"{server_guid}/governance-engines/{gov_engine_name}/refresh-config"
             )
 
-        await self._async_make_request("GET", url, body=body, **kwargs)
+        await self._async_make_request("GET", url, platform=body, **kwargs)
         return
 
     def refresh_gov_eng_config(
@@ -1059,7 +1059,7 @@ class RuntimeManager(ServerClient):
             f"{server_guid}/integration-groups/{integ_group_name}/refresh-config"
         )
 
-        await self._async_make_request("GET", url, body=body, **kwargs)
+        await self._async_make_request("GET", url, platform=body, **kwargs)
         return
 
     def refresh_integ_group_config(
@@ -1112,7 +1112,7 @@ class RuntimeManager(ServerClient):
         )
         return
 
-    async def _async_refresh_integration_connectors(
+    async def _async_refresh_integration_connector(
         self,
         connector_name: Optional[str] = None,
         server_guid: Optional[str] = None,
@@ -1172,7 +1172,7 @@ class RuntimeManager(ServerClient):
         await self._async_make_request("POST", url, body, **kwargs)
         return
 
-    def refresh_integration_connectors(
+    def refresh_integration_connector(
         self,
         connector_name: Optional[str] = None,
         server_guid: Optional[str] = None,
@@ -1286,7 +1286,7 @@ class RuntimeManager(ServerClient):
                 f"{server_guid}/governance-engines/{gov_engine_name}/refresh-config"
             )
 
-        await self._async_make_request("GET", url, body=body, **kwargs)
+        await self._async_make_request("GET", url, platform=body, **kwargs)
         return
 
     def refresh_governance_engine(
@@ -1704,7 +1704,7 @@ class RuntimeManager(ServerClient):
         )
         url = f"{self.runtime_command_root}/omag-servers/{server_guid}"
 
-        await self._async_make_request("DELETE", url, body=body)
+        await self._async_make_request("DELETE", url, platform=body)
 
         return
 
@@ -1786,7 +1786,7 @@ class RuntimeManager(ServerClient):
 
         url = f"{self.runtime_command_root}/omag-servers/{server_guid}/instance"
 
-        await self._async_make_request("POST", url, body=body, time_out=timeout)
+        await self._async_make_request("POST", url, platform=body, time_out=timeout)
         return
 
     def activate_server_with_stored_config(
@@ -1865,7 +1865,7 @@ class RuntimeManager(ServerClient):
         )
         url = f"{self.runtime_command_root}/omag-servers/{server_guid}/instance"
 
-        await self._async_make_request("DELETE", url, body=body)
+        await self._async_make_request("DELETE", url, platform=body)
 
         return
 

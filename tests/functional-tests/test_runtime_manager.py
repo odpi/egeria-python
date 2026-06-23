@@ -769,7 +769,7 @@ class TestRuntimeManager:
             server_name = "qs-integration-daemon"
             connector_name = "UnityCatalogServerSynchronizer"
             start_time = time.perf_counter()
-            r_client.refresh_integration_connectors(
+            r_client.refresh_integration_connector(
                 connector_name, server_guid, server_name
             )
 
