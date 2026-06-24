@@ -114,7 +114,11 @@ def main() -> None:
             starts_with: Optional[bool] = None,
             ends_with: Optional[bool] = None,
             ignore_case: Optional[bool] = None,
-            output_type: Literal["DICT", "JSON", "MARKDOWN"] = "DICT"
+            output_type: Literal[
+                "DICT", "JSON", "MARKDOWN",
+                "LIST", "TABLE", "REPORT", "REPORT-GRAPH",
+                "FORM", "MD", "MERMAID", "HTML", "GRAPH",
+            ] = "DICT"
     ) -> Dict[str, Any]:
         import asyncio
         import nest_asyncio
@@ -125,12 +129,23 @@ def main() -> None:
         # 1. Automatic Validation: FastMCP/Pydantic ensures types are correct.
 
         # 2. Manual Validation (for specific values like output_format)
-        effective_output_format = "REPORT" if output_type == "MARKDOWN" else ("DICT" if output_type == "JSON" else output_type)
+        # "MARKDOWN" is a friendly alias for the executor's internal "REPORT".
+        # Every other type is passed through as-is so callers get the full
+        # fidelity of pyegeria's output formats (LIST, FORM, MERMAID, HTML, ...).
+        # Unsupported-for-this-spec types are rejected downstream by the
+        # executor with a clear "does not support output_format" message that
+        # lists the available formats — we do not pre-empt that here.
+        effective_output_format = "REPORT" if output_type == "MARKDOWN" else output_type
 
-        if effective_output_format not in ["DICT", "JSON", "REPORT", "MERMAID", "HTML"]:
+        _VALID_OUTPUT_FORMATS = [
+            "DICT", "JSON", "LIST", "TABLE", "REPORT", "REPORT-GRAPH",
+            "FORM", "MD", "MERMAID", "HTML", "GRAPH",
+        ]
+        if effective_output_format not in _VALID_OUTPUT_FORMATS:
             print(f"DEBUG: Invalid output_format: {effective_output_format}", file=sys.stderr)
             raise ValueError(
-                f"Invalid output_format: {effective_output_format}. Must be one of ['DICT', 'JSON', 'REPORT', 'MERMAID', 'HTML'].")
+                f"Invalid output_format: {effective_output_format}. "
+                f"Must be one of {_VALID_OUTPUT_FORMATS}.")
 
         # 3. Build params dictionary with only non-None values for clean passing
         params = {
@@ -147,17 +162,45 @@ def main() -> None:
         logger.debug(f"Running report={report_name} with params={params}")
 
         try:
-
-            egeria_client: EgeriaTech = GLOBAL_EGERIA_CLIENT
-            logger.debug("Egeria Client connected")
-            result = await asyncio.wait_for(
-                _async_run_report_tool(
-                    report=report_name,
-                    egeria_client=egeria_client,
-                    params=params,
-                    output_format=effective_output_format),
-                timeout=30  # Adjust timeout as needed
+            # Build a fresh Egeria client bound to THIS handler's event loop and
+            # mint a fresh bearer token per call. Reusing the module-level
+            # GLOBAL_EGERIA_CLIENT (created in the server's startup loop) caused
+            # intermittent CLIENT_ERROR_400 ("unable to connect") because its
+            # httpx async client is bound to a different loop than the one
+            # FastMCP runs tool handlers in. A per-call client (mirroring
+            # exec_report_spec / the CLI) is reliable.
+            from pyegeria.core.config import settings as _settings
+            _user = _settings.User_Profile.user_name
+            _pwd = _settings.User_Profile.user_pwd
+            egeria_client = EgeriaTech(
+                _settings.Environment.egeria_view_server,
+                _settings.Environment.egeria_view_server_url,
+                _user,
+                _pwd,
             )
+            await egeria_client._async_create_egeria_bearer_token(_user, _pwd)
+            logger.debug("Egeria Client connected (fresh per-call client)")
+            try:
+                # Large/multi-request reports (e.g. master-detail LIST, big
+                # graph reports) can legitimately take well over 30s; a tight
+                # cap cancels them mid-request and surfaces as a confusing
+                # CLIENT_ERROR_400. Use a generous, env-configurable timeout.
+                import os
+                _report_timeout = float(os.environ.get("PYEGERIA_MCP_REPORT_TIMEOUT", "300"))
+                result = await asyncio.wait_for(
+                    _async_run_report_tool(
+                        report=report_name,
+                        egeria_client=egeria_client,
+                        params=params,
+                        output_format=effective_output_format),
+                    timeout=_report_timeout
+                )
+            finally:
+                # Release the per-call client's HTTP connections (sync method).
+                try:
+                    egeria_client.close_session()
+                except Exception:
+                    pass
 
             logger.debug("run_report completed successfully")
             return _ok(result)
