@@ -722,7 +722,7 @@ def test_get_relationships():
     c_client = ClassificationExplorer(view_server, platform_url)
 
     bearer_token = c_client.create_egeria_bearer_token(user, password)
-    relationship_type = "Certification"
+    relationship_type = "License"
     response = c_client.get_relationships(relationship_type, output_format="JSON")
 
     if type(response) is list:

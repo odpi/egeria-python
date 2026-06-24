@@ -39,7 +39,7 @@ def add_catalog_target(
         token = a_client.create_egeria_bearer_token()
 
         integ_connector_guid = a_client.get_connector_guid(integration_connector)
-        if not integ_connector_guid or c.catalog_targets == 'No connector found':
+        if not integ_connector_guid or integ_connector_guid == 'No connector found':
             raise PyegeriaInvalidParameterException('No Connector found')
 
         guid = a_client.add_catalog_target(

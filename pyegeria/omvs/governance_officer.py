@@ -2429,7 +2429,7 @@ class GovernanceOfficer(ServerClient):
     async def _async_get_governance_process_graph(self, guid: str, element_type: Optional[str] = None,
                                                        body: Optional[dict | FilterRequestBody] = None,
                                                        output_format: str = "JSON",
-                                                       report_spec: dict = None) -> dict | str:
+                                                       report_spec: dict = None, **kwargs) -> dict | str:
 
         """ Retrieve the governance action process metadata element with the supplied unique identifier
             along with the flow definition describing its implementation. Async version.
@@ -2483,14 +2483,14 @@ class GovernanceOfficer(ServerClient):
         response = await self._async_get_guid_request(url, _type=type,
                                                       _gen_output=self._generate_governance_definition_output,
                                                       output_format=output_format, report_spec=report_spec,
-                                                      body=body)
+                                                      body=body, **kwargs)
 
         return response
 
     @dynamic_catch
     def get_governance_process_graph(self, guid: str, element_type: Optional[str] = None, body: dict = None,
                                           output_format: str = "JSON",
-                                          report_spec: dict = None) -> dict | str:
+                                          report_spec: dict = None, **kwargs) -> dict | str:
 
         """ Retrieve the governance action process metadata element with the supplied unique identifier
             along with the flow definition describing its implementation.
@@ -2538,7 +2538,7 @@ class GovernanceOfficer(ServerClient):
         loop = asyncio.get_event_loop()
         response = loop.run_until_complete(self._async_get_governance_process_graph(guid, element_type, body,
                                                                                          output_format,
-                                                                                         report_spec))
+                                                                                         report_spec, **kwargs))
         return response
 
     @dynamic_catch

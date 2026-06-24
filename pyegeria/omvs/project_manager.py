@@ -97,6 +97,7 @@ class ProjectManager(ServerClient):
             body: Optional[dict | GetRequestBody] = None,
             output_format: str = 'JSON',
             report_spec: str | dict = None,
+            **kwargs,
     ) -> list | str:
         """Returns the list of projects that are linked off of the supplied element. Any relationship will do.
              The request body is optional, but if supplied acts as a filter on project status. Async version.
@@ -143,7 +144,8 @@ class ProjectManager(ServerClient):
         response = await self._async_get_guid_request(url, "Project", self._generate_project_output,
                                                       body=body,
                                                       output_format=output_format,
-                                                      report_spec=report_spec)
+                                                      report_spec=report_spec,
+                                                      **kwargs)
         return response
 
     @dynamic_catch
@@ -152,7 +154,8 @@ class ProjectManager(ServerClient):
             parent_guid: str,
             body: Optional[dict | GetRequestBody] = None,
             output_format: str = 'JSON',
-            report_spec: str | dict = None) -> str | dict:
+            report_spec: str | dict = None,
+            **kwargs) -> str | dict:
 
         """Returns the list of projects that are linked off of the supplied element. Any relationship will do.
              The request body is optional, but if supplied acts as a filter on project status.
@@ -198,7 +201,8 @@ class ProjectManager(ServerClient):
                 parent_guid,
                 body,
                 output_format,
-                report_spec
+                report_spec,
+                **kwargs
             )
         )
         return resp
@@ -211,7 +215,8 @@ class ProjectManager(ServerClient):
             page_size: int = 0,
             output_format: str = 'JSON',
             report_spec: str | dict = None,
-            body: Optional[dict | GetRequestBody] = None,) -> str | dict:
+            body: Optional[dict | GetRequestBody] = None,
+            **kwargs) -> str | dict:
 
         """Returns the list of projects with a particular classification. The name of the classification is
             supplied in the request body. Examples of these classifications include StudyProject, PersonalProject,
@@ -251,7 +256,7 @@ class ProjectManager(ServerClient):
         response = await self._async_get_name_request(url, "Project", self._extract_project_properties,
                                                       filter_string=project_classification, start_from=start_from,
                                                       page_size=page_size, output_format=output_format,
-                                                      report_spec=report_spec, body=body)
+                                                      report_spec=report_spec, body=body, **kwargs)
         return response
 
     @dynamic_catch
@@ -263,6 +268,7 @@ class ProjectManager(ServerClient):
             output_format: str = 'JSON',
             report_spec: str | dict = None,
             body: Optional[dict | GetRequestBody] = None,
+            **kwargs
     ) -> str | dict:
         """Returns the list of projects with a particular classification. The name of the classification is
             supplied in the request body. Examples of these classifications include StudyProject, PersonalProject,
@@ -304,7 +310,8 @@ class ProjectManager(ServerClient):
 
                 output_format,
                 report_spec,
-                body
+                body,
+                **kwargs
             )
         )
         return resp
@@ -513,7 +520,8 @@ class ProjectManager(ServerClient):
             page_size: int = 0,
             output_format: str = 'JSON',
             report_spec: str | dict = None,
-            body: Optional[dict | None] = None,) -> str | dict:
+            body: Optional[dict | None] = None,
+            **kwargs) -> str | dict:
 
         """ Returns the list of project with a ProjectClassification classification and with matching properties.
          Async version.
@@ -568,7 +576,7 @@ class ProjectManager(ServerClient):
                 "startFrom" : start_from,
                 "pageSize" : page_size,
             }
-        response = await self._async_make_request("POST", url, body)
+        response = await self._async_make_request("POST", url, body, **kwargs)
 
         elements = response.json().get("elements", NO_ELEMENTS_FOUND)
         if type(elements) is str or len(elements) == 0:
@@ -589,7 +597,8 @@ class ProjectManager(ServerClient):
             page_size: int = 0,
             output_format: str = 'JSON',
             report_spec: str | dict = None,
-            body: Optional[dict | None] = None,) -> str | dict:
+            body: Optional[dict | None] = None,
+            **kwargs) -> str | dict:
 
         """ Returns the list of project with a ProjectClassification classification and with matching properties.
 
@@ -635,7 +644,7 @@ class ProjectManager(ServerClient):
         resp = loop.run_until_complete(
             self._async_get_projects_by_classification_properties( approach, management_style, results_usage,
                                          start_from, page_size,
-                                         output_format, report_spec, body)
+                                         output_format, report_spec, body, **kwargs)
         )
         return resp
 
@@ -648,7 +657,8 @@ class ProjectManager(ServerClient):
             page_size: int = 0,
             output_format: str = 'JSON',
             report_spec: str | dict = None,
-            body: Optional[dict | FilterRequestBody] = None,) -> str | dict:
+            body: Optional[dict | FilterRequestBody] = None,
+            **kwargs) -> str | dict:
 
         """Returns the list of actors that are linked off of the project.  This includes the project managers.
            The optional request body allows a teamRole to be specified as a filter.  To filter out the project managers,
@@ -683,9 +693,9 @@ class ProjectManager(ServerClient):
         )
         if body is None and (team_role is not None and team_role != "*"):
             body = { "filter" : team_role }
-            response = await self._async_make_request("POST", url, body)
+            response = await self._async_make_request("POST", url, body, **kwargs)
         else:
-            response = await self._async_make_request("POST", url)
+            response = await self._async_make_request("POST", url, **kwargs)
 
         elements = response.json().get("elements", NO_ELEMENTS_FOUND)
         if type(elements) is str or len(elements) == 0:
@@ -708,6 +718,7 @@ class ProjectManager(ServerClient):
             output_format: str = 'JSON',
             report_spec: str | dict = None,
             body: Optional[dict | FilterRequestBody] = None,
+            **kwargs
     ) -> str | dict:
         """Returns the list of actors that are linked off of the project.  This includes the project managers.
            The optional request body allows a teamRole to be specified as a filter.  To filter out the project managers,
@@ -739,7 +750,7 @@ class ProjectManager(ServerClient):
         loop = asyncio.get_event_loop()
         resp = loop.run_until_complete(
             self._async_get_project_team(project_guid, team_role, start_from, page_size,
-                                         output_format,report_spec, body  )
+                                         output_format,report_spec, body, **kwargs  )
         )
         return resp
 
@@ -1027,6 +1038,7 @@ class ProjectManager(ServerClient):
             body: Optional[dict | GetRequestBody] = None,
             output_format: str = 'JSON',
             report_spec: str | dict = None,
+            **kwargs
     ) -> dict | str:
         """Return the mermaid graph of a specific project. Async version.
 
@@ -1060,7 +1072,7 @@ class ProjectManager(ServerClient):
         response = await self._async_get_guid_request(url, _type=element_type,
                                                       _gen_output=self._generate_project_output,
                                                       output_format=output_format, report_spec=report_spec,
-                                                      body=body)
+                                                      body=body, **kwargs)
 
         return response
 
@@ -1072,6 +1084,7 @@ class ProjectManager(ServerClient):
             body: Optional[dict | GetRequestBody] = None,
             output_format: str = 'JSON',
             report_spec: str | dict = None,
+            **kwargs
     ) -> dict | str:
         """Return the mermaid graph of a specific project. Async version.
 
@@ -1100,7 +1113,7 @@ class ProjectManager(ServerClient):
         """
         loop = asyncio.get_event_loop()
         resp = loop.run_until_complete(
-            self._async_get_project_graph(project_guid, element_type, body, output_format, report_spec)
+            self._async_get_project_graph(project_guid, element_type, body, output_format, report_spec, **kwargs)
         )
 
         return resp

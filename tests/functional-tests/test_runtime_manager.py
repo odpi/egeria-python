@@ -769,7 +769,7 @@ class TestRuntimeManager:
             server_name = "qs-integration-daemon"
             connector_name = "UnityCatalogServerSynchronizer"
             start_time = time.perf_counter()
-            r_client.refresh_integration_connectors(
+            r_client.refresh_integration_connector(
                 connector_name, server_guid, server_name
             )
 
@@ -810,6 +810,38 @@ class TestRuntimeManager:
             duration = time.perf_counter() - start_time
             print(f"\n\tDuration was {duration} seconds")
             print("Connector {connector_name} restarted")
+            assert True
+
+        except (
+            PyegeriaInvalidParameterException,
+            PyegeriaAPIException,
+            PyegeriaUnauthorizedException,
+        ) as e:
+            print_exception_response(e)
+            assert False, "Invalid request"
+
+        finally:
+            r_client.close_session()
+
+    def test_refresh_governance_engine(self):
+        try:
+            r_client = RuntimeManager(
+                self.good_view_server_1,
+                self.good_platform1_url,
+                user_id=self.good_user_1,
+                user_pwd="secret",
+            )
+            token = r_client.create_egeria_bearer_token()
+            server_name = "engine-host"
+            gov_engine_name = "default-engine"
+            start_time = time.perf_counter()
+            r_client.refresh_governance_engine(
+                gov_engine_name, display_name=server_name
+            )
+
+            duration = time.perf_counter() - start_time
+            print(f"\n\tDuration was {duration} seconds")
+            print(f"Governance Engine {gov_engine_name} refreshed")
             assert True
 
         except (

@@ -632,13 +632,15 @@ class ServerClient(BaseServerClient):
             "startFrom": start_from,
             "pageSize": page_size,
             "forLineage": for_lineage,
-            "forDuplicateProcessing": for_duplicate_processing
+            "forDuplicateProcessing": for_duplicate_processing,
+            **kwargs
         }
+        validated_body = FindPropertyNamesRequestBody.model_validate(body)
 
         url = f"{self.platform_url}/servers/{self.server_name}/api/open-metadata/classification-explorer/elements/by-exact-property-value"
 
         response: Response = await self._async_make_request(
-            "POST", url, body_slimmer(body), time_out=time_out
+            "POST", url, validated_body.model_dump_json(exclude_none=True), time_out=time_out
         )
 
         elements = response.json().get("elements", NO_ELEMENTS_FOUND)
@@ -6345,6 +6347,7 @@ class ServerClient(BaseServerClient):
                     "anchorTypeName": anchor_type_name,
                     "anchorDomainName": anchor_domain,
                     "anchorScopeGuid": anchor_scope_guid,
+                    **kwargs
                 }
                 if not metadata_element_type:
                     body.pop("metadataElementTypeName", None)
@@ -6376,8 +6379,8 @@ class ServerClient(BaseServerClient):
                     "sequencingOrder": sequencing_order,
                     "sequencingProperty": sequencing_property,
                     "start_from": start_from,
-                    "pageSize": page_size
-
+                    "pageSize": page_size,
+                    **kwargs
                 }
                 if not metadata_element_type:
                     body.pop("metadataElementTypeName", None)
@@ -6429,7 +6432,8 @@ class ServerClient(BaseServerClient):
                 "startFrom": start_from,
                 "pageSize": page_size,
                 "includeOnlyClassifiedElements": classification_names,
-                "maxMermaidNodeCount": max_mermaid_node_count
+                "maxMermaidNodeCount": max_mermaid_node_count,
+                **kwargs
             }
             validated_body = FilterRequestBody.model_validate(body)
 
@@ -6471,7 +6475,8 @@ class ServerClient(BaseServerClient):
                 "includeOnlyRelationships": include_only_relationships,
                 "skipRelationships": skip_relationships,
                 "graphQueryDepth": graph_query_depth,
-                "maxMermaidNodeCount": max_mermaid_node_count
+                "maxMermaidNodeCount": max_mermaid_node_count,
+                **kwargs
             }
             validated_body = GetRequestBody.model_validate(body)
 
@@ -6513,7 +6518,8 @@ class ServerClient(BaseServerClient):
                 "class": "GetRequestBody",
                 "metadataElementTypeName": _type,
                 "maxMermaidNodeCount": max_mermaid_node_count,
-                "graphQueryDepth": graph_query_depth
+                "graphQueryDepth": graph_query_depth,
+                **kwargs
             }
             validated_body = GetRequestBody.model_validate(body)
 
@@ -6600,6 +6606,7 @@ class ServerClient(BaseServerClient):
                 "sequencingProperty": sequencing_property,
                 "start_from": start_from,
                 "page_size": page_size,
+                **kwargs
             }
             validated_body = ActivityStatusSearchString.model_validate(body)
 
@@ -6642,6 +6649,7 @@ class ServerClient(BaseServerClient):
                 "activityStatusList": activity_status_list,
                 "start_from": start_from,
                 "page_size": page_size,
+                **kwargs
             }
             validated_body = ActivityStatusFilterRequestBody.model_validate(body)
 
@@ -6687,6 +6695,7 @@ class ServerClient(BaseServerClient):
                 "limitResultsByStatus": limit_results_by_status,
                 "sequencingOrder": sequencing_order,
                 "sequencingProperty": sequencing_property,
+                **kwargs
             }
             validated_body = ActivityStatusRequestBody.model_validate(body)
 
@@ -6769,6 +6778,7 @@ class ServerClient(BaseServerClient):
                 "sequencingProperty": sequencing_property,
                 "start_from": start_from,
                 "page_size": page_size,
+                **kwargs
             }
             validated_body = ContentStatusSearchString.model_validate(body)
 
@@ -6811,6 +6821,7 @@ class ServerClient(BaseServerClient):
                 "contentStatusList": content_status_list,
                 "start_from": start_from,
                 "page_size": page_size,
+                **kwargs
             }
             validated_body = ContentStatusFilterRequestBody.model_validate(body)
 
@@ -6893,6 +6904,7 @@ class ServerClient(BaseServerClient):
                 "sequencingProperty": sequencing_property,
                 "start_from": start_from,
                 "page_size": page_size,
+                **kwargs
             }
             validated_body = DeploymentStatusSearchString.model_validate(body)
 
@@ -6935,6 +6947,7 @@ class ServerClient(BaseServerClient):
                 "deploymentStatusList": deployment_status_list,
                 "start_from": start_from,
                 "page_size": page_size,
+                **kwargs
             }
             validated_body = DeploymentStatusFilterRequestBody.model_validate(body)
 
@@ -6969,6 +6982,7 @@ class ServerClient(BaseServerClient):
                 "graphQueryDepth": graph_query_depth,
                 "start_from": start_from,
                 "page_size": page_size,
+                **kwargs
             }
             validated_body = ResultsRequestBody.model_validate(body)
 

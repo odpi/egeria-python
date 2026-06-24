@@ -1121,7 +1121,7 @@ class CollectionManager(ServerClient):
     async def _async_get_collection_members(self, collection_guid: Optional[str] = None, collection_name: Optional[str] = None,
                                             collection_qname: Optional[str] = None, body: Optional[dict | ResultsRequestBody] = None, start_from: int = 0,
                                             page_size: int = 0, output_format: str = "JSON",
-                                            report_spec: str | dict = None) -> list | str:
+                                            report_spec: str | dict = None, **kwargs) -> list | str:
         """Return a list of elements that are a member of a collection. Async version.
 
         Parameters
@@ -1187,7 +1187,7 @@ class CollectionManager(ServerClient):
         response = await self._async_get_results_body_request(url, _type="Collection",
                                                   _gen_output=self._generate_collection_output,
                                                   output_format=output_format, report_spec=report_spec,
-                                                  body=body)
+                                                  body=body, **kwargs)
 
         return response
 
@@ -1195,7 +1195,7 @@ class CollectionManager(ServerClient):
     def get_collection_members(self, collection_guid: Optional[str] = None, collection_name: Optional[str] = None,
                                collection_qname: Optional[str] = None, body: dict = None, start_from: int = 0,
                                page_size: int = 0,
-                               output_format: str = "JSON", report_spec: str | dict = None) -> list | str:
+                               output_format: str = "JSON", report_spec: str | dict = None, **kwargs) -> list | str:
         """Return a list of elements that are a member of a collection.
         Parameters
         ----------
@@ -1252,7 +1252,7 @@ class CollectionManager(ServerClient):
         loop = asyncio.get_event_loop()
         resp = loop.run_until_complete(
             self._async_get_collection_members(collection_guid, collection_name, collection_qname, body, start_from,
-                                               page_size, output_format, report_spec))
+                                               page_size, output_format, report_spec, **kwargs))
 
         return resp
 

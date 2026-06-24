@@ -7,7 +7,7 @@ Copyright Contributors to the ODPi Egeria project.
 """
 
 import asyncio
-import datetime
+from datetime import datetime
 
 from httpx import Response
 from loguru import logger
@@ -3020,9 +3020,11 @@ class AutomatedCuration(ServerClient):
         -----
         For more information see: https://egeria-project.org/concepts/governance-action-type
         """
-
+        start_time = (
+            datetime.now() if start_time is None else start_time
+        )
         url = f"{self.ref_curation_command_base}/governance-action-types/initiate"
-        start = int(start_time.timestamp() * 1000) if start_time else None
+        start = int(start_time.timestamp() * 1000)
         body = {
             "class": "InitiateGovernanceActionTypeRequestBody",
             "governanceActionTypeQualifiedName": action_type_qualified_name,
@@ -3425,10 +3427,10 @@ class AutomatedCuration(ServerClient):
             request_source_guids: list[str],
             action_targets: list[dict],
             received_guards: list[str],
-            start_time: datetime,
-            request_type: str,
-            request_parameters: dict,
-            process_name: str,
+            start_time: datetime = None,
+            request_type: str = None,
+            request_parameters: dict = None,
+            process_name: str = None,
             request_src_name: Optional[str] = None,
             originator_svc_name: Optional[str] = None,
             originator_eng_name: Optional[str] = None,
@@ -3482,7 +3484,9 @@ class AutomatedCuration(ServerClient):
         -----
         For more information see: https://egeria-project.org/concepts/engine-action
         """
-
+        start_time = (
+            datetime.now() if start_time is None else start_time
+        )
         url = f"{self.ref_curation_command_base}/governance-engines/engine-actions/initiate"
 
         body = {
@@ -3517,10 +3521,10 @@ class AutomatedCuration(ServerClient):
             request_source_guids: list[str],
             action_targets: list[dict],
             received_guards: list[str],
-            start_time: datetime,
-            request_type: str,
-            request_parameters: dict,
-            process_name: str,
+            start_time: datetime = None,
+            request_type: str = None,
+            request_parameters: dict = None,
+            process_name: str = None,
             request_src_name: Optional[str] = None,
             originator_svc_name: Optional[str] = None,
             originator_eng_name: Optional[str] = None,

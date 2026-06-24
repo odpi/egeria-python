@@ -341,7 +341,7 @@ class BaseServerClient:
         token = loop.run_until_complete(self._async_refresh_egeria_bearer_token())
         return token
 
-    def set_bearer_token(self, token: str) -> None:
+    def set_bearer_token(self, token: str, source: str="Egeria") -> None:
         """Set the Bearer Token for the client.
 
         Parameters
@@ -355,6 +355,7 @@ class BaseServerClient:
             If the token is invalid.
         """
         validate_name(token)
+        self.token_src = source
         self.headers["Authorization"] = f"Bearer {token}"
         self.text_headers["Authorization"] = f"Bearer {token}"
 

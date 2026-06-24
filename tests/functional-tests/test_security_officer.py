@@ -376,12 +376,12 @@ class TestSecurityOfficer:
         """Test retrieving the list of users from the platform."""
         try:
             s_client = SecurityOfficer(
-                self.good_server_1, self.good_platform1_url, user_id=self.good_user_1
+                self.good_server_1, self.good_platform1_url, user_id='garygeeke'
             )
-            s_client.create_egeria_bearer_token(self.good_user_1, USER_PWD)
-
+            s_client.create_egeria_bearer_token('erinoverview', USER_PWD)
+            platform_guid = '41252c4a-cd81-4343-a105-2d93395479de'
             start_time = time.perf_counter()
-            response = s_client.get_user_list(self.good_platform_name)
+            response = s_client.get_user_list('Quickstart OMAG Server Platform', platform_guid=None)
             duration = time.perf_counter() - start_time
             print(f"\n\tDuration was {duration} seconds")
             print(f"\n\nRetrieved user list: {response}")
