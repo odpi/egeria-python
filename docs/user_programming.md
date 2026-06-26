@@ -196,6 +196,71 @@ async def main():
 asyncio.run(main())
 ```
 
+### Long-Running Sessions
+
+Applications that keep a pyegeria client alive for extended periods — Jupyter notebooks, portal servers, scheduled jobs, or any process that runs longer than a few minutes — will encounter two challenges if left unaddressed: **idle-connection expiry** and **bearer-token expiry**.
+
+#### Connection management
+
+The httpx session underlying every pyegeria client is configured with:
+
+| Setting | Value | Why |
+| :--- | :--- | :--- |
+| `keepalive_expiry` | 20 s | Retires idle connections before a typical reverse proxy (nginx/Caddy default: 60–75 s) closes them server-side. Without this, a long-idle connection silently dies and the next request fails with a timeout or protocol error. |
+| `connect` timeout | 10 s | Distinguishes a refused/unreachable host from a slow-but-alive one quickly. |
+| `max_keepalive_connections` | 5 | Limits open idle sockets to avoid resource exhaustion in server processes hosting many clients. |
+
+These settings are transparent to application code; they apply automatically to every client instance. If you are deploying behind a proxy with a non-standard idle timeout, you can create your own client subclass and override the `AsyncClient` constructor.
+
+#### Automatic token refresh
+
+When an Egeria-issued bearer token expires, the server returns HTTP 401. The client detects this and automatically calls `_async_refresh_egeria_bearer_token()` once, then retries the failed request transparently.
+
+This only works for tokens created by pyegeria itself (via `create_egeria_bearer_token()`). Tokens supplied externally via `set_bearer_token()` are not auto-refreshed; the caller is responsible for renewing them before they expire and calling `set_bearer_token()` again.
+
+```python
+# Egeria-issued token: auto-refreshed on 401
+client = EgeriaTech()
+client.create_egeria_bearer_token()
+
+# External token: caller manages expiry
+client2 = EgeriaTech()
+client2.set_bearer_token(my_token)
+# When my_token expires, call set_bearer_token() again with a fresh one
+```
+
+#### Async applications — avoid `create_egeria_bearer_token()` inside coroutines
+
+The sync `create_egeria_bearer_token()` method calls `asyncio.get_event_loop().run_until_complete(...)` internally. Calling it from within a running async context (FastAPI route, async Jupyter cell, etc.) raises `RuntimeError: This event loop is already running`.
+
+Use the async variant instead:
+
+```python
+# In a FastAPI route or any async function:
+async def make_client():
+    client = EgeriaTech()
+    await client._async_create_egeria_bearer_token()
+    return client
+```
+
+If you are building a FastAPI service that creates a fresh client per request, the pattern is:
+
+```python
+from egeria_auth import async_apply_token  # if using egeria-workspaces
+
+async def _get_client():
+    client = EgeriaTech()
+    await async_apply_token(client)   # applies X-Egeria-Token from request context, or fetches a fresh one
+    return client
+
+@app.get("/my-endpoint")
+async def my_endpoint():
+    client = await _get_client()
+    ...
+```
+
+See `egeria-workspaces/PyegeriaWebHandler/egeria_auth.py` for the reference implementation.
+
 ### Error Handling
 
 `pyegeria` defines a hierarchy of exceptions in `pyegeria.core._exceptions`. It is recommended to catch `PyegeriaException` for general error handling:
@@ -208,3 +273,11 @@ try:
 except PyegeriaException as e:
     print(f"An error occurred: {e}")
 ```
+
+| Exception class | When raised |
+| :--- | :--- |
+| `PyegeriaTimeoutException` | Request exceeded the `time_out` parameter (default 30 s) or the 10 s connect timeout. |
+| `PyegeriaConnectionException` | Host is unreachable or refused the connection. |
+| `PyegeriaClientException` | Server returned a 4xx status (including 401 after auto-refresh failed). |
+| `PyegeriaAPIException` | Server returned 200/201 but the inner `relatedHTTPCode` indicates an error. |
+| `PyegeriaUnknownException` | Unexpected exception during the request. |
