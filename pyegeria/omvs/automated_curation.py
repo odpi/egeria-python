@@ -1041,6 +1041,7 @@ class AutomatedCuration(ServerClient):
             file_extension: str = "csv",
             file_system_name: Optional[str] = None,
             description: Optional[str] = None,
+            **kwargs,
     ) -> str:
         """Create a CSV file element from a template if it doesn't exist. If it does exist,
            the guid will be returned. Async version.
@@ -1063,6 +1064,8 @@ class AutomatedCuration(ServerClient):
             Name of the file system the CSV file is hosted on.
         description: str, opt
             A description of the CSV file..
+        **kwargs : Any
+            Additional keyword arguments to pass to the creation request.
 
 
         Returns
@@ -1086,6 +1089,7 @@ class AutomatedCuration(ServerClient):
                 "fileSystemName": file_system_name,
                 "description": description
             },
+            **kwargs,
         }
         body_s = body_slimmer(body)
         return await self._async_create_elem_from_template(body_s)
@@ -1100,6 +1104,7 @@ class AutomatedCuration(ServerClient):
             file_extension: str = "csv",
             file_system_name: Optional[str] = None,
             description: Optional[str] = None,
+            **kwargs,
     ) -> str:
         """Create a CSV file element from a template if it doesn't exist. If it does exist,
            the guid will be returned.
@@ -1122,6 +1127,8 @@ class AutomatedCuration(ServerClient):
             Name of the file system the CSV file is hosted on.
         description: str, opt
             A description of the CSV file..
+        **kwargs : Any
+            Additional keyword arguments to pass to the creation request.
 
         Returns
         -------
@@ -1131,8 +1138,15 @@ class AutomatedCuration(ServerClient):
         loop = asyncio.get_event_loop()
         response = loop.run_until_complete(
             self._async_get_create_csv_data_file_element_from_template(
-                file_name, file_type, file_path_name, version_identifier,
-                file_encoding, file_extension, file_system_name, description
+                file_name,
+                file_type,
+                file_path_name,
+                version_identifier,
+                file_encoding,
+                file_extension,
+                file_system_name,
+                description,
+                **kwargs,
             )
         )
         return response
@@ -2327,6 +2341,7 @@ class AutomatedCuration(ServerClient):
             output_format: str = "JSON",
             report_spec: str | dict = "EngineAction",
             body: Optional[dict | FilterRequestBody] = None,
+            **kwargs,
     ) -> list | str:
         """Retrieve the list of engine action metadata elements.
 
@@ -2344,6 +2359,8 @@ class AutomatedCuration(ServerClient):
             The report specification to use for formatting.
         body : dict | FilterRequestBody, optional
             The request body.
+        **kwargs : Any
+            Additional keyword arguments to pass to the request.
 
         Returns
         -------
@@ -2364,7 +2381,7 @@ class AutomatedCuration(ServerClient):
         response = await self._async_get_name_request(url, _type=self.ENGINE_ACTION_LABEL,
                                                       _gen_output=self._generate_engine_action_output,
                                                       filter_string=None, start_from=start_from, page_size=page_size,
-                                                      output_format=output_format, report_spec=report_spec, body=body)
+                                                      output_format=output_format, report_spec=report_spec, body=body, **kwargs)
         return response
 
     def get_engine_actions(
@@ -2374,6 +2391,7 @@ class AutomatedCuration(ServerClient):
             output_format: str = "JSON",
             report_spec: str | dict = "EngineAction",
             body: Optional[dict | FilterRequestBody] = None,
+            **kwargs,
     ) -> list | str:
         """Retrieve the list of engine action metadata elements.
 
@@ -2390,6 +2408,8 @@ class AutomatedCuration(ServerClient):
             The desired output columns/fields to include.
         body: dict, optional, default = None
             Provides, a full request body.
+        **kwargs : Any
+            Additional keyword arguments to pass to the request.
 
         Returns
         -------
@@ -2405,7 +2425,9 @@ class AutomatedCuration(ServerClient):
         """
         loop = asyncio.get_event_loop()
         response = loop.run_until_complete(
-            self._async_get_engine_actions(start_from, page_size, output_format, report_spec, body)
+            self._async_get_engine_actions(
+                start_from, page_size, output_format, report_spec, body, **kwargs
+            )
         )
         return response
 
@@ -2415,6 +2437,7 @@ class AutomatedCuration(ServerClient):
             page_size: int = 0,
             output_format: str = "JSON",
             report_spec: str | dict = "EngineAction",
+            **kwargs,
     ) -> list | str:
         """Retrieve the engine actions that are still in process.
 
@@ -2430,6 +2453,8 @@ class AutomatedCuration(ServerClient):
             The desired output format (e.g., "JSON", "DICT").
         report_spec : str | dict, default "EngineAction"
             The desired output columns/fields to include.
+        **kwargs : Any
+            Additional keyword arguments to pass to the request and output formatter.
 
         Returns
         -------
@@ -2462,13 +2487,17 @@ class AutomatedCuration(ServerClient):
 
         if output_format.upper() != "JSON":
             return self._generate_engine_action_output(elements, "All", "EngineAction",
-                                                    output_format, report_spec)
+                                                    output_format, report_spec, **kwargs)
         return elements
 
 
     def get_active_engine_actions(
-            self, start_from: int = 0, page_size: int = 0,
-            output_format: str = "JSON", report_spec: str | dict = "EngineAction",
+            self,
+            start_from: int = 0,
+            page_size: int = 0,
+            output_format: str = "JSON",
+            report_spec: str | dict = "EngineAction",
+            **kwargs,
     ) -> list | str:
         """Retrieve the engine actions that are still in process.
 
@@ -2479,6 +2508,12 @@ class AutomatedCuration(ServerClient):
             The starting index of the actions to retrieve. Default is 0.
         page_size : int, optional
             The maximum number of actions to retrieve per page. Default is the global maximum paging size.
+        output_format : str, default "JSON"
+            The desired output format (e.g., "JSON", "DICT").
+        report_spec : str | dict, default "EngineAction"
+            The desired output columns/fields to include.
+        **kwargs : Any
+            Additional keyword arguments to pass to the request and output formatter.
 
         Returns
         -------
@@ -2495,8 +2530,13 @@ class AutomatedCuration(ServerClient):
         """
         loop = asyncio.get_event_loop()
         response = loop.run_until_complete(
-            self._async_get_active_engine_actions(start_from, page_size, output_format=output_format,
-                                                  report_spec=report_spec)
+            self._async_get_active_engine_actions(
+                start_from,
+                page_size,
+                output_format=output_format,
+                report_spec=report_spec,
+                **kwargs,
+            )
         )
         return response
 
@@ -3596,6 +3636,7 @@ class AutomatedCuration(ServerClient):
             output_format: str = "JSON",
             report_spec: str | dict = "CatalogTarget",
             body: Optional[dict | FilterRequestBody] = None,
+            **kwargs,
     ) -> list | str:
         """Retrieve the list of catalog target metadata elements.
 
@@ -3615,6 +3656,8 @@ class AutomatedCuration(ServerClient):
             The report specification to use for formatting.
         body : dict | FilterRequestBody, optional
             The request body.
+        **kwargs : Any
+            Additional keyword arguments to pass to the request.
 
         Returns
         -------
@@ -3642,7 +3685,7 @@ class AutomatedCuration(ServerClient):
         response = await self._async_get_name_request(url, _type=self.CATALOG_TARGET_LABEL,
                                                       _gen_output=self._generate_catalog_target_output,
                                                       filter_string=None, start_from=start_from, page_size=page_size,
-                                                      output_format=output_format, report_spec=report_spec, body=body)
+                                                      output_format=output_format, report_spec=report_spec, body=body, **kwargs)
 
         return response
 
@@ -3654,6 +3697,7 @@ class AutomatedCuration(ServerClient):
             output_format: str = "JSON",
             report_spec: str | dict = "CatalogTarget",
             body: Optional[dict | FilterRequestBody] = None,
+            **kwargs,
     ) -> list | str:
         """Retrieve the list of catalog target metadata elements.
 
@@ -3671,6 +3715,8 @@ class AutomatedCuration(ServerClient):
             The report specification to use for formatting.
         body : dict | FilterRequestBody, optional
             The request body.
+        **kwargs : Any
+            Additional keyword arguments to pass to the request.
 
         Returns
         -------
@@ -3687,6 +3733,7 @@ class AutomatedCuration(ServerClient):
                 output_format=output_format,
                 report_spec=report_spec,
                 body=body,
+                **kwargs,
             )
         )
         return response
@@ -3697,6 +3744,7 @@ class AutomatedCuration(ServerClient):
             output_format: str = "JSON",
             report_spec: str | dict = "CatalogTarget",
             body: Optional[dict | GetRequestBody] = None,
+            **kwargs,
     ) -> dict | str:
         """Retrieve a specific catalog target associated with an integration connector.
 
@@ -3712,6 +3760,8 @@ class AutomatedCuration(ServerClient):
             The report specification.
         body : dict | GetRequestBody, optional
             The request body.
+        **kwargs : Any
+            Additional keyword arguments to pass to the request.
 
         Returns
         -------
@@ -3742,6 +3792,7 @@ class AutomatedCuration(ServerClient):
             output_format=output_format,
             report_spec=report_spec,
             body=body,
+            **kwargs,
         )
         return response
 
@@ -3751,6 +3802,7 @@ class AutomatedCuration(ServerClient):
             output_format: str = "JSON",
             report_spec: str | dict = "CatalogTarget",
             body: Optional[dict | GetRequestBody] = None,
+            **kwargs,
     ) -> dict | str:
         """Retrieve a specific catalog target associated with an integration connector.
 
@@ -3764,6 +3816,8 @@ class AutomatedCuration(ServerClient):
             The report specification.
         body : dict | GetRequestBody, optional
             The request body.
+        **kwargs : Any
+            Additional keyword arguments to pass to the request.
 
         Returns
         -------
@@ -3778,6 +3832,7 @@ class AutomatedCuration(ServerClient):
                 output_format=output_format,
                 report_spec=report_spec,
                 body=body,
+                **kwargs,
             )
         )
         return response
@@ -4084,6 +4139,7 @@ class AutomatedCuration(ServerClient):
             output_format: str = "JSON",
             report_spec: str | dict = "TechType",
             body: Optional[dict | FilterRequestBody] = None,
+            **kwargs,
     ) -> list | str:
         """Retrieve the list of technology types linked to an open metadata type.
 
@@ -4105,6 +4161,8 @@ class AutomatedCuration(ServerClient):
             The report specification to use for formatting.
         body : dict | FilterRequestBody, optional
             The request body.
+        **kwargs : Any
+            Additional keyword arguments to pass to the request.
 
         Returns
         -------
@@ -4126,7 +4184,7 @@ class AutomatedCuration(ServerClient):
                                                       _gen_output=self._generate_tech_type_output,
                                                       filter_string=tech_name, start_from=start_from,
                                                       page_size=page_size, output_format=output_format,
-                                                      report_spec=report_spec, body=body)
+                                                      report_spec=report_spec, body=body, **kwargs)
 
         return response
 
@@ -4139,6 +4197,7 @@ class AutomatedCuration(ServerClient):
             output_format: str = "JSON",
             report_spec: str | dict = "TechType",
             body: Optional[dict | FilterRequestBody] = None,
+            **kwargs,
     ) -> list | str:
         """Retrieve the list of technology types linked to an open metadata type.
 
@@ -4158,6 +4217,8 @@ class AutomatedCuration(ServerClient):
             The report specification to use for formatting.
         body : dict | FilterRequestBody, optional
             The request body.
+        **kwargs : Any
+            Additional keyword arguments to pass to the request.
 
         Returns
         -------
@@ -4174,6 +4235,7 @@ class AutomatedCuration(ServerClient):
                 output_format=output_format,
                 report_spec=report_spec,
                 body=body,
+                **kwargs,
             )
         )
         return response
@@ -4393,21 +4455,39 @@ class AutomatedCuration(ServerClient):
 
 
 
-    async def _async_get_template_guid_for_technology_type(self, type_name: str) -> str:
-        details = await self._async_get_tech_type_detail(type_name)
+    async def _async_get_template_guid_for_technology_type(self, type_name: str, **kwargs) -> str:
+        """Retrieve the template GUID associated with the given technology type.
+
+        Async version.
+
+        Parameters
+        ----------
+        type_name : str
+            The name of the technology type.
+        **kwargs : Any
+            Additional keyword arguments to pass to the request.
+
+        Returns
+        -------
+        str
+            The GUID of the template, or None if not found.
+        """
+        details = await self._async_get_tech_type_detail(type_name, **kwargs)
         if isinstance(details, dict):
             return details.get("catalogTemplates", {})[0].get("relatedElement", {}).get("elementHeader", {}).get("guid",
                                                                                                                  None)
         else:
             return None
 
-    def get_template_guid_for_technology_type(self, type_name: str) -> str:
+    def get_template_guid_for_technology_type(self, type_name: str, **kwargs) -> str:
         """Retrieve the template GUID associated with the given technology type.
 
         Parameters
         ----------
         type_name : str
             The name of the technology type.
+        **kwargs : Any
+            Additional keyword arguments to pass to the request.
 
         Returns
         -------
@@ -4416,7 +4496,7 @@ class AutomatedCuration(ServerClient):
         """
         loop = asyncio.get_event_loop()
         response = loop.run_until_complete(
-            self._async_get_template_guid_for_technology_type(type_name)
+            self._async_get_template_guid_for_technology_type(type_name, **kwargs)
         )
         return response
 
@@ -4802,6 +4882,7 @@ class AutomatedCuration(ServerClient):
             page_size: int = 0,
             output_format: str = "JSON",
             report_spec: str = "TechType",
+            **kwargs,
     ) -> list | str:
         """Retrieve all technology types.
 
@@ -4817,6 +4898,8 @@ class AutomatedCuration(ServerClient):
             The desired output format.
         report_spec : str, default "TechType"
             The report specification.
+        **kwargs : Any
+            Additional keyword arguments to pass to the request.
 
         Returns
         -------
@@ -4825,7 +4908,7 @@ class AutomatedCuration(ServerClient):
         """
         return await self._async_find_technology_types(search_string="*", start_from=start_from,
                                                        page_size=page_size, output_format=output_format,
-                                                       report_spec=report_spec)
+                                                       report_spec=report_spec, **kwargs)
 
     def get_all_technology_types(
             self,
@@ -4833,6 +4916,7 @@ class AutomatedCuration(ServerClient):
             page_size: int = 0,
             output_format: str = "JSON",
             report_spec: str = "TechType",
+            **kwargs,
     ) -> list | str:
         """Retrieve all technology types.
 
@@ -4846,6 +4930,8 @@ class AutomatedCuration(ServerClient):
             The desired output format.
         report_spec : str, default "TechType"
             The report specification.
+        **kwargs : Any
+            Additional keyword arguments to pass to the request.
 
         Returns
         -------
@@ -4853,7 +4939,7 @@ class AutomatedCuration(ServerClient):
             List of all technology types.
         """
         return self.find_technology_types(search_string="*", start_from=start_from, page_size=page_size,
-                                          output_format=output_format, report_spec=report_spec)
+                                          output_format=output_format, report_spec=report_spec, **kwargs)
 
     def print_engine_action_summary(self, governance_action: dict):
         """Print a summary of a governance engine action.
@@ -4891,8 +4977,10 @@ class AutomatedCuration(ServerClient):
             start_from: int = 0,
             page_size: int = 0,
             get_templates: bool = False,
-            output_format: str = "JSON", report_spec: str = "Tech-Type-Elements",
+            output_format: str = "JSON",
+            report_spec: str = "Tech-Type-Elements",
             body: Optional[dict | FilterRequestBody] = None,
+            **kwargs,
     ) -> list | str:
         """Retrieve the elements for the requested deployed implementation type.
 
@@ -4917,6 +5005,8 @@ class AutomatedCuration(ServerClient):
             The report specification to use for formatting.
         body : dict | FilterRequestBody, optional
             The request body. If provided, it overrides other parameters.
+        **kwargs : Any
+            Additional keyword arguments to pass to the request.
 
         Returns
         -------
@@ -4962,13 +5052,14 @@ class AutomatedCuration(ServerClient):
                     "effectiveTime": effective_time,
                     "skipClassifiedElements": [skip_templates],
                     "startFrom": start_from,
-                    "pageSize": page_size
+                    "pageSize": page_size,
+                    **kwargs,
                     }
 
         response = await self._async_get_name_request(url, "TechTypeElement", self._generate_tech_type_element_output,
-                                                      filter_string=None, start_from=start_from, page_size=page_size, 
+                                                      filter_string=None, start_from=start_from, page_size=page_size,
                                                       output_format=output_format,
-                                                      report_spec=report_spec, body=body)
+                                                      report_spec=report_spec, body=body, **kwargs)
         return response
 
 
@@ -4979,8 +5070,10 @@ class AutomatedCuration(ServerClient):
             start_from: int = 0,
             page_size: int = 0,
             get_templates: bool = False,
-            output_format: str = "JSON", report_spec: str = "Tech-Type-Elements",
+            output_format: str = "JSON",
+            report_spec: str = "Tech-Type-Elements",
             body: Optional[dict | FilterRequestBody] = None,
+            **kwargs,
     ) -> list | str:
         """Retrieve the elements for the requested deployed implementation type.
 
@@ -5005,6 +5098,8 @@ class AutomatedCuration(ServerClient):
             The report specification to use for formatting.
         body : dict | FilterRequestBody, optional
             The request body. If provided, it overrides other parameters.
+        **kwargs : Any
+            Additional keyword arguments to pass to the request.
 
         Returns
         -------
@@ -5024,7 +5119,6 @@ class AutomatedCuration(ServerClient):
         -----
         For more information see: https://egeria-project.org/concepts/deployed-implementation-type
         """
-
         loop = asyncio.get_event_loop()
         response = loop.run_until_complete(
             self._async_get_technology_type_elements(
@@ -5036,6 +5130,7 @@ class AutomatedCuration(ServerClient):
                 output_format=output_format,
                 report_spec=report_spec,
                 body=body,
+                **kwargs,
             )
         )
         return response

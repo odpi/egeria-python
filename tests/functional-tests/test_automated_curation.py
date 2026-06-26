@@ -409,7 +409,7 @@ class TestAutomatedCuration:
 
 
             start_time = time.perf_counter()
-            response = a_client.get_engine_actions()
+            response = a_client.get_engine_actions(request_id="test-id")
             duration = time.perf_counter() - start_time
             print(f"\n\tDuration was {duration} seconds")
             print(f"The type of response is: {type(response)}")
@@ -504,7 +504,7 @@ class TestAutomatedCuration:
             token = a_client.create_egeria_bearer_token("peterprofile","secret")
 
             start_time = time.perf_counter()
-            response = a_client.get_active_engine_actions(output_format="DICT",report_spec="Referenceable")
+            response = a_client.get_active_engine_actions(output_format="DICT", report_spec="Referenceable", request_id="test-id")
             duration = time.perf_counter() - start_time
             print(f"\n\tDuration was {duration} seconds")
             if type(response) is list:
@@ -732,7 +732,7 @@ class TestAutomatedCuration:
             token = a_client.create_egeria_bearer_token()
 
             start_time = time.perf_counter()
-            response = a_client.get_all_technology_types(output_format = "JSON", report_spec = "Referenceable")
+            response = a_client.get_all_technology_types(output_format="JSON", report_spec="Referenceable", request_id="test-id")
             duration = time.perf_counter() - start_time
             print(f"\n\tDuration was {duration} seconds")
             if isinstance(response, (list, dict)):
@@ -797,7 +797,7 @@ class TestAutomatedCuration:
 
             start_time = time.perf_counter()
             response = a_client.get_tech_types_for_open_metadata_type(
-                "SoftwareServer", "Database", output_format = "JSON", report_spec = "Referenceable"
+                "SoftwareServer", "Database", output_format="JSON", report_spec="Referenceable", request_id="test-id"
             )
             duration = time.perf_counter() - start_time
             print(f"\n\tDuration was {duration} seconds")
@@ -909,7 +909,7 @@ class TestAutomatedCuration:
             token = a_client.create_egeria_bearer_token()
 
             start_time = time.perf_counter()
-            response = a_client.get_template_guid_for_technology_type("File System",)
+            response = a_client.get_template_guid_for_technology_type("File System", request_id="test-id")
             duration = time.perf_counter() - start_time
             print(f"\n\tDuration was {duration} seconds")
             if type(response) is dict:
@@ -986,7 +986,7 @@ class TestAutomatedCuration:
             rel_guid = "19a5fc39-f928-4a78-8637-ade37e0c5598"
             start_time = time.perf_counter()
             target_relationship = "8f730d8e-96a4-44ca-ad6f-2888c181ec3b"
-            response = a_client.get_catalog_target(target_relationship)
+            response = a_client.get_catalog_target(target_relationship, request_id="test-id")
             duration = time.perf_counter() - start_time
             duration = time.perf_counter() - start_time
             print(f"Type of response was {type(response)}")
@@ -1011,7 +1011,7 @@ class TestAutomatedCuration:
 
 
 
-    def test_get_catalog_targets(self):
+    async def test_get_catalog_targets(self):
         try:
             a_client = AutomatedCuration(
                 self.good_view_server_2,
@@ -1020,16 +1020,16 @@ class TestAutomatedCuration:
                 user_pwd="secret",
             )
             token = a_client.create_egeria_bearer_token()
-            element_guid = a_client.get_connector_guid('JacquardHarvester')
+            # element_guid = a_client.get_connector_guid('JacquardHarvester')
 
-            # element_guid = "79f97f8d-7b7a-464e-8d34-7cfab9d17dbf"
+            element_guid = "a2c281e0-3c8d-4621-bb4d-8f6dff756d1a"
             relationship_guid = "6be6e470-7aa2-4f50-8142-246866037523"
             # t = INTEGRATION_GUIDS['SampleDataFilesMonitor']
             # t = a_client.get_connector_guid('UnityCatalogServerSynchronizer')
             # t = INTEGRATION_GUIDS["UnityCatalogServerSynchronizer"]
             start_time = time.perf_counter()
 
-            response = a_client.get_catalog_targets(element_guid)
+            response = await a_client._async_get_catalog_targets(element_guid, request_id="test-id")
             duration = time.perf_counter() - start_time
             print(f"Type of response was {type(response)}")
             print(f"\n\tDuration was {duration} seconds")
@@ -1377,7 +1377,7 @@ class TestAutomatedCuration:
             filter_string = "CSV Data File"
             # filter_string = "Fileserver"
             response = a_client.get_technology_type_elements(filter_string, get_templates=True, output_format="JSON",
-                                                             report_spec="Tech-Type-Elements")
+                                                             report_spec="Tech-Type-Elements", request_id="test-id")
                                                              # report_spec="Common-Mermaid")
             duration = time.perf_counter() - start_time
             print(f"\n\tDuration was {duration} seconds")
@@ -1481,5 +1481,46 @@ class TestAutomatedCuration:
             # Invalid GUID is expected when using the placeholder — treat as a warning
             assert True, "Expected error with placeholder GUID"
 
+        finally:
+            a_client.close_session()
+
+    def test_get_create_csv_data_file_element_from_template(self):
+        try:
+            a_client = AutomatedCuration(
+                self.good_view_server_2,
+                self.good_platform1_url,
+                user_id=self.good_user_2,
+                user_pwd="secret",
+            )
+            token = a_client.create_egeria_bearer_token()
+
+            start_time = time.perf_counter()
+
+            response = a_client.get_create_csv_data_file_element_from_template(
+                "raw emission factor data.csv",
+                "CSV",
+                "/loading-bay/Sustainability Files/raw emission factor data.csv",
+                "v1",
+                request_id="test-id"
+            )
+
+            duration = time.perf_counter() - start_time
+            print(f"\n\tDuration was {duration} seconds")
+            if type(response) is list:
+                out = "\n\n" + json.dumps(response, indent=4)
+                count = len(response)
+                pprint(f"Found {count} elements")
+                print_json(out)
+            elif type(response) is str:
+                pprint("CSV File element GUID is " + response)
+            assert True
+
+        except (
+            PyegeriaException, PyegeriaAPIException
+        ) as e:
+            print_basic_exception(e)
+            assert False, "Invalid request"
+        except ValidationError as e:
+            print_validation_error(e)
         finally:
             a_client.close_session()
