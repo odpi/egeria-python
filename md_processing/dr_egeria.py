@@ -576,10 +576,7 @@ async def process_md_file_v2(input_file: str, output_folder: str, directive: str
         _, filename = os.path.split(full_file_path)
         new_filename = f"processed-{get_current_datetime_string()}-{filename}"
 
-        if output_folder:
-            new_file_path = os.path.abspath(os.path.expanduser(os.path.join(EGERIA_ROOT_PATH, EGERIA_OUTBOX_PATH, output_folder, new_filename)))
-        else:
-            new_file_path = os.path.join(os.path.dirname(full_file_path), "dr-egeria-outbox", new_filename)
+        new_file_path = os.path.abspath(os.path.expanduser(os.path.join(EGERIA_ROOT_PATH, EGERIA_OUTBOX_PATH, output_folder or "", new_filename)))
             
         os.makedirs(os.path.dirname(new_file_path), exist_ok=True)
 

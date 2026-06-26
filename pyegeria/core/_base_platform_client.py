@@ -120,7 +120,15 @@ class BasePlatformClient:
             self.headers["Authorization"] = f"Bearer {self.token}"
             self.text_headers["Authorization"] = f"Bearer {self.token}"
 
-        self.session = AsyncClient(verify=enable_ssl_check)
+        self.session = AsyncClient(
+            verify=enable_ssl_check,
+            timeout=httpx.Timeout(timeout=30.0, connect=10.0),
+            limits=httpx.Limits(
+                max_connections=10,
+                max_keepalive_connections=5,
+                keepalive_expiry=20.0,  # stay under typical reverse-proxy idle timeout (60-75 s)
+            ),
+        )
         self.command_root: str = f"{self.platform_url}/servers/{self.server_name}/api/open-metadata/"
 
         try:
@@ -172,7 +180,8 @@ class BasePlatformClient:
         return self
 
     def __exit__(self, exc_type, exc_val, exc_tb):
-        self.session.aclose()
+        loop = asyncio.get_event_loop()
+        loop.run_until_complete(self.session.aclose())
         if exc_type is not None:
             self.exc_type = exc_type
             self.exc_val = exc_val
@@ -461,7 +470,8 @@ class BasePlatformClient:
             payload: str | dict = None,
             time_out: int = 30,
             is_json: bool = True,
-            params: dict | None = None
+            params: dict | None = None,
+            _retrying: bool = False,
     ) -> Response | str:
         """Make an asynchronous request to the Egeria API.
 
@@ -536,6 +546,16 @@ class BasePlatformClient:
                     response = await self.session.delete(
                         endpoint, headers=self.headers, timeout=time_out
                     )
+            # Attempt a single token refresh on 401/403 before raising.
+            if response.status_code in (401, 403) and not _retrying and self.token_src == "Egeria":
+                try:
+                    await self._async_refresh_egeria_bearer_token()
+                    return await self._async_make_request(
+                        request_type, endpoint, payload, time_out, is_json, params, _retrying=True
+                    )
+                except Exception:
+                    pass  # fall through to raise_for_status
+
             response.raise_for_status()
 
             status_code = response.status_code

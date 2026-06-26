@@ -139,7 +139,7 @@ class AutomatedCurationScenarioTester:
             
             # Get all technology types
             console.print("  → Retrieving all technology types...")
-            all_types = self.client.get_all_technology_types(output_format="JSON")
+            all_types = self.client.get_all_technology_types(output_format="JSON", request_id="scenario-test")
             
             if isinstance(all_types, list):
                 type_count = len(all_types)
@@ -218,7 +218,7 @@ class AutomatedCurationScenarioTester:
             
             # Get active engine actions
             console.print("  → Retrieving active engine actions...")
-            actions = self.client.get_active_engine_actions(output_format="JSON")
+            actions = self.client.get_active_engine_actions(output_format="JSON", request_id="scenario-test")
             
             if isinstance(actions, list):
                 action_count = len(actions)

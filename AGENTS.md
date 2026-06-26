@@ -20,6 +20,10 @@
 
 ## Architecture map (read before edits)
 - `pyegeria/core/_base_platform_client.py` → `_base_server_client.py` → `_server_client.py`: layered transport/auth/GUID-resolution stack used by all OMVS clients.
+  - **httpx session** (`_base_platform_client.py`): `AsyncClient` is created with `keepalive_expiry=20 s`, `connect` timeout 10 s, and pool limits (`max_connections=10`, `max_keepalive_connections=5`). These settings are load-bearing for long-running sessions behind reverse proxies — do not remove them.
+  - **401 auto-refresh**: `_async_make_request` checks for a 401/403 before calling `raise_for_status()` and, if `token_src == "Egeria"`, calls `_async_refresh_egeria_bearer_token()` and retries once (`_retrying=True` guards against loops). Externally-supplied tokens (via `set_bearer_token`) are not auto-refreshed.
+  - **`__exit__` is async-aware**: uses `loop.run_until_complete(self.session.aclose())` — `aclose()` is a coroutine and must be awaited. Never revert to a bare `self.session.aclose()` call.
+  - **Async context rule**: `create_egeria_bearer_token()` (sync) calls `run_until_complete` internally and raises `RuntimeError` if called from a running event loop. Always use `await client._async_create_egeria_bearer_token()` inside async routes or coroutines.
 - `pyegeria/core/config.py`: Pydantic-settings–based config; precedence = explicit args > OS env > `.env` > `config.json` > defaults.
 - `pyegeria/egeria_tech_client.py`: lazy facade (`__getattr__`) across OMVS subclients; token propagation happens via `set_bearer_token()`.
 - `pyegeria/egeria_client.py` (`Egeria`) / `pyegeria/egeria_cat_client.py` (`EgeriaCat`): additional role-based facades; `EgeriaCat` uses MI over `ProjectManager`, `GlossaryManager`, `AssetCatalog`, `MyProfile`.
