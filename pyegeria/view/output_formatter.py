@@ -478,6 +478,14 @@ def materialize_egeria_summary(summary: dict, columns_struct: Optional[dict] = N
     if isinstance(header, dict):
         res["type"] = (header.get("type") or {}).get("typeName")
         res["guid"] = header.get("guid")
+        res["status"] = header.get("status")
+        res["origin"] = header.get("origin")
+        if "versions" in header and isinstance(header["versions"], dict):
+            res["version"] = header["versions"].get("version")
+            res["created_by"] = header["versions"].get("createdBy")
+            res["create_time"] = header["versions"].get("createTime")
+            res["updated_by"] = header["versions"].get("updatedBy")
+            res["update_time"] = header["versions"].get("updateTime")
         
         # Pull everything else from the header generically
         for h_key, h_val in header.items():

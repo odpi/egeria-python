@@ -908,6 +908,49 @@ Tip: You can combine `find_report_specs` to discover candidates and then `run_re
 
 ---
 
+### Building and running report specs from Egeria Advisor
+
+The Egeria Advisor web UI (`http://localhost:8880`) includes a conversational **Report Spec
+Builder** that generates, saves, and re-runs report specs without writing Python.
+
+**Lifecycle:**
+
+| State | Location |
+|---|---|
+| Draft (in-progress) | `~/egeria-reports/drafts/draft_report_<ts>_<slug>.json` |
+| Catalog entry (saved spec) | `~/egeria-reports/inbox/<spec_id>.md` |
+| Result snapshot (after run) | `~/egeria-reports/outbox/<spec_id>_executed_<ts>.md` |
+
+Running a spec **never removes it from the catalog** — each run writes a new timestamped
+result snapshot.  The spec is always available to run again.
+
+**Three parameter categories** (stored in the markdown spec and passed to `exec_report_spec`):
+
+| Category | Fields | Purpose |
+|---|---|---|
+| Content filters | `search_string`, `status_filter`, … | What data the report returns |
+| Shape defaults | `sort_field`, `sort_order`, `graph_query_depth`, … | How results are organized |
+| Performance hints | `page_size`, `start_from` | Operational tuning |
+
+**Markdown format in the catalog entry** — these three sections appear under
+`## Create Report Spec` as `### Content Filters`, `### Shape Defaults`, `### Performance Hints`.
+Each section is a block of `key=value` pairs.  The parser merges all three into
+`ActionParameter.spec_params` at parse time, which `exec_report_spec` then uses.
+
+**Validation:** `validate_report_spec(spec)` checks that the `ClientClass` named in
+`action_function` exists in `pyegeria` and that the method exists on that class.  Validation
+warnings are logged but do not block execution.
+
+**Registration:** `register_report_spec(name, spec)` registers a `FormatSet` in the
+in-memory `report_specs` / `_RUNTIME_REPORT_FORMATS` dicts.  The name used is always
+`base_doc_id` (with any `_executed_<ts>` suffix stripped) — the same name passed to
+`exec_report_spec`.  This ensures the lookup always hits the registration from the same run.
+
+See `docs/user-docs/REPORT_SPEC_GUIDE.md` in the `egeria-advisor` repo for the full user
+guide, and `docs/design/REPORT_SPEC_BUILDER_DESIGN.md` for the design reference.
+
+---
+
 ### References
 
 - Specs registry and helpers: `pyegeria/view/base_report_formats.py`
