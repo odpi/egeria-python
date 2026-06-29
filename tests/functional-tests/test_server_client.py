@@ -607,5 +607,166 @@ class TestMyProfileActivity:
                 m_client.close_session()
 
 
+class TestServerClientSearchKeywords:
+    """Test class for ServerClient Search Keyword methods"""
+
+    good_platform1_url = "https://localhost:9443"
+    good_view_server_2 = "qs-view-server"
+    good_user_2 = "erinoverview"
+    good_user_2_pwd = "secret"
+    test_element_guid = "71e67a50-ced4-40ed-b25e-98142a009604"
+
+    def test_add_search_keyword_to_element(self):
+        """Test adding a search keyword to an element"""
+        s_client = None
+        try:
+            s_client = ServerClient(
+                self.good_view_server_2,
+                self.good_platform1_url,
+                user_id=self.good_user_2,
+                user_pwd=self.good_user_2_pwd,
+            )
+            keyword = f"test-keyword-{int(time.time())}"
+            start_time = time.perf_counter()
+            response = s_client.add_search_keyword_to_element(
+                self.test_element_guid,
+                keyword=keyword
+            )
+            duration = time.perf_counter() - start_time
+            print(f"\n\tDuration was {duration} seconds")
+            print(f"\n\tResponse was: {response}")
+            assert response is not None, "Search keyword not added"
+        except PyegeriaException as e:
+            print_basic_exception(e)
+            assert False, "Pyegeria exception"
+        except Exception as e:
+            print(e)
+            assert False, f"Unexpected exception: {e}"
+        finally:
+            if s_client:
+                s_client.close_session()
+
+    def test_find_search_keywords(self):
+        """Test finding search keywords and printing formatted results"""
+        from pyegeria.view.base_report_formats import select_report_spec
+        report_spec_name = "Search-Keywords"
+        output_formats = ["JSON"]
+
+        s_client = None
+        try:
+            s_client = ServerClient(
+                self.good_view_server_2,
+                self.good_platform1_url,
+                user_id=self.good_user_2,
+                user_pwd=self.good_user_2_pwd,
+            )
+            s_client.create_egeria_bearer_token()
+
+            # Verify report spec exists
+            # for out_fmt in output_formats:
+            #     fmt = select_report_spec(report_spec_name, out_fmt)
+            #     if not fmt:
+            #         print(f"\nMissing report_spec: '{report_spec_name}' for output_format '{out_fmt}'.")
+            #         assert False, f"Missing report_spec: {report_spec_name}"
+
+            search_string = "*"
+            for out_fmt in output_formats:
+                print(f"\n\t--- Testing find_search_keywords with output_format='{out_fmt}' ---")
+                start_time = time.perf_counter()
+                response = s_client.find_search_keywords(
+                    search_string, output_format=out_fmt, report_spec=report_spec_name, page_size=10
+                )
+                s_client.create_egeria_bearer_token()
+                duration = time.perf_counter() - start_time
+                print(f"\n\tDuration was {duration} seconds")
+
+                if out_fmt == "JSON":
+                    print(f"\n\tResponse (JSON):\n{json.dumps(response, indent=4)}")
+                else:
+                    print(f"\n\tResponse ({out_fmt}):\n{response}")
+
+                assert response is not None, f"No search keywords found for format {out_fmt}"
+
+        except PyegeriaException as e:
+            print_basic_exception(e)
+            assert False, "Pyegeria exception"
+        except Exception as e:
+            print(e)
+            assert False, f"Unexpected exception: {e}"
+        finally:
+            if s_client:
+                s_client.close_session()
+
+    def test_get_search_keyword_by_keyword(self):
+        """Test retrieving search keyword by its name"""
+        s_client = None
+        try:
+            s_client = ServerClient(
+                self.good_view_server_2,
+                self.good_platform1_url,
+                user_id=self.good_user_2,
+                user_pwd=self.good_user_2_pwd,
+            )
+            keyword = "Sustainability"
+            start_time = time.perf_counter()
+            response = s_client.get_search_keyword_by_keyword(keyword)
+            duration = time.perf_counter() - start_time
+            print(f"\n\tDuration was {duration} seconds")
+            print(f"\n\tResponse was: {json.dumps(response, indent=2)}")
+            assert response is not None, "Search keyword not retrieved"
+        except PyegeriaException as e:
+            print_basic_exception(e)
+            assert False, "Pyegeria exception"
+        except Exception as e:
+            print(e)
+            assert False, f"Unexpected exception: {e}"
+        finally:
+            if s_client:
+                s_client.close_session()
+
+    def test_search_keyword_lifecycle(self):
+        """Test search keyword lifecycle: add, find, remove"""
+        s_client = None
+        try:
+            s_client = ServerClient(
+                self.good_view_server_2,
+                self.good_platform1_url,
+                user_id=self.good_user_2,
+                user_pwd=self.good_user_2_pwd,
+            )
+            s_client.create_egeria_bearer_token()
+
+            keyword = f"lifecycle-keyword-{int(time.time())}"
+
+            # 1. Add
+            print(f"\n\tAdding keyword '{keyword}'...")
+            keyword_guid = s_client.add_search_keyword_to_element(
+                self.test_element_guid,
+                keyword=keyword
+            )
+            assert keyword_guid and keyword_guid != 'Search keyword was not created'
+            print(f"\tCreated GUID: {keyword_guid}")
+
+            # 2. Find (with formatting)
+            print(f"\n\tFinding keyword '{keyword}' with LIST format...")
+            response = s_client.find_search_keywords(
+                keyword, output_format="LIST", report_spec="Search-Keywords"
+            )
+            print(f"\tFind Response:\n{response}")
+            assert keyword in str(response)
+
+            # 3. Remove
+            print(f"\n\tRemoving keyword GUID: {keyword_guid}...")
+            s_client.remove_search_keyword(keyword_guid)
+            print("\tRemoved.")
+
+        except Exception as e:
+            print(e)
+            assert False, f"Lifecycle failed: {e}"
+        finally:
+            if s_client:
+                s_client.close_session()
+
+
 if __name__ == "__main__":
     print("Running ServerClient feedback unit tests...")

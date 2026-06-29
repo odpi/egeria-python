@@ -5827,15 +5827,14 @@ class ServerClient(BaseServerClient):
             ...     limit_results_by_status=["ACTIVE"]
             ... )
         """
-        if body is None and search_string:
-            body = {
-                "class": "SearchStringRequestBody",
-                "filter": search_string,
-                "startFrom": start_from,
-                "pageSize": page_size
-            }
+        # if body is None and search_string:
+        #     body = {
+        #         "class": "SearchStringRequestBody",
+        #         "searchString": search_string if search_string != "*" else None,
+        #         "startFrom": start_from,
+        #         "pageSize": page_size
+        #     }
         url = f"{self.command_root}classification-explorer/search-keywords/by-search-string"
-        
         # Build params dict with explicit parameters
         params = {
             'search_string': search_string,
@@ -6309,6 +6308,8 @@ class ServerClient(BaseServerClient):
                                   body: dict | SearchStringRequestBody | FindPropertyNamesRequestBody = None,
                                   **kwargs) -> Any:
 
+        effective_search_string = None if search_string == '*' else search_string
+
         if isinstance(body, (SearchStringRequestBody, FindPropertyNamesRequestBody)):
             validated_body = body
         elif isinstance(body, dict):
@@ -6355,9 +6356,9 @@ class ServerClient(BaseServerClient):
             else:
                 body = {
                     "class": "SearchStringRequestBody",
-                    "searchString": search_string,
-                    "startWith": starts_with,
-                    "endWith": ends_with,
+                    "searchString": effective_search_string,
+                    "startsWith": starts_with,
+                    "endsWith": ends_with,
                     "ignoreCase": ignore_case,
                     "anchorGUID": anchor_guid,
                     "anchorTypeName": anchor_type_name,
@@ -6378,7 +6379,7 @@ class ServerClient(BaseServerClient):
                     "limitResultsByStatus": limit_results_by_status,
                     "sequencingOrder": sequencing_order,
                     "sequencingProperty": sequencing_property,
-                    "start_from": start_from,
+                    "startFrom": start_from,
                     "pageSize": page_size,
                     **kwargs
                 }
@@ -6386,7 +6387,7 @@ class ServerClient(BaseServerClient):
                     body.pop("metadataElementTypeName", None)
                 validated_body = SearchStringRequestBody.model_validate(body)
 
-        json_body = validated_body.model_dump_json(indent=2, exclude_none=True)
+        json_body = validated_body.model_dump_json(indent=2, exclude_none=True, by_alias=True)
 
         response = await self._async_make_request("POST", url, json_body, time_out = 90)
         elements = response.json().get("elements", NO_ELEMENTS_FOUND)
@@ -6585,8 +6586,8 @@ class ServerClient(BaseServerClient):
                 "class": "ActivityStatusSearchString",
                 "searchString": search_string,
                 "activityStatusList": activity_status_list,
-                "startWith": starts_with,
-                "endWith": ends_with,
+                "starstWith": starts_with,
+                "endsWith": ends_with,
                 "ignoreCase": ignore_case,
                 "anchorDomain": anchor_domain,
                 "zoneFilter": governance_zone_filter,
@@ -6757,8 +6758,8 @@ class ServerClient(BaseServerClient):
                 "class": "ContentStatusSearchString",
                 "searchString": search_string,
                 "contentStatusList": content_status_list,
-                "startWith": starts_with,
-                "endWith": ends_with,
+                "startsWith": starts_with,
+                "endsWith": ends_with,
                 "ignoreCase": ignore_case,
                 "anchorDomain": anchor_domain,
                 "zoneFilter": governance_zone_filter,
@@ -6883,8 +6884,8 @@ class ServerClient(BaseServerClient):
                 "class": "DeploymentStatusSearchString",
                 "searchString": search_string,
                 "deploymentStatusList": deployment_status_list,
-                "startWith": starts_with,
-                "endWith": ends_with,
+                "startsWith": starts_with,
+                "endsWith": ends_with,
                 "ignoreCase": ignore_case,
                 "anchorDomain": anchor_domain,
                 "zoneFilter": governance_zone_filter,
@@ -6902,8 +6903,8 @@ class ServerClient(BaseServerClient):
                 "limitResultsByStatus": limit_results_by_status,
                 "sequencingOrder": sequencing_order,
                 "sequencingProperty": sequencing_property,
-                "start_from": start_from,
-                "page_size": page_size,
+                "startFrom": start_from,
+                "pageSize": page_size,
                 **kwargs
             }
             validated_body = DeploymentStatusSearchString.model_validate(body)
