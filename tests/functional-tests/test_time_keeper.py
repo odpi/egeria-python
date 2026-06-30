@@ -6,6 +6,7 @@ This module tests the TimeKeeper class and methods from time_keeper.py
 
 A running Egeria environment is needed to run these tests.
 """
+import json
 import time
 from datetime import datetime
 
@@ -167,7 +168,7 @@ class TestTimeKeeper:
             tk_client.create_egeria_bearer_token(self.good_user_2, USER_PWD)
             
             response = tk_client.find_context_events(search_string="*")
-            print(f"\n\nFound context events: {response}")
+            print(f"\n\nFound context events: {json.dumps(response, indent=2)}")
             assert response is not None
 
         except (

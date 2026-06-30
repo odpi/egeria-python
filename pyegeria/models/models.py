@@ -420,7 +420,7 @@ class NewElementRequestBody(RequestBody):
     anchor_guid: str | None = None
     is_own_anchor: bool | None = True
     anchor_scope_guids: list[str] | None = None
-    initial_classifications:  Dict[str, InitialClassifications] | None = None
+    initial_classifications:  Dict[str, Dict] | None = None
     parent_relationship_properties: dict | None = None
     properties: dict | None = None
     parent_guid: str | None = None
