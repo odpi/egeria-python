@@ -665,7 +665,7 @@ class TestRuntimeManager:
             connector_name = "UnityCatalogServerSynchronizer"
             server_name = "qs-integration-daemon"
             start_time = time.perf_counter()
-            r_client.start_connector(
+            r_client.restart_connector(
                 connector_name,
                 display_name=server_name,
                 organization_name="Coco Pharmaceuticals",
