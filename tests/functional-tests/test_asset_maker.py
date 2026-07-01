@@ -70,7 +70,13 @@ class TestAssetMaker:
                     "qualifiedName": f"test-asset-{int(time.time())}",
                     "displayName": "Test Asset",
                     "description": "An asset created for testing purposes",
+                },
+                "initialClassifications":
+                    {"ZoneMembership": {
+                    "class": "ZoneMembershipProperties",
+                    "zoneMembership": ["Business Systems"]
                 }
+            }
             }
             
             response = a_client.create_asset(body=body)
@@ -84,8 +90,8 @@ class TestAssetMaker:
                 delete_body = {
                     "class": "DeleteElementRequestBody"
                 }
-                a_client.delete_asset(response, delete_body)
-                print(f"Cleaned up test asset: {response}")
+                # a_client.delete_asset(response, delete_body)
+                # print(f"Cleaned up test asset: {response}")
             
             assert response is not None, "Asset creation should return a GUID"
             
@@ -157,8 +163,8 @@ class TestAssetMaker:
                 }
             }
             
-            asset_guid = a_client.create_asset(body=body)
-            # asset_guid = "a47906f0-67f0-46ed-890d-85cb049ffa60"
+            # asset_guid = a_client.create_asset(body=body)
+            asset_guid = "0da3ac68-22e3-481d-a74b-15746ce988ba"
             print(f"\nCreated test asset with GUID: {asset_guid}")
             
             # Now retrieve it
@@ -171,7 +177,7 @@ class TestAssetMaker:
             
             print(f"\n\tDuration was {duration} seconds")
             print(f"\n\nRetrieved asset: {response.get('properties', {}).get('displayName', 'Unknown')}")
-            
+            print(json.dumps(response, indent=4))
             # Clean up
             delete_body = {"class": "DeleteElementRequestBody"}
             a_client.delete_asset(asset_guid, delete_body)

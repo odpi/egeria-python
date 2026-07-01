@@ -67,6 +67,7 @@ class TestServerClientFeedback:
                 user_id=self.good_user_2,
                 user_pwd=self.good_user_2_pwd,
             )
+            s_client.create_egeria_bearer_token()
             # Use a known element GUID from your test environment
             start_time = time.perf_counter()
             response = s_client.add_like_to_element(
@@ -109,6 +110,7 @@ class TestServerClientFeedback:
                 user_id=self.good_user_2,
                 user_pwd=self.good_user_2_pwd,
             )
+            s_client.create_egeria_bearer_token()
             rating_body = {
                 "starRating": 5,
                 "review": "Excellent element!"
@@ -154,6 +156,7 @@ class TestServerClientFeedback:
                 user_id=self.good_user_2,
                 user_pwd=self.good_user_2_pwd,
             )
+            s_client.create_egeria_bearer_token()
             start_time = time.perf_counter()
             response = s_client.get_attached_likes(
                 self.test_element_guid,
@@ -196,6 +199,7 @@ class TestServerClientFeedback:
                 user_id=self.good_user_2,
                 user_pwd=self.good_user_2_pwd,
             )
+            s_client.create_egeria_bearer_token()
             test_element_guid = "test-element-guid-123"
             start_time = time.perf_counter()
             response = s_client.get_attached_ratings(
@@ -239,6 +243,7 @@ class TestServerClientFeedback:
                 user_id=self.good_user_2,
                 user_pwd=self.good_user_2_pwd,
             )
+            s_client.create_egeria_bearer_token()
             start_time = time.perf_counter()
             response = s_client.remove_like_from_element(
                 self.test_element_guid,
@@ -280,6 +285,7 @@ class TestServerClientFeedback:
                 user_id=self.good_user_2,
                 user_pwd=self.good_user_2_pwd,
             )
+            s_client.create_egeria_bearer_token()
             test_element_guid = "test-element-guid-123"
             start_time = time.perf_counter()
             response = s_client.remove_rating_from_element(
@@ -332,6 +338,7 @@ class TestServerClientFeedback:
                 user_id=self.good_user_2,
                 user_pwd=self.good_user_2_pwd,
             )
+            s_client.create_egeria_bearer_token()
             start_time = time.perf_counter()
             search_string = "Sustainability"
             response = s_client.find_assets(
@@ -368,6 +375,7 @@ class TestServerClientFeedback:
                 user_id=self.good_user_2,
                 user_pwd=self.good_user_2_pwd,
             )
+            s_client.create_egeria_bearer_token()
             start_time = time.perf_counter()
             response = s_client.__get_guid__(display_name="My first comment", property_name="displayName")
             duration = time.perf_counter() - start_time
@@ -534,6 +542,7 @@ class TestServerClientJournal:
                 user_id=self.good_user_2,
                 user_pwd=self.good_user_2_pwd,
             )
+            s_client.create_egeria_bearer_token()
 
             journal_qn = f"test-journal-{int(time.time())}"
             note_entry = "This is a test journal entry"
@@ -572,6 +581,7 @@ class TestMyProfileActivity:
                 user_id=self.good_user_2,
                 user_pwd=self.good_user_2_pwd,
             )
+            m_client.create_egeria_bearer_token()
 
             activity_body = {
                 "class": "NewAttachmentRequestBody",
@@ -626,6 +636,7 @@ class TestServerClientSearchKeywords:
                 user_id=self.good_user_2,
                 user_pwd=self.good_user_2_pwd,
             )
+            s_client.create_egeria_bearer_token()
             keyword = f"test-keyword-{int(time.time())}"
             start_time = time.perf_counter()
             response = s_client.add_search_keyword_to_element(
@@ -634,7 +645,7 @@ class TestServerClientSearchKeywords:
             )
             duration = time.perf_counter() - start_time
             print(f"\n\tDuration was {duration} seconds")
-            print(f"\n\tResponse was: {response}")
+            print(f"\n\tResponse was: {json.dumps(response, indent=2) if isinstance(response, (dict, list)) else response}")
             assert response is not None, "Search keyword not added"
         except PyegeriaException as e:
             print_basic_exception(e)
@@ -707,6 +718,7 @@ class TestServerClientSearchKeywords:
                 user_id=self.good_user_2,
                 user_pwd=self.good_user_2_pwd,
             )
+            s_client.create_egeria_bearer_token()
             keyword = "Sustainability"
             start_time = time.perf_counter()
             response = s_client.get_search_keyword_by_keyword(keyword)
@@ -763,6 +775,265 @@ class TestServerClientSearchKeywords:
         except Exception as e:
             print(e)
             assert False, f"Lifecycle failed: {e}"
+        finally:
+            if s_client:
+                s_client.close_session()
+
+
+class TestServerClientInformalTags:
+    """Test class for ServerClient Informal Tag methods"""
+
+    good_platform1_url = "https://localhost:9443"
+    good_view_server_2 = "qs-view-server"
+    good_user_2 = "erinoverview"
+    good_user_2_pwd = "secret"
+    test_element_guid = "71e67a50-ced4-40ed-b25e-98142a009604"
+
+    def test_informal_tag_lifecycle(self):
+        """Test informal tag lifecycle: create, update, get, add to element, find, delete"""
+        s_client = None
+        try:
+            s_client = ServerClient(
+                self.good_view_server_2,
+                self.good_platform1_url,
+                user_id=self.good_user_2,
+                user_pwd=self.good_user_2_pwd,
+            )
+            s_client.create_egeria_bearer_token()
+
+            tag_name = f"TestTag-Lifecycle-{int(time.time())}"
+            description = "Functional test informal tag"
+
+            # 1. Create Informal Tag
+            print(f"\n\tCreating Informal Tag '{tag_name}'...")
+            tag_guid = s_client.create_informal_tag(
+                display_name=tag_name,
+                description=description,
+            )
+            assert tag_guid, "Informal Tag was not created"
+            print(f"\tCreated Tag GUID: {tag_guid}")
+
+            # 2. Update Tag Description
+            new_description = "Updated functional test informal tag"
+            s_client.update_tag_description(tag_guid, description=new_description)
+            print("\tUpdated Tag Description")
+
+            # 3. Get Tag by GUID
+            tag = s_client.get_tag_by_guid(tag_guid)
+            assert tag is not None, "get_tag_by_guid returned None"
+            print(f"\tget_tag_by_guid response: {json.dumps(tag, indent=2)}")
+
+            # 4. Add Tag to Element
+            s_client.add_tag_to_element(self.test_element_guid, tag_guid)
+            print(f"\tAdded Tag to Element {self.test_element_guid}")
+
+            # 5. Get Attached Tags
+            attached_tags = s_client.get_attached_tags(self.test_element_guid)
+            assert attached_tags is not None, "get_attached_tags returned None"
+            print(f"\tget_attached_tags response: {json.dumps(attached_tags, indent=2)}")
+
+            # 6. Get Elements by Tag
+            elements = s_client.get_elements_by_tag(tag_guid)
+            assert elements is not None, "get_elements_by_tag returned None"
+            print(f"\tget_elements_by_tag response: {json.dumps(elements, indent=2)}")
+
+            # 7. Find Tags
+            find_response = s_client.find_tags(tag_name)
+            assert find_response is not None, "find_tags returned None"
+            print(f"\tfind_tags response: {json.dumps(find_response, indent=2)}")
+
+            # 8. Remove Tag from Element
+            s_client.remove_tag_from_element(self.test_element_guid, tag_guid)
+            print("\tRemoved Tag from Element")
+
+            # 9. Delete Tag
+            s_client.delete_tag(tag_guid)
+            print("\tDeleted Tag")
+
+        except Exception as e:
+            print(e)
+            assert False, f"Lifecycle failed: {e}"
+        finally:
+            if s_client:
+                s_client.close_session()
+
+    def test_create_informal_tag(self):
+        """Test creating an informal tag"""
+        s_client = None
+        try:
+            s_client = ServerClient(
+                self.good_view_server_2,
+                self.good_platform1_url,
+                user_id=self.good_user_2,
+                user_pwd=self.good_user_2_pwd,
+            )
+            s_client.create_egeria_bearer_token()
+            tag_name = f"TestTag-Create-{int(time.time())}"
+            tag_guid = s_client.create_informal_tag(display_name=tag_name, description="Test create")
+            assert tag_guid, "Tag not created"
+            print(f"\tCreated Tag GUID: {tag_guid}")
+            s_client.delete_tag(tag_guid)
+        finally:
+            if s_client:
+                s_client.close_session()
+
+    def test_update_tag_description(self):
+        """Test updating an informal tag description"""
+        s_client = None
+        try:
+            s_client = ServerClient(
+                self.good_view_server_2,
+                self.good_platform1_url,
+                user_id=self.good_user_2,
+                user_pwd=self.good_user_2_pwd,
+            )
+            s_client.create_egeria_bearer_token()
+            tag_guid = s_client.create_informal_tag(display_name="TestUpdate", description="Original")
+            s_client.update_tag_description(tag_guid, description="Updated")
+            tag = s_client.get_tag_by_guid(tag_guid)
+            assert tag["description"] == "Updated"
+            print(f"\tUpdated tag: {json.dumps(tag, indent=2)}")
+            s_client.delete_tag(tag_guid)
+        finally:
+            if s_client:
+                s_client.close_session()
+
+    def test_get_tag_by_guid(self):
+        """Test getting an informal tag by GUID"""
+        s_client = None
+        try:
+            s_client = ServerClient(
+                self.good_view_server_2,
+                self.good_platform1_url,
+                user_id=self.good_user_2,
+                user_pwd=self.good_user_2_pwd,
+            )
+            s_client.create_egeria_bearer_token()
+            tag_guid = s_client.create_informal_tag(display_name="TestGet", description="Test get")
+            tag = s_client.get_tag_by_guid(tag_guid)
+            assert tag is not None
+            print(f"\tRetrieved tag: {json.dumps(tag, indent=2)}")
+            s_client.delete_tag(tag_guid)
+        finally:
+            if s_client:
+                s_client.close_session()
+
+    def test_add_tag_to_element(self):
+        """Test adding a tag to an element"""
+        s_client = None
+        try:
+            s_client = ServerClient(
+                self.good_view_server_2,
+                self.good_platform1_url,
+                user_id=self.good_user_2,
+                user_pwd=self.good_user_2_pwd,
+            )
+            s_client.create_egeria_bearer_token()
+            tag_guid = s_client.create_informal_tag(display_name="TestAdd", description="Test add")
+            s_client.add_tag_to_element(self.test_element_guid, tag_guid)
+            print(f"\tAdded tag {tag_guid} to element {self.test_element_guid}")
+            # cleanup
+            s_client.remove_tag_from_element(self.test_element_guid, tag_guid)
+            s_client.delete_tag(tag_guid)
+        finally:
+            if s_client:
+                s_client.close_session()
+
+    def test_get_attached_tags(self):
+        """Test getting tags attached to an element"""
+        s_client = None
+        try:
+            s_client = ServerClient(
+                self.good_view_server_2,
+                self.good_platform1_url,
+                user_id=self.good_user_2,
+                user_pwd=self.good_user_2_pwd,
+            )
+            s_client.create_egeria_bearer_token()
+            tags = s_client.get_attached_tags(self.test_element_guid)
+            assert tags is not None
+            print(f"\tAttached tags: {json.dumps(tags, indent=2)}")
+        finally:
+            if s_client:
+                s_client.close_session()
+
+    def test_get_elements_by_tag(self):
+        """Test getting elements associated with a tag"""
+        s_client = None
+        try:
+            s_client = ServerClient(
+                self.good_view_server_2,
+                self.good_platform1_url,
+                user_id=self.good_user_2,
+                user_pwd=self.good_user_2_pwd,
+            )
+            s_client.create_egeria_bearer_token()
+            tag_guid = s_client.create_informal_tag(display_name="TestElements", description="Test elements")
+            s_client.add_tag_to_element(self.test_element_guid, tag_guid)
+            elements = s_client.get_elements_by_tag(tag_guid)
+            assert elements is not None
+            print(f"\tElements for tag: {json.dumps(elements, indent=2)}")
+            s_client.remove_tag_from_element(self.test_element_guid, tag_guid)
+            s_client.delete_tag(tag_guid)
+        finally:
+            if s_client:
+                s_client.close_session()
+
+    def test_find_tags(self):
+        """Test finding tags by name"""
+        s_client = None
+        try:
+            s_client = ServerClient(
+                self.good_view_server_2,
+                self.good_platform1_url,
+                user_id=self.good_user_2,
+                user_pwd=self.good_user_2_pwd,
+            )
+            s_client.create_egeria_bearer_token()
+            tag_name = f"TestFind-{int(time.time())}"
+            tag_guid = s_client.create_informal_tag(display_name=tag_name, description="Test find")
+            tags = s_client.find_tags(tag_name)
+            assert tags is not None
+            print(f"\tFound tags: {json.dumps(tags, indent=2)}")
+            s_client.delete_tag(tag_guid)
+        finally:
+            if s_client:
+                s_client.close_session()
+
+    def test_remove_tag_from_element(self):
+        """Test removing a tag from an element"""
+        s_client = None
+        try:
+            s_client = ServerClient(
+                self.good_view_server_2,
+                self.good_platform1_url,
+                user_id=self.good_user_2,
+                user_pwd=self.good_user_2_pwd,
+            )
+            s_client.create_egeria_bearer_token()
+            tag_guid = s_client.create_informal_tag(display_name="TestRemove", description="Test remove")
+            s_client.add_tag_to_element(self.test_element_guid, tag_guid)
+            s_client.remove_tag_from_element(self.test_element_guid, tag_guid)
+            print(f"\tRemoved tag {tag_guid} from element {self.test_element_guid}")
+            s_client.delete_tag(tag_guid)
+        finally:
+            if s_client:
+                s_client.close_session()
+
+    def test_delete_tag(self):
+        """Test deleting an informal tag"""
+        s_client = None
+        try:
+            s_client = ServerClient(
+                self.good_view_server_2,
+                self.good_platform1_url,
+                user_id=self.good_user_2,
+                user_pwd=self.good_user_2_pwd,
+            )
+            s_client.create_egeria_bearer_token()
+            tag_guid = s_client.create_informal_tag(display_name="TestDelete", description="Test delete")
+            s_client.delete_tag(tag_guid)
+            print(f"\tDeleted tag {tag_guid}")
         finally:
             if s_client:
                 s_client.close_session()
