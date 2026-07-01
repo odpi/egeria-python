@@ -507,7 +507,7 @@ class RuntimeManager(ServerClient):
         )
 
         url = (
-            f"{self.runtime_command_root}/integration-daemon/"
+            f"{self.runtime_command_root}/integration-daemons/"
             f"{server_guid}/integration-connectors/restart"
         )
         if body is None:
@@ -521,7 +521,7 @@ class RuntimeManager(ServerClient):
                     "name": connector_name
                 }
 
-        await self._async_make_request("GET", url, payload=body)
+        await self._async_make_request("POST", url, payload=body)
         return
 
     def restart_connector(
