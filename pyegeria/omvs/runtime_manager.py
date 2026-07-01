@@ -460,117 +460,15 @@ class RuntimeManager(ServerClient):
         )
         return
 
-    async def _async_stop_connector(
+
+    async def _async_restart_connector(
         self,
         connector_name: Optional[str] = None,
         server_guid: Optional[str] = None,
         display_name: Optional[str] = None,
         qualified_name: Optional[str] = None,
         organization_name: Optional[str] = None,
-        body: Optional[dict | FilterRequestBody] = None,
-    ) -> None:
-        """Stop the named integration connector OR all connectors if connector name is None.  Async version.
-
-        Parameters
-        ----------
-        connector_name : str, default = None
-            Name of the integration connector to stop. If none, all connectors will be stopped.
-        server_guid : str, default = None
-            Identity of the server to act on. If not specified, qualified_name or server_name must be.
-        display_name: str, default = None
-            Name of server to act on. If not specified, server_guid or qualified_name must be.
-        qualified_name: str, default = None
-            Unique name of server to act on. If not specified, server_guid or server_name must be.
-
-        body : dict | FilterRequestBody, optional
-            Request body to pass directly to the API.
-
-        Returns
-        -------
-           None
-
-        Raises
-        ------
-        PyegeriaInvalidParameterException
-        PyegeriaAPIException
-        PyegeriaUnauthorizedException
-
-        """
-        server_guid = self.__get_guid__(
-            server_guid,
-            display_name,
-            "resourceName",
-            qualified_name,
-            "Integration Daemon",
-            organization_name,
-        )
-
-        if connector_name is None:
-            url = (
-                f"{self.runtime_command_root}/integration-daemon/"
-                f"{server_guid}/integration-connectors/stop"
-            )
-        else:
-            url = (
-                f"{self.runtime_command_root}/integration-daemon/"
-                f"{server_guid}/integration-connectors/{connector_name}/stop"
-            )
-
-        await self._async_make_request("GET", url, payload=body)
-        return
-
-    def stop_connector(
-        self,
-        connector_name: Optional[str] = None,
-        server_guid: Optional[str] = None,
-        display_name: Optional[str] = None,
-        qualified_name: Optional[str] = None,
-        organization_name: Optional[str] = None,
-        body: Optional[dict | FilterRequestBody] = None,
-    ) -> None:
-        """Stop the named integration connector OR all connectors if connector name is None.
-
-        Parameters
-        ----------
-        connector_name : str, default = None
-            Name of the integration connector to stop. If none, all connectors will be stopped.
-        server_guid : str, default = None
-            Identity of the server to act on. If not specified, qualified_name or server_name must be.
-        display_name: str, default = None
-            Name of server to act on. If not specified, server_guid or qualified_name must be.
-        qualified_name: str, default = None
-            Unique name of server to act on. If not specified, server_guid or server_name must be.
-
-        body : dict | FilterRequestBody, optional
-            Request body to pass directly to the API.
-
-        Returns
-        -------
-           None
-
-        Raises
-        ------
-        PyegeriaInvalidParameterException
-        PyegeriaAPIException
-        PyegeriaUnauthorizedException
-
-        """
-        loop = asyncio.get_event_loop()
-        loop.run_until_complete(
-            self._async_stop_connector(
-                connector_name, server_guid, display_name, qualified_name, organization_name, body
-            )
-        )
-        return
-
-    async def _async_start_connector(
-        self,
-        connector_name: Optional[str] = None,
-        server_guid: Optional[str] = None,
-        display_name: Optional[str] = None,
-        qualified_name: Optional[str] = None,
-        organization_name: Optional[str] = None,
-        body: Optional[dict | FilterRequestBody] = None,
+        body: Optional[dict] = None,
     ) -> None:
         """Start the named integration connector OR all connectors if connector name is None.  Async version.
 
@@ -608,28 +506,32 @@ class RuntimeManager(ServerClient):
             organization_name,
         )
 
-        if connector_name is None:
-            url = (
-                f"{self.runtime_command_root}/integration-daemon/"
-                f"{server_guid}/integration-connectors/start"
-            )
-        else:
-            url = (
-                f"{self.runtime_command_root}/integration-daemon/"
-                f"{server_guid}/integration-connectors/{connector_name}/start"
-            )
+        url = (
+            f"{self.runtime_command_root}/integration-daemons/"
+            f"{server_guid}/integration-connectors/restart"
+        )
+        if body is None:
+            if connector_name is None:
+                body = {
+                    "class": "NameRequestBody"
+                }
+            else:
+                body = {
+                    "class": "NameRequestBody",
+                    "name": connector_name
+                }
 
-        await self._async_make_request("GET", url, payload=body)
+        await self._async_make_request("POST", url, payload=body)
         return
 
-    def start_connector(
+    def restart_connector(
         self,
         connector_name: Optional[str] = None,
         server_guid: Optional[str] = None,
         display_name: Optional[str] = None,
         qualified_name: Optional[str] = None,
         organization_name: Optional[str] = None,
-        body: Optional[dict | FilterRequestBody] = None,
+        body: Optional[dict] = None,
     ) -> None:
         """Start the named integration connector OR all connectors if connector name is None.
 
@@ -660,7 +562,7 @@ class RuntimeManager(ServerClient):
         """
         loop = asyncio.get_event_loop()
         loop.run_until_complete(
-            self._async_start_connector(
+            self._async_restart_connector(
                 connector_name, server_guid, display_name, qualified_name, organization_name, body
             )
         )
