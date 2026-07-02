@@ -270,6 +270,19 @@ def main():
         os.makedirs(family_dir, exist_ok=True)
         print(f"\n## Family: {family}\n")
 
+        # Remove stale template files for commands no longer in this family
+        # (e.g. a command was removed or renamed upstream) -- otherwise they
+        # linger indefinitely since this loop only ever writes, never deletes.
+        expected_filenames = {
+            command.replace(" ", "_").replace(":", "").replace("/", "_") + ".md"
+            for command in command_list
+        }
+        for existing_file in os.listdir(family_dir):
+            if existing_file.endswith(".md") and existing_file not in expected_filenames:
+                stale_path = os.path.join(family_dir, existing_file)
+                os.remove(stale_path)
+                logger.info(f"Removed stale template for a no-longer-existing command: {stale_path}")
+
         for command in sorted(command_list):
             values = commands[command]
             command_description = values.get("description", "")
@@ -383,6 +396,19 @@ def main():
 
             logger.info(f"Saved command documentation to {command_file_path}")
             print("\n___\n")
+
+    # Remove stale family directories left over from a family being renamed
+    # or removed entirely upstream. Only safe to do on a full run -- a
+    # --family-scoped run only knows about the one family it was asked to
+    # generate, so it can't tell a genuinely-removed family from one that
+    # was simply out of scope for this invocation.
+    if not args.family and os.path.isdir(base_output_dir):
+        for existing_dir in os.listdir(base_output_dir):
+            existing_dir_path = os.path.join(base_output_dir, existing_dir)
+            if os.path.isdir(existing_dir_path) and existing_dir not in families:
+                import shutil
+                shutil.rmtree(existing_dir_path)
+                logger.info(f"Removed stale family template directory: {existing_dir_path}")
 
 
 #

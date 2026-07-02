@@ -57,7 +57,7 @@
 >     Commands: Create Governance Control, Create Governance Rule,
 >               Create Governance Responsibility, Create Governance Procedure,
 >               Create Service Level Objective, Create Methodology,
->               Create Governance Action, Create Data Processing Purpose,
+>               Create Data Processing Purpose,
 >               Create Governance Metric (+Measurement, Target),
 >               Create Naming Standard Rule (+Name Patterns),
 >               Create Notification Type (+date/interval attrs),
@@ -593,32 +593,6 @@ ACTIVE
 
 ### Qualified Name
 Methodology::SalesForecast::GovernanceFramework::1.0
-
-### GUID
-
-___
-
-# GO-17: Create Governance Action
-
-## Create Governance Action
-
-### Display Name
-Remediate Duplicate CRM Opportunities
-
-### Summary
-Identify and merge duplicate CRM opportunity records in the Sales Forecast pipeline.
-
-### Domain Identifier
-DATA
-
-### Importance
-High
-
-### Content Status
-ACTIVE
-
-### Qualified Name
-GovernanceAction::SalesForecast::RemediateDuplicateCRM::1.0
 
 ### GUID
 

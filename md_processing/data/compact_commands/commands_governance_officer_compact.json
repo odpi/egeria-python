@@ -1,6 +1,6 @@
 {
   "family": "Governance Officer",
-  "exported": "May 19, 2026 at 9:10:25 PM",
+  "exported": "Jul 2, 2026 at 10:02:57 AM",
   "attribute_definitions": {
     "Activity Status": {
       "variable_name": "activity_status",
@@ -3661,25 +3661,6 @@
       "extra_find": "",
       "extra_constraints": "",
       "OM_TYPE": "DataProcessingPurpose",
-      "bundle": "Governance Control Base",
-      "custom_attributes": [],
-      "Journal Entry": ""
-    },
-    "Create Governance Action": {
-      "display_name": "Governance Action",
-      "qn_prefix": "GovAction",
-      "alternate_names": [],
-      "family": "Governance Officer",
-      "description": "An executable action, or sequence of actions to support a governance requirement.",
-      "verb": "Create",
-      "upsert": false,
-      "attach": false,
-      "level": "Basic",
-      "find_method": "GovernanceOfficer.find_governance_definitions",
-      "find_constraints": "{\"metadata_element_type\": \"GovernanceAction\"}",
-      "extra_find": "",
-      "extra_constraints": "",
-      "OM_TYPE": "GovernanceAction",
       "bundle": "Governance Control Base",
       "custom_attributes": [],
       "Journal Entry": ""
