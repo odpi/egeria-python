@@ -29,6 +29,7 @@ from .governance import (
     GovernanceProcessor, GovernanceLinkProcessor,
     GovernanceContextProcessor
 )
+from .action_author import ActionProcessStepLinkProcessor
 from .feedback import (
     FeedbackProcessor, TagProcessor,
     ExternalReferenceProcessor, FeedbackLinkProcessor
