@@ -153,11 +153,23 @@ def register_governance_processors(register_processor: Callable[[str, Type[Async
     for base_name, spec in specs.items():
         if not isinstance(spec, dict):
             continue
-        if spec.get("family") != "Governance Officer":
+        family = spec.get("family")
+        if family not in ("Governance Officer", "Action Author"):
+            continue
+
+        verb = base_name.split(" ", 1)[0]
+        if family == "Action Author" and verb in link_verbs:
+            # Link First/Next Process Step call a different OMVS client
+            # (action_author.setup_first/next_action_process_step) with
+            # distinct relationship properties (guard/requestParameters/
+            # mandatoryGuard) than the generic peer-link mechanism
+            # GovernanceLinkProcessor implements -- registering them here
+            # would silently misbehave rather than fail. Skip until their
+            # dedicated processor exists.
             continue
 
         variants = build_command_variants(base_name, spec)
-        processor_cls = GovernanceLinkProcessor if base_name.split(" ", 1)[0] in link_verbs else GovernanceProcessor
+        processor_cls = GovernanceLinkProcessor if verb in link_verbs else GovernanceProcessor
         for variant in variants:
             register_processor(variant, processor_cls)
 

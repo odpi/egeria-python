@@ -138,6 +138,7 @@ Dr.Egeria organizes its commands into "families," each corresponding to a specif
 - **Collection Manager**: Manage various collections of elements, including Folders, Products, and Agreements (e.g., `Create Collection Folder`, `Create Digital Product`).
 - **Solution Architect**: Manage solution blueprints, components, and information supply chains.
 - **Governance Officer**: Manage governance definitions, policies, and responsibilities.
+- **Action Author**: Define governance action process flows — reusable single-step action types and multi-step processes — without writing code (e.g., `Create Governance Action Process`, `Create Governance Action Process Step`, `Link First Process Step`, `Link Next Process Step`).
 
 ### Enrichment and Metadata Management
 

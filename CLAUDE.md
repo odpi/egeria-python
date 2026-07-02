@@ -152,6 +152,7 @@ These files are **Tinderbox exports — never hand-edit**. Describe desired chan
 **Dispatcher registration** — how new commands get wired in:
 - `COLLECTION_SUBTYPES` and `PROJECT_SUBTYPES` drive automatic `Create/Update` routing to `CollectionManagerProcessor` / `ProjectProcessor` — adding a type to these lists is all that's required.
 - Families driven entirely by compact spec (Actor Manager, Governance, Solution Architect) use a `register_*_processors()` helper loop in `dr_egeria.py`.
+- **`register_governance_processors()` is family-name-gated, not automatic** — it only registers commands whose compact-spec `family` is literally `"Governance Officer"` (or, as of the `Action Author` family, also `"Action Author"`). Adding a brand-new family whose commands should reuse `GovernanceProcessor`/`GovernanceLinkProcessor` means adding its name to that check explicitly — nothing is wired up just because the compact JSON exists and validates. `Action Author`'s two `Link` commands (`Link First/Next Process Step`) are deliberately excluded from this loop even though their family matches: they call `action_author.setup_first/next_action_process_step` (different OMVS client, different relationship properties) rather than the generic peer-link mechanism `GovernanceLinkProcessor` implements, and don't have a dedicated processor yet.
 - Everything else is an explicit `reg("Verb Object", ProcessorClass)` call in `setup_dispatcher()`.
 
 **Body builders** — all flow through one function:

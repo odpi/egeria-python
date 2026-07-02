@@ -37,6 +37,7 @@ TEST_FILES = [
     "dr_test_report.md",
     "dr_test_solution.md",
     "dr_test_new_commands.md",
+    "dr_test_action_author.md",
 ]
 
 
