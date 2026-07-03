@@ -2028,7 +2028,7 @@ sdist = { url = "https://files.pythonhosted.org/packages/3d/74/f19e5eaabada3ae7d
 
 [[package]]
 name = "pyegeria"
-version = "6.0.16.2"
+version = "6.0.16.6"
 source = { editable = "." }
 dependencies = [
     { name = "altair" },
@@ -2040,6 +2040,7 @@ dependencies = [
     { name = "loguru" },
     { name = "markers" },
     { name = "mcp" },
+    { name = "nest-asyncio" },
     { name = "optional" },
     { name = "psycopg2-binary" },
     { name = "pydantic" },
@@ -2083,6 +2084,7 @@ requires-dist = [
     { name = "loguru" },
     { name = "markers", specifier = ">=0.3.0" },
     { name = "mcp", specifier = ">=0.1" },
+    { name = "nest-asyncio", specifier = ">=1.6.0" },
     { name = "optional", specifier = ">=0.0.1" },
     { name = "psycopg2-binary", specifier = ">=2.9.11" },
     { name = "pydantic", specifier = ">=2.12.3" },

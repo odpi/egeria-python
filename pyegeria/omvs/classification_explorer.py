@@ -1,8 +1,11 @@
-"""SPDX-License-Identifier: Apache-2.0
+"""
+SPDX-License-Identifier: Apache-2.0
 Copyright Contributors to the ODPi Egeria project.
 
-This module provides access to the classification_manager_omvs module.
+Classification Explorer OMVS Client
 
+This module provides the Python client for the Classification Explorer Open Metadata View Service (OMVS).
+It allows for exploring and managing classifications on metadata elements.
 """
 
 import asyncio
@@ -27,46 +30,14 @@ from pyegeria.view.output_formatter import (
 from pyegeria.core.utils import body_slimmer, dynamic_catch
 
 
-def query_seperator(current_string):
-    if current_string == "":
-        return "?"
-    else:
-        return "&"
-
-
-"params are in the form of [(paramName, value), (param2Name, value)] if the value is not None, it will be added to the query string"
-
-
-def query_string(params):
-    result = ""
-    for i in range(len(params)):
-        if params[i][1] is not None:
-            result = f"{result}{query_seperator(result)}{params[i][0]}={params[i][1]}"
-    return result
-
-
-def base_path(client, view_server: str):
-    return f"{client.platform_url}/servers/{view_server}/api/open-metadata/classification-explorer"
 
 
 class ClassificationExplorer(ServerClient):
-    """ClassificationExplorer is a class that extends the Client class. It
-    provides methods to CRUD annotations and to query elements and relationships. Async version.
+    """
+    Client for the Classification Explorer OMVS.
 
-    Attributes:
-
-        server_name: str
-            The name of the View Server to connect to.
-        platform_url : str
-            URL of the server platform to connect to
-        user_id : str
-            The identity of the user calling the method - this sets a
-            default optionally used by the methods when the user
-            doesn't pass the user_id on a method call.
-        user_pwd: str
-            The password associated with the user_id. Defaults to None
-
-
+    This class provides methods to explore and manage classifications on metadata elements
+    and their relationships within the Egeria ecosystem.
     """
 
     def __init__(
@@ -76,21 +47,19 @@ class ClassificationExplorer(ServerClient):
             user_id: Optional[str] = None,
             user_pwd: Optional[str] = None,
             token: Optional[str] = None,
+            **kwargs,
     ):
-        self.view_server = view_server
-        self.platform_url = platform_url
-        self.user_id = user_id
-        self.user_pwd = user_pwd
-        self.classification_command_root: str = (
-            f"{self.platform_url}/servers/{self.view_server}/api/open-metadata/classification-explorer"
-        )
-        ServerClient.__init__(
-            self,
+        super().__init__(
             view_server,
             platform_url,
             user_id=user_id,
             user_pwd=user_pwd,
             token=token,
+            **kwargs,
+        )
+        self.view_server = self.server_name
+        self.classification_command_root: str = (
+            f"{self.platform_url}/servers/{self.server_name}/api/open-metadata/classification-explorer"
         )
 
         # Default entity label for formatter when not specified
@@ -204,8 +173,7 @@ class ClassificationExplorer(ServerClient):
         if classification_name not in ["Confidence", "Criticality", "Confidentiality", "Impact", "Retention"]:
             print("Invalid classification name. Must be one of Confidence, Criticality, Confidentiality, Impact, Retention")
             raise PyegeriaException(context="Invalid classification name")
-        url = (f"{self.platform_url}/servers/{self.view_server}/api/open-metadata/"
-               f"classification-explorer/elements/by-{classification_name.lower()}")
+        url = (f"{self.classification_command_root}/elements/by-{classification_name.lower()}")
 
         response = await self._async_get_level_identifier_query_body_request(
             url=url, _gen_output=self._generate_referenceable_output, output_format=output_format,
@@ -328,8 +296,7 @@ class ClassificationExplorer(ServerClient):
 
         """
 
-        url = (f"{self.platform_url}/servers/{self.view_server}/api/open-metadata/"
-               f"classification-explorer/elements/by-security-tags")
+        url = (f"{self.classification_command_root}/elements/by-security-tags")
 
         response = await self._async_make_request("POST", url, body_slimmer(body), **kwargs)
         elements = response.json().get("elements", None)
@@ -460,8 +427,7 @@ class ClassificationExplorer(ServerClient):
 
         """
 
-        url = (f"{self.platform_url}/servers/{self.view_server}/api/open-metadata/"
-               f"classification-explorer/elements/by-ownership")
+        url = (f"{self.classification_command_root}/elements/by-ownership")
 
         response = await self._async_get_name_request(
             url=url,
@@ -586,8 +552,7 @@ class ClassificationExplorer(ServerClient):
 
         """
 
-        url = (f"{self.platform_url}/servers/{self.view_server}/api/open-metadata/"
-               f"classification-explorer/elements/by-ownership")
+        url = (f"{self.classification_command_root}/elements/by-ownership")
 
         response = await self._async_get_name_request(
             url=url,
@@ -717,8 +682,7 @@ class ClassificationExplorer(ServerClient):
 
         """
 
-        url = (f"{self.platform_url}/servers/{self.view_server}/api/open-metadata/"
-               f"classification-explorer/elements/by-digital-resource-origin")
+        url = (f"{self.classification_command_root}/elements/by-digital-resource-origin")
 
         response = await self._async_make_request("POST", url, body_slimmer(body), time_out=default_time_out, **kwargs)
         elements = response.json().get("elements", None)
@@ -855,8 +819,7 @@ class ClassificationExplorer(ServerClient):
 
         """
 
-        url = (f"{self.platform_url}/servers/{self.view_server}/api/open-metadata/"
-               f"classification-explorer/glossaries/terms/by-semantic-assignment/{element_guid}")
+        url = (f"{self.classification_command_root}/glossaries/terms/by-semantic-assignment/{element_guid}")
 
         response = await self._async_make_request("POST", url, body_slimmer(body), time_out=default_time_out, **kwargs)
         elements = response.json().get("elements", None)
@@ -940,7 +903,7 @@ class ClassificationExplorer(ServerClient):
         return response
 
     @dynamic_catch
-    async def _async_get_semantic_asignees(
+    async def _async_get_semantic_assignees(
             self,
             term_guid: str,
             body: dict,
@@ -998,8 +961,7 @@ class ClassificationExplorer(ServerClient):
 
         """
 
-        url = (f"{self.platform_url}/servers/{self.view_server}/api/open-metadata/"
-               f"classification-explorer/glossaries/elements/by-semantic-assignment/{term_guid}")
+        url = (f"{self.classification_command_root}/glossaries/elements/by-semantic-assignment/{term_guid}")
 
         response = await self._async_make_request("POST", url, body_slimmer(body), time_out=default_time_out, **kwargs)
         elements = response.json().get("elements", None)
@@ -1017,7 +979,7 @@ class ClassificationExplorer(ServerClient):
         return elements
 
     @dynamic_catch
-    def get_semantic_asignees(
+    def get_semantic_assignees(
             self,
             term_guid: str,
             body: dict,
@@ -1077,8 +1039,8 @@ class ClassificationExplorer(ServerClient):
 
         loop = asyncio.get_event_loop()
         response = loop.run_until_complete(
-            self._async_get_semantic_asignees(term_guid, body, output_format, report_spec, **kwargs
-                                             )
+            self._async_get_semantic_assignees(term_guid, body, output_format, report_spec, **kwargs
+                                               )
         )
         return response
 
@@ -1139,8 +1101,7 @@ class ClassificationExplorer(ServerClient):
 
         """
 
-        url = (f"{self.platform_url}/servers/{self.view_server}/api/open-metadata/"
-               f"classification-explorer/elements/governed-by/{gov_def_guid}")
+        url = (f"{self.classification_command_root}/elements/governed-by/{gov_def_guid}")
 
         response = await self._async_get_results_body_request(url, "Referenceable", self._generate_referenceable_output,
                                                               start_from, page_size, output_format,
@@ -1268,8 +1229,7 @@ class ClassificationExplorer(ServerClient):
 
         """
 
-        url = (f"{self.platform_url}/servers/{self.view_server}/api/open-metadata/"
-               f"classification-explorer/elements/{element_guid}/governed-by")
+        url = (f"{self.classification_command_root}/elements/{element_guid}/governed-by")
 
         response = await self._async_get_results_body_request(url, "Referenceable", self._generate_referenceable_output,
                                                               start_from, page_size, output_format,
@@ -1400,8 +1360,7 @@ class ClassificationExplorer(ServerClient):
 
         """
 
-        url = (f"{self.platform_url}/servers/{self.view_server}/api/open-metadata/"
-               f"classification-explorer/glossaries/elements/{element_guid}/source")
+        url = (f"{self.classification_command_root}/glossaries/elements/{element_guid}/source")
 
         response = await self._async_get_results_body_request(url, "Referenceable", self._generate_referenceable_output,
                                                               start_from, page_size, output_format,
@@ -1534,8 +1493,7 @@ class ClassificationExplorer(ServerClient):
 
         """
 
-        url = (f"{self.platform_url}/servers/{self.view_server}/api/open-metadata/"
-               f"classification-explorer/glossaries/elements/{element_guid}/sourced-from")
+        url = (f"{self.classification_command_root}/glossaries/elements/{element_guid}/sourced-from")
 
         response = await self._async_get_results_body_request(url, "Referenceable", self._generate_referenceable_output,
                                                               start_from, page_size, output_format,
@@ -1665,8 +1623,7 @@ class ClassificationExplorer(ServerClient):
 
         """
 
-        url = (f"{self.platform_url}/servers/{self.view_server}/api/open-metadata/"
-               f"classification-explorer/elements/{element_guid}/scoped-by")
+        url = (f"{self.classification_command_root}/elements/{element_guid}/scoped-by")
 
         response = await self._async_get_results_body_request(url, "Referenceable", self._generate_referenceable_output,
                                                               start_from, page_size, output_format,
@@ -1794,8 +1751,7 @@ class ClassificationExplorer(ServerClient):
 
         """
 
-        url = (f"{self.platform_url}/servers/{self.view_server}/api/open-metadata/"
-               f"classification-explorer/glossaries/elements/scoped-by/{scope_guid}")
+        url = (f"{self.classification_command_root}/glossaries/elements/scoped-by/{scope_guid}")
 
         response = await self._async_get_results_body_request(url, "Referenceable", self._generate_referenceable_output,
                                                               start_from, page_size, output_format,
@@ -1921,8 +1877,7 @@ class ClassificationExplorer(ServerClient):
 
         """
 
-        url = (f"{self.platform_url}/servers/{self.view_server}/api/open-metadata/"
-               f"classification-explorer/glossaries/elements/licenses/{license_type_guid}")
+        url = (f"{self.classification_command_root}/glossaries/elements/licenses/{license_type_guid}")
 
         response = await self._async_get_results_body_request(url, "Referenceable", self._generate_referenceable_output,
                                                               start_from, page_size, output_format,
@@ -2049,8 +2004,7 @@ class ClassificationExplorer(ServerClient):
 
         """
 
-        url = (f"{self.platform_url}/servers/{self.view_server}/api/open-metadata/"
-               f"classification-explorer/glossaries/elements/{element_guid}/licenses")
+        url = (f"{self.classification_command_root}/glossaries/elements/{element_guid}/licenses")
 
         response = await self._async_get_results_body_request(url, "Referenceable", self._generate_referenceable_output,
                                                               start_from, page_size, output_format,
@@ -2178,8 +2132,7 @@ class ClassificationExplorer(ServerClient):
 
         """
 
-        url = (f"{self.platform_url}/servers/{self.view_server}/api/open-metadata/"
-               f"classification-explorer/glossaries/elements/certifications/{certification_type_guid}")
+        url = (f"{self.classification_command_root}/glossaries/elements/certifications/{certification_type_guid}")
 
         response = await self._async_get_results_body_request(url, "Referenceable", self._generate_referenceable_output,
                                                               start_from, page_size, output_format,
@@ -2308,8 +2261,7 @@ class ClassificationExplorer(ServerClient):
 
         """
 
-        url = (f"{self.platform_url}/servers/{self.view_server}/api/open-metadata/"
-               f"classification-explorer/elements/{element_guid}/certifications")
+        url = (f"{self.classification_command_root}/elements/{element_guid}/certifications")
 
         response = await self._async_get_results_body_request(url, "Referenceable", self._generate_referenceable_output,
                                                               start_from, page_size, output_format,
@@ -2424,7 +2376,7 @@ class ClassificationExplorer(ServerClient):
         PyegeriaException
         """
 
-        url = f"{base_path(self, self.view_server)}/elements/by-type"
+        url = f"{self.classification_command_root}/elements/by-type"
         return await self._async_get_results_body_request(
             url,
             metadata_element_type,
@@ -2602,7 +2554,7 @@ class ClassificationExplorer(ServerClient):
             raise PyegeriaInvalidParameterException(context=context)
 
 
-        url = f"{base_path(self, self.view_server)}/elements/by-exact-property-value"
+        url = f"{self.classification_command_root}/elements/by-exact-property-value"
 
         return await self._async_find_request(url, "Referenceable", self._generate_referenceable_output, property_value,
                                               starts_with=starts_with, ends_with=ends_with, ignore_case=ignore_case,
@@ -2872,20 +2824,20 @@ class ClassificationExplorer(ServerClient):
             "forDuplicateProcessing": None
         }
         """
-        if body is None:
-            body = {
-                "class": "FindPropertyNamesProperties",
-                "metadataElementTypeName": metadata_element_type_name,
-                "propertyValue": property_value,
-                "propertyNames": property_names,
-                "startFrom": start_from,
-                "pageSize": page_size,
-                "forLineage": None,
-                "forDuplicateProcessing": None,
-                "effectiveTime": effective_time,
-            }
+        # if body is None:
+        #     body = {
+        #         "class": "FindPropertyNamesProperties",
+        #         "metadataElementTypeName": metadata_element_type_name,
+        #         "propertyValue": property_value,
+        #         "propertyNames": property_names,
+        #         "startFrom": start_from,
+        #         "pageSize": page_size,
+        #         "forLineage": None,
+        #         "forDuplicateProcessing": None,
+        #         "effectiveTime": effective_time,
+        #     }
 
-        url = f"{self.platform_url}/servers/{self.view_server}/api/open-metadata/classification-explorer/elements/by-property-value-search"
+        url = f"{self.classification_command_root}/elements/by-property-value-search"
 
         params = {
             'starts_with': starts_with,
@@ -3019,7 +2971,6 @@ class ClassificationExplorer(ServerClient):
                 graph_query_depth=graph_query_depth,
                 governance_zone_filter=governance_zone_filter,
                 as_of_time=as_of_time,
-                effective_time=effective_time,
                 relationship_page_size=relationship_page_size,
                 limit_results_by_status=limit_results_by_status,
                 sequencing_order=sequencing_order,
@@ -3075,8 +3026,7 @@ class ClassificationExplorer(ServerClient):
             guid = kwargs.pop("element_guid")
 
         element_type_name = element_type_name if element_type_name else "Referenceable"
-        url = (f"{self.platform_url}/servers/{self.view_server}/api/open-metadata/"
-               f"classification-explorer/elements/{guid}")
+        url = (f"{self.classification_command_root}/elements/{guid}")
 
         params = {
             'graph_query_depth': graph_query_depth,
@@ -3196,8 +3146,7 @@ class ClassificationExplorer(ServerClient):
                 "propertyName": property_name,
             }
 
-        url = (f"{self.platform_url}/servers/{self.view_server}/api/open-metadata/"
-               f"classification-explorer/elements/by-unique-name")
+        url = (f"{self.classification_command_root}/elements/by-unique-name")
 
         response: Response = await self._async_make_request(
             "POST", url, body_slimmer(body), **kwargs
@@ -3292,8 +3241,7 @@ class ClassificationExplorer(ServerClient):
                 "propertyName": property_name,
             }
 
-        url = (f"{self.platform_url}/servers/{self.view_server}/api/open-metadata/"
-               f"classification-explorer/elements/guid-by-unique-name")
+        url = (f"{self.classification_command_root}/elements/guid-by-unique-name")
 
         response: Response = await self._async_make_request(
             "POST", url, body_slimmer(body), **kwargs
@@ -3458,7 +3406,7 @@ class ClassificationExplorer(ServerClient):
             report_spec ():
         """
 
-        url = f"{base_path(self, self.view_server)}/elements/by-classification/{classification_name}"
+        url = f"{self.classification_command_root}/elements/by-classification/{classification_name}"
 
         return await self._async_get_results_body_request(
             url,
@@ -3641,7 +3589,7 @@ class ClassificationExplorer(ServerClient):
         """
 
         url = (
-            f"{base_path(self, self.view_server)}/elements/by-classification/{classification_name}/"
+            f"{self.classification_command_root}/elements/by-classification/{classification_name}/"
             f"with-exact-property-value"
         )
         return await self._async_find_request(url, "Referenceable", self._generate_referenceable_output, property_value,
@@ -3874,21 +3822,21 @@ class ClassificationExplorer(ServerClient):
         if property_value == "*":
             property_value = None
 
-        if body is None:
-            body = {
-                "class": "FindPropertyNamesProperties",
-                "metadataElementTypeName": metadata_element_type_name,
-                "propertyValue": property_value,
-                "propertyNames": property_names,
-                "effectiveTime": effective_time,
-                "forLineage": None,
-                "forDuplicateProcessing": None,
-                "startFrom": start_from,
-                "pageSize": page_size,
-            }
+        # if body is None:
+        #     body = {
+        #         "class": "FindPropertyNamesProperties",
+        #         "metadataElementTypeName": metadata_element_type_name,
+        #         "propertyValue": property_value,
+        #         "propertyNames": property_names,
+        #         "effectiveTime": effective_time,
+        #         "forLineage": None,
+        #         "forDuplicateProcessing": None,
+        #         "startFrom": start_from,
+        #         "pageSize": page_size,
+        #     }
 
         url = (
-            f"{base_path(self, self.view_server)}/elements/by-classification/{classification_name}/"
+            f"{self.classification_command_root}/elements/by-classification/{classification_name}/"
             f"with-property-value-search"
         )
 
@@ -4015,7 +3963,6 @@ class ClassificationExplorer(ServerClient):
                 graph_query_depth=graph_query_depth,
                 governance_zone_filter=governance_zone_filter,
                 as_of_time=as_of_time,
-                effective_time=effective_time,
                 relationship_page_size=relationship_page_size,
                 limit_results_by_status=limit_results_by_status,
                 sequencing_order=sequencing_order,
@@ -4086,11 +4033,11 @@ class ClassificationExplorer(ServerClient):
 
         if relationship_type is None:
             url = (
-                f"{base_path(self, self.view_server)}/elements/{element_guid}/by-relationship?startAtEnd={start_at_end}"
+                f"{self.classification_command_root}/elements/{element_guid}/by-relationship?startAtEnd={start_at_end}"
             )
         else:
             url = (
-                f"{base_path(self, self.view_server)}/elements/{element_guid}/by-relationship/"
+                f"{self.classification_command_root}/elements/{element_guid}/by-relationship/"
                 f"{relationship_type}?startAtEnd={start_at_end}"
             )
 
@@ -4283,7 +4230,7 @@ class ClassificationExplorer(ServerClient):
         """
 
         url = (
-            f"{base_path(self, self.view_server)}/elements/{element_guid}/by-relationship/"
+            f"{self.classification_command_root}/elements/{element_guid}/by-relationship/"
             f"{relationship_type}/with-exact-property-value?startAtEnd={start_at_end}"
         )
 
@@ -4514,7 +4461,6 @@ class ClassificationExplorer(ServerClient):
                 "metadataElementTypeName": metadata_element_type_name,
                 "propertyValue": property_value,
                 "propertyNames": property_names,
-                "effectiveTime": effective_time,
                 "forLineage": None,
                 "forDuplicateProcessing": None,
                 "startFrom": start_from,
@@ -4522,7 +4468,7 @@ class ClassificationExplorer(ServerClient):
             }
 
         url = (
-            f"{base_path(self, self.view_server)}/elements/{element_guid}/by-relationship/"
+            f"{self.classification_command_root}/elements/{element_guid}/by-relationship/"
             f"{relationship_type}/with-property-value-search?startAtEnd={start_at_end}"
         )
 
@@ -4725,9 +4671,9 @@ class ClassificationExplorer(ServerClient):
             }
 
         if relationship_type is None:
-            url = f"{base_path(self, self.view_server)}/relationships"
+            url = f"{self.classification_command_root}/relationships"
         else:
-            url = f"{base_path(self, self.view_server)}/relationships/{relationship_type}"
+            url = f"{self.classification_command_root}/relationships/{relationship_type}"
 
         response: Response = await self._async_make_request(
             "POST", url, body_slimmer(body), **kwargs
@@ -4869,12 +4815,12 @@ class ClassificationExplorer(ServerClient):
 
         if relationship_type is None:
             url = (
-                f"{base_path(self, self.view_server)}/relationships/"
+                f"{self.classification_command_root}/relationships/"
                 f"with-exact-property-value"
             )
         else:
             url = (
-                f"{base_path(self, self.view_server)}/relationships/"
+                f"{self.classification_command_root}/relationships/"
                 f"{relationship_type}/with-exact-property-value"
             )
 
@@ -5080,12 +5026,12 @@ class ClassificationExplorer(ServerClient):
 
         if relationship_type is None:
             url = (
-                f"{base_path(self, self.view_server)}/relationships/"
+                f"{self.classification_command_root}/relationships/"
                 f"with-property-value-search"
             )
         else:
             url = (
-                f"{base_path(self, self.view_server)}/relationships/"
+                f"{self.classification_command_root}/relationships/"
                 f"{relationship_type}/with-property-value-search"
             )
 
@@ -5101,7 +5047,6 @@ class ClassificationExplorer(ServerClient):
                                               include_only_classified_elements=include_only_classified_elements,
                                               graph_query_depth=graph_query_depth,
                                               governance_zone_filter=governance_zone_filter, as_of_time=as_of_time,
-                                              effective_time=effective_time,
                                               relationship_page_size=relationship_page_size,
                                               limit_results_by_status=limit_results_by_status,
                                               sequencing_order=sequencing_order,
@@ -5223,7 +5168,6 @@ class ClassificationExplorer(ServerClient):
                 graph_query_depth=graph_query_depth,
                 governance_zone_filter=governance_zone_filter,
                 as_of_time=as_of_time,
-                effective_time=effective_time,
                 relationship_page_size=relationship_page_size,
                 limit_results_by_status=limit_results_by_status,
                 sequencing_order=sequencing_order,
@@ -5294,7 +5238,7 @@ class ClassificationExplorer(ServerClient):
             "forDuplicateProcessing": for_duplicate_processing,
         }
 
-        url = f"{base_path(self, self.view_server)}/guids/{guid}"
+        url = f"{self.classification_command_root}/guids/{guid}"
         response: Response = await self._async_make_request(
             "POST", url, body_slimmer(body), time_out=time_out, **kwargs
         )
@@ -5419,7 +5363,7 @@ class ClassificationExplorer(ServerClient):
         """
 
         url = (
-            f"{base_path(self, self.view_server)}/elements/{element_guid}/confidence"
+            f"{self.classification_command_root}/elements/{element_guid}/confidence"
         )
 
         await self._async_new_classification_request(
@@ -5547,7 +5491,7 @@ class ClassificationExplorer(ServerClient):
         """
 
         url = (
-            f"{base_path(self, self.view_server)}/elements/{element_guid}/confidence/remove"
+            f"{self.classification_command_root}/elements/{element_guid}/confidence/remove"
             f""
         )
         if body is None:
@@ -5687,7 +5631,7 @@ class ClassificationExplorer(ServerClient):
         """
 
         url = (
-            f"{base_path(self, self.view_server)}/elements/{element_guid}/confidentiality"
+            f"{self.classification_command_root}/elements/{element_guid}/confidentiality"
         )
 
         await self._async_new_classification_request(
@@ -5816,7 +5760,7 @@ class ClassificationExplorer(ServerClient):
         """
 
         url = (
-            f"{base_path(self, self.view_server)}/elements/{element_guid}/confidentiality/remove"
+            f"{self.classification_command_root}/elements/{element_guid}/confidentiality/remove"
             f""
         )
 
@@ -5951,7 +5895,7 @@ class ClassificationExplorer(ServerClient):
         """
 
         url = (
-            f"{base_path(self, self.view_server)}/elements/{element_guid}/impact"
+            f"{self.classification_command_root}/elements/{element_guid}/impact"
         )
 
         await self._async_new_classification_request(
@@ -6079,7 +6023,7 @@ class ClassificationExplorer(ServerClient):
         """
 
         url = (
-            f"{base_path(self, self.view_server)}/elements/{element_guid}/impact/remove"
+            f"{self.classification_command_root}/elements/{element_guid}/impact/remove"
             f""
         )
 
@@ -6214,7 +6158,7 @@ class ClassificationExplorer(ServerClient):
         """
 
         url = (
-            f"{base_path(self, self.view_server)}/elements/{element_guid}/criticality"
+            f"{self.classification_command_root}/elements/{element_guid}/criticality"
         )
 
         await self._async_new_classification_request(
@@ -6341,7 +6285,7 @@ class ClassificationExplorer(ServerClient):
         """
 
         url = (
-            f"{base_path(self, self.view_server)}/elements/{element_guid}/criticality/remove"
+            f"{self.classification_command_root}/elements/{element_guid}/criticality/remove"
             f""
         )
 
@@ -6466,7 +6410,7 @@ class ClassificationExplorer(ServerClient):
         """
 
         url = (
-            f"{base_path(self, self.view_server)}/elements/{element_guid}/governed-by/definition/{definition_guid}/attach"
+            f"{self.classification_command_root}/elements/{element_guid}/governed-by/definition/{definition_guid}/attach"
             f""
         )
 
@@ -6578,7 +6522,7 @@ class ClassificationExplorer(ServerClient):
         """
 
         url = (
-            f"{base_path(self, self.view_server)}/elements/{element_guid}/governed-by/definition/"
+            f"{self.classification_command_root}/elements/{element_guid}/governed-by/definition/"
             f"{definition_guid}/detach"
         )
 
@@ -6659,7 +6603,7 @@ class ClassificationExplorer(ServerClient):
 
         """
 
-        url = f"{base_path(self, self.view_server)}/elements/{element_guid}/scoped-by/{scoped_by_guid}/attach"
+        url = f"{self.classification_command_root}/elements/{element_guid}/scoped-by/{scoped_by_guid}/attach"
 
         await self._async_new_relationship_request(url, ['ScopedBy'], body)
 
@@ -6724,7 +6668,7 @@ class ClassificationExplorer(ServerClient):
 
         """
 
-        url = f"{base_path(self, self.view_server)}/elements/{element_guid}/scoped-by/{scoped_by_guid}/detach"
+        url = f"{self.classification_command_root}/elements/{element_guid}/scoped-by/{scoped_by_guid}/detach"
 
 
         await self._async_delete_relationship_request(url, body_slimmer(body))
@@ -6810,7 +6754,7 @@ class ClassificationExplorer(ServerClient):
         """
 
         url = (
-            f"{base_path(self, self.view_server)}/elements/{element_guid}/assigned-to-actor/{actor_guid}/attach"
+            f"{self.classification_command_root}/elements/{element_guid}/assigned-to-actor/{actor_guid}/attach"
         )
 
         await self._async_new_relationship_request(url, body=body)
@@ -6915,7 +6859,7 @@ class ClassificationExplorer(ServerClient):
         """
 
         url = (
-            f"{base_path(self, self.view_server)}/elements/{element_guid}/assigned-to-actor/{actor_guid}/detach"
+            f"{self.classification_command_root}/elements/{element_guid}/assigned-to-actor/{actor_guid}/detach"
         )
 
         await self._async_delete_relationship_request(url, body, cascade_delete=cascade_delete)
@@ -7035,7 +6979,7 @@ class ClassificationExplorer(ServerClient):
 
         """
 
-        url = f"{base_path(self, self.view_server)}/elements/{element_guid}/certification-types/{certification_type_guid}/certify"
+        url = f"{self.classification_command_root}/elements/{element_guid}/certification-types/{certification_type_guid}/certify"
 
         response = await self._async_make_request("POST",url, body_slimmer(body))
         return response.json().get('guid','Relationship was not created')
@@ -7161,7 +7105,7 @@ class ClassificationExplorer(ServerClient):
             }
             """
 
-        url = f"{base_path(self, self.view_server)}/certifications/{certification_guid}/update"
+        url = f"{self.classification_command_root}/certifications/{certification_guid}/update"
 
         await self._async_update_relationship_request(url, None, body_slimmer(body))
 
@@ -7249,7 +7193,7 @@ class ClassificationExplorer(ServerClient):
 
         """
 
-        url = f"{base_path(self, self.view_server)}/certifications/{certification_guid}/delete"
+        url = f"{self.classification_command_root}/certifications/{certification_guid}/delete"
         await self._async_delete_relationship_request(url, body_slimmer(body))
 
     def decertify_element(
@@ -7343,7 +7287,7 @@ class ClassificationExplorer(ServerClient):
 
         """
 
-        url = f"{base_path(self, self.view_server)}/elements/{element_guid}/license-types/{license_type_guid}/license"
+        url = f"{self.classification_command_root}/elements/{element_guid}/license-types/{license_type_guid}/license"
 
         response = await self._async_make_request("POST",url, body_slimmer(body))
         return response.json().get('guid','Relationship was not created')
@@ -7473,7 +7417,7 @@ class ClassificationExplorer(ServerClient):
 
         """
 
-        url = f"{base_path(self, self.view_server)}/licenses/{license_guid}/update"
+        url = f"{self.classification_command_root}/licenses/{license_guid}/update"
 
         await self._async_update_relationship_request(url, None, body_slimmer(body))
 
@@ -7568,7 +7512,7 @@ class ClassificationExplorer(ServerClient):
 
         """
 
-        url = f"{base_path(self, self.view_server)}/licenses/{license_guid}/delete"
+        url = f"{self.classification_command_root}/licenses/{license_guid}/delete"
         await self._async_delete_relationship_request(url, body_slimmer(body))
 
     def unlicense_element(
@@ -7656,7 +7600,7 @@ class ClassificationExplorer(ServerClient):
         """
 
         url = (
-            f"{base_path(self, self.view_server)}/elements/{element_guid}/ownership"
+            f"{self.classification_command_root}/elements/{element_guid}/ownership"
         )
 
         await self._async_new_classification_request(
@@ -7761,7 +7705,7 @@ class ClassificationExplorer(ServerClient):
         """
 
         url = (
-            f"{base_path(self, self.view_server)}/elements/{element_guid}/ownership/remove"
+            f"{self.classification_command_root}/elements/{element_guid}/ownership/remove"
             f""
         )
 
@@ -7866,7 +7810,7 @@ class ClassificationExplorer(ServerClient):
 
         """
 
-        url = f"{base_path(self, self.view_server)}/elements/{element_guid}/digital-resource-origin"
+        url = f"{self.classification_command_root}/elements/{element_guid}/digital-resource-origin"
         await self._async_new_classification_request(
             url, prop=["DigitalResourceOriginProperties"], body=body
         )
@@ -7960,7 +7904,7 @@ class ClassificationExplorer(ServerClient):
 
         """
 
-        url = f"{base_path(self, self.view_server)}/elements/{element_guid}/digital-resource-origin/remove"
+        url = f"{self.classification_command_root}/elements/{element_guid}/digital-resource-origin/remove"
 
         await self._async_delete_classification_request(
              url, body
@@ -8048,7 +7992,7 @@ class ClassificationExplorer(ServerClient):
         }
         """
 
-        url = f"{base_path(self, self.view_server)}/elements/{element_guid}/zone-membership"
+        url = f"{self.classification_command_root}/elements/{element_guid}/zone-membership"
         await self._async_new_classification_request(
             url, prop=["ZoneMembershipProperties"], body=body
         )
@@ -8139,7 +8083,7 @@ class ClassificationExplorer(ServerClient):
 
         """
 
-        url = f"{base_path(self, self.view_server)}/elements/{element_guid}/zone-membership/remove"
+        url = f"{self.classification_command_root}/elements/{element_guid}/zone-membership/remove"
 
         await self._async_delete_classification_request(
              url, body
@@ -8241,7 +8185,7 @@ class ClassificationExplorer(ServerClient):
         """
 
         url = (
-            f"{base_path(self, self.view_server)}/elements/{element_guid}/retention"
+            f"{self.classification_command_root}/elements/{element_guid}/retention"
         )
 
         await self._async_new_classification_request(
@@ -8373,7 +8317,7 @@ class ClassificationExplorer(ServerClient):
         """
 
         url = (
-            f"{base_path(self, self.view_server)}/elements/{element_guid}/retention/remove"
+            f"{self.classification_command_root}/elements/{element_guid}/retention/remove"
             f""
         )
 
@@ -8509,7 +8453,7 @@ class ClassificationExplorer(ServerClient):
         """
 
         url = (
-            f"{base_path(self, self.view_server)}/elements/{element_guid}/governance-expectations"
+            f"{self.classification_command_root}/elements/{element_guid}/governance-expectations"
         )
 
         await self._async_new_classification_request(
@@ -8638,7 +8582,7 @@ class ClassificationExplorer(ServerClient):
         """
 
         url = (
-            f"{base_path(self, self.view_server)}/elements/{element_guid}/governance-expectations/remove"
+            f"{self.classification_command_root}/elements/{element_guid}/governance-expectations/remove"
             f""
         )
 
@@ -8771,7 +8715,7 @@ class ClassificationExplorer(ServerClient):
         """
 
         url = (
-            f"{base_path(self, self.view_server)}/elements/{element_guid}/governance-expectations/update"
+            f"{self.classification_command_root}/elements/{element_guid}/governance-expectations/update"
         )
 
         await self._async_update_element_body_request(
@@ -8907,7 +8851,7 @@ class ClassificationExplorer(ServerClient):
         """
 
         url = (
-            f"{base_path(self, self.view_server)}/elements/{element_guid}/governance-measurements"
+            f"{self.classification_command_root}/elements/{element_guid}/governance-measurements"
         )
 
         await self._async_new_classification_request(
@@ -9045,7 +8989,7 @@ class ClassificationExplorer(ServerClient):
         """
 
         url = (
-            f"{base_path(self, self.view_server)}/elements/{element_guid}/governance-measurements/update"
+            f"{self.classification_command_root}/elements/{element_guid}/governance-measurements/update"
         )
 
         await self._async_update_element_body_request(
@@ -9175,7 +9119,7 @@ class ClassificationExplorer(ServerClient):
         """
 
         url = (
-            f"{base_path(self, self.view_server)}/elements/{element_guid}/governance-measurements/remove"
+            f"{self.classification_command_root}/elements/{element_guid}/governance-measurements/remove"
         )
 
         if body is None:
@@ -9304,7 +9248,7 @@ class ClassificationExplorer(ServerClient):
         """
 
         url = (
-            f"{base_path(self, self.view_server)}/elements/{element_guid}/data-scope"
+            f"{self.classification_command_root}/elements/{element_guid}/data-scope"
         )
 
         await self._async_new_classification_request(
@@ -9437,7 +9381,7 @@ class ClassificationExplorer(ServerClient):
         """
 
         url = (
-            f"{base_path(self, self.view_server)}/elements/{element_guid}/data-scope/update"
+            f"{self.classification_command_root}/elements/{element_guid}/data-scope/update"
         )
 
         await self._async_update_element_body_request(
@@ -9567,7 +9511,7 @@ class ClassificationExplorer(ServerClient):
         """
 
         url = (
-            f"{base_path(self, self.view_server)}/elements/{element_guid}/data-scope/remove"
+            f"{self.classification_command_root}/elements/{element_guid}/data-scope/remove"
         )
 
         if body is None:
@@ -9696,7 +9640,7 @@ class ClassificationExplorer(ServerClient):
         """
 
         url = (
-            f"{base_path(self, self.view_server)}/elements/{element_guid}/security-tags"
+            f"{self.classification_command_root}/elements/{element_guid}/security-tags"
         )
 
         await self._async_new_classification_request(
@@ -9820,7 +9764,7 @@ class ClassificationExplorer(ServerClient):
         """
 
         url = (
-            f"{base_path(self, self.view_server)}/elements/{element_guid}/security-tags/remove"
+            f"{self.classification_command_root}/elements/{element_guid}/security-tags/remove"
             f""
         )
 
@@ -9941,7 +9885,7 @@ class ClassificationExplorer(ServerClient):
         """
 
         url = (
-            f"{base_path(self, self.view_server)}/elements/{element_guid}/search-keywords"
+            f"{self.classification_command_root}/elements/{element_guid}/search-keywords"
         )
 
         return await self._async_create_attachment_body_request(
@@ -10046,7 +9990,7 @@ class ClassificationExplorer(ServerClient):
         """
 
         url = (
-            f"{base_path(self, self.view_server)}/search-keywords/{search_keyword_guid}/update"
+            f"{self.classification_command_root}/search-keywords/{search_keyword_guid}/update"
         )
 
         await self._async_update_element_body_request(
@@ -10136,7 +10080,7 @@ class ClassificationExplorer(ServerClient):
         """
 
         url = (
-            f"{base_path(self, self.view_server)}/search-keywords/{search_keyword_guid}/remove"
+            f"{self.classification_command_root}/search-keywords/{search_keyword_guid}/remove"
         )
 
         await self._async_delete_element_request(url)
@@ -10225,7 +10169,7 @@ class ClassificationExplorer(ServerClient):
         """
 
         url = (
-            f"{base_path(self, self.view_server)}/elements/{element_guid}/known-duplicate"
+            f"{self.classification_command_root}/elements/{element_guid}/known-duplicate"
         )
 
         await self._async_new_classification_request(
@@ -10336,7 +10280,7 @@ class ClassificationExplorer(ServerClient):
         """
 
         url = (
-            f"{base_path(self, self.view_server)}/elements/{element_guid}/known-duplicate/remove"
+            f"{self.classification_command_root}/elements/{element_guid}/known-duplicate/remove"
         )
 
         if body is None:
@@ -10467,7 +10411,7 @@ class ClassificationExplorer(ServerClient):
         """
 
         url = (
-            f"{base_path(self, self.view_server)}/elements/{element_guid}/peer-duplicate/{peer_duplicate_guid}/attach"
+            f"{self.classification_command_root}/elements/{element_guid}/peer-duplicate/{peer_duplicate_guid}/attach"
         )
 
         return await self._async_new_relationship_request(
@@ -10588,7 +10532,7 @@ class ClassificationExplorer(ServerClient):
         """
 
         url = (
-            f"{base_path(self, self.view_server)}/elements/{element_guid}/peer-duplicate/{peer_duplicate_guid}/detach"
+            f"{self.classification_command_root}/elements/{element_guid}/peer-duplicate/{peer_duplicate_guid}/detach"
         )
 
         await self._async_delete_classification_request(url, body)
@@ -10703,7 +10647,7 @@ class ClassificationExplorer(ServerClient):
         """
 
         url = (
-            f"{base_path(self, self.view_server)}/elements/{element_guid}/consolidated-duplicate"
+            f"{self.classification_command_root}/elements/{element_guid}/consolidated-duplicate"
         )
 
         await self._async_new_classification_request(
@@ -10819,7 +10763,7 @@ class ClassificationExplorer(ServerClient):
         """
 
         url = (
-            f"{base_path(self, self.view_server)}/elements/{element_guid}/consolidated-duplicate/remove"
+            f"{self.classification_command_root}/elements/{element_guid}/consolidated-duplicate/remove"
         )
 
         if body is None:
@@ -10943,7 +10887,7 @@ class ClassificationExplorer(ServerClient):
         """
 
         url = (
-            f"{base_path(self, self.view_server)}/elements/{element_guid}/consolidated-duplicate-source/{source_element_guid}/attach"
+            f"{self.classification_command_root}/elements/{element_guid}/consolidated-duplicate-source/{source_element_guid}/attach"
         )
 
         return await self._async_new_relationship_request(
@@ -11059,7 +11003,7 @@ class ClassificationExplorer(ServerClient):
         """
 
         url = (
-            f"{base_path(self, self.view_server)}/elements/{element_guid}/consolidated-duplicate-source/{source_element_guid}/detach"
+            f"{self.classification_command_root}/elements/{element_guid}/consolidated-duplicate-source/{source_element_guid}/detach"
         )
 
         await self._async_delete_relationship_request(url, body)
@@ -11181,7 +11125,7 @@ class ClassificationExplorer(ServerClient):
         """
 
         url = (
-            f"{base_path(self, self.view_server)}/elements/{element_guid}/semantic-assignment/terms/{glossary_term_guid}/attach"
+            f"{self.classification_command_root}/elements/{element_guid}/semantic-assignment/terms/{glossary_term_guid}/attach"
         )
 
         return await self._async_new_relationship_request(
@@ -11314,7 +11258,7 @@ class ClassificationExplorer(ServerClient):
         """
 
         url = (
-            f"{base_path(self, self.view_server)}/elements/{element_guid}/semantic-assignment/terms/{glossary_term_guid}/detach"
+            f"{self.classification_command_root}/elements/{element_guid}/semantic-assignment/terms/{glossary_term_guid}/detach"
             f""
         )
 
@@ -11442,7 +11386,7 @@ class ClassificationExplorer(ServerClient):
         """
 
         url = (
-            f"{base_path(self, self.view_server)}/elements/{element_guid}/subject-area-member"
+            f"{self.classification_command_root}/elements/{element_guid}/subject-area-member"
         )
 
         await self._async_new_classification_request(
@@ -11548,7 +11492,7 @@ class ClassificationExplorer(ServerClient):
         """
 
         url = (
-            f"{base_path(self, self.view_server)}/elements/{element_guid}/subject-area-member"
+            f"{self.classification_command_root}/elements/{element_guid}/subject-area-member"
             f"/remove"
         )
 
@@ -11678,7 +11622,7 @@ class ClassificationExplorer(ServerClient):
         }
         """
         url = (
-            f"{base_path(self, self.view_server)}/elements/by-complex-query"
+            f"{self.classification_command_root}/elements/by-complex-query"
         )
 
         if isinstance(body, FindRequestBody):
@@ -11846,7 +11790,7 @@ class ClassificationExplorer(ServerClient):
         }
         """
         url = (
-            f"{base_path(self, self.view_server)}/authored-elements/by-search-string"
+            f"{self.classification_command_root}/authored-elements/by-search-string"
         )
 
         params = {
@@ -12019,7 +11963,7 @@ class ClassificationExplorer(ServerClient):
         }
         """
         url = (
-            f"{base_path(self, self.view_server)}/authored-elements/by-category"
+            f"{self.classification_command_root}/authored-elements/by-category"
         )
 
         if "filter_string" in kwargs:
@@ -12148,7 +12092,7 @@ class ClassificationExplorer(ServerClient):
         """
 
         url = (
-            f"{base_path(self, self.view_server)}/elements/{element_guid}"
+            f"{self.classification_command_root}/elements/{element_guid}"
             f"/supplementary-properties/{glossary_term_guid}/attach"
         )
 
@@ -12273,7 +12217,7 @@ class ClassificationExplorer(ServerClient):
         """
 
         url = (
-            f"{base_path(self, self.view_server)}/elements/{element_guid}"
+            f"{self.classification_command_root}/elements/{element_guid}"
             f"/supplementary-properties/{glossary_term_guid}/detach"
         )
 

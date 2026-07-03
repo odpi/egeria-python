@@ -240,7 +240,7 @@ def test_get_elements_by_property_value():
     # metadata_element_type = 'Project'
     # property_value = "Campaign:Clinical Trials Management"
     # metadata_element_type = "ValidValueDefinition"
-    metadata_element_type_name = "Comment"
+    metadata_element_type_name = None
     # property_value = "Unity Catalog Catalog"
     # property_names = ["name", "qualifiedName"]
     # metadata_element_type = "Asset"
@@ -248,7 +248,7 @@ def test_get_elements_by_property_value():
     # property_value = "default"
     # property_names = ["name", "qualifiedName"]
     property_names = ["name", "displayName", 'qualifiedName']
-    property_value = "PDR::Comment::My-first-comment"
+    property_value = "Vehicle model"
     # property_names = ["anchorGUID"]
     try:
         c_client = ClassificationExplorer(view_server, platform_url)
@@ -285,12 +285,12 @@ def test_find_elements_by_property_value():
     # metadata_element_type = "ValidValueDefinition"
     # metadata_element_type = None
     # metadata_element_type = "ArchiveFile"
-    open_metadata_type_name = "Project"
-    # metadata_element_type = None
+    # open_metadata_type_name = "Project"
+    open_metadata_type_name = None
     # property_names = ["name"]
     # property_value = "Set up new clinical trial"
-    property_names = ["qualifiedName"]
-    property_value = "Project::SalesForecast::GovernanceProgram::2026::1.0"
+    property_names = ["displayName"]
+    property_value = "Sustain"
 
     try:
         c_client = EgeriaTech(view_server, platform_url, user, password)
@@ -875,7 +875,7 @@ def test_get_meanings():
         c_client.close_session()
 
 
-def test_get_semantic_asignees():
+def test_get_semantic_assignees():
     try:
         c_client = ClassificationExplorer(view_server, platform_url)
         bearer_token = c_client.create_egeria_bearer_token(user, password)
@@ -883,7 +883,7 @@ def test_get_semantic_asignees():
             "class": "FilterRequestBody",
             "filter": "*",
         }
-        response = c_client.get_semantic_asignees(element_guid, body)
+        response = c_client.get_semantic_assignees(element_guid, body)
         assert True
     except PyegeriaException as e:
         print_basic_exception(e)
