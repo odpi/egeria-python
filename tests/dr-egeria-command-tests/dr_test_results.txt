@@ -1,0 +1,952 @@
+Dr. Egeria Test Run — 2026-07-02 16:48:18.463033
+
+
+### VALIDATE MODE ###
+
+================================================================================
+FILE: dr_test_glossary.md  |  DIRECTIVE: validate  |  16:48:19
+================================================================================
+v2: Processing Markdown File: /Users/dwolfson/localGit/egeria-python/tests/dr-egeria-command-tests/dr_test_glossary.md
+
+
+                                                                                    Dr. Egeria v2 Processing Summary                                                                                    
+┏━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━┳━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━┳━━━━━━━━━┳━━━━━━━┳━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━┳━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━┳━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━┓
+┃ Markdown Command              ┃ Canonical Command             ┃ Status  ┃ Found ┃ Display Name / End 1           ┃ Qualified Name / End2                   ┃ Message                                 ┃
+┡━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━╇━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━╇━━━━━━━━━╇━━━━━━━╇━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━╇━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━╇━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━┩
+│ Create Glossary               │ Create Glossary               │ SUCCESS │ No    │ Sales Forecast Glossary        │ Coco                                    │ Validated Create Glossary               │
+│                               │                               │         │       │                                │ Pharmaceuticals::Glossary::Sales-Foreca │                                         │
+│                               │                               │         │       │                                │ st-Glossary::1.0                        │                                         │
+├·······························┼·······························┼·········┼·······┼································┼·········································┼·········································┤
+│ Create Glossary               │ Create Glossary               │ SUCCESS │ No    │ Sales Forecast Domain Glossary │ Glossary::SalesForecast::Domain::1.0    │ Validated Create Glossary               │
+├·······························┼·······························┼·········┼·······┼································┼·········································┼·········································┤
+│ Update Glossary               │ Update Glossary               │ SUCCESS │ Yes   │ Sales Forecast Domain Glossary │ Glossary::SalesForecast::Domain::1.0    │ Validated Update Glossary (GUID:        │
+│                               │                               │         │       │                                │                                         │ (Planned:                               │
+│                               │                               │         │       │                                │                                         │ Glossary::SalesForecast::Domain::1.0))  │
+├·······························┼·······························┼·········┼·······┼································┼·········································┼·········································┤
+│ Create Glossary               │ Create Glossary               │ SUCCESS │ No    │ Sales Forecast Glossary        │ Coco                                    │ Validated Create Glossary               │
+│                               │                               │         │       │                                │ Pharmaceuticals::Glossary::Sales-Foreca │                                         │
+│                               │                               │         │       │                                │ st-Glossary                             │                                         │
+├·······························┼·······························┼·········┼·······┼································┼·········································┼·········································┤
+│ Create Glossary Term          │ Create Glossary Term          │ SUCCESS │ No    │ Sales Forecast                 │ Coco                                    │ Validated Create Glossary Term          │
+│                               │                               │         │       │                                │ Pharmaceuticals::Term::Sales-Forecast:: │                                         │
+│                               │                               │         │       │                                │ 1.0                                     │                                         │
+├·······························┼·······························┼·········┼·······┼································┼·········································┼·········································┤
+│ Create Folder                 │ Create Collection Folder      │ SUCCESS │ No    │ Sales Metrics                  │ CollectionFolder::SalesForecast::SalesM │ Validated Create Folder                 │
+│                               │                               │         │       │                                │ etrics::1.0                             │                                         │
+├·······························┼·······························┼·········┼·······┼································┼·········································┼·········································┤
+│ Create Glossary Term          │ Create Glossary Term          │ SUCCESS │ No    │ Pipeline Coverage Ratio        │ GlossaryTerm::SalesForecast::PipelineCo │ Validated Create Glossary Term          │
+│                               │                               │         │       │                                │ verageRatio::1.0                        │                                         │
+├·······························┼·······························┼·········┼·······┼································┼·········································┼·········································┤
+│ Create Glossary Term          │ Create Glossary Term          │ SUCCESS │ No    │ Commit Forecast                │ GlossaryTerm::SalesForecast::CommitFore │ Validated Create Glossary Term          │
+│                               │                               │         │       │                                │ cast::1.0                               │                                         │
+├·······························┼·······························┼·········┼·······┼································┼·········································┼·········································┤
+│ Create Glossary Term          │ Create Glossary Term          │ SUCCESS │ No    │ Opportunity                    │ GlossaryTerm::SalesForecast::Opportunit │ Validated Create Glossary Term          │
+│                               │                               │         │       │                                │ y::1.0                                  │                                         │
+├·······························┼·······························┼·········┼·······┼································┼·········································┼·········································┤
+│ Update Glossary Term          │ Update Glossary Term          │ SUCCESS │ Yes   │ Pipeline Coverage Ratio        │ GlossaryTerm::SalesForecast::PipelineCo │ Validated Update Glossary Term (GUID:   │
+│                               │                               │         │       │                                │ verageRatio::1.0                        │ (Planned:                               │
+│                               │                               │         │       │                                │                                         │ GlossaryTerm::SalesForecast::PipelineCo │
+│                               │                               │         │       │                                │                                         │ verageRatio::1.0))                      │
+├·······························┼·······························┼·········┼·······┼································┼·········································┼·········································┤
+│ Link Term-Term Relationship   │ Link Term-Term Relationship   │ SUCCESS │ No    │                                │                                         │ Validated Link Term-Term Relationship   │
+├·······························┼·······························┼·········┼·······┼································┼·········································┼·········································┤
+│ Attach Term-Term Relationship │ Attach Term-Term Relationship │ SUCCESS │ No    │                                │                                         │ Validated Attach Term-Term Relationship │
+├·······························┼·······························┼·········┼·······┼································┼·········································┼·········································┤
+│ Link Term-Term Relationship   │ Link Term-Term Relationship   │ SUCCESS │ No    │                                │                                         │ Validated Link Term-Term Relationship   │
+├·······························┼·······························┼·········┼·······┼································┼·········································┼·········································┤
+│ Add Term-Term Relationship    │ Add Term-Term Relationship    │ SUCCESS │ No    │                                │                                         │ Validated Add Term-Term Relationship    │
+├·······························┼·······························┼·········┼·······┼································┼·········································┼·········································┤
+│ Detach Term-Term Relationship │ Detach Term-Term Relationship │ SUCCESS │ No    │                                │                                         │ Validated Detach Term-Term Relationship │
+├·······························┼·······························┼·········┼·······┼································┼·········································┼·········································┤
+│ Unlink Term-Term Relationship │ Unlink Term-Term Relationship │ SUCCESS │ No    │                                │                                         │ Validated Unlink Term-Term Relationship │
+└───────────────────────────────┴───────────────────────────────┴─────────┴───────┴────────────────────────────────┴─────────────────────────────────────────┴─────────────────────────────────────────┘
+
+
+
+v2: Processing complete for '/Users/dwolfson/localGit/egeria-python/tests/dr-egeria-command-tests/dr_test_glossary.md'
+
+
+SCORE: 16 SUCCESS  0 FAILURE  0 WARNING
+
+================================================================================
+FILE: dr_test_governance.md  |  DIRECTIVE: validate  |  16:48:23
+================================================================================
+v2: Processing Markdown File: /Users/dwolfson/localGit/egeria-python/tests/dr-egeria-command-tests/dr_test_governance.md
+
+
+                                                                                     Dr. Egeria v2 Processing Summary                                                                                   
+┏━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━┳━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━┳━━━━━━━━━┳━━━━━━━┳━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━┳━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━┳━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+┃ Markdown Command                  ┃ Canonical Command                 ┃ Status  ┃ Found ┃ Display Name / End 1              ┃ Qualified Name / End2             ┃ Message                             
+┡━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━╇━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━╇━━━━━━━━━╇━━━━━━━╇━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━╇━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━╇━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+│ Create Business Imperative        │ Create Business Imperative        │ SUCCESS │ No    │ Sales Forecast Accuracy           │ BusinessImperative::SalesForecast │ Validated Create Business Imperative
+│                                   │                                   │         │       │                                   │ ::Accuracy::1.0                   │                                     
+├···································┼···································┼·········┼·······┼···································┼···································┼·····································
+│ Create Governance Driver          │ Create Governance Driver          │ SUCCESS │ No    │ SF-Driver-Smoke-Test              │ Coco                              │ Validated Create Governance Driver  
+│                                   │                                   │         │       │                                   │ Pharmaceuticals::GovDriver::SF-Dr │                                     
+│                                   │                                   │         │       │                                   │ iver-Smoke-Test                   │                                     
+├···································┼···································┼·········┼·······┼···································┼···································┼·····································
+│ Create Governance Strategy        │ Create Governance Strategy        │ SUCCESS │ No    │ Sales Forecast Data Governance    │ GovernanceStrategy::SalesForecast │ Validated Create Governance Strategy
+│                                   │                                   │         │       │ Strategy                          │ ::DataGovernance::1.0             │                                     
+├···································┼···································┼·········┼·······┼···································┼···································┼·····································
+│ Create Threat                     │ Create Threat                     │ SUCCESS │ No    │ CRM Data Quality Degradation      │ Threat::SalesForecast::CRMDataQua │ Validated Create Threat             
+│                                   │                                   │         │       │                                   │ lityDegradation::1.0              │                                     
+├···································┼···································┼·········┼·······┼···································┼···································┼·····································
+│ Create Regulation                 │ Create Regulation                 │ SUCCESS │ No    │ Sales Forecast Disclosure         │ Regulation::SalesForecast::Disclo │ Validated Create Regulation         
+│                                   │                                   │         │       │ Requirements                      │ sureRequirements::1.0             │                                     
+├···································┼···································┼·········┼·······┼···································┼···································┼·····································
+│ Create Regulation Article         │ Create Regulation Article         │ SUCCESS │ No    │ SF Disclosure Reg Article 3 —     │ RegulationArticle::SalesForecast: │ Validated Create Regulation Article 
+│                                   │                                   │         │       │ Data Lineage Attestation          │ :DisclosureReg::Article3::1.0     │                                     
+├···································┼···································┼·········┼·······┼···································┼···································┼·····································
+│ Create Governance Policy          │ Create Governance Policy          │ SUCCESS │ No    │ Sales Forecast Data Quality       │ GovernancePolicy::SalesForecast:: │ Validated Create Governance Policy  
+│                                   │                                   │         │       │ Policy                            │ DataQuality::1.0                  │                                     
+├···································┼···································┼·········┼·······┼···································┼···································┼·····································
+│ Create Governance Principle       │ Create Governance Principle       │ SUCCESS │ No    │ Single Source of Truth for        │ GovernancePrinciple::SalesForecas │ Validated Create Governance         
+│                                   │                                   │         │       │ Pipeline Data                     │ t::SingleSourceOfTruth::1.0       │ Principle                           
+├···································┼···································┼·········┼·······┼···································┼···································┼·····································
+│ Create Governance Obligation      │ Create Governance Obligation      │ SUCCESS │ No    │ Monthly CRM Data Quality Review   │ GovernanceObligation::SalesForeca │ Validated Create Governance         
+│                                   │                                   │         │       │                                   │ st::MonthlyCRMReview::1.0         │ Obligation                          
+├···································┼···································┼·········┼·······┼···································┼···································┼·····································
+│ Create Governance Approach        │ Create Governance Approach        │ SUCCESS │ No    │ Automated CRM Data Validation     │ GovernanceApproach::SalesForecast │ Validated Create Governance Approach
+│                                   │                                   │         │       │                                   │ ::AutomatedCRMValidation::1.0     │                                     
+├···································┼···································┼·········┼·······┼···································┼···································┼·····································
+│ Create Governance Control         │ Create Governance Control         │ SUCCESS │ No    │ CRM Export Validation Control     │ GovernanceControl::SalesForecast: │ Validated Create Governance Control 
+│                                   │                                   │         │       │                                   │ :CRMExportValidation::1.0         │                                     
+├···································┼···································┼·········┼·······┼···································┼···································┼·····································
+│ Create Governance Rule            │ Create Governance Rule            │ SUCCESS │ No    │ CRM Opportunity Amount Must Be    │ GovernanceRule::SalesForecast::Op │ Validated Create Governance Rule    
+│                                   │                                   │         │       │ Positive                          │ portunityAmountPositive::1.0      │                                     
+├···································┼···································┼·········┼·······┼···································┼···································┼·····································
+│ Create Governance Responsibility  │ Create Governance Responsibility  │ SUCCESS │ No    │ Sales Forecast Data Steward       │ GovernanceResponsibility::SalesFo │ Validated Create Governance         
+│                                   │                                   │         │       │ Responsibility                    │ recast::DataSteward::1.0          │ Responsibility                      
+├···································┼···································┼·········┼·······┼···································┼···································┼·····································
+│ Create Governance Procedure       │ Create Governance Procedure       │ SUCCESS │ No    │ Sales Forecast Data Quality       │ GovernanceProcedure::SalesForecas │ Validated Create Governance         
+│                                   │                                   │         │       │ Attestation Procedure             │ t::DataQualityAttestation::1.0    │ Procedure                           
+├···································┼···································┼·········┼·······┼···································┼···································┼·····································
+│ Create Service Level Objective    │ Create Service Level Objective    │ SUCCESS │ No    │ Sales Forecast Pipeline SLOs      │ ServiceLevelObjective::SalesForec │ Validated Create Service Level      
+│                                   │                                   │         │       │                                   │ ast::Pipeline::1.0                │ Objective                           
+├···································┼···································┼·········┼·······┼···································┼···································┼·····································
+│ Create Methodology                │ Create Methodology                │ SUCCESS │ No    │ Sales Forecast Governance         │ Methodology::SalesForecast::Gover │ Validated Create Methodology        
+│                                   │                                   │         │       │ Framework                         │ nanceFramework::1.0               │                                     
+├···································┼···································┼·········┼·······┼···································┼···································┼·····································
+│ Create Data Processing Purpose    │ Create Data Processing Purpose    │ SUCCESS │ No    │ Sales Forecast Revenue Projection │ DataProcessingPurpose::SalesForec │ Validated Create Data Processing    
+│                                   │                                   │         │       │                                   │ ast::RevenueProjection::Q1-2026:: │ Purpose                             
+│                                   │                                   │         │       │                                   │ 1.0                               │                                     
+├···································┼···································┼·········┼·······┼···································┼···································┼·····································
+│ Create Governance Metric          │ Create Governance Metric          │ SUCCESS │ No    │ CRM Data Quality Score            │ GovernanceMetric::SalesForecast:: │ Validated Create Governance Metric  
+│                                   │                                   │         │       │                                   │ CRMDataQualityScore::1.0          │                                     
+├···································┼···································┼·········┼·······┼···································┼···································┼·····································
+│ Create Naming Standard Rule       │ Create Naming Standard Rule       │ SUCCESS │ No    │ Sales Forecast Qualified Name     │ NamingStandardRule::SalesForecast │ Validated Create Naming Standard    
+│                                   │                                   │         │       │ Standard                          │ ::QualifiedNameStandard::1.0      │ Rule                                
+├···································┼···································┼·········┼·······┼···································┼···································┼·····································
+│ Create Notification Type          │ Create Notification Type          │ SUCCESS │ No    │ CRM Data Quality Breach Alert     │ NotificationType::SalesForecast:: │ Validated Create Notification Type  
+│                                   │                                   │         │       │                                   │ CRMDataQualityBreachAlert::1.0    │                                     
+├···································┼···································┼·········┼·······┼···································┼···································┼·····································
+│ Create Data Lens                  │ Create Data Lens                  │ SUCCESS │ No    │ Sales Forecast North America Data │ DataLens::SalesForecast::NorthAme │ Validated Create Data Lens          
+│                                   │                                   │         │       │ Lens                              │ rica::Q1-2026::1.0                │                                     
+├···································┼···································┼·········┼·······┼···································┼···································┼·····································
+│ Create Governance Definition      │ Create Governance Definition      │ SUCCESS │ No    │ Sales Forecast Governance         │ GovernanceDefinition::SalesForeca │ Validated Create Governance         
+│                                   │                                   │         │       │ Framework Definition              │ st::FrameworkDefinition::1.0      │ Definition                          
+├···································┼···································┼·········┼·······┼···································┼···································┼·····································
+│ Update Governance Definition      │ Update Governance Definition      │ SUCCESS │ Yes   │ Sales Forecast Governance         │ GovernanceDefinition::SalesForeca │ Validated Update Governance         
+│                                   │                                   │         │       │ Framework Definition              │ st::FrameworkDefinition::1.0      │ Definition (GUID: (Planned:         
+│                                   │                                   │         │       │                                   │                                   │ GovernanceDefinition::SalesForecast:
+│                                   │                                   │         │       │                                   │                                   │ :FrameworkDefinition::1.0))         
+├···································┼···································┼·········┼·······┼···································┼···································┼·····································
+│ Create Certification Type         │ Create Certification Type         │ SUCCESS │ No    │ Sales Forecast Data Quality       │ CertificationType::SalesForecast: │ Validated Create Certification Type 
+│                                   │                                   │         │       │ Certification                     │ :DataQuality::1.0                 │                                     
+├···································┼···································┼·········┼·······┼···································┼···································┼·····································
+│ Create License Type               │ Create License Type               │ SUCCESS │ No    │ Sales Forecast Data Consumer      │ LicenseType::SalesForecast::DataC │ Validated Create License Type       
+│                                   │                                   │         │       │ License                           │ onsumer::1.0                      │                                     
+├···································┼···································┼·········┼·······┼···································┼···································┼·····································
+│ Create Terms and Conditions       │ Create Terms and Conditions       │ SUCCESS │ No    │ Sales Forecast Data Sharing Terms │ TermsAndConditions::SalesForecast │ Validated Create Terms and          
+│                                   │                                   │         │       │ and Conditions                    │ ::DataSharing::1.0                │ Conditions                          
+├···································┼···································┼·········┼·······┼···································┼···································┼·····································
+│ Create Security Access Control    │ Create Security Access Control    │ SUCCESS │ No    │ Sales Forecast Board Report       │ SecurityAccessControl::SalesForec │ Validated Create Security Access    
+│                                   │                                   │         │       │ Access Control                    │ ast::BoardReportAccess::1.0       │ Control                             
+├···································┼···································┼·········┼·······┼···································┼···································┼·····································
+│ Create Governance Zone            │ Create Governance Zone            │ SUCCESS │ No    │ SalesAnalytics Zone               │ GovernanceZone::SalesAnalytics::1 │ Validated Create Governance Zone    
+│                                   │                                   │         │       │                                   │ .0                                │                                     
+├···································┼···································┼·········┼·······┼···································┼···································┼·····································
+│ Link Governance Response          │ Link Governance Response          │ SUCCESS │ No    │                                   │                                   │ Validated Link Governance Response  
+├···································┼···································┼·········┼·······┼···································┼···································┼·····································
+│ Attach Governance Response        │ Attach Governance Response        │ SUCCESS │ No    │                                   │                                   │ Validated Attach Governance Response
+├···································┼···································┼·········┼·······┼···································┼···································┼·····································
+│ Link Governance Mechanism         │ Link Governance Mechanism         │ SUCCESS │ No    │                                   │                                   │ Validated Link Governance Mechanism 
+├···································┼···································┼·········┼·······┼···································┼···································┼·····································
+│ Link Governed By                  │ Link Governed By                  │ FAILURE │ No    │                                   │                                   │ Validated Link Governed By          
+├···································┼···································┼·········┼·······┼···································┼···································┼·····································
+│ Add Governed By                   │ Add Governed By                   │ FAILURE │ No    │                                   │                                   │ Validated Add Governed By           
+├···································┼···································┼·········┼·······┼···································┼···································┼·····································
+│ Link Governance Drivers           │ Link Governance Drivers           │ SUCCESS │ No    │                                   │                                   │ Validated Link Governance Drivers   
+├···································┼···································┼·········┼·······┼···································┼···································┼·····································
+│ Link Governance Policies          │ Link Governance Policies          │ SUCCESS │ No    │                                   │                                   │ Validated Link Governance Policies  
+├···································┼···································┼·········┼·······┼···································┼···································┼·····································
+│ Link Governance Controls          │ Link Governance Controls          │ SUCCESS │ No    │                                   │                                   │ Validated Link Governance Controls  
+├···································┼···································┼·········┼·······┼···································┼···································┼·····································
+│ Link Zone Hierarchy               │ Link Zone Hierarchy               │ FAILURE │ No    │                                   │                                   │ Validated Link Zone Hierarchy       
+├···································┼···································┼·········┼·······┼···································┼···································┼·····································
+│ Link Regulation Certification     │ Link Regulation Certification     │ SUCCESS │ No    │                                   │                                   │ Validated Link Regulation           
+│ Type                              │ Type                              │         │       │                                   │                                   │ Certification Type                  
+├···································┼···································┼·········┼·······┼···································┼···································┼·····································
+│ Link Certification                │ Link Certification                │ FAILURE │ No    │                                   │                                   │ Validated Link Certification        
+├···································┼···································┼·········┼·······┼···································┼···································┼·····································
+│ Link License                      │ Link License                      │ FAILURE │ No    │                                   │                                   │ Validated Link License              
+├···································┼···································┼·········┼·······┼···································┼···································┼·····································
+│ Link Agreement Terms and          │ Link Agreement Terms and          │ FAILURE │ Yes   │ TermsAndConditions::SalesForecast │ TermsAndConditions::SalesForecast │ Validated Link Agreement Terms and  
+│ Conditions                        │ Conditions                        │         │       │ ::DataSharing::1.0                │ ::DataSharing::1.0                │ Conditions (GUID: (Planned:         
+│                                   │                                   │         │       │                                   │                                   │ TermsAndConditions::SalesForecast::D
+│                                   │                                   │         │       │                                   │                                   │ ataSharing::1.0))                   
+├···································┼···································┼·········┼·······┼···································┼···································┼·····································
+│ Link Associated Group             │ Link Associated Group             │ WARNING │ No    │                                   │                                   │ No processor registered for 'Link   
+│                                   │                                   │         │       │                                   │                                   │ Associated Group'                   
+├···································┼···································┼·········┼·······┼···································┼···································┼·····································
+│ Link Monitored Resource           │ Link Monitored Resource           │ FAILURE │ No    │                                   │                                   │ Validated Link Monitored Resource   
+├···································┼···································┼·········┼·······┼···································┼···································┼·····································
+│ Link Notification Subscriber      │ Link Notification Subscriber      │ SUCCESS │ No    │                                   │                                   │ Validated Link Notification         
+│                                   │                                   │         │       │                                   │                                   │ Subscriber                          
+├···································┼···································┼·········┼·······┼···································┼···································┼·····································
+│ Detach Governance Response        │ Detach Governance Response        │ SUCCESS │ No    │                                   │                                   │ Validated Detach Governance Response
+├···································┼···································┼·········┼·······┼···································┼···································┼·····································
+│ Unlink Governed By                │ Unlink Governed By                │ FAILURE │ No    │                                   │                                   │ Validated Unlink Governed By        
+└───────────────────────────────────┴───────────────────────────────────┴─────────┴───────┴───────────────────────────────────┴───────────────────────────────────┴─────────────────────────────────────
+
+
+
+v2: Processing complete for '/Users/dwolfson/localGit/egeria-python/tests/dr-egeria-command-tests/dr_test_governance.md'
+
+
+SCORE: 37 SUCCESS  8 FAILURE  1 WARNING
+
+================================================================================
+FILE: dr_test_projects.md  |  DIRECTIVE: validate  |  16:48:34
+================================================================================
+v2: Processing Markdown File: /Users/dwolfson/localGit/egeria-python/tests/dr-egeria-command-tests/dr_test_projects.md
+
+
+                                                                                    Dr. Egeria v2 Processing Summary                                                                                    
+┏━━━━━━━━━━━━━━━━━━━━━━━━━━━┳━━━━━━━━━━━━━━━━━━━━━━━━━━━┳━━━━━━━━━┳━━━━━━━┳━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━┳━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━┳━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━┓
+┃ Markdown Command          ┃ Canonical Command         ┃ Status  ┃ Found ┃ Display Name / End 1                    ┃ Qualified Name / End2                   ┃ Message                                ┃
+┡━━━━━━━━━━━━━━━━━━━━━━━━━━━╇━━━━━━━━━━━━━━━━━━━━━━━━━━━╇━━━━━━━━━╇━━━━━━━╇━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━╇━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━╇━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━┩
+│ Create Project            │ Create Project            │ SUCCESS │ No    │ Sales Forecast Initiative               │ Sales Forecast Initiative::1.0          │ Validated Create Project               │
+├···························┼···························┼·········┼·······┼·········································┼·········································┼········································┤
+│ Create Project            │ Create Project            │ SUCCESS │ No    │ Q1 2026 Sales Forecast Delivery         │ Project::SalesForecast::Q1-2026::Delive │ Validated Create Project               │
+│                           │                           │         │       │                                         │ ry::1.0                                 │                                        │
+├···························┼···························┼·········┼·······┼·········································┼·········································┼········································┤
+│ Update Project            │ Update Project            │ SUCCESS │ Yes   │ Q1 2026 Sales Forecast Delivery         │ Project::SalesForecast::Q1-2026::Delive │ Validated Update Project (GUID:        │
+│                           │                           │         │       │                                         │ ry::1.0                                 │ (Planned:                              │
+│                           │                           │         │       │                                         │                                         │ Project::SalesForecast::Q1-2026::Deliv │
+│                           │                           │         │       │                                         │                                         │ ery::1.0))                             │
+├···························┼···························┼·········┼·······┼·········································┼·········································┼········································┤
+│ Create Project            │ Create Project            │ SUCCESS │ No    │ Sales Forecast Initiative               │ Sales Forecast Initiative               │ Validated Create Project               │
+├···························┼···························┼·········┼·······┼·········································┼·········································┼········································┤
+│ Create Campaign           │ Create Campaign           │ SUCCESS │ No    │ Sales Forecast Governance Program       │ Project::SalesForecast::GovernanceProgr │ Validated Create Campaign              │
+│                           │                           │         │       │                                         │ am::2026::1.0                           │                                        │
+├···························┼···························┼·········┼·······┼·········································┼·········································┼········································┤
+│ Create Task               │ Create Task               │ SUCCESS │ No    │ Validate CRM Opportunity Data — Q1 2026 │ Project::SalesForecast::Task::CRMValida │ Validated Create Task                  │
+│                           │                           │         │       │                                         │ tion::Q1-2026::1.0                      │                                        │
+├···························┼···························┼·········┼·······┼·········································┼·········································┼········································┤
+│ Create Personal Project   │ Create Personal Project   │ SUCCESS │ No    │ Jane Smith — Forecast Dashboard Design  │ Project::SalesForecast::Personal::JaneS │ Validated Create Personal Project      │
+│                           │                           │         │       │                                         │ mith::Dashboard::1.0                    │                                        │
+├···························┼···························┼·········┼·······┼·········································┼·········································┼········································┤
+│ Create Study Project      │ Create Study Project      │ SUCCESS │ No    │ CRM Pipeline Conversion Rate Analysis   │ Project::SalesForecast::Study::CRMConve │ Validated Create Study Project         │
+│                           │                           │         │       │                                         │ rsion::1.0                              │                                        │
+├···························┼···························┼·········┼·······┼·········································┼·········································┼········································┤
+│ Create Project            │ Create Project            │ SUCCESS │ No    │ ML Forecast Model Experiment — Q2 2026  │ Project::SalesForecast::Experiment::MLM │ Validated Create Project               │
+│                           │                           │         │       │                                         │ odel::Q2-2026::1.0                      │                                        │
+├···························┼···························┼·········┼·······┼·········································┼·········································┼········································┤
+│ Link Project Hierarchy    │ Link Project Hierarchy    │ SUCCESS │ No    │                                         │                                         │ Validated Link Project Hierarchy       │
+├···························┼···························┼·········┼·······┼·········································┼·········································┼········································┤
+│ Attach Project Hierarchy  │ Attach Project Hierarchy  │ SUCCESS │ No    │                                         │                                         │ Validated Attach Project Hierarchy     │
+├···························┼···························┼·········┼·······┼·········································┼·········································┼········································┤
+│ Link Project Dependency   │ Link Project Dependency   │ SUCCESS │ No    │                                         │                                         │ Validated Link Project Dependency      │
+├···························┼···························┼·········┼·······┼·········································┼·········································┼········································┤
+│ Detach Project Hierarchy  │ Detach Project Hierarchy  │ SUCCESS │ No    │                                         │                                         │ Validated Detach Project Hierarchy     │
+├···························┼···························┼·········┼·······┼·········································┼·········································┼········································┤
+│ Unlink Project Dependency │ Unlink Project Dependency │ SUCCESS │ No    │                                         │                                         │ Validated Unlink Project Dependency    │
+└───────────────────────────┴───────────────────────────┴─────────┴───────┴─────────────────────────────────────────┴─────────────────────────────────────────┴────────────────────────────────────────┘
+
+
+
+v2: Processing complete for '/Users/dwolfson/localGit/egeria-python/tests/dr-egeria-command-tests/dr_test_projects.md'
+
+
+SCORE: 14 SUCCESS  0 FAILURE  0 WARNING
+
+================================================================================
+FILE: dr_test_collections_good.md  |  DIRECTIVE: validate  |  16:48:36
+================================================================================
+v2: Processing Markdown File: /Users/dwolfson/localGit/egeria-python/tests/dr-egeria-command-tests/dr_test_collections_good.md
+Processing Warnings:
+
+-- Attach Collection to Resource (None) --
+   - Unknown attribute label: 'Resource Id'. Did you mean: Resource Use?
+
+
+
+
+                                                                                    Dr. Egeria v2 Processing Summary                                                                                    
+┏━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━┳━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━┳━━━━━━━━━┳━━━━━━━┳━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━┳━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━┳━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━┓
+┃ Markdown Command                ┃ Canonical Command             ┃ Status  ┃ Found ┃ Display Name / End 1                ┃ Qualified Name / End2               ┃ Message                              ┃
+┡━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━╇━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━╇━━━━━━━━━╇━━━━━━━╇━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━╇━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━╇━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━┩
+│ Create Collection               │ Create Collection             │ SUCCESS │ No    │ Sales Forecast Smoke Test           │ Coco                                │ Validated Create Collection          │
+│                                 │                               │         │       │                                     │ Pharmaceuticals::Collection::Sales- │                                      │
+│                                 │                               │         │       │                                     │ Forecast-Smoke-Test::1.0            │                                      │
+├·································┼·······························┼·········┼·······┼·····································┼·····································┼······································┤
+│ Create Collection               │ Create Collection             │ SUCCESS │ No    │ Sales Forecast Reference            │ Coco                                │ Validated Create Collection          │
+│                                 │                               │         │       │ Collections                         │ Pharmaceuticals::Collection::Sales- │                                      │
+│                                 │                               │         │       │                                     │ Forecast-Reference-Collections::0.1 │                                      │
+├·································┼·······························┼·········┼·······┼·····································┼·····································┼······································┤
+│ Create Collection               │ Create Collection             │ SUCCESS │ No    │ Sales Forecast Master Collection    │ Collection::SalesForecast::Master:: │ Validated Create Collection          │
+│                                 │                               │         │       │                                     │ 1.0                                 │                                      │
+├·································┼·······························┼·········┼·······┼·····································┼·····································┼······································┤
+│ Create Folder                   │ Create Collection Folder      │ SUCCESS │ No    │ SF-AltName-Test                     │ Collection::SalesForecast::AltNameT │ Validated Create Folder              │
+│                                 │                               │         │       │                                     │ est::1.0                            │                                      │
+├·································┼·······························┼·········┼·······┼·····································┼·····································┼······································┤
+│ Update Collection               │ Update Collection             │ SUCCESS │ Yes   │ Sales Forecast Master Collection    │ Collection::SalesForecast::Master:: │ Validated Update Collection (GUID:   │
+│                                 │                               │         │       │                                     │ 1.0                                 │ (Planned:                            │
+│                                 │                               │         │       │                                     │                                     │ Collection::SalesForecast::Master::1 │
+│                                 │                               │         │       │                                     │                                     │ .0))                                 │
+├·································┼·······························┼·········┼·······┼·····································┼·····································┼······································┤
+│ Create Collection               │ Create Collection             │ SUCCESS │ No    │ Sales Forecast Smoke Test           │ Coco                                │ Validated Create Collection          │
+│                                 │                               │         │       │                                     │ Pharmaceuticals::Collection::Sales- │                                      │
+│                                 │                               │         │       │                                     │ Forecast-Smoke-Test                 │                                      │
+├·································┼·······························┼·········┼·······┼·····································┼·····································┼······································┤
+│ Create Root Collection          │ Create Root Collection        │ SUCCESS │ No    │ Sales Forecast Hierarchy Root       │ Collection::SalesForecast::Root::1. │ Validated Create Root Collection     │
+│                                 │                               │         │       │                                     │ 0                                   │                                      │
+├·································┼·······························┼·········┼·······┼·····································┼·····································┼······································┤
+│ Create Collection Folder        │ Create Collection Folder      │ SUCCESS │ No    │ Sales Forecast Data Structures      │ Collection::SalesForecast::DataStru │ Validated Create Collection Folder   │
+│                                 │                               │         │       │                                     │ ctures::1.0                         │                                      │
+├·································┼·······························┼·········┼·······┼·····································┼·····································┼······································┤
+│ Create Home Collection          │ Create Home Collection        │ SUCCESS │ No    │ Jane Smith — Sales Forecast         │ Collection::HomeCollection::JaneSmi │ Validated Create Home Collection     │
+│                                 │                               │         │       │ Favourites                          │ th::SalesForecast::1.0              │                                      │
+├·································┼·······························┼·········┼·······┼·····································┼·····································┼······································┤
+│ Create Namespace                │ Create Namespace              │ SUCCESS │ No    │ SalesForecast Namespace             │ Collection::Namespace::SalesForecas │ Validated Create Namespace           │
+│                                 │                               │         │       │                                     │ t::1.0                              │                                      │
+├·································┼·······························┼·········┼·······┼·····································┼·····································┼······································┤
+│ Create Results Set              │ Create Results Set            │ SUCCESS │ No    │ Q1 2026 Forecast Query Results      │ Collection::ResultsSet::SalesForeca │ Validated Create Results Set         │
+│                                 │                               │         │       │                                     │ st::Q1-2026::1.0                    │                                      │
+├·································┼·······························┼·········┼·······┼·····································┼·····································┼······································┤
+│ Create Recent Access            │ Create Recent Access          │ SUCCESS │ No    │ Sales Forecast Recent Access —      │ Collection::RecentAccess::SalesFore │ Validated Create Recent Access       │
+│                                 │                               │         │       │ Analytics Team                      │ cast::AnalyticsTeam::1.0            │                                      │
+├·································┼·······························┼·········┼·······┼·····································┼·····································┼······································┤
+│ Create Work Item List           │ Create Work Item List         │ SUCCESS │ No    │ Sales Forecast Data Quality Work    │ Collection::WorkItemList::SalesFore │ Validated Create Work Item List      │
+│                                 │                               │         │       │ Items                               │ cast::DataQuality::1.0              │                                      │
+├·································┼·······························┼·········┼·······┼·····································┼·····································┼······································┤
+│ Create Security Group           │ Create Security Group         │ SUCCESS │ No    │ Board Forecast Readers              │ SecurityGroup::SalesForecast::Board │ Validated Create Security Group      │
+│                                 │                               │         │       │                                     │ ForecastReaders::1.0                │                                      │
+├·································┼·······························┼·········┼·······┼·····································┼·····································┼······································┤
+│ Create Security List            │ Create Security List          │ SUCCESS │ No    │ Sales Forecast Pipeline Identities  │ SecurityList::SalesForecast::Pipeli │ Validated Create Security List       │
+│                                 │                               │         │       │                                     │ neIdentities::1.0                   │                                      │
+├·································┼·······························┼·········┼·······┼·····································┼·····································┼······································┤
+│ Create Security Role            │ Create Security Role          │ SUCCESS │ No    │ Sales Forecast Data Steward Role    │ SecurityRole::SalesForecast::DataSt │ Validated Create Security Role       │
+│                                 │                               │         │       │                                     │ eward::1.0                          │                                      │
+├·································┼·······························┼·········┼·······┼·····································┼·····································┼······································┤
+│ Add Member to Collection        │ Add Member to Collection      │ SUCCESS │ No    │ Collection::SalesForecast::Root::1. │                                     │ Validated Add Member to Collection   │
+│                                 │                               │         │       │ 0                                   │                                     │                                      │
+├·································┼·······························┼·········┼·······┼·····································┼·····································┼······································┤
+│ Add Member to Collection        │ Add Member to Collection      │ SUCCESS │ No    │ Collection::SalesForecast::Master:: │                                     │ Validated Add Member to Collection   │
+│                                 │                               │         │       │ 1.0                                 │                                     │                                      │
+├·································┼·······························┼·········┼·······┼·····································┼·····································┼······································┤
+│ Link Member to Collection       │ Link Member to Collection     │ SUCCESS │ No    │ Collection::SalesForecast::Master:: │                                     │ Validated Link Member to Collection  │
+│                                 │                               │         │       │ 1.0                                 │                                     │                                      │
+├·································┼·······························┼·········┼·······┼·····································┼·····································┼······································┤
+│ Attach Collection to Resource   │ Attach Collection to Resource │ FAILURE │ No    │ Collection::SalesForecast::Master:: │                                     │ Validated Attach Collection to       │
+│                                 │                               │         │       │ 1.0                                 │                                     │ Resource                             │
+├·································┼·······························┼·········┼·······┼·····································┼·····································┼······································┤
+│ Attach Collection to Resource   │ Attach Collection to Resource │ FAILURE │ No    │ Collection::SalesForecast::Master:: │                                     │ Validated Attach Collection to       │
+│                                 │                               │         │       │ 1.0                                 │                                     │ Resource                             │
+├·································┼·······························┼·········┼·······┼·····································┼·····································┼······································┤
+│ Detach Member from Collection   │ Detach Member to Collection   │ SUCCESS │ No    │ Collection::SalesForecast::Root::1. │                                     │ Validated Detach Member from         │
+│                                 │                               │         │       │ 0                                   │                                     │ Collection                           │
+├·································┼·······························┼·········┼·······┼·····································┼·····································┼······································┤
+│ Unlink Collection from Resource │ Unlink Collection to Resource │ FAILURE │ No    │ Collection::SalesForecast::Master:: │                                     │ Validated Unlink Collection from     │
+│                                 │                               │         │       │ 1.0                                 │                                     │ Resource                             │
+└─────────────────────────────────┴───────────────────────────────┴─────────┴───────┴─────────────────────────────────────┴─────────────────────────────────────┴──────────────────────────────────────┘
+
+
+
+v2: Processing complete for '/Users/dwolfson/localGit/egeria-python/tests/dr-egeria-command-tests/dr_test_collections_good.md'
+
+
+SCORE: 20 SUCCESS  3 FAILURE  0 WARNING
+
+================================================================================
+FILE: dr_test_collections_mean.md  |  DIRECTIVE: validate  |  16:48:42
+================================================================================
+v2: Processing Markdown File: /Users/dwolfson/localGit/egeria-python/tests/dr-egeria-command-tests/dr_test_collections_mean.md
+Processing Errors:
+
+-- Create Collection (Collection::SalesForecast::MP01::1.0) --
+   - Missing required attribute: 'Display Name'. Provided attributes: Description, Content Status, Qualified Name, GUID
+-- Create Collection (Collection::SalesForecast::MP02::1.0) --
+   - Value 'BANANA' is not a valid metadata value for 'Content Status' (Validated by Egeria)
+-- Add Member to Collection (None) --
+   - Value 'NOT_A_STATUS' is not a valid metadata value for 'Membership Status' (Validated by Egeria)
+-- Update Collection (None) --
+   - Missing required attribute: 'Display Name'. Provided attributes: Description, Content Status, GUID
+-- Attach Collection to Resource (None) --
+   - Value 'GovernanceDefinitions' is not a valid metadata value for 'Resource Use' (Validated by Egeria)
+   - Missing required attribute: 'Element Id'. Provided attributes: Resource Description, Resource Use, GUID
+
+
+
+
+                                                                                    Dr. Egeria v2 Processing Summary                                                                                    
+┏━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━┳━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━┳━━━━━━━━━┳━━━━━━━┳━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━┳━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━┳━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━┓
+┃ Markdown Command              ┃ Canonical Command             ┃ Status  ┃ Found ┃ Display Name / End 1                 ┃ Qualified Name / End2                ┃ Message                              ┃
+┡━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━╇━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━╇━━━━━━━━━╇━━━━━━━╇━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━╇━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━╇━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━┩
+│ Create Collection             │ Create Collection             │ FAILURE │ No    │                                      │ Collection::SalesForecast::MP01::1.0 │ Validation failed: Missing required  │
+│                               │                               │         │       │                                      │                                      │ attribute: 'Display Name'. Provided  │
+│                               │                               │         │       │                                      │                                      │ attributes: Description, Content     │
+│                               │                               │         │       │                                      │                                      │ Status, Qualified Name, GUID         │
+├·······························┼·······························┼·········┼·······┼······································┼······································┼······································┤
+│ Create Collection             │ Create Collection             │ FAILURE │ No    │ SF-MP02-Invalid-Content-Status       │ Collection::SalesForecast::MP02::1.0 │ Validation failed: Value 'BANANA' is │
+│                               │                               │         │       │                                      │                                      │ not a valid metadata value for       │
+│                               │                               │         │       │                                      │                                      │ 'Content Status' (Validated by       │
+│                               │                               │         │       │                                      │                                      │ Egeria)                              │
+├·······························┼·······························┼·········┼·······┼······································┼······································┼······································┤
+│ Add Member to Collection      │ Add Member to Collection      │ FAILURE │ No    │ Collection::SalesForecast::Master::1 │                                      │ Validation failed: Value             │
+│                               │                               │         │       │ .0                                   │                                      │ 'NOT_A_STATUS' is not a valid        │
+│                               │                               │         │       │                                      │                                      │ metadata value for 'Membership       │
+│                               │                               │         │       │                                      │                                      │ Status' (Validated by Egeria)        │
+├·······························┼·······························┼·········┼·······┼······································┼······································┼······································┤
+│ Add Member to Collection      │ Add Member to Collection      │ FAILURE │ No    │ Collection::SalesForecast::DoesNotEx │                                      │ Validated Add Member to Collection   │
+│                               │                               │         │       │ ist::1.0                             │                                      │                                      │
+├·······························┼·······························┼·········┼·······┼······································┼······································┼······································┤
+│ Add Member to Collection      │ Add Member to Collection      │ FAILURE │ No    │ Collection::SalesForecast::Master::1 │                                      │ Validated Add Member to Collection   │
+│                               │                               │         │       │ .0                                   │                                      │                                      │
+├·······························┼·······························┼·········┼·······┼······································┼······································┼······································┤
+│ Update Collection             │ Update Collection             │ FAILURE │ No    │                                      │                                      │ Validation failed: Missing required  │
+│                               │                               │         │       │                                      │                                      │ attribute: 'Display Name'. Provided  │
+│                               │                               │         │       │                                      │                                      │ attributes: Description, Content     │
+│                               │                               │         │       │                                      │                                      │ Status, GUID                         │
+├·······························┼·······························┼·········┼·······┼······································┼······································┼······································┤
+│ Add Member to Collection      │ Add Member to Collection      │ FAILURE │ No    │ Collection::SalesForecast::Master::1 │                                      │ Validated Add Member to Collection   │
+│                               │                               │         │       │ .0                                   │                                      │                                      │
+├·······························┼·······························┼·········┼·······┼······································┼······································┼······································┤
+│ Attach Collection to Resource │ Attach Collection to Resource │ FAILURE │ No    │                                      │                                      │ Validation failed: Value             │
+│                               │                               │         │       │                                      │                                      │ 'GovernanceDefinitions' is not a     │
+│                               │                               │         │       │                                      │                                      │ valid metadata value for 'Resource   │
+│                               │                               │         │       │                                      │                                      │ Use' (Validated by Egeria); Missing  │
+│                               │                               │         │       │                                      │                                      │ required attribute: 'Element Id'.    │
+│                               │                               │         │       │                                      │                                      │ Provided attributes: Resource        │
+│                               │                               │         │       │                                      │                                      │ Description, Resource Use, GUID      │
+├·······························┼·······························┼·········┼·······┼······································┼······································┼······································┤
+│ Detach Member from Collection │ Detach Member to Collection   │ FAILURE │ No    │ Collection::SalesForecast::Master::1 │                                      │ Validated Detach Member from         │
+│                               │                               │         │       │ .0                                   │                                      │ Collection                           │
+├·······························┼·······························┼·········┼·······┼······································┼······································┼······································┤
+│ Create Collection             │ Create Collection             │ SUCCESS │ No    │ SF-MP11-Bad-User-Defined-Status      │ Collection::SalesForecast::MP11::1.0 │ Validated Create Collection          │
+└───────────────────────────────┴───────────────────────────────┴─────────┴───────┴──────────────────────────────────────┴──────────────────────────────────────┴──────────────────────────────────────┘
+
+
+
+v2: Processing complete for '/Users/dwolfson/localGit/egeria-python/tests/dr-egeria-command-tests/dr_test_collections_mean.md'
+
+
+SCORE: 1 SUCCESS  9 FAILURE  0 WARNING
+
+================================================================================
+FILE: dr_test_products_good.md  |  DIRECTIVE: validate  |  16:48:45
+================================================================================
+v2: Processing Markdown File: /Users/dwolfson/localGit/egeria-python/tests/dr-egeria-command-tests/dr_test_products_good.md
+
+
+                                                                                    Dr. Egeria v2 Processing Summary                                                                                    
+┏━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━┳━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━┳━━━━━━━━━┳━━━━━━━┳━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━┳━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━┳━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━┓
+┃ Markdown Command               ┃ Canonical Command              ┃ Status  ┃ Found ┃ Display Name / End 1                ┃ Qualified Name / End2               ┃ Message                              ┃
+┡━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━╇━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━╇━━━━━━━━━╇━━━━━━━╇━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━╇━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━╇━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━┩
+│ Create Digital Product         │ Create Digital Product         │ SUCCESS │ No    │ Sales Forecast Data Feed            │ Coco                                │ Validated Create Digital Product     │
+│                                │                                │         │       │                                     │ Pharmaceuticals::DigitalProduct::Sa │                                      │
+│                                │                                │         │       │                                     │ les-Forecast-Data-Feed::1.0         │                                      │
+├································┼································┼·········┼·······┼·····································┼·····································┼······································┤
+│ Create Digital Product         │ Create Digital Product         │ SUCCESS │ No    │ Sales Forecast Pipeline Product     │ DigitalProduct::SalesForecast::Pipe │ Validated Create Digital Product     │
+│                                │                                │         │       │                                     │ line::1.2                           │                                      │
+├································┼································┼·········┼·······┼·····································┼·····································┼······································┤
+│ Create Digital Product Catalog │ Create Digital Product Catalog │ SUCCESS │ No    │ Sales Analytics Digital Product     │ DigitalProductCatalog::SalesAnalyti │ Validated Create Digital Product     │
+│                                │                                │         │       │ Catalog                             │ cs::1.0                             │ Catalog                              │
+├································┼································┼·········┼·······┼·····································┼·····································┼······································┤
+│ Update Digital Product         │ Update Digital Product         │ SUCCESS │ Yes   │ Sales Forecast Pipeline Product     │ DigitalProduct::SalesForecast::Pipe │ Validated Update Digital Product     │
+│                                │                                │         │       │                                     │ line::1.2                           │ (GUID: (Planned:                     │
+│                                │                                │         │       │                                     │                                     │ DigitalProduct::SalesForecast::Pipel │
+│                                │                                │         │       │                                     │                                     │ ine::1.2))                           │
+├································┼································┼·········┼·······┼·····································┼·····································┼······································┤
+│ Create Agreement               │ Create Agreement               │ SUCCESS │ No    │ Sales Forecast Data Access          │ Agreement::SalesForecast::DataAcces │ Validated Create Agreement           │
+│                                │                                │         │       │ Agreement                           │ s::1.0                              │                                      │
+├································┼································┼·········┼·······┼·····································┼·····································┼······································┤
+│ Create Data Sharing Agreement  │ Create Data Sharing Agreement  │ SUCCESS │ No    │ Sales Forecast — Finance Data       │ Agreement::SalesForecast::Finance:: │ Validated Create Data Sharing        │
+│                                │                                │         │       │ Sharing Agreement                   │ DataSharing::1.0                    │ Agreement                            │
+├································┼································┼·········┼·······┼·····································┼·····································┼······································┤
+│ Create Digital Subscription    │ Create Digital Subscription    │ SUCCESS │ No    │ Finance Team — Sales Forecast       │ DigitalSubscription::SalesForecast: │ Validated Create Digital             │
+│                                │                                │         │       │ Subscription                        │ :Finance::Premium::1.0              │ Subscription                         │
+├································┼································┼·········┼·······┼·····································┼·····································┼······································┤
+│ Update Digital Subscription    │ Update Digital Subscription    │ SUCCESS │ Yes   │ Finance Team — Sales Forecast       │ DigitalSubscription::SalesForecast: │ Validated Update Digital             │
+│                                │                                │         │       │ Subscription                        │ :Finance::Premium::1.0              │ Subscription (GUID: (Planned:        │
+│                                │                                │         │       │                                     │                                     │ DigitalSubscription::SalesForecast:: │
+│                                │                                │         │       │                                     │                                     │ Finance::Premium::1.0))              │
+├································┼································┼·········┼·······┼·····································┼·····································┼······································┤
+│ Link Product Dependency        │ Link Product Dependency        │ FAILURE │ No    │                                     │                                     │ Validated Link Product Dependency    │
+├································┼································┼·········┼·······┼·····································┼·····································┼······································┤
+│ Link Agreement to Actor        │ Link Agreement Actor           │ SUCCESS │ No    │ Agreement::SalesForecast::Finance:: │                                     │ Validated Link Agreement to Actor    │
+│                                │                                │         │       │ DataSharing::1.0                    │                                     │                                      │
+├································┼································┼·········┼·······┼·····································┼·····································┼······································┤
+│ Attach Agreement to Item       │ Attach Agreement Item          │ SUCCESS │ No    │ Agreement::SalesForecast::Finance:: │                                     │ Validated Attach Agreement to Item   │
+│                                │                                │         │       │ DataSharing::1.0                    │                                     │                                      │
+├································┼································┼·········┼·······┼·····································┼·····································┼······································┤
+│ Link Agreement Item            │ Link Agreement Item            │ SUCCESS │ No    │ Agreement::SalesForecast::DataAcces │                                     │ Validated Link Agreement Item        │
+│                                │                                │         │       │ s::1.0                              │                                     │                                      │
+├································┼································┼·········┼·······┼·····································┼·····································┼······································┤
+│ Add Digital Subscriber         │ Add Digital Subscriber         │ FAILURE │ No    │ DigitalSubscription::SalesForecast: │                                     │ Validated Add Digital Subscriber     │
+│                                │                                │         │       │ :Finance::Premium::1.0              │                                     │                                      │
+├································┼································┼·········┼·······┼·····································┼·····································┼······································┤
+│ Detach Product Dependency      │ Detach Product Dependency      │ SUCCESS │ No    │                                     │                                     │ Validated Detach Product Dependency  │
+├································┼································┼·········┼·······┼·····································┼·····································┼······································┤
+│ Unlink Digital Subscriber      │ Unlink Digital Subscriber      │ FAILURE │ No    │ DigitalSubscription::SalesForecast: │                                     │ Validated Unlink Digital Subscriber  │
+│                                │                                │         │       │ :Finance::Premium::1.0              │                                     │                                      │
+└────────────────────────────────┴────────────────────────────────┴─────────┴───────┴─────────────────────────────────────┴─────────────────────────────────────┴──────────────────────────────────────┘
+
+
+
+v2: Processing complete for '/Users/dwolfson/localGit/egeria-python/tests/dr-egeria-command-tests/dr_test_products_good.md'
+
+
+SCORE: 12 SUCCESS  3 FAILURE  0 WARNING
+
+================================================================================
+FILE: dr_test_external_ref.md  |  DIRECTIVE: validate  |  16:48:48
+================================================================================
+v2: Processing Markdown File: /Users/dwolfson/localGit/egeria-python/tests/dr-egeria-command-tests/dr_test_external_ref.md
+
+
+                                                                                    Dr. Egeria v2 Processing Summary                                                                                    
+┏━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━┳━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━┳━━━━━━━━━┳━━━━━━━┳━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━┳━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━┳━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━┓
+┃ Markdown Command             ┃ Canonical Command            ┃ Status  ┃ Found ┃ Display Name / End 1                  ┃ Qualified Name / End2                 ┃ Message                              ┃
+┡━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━╇━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━╇━━━━━━━━━╇━━━━━━━╇━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━╇━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━╇━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━┩
+│ Create External Reference    │ Create External Reference    │ SUCCESS │ No    │ Salesforce CRM Documentation          │ Coco                                  │ Validated Create External Reference  │
+│                              │                              │         │       │                                       │ Pharmaceuticals::ExtRef::Salesforce-C │                                      │
+│                              │                              │         │       │                                       │ RM-Documentation::1.0                 │                                      │
+├······························┼······························┼·········┼·······┼·······································┼·······································┼······································┤
+│ Create External Reference    │ Create External Reference    │ SUCCESS │ No    │ Salesforce CRM API Reference          │ ExternalReference::Salesforce::CRM::A │ Validated Create External Reference  │
+│                              │                              │         │       │                                       │ PIReference::v60.0                    │                                      │
+├······························┼······························┼·········┼·······┼·······································┼·······································┼······································┤
+│ Update External Reference    │ Update External Reference    │ SUCCESS │ Yes   │ Salesforce CRM API Reference          │ ExternalReference::Salesforce::CRM::A │ Validated Update External Reference  │
+│                              │                              │         │       │                                       │ PIReference::v60.0                    │ (GUID: (Planned:                     │
+│                              │                              │         │       │                                       │                                       │ ExternalReference::Salesforce::CRM:: │
+│                              │                              │         │       │                                       │                                       │ APIReference::v60.0))                │
+├······························┼······························┼·········┼·······┼·······································┼·······································┼······································┤
+│ Create External Reference    │ Create External Reference    │ SUCCESS │ No    │ Salesforce CRM Documentation          │ Coco                                  │ Validated Create External Reference  │
+│                              │                              │         │       │                                       │ Pharmaceuticals::ExtRef::Salesforce-C │                                      │
+│                              │                              │         │       │                                       │ RM-Documentation                      │                                      │
+├······························┼······························┼·········┼·······┼·······································┼·······································┼······································┤
+│ Create External Data Source  │ Create External Data Source  │ SUCCESS │ No    │ Salesforce Opportunity Export Feed    │ ExternalDataSource::Salesforce::Oppor │ Validated Create External Data       │
+│                              │                              │         │       │                                       │ tunityFeed::Daily::1.0                │ Source                               │
+├······························┼······························┼·········┼·······┼·······································┼·······································┼······································┤
+│ Create External Model Source │ Create External Model Source │ SUCCESS │ No    │ Best Case Forecast Regression Model   │ ExternalModelSource::SalesForecast::B │ Validated Create External Model      │
+│                              │                              │         │       │                                       │ estCaseRegression::v2.1               │ Source                               │
+├······························┼······························┼·········┼·······┼·······································┼·······································┼······································┤
+│ Create External Source Code  │ Create External Source Code  │ SUCCESS │ No    │ Sales Forecast Pipeline — Source Code │ ExternalSourceCode::SalesForecast::Pi │ Validated Create External Source     │
+│                              │                              │         │       │                                       │ peline::v1.2.0                        │ Code                                 │
+├······························┼······························┼·········┼·······┼·······································┼·······································┼······································┤
+│ Create Related Media         │ Create Related Media         │ SUCCESS │ No    │ Sales Forecast Dashboard Screenshot — │ RelatedMedia::SalesForecast::Dashboar │ Validated Create Related Media       │
+│                              │                              │         │       │ Q1 2026                               │ d::Q1-2026::1.0                       │                                      │
+├······························┼······························┼·········┼·······┼·······································┼·······································┼······································┤
+│ Create Related Media         │ Create Related Media         │ SUCCESS │ No    │ Sales Forecast Data Dictionary — PDF  │ RelatedMedia::SalesForecast::DataDict │ Validated Create Related Media       │
+│                              │                              │         │       │                                       │ ionary::PDF::1.0                      │                                      │
+├······························┼······························┼·········┼·······┼·······································┼·······································┼······································┤
+│ Create Cited Document        │ Create Cited Document        │ SUCCESS │ No    │ Enterprise Data Management — Best     │ CitedDocument::DataGovernanceInstitut │ Validated Create Cited Document      │
+│                              │                              │         │       │ Practices Guide                       │ e::EDMGuide::3rdEd::2024              │                                      │
+├······························┼······························┼·········┼·······┼·······································┼·······································┼······································┤
+│ Link External Reference      │ Link External Reference      │ FAILURE │ No    │ GlossaryTerm::SalesForecast::Opportun │                                       │ Validated Link External Reference    │
+│                              │                              │         │       │ ity::1.0                              │                                       │                                      │
+├······························┼······························┼·········┼·······┼·······································┼·······································┼······································┤
+│ Attach External Reference    │ Attach External Reference    │ FAILURE │ No    │ DigitalProduct::SalesForecast::Pipeli │                                       │ Validated Attach External Reference  │
+│                              │                              │         │       │ ne::1.2                               │                                       │                                      │
+├······························┼······························┼·········┼·······┼·······································┼·······································┼······································┤
+│ Link Media Reference         │ Link Media Reference         │ FAILURE │ No    │ DigitalProduct::SalesForecast::Pipeli │                                       │ Validated Link Media Reference       │
+│                              │                              │         │       │ ne::1.2                               │                                       │                                      │
+├······························┼······························┼·········┼·······┼·······································┼·······································┼······································┤
+│ Add Media Reference          │ Add Media Reference          │ FAILURE │ No    │ GlossaryTerm::SalesForecast::Pipeline │                                       │ Validated Add Media Reference        │
+│                              │                              │         │       │ CoverageRatio::1.0                    │                                       │                                      │
+├······························┼······························┼·········┼·······┼·······································┼·······································┼······································┤
+│ Link Cited Document          │ Link Cited Document          │ FAILURE │ No    │ Collection::SalesForecast::Master::1. │                                       │ Validated Link Cited Document        │
+│                              │                              │         │       │ 0                                     │                                       │                                      │
+├······························┼······························┼·········┼·······┼·······································┼·······································┼······································┤
+│ Detach External Reference    │ Detach External Reference    │ FAILURE │ No    │ GlossaryTerm::SalesForecast::Opportun │                                       │ Validated Detach External Reference  │
+│                              │                              │         │       │ ity::1.0                              │                                       │                                      │
+├······························┼······························┼·········┼·······┼·······································┼·······································┼······································┤
+│ Unlink Media Reference       │ Unlink Media Reference       │ FAILURE │ No    │ DigitalProduct::SalesForecast::Pipeli │                                       │ Validated Unlink Media Reference     │
+│                              │                              │         │       │ ne::1.2                               │                                       │                                      │
+├······························┼······························┼·········┼·······┼·······································┼·······································┼······································┤
+│ Remove Cited Document        │ Remove Cited Document        │ FAILURE │ No    │ Collection::SalesForecast::Master::1. │                                       │ Validated Remove Cited Document      │
+│                              │                              │         │       │ 0                                     │                                       │                                      │
+└──────────────────────────────┴──────────────────────────────┴─────────┴───────┴───────────────────────────────────────┴───────────────────────────────────────┴──────────────────────────────────────┘
+
+
+
+v2: Processing complete for '/Users/dwolfson/localGit/egeria-python/tests/dr-egeria-command-tests/dr_test_external_ref.md'
+
+
+SCORE: 10 SUCCESS  8 FAILURE  0 WARNING
+
+================================================================================
+FILE: dr_test_feedback.md  |  DIRECTIVE: validate  |  16:48:52
+================================================================================
+v2: Processing Markdown File: /Users/dwolfson/localGit/egeria-python/tests/dr-egeria-command-tests/dr_test_feedback.md
+
+
+                                                                                    Dr. Egeria v2 Processing Summary                                                                                    
+┏━━━━━━━━━━━━━━━━━━━━━┳━━━━━━━━━━━━━━━━━━━━━┳━━━━━━━━━┳━━━━━━━┳━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━┳━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━┳━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━┓
+┃ Markdown Command    ┃ Canonical Command   ┃ Status  ┃ Found ┃ Display Name / End 1                        ┃ Qualified Name / End2                       ┃ Message                                    ┃
+┡━━━━━━━━━━━━━━━━━━━━━╇━━━━━━━━━━━━━━━━━━━━━╇━━━━━━━━━╇━━━━━━━╇━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━╇━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━╇━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━┩
+│ Create Comment      │ Create Comment      │ FAILURE │ No    │ SF-Comment-Smoke-Test                       │ Coco                                        │ Validated Create Comment                   │
+│                     │                     │         │       │                                             │ Pharmaceuticals::Comment::SF-Comment-Smoke- │                                            │
+│                     │                     │         │       │                                             │ Test::1.0                                   │                                            │
+├·····················┼·····················┼·········┼·······┼·············································┼·············································┼············································┤
+│ Create Comment      │ Create Comment      │ FAILURE │ No    │ Sales Forecast Pipeline Coverage — Data     │ Comment::SalesForecast::PipelineCoverage::D │ Validated Create Comment                   │
+│                     │                     │         │       │ Quality Observation                         │ ataQualityObservation::1.0                  │                                            │
+├·····················┼·····················┼·········┼·······┼·············································┼·············································┼············································┤
+│ Create Comment      │ Create Comment      │ FAILURE │ No    │ How is Pipeline Coverage Ratio calculated   │ Comment::SalesForecast::PCR::MultiCurrencyQ │ Validated Create Comment                   │
+│                     │                     │         │       │ for multi-currency opportunities?           │ uestion::1.0                                │                                            │
+├·····················┼·····················┼·········┼·······┼·············································┼·············································┼············································┤
+│ Create Comment      │ Create Comment      │ FAILURE │ No    │ Pipeline Coverage Ratio uses USD-converted  │ Comment::SalesForecast::PCR::MultiCurrencyA │ Validated Create Comment                   │
+│                     │                     │         │       │ amounts via daily exchange rates            │ nswer::1.0                                  │                                            │
+├·····················┼·····················┼·········┼·······┼·············································┼·············································┼············································┤
+│ Create Comment      │ Create Comment      │ FAILURE │ No    │ Suggest adding automated duplicate          │ Comment::SalesForecast::Pipeline::Duplicate │ Validated Create Comment                   │
+│                     │                     │         │       │ detection to CRM pipeline export            │ DetectionSuggestion::1.0                    │                                            │
+├·····················┼·····················┼·········┼·······┼·············································┼·············································┼············································┤
+│ Create Comment      │ Create Comment      │ FAILURE │ No    │ Pipeline Coverage Ratio term definition is  │ Comment::SalesForecast::PCR::UsageExperienc │ Validated Create Comment                   │
+│                     │                     │         │       │ clear and actionable                        │ e::1.0                                      │                                            │
+├·····················┼·····················┼·········┼·······┼·············································┼·············································┼············································┤
+│ Create Comment      │ Create Comment      │ FAILURE │ No    │ Forecast pipeline must support real-time    │ Comment::SalesForecast::Pipeline::RealTimeR │ Validated Create Comment                   │
+│                     │                     │         │       │ opportunity updates by Q3 2026              │ equirement::1.0                             │                                            │
+├·····················┼·····················┼·········┼·······┼·············································┼·············································┼············································┤
+│ Create Informal Tag │ Create Informal Tag │ SUCCESS │ No    │ forecast-critical                           │ InformalTag::SalesForecast::ForecastCritica │ Validated Create Informal Tag              │
+│                     │                     │         │       │                                             │ l::1.0                                      │                                            │
+├·····················┼·····················┼·········┼·······┼·············································┼·············································┼············································┤
+│ Create Informal Tag │ Create Informal Tag │ SUCCESS │ No    │ needs-review                                │ InformalTag::SalesForecast::NeedsReview::1. │ Validated Create Informal Tag              │
+│                     │                     │         │       │                                             │ 0                                           │                                            │
+├·····················┼·····················┼·········┼·······┼·············································┼·············································┼············································┤
+│ Update Comment      │ Update Comment      │ SUCCESS │ Yes   │ Sales Forecast Pipeline Coverage — Data     │ Comment::SalesForecast::PipelineCoverage::D │ Validated Update Comment (GUID: (Planned:  │
+│                     │                     │         │       │ Quality Observation                         │ ataQualityObservation::1.0                  │ Comment::SalesForecast::PipelineCoverage:: │
+│                     │                     │         │       │                                             │                                             │ DataQualityObservation::1.0))              │
+├·····················┼·····················┼·········┼·······┼·············································┼·············································┼············································┤
+│ Attach Rating       │ Attach Rating       │ FAILURE │ No    │                                             │                                             │ Validated Attach Rating                    │
+├·····················┼·····················┼·········┼·······┼·············································┼·············································┼············································┤
+│ Attach Rating       │ Attach Rating       │ FAILURE │ No    │                                             │                                             │ Validated Attach Rating                    │
+├·····················┼·····················┼·········┼·······┼·············································┼·············································┼············································┤
+│ Link Accept Answer  │ Link Accept Answer  │ SUCCESS │ No    │                                             │                                             │ Validated Link Accept Answer               │
+├·····················┼·····················┼·········┼·······┼·············································┼·············································┼············································┤
+│ Attach Like         │ Attach Like         │ SUCCESS │ No    │                                             │                                             │ Validated Attach Like                      │
+├·····················┼·····················┼·········┼·······┼·············································┼·············································┼············································┤
+│ Add Like            │ Add Like            │ FAILURE │ No    │                                             │                                             │ Validated Add Like                         │
+├·····················┼·····················┼·········┼·······┼·············································┼·············································┼············································┤
+│ Attach Tag          │ Attach Tag          │ FAILURE │ No    │                                             │                                             │ Validated Attach Tag                       │
+├·····················┼·····················┼·········┼·······┼·············································┼·············································┼············································┤
+│ Attach Tag          │ Attach Tag          │ FAILURE │ No    │                                             │                                             │ Validated Attach Tag                       │
+├·····················┼·····················┼·········┼·······┼·············································┼·············································┼············································┤
+│ Detach Rating       │ Detach Rating       │ FAILURE │ No    │                                             │                                             │ Validated Detach Rating                    │
+├·····················┼·····················┼·········┼·······┼·············································┼·············································┼············································┤
+│ Unlink Like         │ Unlink Like         │ FAILURE │ No    │                                             │                                             │ Validated Unlink Like                      │
+├·····················┼·····················┼·········┼·······┼·············································┼·············································┼············································┤
+│ Remove Tag          │ Remove Tag          │ FAILURE │ No    │                                             │                                             │ Validated Remove Tag                       │
+└─────────────────────┴─────────────────────┴─────────┴───────┴─────────────────────────────────────────────┴─────────────────────────────────────────────┴────────────────────────────────────────────┘
+
+
+
+v2: Processing complete for '/Users/dwolfson/localGit/egeria-python/tests/dr-egeria-command-tests/dr_test_feedback.md'
+
+
+SCORE: 5 SUCCESS  15 FAILURE  0 WARNING
+
+================================================================================
+FILE: dr_test_data_designer.md  |  DIRECTIVE: validate  |  16:48:58
+================================================================================
+v2: Processing Markdown File: /Users/dwolfson/localGit/egeria-python/tests/dr-egeria-command-tests/dr_test_data_designer.md
+
+
+                                                                                     Dr. Egeria v2 Processing Summary                                                                                   
+┏━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━┳━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━┳━━━━━━━━━┳━━━━━━━┳━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━┳━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━┳━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+┃ Markdown Command                  ┃ Canonical Command                 ┃ Status  ┃ Found ┃ Display Name / End 1              ┃ Qualified Name / End2             ┃ Message                             
+┡━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━╇━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━╇━━━━━━━━━╇━━━━━━━╇━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━╇━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━╇━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+│ Create Certification Type         │ Create Certification Type         │ SUCCESS │ No    │ Sales Forecast Certified          │ CertificationType::SalesForecastC │ Validated Create Certification Type 
+│                                   │                                   │         │       │                                   │ ertified::1.0                     │                                     
+├···································┼···································┼·········┼·······┼···································┼···································┼·····································
+│ Create Data Dictionary            │ Create Data Dictionary            │ SUCCESS │ No    │ Sales Forecast Dictionary         │ DataDictionary::SalesForecast::1. │ Validated Create Data Dictionary    
+│                                   │                                   │         │       │                                   │ 0                                 │                                     
+├···································┼···································┼·········┼·······┼···································┼···································┼·····································
+│ Create Data Spec                  │ Create Data Spec                  │ SUCCESS │ No    │ Sales Forecast Specification      │ DataSpecification::SalesForecast: │ Validated Create Data Spec          
+│                                   │                                   │         │       │                                   │ :1.0                              │                                     
+├···································┼···································┼·········┼·······┼···································┼···································┼·····································
+│ Create Data Class                 │ Create Data Class                 │ SUCCESS │ No    │ Revenue Amount                    │ DataClass::RevenueAmount::1.0     │ Validated Create Data Class         
+├···································┼···································┼·········┼·······┼···································┼···································┼·····································
+│ Create Data Value Specification   │ Create Data Value Specification   │ SUCCESS │ No    │ Bounded Integer Spec              │ DataValueSpecification::BoundedIn │ Validated Create Data Value         
+│                                   │                                   │         │       │                                   │ teger::1.0                        │ Specification                       
+├···································┼···································┼·········┼·······┼···································┼···································┼·····································
+│ Create Data Value Specification   │ Create Data Value Specification   │ SUCCESS │ No    │ Percentage Range Spec             │ DataValueSpecification::Percentag │ Validated Create Data Value         
+│                                   │                                   │         │       │                                   │ eRange::1.0                       │ Specification                       
+├···································┼···································┼·········┼·······┼···································┼···································┼·····································
+│ Create Data Structure             │ Create Data Structure             │ SUCCESS │ No    │ Sales Forecast Record             │ DataStructure::SalesForecastRecor │ Validated Create Data Structure     
+│                                   │                                   │         │       │                                   │ d::1.0                            │                                     
+├···································┼···································┼·········┼·······┼···································┼···································┼·····································
+│ Create Data Grain                 │ Create Data Grain                 │ SUCCESS │ No    │ Monthly Region Grain              │ DataGrain::MonthlyRegion::1.0     │ Validated Create Data Grain         
+├···································┼···································┼·········┼·······┼···································┼···································┼·····································
+│ Create Data Field                 │ Create Data Field                 │ SUCCESS │ No    │ Region Code                       │ DataField::SalesForecastRecord::R │ Validated Create Data Field         
+│                                   │                                   │         │       │                                   │ egionCode::1.0                    │                                     
+├···································┼···································┼·········┼·······┼···································┼···································┼·····································
+│ Create Data Field                 │ Create Data Field                 │ SUCCESS │ No    │ Forecast Period                   │ DataField::SalesForecastRecord::F │ Validated Create Data Field         
+│                                   │                                   │         │       │                                   │ orecastPeriod::1.0                │                                     
+├···································┼···································┼·········┼·······┼···································┼···································┼·····································
+│ Create Data Field                 │ Create Data Field                 │ SUCCESS │ No    │ Predicted Revenue                 │ DataField::SalesForecastRecord::P │ Validated Create Data Field         
+│                                   │                                   │         │       │                                   │ redictedRevenue::1.0              │                                     
+├···································┼···································┼·········┼·······┼···································┼···································┼·····································
+│ Create Data Field                 │ Create Data Field                 │ SUCCESS │ No    │ Confidence Score                  │ DataField::SalesForecastRecord::C │ Validated Create Data Field         
+│                                   │                                   │         │       │                                   │ onfidenceScore::1.0               │                                     
+├···································┼···································┼·········┼·······┼···································┼···································┼·····································
+│ Attach Data Value Specification   │ Attach Data Value Specification   │ SUCCESS │ Yes   │ DataField::SalesForecastRecord::C │ DataField::SalesForecastRecord::C │ Validated Attach Data Value         
+│                                   │                                   │         │       │ onfidenceScore::1.0               │ onfidenceScore::1.0               │ Specification (GUID: (Planned:      
+│                                   │                                   │         │       │                                   │                                   │ DataField::SalesForecastRecord::Conf
+│                                   │                                   │         │       │                                   │                                   │ idenceScore::1.0))                  
+├···································┼···································┼·········┼·······┼···································┼···································┼·····································
+│ Link Data Field                   │ Link Data Field                   │ SUCCESS │ No    │ DerivedFrom                       │ DerivedFrom                       │ Validated Link Data Field           
+├···································┼···································┼·········┼·······┼···································┼···································┼·····································
+│ Link Data Value Composition       │ Link Data Value Composition       │ SUCCESS │ No    │                                   │                                   │ Validated Link Data Value           
+│                                   │                                   │         │       │                                   │                                   │ Composition                         
+├···································┼···································┼·········┼·······┼···································┼···································┼·····································
+│ Create Data Class                 │ Create Data Class                 │ SUCCESS │ No    │ Forecast Revenue Amount           │ DataClass::ForecastRevenueAmount: │ Validated Create Data Class         
+│                                   │                                   │         │       │                                   │ :1.0                              │                                     
+├···································┼···································┼·········┼·······┼···································┼···································┼·····································
+│ Link Data Class Composition       │ Link Data Class Composition       │ SUCCESS │ No    │                                   │                                   │ Validated Link Data Class           
+│                                   │                                   │         │       │                                   │                                   │ Composition                         
+├···································┼···································┼·········┼·······┼···································┼···································┼·····································
+│ Link Data Field to Data Structure │ Link Data Field to Data Structure │ SUCCESS │ No    │                                   │                                   │ Validated Link Data Field to Data   
+│                                   │                                   │         │       │                                   │                                   │ Structure                           
+├···································┼···································┼·········┼·······┼···································┼···································┼·····································
+│ Link Certification Type to Data   │ Link Certification Type to Data   │ SUCCESS │ No    │                                   │                                   │ Validated Link Certification Type to
+│ Structure                         │ Structure                         │         │       │                                   │                                   │ Data Structure                      
+├···································┼···································┼·········┼·······┼···································┼···································┼·····································
+│ Attach Data Description to        │ Attach Data Description to        │ SUCCESS │ No    │ DataSpecification::SalesForecast: │                                   │ Validated Attach Data Description to
+│ Element                           │ Element                           │         │       │ :1.0                              │                                   │ Element                             
+└───────────────────────────────────┴───────────────────────────────────┴─────────┴───────┴───────────────────────────────────┴───────────────────────────────────┴─────────────────────────────────────
+
+
+
+v2: Processing complete for '/Users/dwolfson/localGit/egeria-python/tests/dr-egeria-command-tests/dr_test_data_designer.md'
+
+
+SCORE: 20 SUCCESS  0 FAILURE  0 WARNING
+
+================================================================================
+FILE: dr_test_report.md  |  DIRECTIVE: validate  |  16:49:03
+================================================================================
+v2: Processing Markdown File: /Users/dwolfson/localGit/egeria-python/tests/dr-egeria-command-tests/dr_test_report.md
+
+
+                                                        Dr. Egeria v2 Processing Summary                                                        
+┏━━━━━━━━━━━━━━━━━━┳━━━━━━━━━━━━━━━━━━━┳━━━━━━━━━┳━━━━━━━┳━━━━━━━━━━━━━━━━━━━━━━┳━━━━━━━━━━━━━━━━━━━━━━━┳━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━┓
+┃ Markdown Command ┃ Canonical Command ┃ Status  ┃ Found ┃ Display Name / End 1 ┃ Qualified Name / End2 ┃ Message                              ┃
+┡━━━━━━━━━━━━━━━━━━╇━━━━━━━━━━━━━━━━━━━╇━━━━━━━━━╇━━━━━━━╇━━━━━━━━━━━━━━━━━━━━━━╇━━━━━━━━━━━━━━━━━━━━━━━╇━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━┩
+│ View Report      │ View Report       │ SUCCESS │ No    │ Default              │                       │ Validated View Report                │
+├··················┼···················┼·········┼·······┼······················┼·······················┼······································┤
+│ View Report      │ View Report       │ SUCCESS │ No    │ Collections          │                       │ Validated View Report                │
+├··················┼···················┼·········┼·······┼······················┼·······················┼······································┤
+│ View Report      │ View Report       │ SUCCESS │ No    │ Collections          │                       │ Validated View Report                │
+├··················┼···················┼·········┼·······┼······················┼·······················┼······································┤
+│ View Report      │ View Report       │ SUCCESS │ No    │ Digital-Products     │                       │ Validated View Report                │
+├··················┼···················┼·········┼·······┼······················┼·······················┼······································┤
+│ View Report      │ View Report       │ SUCCESS │ No    │ Glossaries           │                       │ Validated View Report                │
+├··················┼···················┼·········┼·······┼······················┼·······················┼······································┤
+│ View Report      │ View Report       │ SUCCESS │ No    │ Projects             │                       │ Validated View Report                │
+├··················┼···················┼·········┼·······┼······················┼·······················┼······································┤
+│ View Report      │ View Report       │ SUCCESS │ No    │ Glossaries           │                       │ Validated View Report                │
+├··················┼···················┼·········┼·······┼······················┼·······················┼······································┤
+│ View Report      │ View Report       │ SUCCESS │ No    │ Collections          │                       │ Validated View Report                │
+├··················┼···················┼·········┼·······┼······················┼·······················┼······································┤
+│ View Report      │ View Report       │ SUCCESS │ No    │ Digital-Products     │                       │ Validated View Report                │
+├··················┼···················┼·········┼·······┼······················┼·······················┼······································┤
+│ View Report      │ View Report       │ SUCCESS │ No    │ Digital-Products     │                       │ Validated View Report                │
+├··················┼···················┼·········┼·······┼······················┼·······················┼······································┤
+│ View Report      │ View Report       │ SUCCESS │ No    │ Collections          │                       │ Validated View Report                │
+├··················┼···················┼·········┼·······┼······················┼·······················┼······································┤
+│ View Report      │ View Report       │ SUCCESS │ No    │ Glossaries           │                       │ Validated View Report                │
+├··················┼···················┼·········┼·······┼······················┼·······················┼······································┤
+│ View Report      │ View Report       │ SUCCESS │ No    │ Glossaries           │                       │ Validated View Report                │
+├··················┼···················┼·········┼·······┼······················┼·······················┼······································┤
+│ View Report      │ View Report       │ SUCCESS │ No    │ Collections          │                       │ Validated View Report                │
+├··················┼···················┼·········┼·······┼······················┼·······················┼······································┤
+│ View Report      │ View Report       │ SUCCESS │ No    │ Glossaries           │                       │ Validated View Report                │
+├··················┼···················┼·········┼·······┼······················┼·······················┼······································┤
+│ View Report      │ View Report       │ SUCCESS │ No    │ Projects             │                       │ Validated View Report                │
+├··················┼···················┼·········┼·······┼······················┼·······················┼······································┤
+│ View Report      │ View Report       │ SUCCESS │ No    │ Collections          │                       │ Validated View Report                │
+├··················┼···················┼·········┼·······┼······················┼·······················┼······································┤
+│ View Report      │ View Report       │ SUCCESS │ No    │ Digital-Products     │                       │ Validated View Report                │
+├··················┼···················┼·········┼·······┼······················┼·······················┼······································┤
+│ View Report      │ View Report       │ SUCCESS │ No    │ Collections          │                       │ Validated View Report                │
+├··················┼···················┼·········┼·······┼······················┼·······················┼······································┤
+│ View Report      │ View Report       │ SUCCESS │ No    │ Digital-Products     │                       │ Validated View Report                │
+├··················┼···················┼·········┼·······┼······················┼·······················┼······································┤
+│ View Report      │ View Report       │ FAILURE │ No    │ Collections          │                       │ Validated View Report                │
+├··················┼···················┼·········┼·······┼······················┼·······················┼······································┤
+│ View Report      │ View Report       │ SUCCESS │ No    │ Collections          │                       │ Validated View Report                │
+├··················┼···················┼·········┼·······┼······················┼·······················┼······································┤
+│ View Report      │ View Report       │ SUCCESS │ No    │ Glossaries           │                       │ Validated View Report                │
+└──────────────────┴───────────────────┴─────────┴───────┴──────────────────────┴───────────────────────┴──────────────────────────────────────┘
+
+
+
+v2: Processing complete for '/Users/dwolfson/localGit/egeria-python/tests/dr-egeria-command-tests/dr_test_report.md'
+
+
+SCORE: 22 SUCCESS  1 FAILURE  0 WARNING
+
+================================================================================
+FILE: dr_test_solution.md  |  DIRECTIVE: validate  |  16:49:06
+================================================================================
+v2: Processing Markdown File: /Users/dwolfson/localGit/egeria-python/tests/dr-egeria-command-tests/dr_test_solution.md
+
+
+                                                                                     Dr. Egeria v2 Processing Summary                                                                                   
+┏━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━┳━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━┳━━━━━━━━━┳━━━━━━━┳━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━┳━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━┳━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+┃ Markdown Command                  ┃ Canonical Command                 ┃ Status  ┃ Found ┃ Display Name / End 1              ┃ Qualified Name / End2              ┃ Message                            
+┡━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━╇━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━╇━━━━━━━━━╇━━━━━━━╇━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━╇━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━╇━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+│ Create Information Supply Chain   │ Create Information Supply Chain   │ SUCCESS │ No    │ Sales Forecast Data Flow          │ InformationSupplyChain::Sales      │ Validated Create Information Supply
+│                                   │                                   │         │       │                                   │ Forecast Data Flow                 │ Chain                              
+├···································┼···································┼·········┼·······┼···································┼····································┼····································
+│ Create Information Supply Chain   │ Create Information Supply Chain   │ SUCCESS │ No    │ Sales Data Ingestion Segment      │ InformationSupplyChain::Sales Data │ Validated Create Information Supply
+│                                   │                                   │         │       │                                   │ Ingestion Segment                  │ Chain                              
+├···································┼···································┼·········┼·······┼···································┼····································┼····································
+│ Create Solution Blueprint         │ Create Solution Blueprint         │ SUCCESS │ No    │ Sales Forecast Architecture       │ SolutionBlueprint::Sales Forecast  │ Validated Create Solution Blueprint
+│                                   │                                   │         │       │                                   │ Architecture                       │                                    
+├···································┼···································┼·········┼·······┼···································┼····································┼····································
+│ Create Solution Component         │ Create Solution Component         │ SUCCESS │ No    │ Sales Data Ingestion Component    │ SolutionComponent::Sales Data      │ Validated Create Solution Component
+│                                   │                                   │         │       │                                   │ Ingestion Component                │                                    
+├···································┼···································┼·········┼·······┼···································┼····································┼····································
+│ Create Solution Component         │ Create Solution Component         │ SUCCESS │ No    │ Forecast Calculation Engine       │ SolutionComponent::Forecast        │ Validated Create Solution Component
+│                                   │                                   │         │       │                                   │ Calculation Engine                 │                                    
+├···································┼···································┼·········┼·······┼···································┼····································┼····································
+│ Create Solution Component         │ Create Solution Component         │ SUCCESS │ No    │ Report Distribution Component     │ SolutionComponent::Report          │ Validated Create Solution Component
+│                                   │                                   │         │       │                                   │ Distribution Component             │                                    
+├···································┼···································┼·········┼·······┼···································┼····································┼····································
+│ Create Solution Component         │ Create Solution Component         │ SUCCESS │ No    │ Model Validation Service          │ SolutionComponent::Model           │ Validated Create Solution Component
+│                                   │                                   │         │       │                                   │ Validation Service                 │                                    
+├···································┼···································┼·········┼·······┼···································┼····································┼····································
+│ Create Solution Role              │ Create Solution Role              │ SUCCESS │ No    │ Sales Data Steward                │ SolutionRole::Sales Data Steward   │ Validated Create Solution Role     
+├···································┼···································┼·········┼·······┼···································┼····································┼····································
+│ Link Solution Components          │ Link Solution Components          │ SUCCESS │ No    │                                   │                                    │ Validated Link Solution Components 
+├···································┼···································┼·········┼·······┼···································┼····································┼····································
+│ Link Solution Components          │ Link Solution Components          │ SUCCESS │ No    │                                   │                                    │ Validated Link Solution Components 
+├···································┼···································┼·········┼·······┼···································┼····································┼····································
+│ Link Information Supply Chain     │ Link Information Supply Chain     │ SUCCESS │ Yes   │ InformationSupplyChain::Sales     │ InformationSupplyChain::Sales Data │ Validated Link Information Supply  
+│ Peers                             │ Peers                             │         │       │ Data Ingestion Segment            │ Ingestion Segment                  │ Chain Peers (GUID: (Planned:       
+│                                   │                                   │         │       │                                   │                                    │ InformationSupplyChain::Sales Data 
+│                                   │                                   │         │       │                                   │                                    │ Ingestion Segment))                
+├···································┼···································┼·········┼·······┼···································┼····································┼····································
+│ Link Information Supply Chain     │ Link Information Supply Chain     │ SUCCESS │ No    │                                   │                                    │ Validated Link Information Supply  
+│ Child                             │ Child                             │         │       │                                   │                                    │ Chain Child                        
+├···································┼···································┼·········┼·······┼···································┼····································┼····································
+│ Link Solution Component to        │ Link Solution Component to        │ SUCCESS │ No    │                                   │                                    │ Validated Link Solution Component t
+│ Blueprint                         │ Blueprint                         │         │       │                                   │                                    │ Blueprint                          
+├···································┼···································┼·········┼·······┼···································┼····································┼····································
+│ Link Solution Component to        │ Link Solution Component to        │ SUCCESS │ No    │                                   │                                    │ Validated Link Solution Component t
+│ Blueprint                         │ Blueprint                         │         │       │                                   │                                    │ Blueprint                          
+├···································┼···································┼·········┼·······┼···································┼····································┼····································
+│ Link Solution Component to        │ Link Solution Component to        │ SUCCESS │ No    │                                   │                                    │ Validated Link Solution Component t
+│ Blueprint                         │ Blueprint                         │         │       │                                   │                                    │ Blueprint                          
+├···································┼···································┼·········┼·······┼···································┼····································┼····································
+│ Link Actor to Blueprint           │ Link Actor to Blueprint           │ SUCCESS │ No    │                                   │                                    │ Validated Link Actor to Blueprint  
+├···································┼···································┼·········┼·······┼···································┼····································┼····································
+│ Link SubComponent                 │ Link SubComponent                 │ SUCCESS │ No    │                                   │                                    │ Validated Link SubComponent        
+├···································┼···································┼·········┼·······┼···································┼····································┼····································
+│ Link Component to Actor           │ Link Component to Actor           │ SUCCESS │ No    │                                   │                                    │ Validated Link Component to Actor  
+├···································┼···································┼·········┼·······┼···································┼····································┼····································
+│ Link Solution Design              │ Link Solution Design              │ SUCCESS │ Yes   │ InformationSupplyChain::Sales     │ InformationSupplyChain::Sales      │ Validated Link Solution Design     
+│                                   │                                   │         │       │ Forecast Data Flow                │ Forecast Data Flow                 │ (GUID: (Planned:                   
+│                                   │                                   │         │       │                                   │                                    │ InformationSupplyChain::Sales      
+│                                   │                                   │         │       │                                   │                                    │ Forecast Data Flow))               
+└───────────────────────────────────┴───────────────────────────────────┴─────────┴───────┴───────────────────────────────────┴────────────────────────────────────┴────────────────────────────────────
+
+
+
+v2: Processing complete for '/Users/dwolfson/localGit/egeria-python/tests/dr-egeria-command-tests/dr_test_solution.md'
+
+
+SCORE: 19 SUCCESS  0 FAILURE  0 WARNING
+
+================================================================================
+FILE: dr_test_new_commands.md  |  DIRECTIVE: validate  |  16:49:09
+================================================================================
+v2: Processing Markdown File: /Users/dwolfson/localGit/egeria-python/tests/dr-egeria-command-tests/dr_test_new_commands.md
+
+
+                                                                       Dr. Egeria v2 Processing Summary                                                                       
+┏━━━━━━━━━━━━━━━━━━━━┳━━━━━━━━━━━━━━━━━━━━┳━━━━━━━━━┳━━━━━━━┳━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━┳━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━┳━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━┓
+┃ Markdown Command   ┃ Canonical Command  ┃ Status  ┃ Found ┃ Display Name / End 1               ┃ Qualified Name / End2              ┃ Message                              ┃
+┡━━━━━━━━━━━━━━━━━━━━╇━━━━━━━━━━━━━━━━━━━━╇━━━━━━━━━╇━━━━━━━╇━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━╇━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━╇━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━┩
+│ Create Skill Set   │ Create Skill Set   │ SUCCESS │ No    │ Data Analysis Skills               │ SkillSet::DataAnalysisSkills       │ Validated Create Skill Set           │
+├····················┼····················┼·········┼·······┼····································┼····································┼······································┤
+│ Create Perspective │ Create Perspective │ SUCCESS │ No    │ Operational Resilience Perspective │ Perspective::OperationalResilience │ Validated Create Perspective         │
+├····················┼····················┼·········┼·······┼····································┼····································┼······································┤
+│ Create Skill       │ Create Skill       │ SUCCESS │ No    │ Data Profiling                     │ Skill::DataProfiling               │ Validated Create Skill               │
+└────────────────────┴────────────────────┴─────────┴───────┴────────────────────────────────────┴────────────────────────────────────┴──────────────────────────────────────┘
+
+
+
+v2: Processing complete for '/Users/dwolfson/localGit/egeria-python/tests/dr-egeria-command-tests/dr_test_new_commands.md'
+
+
+SCORE: 3 SUCCESS  0 FAILURE  0 WARNING
+
+================================================================================
+FILE: dr_test_action_author.md  |  DIRECTIVE: validate  |  16:49:10
+================================================================================
+v2: Processing Markdown File: /Users/dwolfson/localGit/egeria-python/tests/dr-egeria-command-tests/dr_test_action_author.md
+
+
+                                                                                     Dr. Egeria v2 Processing Summary                                                                                   
+┏━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━┳━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━┳━━━━━━━━━┳━━━━━━━┳━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━┳━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━┳━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+┃ Markdown Command                  ┃ Canonical Command                  ┃ Status  ┃ Found ┃ Display Name / End 1             ┃ Qualified Name / End2             ┃ Message                             
+┡━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━╇━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━╇━━━━━━━━━╇━━━━━━━╇━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━╇━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━╇━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+│ Create Governance Action Process  │ Create Governance Action Process   │ SUCCESS │ No    │ Data Quality Remediation Process │ GovActionProcess::DataQuality::Re │ Validated Create Governance Action  
+│                                   │                                    │         │       │                                  │ mediation::1.0                    │ Process                             
+├···································┼····································┼·········┼·······┼··································┼···································┼·····································
+│ Create Governance Action Process  │ Create Governance Action Process   │ SUCCESS │ No    │ Detect Duplicates Step           │ GovActionProcessStep::DataQuality │ Validated Create Governance Action  
+│ Step                              │ Step                               │         │       │                                  │ ::DetectDuplicates::1.0           │ Process Step                        
+├···································┼····································┼·········┼·······┼··································┼···································┼·····································
+│ Create Governance Action Process  │ Create Governance Action Process   │ SUCCESS │ No    │ Merge Duplicates Step            │ GovActionProcessStep::DataQuality │ Validated Create Governance Action  
+│ Step                              │ Step                               │         │       │                                  │ ::MergeDuplicates::1.0            │ Process Step                        
+├···································┼····································┼·········┼·······┼··································┼···································┼·····································
+│ Create Governance Action Type     │ Create Governance Action Type      │ SUCCESS │ No    │ Ad Hoc Duplicate Scan            │ GovActionType::DataQuality::AdHoc │ Validated Create Governance Action  
+│                                   │                                    │         │       │                                  │ DuplicateScan::1.0                │ Type                                
+├···································┼····································┼·········┼·······┼··································┼···································┼·····································
+│ Link First Process Step           │ Link First Process Step            │ WARNING │ No    │                                  │                                   │ No processor registered for 'Link   
+│                                   │                                    │         │       │                                  │                                   │ First Process Step'                 
+├···································┼····································┼·········┼·······┼··································┼···································┼·····································
+│ Link Next Process Step            │ Link Next Process Step             │ WARNING │ No    │                                  │                                   │ No processor registered for 'Link   
+│                                   │                                    │         │       │                                  │                                   │ Next Process Step'                  
+└───────────────────────────────────┴────────────────────────────────────┴─────────┴───────┴──────────────────────────────────┴───────────────────────────────────┴─────────────────────────────────────
+
+
+
+v2: Processing complete for '/Users/dwolfson/localGit/egeria-python/tests/dr-egeria-command-tests/dr_test_action_author.md'
+
+
+SCORE: 4 SUCCESS  0 FAILURE  2 WARNING
+
+
+================================================================================
+VALIDATE MODE SUMMARY
+================================================================================
+File                                         S     F     W
+dr_test_glossary.md                         16     0     0
+dr_test_governance.md                       37     8     1
+dr_test_projects.md                         14     0     0
+dr_test_collections_good.md                 20     3     0
+dr_test_collections_mean.md                  1     9     0
+dr_test_products_good.md                    12     3     0
+dr_test_external_ref.md                     10     8     0
+dr_test_feedback.md                          5    15     0
+dr_test_data_designer.md                    20     0     0
+dr_test_report.md                           22     1     0
+dr_test_solution.md                         19     0     0
+dr_test_new_commands.md                      3     0     0
+dr_test_action_author.md                     4     0     2
+
+TOTALS: 183 SUCCESS  47 FAILURE  3 WARNING
