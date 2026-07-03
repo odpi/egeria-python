@@ -9,8 +9,8 @@ from pyegeria import EgeriaTech, PyegeriaException
 from md_processing.v2.processors import AsyncBaseCommandProcessor
 from md_processing.md_processing_utils.md_processing_constants import get_command_spec
 from md_processing.md_processing_utils.common_md_utils import (
-    set_element_prop_body, set_create_body, set_update_body, 
-    set_rel_request_body, set_rel_prop_body,
+    set_element_prop_body, set_create_body, set_update_body,
+    set_rel_request_body, set_rel_prop_body, set_solution_architect_body,
     update_element_dictionary, add_note_in_dr_e, async_add_note_in_dr_e,
     set_delete_request_body, set_delete_rel_request_body
 )
@@ -466,6 +466,8 @@ class SolutionArchitectProcessor(AsyncBaseCommandProcessor):
                 return await self.client._async_get_solution_component_by_guid(guid)
             elif om_type == "SolutionRole" or om_type == "SolutionActorRole":
                 return await self.client._async_get_solution_role_by_guid(guid)
+            elif om_type == "DesignPattern":
+                return await self.client._async_get_design_pattern_by_guid(guid)
             return None
         except PyegeriaException:
             return None
@@ -486,9 +488,9 @@ class SolutionArchitectProcessor(AsyncBaseCommandProcessor):
                 return self.command.raw_block
 
             body = set_update_body(om_type, attributes)
-            prop_body = set_element_prop_body(om_type, qualified_name, attributes)
+            prop_body = set_solution_architect_body(om_type, qualified_name, attributes)
             body['properties'] = self.filter_update_properties(prop_body, body.get('mergeUpdate', True))
-            
+
             if om_type == "InformationSupplyChain":
                 await self.client._async_update_info_supply_chain(guid, body)
             elif om_type == "SolutionBlueprint":
@@ -497,7 +499,9 @@ class SolutionArchitectProcessor(AsyncBaseCommandProcessor):
                 await self.client._async_update_solution_component(guid, body)
             elif om_type == "SolutionActorRole":
                 await self.client._async_update_solution_role(guid, body)
-            
+            elif om_type == "DesignPattern":
+                await self.client._async_update_design_pattern(guid, body)
+
             self.parsed_output["guid"] = guid
             
             if journal_entry:
@@ -509,9 +513,9 @@ class SolutionArchitectProcessor(AsyncBaseCommandProcessor):
 
         elif verb == "Create":
             body = set_create_body(om_type, attributes)
-            body['properties'] = set_element_prop_body(om_type, qualified_name, attributes)
+            body['properties'] = set_solution_architect_body(om_type, qualified_name, attributes)
             body = body_slimmer(body)
-            
+
             raw_guid = None
             if om_type == "InformationSupplyChain":
                 raw_guid = await self.client._async_create_info_supply_chain(body)
@@ -521,7 +525,9 @@ class SolutionArchitectProcessor(AsyncBaseCommandProcessor):
                 raw_guid = await self.client._async_create_solution_component(body)
             elif om_type == "SolutionActorRole":
                 raw_guid = await self.client._async_create_solution_role(body)
-            
+            elif om_type == "DesignPattern":
+                raw_guid = await self.client._async_create_design_pattern(body)
+
             guid = self.extract_guid_or_raise(raw_guid, f"Create {om_type}")
             if guid:
                 self.parsed_output["guid"] = guid
@@ -635,7 +641,8 @@ class SolutionLinkProcessor(AsyncBaseCommandProcessor):
             }
             
             # Determine which property to use for the 'label/role' field
-            if om_type in ["SolutionLinkingWire", "InformationSupplyChainLink", "InformationSupplyChainComposition"]:
+            if om_type in ["SolutionLinkingWire", "InformationSupplyChainLink", "InformationSupplyChainComposition",
+                            "NestedDesignPattern", "SpecializedDesignPattern", "RelatedDesignPattern"]:
                  properties["label"] = label
             elif om_type == "CollectionMembership":
                  properties["membershipRationale"] = attributes.get('Membership Rationale', {}).get('value') or description
@@ -670,6 +677,12 @@ class SolutionLinkProcessor(AsyncBaseCommandProcessor):
             elif om_type == "CollectionMembership":
                  from pyegeria.core.utils import body_slimmer
                  await self.client._async_add_to_collection(id1, id2, body_slimmer(body))
+            elif om_type == "NestedDesignPattern":
+                 await self.client._async_link_nested_design_patterns(id1, id2, body)
+            elif om_type == "SpecializedDesignPattern":
+                 await self.client._async_link_specialized_design_patterns(id1, id2, body)
+            elif om_type == "RelatedDesignPattern":
+                 await self.client._async_link_related_design_patterns(id1, id2, body)
             else:
                  logger.warning(f"OM_TYPE {om_type} not yet supported in SolutionLinkProcessor")
                  return self.command.raw_block
@@ -695,6 +708,12 @@ class SolutionLinkProcessor(AsyncBaseCommandProcessor):
                 await self.client._async_detach_solution_design(id1, id2, body)
             elif om_type == "CollectionMembership":
                 await self.client._async_remove_from_collection(id1, id2, body)
+            elif om_type == "NestedDesignPattern":
+                await self.client._async_detach_nested_design_patterns(id1, id2, body)
+            elif om_type == "SpecializedDesignPattern":
+                await self.client._async_detach_specialized_design_patterns(id1, id2, body)
+            elif om_type == "RelatedDesignPattern":
+                await self.client._async_detach_related_design_patterns(id1, id2, body)
             else:
                 logger.warning(f"OM_TYPE {om_type} not yet supported in SolutionLinkProcessor for detach")
                 return self.command.raw_block

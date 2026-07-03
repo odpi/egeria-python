@@ -136,7 +136,7 @@ Dr.Egeria organizes its commands into "families," each corresponding to a specif
 - **Actor Manager**: Manage organizational metadata, including people, teams, organizations, and roles (e.g., `Create Person`, `Create Team`, `Create Organization`, `Create Person Role`). Supports linking team structures and role appointments.
 - **Project**: Manage projects and their dependencies or hierarchies (e.g., `Create Project`, `Link Project Dependency`).
 - **Collection Manager**: Manage various collections of elements, including Folders, Products, and Agreements (e.g., `Create Collection Folder`, `Create Digital Product`).
-- **Solution Architect**: Manage solution blueprints, components, and information supply chains.
+- **Solution Architect**: Manage solution blueprints, components, information supply chains, and design patterns (e.g., `Create Design Pattern`, `Link Nested Design Patterns`, `Link Specialized Design Patterns`, `Link Related Design Patterns`).
 - **Governance Officer**: Manage governance definitions, policies, and responsibilities.
 - **Action Author**: Define governance action process flows — reusable single-step action types and multi-step processes — without writing code (e.g., `Create Governance Action Process`, `Create Governance Action Process Step`, `Link First Process Step`, `Link Next Process Step`).
 

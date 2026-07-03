@@ -494,6 +494,28 @@ def set_actor_manager_prop_body(object_type: str, qualified_name: str, attribute
     return prop_bod
 
 
+def set_solution_architect_body(object_type: str, qualified_name: str, attributes: dict) -> dict:
+    """
+    Build the INNER element-specific Properties body for Solution Architect elements.
+    Adds DesignPattern-specific fields on top of set_element_prop_body.
+    """
+    prop_bod = set_element_prop_body(object_type, qualified_name, attributes)
+
+    if object_type == "DesignPattern":
+        prop_bod.update({
+            "context": attributes.get('Context', {}).get('value', None),
+            "problemStatement": attributes.get('Problem Statement', {}).get('value', None),
+            "problemExample": attributes.get('Problem Example', {}).get('value', None),
+            "solutionDescription": attributes.get('Solution Description', {}).get('value', None),
+            "solutionExample": attributes.get('Solution Example', {}).get('value', None),
+            "forces": attributes.get('Forces', {}).get('value', None),
+            "benefits": attributes.get('Benefits', {}).get('value', None),
+            "liabilities": attributes.get('Liabilities', {}).get('value', None),
+        })
+
+    return prop_bod
+
+
 def set_product_body(object_type: str, qualified_name: str, attributes: dict) -> dict:
     prop_bod = set_element_prop_body(object_type, qualified_name, attributes)
     prop_bod["identifier"] = attributes.get('Identifier', {}).get('value', None)
