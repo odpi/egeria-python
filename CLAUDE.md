@@ -64,6 +64,11 @@ gen_md_cmd_templates                # Basic attributes only
 gen_md_cmd_templates --advanced     # All attributes
 ```
 
+## Commits
+
+- Always use `git commit -s` to sign off commits. This appends `Signed-off-by: Dan Wolfson <dan.wolfson@pdr-associates.com>` — DCO is enforced on this repo and unsigned commits will be rejected.
+- Do **not** add `Co-Authored-By:` lines to commit messages.
+
 ---
 
 ## Architecture
