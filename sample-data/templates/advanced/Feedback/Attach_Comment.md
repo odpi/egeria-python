@@ -3,6 +3,16 @@ ___
 ## Attach Comment
 > Attach a comment to a referenceable element via the AttachedComment relationship.
 
+### Commented On Element
+>	**Input Required**: True
+
+>	**Attribute Type**: Reference Name
+
+>	**Description**: The element being commented on.
+
+>	**Alternative Labels**: Associated Element
+
+
 ### Label
 >	**Input Required**: False
 
@@ -11,6 +21,14 @@ ___
 >	**Description**: A label used to identify or categorise a relationship link.
 
 >	**Alternative Labels**: Wire Label
+
+
+### Comment
+>	**Input Required**: False
+
+>	**Attribute Type**: Reference Name
+
+>	**Description**: The comment being attached.
 
 
 ### Journal Entry

@@ -18,7 +18,7 @@ ___
 
 >	**Attribute Type**: Reference Name
 
->	**Description**: The data class that specifies the valid values or patterns for this data field (DataValueDefinition relationship).
+>	**Description**: The parent data class in a relationship.
 
 
 ### Data Type
@@ -176,7 +176,7 @@ ___
 
 >	**Attribute Type**: Reference Name
 
->	**Description**: The data class that specifies the valid values or patterns for this data field (DataValueDefinition relationship).
+>	**Description**: The parent data class in a relationship.
 
 
 ### Data Type

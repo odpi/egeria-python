@@ -293,7 +293,6 @@ def setup_dispatcher(client: EgeriaTech) -> V2Dispatcher:
 
     # Reporting / View
     reg("View Report", ViewProcessor)
-    reg("Report", ViewProcessor)
 
     # Feedback / Tags / External References
     reg("Add Comment", FeedbackProcessor)

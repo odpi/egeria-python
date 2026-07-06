@@ -15,6 +15,24 @@ ___
 >	**Valid Values**: RelatedTerm,Synonym,Antonym,PreferredTerm,ReplacementTerm,Translation,ISA,ValidValue,ISARelationship,TermHASARelationship,TYPED BY,TermTYPEDBYRelationship,TYPE OF,TermISATYPEOFRelationship
 
 
+### Term 1
+>	**Input Required**: True
+
+>	**Attribute Type**: Reference Name
+
+>	**Description**: The name of the first term to connect.
+
+>	**Alternative Labels**: Term; Term Name
+
+
+### Term 2
+>	**Input Required**: True
+
+>	**Attribute Type**: Reference Name
+
+>	**Description**: The name of the second term to connect.
+
+
 ### Confidence
 >	**Input Required**: False
 

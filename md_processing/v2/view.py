@@ -149,21 +149,22 @@ class ViewProcessor(AsyncBaseCommandProcessor):
 
         # 5. Handle the result structure from _async_run_report
         # Expected shapes: {"kind": "empty"}, {"kind": "text", "content": ...}, {"kind": "json", "data": ...}
+        preamble = self.command.raw_block
+        sep = "\n\n---\n\n"
         kind = result.get("kind")
         if kind == "empty":
-            return f"\n\n## {self.command.verb} {self.command.object_type}\n\nNo elements found"
-        
+            return f"{preamble}{sep}## {self.command.verb} {self.command.object_type}\n\nNo elements found"
+
         elif kind == "text":
             content = result.get("content", "")
-            # Ensure there's a heading if it's not already in the content
             if not content.strip().startswith("#"):
-                return f"\n\n## {self.command.verb} {self.command.object_type}\n\n{content}"
-            return f"\n\n{content}"
-        
+                return f"{preamble}{sep}## {self.command.verb} {self.command.object_type}\n\n{content}"
+            return f"{preamble}{sep}{content}"
+
         elif kind == "json":
             data = result.get("data")
             formatted_json = json.dumps(data, indent=4)
-            return f"\n\n## {self.command.verb} {self.command.object_type}\n\n```json\n{formatted_json}\n```"
+            return f"{preamble}{sep}## {self.command.verb} {self.command.object_type}\n\n```json\n{formatted_json}\n```"
         
         else:
             raw_result = result.get("raw", "Unknown result from report executor")

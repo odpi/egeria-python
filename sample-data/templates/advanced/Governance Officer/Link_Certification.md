@@ -8,7 +8,7 @@ ___
 
 >	**Attribute Type**: Reference Name
 
->	**Description**: The license type being used for the license.
+>	**Description**: The certification type being used for the certification.
 
 
 ### Referenceable

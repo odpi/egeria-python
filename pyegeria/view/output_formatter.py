@@ -902,10 +902,17 @@ def populate_columns_from_properties(element: dict, columns_struct: dict) -> dic
             # Fallback to root element if not found in nested properties
             if val is None and props is not element:
                 val = element.get(key_upper)
-            
+
             if val is not None:
                 set_col_value(val)
                 continue
+
+            # 4) GUID lives in elementHeader, not in properties
+            if key_snake.lower() in ('guid',):
+                val = element.get('elementHeader', {}).get('guid')
+                if val is not None:
+                    set_col_value(val)
+                    continue
 
         except Exception as e:
             # Be resilient; log and continue

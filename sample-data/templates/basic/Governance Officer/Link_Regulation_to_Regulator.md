@@ -3,22 +3,22 @@ ___
 ## Link Regulation to Regulator
 > Use the Regulator relationship to link a regulation to a regulator organization.
 
-### Governance Definition
+### Regulation
 >	**Input Required**: True
 
 >	**Attribute Type**: Reference Name
 
->	**Description**: The definition governing the referenceable.
+>	**Description**: The Regulation entity to link to.
 
 
-### Referenceable
+### Organization Reference
 >	**Input Required**: True
 
 >	**Attribute Type**: Reference Name
 
->	**Description**: The object being licensed or certified.
+>	**Description**: An organization element that, for instance, can represent a regulatory organization.
 
->	**Alternative Labels**: element
+>	**Alternative Labels**: Org; Org Reference
 
 
 ### Label

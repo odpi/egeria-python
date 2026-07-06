@@ -186,6 +186,78 @@ def test_validate_compact_spec_file_warns_when_om_type_missing(tmp_path):
     assert severities.get("OM_TYPE_MISSING") == "WARNING"
 
 
+def test_validate_compact_spec_file_does_not_warn_when_enum_attribute_selects_relationship_type(tmp_path):
+    # Mirrors "Link Term-Term Relationship": OM_TYPE is intentionally blank because the concrete
+    # Egeria relationship type is chosen at runtime via the Enum-style "Relationship Type" attribute,
+    # which is inherited from the command's bundle rather than listed in custom_attributes directly.
+    payload = {
+        "attribute_definitions": {
+            "Term 1": {"variable_name": "term_1", "style": "Reference Name"},
+            "Term 2": {"variable_name": "term_2", "style": "Reference Name"},
+            "Relationship Type": {
+                "variable_name": "relationship_type",
+                "style": "Enum",
+                "valid_values": ["RelatedTerm", "Synonym", "Antonym", "PreferredTerm"],
+            },
+        },
+        "bundles": {
+            "Term-Term Link Base": {
+                "inherits": None,
+                "own_attributes": ["Relationship Type"],
+            }
+        },
+        "commands": {
+            "Link Term-Term Relationship": {
+                "family": "Glossary",
+                "find_method": "",
+                "OM_TYPE": "",
+                "bundle": "Term-Term Link Base",
+                "custom_attributes": ["Term 1", "Term 2"],
+            }
+        },
+    }
+    file_path = tmp_path / "compact_enum_relationship_type.json"
+    file_path.write_text(json.dumps(payload), encoding="utf-8")
+
+    findings = validate_compact_spec_file(file_path)
+    codes = {f.code for f in findings}
+    assert "OM_TYPE_MISSING" not in codes
+
+
+def test_validate_compact_spec_file_still_flags_invalid_om_type_for_link_team_membership(tmp_path):
+    # "Link Team Membership" has a real OM_TYPE_INVALID bug (OM_TYPE should be a relationship type
+    # like "AssignmentScope", not "TeamMember"). Its bundle attributes are plain Reference Name
+    # style, not Enum, so the new enum-type-selector exemption must not swallow this error.
+    payload = {
+        "attribute_definitions": {
+            "Team": {"variable_name": "team", "style": "Reference Name"},
+            "Team Member Role": {"variable_name": "team_member_role", "style": "Reference Name"},
+        },
+        "bundles": {
+            "Team Membership Link Base": {
+                "inherits": None,
+                "own_attributes": ["Team", "Team Member Role"],
+            }
+        },
+        "commands": {
+            "Link Team Membership": {
+                "family": "Actor Manager",
+                "find_method": "",
+                "OM_TYPE": "TeamMember",
+                "bundle": "Team Membership Link Base",
+                "custom_attributes": [],
+            }
+        },
+    }
+    file_path = tmp_path / "compact_team_membership.json"
+    file_path.write_text(json.dumps(payload), encoding="utf-8")
+
+    findings = validate_compact_spec_file(file_path, valid_om_types={"AssignmentScope"})
+    severities = {f.code: f.severity for f in findings}
+    assert severities.get("OM_TYPE_INVALID") == "ERROR"
+    assert "OM_TYPE_MISSING" not in severities
+
+
 def test_validate_compact_spec_file_does_not_flag_mismatch_by_default(tmp_path):
     payload = {
         "commands": {

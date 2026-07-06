@@ -253,4 +253,14 @@ ___
 >	**Description**: The authors.
 
 
+### Sub-Projects
+>	**Input Required**: False
+
+>	**Attribute Type**: Reference Name List
+
+>	**Description**: List of sub-projects.
+
+>	**Alternative Labels**: SubProjects; Child Projects
+
+
 ___

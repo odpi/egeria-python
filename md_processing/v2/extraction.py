@@ -8,9 +8,14 @@ from loguru import logger
 
 # Standard Dr.Egeria / OMAG verbs
 STANDARD_VERBS = {
-    "Create", "Update", "Delete", "Link", "Attach", "Add", 
-    "Unlink", "Detach", "Remove", "Display", "Run", "View", 
+    "Create", "Update", "Delete", "Link", "Attach", "Add",
+    "Unlink", "Detach", "Remove", "Display", "Run", "View",
     "Search", "Find", "Provenance", "Validate", "Process"
+}
+
+# Commands that appear as a single word (no separate verb) and map to canonical verb+object
+VERBLESS_COMMAND_ALIASES = {
+    "report": ("View", "Report"),
 }
 
 @dataclass
@@ -78,18 +83,45 @@ class UniversalExtractor:
                     is_command=True
                 ))
             else:
-                # Preservation: include non-command blocks as-is
-                commands.append(DrECommand(
-                    verb="",
-                    object_type="",
-                    source_verb="",
-                    source_object_type="",
-                    attributes={},
-                    raw_block=block_text,
-                    start_line=start_line,
-                    end_line=start_line + block_text.count('\n'),
-                    is_command=False
-                ))
+                # Check for known verbless aliases (e.g. "## Report" → View Report)
+                verbless_verb, verbless_obj = "", ""
+                for line in block_text.splitlines():
+                    stripped = line.strip()
+                    if not stripped:
+                        continue
+                    if re.match(r'^\s*[_-]{3,}\s*$', line):
+                        continue
+                    word = re.sub(r'^##?\s*', '', stripped).strip().lower()
+                    if word in VERBLESS_COMMAND_ALIASES:
+                        verbless_verb, verbless_obj = VERBLESS_COMMAND_ALIASES[word]
+                    break
+
+                if verbless_verb:
+                    attributes = self._extract_attributes_from_block(block_text)
+                    commands.append(DrECommand(
+                        verb=verbless_verb,
+                        object_type=verbless_obj,
+                        source_verb=word.capitalize(),
+                        source_object_type="",
+                        attributes=attributes,
+                        raw_block=block_text,
+                        start_line=start_line,
+                        end_line=start_line + block_text.count('\n'),
+                        is_command=True
+                    ))
+                else:
+                    # Preservation: include non-command blocks as-is
+                    commands.append(DrECommand(
+                        verb="",
+                        object_type="",
+                        source_verb="",
+                        source_object_type="",
+                        attributes={},
+                        raw_block=block_text,
+                        start_line=start_line,
+                        end_line=start_line + block_text.count('\n'),
+                        is_command=False
+                    ))
         return commands
 
     def _split_into_blocks(self) -> List[tuple[str, int]]:
