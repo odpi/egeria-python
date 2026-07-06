@@ -1,14 +1,14 @@
 ___
 
 ## Link Regulation Certification Type
-> A certification type addressing a specific regulation.
+> Link a regulation certification type to a regulation.
 
 ### Certification Type
 >	**Input Required**: True
 
 >	**Attribute Type**: Reference Name
 
->	**Description**: The license type being used for the license.
+>	**Description**: The certification type being used for the certification.
 
 
 ### Regulation
@@ -16,7 +16,7 @@ ___
 
 >	**Attribute Type**: Reference Name
 
->	**Description**: The Regulation entity to link to the certification type.
+>	**Description**: The Regulation entity to link to.
 
 
 ### Label

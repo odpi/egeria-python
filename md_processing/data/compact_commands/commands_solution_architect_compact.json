@@ -1,6 +1,6 @@
 {
   "family": "Solution Architect",
-  "exported": "Jul 2, 2026 at 8:17:19 PM",
+  "exported": "Jul 6, 2026 at 1:04:05 PM",
   "attribute_definitions": {
     "Activity Status": {
       "variable_name": "activity_status",
@@ -271,7 +271,7 @@
       "default_value": "",
       "valid_values": [],
       "existing_element": "CertificationType",
-      "description": "The license type being used for the license.",
+      "description": "The certification type being used for the certification.",
       "generated": false,
       "style": "Reference Name",
       "user_specified": true,
@@ -1267,6 +1267,25 @@
       "min_cardinality": 0,
       "max_cardinality": 1,
       "level": "Domain",
+      "Journal Entry": ""
+    },
+    "Organization Reference": {
+      "variable_name": "organization_reference",
+      "inUpdate": true,
+      "attr_labels": "Org; Org Reference",
+      "examples": "",
+      "default_value": "",
+      "valid_values": [],
+      "existing_element": "Referenceable",
+      "description": "An organization element that, for instance, can represent a regulatory organization.",
+      "generated": false,
+      "style": "Reference Name",
+      "user_specified": true,
+      "unique": false,
+      "input_required": true,
+      "min_cardinality": 1,
+      "max_cardinality": 1,
+      "level": "Basic",
       "Journal Entry": ""
     },
     "Parent at End1": {

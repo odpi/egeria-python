@@ -107,11 +107,11 @@ class BlueprintProcessor(AsyncBaseCommandProcessor):
         as_is = {c['elementHeader']['guid'] for c in bp_element.get('solutionComponents', [])}
         
         async def add_fn(comp_guid):
-            body = {"class": "NewRelationshipRequestBody", "properties": {"class": "SolutionBlueprintCompositionProperties", "typeName": "SolutionBlueprintComposition", "description": "linked by Dr.Egeria v2"}}
-            await self.client._async_link_solution_component_to_blueprint(guid, comp_guid, body)
-            
+            body = {"class": "NewRelationshipRequestBody", "properties": {"class": "SolutionDesignProperties", "description": "linked by Dr.Egeria v2"}}
+            await self.client._async_link_solution_design(guid, comp_guid, body)
+
         async def remove_fn(comp_guid):
-            await self.client._async_detach_solution_component_from_blueprint(guid, comp_guid, None)
+            await self.client._async_detach_solution_design(guid, comp_guid, None)
             
         return await self.sync_members(as_is, to_be_guids, add_fn, remove_fn, replace_all)
 
@@ -161,9 +161,11 @@ class ComponentProcessor(AsyncBaseCommandProcessor):
             self.parsed_output["guid"] = guid
             
             sync_res = await self._sync_all_rels(guid, supply_chain_guids, parent_comp_guids, actor_guids, blueprint_guids, keywords, not merge_update)
-            if any(sync_res.values()):
-                self.add_related_result("Relationships Sync", message=f"Updated relationships (Success: {len(sync_res['added']) + len(sync_res['removed'])}, Errors: {len(sync_res['errors'])})")
-            
+            if sync_res.get("errors"):
+                self.add_related_result("Relationships Sync", status="failure", message="; ".join(sync_res["errors"][:5]))
+            elif sync_res.get("added") or sync_res.get("removed"):
+                self.add_related_result("Relationships Sync", message=f"Added {len(sync_res['added'])}, Removed {len(sync_res['removed'])}")
+
             if journal_entry:
                 try:
                     j_guid = await async_add_note_in_dr_e(self.client, qualified_name, display_name, journal_entry)
@@ -193,8 +195,10 @@ class ComponentProcessor(AsyncBaseCommandProcessor):
             if guid:
                 self.parsed_output["guid"] = guid
                 sync_res = await self._sync_all_rels(guid, supply_chain_guids, parent_comp_guids, actor_guids, blueprint_guids, keywords, replace_all=True)
-                if any(sync_res.values()):
-                    self.add_related_result("Relationships Sync", message=f"Initial relationships (Success: {len(sync_res['added']) + len(sync_res['removed'])}, Errors: {len(sync_res['errors'])})")
+                if sync_res.get("errors"):
+                    self.add_related_result("Relationships Sync", status="failure", message="; ".join(sync_res["errors"][:5]))
+                elif sync_res.get("added") or sync_res.get("removed"):
+                    self.add_related_result("Relationships Sync", message=f"Added {len(sync_res['added'])}, Removed {len(sync_res['removed'])}")
 
                 if journal_entry:
                     try:
@@ -241,8 +245,8 @@ class ComponentProcessor(AsyncBaseCommandProcessor):
         # 4. Blueprints
         as_is_bps = set(rel_els.get("blueprint_guids", []))
         res = await self.sync_members(as_is_bps, bp_guids,
-                               lambda bp: self.client._async_link_solution_component_to_blueprint(bp, guid, {"class": "NewRelationshipRequestBody", "properties": {"class": "SolutionBlueprintCompositionProperties", "typeName": "SolutionBlueprintComposition", "description": "linked by Dr.Egeria v2"}}),
-                               lambda bp: self.client._async_detach_solution_component_from_blueprint(bp, guid, None),
+                               lambda bp: self.client._async_link_solution_design(bp, guid, {"class": "NewRelationshipRequestBody", "properties": {"class": "SolutionDesignProperties", "description": "linked by Dr.Egeria v2"}}),
+                               lambda bp: self.client._async_detach_solution_design(bp, guid, None),
                                replace_all)
         for k in combined_results: combined_results[k].extend(res.get(k, []))
         
@@ -670,10 +674,9 @@ class SolutionLinkProcessor(AsyncBaseCommandProcessor):
                 # Method signature: role_guid, component_guid
                 # Spec has Component1, Role. Role is id2.
                 await self.client._async_link_component_to_actor(id2, id1, body)
-            elif om_type == "SolutionBlueprintComposition":
-                await self.client._async_link_solution_component_to_blueprint(id1, id2, body)
-            elif om_type == "SolutionDesign":
-                await self.client._async_link_solution_design(id2, id1, body)
+            elif om_type in ("SolutionBlueprintComposition", "SolutionDesign"):
+                body["properties"]["class"] = "SolutionDesignProperties"
+                await self.client._async_link_solution_design(id1, id2, body)
             elif om_type == "CollectionMembership":
                  from pyegeria.core.utils import body_slimmer
                  await self.client._async_add_to_collection(id1, id2, body_slimmer(body))
@@ -702,9 +705,7 @@ class SolutionLinkProcessor(AsyncBaseCommandProcessor):
                 await self.client._async_detach_sub_component(id1, id2, body)
             elif om_type == "SolutionComponentActor":
                 await self.client._async_detach_component_actor(id2, id1, body)
-            elif om_type == "SolutionBlueprintComposition":
-                await self.client._async_detach_solution_component_from_blueprint(id1, id2, body)
-            elif om_type == "SolutionDesign":
+            elif om_type in ("SolutionBlueprintComposition", "SolutionDesign"):
                 await self.client._async_detach_solution_design(id1, id2, body)
             elif om_type == "CollectionMembership":
                 await self.client._async_remove_from_collection(id1, id2, body)

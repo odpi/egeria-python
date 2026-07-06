@@ -1,14 +1,14 @@
 ___
 
 ## Link Data Class Composition
-> Link a child data class to a parent data class. 
+> Links a child data class  to a parent data class.
 
 ### Data Class Child
 >	**Input Required**: True
 
 >	**Attribute Type**: Reference Name
 
->	**Description**: The data class that specifies the valid values or patterns for this data field (DataValueDefinition relationship).
+>	**Description**: The child data class in a relationship.
 
 
 ### Label
@@ -26,7 +26,7 @@ ___
 
 >	**Attribute Type**: Reference Name
 
->	**Description**: The data class that specifies the valid values or patterns for this data field (DataValueDefinition relationship).
+>	**Description**: The parent data class in a relationship.
 
 
 ### Journal Entry

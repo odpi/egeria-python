@@ -393,7 +393,63 @@ def _normalize_bearer_token(raw_token: Any) -> str:
     return token
 
 
-def _should_warn_missing_om_type(command_name: str, command_spec: dict[str, Any]) -> bool:
+_TYPE_SELECTOR_ATTR_NAME_PATTERN = re.compile(r"(relationship|entity|element)[\s_]*type", re.IGNORECASE)
+
+
+def _resolve_command_attribute_names(command_spec: dict[str, Any], bundles: dict[str, Any]) -> list[str]:
+    """Return the full attribute-name list for a command: inherited bundle attributes + custom_attributes."""
+    names: list[str] = []
+
+    chain: list[str] = []
+    seen_bundles: set[str] = set()
+    current = command_spec.get("bundle", "")
+    while isinstance(current, str) and current and current in bundles and current not in seen_bundles:
+        seen_bundles.add(current)
+        chain.append(current)
+        bundle_def = bundles.get(current)
+        current = bundle_def.get("inherits") if isinstance(bundle_def, dict) else None
+
+    for bundle_name in reversed(chain):
+        own_attributes = bundles.get(bundle_name, {}).get("own_attributes", [])
+        if isinstance(own_attributes, list):
+            names.extend(a for a in own_attributes if isinstance(a, str))
+
+    custom_attributes = command_spec.get("custom_attributes", [])
+    if isinstance(custom_attributes, list):
+        names.extend(a for a in custom_attributes if isinstance(a, str))
+
+    return names
+
+
+def _has_enum_type_selector_attribute(
+    command_spec: dict[str, Any],
+    bundles: dict[str, Any],
+    attribute_definitions: dict[str, Any],
+) -> bool:
+    """Return True if the command resolves an Enum-style attribute (e.g. "Relationship Type")
+    that selects the concrete Egeria type at runtime, making a bound OM_TYPE inappropriate."""
+    for attr_name in _resolve_command_attribute_names(command_spec, bundles):
+        attr_def = attribute_definitions.get(attr_name)
+        if not isinstance(attr_def, dict):
+            continue
+        if str(attr_def.get("style", "")).strip().lower() != "enum":
+            continue
+
+        variable_name = str(attr_def.get("variable_name", ""))
+        if _TYPE_SELECTOR_ATTR_NAME_PATTERN.search(attr_name) or _TYPE_SELECTOR_ATTR_NAME_PATTERN.search(
+            variable_name
+        ):
+            return True
+
+    return False
+
+
+def _should_warn_missing_om_type(
+    command_name: str,
+    command_spec: dict[str, Any],
+    bundles: dict[str, Any] | None = None,
+    attribute_definitions: dict[str, Any] | None = None,
+) -> bool:
     """Return False for command forms where OM_TYPE is intentionally omitted."""
     family = str(command_spec.get("family", "")).strip().lower()
     find_method = str(command_spec.get("find_method", "")).strip().lower()
@@ -405,6 +461,13 @@ def _should_warn_missing_om_type(command_name: str, command_spec: dict[str, Any]
 
     # Dynamic relationship commands can defer the concrete type to command attributes.
     if find_method == "name":
+        return False
+
+    # The concrete relationship/entity type is selected at runtime via an Enum-style
+    # attribute (e.g. "Relationship Type"), so a single OM_TYPE would misrepresent it.
+    if bundles is not None and attribute_definitions is not None and _has_enum_type_selector_attribute(
+        command_spec, bundles, attribute_definitions
+    ):
         return False
 
     return True
@@ -514,6 +577,14 @@ def validate_compact_spec_file(
             )
         ]
 
+    bundles = payload.get("bundles", {}) if isinstance(payload, dict) else {}
+    if not isinstance(bundles, dict):
+        bundles = {}
+
+    attribute_definitions = payload.get("attribute_definitions", {}) if isinstance(payload, dict) else {}
+    if not isinstance(attribute_definitions, dict):
+        attribute_definitions = {}
+
     for command_name, command_spec in commands.items():
         if not isinstance(command_spec, dict):
             findings.append(
@@ -555,7 +626,7 @@ def validate_compact_spec_file(
         raw_om_type = command_spec.get("OM_TYPE")
         om_type = raw_om_type.strip() if isinstance(raw_om_type, str) else ""
         if not om_type:
-            if _should_warn_missing_om_type(str(command_name), command_spec):
+            if _should_warn_missing_om_type(str(command_name), command_spec, bundles, attribute_definitions):
                 findings.append(
                     SpecFinding(
                         severity="WARNING",
