@@ -43,7 +43,6 @@ class GlossaryProcessor(AsyncBaseCommandProcessor):
         prop_body["usage"] = attributes.get('Usage', {}).get('value', None)
         
         display_name = attributes.get('Display Name', {}).get('value', qualified_name)
-        status = attributes.get('Status', {}).get('value', None)
         journal_entry = attributes.get('Journal Entry', {}).get('value')
 
         if verb == "Update":
@@ -60,9 +59,7 @@ class GlossaryProcessor(AsyncBaseCommandProcessor):
             
             await self.client._async_update_collection(guid, body)
             self.parsed_output["guid"] = guid
-            # if status:
-            #     await self.client._async_update_collection_status(guid, status)
-            
+
             if journal_entry:
                 try:
                     j_guid = await async_add_note_in_dr_e(self.client, qualified_name, display_name, journal_entry)

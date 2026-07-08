@@ -39,3 +39,14 @@ The new `Produced Guards` attribute (`Action Author` family, on `Governance Acti
 This means the `Create` commands that would establish this baseline dataset are scattered across several of the `dr_test_*.md` files rather than living together, and nothing has actually run them in `--process` mode against this server (or the server was reset since they last were). Every `Link`/`Attach`/`Detach`/`Unlink` command elsewhere that references one of those named elements by qualified name fails to resolve it.
 
 **Fix:** collect up the `Create` commands that establish the SalesForecast baseline (and the couple of campaign elements), work out the correct dependency order, and either (a) run them once in `--process` mode against whichever server these fixtures are meant to run against, or (b) consolidate them into a dedicated seed file that `run_dr_tests.py` (or a setup step before it) runs first. Not blocking Action Author Phase 1/2 — pre-existing gap, unrelated to those commands.
+
+---
+
+## 🟡 Medium Priority — Bearer token expires mid-run on long `dr_egeria --process` batches
+
+**Status:** open
+**Added:** 2026-07-08
+
+Running `dr_egeria <100+ command file> --process` against `localhost:9443` (e.g. the generated `dr-egeria-help-*.md`, ~100+ commands) took ~1h20m end to end and started failing every remaining command with HTTP 401 partway through — the bearer token created at the start of the run expired before the run finished, and nothing re-authenticates or refreshes it mid-batch. Confirmed directly in `logs/pyegeria.log`: the "Create Risk" term's `_async_create_element_body_request` call at 23:12:14 got a 401 (`Client error '401' for url .../glossary-manager/glossaries/terms`), as did every command after it in that run (~6+ trailing Solution Architect `Link` commands all failed the same way). Re-running the single "Create Risk" term in isolation (a few seconds) succeeded immediately with the same credentials — confirming it's a token-lifetime/duration issue, not a bad request or bad credentials.
+
+**Fix:** either (a) proactively refresh/recreate the bearer token partway through a long batch (e.g. every N commands or every N minutes) inside the v2 dispatcher's command loop, or (b) on a 401 mid-batch, transparently re-authenticate and retry the failed command once before surfacing it as a failure. Without one of these, any `--process` run over enough commands to exceed the token's lifetime will silently corrupt the back half of a large Glossary/help-doc sync — as happened here for the regenerated `dr-egeria-help-2026-07-07T20:51:10.md` run.
