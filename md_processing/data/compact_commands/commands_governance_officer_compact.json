@@ -1,6 +1,6 @@
 {
   "family": "Governance Officer",
-  "exported": "Jul 6, 2026 at 1:10:28 PM",
+  "exported": "Jul 7, 2026 at 8:42:54 PM",
   "attribute_definitions": {
     "Activity Status": {
       "variable_name": "activity_status",
@@ -4214,6 +4214,25 @@
       "extra_constraints": "",
       "OM_TYPE": "RegulationArticle",
       "bundle": "Governance Driver",
+      "custom_attributes": [],
+      "Journal Entry": ""
+    },
+    "Create Risk": {
+      "display_name": "Risk",
+      "qn_prefix": "Risk",
+      "alternate_names": [],
+      "family": "Governance Officer",
+      "description": "The GovernanceRisk entity defines a risk to be managed.",
+      "verb": "Create",
+      "upsert": false,
+      "attach": false,
+      "level": "Basic",
+      "find_method": "GovernanceOfficer.find_governance_definitions",
+      "find_constraints": "{\"metadata_element_type\": \"Risk\"}",
+      "extra_find": "",
+      "extra_constraints": "",
+      "OM_TYPE": "Risk",
+      "bundle": "Governance Policy",
       "custom_attributes": [],
       "Journal Entry": ""
     },
