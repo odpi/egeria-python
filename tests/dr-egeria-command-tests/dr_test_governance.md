@@ -598,6 +598,46 @@ Methodology::SalesForecast::GovernanceFramework::1.0
 
 ___
 
+# GO-17: Create Risk
+
+## Create Risk
+
+### Display Name
+Sales Forecast Data Quality Risk
+
+### Summary
+Unvalidated sales data may propagate into board-presented forecasts,
+leading to materially incorrect revenue projections.
+
+### Domain Identifier
+DATA
+
+### Scope
+All data assets in the SalesAnalytics governance zone.
+
+### Importance
+Critical
+
+### Implications
+Forecast generation must include automated data quality checks
+Undetected data quality failures may misstate quarterly revenue
+
+### Outcomes
+Zero unresolved critical data quality risks in any board forecast
+
+### Authors
+jane.smith@example.com
+
+### Content Status
+ACTIVE
+
+### Qualified Name
+Risk::SalesForecast::DataQuality::1.0
+
+### GUID
+
+___
+
 # GO-18: Create Data Processing Purpose
 
 ## Create Data Processing Purpose
