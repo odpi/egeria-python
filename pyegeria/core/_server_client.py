@@ -32,6 +32,7 @@ from pyegeria.models import (SearchStringRequestBody, FilterRequestBody, GetRequ
                              UpdateRelationshipRequestBody, ResultsRequestBody,
                              DeploymentStatusSearchString, DeploymentStatusFilterRequestBody,
                              NewClassificationRequestBody,
+                             NewExternalIdRequestBody,
                              DeleteElementRequestBody, DeleteRelationshipRequestBody, DeleteClassificationRequestBody,
                              LevelIdentifierQueryBody, UpdatePropertiesRequestBody, MetadataSourceRequestBody,
                              UpdateEffectivityDatesRequestBody, OpenMetadataDeleteRequestBody, ArchiveRequestBody,
@@ -55,6 +56,7 @@ from pyegeria.models.models import (
     NewRelationshipRequestBody,
     DeleteRelationshipRequestBody,
     NewClassificationRequestBody,
+    NewExternalIdRequestBody,
     DeleteClassificationRequestBody,
     DeploymentStatusSearchString,
     DeploymentStatusFilterRequestBody,
@@ -91,6 +93,7 @@ __all__ = [
     "NewRelationshipRequestBody",
     "DeleteRelationshipRequestBody",
     "NewClassificationRequestBody",
+    "NewExternalIdRequestBody",
     "DeleteClassificationRequestBody",
     "SearchStringRequestBody",
     "FilterRequestBody",
@@ -179,6 +182,7 @@ class ServerClient(BaseServerClient):
         # self._update_status_request_adapter = TypeAdapter(UpdateStatusRequestBody)
         self._new_relationship_request_adapter = TypeAdapter(NewRelationshipRequestBody)
         self._new_classification_request_adapter = TypeAdapter(NewClassificationRequestBody)
+        self._new_external_id_request_adapter = TypeAdapter(NewExternalIdRequestBody)
         self._delete_element_request_adapter = TypeAdapter(DeleteElementRequestBody)
         self._delete_relationship_request_adapter = TypeAdapter(DeleteRelationshipRequestBody)
         self._delete_classification_request_adapter = TypeAdapter(DeleteClassificationRequestBody)
@@ -6014,6 +6018,18 @@ class ServerClient(BaseServerClient):
         return validated_body
 
     @dynamic_catch
+    def validate_add_external_id_request(self, body: dict | NewExternalIdRequestBody,
+                                         prop: Optional[list[str]] = None) -> NewExternalIdRequestBody | None:
+        if isinstance(body, NewExternalIdRequestBody):
+            validated_body = body
+
+        elif isinstance(body, dict):
+            validated_body = self._new_external_id_request_adapter.validate_python(body)
+        else:
+            return None
+        return validated_body
+
+    @dynamic_catch
     def validate_new_element_from_template_request(self, body: dict | TemplateRequestBody
                                                    ) -> NewElementRequestBody | None:
         if isinstance(body, TemplateRequestBody):
@@ -7053,6 +7069,20 @@ class ServerClient(BaseServerClient):
         response = await self._async_make_request("POST", url, json_body, is_json=True)
         logger.info(response.json())
         return response.json().get("guid")
+
+    @dynamic_catch
+    async def _async_add_external_id_body_request(self, url: str, prop: Optional[list[str]] = None,
+                                                  body: Optional[dict | NewExternalIdRequestBody] = None) -> str:
+        validated_body = self.validate_add_external_id_request(body, prop)
+        json_body = validated_body.model_dump_json(indent=2, exclude_none=True)
+        logger.info(json_body)
+        response = await self._async_make_request("POST", url, json_body, is_json=True)
+        resp_json = response.json()
+        logger.info(resp_json)
+        guid = resp_json.get("guid")
+        if guid is None:
+             logger.error(f"No GUID in response: {resp_json}")
+        return guid
 
     @dynamic_catch
     async def _async_create_element_from_template(self, url: str, body: Optional[dict | TemplateRequestBody] = None) -> str:

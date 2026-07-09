@@ -601,5 +601,115 @@ class TestExternalReferences:
         finally:
             p_client.close_session()
 
+    def test_external_identifier_lifecycle(self):
+        try:
+            p_client = ExternalReferences(
+                self.good_view_server_2,
+                self.good_platform1_url,
+                user_id=self.good_user_3,
+            )
+            token = p_client.create_egeria_bearer_token(self.good_user_3, "secret")
+
+            # 0. Create a Term to attach the external identifier to
+            from pyegeria.omvs.glossary_manager import GlossaryManager
+            gv_client = GlossaryManager(
+                self.good_view_server_2,
+                self.good_platform1_url,
+                user_id=self.good_user_3,
+            )
+            gv_client.set_bearer_token(token)
+            
+            term_body = {
+                "class": "NewElementRequestBody",
+                "properties": {
+                    "class": "GlossaryTermProperties",
+                    "qualifiedName": f"test-term-{time.time()}",
+                    "displayName": "Test Term for External ID"
+                }
+            }
+            element_guid = gv_client.create_glossary_term(term_body)
+            print(f"\n\tCreated term with GUID: {element_guid}")
+
+            # 1. Add External Identifier
+            external_scope_guid = "4aa07538-57de-4d86-ab5c-566bbc3531c8"
+            external_scope_name = "External-Scope-1"
+
+            ext_id_key = f"test-external-id-key-{time.time()}"
+            body = {
+                "class": "NewExternalIdRequestBody",
+                "externalSourceGUID": external_scope_guid,
+                "externalSourceName": external_scope_name,
+                "properties": {
+                    "class": "ExternalIdProperties",
+                    "qualifiedName": f"test-external-id-qualified-name-{time.time()}",
+                    "key": ext_id_key,
+                    "displayName": "Test External ID",
+                    "description": "A test external identifier"
+                },
+                "parentRelationshipProperties": {
+                    "class": "ExternalIdLinkProperties",
+                    "permittedSynchronization": "BOTH_DIRECTIONS"
+                }
+            }
+
+            p_client.add_external_identifier(element_guid, body)
+            
+            # Find the GUID by searching for the key
+            results = p_client.get_external_identifiers_by_name(ext_id_key)
+            assert len(results) > 0, "Could not find the created external identifier by name"
+            ext_id_guid = results[0].get("elementHeader", {}).get("guid")
+            assert ext_id_guid is not None
+
+            # 2. Get External Identifier by GUID
+            ext_id = p_client.get_external_identifier_by_guid(ext_id_guid)
+            assert ext_id is not None
+
+            # 3. Update External Identifier
+            update_body = {
+                "class": "UpdateElementRequestBody",
+                "externalSourceGUID": external_scope_guid,
+                "externalSourceName": external_scope_name,
+                "properties": {
+                    "class": "ExternalIdProperties",
+                    "description": "Updated test external identifier"
+                }
+            }
+            p_client.update_external_identifier(ext_id_guid, update_body)
+
+            # 4. Search for External Identifiers
+            results = p_client.find_external_identifiers(ext_id_key)
+            assert len(results) > 0
+            
+            # 5. Confirm Synchronization
+            # We need the relationship GUID. In Egeria, this is available in equivalentElements
+            ext_id_element = results[0]
+            link_guid = ext_id_element.get("equivalentElements", [{}])[0].get("relationshipHeader", {}).get("guid")
+            if link_guid:
+                sync_body = {
+                    "class": "UpdateRelationshipRequestBody",
+                    "externalSourceGUID": external_scope_guid,
+                    "externalSourceName": external_scope_name,
+                    "properties": {
+                        "class": "ExternalIdLinkProperties"
+                    }
+                }
+                p_client.confirm_synchronization(link_guid, sync_body)
+
+            # 6. Delete External Identifier
+            delete_body = {
+                "class": "DeleteElementRequestBody",
+                "externalSourceGUID": external_scope_guid,
+                "externalSourceName": external_scope_name
+            }
+            p_client.delete_external_identifier(ext_id_guid, delete_body)
+
+            assert True
+
+        except PyegeriaException as e:
+            print_basic_exception(e)
+            assert False, f"Lifecycle test failed: {e}"
+        finally:
+            p_client.close_session()
+
 
 
