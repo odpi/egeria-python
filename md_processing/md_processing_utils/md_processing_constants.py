@@ -785,7 +785,7 @@ def add_default_upsert_attributes(attributes: list[dict]) -> list[dict]:
             "valid_values": "",
             "existing_element": "",
             "description": "A unique qualified name for the element. Generated using the qualified name pattern  if not user specified.",
-            "qualified_name_pattern": "local_qualifier::namespace::DataDictionary:display_name::version_id",
+            "qualified_name_pattern": "local_qualifier::namespace::DataDictionary::display_name::version_id",
             "generated": True,
             "style": "QN",
             "user_specified": True,

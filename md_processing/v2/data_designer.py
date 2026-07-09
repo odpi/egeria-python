@@ -122,7 +122,6 @@ class DataCollectionProcessor(AsyncBaseCommandProcessor):
         attributes = self.parsed_output["attributes"]
         qualified_name = self.parsed_output["qualified_name"]
         display_name = attributes.get('Display Name', {}).get('value', qualified_name)
-        status = attributes.get('Status', {}).get('value', None)
         journal_entry = attributes.get('Journal Entry', {}).get('value')
 
         spec = self.get_command_spec()
@@ -148,8 +147,6 @@ class DataCollectionProcessor(AsyncBaseCommandProcessor):
             
             await self.client.data_designer._async_update_collection(guid, body)
             self.parsed_output["guid"] = guid
-            if status:
-                await self.client.data_designer._async_update_collection_status(guid, status)
 
             if journal_entry:
                 try:

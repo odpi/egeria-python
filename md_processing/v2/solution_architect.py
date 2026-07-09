@@ -32,10 +32,9 @@ class BlueprintProcessor(AsyncBaseCommandProcessor):
         attributes = self.parsed_output["attributes"]
         qualified_name = self.parsed_output["qualified_name"]
         display_name = attributes.get('Display Name', {}).get('value', qualified_name)
-        status = attributes.get('Status', {}).get('value', 'ACTIVE')
         merge_update = attributes.get('Merge Update', {}).get('value', True)
         journal_entry = attributes.get('Journal Entry', {}).get('value')
-        
+
         comp_guids = set(attributes.get('Solution Components', {}).get('guid_list', []))
 
         spec = self.get_command_spec()
@@ -52,9 +51,7 @@ class BlueprintProcessor(AsyncBaseCommandProcessor):
             
             await self.client._async_update_solution_blueprint(guid, body)
             self.parsed_output["guid"] = guid
-            # if status:
-            #     await self.client._async_update_solution_element_status(guid, status)
-            
+
             sync_res = await self._sync_components(guid, comp_guids, not merge_update)
             if sync_res.get("added") or sync_res.get("removed"):
                 self.add_related_result("Components Sync", message=f"Added {len(sync_res['added'])}, Removed {len(sync_res['removed'])}")
@@ -104,15 +101,19 @@ class BlueprintProcessor(AsyncBaseCommandProcessor):
 
     async def _sync_components(self, guid: str, to_be_guids: Set[str], replace_all: bool) -> Dict[str, Any]:
         bp_element = await self.client._async_get_solution_blueprint_by_guid(guid)
-        as_is = {c['elementHeader']['guid'] for c in bp_element.get('solutionComponents', [])}
-        
+        as_is = {
+            m['relatedElement']['elementHeader']['guid']
+            for m in bp_element.get('collectionMembers', [])
+            if m.get('relatedElement', {}).get('elementHeader', {}).get('type', {}).get('typeName') == 'SolutionComponent'
+        }
+
         async def add_fn(comp_guid):
-            body = {"class": "NewRelationshipRequestBody", "properties": {"class": "SolutionDesignProperties", "description": "linked by Dr.Egeria v2"}}
-            await self.client._async_link_solution_design(guid, comp_guid, body)
+            body = {"class": "NewRelationshipRequestBody", "properties": {"class": "CollectionMembershipProperties", "membershipRationale": "linked by Dr.Egeria v2"}}
+            await self.client._async_add_to_collection(guid, comp_guid, body)
 
         async def remove_fn(comp_guid):
-            await self.client._async_detach_solution_design(guid, comp_guid, None)
-            
+            await self.client._async_remove_from_collection(guid, comp_guid, None)
+
         return await self.sync_members(as_is, to_be_guids, add_fn, remove_fn, replace_all)
 
 class ComponentProcessor(AsyncBaseCommandProcessor):
@@ -245,8 +246,8 @@ class ComponentProcessor(AsyncBaseCommandProcessor):
         # 4. Blueprints
         as_is_bps = set(rel_els.get("blueprint_guids", []))
         res = await self.sync_members(as_is_bps, bp_guids,
-                               lambda bp: self.client._async_link_solution_design(bp, guid, {"class": "NewRelationshipRequestBody", "properties": {"class": "SolutionDesignProperties", "description": "linked by Dr.Egeria v2"}}),
-                               lambda bp: self.client._async_detach_solution_design(bp, guid, None),
+                               lambda bp: self.client._async_add_to_collection(bp, guid, {"class": "NewRelationshipRequestBody", "properties": {"class": "CollectionMembershipProperties", "membershipRationale": "linked by Dr.Egeria v2"}}),
+                               lambda bp: self.client._async_remove_from_collection(bp, guid, None),
                                replace_all)
         for k in combined_results: combined_results[k].extend(res.get(k, []))
         
@@ -400,19 +401,19 @@ class SupplyChainProcessor(AsyncBaseCommandProcessor):
         rel_els = await self._get_supply_chain_rel_elements(guid)
         combined_results = {"added": [], "removed": [], "errors": []}
         
-        # 1. Parents
+        # 1. Parents (this ISC is a member of the parent ISC's collection)
         as_is_parents = set(rel_els.get("parent_guids", []))
         res = await self.sync_members(as_is_parents, parent_guids,
-                               lambda p: self.client._async_compose_info_supply_chains(p, guid, None),
-                               lambda p: self.client._async_decompose_info_supply_chains(p, guid, None),
+                               lambda p: self.client._async_add_to_collection(p, guid, {"class": "NewRelationshipRequestBody", "properties": {"class": "CollectionMembershipProperties", "membershipRationale": "linked by Dr.Egeria v2"}}),
+                               lambda p: self.client._async_remove_from_collection(p, guid, None),
                                replace_all)
         for k in combined_results: combined_results[k].extend(res.get(k, []))
-                               
-        # 2. Nested
+
+        # 2. Nested (child ISCs are members of this ISC's collection)
         as_is_nested = set(rel_els.get("nested_guids", []))
         res = await self.sync_members(as_is_nested, nested_guids,
-                               lambda n: self.client._async_compose_info_supply_chains(guid, n, None),
-                               lambda n: self.client._async_decompose_info_supply_chains(guid, n, None),
+                               lambda n: self.client._async_add_to_collection(guid, n, {"class": "NewRelationshipRequestBody", "properties": {"class": "CollectionMembershipProperties", "membershipRationale": "linked by Dr.Egeria v2"}}),
+                               lambda n: self.client._async_remove_from_collection(guid, n, None),
                                replace_all)
         for k in combined_results: combined_results[k].extend(res.get(k, []))
 
@@ -431,13 +432,17 @@ class SupplyChainProcessor(AsyncBaseCommandProcessor):
             "supply_from_guids": [],
         }
 
-        # Parents
-        for parent in el_struct.get("parents", []):
-            res["parent_guids"].append(parent['relatedElement']['elementHeader']["guid"])
+        # Parents (this ISC is a member of a parent ISC's collection)
+        for m in el_struct.get("memberOfCollections", []):
+            related = m.get('relatedElement', {})
+            if related.get('elementHeader', {}).get('type', {}).get('typeName') == 'InformationSupplyChain':
+                res["parent_guids"].append(related['elementHeader']['guid'])
 
-        # Nested (Collection Members or nestedDataClasses)
+        # Nested (child ISCs that are members of this ISC's collection)
         for element in el_struct.get("collectionMembers", []):
-            res["nested_guids"].append(element['relatedElement']['elementHeader']['guid'])
+            related = element.get('relatedElement', {})
+            if related.get('elementHeader', {}).get('type', {}).get('typeName') == 'InformationSupplyChain':
+                res["nested_guids"].append(related['elementHeader']['guid'])
 
         # Implemented By
         for element in el_struct.get("implementedByList", []):
@@ -645,7 +650,7 @@ class SolutionLinkProcessor(AsyncBaseCommandProcessor):
             }
             
             # Determine which property to use for the 'label/role' field
-            if om_type in ["SolutionLinkingWire", "InformationSupplyChainLink", "InformationSupplyChainComposition",
+            if om_type in ["SolutionLinkingWire", "InformationSupplyChainLink",
                             "NestedDesignPattern", "SpecializedDesignPattern", "RelatedDesignPattern"]:
                  properties["label"] = label
             elif om_type == "CollectionMembership":
@@ -666,8 +671,6 @@ class SolutionLinkProcessor(AsyncBaseCommandProcessor):
                 await self.client._async_link_solution_linking_wire(id1, id2, body)
             elif om_type == "InformationSupplyChainLink":
                 await self.client._async_link_peer_info_supply_chains(id1, id2, body)
-            elif om_type == "InformationSupplyChainComposition":
-                await self.client._async_compose_info_supply_chains(id1, id2, body)
             elif om_type == "SolutionComposition":
                 await self.client._async_link_subcomponent(id1, id2, body)
             elif om_type == "SolutionComponentActor":
@@ -699,8 +702,6 @@ class SolutionLinkProcessor(AsyncBaseCommandProcessor):
                 await self.client._async_detach_solution_linking_wire(id1, id2, body)
             elif om_type == "InformationSupplyChainLink":
                 await self.client._async_unlink_peer_info_supply_chains(id1, id2, body)
-            elif om_type == "InformationSupplyChainComposition":
-                await self.client._async_decompose_info_supply_chains(id1, id2, body)
             elif om_type == "SolutionComposition":
                 await self.client._async_detach_sub_component(id1, id2, body)
             elif om_type == "SolutionComponentActor":

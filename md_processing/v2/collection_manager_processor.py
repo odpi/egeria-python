@@ -27,7 +27,6 @@ class CollectionManagerProcessor(AsyncBaseCommandProcessor):
         attributes = self.parsed_output["attributes"]
         qualified_name = self.parsed_output["qualified_name"]
         display_name = attributes.get('Display Name', {}).get('value', qualified_name)
-        status = attributes.get('Status', {}).get('value', 'ACTIVE')
         journal_entry = attributes.get('Journal Entry', {}).get('value')
 
         spec = self.get_command_spec()
@@ -67,13 +66,7 @@ class CollectionManagerProcessor(AsyncBaseCommandProcessor):
                 await self.client._async_update_collection(guid, body)
                 
             self.parsed_output["guid"] = guid
-            if status:
-                # Most collection manager types support status updates
-                try:
-                    await self.client._async_update_collection_status(guid, status)
-                except Exception:
-                    logger.debug(f"Status update not supported for {object_type}")
-            
+
             if journal_entry:
                 try:
                     j_guid = await async_add_note_in_dr_e(self.client, qualified_name, display_name, journal_entry)

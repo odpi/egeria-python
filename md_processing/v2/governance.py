@@ -341,6 +341,7 @@ class GovernanceLinkProcessor(AsyncBaseCommandProcessor):
             "Associated Group": ("Access Control", "Security Group"),
             "Monitored Resource": (("Notification Type", "Monitoring Control"), "Monitored Resource"),
             "Regulation Certification Type": ("Regulation", "Certification Type"),
+            "Regulator": ("Regulation", "Organization Reference"),
         }
 
         endpoint_keys = endpoint_map.get(object_type)
