@@ -1,7 +1,7 @@
 """
 Project Processors for Dr.Egeria v2.
 """
-from typing import Dict, Any, Optional, List
+from typing import Dict, Any, Optional, List, Set
 from loguru import logger
 
 from pyegeria import EgeriaTech, PyegeriaException
@@ -35,10 +35,12 @@ class ProjectProcessor(AsyncBaseCommandProcessor):
         qualified_name = self.parsed_output["qualified_name"]
         display_name = attributes.get('Display Name', {}).get('value', qualified_name)
         journal_entry = attributes.get('Journal Entry', {}).get('value')
-        
+        merge_update = attributes.get('Merge Update', {}).get('value', True)
+        sub_project_guids = set(attributes.get('Sub-Projects', {}).get('guid_list', []))
+
         spec = self.get_command_spec()
         om_type = spec.get("OM_TYPE")
-        
+
         # Ensure we use "Project" as the base type for the property package
         base_type = om_type or "Project"
         project_types = ["Campaign", "Task", "Personal Project", "Study Project"]
@@ -74,7 +76,13 @@ class ProjectProcessor(AsyncBaseCommandProcessor):
             self.last_body = body = set_update_body(base_type, attributes)
             body['properties'] = self.filter_update_properties(prop_body, body.get('mergeUpdate', True))
             await self.client._async_update_project(project_guid=guid, body=body)
-            
+
+            sync_res = await self._sync_sub_projects(guid, sub_project_guids, not merge_update)
+            if sync_res.get("added") or sync_res.get("removed"):
+                self.add_related_result("Sub-Projects Sync", message=f"Added {len(sync_res['added'])}, Removed {len(sync_res['removed'])}")
+            if sync_res.get("errors"):
+                self.add_related_result("Sub-Projects Sync", status="failure", message="; ".join(sync_res["errors"]))
+
             if journal_entry:
                 try:
                     j_guid = await async_add_note_in_dr_e(self.client, qualified_name, display_name, journal_entry)
@@ -98,6 +106,12 @@ class ProjectProcessor(AsyncBaseCommandProcessor):
             if guid:
                 self.parsed_output["guid"] = guid
 
+                sync_res = await self._sync_sub_projects(guid, sub_project_guids, replace_all=True)
+                if sync_res.get("added") or sync_res.get("removed"):
+                    self.add_related_result("Sub-Projects Sync", message=f"Added {len(sync_res['added'])}, Removed {len(sync_res['removed'])}")
+                if sync_res.get("errors"):
+                    self.add_related_result("Sub-Projects Sync", status="failure", message="; ".join(sync_res["errors"]))
+
                 if journal_entry:
                     try:
                         j_guid = await async_add_note_in_dr_e(self.client, qualified_name, display_name, journal_entry)
@@ -111,6 +125,35 @@ class ProjectProcessor(AsyncBaseCommandProcessor):
                 return await self.render_result_markdown(guid)
 
         return self.command.raw_block
+
+    async def _sync_sub_projects(self, guid: str, to_be_guids: Set[str], replace_all: bool) -> Dict[str, Any]:
+        """Sync the ProjectHierarchy children declared via the embedded 'Sub-Projects' attribute."""
+        as_is: set = set()
+        try:
+            project_element = await self.client._async_get_project_by_guid(guid)
+            managed_projects = project_element.get("managedProjects", []) if isinstance(project_element, dict) else []
+            for entry in managed_projects:
+                try:
+                    relationship = entry["relationshipHeader"]["type"]["typeName"]
+                except (KeyError, TypeError):
+                    continue
+                if relationship != "ProjectHierarchy":
+                    continue
+                try:
+                    as_is.add(entry["relatedElement"]["elementHeader"]["guid"])
+                except (KeyError, TypeError):
+                    continue
+        except PyegeriaException as e:
+            logger.error(f"Failed to fetch existing sub-projects for {guid}: {e}")
+
+        async def add_fn(sub_guid):
+            body = {"class": "NewRelationshipRequestBody", "properties": {"class": "ProjectHierarchyProperties"}}
+            await self.client._async_set_project_hierarchy(project_guid=sub_guid, parent_project_guid=guid, body=body)
+
+        async def remove_fn(sub_guid):
+            await self.client._async_clear_project_hierarchy(sub_guid, guid, None)
+
+        return await self.sync_members(as_is, to_be_guids, add_fn, remove_fn, replace_all)
 
 class ProjectLinkProcessor(AsyncBaseCommandProcessor):
     """

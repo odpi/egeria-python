@@ -25,6 +25,32 @@ class ActionProcessStepLinkProcessor(AsyncBaseCommandProcessor):
     async def fetch_as_is(self) -> Optional[Dict[str, Any]]:
         return None
 
+    def _normalize_guid(self, value: Any) -> Optional[str]:
+        if not value:
+            return None
+        if isinstance(value, str):
+            if value.startswith("(Planned: "):
+                return value
+            # Basic GUID regex check
+            import re
+            if re.match(r'^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$', value.lower()):
+                return value
+        return None
+
+    def _resolve_relationship_guid(self, object_type: str, attributes: Dict[str, Any]) -> Optional[str]:
+        guid_sources = [
+            self.parsed_output.get("guid") if self.parsed_output else None,
+            (attributes.get("GUID") or {}).get("guid"),
+            (attributes.get("GUID") or {}).get("value"),
+            (attributes.get("Relationship GUID") or {}).get("value"),
+        ]
+
+        for raw in guid_sources:
+            guid = self._normalize_guid(raw)
+            if guid:
+                return guid
+        return None
+
     async def apply_changes(self) -> str:
         verb = self.command.verb
         object_type = getattr(self, 'canonical_object_type', self.command.object_type)
@@ -38,7 +64,10 @@ class ActionProcessStepLinkProcessor(AsyncBaseCommandProcessor):
             process_guid = attributes.get('Governance Action Process', {}).get('guid')
             step_guid = attributes.get('Governance Action Process Step', {}).get('guid')
             if not (process_guid and step_guid):
-                return self.command.raw_block
+                missing = []
+                if not process_guid: missing.append("'Governance Action Process'")
+                if not step_guid: missing.append("'Governance Action Process Step'")
+                raise ValueError(f"Cannot link process step: resolution failed for {', '.join(missing)}")
 
             if verb in ["Link", "Attach", "Add"]:
                 body = set_rel_request_body(om_type, attributes)
@@ -61,7 +90,10 @@ class ActionProcessStepLinkProcessor(AsyncBaseCommandProcessor):
             step_guid = attributes.get('Governance Action Process Step', {}).get('guid')
             next_step_guid = attributes.get('Next Governance Action Process Step', {}).get('guid')
             if not (step_guid and next_step_guid):
-                return self.command.raw_block
+                missing = []
+                if not step_guid: missing.append("'Governance Action Process Step'")
+                if not next_step_guid: missing.append("'Next Governance Action Process Step'")
+                raise ValueError(f"Cannot link next process step: resolution failed for {', '.join(missing)}")
 
             if verb in ["Link", "Attach", "Add"]:
                 body = set_rel_request_body(om_type, attributes)
@@ -78,10 +110,7 @@ class ActionProcessStepLinkProcessor(AsyncBaseCommandProcessor):
             elif verb in ["Detach", "Unlink", "Remove"]:
                 relationship_guid = self._resolve_relationship_guid(object_type, attributes)
                 if not relationship_guid:
-                    msg = "Cannot remove Next Process Step link: no relationship GUID resolved."
-                    logger.warning(msg)
-                    self._add_warning(msg)
-                    return self.command.raw_block
+                    raise ValueError("Cannot remove Next Process Step link: no relationship GUID resolved. Provide 'Relationship GUID' or 'GUID'.")
                 await self.client._async_remove_next_action_process_step(relationship_guid)
                 logger.success(f"Removed next-process-step link {relationship_guid}")
                 return f"\n\n## {verb} {object_type}\n\nRemoved next-process-step link {relationship_guid}"

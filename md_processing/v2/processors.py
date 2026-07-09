@@ -485,11 +485,21 @@ class AsyncBaseCommandProcessor(ABC):
         # Check for blockers before applying changes
         if self.parsed_output.get("errors"):
             guid = self.parsed_output.get("guid")
+            error_list = self.parsed_output['errors']
+            error_msg = "; ".join(error_list)
+            
+            # Incorporate errors into the output markdown for better user feedback
+            output = self.command.raw_block
+            if error_list:
+                output += "\n\n> ❌ **Execution Blocked**\n"
+                for err in error_list:
+                    output += f"> - {err}\n"
+            
             return {
-                "output": self.command.raw_block,
+                "output": output,
                 "analysis": analysis,
                 "status": "failure",
-                "message": f"Execution blocked: {'; '.join(self.parsed_output['errors'])}" + (f" (GUID: {guid})" if guid else ""),
+                "message": f"Execution blocked: {error_msg}" + (f" (GUID: {guid})" if guid else ""),
                 "verb": self.command.verb,
                 "object_type": self.canonical_object_type,
                 "markdown_object_type": self.markdown_object_type,
@@ -513,7 +523,7 @@ class AsyncBaseCommandProcessor(ABC):
                         msg = f"Prerequisite element '{val}' was not successfully created or found."
                         logger.error(msg)
                         return {
-                            "output": self.command.raw_block,
+                            "output": f"{self.command.raw_block}\n\n> ❌ **Execution Blocked**\n> - {msg}",
                             "analysis": analysis,
                             "status": "failure",
                             "message": f"Execution blocked: {msg}",
@@ -542,7 +552,7 @@ class AsyncBaseCommandProcessor(ABC):
                             msg = f"Prerequisite elements {failed_names} were not successfully created or found."
                             logger.error(msg)
                             return {
-                                "output": self.command.raw_block,
+                                "output": f"{self.command.raw_block}\n\n> ❌ **Execution Blocked**\n> - {msg}",
                                 "analysis": analysis,
                                 "status": "failure",
                                 "message": f"Execution blocked: {msg}",
