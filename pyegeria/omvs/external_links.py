@@ -7,7 +7,7 @@ Copyright Contributors to the ODPi Egeria project.
 """
 
 import asyncio
-from typing import Optional
+from typing import Optional, Any
 
 from loguru import logger
 from pydantic import HttpUrl
@@ -17,7 +17,8 @@ from pyegeria.view.base_report_formats import select_report_spec, get_report_spe
 from pyegeria.models import (SearchStringRequestBody, FilterRequestBody, GetRequestBody, NewElementRequestBody,
                              TemplateRequestBody,
                              UpdateElementRequestBody, NewRelationshipRequestBody,
-                             DeleteElementRequestBody, DeleteRelationshipRequestBody)
+                             DeleteElementRequestBody, DeleteRelationshipRequestBody,
+                             NewExternalIdRequestBody, UpdateRelationshipRequestBody)
 from pyegeria.view.output_formatter import (generate_output,
                                             _extract_referenceable_properties, populate_columns_from_properties,
                                             get_required_relationships)
@@ -29,6 +30,10 @@ EXTERNAL_REFERENCE_PROPS = ["ExternalReferenceProperties", "ExternalDataSourcePr
 
 EXTERNAL_REFERENCE_TYPES = ["ExternalReference", "ExternalDataSource", "ExternalModelSource",
                             "RelatedMedia", "CitedDocument"]
+
+EXTERNAL_ID_PROPS = ["ExternalIdProperties"]
+EXTERNAL_ID_LINK_PROPS = ["ExternalIdLinkProperties"]
+
 from pyegeria.core._server_client import ServerClient
 
 
@@ -1714,6 +1719,706 @@ class ExternalReferences(ServerClient):
             entity_type=element_type_name or "ExternalReference",
             output_format=output_format,
             extract_properties_func=self._extract_external_reference_properties,
+            report_spec=report_spec,
+            **kwargs
+        )
+
+    #
+    # Manage external identifiers
+    #
+
+    @dynamic_catch
+    async def _async_add_external_identifier(self, element_guid: str,
+                                             body: Optional[dict | NewExternalIdRequestBody] = None) -> str:
+        """ Add the description of a specific external identifier and link it to the associated metadata element.
+            Note, the external identifier is anchored to the scope (specified in the request body).
+            Async version.
+
+        Parameters
+        ----------
+        element_guid: str
+            The guid of the metadata element to link the external identifier to.
+
+        body: dict | NewExternalIdRequestBody, optional
+            A dict or NewExternalIdRequestBody representing the details of the external identifier to add.
+            The body is validated before being used.
+
+        Returns
+        -------
+        str - the guid of the created external identifier
+
+        Raises
+        ------
+        PyegeriaException
+            One of the pyegeria exceptions will be raised if there are issues in communications, message format, or
+            Egeria errors.
+        ValidationError
+            Pydantic validation errors are raised if the body does not conform to the NewExternalIdRequestBody.
+        NotAuthorizedException
+          The principle specified by the user_id does not have authorization for the requested action
+
+        Notes:
+        -----
+        Sample body:
+        {
+          "class" : "NewExternalIdRequestBody",
+          "externalSourceGUID" : "external scope GUID",
+          "externalSourceName" : "external scope qualified name",
+          "properties": {
+            "class" : "ExternalIdProperties",
+            "key" : "Add external identifier here",
+            "keyPattern": "LOCAL_KEY",
+            "description": "Add optional description here",
+            "displayName": "Add optional name used for the identifier in the third party technology here",
+            "externalInstanceTypeName": "Describe the type name in the external system",
+            "externalInstanceCreatedBy": "Add userId used in third Party",
+            "externalInstanceCreationTime": "When was the instance created in the third party",
+            "externalInstanceLastUpdatedBy": "Add userId used in third Party",
+            "externalInstanceLastUpdateTime": "When was the instance last updated in the third party",
+            "externalInstanceVersion": 1
+          },
+          "parentRelationshipProperties": {
+            "class" : "ExternalIdLinkProperties",
+            "permittedSynchronization" : "BOTH_DIRECTIONS",
+            "usage": "Add how the identifier is used by the third party",
+            "source": "Describe how the identifier was discovered",
+            "lastSynchronized": "2023-01-01T00:00:00.000+00:00",
+            "mappingProperties": {
+              "propertyName1" : "propertyValue1",
+              "propertyName2" : "propertyValue2"
+            }
+          },
+          "effectiveFrom" : "2023-01-01T00:00:00.000+00:00",
+          "effectiveTo" : "2023-12-31T23:59:59.000+00:00",
+          "effectiveTime" : "2023-01-01T00:00:00.000+00:00"
+        }
+        """
+
+        url = f"{self.command_root}/elements/{element_guid}/external-identifiers/add"
+        return await self._async_add_external_id_body_request(url, EXTERNAL_ID_PROPS, body)
+
+    @dynamic_catch
+    def add_external_identifier(self, element_guid: str,
+                                body: Optional[dict | NewExternalIdRequestBody] = None) -> str:
+        """ Add the description of a specific external identifier and link it to the associated metadata element.
+            Note, the external identifier is anchored to the scope (specified in the request body).
+
+        Parameters
+        ----------
+        element_guid: str
+            The guid of the metadata element to link the external identifier to.
+
+        body: dict | NewExternalIdRequestBody, optional
+            A dict or NewExternalIdRequestBody representing the details of the external identifier to add.
+            The body is validated before being used.
+
+        Returns
+        -------
+        str - the guid of the created external identifier
+
+        Raises
+        ------
+        PyegeriaException
+            One of the pyegeria exceptions will be raised if there are issues in communications, message format, or
+            Egeria errors.
+        ValidationError
+            Pydantic validation errors are raised if the body does not conform to the NewExternalIdRequestBody.
+        NotAuthorizedException
+          The principle specified by the user_id does not have authorization for the requested action
+        """
+
+        return asyncio.get_event_loop().run_until_complete(self._async_add_external_identifier(element_guid, body))
+
+    @dynamic_catch
+    async def _async_update_external_identifier(self, external_id_guid: str,
+                                                body: dict | UpdateElementRequestBody) -> None:
+        """ Update the description of a specific external identifier.
+            Async version.
+
+        Parameters
+        ----------
+        external_id_guid: str
+            The guid of the external identifier to update.
+
+        body: dict | UpdateElementRequestBody
+            A dict or UpdateElementRequestBody representing the details of the update.
+            The body is validated before being used.
+
+        Returns
+        -------
+        None
+
+        Raises
+        ------
+        PyegeriaException
+            One of the pyegeria exceptions will be raised if there are issues in communications, message format, or
+            Egeria errors.
+        ValidationError
+            Pydantic validation errors are raised if the body does not conform to the UpdateElementRequestBody.
+        NotAuthorizedException
+          The principle specified by the user_id does not have authorization for the requested action
+
+        Notes:
+        -----
+        Sample body:
+        {
+          "class" : "UpdateElementRequestBody",
+          "externalSourceGUID" : "external scope GUID",
+          "externalSourceName" : "external scope qualified name",
+          "properties": {
+            "class" : "ExternalIdProperties",
+            "key" : "Add external identifier here",
+            "description": "Add optional description here",
+            "displayName": "Add optional name used for the identifier in the third party technology here",
+            "keyPattern": "LOCAL_KEY",
+            "externalInstanceTypeName": "Describe the type name in the external system",
+            "externalInstanceCreatedBy": "Add userId used in third Party",
+            "externalInstanceCreationTime": "When was the instance created in the third party",
+            "externalInstanceLastUpdatedBy": "Add userId used in third Party",
+            "externalInstanceLastUpdateTime": "When was the instance last updated in the third party",
+            "externalInstanceVersion": 1
+          },
+          "effectiveFrom" : "2023-01-01T00:00:00.000+00:00",
+          "effectiveTo" : "2023-12-31T23:59:59.000+00:00",
+          "effectiveTime" : "2023-01-01T00:00:00.000+00:00"
+        }
+        """
+
+        url = f"{self.command_root}/external-identifiers/{external_id_guid}/update"
+        await self._async_update_element_body_request(url, EXTERNAL_ID_PROPS, body)
+
+    @dynamic_catch
+    def update_external_identifier(self, external_id_guid: str,
+                                   body: dict | UpdateElementRequestBody) -> None:
+        """ Update the description of a specific external identifier.
+
+        Parameters
+        ----------
+        external_id_guid: str
+            The guid of the external identifier to update.
+
+        body: dict | UpdateElementRequestBody
+            A dict or UpdateElementRequestBody representing the details of the update.
+            The body is validated before being used.
+
+        Returns
+        -------
+        None
+
+        Raises
+        ------
+        PyegeriaException
+            One of the pyegeria exceptions will be raised if there are issues in communications, message format, or
+            Egeria errors.
+        ValidationError
+            Pydantic validation errors are raised if the body does not conform to the UpdateElementRequestBody.
+        NotAuthorizedException
+          The principle specified by the user_id does not have authorization for the requested action
+        """
+
+        return asyncio.get_event_loop().run_until_complete(self._async_update_external_identifier(external_id_guid, body))
+
+    @dynamic_catch
+    async def _async_delete_external_identifier(self, external_id_guid: str,
+                                                body: Optional[dict | DeleteElementRequestBody] = None) -> None:
+        """ Remove an external identifier from an existing open metadata element.
+            The open metadata element is not affected.
+            Async version.
+
+        Parameters
+        ----------
+        external_id_guid: str
+            The guid of the external identifier to delete.
+
+        body: dict | DeleteElementRequestBody, optional
+            A dict or DeleteElementRequestBody representing the details of the delete request.
+            The body is validated before being used.
+
+        Returns
+        -------
+        None
+
+        Raises
+        ------
+        PyegeriaException
+            One of the pyegeria exceptions will be raised if there are issues in communications, message format, or
+            Egeria errors.
+        NotAuthorizedException
+          The principle specified by the user_id does not have authorization for the requested action
+
+        Notes:
+        -----
+        Sample body:
+        {
+          "class" : "DeleteElementRequestBody",
+          "externalSourceGUID" : "external scope GUID",
+          "externalSourceName" : "external scope qualified name",
+          "effectiveTime" : "2023-01-01T00:00:00.000+00:00"
+        }
+        """
+
+        url = f"{self.command_root}/external-identifiers/{external_id_guid}/delete"
+        await self._async_delete_element_request(url, body)
+
+    @dynamic_catch
+    def delete_external_identifier(self, external_id_guid: str,
+                                   body: Optional[dict | DeleteElementRequestBody] = None) -> None:
+        """ Remove an external identifier from an existing open metadata element.
+            The open metadata element is not affected.
+
+        Parameters
+        ----------
+        external_id_guid: str
+            The guid of the external identifier to delete.
+
+        body: dict | DeleteElementRequestBody, optional
+            A dict or DeleteElementRequestBody representing the details of the delete request.
+            The body is validated before being used.
+
+        Returns
+        -------
+        None
+
+        Raises
+        ------
+        PyegeriaException
+            One of the pyegeria exceptions will be raised if there are issues in communications, message format, or
+            Egeria errors.
+        NotAuthorizedException
+          The principle specified by the user_id does not have authorization for the requested action
+        """
+
+        return asyncio.get_event_loop().run_until_complete(self._async_delete_external_identifier(external_id_guid, body))
+
+    @dynamic_catch
+    async def _async_confirm_synchronization(self, external_id_link_guid: str,
+                                             body: dict | UpdateRelationshipRequestBody) -> None:
+        """ Confirm that the values of a particular metadata element have been synchronized.
+            This is important from an audit point of view, and to allow bidirectional updates of metadata using optimistic locking.
+            Async version.
+
+        Parameters
+        ----------
+        external_id_link_guid: str
+            The guid of the external identifier link relationship.
+
+        body: dict | UpdateRelationshipRequestBody
+            A dict or UpdateRelationshipRequestBody representing the details of the sync confirmation.
+            The body is validated before being used.
+
+        Returns
+        -------
+        None
+
+        Raises
+        ------
+        PyegeriaException
+            One of the pyegeria exceptions will be raised if there are issues in communications, message format, or
+            Egeria errors.
+        NotAuthorizedException
+          The principle specified by the user_id does not have authorization for the requested action
+
+        Notes:
+        -----
+        Sample body:
+        {
+            "class" : "UpdateRelationshipRequestBody",
+            "externalSourceGUID" : "external scope GUID",
+            "externalSourceName" : "external scope qualified name"
+        }
+        """
+
+        url = f"{self.command_root}/external-identifiers/links/{external_id_link_guid}/synchronized"
+        await self._async_update_relationship_request(url, EXTERNAL_ID_LINK_PROPS, body)
+
+    @dynamic_catch
+    def confirm_synchronization(self, external_id_link_guid: str,
+                                body: dict | UpdateRelationshipRequestBody) -> None:
+        """ Confirm that the values of a particular metadata element have been synchronized.
+            This is important from an audit point of view, and to allow bidirectional updates of metadata using optimistic locking.
+
+        Parameters
+        ----------
+        external_id_link_guid: str
+            The guid of the external identifier link relationship.
+
+        body: dict | UpdateRelationshipRequestBody
+            A dict or UpdateRelationshipRequestBody representing the details of the sync confirmation.
+            The body is validated before being used.
+
+        Returns
+        -------
+        None
+
+        Raises
+        ------
+        PyegeriaException
+            One of the pyegeria exceptions will be raised if there are issues in communications, message format, or
+            Egeria errors.
+        NotAuthorizedException
+          The principle specified by the user_id does not have authorization for the requested action
+        """
+
+        return asyncio.get_event_loop().run_until_complete(self._async_confirm_synchronization(external_id_link_guid, body))
+
+    @dynamic_catch
+    async def _async_get_external_identifiers_by_name(self, name: str = "*",
+                                                      body: Optional[dict | FilterRequestBody] = None,
+                                                      start_from: int = 0, page_size: int = 0,
+                                                      output_format: str = "JSON",
+                                                      report_spec: Optional[str | dict] = "ExternalIdentifier",
+                                                      **kwargs) -> Any:
+        """ Returns the list of external identifiers with a particular name.
+            Async version.
+
+        Parameters
+        ----------
+        name: str, optional, default = "*"
+            The name to filter by.
+
+        body: dict | FilterRequestBody, optional
+            A dict or FilterRequestBody representing the details of the search.
+
+        start_from: int, optional, default = 0
+            The starting element for the result list.
+
+        page_size: int, optional, default = 0
+            The maximum number of elements to return.
+
+        output_format: str, optional, default = "JSON"
+            The desired output format (MD, FORM, REPORT, LIST, DICT, MERMAID, HTML)
+
+        report_spec: str | dict, optional, default = "ExternalIdentifier"
+            The report specification to use.
+
+        Returns
+        -------
+        Any - list of matching metadata elements or formatted output
+
+        Raises
+        ------
+        PyegeriaException
+            One of the pyegeria exceptions will be raised if there are issues in communications, message format, or
+            Egeria errors.
+        NotAuthorizedException
+          The principle specified by the user_id does not have authorization for the requested action
+
+        Notes:
+        -----
+        Sample body:
+        {
+          "class" : "FilterRequestBody",
+          "filter" : "Add name here",
+          "startFrom": 0,
+          "pageSize": 10,
+          "asOfTime" : "2023-01-01T00:00:00.000+00:00",
+          "effectiveTime" : "2023-01-01T00:00:00.000+00:00",
+          "forLineage" : false,
+          "forDuplicateProcessing" : false,
+          "limitResultsByStatus" : ["ACTIVE"],
+          "sequencingOrder" : "PROPERTY_ASCENDING",
+          "sequencingProperty" : "qualifiedName"
+        }
+        """
+
+        url = f"{self.command_root}/external-identifiers/by-name"
+        return await self._async_get_name_request(url, "ExternalId", self._generate_external_identifier_output,
+                                                    filter_string=name, start_from=start_from, page_size=page_size,
+                                                    output_format=output_format, report_spec=report_spec, body=body, **kwargs)
+
+    @dynamic_catch
+    def get_external_identifiers_by_name(self, name: str = "*",
+                                         body: Optional[dict | FilterRequestBody] = None,
+                                         start_from: int = 0, page_size: int = 0,
+                                         output_format: str = "JSON",
+                                         report_spec: Optional[str | dict] = "ExternalIdentifier",
+                                         **kwargs) -> Any:
+        """ Returns the list of external identifiers with a particular name.
+
+        Parameters
+        ----------
+        name: str, optional, default = "*"
+            The name to filter by.
+
+        body: dict | FilterRequestBody, optional
+            A dict or FilterRequestBody representing the details of the search.
+
+        start_from: int, optional, default = 0
+            The starting element for the result list.
+
+        page_size: int, optional, default = 0
+            The maximum number of elements to return.
+
+        output_format: str, optional, default = "JSON"
+            The desired output format (MD, FORM, REPORT, LIST, DICT, MERMAID, HTML)
+
+        report_spec: str | dict, optional, default = "ExternalIdentifier"
+            The report specification to use.
+
+        Returns
+        -------
+        Any - list of matching metadata elements or formatted output
+        """
+
+        return asyncio.get_event_loop().run_until_complete(
+            self._async_get_external_identifiers_by_name(name, body, start_from, page_size, output_format, report_spec, **kwargs))
+
+    @dynamic_catch
+    async def _async_find_external_identifiers(self, search_string: str = "*",
+                                               body: Optional[dict | SearchStringRequestBody] = None,
+                                               starts_with: bool = True, ends_with: bool = False,
+                                               ignore_case: bool = True, start_from: int = 0, page_size: int = 0,
+                                               output_format: str = "JSON",
+                                               report_spec: Optional[str | dict] = "ExternalIdentifier",
+                                               **kwargs) -> Any:
+        """ Retrieve the list of external identifiers metadata elements that contain the search string.
+            Async version.
+
+        Parameters
+        ----------
+        search_string: str, optional, default = "*"
+            The search string to find.
+
+        body: dict | SearchStringRequestBody, optional
+            A dict or SearchStringRequestBody representing the details of the search.
+
+        starts_with: bool, optional, default = True
+            Whether the search string should be at the start.
+
+        ends_with: bool, optional, default = False
+            Whether the search string should be at the end.
+
+        ignore_case: bool, optional, default = True
+            Whether to ignore case in the search.
+
+        start_from: int, optional, default = 0
+            The starting element for the result list.
+
+        page_size: int, optional, default = 0
+            The maximum number of elements to return.
+
+        output_format: str, optional, default = "JSON"
+            The desired output format (MD, FORM, REPORT, LIST, DICT, MERMAID, HTML)
+
+        report_spec: str | dict, optional, default = "ExternalIdentifier"
+            The report specification to use.
+
+        Returns
+        -------
+        Any - list of matching metadata elements or formatted output
+
+        Raises
+        ------
+        PyegeriaException
+            One of the pyegeria exceptions will be raised if there are issues in communications, message format, or
+            Egeria errors.
+        NotAuthorizedException
+          The principle specified by the user_id does not have authorization for the requested action
+
+        Notes:
+        -----
+        Sample body:
+        {
+          "class" : "SearchStringRequestBody",
+          "searchString": "xxx",
+          "startsWith" : false,
+          "endsWith" : false,
+          "ignoreCase" : true,
+          "startFrom" : 0,
+          "pageSize": 0,
+          "asOfTime" : "2023-01-01T00:00:00.000+00:00",
+          "effectiveTime" : "2023-01-01T00:00:00.000+00:00",
+          "forLineage" : false,
+          "forDuplicateProcessing" : false,
+          "limitResultsByStatus" : ["ACTIVE"],
+          "sequencingOrder" : "PROPERTY_ASCENDING",
+          "sequencingProperty" : "qualifiedName"
+        }
+        """
+
+        url = f"{self.command_root}/external-identifiers/by-search-string"
+        return await self._async_find_request(url, "ExternalId", self._generate_external_identifier_output,
+                                                    search_string, starts_with, ends_with, ignore_case, start_from=start_from,
+                                                    page_size=page_size, output_format=output_format, report_spec=report_spec, body=body, **kwargs)
+
+    @dynamic_catch
+    def find_external_identifiers(self, search_string: str = "*",
+                                  body: Optional[dict | SearchStringRequestBody] = None,
+                                  starts_with: bool = True, ends_with: bool = False,
+                                  ignore_case: bool = True, start_from: int = 0, page_size: int = 0,
+                                  output_format: str = "JSON",
+                                  report_spec: Optional[str | dict] = "ExternalIdentifier",
+                                  **kwargs) -> Any:
+        """ Retrieve the list of external identifiers metadata elements that contain the search string.
+
+        Parameters
+        ----------
+        search_string: str, optional, default = "*"
+            The search string to find.
+
+        body: dict | SearchStringRequestBody, optional
+            A dict or SearchStringRequestBody representing the details of the search.
+
+        starts_with: bool, optional, default = True
+            Whether the search string should be at the start.
+
+        ends_with: bool, optional, default = False
+            Whether the search string should be at the end.
+
+        ignore_case: bool, optional, default = True
+            Whether to ignore case in the search.
+
+        start_from: int, optional, default = 0
+            The starting element for the result list.
+
+        page_size: int, optional, default = 0
+            The maximum number of elements to return.
+
+        output_format: str, optional, default = "JSON"
+            The desired output format (MD, FORM, REPORT, LIST, DICT, MERMAID, HTML)
+
+        report_spec: str | dict, optional, default = "ExternalIdentifier"
+            The report specification to use.
+
+        Returns
+        -------
+        Any - list of matching metadata elements or formatted output
+        """
+
+        return asyncio.get_event_loop().run_until_complete(
+            self._async_find_external_identifiers(search_string, body, starts_with, ends_with, ignore_case, start_from,
+                                                  page_size, output_format, report_spec, **kwargs))
+
+    @dynamic_catch
+    async def _async_get_external_identifier_by_guid(self, guid: str,
+                                                     body: Optional[dict | GetRequestBody] = None,
+                                                     output_format: str = "JSON",
+                                                     report_spec: Optional[str | dict] = "ExternalIdentifier",
+                                                     **kwargs) -> Any:
+        """ Return the properties of a specific external identifier.
+            Async version.
+
+        Parameters
+        ----------
+        guid: str
+            The guid of the required element.
+
+        body: dict | GetRequestBody, optional
+            A dict or GetRequestBody representing the details of the request.
+
+        output_format: str, optional, default = "JSON"
+            The desired output format (MD, FORM, REPORT, LIST, DICT, MERMAID, HTML)
+
+        report_spec: str | dict, optional, default = "ExternalIdentifier"
+            The report specification to use.
+
+        Returns
+        -------
+        Any - the matching metadata element or formatted output
+
+        Raises
+        ------
+        PyegeriaException
+            One of the pyegeria exceptions will be raised if there are issues in communications, message format, or
+            Egeria errors.
+        NotAuthorizedException
+          The principle specified by the user_id does not have authorization for the requested action
+
+        Notes:
+        -----
+        Sample body:
+        {
+          "class" : "GetRequestBody",
+          "asOfTime" : "2023-01-01T00:00:00.000+00:00",
+          "effectiveTime" : "2023-01-01T00:00:00.000+00:00",
+          "forLineage" : false,
+          "forDuplicateProcessing" : false
+        }
+        """
+
+        url = f"{self.command_root}/external-identifiers/{guid}/retrieve"
+        return await self._async_get_guid_request(url, "ExternalId", self._generate_external_identifier_output,
+                                                            output_format=output_format, report_spec=report_spec, body=body, **kwargs)
+
+    @dynamic_catch
+    def get_external_identifier_by_guid(self, guid: str,
+                                        body: Optional[dict | GetRequestBody] = None,
+                                        output_format: str = "JSON",
+                                        report_spec: Optional[str | dict] = "ExternalIdentifier",
+                                        **kwargs) -> Any:
+        """ Return the properties of a specific external identifier.
+
+        Parameters
+        ----------
+        guid: str
+            The guid of the required element.
+
+        body: dict | GetRequestBody, optional
+            A dict or GetRequestBody representing the details of the request.
+
+        output_format: str, optional, default = "JSON"
+            The desired output format (MD, FORM, REPORT, LIST, DICT, MERMAID, HTML)
+
+        report_spec: str | dict, optional, default = "ExternalIdentifier"
+            The report specification to use.
+
+        Returns
+        -------
+        Any - the matching metadata element or formatted output
+        """
+
+        return asyncio.get_event_loop().run_until_complete(
+            self._async_get_external_identifier_by_guid(guid, body, output_format, report_spec, **kwargs))
+
+    def _extract_external_identifier_properties(self, element: dict, columns_struct: dict) -> dict:
+        """
+        Extract properties from an external identifier element and populate into the provided columns_struct.
+
+        Args:
+            element (dict): The external identifier element
+            columns_struct (dict): The columns structure to populate
+
+        Returns:
+            dict: columns_struct with column 'value' fields populated
+        """
+        # First, populate from element.properties using the utility
+        col_data = populate_columns_from_properties(element, columns_struct)
+
+        columns_list = col_data.get("formats", {}).get("attributes", [])
+
+        # Populate header-derived values
+        header_props = _extract_referenceable_properties(element)
+        for column in columns_list:
+            key = column.get('key')
+            if key in header_props:
+                column['value'] = header_props.get(key)
+            elif isinstance(key, str) and key.lower() == 'guid':
+                column['value'] = header_props.get('GUID')
+
+        return col_data
+
+    def _generate_external_identifier_output(self, elements: dict | list[dict], search_string: Optional[str] = None,
+                                             element_type_name: Optional[str] = None, output_format: str = "DICT",
+                                             report_spec: dict | str = None, **kwargs) -> str | list[dict]:
+        """ Generate output for external identifiers in the specified format.
+
+            Args:
+                elements (dict | list[dict]): Dictionary or list of dictionaries containing external identifier elements
+                search_string (Optional[str]): The search string used to find the elements
+                element_type_name (Optional[str]): The type name of the external identifier
+                output_format (str): The desired output format (MD, FORM, REPORT, LIST, DICT, MERMAID, HTML)
+                report_spec (Optional[dict | str]): The report specification to use
+                **kwargs: Additional arguments.
+
+            Returns:
+                str | list[dict]: Formatted output as a string or list of dictionaries
+        """
+        return self._generate_formatted_output(
+            elements=elements,
+            query_string=search_string,
+            entity_type=element_type_name or "ExternalIdentifier",
+            output_format=output_format,
+            extract_properties_func=self._extract_external_identifier_properties,
             report_spec=report_spec,
             **kwargs
         )

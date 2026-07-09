@@ -428,6 +428,14 @@ class NewElementRequestBody(RequestBody):
     parent_at_end_1: bool | None = None
 
 
+class NewExternalIdRequestBody(RequestBody):
+    class_: Annotated[Literal["NewExternalIdRequestBody"], Field(alias="class")]
+    properties: dict | None = None
+    parent_relationship_properties: dict | None = None
+    effective_from: datetime | None = None
+    effective_to: datetime | None = None
+
+
 class NewClassificationRequestBody(RequestBody):
     class_: Annotated[Literal["NewClassificationRequestBody"], Field(alias="class")]
     properties: dict | None = None

@@ -653,6 +653,14 @@ class SolutionLinkProcessor(AsyncBaseCommandProcessor):
             if om_type in ["SolutionLinkingWire", "InformationSupplyChainLink",
                             "NestedDesignPattern", "SpecializedDesignPattern", "RelatedDesignPattern"]:
                  properties["label"] = label
+                 if om_type == "SolutionLinkingWire":
+                     # Additional SolutionLinkingWire properties (0735)
+                     properties["oneWay"] = attributes.get('One Way', {}).get('value', True)
+                     properties["frequency"] = attributes.get('Frequency', {}).get('value')
+                     properties["integrationStyle"] = attributes.get('Integration Style', {}).get('value')
+                     properties["protocol"] = attributes.get('Protocol', {}).get('value')
+                     properties["dataExchanged"] = attributes.get('Data Exchanged', {}).get('value')
+                     properties["iscQualifiedNames"] = attributes.get('ISC Qualified Names', {}).get('value')
             elif om_type == "CollectionMembership":
                  properties["membershipRationale"] = attributes.get('Membership Rationale', {}).get('value') or description
                  # Additional CollectionMembership properties
@@ -668,6 +676,33 @@ class SolutionLinkProcessor(AsyncBaseCommandProcessor):
             }
             
             if om_type == "SolutionLinkingWire":
+                # Egeria server behavior: a second SolutionLinkingWire attach call with the
+                # *same* ordered (id1, id2) pair silently overwrites the existing relationship's
+                # properties (including label) rather than creating a parallel wire - the type
+                # system allows ANY_NUMBER of these relationships per pair, but the view service
+                # attach handler does not. Warn so this isn't a silent data-loss surprise.
+                try:
+                    existing = await self.client._async_get_solution_component_by_guid(id1)
+                    for wire in (existing.get("wiredTo", []) or []):
+                        related_guid = wire.get('relatedElement', {}).get('elementHeader', {}).get('guid')
+                        at_end1 = wire.get('relatedElementAtEnd1')
+                        if related_guid == id2 and at_end1 is False:
+                            existing_label = wire.get('relationshipProperties', {}).get('label', '')
+                            logger.warning(
+                                f"Link Solution Components: a SolutionLinkingWire already exists from {id1} to {id2} "
+                                f"(label={existing_label!r}); this call will overwrite it in place rather than adding "
+                                f"a parallel wire, since Egeria does not create a second relationship for the same "
+                                f"ordered component pair. Use 'One Way: False' for bidirectional flow instead of two "
+                                f"same-direction Link commands."
+                            )
+                            self.add_related_result(
+                                "Existing Wire Overwrite", status="warning",
+                                message=f"Overwriting existing wire (was label={existing_label!r}) between these components in this direction"
+                            )
+                            break
+                except Exception as e:
+                    logger.debug(f"Could not pre-check existing SolutionLinkingWire for {id1}->{id2}: {e}")
+
                 await self.client._async_link_solution_linking_wire(id1, id2, body)
             elif om_type == "InformationSupplyChainLink":
                 await self.client._async_link_peer_info_supply_chains(id1, id2, body)

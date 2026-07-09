@@ -1,6 +1,6 @@
 {
   "family": "Solution Architect",
-  "exported": "Jul 6, 2026 at 1:04:05 PM",
+  "exported": "Jul 9, 2026 at 8:27:15 AM",
   "attribute_definitions": {
     "Activity Status": {
       "variable_name": "activity_status",
@@ -902,6 +902,25 @@
       "level": "Common",
       "Journal Entry": ""
     },
+    "Frequency": {
+      "variable_name": "frequency",
+      "inUpdate": true,
+      "attr_labels": "",
+      "examples": "",
+      "default_value": "",
+      "valid_values": [],
+      "existing_element": "",
+      "description": "A frequency of interaction.",
+      "generated": false,
+      "style": "Simple",
+      "user_specified": true,
+      "unique": false,
+      "input_required": false,
+      "min_cardinality": 0,
+      "max_cardinality": 1,
+      "level": "Basic",
+      "Journal Entry": ""
+    },
     "Glossary Term": {
       "variable_name": "glossary_term",
       "inUpdate": true,
@@ -1449,6 +1468,25 @@
       "valid_values": [],
       "existing_element": "",
       "description": "Description of the types of problem that this design pattern provides a solution to.",
+      "generated": false,
+      "style": "Simple",
+      "user_specified": true,
+      "unique": false,
+      "input_required": false,
+      "min_cardinality": 0,
+      "max_cardinality": 1,
+      "level": "Common",
+      "Journal Entry": ""
+    },
+    "Protocol": {
+      "variable_name": "protocol",
+      "inUpdate": true,
+      "attr_labels": "",
+      "examples": "",
+      "default_value": "",
+      "valid_values": [],
+      "existing_element": "",
+      "description": "Name of the protocol used for interaction.",
       "generated": false,
       "style": "Simple",
       "user_specified": true,
@@ -2283,6 +2321,25 @@
       "level": "Domain",
       "Journal Entry": ""
     },
+    "Data Exchanged": {
+      "variable_name": "data_exchanged",
+      "inUpdate": true,
+      "attr_labels": "",
+      "examples": "",
+      "default_value": "",
+      "valid_values": [],
+      "existing_element": "",
+      "description": "The data exchanged in an interaction.",
+      "generated": false,
+      "style": "Simple",
+      "user_specified": true,
+      "unique": false,
+      "input_required": false,
+      "min_cardinality": 0,
+      "max_cardinality": 1,
+      "level": "Domain",
+      "Journal Entry": ""
+    },
     "Data Processing Purposes": {
       "variable_name": "purposes",
       "inUpdate": true,
@@ -2502,7 +2559,7 @@
       "existing_element": "",
       "description": "The qualified names of the information supply chains that this wire implements. From SolutionLinkingWire (0735).",
       "generated": false,
-      "style": "Simple List",
+      "style": "Reference Name List",
       "user_specified": true,
       "unique": false,
       "input_required": false,
@@ -2566,6 +2623,25 @@
       "min_cardinality": 0,
       "max_cardinality": 1,
       "level": "Domain",
+      "Journal Entry": ""
+    },
+    "One Way": {
+      "variable_name": "one_way",
+      "inUpdate": true,
+      "attr_labels": "Unidirectional",
+      "examples": "",
+      "default_value": "True",
+      "valid_values": [],
+      "existing_element": "",
+      "description": "Is the link one way or bi-directional?",
+      "generated": false,
+      "style": "Bool",
+      "user_specified": true,
+      "unique": false,
+      "input_required": false,
+      "min_cardinality": 0,
+      "max_cardinality": 1,
+      "level": "Basic",
       "Journal Entry": ""
     },
     "Parent Design Pattern": {
@@ -3157,7 +3233,13 @@
       "bundle": "Solution Component Link Base",
       "custom_attributes": [
         "Component1",
-        "Component2"
+        "Component2",
+        "One Way",
+        "Frequency",
+        "Integration Style",
+        "Protocol",
+        "Data Exchanged",
+        "ISC Qualified Names"
       ],
       "Journal Entry": ""
     },

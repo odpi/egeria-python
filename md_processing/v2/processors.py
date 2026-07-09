@@ -465,13 +465,27 @@ class AsyncBaseCommandProcessor(ABC):
 
         # 9. Action Dispatch
         if directive == "validate":
-            status = "success" if not self.parsed_output.get("errors") else "failure"
+            errors = self.parsed_output.get("errors") or []
+            status = "success" if not errors else "failure"
             guid = self.parsed_output.get("guid")
+            # On failure, surface the actual validation error(s) (e.g. "Referenced
+            # element 'X' for attribute 'Y' not found.") rather than the generic
+            # "Validated ..." success-shaped message — and include "errors" in the
+            # result so callers building a structured response (e.g. the MCP
+            # server's _build_structured_response) can route this into
+            # validation_errors with the real text instead of falling through to
+            # a generic execution_errors entry with no useful detail.
+            message = (
+                f"Validated {self.command.verb} {self.command.object_type}"
+                + (f" (GUID: {guid})" if guid else "")
+                if status == "success"
+                else "; ".join(errors)
+            )
             return {
                 "output": analysis,
                 "analysis": analysis,
                 "status": status,
-                "message": f"Validated {self.command.verb} {self.command.object_type}" + (f" (GUID: {guid})" if guid else ""),
+                "message": message,
                 "verb": self.command.verb,
                 "object_type": self.canonical_object_type,
                 "markdown_object_type": self.markdown_object_type,
@@ -479,7 +493,8 @@ class AsyncBaseCommandProcessor(ABC):
                 "qualified_name": self.parsed_output.get("qualified_name"),
                 "guid": self.parsed_output.get("guid"),
                 "found": self.parsed_output.get("exists", False),
-                "warnings": self.parsed_output.get("warnings", [])
+                "warnings": self.parsed_output.get("warnings", []),
+                "errors": errors,
             }
         
         # Check for blockers before applying changes

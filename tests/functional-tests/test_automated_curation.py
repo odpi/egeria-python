@@ -828,7 +828,7 @@ class TestAutomatedCuration:
 
             start_time = time.perf_counter()
             # response = a_client.get_tech_type_detail("CSV Data File", True)
-            response = a_client.get_tech_type_detail("PostgreSQL Relational Database", output_format="DICT",
+            response = a_client.get_tech_type_detail("PostgreSQL Relational Database", output_format="JSON",
                                                      report_spec="Tech-Type-Details-MD")
             duration = time.perf_counter() - start_time
             print(f"\n\tDuration was {duration} seconds")
@@ -1404,7 +1404,7 @@ class TestAutomatedCuration:
         """
         try:
             a_client = AutomatedCuration(
-                self.good_view_server_1,
+                self.good_view_server_2,
                 self.good_platform1_url,
                 user_id=self.good_user_2,
                 user_pwd="secret",
@@ -1412,17 +1412,17 @@ class TestAutomatedCuration:
             token = a_client.create_egeria_bearer_token()
 
             # Replace with a real secrets store GUID from your Egeria environment
-            secrets_store_guid = "add-secrets-store-guid-here"
+            secrets_store_guid = "8bc3980b-47ec-4a67-92cb-e8b0b5909bdc"
 
             body = {
                 "class": "SecretsCollectionRequestBody",
                 "secretsCollection": {
-                    "collectionName": "test-secret-collection",
-                    "displayName": "Test Secret Collection",
-                    "description": "A test collection of client-side secrets",
-                    "refreshTimeInterval": 60,
+                    "collectionName": "PostgreSQL Server Secret",
+                    "displayName": "PostgreSQL Server Secret",
+                    "description": "Postgres of client-side secrets",
+                    "refreshTimeInterval": 10,
                     "secrets": {
-                        "testSecretKey": "testSecretValue",
+                        "egeria_user": "user4egeria",
                     },
                 },
             }

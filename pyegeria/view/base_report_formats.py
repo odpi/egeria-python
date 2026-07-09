@@ -347,6 +347,21 @@ COMMON_COLUMNS = [
     Column(name='Type Name', key='type_name'),
     Column(name='URL', key='url')
 ]
+
+EXTERNAL_ID_COLUMNS = [
+    Column(name='Key', key='key'),
+    Column(name='Key Pattern', key='key_pattern'),
+    Column(name='Description', key='description'),
+    Column(name='Display Name', key='display_name'),
+    Column(name='External Instance Type Name', key='external_instance_type_name'),
+    Column(name='External Instance Created By', key='external_instance_created_by'),
+    Column(name='External Instance Creation Time', key='external_instance_creation_time'),
+    Column(name='External Instance Last Updated By', key='external_instance_last_updated_by'),
+    Column(name='External Instance Last Update Time', key='external_instance_last_update_time'),
+    Column(name='External Instance Version', key='external_instance_version'),
+    Column(name='Qualified Name', key='qualified_name'),
+    Column(name='GUID', key='guid'),
+]
 # Preferred terminology alias
 COMMON_ATTRIBUTES = COMMON_COLUMNS
 
@@ -1732,6 +1747,25 @@ base_report_specs = FormatSetDict({
         ],
         action=ActionParameter(
             function="ExternalReference.find_external_references",
+            optional_params=OPTIONAL_SEARCH_PARAMS,
+            required_params=["search_string"],
+            spec_params={},
+        )
+    ),
+    "ExternalIdentifier": FormatSet(
+        target_type="External Identifier",
+        heading="External Identifier Attributes",
+        description="Attributes that apply to External Identifiers.",
+        annotations={},
+        family="External References",
+        formats=[
+            Format(
+                types=["ALL"],
+                attributes=EXTERNAL_ID_COLUMNS,
+            )
+        ],
+        action=ActionParameter(
+            function="ExternalReference.find_external_identifiers",
             optional_params=OPTIONAL_SEARCH_PARAMS,
             required_params=["search_string"],
             spec_params={},
