@@ -990,5 +990,95 @@ class TestGlossaryManager:
             print_exception_table(e)
             assert False, "Invalid request"
 
+    def test_term_relationship_keys_synonym_and_isa(self):
+        """Confirms the raw JSON shape glossary_handler.py's relationship grouping
+        depends on. IMPORTANT — this contradicts the original assumption (that
+        Egeria exposes separate 'synonyms'/'classifies'/'isA' top-level keys per
+        relationship type, per OpenMetadataTypesArchive1_2.java's end-attribute
+        names): empirically, get_term_by_guid(output_format='JSON') puts ALL
+        term-to-term relationships — Synonym, ISARelationship, etc. — into a
+        single 'relatedTerms' list. Each entry's actual type is only recoverable
+        from relationshipHeader.type.typeName, and asymmetric types (ISARelationship)
+        are distinguished via the relatedElementAtEnd1 boolean, not by dict key.
+        Uses localhost since this is run against a local docker-compose Egeria
+        stack, not the laz.local environment the rest of this file targets.
+        """
+        platform_url = "https://localhost:9443"
+        view_server = self.good_view_server_2
+        user_id = self.good_user_3
+        user_pwd = "secret"
+        # "Simple Catalog Glossary" on the qs demo data — a safe, generic
+        # anchor for throwaway test terms.
+        glossary_guid = "08c8e87f-6818-4753-892f-c2cd12f4b1ad"
+
+        g_client = GlossaryManager(view_server, platform_url, user_id=user_id, user_pwd=user_pwd)
+        term1_guid = term2_guid = None
+        try:
+            g_client.create_egeria_bearer_token(user_id, user_pwd)
+
+            def _make_term(name):
+                prop_body = GlossaryTermProperties(
+                    class_="GlossaryTermProperties",
+                    display_name=name,
+                    qualified_name=f"GlossaryTerm:{name}:{time.time()}",
+                    description="Throwaway term for PY-relationship-key verification",
+                )
+                body = NewElementRequestBody(
+                    class_="NewElementRequestBody",
+                    parent_guid=glossary_guid,
+                    is_own_anchor=True,
+                    anchor_scope_guid=glossary_guid,
+                    parent_relationship_type_name="CollectionMembership",
+                    parent_at_end_1=True,
+                    properties=prop_body.model_dump(exclude_none=True),
+                )
+                return g_client.create_glossary_term(body)
+
+            term1_guid = _make_term("RelKeyTestTerm1")
+            term2_guid = _make_term("RelKeyTestTerm2")
+
+            g_client.add_relationship_between_terms(term1_guid, term2_guid, "Synonym")
+            g_client.add_relationship_between_terms(term1_guid, term2_guid, "ISARelationship")
+
+            raw = g_client.get_term_by_guid(term1_guid, output_format="JSON", graph_query_depth=1)
+            keys = [k for k in raw.keys() if k not in ("elementHeader", "properties", "class")]
+            print(f"\nterm1 raw relationship keys: {keys}")
+
+            assert "relatedTerms" in keys, f"expected all term relationships under 'relatedTerms', got {keys}"
+            assert "synonyms" not in keys and "classifies" not in keys and "isA" not in keys, (
+                f"expected NO separate per-type keys (that was the disproven assumption), got {keys}"
+            )
+
+            entries = raw.get("relatedTerms") or []
+            type_names = {((e.get("relationshipHeader") or {}).get("type") or {}).get("typeName") for e in entries}
+            print(f"relatedTerms entry type names: {type_names}")
+            assert "Synonym" in type_names, f"expected a Synonym-typed entry, got {type_names}"
+            assert "ISARelationship" in type_names, f"expected an ISARelationship-typed entry, got {type_names}"
+
+            isa_entry = next(e for e in entries if (e.get("relationshipHeader") or {}).get("type", {}).get("typeName") == "ISARelationship")
+            assert "relatedElementAtEnd1" in isa_entry, "expected relatedElementAtEnd1 to distinguish ISARelationship direction"
+
+        except PyegeriaException as e:
+            print_exception_table(e)
+            assert False, "Invalid request"
         finally:
+            if term1_guid and term2_guid:
+                try:
+                    g_client.remove_relationship_between_terms(term1_guid, term2_guid, "Synonym")
+                except Exception:
+                    pass
+                try:
+                    g_client.remove_relationship_between_terms(term1_guid, term2_guid, "ISARelationship")
+                except Exception:
+                    pass
+            if term1_guid:
+                try:
+                    g_client.delete_term(term1_guid, cascade=True)
+                except Exception:
+                    pass
+            if term2_guid:
+                try:
+                    g_client.delete_term(term2_guid, cascade=True)
+                except Exception:
+                    pass
             g_client.close_session()
