@@ -629,6 +629,60 @@ class TestMetadataExpert:
         except Exception as e:
             print(f"Caught exception: {type(e).__name__}: {e}")
 
+    def test_find_metadata_elements_multi_classification_any_match_criteria(self, expert_client):
+        """Regression test for PY-15 (see PYEGERIA_ISSUES.md in egeria-workspaces-fs).
+
+        The Postgres repository connector's QueryBuilder.getSearchClassificationsClause()
+        was found to ignore SearchClassifications.matchCriteria entirely once 2+
+        classification conditions were supplied: ANY/ALL/NONE all behaved as an
+        unconditional AND across every named classification's type_name LIKE clause.
+        Two mutually exclusive classification names (present on qs demo data but never
+        on the same element, e.g. ZoneMembership + Confidentiality) therefore always
+        returned zero elements regardless of matchCriteria, when matchCriteria=ANY
+        should have returned their union. Single-condition queries were unaffected,
+        which is why this test needs 2+ conditions to catch the regression.
+        """
+        def _find(names, match_criteria):
+            body = {
+                "class": "FindRequestBody",
+                "matchClassifications": {
+                    "class": "SearchClassifications",
+                    "matchCriteria": match_criteria,
+                    "conditions": [{"name": n} for n in names],
+                },
+                "limitResultsByStatus": ["ACTIVE"],
+            }
+            return expert_client.find_metadata_elements(body, start_from=0, page_size=500, graph_query_depth=0)
+
+        try:
+            zone_only = _find(["ZoneMembership"], "ANY")
+            confidentiality_only = _find(["Confidentiality"], "ANY")
+            both_any = _find(["ZoneMembership", "Confidentiality"], "ANY")
+        except PyegeriaConnectionException:
+            pytest.skip("No Egeria server running")
+            return
+
+        zone_count = len(zone_only) if isinstance(zone_only, list) else 0
+        confidentiality_count = len(confidentiality_only) if isinstance(confidentiality_only, list) else 0
+
+        if zone_count == 0 and confidentiality_count == 0:
+            pytest.skip(
+                "No ZoneMembership/Confidentiality classified elements found on this "
+                "server to test against — expected non-zero on the qs demo data set"
+            )
+
+        both_any_count = len(both_any) if isinstance(both_any, list) else 0
+
+        # ANY across two classifications can only grow the result set relative to
+        # either classification alone — it must never come back *smaller*. Before the
+        # fix, both_any_count was always 0 here regardless of zone_count/confidentiality_count.
+        assert both_any_count >= max(zone_count, confidentiality_count), (
+            f"matchCriteria=ANY across ['ZoneMembership', 'Confidentiality'] returned "
+            f"{both_any_count} elements, but ZoneMembership alone returned {zone_count} and "
+            f"Confidentiality alone returned {confidentiality_count} — matchCriteria is being "
+            f"ignored for classification conditions (PY-15)."
+        )
+
     def test_find_glossary_terms_cim(self, expert_client):
         """Find GlossaryTerm elements anchored to the CIM glossary."""
         cim_glossary_guid = "ab84bad2-67f0-4ec8-b0e3-76e638ec9f63"
