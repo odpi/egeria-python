@@ -240,7 +240,7 @@ class TestDigitalBusiness:
             ))
             
             db_client.link_business_capability_dependency(guid1, guid2, body=NewRelationshipRequestBody(class_="NewRelationshipRequestBody"))
-            
+
             # Cleanup
             db_client.detach_business_capability_dependency(guid1, guid2, body=DeleteRelationshipRequestBody(class_="DeleteRelationshipRequestBody"))
 
@@ -248,6 +248,66 @@ class TestDigitalBusiness:
             print(f"Exception: {e}")
             assert False
         finally:
+            db_client.close_session()
+
+    def test_business_capability_dependency_relationship_key(self):
+        """Confirms the raw JSON key name business_capability_handler.py's
+        _generic_relationships() will pick up for BusinessCapabilityDependency
+        — unconfirmed before this test since no live qs demo data has this
+        relationship (checked up to graph_query_depth=2 against the 9 real
+        Coco Pharmaceuticals BusinessCapability entities: zero dependency
+        links). Unlike test_link_business_capability_dependency above, this
+        also fetches the result and inspects it, and deletes the two
+        throwaway capabilities afterward (that test creates them but never
+        deletes them)."""
+        db_client = DigitalBusiness(self.good_view_server_1, self.good_platform1_url, user_id=self.good_user_1)
+        guid1 = guid2 = None
+        try:
+            db_client.create_egeria_bearer_token(self.good_user_1, "secret")
+            guid1 = db_client.create_business_capability(body=NewElementRequestBody(
+                class_="NewElementRequestBody",
+                properties={"class": "BusinessCapabilityProperties", "qualifiedName": self._unique_qname("DepKeyCap1"),
+                            "displayName": "DepKeyCap1"}
+            ))
+            guid2 = db_client.create_business_capability(body=NewElementRequestBody(
+                class_="NewElementRequestBody",
+                properties={"class": "BusinessCapabilityProperties", "qualifiedName": self._unique_qname("DepKeyCap2"),
+                            "displayName": "DepKeyCap2"}
+            ))
+            db_client.link_business_capability_dependency(guid1, guid2, body=NewRelationshipRequestBody(
+                class_="NewRelationshipRequestBody",
+                properties={"class": "BusinessCapabilityDependencyProperties"}
+            ))
+
+            raw = db_client.get_business_capability_by_guid(guid1, graph_query_depth=2, output_format="JSON")
+            keys = [k for k in raw.keys() if k not in ("elementHeader", "properties", "class")]
+            print(f"\nBusinessCapabilityDependency raw keys: {keys}")
+            dep_keys = [k for k in keys if "epend" in k]
+            assert dep_keys, f"expected a dependency-shaped key, got {keys}"
+
+            entries = raw.get(dep_keys[0]) or []
+            type_names = {((e.get("relationshipHeader") or {}).get("type") or {}).get("typeName") for e in entries}
+            print(f"{dep_keys[0]} entry type names: {type_names}")
+            assert "BusinessCapabilityDependency" in type_names, (
+                f"expected a BusinessCapabilityDependency-typed entry under {dep_keys[0]!r}, got {type_names}"
+            )
+
+        except Exception as e:
+            print(f"Exception: {e}")
+            assert False
+        finally:
+            if guid1 and guid2:
+                try:
+                    db_client.detach_business_capability_dependency(
+                        guid1, guid2, body=DeleteRelationshipRequestBody(class_="DeleteRelationshipRequestBody"))
+                except Exception as e:
+                    print(f"detach cleanup error: {e}")
+            for g in (guid1, guid2):
+                if g:
+                    try:
+                        db_client.delete_business_capability(g, body=DeleteElementRequestBody(class_="DeleteElementRequestBody"))
+                    except Exception as e:
+                        print(f"delete cleanup error for {g}: {e}")
             db_client.close_session()
 
     def test_link_digital_support(self):
