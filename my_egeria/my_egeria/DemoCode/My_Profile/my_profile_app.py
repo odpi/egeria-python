@@ -45,6 +45,7 @@ from MainScreen import MainScreen
 from SearchForTermScreen import SearchForTermScreen
 from CreateSubscriptionRequestScreen import CreateSubscriptionRequestScreen
 from UserIdentitiesScreen import UserIdentitiesScreen
+from ShowCommentsScreen import ShowCommentsScreen
 
 
 class MyProfileApp(App):
@@ -78,7 +79,8 @@ class MyProfileApp(App):
         "search_for_term": SearchForTermScreen,
         "overview": SelectionOverviewScreen,
         "create_subscription": CreateSubscriptionRequestScreen,
-        "my_team": MyTeam
+        "my_team": MyTeam,
+        "show_comments": ShowCommentsScreen,
     }
 
     def __init__(self, *args, **kwargs):
@@ -104,7 +106,9 @@ class MyProfileApp(App):
         self.projects = []
         self.communities = []
         self.roles = []
-        self.actions = []
+        self.blogs = []
+        self.journal = []
+        self.todos = []
         self.teams = []
         self.other_function_list = []
         self.tech_type_json: str
@@ -208,14 +212,17 @@ class MyProfileApp(App):
         self.my_teams_data = self.user_profile.get("Teams") or []
         self.my_communities_data = self.user_profile.get("Communities") or []
         self.my_roles_data = self.user_profile.get("Roles") or []
-        self.my_actions_data = self.user_profile.get("Actions") or []
+        self.my_blogs_data = self.user_profile.get("Blogs") or []
+        self.my_journal_data = self.user_profile.get("Journal") or []
         self.log(f"Contribution Record: {self.contribution_record}")
         self.log(f"Karma Points: {self.karma_points}")
         self.log(f"my_projects_data: {self.my_projects_data}")
         self.log(f"my_teams_data: {self.my_teams_data}")
         self.log(f"my_communities_data: {self.my_communities_data}")
         self.log(f"my_roles_data: {self.my_roles_data}")
-        self.log(f"my_actions_data: {self.my_actions_data}")
+        self.log(f"my_blogs_data: {self.my_blogs_data}")
+        self.log(f"my_journal_data: {self.my_journal_data}")
+
         # User Identities
         try:
             self.user_identities = self.my_profile_inst.get_my_profile(
@@ -226,6 +233,19 @@ class MyProfileApp(App):
         except PyegeriaException as e:
             self.log(f"Error retrieving User-Identities: {e!s}")
             self.user_identities = {}
+
+        # User To-Dos
+
+        try:
+            self.my_todos_data = self.my_profile_inst.get_my_to_dos(report_spec="My-User-ToDos",
+                                                                    output_format="DICT",
+                                                                    )
+            self.log(f"My To-Dos: {self.my_todos_data}, type: {type(self.my_todos_data)}")
+        except PyegeriaException as e:
+            self.log(f"Error retrieving My To-Dos: {e!s}")
+            self.my_todos_data = {}
+
+        self.log(f"my_todos_data: {self.my_todos_data}")
 
         # User GUID — resolve self-scoped; never let a missing/empty lookup crash
         # the app (this runs in on_mount, before first paint, so an unguarded
@@ -264,8 +284,13 @@ class MyProfileApp(App):
         self.projects = self.my_projects_data or []
         self.communities = self.my_communities_data or []
         self.roles = self.my_roles_data or []
-        self.actions = self.user_profile.get("actions") or []
+        self.blogs = self.my_blogs_data or []
+        self.journal = self.my_journal_data or []
+        self.todos = self.my_todos_data or []
         self.teams = self.my_teams_data or []
+        self.log(f"Blogs data: {self.blogs}")
+        self.log(f"Journal data: {self.journal}")
+        self.log(f"Todos data: {self.todos}")
         if isinstance(self.user_identities, list):
             self.user_identity = self.user_identities
         else:
@@ -273,18 +298,24 @@ class MyProfileApp(App):
 
     async def _populate_tables(self) -> None:
         """Populates tables from normalized profile data"""
+
         main_screen = self.get_screen("main")
+
         self.projects_table = main_screen.query_one("#projects_table", DataTable)
         self.communities_table = main_screen.query_one("#communities_table", DataTable)
         self.roles_table = main_screen.query_one("#roles_table", DataTable)
-        self.actions_table = main_screen.query_one("#actions_table", DataTable)
+        self.blogs_table = main_screen.query_one("#blogs_table", DataTable)
+        self.journal_table = main_screen.query_one("#journal_table", DataTable)
+        self.todos_table = main_screen.query_one("#todos_table", DataTable)
         self.user_identity_table = main_screen.query_one("#user_identity_table", DataTable)
         self.teams_table = main_screen.query_one("#teams_table", DataTable)
 
         assert self.projects_table is not None
         assert self.communities_table is not None
         assert self.roles_table is not None
-        assert self.actions_table is not None
+        assert self.blogs_table is not None
+        assert self.journal_table is not None
+        assert self.todos_table is not None
         assert self.user_identity_table is not None
         assert self.teams_table is not None
 
@@ -302,8 +333,20 @@ class MyProfileApp(App):
         self.teams_table.clear(columns=True)
         self.teams_table.add_columns("Assignment Type", "Team Name", "Description","GUID")
 
-        self.actions_table.clear(columns=True)
-        self.actions_table.add_columns("Action Name", "Status", "Description")
+        self.blogs_table.clear(columns=True)
+        self.blogs_table.add_columns("Blog Title", "Date", "Text")
+        self.blogs_table.zebra = True
+        self.blogs_table.cursor_type = "row"
+
+        self.journal_table.clear(columns=True)
+        self.journal_table.add_columns("Journal Entry", "Date", "Text")
+        self.journal_table.zebra = True
+        self.journal_table.cursor_type = "row"
+
+        self.todos_table.clear(columns=True)
+        self.todos_table.add_columns("To-Do Name", "Activity Status", "Description")
+        self.todos_table.zebra = True
+        self.todos_table.cursor_type = "row"
 
         self.user_identity_table.clear(columns=True)
         self.user_identity_table.add_columns("Display Name", "User ID", "Distinguished Name")
@@ -332,10 +375,25 @@ class MyProfileApp(App):
                 str(r.get("GUID", "")),
             )
 
-        for a in self.actions if isinstance(self.actions, list) else []:
-            self.actions_table.add_row(
-                str(a.get("Display Name", "")),
-                str(a.get("Description", "")),
+        for b in self.blogs if isinstance(self.blogs, list) else []:
+            self.blogs_table.add_row(
+                str(b.get("title", "")),
+                str(b.get("time", "")),
+                str(b.get("text", "")),
+            )
+
+        for j in self.journal if isinstance(self.journal, list) else []:
+            self.journal_table.add_row(
+                str(j.get("title", "")),
+                str(j.get("time", "")),
+                str(j.get("text", "")),
+            )
+
+        for td in self.todos if isinstance(self.todos, list) else []:
+            self.todos_table.add_row(
+                str(td.get("Name", "")),
+                str(td.get("Activity Status", "")),
+                str(td.get("Description", "")),
             )
 
         for t in self.teams if isinstance(self.teams, list) else []:
@@ -1605,13 +1663,14 @@ class MyProfileApp(App):
         team_members_list: list = []
         self.team_members = []
 
-        # provide list of team members for team leader
-        if "TeamLeader" in selected_role_name or "TeamLeader" in selected_role_type:
-            self.log(f"Selected role is a TeamLeader: {selected_role_name}")
-            team_members_list, team_display_name, team_qualified_name, team_category, team_description = self.find_team_members(selected_role_name)
-        elif "TeamMembers" in selected_role_name or "TeamMembers" in selected_role_type:
-            self.log(f"Selected role is a TeamMember: {selected_role_name}")
-            team_members_list, team_display_name, team_qualified_name, team_category, team_description = self.find_team_members(selected_role_name)
+        # provide list of team members for team leader or team member
+        if ("TeamLeader" in selected_role_name or "TeamLeader" in selected_role_type or
+                "TeamMember" in selected_role_name or "TeamMember" in selected_role_type):
+            self.log(f"Selected role is a TeamLeader or TeamMember: {selected_role_name}")
+            result = self.find_team_members(selected_role_name)
+            if not isinstance(result, (tuple, list)) or len(result) != 5:
+                return
+            team_members_list, team_display_name, team_qualified_name, team_category, team_description = result
         else:
             self.log(f"Selected role is not a TeamLeader or TeamMember: {selected_role_name}")
             return (201)
@@ -1667,7 +1726,7 @@ class MyProfileApp(App):
         self.log(f"team_member_data: {team_member_data}")
         # team members?
         if team_member_data.get("kind") != "empty":
-            team_members_data_struct: list[dict] = team_member_data.get("data")
+            team_members_data_struct = team_member_data.get("data") or []
             self.log(f"team members data extracted: {team_members_data_struct}")
         else:
             self.log(f"No team members found for role: {role_search_key}")
@@ -1675,16 +1734,16 @@ class MyProfileApp(App):
             error_message = "No team members found"
             self.log(f"Error retrieving team members: {error_category}, {error_message}")
             self.push_screen(StatusScreen(f"{error_category}: {error_message}"), callback=self.status_callback)
-            return
+            return ([], None, None, None, None)
         team_members_list.clear()
         for team_member in team_members_data_struct:
             # get team details
-            team_display_name: str = team_member.get("Display Name", None)
-            team_qualified_name: str = team_member.get("Qualified Name", None)
-            team_category: str = team_member.get("Category", None)
-            team_description: str = team_member.get("Description", None)
+            team_display_name: str = team_member.get("Display Name", "")
+            team_qualified_name: str = team_member.get("Qualified Name", "")
+            team_category: str = team_member.get("Category", "")
+            team_description: str = team_member.get("Description", "")
             # extract the team member entries
-            team_member_structure: list[dict] = team_member.get("Members", None)
+            team_member_structure: list[dict] = team_member.get("Members", [])
 
             if team_member_structure != None:
                 for entry in team_member_structure:
@@ -1698,13 +1757,13 @@ class MyProfileApp(App):
                     #
 
                     continue
-                return(team_members_list, team_display_name, team_qualified_name, team_category, team_description)
+                return([team_members_list, team_display_name, team_qualified_name, team_category, team_description])
             else:
                 error_category = "Team Member Details"
                 error_message = "No team member details found"
                 self.log(f"Error retrieving team member details: {error_category}, {error_message}")
                 self.push_screen(StatusScreen(f"{error_category}: {error_message}"), callback=self.status_callback)
-                return (430)
+                return ([], None, None, None, None)
 
     def my_team_callback(self, status) -> None:
         self.log(f"Callback received with status: {status}")
@@ -1928,6 +1987,34 @@ class MyProfileApp(App):
             self.log(f"Unexpected return type from EditProfileScreen: {type(return_c)}")
             self.push_screen("main")
 
+    def edit_tables(self, table_name, row_k):
+        """ Edit the selected table """
+        self.log(f"Editing table: {table_name}, row: {row_k}")
+        if table_name == "roles":
+            self.push_screen(EditRolesScreen(), callback=self.edit_roles_callback)
+        elif table_name == "teams":
+            self.push_screen(EditTeamsScreen(), callback=self.edit_teams_callback)
+        else:
+            self.log(f"Unexpected table name: {table_name}")
+
+    async def show_comments(self, table_name, row_k):
+        """ Show comments for the selected table """
+        self.log(f"Showing comments for table: {table_name}, row: {row_k}")
+        await self.push_screen(ShowCommentsScreen(table_name, row_k,
+                                                  self.view_server,
+                                                  self.platform_url,
+                                                  self.user_name,
+                                                  self.user_password), callback=self.show_comments_callback)
+
+    def show_comments_callback(self, return_c):
+        """ Callback for ShowCommentsScreen """
+        self.log(f"Return from ShowCommentsScreen: {return_c}")
+        if return_c is None:
+            self.log("No return from ShowCommentsScreen")
+            self.push_screen("main")
+        else:
+            self.log(f"Unexpected return type from ShowCommentsScreen: {type(return_c)}")
+            self.push_screen("main")
 
 if __name__ == "__main__":
     app = MyProfileApp()
