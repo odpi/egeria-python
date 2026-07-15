@@ -879,7 +879,7 @@ class AutomatedCuration(ServerClient):
         body = {
             "class": "TemplateRequestBody",
             "templateGUID": template_guid,
-            "isOwnAnchor": "true",
+            "isOwnAnchor": True,
             "placeholderPropertyValues": {
                 "serverName": kafka_server,
                 "hostIdentifier": host_name,
@@ -970,7 +970,7 @@ class AutomatedCuration(ServerClient):
         body = {
             "class": "TemplateRequestBody",
             "templateGUID": template_guid,
-            "isOwnAnchor": "true",
+            "isOwnAnchor": True,
             "placeholderPropertyValues": {
                 "fileName": file_name,
                 "fileType": file_type,
@@ -1194,7 +1194,7 @@ class AutomatedCuration(ServerClient):
         body = {
             "class": "TemplateRequestBody",
             "templateGUID": template_guid,
-            "isOwnAnchor": "true",
+            "isOwnAnchor": True,
             "placeholderPropertyValues": {
                 "serverName": postgres_server,
                 "hostIdentifier": host_name,
@@ -1292,7 +1292,7 @@ class AutomatedCuration(ServerClient):
         body = {
             "class": "TemplateRequestBody",
             "templateGUID": template_guid,
-            "isOwnAnchor": "true",
+            "isOwnAnchor": True,
             "placeholderPropertyValues": {
                 "databaseName": postgres_database,
                 "serverName": server_name,
@@ -1362,6 +1362,8 @@ class AutomatedCuration(ServerClient):
             file_system: str,
             description: Optional[str] = None,
             version: Optional[str] = None,
+            is_own_anchor: bool = True,
+            initial_classifications: Optional[list] = None,
     ) -> str:
         """Create a File folder element from a template.
         Async version.
@@ -1384,6 +1386,12 @@ class AutomatedCuration(ServerClient):
         version: str, opt
             version of the element - typically of the form x.y.z
 
+        is_own_anchor : bool, optional
+            Whether the element is its own anchor. Defaults to True.
+
+        initial_classifications : list, optional
+            A list of initial classifications to apply to the element. Defaults to None.
+
 
 
         Returns
@@ -1396,7 +1404,8 @@ class AutomatedCuration(ServerClient):
         body = {
             "class": "TemplateRequestBody",
             "templateGUID": template_guid,
-            "isOwnAnchor": "true",
+            "isOwnAnchor": is_own_anchor,
+            "initialClassifications": initial_classifications,
             "placeholderPropertyValues": {
                 "directoryPathName": path_name,
                 "directoryName": folder_name,
@@ -1416,6 +1425,8 @@ class AutomatedCuration(ServerClient):
             file_system: str,
             description: Optional[str] = None,
             version: Optional[str] = None,
+            is_own_anchor: bool = True,
+            initial_classifications: Optional[list] = None,
     ) -> str:
         """Create a File folder element from a template.
 
@@ -1437,6 +1448,12 @@ class AutomatedCuration(ServerClient):
         version: str, opt
             version of the element - typically of the form x.y.z
 
+        is_own_anchor : bool, optional
+            Whether the element is its own anchor. Defaults to True.
+
+        initial_classifications : list, optional
+            A list of initial classifications to apply to the element. Defaults to None.
+
 
 
         Returns
@@ -1447,7 +1464,7 @@ class AutomatedCuration(ServerClient):
         loop = asyncio.get_event_loop()
         response = loop.run_until_complete(
             self._async_create_folder_element_from_template(
-                path_name, folder_name, file_system, description, version
+                path_name, folder_name, file_system, description, version, is_own_anchor, initial_classifications
             )
         )
         return response
@@ -1491,7 +1508,7 @@ class AutomatedCuration(ServerClient):
         body = {
             "class": "TemplateRequestBody",
             "templateGUID": template_guid,
-            "isOwnAnchor": "true",
+            "isOwnAnchor": True,
             "placeholderPropertyValues": {
                 "serverName": server_name,
                 "hostURL": host_url,
@@ -1581,7 +1598,7 @@ class AutomatedCuration(ServerClient):
         body = {
             "class": "TemplateRequestBody",
             "templateGUID": template_guid,
-            "isOwnAnchor": "true",
+            "isOwnAnchor": True,
             "placeholderPropertyValues": {
                 "ucCatalogName": uc_catalog,
                 "serverNetworkAddress": network_address,
@@ -1670,7 +1687,7 @@ class AutomatedCuration(ServerClient):
         body = {
             "class": "TemplateRequestBody",
             "templateGUID": template_guid,
-            "isOwnAnchor": "true",
+            "isOwnAnchor": True,
             "placeholderPropertyValues": {
                 "ucCatalogName": uc_catalog,
                 "ucSchemaName": uc_schema,
@@ -1777,7 +1794,7 @@ class AutomatedCuration(ServerClient):
         body = {
             "class": "TemplateRequestBody",
             "templateGUID": template_guid,
-            "isOwnAnchor": "true",
+            "isOwnAnchor": True,
             "placeholderPropertyValues": {
                 "ucCatalogName": uc_catalog,
                 "ucSchemaName": uc_schema,
@@ -1900,7 +1917,7 @@ class AutomatedCuration(ServerClient):
         body = {
             "class": "TemplateRequestBody",
             "templateGUID": template_guid,
-            "isOwnAnchor": "true",
+            "isOwnAnchor": True,
             "placeholderPropertyValues": {
                 "ucCatalogName": uc_catalog,
                 "ucSchemaName": uc_schema,
@@ -2015,7 +2032,7 @@ class AutomatedCuration(ServerClient):
         body = {
             "class": "TemplateRequestBody",
             "templateGUID": template_guid,
-            "isOwnAnchor": "true",
+            "isOwnAnchor": True,
             "placeholderPropertyValues": {
                 "ucCatalogName": uc_catalog,
                 "ucSchemaName": uc_schema,

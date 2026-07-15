@@ -6436,7 +6436,7 @@ class ServerClient(BaseServerClient):
         elif isinstance(body, dict):
             validated_body = self._filter_request_adapter.validate_python(body)
         else:
-            filter_string = ".*" if filter_string == "*" else filter_string
+            filter_string = None if filter_string == "*" else filter_string
             classification_names = None if classification_names == [] else classification_names
             body = {
                 "class": "FilterRequestBody",

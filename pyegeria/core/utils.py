@@ -116,41 +116,32 @@ def camel_to_title_case(input_string):
     return " ".join(new_words)
 
 
-def to_camel_case(input_string):
-    """Convert an input string to camelCase, singularizing if plural.
-    
-    This function takes an input string, converts it to singular form if it's plural,
-    and then transforms it to camelCase format (first word lowercase, subsequent words
-    capitalized with no spaces).
-    
+def to_camel_case(input_string: str) -> str:
+    """Convert an input string (snake_case or space-separated) to camelCase,
+    singularizing if plural. Special rule: keep 'guid' as 'GUID'.
+
     Parameters
     ----------
     input_string : str
         The string to convert to camelCase
-        
+
     Returns
     -------
     str:
         The input string converted to camelCase, after singularization if needed
-        
-    Examples
-    --------
-    >>> to_camel_case("data categories")
-    'dataCategory'
-    >>> to_camel_case("business terms")
-    'businessTerm'
-    >>> to_camel_case("glossary categories")
-    'glossaryCategory'
     """
     if not input_string:
         return ""
-    
+
+    # Handle snake_case by converting to spaces first
+    input_string = input_string.replace('_', ' ')
+
     # Convert to lowercase for consistent processing
     lowercase_input = input_string.lower()
-    
+
     # First, convert to singular if plural
     singular = lowercase_input
-    
+
     # Handle common plural endings
     if singular.endswith('ies'):
         singular = singular[:-3] + 'y'
@@ -162,18 +153,22 @@ def to_camel_case(input_string):
             singular = singular[:-1]
     elif singular.endswith('s') and not singular.endswith('ss'):
         singular = singular[:-1]
-    
+
     # Split the string into words and convert to camelCase
     words = singular.split()
     if not words:
         return ""
-    
-    # First word is lowercase, rest are capitalized
-    result = words[0]
-    for word in words[1:]:
-        result += word.capitalize()
-    
-    return result
+
+    camel_case_components = []
+    for i, word in enumerate(words):
+        if word.lower() == 'guid':
+            camel_case_components.append('GUID')
+        elif i == 0:
+            camel_case_components.append(word)
+        else:
+            camel_case_components.append(word.capitalize())
+
+    return ''.join(camel_case_components)
 
 def to_pascal_case(input_string)->str:
     """
