@@ -16,6 +16,12 @@ from textual.widgets._option_list import Option
 class MainScreen(Screen):
     """Main Screen for My Profile App."""
 
+    BINDINGS = [
+        ("q", "app.quit", "Quit"),
+        ("ctrl+e", "edit_table", "Edit Selected Table"),
+        ("ctrl+s", "show_comments", "Show Comments for Selected Table"),
+    ]
+
     CSS_PATH = "my_profile.tcss"
 
     def __init__(self):
@@ -67,9 +73,13 @@ class MainScreen(Screen):
         )
 
         yield ScrollableContainer(
-            Static("Actions"),
-            DataTable(id="actions_table"),
-            id="main_actions_container"
+            Static("Blogs"),
+            DataTable(id="blogs_table"),
+            Static("Journal"),
+            DataTable(id="journal_table"),
+            Static("To-Dos"),
+            DataTable(id="todos_table"),
+            id="main_activities_container"
         )
 
         yield ScrollableContainer(
@@ -79,3 +89,21 @@ class MainScreen(Screen):
         )
 
         yield Footer(id="main_footer")
+
+    def on_data_table_row_selected(self, event: DataTable.RowSelected):
+        """ Collect row and table when the user selects a row in a table """
+        self.selected_row = event.row_key
+        self.selected_table = event.data_table.id
+        pass
+
+    def action_edit_table(self):
+        """ Edit the selected table """
+        self.app.edit_tables(self.selected_table, self.selected_row)
+        pass
+
+    def action_show_comments(self):
+        """ Show comments for the selected table """
+        if self.selected_table and self.selected_row:
+            self.app.show_comments(self.selected_table, self.selected_row)
+        else:
+            self.notify("Please select a row and table to show comments.", timeout=5, severity="warning")
