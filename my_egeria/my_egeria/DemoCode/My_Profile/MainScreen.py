@@ -5,7 +5,7 @@
    This file provides a set of report specification related functions for my_egeria.
 
 """
-
+import pwd
 from textual.app import ComposeResult
 from textual.containers import ScrollableContainer
 from textual.screen import Screen
@@ -28,6 +28,14 @@ class MainScreen(Screen):
         super().__init__(id="main_screen")
         self.title = "Egeria"
         self.sub_title = "My Profile"
+        self.projects_table: DataTable = self.app.query_one("#projects_table")
+        self.communities_table: DataTable = self.app.query_one("#communities_table")
+        self.roles_table: DataTable = self.app.query_one("#roles_table")
+        self.teams_table: DataTable = self.app.query_one("#teams_table")
+        self.blogs_table: DataTable = self.app.query_one("#blogs_table")
+        self.journal_table: DataTable = self.app.query_one("#journal_table")
+        self.todos_table: DataTable = self.app.query_one("#todos_table")
+        self.other_function_list: OptionList = OptionList(id="other_function_list")
 
     def compose(self) -> ComposeResult:
         # place widgets into grid on screen, note sequence determines position!
