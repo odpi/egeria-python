@@ -42,9 +42,10 @@ class FullServerConfig(CoreServerConfig):
         platform_url: str,
         user_id: str,
         user_pwd: Optional[str] = None,
+        timeout: int = None,
     ):
         self.full_config_command_root: str
-        CoreServerConfig.__init__(self, server_name, platform_url, user_id, user_pwd)
+        CoreServerConfig.__init__(self, server_name, platform_url, user_id, user_pwd, timeout=timeout)
         self.full_config_command_root = (
             self.platform_url + "/open-metadata/admin-services"
         )

@@ -75,12 +75,14 @@ class EgeriaTech:
         user_id: str = None,
         user_pwd: str = None,
         token: str = None,
+        timeout: int = None,
     ):
         self.view_server = view_server or settings.Environment.egeria_view_server
         self.platform_url = platform_url or settings.Environment.egeria_platform_url
         self.user_id = user_id or settings.User_Profile.user_name
         self.user_pwd = user_pwd or settings.User_Profile.user_pwd
         self.token = token
+        self.timeout = timeout
 
         # Mapping of attribute names to their classes for lazy loading
         self._subclient_map = {
@@ -157,6 +159,7 @@ class EgeriaTech:
                 self.user_id,
                 self.user_pwd,
                 self.token,
+                timeout=self.timeout,
             )
         return self._instantiated_clients[attr_name]
 

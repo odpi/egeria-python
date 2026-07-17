@@ -144,7 +144,7 @@ class Platform(BasePlatformClient):
 
         url = self.admin_command_root + "/servers/" + server + "/instance"
 
-        await self._async_make_request("POST", url, time_out=timeout)
+        await self._async_make_request("POST", url, timeout=timeout)
 
     def activate_server_stored_config(
         self, server: Optional[str] = None, timeout: int = 90
@@ -206,7 +206,7 @@ class Platform(BasePlatformClient):
             server = self.server_name
 
         url = self.admin_command_root + "/servers/" + server + "/instance/configuration"
-        await self._async_make_request("POST", url, config_body, time_out=timeout)
+        await self._async_make_request("POST", url, config_body, timeout=timeout)
 
     def activate_server_supplied_config(
         self, config_body: dict, server: Optional[str] = None, timeout: int = 60

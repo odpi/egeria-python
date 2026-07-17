@@ -1,10 +1,10 @@
-Dr. Egeria Test Run — 2026-07-07 21:40:46.844292
+Dr. Egeria Test Run — 2026-07-15 13:14:09.939787
 
 
 ### VALIDATE MODE ###
 
 ================================================================================
-FILE: dr_test_glossary.md  |  DIRECTIVE: validate  |  21:40:48
+FILE: dr_test_glossary.md  |  DIRECTIVE: validate  |  13:14:11
 ================================================================================
 v2: Processing Markdown File: /Users/dwolfson/localGit/egeria-python/tests/dr-egeria-command-tests/dr_test_glossary.md
 
@@ -69,9 +69,29 @@ v2: Processing complete for '/Users/dwolfson/localGit/egeria-python/tests/dr-ege
 SCORE: 16 SUCCESS  0 FAILURE  0 WARNING
 
 ================================================================================
-FILE: dr_test_governance.md  |  DIRECTIVE: validate  |  21:40:52
+FILE: dr_test_governance.md  |  DIRECTIVE: validate  |  13:14:14
 ================================================================================
 v2: Processing Markdown File: /Users/dwolfson/localGit/egeria-python/tests/dr-egeria-command-tests/dr_test_governance.md
+Processing Errors:
+
+-- Link Governed By (None) --
+   - Referenced element 'DigitalProduct::SalesForecast::Pipeline::1.2' for attribute 'Referenceable' not found.
+-- Add Governed By (None) --
+   - Referenced element 'Collection::SalesForecast::Master::1.0' for attribute 'Referenceable' not found.
+-- Link Zone Hierarchy (None) --
+   - Referenced element 'GovernanceZone::SalesForecast::DataStructures::1.0' for attribute 'Child Zone' not found.
+-- Link Certification (None) --
+   - Referenced element 'DigitalProduct::SalesForecast::Pipeline::1.2' for attribute 'Referenceable' not found.
+-- Link License (None) --
+   - Referenced element 'Agreement::SalesForecast::Finance::DataSharing::1.0' for attribute 'Referenceable' not found.
+-- Link Agreement Terms and Conditions (TermsAndConditions::SalesForecast::DataSharing::1.0) --
+   - Referenced element 'Agreement::SalesForecast::Finance::DataSharing::1.0' for attribute 'Agreement Name' not found.
+-- Link Monitored Resource (None) --
+   - Referenced element 'ExternalDataSource::Salesforce::OpportunityFeed::Daily::1.0' for attribute 'Monitored Resource' not found.
+-- Unlink Governed By (None) --
+   - Referenced element 'Collection::SalesForecast::Master::1.0' for attribute 'Referenceable' not found.
+
+
 
 
                                                                                      Dr. Egeria v2 Processing Summary                                                                                   
@@ -175,9 +195,15 @@ v2: Processing Markdown File: /Users/dwolfson/localGit/egeria-python/tests/dr-eg
 ├···································┼···································┼·········┼·······┼···································┼···································┼·····································
 │ Link Governance Mechanism         │ Link Governance Mechanism         │ SUCCESS │ No    │                                   │                                   │ Validated Link Governance Mechanism 
 ├···································┼···································┼·········┼·······┼···································┼···································┼·····································
-│ Link Governed By                  │ Link Governed By                  │ FAILURE │ No    │                                   │                                   │ Validated Link Governed By          
+│ Link Governed By                  │ Link Governed By                  │ FAILURE │ No    │                                   │                                   │ Referenced element                  
+│                                   │                                   │         │       │                                   │                                   │ 'DigitalProduct::SalesForecast::Pipe
+│                                   │                                   │         │       │                                   │                                   │ line::1.2' for attribute            
+│                                   │                                   │         │       │                                   │                                   │ 'Referenceable' not found.          
 ├···································┼···································┼·········┼·······┼···································┼···································┼·····································
-│ Add Governed By                   │ Add Governed By                   │ FAILURE │ No    │                                   │                                   │ Validated Add Governed By           
+│ Add Governed By                   │ Add Governed By                   │ FAILURE │ No    │                                   │                                   │ Referenced element                  
+│                                   │                                   │         │       │                                   │                                   │ 'Collection::SalesForecast::Master::
+│                                   │                                   │         │       │                                   │                                   │ 1.0' for attribute 'Referenceable'  
+│                                   │                                   │         │       │                                   │                                   │ not found.                          
 ├···································┼···································┼·········┼·······┼···································┼···································┼·····································
 │ Link Governance Drivers           │ Link Governance Drivers           │ SUCCESS │ No    │                                   │                                   │ Validated Link Governance Drivers   
 ├···································┼···································┼·········┼·······┼···································┼···································┼·····································
@@ -185,31 +211,47 @@ v2: Processing Markdown File: /Users/dwolfson/localGit/egeria-python/tests/dr-eg
 ├···································┼···································┼·········┼·······┼···································┼···································┼·····································
 │ Link Governance Controls          │ Link Governance Controls          │ SUCCESS │ No    │                                   │                                   │ Validated Link Governance Controls  
 ├···································┼···································┼·········┼·······┼···································┼···································┼·····································
-│ Link Zone Hierarchy               │ Link Zone Hierarchy               │ FAILURE │ No    │                                   │                                   │ Validated Link Zone Hierarchy       
+│ Link Zone Hierarchy               │ Link Zone Hierarchy               │ FAILURE │ No    │                                   │                                   │ Referenced element                  
+│                                   │                                   │         │       │                                   │                                   │ 'GovernanceZone::SalesForecast::Data
+│                                   │                                   │         │       │                                   │                                   │ Structures::1.0' for attribute      
+│                                   │                                   │         │       │                                   │                                   │ 'Child Zone' not found.             
 ├···································┼···································┼·········┼·······┼···································┼···································┼·····································
 │ Link Regulation Certification     │ Link Regulation Certification     │ SUCCESS │ No    │                                   │                                   │ Validated Link Regulation           
 │ Type                              │ Type                              │         │       │                                   │                                   │ Certification Type                  
 ├···································┼···································┼·········┼·······┼···································┼···································┼·····································
-│ Link Certification                │ Link Certification                │ FAILURE │ No    │                                   │                                   │ Validated Link Certification        
+│ Link Certification                │ Link Certification                │ FAILURE │ No    │                                   │                                   │ Referenced element                  
+│                                   │                                   │         │       │                                   │                                   │ 'DigitalProduct::SalesForecast::Pipe
+│                                   │                                   │         │       │                                   │                                   │ line::1.2' for attribute            
+│                                   │                                   │         │       │                                   │                                   │ 'Referenceable' not found.          
 ├···································┼···································┼·········┼·······┼···································┼···································┼·····································
-│ Link License                      │ Link License                      │ FAILURE │ No    │                                   │                                   │ Validated Link License              
+│ Link License                      │ Link License                      │ FAILURE │ No    │                                   │                                   │ Referenced element                  
+│                                   │                                   │         │       │                                   │                                   │ 'Agreement::SalesForecast::Finance::
+│                                   │                                   │         │       │                                   │                                   │ DataSharing::1.0' for attribute     
+│                                   │                                   │         │       │                                   │                                   │ 'Referenceable' not found.          
 ├···································┼···································┼·········┼·······┼···································┼···································┼·····································
-│ Link Agreement Terms and          │ Link Agreement Terms and          │ FAILURE │ Yes   │ TermsAndConditions::SalesForecast │ TermsAndConditions::SalesForecast │ Validated Link Agreement Terms and  
-│ Conditions                        │ Conditions                        │         │       │ ::DataSharing::1.0                │ ::DataSharing::1.0                │ Conditions (GUID: (Planned:         
-│                                   │                                   │         │       │                                   │                                   │ TermsAndConditions::SalesForecast::D
-│                                   │                                   │         │       │                                   │                                   │ ataSharing::1.0))                   
+│ Link Agreement Terms and          │ Link Agreement Terms and          │ FAILURE │ Yes   │ TermsAndConditions::SalesForecast │ TermsAndConditions::SalesForecast │ Referenced element                  
+│ Conditions                        │ Conditions                        │         │       │ ::DataSharing::1.0                │ ::DataSharing::1.0                │ 'Agreement::SalesForecast::Finance::
+│                                   │                                   │         │       │                                   │                                   │ DataSharing::1.0' for attribute     
+│                                   │                                   │         │       │                                   │                                   │ 'Agreement Name' not found.         
 ├···································┼···································┼·········┼·······┼···································┼···································┼·····································
 │ Link Associated Group             │ Link Associated Group             │ WARNING │ No    │                                   │                                   │ No processor registered for 'Link   
 │                                   │                                   │         │       │                                   │                                   │ Associated Group'                   
 ├···································┼···································┼·········┼·······┼···································┼···································┼·····································
-│ Link Monitored Resource           │ Link Monitored Resource           │ FAILURE │ No    │                                   │                                   │ Validated Link Monitored Resource   
+│ Link Monitored Resource           │ Link Monitored Resource           │ FAILURE │ No    │                                   │                                   │ Referenced element                  
+│                                   │                                   │         │       │                                   │                                   │ 'ExternalDataSource::Salesforce::Opp
+│                                   │                                   │         │       │                                   │                                   │ ortunityFeed::Daily::1.0' for       
+│                                   │                                   │         │       │                                   │                                   │ attribute 'Monitored Resource' not  
+│                                   │                                   │         │       │                                   │                                   │ found.                              
 ├···································┼···································┼·········┼·······┼···································┼···································┼·····································
 │ Link Notification Subscriber      │ Link Notification Subscriber      │ SUCCESS │ No    │                                   │                                   │ Validated Link Notification         
 │                                   │                                   │         │       │                                   │                                   │ Subscriber                          
 ├···································┼···································┼·········┼·······┼···································┼···································┼·····································
 │ Detach Governance Response        │ Detach Governance Response        │ SUCCESS │ No    │                                   │                                   │ Validated Detach Governance Response
 ├···································┼···································┼·········┼·······┼···································┼···································┼·····································
-│ Unlink Governed By                │ Unlink Governed By                │ FAILURE │ No    │                                   │                                   │ Validated Unlink Governed By        
+│ Unlink Governed By                │ Unlink Governed By                │ FAILURE │ No    │                                   │                                   │ Referenced element                  
+│                                   │                                   │         │       │                                   │                                   │ 'Collection::SalesForecast::Master::
+│                                   │                                   │         │       │                                   │                                   │ 1.0' for attribute 'Referenceable'  
+│                                   │                                   │         │       │                                   │                                   │ not found.                          
 └───────────────────────────────────┴───────────────────────────────────┴─────────┴───────┴───────────────────────────────────┴───────────────────────────────────┴─────────────────────────────────────
 
 
@@ -220,7 +262,7 @@ v2: Processing complete for '/Users/dwolfson/localGit/egeria-python/tests/dr-ege
 SCORE: 38 SUCCESS  8 FAILURE  1 WARNING
 
 ================================================================================
-FILE: dr_test_projects.md  |  DIRECTIVE: validate  |  21:41:06
+FILE: dr_test_projects.md  |  DIRECTIVE: validate  |  13:14:26
 ================================================================================
 v2: Processing Markdown File: /Users/dwolfson/localGit/egeria-python/tests/dr-egeria-command-tests/dr_test_projects.md
 
@@ -275,9 +317,19 @@ v2: Processing complete for '/Users/dwolfson/localGit/egeria-python/tests/dr-ege
 SCORE: 14 SUCCESS  0 FAILURE  0 WARNING
 
 ================================================================================
-FILE: dr_test_collections_good.md  |  DIRECTIVE: validate  |  21:41:10
+FILE: dr_test_collections_good.md  |  DIRECTIVE: validate  |  13:14:29
 ================================================================================
 v2: Processing Markdown File: /Users/dwolfson/localGit/egeria-python/tests/dr-egeria-command-tests/dr_test_collections_good.md
+Processing Errors:
+
+-- Attach Collection to Resource (None) --
+   - Referenced element 'Campaign:Clinical Trials Management' for attribute 'Element Id' not found.
+-- Attach Collection to Resource (None) --
+   - Referenced element 'Campaign:Clinical Trials Management' for attribute 'Element Id' not found.
+-- Unlink Collection to Resource (None) --
+   - Referenced element 'Campaign:Clinical Trials Management' for attribute 'Element Id' not found.
+
+
 Processing Warnings:
 
 -- Attach Collection to Resource (None) --
@@ -352,17 +404,23 @@ Processing Warnings:
 │ Link Member to Collection       │ Link Member to Collection     │ SUCCESS │ No    │ Collection::SalesForecast::Master:: │                                     │ Validated Link Member to Collection  │
 │                                 │                               │         │       │ 1.0                                 │                                     │                                      │
 ├·································┼·······························┼·········┼·······┼·····································┼·····································┼······································┤
-│ Attach Collection to Resource   │ Attach Collection to Resource │ FAILURE │ No    │ Collection::SalesForecast::Master:: │                                     │ Validated Attach Collection to       │
-│                                 │                               │         │       │ 1.0                                 │                                     │ Resource                             │
+│ Attach Collection to Resource   │ Attach Collection to Resource │ FAILURE │ No    │ Collection::SalesForecast::Master:: │                                     │ Referenced element                   │
+│                                 │                               │         │       │ 1.0                                 │                                     │ 'Campaign:Clinical Trials            │
+│                                 │                               │         │       │                                     │                                     │ Management' for attribute 'Element   │
+│                                 │                               │         │       │                                     │                                     │ Id' not found.                       │
 ├·································┼·······························┼·········┼·······┼·····································┼·····································┼······································┤
-│ Attach Collection to Resource   │ Attach Collection to Resource │ FAILURE │ No    │ Collection::SalesForecast::Master:: │                                     │ Validated Attach Collection to       │
-│                                 │                               │         │       │ 1.0                                 │                                     │ Resource                             │
+│ Attach Collection to Resource   │ Attach Collection to Resource │ FAILURE │ No    │ Collection::SalesForecast::Master:: │                                     │ Referenced element                   │
+│                                 │                               │         │       │ 1.0                                 │                                     │ 'Campaign:Clinical Trials            │
+│                                 │                               │         │       │                                     │                                     │ Management' for attribute 'Element   │
+│                                 │                               │         │       │                                     │                                     │ Id' not found.                       │
 ├·································┼·······························┼·········┼·······┼·····································┼·····································┼······································┤
 │ Detach Member from Collection   │ Detach Member to Collection   │ SUCCESS │ No    │ Collection::SalesForecast::Root::1. │                                     │ Validated Detach Member from         │
 │                                 │                               │         │       │ 0                                   │                                     │ Collection                           │
 ├·································┼·······························┼·········┼·······┼·····································┼·····································┼······································┤
-│ Unlink Collection from Resource │ Unlink Collection to Resource │ FAILURE │ No    │ Collection::SalesForecast::Master:: │                                     │ Validated Unlink Collection from     │
-│                                 │                               │         │       │ 1.0                                 │                                     │ Resource                             │
+│ Unlink Collection from Resource │ Unlink Collection to Resource │ FAILURE │ No    │ Collection::SalesForecast::Master:: │                                     │ Referenced element                   │
+│                                 │                               │         │       │ 1.0                                 │                                     │ 'Campaign:Clinical Trials            │
+│                                 │                               │         │       │                                     │                                     │ Management' for attribute 'Element   │
+│                                 │                               │         │       │                                     │                                     │ Id' not found.                       │
 └─────────────────────────────────┴───────────────────────────────┴─────────┴───────┴─────────────────────────────────────┴─────────────────────────────────────┴──────────────────────────────────────┘
 
 
@@ -373,7 +431,7 @@ v2: Processing complete for '/Users/dwolfson/localGit/egeria-python/tests/dr-ege
 SCORE: 20 SUCCESS  3 FAILURE  0 WARNING
 
 ================================================================================
-FILE: dr_test_collections_mean.md  |  DIRECTIVE: validate  |  21:41:17
+FILE: dr_test_collections_mean.md  |  DIRECTIVE: validate  |  13:14:36
 ================================================================================
 v2: Processing Markdown File: /Users/dwolfson/localGit/egeria-python/tests/dr-egeria-command-tests/dr_test_collections_mean.md
 Processing Errors:
@@ -384,11 +442,23 @@ Processing Errors:
    - Value 'BANANA' is not a valid metadata value for 'Content Status' (Validated by Egeria)
 -- Add Member to Collection (None) --
    - Value 'NOT_A_STATUS' is not a valid metadata value for 'Membership Status' (Validated by Egeria)
+-- Add Member to Collection (None) --
+   - Referenced element 'Collection::SalesForecast::DoesNotExist::1.0' for attribute 'Collection Id' not found.
+   - Referenced element 'DataStructure::CRMOpportunity::Salesforce::1.0' for attribute 'Element Id' not found.
+-- Add Member to Collection (None) --
+   - Referenced element 'Collection::SalesForecast::Master::1.0' for attribute 'Collection Id' not found.
+   - Referenced element 'DataStructure::NoSuchStructure::99.9' for attribute 'Element Id' not found.
 -- Update Collection (None) --
    - Missing required attribute: 'Display Name'. Provided attributes: Description, Content Status, GUID
+-- Add Member to Collection (None) --
+   - Referenced element 'Collection::SalesForecast::Master::1.0' for attribute 'Collection Id' not found.
+   - Referenced element 'DataStructure::CRMOpportunity::Salesforce::1.0' for attribute 'Element Id' not found.
 -- Attach Collection to Resource (None) --
    - Value 'GovernanceDefinitions' is not a valid metadata value for 'Resource Use' (Validated by Egeria)
    - Missing required attribute: 'Element Id'. Provided attributes: Resource Description, Resource Use, GUID
+-- Detach Member to Collection (None) --
+   - Referenced element 'Collection::SalesForecast::Master::1.0' for attribute 'Collection Id' not found.
+   - Referenced element 'Collection::SalesForecast::NeverLinked::1.0' for attribute 'Element Id' not found.
 
 
 
@@ -412,19 +482,34 @@ Processing Errors:
 │                               │                               │         │       │                                      │                                      │ metadata value for 'Membership       │
 │                               │                               │         │       │                                      │                                      │ Status' (Validated by Egeria)        │
 ├·······························┼·······························┼·········┼·······┼······································┼······································┼······································┤
-│ Add Member to Collection      │ Add Member to Collection      │ FAILURE │ No    │ Collection::SalesForecast::DoesNotEx │                                      │ Validated Add Member to Collection   │
-│                               │                               │         │       │ ist::1.0                             │                                      │                                      │
+│ Add Member to Collection      │ Add Member to Collection      │ FAILURE │ No    │ Collection::SalesForecast::DoesNotEx │                                      │ Referenced element                   │
+│                               │                               │         │       │ ist::1.0                             │                                      │ 'Collection::SalesForecast::DoesNotE │
+│                               │                               │         │       │                                      │                                      │ xist::1.0' for attribute 'Collection │
+│                               │                               │         │       │                                      │                                      │ Id' not found.; Referenced element   │
+│                               │                               │         │       │                                      │                                      │ 'DataStructure::CRMOpportunity::Sale │
+│                               │                               │         │       │                                      │                                      │ sforce::1.0' for attribute 'Element  │
+│                               │                               │         │       │                                      │                                      │ Id' not found.                       │
 ├·······························┼·······························┼·········┼·······┼······································┼······································┼······································┤
-│ Add Member to Collection      │ Add Member to Collection      │ FAILURE │ No    │ Collection::SalesForecast::Master::1 │                                      │ Validated Add Member to Collection   │
-│                               │                               │         │       │ .0                                   │                                      │                                      │
+│ Add Member to Collection      │ Add Member to Collection      │ FAILURE │ No    │ Collection::SalesForecast::Master::1 │                                      │ Referenced element                   │
+│                               │                               │         │       │ .0                                   │                                      │ 'Collection::SalesForecast::Master:: │
+│                               │                               │         │       │                                      │                                      │ 1.0' for attribute 'Collection Id'   │
+│                               │                               │         │       │                                      │                                      │ not found.; Referenced element       │
+│                               │                               │         │       │                                      │                                      │ 'DataStructure::NoSuchStructure::99. │
+│                               │                               │         │       │                                      │                                      │ 9' for attribute 'Element Id' not    │
+│                               │                               │         │       │                                      │                                      │ found.                               │
 ├·······························┼·······························┼·········┼·······┼······································┼······································┼······································┤
 │ Update Collection             │ Update Collection             │ FAILURE │ No    │                                      │                                      │ Validation failed: Missing required  │
 │                               │                               │         │       │                                      │                                      │ attribute: 'Display Name'. Provided  │
 │                               │                               │         │       │                                      │                                      │ attributes: Description, Content     │
 │                               │                               │         │       │                                      │                                      │ Status, GUID                         │
 ├·······························┼·······························┼·········┼·······┼······································┼······································┼······································┤
-│ Add Member to Collection      │ Add Member to Collection      │ FAILURE │ No    │ Collection::SalesForecast::Master::1 │                                      │ Validated Add Member to Collection   │
-│                               │                               │         │       │ .0                                   │                                      │                                      │
+│ Add Member to Collection      │ Add Member to Collection      │ FAILURE │ No    │ Collection::SalesForecast::Master::1 │                                      │ Referenced element                   │
+│                               │                               │         │       │ .0                                   │                                      │ 'Collection::SalesForecast::Master:: │
+│                               │                               │         │       │                                      │                                      │ 1.0' for attribute 'Collection Id'   │
+│                               │                               │         │       │                                      │                                      │ not found.; Referenced element       │
+│                               │                               │         │       │                                      │                                      │ 'DataStructure::CRMOpportunity::Sale │
+│                               │                               │         │       │                                      │                                      │ sforce::1.0' for attribute 'Element  │
+│                               │                               │         │       │                                      │                                      │ Id' not found.                       │
 ├·······························┼·······························┼·········┼·······┼······································┼······································┼······································┤
 │ Attach Collection to Resource │ Attach Collection to Resource │ FAILURE │ No    │                                      │                                      │ Validation failed: Value             │
 │                               │                               │         │       │                                      │                                      │ 'GovernanceDefinitions' is not a     │
@@ -434,8 +519,13 @@ Processing Errors:
 │                               │                               │         │       │                                      │                                      │ Provided attributes: Resource        │
 │                               │                               │         │       │                                      │                                      │ Description, Resource Use, GUID      │
 ├·······························┼·······························┼·········┼·······┼······································┼······································┼······································┤
-│ Detach Member from Collection │ Detach Member to Collection   │ FAILURE │ No    │ Collection::SalesForecast::Master::1 │                                      │ Validated Detach Member from         │
-│                               │                               │         │       │ .0                                   │                                      │ Collection                           │
+│ Detach Member from Collection │ Detach Member to Collection   │ FAILURE │ No    │ Collection::SalesForecast::Master::1 │                                      │ Referenced element                   │
+│                               │                               │         │       │ .0                                   │                                      │ 'Collection::SalesForecast::Master:: │
+│                               │                               │         │       │                                      │                                      │ 1.0' for attribute 'Collection Id'   │
+│                               │                               │         │       │                                      │                                      │ not found.; Referenced element       │
+│                               │                               │         │       │                                      │                                      │ 'Collection::SalesForecast::NeverLin │
+│                               │                               │         │       │                                      │                                      │ ked::1.0' for attribute 'Element Id' │
+│                               │                               │         │       │                                      │                                      │ not found.                           │
 ├·······························┼·······························┼·········┼·······┼······································┼······································┼······································┤
 │ Create Collection             │ Create Collection             │ SUCCESS │ No    │ SF-MP11-Bad-User-Defined-Status      │ Collection::SalesForecast::MP11::1.0 │ Validated Create Collection          │
 └───────────────────────────────┴───────────────────────────────┴─────────┴───────┴──────────────────────────────────────┴──────────────────────────────────────┴──────────────────────────────────────┘
@@ -448,9 +538,19 @@ v2: Processing complete for '/Users/dwolfson/localGit/egeria-python/tests/dr-ege
 SCORE: 1 SUCCESS  9 FAILURE  0 WARNING
 
 ================================================================================
-FILE: dr_test_products_good.md  |  DIRECTIVE: validate  |  21:41:20
+FILE: dr_test_products_good.md  |  DIRECTIVE: validate  |  13:14:39
 ================================================================================
 v2: Processing Markdown File: /Users/dwolfson/localGit/egeria-python/tests/dr-egeria-command-tests/dr_test_products_good.md
+Processing Errors:
+
+-- Link Product Dependency (None) --
+   - Referenced element 'PDR::DigitalProduct::Sales-Forecast-Data-Feed::1.0' for attribute 'Digital Product 2' not found.
+-- Add Digital Subscriber (None) --
+   - Referenced element 'Campaign:Sustainability' for attribute 'Subscriber Id' not found.
+-- Unlink Digital Subscriber (None) --
+   - Referenced element 'Campaign:Sustainability' for attribute 'Subscriber Id' not found.
+
+
 
 
                                                                                     Dr. Egeria v2 Processing Summary                                                                                    
@@ -486,7 +586,10 @@ v2: Processing Markdown File: /Users/dwolfson/localGit/egeria-python/tests/dr-eg
 │                                │                                │         │       │                                     │                                     │ DigitalSubscription::SalesForecast:: │
 │                                │                                │         │       │                                     │                                     │ Finance::Premium::1.0))              │
 ├································┼································┼·········┼·······┼·····································┼·····································┼······································┤
-│ Link Product Dependency        │ Link Product Dependency        │ FAILURE │ No    │                                     │                                     │ Validated Link Product Dependency    │
+│ Link Product Dependency        │ Link Product Dependency        │ FAILURE │ No    │                                     │                                     │ Referenced element                   │
+│                                │                                │         │       │                                     │                                     │ 'PDR::DigitalProduct::Sales-Forecast │
+│                                │                                │         │       │                                     │                                     │ -Data-Feed::1.0' for attribute       │
+│                                │                                │         │       │                                     │                                     │ 'Digital Product 2' not found.       │
 ├································┼································┼·········┼·······┼·····································┼·····································┼······································┤
 │ Link Agreement to Actor        │ Link Agreement Actor           │ SUCCESS │ No    │ Agreement::SalesForecast::Finance:: │                                     │ Validated Link Agreement to Actor    │
 │                                │                                │         │       │ DataSharing::1.0                    │                                     │                                      │
@@ -497,13 +600,15 @@ v2: Processing Markdown File: /Users/dwolfson/localGit/egeria-python/tests/dr-eg
 │ Link Agreement Item            │ Link Agreement Item            │ SUCCESS │ No    │ Agreement::SalesForecast::DataAcces │                                     │ Validated Link Agreement Item        │
 │                                │                                │         │       │ s::1.0                              │                                     │                                      │
 ├································┼································┼·········┼·······┼·····································┼·····································┼······································┤
-│ Add Digital Subscriber         │ Add Digital Subscriber         │ FAILURE │ No    │ DigitalSubscription::SalesForecast: │                                     │ Validated Add Digital Subscriber     │
-│                                │                                │         │       │ :Finance::Premium::1.0              │                                     │                                      │
+│ Add Digital Subscriber         │ Add Digital Subscriber         │ FAILURE │ No    │ DigitalSubscription::SalesForecast: │                                     │ Referenced element                   │
+│                                │                                │         │       │ :Finance::Premium::1.0              │                                     │ 'Campaign:Sustainability' for        │
+│                                │                                │         │       │                                     │                                     │ attribute 'Subscriber Id' not found. │
 ├································┼································┼·········┼·······┼·····································┼·····································┼······································┤
 │ Detach Product Dependency      │ Detach Product Dependency      │ SUCCESS │ No    │                                     │                                     │ Validated Detach Product Dependency  │
 ├································┼································┼·········┼·······┼·····································┼·····································┼······································┤
-│ Unlink Digital Subscriber      │ Unlink Digital Subscriber      │ FAILURE │ No    │ DigitalSubscription::SalesForecast: │                                     │ Validated Unlink Digital Subscriber  │
-│                                │                                │         │       │ :Finance::Premium::1.0              │                                     │                                      │
+│ Unlink Digital Subscriber      │ Unlink Digital Subscriber      │ FAILURE │ No    │ DigitalSubscription::SalesForecast: │                                     │ Referenced element                   │
+│                                │                                │         │       │ :Finance::Premium::1.0              │                                     │ 'Campaign:Sustainability' for        │
+│                                │                                │         │       │                                     │                                     │ attribute 'Subscriber Id' not found. │
 └────────────────────────────────┴────────────────────────────────┴─────────┴───────┴─────────────────────────────────────┴─────────────────────────────────────┴──────────────────────────────────────┘
 
 
@@ -514,9 +619,29 @@ v2: Processing complete for '/Users/dwolfson/localGit/egeria-python/tests/dr-ege
 SCORE: 12 SUCCESS  3 FAILURE  0 WARNING
 
 ================================================================================
-FILE: dr_test_external_ref.md  |  DIRECTIVE: validate  |  21:41:24
+FILE: dr_test_external_ref.md  |  DIRECTIVE: validate  |  13:14:42
 ================================================================================
 v2: Processing Markdown File: /Users/dwolfson/localGit/egeria-python/tests/dr-egeria-command-tests/dr_test_external_ref.md
+Processing Errors:
+
+-- Link External Reference (None) --
+   - Referenced element 'GlossaryTerm::SalesForecast::Opportunity::1.0' for attribute 'Element Name' not found.
+-- Attach External Reference (None) --
+   - Referenced element 'DigitalProduct::SalesForecast::Pipeline::1.2' for attribute 'Element Name' not found.
+-- Link Media Reference (None) --
+   - Referenced element 'DigitalProduct::SalesForecast::Pipeline::1.2' for attribute 'Element Name' not found.
+-- Add Media Reference (None) --
+   - Referenced element 'GlossaryTerm::SalesForecast::PipelineCoverageRatio::1.0' for attribute 'Element Name' not found.
+-- Link Cited Document (None) --
+   - Referenced element 'Collection::SalesForecast::Master::1.0' for attribute 'Element Name' not found.
+-- Detach External Reference (None) --
+   - Referenced element 'GlossaryTerm::SalesForecast::Opportunity::1.0' for attribute 'Element Name' not found.
+-- Unlink Media Reference (None) --
+   - Referenced element 'DigitalProduct::SalesForecast::Pipeline::1.2' for attribute 'Element Name' not found.
+-- Remove Cited Document (None) --
+   - Referenced element 'Collection::SalesForecast::Master::1.0' for attribute 'Element Name' not found.
+
+
 
 
                                                                                     Dr. Egeria v2 Processing Summary                                                                                    
@@ -557,29 +682,45 @@ v2: Processing Markdown File: /Users/dwolfson/localGit/egeria-python/tests/dr-eg
 │ Create Cited Document        │ Create Cited Document        │ SUCCESS │ No    │ Enterprise Data Management — Best     │ CitedDocument::DataGovernanceInstitut │ Validated Create Cited Document      │
 │                              │                              │         │       │ Practices Guide                       │ e::EDMGuide::3rdEd::2024              │                                      │
 ├······························┼······························┼·········┼·······┼·······································┼·······································┼······································┤
-│ Link External Reference      │ Link External Reference      │ FAILURE │ No    │ GlossaryTerm::SalesForecast::Opportun │                                       │ Validated Link External Reference    │
-│                              │                              │         │       │ ity::1.0                              │                                       │                                      │
+│ Link External Reference      │ Link External Reference      │ FAILURE │ No    │ GlossaryTerm::SalesForecast::Opportun │                                       │ Referenced element                   │
+│                              │                              │         │       │ ity::1.0                              │                                       │ 'GlossaryTerm::SalesForecast::Opport │
+│                              │                              │         │       │                                       │                                       │ unity::1.0' for attribute 'Element   │
+│                              │                              │         │       │                                       │                                       │ Name' not found.                     │
 ├······························┼······························┼·········┼·······┼·······································┼·······································┼······································┤
-│ Attach External Reference    │ Attach External Reference    │ FAILURE │ No    │ DigitalProduct::SalesForecast::Pipeli │                                       │ Validated Attach External Reference  │
-│                              │                              │         │       │ ne::1.2                               │                                       │                                      │
+│ Attach External Reference    │ Attach External Reference    │ FAILURE │ No    │ DigitalProduct::SalesForecast::Pipeli │                                       │ Referenced element                   │
+│                              │                              │         │       │ ne::1.2                               │                                       │ 'DigitalProduct::SalesForecast::Pipe │
+│                              │                              │         │       │                                       │                                       │ line::1.2' for attribute 'Element    │
+│                              │                              │         │       │                                       │                                       │ Name' not found.                     │
 ├······························┼······························┼·········┼·······┼·······································┼·······································┼······································┤
-│ Link Media Reference         │ Link Media Reference         │ FAILURE │ No    │ DigitalProduct::SalesForecast::Pipeli │                                       │ Validated Link Media Reference       │
-│                              │                              │         │       │ ne::1.2                               │                                       │                                      │
+│ Link Media Reference         │ Link Media Reference         │ FAILURE │ No    │ DigitalProduct::SalesForecast::Pipeli │                                       │ Referenced element                   │
+│                              │                              │         │       │ ne::1.2                               │                                       │ 'DigitalProduct::SalesForecast::Pipe │
+│                              │                              │         │       │                                       │                                       │ line::1.2' for attribute 'Element    │
+│                              │                              │         │       │                                       │                                       │ Name' not found.                     │
 ├······························┼······························┼·········┼·······┼·······································┼·······································┼······································┤
-│ Add Media Reference          │ Add Media Reference          │ FAILURE │ No    │ GlossaryTerm::SalesForecast::Pipeline │                                       │ Validated Add Media Reference        │
-│                              │                              │         │       │ CoverageRatio::1.0                    │                                       │                                      │
+│ Add Media Reference          │ Add Media Reference          │ FAILURE │ No    │ GlossaryTerm::SalesForecast::Pipeline │                                       │ Referenced element                   │
+│                              │                              │         │       │ CoverageRatio::1.0                    │                                       │ 'GlossaryTerm::SalesForecast::Pipeli │
+│                              │                              │         │       │                                       │                                       │ neCoverageRatio::1.0' for attribute  │
+│                              │                              │         │       │                                       │                                       │ 'Element Name' not found.            │
 ├······························┼······························┼·········┼·······┼·······································┼·······································┼······································┤
-│ Link Cited Document          │ Link Cited Document          │ FAILURE │ No    │ Collection::SalesForecast::Master::1. │                                       │ Validated Link Cited Document        │
-│                              │                              │         │       │ 0                                     │                                       │                                      │
+│ Link Cited Document          │ Link Cited Document          │ FAILURE │ No    │ Collection::SalesForecast::Master::1. │                                       │ Referenced element                   │
+│                              │                              │         │       │ 0                                     │                                       │ 'Collection::SalesForecast::Master:: │
+│                              │                              │         │       │                                       │                                       │ 1.0' for attribute 'Element Name'    │
+│                              │                              │         │       │                                       │                                       │ not found.                           │
 ├······························┼······························┼·········┼·······┼·······································┼·······································┼······································┤
-│ Detach External Reference    │ Detach External Reference    │ FAILURE │ No    │ GlossaryTerm::SalesForecast::Opportun │                                       │ Validated Detach External Reference  │
-│                              │                              │         │       │ ity::1.0                              │                                       │                                      │
+│ Detach External Reference    │ Detach External Reference    │ FAILURE │ No    │ GlossaryTerm::SalesForecast::Opportun │                                       │ Referenced element                   │
+│                              │                              │         │       │ ity::1.0                              │                                       │ 'GlossaryTerm::SalesForecast::Opport │
+│                              │                              │         │       │                                       │                                       │ unity::1.0' for attribute 'Element   │
+│                              │                              │         │       │                                       │                                       │ Name' not found.                     │
 ├······························┼······························┼·········┼·······┼·······································┼·······································┼······································┤
-│ Unlink Media Reference       │ Unlink Media Reference       │ FAILURE │ No    │ DigitalProduct::SalesForecast::Pipeli │                                       │ Validated Unlink Media Reference     │
-│                              │                              │         │       │ ne::1.2                               │                                       │                                      │
+│ Unlink Media Reference       │ Unlink Media Reference       │ FAILURE │ No    │ DigitalProduct::SalesForecast::Pipeli │                                       │ Referenced element                   │
+│                              │                              │         │       │ ne::1.2                               │                                       │ 'DigitalProduct::SalesForecast::Pipe │
+│                              │                              │         │       │                                       │                                       │ line::1.2' for attribute 'Element    │
+│                              │                              │         │       │                                       │                                       │ Name' not found.                     │
 ├······························┼······························┼·········┼·······┼·······································┼·······································┼······································┤
-│ Remove Cited Document        │ Remove Cited Document        │ FAILURE │ No    │ Collection::SalesForecast::Master::1. │                                       │ Validated Remove Cited Document      │
-│                              │                              │         │       │ 0                                     │                                       │                                      │
+│ Remove Cited Document        │ Remove Cited Document        │ FAILURE │ No    │ Collection::SalesForecast::Master::1. │                                       │ Referenced element                   │
+│                              │                              │         │       │ 0                                     │                                       │ 'Collection::SalesForecast::Master:: │
+│                              │                              │         │       │                                       │                                       │ 1.0' for attribute 'Element Name'    │
+│                              │                              │         │       │                                       │                                       │ not found.                           │
 └──────────────────────────────┴──────────────────────────────┴─────────┴───────┴───────────────────────────────────────┴───────────────────────────────────────┴──────────────────────────────────────┘
 
 
@@ -590,36 +731,83 @@ v2: Processing complete for '/Users/dwolfson/localGit/egeria-python/tests/dr-ege
 SCORE: 10 SUCCESS  8 FAILURE  0 WARNING
 
 ================================================================================
-FILE: dr_test_feedback.md  |  DIRECTIVE: validate  |  21:41:30
+FILE: dr_test_feedback.md  |  DIRECTIVE: validate  |  13:14:47
 ================================================================================
 v2: Processing Markdown File: /Users/dwolfson/localGit/egeria-python/tests/dr-egeria-command-tests/dr_test_feedback.md
+Processing Errors:
+
+-- Create Comment (Coco Pharmaceuticals::Comment::SF-Comment-Smoke-Test::1.0) --
+   - Referenced element 'DigitalProduct::SalesForecast::Pipeline::1.2' for attribute 'Commented On Element' not found.
+-- Create Comment (Comment::SalesForecast::PipelineCoverage::DataQualityObservation::1.0) --
+   - Referenced element 'DigitalProduct::SalesForecast::Pipeline::1.2' for attribute 'Commented On Element' not found.
+-- Create Comment (Comment::SalesForecast::PCR::MultiCurrencyQuestion::1.0) --
+   - Referenced element 'GlossaryTerm::SalesForecast::PipelineCoverageRatio::1.0' for attribute 'Commented On Element' not found.
+-- Create Comment (Comment::SalesForecast::PCR::MultiCurrencyAnswer::1.0) --
+   - Referenced element 'GlossaryTerm::SalesForecast::PipelineCoverageRatio::1.0' for attribute 'Commented On Element' not found.
+-- Create Comment (Comment::SalesForecast::Pipeline::DuplicateDetectionSuggestion::1.0) --
+   - Referenced element 'ExternalDataSource::Salesforce::OpportunityFeed::Daily::1.0' for attribute 'Commented On Element' not found.
+-- Create Comment (Comment::SalesForecast::PCR::UsageExperience::1.0) --
+   - Referenced element 'GlossaryTerm::SalesForecast::PipelineCoverageRatio::1.0' for attribute 'Commented On Element' not found.
+-- Create Comment (Comment::SalesForecast::Pipeline::RealTimeRequirement::1.0) --
+   - Referenced element 'DigitalProduct::SalesForecast::Pipeline::1.2' for attribute 'Commented On Element' not found.
+-- Attach Rating (None) --
+   - Referenced element 'GlossaryTerm::SalesForecast::PipelineCoverageRatio::1.0' for attribute 'Reviewed Element' not found.
+-- Attach Rating (None) --
+   - Referenced element 'GlossaryTerm::SalesForecast::CommitForecast::1.0' for attribute 'Reviewed Element' not found.
+-- Add Like (None) --
+   - Referenced element 'GlossaryTerm::SalesForecast::Opportunity::1.0' for attribute 'Liked Element' not found.
+-- Attach Tag (None) --
+   - Referenced element 'DigitalProduct::SalesForecast::Pipeline::1.2' for attribute 'Tagged Element' not found.
+-- Attach Tag (None) --
+   - Referenced element 'GlossaryTerm::SalesForecast::CommitForecast::1.0' for attribute 'Tagged Element' not found.
+-- Detach Rating (None) --
+   - Referenced element 'GlossaryTerm::SalesForecast::CommitForecast::1.0' for attribute 'Reviewed Element' not found.
+-- Unlink Like (None) --
+   - Referenced element 'GlossaryTerm::SalesForecast::Opportunity::1.0' for attribute 'Liked Element' not found.
+-- Remove Tag (None) --
+   - Referenced element 'GlossaryTerm::SalesForecast::CommitForecast::1.0' for attribute 'Tagged Element' not found.
+
+
 
 
                                                                                     Dr. Egeria v2 Processing Summary                                                                                    
 ┏━━━━━━━━━━━━━━━━━━━━━┳━━━━━━━━━━━━━━━━━━━━━┳━━━━━━━━━┳━━━━━━━┳━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━┳━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━┳━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━┓
 ┃ Markdown Command    ┃ Canonical Command   ┃ Status  ┃ Found ┃ Display Name / End 1                        ┃ Qualified Name / End2                       ┃ Message                                    ┃
 ┡━━━━━━━━━━━━━━━━━━━━━╇━━━━━━━━━━━━━━━━━━━━━╇━━━━━━━━━╇━━━━━━━╇━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━╇━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━╇━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━┩
-│ Create Comment      │ Create Comment      │ FAILURE │ No    │ SF-Comment-Smoke-Test                       │ Coco                                        │ Validated Create Comment                   │
-│                     │                     │         │       │                                             │ Pharmaceuticals::Comment::SF-Comment-Smoke- │                                            │
-│                     │                     │         │       │                                             │ Test::1.0                                   │                                            │
+│ Create Comment      │ Create Comment      │ FAILURE │ No    │ SF-Comment-Smoke-Test                       │ Coco                                        │ Referenced element                         │
+│                     │                     │         │       │                                             │ Pharmaceuticals::Comment::SF-Comment-Smoke- │ 'DigitalProduct::SalesForecast::Pipeline:: │
+│                     │                     │         │       │                                             │ Test::1.0                                   │ 1.2' for attribute 'Commented On Element'  │
+│                     │                     │         │       │                                             │                                             │ not found.                                 │
 ├·····················┼·····················┼·········┼·······┼·············································┼·············································┼············································┤
-│ Create Comment      │ Create Comment      │ FAILURE │ No    │ Sales Forecast Pipeline Coverage — Data     │ Comment::SalesForecast::PipelineCoverage::D │ Validated Create Comment                   │
-│                     │                     │         │       │ Quality Observation                         │ ataQualityObservation::1.0                  │                                            │
+│ Create Comment      │ Create Comment      │ FAILURE │ No    │ Sales Forecast Pipeline Coverage — Data     │ Comment::SalesForecast::PipelineCoverage::D │ Referenced element                         │
+│                     │                     │         │       │ Quality Observation                         │ ataQualityObservation::1.0                  │ 'DigitalProduct::SalesForecast::Pipeline:: │
+│                     │                     │         │       │                                             │                                             │ 1.2' for attribute 'Commented On Element'  │
+│                     │                     │         │       │                                             │                                             │ not found.                                 │
 ├·····················┼·····················┼·········┼·······┼·············································┼·············································┼············································┤
-│ Create Comment      │ Create Comment      │ FAILURE │ No    │ How is Pipeline Coverage Ratio calculated   │ Comment::SalesForecast::PCR::MultiCurrencyQ │ Validated Create Comment                   │
-│                     │                     │         │       │ for multi-currency opportunities?           │ uestion::1.0                                │                                            │
+│ Create Comment      │ Create Comment      │ FAILURE │ No    │ How is Pipeline Coverage Ratio calculated   │ Comment::SalesForecast::PCR::MultiCurrencyQ │ Referenced element                         │
+│                     │                     │         │       │ for multi-currency opportunities?           │ uestion::1.0                                │ 'GlossaryTerm::SalesForecast::PipelineCove │
+│                     │                     │         │       │                                             │                                             │ rageRatio::1.0' for attribute 'Commented   │
+│                     │                     │         │       │                                             │                                             │ On Element' not found.                     │
 ├·····················┼·····················┼·········┼·······┼·············································┼·············································┼············································┤
-│ Create Comment      │ Create Comment      │ FAILURE │ No    │ Pipeline Coverage Ratio uses USD-converted  │ Comment::SalesForecast::PCR::MultiCurrencyA │ Validated Create Comment                   │
-│                     │                     │         │       │ amounts via daily exchange rates            │ nswer::1.0                                  │                                            │
+│ Create Comment      │ Create Comment      │ FAILURE │ No    │ Pipeline Coverage Ratio uses USD-converted  │ Comment::SalesForecast::PCR::MultiCurrencyA │ Referenced element                         │
+│                     │                     │         │       │ amounts via daily exchange rates            │ nswer::1.0                                  │ 'GlossaryTerm::SalesForecast::PipelineCove │
+│                     │                     │         │       │                                             │                                             │ rageRatio::1.0' for attribute 'Commented   │
+│                     │                     │         │       │                                             │                                             │ On Element' not found.                     │
 ├·····················┼·····················┼·········┼·······┼·············································┼·············································┼············································┤
-│ Create Comment      │ Create Comment      │ FAILURE │ No    │ Suggest adding automated duplicate          │ Comment::SalesForecast::Pipeline::Duplicate │ Validated Create Comment                   │
-│                     │                     │         │       │ detection to CRM pipeline export            │ DetectionSuggestion::1.0                    │                                            │
+│ Create Comment      │ Create Comment      │ FAILURE │ No    │ Suggest adding automated duplicate          │ Comment::SalesForecast::Pipeline::Duplicate │ Referenced element                         │
+│                     │                     │         │       │ detection to CRM pipeline export            │ DetectionSuggestion::1.0                    │ 'ExternalDataSource::Salesforce::Opportuni │
+│                     │                     │         │       │                                             │                                             │ tyFeed::Daily::1.0' for attribute          │
+│                     │                     │         │       │                                             │                                             │ 'Commented On Element' not found.          │
 ├·····················┼·····················┼·········┼·······┼·············································┼·············································┼············································┤
-│ Create Comment      │ Create Comment      │ FAILURE │ No    │ Pipeline Coverage Ratio term definition is  │ Comment::SalesForecast::PCR::UsageExperienc │ Validated Create Comment                   │
-│                     │                     │         │       │ clear and actionable                        │ e::1.0                                      │                                            │
+│ Create Comment      │ Create Comment      │ FAILURE │ No    │ Pipeline Coverage Ratio term definition is  │ Comment::SalesForecast::PCR::UsageExperienc │ Referenced element                         │
+│                     │                     │         │       │ clear and actionable                        │ e::1.0                                      │ 'GlossaryTerm::SalesForecast::PipelineCove │
+│                     │                     │         │       │                                             │                                             │ rageRatio::1.0' for attribute 'Commented   │
+│                     │                     │         │       │                                             │                                             │ On Element' not found.                     │
 ├·····················┼·····················┼·········┼·······┼·············································┼·············································┼············································┤
-│ Create Comment      │ Create Comment      │ FAILURE │ No    │ Forecast pipeline must support real-time    │ Comment::SalesForecast::Pipeline::RealTimeR │ Validated Create Comment                   │
-│                     │                     │         │       │ opportunity updates by Q3 2026              │ equirement::1.0                             │                                            │
+│ Create Comment      │ Create Comment      │ FAILURE │ No    │ Forecast pipeline must support real-time    │ Comment::SalesForecast::Pipeline::RealTimeR │ Referenced element                         │
+│                     │                     │         │       │ opportunity updates by Q3 2026              │ equirement::1.0                             │ 'DigitalProduct::SalesForecast::Pipeline:: │
+│                     │                     │         │       │                                             │                                             │ 1.2' for attribute 'Commented On Element'  │
+│                     │                     │         │       │                                             │                                             │ not found.                                 │
 ├·····················┼·····················┼·········┼·······┼·············································┼·············································┼············································┤
 │ Create Informal Tag │ Create Informal Tag │ SUCCESS │ No    │ forecast-critical                           │ InformalTag::SalesForecast::ForecastCritica │ Validated Create Informal Tag              │
 │                     │                     │         │       │                                             │ l::1.0                                      │                                            │
@@ -631,25 +819,49 @@ v2: Processing Markdown File: /Users/dwolfson/localGit/egeria-python/tests/dr-eg
 │                     │                     │         │       │ Quality Observation                         │ ataQualityObservation::1.0                  │ Comment::SalesForecast::PipelineCoverage:: │
 │                     │                     │         │       │                                             │                                             │ DataQualityObservation::1.0))              │
 ├·····················┼·····················┼·········┼·······┼·············································┼·············································┼············································┤
-│ Attach Rating       │ Attach Rating       │ FAILURE │ No    │                                             │                                             │ Validated Attach Rating                    │
+│ Attach Rating       │ Attach Rating       │ FAILURE │ No    │                                             │                                             │ Referenced element                         │
+│                     │                     │         │       │                                             │                                             │ 'GlossaryTerm::SalesForecast::PipelineCove │
+│                     │                     │         │       │                                             │                                             │ rageRatio::1.0' for attribute 'Reviewed    │
+│                     │                     │         │       │                                             │                                             │ Element' not found.                        │
 ├·····················┼·····················┼·········┼·······┼·············································┼·············································┼············································┤
-│ Attach Rating       │ Attach Rating       │ FAILURE │ No    │                                             │                                             │ Validated Attach Rating                    │
+│ Attach Rating       │ Attach Rating       │ FAILURE │ No    │                                             │                                             │ Referenced element                         │
+│                     │                     │         │       │                                             │                                             │ 'GlossaryTerm::SalesForecast::CommitForeca │
+│                     │                     │         │       │                                             │                                             │ st::1.0' for attribute 'Reviewed Element'  │
+│                     │                     │         │       │                                             │                                             │ not found.                                 │
 ├·····················┼·····················┼·········┼·······┼·············································┼·············································┼············································┤
 │ Link Accept Answer  │ Link Accept Answer  │ SUCCESS │ No    │                                             │                                             │ Validated Link Accept Answer               │
 ├·····················┼·····················┼·········┼·······┼·············································┼·············································┼············································┤
 │ Attach Like         │ Attach Like         │ SUCCESS │ No    │                                             │                                             │ Validated Attach Like                      │
 ├·····················┼·····················┼·········┼·······┼·············································┼·············································┼············································┤
-│ Add Like            │ Add Like            │ FAILURE │ No    │                                             │                                             │ Validated Add Like                         │
+│ Add Like            │ Add Like            │ FAILURE │ No    │                                             │                                             │ Referenced element                         │
+│                     │                     │         │       │                                             │                                             │ 'GlossaryTerm::SalesForecast::Opportunity: │
+│                     │                     │         │       │                                             │                                             │ :1.0' for attribute 'Liked Element' not    │
+│                     │                     │         │       │                                             │                                             │ found.                                     │
 ├·····················┼·····················┼·········┼·······┼·············································┼·············································┼············································┤
-│ Attach Tag          │ Attach Tag          │ FAILURE │ No    │                                             │                                             │ Validated Attach Tag                       │
+│ Attach Tag          │ Attach Tag          │ FAILURE │ No    │                                             │                                             │ Referenced element                         │
+│                     │                     │         │       │                                             │                                             │ 'DigitalProduct::SalesForecast::Pipeline:: │
+│                     │                     │         │       │                                             │                                             │ 1.2' for attribute 'Tagged Element' not    │
+│                     │                     │         │       │                                             │                                             │ found.                                     │
 ├·····················┼·····················┼·········┼·······┼·············································┼·············································┼············································┤
-│ Attach Tag          │ Attach Tag          │ FAILURE │ No    │                                             │                                             │ Validated Attach Tag                       │
+│ Attach Tag          │ Attach Tag          │ FAILURE │ No    │                                             │                                             │ Referenced element                         │
+│                     │                     │         │       │                                             │                                             │ 'GlossaryTerm::SalesForecast::CommitForeca │
+│                     │                     │         │       │                                             │                                             │ st::1.0' for attribute 'Tagged Element'    │
+│                     │                     │         │       │                                             │                                             │ not found.                                 │
 ├·····················┼·····················┼·········┼·······┼·············································┼·············································┼············································┤
-│ Detach Rating       │ Detach Rating       │ FAILURE │ No    │                                             │                                             │ Validated Detach Rating                    │
+│ Detach Rating       │ Detach Rating       │ FAILURE │ No    │                                             │                                             │ Referenced element                         │
+│                     │                     │         │       │                                             │                                             │ 'GlossaryTerm::SalesForecast::CommitForeca │
+│                     │                     │         │       │                                             │                                             │ st::1.0' for attribute 'Reviewed Element'  │
+│                     │                     │         │       │                                             │                                             │ not found.                                 │
 ├·····················┼·····················┼·········┼·······┼·············································┼·············································┼············································┤
-│ Unlink Like         │ Unlink Like         │ FAILURE │ No    │                                             │                                             │ Validated Unlink Like                      │
+│ Unlink Like         │ Unlink Like         │ FAILURE │ No    │                                             │                                             │ Referenced element                         │
+│                     │                     │         │       │                                             │                                             │ 'GlossaryTerm::SalesForecast::Opportunity: │
+│                     │                     │         │       │                                             │                                             │ :1.0' for attribute 'Liked Element' not    │
+│                     │                     │         │       │                                             │                                             │ found.                                     │
 ├·····················┼·····················┼·········┼·······┼·············································┼·············································┼············································┤
-│ Remove Tag          │ Remove Tag          │ FAILURE │ No    │                                             │                                             │ Validated Remove Tag                       │
+│ Remove Tag          │ Remove Tag          │ FAILURE │ No    │                                             │                                             │ Referenced element                         │
+│                     │                     │         │       │                                             │                                             │ 'GlossaryTerm::SalesForecast::CommitForeca │
+│                     │                     │         │       │                                             │                                             │ st::1.0' for attribute 'Tagged Element'    │
+│                     │                     │         │       │                                             │                                             │ not found.                                 │
 └─────────────────────┴─────────────────────┴─────────┴───────┴─────────────────────────────────────────────┴─────────────────────────────────────────────┴────────────────────────────────────────────┘
 
 
@@ -660,7 +872,7 @@ v2: Processing complete for '/Users/dwolfson/localGit/egeria-python/tests/dr-ege
 SCORE: 5 SUCCESS  15 FAILURE  0 WARNING
 
 ================================================================================
-FILE: dr_test_data_designer.md  |  DIRECTIVE: validate  |  21:41:38
+FILE: dr_test_data_designer.md  |  DIRECTIVE: validate  |  13:14:53
 ================================================================================
 v2: Processing Markdown File: /Users/dwolfson/localGit/egeria-python/tests/dr-egeria-command-tests/dr_test_data_designer.md
 
@@ -737,61 +949,68 @@ v2: Processing complete for '/Users/dwolfson/localGit/egeria-python/tests/dr-ege
 SCORE: 20 SUCCESS  0 FAILURE  0 WARNING
 
 ================================================================================
-FILE: dr_test_report.md  |  DIRECTIVE: validate  |  21:41:44
+FILE: dr_test_report.md  |  DIRECTIVE: validate  |  13:14:59
 ================================================================================
 v2: Processing Markdown File: /Users/dwolfson/localGit/egeria-python/tests/dr-egeria-command-tests/dr_test_report.md
+Processing Errors:
+
+-- View Report (None) --
+   - Referenced element 'Collection::SalesForecast::Root::1.0' for attribute 'Anchor Scope ID' not found.
 
 
-                                                        Dr. Egeria v2 Processing Summary                                                        
-┏━━━━━━━━━━━━━━━━━━┳━━━━━━━━━━━━━━━━━━━┳━━━━━━━━━┳━━━━━━━┳━━━━━━━━━━━━━━━━━━━━━━┳━━━━━━━━━━━━━━━━━━━━━━━┳━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━┓
-┃ Markdown Command ┃ Canonical Command ┃ Status  ┃ Found ┃ Display Name / End 1 ┃ Qualified Name / End2 ┃ Message                              ┃
-┡━━━━━━━━━━━━━━━━━━╇━━━━━━━━━━━━━━━━━━━╇━━━━━━━━━╇━━━━━━━╇━━━━━━━━━━━━━━━━━━━━━━╇━━━━━━━━━━━━━━━━━━━━━━━╇━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━┩
-│ View Report      │ View Report       │ SUCCESS │ No    │ Default              │                       │ Validated View Report                │
-├··················┼···················┼·········┼·······┼······················┼·······················┼······································┤
-│ View Report      │ View Report       │ SUCCESS │ No    │ Collections          │                       │ Validated View Report                │
-├··················┼···················┼·········┼·······┼······················┼·······················┼······································┤
-│ View Report      │ View Report       │ SUCCESS │ No    │ Collections          │                       │ Validated View Report                │
-├··················┼···················┼·········┼·······┼······················┼·······················┼······································┤
-│ View Report      │ View Report       │ SUCCESS │ No    │ Digital-Products     │                       │ Validated View Report                │
-├··················┼···················┼·········┼·······┼······················┼·······················┼······································┤
-│ View Report      │ View Report       │ SUCCESS │ No    │ Glossaries           │                       │ Validated View Report                │
-├··················┼···················┼·········┼·······┼······················┼·······················┼······································┤
-│ View Report      │ View Report       │ SUCCESS │ No    │ Projects             │                       │ Validated View Report                │
-├··················┼···················┼·········┼·······┼······················┼·······················┼······································┤
-│ View Report      │ View Report       │ SUCCESS │ No    │ Glossaries           │                       │ Validated View Report                │
-├··················┼···················┼·········┼·······┼······················┼·······················┼······································┤
-│ View Report      │ View Report       │ SUCCESS │ No    │ Collections          │                       │ Validated View Report                │
-├··················┼···················┼·········┼·······┼······················┼·······················┼······································┤
-│ View Report      │ View Report       │ SUCCESS │ No    │ Digital-Products     │                       │ Validated View Report                │
-├··················┼···················┼·········┼·······┼······················┼·······················┼······································┤
-│ View Report      │ View Report       │ SUCCESS │ No    │ Digital-Products     │                       │ Validated View Report                │
-├··················┼···················┼·········┼·······┼······················┼·······················┼······································┤
-│ View Report      │ View Report       │ SUCCESS │ No    │ Collections          │                       │ Validated View Report                │
-├··················┼···················┼·········┼·······┼······················┼·······················┼······································┤
-│ View Report      │ View Report       │ SUCCESS │ No    │ Glossaries           │                       │ Validated View Report                │
-├··················┼···················┼·········┼·······┼······················┼·······················┼······································┤
-│ View Report      │ View Report       │ SUCCESS │ No    │ Glossaries           │                       │ Validated View Report                │
-├··················┼···················┼·········┼·······┼······················┼·······················┼······································┤
-│ View Report      │ View Report       │ SUCCESS │ No    │ Collections          │                       │ Validated View Report                │
-├··················┼···················┼·········┼·······┼······················┼·······················┼······································┤
-│ View Report      │ View Report       │ SUCCESS │ No    │ Glossaries           │                       │ Validated View Report                │
-├··················┼···················┼·········┼·······┼······················┼·······················┼······································┤
-│ View Report      │ View Report       │ SUCCESS │ No    │ Projects             │                       │ Validated View Report                │
-├··················┼···················┼·········┼·······┼······················┼·······················┼······································┤
-│ View Report      │ View Report       │ SUCCESS │ No    │ Collections          │                       │ Validated View Report                │
-├··················┼···················┼·········┼·······┼······················┼·······················┼······································┤
-│ View Report      │ View Report       │ SUCCESS │ No    │ Digital-Products     │                       │ Validated View Report                │
-├··················┼···················┼·········┼·······┼······················┼·······················┼······································┤
-│ View Report      │ View Report       │ SUCCESS │ No    │ Collections          │                       │ Validated View Report                │
-├··················┼···················┼·········┼·······┼······················┼·······················┼······································┤
-│ View Report      │ View Report       │ SUCCESS │ No    │ Digital-Products     │                       │ Validated View Report                │
-├··················┼···················┼·········┼·······┼······················┼·······················┼······································┤
-│ View Report      │ View Report       │ FAILURE │ No    │ Collections          │                       │ Validated View Report                │
-├··················┼···················┼·········┼·······┼······················┼·······················┼······································┤
-│ View Report      │ View Report       │ SUCCESS │ No    │ Collections          │                       │ Validated View Report                │
-├··················┼···················┼·········┼·······┼······················┼·······················┼······································┤
-│ View Report      │ View Report       │ SUCCESS │ No    │ Glossaries           │                       │ Validated View Report                │
-└──────────────────┴───────────────────┴─────────┴───────┴──────────────────────┴───────────────────────┴──────────────────────────────────────┘
+
+
+                                                                                    Dr. Egeria v2 Processing Summary                                                                                    
+┏━━━━━━━━━━━━━━━━━━┳━━━━━━━━━━━━━━━━━━━┳━━━━━━━━━┳━━━━━━━┳━━━━━━━━━━━━━━━━━━━━━━┳━━━━━━━━━━━━━━━━━━━━━━━┳━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━┓
+┃ Markdown Command ┃ Canonical Command ┃ Status  ┃ Found ┃ Display Name / End 1 ┃ Qualified Name / End2 ┃ Message                                                                                      ┃
+┡━━━━━━━━━━━━━━━━━━╇━━━━━━━━━━━━━━━━━━━╇━━━━━━━━━╇━━━━━━━╇━━━━━━━━━━━━━━━━━━━━━━╇━━━━━━━━━━━━━━━━━━━━━━━╇━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━┩
+│ View Report      │ View Report       │ SUCCESS │ No    │ Default              │                       │ Validated View Report                                                                        │
+├··················┼···················┼·········┼·······┼······················┼·······················┼······························································································┤
+│ View Report      │ View Report       │ SUCCESS │ No    │ Collections          │                       │ Validated View Report                                                                        │
+├··················┼···················┼·········┼·······┼······················┼·······················┼······························································································┤
+│ View Report      │ View Report       │ SUCCESS │ No    │ Collections          │                       │ Validated View Report                                                                        │
+├··················┼···················┼·········┼·······┼······················┼·······················┼······························································································┤
+│ View Report      │ View Report       │ SUCCESS │ No    │ Digital-Products     │                       │ Validated View Report                                                                        │
+├··················┼···················┼·········┼·······┼······················┼·······················┼······························································································┤
+│ View Report      │ View Report       │ SUCCESS │ No    │ Glossaries           │                       │ Validated View Report                                                                        │
+├··················┼···················┼·········┼·······┼······················┼·······················┼······························································································┤
+│ View Report      │ View Report       │ SUCCESS │ No    │ Projects             │                       │ Validated View Report                                                                        │
+├··················┼···················┼·········┼·······┼······················┼·······················┼······························································································┤
+│ View Report      │ View Report       │ SUCCESS │ No    │ Glossaries           │                       │ Validated View Report                                                                        │
+├··················┼···················┼·········┼·······┼······················┼·······················┼······························································································┤
+│ View Report      │ View Report       │ SUCCESS │ No    │ Collections          │                       │ Validated View Report                                                                        │
+├··················┼···················┼·········┼·······┼······················┼·······················┼······························································································┤
+│ View Report      │ View Report       │ SUCCESS │ No    │ Digital-Products     │                       │ Validated View Report                                                                        │
+├··················┼···················┼·········┼·······┼······················┼·······················┼······························································································┤
+│ View Report      │ View Report       │ SUCCESS │ No    │ Digital-Products     │                       │ Validated View Report                                                                        │
+├··················┼···················┼·········┼·······┼······················┼·······················┼······························································································┤
+│ View Report      │ View Report       │ SUCCESS │ No    │ Collections          │                       │ Validated View Report                                                                        │
+├··················┼···················┼·········┼·······┼······················┼·······················┼······························································································┤
+│ View Report      │ View Report       │ SUCCESS │ No    │ Glossaries           │                       │ Validated View Report                                                                        │
+├··················┼···················┼·········┼·······┼······················┼·······················┼······························································································┤
+│ View Report      │ View Report       │ SUCCESS │ No    │ Glossaries           │                       │ Validated View Report                                                                        │
+├··················┼···················┼·········┼·······┼······················┼·······················┼······························································································┤
+│ View Report      │ View Report       │ SUCCESS │ No    │ Collections          │                       │ Validated View Report                                                                        │
+├··················┼···················┼·········┼·······┼······················┼·······················┼······························································································┤
+│ View Report      │ View Report       │ SUCCESS │ No    │ Glossaries           │                       │ Validated View Report                                                                        │
+├··················┼···················┼·········┼·······┼······················┼·······················┼······························································································┤
+│ View Report      │ View Report       │ SUCCESS │ No    │ Projects             │                       │ Validated View Report                                                                        │
+├··················┼···················┼·········┼·······┼······················┼·······················┼······························································································┤
+│ View Report      │ View Report       │ SUCCESS │ No    │ Collections          │                       │ Validated View Report                                                                        │
+├··················┼···················┼·········┼·······┼······················┼·······················┼······························································································┤
+│ View Report      │ View Report       │ SUCCESS │ No    │ Digital-Products     │                       │ Validated View Report                                                                        │
+├··················┼···················┼·········┼·······┼······················┼·······················┼······························································································┤
+│ View Report      │ View Report       │ SUCCESS │ No    │ Collections          │                       │ Validated View Report                                                                        │
+├··················┼···················┼·········┼·······┼······················┼·······················┼······························································································┤
+│ View Report      │ View Report       │ SUCCESS │ No    │ Digital-Products     │                       │ Validated View Report                                                                        │
+├··················┼···················┼·········┼·······┼······················┼·······················┼······························································································┤
+│ View Report      │ View Report       │ FAILURE │ No    │ Collections          │                       │ Referenced element 'Collection::SalesForecast::Root::1.0' for attribute 'Anchor Scope ID'    │
+│                  │                   │         │       │                      │                       │ not found.                                                                                   │
+├··················┼···················┼·········┼·······┼······················┼·······················┼······························································································┤
+│ View Report      │ View Report       │ SUCCESS │ No    │ Collections          │                       │ Validated View Report                                                                        │
+├··················┼···················┼·········┼·······┼······················┼·······················┼······························································································┤
+│ View Report      │ View Report       │ SUCCESS │ No    │ Glossaries           │                       │ Validated View Report                                                                        │
+└──────────────────┴───────────────────┴─────────┴───────┴──────────────────────┴───────────────────────┴──────────────────────────────────────────────────────────────────────────────────────────────┘
 
 
 
@@ -801,7 +1020,7 @@ v2: Processing complete for '/Users/dwolfson/localGit/egeria-python/tests/dr-ege
 SCORE: 22 SUCCESS  1 FAILURE  0 WARNING
 
 ================================================================================
-FILE: dr_test_solution.md  |  DIRECTIVE: validate  |  21:41:47
+FILE: dr_test_solution.md  |  DIRECTIVE: validate  |  13:15:02
 ================================================================================
 v2: Processing Markdown File: /Users/dwolfson/localGit/egeria-python/tests/dr-egeria-command-tests/dr_test_solution.md
 
@@ -874,7 +1093,7 @@ v2: Processing complete for '/Users/dwolfson/localGit/egeria-python/tests/dr-ege
 SCORE: 19 SUCCESS  0 FAILURE  0 WARNING
 
 ================================================================================
-FILE: dr_test_design_patterns.md  |  DIRECTIVE: validate  |  21:41:51
+FILE: dr_test_design_patterns.md  |  DIRECTIVE: validate  |  13:15:05
 ================================================================================
 v2: Processing Markdown File: /Users/dwolfson/localGit/egeria-python/tests/dr-egeria-command-tests/dr_test_design_patterns.md
 
@@ -906,7 +1125,7 @@ v2: Processing complete for '/Users/dwolfson/localGit/egeria-python/tests/dr-ege
 SCORE: 7 SUCCESS  0 FAILURE  0 WARNING
 
 ================================================================================
-FILE: dr_test_new_commands.md  |  DIRECTIVE: validate  |  21:41:53
+FILE: dr_test_new_commands.md  |  DIRECTIVE: validate  |  13:15:07
 ================================================================================
 v2: Processing Markdown File: /Users/dwolfson/localGit/egeria-python/tests/dr-egeria-command-tests/dr_test_new_commands.md
 
@@ -930,38 +1149,44 @@ v2: Processing complete for '/Users/dwolfson/localGit/egeria-python/tests/dr-ege
 SCORE: 3 SUCCESS  0 FAILURE  0 WARNING
 
 ================================================================================
-FILE: dr_test_action_author.md  |  DIRECTIVE: validate  |  21:41:54
+FILE: dr_test_action_author.md  |  DIRECTIVE: validate  |  13:15:08
 ================================================================================
 v2: Processing Markdown File: /Users/dwolfson/localGit/egeria-python/tests/dr-egeria-command-tests/dr_test_action_author.md
 
 
                                                                                      Dr. Egeria v2 Processing Summary                                                                                   
-┏━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━┳━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━┳━━━━━━━━━┳━━━━━━━┳━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━┳━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━┳━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-┃ Markdown Command                  ┃ Canonical Command                  ┃ Status  ┃ Found ┃ Display Name / End 1             ┃ Qualified Name / End2             ┃ Message                             
-┡━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━╇━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━╇━━━━━━━━━╇━━━━━━━╇━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━╇━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━╇━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-│ Create Governance Action Process  │ Create Governance Action Process   │ SUCCESS │ No    │ Data Quality Remediation Process │ GovActionProcess::DataQuality::Re │ Validated Create Governance Action  
-│                                   │                                    │         │       │                                  │ mediation::1.0                    │ Process                             
-├···································┼····································┼·········┼·······┼··································┼···································┼·····································
-│ Create Governance Action Process  │ Create Governance Action Process   │ SUCCESS │ No    │ Detect Duplicates Step           │ GovActionProcessStep::DataQuality │ Validated Create Governance Action  
-│ Step                              │ Step                               │         │       │                                  │ ::DetectDuplicates::1.0           │ Process Step                        
-├···································┼····································┼·········┼·······┼··································┼···································┼·····································
-│ Create Governance Action Process  │ Create Governance Action Process   │ SUCCESS │ No    │ Merge Duplicates Step            │ GovActionProcessStep::DataQuality │ Validated Create Governance Action  
-│ Step                              │ Step                               │         │       │                                  │ ::MergeDuplicates::1.0            │ Process Step                        
-├···································┼····································┼·········┼·······┼··································┼···································┼·····································
-│ Create Governance Action Type     │ Create Governance Action Type      │ SUCCESS │ No    │ Ad Hoc Duplicate Scan            │ GovActionType::DataQuality::AdHoc │ Validated Create Governance Action  
-│                                   │                                    │         │       │                                  │ DuplicateScan::1.0                │ Type                                
-├···································┼····································┼·········┼·······┼··································┼···································┼·····································
-│ Link First Process Step           │ Link First Process Step            │ SUCCESS │ No    │                                  │                                   │ Validated Link First Process Step   
-├···································┼····································┼·········┼·······┼··································┼···································┼·····································
-│ Link Next Process Step            │ Link Next Process Step             │ SUCCESS │ No    │                                  │                                   │ Validated Link Next Process Step    
-└───────────────────────────────────┴────────────────────────────────────┴─────────┴───────┴──────────────────────────────────┴───────────────────────────────────┴─────────────────────────────────────
+┏━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━┳━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━┳━━━━━━━━━┳━━━━━━━┳━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━┳━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━┳━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+┃ Markdown Command                  ┃ Canonical Command                 ┃ Status  ┃ Found ┃ Display Name / End 1              ┃ Qualified Name / End2             ┃ Message                             
+┡━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━╇━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━╇━━━━━━━━━╇━━━━━━━╇━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━╇━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━╇━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+│ Create Governance Action Process  │ Create Governance Action Process  │ SUCCESS │ No    │ Data Quality Remediation Process  │ GovActionProcess::DataQuality::Re │ Validated Create Governance Action  
+│                                   │                                   │         │       │                                   │ mediation::1.0                    │ Process                             
+├···································┼···································┼·········┼·······┼···································┼···································┼·····································
+│ Create Governance Action Process  │ Create Governance Action Process  │ SUCCESS │ No    │ Detect Duplicates Step            │ GovActionProcessStep::DataQuality │ Validated Create Governance Action  
+│ Step                              │ Step                              │         │       │                                   │ ::DetectDuplicates::1.0           │ Process Step                        
+├···································┼···································┼·········┼·······┼···································┼···································┼·····································
+│ Create Governance Action Process  │ Create Governance Action Process  │ SUCCESS │ No    │ Merge Duplicates Step             │ GovActionProcessStep::DataQuality │ Validated Create Governance Action  
+│ Step                              │ Step                              │         │       │                                   │ ::MergeDuplicates::1.0            │ Process Step                        
+├···································┼···································┼·········┼·······┼···································┼···································┼·····································
+│ Create Governance Action Type     │ Create Governance Action Type     │ SUCCESS │ No    │ Ad Hoc Duplicate Scan             │ GovActionType::DataQuality::AdHoc │ Validated Create Governance Action  
+│                                   │                                   │         │       │                                   │ DuplicateScan::1.0                │ Type                                
+├···································┼···································┼·········┼·······┼···································┼···································┼·····································
+│ Link First Process Step           │ Link First Process Step           │ SUCCESS │ No    │                                   │                                   │ Validated Link First Process Step   
+├···································┼···································┼·········┼·······┼···································┼···································┼·····································
+│ Link Next Process Step            │ Link Next Process Step            │ SUCCESS │ No    │                                   │                                   │ Validated Link Next Process Step    
+├···································┼···································┼·········┼·······┼···································┼···································┼·····································
+│ Link Action to Action Executor    │ Link Action to Action Executor    │ SUCCESS │ No    │                                   │                                   │ Validated Link Action to Action     
+│                                   │                                   │         │       │                                   │                                   │ Executor                            
+├···································┼···································┼·········┼·······┼···································┼···································┼·····································
+│ Link Action to Target             │ Link Action to Target             │ SUCCESS │ No    │ GovActionProcess::DataQuality::Re │                                   │ Validated Link Action to Target     
+│                                   │                                   │         │       │ mediation::1.0                    │                                   │                                     
+└───────────────────────────────────┴───────────────────────────────────┴─────────┴───────┴───────────────────────────────────┴───────────────────────────────────┴─────────────────────────────────────
 
 
 
 v2: Processing complete for '/Users/dwolfson/localGit/egeria-python/tests/dr-egeria-command-tests/dr_test_action_author.md'
 
 
-SCORE: 6 SUCCESS  0 FAILURE  0 WARNING
+SCORE: 8 SUCCESS  0 FAILURE  0 WARNING
 
 
 ================================================================================
@@ -981,6 +1206,6 @@ dr_test_report.md                           22     1     0
 dr_test_solution.md                         19     0     0
 dr_test_design_patterns.md                   7     0     0
 dr_test_new_commands.md                      3     0     0
-dr_test_action_author.md                     6     0     0
+dr_test_action_author.md                     8     0     0
 
-TOTALS: 193 SUCCESS  47 FAILURE  1 WARNING
+TOTALS: 195 SUCCESS  47 FAILURE  1 WARNING

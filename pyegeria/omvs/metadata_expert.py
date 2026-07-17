@@ -18,7 +18,7 @@ from pyegeria.models import (NewOpenMetadataElementRequestBody, TemplateRequestB
                              SearchStringRequestBody as SearchStringBody, DeleteElementRequestBody)
 from pyegeria.core.utils import body_slimmer, dynamic_catch
 from pyegeria.core._server_client import ServerClient, max_paging_size
-from pyegeria.core._globals import default_time_out, NO_ELEMENTS_FOUND
+from pyegeria.core._globals import default_timeout, NO_ELEMENTS_FOUND
 
 def base_path(client: ServerClient, view_server: str):
     return f"{client.platform_url}/servers/{view_server}/api/open-metadata/metadata-expert"
@@ -67,12 +67,12 @@ class MetadataExpert(ServerClient):
     Metadata Expert OMVS client (merged with Explorer).
     """
 
-    def __init__(self, view_server: str, platform_url: str, user_id: str, user_pwd: Optional[str] = None, token: str = None):
+    def __init__(self, view_server: str, platform_url: str, user_id: str, user_pwd: Optional[str] = None, token: str = None, timeout: int = None, **kwargs):
         self.view_server = view_server
         self.platform_url = platform_url
         self.user_id = user_id
         self.user_pwd = user_pwd
-        ServerClient.__init__(self, view_server, platform_url, user_id, user_pwd, token)
+        ServerClient.__init__(self, view_server, platform_url, user_id, user_pwd, token, timeout=timeout, **kwargs)
         logger.debug(f"{self.__class__.__name__} initialized")
         self.command_root: str = (
             f"{self.platform_url}/servers/{self.view_server}/api/open-metadata/metadata-expert")
@@ -2462,7 +2462,7 @@ class MetadataExpert(ServerClient):
         starting_at_end: int = 0,
         start_from: int = 0,
         page_size: int = max_paging_size,
-        time_out: int = default_time_out,
+        timeout: int = default_timeout,
         mermaid_only: bool = False,
         **kwargs,
     ) -> list | str:
@@ -2488,7 +2488,7 @@ class MetadataExpert(ServerClient):
                 - index of the list to start from (0 for start).
             page_size
                 - maximum number of elements to return.
-            time_out: int, default = default_time_out
+            timeout: int, default = default_timeout
                 - http request timeout for this request
             mermaid_only: bool, default is False
                 - if true only a string representing the mermaid graph will be returned
@@ -2527,7 +2527,7 @@ class MetadataExpert(ServerClient):
         )
 
         response: Response = await self._async_make_request(
-            "POST", url, body_slimmer(body), time_out=time_out
+            "POST", url, body_slimmer(body), timeout=timeout
         )
 
         return process_related_element_list(response, mermaid_only)
@@ -2542,7 +2542,7 @@ class MetadataExpert(ServerClient):
         starting_at_end: int = 0,
         start_from: int = 0,
         page_size: int = max_paging_size,
-        time_out: int = default_time_out,
+        timeout: int = default_timeout,
         mermaid_only: bool = False,
         **kwargs,
     ) -> list | str:
@@ -2567,7 +2567,7 @@ class MetadataExpert(ServerClient):
             - index of the list to start from (0 for start).
         page_size
             - maximum number of elements to return.
-        time_out: int, default = default_time_out
+        timeout: int, default = default_timeout
             - http request timeout for this request
         mermaid_only: bool, default is False
             - if true only a string representing the mermaid graph will be returned
@@ -2612,7 +2612,7 @@ class MetadataExpert(ServerClient):
                 starting_at_end=starting_at_end,
                 start_from=start_from,
                 page_size=page_size,
-                time_out=time_out,
+                timeout=timeout,
                 mermaid_only=mermaid_only,
                 **kwargs,
             )
@@ -2629,7 +2629,7 @@ class MetadataExpert(ServerClient):
         starting_at_end: int = 0,
         start_from: int = 0,
         page_size: int = max_paging_size,
-        time_out: int = default_time_out,
+        timeout: int = default_timeout,
         mermaid_only: bool = False,
         **kwargs,
     ) -> list | str:
@@ -2655,7 +2655,7 @@ class MetadataExpert(ServerClient):
             - index of the list to start from (0 for start).
         page_size
             - maximum number of elements to return.
-        time_out: int, default = default_time_out
+        timeout: int, default = default_timeout
             - http request timeout for this request
         mermaid_only: bool, default is False
             - if true only a string representing the mermaid graph will be returned
@@ -2699,7 +2699,7 @@ class MetadataExpert(ServerClient):
         )
 
         response: Response = await self._async_make_request(
-            "POST", url, body_slimmer(body), time_out=time_out
+            "POST", url, body_slimmer(body), timeout=timeout
         )
 
         return process_related_element_list(response, mermaid_only)
@@ -2714,7 +2714,7 @@ class MetadataExpert(ServerClient):
         starting_at_end: int = 0,
         start_from: int = 0,
         page_size: int = max_paging_size,
-        time_out: int = default_time_out,
+        timeout: int = default_timeout,
         mermaid_only: bool = False,
         **kwargs,
     ) -> list | str:
@@ -2739,7 +2739,7 @@ class MetadataExpert(ServerClient):
             - index of the list to start from (0 for start).
         page_size
             - maximum number of elements to return.
-        time_out: int, default = default_time_out
+        timeout: int, default = default_timeout
             - http request timeout for this request
         mermaid_only: bool, default is False
             - if true only a string representing the mermaid graph will be returned
@@ -2784,7 +2784,7 @@ class MetadataExpert(ServerClient):
                 starting_at_end=starting_at_end,
                 start_from=start_from,
                 page_size=page_size,
-                time_out=time_out,
+                timeout=timeout,
                 mermaid_only=mermaid_only,
                 **kwargs,
             )
@@ -2802,7 +2802,7 @@ class MetadataExpert(ServerClient):
         starting_at_end: int = 0,
         start_from: int = 0,
         page_size: int = max_paging_size,
-        time_out: int = default_time_out,
+        timeout: int = default_timeout,
         mermaid_only: bool = False,
         **kwargs,
     ) -> list | str:
@@ -2830,7 +2830,7 @@ class MetadataExpert(ServerClient):
             - index of the list to start from (0 for start).
         page_size
             - maximum number of elements to return.
-        time_out: int, default = default_time_out
+        timeout: int, default = default_timeout
             - http request timeout for this request
         mermaid_only: bool, default is False
             - if true only a string representing the mermaid graph will be returned
@@ -2873,7 +2873,7 @@ class MetadataExpert(ServerClient):
         )
 
         response: Response = await self._async_make_request(
-            "POST", url, body_slimmer(body), time_out=time_out
+            "POST", url, body_slimmer(body), timeout=timeout
         )
 
         return process_related_element_list(response, mermaid_only)
@@ -2889,7 +2889,7 @@ class MetadataExpert(ServerClient):
         starting_at_end: int = 0,
         start_from: int = 0,
         page_size: int = max_paging_size,
-        time_out: int = default_time_out,
+        timeout: int = default_timeout,
         mermaid_only: bool = False,
         **kwargs,
     ) -> list | str:
@@ -2916,7 +2916,7 @@ class MetadataExpert(ServerClient):
             - index of the list to start from (0 for start).
         page_size
             - maximum number of elements to return.
-        time_out: int, default = default_time_out
+        timeout: int, default = default_timeout
             - http request timeout for this request
         mermaid_only: bool, default is False
             - if true only a string representing the mermaid graph will be returned
@@ -2963,7 +2963,7 @@ class MetadataExpert(ServerClient):
                 starting_at_end=starting_at_end,
                 start_from=start_from,
                 page_size=page_size,
-                time_out=time_out,
+                timeout=timeout,
                 mermaid_only=mermaid_only,
                 **kwargs,
             )
@@ -2979,7 +2979,7 @@ class MetadataExpert(ServerClient):
         for_duplicate_processing: bool = None,
         start_from: int = 0,
         page_size: int = max_paging_size,
-        time_out: int = default_time_out,
+        timeout: int = default_timeout,
         **kwargs,
     ) -> list | str:
         """Return a list of metadata elements that match the supplied criteria.
@@ -2997,7 +2997,7 @@ class MetadataExpert(ServerClient):
             - index of the list to start from (0 for start).
         page_size
             - maximum number of elements to return.
-        time_out: int, default = default_time_out
+        timeout: int, default = default_timeout
             - http request timeout for this request
 
         Returns
@@ -3076,7 +3076,7 @@ class MetadataExpert(ServerClient):
         )
 
         response: Response = await self._async_make_request(
-            "POST", url, body_slimmer(body), time_out=time_out
+            "POST", url, body_slimmer(body), timeout=timeout
         )
 
         elements = response.json().get("elements", NO_ELEMENTS_FOUND)
@@ -3094,7 +3094,7 @@ class MetadataExpert(ServerClient):
         for_duplicate_processing: bool = None,
         start_from: int = 0,
         page_size: int = max_paging_size,
-        time_out: int = default_time_out,
+        timeout: int = default_timeout,
         **kwargs,
     ) -> list | str:
         """
@@ -3112,7 +3112,7 @@ class MetadataExpert(ServerClient):
             - index of the list to start from (0 for start).
         page_size
             - maximum number of elements to return.
-        time_out: int, default = default_time_out
+        timeout: int, default = default_timeout
             - http request timeout for this request
 
         Returns
@@ -3195,7 +3195,7 @@ class MetadataExpert(ServerClient):
                 for_duplicate_processing=for_duplicate_processing,
                 start_from=start_from,
                 page_size=page_size,
-                time_out=time_out,
+                timeout=timeout,
                 **kwargs,
             )
         )
@@ -3210,7 +3210,7 @@ class MetadataExpert(ServerClient):
         for_duplicate_processing: bool = None,
         start_from: int = 0,
         page_size: int = max_paging_size,
-        time_out: int = default_time_out,
+        timeout: int = default_timeout,
         mermaid_only: bool = False,
         **kwargs,
     ) -> list | str:
@@ -3229,7 +3229,7 @@ class MetadataExpert(ServerClient):
             - index of the list to start from (0 for start).
         page_size
             - maximum number of elements to return.
-        time_out: int, default = default_time_out
+        timeout: int, default = default_timeout
             - http request timeout for this request
         mermaid_only: bool, default is False
             - if true only a string representing the mermaid graph will be returned
@@ -3289,7 +3289,7 @@ class MetadataExpert(ServerClient):
         )
 
         response: Response = await self._async_make_request(
-            "POST", url, body_slimmer(body), time_out=time_out
+            "POST", url, body_slimmer(body), timeout=timeout
         )
 
         return process_related_element_list(
@@ -3305,7 +3305,7 @@ class MetadataExpert(ServerClient):
         for_duplicate_processing: bool = None,
         start_from: int = 0,
         page_size: int = max_paging_size,
-        time_out: int = default_time_out,
+        timeout: int = default_timeout,
         mermaid_only: bool = False,
         **kwargs,
     ) -> list | str:
@@ -3324,7 +3324,7 @@ class MetadataExpert(ServerClient):
             - index of the list to start from (0 for start).
         page_size
             - maximum number of elements to return.
-        time_out: int, default = default_time_out
+        timeout: int, default = default_timeout
             - http request timeout for this request
         mermaid_only: bool, default is False
             - if true only a string representing the mermaid graph will be returned
@@ -3389,7 +3389,7 @@ class MetadataExpert(ServerClient):
                 for_duplicate_processing=for_duplicate_processing,
                 start_from=start_from,
                 page_size=page_size,
-                time_out=time_out,
+                timeout=timeout,
                 mermaid_only=mermaid_only,
                 **kwargs,
             )
@@ -3516,7 +3516,7 @@ class MetadataExpert(ServerClient):
         for_duplicate_processing: bool = None,
         start_from: int = 0,
         page_size: int = max_paging_size,
-        time_out: int = default_time_out,
+        timeout: int = default_timeout,
         mermaid_only: bool = False,
         **kwargs,
     ) -> list | str:
@@ -3542,7 +3542,7 @@ class MetadataExpert(ServerClient):
             - index of the list to start from (0 for start).
         page_size
             - maximum number of elements to return.
-        time_out: int, default = default_time_out
+        timeout: int, default = default_timeout
             - http request timeout for this request
         mermaid_only: bool, default is False
             - if true only a string representing the mermaid graph will be returned
@@ -3579,7 +3579,7 @@ class MetadataExpert(ServerClient):
         )
 
         response: Response = await self._async_make_request(
-            "POST", url, body_slimmer(body), time_out=time_out
+            "POST", url, body_slimmer(body), timeout=timeout
         )
         rel = response.json().get("relationshipList", NO_ELEMENTS_FOUND)
         if isinstance(rel, (list, dict)):
@@ -3597,7 +3597,7 @@ class MetadataExpert(ServerClient):
         for_duplicate_processing: bool = None,
         start_from: int = 0,
         page_size: int = max_paging_size,
-        time_out: int = default_time_out,
+        timeout: int = default_timeout,
         mermaid_only: bool = False,
         **kwargs,
     ) -> list | str:
@@ -3623,7 +3623,7 @@ class MetadataExpert(ServerClient):
              - index of the list to start from (0 for start).
          page_size
              - maximum number of elements to return.
-         time_out: int, default = default_time_out
+         timeout: int, default = default_timeout
              - http request timeout for this request
          mermaid_only: bool, default is False
             - if true only a string representing the mermaid graph will be returned
@@ -3656,7 +3656,7 @@ class MetadataExpert(ServerClient):
                 for_duplicate_processing=for_duplicate_processing,
                 start_from=start_from,
                 page_size=page_size,
-                time_out=time_out,
+                timeout=timeout,
                 mermaid_only=mermaid_only,
                 **kwargs,
             )

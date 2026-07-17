@@ -360,15 +360,15 @@ async def _async_get_xxx_by_guid(
   - **Planned**: Standard Find Pattern
 - [x] `_async_find_authored_elements_by_category(self, filter_string='*', content_status_list=[], start_from=0, page_size=0, output_format='JSON', report_spec=None, body=None)`
   - **Planned**: Standard Find Pattern
-- [x] `_async_find_elements_by_classification_with_property_value(self, classification_name, property_value, property_names, metadata_element_type_name=None, starts_with=True, ends_with=False, ignore_case=False, anchor_domain=None, metadata_element_subtypes=None, skip_relationships=None, include_only_relationships=None, skip_classified_elements=None, include_only_classified_elements=None, graph_query_depth=3, governance_zone_filter=None, as_of_time=None, effective_time=None, relationship_page_size=0, limit_results_by_status=None, sequencing_order=None, sequencing_property=None, output_format='JSON', report_spec=None, start_from=0, page_size=0, time_out=default_time_out, body=None)`
+- [x] `_async_find_elements_by_classification_with_property_value(self, classification_name, property_value, property_names, metadata_element_type_name=None, starts_with=True, ends_with=False, ignore_case=False, anchor_domain=None, metadata_element_subtypes=None, skip_relationships=None, include_only_relationships=None, skip_classified_elements=None, include_only_classified_elements=None, graph_query_depth=3, governance_zone_filter=None, as_of_time=None, effective_time=None, relationship_page_size=0, limit_results_by_status=None, sequencing_order=None, sequencing_property=None, output_format='JSON', report_spec=None, start_from=0, page_size=0, timeout=default_timeout, body=None)`
   - **Planned**: Standard Find Pattern
-- [x] `_async_find_elements_by_property_value(self, property_value, property_names, metadata_element_type_name=None, starts_with=True, ends_with=False, ignore_case=False, anchor_domain=None, metadata_element_subtypes=None, skip_relationships=None, include_only_relationships=None, skip_classified_elements=None, include_only_classified_elements=None, graph_query_depth=3, governance_zone_filter=None, as_of_time=None, effective_time=None, relationship_page_size=0, limit_results_by_status=None, sequencing_order=None, sequencing_property=None, output_format='JSON', report_spec=None, start_from=0, page_size=0, time_out=default_time_out, body=None)`
+- [x] `_async_find_elements_by_property_value(self, property_value, property_names, metadata_element_type_name=None, starts_with=True, ends_with=False, ignore_case=False, anchor_domain=None, metadata_element_subtypes=None, skip_relationships=None, include_only_relationships=None, skip_classified_elements=None, include_only_classified_elements=None, graph_query_depth=3, governance_zone_filter=None, as_of_time=None, effective_time=None, relationship_page_size=0, limit_results_by_status=None, sequencing_order=None, sequencing_property=None, output_format='JSON', report_spec=None, start_from=0, page_size=0, timeout=default_timeout, body=None)`
   - **Planned**: Standard Find Pattern
-- [x] `_async_find_related_elements_with_property_value(self, element_guid, relationship_type, property_value, property_names, metadata_element_type_name=None, start_at_end=1, starts_with=True, ends_with=False, ignore_case=False, anchor_domain=None, metadata_element_subtypes=None, skip_relationships=None, include_only_relationships=None, skip_classified_elements=None, include_only_classified_elements=None, graph_query_depth=3, governance_zone_filter=None, as_of_time=None, effective_time=None, relationship_page_size=0, limit_results_by_status=None, sequencing_order=None, sequencing_property=None, output_format='JSON', report_spec=None, start_from=0, page_size=0, time_out=default_time_out, body=None)`
+- [x] `_async_find_related_elements_with_property_value(self, element_guid, relationship_type, property_value, property_names, metadata_element_type_name=None, start_at_end=1, starts_with=True, ends_with=False, ignore_case=False, anchor_domain=None, metadata_element_subtypes=None, skip_relationships=None, include_only_relationships=None, skip_classified_elements=None, include_only_classified_elements=None, graph_query_depth=3, governance_zone_filter=None, as_of_time=None, effective_time=None, relationship_page_size=0, limit_results_by_status=None, sequencing_order=None, sequencing_property=None, output_format='JSON', report_spec=None, start_from=0, page_size=0, timeout=default_timeout, body=None)`
   - **Planned**: Standard Find Pattern
 - [x] `_async_find_relationships_with_property_value(self, property_value, property_names, relationship_type=None, starts_with=True, ends_with=False, ignore_case=False, anchor_domain=None, metadata_element_subtypes=None, skip_relationships=None, include_only_relationships=None, skip_classified_elements=None, include_only_classified_elements=None, graph_query_depth=3, governance_zone_filter=None, as_of_time=None, effective_time=None, relationship_page_size=0, limit_results_by_status=None, sequencing_order=None, sequencing_property=None, output_format='JSON', report_spec=None, start_from=0, page_size=0, body=None)`
   - **Planned**: Standard Find Pattern
-- [x] `_async_find_root_elements(self, metadata_element_type_name=None, search_properties=None, match_classifications=None, start_from=0, page_size=0, output_format='JSON', report_spec=None, time_out=default_time_out, body=None)`
+- [x] `_async_find_root_elements(self, metadata_element_type_name=None, search_properties=None, match_classifications=None, start_from=0, page_size=0, output_format='JSON', report_spec=None, timeout=default_timeout, body=None)`
   - **Planned**: Standard Find Pattern
 - [ ] `_async_get_certifications(self, element_guid, body=None, output_format='JSON', report_spec=None, start_from=0, page_size=0)`
   - **Planned**: TODO
@@ -414,7 +414,7 @@ async def _async_get_xxx_by_guid(
   - **Planned**: TODO
 - [ ] `_async_get_relationships(self, relationship_type=None, start_from=0, page_size=0, output_format='JSON', report_spec=None, body=None)`
   - **Planned**: TODO
-- [ ] `_async_get_relationships_with_property_value(self, property_value, property_names, relationship_type=None, effective_time=None, for_lineage=False, for_duplicate_processing=False, start_from=0, page_size=0, time_out=default_time_out, output_format='JSON', report_spec=None)`
+- [ ] `_async_get_relationships_with_property_value(self, property_value, property_names, relationship_type=None, effective_time=None, for_lineage=False, for_duplicate_processing=False, start_from=0, page_size=0, timeout=default_timeout, output_format='JSON', report_spec=None)`
   - **Planned**: TODO
 - [ ] `_async_get_scoped_elements(self, scope_guid, body=None, output_format='JSON', report_spec=None, start_from=0, page_size=0)`
   - **Planned**: TODO
@@ -432,15 +432,15 @@ async def _async_get_xxx_by_guid(
   - **Planned**: Standard Find Pattern
 - [x] `find_authored_elements_by_category(self, filter_string='*', content_status_list=[], start_from=0, page_size=0, output_format='JSON', report_spec=None, body=None)`
   - **Planned**: Standard Find Pattern
-- [x] `find_elements_by_classification_with_property_value(self, classification_name, property_value, property_names, metadata_element_type_name=None, starts_with=True, ends_with=False, ignore_case=False, anchor_domain=None, metadata_element_subtypes=None, skip_relationships=None, include_only_relationships=None, skip_classified_elements=None, include_only_classified_elements=None, graph_query_depth=3, governance_zone_filter=None, as_of_time=None, effective_time=None, relationship_page_size=0, limit_results_by_status=None, sequencing_order=None, sequencing_property=None, output_format='JSON', report_spec=None, start_from=0, page_size=0, time_out=default_time_out, body=None)`
+- [x] `find_elements_by_classification_with_property_value(self, classification_name, property_value, property_names, metadata_element_type_name=None, starts_with=True, ends_with=False, ignore_case=False, anchor_domain=None, metadata_element_subtypes=None, skip_relationships=None, include_only_relationships=None, skip_classified_elements=None, include_only_classified_elements=None, graph_query_depth=3, governance_zone_filter=None, as_of_time=None, effective_time=None, relationship_page_size=0, limit_results_by_status=None, sequencing_order=None, sequencing_property=None, output_format='JSON', report_spec=None, start_from=0, page_size=0, timeout=default_timeout, body=None)`
   - **Planned**: Standard Find Pattern
-- [x] `find_elements_by_property_value(self, property_value, property_names, metadata_element_type_name=None, starts_with=True, ends_with=False, ignore_case=False, anchor_domain=None, metadata_element_subtypes=None, skip_relationships=None, include_only_relationships=None, skip_classified_elements=None, include_only_classified_elements=None, graph_query_depth=3, governance_zone_filter=None, as_of_time=None, effective_time=None, relationship_page_size=0, limit_results_by_status=None, sequencing_order=None, sequencing_property=None, output_format='JSON', report_spec=None, start_from=0, page_size=0, time_out=default_time_out, body=None)`
+- [x] `find_elements_by_property_value(self, property_value, property_names, metadata_element_type_name=None, starts_with=True, ends_with=False, ignore_case=False, anchor_domain=None, metadata_element_subtypes=None, skip_relationships=None, include_only_relationships=None, skip_classified_elements=None, include_only_classified_elements=None, graph_query_depth=3, governance_zone_filter=None, as_of_time=None, effective_time=None, relationship_page_size=0, limit_results_by_status=None, sequencing_order=None, sequencing_property=None, output_format='JSON', report_spec=None, start_from=0, page_size=0, timeout=default_timeout, body=None)`
   - **Planned**: Standard Find Pattern
-- [x] `find_related_elements_with_property_value(self, element_guid, relationship_type, property_value, property_names, metadata_element_type_name=None, start_at_end=1, starts_with=True, ends_with=False, ignore_case=False, anchor_domain=None, metadata_element_subtypes=None, skip_relationships=None, include_only_relationships=None, skip_classified_elements=None, include_only_classified_elements=None, graph_query_depth=3, governance_zone_filter=None, as_of_time=None, effective_time=None, relationship_page_size=0, limit_results_by_status=None, sequencing_order=None, sequencing_property=None, output_format='JSON', report_spec=None, start_from=0, page_size=0, time_out=default_time_out, body=None)`
+- [x] `find_related_elements_with_property_value(self, element_guid, relationship_type, property_value, property_names, metadata_element_type_name=None, start_at_end=1, starts_with=True, ends_with=False, ignore_case=False, anchor_domain=None, metadata_element_subtypes=None, skip_relationships=None, include_only_relationships=None, skip_classified_elements=None, include_only_classified_elements=None, graph_query_depth=3, governance_zone_filter=None, as_of_time=None, effective_time=None, relationship_page_size=0, limit_results_by_status=None, sequencing_order=None, sequencing_property=None, output_format='JSON', report_spec=None, start_from=0, page_size=0, timeout=default_timeout, body=None)`
   - **Planned**: Standard Find Pattern
 - [x] `find_relationships_with_property_value(self, property_value, property_names, relationship_type=None, starts_with=True, ends_with=False, ignore_case=False, anchor_domain=None, metadata_element_subtypes=None, skip_relationships=None, include_only_relationships=None, skip_classified_elements=None, include_only_classified_elements=None, graph_query_depth=3, governance_zone_filter=None, as_of_time=None, effective_time=None, relationship_page_size=0, limit_results_by_status=None, sequencing_order=None, sequencing_property=None, output_format='JSON', report_spec=None, start_from=0, page_size=0, body=None)`
   - **Planned**: Standard Find Pattern
-- [x] `find_root_elements(self, metadata_element_type_name=None, search_properties=None, match_classifications=None, start_from=0, page_size=0, output_format='JSON', report_spec=None, time_out=default_time_out, body=None)`
+- [x] `find_root_elements(self, metadata_element_type_name=None, search_properties=None, match_classifications=None, start_from=0, page_size=0, output_format='JSON', report_spec=None, timeout=default_timeout, body=None)`
   - **Planned**: Standard Find Pattern
 - [ ] `get_actor_for_guid(self, guid)`
   - **Planned**: TODO
@@ -488,7 +488,7 @@ async def _async_get_xxx_by_guid(
   - **Planned**: TODO
 - [ ] `get_relationships(self, relationship_type=None, start_from=0, page_size=0, output_format='JSON', report_spec=None, body=None)`
   - **Planned**: TODO
-- [ ] `get_relationships_with_property_value(self, property_value, property_names, relationship_type=None, effective_time=None, for_lineage=False, for_duplicate_processing=False, start_from=0, page_size=0, time_out=default_time_out, output_format='JSON', report_spec=None)`
+- [ ] `get_relationships_with_property_value(self, property_value, property_names, relationship_type=None, effective_time=None, for_lineage=False, for_duplicate_processing=False, start_from=0, page_size=0, timeout=default_timeout, output_format='JSON', report_spec=None)`
   - **Planned**: TODO
 - [ ] `get_scoped_elements(self, scope_guid, body=None, output_format='JSON', report_spec=None, start_from=0, page_size=0)`
   - **Planned**: TODO
@@ -866,13 +866,13 @@ async def _async_get_xxx_by_guid(
   - **Planned**: Standard Find Pattern
 - [x] `_async_find_elements_in_anchor_scope(self, anchor_scope_guid, search_string='*', starts_with=True, ends_with=False, ignore_case=False, anchor_domain=None, zone_filter=None, metadata_element_type=None, metadata_element_sub_type=None, skip_relationships=None, include_only_relationships=None, relationship_page_size=10, skip_classified_elements=None, include_only_classified_elements=None, graph_query_depth=5, as_of_time=None, effective_time=None, limit_results_by_status=None, sequencing_order='PROPERTY_ASCENDING', sequencing_property='qualifiedName', start_from=0, page_size=0, body=None)`
   - **Planned**: Standard Find Pattern
-- [x] `_async_find_metadata_elements(self, body, for_lineage=None, for_duplicate_processing=None, start_from=0, page_size=max_paging_size, time_out=default_time_out)`
+- [x] `_async_find_metadata_elements(self, body, for_lineage=None, for_duplicate_processing=None, start_from=0, page_size=max_paging_size, timeout=default_timeout)`
   - **Planned**: Standard Find Pattern
 - [x] `_async_find_metadata_elements_with_string(self, search_string='*', starts_with=True, ends_with=False, ignore_case=False, anchor_domain=None, zone_filter=None, metadata_element_type=None, metadata_element_sub_type=None, skip_relationships=None, include_only_relationships=None, relationship_page_size=10, skip_classified_elements=None, include_only_classified_elements=None, graph_query_depth=5, as_of_time=None, effective_time=None, limit_results_by_status=None, sequencing_order='PROPERTY_ASCENDING', sequencing_property='qualifiedName', start_from=0, page_size=0, body=None)`
   - **Planned**: Standard Find Pattern
-- [x] `_async_find_relationships_between_elements(self, body, for_lineage=None, for_duplicate_processing=None, start_from=0, page_size=max_paging_size, time_out=default_time_out, mermaid_only=False)`
+- [x] `_async_find_relationships_between_elements(self, body, for_lineage=None, for_duplicate_processing=None, start_from=0, page_size=max_paging_size, timeout=default_timeout, mermaid_only=False)`
   - **Planned**: Standard Find Pattern
-- [ ] `_async_get_all_metadata_element_relationships(self, end1_guid, end2_guid, body, for_lineage=None, for_duplicate_processing=None, starting_at_end=0, start_from=0, page_size=max_paging_size, time_out=default_time_out, mermaid_only=False)`
+- [ ] `_async_get_all_metadata_element_relationships(self, end1_guid, end2_guid, body, for_lineage=None, for_duplicate_processing=None, starting_at_end=0, start_from=0, page_size=max_paging_size, timeout=default_timeout, mermaid_only=False)`
   - **Planned**: TODO
 - [ ] `_async_get_all_related_elements(self, element_guid, starting_at_end=0, start_from=0, page_size=0, graph_query_depth=5, relationships_page_size=0, body=None)`
   - **Planned**: TODO
@@ -886,15 +886,15 @@ async def _async_get_xxx_by_guid(
   - **Planned**: Standard Get By GUID Pattern
 - [ ] `_async_get_metadata_element_by_unique_name(self, name, property_name='qualifiedName', effective_time=None, body=None)`
   - **Planned**: TODO
-- [ ] `_async_get_metadata_element_relationships(self, end1_guid, end2_guid, relationship_type, body, for_lineage=None, for_duplicate_processing=None, starting_at_end=0, start_from=0, page_size=max_paging_size, time_out=default_time_out, mermaid_only=False)`
+- [ ] `_async_get_metadata_element_relationships(self, end1_guid, end2_guid, relationship_type, body, for_lineage=None, for_duplicate_processing=None, starting_at_end=0, start_from=0, page_size=max_paging_size, timeout=default_timeout, mermaid_only=False)`
   - **Planned**: TODO
 - [ ] `_async_get_metadata_guid_by_unique_name(self, name, property_name, as_of_time=None, effective_time=None, body=None)`
   - **Planned**: TODO
-- [ ] `_async_get_related_metadata_elements(self, element_guid, relationship_type, body, for_lineage=None, for_duplicate_processing=None, starting_at_end=0, start_from=0, page_size=max_paging_size, time_out=default_time_out, mermaid_only=False)`
+- [ ] `_async_get_related_metadata_elements(self, element_guid, relationship_type, body, for_lineage=None, for_duplicate_processing=None, starting_at_end=0, start_from=0, page_size=max_paging_size, timeout=default_timeout, mermaid_only=False)`
   - **Planned**: TODO
 - [x] `_async_get_relationship_by_guid(self, guid, effective_time=None, as_of_time=None, for_lineage=None, for_duplicate_processing=None)`
   - **Planned**: Standard Get By GUID Pattern
-- [ ] `_async_get_relationship_history(self, guid, effective_time=None, oldest_first=False, from_time=None, to_time=None, for_lineage=None, for_duplicate_processing=None, start_from=0, page_size=max_paging_size, time_out=default_time_out, mermaid_only=False)`
+- [ ] `_async_get_relationship_history(self, guid, effective_time=None, oldest_first=False, from_time=None, to_time=None, for_lineage=None, for_duplicate_processing=None, start_from=0, page_size=max_paging_size, timeout=default_timeout, mermaid_only=False)`
   - **Planned**: TODO
 - [x] `find_elements_for_anchor(self, anchor_guid, search_string='*', starts_with=True, ends_with=False, ignore_case=False, anchor_domain=None, zone_filter=None, metadata_element_type=None, metadata_element_sub_type=None, skip_relationships=None, include_only_relationships=None, relationship_page_size=10, skip_classified_elements=None, include_only_classified_elements=None, graph_query_depth=5, as_of_time=None, effective_time=None, limit_results_by_status=None, sequencing_order='PROPERTY_ASCENDING', sequencing_property='qualifiedName', start_from=0, page_size=0, body=None)`
   - **Planned**: Standard Find Pattern
@@ -902,13 +902,13 @@ async def _async_get_xxx_by_guid(
   - **Planned**: Standard Find Pattern
 - [x] `find_elements_in_anchor_scope(self, anchor_scope_guid, search_string='*', starts_with=True, ends_with=False, ignore_case=False, anchor_domain=None, zone_filter=None, metadata_element_type=None, metadata_element_sub_type=None, skip_relationships=None, include_only_relationships=None, relationship_page_size=10, skip_classified_elements=None, include_only_classified_elements=None, graph_query_depth=5, as_of_time=None, effective_time=None, limit_results_by_status=None, sequencing_order='PROPERTY_ASCENDING', sequencing_property='qualifiedName', start_from=0, page_size=0, body=None)`
   - **Planned**: Standard Find Pattern
-- [x] `find_metadata_elements(self, body, for_lineage=None, for_duplicate_processing=None, start_from=0, page_size=max_paging_size, time_out=default_time_out)`
+- [x] `find_metadata_elements(self, body, for_lineage=None, for_duplicate_processing=None, start_from=0, page_size=max_paging_size, timeout=default_timeout)`
   - **Planned**: Standard Find Pattern
 - [x] `find_metadata_elements_with_string(self, search_string='*', starts_with=True, ends_with=False, ignore_case=False, anchor_domain=None, zone_filter=None, metadata_element_type=None, metadata_element_sub_type=None, skip_relationships=None, include_only_relationships=None, relationship_page_size=10, skip_classified_elements=None, include_only_classified_elements=None, graph_query_depth=5, as_of_time=None, effective_time=None, limit_results_by_status=None, sequencing_order='PROPERTY_ASCENDING', sequencing_property='qualifiedName', start_from=0, page_size=0, body=None)`
   - **Planned**: Standard Find Pattern
-- [x] `find_relationships_between_elements(self, body, for_lineage=None, for_duplicate_processing=None, start_from=0, page_size=max_paging_size, time_out=default_time_out, mermaid_only=False)`
+- [x] `find_relationships_between_elements(self, body, for_lineage=None, for_duplicate_processing=None, start_from=0, page_size=max_paging_size, timeout=default_timeout, mermaid_only=False)`
   - **Planned**: Standard Find Pattern
-- [ ] `get_all_metadata_element_relationships(self, end1_guid, end2_guid, body, for_lineage=None, for_duplicate_processing=None, starting_at_end=0, start_from=0, page_size=max_paging_size, time_out=default_time_out, mermaid_only=False)`
+- [ ] `get_all_metadata_element_relationships(self, end1_guid, end2_guid, body, for_lineage=None, for_duplicate_processing=None, starting_at_end=0, start_from=0, page_size=max_paging_size, timeout=default_timeout, mermaid_only=False)`
   - **Planned**: TODO
 - [ ] `get_all_related_elements(self, element_guid, starting_at_end=0, start_from=0, page_size=max_paging_size, graph_query_depth=5, relationships_page_size=0, body=None)`
   - **Planned**: TODO
@@ -922,15 +922,15 @@ async def _async_get_xxx_by_guid(
   - **Planned**: Standard Get By GUID Pattern
 - [ ] `get_metadata_element_by_unique_name(self, name, property_name='qualifiedName', effective_time=None, body=None)`
   - **Planned**: TODO
-- [ ] `get_metadata_element_relationships(self, end1_guid, end2_guid, relationship_type, body, for_lineage=None, for_duplicate_processing=None, starting_at_end=0, start_from=0, page_size=max_paging_size, time_out=default_time_out, mermaid_only=False)`
+- [ ] `get_metadata_element_relationships(self, end1_guid, end2_guid, relationship_type, body, for_lineage=None, for_duplicate_processing=None, starting_at_end=0, start_from=0, page_size=max_paging_size, timeout=default_timeout, mermaid_only=False)`
   - **Planned**: TODO
 - [ ] `get_metadata_guid_by_unique_name(self, name, property_name, as_of_time=None, effective_time=None, body=None)`
   - **Planned**: TODO
-- [ ] `get_related_metadata_elements(self, guid, relationship_type, body, for_lineage=None, for_duplicate_processing=None, starting_at_end=0, start_from=0, page_size=max_paging_size, time_out=default_time_out, mermaid_only=False)`
+- [ ] `get_related_metadata_elements(self, guid, relationship_type, body, for_lineage=None, for_duplicate_processing=None, starting_at_end=0, start_from=0, page_size=max_paging_size, timeout=default_timeout, mermaid_only=False)`
   - **Planned**: TODO
 - [x] `get_relationship_by_guid(self, guid, effective_time=None, for_lineage=None, for_duplicate_processing=None)`
   - **Planned**: Standard Get By GUID Pattern
-- [ ] `get_relationship_history(self, guid, effective_time=None, oldest_first=False, from_time=None, to_time=None, for_lineage=None, for_duplicate_processing=None, start_from=0, page_size=max_paging_size, time_out=default_time_out, mermaid_only=False)`
+- [ ] `get_relationship_history(self, guid, effective_time=None, oldest_first=False, from_time=None, to_time=None, for_lineage=None, for_duplicate_processing=None, start_from=0, page_size=max_paging_size, timeout=default_timeout, mermaid_only=False)`
   - **Planned**: TODO
 
 ### my_profile.py

@@ -10,7 +10,7 @@ Copyright Contributors to the ODPi Egeria project.
 import asyncio
 from typing import Any, Optional
 from pyegeria.core._server_client import ServerClient
-from pyegeria.core._globals import default_time_out
+from pyegeria.core._globals import default_timeout
 from pyegeria.core.utils import dynamic_catch
 from pyegeria.models import (NewRelationshipRequestBody, DeleteRelationshipRequestBody,
                              NewClassificationRequestBody, DeleteClassificationRequestBody)
@@ -44,11 +44,11 @@ class TemplateManager(ServerClient):
         user_id: str,
         user_pwd: Optional[str] = None,
         token: Optional[str] = None,
-        time_out: int = default_time_out,
+        timeout: int = default_timeout,
+        **kwargs,
     ):
         self.view_server = view_server
-        self.time_out = time_out
-        ServerClient.__init__(self, view_server, platform_url, user_id, user_pwd, token=token)
+        ServerClient.__init__(self, view_server, platform_url, user_id, user_pwd, token=token, timeout=timeout, **kwargs)
         self.command_root = f"{self.platform_url}/servers/{self.view_server}/api/open-metadata/template-manager"
 
     @dynamic_catch

@@ -12,7 +12,7 @@ from loguru import logger
 from requests import Response
 from pyegeria.core.utils import body_slimmer, dynamic_catch
 from pyegeria.core._server_client import ServerClient
-from pyegeria.core._globals import max_paging_size, default_time_out, NO_ELEMENTS_FOUND
+from pyegeria.core._globals import max_paging_size, default_timeout, NO_ELEMENTS_FOUND
 from typing import Any, Optional
 from pyegeria.view.base_report_formats import get_report_spec_match
 from pyegeria.view.base_report_formats import select_report_spec
@@ -54,11 +54,11 @@ class RuntimeManager(ServerClient):
         user_id: str,
         user_pwd: Optional[str] = None,
         token: Optional[str] = None,
-        time_out: int = default_time_out,
+        timeout: int = default_timeout,
+        **kwargs,
     ):
         self.view_server = view_server
-        self.time_out = time_out
-        ServerClient.__init__(self, view_server, platform_url, user_id, user_pwd, token=token)
+        ServerClient.__init__(self, view_server, platform_url, user_id, user_pwd, token=token, timeout=timeout, **kwargs)
         self.runtime_command_root = f"{self.platform_url}/servers/{self.view_server}/api/open-metadata/runtime-manager"
         # self.platform_guid = "44bf319f-1e41-4da1-b771-2753b92b631a"  # this is platform @ 9443 from the core content archive
         self.platform_guid = None
@@ -1352,7 +1352,7 @@ class RuntimeManager(ServerClient):
         server_guid: Optional[str] = None,
         display_name: Optional[str] = None,
         qualified_name: Optional[str] = None,
-        time_out: int = 60,
+        timeout: int = 60,
         body: Optional[dict | ArchiveRequestBody] = None,
     ) -> None:
         """An open metadata archive contains metadata types and instances.
@@ -1371,7 +1371,7 @@ class RuntimeManager(ServerClient):
             Unique name of server to act on. If not specified, server_guid or server_name must be.
         archive_content : dict
             A dict containing the content of the archive to load.
-        time_out : int, optional, default = 60 seconds
+        timeout : int, optional, default = 60 seconds
             Timeout for the REST call.
 
         body : dict | ArchiveRequestBody, optional
@@ -1401,7 +1401,7 @@ class RuntimeManager(ServerClient):
         )
 
         payload = body if body else archive_content
-        await self._async_make_request("POST", url, payload, time_out=time_out)
+        await self._async_make_request("POST", url, payload, timeout=timeout)
         return
 
     def add_archive_content(
@@ -1410,7 +1410,7 @@ class RuntimeManager(ServerClient):
         server_guid: Optional[str] = None,
         display_name: Optional[str] = None,
         qualified_name: Optional[str] = None,
-        time_out: int = 60,
+        timeout: int = 60,
         body: Optional[dict | ArchiveRequestBody] = None,
     ) -> None:
         """An open metadata archive contains metadata types and instances.
@@ -1429,7 +1429,7 @@ class RuntimeManager(ServerClient):
             Name of server to act on. If not specified, server_guid or qualified_name must be.
         qualified_name: str, default = None
             Unique name of server to act on. If not specified, server_guid or server_name must be.
-        time_out : int, optional, default = 60 seconds
+        timeout : int, optional, default = 60 seconds
             Timeout for the REST call.
 
         body : dict | ArchiveRequestBody, optional
@@ -1449,7 +1449,7 @@ class RuntimeManager(ServerClient):
         loop = asyncio.get_event_loop()
         loop.run_until_complete(
             self._async_add_archive_content(
-                archive_content, server_guid, display_name, qualified_name, time_out, body
+                archive_content, server_guid, display_name, qualified_name, timeout, body
             )
         )
         return
@@ -1460,7 +1460,7 @@ class RuntimeManager(ServerClient):
         server_guid: Optional[str] = None,
         display_name: Optional[str] = None,
         qualified_name: Optional[str] = None,
-        time_out: int = 120,
+        timeout: int = 120,
         organization_name: Optional[str] = None,
         body: Optional[dict | ArchiveRequestBody] = None,
     ) -> None:
@@ -1481,7 +1481,7 @@ class RuntimeManager(ServerClient):
             Name of server to act on. If not specified, server_guid or qualified_name must be.
         qualified_name: str, default = None
             Unique name of server to act on. If not specified, server_guid or server_name must be.
-        time_out: int, optional
+        timeout: int, optional
            Time out for the rest call.
 
         body : dict | ArchiveRequestBody, optional
@@ -1511,7 +1511,7 @@ class RuntimeManager(ServerClient):
 
         payload = body if body else archive_file
         await self._async_make_request(
-            "POST-DATA", url, payload, time_out=time_out
+            "POST-DATA", url, payload, timeout=timeout
         )
         return
 
@@ -1521,7 +1521,7 @@ class RuntimeManager(ServerClient):
         server_guid: Optional[str] = None,
         display_name: Optional[str] = None,
         qualified_name: Optional[str] = None,
-        time_out: int = 120,
+        timeout: int = 120,
         organization_name: Optional[str] = None,
         body: Optional[dict | ArchiveRequestBody] = None,
     ) -> None:
@@ -1541,7 +1541,7 @@ class RuntimeManager(ServerClient):
             Name of server to act on. If not specified, server_guid or qualified_name must be.
         qualified_name: str, default = None
             Unique name of server to act on. If not specified, server_guid or server_name must be.
-        time_out: int, optional, default = 60 seconds
+        timeout: int, optional, default = 60 seconds
 
         body : dict | ArchiveRequestBody, optional
             Request body to pass directly to the API.
@@ -1562,7 +1562,7 @@ class RuntimeManager(ServerClient):
         loop = asyncio.get_event_loop()
         loop.run_until_complete(
             self._async_add_archive_file(
-                archive_file, server_guid, display_name, qualified_name, time_out, organization_name, body
+                archive_file, server_guid, display_name, qualified_name, timeout, organization_name, body
             )
         )
         return
@@ -1688,7 +1688,7 @@ class RuntimeManager(ServerClient):
 
         url = f"{self.runtime_command_root}/omag-servers/{server_guid}/instance"
 
-        await self._async_make_request("POST", url, payload=body, time_out=timeout)
+        await self._async_make_request("POST", url, payload=body, timeout=timeout)
         return
 
     def activate_server_with_stored_config(

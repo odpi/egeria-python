@@ -116,7 +116,7 @@ class ServerOps(Platform):
             + "/instance/open-metadata-archives/file"
         )
 
-        await self._async_make_request("POST-DATA", url, archive_file,  time_out=timeout)
+        await self._async_make_request("POST-DATA", url, archive_file,  timeout=timeout)
 
     def add_archive_file(
         self, archive_file: str, server: Optional[str] = None, timeout: int = 30
@@ -430,7 +430,7 @@ class ServerOps(Platform):
         return response
 
     async def _async_refresh_integration_connectors(
-        self, connector_name: str = "all", server: Optional[str] = None, time_out: int = 60
+        self, connector_name: str = "all", server: Optional[str] = None, timeout: int = 60
     ) -> None:
         """Issue a refresh request to all connectors running in the integration daemon, or a specific connector
         if one is specified - async version"""
@@ -445,19 +445,19 @@ class ServerOps(Platform):
         )
         if connector_name:
             body = {"class": "NameRequestBody", "name": connector_name}
-            await self._async_make_request("POST", url, body, time_out=time_out)
+            await self._async_make_request("POST", url, body, timeout=timeout)
         else:
-            await self._async_make_request("POST", url, time_out=time_out)
+            await self._async_make_request("POST", url, timeout=timeout)
 
         return
 
     def refresh_integration_connectors(
-        self, connector_name: str, server: Optional[str] = None, time_out: int = 60
+        self, connector_name: str, server: Optional[str] = None, timeout: int = 60
     ) -> None:
         """Restart the integration Connector specified by connector_name"""
         loop = asyncio.get_event_loop()
         loop.run_until_complete(
-            self._async_refresh_integration_connectors(connector_name, server, time_out)
+            self._async_refresh_integration_connectors(connector_name, server, timeout)
         )
 
 

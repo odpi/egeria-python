@@ -73,6 +73,7 @@ class BasePlatformClient:
             token_src: str = None,
             api_key: str = None,
             page_size: int = None,
+            timeout: int = None,
     ):
         server_name = server_name or settings.Environment.egeria_view_server
         platform_url = platform_url or settings.Environment.egeria_platform_url
@@ -85,6 +86,7 @@ class BasePlatformClient:
         self.user_id = user_id or settings.User_Profile.user_name
         self.user_pwd = user_pwd or settings.User_Profile.user_pwd
         self.page_size = page_size or max_paging_size
+        self.timeout = timeout or settings.Debug.timeout_seconds or 30
         self.token_src = token_src
         self.token = token
         self.exc_type = None
@@ -122,7 +124,7 @@ class BasePlatformClient:
 
         self.session = AsyncClient(
             verify=enable_ssl_check,
-            timeout=httpx.Timeout(timeout=30.0, connect=10.0),
+            timeout=httpx.Timeout(timeout=float(self.timeout), connect=10.0),
             limits=httpx.Limits(
                 max_connections=10,
                 max_keepalive_connections=5,
@@ -419,7 +421,7 @@ class BasePlatformClient:
             request_type: str,
             endpoint: str,
             payload: str | dict = None,
-            time_out: int = 30,
+            timeout: int = None,
             is_json: bool = True,
             params: dict | None = None
     ) -> Response | str:
@@ -433,8 +435,8 @@ class BasePlatformClient:
             The API endpoint URL.
         payload : str | dict, optional
             The request payload.
-        time_out : int, optional
-            The timeout for the request in seconds (default is 30).
+        timeout : int, optional
+            The timeout for the request in seconds.
         is_json : bool, optional
             Whether the payload is in JSON format (default is True).
         params : dict, optional
@@ -450,17 +452,19 @@ class BasePlatformClient:
         PyegeriaException
             If the request fails.
         """
+        if timeout is None:
+            timeout = self.timeout
         try:
             loop = asyncio.get_running_loop()
             if loop.is_running():
-                coro = self._async_make_request(request_type, endpoint, payload, time_out, is_json, params)
+                coro = self._async_make_request(request_type, endpoint, payload, timeout, is_json, params)
                 return asyncio.run_coroutine_threadsafe(coro, loop).result()
             else:
                 return loop.run_until_complete(
-                    self._async_make_request(request_type, endpoint, payload, time_out, is_json, params))
+                    self._async_make_request(request_type, endpoint, payload, timeout, is_json, params))
         except RuntimeError:
             # No running loop exists; run the coroutine
-            return asyncio.run(self._async_make_request(request_type, endpoint, payload, time_out, is_json, params))
+            return asyncio.run(self._async_make_request(request_type, endpoint, payload, timeout, is_json, params))
 
 
     async def _async_make_request(
@@ -468,7 +472,7 @@ class BasePlatformClient:
             request_type: str,
             endpoint: str,
             payload: str | dict = None,
-            time_out: int = 30,
+            timeout: int = None,
             is_json: bool = True,
             params: dict | None = None,
             _retrying: bool = False,
@@ -483,8 +487,8 @@ class BasePlatformClient:
             The API endpoint URL.
         payload : str | dict, optional
             The request payload.
-        time_out : int, optional
-            The timeout for the request in seconds (default is 30).
+        timeout : int, optional
+            The timeout for the request in seconds.
         is_json : bool, optional
             Whether the payload is in JSON format (default is True).
         params : dict, optional
@@ -504,6 +508,8 @@ class BasePlatformClient:
         PyegeriaInvalidParameterException
             If the request parameters are invalid.
         """
+        if timeout is None:
+            timeout = self.timeout
         context: dict = {}
         context['class name'] = __class__.__name__
         context['caller method'] = inspect.currentframe().f_back.f_code.co_name
@@ -512,24 +518,24 @@ class BasePlatformClient:
         try:
             if request_type == "GET":
                 response = await self.session.get(
-                    endpoint, params=params, headers=self.headers, timeout=time_out,
+                    endpoint, params=params, headers=self.headers, timeout=timeout,
                 )
 
             elif request_type == "POST":
                 if payload is None:
                     response = await self.session.post(
-                        endpoint, headers=self.headers, timeout=time_out, params = params
+                        endpoint, headers=self.headers, timeout=timeout, params = params
                     )
                 elif type(payload) is dict:
                     response = await self.session.post(
-                        endpoint, json=payload, headers=self.headers, timeout=time_out
+                        endpoint, json=payload, headers=self.headers, timeout=timeout
                     )
                 elif type(payload) is str:
                     response = await self.session.post(
                         endpoint,
                         headers=self.headers,
                         content=payload,
-                        timeout=time_out,
+                        timeout=timeout,
                         params=params
                     )
                 else:
@@ -539,19 +545,19 @@ class BasePlatformClient:
             elif request_type == "POST-DATA":
                 if True:
                     response = await self.session.post(
-                        endpoint, headers=self.headers, data=payload, timeout=time_out
+                        endpoint, headers=self.headers, data=payload, timeout=timeout
                     )
             elif request_type == "DELETE":
                 if True:
                     response = await self.session.delete(
-                        endpoint, headers=self.headers, timeout=time_out
+                        endpoint, headers=self.headers, timeout=timeout
                     )
             # Attempt a single token refresh on 401/403 before raising.
             if response.status_code in (401, 403) and not _retrying and self.token_src == "Egeria":
                 try:
                     await self._async_refresh_egeria_bearer_token()
                     return await self._async_make_request(
-                        request_type, endpoint, payload, time_out, is_json, params, _retrying=True
+                        request_type, endpoint, payload, timeout, is_json, params, _retrying=True
                     )
                 except Exception:
                     pass  # fall through to raise_for_status
@@ -564,7 +570,7 @@ class BasePlatformClient:
             additional_info = {
                 "endpoint": endpoint,
                 "error_kind": "timeout",
-                "timeout_seconds": time_out,
+                "timeout_seconds": timeout,
             }
             raise PyegeriaTimeoutException(context, additional_info, e)
 

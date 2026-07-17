@@ -775,7 +775,7 @@ class TestRuntimeManager:
 
             duration = time.perf_counter() - start_time
             print(f"\n\tDuration was {duration} seconds")
-            print("Connector {connector_name} restarted")
+            print(f"Connector {connector_name} refreshed")
             assert True
 
         except (
@@ -803,13 +803,13 @@ class TestRuntimeManager:
             # connector_name = "UnityCatalogServerSynchronizer"
             connector_name = None
             start_time = time.perf_counter()
-            r_client.restart_integration_connectors(
+            r_client.restart_connector(
                 connector_name, server_guid, server_name
             )
 
             duration = time.perf_counter() - start_time
             print(f"\n\tDuration was {duration} seconds")
-            print("Connector {connector_name} restarted")
+            print(f"Connector {connector_name} restarted")
             assert True
 
         except (
@@ -1022,3 +1022,82 @@ class TestRuntimeManager:
 
         finally:
             r_client.close_session()
+
+    def test_refresh_integration_connector_with_timeout(self):
+        """
+        Example showing how to use the timeout parameter both at initialization
+        and as an override on the method call.
+        """
+        try:
+            # Example 1: Set timeout at initialization for all requests in this client session
+            r_client = RuntimeManager(
+                self.good_view_server_2,
+                self.good_platform1_url,
+                user_id=self.good_user_1,
+                user_pwd="secret",
+                timeout=30  # 30 seconds default timeout for this client
+            )
+            token = r_client.create_egeria_bearer_token()
+
+            server_name = "qs-integration-daemon"
+            connector_name = "UnityCatalogServerSynchronizer"
+
+            print(f"\nRefreshing connector {connector_name} with session timeout (30s)...")
+            start_time = time.perf_counter()
+            r_client.refresh_integration_connector(
+                connector_name, display_name=server_name
+            )
+            duration = time.perf_counter() - start_time
+            print(f"Refresh completed in {duration:.2f} seconds")
+
+            # Example 2: Override the session timeout for a specific call
+            print(f"\nRefreshing connector {connector_name} with call-specific override timeout (60s)...")
+            start_time = time.perf_counter()
+            r_client.refresh_integration_connector(
+                connector_name, display_name=server_name, timeout=60
+            )
+            duration = time.perf_counter() - start_time
+            print(f"Refresh override completed in {duration:.2f} seconds")
+
+            assert True
+
+        except (
+            PyegeriaInvalidParameterException,
+            PyegeriaAPIException,
+            PyegeriaUnauthorizedException,
+        ) as e:
+            print_exception_response(e)
+            assert False, f"Request failed: {e}"
+
+        finally:
+            r_client.close_session()
+
+    def test_egeriatech_timeout_propagation(self):
+        """
+        Example showing how timeout is propagated from EgeriaTech to RuntimeManager.
+        """
+        try:
+            # Set timeout on the aggregate client
+            tech_client = EgeriaTech(
+                self.good_view_server_2,
+                self.good_platform1_url,
+                user_id=self.good_user_2,
+                user_pwd="secret",
+                timeout=45
+            )
+            token = tech_client.create_egeria_bearer_token()
+
+            # RuntimeManager is lazy-loaded and should inherit the timeout
+            # We can use it via the tech_client facade
+            server_name = "qs-integration-daemon"
+            connector_name = "UnityCatalogServerSynchronizer"
+
+            print(f"\nRefreshing connector via EgeriaTech with propagated timeout (45s)...")
+            tech_client.refresh_integration_connector(
+                connector_name, display_name=server_name
+            )
+            print("Refresh successful")
+            assert True
+
+        finally:
+            tech_client.close_session()

@@ -1,18 +1,21 @@
 """
 Action Author Processors for Dr.Egeria v2.
 
-Handles the two Action Author link commands (Link First Process Step,
-Link Next Process Step). These don't fit the generic governance
-peer-link mechanism (GovernanceLinkProcessor / link_peer_definitions) --
-they call the action_author OMVS client directly, with dedicated
-relationship properties (guard/requestParameters/mandatoryGuard) that
-the generic PeerDefinitionProperties body has no room for.
+Handles the Action Author link commands (Link First Process Step,
+Link Next Process Step, Link Action to Action Executor, Link Action
+to Target). These don't fit the generic governance peer-link mechanism
+(GovernanceLinkProcessor / link_peer_definitions) -- they call the
+action_author OMVS client directly, with dedicated relationship
+properties (guard/requestParameters/mandatoryGuard,
+requestType/requestParameterFilter/requestParameterMap/
+actionTargetFilter/actionTargetMap, actionTargetName) that the generic
+PeerDefinitionProperties body has no room for.
 """
 from typing import Dict, Any, Optional
 from loguru import logger
 
 from md_processing.v2.processors import AsyncBaseCommandProcessor
-from md_processing.md_processing_utils.common_md_utils import set_rel_request_body
+from md_processing.md_processing_utils.common_md_utils import set_rel_request_body, set_delete_rel_request_body
 from pyegeria.core.utils import body_slimmer
 
 
@@ -114,5 +117,84 @@ class ActionProcessStepLinkProcessor(AsyncBaseCommandProcessor):
                 await self.client._async_remove_next_action_process_step(relationship_guid)
                 logger.success(f"Removed next-process-step link {relationship_guid}")
                 return f"\n\n## {verb} {object_type}\n\nRemoved next-process-step link {relationship_guid}"
+
+        return self.command.raw_block
+
+
+class ActionExecutorTargetLinkProcessor(AsyncBaseCommandProcessor):
+    """
+    Processor for Link Action to Action Executor (GovernanceActionExecutor) and
+    Link Action to Target (TargetForGovernanceAction). Unlike Link Next Process
+    Step, detach for both of these takes the same two element GUIDs as attach
+    (mirroring link_governance_action_executor/link_target_for_governance_action's
+    own attach/detach signatures) rather than a single relationship GUID.
+    """
+
+    async def fetch_as_is(self) -> Optional[Dict[str, Any]]:
+        return None
+
+    async def apply_changes(self) -> str:
+        verb = self.command.verb
+        object_type = getattr(self, 'canonical_object_type', self.command.object_type)
+        attributes = self.parsed_output["attributes"]
+        spec = self.get_command_spec()
+        om_type = spec.get("OM_TYPE")
+
+        if om_type == "GovernanceActionExecutor":
+            type_guid = attributes.get('Governance Action Type', {}).get('guid')
+            engine_guid = attributes.get('Governance Engine', {}).get('guid')
+            if not (type_guid and engine_guid):
+                missing = []
+                if not type_guid: missing.append("'Governance Action Type'")
+                if not engine_guid: missing.append("'Governance Engine'")
+                raise ValueError(f"Cannot link action executor: resolution failed for {', '.join(missing)}")
+
+            if verb in ["Link", "Attach", "Add"]:
+                body = set_rel_request_body(om_type, attributes)
+                body["properties"] = {
+                    "class": "GovernanceActionExecutorProperties",
+                    "requestType": attributes.get('Request Type', {}).get('value'),
+                    "requestParameters": attributes.get('Request Parameters', {}).get('value'),
+                    "requestParameterFilter": attributes.get('Request Parameter Filter', {}).get('value'),
+                    "requestParameterMap": attributes.get('Request Parameter Map', {}).get('value'),
+                    "actionTargetFilter": attributes.get('Action Target Filter', {}).get('value'),
+                    "actionTargetMap": attributes.get('Action Target Map', {}).get('value'),
+                }
+                self.last_body = body = body_slimmer(body)
+                await self.client._async_link_governance_action_executor(type_guid, engine_guid, body)
+                logger.success(f"Linked {engine_guid} as executor of {type_guid}")
+                return f"\n\n## {verb} {object_type}\n\nLinked {engine_guid} as executor of {type_guid}"
+
+            elif verb in ["Detach", "Unlink", "Remove"]:
+                body = set_delete_rel_request_body(om_type, attributes)
+                await self.client._async_detach_governance_action_executor(type_guid, engine_guid, body)
+                logger.success(f"Removed executor link between {type_guid} and {engine_guid}")
+                return f"\n\n## {verb} {object_type}\n\nRemoved executor link between {type_guid} and {engine_guid}"
+
+        elif om_type == "TargetForGovernanceAction":
+            action_guid = attributes.get('Governance Action', {}).get('guid')
+            element_guid = attributes.get('Element Id', {}).get('guid')
+            if not (action_guid and element_guid):
+                missing = []
+                if not action_guid: missing.append("'Governance Action'")
+                if not element_guid: missing.append("'Element Id'")
+                raise ValueError(f"Cannot link action target: resolution failed for {', '.join(missing)}")
+
+            if verb in ["Link", "Attach", "Add"]:
+                body = set_rel_request_body(om_type, attributes)
+                body["properties"] = {
+                    "class": "TargetForGovernanceActionProperties",
+                    "actionTargetName": attributes.get('Action Target Name', {}).get('value'),
+                }
+                self.last_body = body = body_slimmer(body)
+                await self.client._async_link_target_for_governance_action(action_guid, element_guid, body)
+                logger.success(f"Linked {element_guid} as target of {action_guid}")
+                return f"\n\n## {verb} {object_type}\n\nLinked {element_guid} as target of {action_guid}"
+
+            elif verb in ["Detach", "Unlink", "Remove"]:
+                body = set_delete_rel_request_body(om_type, attributes)
+                await self.client._async_detach_target_for_governance_action(action_guid, element_guid, body)
+                logger.success(f"Removed target link between {action_guid} and {element_guid}")
+                return f"\n\n## {verb} {object_type}\n\nRemoved target link between {action_guid} and {element_guid}"
 
         return self.command.raw_block

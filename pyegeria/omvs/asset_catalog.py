@@ -43,8 +43,8 @@ class AssetCatalog(ServerClient):
     """
 
     def __init__(self, view_server: str, platform_url: str, user_id: str, user_pwd: Optional[str] = None,
-                 token: str = None, time_out: int = None):
-        super().__init__(view_server, platform_url, user_id, user_pwd, token, time_out=time_out)
+                 token: str = None, timeout: int = None):
+        super().__init__(view_server, platform_url, user_id, user_pwd, token, timeout=timeout)
         self.view_server = view_server
         self.platform_url = platform_url
         self.user_id = user_id

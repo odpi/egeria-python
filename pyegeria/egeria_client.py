@@ -66,12 +66,14 @@ class Egeria:
         user_id: str = None,
         user_pwd: str = None,
         token: str = None,
+        timeout: int = None,
     ):
         self.view_server = view_server or settings.Environment.egeria_view_server
         self.platform_url = platform_url or settings.Environment.egeria_platform_url
         self.user_id = user_id or settings.User_Profile.user_name
         self.user_pwd = user_pwd or settings.User_Profile.user_pwd
         self.token = token
+        self.timeout = timeout
 
         self._subclient_map = {
             "action_author": ActionAuthor,
@@ -138,7 +140,12 @@ class Egeria:
         if attr_name not in self._instantiated_clients:
             client_cls = self._subclient_map[attr_name]
             self._instantiated_clients[attr_name] = client_cls(
-                self.view_server, self.platform_url, self.user_id, self.user_pwd, self.token
+                self.view_server,
+                self.platform_url,
+                self.user_id,
+                self.user_pwd,
+                self.token,
+                timeout=self.timeout,
             )
         return self._instantiated_clients[attr_name]
 

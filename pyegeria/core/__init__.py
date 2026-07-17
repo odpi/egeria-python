@@ -14,7 +14,7 @@ from pyegeria.core._exceptions import (
     PyegeriaUnknownException,
 )
 from pyegeria.core._globals import (
-    default_time_out,
+    default_timeout,
     disable_ssl_warnings,
     enable_ssl_check,
     is_debug,
@@ -34,7 +34,7 @@ __all__ = [
     "PyegeriaInvalidParameterException",
     "PyegeriaClientException",
     "PyegeriaUnknownException",
-    "default_time_out",
+    "default_timeout",
     "disable_ssl_warnings",
     "enable_ssl_check",
     "is_debug",

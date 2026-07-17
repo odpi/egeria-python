@@ -15,7 +15,7 @@ from loguru import logger
 from typing import Any, Optional
 from pyegeria.core._exceptions import PyegeriaException, PyegeriaInvalidParameterException
 from pyegeria.core._server_client import ServerClient
-from pyegeria.core._globals import default_time_out, NO_ELEMENTS_FOUND
+from pyegeria.core._globals import default_timeout, NO_ELEMENTS_FOUND
 from pyegeria.view.base_report_formats import select_report_spec, get_report_spec_match
 from pyegeria.models import LevelIdentifierQueryBody, FilterRequestBody, GetRequestBody, NewClassificationRequestBody, \
     DeleteClassificationRequestBody, NewRelationshipRequestBody, DeleteRelationshipRequestBody, \
@@ -684,7 +684,7 @@ class ClassificationExplorer(ServerClient):
 
         url = (f"{self.classification_command_root}/elements/by-digital-resource-origin")
 
-        response = await self._async_make_request("POST", url, body_slimmer(body), time_out=default_time_out, **kwargs)
+        response = await self._async_make_request("POST", url, body_slimmer(body), timeout=default_timeout, **kwargs)
         elements = response.json().get("elements", None)
         if elements is None:
             elements = response.json().get("element", NO_ELEMENTS_FOUND)
@@ -821,7 +821,7 @@ class ClassificationExplorer(ServerClient):
 
         url = (f"{self.classification_command_root}/glossaries/terms/by-semantic-assignment/{element_guid}")
 
-        response = await self._async_make_request("POST", url, body_slimmer(body), time_out=default_time_out, **kwargs)
+        response = await self._async_make_request("POST", url, body_slimmer(body), timeout=default_timeout, **kwargs)
         elements = response.json().get("elements", None)
         if elements is None:
             elements = response.json().get("element", NO_ELEMENTS_FOUND)
@@ -963,7 +963,7 @@ class ClassificationExplorer(ServerClient):
 
         url = (f"{self.classification_command_root}/glossaries/elements/by-semantic-assignment/{term_guid}")
 
-        response = await self._async_make_request("POST", url, body_slimmer(body), time_out=default_time_out, **kwargs)
+        response = await self._async_make_request("POST", url, body_slimmer(body), timeout=default_timeout, **kwargs)
         elements = response.json().get("elements", None)
         if elements is None:
             elements = response.json().get("element", NO_ELEMENTS_FOUND)
@@ -2733,7 +2733,7 @@ class ClassificationExplorer(ServerClient):
         report_spec: dict | str = None,
         start_from: int = 0,
         page_size: int = 0,
-        time_out: int = default_time_out,
+        timeout: int = default_timeout,
         body: Optional[dict | FindPropertyNamesRequestBody] = None,
         **kwargs,
     ) -> list | str:
@@ -2790,7 +2790,7 @@ class ClassificationExplorer(ServerClient):
             - index of the list to start from (0 for start).
         page_size
             - maximum number of elements to return.
-        time_out: int, default = default_time_out
+        timeout: int, default = default_timeout
             - http request timeout for this request
         output_format: str, default = "JSON"
             - Type of output to return.
@@ -2895,7 +2895,7 @@ class ClassificationExplorer(ServerClient):
         report_spec: dict | str = None,
         start_from: int = 0,
         page_size: int = 0,
-        time_out: int = default_time_out,
+        timeout: int = default_timeout,
         body: Optional[dict | FindPropertyNamesRequestBody] = None,
         **kwargs,
     ) -> list | str:
@@ -2918,7 +2918,7 @@ class ClassificationExplorer(ServerClient):
             - index of the list to start from (0 for start).
         page_size
             - maximum number of elements to return.
-        time_out: int, default = default_time_out
+        timeout: int, default = default_timeout
             - http request timeout for this request
         output_format: str, default = "JSON"
             - Type of output to return.
@@ -2979,7 +2979,7 @@ class ClassificationExplorer(ServerClient):
                 report_spec=report_spec,
                 start_from=start_from,
                 page_size=page_size,
-                time_out=time_out,
+                timeout=timeout,
                 body=body,
                 **kwargs
             )
@@ -3772,7 +3772,7 @@ class ClassificationExplorer(ServerClient):
         report_spec: dict | str = None,
         start_from: int = 0,
         page_size: int = 0,
-        time_out: int = default_time_out,
+        timeout: int = default_timeout,
         body: Optional[dict | SearchStringRequestBody] = None,
         **kwargs,
     ) -> list | str:
@@ -3801,7 +3801,7 @@ class ClassificationExplorer(ServerClient):
             - index of the list to start from (0 for start).
         page_size: int, default = 0
             - maximum number of elements to return.
-        time_out: int, default = default_time_out
+        timeout: int, default = default_timeout
             - http request timeout for this request
         output_format: str, default = "JSON"
             - Type of output to return.
@@ -3897,7 +3897,7 @@ class ClassificationExplorer(ServerClient):
         report_spec: dict | str = None,
         start_from: int = 0,
         page_size: int = 0,
-        time_out: int = default_time_out,
+        timeout: int = default_timeout,
         body: Optional[dict | SearchStringRequestBody] = None,
         **kwargs,
     ) -> list | str:
@@ -3925,7 +3925,7 @@ class ClassificationExplorer(ServerClient):
             - index of the list to start from (0 for start).
         page_size: int, default = 0
             - maximum number of elements to return.
-        time_out: int, default = default_time_out
+        timeout: int, default = default_timeout
             - http request timeout for this request
         output_format: str, default = "JSON"
             - Type of output to return.
@@ -3971,7 +3971,7 @@ class ClassificationExplorer(ServerClient):
                 report_spec=report_spec,
                 start_from=start_from,
                 page_size=page_size,
-                time_out=time_out,
+                timeout=timeout,
                 body=body,
                 **kwargs
             )
@@ -4316,7 +4316,7 @@ class ClassificationExplorer(ServerClient):
             - index of the list to start from (0 for start).
         page_size: int, default = 0
             - maximum number of elements to return.
-        time_out: int, default = default_time_out
+        timeout: int, default = default_timeout
             - http request timeout for this request
         output_format: str, default = "JSON"
             - Type of output to return.
@@ -4398,7 +4398,7 @@ class ClassificationExplorer(ServerClient):
         report_spec: dict | str = None,
         start_from: int = 0,
         page_size: int = 0,
-        time_out: int = default_time_out,
+        timeout: int = default_timeout,
         body: Optional[dict | SearchStringRequestBody] = None,
         **kwargs,
     ) -> list | str:
@@ -4430,7 +4430,7 @@ class ClassificationExplorer(ServerClient):
             - index of the list to start from (0 for start).
         page_size
             - maximum number of elements to return.
-        time_out: int, default = default_time_out
+        timeout: int, default = default_timeout
             - http request timeout for this request
         output_format: str, default = "JSON"
             - Type of output to return.
@@ -4531,7 +4531,7 @@ class ClassificationExplorer(ServerClient):
         report_spec: dict | str = None,
         start_from: int = 0,
         page_size: int = 0,
-        time_out: int = default_time_out,
+        timeout: int = default_timeout,
         body: Optional[dict | SearchStringRequestBody] = None,
         **kwargs,
     ) -> list | str:
@@ -4563,7 +4563,7 @@ class ClassificationExplorer(ServerClient):
             - index of the list to start from (0 for start).
         page_size: int, default = 0
             - maximum number of elements to return.
-        time_out: int, default = default_time_out
+        timeout: int, default = default_timeout
             - http request timeout for this request
         output_format: str, default = "JSON"
             - Type of output to return.
@@ -4611,7 +4611,7 @@ class ClassificationExplorer(ServerClient):
                 report_spec=report_spec,
                 start_from=start_from,
                 page_size=page_size,
-                time_out=time_out,
+                timeout=timeout,
                 body=body,
                 **kwargs
             )
@@ -4755,7 +4755,7 @@ class ClassificationExplorer(ServerClient):
             for_duplicate_processing: bool = False,
             start_from: int = 0,
             page_size: int = 0,
-            time_out: int = default_time_out,
+            timeout: int = default_timeout,
             output_format: str = "JSON", report_spec: dict | str = None,
             **kwargs
     ) -> list | str:
@@ -4785,7 +4785,7 @@ class ClassificationExplorer(ServerClient):
             - maximum number of elements to return.
 
 
-        time_out: int, default = default_time_out
+        timeout: int, default = default_timeout
             - http request timeout for this request
 
         Returns
@@ -4825,7 +4825,7 @@ class ClassificationExplorer(ServerClient):
             )
 
         response: Response = await self._async_make_request(
-            "POST", url, body_slimmer(body), time_out=time_out, **kwargs
+            "POST", url, body_slimmer(body), timeout=timeout, **kwargs
         )
         rels = response.json().get("relationships", NO_ELEMENTS_FOUND)
         if type(rels) is list and len(rels) == 0:
@@ -4847,7 +4847,7 @@ class ClassificationExplorer(ServerClient):
             for_duplicate_processing: bool = False,
             start_from: int = 0,
             page_size: int = 0,
-            time_out: int = default_time_out,
+            timeout: int = default_timeout,
             output_format: str = "JSON",
             report_spec: dict | str = None,
             **kwargs
@@ -4876,7 +4876,7 @@ class ClassificationExplorer(ServerClient):
             - maximum number of elements to return.
 
 
-        time_out: int, default = default_time_out
+        timeout: int, default = default_timeout
             - http request timeout for this request
 
         Returns
@@ -4904,7 +4904,7 @@ class ClassificationExplorer(ServerClient):
                 for_duplicate_processing,
                 start_from,
                 page_size,
-                time_out,
+                timeout,
                 output_format,
                 report_spec,
                 **kwargs
@@ -5192,7 +5192,7 @@ class ClassificationExplorer(ServerClient):
             effective_time: Optional[str] = None,
             for_lineage: bool = False,
             for_duplicate_processing: bool = False,
-            time_out: int = default_time_out,
+            timeout: int = default_timeout,
             output_format: str = "JSON",
             report_spec: dict | str = None,
             **kwargs
@@ -5214,7 +5214,7 @@ class ClassificationExplorer(ServerClient):
             - Normally false. Set true when the caller is part of a deduplication function
 
 
-        time_out: int, default = default_time_out
+        timeout: int, default = default_timeout
             - http request timeout for this request
 
         Returns
@@ -5240,7 +5240,7 @@ class ClassificationExplorer(ServerClient):
 
         url = f"{self.classification_command_root}/guids/{guid}"
         response: Response = await self._async_make_request(
-            "POST", url, body_slimmer(body), time_out=time_out, **kwargs
+            "POST", url, body_slimmer(body), timeout=timeout, **kwargs
         )
         element = response.json().get("element", NO_ELEMENTS_FOUND)
         if output_format != 'JSON':  # return a simplified markdown representation
@@ -5256,7 +5256,7 @@ class ClassificationExplorer(ServerClient):
             effective_time: Optional[str] = None,
             for_lineage: bool = False,
             for_duplicate_processing: bool = False,
-            time_out: int = default_time_out,
+            timeout: int = default_timeout,
             output_format: str = "JSON",
             report_spec: dict | str = None,
             **kwargs
@@ -5277,7 +5277,7 @@ class ClassificationExplorer(ServerClient):
             - Normally false. Set true when the caller is part of a deduplication function
 
 
-        time_out: int, default = default_time_out
+        timeout: int, default = default_timeout
             - http request timeout for this request
 
         Returns
@@ -5297,7 +5297,7 @@ class ClassificationExplorer(ServerClient):
         loop = asyncio.get_event_loop()
         response = loop.run_until_complete(
             self._async_retrieve_instance_for_guid(guid, effective_time, for_lineage, for_duplicate_processing,
-                                                   time_out, output_format, report_spec, **kwargs)
+                                                   timeout, output_format, report_spec, **kwargs)
         )
         return response
 
@@ -5309,7 +5309,7 @@ class ClassificationExplorer(ServerClient):
             self,
             element_guid: str,
             body: dict | NewClassificationRequestBody,
-            time_out: int = default_time_out,
+            timeout: int = default_timeout,
     ) -> None:
         """
         Classify/reclassify the element (typically an asset) to indicate the level of confidence that the organization
@@ -5325,7 +5325,7 @@ class ClassificationExplorer(ServerClient):
         body: dict | NewClassificationRequestBody
             - a dictionary or Pydantic model containing the properties to set - see note below
 
-        time_out: int, default = default_time_out
+        timeout: int, default = default_timeout
             - http request timeout for this request
 
         Returns
@@ -5374,7 +5374,7 @@ class ClassificationExplorer(ServerClient):
             self,
             element_guid: str,
             body: dict | NewClassificationRequestBody,
-            time_out: int = default_time_out,
+            timeout: int = default_timeout,
     ) -> None:
         """
         Classify/reclassify the element (typically an asset) to indicate the level of confidence that the organization
@@ -5389,7 +5389,7 @@ class ClassificationExplorer(ServerClient):
             - the identity of the element to update
         body: dict | NewClassificationRequestBody
             - a dictionary or Pydantic model containing the properties to set - see note below
-        time_out: int, default = default_time_out
+        timeout: int, default = default_timeout
             - http request timeout for this request
 
         Returns
@@ -5431,7 +5431,7 @@ class ClassificationExplorer(ServerClient):
             self._async_set_confidence_classification(
                 element_guid,
                 body,
-                time_out,
+                timeout,
             )
         )
 
@@ -5442,7 +5442,7 @@ class ClassificationExplorer(ServerClient):
             for_lineage: bool = False,
             for_duplicate_processing: bool = False,
             effective_time: Optional[str] = None,
-            time_out: int = default_time_out,
+            timeout: int = default_timeout,
     ) -> None:
         """
         Remove the confidence classification from the element.  This normally occurs when the organization has lost
@@ -5464,7 +5464,7 @@ class ClassificationExplorer(ServerClient):
             - Time format is "YYYY-MM-DDTHH:MM:SS" (ISO 8601)
 
 
-        time_out: int, default = default_time_out
+        timeout: int, default = default_timeout
             - http request timeout for this request
 
         Returns
@@ -5511,7 +5511,7 @@ class ClassificationExplorer(ServerClient):
             for_lineage: bool = False,
             for_duplicate_processing: bool = False,
             effective_time: Optional[str] = None,
-            time_out: int = default_time_out,
+            timeout: int = default_timeout,
     ) -> None:
         """
         Remove the confidence classification from the element.  This normally occurs when the organization has lost
@@ -5533,7 +5533,7 @@ class ClassificationExplorer(ServerClient):
             - Time format is "YYYY-MM-DDTHH:MM:SS" (ISO 8601)
 
 
-        time_out: int, default = default_time_out
+        timeout: int, default = default_timeout
             - http request timeout for this request
 
         Returns
@@ -5567,7 +5567,7 @@ class ClassificationExplorer(ServerClient):
                 for_lineage,
                 for_duplicate_processing,
                 effective_time,
-                time_out,
+                timeout,
             )
         )
 
@@ -5575,7 +5575,7 @@ class ClassificationExplorer(ServerClient):
             self,
             element_guid: str,
             body: dict | NewClassificationRequestBody,
-            time_out: int = default_time_out,
+            timeout: int = default_timeout,
     ) -> None:
         """
         Classify the element (typically a data field, schema attribute or glossary term) to indicate the level of
@@ -5593,7 +5593,7 @@ class ClassificationExplorer(ServerClient):
         body: dict | NewClassificationRequestBody
             - a dictionary or Pydantic model containing the properties to set - see note below
 
-        time_out: int, default = default_time_out
+        timeout: int, default = default_timeout
             - http request timeout for this request
 
         Returns
@@ -5642,7 +5642,7 @@ class ClassificationExplorer(ServerClient):
             self,
             element_guid: str,
             body: dict | NewClassificationRequestBody,
-            time_out: int = default_time_out,
+            timeout: int = default_timeout,
     ) -> None:
         """
         Classify the element (typically a data field, schema attribute or glossary term) to indicate the level of
@@ -5658,7 +5658,7 @@ class ClassificationExplorer(ServerClient):
             - the identity of the element to update
         body: dict | NewClassificationRequestBody
             - a dictionary or Pydantic model containing the properties to set - see note below
-        time_out: int, default = default_time_out
+        timeout: int, default = default_timeout
             - http request timeout for this request
 
         Returns
@@ -5700,7 +5700,7 @@ class ClassificationExplorer(ServerClient):
             self._async_set_confidentiality_classification(
                 element_guid,
                 body,
-                time_out,
+                timeout,
             )
         )
 
@@ -5711,7 +5711,7 @@ class ClassificationExplorer(ServerClient):
             for_lineage: bool = False,
             for_duplicate_processing: bool = False,
             effective_time: Optional[str] = None,
-            time_out: int = default_time_out,
+            timeout: int = default_timeout,
     ) -> None:
         """
         Remove the confidentiality classification from the element.  This normally occurs when the organization has lost
@@ -5733,7 +5733,7 @@ class ClassificationExplorer(ServerClient):
             - Time format is "YYYY-MM-DDTHH:MM:SS" (ISO 8601)
 
 
-        time_out: int, default = default_time_out
+        timeout: int, default = default_timeout
             - http request timeout for this request
 
         Returns
@@ -5777,7 +5777,7 @@ class ClassificationExplorer(ServerClient):
             for_lineage: bool = False,
             for_duplicate_processing: bool = False,
             effective_time: Optional[str] = None,
-            time_out: int = default_time_out,
+            timeout: int = default_timeout,
     ) -> None:
         """
         Remove the confidentiality classification from the element.  This normally occurs when the organization has lost
@@ -5799,7 +5799,7 @@ class ClassificationExplorer(ServerClient):
             - Time format is "YYYY-MM-DDTHH:MM:SS" (ISO 8601)
 
 
-        time_out: int, default = default_time_out
+        timeout: int, default = default_timeout
             - http request timeout for this request
 
         Returns
@@ -5833,7 +5833,7 @@ class ClassificationExplorer(ServerClient):
                 for_lineage,
                 for_duplicate_processing,
                 effective_time,
-                time_out,
+                timeout,
             )
         )
 
@@ -5841,7 +5841,7 @@ class ClassificationExplorer(ServerClient):
             self,
             element_guid: str,
             body: dict | NewClassificationRequestBody,
-            time_out: int = default_time_out,
+            timeout: int = default_timeout,
     ) -> None:
         """
         Classify the element (typically a context event, to do or incident report) to indicate the level of impact
@@ -5857,7 +5857,7 @@ class ClassificationExplorer(ServerClient):
         body: dict | NewClassificationRequestBody
             - a dictionary or Pydantic model containing the properties to set - see note below
 
-        time_out: int, default = default_time_out
+        timeout: int, default = default_timeout
             - http request timeout for this request
 
         Returns
@@ -5906,7 +5906,7 @@ class ClassificationExplorer(ServerClient):
             self,
             element_guid: str,
             body: dict | NewClassificationRequestBody,
-            time_out: int = default_time_out,
+            timeout: int = default_timeout,
     ) -> None:
         """
         Classify the element (typically a context event, to do or incident report) to indicate the level of impact
@@ -5921,7 +5921,7 @@ class ClassificationExplorer(ServerClient):
             - the identity of the element to update
         body: dict | NewClassificationRequestBody
             - a dictionary or Pydantic model containing the properties to set - see note below
-        time_out: int, default = default_time_out
+        timeout: int, default = default_timeout
             - http request timeout for this request
 
         Returns
@@ -5963,7 +5963,7 @@ class ClassificationExplorer(ServerClient):
             self._async_set_impact_classification(
                 element_guid,
                 body,
-                time_out,
+                timeout,
             )
         )
 
@@ -5974,7 +5974,7 @@ class ClassificationExplorer(ServerClient):
             for_lineage: bool = False,
             for_duplicate_processing: bool = False,
             effective_time: Optional[str] = None,
-            time_out: int = default_time_out,
+            timeout: int = default_timeout,
     ) -> None:
         """
         Remove the impact classification from the element.  This normally occurs when the organization has lost
@@ -5996,7 +5996,7 @@ class ClassificationExplorer(ServerClient):
             - Time format is "YYYY-MM-DDTHH:MM:SS" (ISO 8601)
 
 
-        time_out: int, default = default_time_out
+        timeout: int, default = default_timeout
             - http request timeout for this request
 
         Returns
@@ -6040,7 +6040,7 @@ class ClassificationExplorer(ServerClient):
             for_lineage: bool = False,
             for_duplicate_processing: bool = False,
             effective_time: Optional[str] = None,
-            time_out: int = default_time_out,
+            timeout: int = default_timeout,
     ) -> None:
         """
         Remove the impact classification from the element.  This normally occurs when the organization has lost
@@ -6062,7 +6062,7 @@ class ClassificationExplorer(ServerClient):
             - Time format is "YYYY-MM-DDTHH:MM:SS" (ISO 8601)
 
 
-        time_out: int, default = default_time_out
+        timeout: int, default = default_timeout
             - http request timeout for this request
 
         Returns
@@ -6096,7 +6096,7 @@ class ClassificationExplorer(ServerClient):
                 for_lineage,
                 for_duplicate_processing,
                 effective_time,
-                time_out,
+                timeout,
             )
         )
 
@@ -6104,7 +6104,7 @@ class ClassificationExplorer(ServerClient):
             self,
             element_guid: str,
             body: dict | NewClassificationRequestBody,
-            time_out: int = default_time_out,
+            timeout: int = default_timeout,
     ) -> None:
         """
         Classify the element (typically an asset) to indicate how critical the element (or associated resource)
@@ -6120,7 +6120,7 @@ class ClassificationExplorer(ServerClient):
         body: dict | NewClassificationRequestBody
             - a dictionary or Pydantic model containing the properties to set - see note below
 
-        time_out: int, default = default_time_out
+        timeout: int, default = default_timeout
             - http request timeout for this request
 
         Returns
@@ -6169,7 +6169,7 @@ class ClassificationExplorer(ServerClient):
             self,
             element_guid: str,
             body: dict | NewClassificationRequestBody,
-            time_out: int = default_time_out,
+            timeout: int = default_timeout,
     ) -> None:
         """
         Classify the element (typically an asset) to indicate how critical the element (or associated resource)
@@ -6183,7 +6183,7 @@ class ClassificationExplorer(ServerClient):
             - the identity of the element to update
         body: dict | NewClassificationRequestBody
             - a dictionary or Pydantic model containing the properties to set - see note below
-        time_out: int, default = default_time_out
+        timeout: int, default = default_timeout
             - http request timeout for this request
 
         Returns
@@ -6225,7 +6225,7 @@ class ClassificationExplorer(ServerClient):
             self._async_set_criticality_classification(
                 element_guid,
                 body,
-                time_out,
+                timeout,
             )
         )
 
@@ -6236,7 +6236,7 @@ class ClassificationExplorer(ServerClient):
             for_lineage: bool = False,
             for_duplicate_processing: bool = False,
             effective_time: Optional[str] = None,
-            time_out: int = default_time_out,
+            timeout: int = default_timeout,
     ) -> None:
         """
         Remove the criticality classification from the element.  This normally occurs when the organization has lost
@@ -6258,7 +6258,7 @@ class ClassificationExplorer(ServerClient):
             - Time format is "YYYY-MM-DDTHH:MM:SS" (ISO 8601)
 
 
-        time_out: int, default = default_time_out
+        timeout: int, default = default_timeout
             - http request timeout for this request
 
         Returns
@@ -6302,7 +6302,7 @@ class ClassificationExplorer(ServerClient):
             for_lineage: bool = False,
             for_duplicate_processing: bool = False,
             effective_time: Optional[str] = None,
-            time_out: int = default_time_out,
+            timeout: int = default_timeout,
     ) -> None:
         """
         Remove the criticality classification from the element.  This normally occurs when the organization has lost
@@ -6324,7 +6324,7 @@ class ClassificationExplorer(ServerClient):
             - Time format is "YYYY-MM-DDTHH:MM:SS" (ISO 8601)
 
 
-        time_out: int, default = default_time_out
+        timeout: int, default = default_timeout
             - http request timeout for this request
 
         Returns
@@ -6358,7 +6358,7 @@ class ClassificationExplorer(ServerClient):
                 for_lineage,
                 for_duplicate_processing,
                 effective_time,
-                time_out,
+                timeout,
             )
         )
 
@@ -7554,7 +7554,7 @@ class ClassificationExplorer(ServerClient):
             self,
             element_guid: str,
             body: dict | NewClassificationRequestBody,
-            time_out: int = default_time_out,
+            timeout: int = default_timeout,
     ) -> None:
         """
         Add the ownership classification for an element. Async version.
@@ -7568,7 +7568,7 @@ class ClassificationExplorer(ServerClient):
         body: dict | NewClassificationRequestBody
             - a dictionary or Pydantic model containing the properties to set - see note below
 
-        time_out: int, default = default_time_out
+        timeout: int, default = default_timeout
             - http request timeout for this request
 
         Returns
@@ -7611,7 +7611,7 @@ class ClassificationExplorer(ServerClient):
             self,
             element_guid: str,
             body: dict | NewClassificationRequestBody,
-            time_out: int = default_time_out,
+            timeout: int = default_timeout,
     ) -> None:
         """
         Add the ownership classification for an element.
@@ -7625,7 +7625,7 @@ class ClassificationExplorer(ServerClient):
         body: dict | NewClassificationRequestBody
             - a dictionary or Pydantic model containing the properties to set - see note below
 
-        time_out: int, default = default_time_out
+        timeout: int, default = default_timeout
             - http request timeout for this request
 
         Returns
@@ -7661,7 +7661,7 @@ class ClassificationExplorer(ServerClient):
             self._async_add_ownership_to_element(
                 element_guid,
                 body,
-                time_out,
+                timeout,
             )
         )
 
@@ -7671,7 +7671,7 @@ class ClassificationExplorer(ServerClient):
             for_lineage: bool = False,
             for_duplicate_processing: bool = False,
             effective_time: Optional[str] = None,
-            time_out: int = default_time_out,
+            timeout: int = default_timeout,
     ) -> None:
         """
         Remove the ownership classification from an element. Async version.
@@ -7690,7 +7690,7 @@ class ClassificationExplorer(ServerClient):
             - Time format is "YYYY-MM-DDTHH:MM:SS" (ISO 8601)
 
 
-        time_out: int, default = default_time_out
+        timeout: int, default = default_timeout
             - http request timeout for this request
 
         Returns
@@ -7720,7 +7720,7 @@ class ClassificationExplorer(ServerClient):
             for_lineage: bool = False,
             for_duplicate_processing: bool = False,
             effective_time: Optional[str] = None,
-            time_out: int = default_time_out,
+            timeout: int = default_timeout,
     ) -> None:
         """
         Remove the ownership classification from an element.
@@ -7739,7 +7739,7 @@ class ClassificationExplorer(ServerClient):
             - Time format is "YYYY-MM-DDTHH:MM:SS" (ISO 8601)
 
 
-        time_out: int, default = default_time_out
+        timeout: int, default = default_timeout
             - http request timeout for this request
 
         Returns
@@ -7756,7 +7756,7 @@ class ClassificationExplorer(ServerClient):
         loop = asyncio.get_event_loop()
         loop.run_until_complete(
             self._async_clear_ownership_from_element(element_guid, for_lineage, for_duplicate_processing,
-                                                                  effective_time, time_out)
+                                                                  effective_time, timeout)
         )
 
     @dynamic_catch
@@ -7764,7 +7764,7 @@ class ClassificationExplorer(ServerClient):
             self,
             element_guid: str,
             body: dict | NewClassificationRequestBody,
-            time_out: int = default_time_out,
+            timeout: int = default_timeout,
     ) -> None:
         """
         Add the digital resource origin classification for an element. Async Version.
@@ -7778,7 +7778,7 @@ class ClassificationExplorer(ServerClient):
         body: dict | NewClassificationRequestBody
             - a dictionary or Pydantic model containing the properties to set - see note below
 
-        time_out: int, default = default_time_out
+        timeout: int, default = default_timeout
             - http request timeout for this request
 
         Returns
@@ -7820,7 +7820,7 @@ class ClassificationExplorer(ServerClient):
             self,
             element_guid: str,
             body: dict | NewClassificationRequestBody,
-            time_out: int = default_time_out,
+            timeout: int = default_timeout,
     ) -> None:
         """
         Add the digital resource origin classification for an element.
@@ -7834,7 +7834,7 @@ class ClassificationExplorer(ServerClient):
         body: dict | NewClassificationRequestBody
             - a dictionary or Pydantic model containing the properties to set - see note below
 
-        time_out: int, default = default_time_out
+        timeout: int, default = default_timeout
             - http request timeout for this request
 
         Returns
@@ -7871,7 +7871,7 @@ class ClassificationExplorer(ServerClient):
             self._async_add_digital_resource_origin(
                 element_guid,
                 body,
-                time_out,
+                timeout,
             )
         )
 
@@ -7949,7 +7949,7 @@ class ClassificationExplorer(ServerClient):
             self,
             element_guid: str,
             body: dict | NewClassificationRequestBody,
-            time_out: int = default_time_out,
+            timeout: int = default_timeout,
     ) -> None:
         """
         Add the zone membership classification for an element. Async version.
@@ -7963,7 +7963,7 @@ class ClassificationExplorer(ServerClient):
         body: dict | NewClassificationRequestBody
             - a dictionary or Pydantic model containing the properties to set - see note below
 
-        time_out: int, default = default_time_out
+        timeout: int, default = default_timeout
             - http request timeout for this request
 
         Returns
@@ -8002,7 +8002,7 @@ class ClassificationExplorer(ServerClient):
             self,
             element_guid: str,
             body: dict | NewClassificationRequestBody,
-            time_out: int = default_time_out,
+            timeout: int = default_timeout,
     ) -> None:
         """
         Add the zone membership classification for an element.
@@ -8016,7 +8016,7 @@ class ClassificationExplorer(ServerClient):
         body: dict | NewClassificationRequestBody
             - a dictionary or Pydantic model containing the properties to set - see note below
 
-        time_out: int, default = default_time_out
+        timeout: int, default = default_timeout
             - http request timeout for this request
 
         Returns
@@ -8050,7 +8050,7 @@ class ClassificationExplorer(ServerClient):
             self._async_add_zone_membership(
                 element_guid,
                 body,
-                time_out,
+                timeout,
             )
         )
 
@@ -8127,7 +8127,7 @@ class ClassificationExplorer(ServerClient):
             self,
             element_guid: str,
             body: dict | NewClassificationRequestBody,
-            time_out: int = default_time_out,
+            timeout: int = default_timeout,
     ) -> None:
         """
         Classify the element (typically an asset) to indicate how long the element (or associated resource)
@@ -8144,7 +8144,7 @@ class ClassificationExplorer(ServerClient):
         body: dict | NewClassificationRequestBody
             - a dictionary or Pydantic model containing the properties to set - see note below
 
-        time_out: int, default = default_time_out
+        timeout: int, default = default_timeout
             - http request timeout for this request
 
         Returns
@@ -8196,7 +8196,7 @@ class ClassificationExplorer(ServerClient):
             self,
             element_guid: str,
             body: dict | NewClassificationRequestBody,
-            time_out: int = default_time_out,
+            timeout: int = default_timeout,
     ) -> None:
         """
         Classify the element (typically an asset) to indicate how long the element (or associated resource)
@@ -8212,7 +8212,7 @@ class ClassificationExplorer(ServerClient):
             - the identity of the element to update
         body: dict | NewClassificationRequestBody
             - a dictionary or Pydantic model containing the properties to set - see note below
-        time_out: int, default = default_time_out
+        timeout: int, default = default_timeout
             - http request timeout for this request
 
         Returns
@@ -8257,7 +8257,7 @@ class ClassificationExplorer(ServerClient):
             self._async_set_retention_classification(
                 element_guid,
                 body,
-                time_out,
+                timeout,
             )
         )
 
@@ -8268,7 +8268,7 @@ class ClassificationExplorer(ServerClient):
             for_lineage: bool = False,
             for_duplicate_processing: bool = False,
             effective_time: Optional[str] = None,
-            time_out: int = default_time_out,
+            timeout: int = default_timeout,
     ) -> None:
         """
         Remove the retention classification from the element.  This normally occurs when the organization has lost
@@ -8290,7 +8290,7 @@ class ClassificationExplorer(ServerClient):
            - Time format is "YYYY-MM-DDTHH:MM:SS" (ISO 8601)
 
 
-        time_out: int, default = default_time_out
+        timeout: int, default = default_timeout
             - http request timeout for this request
 
         Returns
@@ -8334,7 +8334,7 @@ class ClassificationExplorer(ServerClient):
             for_lineage: bool = False,
             for_duplicate_processing: bool = False,
             effective_time: Optional[str] = None,
-            time_out: int = default_time_out,
+            timeout: int = default_timeout,
     ) -> None:
         """
         Remove the retention classification from the element.  This normally occurs when the organization has lost
@@ -8356,7 +8356,7 @@ class ClassificationExplorer(ServerClient):
             - Time format is "YYYY-MM-DDTHH:MM:SS" (ISO 8601)
 
 
-        time_out: int, default = default_time_out
+        timeout: int, default = default_timeout
             - http request timeout for this request
 
         Returns
@@ -8390,7 +8390,7 @@ class ClassificationExplorer(ServerClient):
                 for_lineage,
                 for_duplicate_processing,
                 effective_time,
-                time_out,
+                timeout,
             )
         )
 
@@ -8398,7 +8398,7 @@ class ClassificationExplorer(ServerClient):
             self,
             element_guid: str,
             body: dict | NewClassificationRequestBody,
-            time_out: int = default_time_out,
+            timeout: int = default_timeout,
     ) -> None:
         """
         Add the governance expectations classification to an element. Async version.
@@ -8412,7 +8412,7 @@ class ClassificationExplorer(ServerClient):
         body: dict | NewClassificationRequestBody
             - a dictionary or Pydantic model containing the properties to set - see note below
 
-        time_out: int, default = default_time_out
+        timeout: int, default = default_timeout
             - http request timeout for this request
 
         Returns
@@ -8464,7 +8464,7 @@ class ClassificationExplorer(ServerClient):
             self,
             element_guid: str,
             body: dict | NewClassificationRequestBody,
-            time_out: int = default_time_out,
+            timeout: int = default_timeout,
     ) -> None:
         """
         Add the governance expectations classification to an element.
@@ -8478,7 +8478,7 @@ class ClassificationExplorer(ServerClient):
         body: dict | NewClassificationRequestBody
             - a dictionary or Pydantic model containing the properties to set - see note below
 
-        time_out: int, default = default_time_out
+        timeout: int, default = default_timeout
             - http request timeout for this request
 
         Returns
@@ -8523,7 +8523,7 @@ class ClassificationExplorer(ServerClient):
             self._async_set_governance_expectation(
                 element_guid,
                 body,
-                time_out,
+                timeout,
             )
         )
 
@@ -8534,7 +8534,7 @@ class ClassificationExplorer(ServerClient):
             for_lineage: bool = False,
             for_duplicate_processing: bool = False,
             effective_time: Optional[str] = None,
-            time_out: int = default_time_out,
+            timeout: int = default_timeout,
     ) -> None:
         """
         Remove the governance expectations classification from an element. Async version
@@ -8555,7 +8555,7 @@ class ClassificationExplorer(ServerClient):
            - Time format is "YYYY-MM-DDTHH:MM:SS" (ISO 8601)
 
 
-        time_out: int, default = default_time_out
+        timeout: int, default = default_timeout
             - http request timeout for this request
 
         Returns
@@ -8599,7 +8599,7 @@ class ClassificationExplorer(ServerClient):
         for_lineage: bool = False,
         for_duplicate_processing: bool = False,
         effective_time: Optional[str] = None,
-        time_out: int = default_time_out,
+        timeout: int = default_timeout,
     ) -> None:
         """
         Remove the governance expectations classification from an element.
@@ -8618,7 +8618,7 @@ class ClassificationExplorer(ServerClient):
             - Normally false. Set true when the caller is part of a deduplication function
         effective_time: str, default = None
            - Time format is "YYYY-MM-DDTHH:MM:SS" (ISO 8601)
-        time_out: int, default = default_time_out
+        timeout: int, default = default_timeout
             - http request timeout for this request
 
         Returns
@@ -8651,7 +8651,7 @@ class ClassificationExplorer(ServerClient):
                 for_lineage,
                 for_duplicate_processing,
                 effective_time,
-                time_out,
+                timeout,
             )
         )
 
@@ -8659,7 +8659,7 @@ class ClassificationExplorer(ServerClient):
             self,
             element_guid: str,
             body: dict | UpdateClassificationRequestBody,
-            time_out: int = default_time_out,
+            timeout: int = default_timeout,
     ) -> None:
         """
         Update the governance expectations classification to an element. Async version.
@@ -8673,7 +8673,7 @@ class ClassificationExplorer(ServerClient):
         body: dict | UpdateClassificationRequestBody
             - a dictionary or Pydantic model containing the properties to set - see note below
 
-        time_out: int, default = default_time_out
+        timeout: int, default = default_timeout
             - http request timeout for this request
 
         Returns
@@ -8726,7 +8726,7 @@ class ClassificationExplorer(ServerClient):
             self,
             element_guid: str,
             body: dict | UpdateClassificationRequestBody,
-            time_out: int = default_time_out,
+            timeout: int = default_timeout,
     ) -> None:
         """
         Update the governance expectations classification to an element.
@@ -8740,7 +8740,7 @@ class ClassificationExplorer(ServerClient):
         body: dict | UpdateClassificationRequestBody
             - a dictionary or Pydantic model containing the properties to set - see note below
 
-        time_out: int, default = default_time_out
+        timeout: int, default = default_timeout
             - http request timeout for this request
 
         Returns
@@ -8786,7 +8786,7 @@ class ClassificationExplorer(ServerClient):
             self._async_update_governance_expectation(
                 element_guid,
                 body,
-                time_out,
+                timeout,
             )
         )
 
@@ -8794,7 +8794,7 @@ class ClassificationExplorer(ServerClient):
             self,
             element_guid: str,
             body: dict | NewClassificationRequestBody,
-            time_out: int = default_time_out,
+            timeout: int = default_timeout,
     ) -> None:
         """
         Add the governance measurements classification to an element. Async version.
@@ -8808,7 +8808,7 @@ class ClassificationExplorer(ServerClient):
         body: dict | NewClassificationRequestBody
             - a dictionary or Pydantic model containing the properties to set - see note below
 
-        time_out: int, default = default_time_out
+        timeout: int, default = default_timeout
             - http request timeout for this request
 
         Returns
@@ -8862,7 +8862,7 @@ class ClassificationExplorer(ServerClient):
             self,
             element_guid: str,
             body: dict | NewClassificationRequestBody,
-            time_out: int = default_time_out,
+            timeout: int = default_timeout,
     ) -> None:
         """
         Add the governance measurements classification to an element.
@@ -8876,7 +8876,7 @@ class ClassificationExplorer(ServerClient):
         body: dict | NewClassificationRequestBody
             - a dictionary or Pydantic model containing the properties to set - see note below
 
-        time_out: int, default = default_time_out
+        timeout: int, default = default_timeout
             - http request timeout for this request
 
         Returns
@@ -8923,7 +8923,7 @@ class ClassificationExplorer(ServerClient):
             self._async_add_governance_measurements(
                 element_guid,
                 body,
-                time_out,
+                timeout,
             )
         )
 
@@ -8931,7 +8931,7 @@ class ClassificationExplorer(ServerClient):
             self,
             element_guid: str,
             body: dict | UpdateClassificationRequestBody,
-            time_out: int = default_time_out,
+            timeout: int = default_timeout,
     ) -> None:
         """
         Update the governance measurements classification to an element. Async version.
@@ -8945,7 +8945,7 @@ class ClassificationExplorer(ServerClient):
         body: dict | UpdateClassificationRequestBody
             - a dictionary or Pydantic model containing the properties to set - see note below
 
-        time_out: int, default = default_time_out
+        timeout: int, default = default_timeout
             - http request timeout for this request
 
         Returns
@@ -9000,7 +9000,7 @@ class ClassificationExplorer(ServerClient):
             self,
             element_guid: str,
             body: dict | UpdateClassificationRequestBody,
-            time_out: int = default_time_out,
+            timeout: int = default_timeout,
     ) -> None:
         """
         Update the governance measurements classification to an element.
@@ -9014,7 +9014,7 @@ class ClassificationExplorer(ServerClient):
         body: dict | UpdateClassificationRequestBody
             - a dictionary or Pydantic model containing the properties to set - see note below
 
-        time_out: int, default = default_time_out
+        timeout: int, default = default_timeout
             - http request timeout for this request
 
         Returns
@@ -9062,7 +9062,7 @@ class ClassificationExplorer(ServerClient):
             self._async_update_governance_measurements(
                 element_guid,
                 body,
-                time_out,
+                timeout,
             )
         )
 
@@ -9073,7 +9073,7 @@ class ClassificationExplorer(ServerClient):
             for_lineage: bool = False,
             for_duplicate_processing: bool = False,
             effective_time: Optional[str] = None,
-            time_out: int = default_time_out,
+            timeout: int = default_timeout,
     ) -> None:
         """
         Remove the governance measurements classification from an element. Async version.
@@ -9092,7 +9092,7 @@ class ClassificationExplorer(ServerClient):
             - Normally false. Set true when the caller is part of a deduplication function
         effective_time: str, default = None
            - Time format is "YYYY-MM-DDTHH:MM:SS" (ISO 8601)
-        time_out: int, default = default_time_out
+        timeout: int, default = default_timeout
             - http request timeout for this request
 
         Returns
@@ -9139,7 +9139,7 @@ class ClassificationExplorer(ServerClient):
             for_lineage: bool = False,
             for_duplicate_processing: bool = False,
             effective_time: Optional[str] = None,
-            time_out: int = default_time_out,
+            timeout: int = default_timeout,
     ) -> None:
         """
         Remove the governance measurements classification from an element.
@@ -9155,7 +9155,7 @@ class ClassificationExplorer(ServerClient):
         for_lineage: bool, default = False
         for_duplicate_processing: bool, default = False
         effective_time: str, default = None
-        time_out: int, default = default_time_out
+        timeout: int, default = default_timeout
 
         Returns
         -------
@@ -9188,7 +9188,7 @@ class ClassificationExplorer(ServerClient):
                 for_lineage,
                 for_duplicate_processing,
                 effective_time,
-                time_out,
+                timeout,
             )
         )
 
@@ -9196,7 +9196,7 @@ class ClassificationExplorer(ServerClient):
             self,
             element_guid: str,
             body: dict | NewClassificationRequestBody,
-            time_out: int = default_time_out,
+            timeout: int = default_timeout,
     ) -> None:
         """
         Add the data scope classification to an element. Async version.
@@ -9209,7 +9209,7 @@ class ClassificationExplorer(ServerClient):
             - the identity of the element to update
         body: dict | NewClassificationRequestBody
             - a dictionary or Pydantic model containing the properties to set - see note below
-        time_out: int, default = default_time_out
+        timeout: int, default = default_timeout
             - http request timeout for this request
 
         Returns
@@ -9259,7 +9259,7 @@ class ClassificationExplorer(ServerClient):
             self,
             element_guid: str,
             body: dict | NewClassificationRequestBody,
-            time_out: int = default_time_out,
+            timeout: int = default_timeout,
     ) -> None:
         """
         Add the data scope classification to an element.
@@ -9272,7 +9272,7 @@ class ClassificationExplorer(ServerClient):
             - the identity of the element to update
         body: dict | NewClassificationRequestBody
             - a dictionary or Pydantic model containing the properties to set - see note below
-        time_out: int, default = default_time_out
+        timeout: int, default = default_timeout
             - http request timeout for this request
 
         Returns
@@ -9315,7 +9315,7 @@ class ClassificationExplorer(ServerClient):
             self._async_add_data_scope(
                 element_guid,
                 body,
-                time_out,
+                timeout,
             )
         )
 
@@ -9323,7 +9323,7 @@ class ClassificationExplorer(ServerClient):
             self,
             element_guid: str,
             body: dict | UpdateClassificationRequestBody,
-            time_out: int = default_time_out,
+            timeout: int = default_timeout,
     ) -> None:
         """
         Update the data scope classification to an element. Async version.
@@ -9336,7 +9336,7 @@ class ClassificationExplorer(ServerClient):
             - the identity of the element to update
         body: dict | UpdateClassificationRequestBody
             - a dictionary or Pydantic model containing the properties to set - see note below
-        time_out: int, default = default_time_out
+        timeout: int, default = default_timeout
             - http request timeout for this request
 
         Returns
@@ -9392,7 +9392,7 @@ class ClassificationExplorer(ServerClient):
             self,
             element_guid: str,
             body: dict | UpdateClassificationRequestBody,
-            time_out: int = default_time_out,
+            timeout: int = default_timeout,
     ) -> None:
         """
         Update the data scope classification to an element.
@@ -9405,7 +9405,7 @@ class ClassificationExplorer(ServerClient):
             - the identity of the element to update
         body: dict | UpdateClassificationRequestBody
             - a dictionary or Pydantic model containing the properties to set - see note below
-        time_out: int, default = default_time_out
+        timeout: int, default = default_timeout
             - http request timeout for this request
 
         Returns
@@ -9454,7 +9454,7 @@ class ClassificationExplorer(ServerClient):
             self._async_update_data_scope(
                 element_guid,
                 body,
-                time_out,
+                timeout,
             )
         )
 
@@ -9465,7 +9465,7 @@ class ClassificationExplorer(ServerClient):
             for_lineage: bool = False,
             for_duplicate_processing: bool = False,
             effective_time: Optional[str] = None,
-            time_out: int = default_time_out,
+            timeout: int = default_timeout,
     ) -> None:
         """
         Remove the data scope classification from an element. Async version.
@@ -9484,7 +9484,7 @@ class ClassificationExplorer(ServerClient):
             - Normally false. Set true when the caller is part of a deduplication function
         effective_time: str, default = None
            - Time format is "YYYY-MM-DDTHH:MM:SS" (ISO 8601)
-        time_out: int, default = default_time_out
+        timeout: int, default = default_timeout
             - http request timeout for this request
 
         Returns
@@ -9531,7 +9531,7 @@ class ClassificationExplorer(ServerClient):
             for_lineage: bool = False,
             for_duplicate_processing: bool = False,
             effective_time: Optional[str] = None,
-            time_out: int = default_time_out,
+            timeout: int = default_timeout,
     ) -> None:
         """
         Remove the data scope classification from an element.
@@ -9547,7 +9547,7 @@ class ClassificationExplorer(ServerClient):
         for_lineage: bool, default = False
         for_duplicate_processing: bool, default = False
         effective_time: str, default = None
-        time_out: int, default = default_time_out
+        timeout: int, default = default_timeout
 
         Returns
         -------
@@ -9580,7 +9580,7 @@ class ClassificationExplorer(ServerClient):
                 for_lineage,
                 for_duplicate_processing,
                 effective_time,
-                time_out,
+                timeout,
             )
         )
 
@@ -9588,7 +9588,7 @@ class ClassificationExplorer(ServerClient):
             self,
             element_guid: str,
             body: dict | NewClassificationRequestBody,
-            time_out: int = default_time_out,
+            timeout: int = default_timeout,
     ) -> None:
         """
         Add or replace the security tags for an element. Async version.
@@ -9602,7 +9602,7 @@ class ClassificationExplorer(ServerClient):
         body: dict | NewClassificationRequestBody
             - a dictionary or Pydantic model containing the properties to set - see note below
 
-        time_out: int, default = default_time_out
+        timeout: int, default = default_timeout
             - http request timeout for this request
 
         Returns
@@ -9651,7 +9651,7 @@ class ClassificationExplorer(ServerClient):
             self,
             element_guid: str,
             body: dict | NewClassificationRequestBody,
-            time_out: int = default_time_out,
+            timeout: int = default_timeout,
     ) -> None:
         """
         Add or replace the security tags for an element.
@@ -9665,7 +9665,7 @@ class ClassificationExplorer(ServerClient):
         body: dict | NewClassificationRequestBody
             - a dictionary or Pydantic model containing the properties to set - see note below
 
-        time_out: int, default = default_time_out
+        timeout: int, default = default_timeout
             - http request timeout for this request
 
         Returns
@@ -9707,7 +9707,7 @@ class ClassificationExplorer(ServerClient):
             self._async_set_security_tags_classification(
                 element_guid,
                 body,
-                time_out,
+                timeout,
             )
         )
 
@@ -9718,7 +9718,7 @@ class ClassificationExplorer(ServerClient):
             for_lineage: bool = False,
             for_duplicate_processing: bool = False,
             effective_time: Optional[str] = None,
-            time_out: int = default_time_out,
+            timeout: int = default_timeout,
     ) -> None:
         """
         Remove the security-tags classification from the element. Async version.
@@ -9737,7 +9737,7 @@ class ClassificationExplorer(ServerClient):
             - Normally false. Set true when the caller is part of a deduplication function
         effective_time: str, default = None
             - Time format is "YYYY-MM-DDTHH:MM:SS" (ISO 8601)
-        time_out: int, default = default_time_out
+        timeout: int, default = default_timeout
             - http request timeout for this request
 
         Returns
@@ -9781,7 +9781,7 @@ class ClassificationExplorer(ServerClient):
             for_lineage: bool = False,
             for_duplicate_processing: bool = False,
             effective_time: Optional[str] = None,
-            time_out: int = default_time_out,
+            timeout: int = default_timeout,
     ) -> None:
         """
         Remove the security-tags classification from the element.
@@ -9802,7 +9802,7 @@ class ClassificationExplorer(ServerClient):
            - Time format is "YYYY-MM-DDTHH:MM:SS" (ISO 8601)
 
 
-        time_out: int, default = default_time_out
+        timeout: int, default = default_timeout
             - http request timeout for this request
 
         Returns
@@ -9836,7 +9836,7 @@ class ClassificationExplorer(ServerClient):
                 for_lineage,
                 for_duplicate_processing,
                 effective_time,
-                time_out,
+                timeout,
             )
         )
 
@@ -9844,7 +9844,7 @@ class ClassificationExplorer(ServerClient):
             self,
             element_guid: str,
             body: dict | NewAttachmentRequestBody,
-            time_out: int = default_time_out,
+            timeout: int = default_timeout,
     ) -> str:
         """
         Creates a search keyword and attaches it to an element. Async version.
@@ -9858,7 +9858,7 @@ class ClassificationExplorer(ServerClient):
         body: dict | NewAttachmentRequestBody
             - a dictionary or Pydantic model containing the properties to set - see note below
 
-        time_out: int, default = default_time_out
+        timeout: int, default = default_timeout
             - http request timeout for this request
 
         Returns
@@ -9896,7 +9896,7 @@ class ClassificationExplorer(ServerClient):
             self,
             element_guid: str,
             body: dict | NewAttachmentRequestBody,
-            time_out: int = default_time_out,
+            timeout: int = default_timeout,
     ) -> str:
         """
         Creates a search keyword and attaches it to an element.
@@ -9910,7 +9910,7 @@ class ClassificationExplorer(ServerClient):
         body: dict | NewAttachmentRequestBody
             - a dictionary or Pydantic model containing the properties to set - see note below
 
-        time_out: int, default = default_time_out
+        timeout: int, default = default_timeout
             - http request timeout for this request
 
         Returns
@@ -9941,7 +9941,7 @@ class ClassificationExplorer(ServerClient):
             self._async_add_search_keyword_to_element(
                 element_guid,
                 body,
-                time_out,
+                timeout,
             )
         )
 
@@ -9949,7 +9949,7 @@ class ClassificationExplorer(ServerClient):
             self,
             search_keyword_guid: str,
             body: dict | UpdateElementRequestBody,
-            time_out: int = default_time_out,
+            timeout: int = default_timeout,
     ) -> None:
         """
         Update an existing search keyword. Async version.
@@ -9963,7 +9963,7 @@ class ClassificationExplorer(ServerClient):
         body: dict | UpdateElementRequestBody
             - a dictionary or Pydantic model containing the properties to set - see note below
 
-        time_out: int, default = default_time_out
+        timeout: int, default = default_timeout
             - http request timeout for this request
 
         Returns
@@ -10001,7 +10001,7 @@ class ClassificationExplorer(ServerClient):
             self,
             search_keyword_guid: str,
             body: dict | UpdateElementRequestBody,
-            time_out: int = default_time_out,
+            timeout: int = default_timeout,
     ) -> None:
         """
         Update an existing search keyword.
@@ -10015,7 +10015,7 @@ class ClassificationExplorer(ServerClient):
         body: dict | UpdateElementRequestBody
             - a dictionary or Pydantic model containing the properties to set - see note below
 
-        time_out: int, default = default_time_out
+        timeout: int, default = default_timeout
             - http request timeout for this request
 
         Returns
@@ -10046,14 +10046,14 @@ class ClassificationExplorer(ServerClient):
             self._async_update_search_keyword(
                 search_keyword_guid,
                 body,
-                time_out,
+                timeout,
             )
         )
 
     async def _async_remove_search_keyword_from_element(
             self,
             search_keyword_guid: str,
-            time_out: int = default_time_out,
+            timeout: int = default_timeout,
     ) -> None:
         """
         Removes a search keyword added to the element by this user.
@@ -10067,7 +10067,7 @@ class ClassificationExplorer(ServerClient):
         search_keyword_guid: str
             - the identity of the search keyword to remove
 
-        time_out: int, default = default_time_out
+        timeout: int, default = default_timeout
             - http request timeout for this request
 
         Returns
@@ -10088,7 +10088,7 @@ class ClassificationExplorer(ServerClient):
     def remove_search_keyword_from_element(
             self,
             search_keyword_guid: str,
-            time_out: int = default_time_out,
+            timeout: int = default_timeout,
     ) -> None:
         """
         Removes a search keyword added to the element by this user.
@@ -10101,7 +10101,7 @@ class ClassificationExplorer(ServerClient):
         search_keyword_guid: str
             - the identity of the search keyword to remove
 
-        time_out: int, default = default_time_out
+        timeout: int, default = default_timeout
             - http request timeout for this request
 
         Returns
@@ -10117,7 +10117,7 @@ class ClassificationExplorer(ServerClient):
         loop.run_until_complete(
             self._async_remove_search_keyword_from_element(
                 search_keyword_guid,
-                time_out,
+                timeout,
             )
         )
 
@@ -10125,7 +10125,7 @@ class ClassificationExplorer(ServerClient):
             self,
             element_guid: str,
             body: dict | NewClassificationRequestBody,
-            time_out: int = default_time_out,
+            timeout: int = default_timeout,
     ) -> None:
         """
         Classify the element to indicate that is has one or more duplicate in the open metadata ecosystem.
@@ -10140,7 +10140,7 @@ class ClassificationExplorer(ServerClient):
         body: dict | NewClassificationRequestBody
             - a dictionary or Pydantic model containing the properties to set - see note below
 
-        time_out: int, default = default_time_out
+        timeout: int, default = default_timeout
             - http request timeout for this request
 
         Returns
@@ -10180,7 +10180,7 @@ class ClassificationExplorer(ServerClient):
             self,
             element_guid: str,
             body: dict | NewClassificationRequestBody,
-            time_out: int = default_time_out,
+            timeout: int = default_timeout,
     ) -> None:
         """
         Classify the element to indicate that is has one or more duplicate in the open metadata ecosystem.
@@ -10194,7 +10194,7 @@ class ClassificationExplorer(ServerClient):
         body: dict | NewClassificationRequestBody
             - a dictionary or Pydantic model containing the properties to set - see note below
 
-        time_out: int, default = default_time_out
+        timeout: int, default = default_timeout
             - http request timeout for this request
 
         Returns
@@ -10227,7 +10227,7 @@ class ClassificationExplorer(ServerClient):
             self._async_set_known_duplicate_classification(
                 element_guid,
                 body,
-                time_out,
+                timeout,
             )
         )
 
@@ -10238,7 +10238,7 @@ class ClassificationExplorer(ServerClient):
             for_lineage: bool = False,
             for_duplicate_processing: bool = False,
             effective_time: Optional[str] = None,
-            time_out: int = default_time_out,
+            timeout: int = default_timeout,
     ) -> None:
         """
         Remove the KnownDuplicate classification from the element. Async version.
@@ -10254,7 +10254,7 @@ class ClassificationExplorer(ServerClient):
         for_lineage: bool, default = False
         for_duplicate_processing: bool, default = False
         effective_time: str, default = None
-        time_out: int, default = default_time_out
+        timeout: int, default = default_timeout
 
         Returns
         -------
@@ -10300,7 +10300,7 @@ class ClassificationExplorer(ServerClient):
             for_lineage: bool = False,
             for_duplicate_processing: bool = False,
             effective_time: Optional[str] = None,
-            time_out: int = default_time_out,
+            timeout: int = default_timeout,
     ) -> None:
         """
         Remove the KnownDuplicate classification from the element.
@@ -10316,7 +10316,7 @@ class ClassificationExplorer(ServerClient):
         for_lineage: bool, default = False
         for_duplicate_processing: bool, default = False
         effective_time: str, default = None
-        time_out: int, default = default_time_out
+        timeout: int, default = default_timeout
 
         Returns
         -------
@@ -10349,7 +10349,7 @@ class ClassificationExplorer(ServerClient):
                 for_lineage,
                 for_duplicate_processing,
                 effective_time,
-                time_out,
+                timeout,
             )
         )
 
@@ -10358,7 +10358,7 @@ class ClassificationExplorer(ServerClient):
             element_guid: str,
             peer_duplicate_guid: str,
             body: dict | NewRelationshipRequestBody,
-            time_out: int = default_time_out,
+            timeout: int = default_timeout,
     ) -> str:
         """
         Create a PeerDuplicateLink relationship between two elements that shows they represent the same 'thing'.
@@ -10375,7 +10375,7 @@ class ClassificationExplorer(ServerClient):
         body: dict | NewRelationshipRequestBody
             - a dictionary or Pydantic model containing the properties to set - see note below
 
-        time_out: int, default = default_time_out
+        timeout: int, default = default_timeout
             - http request timeout for this request
 
         Returns
@@ -10411,7 +10411,7 @@ class ClassificationExplorer(ServerClient):
         """
 
         url = (
-            f"{self.classification_command_root}/elements/{element_guid}/peer-duplicate/{peer_duplicate_guid}/attach"
+            f"{self.classification_command_root}/related-elements/{element_guid}/peer-duplicate/{peer_duplicate_guid}/attach"
         )
 
         return await self._async_new_relationship_request(
@@ -10423,7 +10423,7 @@ class ClassificationExplorer(ServerClient):
             element_guid: str,
             peer_duplicate_guid: str,
             body: dict | NewRelationshipRequestBody,
-            time_out: int = default_time_out,
+            timeout: int = default_timeout,
     ) -> str:
         """
         Create a PeerDuplicateLink relationship between two elements that shows they represent the same 'thing'.
@@ -10439,7 +10439,7 @@ class ClassificationExplorer(ServerClient):
         body: dict | NewRelationshipRequestBody
             - a dictionary or Pydantic model containing the properties to set - see note below
 
-        time_out: int, default = default_time_out
+        timeout: int, default = default_timeout
             - http request timeout for this request
 
         Returns
@@ -10480,7 +10480,7 @@ class ClassificationExplorer(ServerClient):
                 element_guid,
                 peer_duplicate_guid,
                 body,
-                time_out,
+                timeout,
             )
         )
 
@@ -10489,7 +10489,7 @@ class ClassificationExplorer(ServerClient):
             element_guid: str,
             peer_duplicate_guid: str,
             body: dict | DeleteRelationshipRequestBody,
-            time_out: int = default_time_out,
+            timeout: int = default_timeout,
     ) -> None:
         """
         Remove the PeerDuplicateLink a relationship between two elements that showed they represent the same 'thing'.
@@ -10506,7 +10506,7 @@ class ClassificationExplorer(ServerClient):
         body: dict | DeleteRelationshipRequestBody
             - a dictionary or Pydantic model containing the properties for the request - see note below
 
-        time_out: int, default = default_time_out
+        timeout: int, default = default_timeout
             - http request timeout for this request
 
         Returns
@@ -10542,7 +10542,7 @@ class ClassificationExplorer(ServerClient):
             element_guid: str,
             peer_duplicate_guid: str,
             body: dict | DeleteRelationshipRequestBody,
-            time_out: int = default_time_out,
+            timeout: int = default_timeout,
     ) -> None:
         """
         Remove the PeerDuplicateLink a relationship between two elements that showed they represent the same 'thing'.
@@ -10558,7 +10558,7 @@ class ClassificationExplorer(ServerClient):
         body: dict | DeleteRelationshipRequestBody
             - a dictionary or Pydantic model containing the properties for the request - see note below
 
-        time_out: int, default = default_time_out
+        timeout: int, default = default_timeout
             - http request timeout for this request
 
         Returns
@@ -10589,7 +10589,7 @@ class ClassificationExplorer(ServerClient):
                 element_guid,
                 peer_duplicate_guid,
                 body,
-                time_out,
+                timeout,
             )
         )
 
@@ -10597,7 +10597,7 @@ class ClassificationExplorer(ServerClient):
             self,
             element_guid: str,
             body: dict | NewClassificationRequestBody,
-            time_out: int = default_time_out,
+            timeout: int = default_timeout,
     ) -> None:
         """
         Classify the element to indicate that it is derived from one or more duplicates in the open metadata ecosystem.
@@ -10612,7 +10612,7 @@ class ClassificationExplorer(ServerClient):
         body: dict | NewClassificationRequestBody
             - a dictionary or Pydantic model containing the properties to set - see note below
 
-        time_out: int, default = default_time_out
+        timeout: int, default = default_timeout
             - http request timeout for this request
 
         Returns
@@ -10658,7 +10658,7 @@ class ClassificationExplorer(ServerClient):
             self,
             element_guid: str,
             body: dict | NewClassificationRequestBody,
-            time_out: int = default_time_out,
+            timeout: int = default_timeout,
     ) -> None:
         """
         Classify the element to indicate that it is derived from one or more duplicates in the open metadata ecosystem.
@@ -10672,7 +10672,7 @@ class ClassificationExplorer(ServerClient):
         body: dict | NewClassificationRequestBody
             - a dictionary or Pydantic model containing the properties to set - see note below
 
-        time_out: int, default = default_time_out
+        timeout: int, default = default_timeout
             - http request timeout for this request
 
         Returns
@@ -10711,7 +10711,7 @@ class ClassificationExplorer(ServerClient):
             self._async_set_consolidated_duplicate_classification(
                 element_guid,
                 body,
-                time_out,
+                timeout,
             )
         )
 
@@ -10722,7 +10722,7 @@ class ClassificationExplorer(ServerClient):
             for_lineage: bool = False,
             for_duplicate_processing: bool = False,
             effective_time: Optional[str] = None,
-            time_out: int = default_time_out,
+            timeout: int = default_timeout,
     ) -> None:
         """
         Remove the ConsolidatedDuplicate classification from the element. Async version.
@@ -10738,7 +10738,7 @@ class ClassificationExplorer(ServerClient):
         for_lineage: bool, default = False
         for_duplicate_processing: bool, default = False
         effective_time: str, default = None
-        time_out: int, default = default_time_out
+        timeout: int, default = default_timeout
 
         Returns
         -------
@@ -10783,7 +10783,7 @@ class ClassificationExplorer(ServerClient):
             for_lineage: bool = False,
             for_duplicate_processing: bool = False,
             effective_time: Optional[str] = None,
-            time_out: int = default_time_out,
+            timeout: int = default_timeout,
     ) -> None:
         """
         Remove the ConsolidatedDuplicate classification from the element.
@@ -10799,7 +10799,7 @@ class ClassificationExplorer(ServerClient):
         for_lineage: bool, default = False
         for_duplicate_processing: bool, default = False
         effective_time: str, default = None
-        time_out: int, default = default_time_out
+        timeout: int, default = default_timeout
 
         Returns
         -------
@@ -10831,7 +10831,7 @@ class ClassificationExplorer(ServerClient):
                 for_lineage,
                 for_duplicate_processing,
                 effective_time,
-                time_out,
+                timeout,
             )
         )
 
@@ -10840,7 +10840,7 @@ class ClassificationExplorer(ServerClient):
             element_guid: str,
             source_element_guid: str,
             body: dict | NewRelationshipRequestBody,
-            time_out: int = default_time_out,
+            timeout: int = default_timeout,
     ) -> str:
         """
         Create a relationship between two elements that shows that one is a combination of
@@ -10857,7 +10857,7 @@ class ClassificationExplorer(ServerClient):
         body: dict | NewRelationshipRequestBody
             - a dictionary or Pydantic model containing the properties to set - see note below
 
-        time_out: int, default = default_time_out
+        timeout: int, default = default_timeout
             - http request timeout for this request
 
         Returns
@@ -10899,7 +10899,7 @@ class ClassificationExplorer(ServerClient):
             element_guid: str,
             source_element_guid: str,
             body: dict | NewRelationshipRequestBody,
-            time_out: int = default_time_out,
+            timeout: int = default_timeout,
     ) -> str:
         """
         Create a relationship between two elements that shows that one is a combination of
@@ -10916,7 +10916,7 @@ class ClassificationExplorer(ServerClient):
         body: dict | NewRelationshipRequestBody
             - a dictionary or Pydantic model containing the properties to set - see note below
 
-        time_out: int, default = default_time_out
+        timeout: int, default = default_timeout
             - http request timeout for this request
 
         Returns
@@ -10951,7 +10951,7 @@ class ClassificationExplorer(ServerClient):
                 element_guid,
                 source_element_guid,
                 body,
-                time_out,
+                timeout,
             )
         )
 
@@ -10960,7 +10960,7 @@ class ClassificationExplorer(ServerClient):
             element_guid: str,
             source_element_guid: str,
             body: dict | DeleteRelationshipRequestBody,
-            time_out: int = default_time_out,
+            timeout: int = default_timeout,
     ) -> None:
         """
         Remove the ConsolidatedDuplicateLink relationship between two elements that showed they represent
@@ -10977,7 +10977,7 @@ class ClassificationExplorer(ServerClient):
         body: dict | DeleteRelationshipRequestBody
             - a dictionary or Pydantic model containing the properties for the request - see note below
 
-        time_out: int, default = default_time_out
+        timeout: int, default = default_timeout
             - http request timeout for this request
 
         Returns
@@ -11013,7 +11013,7 @@ class ClassificationExplorer(ServerClient):
             element_guid: str,
             source_element_guid: str,
             body: dict | DeleteRelationshipRequestBody,
-            time_out: int = default_time_out,
+            timeout: int = default_timeout,
     ) -> None:
         """
         Remove the ConsolidatedDuplicateLink relationship between two elements that showed they represent the same "thing".
@@ -11029,7 +11029,7 @@ class ClassificationExplorer(ServerClient):
         body: dict | DeleteRelationshipRequestBody
             - a dictionary or Pydantic model containing the properties for the request - see note below
 
-        time_out: int, default = default_time_out
+        timeout: int, default = default_timeout
             - http request timeout for this request
 
         Returns
@@ -11060,7 +11060,7 @@ class ClassificationExplorer(ServerClient):
                 element_guid,
                 source_element_guid,
                 body,
-                time_out,
+                timeout,
             )
         )
 
@@ -11070,7 +11070,7 @@ class ClassificationExplorer(ServerClient):
             glossary_term_guid: str,
             element_guid: str,
             body: dict | NewRelationshipRequestBody,
-            time_out: int = default_time_out,
+            timeout: int = default_timeout,
     ) -> str:
         """
         Create a semantic assignment relationship between a glossary term and an element (normally a schema attribute,
@@ -11088,7 +11088,7 @@ class ClassificationExplorer(ServerClient):
         body: dict | NewRelationshipRequestBody
             - a dictionary or Pydantic model containing the properties to set - see note below
 
-        time_out: int, default = default_time_out
+        timeout: int, default = default_timeout
             - http request timeout for this request
 
         Returns
@@ -11137,7 +11137,7 @@ class ClassificationExplorer(ServerClient):
             glossary_term_guid: str,
             element_guid: str,
             body: dict | NewRelationshipRequestBody,
-            time_out: int = default_time_out,
+            timeout: int = default_timeout,
     ) -> str:
         """
         Create a semantic assignment relationship between a glossary term and an element (normally a schema attribute,
@@ -11155,7 +11155,7 @@ class ClassificationExplorer(ServerClient):
         body: dict | NewRelationshipRequestBody
             - a dictionary or Pydantic model containing the properties to set - see note below
 
-        time_out: int, default = default_time_out
+        timeout: int, default = default_timeout
             - http request timeout for this request
 
         Returns
@@ -11197,7 +11197,7 @@ class ClassificationExplorer(ServerClient):
                 glossary_term_guid,
                 element_guid,
                 body,
-                time_out,
+                timeout,
             )
         )
 
@@ -11209,7 +11209,7 @@ class ClassificationExplorer(ServerClient):
             for_lineage: bool = False,
             for_duplicate_processing: bool = False,
             effective_time: Optional[str] = None,
-            time_out: int = default_time_out,
+            timeout: int = default_timeout,
     ) -> None:
         """
         Remove a semantic assignment relationship between an element and its glossary term. Async version.
@@ -11232,7 +11232,7 @@ class ClassificationExplorer(ServerClient):
            - Time format is "YYYY-MM-DDTHH:MM:SS" (ISO 8601)
 
 
-        time_out: int, default = default_time_out
+        timeout: int, default = default_timeout
             - http request timeout for this request
 
         Returns
@@ -11276,7 +11276,7 @@ class ClassificationExplorer(ServerClient):
             for_lineage: bool = False,
             for_duplicate_processing: bool = False,
             effective_time: Optional[str] = None,
-            time_out: int = default_time_out,
+            timeout: int = default_timeout,
     ) -> None:
         """
         Remove a semantic assignment relationship between an element and its glossary term.
@@ -11299,7 +11299,7 @@ class ClassificationExplorer(ServerClient):
            - Time format is "YYYY-MM-DDTHH:MM:SS" (ISO 8601)
 
 
-        time_out: int, default = default_time_out
+        timeout: int, default = default_timeout
             - http request timeout for this request
 
         Returns
@@ -11333,7 +11333,7 @@ class ClassificationExplorer(ServerClient):
                 for_lineage,
                 for_duplicate_processing,
                 effective_time,
-                time_out,
+                timeout,
             )
         )
 
@@ -11341,7 +11341,7 @@ class ClassificationExplorer(ServerClient):
             self,
             element_guid: str,
             body: dict | NewClassificationRequestBody,
-            time_out: int = default_time_out,
+            timeout: int = default_timeout,
     ) -> None:
         """
         Classify the element to assert that the definitions it represents are part of a subject area definition.
@@ -11356,7 +11356,7 @@ class ClassificationExplorer(ServerClient):
         body: dict | NewClassificationRequestBody
             - a dictionary or Pydantic model containing the properties to set - see note below
 
-        time_out: int, default = default_time_out
+        timeout: int, default = default_timeout
             - http request timeout for this request
 
         Returns
@@ -11397,7 +11397,7 @@ class ClassificationExplorer(ServerClient):
             self,
             element_guid: str,
             body: dict | NewClassificationRequestBody,
-            time_out: int = default_time_out,
+            timeout: int = default_timeout,
     ) -> None:
         """
         Classify the element to assert that the definitions it represents are part of a subject area definition.
@@ -11411,7 +11411,7 @@ class ClassificationExplorer(ServerClient):
         body: dict | NewClassificationRequestBody
             - a dictionary or Pydantic model containing the properties to set - see note below
 
-        time_out: int, default = default_time_out
+        timeout: int, default = default_timeout
             - http request timeout for this request
 
         Returns
@@ -11445,7 +11445,7 @@ class ClassificationExplorer(ServerClient):
             self._async_add_element_to_subject_area(
                 element_guid,
                 body,
-                time_out,
+                timeout,
             )
         )
 
@@ -11455,7 +11455,7 @@ class ClassificationExplorer(ServerClient):
             for_lineage: bool = False,
             for_duplicate_processing: bool = False,
             effective_time: Optional[str] = None,
-            time_out: int = default_time_out,
+            timeout: int = default_timeout,
     ) -> None:
         """
         Remove the subject area designation from the identified element. Async version.
@@ -11472,7 +11472,7 @@ class ClassificationExplorer(ServerClient):
              - Normally false. Set true when the caller is part of a deduplication function
          effective_time: str, default = None
             - Time format is "YYYY-MM-DDTHH:MM:SS" (ISO 8601)
-         time_out: int, default = default_time_out
+         timeout: int, default = default_timeout
              - http request timeout for this request
 
          Returns
@@ -11507,7 +11507,7 @@ class ClassificationExplorer(ServerClient):
             for_lineage: bool = False,
             for_duplicate_processing: bool = False,
             effective_time: Optional[str] = None,
-            time_out: int = default_time_out,
+            timeout: int = default_timeout,
     ) -> None:
         """
         Remove the subject area designation from the identified element.
@@ -11526,7 +11526,7 @@ class ClassificationExplorer(ServerClient):
             - Time format is "YYYY-MM-DDTHH:MM:SS" (ISO 8601)
 
 
-         time_out: int, default = default_time_out
+         timeout: int, default = default_timeout
              - http request timeout for this request
 
          Returns
@@ -11552,7 +11552,7 @@ class ClassificationExplorer(ServerClient):
                 for_lineage,
                 for_duplicate_processing,
                 effective_time,
-                time_out,
+                timeout,
             )
         )
 
@@ -11567,7 +11567,7 @@ class ClassificationExplorer(ServerClient):
         page_size: int = 0,
         graph_query_depth: int = 3, output_format: str = "JSON",
         report_spec: str | dict = None,
-        time_out: int = default_time_out,
+        timeout: int = default_timeout,
         body: dict | FindRequestBody = None,
         **kwargs,
     ) -> list | str:
@@ -11590,7 +11590,7 @@ class ClassificationExplorer(ServerClient):
             - one of "MD", "LIST", "FORM", "REPORT", "DICT", "MERMAID" or "JSON"
         report_spec: str | dict, optional
             - the desired output columns/fields to include.
-        time_out: int, default = default_time_out
+        timeout: int, default = default_timeout
             - http request timeout for this request
         body: dict | FindRequestBody, optional
             - if specified, this takes precedence over other parameters.
@@ -11643,7 +11643,7 @@ class ClassificationExplorer(ServerClient):
 
         json_body = validated_body.model_dump_json(indent=2, exclude_none=True, by_alias=True)
 
-        response = await self._async_make_request("POST", url, json_body, time_out=time_out)
+        response = await self._async_make_request("POST", url, json_body, timeout=timeout)
         elements = response.json().get("elements", NO_ELEMENTS_FOUND)
 
         if type(elements) is str or len(elements) == 0:
@@ -11666,7 +11666,7 @@ class ClassificationExplorer(ServerClient):
         page_size: int = 0,
         graph_query_depth: int = 3, output_format: str = "JSON",
         report_spec: str | dict = None,
-        time_out: int = default_time_out,
+        timeout: int = default_timeout,
         body: dict | FindRequestBody = None,
         **kwargs,
     ) -> list | str:
@@ -11689,7 +11689,7 @@ class ClassificationExplorer(ServerClient):
             - one of "MD", "LIST", "FORM", "REPORT", "DICT", "MERMAID" or "JSON"
         report_spec: str | dict, optional
             - the desired output columns/fields to include.
-        time_out: int, default = default_time_out
+        timeout: int, default = default_timeout
             - http request timeout for this request
         body: dict | FindRequestBody, optional
             - if specified, this takes precedence over other parameters.
@@ -11709,7 +11709,7 @@ class ClassificationExplorer(ServerClient):
                 page_size,
                 output_format,
                 report_spec,
-                time_out,
+                timeout,
                 body,
                 **kwargs
             )
@@ -12044,7 +12044,7 @@ class ClassificationExplorer(ServerClient):
             element_guid: str,
             glossary_term_guid: str,
             body: dict | NewRelationshipRequestBody,
-            time_out: int = default_time_out,
+            timeout: int = default_timeout,
     ) -> str:
         """
         Link a glossary term to an element using the SupplementaryProperties relationship. Async version.
@@ -12060,7 +12060,7 @@ class ClassificationExplorer(ServerClient):
         body: dict | NewRelationshipRequestBody
             - a dictionary or Pydantic model containing the properties to set - see note below
 
-        time_out: int, default = default_time_out
+        timeout: int, default = default_timeout
             - http request timeout for this request
 
         Returns
@@ -12105,7 +12105,7 @@ class ClassificationExplorer(ServerClient):
             element_guid: str,
             glossary_term_guid: str,
             body: dict | NewRelationshipRequestBody,
-            time_out: int = default_time_out,
+            timeout: int = default_timeout,
     ) -> str:
         """
         Link a glossary term to an element using the SupplementaryProperties relationship.
@@ -12121,7 +12121,7 @@ class ClassificationExplorer(ServerClient):
         body: dict | NewRelationshipRequestBody
             - a dictionary or Pydantic model containing the properties to set - see note below
 
-        time_out: int, default = default_time_out
+        timeout: int, default = default_timeout
             - http request timeout for this request
 
         Returns
@@ -12158,7 +12158,7 @@ class ClassificationExplorer(ServerClient):
                 element_guid,
                 glossary_term_guid,
                 body,
-                time_out,
+                timeout,
             )
         )
 
@@ -12170,7 +12170,7 @@ class ClassificationExplorer(ServerClient):
             for_lineage: bool = False,
             for_duplicate_processing: bool = False,
             effective_time: Optional[str] = None,
-            time_out: int = default_time_out,
+            timeout: int = default_timeout,
     ) -> None:
         """
         Remove the SupplementaryProperties relationship between a glossary term and an element. Async version.
@@ -12191,7 +12191,7 @@ class ClassificationExplorer(ServerClient):
             - set true when the caller is part of a deduplication function
         effective_time: str, default = None
             - Time format is "YYYY-MM-DDTHH:MM:SS" (ISO 8601)
-        time_out: int, default = default_time_out
+        timeout: int, default = default_timeout
             - http request timeout for this request
 
         Returns
@@ -12235,7 +12235,7 @@ class ClassificationExplorer(ServerClient):
             for_lineage: bool = False,
             for_duplicate_processing: bool = False,
             effective_time: Optional[str] = None,
-            time_out: int = default_time_out,
+            timeout: int = default_timeout,
     ) -> None:
         """
         Remove the SupplementaryProperties relationship between a glossary term and an element.
@@ -12256,7 +12256,7 @@ class ClassificationExplorer(ServerClient):
             - set true when the caller is part of a deduplication function
         effective_time: str, default = None
             - Time format is "YYYY-MM-DDTHH:MM:SS" (ISO 8601)
-        time_out: int, default = default_time_out
+        timeout: int, default = default_timeout
             - http request timeout for this request
 
         Returns
@@ -12290,7 +12290,7 @@ class ClassificationExplorer(ServerClient):
                 for_lineage,
                 for_duplicate_processing,
                 effective_time,
-                time_out,
+                timeout,
             )
         )
 

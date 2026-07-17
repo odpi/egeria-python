@@ -276,7 +276,7 @@ except PyegeriaException as e:
 
 | Exception class | When raised |
 | :--- | :--- |
-| `PyegeriaTimeoutException` | Request exceeded the `time_out` parameter (default 30 s) or the 10 s connect timeout. |
+| `PyegeriaTimeoutException` | Request exceeded the `timeout` parameter (default 30 s) or the 10 s connect timeout. |
 | `PyegeriaConnectionException` | Host is unreachable or refused the connection. |
 | `PyegeriaClientException` | Server returned a 4xx status (including 401 after auto-refresh failed). |
 | `PyegeriaAPIException` | Server returned 200/201 but the inner `relatedHTTPCode` indicates an error. |

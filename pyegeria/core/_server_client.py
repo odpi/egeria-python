@@ -23,7 +23,7 @@ from pyegeria.core._base_server_client import BaseServerClient
 from pyegeria.core._exceptions import (
     PyegeriaConnectionException, PyegeriaInvalidParameterException, PyegeriaException, PyegeriaErrorCode
 )
-from pyegeria.core._globals import max_paging_size, NO_ELEMENTS_FOUND, default_time_out, COMMENT_TYPES
+from pyegeria.core._globals import max_paging_size, NO_ELEMENTS_FOUND, default_timeout, COMMENT_TYPES
 from pyegeria.view.base_report_formats import get_report_spec_match
 from pyegeria.view.base_report_formats import select_report_spec
 from pyegeria.models import (SearchStringRequestBody, FilterRequestBody, GetRequestBody, NewElementRequestBody,
@@ -147,7 +147,7 @@ class ServerClient(BaseServerClient):
             Retrieve the bearer token.
 
         make_request(request_type: str, endpoint: str, payload: str | dict = None,
-                    time_out: int = 30) -> Response
+                    timeout: int = 30) -> Response
             Make an HTTP Restful request and handle potential errors and exceptions.
 
     """
@@ -166,11 +166,12 @@ class ServerClient(BaseServerClient):
             page_size: int = None,
             local_qualifier: str = None,
             organization_name: str = None,
-            time_out: int = None,
+            timeout: int = None,
+            **kwargs
     ):
 
         super().__init__(server_name, platform_url, user_id, user_pwd, token,
-                         token_src, api_key, page_size, local_qualifier, organization_name, time_out)
+                         token_src, api_key, page_size, local_qualifier, organization_name, timeout=timeout, **kwargs)
 
         self.command_root: str = f"{self.platform_url}/servers/{self.server_name}/api/open-metadata/"
         self._search_string_request_adapter = TypeAdapter(SearchStringRequestBody)
@@ -427,7 +428,7 @@ class ServerClient(BaseServerClient):
             for_duplicate_processing: Optional[bool] = None,
             start_from: int = 0,
             page_size: int = max_paging_size,
-            time_out: int = default_time_out,
+            timeout: int = default_timeout,
     ) -> list | str:
         """
         Retrieve relationships of the requested relationship type name and with the requested a value found in
@@ -455,7 +456,7 @@ class ServerClient(BaseServerClient):
             - maximum number of elements to return.
 
 
-        time_out: int, default = default_time_out
+        timeout: int, default = default_timeout
             - http request timeout for this request
 
         Returns
@@ -491,7 +492,7 @@ class ServerClient(BaseServerClient):
         )
 
         response: Response = await self._async_make_request(
-            "POST", url, body_slimmer(body), time_out=time_out
+            "POST", url, body_slimmer(body), timeout=timeout
         )
         rels = response.json().get("relationships", NO_ELEMENTS_FOUND)
         if type(rels) is list:
@@ -509,7 +510,7 @@ class ServerClient(BaseServerClient):
             for_duplicate_processing: Optional[bool] = None,
             start_from: int = 0,
             page_size: int = max_paging_size,
-            time_out: int = default_time_out,
+            timeout: int = default_timeout,
     ) -> list | str:
         """
         Retrieve relationships of the requested relationship type name and with the requested a value found in
@@ -535,7 +536,7 @@ class ServerClient(BaseServerClient):
             - maximum number of elements to return.
 
 
-        time_out: int, default = default_time_out
+        timeout: int, default = default_timeout
             - http request timeout for this request
 
         Returns
@@ -564,7 +565,7 @@ class ServerClient(BaseServerClient):
                 for_duplicate_processing,
                 start_from,
                 page_size,
-                time_out,
+                timeout,
             )
         )
         return response
@@ -582,7 +583,7 @@ class ServerClient(BaseServerClient):
             page_size: int = 0,
             output_format: str = "JSON",
             report_spec: str | dict | None = None,
-            time_out: int = default_time_out,
+            timeout: int = default_timeout,
             **kwargs
     ) -> list | dict | str:
         """
@@ -613,7 +614,7 @@ class ServerClient(BaseServerClient):
             - output type - JSON, MD, MERMAID, REPORT, LIST...
         report_spec: str, optional = None
             - Report specification for the returned output
-        time_out: int, default = default_time_out
+        timeout: int, default = default_timeout
             - http request timeout for this request
 
         Returns
@@ -644,7 +645,7 @@ class ServerClient(BaseServerClient):
         url = f"{self.platform_url}/servers/{self.server_name}/api/open-metadata/classification-explorer/elements/by-exact-property-value"
 
         response: Response = await self._async_make_request(
-            "POST", url, validated_body.model_dump_json(exclude_none=True), time_out=time_out
+            "POST", url, validated_body.model_dump_json(exclude_none=True), timeout=timeout
         )
 
         elements = response.json().get("elements", NO_ELEMENTS_FOUND)
@@ -674,7 +675,7 @@ class ServerClient(BaseServerClient):
             page_size: int = 0,
             output_format: str = "JSON",
             report_spec: str | dict | None = None,
-            time_out: int = default_time_out,
+            timeout: int = default_timeout,
             **kwargs
     ) -> list | dict | str:
         """
@@ -705,7 +706,7 @@ class ServerClient(BaseServerClient):
             - output type - JSON, MD, MERMAID, REPORT, LIST...
         report_spec: str, optional = None
             - Report specification for the returned output
-        time_out: int, default = default_time_out
+        timeout: int, default = default_timeout
             - http request timeout for this request
 
         Returns
@@ -722,7 +723,7 @@ class ServerClient(BaseServerClient):
         response = loop.run_until_complete(
             self._async_get_elements_by_property_value(property_value, property_names, metadata_element_type,
                                                        effective_time, for_lineage, for_duplicate_processing,
-                                                       start_from, page_size, output_format, report_spec, time_out, **kwargs)
+                                                       start_from, page_size, output_format, report_spec, timeout, **kwargs)
         )
         return response
 
@@ -883,7 +884,7 @@ class ServerClient(BaseServerClient):
             for_duplicate_processing: Optional[bool] = None,
             start_from: int = 0,
             page_size: int = 0,
-            time_out: int = default_time_out,
+            timeout: int = default_timeout,
     ) -> list | str:
         """
         Retrieve elements linked via the requested relationship type name and with the requested a value found in one of
@@ -919,7 +920,7 @@ class ServerClient(BaseServerClient):
             - maximum number of elements to return.
 
 
-        time_out: int, default = default_time_out
+        timeout: int, default = default_timeout
             - http request timeout for this request
 
         Returns
@@ -950,7 +951,7 @@ class ServerClient(BaseServerClient):
         )
 
         response: Response = await self._async_make_request(
-            "POST", url, body_slimmer(body), time_out=time_out
+            "POST", url, body_slimmer(body), timeout=timeout
         )
         elements = response.json().get("elements", NO_ELEMENTS_FOUND)
         if type(elements) is list:
@@ -1003,7 +1004,7 @@ class ServerClient(BaseServerClient):
             server_guid: Optional[str] = None,
             display_name: Optional[str] = None,
             qualified_name: Optional[str] = None,
-            time_out: int = 120,
+            timeout: int = 120,
             organization_name: Optional[str] = None,
     ) -> None:
         """Add a new open metadata archive to running OMAG Server's repository.
@@ -1023,7 +1024,7 @@ class ServerClient(BaseServerClient):
             Name of server to act on. If not specified, server_guid or qualified_name must be.
         qualified_name: str, default = None
             Unique name of server to act on. If not specified, server_guid or server_name must be.
-        time_out: int, optional
+        timeout: int, optional
            Time out for the rest call.
 
         Returns
@@ -1050,7 +1051,7 @@ class ServerClient(BaseServerClient):
         url = f"{self.command_root}runtime-manager/omag-servers/{server_guid}/instance/load/open-metadata-archives/file"
 
         await self._async_make_request(
-            "POST-DATA", url, archive_file, time_out=time_out
+            "POST-DATA", url, archive_file, timeout=timeout
         )
 
 
@@ -1060,7 +1061,7 @@ class ServerClient(BaseServerClient):
             server_guid: Optional[str] = None,
             display_name: Optional[str] = None,
             qualified_name: Optional[str] = None,
-            time_out: int = 120,
+            timeout: int = 120,
             organization_name: Optional[str] = None,
     ) -> None:
         """Add a new open metadata archive to running OMAG Server's repository.
@@ -1079,7 +1080,7 @@ class ServerClient(BaseServerClient):
             Name of server to act on. If not specified, server_guid or qualified_name must be.
         qualified_name: str, default = None
             Unique name of server to act on. If not specified, server_guid or server_name must be.
-        time_out: int, optional, default = 60 seconds
+        timeout: int, optional, default = 60 seconds
 
         Returns
         -------
@@ -1097,7 +1098,7 @@ class ServerClient(BaseServerClient):
         loop = asyncio.get_event_loop()
         loop.run_until_complete(
             self._async_add_archive_file(
-                archive_file, server_guid, display_name, qualified_name, time_out, organization_name
+                archive_file, server_guid, display_name, qualified_name, timeout, organization_name
             )
         )
         return
@@ -6405,7 +6406,7 @@ class ServerClient(BaseServerClient):
 
         json_body = validated_body.model_dump_json(indent=2, exclude_none=True, by_alias=True)
 
-        response = await self._async_make_request("POST", url, json_body, time_out = 90)
+        response = await self._async_make_request("POST", url, json_body, timeout = 90)
         elements = response.json().get("elements", NO_ELEMENTS_FOUND)
         if type(elements) is str:
             logger.info(NO_ELEMENTS_FOUND)
@@ -6628,7 +6629,7 @@ class ServerClient(BaseServerClient):
             validated_body = ActivityStatusSearchString.model_validate(body)
 
         json_body = validated_body.model_dump_json(indent=2, exclude_none=True)
-        response = await self._async_make_request("POST", url, json_body, time_out=90)
+        response = await self._async_make_request("POST", url, json_body, timeout=90)
         elements = response.json().get("elements", NO_ELEMENTS_FOUND)
         if type(elements) is str:
             logger.info(NO_ELEMENTS_FOUND)
@@ -6800,7 +6801,7 @@ class ServerClient(BaseServerClient):
             validated_body = ContentStatusSearchString.model_validate(body)
 
         json_body = validated_body.model_dump_json(indent=2, exclude_none=True)
-        response = await self._async_make_request("POST", url, json_body, time_out=90)
+        response = await self._async_make_request("POST", url, json_body, timeout=90)
         elements = response.json().get("elements", NO_ELEMENTS_FOUND)
         if type(elements) is str:
             logger.info(NO_ELEMENTS_FOUND)
@@ -6926,7 +6927,7 @@ class ServerClient(BaseServerClient):
             validated_body = DeploymentStatusSearchString.model_validate(body)
 
         json_body = validated_body.model_dump_json(indent=2, exclude_none=True)
-        response = await self._async_make_request("POST", url, json_body, time_out=90)
+        response = await self._async_make_request("POST", url, json_body, timeout=90)
         elements = response.json().get("elements", NO_ELEMENTS_FOUND)
         if type(elements) is str:
             logger.info(NO_ELEMENTS_FOUND)

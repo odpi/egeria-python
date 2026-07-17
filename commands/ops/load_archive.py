@@ -70,7 +70,7 @@ def load_archive(file_name, server_name, view_server, url, userid, password, tim
         if server_guid == "No elements found":
             raise click.ClickException("Didn't find the metadata store")
 
-        s_client.add_archive_file(file_name, server_guid, server_name, time_out=timeout, organization_name=organization_name)
+        s_client.add_archive_file(file_name, server_guid, server_name, timeout=timeout, organization_name=organization_name)
 
         click.echo(f"Loaded archive: {file_name}")
 
