@@ -37,56 +37,100 @@ EGERIA_USER_PASSWORD = settings.User_Profile.user_pwd or os.environ.get("EGERIA_
 EGERIA_JUPYTER = bool(app_config.egeria_jupyter)
 EGERIA_WIDTH = int(app_config.egeria_width or 200)
 EGERIA_MERMAID_FOLDER = app_config.egeria_mermaid_folder
+EGERIA_KROKI_URL = app_config.egeria_kroki_url
 
 
 def load_mermaid():
-    """No-op: Kroki renders server-side, no JS injection needed."""
+    """No-op: rendering is either server-side (local Kroki) or self-contained
+    client-side JS in an iframe, neither needs a global script injection."""
     pass
 
 
 def render_mermaid(mermaid_code):
-    """Render Mermaid diagram via Kroki API (server-side SVG, no JS required).
+    """Render a Mermaid diagram, preferring a local, self-hosted renderer over
+    any external network service.
 
-    JupyterLab 4.x strips <script> tags from HTML outputs, so the previous
-    approach of injecting mermaid.js from a CDN no longer works. Kroki renders
-    the diagram server-side in the Python kernel and returns an SVG directly,
-    which displays reliably without any JavaScript.
+    Two tiers, no silent dependency on a third-party service:
+
+    1. **Local Kroki** — only attempted if ``EGERIA_KROKI_URL`` is explicitly
+       set (e.g. by a docker-compose environment running its own Kroki
+       container on the same network). A short timeout is used since a local
+       service should respond almost immediately if it's up at all; a slow
+       local service is treated the same as an absent one. Never contacts the
+       public kroki.io — pyegeria does not assume any particular container is
+       present, and doesn't fall back to a service outside the caller's
+       control.
+    2. **Client-side rendering** — if tier 1 isn't configured or fails, the
+       diagram is rendered entirely in the notebook's own browser via
+       mermaid.js, with zero server-side dependency. JupyterLab 4.x strips
+       top-level <script> tags from HTML outputs, so this is embedded inside
+       a sandboxed <iframe srcdoc="..."> — the iframe is its own document, so
+       its inline scripts execute normally even though the outer output HTML
+       is sanitized.
     """
-    import requests as _requests
     from pyegeria.view.output_formatter import _normalize_mermaid_graph
 
     title_label, guid, mermaid_code = parse_mermaid_code(mermaid_code)
     mermaid_code = _normalize_mermaid_graph(mermaid_code)
 
-    header_html = ""
-    if title_label:
-        escaped_header = html.escape(title_label)
-        header_html = f"""
-        <h3 style="margin: 20px 0; font-size: 1.5em; text-align: center;">{escaped_header}</h3>
-        <p style="margin: 0; padding: 5px; font-size: 1em; text-align: center; color: gray;">GUID: {guid}</p>
-        """
-
-    try:
-        resp = _requests.post(
-            'https://kroki.io/mermaid/svg',
-            data=mermaid_code.encode('utf-8'),
-            headers={'Content-Type': 'text/plain'},
-            timeout=30,
-        )
-        if resp.status_code == 200:
+    if EGERIA_KROKI_URL:
+        svg = _render_via_local_kroki(mermaid_code)
+        if svg is not None:
+            header_html = ""
+            if title_label:
+                escaped_header = html.escape(title_label)
+                header_html = f"""
+                <h3 style="margin: 20px 0; font-size: 1.5em; text-align: center;">{escaped_header}</h3>
+                <p style="margin: 0; padding: 5px; font-size: 1em; text-align: center; color: gray;">GUID: {guid}</p>
+                """
             display(HTML(f"""
             <div style="font-family: sans-serif;">
                 {header_html}
                 <div style="width:100%; overflow:auto; border:1px solid #ddd; border-radius:4px; padding:10px; background:#fff;">
-                    {resp.text}
+                    {svg}
                 </div>
             </div>
             """))
             return
-        else:
-            display(HTML(f'<p style="color:red">Kroki error {resp.status_code}: {html.escape(resp.text[:200])}</p>'))
-    except Exception as exc:
-        display(HTML(f'<p style="color:orange">Kroki unavailable ({html.escape(str(exc)[:120])})</p>'))
+
+    _render_via_client_side_js(title_label, guid, mermaid_code)
+
+
+def _render_via_local_kroki(mermaid_code):
+    """POST to the locally-configured Kroki instance. Returns the SVG text on
+    success, or None on any failure (connection error, timeout, non-200) so
+    the caller can fall through to client-side rendering. Never raises."""
+    import requests as _requests
+
+    url = EGERIA_KROKI_URL.rstrip('/') + '/mermaid/svg'
+    try:
+        resp = _requests.post(
+            url,
+            data=mermaid_code.encode('utf-8'),
+            headers={'Content-Type': 'text/plain'},
+            # Local service — a real outage/misconfiguration should be
+            # apparent almost immediately; don't make every diagram wait
+            # a long timeout before falling back to client-side rendering.
+            timeout=5,
+        )
+        if resp.status_code == 200:
+            return resp.text
+    except Exception:
+        pass
+    return None
+
+
+def _render_via_client_side_js(title_label, guid, mermaid_code):
+    """Render entirely in the browser via mermaid.js, inside a sandboxed
+    iframe so JupyterLab's output sanitizer (which strips top-level <script>
+    tags) doesn't interfere — the iframe is its own document."""
+    inner_html = _build_mermaid_client_html(title_label, guid, mermaid_code)
+    escaped_srcdoc = html.escape(inner_html, quote=True)
+    display(HTML(f"""
+    <iframe srcdoc="{escaped_srcdoc}" sandbox="allow-scripts"
+            style="width:100%; height:650px; border:1px solid #ddd; border-radius:4px;">
+    </iframe>
+    """))
 
 
 def render_mermaid_adv(mermaid_code):
@@ -118,7 +162,15 @@ def parse_mermaid_code(mermaid_code):
 def construct_mermaid_web(mermaid_str: str) -> str:
     """Function to display a HTML code in a Jupyter notebook"""
     title_label, guid, mermaid_code = parse_mermaid_code(mermaid_str)
+    return _build_mermaid_client_html(title_label, guid, mermaid_code)
 
+
+def _build_mermaid_client_html(title_label, guid, mermaid_code) -> str:
+    """Full standalone HTML document that renders `mermaid_code` client-side
+    via mermaid.js, with pan/zoom. Takes already-parsed title/guid/code
+    (rather than the raw ``---`` delimited string) so callers that have
+    already parsed once — e.g. render_mermaid()'s client-side fallback —
+    don't need to re-parse or risk a mismatched guid."""
     html_section1 = """
     <!DOCTYPE html>
     <html>

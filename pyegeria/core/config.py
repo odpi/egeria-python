@@ -109,6 +109,7 @@ class EnvironmentConfig(BaseModel):
     egeria_integration_daemon: str = Field(default="qs-integration-daemon", alias="Egeria Integration Daemon")
     egeria_jupyter: bool = Field(default=True, alias="Egeria Jupyter")
     egeria_kafka_endpoint: str = Field(default="localhost:9192", alias="Egeria Kafka Endpoint")
+    egeria_kroki_url: str = Field(default="", alias="Egeria Kroki URL")
     egeria_mermaid_folder: str = Field(default="egeria-outbox/mermaid-graphs", alias="Egeria Mermaid Folder")
     egeria_normalize_mermaid: bool = Field(default=True, alias="Egeria Normalize Mermaid")
     egeria_metadata_store: str = Field(default="qs-metadata-store", alias="Egeria Metadata Store")
@@ -341,6 +342,11 @@ def load_app_config(env_file: str | None = None):
     env["Egeria Integration Daemon URL"] = os.getenv("EGERIA_INTEGRATION_DAEMON_URL", env.get("Egeria Integration Daemon URL", "https://localhost:9443"))
     env["Egeria Jupyter"] = _parse_bool_env("EGERIA_JUPYTER", bool(env.get("Egeria Jupyter", True)))
     env["Egeria Kafka Endpoint"] = os.getenv("EGERIA_KAFKA", env.get("Egeria Kafka Endpoint", "localhost:9192"))
+    # Empty by default: render_mermaid() only attempts a local Kroki instance
+    # when this is explicitly set (e.g. by a docker-compose environment that
+    # runs its own self-hosted Kroki container). No default guess is made, so
+    # pyegeria never silently depends on a specific container being present.
+    env["Egeria Kroki URL"] = os.getenv("EGERIA_KROKI_URL", env.get("Egeria Kroki URL", ""))
     # Normalize to hyphenated folder name; retain any explicit env override
     env["Egeria Mermaid Folder"] = os.getenv(
         "EGERIA_MERMAID_FOLDER",
