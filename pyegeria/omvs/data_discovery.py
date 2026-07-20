@@ -65,8 +65,8 @@ class DataDiscovery(ServerClient):
         user_id: str,
         user_pwd: Optional[str] = None,
         token: Optional[str] = None,
-    ):
-        super().__init__(view_server, platform_url, user_id, user_pwd, token)
+        timeout: int = None):
+        super().__init__(view_server, platform_url, user_id, user_pwd, token, timeout=timeout)
         self.view_server = view_server
         self.platform_url = platform_url
         self.user_id = user_id

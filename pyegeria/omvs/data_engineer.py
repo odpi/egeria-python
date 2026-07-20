@@ -34,7 +34,15 @@ class DataEngineer(ServerClient):
         The password associated with the user_id. Defaults to None.
     """
     @dynamic_catch
-    def __init__(self, view_server: str, platform_url: str, user_id: str, user_pwd: Optional[str] = None, token: str = None):
+    def __init__(
+        self,
+        view_server: str,
+        platform_url: str,
+        user_id: str,
+        user_pwd: Optional[str] = None,
+        token: str = None,
+        timeout: int = None,
+    ):
         """
         Initialize the DataEngineer client.
 
@@ -50,13 +58,17 @@ class DataEngineer(ServerClient):
             The password associated with the user_id. Defaults to None.
         token : str, optional
             An optional bearer token for authentication.
+        timeout : int, optional
+            An optional timeout for requests.
         """
         self.view_server = view_server
         self.platform_url = platform_url
         self.user_id = user_id
         self.user_pwd = user_pwd
 
-        ServerClient.__init__(self, view_server, platform_url, user_id, user_pwd, token)
+        ServerClient.__init__(
+            self, view_server, platform_url, user_id, user_pwd, token, timeout=timeout
+        )
         self.command_root: str = (
             f"{self.platform_url}/servers/{self.view_server}/api/open-metadata/data-engineer")
 

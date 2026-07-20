@@ -48,7 +48,7 @@ class ValidMetadataManager(ServerClient):
         user_id: Optional[str] = None,
         user_pwd: Optional[str] = None,
         token: Optional[str] = None,
-    ):
+        timeout: int = None):
         self.view_server = view_server
         self.platform_url = platform_url
         self.user_id = user_id
@@ -56,7 +56,7 @@ class ValidMetadataManager(ServerClient):
 
         self.valid_m_command_base: str = f"/api/open-metadata/valid-metadata"
         self.page_size = max_paging_size
-        ServerClient.__init__(self, view_server, platform_url, user_id, user_pwd, token=token)
+        ServerClient.__init__(self, view_server, platform_url, user_id, user_pwd, token=token, timeout=timeout)
 
         # Default entity label used by output formatter when a specific type is not supplied
         self.REFERENCEABLE_LABEL = "Referenceable"

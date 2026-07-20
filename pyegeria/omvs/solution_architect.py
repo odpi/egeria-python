@@ -83,14 +83,14 @@ class SolutionArchitect(ServerClient):
     """
 
     def __init__(self, view_server: str, platform_url: str, user_id: Optional[str] = None, user_pwd: Optional[str] = None,
-                 token: Optional[str] = None, ):
+                 token: Optional[str] = None,     timeout: int = None):
         self.view_server = view_server
         self.platform_url = platform_url
         self.user_id = user_id
         self.user_pwd = user_pwd
         self.solution_architect_command_root: str = (f"{self.platform_url}/servers/{self.view_server}"
                                                      f"/api/open-metadata/solution-architect")
-        ServerClient.__init__(self, view_server, platform_url, user_id=user_id, user_pwd=user_pwd, token=token, )
+        ServerClient.__init__(self, view_server, platform_url, user_id=user_id, user_pwd=user_pwd, token=token, timeout=timeout)
         self.url_marker = "solution-architect"
     #
     # Extract properties functions

@@ -412,9 +412,10 @@ class BaseServerClient:
             request_type: str,
             endpoint: str,
             payload: str | dict = None,
-            timeout: int = None,
             is_json: bool = True,
-            params: dict | None = None
+            params: dict | None = None,
+            *,
+            timeout: int = None
     ) -> Response | str:
         """Make a synchronous request to the Egeria API.
 
@@ -426,12 +427,12 @@ class BaseServerClient:
             The API endpoint URL.
         payload : str | dict, optional
             The request payload.
-        timeout : int, optional
-            The timeout for the request in seconds.
         is_json : bool, optional
             Whether the payload is in JSON format (default is True).
         params : dict, optional
             Query parameters for the request.
+        timeout : int, optional
+            The timeout for the request in seconds.
 
         Returns
         -------
@@ -448,14 +449,14 @@ class BaseServerClient:
         try:
             loop = asyncio.get_running_loop()
             if loop.is_running():
-                coro = self._async_make_request(request_type, endpoint, payload, timeout, is_json, params)
+                coro = self._async_make_request(request_type, endpoint, payload, is_json, params, timeout=timeout)
                 return asyncio.run_coroutine_threadsafe(coro, loop).result()
             else:
                 return loop.run_until_complete(
-                    self._async_make_request(request_type, endpoint, payload, timeout, is_json, params))
+                    self._async_make_request(request_type, endpoint, payload, is_json, params, timeout=timeout))
         except RuntimeError:
             # No running loop exists; run the coroutine
-            return asyncio.run(self._async_make_request(request_type, endpoint, payload, timeout, is_json, params))
+            return asyncio.run(self._async_make_request(request_type, endpoint, payload, is_json, params, timeout=timeout))
 
 
     async def _async_make_request(
@@ -463,9 +464,10 @@ class BaseServerClient:
             request_type: str,
             endpoint: str,
             payload: str | dict = None,
-            timeout: int = None,
             is_json: bool = True,
-            params: dict | None = None
+            params: dict | None = None,
+            *,
+            timeout: int = None
     ) -> Response | str:
         """Make an asynchronous request to the Egeria API.
 
@@ -477,12 +479,12 @@ class BaseServerClient:
             The API endpoint URL.
         payload : str | dict, optional
             The request payload.
-        timeout : int, optional
-            The timeout for the request in seconds.
         is_json : bool, optional
             Whether the payload is in JSON format (default is True).
         params : dict, optional
             Query parameters for the request.
+        timeout : int, optional
+            The timeout for the request in seconds.
 
         Returns
         -------

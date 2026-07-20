@@ -51,7 +51,7 @@ class Platform(BasePlatformClient):
         user_id: str = None,
         user_pwd: Optional[str] = None,
         token: Optional[str] = None,
-    ):
+        timeout: int = None):
         BasePlatformClient.__init__(self, server_name, platform_url, user_id, user_pwd, token=token)
         self.admin_command_root = (
             self.platform_url

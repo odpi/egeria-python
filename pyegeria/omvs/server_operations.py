@@ -37,7 +37,7 @@ class ServerOps(Platform):
         user_id: str = None,
         user_pwd: Optional[str] = None,
         token: Optional[str] = None,
-    ):
+        timeout: int = None):
         Platform.__init__(self, server_name, platform_url, user_id, user_pwd, token=token)
         self.ops_command_root = (
             # f"{self.platform_url}/open-metadata/server-operations/users/{user_id}"

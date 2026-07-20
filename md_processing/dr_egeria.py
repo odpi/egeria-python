@@ -363,7 +363,7 @@ async def process_md_file_v2(input_file: str, output_folder: str, directive: str
         _orig_make_request = BaseServerClient._async_make_request
 
         async def _debug_make_request(self_inner, request_type, endpoint,
-                                      payload=None, timeout=30, is_json=True, params=None):
+                                      payload=None, is_json=True, params=None, *, timeout=30):
             import inspect as _inspect
 
             _url_str = endpoint
@@ -405,7 +405,7 @@ async def process_md_file_v2(input_file: str, output_folder: str, directive: str
                     except Exception:
                         console.print(f"[dark_orange][DEBUG] Body: {payload}[/dark_orange]")
             return await _orig_make_request(self_inner, request_type, endpoint,
-                                            payload, timeout, is_json, params)
+                                            payload, is_json, params, timeout=timeout)
 
         BaseServerClient._async_make_request = _debug_make_request
         console.print(
