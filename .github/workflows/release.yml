@@ -18,7 +18,24 @@ jobs:
       - name: Install dependencies
         run: uv sync --all-extras --dev
       - name: Run unit tests
-        run: uv run pytest tests/ -m "not live_egeria"
+        # tests/ -m "not live_egeria" (previous scope) was a no-op filter: no
+        # test anywhere is marked "live_egeria" (that name is only a fixture
+        # in tests/micro-tests/conftest_full.py, not a registered pytest
+        # marker — see tests/pytest.ini's `markers` list). So this ran the
+        # ENTIRE suite, including tests/functional-tests/ and
+        # tests/scenario-tests/, both of which require a real Egeria server
+        # at localhost:9443 that no GitHub Actions runner has, plus an
+        # unrelated pytest-asyncio/sniffio configuration issue in several of
+        # those files. Confirmed 2026-07-20: this gate has never actually
+        # passed on this repo (774 failed / 231 passed on the v6.0.17.1 run;
+        # every prior tagged release run in the Actions history also shows
+        # `failure`). tests/micro-tests/ is the suite actually designed to
+        # run without live infra (mocks/monkeypatching by default; live mode
+        # is an explicit opt-in via --live-egeria or PYEG_LIVE_EGERIA=1) —
+        # confirmed clean (exit 0) standalone. Use that as the CI gate
+        # instead of a full-suite run that requires infrastructure CI
+        # doesn't have.
+        run: uv run pytest tests/micro-tests/
 
   build-n-publish:
     name: Build and Publish to PyPI
