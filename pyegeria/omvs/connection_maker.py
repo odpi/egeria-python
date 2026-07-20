@@ -34,8 +34,8 @@ class ConnectionMaker(ServerClient):
         user_id: str,
         user_pwd: str,
         token: Optional[str] = None,
-    ):
-        super().__init__(server_name, platform_url, user_id, user_pwd, token)
+        timeout: int = None):
+        super().__init__(server_name, platform_url, user_id, user_pwd, token, timeout=timeout)
         self.base_url = f"{self.platform_url}/servers/{self.server_name}/api/open-metadata/connection-maker"
 
     # --- Connections ---

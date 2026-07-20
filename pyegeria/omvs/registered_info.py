@@ -58,7 +58,7 @@ class RegisteredInfo(ServerClient):
         user_id: str,
         user_pwd: Optional[str] = None,
         token: Optional[str] = None,
-    ):
+        timeout: int = None):
         if view_server is None:
             server_name = "NA"
         ServerClient.__init__(self, view_server, platform_url, user_id, user_pwd)

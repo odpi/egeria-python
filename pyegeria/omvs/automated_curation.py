@@ -60,12 +60,13 @@ class AutomatedCuration(ServerClient):
             user_id: str,
             user_pwd: Optional[str] = None,
             token: Optional[str] = None,
+            timeout: int = None,
     ):
         self.view_server = view_server
         self.platform_url = platform_url
         self.user_id = user_id
         self.user_pwd = user_pwd
-        ServerClient.__init__(self, view_server, platform_url, user_id, user_pwd, token=token)
+        ServerClient.__init__(self, view_server, platform_url, user_id, user_pwd, token=token, timeout=timeout)
         self.ref_curation_command_base = f"{self.platform_url}/servers/{self.view_server}/api/open-metadata/automated-curation"
 
         # Default entity label used by the output formatter for Technology Types

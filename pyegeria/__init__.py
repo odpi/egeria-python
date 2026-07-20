@@ -6,7 +6,7 @@ from pyegeria.core.logging_configuration import config_logging, init_logging
 from pyegeria.core._globals import (
     COMMENT_TYPES,
     DEBUG_LEVEL,
-    default_time_out,
+    default_timeout,
     disable_ssl_warnings,
     enable_ssl_check,
     is_debug,
@@ -139,7 +139,7 @@ __all__ = [
     # Globals & Constants
     "COMMENT_TYPES",
     "DEBUG_LEVEL",
-    "default_time_out",
+    "default_timeout",
     "disable_ssl_warnings",
     "enable_ssl_check",
     "is_debug",

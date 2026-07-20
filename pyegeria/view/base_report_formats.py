@@ -3789,7 +3789,7 @@ _QUESTION_SPEC_FORMATS = FormatSetDict({
             function="CollectionManager.find_collections",
             optional_params=OPTIONAL_FILTER_PARAMS,
             required_params=["search_string"],
-            spec_params={"_type": "CollectionFolder"},
+            spec_params={"_type": "FolderCollection"},
         ),
     ),
 })

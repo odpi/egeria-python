@@ -52,6 +52,7 @@ class CommunityMatters(ServerClient):
         user_id: str,
         user_pwd: str | None = None,
         token: str | None = None,
+        timeout: int | None = None,
     ):
         self.view_server = view_server
         self.platform_url = platform_url
@@ -62,7 +63,9 @@ class CommunityMatters(ServerClient):
         )
         # url_marker only used by some generic helpers (e.g., update status) not used here
         self.url_marker = "community-matters"
-        ServerClient.__init__(self, view_server, platform_url, user_id, user_pwd, token)
+        ServerClient.__init__(
+            self, view_server, platform_url, user_id, user_pwd, token, timeout=timeout
+        )
 
     # -----------------------------
     # Create

@@ -74,14 +74,14 @@ class ActorManager(ServerClient):
 
     """
 
-    def __init__(self, view_server: str = None, platform_url: str = None, user_id: str = None, user_pwd: Optional[str] = None, token: Optional[str] = None, ):
+    def __init__(self, view_server: str = None, platform_url: str = None, user_id: str = None, user_pwd: Optional[str] = None, token: Optional[str] = None,     timeout: int = None):
         self.view_server = view_server
         self.platform_url = platform_url
         self.user_id = user_id
         self.user_pwd = user_pwd
 
         # Handle Optional parameters for parent class
-        ServerClient.__init__(self, view_server, platform_url, user_id, user_pwd, token)
+        ServerClient.__init__(self, view_server, platform_url, user_id, user_pwd, token, timeout=timeout)
         self.command_root: str = (
             f"{self.platform_url}/servers/{self.view_server}/api/open-metadata/actor-manager")
 

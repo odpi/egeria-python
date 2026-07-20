@@ -67,8 +67,8 @@ class ExternalReferences(ServerClient):
 
     """
 
-    def __init__(self, view_server: str = None, platform_url: str = None, user_id: str = None, user_pwd: Optional[str] = None, token: Optional[str] = None, ):
-        ServerClient.__init__(self, view_server, platform_url, user_id, user_pwd, token)
+    def __init__(self, view_server: str = None, platform_url: str = None, user_id: str = None, user_pwd: Optional[str] = None, token: Optional[str] = None,     timeout: int = None):
+        ServerClient.__init__(self, view_server, platform_url, user_id, user_pwd, token, timeout=timeout)
         self.view_server = self.server_name
         self.platform_url = self.platform_url
         self.user_id = self.user_id

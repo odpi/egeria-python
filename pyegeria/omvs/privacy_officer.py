@@ -46,8 +46,8 @@ class PrivacyOfficer(ServerClient):
         user_id: str = None,
         user_pwd: Optional[str] = None,
         token: Optional[str] = None,
-    ):
-        ServerClient.__init__(self, view_server, platform_url, user_id, user_pwd, token)
+        timeout: int = None):
+        ServerClient.__init__(self, view_server, platform_url, user_id, user_pwd, token, timeout=timeout)
         self.privacy_officer_base_url = (
             f"{self.platform_url}/servers/{self.server_name}/api/open-metadata/privacy-officer"
         )

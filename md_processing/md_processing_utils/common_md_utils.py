@@ -587,22 +587,36 @@ def set_gov_prop_body(object_type: str, qualified_name: str, attributes: dict)->
     
 
 def update_gov_body_for_type(object_type: str, body: dict, attributes: dict) -> dict:
+    # Callers pass either the spaced display name (e.g. "Certification Type") or the
+    # no-space OM_TYPE (e.g. "CertificationType", which is what GovernanceProcessor
+    # actually uses for every governance-officer command). Normalize once and compare
+    # every branch against the no-space form so both callers match consistently.
     gov_def_name = object_type.replace(" ", "")
-    if object_type in GENERAL_GOVERNANCE_DEFINITIONS:
+    general_defs = {t.replace(" ", "") for t in GENERAL_GOVERNANCE_DEFINITIONS}
+    controls = {t.replace(" ", "") for t in GOVERNANCE_CONTROLS}
+
+    if gov_def_name in general_defs:
         return body
-    elif object_type == "Governance Strategy":
+    elif gov_def_name == "GovernanceStrategy":
         body['businessImperatives'] = attributes.get('Business Imperatives', {}).get('value', [])
         return body
 
-    elif object_type == "Regulation":
+    elif gov_def_name == "Regulation":
         body['regulationSource'] = attributes.get('Regulation Source', {}).get('value', None)
         body['regulators'] = attributes.get('Regulators', {}).get('value', [])
         return body
 
-    elif object_type in GOVERNANCE_CONTROLS:
+    elif gov_def_name == "GovernanceMetric":
+        # Inherits Implementation Description from the Governance Control Base bundle,
+        # plus its own Measurement/Target attributes.
+        body['implementationDescription'] = attributes.get('Implementation Description', {}).get('value', None)
+        body['measurement'] = attributes.get('Measurement', {}).get('value', None)
+        body['target'] = attributes.get('Target', {}).get('value', None)
+        return body
+    elif gov_def_name in controls:
         body['implementationDescription'] = attributes.get('Implementation Description', {}).get('value', None)
         return body
-    elif object_type in {"Security Group", "SecurityGroup"}:
+    elif gov_def_name == "SecurityGroup":
         # Some servers model SecurityGroup with a narrower property set than other governance definitions.
         for field in [
             "domainIdentifier",
@@ -617,17 +631,13 @@ def update_gov_body_for_type(object_type: str, body: dict, attributes: dict) -> 
             body.pop(field, None)
         body['distinguishedName'] = attributes.get('Distinguished Name', {}).get('value', None)
         return body
-    elif object_type == "GovernanceMetric":
-        body['measurement'] = attributes.get('Measurement', {}).get('value', None)
-        body['target'] = attributes.get('Target', {}).get('value', None)
-        return body
-    elif object_type == "Naming Standard Rule":
+    elif gov_def_name == "NamingStandardRule":
         body['namePatterns'] = attributes.get('Name Patterns', {}).get('value', [])
         return body
-    elif object_type == "Governance Zone":
+    elif gov_def_name == "GovernanceZone":
         body['criteria'] = attributes.get('Criteria', {}).get('value', None)
         return body
-    elif object_type == "Notification Type":
+    elif gov_def_name == "NotificationType":
         body['plannedCompletionDate'] = attributes.get('Planned Completion Date', {}).get('value', None)
         body['multipleNotificationsPermitted'] = attributes.get('Multiple Notifications Permitted', {}).get('value', None)
         body['nextScheduledNotification'] = attributes.get('Next Scheduled Notification', {}).get('value', None)
@@ -636,7 +646,7 @@ def update_gov_body_for_type(object_type: str, body: dict, attributes: dict) -> 
         body['minimumNotificationInterval'] = attributes.get('Minimum Notification Interval', {}).get('value', None)
         body['plannedStartDate'] = attributes.get('Planned Start Date', {}).get('value', None)
         return body
-    elif object_type in ["TermsAndConditions", "Terms and Conditions", "Terms & Conditions", "Certification Type", "License Type"]:
+    elif gov_def_name in {"TermsAndConditions", "Terms&Conditions", "CertificationType", "LicenseType"}:
         entitlements = attributes.get('Entitlements', {}).get('value', {}) if attributes.get('Entitlements',None) else None
         restrictions = attributes.get('Restrictions', {}).get('value', {}) if attributes.get('Restrictions',None) else None
         obligations = attributes.get('Obligations', {}).get('value', {}) if attributes.get('Obligations',None) else None

@@ -75,10 +75,11 @@ class AssetMaker(ServerClient):
         user_id: str | None = None,
         user_pwd: str | None = None,
         token: str | None = None,
+        timeout: int = None,
     ):
         """Initialize an AssetMaker client."""
         ServerClient.__init__(
-            self, view_server, platform_url, user_id=user_id, user_pwd=user_pwd, token=token
+            self, view_server, platform_url, user_id=user_id, user_pwd=user_pwd, token=token, timeout=timeout
         )
         self.view_server = self.server_name
         self.asset_command_root = f"{self.platform_url}/servers/{self.view_server}/api/open-metadata/asset-maker"

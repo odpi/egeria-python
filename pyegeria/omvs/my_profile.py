@@ -57,6 +57,7 @@ class MyProfile(AssetMaker):
         user_pwd: str | None = None,
         token: str | None = None,
         aggregation_depth: int = 3,
+        timeout: int = None,
     ):
         AssetMaker.__init__(
             self,
@@ -65,6 +66,7 @@ class MyProfile(AssetMaker):
             user_id=user_id,
             user_pwd=user_pwd,
             token=token,
+            timeout=timeout,
         )
         self.view_server = self.server_name
         self.platform_url = self.platform_url

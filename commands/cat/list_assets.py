@@ -49,7 +49,8 @@ def display_assets(
     url: str,
     username: str,
     user_password: str,
-    time_out: int = 60,
+    timeout: int = 60,
+    timeout: int = None,
     jupyter: bool = EGERIA_JUPYTER,
     width: int = EGERIA_WIDTH,
 ):
@@ -58,7 +59,8 @@ def display_assets(
         raise ValueError(
             "Invalid Search String - must be greater than four characters long"
         )
-    g_client = AssetCatalog(server, url, username)
+    timeout = timeout or timeout
+    g_client = AssetCatalog(server, url, username, timeout=timeout)
     token = g_client.create_egeria_bearer_token(username, user_password)
 
     def generate_table(search_string: str = None) -> Table:
@@ -152,7 +154,8 @@ def main():
     parser.add_argument("--url", help="URL Platform to connect to")
     parser.add_argument("--userid", help="User Id")
     parser.add_argument("--password", help="User Password")
-    parser.add_argument("--time_out", help="Time Out")
+    parser.add_argument("--timeout", help="Time Out (legacy)")
+    parser.add_argument("--timeout", help="Time Out")
 
     args = parser.parse_args()
 
@@ -160,10 +163,11 @@ def main():
     url = args.url if args.url is not None else EGERIA_PLATFORM_URL
     userid = args.userid if args.userid is not None else EGERIA_USER
     user_pass = args.password if args.password is not None else EGERIA_USER_PASSWORD
-    time_out = args.time_out if args.time_out is not None else 60
+    time_out_val = args.timeout or args.time_out
+    timeout = int(time_out_val) if time_out_val is not None else 60
     try:
         search_string = Prompt.ask("Enter an asset search string:", default="")
-        display_assets(search_string, server, url, userid, user_pass, time_out)
+        display_assets(search_string, server, url, userid, user_pass, timeout=timeout)
     except KeyboardInterrupt:
         pass
 

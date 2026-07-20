@@ -74,7 +74,8 @@ class BaseServerClient:
             page_size: int = None,
             local_qualifier: str = None,
             organization_name: str = None,
-            time_out: int = None,
+            timeout: int = None,
+            **kwargs
     ):
         server_name = server_name or settings.Environment.egeria_view_server
         platform_url = platform_url or settings.Environment.egeria_platform_url
@@ -91,7 +92,10 @@ class BaseServerClient:
         self.token = token
         self.local_qualifier = local_qualifier or settings.User_Profile.egeria_local_qualifier
         self.organization_name = organization_name or settings.Environment.organization_name
-        self.time_out = time_out or settings.Debug.timeout_seconds or 30
+        
+        # Handle both timeout and legacy time_out
+        legacy_timeout = kwargs.pop('time_out', None)
+        self.timeout = timeout or legacy_timeout or settings.Debug.timeout_seconds or 30
         self._valid_value_cache = {}
 
         self.exc_type = None
@@ -116,7 +120,10 @@ class BaseServerClient:
             self.headers["Authorization"] = f"Bearer {self.token}"
             self.text_headers["Authorization"] = f"Bearer {self.token}"
 
-        self.session = AsyncClient(verify=enable_ssl_check)
+        self.session = AsyncClient(
+            verify=enable_ssl_check,
+            timeout=httpx.Timeout(timeout=float(self.timeout), connect=10.0),
+        )
         self.command_root: str = f"{self.platform_url}/servers/{self.server_name}/api/open-metadata/"
 
         try:
@@ -400,15 +407,15 @@ class BaseServerClient:
         response = loop.run_until_complete(self.async_get_platform_origin())
         return response
 
-    # @logger.catch
     def make_request(
             self,
             request_type: str,
             endpoint: str,
             payload: str | dict = None,
-            time_out: int = 30,
             is_json: bool = True,
-            params: dict | None = None
+            params: dict | None = None,
+            *,
+            timeout: int = None
     ) -> Response | str:
         """Make a synchronous request to the Egeria API.
 
@@ -420,12 +427,12 @@ class BaseServerClient:
             The API endpoint URL.
         payload : str | dict, optional
             The request payload.
-        time_out : int, optional
-            The timeout for the request in seconds (default is 30).
         is_json : bool, optional
             Whether the payload is in JSON format (default is True).
         params : dict, optional
             Query parameters for the request.
+        timeout : int, optional
+            The timeout for the request in seconds.
 
         Returns
         -------
@@ -437,17 +444,19 @@ class BaseServerClient:
         PyegeriaException
             If the request fails.
         """
+        if timeout is None:
+            timeout = self.timeout
         try:
             loop = asyncio.get_running_loop()
             if loop.is_running():
-                coro = self._async_make_request(request_type, endpoint, payload, time_out, is_json, params)
+                coro = self._async_make_request(request_type, endpoint, payload, is_json, params, timeout=timeout)
                 return asyncio.run_coroutine_threadsafe(coro, loop).result()
             else:
                 return loop.run_until_complete(
-                    self._async_make_request(request_type, endpoint, payload, time_out, is_json, params))
+                    self._async_make_request(request_type, endpoint, payload, is_json, params, timeout=timeout))
         except RuntimeError:
             # No running loop exists; run the coroutine
-            return asyncio.run(self._async_make_request(request_type, endpoint, payload, time_out, is_json, params))
+            return asyncio.run(self._async_make_request(request_type, endpoint, payload, is_json, params, timeout=timeout))
 
 
     async def _async_make_request(
@@ -455,9 +464,10 @@ class BaseServerClient:
             request_type: str,
             endpoint: str,
             payload: str | dict = None,
-            time_out: int = None,
             is_json: bool = True,
-            params: dict | None = None
+            params: dict | None = None,
+            *,
+            timeout: int = None
     ) -> Response | str:
         """Make an asynchronous request to the Egeria API.
 
@@ -469,12 +479,12 @@ class BaseServerClient:
             The API endpoint URL.
         payload : str | dict, optional
             The request payload.
-        time_out : int, optional
-            The timeout for the request in seconds (default is 30).
         is_json : bool, optional
             Whether the payload is in JSON format (default is True).
         params : dict, optional
             Query parameters for the request.
+        timeout : int, optional
+            The timeout for the request in seconds.
 
         Returns
         -------
@@ -490,8 +500,8 @@ class BaseServerClient:
         PyegeriaInvalidParameterException
             If the request parameters are invalid.
         """
-        if time_out is None:
-            time_out = self.time_out
+        if timeout is None:
+            timeout = self.timeout
         
         context: dict = {}
         context['class name'] = __class__.__name__
@@ -501,24 +511,24 @@ class BaseServerClient:
         try:
             if request_type == "GET":
                 response = await self.session.get(
-                    endpoint, params=params, headers=self.headers, timeout=time_out,
+                    endpoint, params=params, headers=self.headers, timeout=timeout,
                 )
 
             elif request_type == "POST":
                 if payload is None:
                     response = await self.session.post(
-                        endpoint, headers=self.headers, timeout=time_out, params = params
+                        endpoint, headers=self.headers, timeout=timeout, params = params
                     )
                 elif type(payload) is dict:
                     response = await self.session.post(
-                        endpoint, json=payload, headers=self.headers, timeout=time_out
+                        endpoint, json=payload, headers=self.headers, timeout=timeout
                     )
                 elif type(payload) is str:
                     response = await self.session.post(
                         endpoint,
                         headers=self.headers,
                         content=payload,
-                        timeout=time_out,
+                        timeout=timeout,
                         params=params
                     )
                 else:
@@ -528,12 +538,12 @@ class BaseServerClient:
             elif request_type == "POST-DATA":
                 if True:
                     response = await self.session.post(
-                        endpoint, headers=self.headers, data=payload, timeout=time_out
+                        endpoint, headers=self.headers, data=payload, timeout=timeout
                     )
             elif request_type == "DELETE":
                 if True:
                     response = await self.session.delete(
-                        endpoint, headers=self.headers, timeout=time_out
+                        endpoint, headers=self.headers, timeout=timeout
                     )
             response.raise_for_status()
 
@@ -543,7 +553,7 @@ class BaseServerClient:
             additional_info = {
                 "endpoint": endpoint,
                 "error_kind": "timeout",
-                "timeout_seconds": time_out,
+                "timeout_seconds": timeout,
             }
             raise PyegeriaTimeoutException(context, additional_info, e)
 

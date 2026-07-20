@@ -32,6 +32,6 @@ class SpecificationProperties(ValidMetadataManager):
         user_id: str,
         user_pwd: Optional[str] = None,
         token: Optional[str] = None,
-    ):
-        super().__init__(view_server, platform_url, user_id, user_pwd, token)
+        timeout: int = None):
+        super().__init__(view_server, platform_url, user_id, user_pwd, token, timeout=timeout)
         self.url_marker = "valid-metadata"

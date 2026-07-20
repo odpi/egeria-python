@@ -47,9 +47,10 @@ class CoreServerConfig(BasePlatformClient):
         user_id: str,
         user_pwd: Optional[str] = None,
         verify_flag: bool = enable_ssl_check,
+        timeout: int = None,
     ):
         self.core_command_root: str
-        BasePlatformClient.__init__(self, server_name, platform_url, user_id, user_pwd)
+        BasePlatformClient.__init__(self, server_name, platform_url, user_id, user_pwd, timeout=timeout)
         self.core_command_root = (
             self.platform_url + "/open-metadata/admin-services"
         )

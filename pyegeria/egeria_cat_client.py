@@ -37,12 +37,13 @@ class EgeriaCat(ProjectManager, GlossaryManager, AssetCatalog, MyProfile):
         user_id: str = None,
         user_pwd: str = None,
         token: str = None,
+        timeout: int = None,
     ):
         # Initialize each parent explicitly (do not rely on cooperative super)
-        ProjectManager.__init__(self, view_server, platform_url, user_id, user_pwd, token)
-        GlossaryManager.__init__(self, view_server, platform_url, user_id, user_pwd, token)
-        AssetCatalog.__init__(self, view_server, platform_url, user_id, user_pwd, token)
-        MyProfile.__init__(self, view_server, platform_url, user_id, user_pwd, token)
+        ProjectManager.__init__(self, view_server, platform_url, user_id, user_pwd, token, timeout=timeout)
+        GlossaryManager.__init__(self, view_server, platform_url, user_id, user_pwd, token, timeout=timeout)
+        AssetCatalog.__init__(self, view_server, platform_url, user_id, user_pwd, token, timeout=timeout)
+        MyProfile.__init__(self, view_server, platform_url, user_id, user_pwd, token, timeout=timeout)
 
 
 if __name__ == "__main__":

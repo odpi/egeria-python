@@ -5,7 +5,7 @@ Copyright Contributors to the ODPi Egeria project.
 
 """
 from pyegeria import (
-    default_time_out,
+    default_timeout,
     disable_ssl_warnings,
     enable_ssl_check,
     is_debug,

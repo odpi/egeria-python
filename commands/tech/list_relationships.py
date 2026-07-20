@@ -46,7 +46,7 @@ def list_relationships(
     url: str,
     username: str,
     user_password: str,
-    time_out: int = 60,
+    timeout: int = 60,
     jupyter: bool = settings.Environment.egeria_jupyter,
     width: int = settings.Environment.egeria_width,
 ):
@@ -145,7 +145,7 @@ def main():
     parser.add_argument("--url", help="URL Platform to connect to")
     parser.add_argument("--userid", help="User Id")
     parser.add_argument("--password", help="User Password")
-    parser.add_argument("--time_out", help="Time Out")
+    parser.add_argument("--timeout", help="Time Out")
 
     args = parser.parse_args()
 
@@ -153,13 +153,13 @@ def main():
     url = args.url if args.url is not None else app_config.egeria_platform_url
     userid = args.userid if args.userid is not None else EGERIA_USER
     user_pass = args.password if args.password is not None else EGERIA_USER_PASSWORD
-    time_out = args.time_out if args.time_out is not None else 60
+    timeout = args.timeout if args.timeout is not None else 60
     try:
         search_string = Prompt.ask(
             "Enter a relationship search string:", default="Certification"
         )
 
-        list_relationships(search_string, server, url, userid, user_pass, time_out)
+        list_relationships(search_string, server, url, userid, user_pass, timeout)
     except KeyboardInterrupt:
         pass
 

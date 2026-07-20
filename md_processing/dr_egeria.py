@@ -33,7 +33,7 @@ from md_processing.v2 import (
     GovernanceProcessor, GovernanceLinkProcessor, GovernanceContextProcessor,
     FeedbackProcessor, TagProcessor, ExternalReferenceProcessor, FeedbackLinkProcessor,
     ViewProcessor, ActorManagerProcessor, ActorManagerLinkProcessor,
-    ActionProcessStepLinkProcessor
+    ActionProcessStepLinkProcessor, ActionExecutorTargetLinkProcessor
 )
 
 from pyegeria import settings, EgeriaTech, PyegeriaException, print_basic_exception, print_validation_error
@@ -159,7 +159,8 @@ def register_governance_processors(register_processor: Callable[[str, Type[Async
             continue
 
         verb = base_name.split(" ", 1)[0]
-        if family == "Action Author" and verb in link_verbs:
+        om_type = spec.get("OM_TYPE")
+        if family == "Action Author" and om_type in ("GovernanceActionProcessFlow", "NextGovernanceActionProcessStep"):
             # Link/Unlink First/Next Process Step call a different OMVS
             # client (action_author.setup_first/next_action_process_step,
             # remove_first/next_action_process_step) with distinct
@@ -167,6 +168,13 @@ def register_governance_processors(register_processor: Callable[[str, Type[Async
             # mandatoryGuard) than the generic peer-link mechanism
             # GovernanceLinkProcessor implements.
             processor_cls = ActionProcessStepLinkProcessor
+        elif family == "Action Author" and om_type in ("GovernanceActionExecutor", "TargetForGovernanceAction"):
+            # Link Action to Action Executor / Link Action to Target call
+            # action_author.link_governance_action_executor /
+            # link_target_for_governance_action directly, with their own
+            # dedicated relationship properties (requestType/filters/maps,
+            # actionTargetName) that PeerDefinitionProperties has no room for.
+            processor_cls = ActionExecutorTargetLinkProcessor
         elif verb in link_verbs:
             processor_cls = GovernanceLinkProcessor
         else:
@@ -355,7 +363,7 @@ async def process_md_file_v2(input_file: str, output_folder: str, directive: str
         _orig_make_request = BaseServerClient._async_make_request
 
         async def _debug_make_request(self_inner, request_type, endpoint,
-                                      payload=None, time_out=30, is_json=True, params=None):
+                                      payload=None, is_json=True, params=None, *, timeout=30):
             import inspect as _inspect
 
             _url_str = endpoint
@@ -397,7 +405,7 @@ async def process_md_file_v2(input_file: str, output_folder: str, directive: str
                     except Exception:
                         console.print(f"[dark_orange][DEBUG] Body: {payload}[/dark_orange]")
             return await _orig_make_request(self_inner, request_type, endpoint,
-                                            payload, time_out, is_json, params)
+                                            payload, is_json, params, timeout=timeout)
 
         BaseServerClient._async_make_request = _debug_make_request
         console.print(
