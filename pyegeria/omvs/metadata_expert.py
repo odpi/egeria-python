@@ -3201,6 +3201,96 @@ class MetadataExpert(ServerClient):
         )
         return response
 
+    async def _async_count_metadata_elements(
+        self,
+        body: dict,
+        timeout: int = default_timeout,
+        **kwargs,
+    ) -> int:
+        """Return the number of metadata elements that match the supplied criteria.
+
+        Same search semantics as `find_metadata_elements()` but returns just the
+        count — the server answers with a native `SELECT COUNT(*)` rather than
+        materializing the result set, so it is far cheaper (esp. for as-of queries).
+        Async version.
+
+        Parameters
+        ----------
+        body: dict
+            - A `FindRequestBody` search structure (see `find_metadata_elements`).
+        timeout: int, default = default_timeout
+            - http request timeout for this request
+
+        Returns
+        -------
+        int
+            The number of matching metadata elements.
+
+        Raises
+        ------
+        PyegeriaInvalidParameterException
+            one of the parameters is null or invalid or
+        PyegeriaAPIException
+            There is a problem issuing the request to the metadata repository or
+        PyegeriaUnauthorizedException
+            the requesting user is not authorized to issue this request.
+
+        Notes
+        -----
+            Sample body — identical to `find_metadata_elements`:
+                {
+                  "class" : "FindRequestBody",
+                  "metadataElementTypeName": "add typeName here",
+                  "limitResultsByStatus" : ["ACTIVE"],
+                  "asOfTime" : "{{$isoTimestamp}}"
+                }
+        """
+        url = (
+            f"{base_path(self, self.view_server)}/metadata-elements/by-search-conditions/count"
+        )
+        response: Response = await self._async_make_request(
+            "POST", url, body_slimmer(body), timeout=timeout
+        )
+        return response.json().get("count", 0)
+
+    def count_metadata_elements(
+        self,
+        body: dict,
+        timeout: int = default_timeout,
+        **kwargs,
+    ) -> int:
+        """Return the number of metadata elements that match the supplied criteria.
+
+        Same search semantics as `find_metadata_elements()` but returns just the
+        count — the server answers with a native `SELECT COUNT(*)` rather than
+        materializing the result set, so it is far cheaper (esp. for as-of queries).
+
+        Parameters
+        ----------
+        body: dict
+            - A `FindRequestBody` search structure (see `find_metadata_elements`).
+        timeout: int, default = default_timeout
+            - http request timeout for this request
+
+        Returns
+        -------
+        int
+            The number of matching metadata elements.
+
+        Raises
+        ------
+        PyegeriaInvalidParameterException
+            one of the parameters is null or invalid or
+        PyegeriaAPIException
+            There is a problem issuing the request to the metadata repository or
+        PyegeriaUnauthorizedException
+            the requesting user is not authorized to issue this request.
+        """
+        loop = asyncio.get_event_loop()
+        return loop.run_until_complete(
+            self._async_count_metadata_elements(body, timeout=timeout, **kwargs)
+        )
+
     async def _async_find_relationships_between_elements(
         self,
         body: dict,
@@ -3395,6 +3485,97 @@ class MetadataExpert(ServerClient):
             )
         )
         return response
+
+    async def _async_count_relationships_between_elements(
+        self,
+        body: dict,
+        timeout: int = default_timeout,
+        **kwargs,
+    ) -> int:
+        """Return the number of relationships that match the requested conditions.
+
+        Same search semantics as `find_relationships_between_elements()` but returns
+        just the count — the server answers with a native `SELECT COUNT(*)` rather
+        than materializing the result set. Async version.
+
+        Parameters
+        ----------
+        body: dict
+            - A `FindRelationshipRequestBody` search structure
+              (see `find_relationships_between_elements`).
+        timeout: int, default = default_timeout
+            - http request timeout for this request
+
+        Returns
+        -------
+        int
+            The number of matching relationships.
+
+        Raises
+        ------
+        PyegeriaInvalidParameterException
+            one of the parameters is null or invalid or
+        PyegeriaAPIException
+            There is a problem issuing the request to the metadata repository or
+        PyegeriaUnauthorizedException
+            the requesting user is not authorized to issue this request.
+
+        Notes
+        -----
+            Sample body — identical to `find_relationships_between_elements`:
+                {
+                  "class" : "FindRelationshipRequestBody",
+                  "relationshipTypeName": "add typeName here",
+                  "limitResultsByStatus" : ["ACTIVE"],
+                  "asOfTime" : "{{$isoTimestamp}}"
+                }
+        """
+        url = (
+            f"{base_path(self, self.view_server)}/relationships/by-search-conditions/count"
+        )
+        response: Response = await self._async_make_request(
+            "POST", url, body_slimmer(body), timeout=timeout
+        )
+        return response.json().get("count", 0)
+
+    def count_relationships_between_elements(
+        self,
+        body: dict,
+        timeout: int = default_timeout,
+        **kwargs,
+    ) -> int:
+        """Return the number of relationships that match the requested conditions.
+
+        Same search semantics as `find_relationships_between_elements()` but returns
+        just the count — the server answers with a native `SELECT COUNT(*)` rather
+        than materializing the result set.
+
+        Parameters
+        ----------
+        body: dict
+            - A `FindRelationshipRequestBody` search structure
+              (see `find_relationships_between_elements`).
+        timeout: int, default = default_timeout
+            - http request timeout for this request
+
+        Returns
+        -------
+        int
+            The number of matching relationships.
+
+        Raises
+        ------
+        PyegeriaInvalidParameterException
+            one of the parameters is null or invalid or
+        PyegeriaAPIException
+            There is a problem issuing the request to the metadata repository or
+        PyegeriaUnauthorizedException
+            the requesting user is not authorized to issue this request.
+        """
+        loop = asyncio.get_event_loop()
+        return loop.run_until_complete(
+            self._async_count_relationships_between_elements(body, timeout=timeout, **kwargs)
+        )
 
     async def _async_get_relationship_by_guid(
         self,
