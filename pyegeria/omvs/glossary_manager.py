@@ -42,6 +42,7 @@ class GlossaryTermProperties(ReferenceableProperties):
     examples: str = None
     usage: str = None
     user_defined_status: str = None
+    aliases: list[str] | None = None
     publishVersionIdentifier: str = None
     contextDescription: str = None
     contextScope: str = None

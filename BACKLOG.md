@@ -67,3 +67,29 @@ Checked the Egeria core Java handler (`SolutionComponentHandler.linkSolutionLink
 **Mitigation added 2026-07-09:** the user extended `Link Solution Components` with a `One Way` attribute (bool, default `True`) as a workaround — set `One Way: False` to express a bidirectional flow with a single command instead of issuing two same-direction commands. `SolutionLinkProcessor.apply_changes()` in `md_processing/v2/solution_architect.py` now also pre-checks for an existing same-direction wire before creating a new one and surfaces a `WARNING`-status "Existing Wire Overwrite" result if a call is about to silently clobber an existing relationship — so this is no longer a silent, undetectable data-loss surprise, but the underlying overwrite behavior itself is still present.
 
 **Fix (if ever pursued upstream):** report/fix in Egeria core so the `attach` REST handler for `SolutionLinkingWire` creates a new relationship instance per call (matching the type system's `ANY_NUMBER` cardinality) rather than upserting by ordered end-GUID pair. Out of scope for `egeria-python` to fix directly.
+
+---
+
+## 🟢 Low Priority — `examples/` has two broken test-collection files
+
+**Status:** open
+**Added:** 2026-07-24
+
+Running `pytest` broadly enough to sweep in `examples/` (rather than scoping to `tests/` per this repo's convention) surfaces two pre-existing collection errors, unrelated to any Dr.Egeria/glossary work:
+- `examples/extract_attribute_test.py:13` — a stray trailing `/` after `if zones and isinstance(zones, list):` is a plain `SyntaxError`, so the file can't even be parsed.
+- `examples/test_jacquard_data_sets.py` and `examples/test_jacquard_data_sets_scenarios.py` — both `from examples.jacquard_data_sets import JacquardDataSets`, which fails with `ModuleNotFoundError: No module named 'examples'` (no `__init__.py`/path setup makes `examples` importable as a package).
+
+Neither breaks `pytest tests/`, so day-to-day test runs are unaffected — this only bites if `examples/` is included in the collection path.
+
+**Fix:** remove the stray `/` in `extract_attribute_test.py:13`; either add `examples/__init__.py` (and confirm `examples` is on `sys.path`/rootdir-relative import works) or change the two Jacquard test imports to a path that resolves without treating `examples` as a package.
+
+---
+
+## 🟡 Medium Priority — Migrate Pydantic v1-style validators to v2 syntax
+
+**Status:** open
+**Added:** 2026-07-24
+
+`pyegeria/view/_output_format_models.py` (lines 164, 172, 221, 238, 275) still uses Pydantic v1-style `@root_validator(pre=True)` and `@validator(...)` decorators. These emit `PydanticDeprecatedSince20` warnings on every collection/import that touches this module (visible in `pytest` output) — they still work today (v2 keeps them as deprecated shims) but are slated for removal in a future Pydantic major version. Not urgent — no functional bug, and the project's Pydantic version (2.12.3) is current — but the warning noise will become a hard break eventually.
+
+**Fix:** migrate `@root_validator(pre=True)` → `@model_validator(mode="before")` and `@validator(...)` → `@field_validator(...)` for each of the 5 flagged validators in `_output_format_models.py`, then re-run `pytest -m unit` to confirm the warnings are gone and behavior is unchanged.

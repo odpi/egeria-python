@@ -20,7 +20,7 @@ import re
 from pathlib import Path
 from typing import Dict, List, Set, Tuple
 
-ROOT = Path(__file__).resolve().parents[1]
+ROOT = Path(__file__).resolve().parents[2]
 EXPERT_FILE = ROOT / "pyegeria" / "omvs" / "metadata_expert.py"
 HTTP_CONTRACT_FILE = ROOT / "pyegeria" / "http clients" / "Egeria-api-metadata-expert.http"
 
