@@ -420,7 +420,31 @@ async def process_md_file_v2(input_file: str, output_folder: str, directive: str
     else:
         full_file_path = os.path.abspath(os.path.expanduser(os.path.join(EGERIA_ROOT_PATH, EGERIA_INBOX_PATH, input_file)))
 
-    logger.info(f"v2: Processing Markdown File: {full_file_path}")
+    logger.info(f"v2: Processing Markdown path: {full_file_path}")
+
+    if os.path.isdir(full_file_path):
+        console.print(f"[cyan]v2: Processing Markdown Directory: {full_file_path}[/cyan]")
+        md_files = [f for f in os.listdir(full_file_path) if f.endswith('.md') and f.lower() != 'readme.md']
+        md_files.sort()
+        if not md_files:
+            console.print(f"[yellow]No .md files found in directory: {full_file_path}[/yellow]")
+            return
+
+        for md_file in md_files:
+            await process_md_file_v2(
+                input_file=os.path.join(full_file_path, md_file),
+                output_folder=output_folder,
+                directive=directive,
+                client=client,
+                parse_summary=parse_summary,
+                attribute_logs=attribute_logs,
+                usage_level=usage_level,
+                summary_only=summary_only,
+                debug=debug
+            )
+        console.print(f"\n[bold green]v2: Processing complete for directory '{input_file}'[/bold green]")
+        return
+
     console.print(f"[cyan]v2: Processing Markdown File: {full_file_path}[/cyan]")
 
     if directive == "process":

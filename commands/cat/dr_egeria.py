@@ -80,9 +80,10 @@ def process_markdown_file(input_file: str, output_folder: str, directive: str,
     usage_level = "Advanced" if advanced else "Basic"
     try:
         # Instantiate the client
-        from pyegeria import settings, EgeriaTech
+        from pyegeria import EgeriaTech
         client = EgeriaTech(server, url, userid, user_pass)
         client.create_egeria_bearer_token()
+
         asyncio.run(process_md_file_v2(
             input_file=input_file,
             output_folder=output_folder,
