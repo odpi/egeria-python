@@ -120,12 +120,20 @@ def _is_mermaid_attribute(attribute_name: str | None = None, attribute_key: str 
     return attribute_title in MERMAID_GRAPH_TITLES + ["Mermaid Graph", "Mermaid"]
 
 
+_VEGA_KEY_SUFFIXES = ("BarGraph", "PieGraph", "VegaGraph", "LineGraph", "AreaGraph", "ScatterGraph", "FunnelGraph")
+_VEGA_TITLE_SUFFIXES = ("Bar Graph", "Pie Graph", "Vega Graph", "Line Graph", "Area Graph", "Scatter Graph", "Funnel Graph")
+
+
 def _is_vega_attribute(attribute_name: str | None = None, attribute_key: str | None = None) -> bool:
-    """Return True when a selected report attribute should be rendered as a Vega-Lite graph."""
+    """Return True when a selected report attribute should be rendered as a Vega-Lite graph.
+
+    Deliberately an explicit suffix allowlist rather than a blanket "endswith
+    Graph" check — Mermaid's own attribute keys (e.g. organizationTreeMermaidGraph)
+    also end in "Graph", and a blanket check would misroute those into the
+    vega-lite fence instead of the mermaid one (see _is_mermaid_attribute)."""
     key = attribute_key or ""
     name = attribute_name or ""
-    return key.endswith("BarGraph") or key.endswith("PieGraph") or key.endswith("VegaGraph") or \
-           name.endswith("Bar Graph") or name.endswith("Pie Graph") or name.endswith("Vega Graph")
+    return key.endswith(_VEGA_KEY_SUFFIXES) or name.endswith(_VEGA_TITLE_SUFFIXES)
 
 
 def _get_report_spec_attributes(columns_struct: Optional[dict]) -> list[dict]:
