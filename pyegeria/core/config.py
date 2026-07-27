@@ -57,7 +57,7 @@ class PyegeriaSettings(BaseSettings):
     egeria_width: int = 200
     # Renamed: format_sets -> report_specs
     pyegeria_user_report_specs_dir: str = "~/.pyegeria/report_specs"
-    egeria_user_name: str = ""
+    egeria_user_name: str = Field(default="", validation_alias="EGERIA_USER")
     egeria_user_password: str = ""
     egeria_usage_level: str = "Advanced"
     
