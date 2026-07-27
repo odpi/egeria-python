@@ -890,43 +890,6 @@ class LinkCertificationTypeToStructureProcessor(AsyncBaseCommandProcessor):
         return None
 
 
-class AttachDataDescriptionProcessor(AsyncBaseCommandProcessor):
-    """
-    Processor for Attach Data Description to Element commands.
-    """
-
-    def get_command_spec(self) -> Dict[str, Any]:
-        return get_command_spec("Attach Data Description to Element")
-
-    async def apply_changes(self) -> str:
-        attributes = self.parsed_output["attributes"]
-        coll_guid = attributes.get('Collection Id', {}).get('guid')
-        elem_guid = attributes.get('Element Id', {}).get('guid')
-        description = attributes.get('Description', {}).get('value')
-
-        if not coll_guid or not elem_guid:
-            logger.error("Both Collection Id and Element Id are required")
-            return self.command.raw_block
-
-        try:
-            body = {
-                "class": "NewRelationshipRequestBody",
-                "properties": {
-                    "class": "DataDescriptionProperties"
-                }
-            }
-
-            await self.client.collection_manager._async_attach_data_description(elem_guid, coll_guid, body)
-            logger.success(f"Attached Data Description to Element")
-            return "Link created successfully"
-        except Exception as e:
-            logger.error(f"Error attaching data description: {e}")
-            return self.command.raw_block
-
-    async def fetch_element(self, guid: str) -> Optional[Dict[str, Any]]:
-        return None
-
-
 class AssignDataValueSpecificationProcessor(AsyncBaseCommandProcessor):
     """
     Processor for Assign/Attach Data Value Specification to Element commands.

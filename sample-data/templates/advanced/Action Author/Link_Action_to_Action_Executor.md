@@ -1,22 +1,24 @@
 ___
 
-## Link Notification Subscriber
-> Links a Referenceable as a subscriber to a NotificationType, defining the subscription parameters.
+## Link Action to Action Executor
+> Links a governance action type to a governance engine, defining which engine executes it and how (request type, request parameters, and target/parameter filtering and renaming).
 
-### Notification Type
+### Governance Action Type
 >	**Input Required**: True
 
 >	**Attribute Type**: Reference Name
 
->	**Description**: The NotificationType entity to link the subscriber to or for a monitored resource.
+>	**Description**: The governance action type to link to a governance engine executor.
+
+>	**Alternative Labels**: Action Type
 
 
-### Subscriber
+### Governance Engine
 >	**Input Required**: True
 
 >	**Attribute Type**: Reference Name
 
->	**Description**: The Referenceable entity subscribing to the notification type.
+>	**Description**: The governance engine that will execute the linked governance action type.
 
 
 ### Label
@@ -27,14 +29,6 @@ ___
 >	**Description**: A label used to identify or categorise a relationship link.
 
 >	**Alternative Labels**: Wire Label
-
-
-### Last Notification
->	**Input Required**: False
-
->	**Attribute Type**: Simple
-
->	**Description**: The date of the last notification sent to this subscriber.
 
 
 ### Journal Entry
@@ -53,16 +47,24 @@ ___
 >	**Description**: A description.
 
 
-### Activity Status
+### Request Type
 >	**Input Required**: False
 
->	**Attribute Type**: Valid Value
+>	**Attribute Type**: Simple
 
->	**Description**: The status of an activity - one of an enumerated set of values.
+>	**Description**: The request type the executing governance engine uses to identify the governance service to run.
 
->	**Valid Values**: REQUESTED,APPROVED,WAITING,ACTIVATING,IN_PROGRESS,PAUSED,COMPLETED,INVALID,IGNORED,FAILED,CANCELLED,ABANDONED,OTHER
 
->	**Default Value**: REQUESTED
+### Request Parameters
+>	**Input Required**: False
+
+>	**Attribute Type**: Dictionary
+
+>	**Description**: Parameters to pass to the governance service when this step executes.
+
+>	| Parameter Name | Parameter Value |
+>	|---|---|
+>	| example_key | example_value |
 
 
 ### Effective From
@@ -147,12 +149,44 @@ ___
 >	**Default Value**: false
 
 
-### Zone Membership
+### Request Parameter Filter
 >	**Input Required**: False
 
 >	**Attribute Type**: Simple List
 
->	**Description**: Zones scope visibility of elements to different users.
+>	**Description**: Names of request parameters to remove before they are passed to the governance engine.
+
+
+### Request Parameter Map
+>	**Input Required**: False
+
+>	**Attribute Type**: Dictionary
+
+>	**Description**: Map to override the name that a request parameter is passed as to the governance engine.
+
+>	| Parameter Name | Parameter Value |
+>	|---|---|
+>	| example_key | example_value |
+
+
+### Action Target Filter
+>	**Input Required**: False
+
+>	**Attribute Type**: Simple List
+
+>	**Description**: Names of action targets to remove before they are passed to the governance engine.
+
+
+### Action Target Map
+>	**Input Required**: False
+
+>	**Attribute Type**: Dictionary
+
+>	**Description**: Map to override the name that an action target is passed as to the governance engine.
+
+>	| Parameter Name | Parameter Value |
+>	|---|---|
+>	| example_key | example_value |
 
 
 ___

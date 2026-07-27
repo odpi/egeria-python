@@ -13,7 +13,7 @@ from .data_designer import (
     DataGrainProcessor, LinkDataFieldProcessor, LinkFieldToStructureProcessor,
     LinkDataValueDefinitionProcessor, LinkDataValueCompositionProcessor,
     LinkDataClassCompositionProcessor, LinkCertificationTypeToStructureProcessor,
-    AttachDataDescriptionProcessor, DataValueSpecificationProcessor
+    DataValueSpecificationProcessor
 )
 from .solution_architect import (
     BlueprintProcessor, ComponentProcessor,

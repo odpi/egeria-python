@@ -181,6 +181,36 @@ class AsyncBaseCommandProcessor(ABC):
             "label": label, "guid": guid, "status": status, "message": message
         })
 
+    async def _sync_zone_membership(self, guid: str, attributes: Dict[str, Any]) -> None:
+        """
+        Apply the "Zone Membership" attribute (a ZoneMembershipProperties classification,
+        not a plain Referenceable property) to the element just created/updated.
+
+        Egeria's classification handler reclassifies in place, so a single
+        add_zone_membership call is safe for both create and update; an empty/cleared
+        list removes the classification instead.
+        """
+        zone_attr = attributes.get("Zone Membership", {})
+        if "value" not in zone_attr:
+            return
+        zones = zone_attr.get("value")
+        try:
+            if zones:
+                body = {
+                    "class": "NewClassificationRequestBody",
+                    "properties": {"class": "ZoneMembershipProperties", "zoneMembership": zones},
+                }
+                await self.client._async_add_zone_membership(guid, body)
+                self.add_related_result("Zone Membership", guid=guid, message=f"Set to {zones}")
+            else:
+                await self.client._async_clear_zone_membership(
+                    guid, {"class": "DeleteClassificationRequestBody"}
+                )
+                self.add_related_result("Zone Membership", guid=guid, message="Cleared")
+        except PyegeriaException as e:
+            logger.error(f"Error syncing Zone Membership for {guid}: {e}")
+            self.add_related_result("Zone Membership", guid=guid, status="failure", message=str(e))
+
     async def execute(self) -> Dict[str, Any]:
         """
         Orchestrate the command execution flow.
@@ -632,6 +662,9 @@ class AsyncBaseCommandProcessor(ABC):
             if qn and guid:
                 d_name = self.parsed_output.get("display_name") or qn
                 update_element_dictionary(qn, {"guid": guid, "display_name": d_name})
+
+            if guid and self.command.verb in ["Create", "Define", "Register", "Add", "Update", "Modify", "Upsert"]:
+                await self._sync_zone_membership(guid, attributes)
 
         message = f"Executed {self.command.verb} {self.command.object_type}" + (f" (GUID: {guid})" if guid else "")
         if self.related_results:

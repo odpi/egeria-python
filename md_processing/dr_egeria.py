@@ -247,7 +247,7 @@ def setup_dispatcher(client: EgeriaTech) -> V2Dispatcher:
     from md_processing.v2.data_designer import (
         DataValueSpecificationProcessor, DataClassProcessor, DataStructureProcessor, DataFieldProcessor, DataGrainProcessor,
         LinkDataFieldProcessor, LinkFieldToStructureProcessor, LinkDataValueDefinitionProcessor, LinkDataValueCompositionProcessor,
-        LinkDataClassCompositionProcessor, LinkCertificationTypeToStructureProcessor, AttachDataDescriptionProcessor,
+        LinkDataClassCompositionProcessor, LinkCertificationTypeToStructureProcessor,
         AssignDataValueSpecificationProcessor
     )
 
@@ -265,7 +265,6 @@ def setup_dispatcher(client: EgeriaTech) -> V2Dispatcher:
     reg("Link Data Value Composition", LinkDataValueCompositionProcessor)
     reg("Link Data Class Composition", LinkDataClassCompositionProcessor)
     reg("Link Certification Type to Data Structure", LinkCertificationTypeToStructureProcessor)
-    reg("Attach Data Description to Element", AttachDataDescriptionProcessor)
     reg("Assign Data Value Specification", AssignDataValueSpecificationProcessor)
 
     # Solution Architect (spec-driven to keep coverage aligned with compact commands)
