@@ -33,7 +33,8 @@ from md_processing.v2 import (
     GovernanceProcessor, GovernanceLinkProcessor, GovernanceContextProcessor,
     FeedbackProcessor, TagProcessor, ExternalReferenceProcessor, FeedbackLinkProcessor,
     ViewProcessor, ActorManagerProcessor, ActorManagerLinkProcessor,
-    ActionProcessStepLinkProcessor, ActionExecutorTargetLinkProcessor
+    ActionProcessStepLinkProcessor, ActionExecutorTargetLinkProcessor,
+    CreateDashboardSheetProcessor, LinkReportToDashboardSheetProcessor
 )
 
 from pyegeria import settings, EgeriaTech, PyegeriaException, print_basic_exception, print_validation_error
@@ -300,6 +301,11 @@ def setup_dispatcher(client: EgeriaTech) -> V2Dispatcher:
 
     # Reporting / View
     reg("View Report", ViewProcessor)
+
+    # Dashboard Sheets (local pyegeria-only records, not Egeria elements yet --
+    # see OVERVIEW_REPORTING_MODEL.md SS10 for the planned Collection-subtype migration)
+    reg("Create Dashboard Sheet", CreateDashboardSheetProcessor)
+    reg("Link Report to Dashboard Sheet", LinkReportToDashboardSheetProcessor)
 
     # Feedback / Tags / External References
     reg("Add Comment", FeedbackProcessor)
