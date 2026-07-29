@@ -568,6 +568,29 @@ base_report_specs = FormatSetDict({
             # spec_params={"property_names": ["displayName", "qualifiedName"]},
         )
     ),
+    "Comment-by-Element": FormatSet(
+        heading="Comments by Element",
+        description="Return comments for the specified element",
+        annotations={},  # No specific annotations
+        family="General",
+        formats=[
+            Format(
+                types=["ALL", "TABLE", "DICT"],
+                attributes= [
+                    Column(name='Display Name', key='display_name'),
+                    Column(name='Qualified Name', key='qualified_name', format=False),
+                    Column(name='Comment Guid', key='guid'),
+                    Column(name='Description', key='description', format=True),
+                ],
+            )
+        ],
+        action=ActionParameter(
+            function="ServerClient.get_attached_comments",
+            optional_params=['body'],
+            required_params=["element_guid"],
+            spec_params={},
+        )
+    ),
     "Element-By-Owner": FormatSet(
         heading="Elements by Owner",
         description="Return elements for the specified owner",
@@ -884,6 +907,7 @@ base_report_specs = FormatSetDict({
                     Column(name="Time", key="time"),
                     Column(name="Priority", key="priority"),
                     Column(name="Activity Status", key="activityStatus"),
+                    Column(name="GUID", key="guid"),
                 ],
             )
         ],
