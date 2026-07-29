@@ -1,10 +1,15 @@
 ___
 
-## Attach Data Description to Element
-> Connect an existing data describing collection to an element using the DataDescription relationship (0580).
+## Link Action to Target
+> Links a governance action to an element that is a target of that action, giving the target a name that the governance service uses to identify it.
 
->
->	**Alternative Names**: Attach Data Description->Element
+### Governance Action
+>	**Input Required**: True
+
+>	**Attribute Type**: Reference Name
+
+>	**Description**: The governance action to attach a target element to.
+
 
 ### Element Id
 >	**Input Required**: True
@@ -42,12 +47,12 @@ ___
 >	**Description**: A description.
 
 
-### Collection Id
+### Action Target Name
 >	**Input Required**: False
 
->	**Attribute Type**: Reference Name
+>	**Attribute Type**: Simple
 
->	**Description**: The unique identifier (qualified name or GUID) of the collection.
+>	**Description**: The name to give this element when it is passed as an action target to the governance service.
 
 
 ### Effective From
