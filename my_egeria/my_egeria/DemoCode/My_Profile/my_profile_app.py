@@ -31,8 +31,12 @@ from CreateProfileScreen import CreateProfileScreen
 from EditProfileScreen import EditProfileScreen
 from EditCommunitiesScreen import EditCommunitiesScreen
 from EditIdentitiesScreen import EditIdentitiesScreen
+from EditProjectsScreen import EditProjectsScreen
+from EditTodosScreen import EditTodosScreen
 from EditRolesScreen import EditRolesScreen
 from EditTeamsScreen import EditTeamsScreen
+from EditBlogsScreen import EditBlogsScreen
+from EditJournalScreen import EditJournalScreen
 from TechnologyTypesScreen import TechnologyTypesScreen
 from TechnologyTypeOptionsScreen import TechnologyTypeOptionsScreen
 from TechnologyTypeTemplatesScreen import TechnologyTypeTemplatesScreen
@@ -63,13 +67,15 @@ class MyProfileApp(App):
 
     SCREENS = {
         "main": MainScreen,
-        "_default": MainScreen,
         "create_profile": CreateProfileScreen,
         "edit_profile": EditProfileScreen,
         "edit_communities": EditCommunitiesScreen,
         "edit_identities": EditIdentitiesScreen,
         "edit_roles": EditRolesScreen,
         "edit_teams": EditTeamsScreen,
+        "edit_todos": EditTodosScreen,
+        "edit_projects": EditProjectsScreen,
+        "edit_blogs": EditBlogsScreen,
         "tech_types": TechnologyTypesScreen,
         "tech_type_options": TechnologyTypeOptionsScreen,
         "tech_type_templates": TechnologyTypeTemplatesScreen,
@@ -140,7 +146,7 @@ class MyProfileApp(App):
     async def on_mount(self) -> None:
         """Load profile; if missing, prompt to create it; then populate tables."""
         # DOMInfo.attach_to(self)
-
+        await self.push_screen("main")
         await self._load_or_create_profile()
         await self._populate_tables()
 
@@ -192,7 +198,8 @@ class MyProfileApp(App):
                 report_spec="My-User-MD",
             )
             self.log(f"Profile retrieved successfully: {self.user_profile_struct}")
-            self.push_screen("main")
+
+            self._show_main_screen()
         except PyegeriaException as e2:
             self.log(f"Error retrieving user profile: {e2!s}")
             self.exit(412)
@@ -321,9 +328,13 @@ class MyProfileApp(App):
 
         self.projects_table.clear(columns=True)
         self.projects_table.add_columns("Project Name", "Description", "Qualified Name")
+        self.projects_table.zebra = True
+        self.projects_table.cursor_type = "row"
 
         self.communities_table.clear(columns=True)
         self.communities_table.add_columns("Assignment Type", "Community Name", "Description", "GUID")
+        self.communities_table.zebra = True
+        self.communities_table.cursor_type = "row"
 
         self.roles_table.clear(columns=True)
         self.roles_table.add_columns("Role Name", "Role Type","Description", "GUID")
@@ -332,31 +343,35 @@ class MyProfileApp(App):
 
         self.teams_table.clear(columns=True)
         self.teams_table.add_columns("Assignment Type", "Team Name", "Description","GUID")
+        self.teams_table.zebra = True
+        self.teams_table.cursor_type = "row"
 
         self.blogs_table.clear(columns=True)
-        self.blogs_table.add_columns("Blog Title", "Date", "Text")
+        self.blogs_table.add_columns("Blog Title", "Date", "Text", "GUID")
         self.blogs_table.zebra = True
         self.blogs_table.cursor_type = "row"
 
         self.journal_table.clear(columns=True)
-        self.journal_table.add_columns("Journal Entry", "Date", "Text")
+        self.journal_table.add_columns("Journal Entry", "Date", "Text", "GUID")
         self.journal_table.zebra = True
         self.journal_table.cursor_type = "row"
 
         self.todos_table.clear(columns=True)
-        self.todos_table.add_columns("To-Do Name", "Activity Status", "Description")
+        self.todos_table.add_columns("To-Do Name", "Activity Status", "Description", "GUID")
         self.todos_table.zebra = True
         self.todos_table.cursor_type = "row"
 
         self.user_identity_table.clear(columns=True)
-        self.user_identity_table.add_columns("Display Name", "User ID", "Distinguished Name")
+        self.user_identity_table.add_columns("Display Name", "User ID", "Distinguished Name", "GUID")
+        self.user_identity_table.zebra = True
+        self.user_identity_table.cursor_type = "row"
 
         # Populate rows
         for p in self.projects if isinstance(self.projects, list) else []:
             self.projects_table.add_row(
                 str(p.get("Name", "")),
                 str(p.get("Description", "")),
-                str(p.get("Qualified Name", "")),
+                str(p.get("Qualified Name", p.get("qualified_name", ""))),
             )
 
         for c in self.communities if isinstance(self.communities, list) else []:
@@ -364,7 +379,7 @@ class MyProfileApp(App):
                 str(c.get("Assignment Type", "")),
                 str(c.get("Name", "")),
                 str(c.get("Description", "")),
-                str(c.get("GUID", ""))
+                str(c.get("GUID", c.get("guid", "")))
             )
 
         for r in self.roles if isinstance(self.roles, list) else []:
@@ -372,7 +387,7 @@ class MyProfileApp(App):
                 str(r.get("Name", "")),
                 str(r.get("Type", "")),
                 str(r.get("Description", "")),
-                str(r.get("GUID", "")),
+                str(r.get("GUID", r.get("guid", ""))),
             )
 
         for b in self.blogs if isinstance(self.blogs, list) else []:
@@ -380,6 +395,7 @@ class MyProfileApp(App):
                 str(b.get("title", "")),
                 str(b.get("time", "")),
                 str(b.get("text", "")),
+                str(b.get("GUID", b.get("guid", "")))
             )
 
         for j in self.journal if isinstance(self.journal, list) else []:
@@ -387,6 +403,7 @@ class MyProfileApp(App):
                 str(j.get("title", "")),
                 str(j.get("time", "")),
                 str(j.get("text", "")),
+                str(j.get("GUID", j.get("guid", "")))
             )
 
         for td in self.todos if isinstance(self.todos, list) else []:
@@ -394,6 +411,7 @@ class MyProfileApp(App):
                 str(td.get("Name", "")),
                 str(td.get("Activity Status", "")),
                 str(td.get("Description", "")),
+                str(td.get("GUID", td.get("guid", "")))
             )
 
         for t in self.teams if isinstance(self.teams, list) else []:
@@ -401,7 +419,7 @@ class MyProfileApp(App):
                 str(t.get("Assignment Type", "")),
                 str(t.get("Name", "")),
                 str(t.get("Description", "")),
-                str(t.get("GUID", "")),
+                str(t.get("GUID", t.get("guid", ""))),
             )
 
     def action_quit(self) -> None:
@@ -690,7 +708,7 @@ class MyProfileApp(App):
         # check that we got a valid result from the screen and process accordingly
         if not result or isinstance(result, int) :
             self.log(f"Technology Types screen cancelled or failed; return: {result}.")
-            await self.push_screen(MainScreen())
+            self._show_main_screen()
             return (result)
         self.selected_t_node = str(result)
         self.log(f"Technology Types screen returned: {self.selected_t_node}")
@@ -751,14 +769,14 @@ class MyProfileApp(App):
 
         if not result or result == None:
             self.log(f"Technology Type Options screen returned no input; return: {result}.")
-            await self.push_screen(MainScreen())
+            self._show_main_screen()
         elif isinstance(result, int) or isinstance(result, str):
             if not result or result == "back":
                 self.log(f"Technology Type Options screen cancelled/failed; return: {result}, exiting.")
-                await self.push_screen(MainScreen())
+                self._show_main_screen()
             elif isinstance(result, int) and result == 200:
                 self.log("Technology Type Options screen returned successfully.")
-                await self.push_screen(MainScreen())
+                self._show_main_screen()
             elif isinstance(result, int) and result != 200:
                 self.log(f"Technology Type Options screen cancelled/failed; return: {result}, exiting.")
                 self.exit(415)
@@ -770,16 +788,16 @@ class MyProfileApp(App):
             if not result[0] or isinstance(result[0], int):
                 if isinstance(result[0], int) and result[0] == 200:
                     self.log("Technology Type Options screen returned successfully.")
-                    await self.push_screen(MainScreen())
+                    self._show_main_screen()
             elif isinstance(result, list) and result[0] == "back":
-                await self.push_screen(MainScreen())
+                self._show_main_screen()
             else:
                     self.selected_t_option = str(result[0])
                     self.selected_t_option_selected = str(result[1])
                     self.log(f"Technology Type Options screen returned: {self.selected_t_option} | {self.selected_t_option_selected}")
         else:
             self.log(f"Technology Type Options screen cancelled/failed; return: {result}, type: {type(result)}.")
-            await self.push_screen(MainScreen())
+            self._show_main_screen()
 
         # display the screen so the objects we need to mount to are created in the DOM
         # then we can build the display elements for the placeholder properties
@@ -1771,13 +1789,13 @@ class MyProfileApp(App):
             self.log("MyTeam screen completed successfully")
         else:
             self.log(f"Error in MyTeam screen: {status}")
-        self.push_screen("main")
+        self._show_main_screen()
 
     def search_for_term_callback(self, status) -> None:
         self.log(f"Callback received with status: {status}")
         if status == 200:
             self.log("Search for term screen completed successfully")
-            self.push_screen("main")
+            self._show_main_screen()
         elif status == 201:
             glossary_table = self.query_one("g#glossary_table", DataTable)
             digital_product_catalog_table = self.query_one("d#digital_product_catalog_table", DataTable)
@@ -1889,7 +1907,7 @@ class MyProfileApp(App):
         """ Callback roiutine for the user identities screen
             the user has requested to exit the screen and so will will
             push the main screen again"""
-        self.push_screen("main")
+        self._show_main_screen()
 
     def edit_identities_callback(self, rows_with_keys):
         """ Callback for EditIdentitiesScreen """
@@ -1899,7 +1917,7 @@ class MyProfileApp(App):
             table.clear()
             for key_str, cell_values in rows_with_keys:
                 table.add_row(*cell_values, key=key_str)
-        self.push_screen("main")
+        self._show_main_screen()
 
     def edit_communities_callback(self, rows_with_keys):
         """ Callback for EditCommunitiesScreen """
@@ -1909,7 +1927,7 @@ class MyProfileApp(App):
             table.clear()
             for key_str, cell_values in rows_with_keys:
                 table.add_row(*cell_values, key=key_str)
-        self.push_screen("main")
+        self._show_main_screen()
 
     def edit_roles_callback(self, rows_with_keys):
         """ Callback for EditRolesScreen """
@@ -1919,7 +1937,7 @@ class MyProfileApp(App):
             table.clear()
             for key_str, cell_values in rows_with_keys:
                 table.add_row(*cell_values, key=key_str)
-        self.push_screen("main")
+        self._show_main_screen()
 
     def edit_teams_callback(self, rows_with_keys):
         """ Callback for EditTeamsScreen """
@@ -1929,17 +1947,17 @@ class MyProfileApp(App):
             table.clear()
             for key_str, cell_values in rows_with_keys:
                 table.add_row(*cell_values, key=key_str)
-        self.push_screen("main")
+        self._show_main_screen()
 
     def edit_profile_callback(self, return_c):
         """ Callback routine for the edit profile screen """
         if isinstance(return_c, int):
             if return_c == 200:
-                self.push_screen("main")
+                self._show_main_screen()
             else:
                 self.log(f"Error returned from EditProfileScreen: {return_c}")
                 self.log("Returning to main screen")
-                self.push_screen("main")
+                self._show_main_screen()
         elif isinstance(return_c, str):
             if return_c == "identity":
                 main_screen = self.get_screen("main")
@@ -1985,22 +2003,33 @@ class MyProfileApp(App):
                 self.push_screen(EditTeamsScreen(columns, rows_with_keys), callback=self.edit_teams_callback)
         else:
             self.log(f"Unexpected return type from EditProfileScreen: {type(return_c)}")
-            self.push_screen("main")
+            self._show_main_screen()
 
     def edit_tables(self, table_name, row_k):
         """ Edit the selected table """
         self.log(f"Editing table: {table_name}, row: {row_k}")
-        if table_name == "roles":
+        if table_name == "roles_table":
             self.push_screen(EditRolesScreen(), callback=self.edit_roles_callback)
-        elif table_name == "teams":
+        elif table_name == "projects_table":
+            self.push_screen(EditProjectsScreen(), callback=self.edit_projects_callback)
+        elif table_name == "communities_table":
+            self.push_screen(EditCommunitiesScreen(), callback=self.edit_communities_callback)
+        elif table_name == "teams_table":
             self.push_screen(EditTeamsScreen(), callback=self.edit_teams_callback)
+        elif table_name == "blogs_table":
+            self.push_screen(EditBlogsScreen(), callback=self.edit_blogs_callback)
+        elif table_name == "journal_table":
+            self.push_screen(EditJournalScreen(), callback=self.edit_journal_callback)
+        elif table_name == "todos_table":
+            self.push_screen(EditTodosScreen(), callback=self.edit_todos_callback)
         else:
             self.log(f"Unexpected table name: {table_name}")
 
-    async def show_comments(self, table_name, row_k):
+    def show_comments(self, table_name, row_k):
         """ Show comments for the selected table """
         self.log(f"Showing comments for table: {table_name}, row: {row_k}")
-        await self.push_screen(ShowCommentsScreen(table_name, row_k,
+        # row_k might be a RowKey object, we want to ensure we pass something that extract_backend_identifier can use
+        self.push_screen(ShowCommentsScreen(table_name, row_k,
                                                   self.view_server,
                                                   self.platform_url,
                                                   self.user_name,
@@ -2011,10 +2040,23 @@ class MyProfileApp(App):
         self.log(f"Return from ShowCommentsScreen: {return_c}")
         if return_c is None:
             self.log("No return from ShowCommentsScreen")
-            self.push_screen("main")
+            self._show_main_screen()
         else:
             self.log(f"Unexpected return type from ShowCommentsScreen: {type(return_c)}")
+            self._show_main_screen()
+
+    def _show_main_screen(self):
+        """ Callback for ShowCommentsScreen """
+        self.log("Returning to main screen")
+        try:
+            # query the main screen, if it already exists then switch to it
+            exists = self.get_screen("main")
+            self.switch_screen("main")
+        except KeyError:
+            # if it doesnt exist then push the main screen
+            self.log("Main screen does not exist")
             self.push_screen("main")
+        return
 
 if __name__ == "__main__":
     app = MyProfileApp()
