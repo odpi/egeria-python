@@ -24,18 +24,13 @@ class MainScreen(Screen):
 
     CSS_PATH = "my_profile.tcss"
 
-    def __init__(self):
-        super().__init__(id="main_screen")
+    def __init__(self, *args, **kwargs):
+        super().__init__(id="main_screen", *args, **kwargs)
         self.title = "Egeria"
         self.sub_title = "My Profile"
-        self.projects_table: DataTable = self.app.query_one("#projects_table")
-        self.communities_table: DataTable = self.app.query_one("#communities_table")
-        self.roles_table: DataTable = self.app.query_one("#roles_table")
-        self.teams_table: DataTable = self.app.query_one("#teams_table")
-        self.blogs_table: DataTable = self.app.query_one("#blogs_table")
-        self.journal_table: DataTable = self.app.query_one("#journal_table")
-        self.todos_table: DataTable = self.app.query_one("#todos_table")
         self.other_function_list: OptionList = OptionList(id="other_function_list")
+        self.selected_table = None
+        self.selected_row = None
 
     def compose(self) -> ComposeResult:
         # place widgets into grid on screen, note sequence determines position!
@@ -98,18 +93,24 @@ class MainScreen(Screen):
 
         yield Footer(id="main_footer")
 
+    def on_data_table_row_highlighted(self, event: DataTable.RowHighlighted):
+        """ Collect row and table when the user highlights a row in a table """
+        self.selected_row = event.row_key
+        self.selected_table = event.data_table.id
+
     def on_data_table_row_selected(self, event: DataTable.RowSelected):
         """ Collect row and table when the user selects a row in a table """
         self.selected_row = event.row_key
         self.selected_table = event.data_table.id
-        pass
 
-    def action_edit_table(self):
+    async def action_edit_table(self):
         """ Edit the selected table """
-        self.app.edit_tables(self.selected_table, self.selected_row)
-        pass
+        if self.selected_table and self.selected_row:
+            await self.app.edit_tables(self.selected_table, self.selected_row)
+        else:
+            self.notify("Please select a row and table to edit.", timeout=5, severity="warning")
 
-    def action_show_comments(self):
+    async def action_show_comments(self):
         """ Show comments for the selected table """
         if self.selected_table and self.selected_row:
             self.app.show_comments(self.selected_table, self.selected_row)
