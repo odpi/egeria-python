@@ -5,6 +5,37 @@ Status: `open` · `in-progress` · `done` · `deferred`
 
 ---
 
+## 🔴 High Priority — Cross-family template scan found several Link/Attach spec defects that validation sweeps missed
+
+**Status:** open
+**Added:** 2026-07-06
+
+Egeria Advisor did a manual+agent-assisted scan of all `Create_*`/`Link_*`/`Attach_*` markdown templates across all 12 Dr.Egeria families (Action Author, Actor Manager, Collections, Data Designer, Digital Product Manager, External Reference, Feedback, Glossary, Governance Officer, Projects, Report, Solution Architect) while researching relationship-representation patterns for a chat-driven plan-editing feature. It surfaced several template defects that existing `validate_compact_specs` / test sweeps apparently don't catch:
+
+- **`Link_Term-Term_Relationship`** (Glossary): has no Term1/Term2 (or equivalent) reference fields at all — only a `Relationship Type` enum. As specified, the command can't actually name which two terms to link.
+- **`Attach_Comment`** (Feedback): missing its target-element reference field entirely. Sibling commands `Attach_Like`, `Attach_Rating`, `Attach_Tag` all correctly carry theirs.
+- **`Link_Regulation_to_Regulator`** (Governance Officer): field names appear copy-pasted from `Link_Governed_By` — still labeled `Governance Definition`/`Referenceable` rather than Regulation/Regulator-specific names.
+- **`Link_Certification`** and **`Link_Regulation_Certification_Type`** (Governance Officer): field descriptions say "license type" where they should say "certification type" — looks like copy-paste from the parallel `Link_License` command.
+- **`Link_Data_Class_Composition`** (Data Designer): field descriptions carry text copy-pasted from the unrelated `DataValueDefinition` relationship.
+- Two related "naming trap" issues worth a lint rule rather than a one-off fix: `Create_Regulation.Regulators` (Governance Officer) is typed `Simple List` (free text) even though it reads like an embedded relationship declaration; `Link_Associated_Skill_Set.Actor Name` (Actor Manager) is typed `Simple` while every sibling Link command's actor-reference field is typed `Reference Name`.
+
+**Open question to resolve as part of this item:** these look like authoring/copy-paste artifacts from Tinderbox rather than runtime logic bugs, so `validate_compact_specs` presumably isn't checking description-text content or field-name/type consistency against the command's own semantics — worth figuring out why the existing validation sweep didn't flag any of these, and whether a targeted lint (e.g., flag a Link/Attach command with zero `Reference Name`-typed fields, or flag description text mentioning an entity type absent from the command's own name/family) would have caught them, so this class of defect doesn't require another manual full-family read to find next time.
+
+**Fix:** correct each of the templates above in Tinderbox (compact command JSON is Tinderbox-exported and must not be hand-edited — see `CLAUDE.md`), re-export, run `refresh_specs` + `validate_compact_specs`, then propagate via the usual `gen_md_cmd_templates` / `gen_dr_help` sync to egeria-workspaces and egeria-advisor.
+
+---
+
+## 🟡 Medium Priority — `Create Project` is the odd one out for embedded Parent ID / Parent Relationship Type Name (advanced-only, not in basic)
+
+**Status:** open
+**Added:** 2026-07-06
+
+Found while researching relationship representation across families: `Create_Project`'s `Parent ID` / `Parent Relationship Type Name` / `Parent Relationship Attributes` / `Parent at End1` fields exist only in the **advanced** template (`sample-data/templates/advanced/Projects/Create_Project.md`), not the basic one — even though this is a heavily-used, load-bearing feature (Egeria Advisor's plan generation relies on it to create sub-project hierarchies in a single step; see Egeria Advisor `CLAUDE.md` design rule 13). Every other advanced-only generic field (Anchor ID/Scope, Glossary Term) is genuinely power-user scaffolding, but per dwolfson: Project's parent-relationship fields are meant to be usable more broadly, and having them gated behind "advanced" for Projects specifically, while equivalent generic single-relationship-at-creation fields exist in every family's advanced tier regardless, is an inconsistency worth cleaning up rather than by design.
+
+**Fix:** promote `Parent ID` + `Parent Relationship Type Name` (and decide whether `Parent Relationship Attributes` / `Parent at End1` should move too, or stay advanced-only as more power-user-oriented) into the **basic** `Create_Project` template in Tinderbox, re-export, `refresh_specs`, `gen_md_cmd_templates`, then sync to egeria-workspaces/egeria-advisor.
+
+---
+
 ## 🟡 Medium Priority — ServerClient missing async comment methods
 
 **Status:** open
