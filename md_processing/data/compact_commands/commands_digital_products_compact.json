@@ -1,6 +1,6 @@
 {
   "family": "Digital Products",
-  "exported": "Jul 6, 2026 at 1:00:20 PM",
+  "exported": "Jul 27, 2026 at 8:27:06 AM",
   "attribute_definitions": {
     "Activity Status": {
       "variable_name": "activity_status",
@@ -145,7 +145,7 @@
       "unique": false,
       "input_required": false,
       "min_cardinality": 0,
-      "max_cardinality": 1,
+      "max_cardinality": -1,
       "level": "Common",
       "Journal Entry": ""
     },
@@ -902,6 +902,25 @@
       "level": "Common",
       "Journal Entry": ""
     },
+    "Frequency": {
+      "variable_name": "frequency",
+      "inUpdate": true,
+      "attr_labels": "",
+      "examples": "",
+      "default_value": "",
+      "valid_values": [],
+      "existing_element": "",
+      "description": "A frequency of interaction.",
+      "generated": false,
+      "style": "Simple",
+      "user_specified": true,
+      "unique": false,
+      "input_required": false,
+      "min_cardinality": 0,
+      "max_cardinality": 1,
+      "level": "Basic",
+      "Journal Entry": ""
+    },
     "Glossary Term": {
       "variable_name": "glossary_term",
       "inUpdate": true,
@@ -1449,6 +1468,25 @@
       "valid_values": [],
       "existing_element": "",
       "description": "Description of the types of problem that this design pattern provides a solution to.",
+      "generated": false,
+      "style": "Simple",
+      "user_specified": true,
+      "unique": false,
+      "input_required": false,
+      "min_cardinality": 0,
+      "max_cardinality": 1,
+      "level": "Common",
+      "Journal Entry": ""
+    },
+    "Protocol": {
+      "variable_name": "protocol",
+      "inUpdate": true,
+      "attr_labels": "",
+      "examples": "",
+      "default_value": "",
+      "valid_values": [],
+      "existing_element": "",
+      "description": "Name of the protocol used for interaction.",
       "generated": false,
       "style": "Simple",
       "user_specified": true,
@@ -2160,7 +2198,7 @@
       "existing_element": "",
       "description": "Zones scope visibility of elements to different users.",
       "generated": false,
-      "style": "Simple",
+      "style": "Simple List",
       "user_specified": true,
       "unique": false,
       "input_required": false,

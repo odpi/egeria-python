@@ -278,7 +278,7 @@ ___
 ### Zone Membership
 >	**Input Required**: False
 
->	**Attribute Type**: Simple
+>	**Attribute Type**: Simple List
 
 >	**Description**: Zones scope visibility of elements to different users.
 

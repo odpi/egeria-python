@@ -5,16 +5,39 @@ Status: `open` · `in-progress` · `done` · `deferred`
 
 ---
 
-## 🟡 Medium Priority — ServerClient missing async comment methods
+## 🟠 High Priority — Missing/absent catalog templates crash or silently proceed in `_async_get_template_guid_for_technology_type` callers — needs discussion
 
-**Status:** open
+**Status:** open (partial fix landed 2026-07-27)
+**Added:** 2026-07-27
+
+`tests/scenario-tests/test_automated_curation_scenarios.py::scenario_manage_client_side_secrets` crashed with a bare `KeyError: 0` calling `create_secrets_store_element_from_template`. Root cause: `_async_get_template_guid_for_technology_type()` (`pyegeria/omvs/automated_curation.py:4476`, shared by **13** `create_X_element_from_template` methods — Kafka, CSV, PostgreSQL x2, File System Directory, 6x Unity Catalog, YAML File Secrets Collection) blindly indexed `details.get("catalogTemplates", {})[0]` with a wrong default (`{}` instead of `[]`), turning a missing/empty `catalogTemplates` into a confusing `KeyError` instead of a clear error.
+
+**Fixed:** the indexing bug itself — now raises a clear `PyegeriaException` naming the technology type and stating no catalog template is registered, instead of crashing opaquely.
+
+**Live-checked all 13 call sites against `qs-view-server` (2026-07-27) — two real gaps found, need a decision on each:**
+1. **`YAML File Secrets Collection`** — technology type exists (it's a real, standard Egeria type per `DeployedImplementationType.java` in egeria core) but has **zero** catalog templates registered on this server (`catalogTemplates: []`). This is a server-side sample-data/archive gap, not a pyegeria bug — `create_secrets_store_element_from_template` cannot work at all against this server until the template is loaded. Confirm which archive/sample-data load is supposed to seed this template, and whether it's missing from the quickstart setup or was never added upstream.
+2. **`Apache Kafka Server`** — technology type is **not registered at all** on this server (`_async_get_tech_type_detail` returns `NO_ELEMENTS_FOUND`). `_async_get_template_guid_for_technology_type` already handles this branch gracefully (returns `None`, no crash) — but every caller (e.g. `create_kafka_server_element_from_template`) then proceeds to build a `TemplateRequestBody` with `templateGUID: None`, which `body_slimmer` will likely strip, sending a request silently missing a required field — masking the real problem behind a probably-confusing downstream 400 from the server instead of failing fast client-side. Needs a decision: should `_async_get_template_guid_for_technology_type` returning `None` cause the 13 callers to raise immediately (consistent with the empty-catalogTemplates case above), rather than let each one send a doomed request?
+
+All other 10 call sites (`CSV Data File`, `PostgreSQL Server`, `PostgreSQL Relational Database`, `File System Directory`, and all 6 `Unity Catalog *` types) checked clean — tech type found, exactly one catalog template registered, no issue.
+
+---
+
+## 🟡 Medium Priority — `add_comment_reply` has no real implementation or Egeria endpoint
+
+**Status:** open (partially resolved 2026-07-27)
 **Added:** 2026-07-02
 
-`tests/functional-tests/test_comments.py` has 9 failing tests, all `AttributeError` on `pyegeria.core._server_client.ServerClient` for methods that don't exist: `async_add_comment_to_element`, `async_add_comment_reply`, `async_update_comment`, `async_setup_accepted_answer`, `async_setup_clear_answer`, `async_remove_comment_from_element`, `async_get_comment_by_guid`, `async_get_attached_comments`, `async_find_comments`.
+`tests/functional-tests/test_comments.py` originally had 9 failing tests, all `AttributeError` on `pyegeria.core._server_client.ServerClient`. Root cause turned out to be **test bugs, not missing SDK methods** — the file was written by copy-pasting a `note_logs` test file and missed several renames:
+- 7 tests patched `async_X` when the real method is `_async_X` (this repo's documented convention: private `_async_*` impl + public sync wrapper) — simple naming typo.
+- `test_remove_comment_from_element_sync_calls_async` called `client.remove_note_log(...)` instead of `client.remove_comment_from_element(...)`, with a stale fake signature (extra `element_guid` param the real method doesn't have).
+- `test_get_attached_comments_sync_calls_async` called `client.get_attached_note_logs(...)` instead of `client.get_attached_comments(...)`, with wrong fake param names/order.
+- `test_find_comments_sync_calls_async` called `client.find_note_logs(...)` instead of `client.find_comments(...)`.
+- `test_get_comment_by_guid_sync_calls_async` had a fake signature with a nonexistent `element_type` param instead of the real `graph_query_depth`.
+- `test_update_comment_sync_calls_async` asserted a return value (`{"status": "OK"}`) that `update_comment()`'s sync wrapper never actually propagates (matches `_async_update_comment`'s own `-> None` contract) — assertion was just wrong.
 
-Confirmed pre-existing and unrelated to Dr.Egeria command work — same 9 failures occur with or without changes to `md_processing/data/compact_commands/`. Run `pytest tests/functional-tests/test_comments.py -m unit` to reproduce.
+All 8 of the above are now fixed in `tests/functional-tests/test_comments.py`; `pytest tests/functional-tests/test_comments.py` passes.
 
-**Fix:** Either implement the missing `async_*` comment methods on `ServerClient` (if comment support was intended to live there), or update the tests to target wherever comment methods actually live now (possibly moved to a different client class during a refactor).
+**Still open:** `test_add_comment_reply_sync_calls_async` is marked `@pytest.mark.skip` — `add_comment_reply` has no `_async_*` method on `ServerClient`, and Egeria's feedback-manager REST API (`Egeria-api-feedback-manager.http`) has no distinct comment-reply endpoint either; replies appear to just be regular comments attached via `addCommentToElement`, not a separate mechanism. Needs a product decision: implement real reply support (if Egeria core actually has one this reference file is missing), or delete the test.
 
 ---
 
@@ -67,3 +90,29 @@ Checked the Egeria core Java handler (`SolutionComponentHandler.linkSolutionLink
 **Mitigation added 2026-07-09:** the user extended `Link Solution Components` with a `One Way` attribute (bool, default `True`) as a workaround — set `One Way: False` to express a bidirectional flow with a single command instead of issuing two same-direction commands. `SolutionLinkProcessor.apply_changes()` in `md_processing/v2/solution_architect.py` now also pre-checks for an existing same-direction wire before creating a new one and surfaces a `WARNING`-status "Existing Wire Overwrite" result if a call is about to silently clobber an existing relationship — so this is no longer a silent, undetectable data-loss surprise, but the underlying overwrite behavior itself is still present.
 
 **Fix (if ever pursued upstream):** report/fix in Egeria core so the `attach` REST handler for `SolutionLinkingWire` creates a new relationship instance per call (matching the type system's `ANY_NUMBER` cardinality) rather than upserting by ordered end-GUID pair. Out of scope for `egeria-python` to fix directly.
+
+---
+
+## 🟢 Low Priority — `examples/` has two broken test-collection files
+
+**Status:** open
+**Added:** 2026-07-24
+
+Running `pytest` broadly enough to sweep in `examples/` (rather than scoping to `tests/` per this repo's convention) surfaces two pre-existing collection errors, unrelated to any Dr.Egeria/glossary work:
+- `examples/extract_attribute_test.py:13` — a stray trailing `/` after `if zones and isinstance(zones, list):` is a plain `SyntaxError`, so the file can't even be parsed.
+- `examples/test_jacquard_data_sets.py` and `examples/test_jacquard_data_sets_scenarios.py` — both `from examples.jacquard_data_sets import JacquardDataSets`, which fails with `ModuleNotFoundError: No module named 'examples'` (no `__init__.py`/path setup makes `examples` importable as a package).
+
+Neither breaks `pytest tests/`, so day-to-day test runs are unaffected — this only bites if `examples/` is included in the collection path.
+
+**Fix:** remove the stray `/` in `extract_attribute_test.py:13`; either add `examples/__init__.py` (and confirm `examples` is on `sys.path`/rootdir-relative import works) or change the two Jacquard test imports to a path that resolves without treating `examples` as a package.
+
+---
+
+## 🟡 Medium Priority — Migrate Pydantic v1-style validators to v2 syntax
+
+**Status:** open
+**Added:** 2026-07-24
+
+`pyegeria/view/_output_format_models.py` (lines 164, 172, 221, 238, 275) still uses Pydantic v1-style `@root_validator(pre=True)` and `@validator(...)` decorators. These emit `PydanticDeprecatedSince20` warnings on every collection/import that touches this module (visible in `pytest` output) — they still work today (v2 keeps them as deprecated shims) but are slated for removal in a future Pydantic major version. Not urgent — no functional bug, and the project's Pydantic version (2.12.3) is current — but the warning noise will become a hard break eventually.
+
+**Fix:** migrate `@root_validator(pre=True)` → `@model_validator(mode="before")` and `@validator(...)` → `@field_validator(...)` for each of the 5 flagged validators in `_output_format_models.py`, then re-run `pytest -m unit` to confirm the warnings are gone and behavior is unchanged.

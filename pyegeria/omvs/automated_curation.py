@@ -15,6 +15,7 @@ from pydantic import HttpUrl
 from pyegeria.core._globals import NO_ELEMENTS_FOUND
 from pyegeria.core._server_client import ServerClient
 from pyegeria.core._validators import validate_guid, validate_name, validate_search_string
+from pyegeria.core._exceptions import PyegeriaException
 # from pyegeria._exceptions import (
 #     PyegeriaInvalidParameterException,
 #     PyegeriaAPIException,
@@ -4491,11 +4492,15 @@ class AutomatedCuration(ServerClient):
             The GUID of the template, or None if not found.
         """
         details = await self._async_get_tech_type_detail(type_name, **kwargs)
-        if isinstance(details, dict):
-            return details.get("catalogTemplates", {})[0].get("relatedElement", {}).get("elementHeader", {}).get("guid",
-                                                                                                                 None)
-        else:
+        if not isinstance(details, dict):
             return None
+        catalog_templates = details.get("catalogTemplates") or []
+        if not catalog_templates:
+            raise PyegeriaException(
+                response=f"No catalog template is registered for technology type '{type_name}' on this Egeria server.",
+                context={"type_name": type_name, "reason": "catalogTemplates is empty or missing"},
+            )
+        return catalog_templates[0].get("relatedElement", {}).get("elementHeader", {}).get("guid", None)
 
     def get_template_guid_for_technology_type(self, type_name: str, **kwargs) -> str:
         """Retrieve the template GUID associated with the given technology type.

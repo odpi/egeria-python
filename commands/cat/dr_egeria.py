@@ -26,9 +26,11 @@ app_config = settings.Environment
 # Get configuration values with environment variable fallbacks
 EGERIA_VIEW_SERVER = os.environ.get("EGERIA_VIEW_SERVER", app_config.egeria_view_server)
 EGERIA_VIEW_SERVER_URL = os.environ.get("EGERIA_VIEW_SERVER_URL", app_config.egeria_view_server_url)
-# User credentials are only from environment variables or command line (not stored in config for security)
-EGERIA_USER = os.environ.get("EGERIA_USER", "erinoverview")
-EGERIA_USER_PASSWORD = os.environ.get("EGERIA_USER_PASSWORD", "secret")
+# User credentials: resolved via the standard pyegeria config utility, which already
+# honors the full precedence chain (OS env > .env file > default) — a raw
+# os.environ.get() here would silently miss credentials that only exist in .env.
+EGERIA_USER = settings.User_Profile.user_name or "erinoverview"
+EGERIA_USER_PASSWORD = settings.User_Profile.user_pwd or "secret"
 EGERIA_WIDTH = int(os.environ.get("EGERIA_WIDTH", settings.Environment.egeria_width or 190))
 EGERIA_JUPYTER = os.environ.get("EGERIA_JUPYTER", str(settings.Environment.egeria_jupyter)).lower() in ("true", "1", "yes")
 
@@ -46,8 +48,10 @@ console = Console(width=EGERIA_WIDTH)
               help="Shortcut: execute all commands and make permanent changes in Egeria (overrides --directive)")
 @click.option("--server", default=EGERIA_VIEW_SERVER, help="Egeria view server to use.")
 @click.option("--url", default=EGERIA_VIEW_SERVER_URL, help="URL of Egeria platform to connect to")
-@click.option("--userid", default=EGERIA_USER, help="Egeria user")
-@click.option("--user_pass", default=EGERIA_USER_PASSWORD, help="Egeria user password")
+@click.option("--userid", default=EGERIA_USER,
+              help="Egeria user. Overrides EGERIA_USER (env var or .env file).")
+@click.option("--user_pass", default=EGERIA_USER_PASSWORD,
+              help="Egeria user password. Overrides EGERIA_USER_PASSWORD (env var or .env file).")
 @click.option("--parse-summary", default="none", help="When to show parse summaries",
               type=click.Choice(["all", "errors", "none"], case_sensitive=False))
 @click.option("--attribute-logs", default="info", help="Per-attribute log verbosity",
@@ -80,9 +84,10 @@ def process_markdown_file(input_file: str, output_folder: str, directive: str,
     usage_level = "Advanced" if advanced else "Basic"
     try:
         # Instantiate the client
-        from pyegeria import settings, EgeriaTech
+        from pyegeria import EgeriaTech
         client = EgeriaTech(server, url, userid, user_pass)
         client.create_egeria_bearer_token()
+
         asyncio.run(process_md_file_v2(
             input_file=input_file,
             output_folder=output_folder,
