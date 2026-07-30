@@ -457,16 +457,15 @@ ___
 # PR-12: Link Project Dependency — verb Link
 
 > Q1 Delivery depends on CRM Validation completing first.
-> Parent Project is the dependency (must complete first);
-> Child Project is the dependent (cannot start until parent completes).
+> Dependent Project cannot start until Depends on Project completes.
 
 ## Link Project Dependency
 
-### Parent Project
-Project::SalesForecast::Task::CRMValidation::Q1-2026::1.0
-
-### Child Project
+### Dependent Project
 Project::SalesForecast::Q1-2026::Delivery::1.0
+
+### Depends on Project
+Project::SalesForecast::Task::CRMValidation::Q1-2026::1.0
 
 ### Description
 Q1 2026 Delivery depends on CRM Validation completing before forecast generation begins.
@@ -495,11 +494,11 @@ ___
 
 ## Unlink Project Dependency
 
-### Parent Project
-Project::SalesForecast::Task::CRMValidation::Q1-2026::1.0
-
-### Child Project
+### Dependent Project
 Project::SalesForecast::Q1-2026::Delivery::1.0
+
+### Depends on Project
+Project::SalesForecast::Task::CRMValidation::Q1-2026::1.0
 
 ___
 
