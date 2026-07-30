@@ -3,20 +3,20 @@ ___
 ## Link Project Hierarchy
 > Links or unlinks a parent project and a child project via the ProjectHierarchy relationship.
 
-### Child Project
->	**Input Required**: True
-
->	**Attribute Type**: Reference Name
-
->	**Description**: The name of the child project.
-
-
 ### Parent Project
 >	**Input Required**: True
 
 >	**Attribute Type**: Reference Name
 
 >	**Description**: The name of the parent project.
+
+
+### Child Project
+>	**Input Required**: True
+
+>	**Attribute Type**: Reference Name
+
+>	**Description**: The name of the child project.
 
 
 ### Label

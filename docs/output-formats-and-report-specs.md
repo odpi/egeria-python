@@ -898,6 +898,39 @@ Tip: You can combine `find_report_specs` to discover candidates and then `run_re
 
 ---
 
+### Analytic functions and chart output formats (SERIES, BAR, PIE)
+
+A `FormatSet`'s `action` (`ActionParameter`, in `pyegeria/view/_output_format_models.py`) has **two independent execution paths**, mirroring the two function slots Dr.Egeria commands have always carried (`find_method`/`find_constraints` and `extra_find`/`extra_constraints`):
+
+- `function` (from `find_method`): an element-query call, typically a `pyegeria.omvs.*` method (e.g. `MetadataExpert.find_metadata_elements_with_string`) — returns a list of Egeria elements, formatted per-column by the `FormatSet`'s `Format.attributes` (the TABLE/DICT/REPORT/MERMAID path already documented above).
+- `analytic_function` (from `extra_find`): a plain Python function — typically in `pyegeria.view.overview_metrics` — that takes an already-constructed, already-authenticated client as its first argument (or first two, for a function needing two client roles — see `_bind_client_args` in `pyegeria/view/format_set_executor.py`) and returns an already-aggregated scalar/dict/list result, **not** raw elements. Deliberately no fixed required/optional-param whitelist: every caller-supplied param is forwarded as-is (`**kwargs`); Python's own `TypeError` on an unexpected keyword is the validation.
+
+A `FormatSet` can declare either path, or both (in which case the analytic path only runs for `SERIES`/`BAR`/`PIE` output formats — see below — and the find path handles everything else, unchanged).
+
+**Running the analytic path — output format selects the shape:**
+
+- `DICT` / `JSON` (or any non-chart format): the function's raw result is returned as-is (`{"kind":"json","data": <scalar|dict|list>}`) — no per-column formatting, since there's no element list to format. `DICT` and `JSON` are indistinguishable here by design (both return the same raw payload); the distinction only matters on the find path, where different output types can select different rendering.
+- `SERIES`: expects a time-series shape — `List[Dict]` of `{label, date, <metric>: value, ...}` points (e.g. `overview_metrics.growth_series`) — wrapped as a Vega-Lite **line** chart, one line per numeric metric key.
+- `BAR` / `PIE`: expects a category-breakdown shape — either a plain `{category: value}` dict, or a `List[Dict]` with one label-like field and exactly one numeric field (e.g. `overview_metrics.counts_by_type`'s `[{label, type, count}, ...]`) — wrapped as a Vega-Lite bar or pie/donut chart. If the result is a dict with fewer than 2 top-level numeric fields, the executor looks one level down for a nested dict-of-numerics (e.g. `governed_coverage`'s `byClassification`) rather than charting a single meaningless bar/slice — see `_as_category_value_dict` in `format_set_executor.py`.
+
+All three chart formats are dispatched *before* the normal Format-row lookup (`exec_report_spec`), since no `FormatSet` needs to declare a `SERIES`/`BAR`/`PIE` `Format` row for this to work — only `DICT`/`JSON` (or whatever find-path formats it also supports) need a declared row.
+
+**`analytic_spec_params` are defaults, not pins.** Unlike the find path's `spec_params` (always fixed — a caller-supplied value for the same key is silently overridden), `analytic_spec_params` set a *default* that a caller-supplied value for the same key overrides. This is what lets a report spec like the demo "Element Count by Type" (which pins `type_name: "GlossaryTerm"` as its default) actually be re-pointed at a different type at run time instead of being permanently locked to the demo's own default.
+
+**The analytic function registry** (`pyegeria/view/analytic_registry.py`) is a separate, hand-written catalog of every analytic function available to point `analytic_function` at — `AnalyticFunctionSpec` entries carry `function` (dotted import path), `description`, `returns` (result shape), `params`, and a `generic: bool` flag with a `binding_note`:
+- `generic=True` — what the function counts/aggregates is itself a parameter (e.g. `count_elements(type_name=...)`), freely retargetable at any element type via `analytic_spec_params`.
+- `generic=False` — the vocabulary is hardcoded in the function body (e.g. `governed_coverage` always counts a fixed set of governance classifications); a report spec can still point at it, but always gets that one fixed metric.
+
+`get_analytic_registry()` combines a `BUILTINS` tier (the 10 `overview_metrics` functions shipped today) with optional `CONFIG`/`RUNTIME` tiers, mirroring `base_report_formats.py`'s report-spec registry shape.
+
+**Demo report specs** (`pyegeria/view/analytic_demo_specs.py`) — one real, executable `FormatSet` per registered analytic function, proving each is actually runnable as a report spec (not just documented in the registry). Named `Analytic Demo - <Heading>`, family `"Analytic Function Demo"`. Each spec's `description` states plainly whether the underlying function is generic or a fixed metric (pulled from the registry, not duplicated by hand).
+
+**Making extra report specs visible everywhere** — `get_report_registry()` auto-loads its `CONFIG` tier from `settings.Environment.pyegeria_report_spec_modules` (config.json's `"Pyegeria Report Spec Modules"` list) or the `PYEGERIA_REPORT_SPEC_MODULES` env var (comma-separated), the first time anything calls it — no explicit registration call needed in any consumer. Each entry is either a `.json` file path or a `"pkg.mod:func"`/`"pkg.mod.func"` loader callable returning a `FormatSetDict` (or plain dict of `FormatSet`s). `config/config.json` ships with `"Pyegeria Report Spec Modules": ["pyegeria.view.analytic_demo_specs:get_analytic_demo_specs"]` by default, so the demo specs above are visible to `dr_egeria`, `hey_egeria`, and any other pyegeria consumer without further setup — a consumer with no `config.json` of its own (e.g. a container with only the installed package) can set the `PYEGERIA_REPORT_SPEC_MODULES` env var instead. See `refresh_report_specs()`/`get_report_registry()` in `base_report_formats.py`.
+
+**Dashboard authoring** — a `Report` (a real Egeria asset naming a report spec plus default execution params, created via Dr.Egeria's `Create Report`) can be placed on a user-authored Dashboard Sheet (`Create Dashboard Sheet` / `Link Report to Dashboard Sheet`), alongside literal markdown text placements (`Add Text on Dashboard Sheet`) for section headers and explanations. See the "Report" family in `docs/dr_egeria_manual.md` and `pyegeria/view/_output_dashboard_sheet_models.py`.
+
+---
+
 ### Troubleshooting
 
 - Cell shows `---` in LIST: the value is empty or the key didn’t match. Check your column `key` (snake vs camel), and confirm your extractor/materializer emits that key.
@@ -957,3 +990,9 @@ guide, and `docs/design/REPORT_SPEC_BUILDER_DESIGN.md` for the design reference.
 - Output engine and materializer: `pyegeria/view/output_formatter.py`
 - Pydantic models for specs: `pyegeria/view/_output_format_models.py`
 - Example built‑ins (including My-User‑MD): `pyegeria/view/base_report_formats.py`
+- Report spec + analytic-function execution: `pyegeria/view/format_set_executor.py`
+- Analytic function registry: `pyegeria/view/analytic_registry.py`
+- Analytic function demo report specs: `pyegeria/view/analytic_demo_specs.py`
+- Analytic functions themselves: `pyegeria/view/overview_metrics.py`
+- Chart generators (line/bar/pie/funnel/area/scatter): `pyegeria/view/vega_utilities.py`
+- Dashboard Sheet / Placement model: `pyegeria/view/_output_dashboard_sheet_models.py`

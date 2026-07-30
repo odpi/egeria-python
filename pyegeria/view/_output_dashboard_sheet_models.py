@@ -119,13 +119,22 @@ class Placement(BaseModel):
     Fields:
         ref: The name (or alias) of the placed ReportSpec/FormatSet, or of
             another Dashboard Sheet for nesting. Resolved by the caller —
-            this model does not know which dict `ref` lives in.
+            this model does not know which dict `ref` lives in. For a text
+            placement (`content` set), `ref` is instead the placement's own
+            stable identifying name (Dr.Egeria's `Placement Name`) — not
+            resolved against anything, just the replace-by-name key.
         span: Layout width hint — "1"/"2" (relative columns) or "full" (row width).
         emphasis: Presentation hint — "kpi" (compact tile) or "panel" (larger, detailed).
+        content: Literal markdown text for a text placement (Dr.Egeria `Place
+            Text on Dashboard Sheet` / `MD Content`) — section headers,
+            explanations, captions. None for a Report/Sheet placement. A
+            consuming app checks this before attempting to resolve `ref`
+            against a Report or Sheet, since text needs no such lookup.
     """
     ref: str
     span: Span = "1"
     emphasis: Emphasis = "kpi"
+    content: Optional[str] = None
 
 
 class DashboardSheet(BaseModel):

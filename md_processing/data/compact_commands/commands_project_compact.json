@@ -1,6 +1,6 @@
 {
   "family": "Projects",
-  "exported": "Jul 27, 2026 at 8:28:45 AM",
+  "exported": "Jul 30, 2026 at 9:12:06 AM",
   "attribute_definitions": {
     "Activity Status": {
       "variable_name": "activity_status",
@@ -2264,6 +2264,44 @@
       "level": "Domain",
       "Journal Entry": ""
     },
+    "Dependent Project": {
+      "variable_name": "dependent_project",
+      "inUpdate": true,
+      "attr_labels": "",
+      "examples": "",
+      "default_value": "",
+      "valid_values": [],
+      "existing_element": "Project",
+      "description": "The name of the dependent project.",
+      "generated": false,
+      "style": "Reference Name",
+      "user_specified": true,
+      "unique": false,
+      "input_required": true,
+      "min_cardinality": 1,
+      "max_cardinality": 1,
+      "level": "Domain",
+      "Journal Entry": ""
+    },
+    "Depends on Project": {
+      "variable_name": "depends_on_project",
+      "inUpdate": true,
+      "attr_labels": "",
+      "examples": "",
+      "default_value": "",
+      "valid_values": [],
+      "existing_element": "Project",
+      "description": "The name of the project other projects depend on.",
+      "generated": false,
+      "style": "Reference Name",
+      "user_specified": true,
+      "unique": false,
+      "input_required": true,
+      "min_cardinality": 1,
+      "max_cardinality": 1,
+      "level": "Domain",
+      "Journal Entry": ""
+    },
     "Mission": {
       "variable_name": "mission",
       "inUpdate": true,
@@ -2724,10 +2762,7 @@
     },
     "Project Link Base": {
       "inherits": "Link Command Base",
-      "own_attributes": [
-        "Child Project",
-        "Parent Project"
-      ]
+      "own_attributes": []
     }
   },
   "commands": {
@@ -2758,7 +2793,7 @@
       "description": "Links or unlinks a parent project and a child project via the ProjectHierarchy relationship.",
       "verb": "Link",
       "upsert": false,
-      "attach": false,
+      "attach": true,
       "level": "Basic",
       "find_method": "",
       "find_constraints": "",
@@ -2766,7 +2801,10 @@
       "extra_constraints": "",
       "OM_TYPE": "ProjectHierarchy",
       "bundle": "Project Link Base",
-      "custom_attributes": [],
+      "custom_attributes": [
+        "Parent Project",
+        "Child Project"
+      ],
       "Journal Entry": ""
     },
     "Link Project Dependency": {
@@ -2777,7 +2815,7 @@
       "description": "Links or unlinks a project and a project it depends on via the ProjectDependency relationship.",
       "verb": "Link",
       "upsert": false,
-      "attach": false,
+      "attach": true,
       "level": "Basic",
       "find_method": "",
       "find_constraints": "",
@@ -2785,7 +2823,10 @@
       "extra_constraints": "",
       "OM_TYPE": "ProjectDependency",
       "bundle": "Project Link Base",
-      "custom_attributes": [],
+      "custom_attributes": [
+        "Dependent Project",
+        "Depends on Project"
+      ],
       "Journal Entry": ""
     },
     "Create Personal Project": {

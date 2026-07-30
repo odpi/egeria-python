@@ -169,37 +169,48 @@ class ProjectLinkProcessor(AsyncBaseCommandProcessor):
         verb = self.command.verb
         object_type = getattr(self, 'canonical_object_type', self.command.object_type)
         attributes = self.parsed_output["attributes"]
-        
+
         spec = self.get_command_spec()
         om_type = spec.get("OM_TYPE")
 
-        parent_guid = attributes.get('Parent Project', {}).get('guid')
-        child_guid = attributes.get('Child Project', {}).get('guid')
+        is_hierarchy = "Hierarchy" in object_type
         label = attributes.get('Link Label', {}).get('value', "")
-        
-        if not (parent_guid and child_guid):
+
+        if is_hierarchy:
+            # End1 = Parent Project, End2 = Child Project
+            end1_guid = attributes.get('Parent Project', {}).get('guid')
+            end2_guid = attributes.get('Child Project', {}).get('guid')
+        else:
+            # ProjectDependency: End1 = Dependent Project (has the dependency),
+            # End2 = Depends on Project (the upstream project it depends on) -
+            # confirmed against Egeria core's ProjectHandler.setupProjectDependency
+            # -> createRelatedElementsInStore(userId, typeName, projectGUID, dependsOnProjectGUID, ...).
+            end1_guid = attributes.get('Dependent Project', {}).get('guid')
+            end2_guid = attributes.get('Depends on Project', {}).get('guid')
+
+        if not (end1_guid and end2_guid):
             return self.command.raw_block
 
         if verb in ["Link", "Attach", "Add"]:
-            if "Hierarchy" in object_type:
+            if is_hierarchy:
                 self.last_body = body = set_rel_request_body_for_type(om_type or "ProjectHierarchy", attributes)
 
-                await self.client._async_set_project_hierarchy(project_guid=child_guid, parent_project_guid=parent_guid, body=body_slimmer(body))
+                await self.client._async_set_project_hierarchy(project_guid=end2_guid, parent_project_guid=end1_guid, body=body_slimmer(body))
             else:
                 self.last_body = body = set_rel_request_body_for_type(om_type or "ProjectDependency", attributes)
-                await self.client._async_set_project_dependency(project_guid=child_guid, upstream_project_guid=parent_guid, body=body_slimmer(body))
-            
+                await self.client._async_set_project_dependency(project_guid=end1_guid, upstream_project_guid=end2_guid, body=body_slimmer(body))
+
             logger.success(f"Linked Project {object_type}")
-            return f"\n\n## {verb} {object_type}\n\nLinked {child_guid} to {parent_guid} ({label})"
+            return f"\n\n## {verb} {object_type}\n\nLinked {end1_guid} to {end2_guid} ({label})"
 
         elif verb in ["Detach", "Unlink", "Remove"]:
             self.last_body = body = set_delete_rel_request_body(object_type, attributes)
-            if "Hierarchy" in object_type:
-                await self.client._async_clear_project_hierarchy(child_guid, parent_guid, body)
+            if is_hierarchy:
+                await self.client._async_clear_project_hierarchy(end2_guid, end1_guid, body)
             else:
-                await self.client._async_clear_project_dependency(child_guid, parent_guid, body)
-                
+                await self.client._async_clear_project_dependency(end1_guid, end2_guid, body)
+
             logger.success(f"Detached Project {object_type}")
-            return f"\n\n## {verb} {object_type}\n\nDetached {child_guid} from {parent_guid} ({label})"
+            return f"\n\n## {verb} {object_type}\n\nDetached {end1_guid} from {end2_guid} ({label})"
 
         return self.command.raw_block
