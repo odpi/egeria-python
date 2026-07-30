@@ -1,0 +1,134 @@
+"""
+Report Processor for Dr.Egeria v2.
+
+Handles `Create Report` (and its Update transition) -- persists a real
+Egeria `Report` asset (DataSet -> Asset -> Referenceable; see
+odpi/egeria-project.ai/types/2/0239-Reports) carrying a Report Spec
+reference plus optional default execution parameters (Output Format,
+Search String, and the rest of the same 22-attribute vocabulary
+`View Report` already supports ad-hoc). Short-term design: everything
+beyond the base Referenceable properties lands in `additionalProperties`
+-- no dedicated `ReportDefinition` subtype yet (see egeria-workspaces-fs
+BACKLOG.md NEXT-14). `Link Report to Dashboard Sheet` then references a
+Report by its `Report Name` instead of a bare Report Spec name, giving a
+Dashboard Sheet placement a concrete, parameterized instance to run
+instead of an unparameterized template.
+
+No dedicated OMVS wrapper exists for `Report` (it isn't a Collection or
+Project subtype, so the generic COLLECTION_SUBTYPES/PROJECT_SUBTYPES
+dispatcher fallback doesn't apply either). Report *is* an Asset subtype
+(Report -> DataSet -> Asset -> Referenceable), so this uses AssetMaker's
+generic asset endpoints (`_async_create_asset` / `_async_update_asset`,
+`asset-maker/assets`) rather than MetadataExpert's raw metadata-store
+endpoint -- verified live: MetadataExpert's `_async_create_metadata_element`
+expects the verbose typed `ElementProperties`/`propertyValueMap` body shape
+(confirmed against a real 400 error -- "qualifiedName parameter ... is
+null" when passed the same flat properties dict `set_element_prop_body`
+produces), whereas AssetMaker's `NewElementRequestBody`-based endpoint
+accepts flat properties directly, matching every other processor in this
+codebase (`set_create_body`/`set_element_prop_body` -> a bespoke `_async_create_*`
+call). Both subclients are available transparently via `self.client`
+(EgeriaTech proxies to instantiated subclients via `__getattr__`).
+"""
+import json
+from typing import Any, Dict, Optional
+
+from loguru import logger
+
+from md_processing.v2.processors import AsyncBaseCommandProcessor
+from md_processing.md_processing_utils.common_md_utils import (
+    set_create_body, set_element_prop_body, update_element_dictionary,
+)
+
+# The 22 report-execution-parameter attributes (same set View Report exposes
+# ad-hoc) -- short-term, all of these land in additionalProperties rather
+# than typed Report fields. camelCase keys distinguish them from anything a
+# user puts in their own "Additional Properties" dict.
+_REPORT_PARAM_ATTRS = {
+    "Report Spec": "reportSpec",
+    "Output Format": "outputFormat",
+    "Search String": "searchString",
+    "Starts With": "startsWith",
+    "Ends With": "endsWith",
+    "Ignore Case": "ignoreCase",
+    "Limit Result by Status": "limitResultByStatus",
+    "Metadata Element Type Name": "metadataElementTypeName",
+    "Metadata Element Subtype Names": "metadataElementSubtypeNames",
+    "Skip Relationships": "skipRelationships",
+    "Include Only Relationships": "includeOnlyRelationships",
+    "Skip Classified Elements": "skipClassifiedElements",
+    "Include Only Classified Elements": "includeOnlyClassifiedElements",
+    "Governance Zone Filter": "governanceZoneFilter",
+    "Graph Query Depth": "graphQueryDepth",
+    "Effective Time": "effectiveTime",
+    "AsOfTime": "asOfTime",
+    "Output Sort Order": "outputSortOrder",
+    "Order Property Name": "orderPropertyName",
+    "Page Size": "pageSize",
+    "Start From": "startFrom",
+    "Anchor Scope ID": "anchorScopeId",
+}
+
+
+def _report_additional_properties(attributes: Dict[str, Any]) -> Dict[str, str]:
+    """Merge the user's own 'Additional Properties' dict (if any) with the
+    report-execution params, stringified (additionalProperties is
+    Map<String,String> in the Egeria type model)."""
+    merged: Dict[str, str] = {}
+    user_extra = attributes.get("Additional Properties", {}).get("value")
+    if isinstance(user_extra, dict):
+        merged.update({str(k): str(v) for k, v in user_extra.items() if v is not None})
+    for canonical_name, key in _REPORT_PARAM_ATTRS.items():
+        value = attributes.get(canonical_name, {}).get("value")
+        if value is not None and value != "":
+            merged[key] = value if isinstance(value, str) else str(value)
+
+    # Arbitrary parameters for a report spec's analytic_function (extra_find)
+    # -- e.g. {"window": "90d", "points": "12"} for a growth_series-backed
+    # spec. Kept under its own distinct key rather than merged flat into the
+    # 22 find-oriented keys above, so a consumer can tell "analytic params"
+    # from "find params" unambiguously without guessing by key name. No
+    # fixed set of expected keys here by design -- see ActionParameter's
+    # docstring in _output_format_models.py.
+    analytic_params = attributes.get("Analytic Parameters", {}).get("value")
+    if isinstance(analytic_params, dict) and analytic_params:
+        merged["analyticParams"] = json.dumps(
+            {str(k): str(v) for k, v in analytic_params.items() if v is not None}
+        )
+    return merged
+
+
+class ReportProcessor(AsyncBaseCommandProcessor):
+    """Processor for Create Report (and its Update transition)."""
+
+    async def apply_changes(self) -> str:
+        attributes = self.parsed_output["attributes"]
+        qualified_name = self.parsed_output.get("qualified_name") or self.derive_qualified_name(attributes)
+        display_name = attributes.get("Display Name", {}).get("value") or qualified_name
+
+        if not attributes.get("Report Spec", {}).get("value"):
+            raise ValueError("Report Spec is required.")
+
+        props = set_element_prop_body("Report", qualified_name, attributes)
+        props["additionalProperties"] = _report_additional_properties(attributes)
+
+        if self.as_is_element:
+            guid = self.as_is_element["elementHeader"]["guid"]
+            update_body = {
+                "class": "UpdateElementRequestBody",
+                "properties": props,
+                "mergeUpdate": attributes.get("Merge Update", {}).get("value", True),
+            }
+            await self.client._async_update_asset(guid, update_body)
+            verb_word = "Updated"
+        else:
+            create_body = set_create_body("Report", attributes)
+            create_body["properties"] = props
+            guid = await self.client._async_create_asset(["ReportProperties"], create_body)
+            verb_word = "Created"
+
+        self.parsed_output["guid"] = guid
+        update_element_dictionary(qualified_name, {"guid": guid, "display_name": display_name})
+
+        logger.success(f"{verb_word} Report '{display_name}' with GUID {guid}")
+        return await self.render_result_markdown(guid)

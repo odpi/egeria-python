@@ -3483,15 +3483,53 @@ def _load_json_file(path: str) -> FormatSetDict:
     return FormatSetDict.load_from_json(str(p))
 
 
+def _load_module_loader(m: str) -> FormatSetDict:
+    """Resolve a "pkg.mod:func" or "pkg.mod.func" string to a loader callable,
+    call it, and coerce the result to a FormatSetDict."""
+    if ":" in m:
+        pkg, func = m.split(":", 1)
+    else:
+        pkg, func = m.rsplit(".", 1)
+    mod = __import__(pkg, fromlist=[func])
+    loader = getattr(mod, func)
+    loaded = loader()
+    return loaded if isinstance(loaded, FormatSetDict) else FormatSetDict(loaded)
+
+
 def refresh_report_specs() -> None:
     """Reload formats from configured JSON files and optional modules.
-    Environment variables:
-      - PYEGERIA_REPORT_FORMATS_JSON: comma-separated JSON file paths
-      - PYEGERIA_REPORT_FORMATS_MODULES: optional comma-separated module callables (pkg.mod:func or pkg.mod.func)
+
+    Sources, in order:
+      - `settings.Environment.pyegeria_report_spec_modules` (config.json's
+        "Pyegeria Report Spec Modules" list, or the OS env var
+        PYEGERIA_REPORT_SPEC_MODULES as a comma-separated string) -- each
+        entry is a JSON file path (ending ".json") or a "pkg.mod:func"/
+        "pkg.mod.func" loader callable.
+      - PYEGERIA_REPORT_FORMATS_JSON: comma-separated JSON file paths (older,
+        still supported for backward compat).
+      - PYEGERIA_REPORT_FORMATS_MODULES: comma-separated module callables
+        (older, still supported for backward compat).
     Collisions across sources will raise ReportFormatCollision.
     """
     global _CONFIG_REPORT_FORMATS
     _CONFIG_REPORT_FORMATS = FormatSetDict()
+
+    try:
+        from pyegeria.core.config import settings
+        configured = list(settings.Environment.pyegeria_report_spec_modules or [])
+    except Exception:  # noqa: BLE001 -- settings may not be initialized in every context
+        configured = []
+    env_list = os.getenv("PYEGERIA_REPORT_SPEC_MODULES", "").strip()
+    if env_list:
+        configured.extend(p.strip() for p in env_list.split(",") if p.strip())
+
+    for entry in configured:
+        if entry.endswith(".json"):
+            loaded = _load_json_file(entry)
+            _add_with_collision_check(_CONFIG_REPORT_FORMATS, loaded, source=f"JSON:{entry}")
+        else:
+            loaded = _load_module_loader(entry)
+            _add_with_collision_check(_CONFIG_REPORT_FORMATS, loaded, source=f"MODULE:{entry}")
 
     json_paths = os.getenv("PYEGERIA_REPORT_FORMATS_JSON", "").strip()
     if json_paths:
@@ -3508,23 +3546,27 @@ def refresh_report_specs() -> None:
             m = m.strip()
             if not m:
                 continue
-            # support both "pkg.mod.func" and "pkg.mod:func"
-            if ":" in m:
-                pkg, func = m.split(":", 1)
-            else:
-                pkg, func = m.rsplit(".", 1)
-            mod = __import__(pkg, fromlist=[func])
-            loader = getattr(mod, func)
-            loaded = loader()
-            if not isinstance(loaded, FormatSetDict):
-                loaded = FormatSetDict(loaded)
+            loaded = _load_module_loader(m)
             _add_with_collision_check(_CONFIG_REPORT_FORMATS, loaded, source=f"MODULE:{m}")
+
+
+_config_report_specs_loaded = False
 
 
 def get_report_registry() -> FormatSetDict:
     """Combine built-ins, generated, config-loaded, and runtime formats.
-    Enforce no duplicate labels across all sources.
+    Enforce no duplicate labels across all sources. The CONFIG tier
+    (`refresh_report_specs()`) is auto-loaded on first call -- no consumer
+    needs to remember to call it explicitly.
     """
+    global _config_report_specs_loaded
+    if not _config_report_specs_loaded:
+        _config_report_specs_loaded = True
+        try:
+            refresh_report_specs()
+        except Exception as exc:  # noqa: BLE001 -- a misconfigured entry shouldn't break the registry
+            logger.warning(f"refresh_report_specs() failed during auto-load: {exc}")
+
     combined = FormatSetDict()
     _add_with_collision_check(combined, base_report_specs, source="BUILTINS")
     _add_with_collision_check(combined, generated_format_sets, source="GENERATED")

@@ -56,6 +56,17 @@ from pyegeria.core.config import get_app_config
 from pyegeria.view._output_format_models import Column, Format, ActionParameter, FormatSet, FormatSetDict
 from pyegeria.view.base_report_formats import OPTIONAL_SEARCH_PARAMS  # ["page_size","start_from","starts_with","ends_with","ignore_case"]
 
+# No fixed optional-params list for the `analytic_function` (extra_find) path,
+# deliberately -- unlike `function` (find_method), which always maps onto the
+# same find_metadata_elements_with_string-shaped signature regardless of
+# command, analytic functions (pyegeria.view.overview_metrics.*) each take
+# whatever arbitrary parameters they need (window/points for growth_series,
+# something else entirely for the next one). Rather than growing a hardcoded
+# param-name list here per new analytic function, a Report's arbitrary
+# "Analytic Parameters" dict (Create Report attribute) is forwarded to the
+# analytic function as-is at execution time (format_set_executor.py's
+# _exec_analytic_series) -- no per-function param registry to maintain.
+
 
 GENERATED_REPORT_EXCLUDED_KEYS = {
     "anchor_id",
@@ -364,14 +375,24 @@ def build_format_sets_from_commands(
 
             find_method = cmd_obj.get("find_method") or ""
             constraints = _safe_parse_constraints(cmd_obj.get("find_constraints"))
+            extra_find = cmd_obj.get("extra_find") or ""
+            extra_constraints = _safe_parse_constraints(cmd_obj.get("extra_constraints"))
             action = None
-            if find_method:
+            if find_method or extra_find:
+                # `function` is a required (non-Optional) field on ActionParameter,
+                # but a command can legitimately have only an analytic_function and
+                # no find_method at all (e.g. a dedicated "View Growth"-style command
+                # with no element-listing path) -- an empty string is a valid, if
+                # unused, value; exec_report_spec's SERIES path never reads it.
                 action = ActionParameter(
-                    function=find_method,
-                    required_params=["search_string"],
-                    optional_params=OPTIONAL_SEARCH_PARAMS,
+                    function=find_method or "",
+                    required_params=["search_string"] if find_method else [],
+                    optional_params=OPTIONAL_SEARCH_PARAMS if find_method else [],
                     spec_params=constraints or {},
                 )
+                if extra_find:
+                    action.analytic_function = extra_find
+                    action.analytic_spec_params = extra_constraints or {}
 
             formats = _build_generated_formats(columns, default_types=default_types)
             if not formats:

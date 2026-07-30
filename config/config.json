@@ -26,7 +26,10 @@
     "Pyegeria Root": "sample-data",
     "Pyegeria Config Directory": "config",
     "Pyegeria Publishing Root": "http://localhost:8085/outbox",
-    "Pyegeria User Report Specs Dir": "~/.pyegeria/report_specs"
+    "Pyegeria User Report Specs Dir": "~/.pyegeria/report_specs",
+    "Pyegeria Report Spec Modules": [
+      "pyegeria.view.analytic_demo_specs:get_analytic_demo_specs"
+    ]
   },
   "feature_x_enabled": false,
   "Logging": {

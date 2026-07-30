@@ -1,6 +1,6 @@
 ___
 
-## Report
+## View Report
 > Runs a named pyegeria report spec (FormatSet) via hey_egeria run_report. Returns formatted output from the Egeria repository — not an element creation command.
 
 ### Report Spec

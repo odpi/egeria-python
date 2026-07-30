@@ -123,6 +123,14 @@ class EnvironmentConfig(BaseModel):
     pyegeria_publishing_root: str = Field(default="/dr-egeria-outbox", alias="Pyegeria Publishing Root")
     # Renamed: Format Sets -> Report Specs
     pyegeria_user_report_specs_dir: str = Field(default="~/.pyegeria/report_specs", alias="Pyegeria User Report Specs Dir")
+    # Extra report-spec sources auto-loaded into the CONFIG tier of
+    # get_report_registry() -- each entry is either a JSON file path or a
+    # "pkg.mod:func"/"pkg.mod.func" loader callable returning a FormatSetDict
+    # (or a plain dict of FormatSets), e.g.
+    # "pyegeria.view.analytic_demo_specs:get_analytic_demo_specs". See
+    # base_report_formats.refresh_report_specs(), which reads this list (and,
+    # for backward compat, the PYEGERIA_REPORT_FORMATS_JSON/_MODULES env vars).
+    pyegeria_report_spec_modules: List[str] = Field(default_factory=list, alias="Pyegeria Report Spec Modules")
     
     model_config = ConfigDict(populate_by_name=True, extra='allow')
 

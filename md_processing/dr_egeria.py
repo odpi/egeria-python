@@ -2,6 +2,13 @@ from md_processing.md_processing_utils.md_processing_constants import load_comma
 
 # Ensure compact command specs are loaded before any v2 processing
 load_commands()
+
+# Analytic Function Demo report specs (pyegeria.view.analytic_demo_specs) --
+# and any other extra report-spec source -- are auto-loaded by
+# get_report_registry() itself (CONFIG tier, driven by
+# settings.Environment.pyegeria_report_spec_modules / config.json's "Pyegeria
+# Report Spec Modules") the first time anything calls it. No explicit
+# registration call needed here anymore.
 """
 This is an ongoing experiment in parsing and playing with Dr.Egeria docs
 """
@@ -34,7 +41,8 @@ from md_processing.v2 import (
     FeedbackProcessor, TagProcessor, ExternalReferenceProcessor, FeedbackLinkProcessor,
     ViewProcessor, ActorManagerProcessor, ActorManagerLinkProcessor,
     ActionProcessStepLinkProcessor, ActionExecutorTargetLinkProcessor,
-    CreateDashboardSheetProcessor, LinkReportToDashboardSheetProcessor
+    CreateDashboardSheetProcessor, LinkReportToDashboardSheetProcessor,
+    AddTextOnDashboardSheetProcessor, ReportProcessor
 )
 
 from pyegeria import settings, EgeriaTech, PyegeriaException, print_basic_exception, print_validation_error
@@ -301,11 +309,14 @@ def setup_dispatcher(client: EgeriaTech) -> V2Dispatcher:
 
     # Reporting / View
     reg("View Report", ViewProcessor)
+    reg("Create Report", ReportProcessor)
+    reg("Update Report", ReportProcessor)
 
     # Dashboard Sheets (local pyegeria-only records, not Egeria elements yet --
     # see OVERVIEW_REPORTING_MODEL.md SS10 for the planned Collection-subtype migration)
     reg("Create Dashboard Sheet", CreateDashboardSheetProcessor)
     reg("Link Report to Dashboard Sheet", LinkReportToDashboardSheetProcessor)
+    reg("Add Text on Dashboard Sheet", AddTextOnDashboardSheetProcessor)
 
     # Feedback / Tags / External References
     reg("Add Comment", FeedbackProcessor)
