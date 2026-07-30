@@ -1,10 +1,10 @@
-Dr. Egeria Test Run — 2026-07-15 13:14:09.939787
+Dr. Egeria Test Run — 2026-07-30 09:22:39.659149
 
 
 ### VALIDATE MODE ###
 
 ================================================================================
-FILE: dr_test_glossary.md  |  DIRECTIVE: validate  |  13:14:11
+FILE: dr_test_glossary.md  |  DIRECTIVE: validate  |  09:22:41
 ================================================================================
 v2: Processing Markdown File: /Users/dwolfson/localGit/egeria-python/tests/dr-egeria-command-tests/dr_test_glossary.md
 
@@ -69,7 +69,7 @@ v2: Processing complete for '/Users/dwolfson/localGit/egeria-python/tests/dr-ege
 SCORE: 16 SUCCESS  0 FAILURE  0 WARNING
 
 ================================================================================
-FILE: dr_test_governance.md  |  DIRECTIVE: validate  |  13:14:14
+FILE: dr_test_governance.md  |  DIRECTIVE: validate  |  09:22:46
 ================================================================================
 v2: Processing Markdown File: /Users/dwolfson/localGit/egeria-python/tests/dr-egeria-command-tests/dr_test_governance.md
 Processing Errors:
@@ -262,7 +262,7 @@ v2: Processing complete for '/Users/dwolfson/localGit/egeria-python/tests/dr-ege
 SCORE: 38 SUCCESS  8 FAILURE  1 WARNING
 
 ================================================================================
-FILE: dr_test_projects.md  |  DIRECTIVE: validate  |  13:14:26
+FILE: dr_test_projects.md  |  DIRECTIVE: validate  |  09:23:04
 ================================================================================
 v2: Processing Markdown File: /Users/dwolfson/localGit/egeria-python/tests/dr-egeria-command-tests/dr_test_projects.md
 
@@ -317,7 +317,7 @@ v2: Processing complete for '/Users/dwolfson/localGit/egeria-python/tests/dr-ege
 SCORE: 14 SUCCESS  0 FAILURE  0 WARNING
 
 ================================================================================
-FILE: dr_test_collections_good.md  |  DIRECTIVE: validate  |  13:14:29
+FILE: dr_test_collections_good.md  |  DIRECTIVE: validate  |  09:23:08
 ================================================================================
 v2: Processing Markdown File: /Users/dwolfson/localGit/egeria-python/tests/dr-egeria-command-tests/dr_test_collections_good.md
 Processing Errors:
@@ -431,17 +431,16 @@ v2: Processing complete for '/Users/dwolfson/localGit/egeria-python/tests/dr-ege
 SCORE: 20 SUCCESS  3 FAILURE  0 WARNING
 
 ================================================================================
-FILE: dr_test_collections_mean.md  |  DIRECTIVE: validate  |  13:14:36
+FILE: dr_test_collections_mean.md  |  DIRECTIVE: validate  |  09:23:17
 ================================================================================
 v2: Processing Markdown File: /Users/dwolfson/localGit/egeria-python/tests/dr-egeria-command-tests/dr_test_collections_mean.md
 Processing Errors:
 
 -- Create Collection (Collection::SalesForecast::MP01::1.0) --
    - Missing required attribute: 'Display Name'. Provided attributes: Description, Content Status, Qualified Name, GUID
--- Create Collection (Collection::SalesForecast::MP02::1.0) --
-   - Value 'BANANA' is not a valid metadata value for 'Content Status' (Validated by Egeria)
 -- Add Member to Collection (None) --
-   - Value 'NOT_A_STATUS' is not a valid metadata value for 'Membership Status' (Validated by Egeria)
+   - Referenced element 'Collection::SalesForecast::Master::1.0' for attribute 'Collection Id' not found.
+   - Referenced element 'DataStructure::CRMOpportunity::Salesforce::1.0' for attribute 'Element Id' not found.
 -- Add Member to Collection (None) --
    - Referenced element 'Collection::SalesForecast::DoesNotExist::1.0' for attribute 'Collection Id' not found.
    - Referenced element 'DataStructure::CRMOpportunity::Salesforce::1.0' for attribute 'Element Id' not found.
@@ -454,11 +453,18 @@ Processing Errors:
    - Referenced element 'Collection::SalesForecast::Master::1.0' for attribute 'Collection Id' not found.
    - Referenced element 'DataStructure::CRMOpportunity::Salesforce::1.0' for attribute 'Element Id' not found.
 -- Attach Collection to Resource (None) --
-   - Value 'GovernanceDefinitions' is not a valid metadata value for 'Resource Use' (Validated by Egeria)
    - Missing required attribute: 'Element Id'. Provided attributes: Resource Description, Resource Use, GUID
 -- Detach Member to Collection (None) --
    - Referenced element 'Collection::SalesForecast::Master::1.0' for attribute 'Collection Id' not found.
    - Referenced element 'Collection::SalesForecast::NeverLinked::1.0' for attribute 'Element Id' not found.
+
+
+Processing Warnings:
+
+-- Create Collection (Collection::SalesForecast::MP02::1.0) --
+   - Value 'BANANA' is not a valid metadata value for 'Content Status'
+-- Add Member to Collection (None) --
+   - Value 'NOT_A_STATUS' is not a valid metadata value for 'Membership Status'
 
 
 
@@ -472,15 +478,15 @@ Processing Errors:
 │                               │                               │         │       │                                      │                                      │ attributes: Description, Content     │
 │                               │                               │         │       │                                      │                                      │ Status, Qualified Name, GUID         │
 ├·······························┼·······························┼·········┼·······┼······································┼······································┼······································┤
-│ Create Collection             │ Create Collection             │ FAILURE │ No    │ SF-MP02-Invalid-Content-Status       │ Collection::SalesForecast::MP02::1.0 │ Validation failed: Value 'BANANA' is │
-│                               │                               │         │       │                                      │                                      │ not a valid metadata value for       │
-│                               │                               │         │       │                                      │                                      │ 'Content Status' (Validated by       │
-│                               │                               │         │       │                                      │                                      │ Egeria)                              │
+│ Create Collection             │ Create Collection             │ SUCCESS │ No    │ SF-MP02-Invalid-Content-Status       │ Collection::SalesForecast::MP02::1.0 │ Validated Create Collection          │
 ├·······························┼·······························┼·········┼·······┼······································┼······································┼······································┤
-│ Add Member to Collection      │ Add Member to Collection      │ FAILURE │ No    │ Collection::SalesForecast::Master::1 │                                      │ Validation failed: Value             │
-│                               │                               │         │       │ .0                                   │                                      │ 'NOT_A_STATUS' is not a valid        │
-│                               │                               │         │       │                                      │                                      │ metadata value for 'Membership       │
-│                               │                               │         │       │                                      │                                      │ Status' (Validated by Egeria)        │
+│ Add Member to Collection      │ Add Member to Collection      │ FAILURE │ No    │ Collection::SalesForecast::Master::1 │                                      │ Referenced element                   │
+│                               │                               │         │       │ .0                                   │                                      │ 'Collection::SalesForecast::Master:: │
+│                               │                               │         │       │                                      │                                      │ 1.0' for attribute 'Collection Id'   │
+│                               │                               │         │       │                                      │                                      │ not found.; Referenced element       │
+│                               │                               │         │       │                                      │                                      │ 'DataStructure::CRMOpportunity::Sale │
+│                               │                               │         │       │                                      │                                      │ sforce::1.0' for attribute 'Element  │
+│                               │                               │         │       │                                      │                                      │ Id' not found.                       │
 ├·······························┼·······························┼·········┼·······┼······································┼······································┼······································┤
 │ Add Member to Collection      │ Add Member to Collection      │ FAILURE │ No    │ Collection::SalesForecast::DoesNotEx │                                      │ Referenced element                   │
 │                               │                               │         │       │ ist::1.0                             │                                      │ 'Collection::SalesForecast::DoesNotE │
@@ -511,13 +517,10 @@ Processing Errors:
 │                               │                               │         │       │                                      │                                      │ sforce::1.0' for attribute 'Element  │
 │                               │                               │         │       │                                      │                                      │ Id' not found.                       │
 ├·······························┼·······························┼·········┼·······┼······································┼······································┼······································┤
-│ Attach Collection to Resource │ Attach Collection to Resource │ FAILURE │ No    │                                      │                                      │ Validation failed: Value             │
-│                               │                               │         │       │                                      │                                      │ 'GovernanceDefinitions' is not a     │
-│                               │                               │         │       │                                      │                                      │ valid metadata value for 'Resource   │
-│                               │                               │         │       │                                      │                                      │ Use' (Validated by Egeria); Missing  │
-│                               │                               │         │       │                                      │                                      │ required attribute: 'Element Id'.    │
-│                               │                               │         │       │                                      │                                      │ Provided attributes: Resource        │
-│                               │                               │         │       │                                      │                                      │ Description, Resource Use, GUID      │
+│ Attach Collection to Resource │ Attach Collection to Resource │ FAILURE │ No    │                                      │                                      │ Validation failed: Missing required  │
+│                               │                               │         │       │                                      │                                      │ attribute: 'Element Id'. Provided    │
+│                               │                               │         │       │                                      │                                      │ attributes: Resource Description,    │
+│                               │                               │         │       │                                      │                                      │ Resource Use, GUID                   │
 ├·······························┼·······························┼·········┼·······┼······································┼······································┼······································┤
 │ Detach Member from Collection │ Detach Member to Collection   │ FAILURE │ No    │ Collection::SalesForecast::Master::1 │                                      │ Referenced element                   │
 │                               │                               │         │       │ .0                                   │                                      │ 'Collection::SalesForecast::Master:: │
@@ -535,10 +538,10 @@ Processing Errors:
 v2: Processing complete for '/Users/dwolfson/localGit/egeria-python/tests/dr-egeria-command-tests/dr_test_collections_mean.md'
 
 
-SCORE: 1 SUCCESS  9 FAILURE  0 WARNING
+SCORE: 2 SUCCESS  8 FAILURE  0 WARNING
 
 ================================================================================
-FILE: dr_test_products_good.md  |  DIRECTIVE: validate  |  13:14:39
+FILE: dr_test_products_good.md  |  DIRECTIVE: validate  |  09:23:22
 ================================================================================
 v2: Processing Markdown File: /Users/dwolfson/localGit/egeria-python/tests/dr-egeria-command-tests/dr_test_products_good.md
 Processing Errors:
@@ -619,7 +622,7 @@ v2: Processing complete for '/Users/dwolfson/localGit/egeria-python/tests/dr-ege
 SCORE: 12 SUCCESS  3 FAILURE  0 WARNING
 
 ================================================================================
-FILE: dr_test_external_ref.md  |  DIRECTIVE: validate  |  13:14:42
+FILE: dr_test_external_ref.md  |  DIRECTIVE: validate  |  09:23:27
 ================================================================================
 v2: Processing Markdown File: /Users/dwolfson/localGit/egeria-python/tests/dr-egeria-command-tests/dr_test_external_ref.md
 Processing Errors:
@@ -731,7 +734,7 @@ v2: Processing complete for '/Users/dwolfson/localGit/egeria-python/tests/dr-ege
 SCORE: 10 SUCCESS  8 FAILURE  0 WARNING
 
 ================================================================================
-FILE: dr_test_feedback.md  |  DIRECTIVE: validate  |  13:14:47
+FILE: dr_test_feedback.md  |  DIRECTIVE: validate  |  09:23:36
 ================================================================================
 v2: Processing Markdown File: /Users/dwolfson/localGit/egeria-python/tests/dr-egeria-command-tests/dr_test_feedback.md
 Processing Errors:
@@ -872,7 +875,7 @@ v2: Processing complete for '/Users/dwolfson/localGit/egeria-python/tests/dr-ege
 SCORE: 5 SUCCESS  15 FAILURE  0 WARNING
 
 ================================================================================
-FILE: dr_test_data_designer.md  |  DIRECTIVE: validate  |  13:14:53
+FILE: dr_test_data_designer.md  |  DIRECTIVE: validate  |  09:23:47
 ================================================================================
 v2: Processing Markdown File: /Users/dwolfson/localGit/egeria-python/tests/dr-egeria-command-tests/dr_test_data_designer.md
 
@@ -937,8 +940,8 @@ v2: Processing Markdown File: /Users/dwolfson/localGit/egeria-python/tests/dr-eg
 │ Link Certification Type to Data   │ Link Certification Type to Data   │ SUCCESS │ No    │                                   │                                   │ Validated Link Certification Type to
 │ Structure                         │ Structure                         │         │       │                                   │                                   │ Data Structure                      
 ├···································┼···································┼·········┼·······┼···································┼···································┼·····································
-│ Attach Data Description to        │ Attach Data Description to        │ SUCCESS │ No    │ DataSpecification::SalesForecast: │                                   │ Validated Attach Data Description to
-│ Element                           │ Element                           │         │       │ :1.0                              │                                   │ Element                             
+│ Attach Data Description to        │ Attach Data Description to        │ WARNING │ No    │                                   │                                   │ No processor registered for 'Attach 
+│ Element                           │ Element                           │         │       │                                   │                                   │ Data Description to Element'        
 └───────────────────────────────────┴───────────────────────────────────┴─────────┴───────┴───────────────────────────────────┴───────────────────────────────────┴─────────────────────────────────────
 
 
@@ -946,10 +949,10 @@ v2: Processing Markdown File: /Users/dwolfson/localGit/egeria-python/tests/dr-eg
 v2: Processing complete for '/Users/dwolfson/localGit/egeria-python/tests/dr-egeria-command-tests/dr_test_data_designer.md'
 
 
-SCORE: 20 SUCCESS  0 FAILURE  0 WARNING
+SCORE: 19 SUCCESS  0 FAILURE  1 WARNING
 
 ================================================================================
-FILE: dr_test_report.md  |  DIRECTIVE: validate  |  13:14:59
+FILE: dr_test_report.md  |  DIRECTIVE: validate  |  09:23:55
 ================================================================================
 v2: Processing Markdown File: /Users/dwolfson/localGit/egeria-python/tests/dr-egeria-command-tests/dr_test_report.md
 Processing Errors:
@@ -958,69 +961,98 @@ Processing Errors:
    - Referenced element 'Collection::SalesForecast::Root::1.0' for attribute 'Anchor Scope ID' not found.
 
 
+Processing Warnings:
+
+-- Create Report (Coco Pharmaceuticals::DeployedReport::Sales-Forecast-Pipeline-Report::1.0) --
+   - Value '['ACTIVE']' is not a valid metadata value for 'Limit Result by Status'
+-- Create Report (Coco Pharmaceuticals::DeployedReport::Sales-Forecast-Collections-Table::1.0) --
+   - Value '['ACTIVE']' is not a valid metadata value for 'Limit Result by Status'
+-- Create Report (Coco Pharmaceuticals::DeployedReport::Sales-Forecast-Products-Governed-View::1.0) --
+   - Value '['ACTIVE']' is not a valid metadata value for 'Limit Result by Status'
+-- Create Report (Coco Pharmaceuticals::DeployedReport::Sales-Forecast-Pipeline-Report::1.0) --
+   - Value '['ACTIVE']' is not a valid metadata value for 'Limit Result by Status'
+
+
 
 
                                                                                     Dr. Egeria v2 Processing Summary                                                                                    
-┏━━━━━━━━━━━━━━━━━━┳━━━━━━━━━━━━━━━━━━━┳━━━━━━━━━┳━━━━━━━┳━━━━━━━━━━━━━━━━━━━━━━┳━━━━━━━━━━━━━━━━━━━━━━━┳━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━┓
-┃ Markdown Command ┃ Canonical Command ┃ Status  ┃ Found ┃ Display Name / End 1 ┃ Qualified Name / End2 ┃ Message                                                                                      ┃
-┡━━━━━━━━━━━━━━━━━━╇━━━━━━━━━━━━━━━━━━━╇━━━━━━━━━╇━━━━━━━╇━━━━━━━━━━━━━━━━━━━━━━╇━━━━━━━━━━━━━━━━━━━━━━━╇━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━┩
-│ View Report      │ View Report       │ SUCCESS │ No    │ Default              │                       │ Validated View Report                                                                        │
-├··················┼···················┼·········┼·······┼······················┼·······················┼······························································································┤
-│ View Report      │ View Report       │ SUCCESS │ No    │ Collections          │                       │ Validated View Report                                                                        │
-├··················┼···················┼·········┼·······┼······················┼·······················┼······························································································┤
-│ View Report      │ View Report       │ SUCCESS │ No    │ Collections          │                       │ Validated View Report                                                                        │
-├··················┼···················┼·········┼·······┼······················┼·······················┼······························································································┤
-│ View Report      │ View Report       │ SUCCESS │ No    │ Digital-Products     │                       │ Validated View Report                                                                        │
-├··················┼···················┼·········┼·······┼······················┼·······················┼······························································································┤
-│ View Report      │ View Report       │ SUCCESS │ No    │ Glossaries           │                       │ Validated View Report                                                                        │
-├··················┼···················┼·········┼·······┼······················┼·······················┼······························································································┤
-│ View Report      │ View Report       │ SUCCESS │ No    │ Projects             │                       │ Validated View Report                                                                        │
-├··················┼···················┼·········┼·······┼······················┼·······················┼······························································································┤
-│ View Report      │ View Report       │ SUCCESS │ No    │ Glossaries           │                       │ Validated View Report                                                                        │
-├··················┼···················┼·········┼·······┼······················┼·······················┼······························································································┤
-│ View Report      │ View Report       │ SUCCESS │ No    │ Collections          │                       │ Validated View Report                                                                        │
-├··················┼···················┼·········┼·······┼······················┼·······················┼······························································································┤
-│ View Report      │ View Report       │ SUCCESS │ No    │ Digital-Products     │                       │ Validated View Report                                                                        │
-├··················┼···················┼·········┼·······┼······················┼·······················┼······························································································┤
-│ View Report      │ View Report       │ SUCCESS │ No    │ Digital-Products     │                       │ Validated View Report                                                                        │
-├··················┼···················┼·········┼·······┼······················┼·······················┼······························································································┤
-│ View Report      │ View Report       │ SUCCESS │ No    │ Collections          │                       │ Validated View Report                                                                        │
-├··················┼···················┼·········┼·······┼······················┼·······················┼······························································································┤
-│ View Report      │ View Report       │ SUCCESS │ No    │ Glossaries           │                       │ Validated View Report                                                                        │
-├··················┼···················┼·········┼·······┼······················┼·······················┼······························································································┤
-│ View Report      │ View Report       │ SUCCESS │ No    │ Glossaries           │                       │ Validated View Report                                                                        │
-├··················┼···················┼·········┼·······┼······················┼·······················┼······························································································┤
-│ View Report      │ View Report       │ SUCCESS │ No    │ Collections          │                       │ Validated View Report                                                                        │
-├··················┼···················┼·········┼·······┼······················┼·······················┼······························································································┤
-│ View Report      │ View Report       │ SUCCESS │ No    │ Glossaries           │                       │ Validated View Report                                                                        │
-├··················┼···················┼·········┼·······┼······················┼·······················┼······························································································┤
-│ View Report      │ View Report       │ SUCCESS │ No    │ Projects             │                       │ Validated View Report                                                                        │
-├··················┼···················┼·········┼·······┼······················┼·······················┼······························································································┤
-│ View Report      │ View Report       │ SUCCESS │ No    │ Collections          │                       │ Validated View Report                                                                        │
-├··················┼···················┼·········┼·······┼······················┼·······················┼······························································································┤
-│ View Report      │ View Report       │ SUCCESS │ No    │ Digital-Products     │                       │ Validated View Report                                                                        │
-├··················┼···················┼·········┼·······┼······················┼·······················┼······························································································┤
-│ View Report      │ View Report       │ SUCCESS │ No    │ Collections          │                       │ Validated View Report                                                                        │
-├··················┼···················┼·········┼·······┼······················┼·······················┼······························································································┤
-│ View Report      │ View Report       │ SUCCESS │ No    │ Digital-Products     │                       │ Validated View Report                                                                        │
-├··················┼···················┼·········┼·······┼······················┼·······················┼······························································································┤
-│ View Report      │ View Report       │ FAILURE │ No    │ Collections          │                       │ Referenced element 'Collection::SalesForecast::Root::1.0' for attribute 'Anchor Scope ID'    │
-│                  │                   │         │       │                      │                       │ not found.                                                                                   │
-├··················┼···················┼·········┼·······┼······················┼·······················┼······························································································┤
-│ View Report      │ View Report       │ SUCCESS │ No    │ Collections          │                       │ Validated View Report                                                                        │
-├··················┼···················┼·········┼·······┼······················┼·······················┼······························································································┤
-│ View Report      │ View Report       │ SUCCESS │ No    │ Glossaries           │                       │ Validated View Report                                                                        │
-└──────────────────┴───────────────────┴─────────┴───────┴──────────────────────┴───────────────────────┴──────────────────────────────────────────────────────────────────────────────────────────────┘
+┏━━━━━━━━━━━━━━━━━━┳━━━━━━━━━━━━━━━━━━━┳━━━━━━━━━┳━━━━━━━┳━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━┳━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━┳━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━┓
+┃ Markdown Command ┃ Canonical Command ┃ Status  ┃ Found ┃ Display Name / End 1                  ┃ Qualified Name / End2                            ┃ Message                                          ┃
+┡━━━━━━━━━━━━━━━━━━╇━━━━━━━━━━━━━━━━━━━╇━━━━━━━━━╇━━━━━━━╇━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━╇━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━╇━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━┩
+│ View Report      │ View Report       │ SUCCESS │ No    │ Default                               │                                                  │ Validated View Report                            │
+├··················┼···················┼·········┼·······┼·······································┼··················································┼··················································┤
+│ View Report      │ View Report       │ SUCCESS │ No    │ Collections                           │                                                  │ Validated View Report                            │
+├··················┼···················┼·········┼·······┼·······································┼··················································┼··················································┤
+│ View Report      │ View Report       │ SUCCESS │ No    │ Collections                           │                                                  │ Validated View Report                            │
+├··················┼···················┼·········┼·······┼·······································┼··················································┼··················································┤
+│ View Report      │ View Report       │ SUCCESS │ No    │ Digital-Products                      │                                                  │ Validated View Report                            │
+├··················┼···················┼·········┼·······┼·······································┼··················································┼··················································┤
+│ View Report      │ View Report       │ SUCCESS │ No    │ Glossaries                            │                                                  │ Validated View Report                            │
+├··················┼···················┼·········┼·······┼·······································┼··················································┼··················································┤
+│ View Report      │ View Report       │ SUCCESS │ No    │ Projects                              │                                                  │ Validated View Report                            │
+├··················┼···················┼·········┼·······┼·······································┼··················································┼··················································┤
+│ View Report      │ View Report       │ SUCCESS │ No    │ Glossaries                            │                                                  │ Validated View Report                            │
+├··················┼···················┼·········┼·······┼·······································┼··················································┼··················································┤
+│ View Report      │ View Report       │ SUCCESS │ No    │ Collections                           │                                                  │ Validated View Report                            │
+├··················┼···················┼·········┼·······┼·······································┼··················································┼··················································┤
+│ View Report      │ View Report       │ SUCCESS │ No    │ Digital-Products                      │                                                  │ Validated View Report                            │
+├··················┼···················┼·········┼·······┼·······································┼··················································┼··················································┤
+│ View Report      │ View Report       │ SUCCESS │ No    │ Digital-Products                      │                                                  │ Validated View Report                            │
+├··················┼···················┼·········┼·······┼·······································┼··················································┼··················································┤
+│ View Report      │ View Report       │ SUCCESS │ No    │ Collections                           │                                                  │ Validated View Report                            │
+├··················┼···················┼·········┼·······┼·······································┼··················································┼··················································┤
+│ View Report      │ View Report       │ SUCCESS │ No    │ Glossaries                            │                                                  │ Validated View Report                            │
+├··················┼···················┼·········┼·······┼·······································┼··················································┼··················································┤
+│ View Report      │ View Report       │ SUCCESS │ No    │ Glossaries                            │                                                  │ Validated View Report                            │
+├··················┼···················┼·········┼·······┼·······································┼··················································┼··················································┤
+│ View Report      │ View Report       │ SUCCESS │ No    │ Collections                           │                                                  │ Validated View Report                            │
+├··················┼···················┼·········┼·······┼·······································┼··················································┼··················································┤
+│ View Report      │ View Report       │ SUCCESS │ No    │ Glossaries                            │                                                  │ Validated View Report                            │
+├··················┼···················┼·········┼·······┼·······································┼··················································┼··················································┤
+│ View Report      │ View Report       │ SUCCESS │ No    │ Projects                              │                                                  │ Validated View Report                            │
+├··················┼···················┼·········┼·······┼·······································┼··················································┼··················································┤
+│ View Report      │ View Report       │ SUCCESS │ No    │ Collections                           │                                                  │ Validated View Report                            │
+├··················┼···················┼·········┼·······┼·······································┼··················································┼··················································┤
+│ View Report      │ View Report       │ SUCCESS │ No    │ Digital-Products                      │                                                  │ Validated View Report                            │
+├··················┼···················┼·········┼·······┼·······································┼··················································┼··················································┤
+│ View Report      │ View Report       │ SUCCESS │ No    │ Collections                           │                                                  │ Validated View Report                            │
+├··················┼···················┼·········┼·······┼·······································┼··················································┼··················································┤
+│ View Report      │ View Report       │ SUCCESS │ No    │ Digital-Products                      │                                                  │ Validated View Report                            │
+├··················┼···················┼·········┼·······┼·······································┼··················································┼··················································┤
+│ View Report      │ View Report       │ FAILURE │ No    │ Collections                           │                                                  │ Referenced element                               │
+│                  │                   │         │       │                                       │                                                  │ 'Collection::SalesForecast::Root::1.0' for       │
+│                  │                   │         │       │                                       │                                                  │ attribute 'Anchor Scope ID' not found.           │
+├··················┼···················┼·········┼·······┼·······································┼··················································┼··················································┤
+│ View Report      │ View Report       │ SUCCESS │ No    │ Collections                           │                                                  │ Validated View Report                            │
+├··················┼···················┼·········┼·······┼·······································┼··················································┼··················································┤
+│ View Report      │ View Report       │ SUCCESS │ No    │ Glossaries                            │                                                  │ Validated View Report                            │
+├··················┼···················┼·········┼·······┼·······································┼··················································┼··················································┤
+│ Create Report    │ Create Report     │ SUCCESS │ No    │ Sales Forecast Pipeline Report        │ Coco                                             │ Validated Create Report                          │
+│                  │                   │         │       │                                       │ Pharmaceuticals::DeployedReport::Sales-Forecast- │                                                  │
+│                  │                   │         │       │                                       │ Pipeline-Report::1.0                             │                                                  │
+├··················┼···················┼·········┼·······┼·······································┼··················································┼··················································┤
+│ Create Report    │ Create Report     │ SUCCESS │ No    │ Sales Forecast Collections Table      │ Coco                                             │ Validated Create Report                          │
+│                  │                   │         │       │                                       │ Pharmaceuticals::DeployedReport::Sales-Forecast- │                                                  │
+│                  │                   │         │       │                                       │ Collections-Table::1.0                           │                                                  │
+├··················┼···················┼·········┼·······┼·······································┼··················································┼··················································┤
+│ Create Report    │ Create Report     │ SUCCESS │ No    │ Sales Forecast Products Governed View │ Coco                                             │ Validated Create Report                          │
+│                  │                   │         │       │                                       │ Pharmaceuticals::DeployedReport::Sales-Forecast- │                                                  │
+│                  │                   │         │       │                                       │ Products-Governed-View::1.0                      │                                                  │
+├··················┼···················┼·········┼·······┼·······································┼··················································┼··················································┤
+│ Create Report    │ Create Report     │ SUCCESS │ Yes   │ Sales Forecast Pipeline Report        │ Coco                                             │ Validated Create Report (GUID: (Planned: Coco    │
+│                  │                   │         │       │                                       │ Pharmaceuticals::DeployedReport::Sales-Forecast- │ Pharmaceuticals::DeployedReport::Sales-Forecast- │
+│                  │                   │         │       │                                       │ Pipeline-Report::1.0                             │ Pipeline-Report::1.0))                           │
+└──────────────────┴───────────────────┴─────────┴───────┴───────────────────────────────────────┴──────────────────────────────────────────────────┴──────────────────────────────────────────────────┘
 
 
 
 v2: Processing complete for '/Users/dwolfson/localGit/egeria-python/tests/dr-egeria-command-tests/dr_test_report.md'
 
 
-SCORE: 22 SUCCESS  1 FAILURE  0 WARNING
+SCORE: 26 SUCCESS  1 FAILURE  0 WARNING
 
 ================================================================================
-FILE: dr_test_solution.md  |  DIRECTIVE: validate  |  13:15:02
+FILE: dr_test_solution.md  |  DIRECTIVE: validate  |  09:24:01
 ================================================================================
 v2: Processing Markdown File: /Users/dwolfson/localGit/egeria-python/tests/dr-egeria-command-tests/dr_test_solution.md
 
@@ -1093,7 +1125,7 @@ v2: Processing complete for '/Users/dwolfson/localGit/egeria-python/tests/dr-ege
 SCORE: 19 SUCCESS  0 FAILURE  0 WARNING
 
 ================================================================================
-FILE: dr_test_design_patterns.md  |  DIRECTIVE: validate  |  13:15:05
+FILE: dr_test_design_patterns.md  |  DIRECTIVE: validate  |  09:24:05
 ================================================================================
 v2: Processing Markdown File: /Users/dwolfson/localGit/egeria-python/tests/dr-egeria-command-tests/dr_test_design_patterns.md
 
@@ -1125,7 +1157,7 @@ v2: Processing complete for '/Users/dwolfson/localGit/egeria-python/tests/dr-ege
 SCORE: 7 SUCCESS  0 FAILURE  0 WARNING
 
 ================================================================================
-FILE: dr_test_new_commands.md  |  DIRECTIVE: validate  |  13:15:07
+FILE: dr_test_new_commands.md  |  DIRECTIVE: validate  |  09:24:08
 ================================================================================
 v2: Processing Markdown File: /Users/dwolfson/localGit/egeria-python/tests/dr-egeria-command-tests/dr_test_new_commands.md
 
@@ -1149,7 +1181,7 @@ v2: Processing complete for '/Users/dwolfson/localGit/egeria-python/tests/dr-ege
 SCORE: 3 SUCCESS  0 FAILURE  0 WARNING
 
 ================================================================================
-FILE: dr_test_action_author.md  |  DIRECTIVE: validate  |  13:15:08
+FILE: dr_test_action_author.md  |  DIRECTIVE: validate  |  09:24:10
 ================================================================================
 v2: Processing Markdown File: /Users/dwolfson/localGit/egeria-python/tests/dr-egeria-command-tests/dr_test_action_author.md
 
@@ -1197,15 +1229,15 @@ dr_test_glossary.md                         16     0     0
 dr_test_governance.md                       38     8     1
 dr_test_projects.md                         14     0     0
 dr_test_collections_good.md                 20     3     0
-dr_test_collections_mean.md                  1     9     0
+dr_test_collections_mean.md                  2     8     0
 dr_test_products_good.md                    12     3     0
 dr_test_external_ref.md                     10     8     0
 dr_test_feedback.md                          5    15     0
-dr_test_data_designer.md                    20     0     0
-dr_test_report.md                           22     1     0
+dr_test_data_designer.md                    19     0     1
+dr_test_report.md                           26     1     0
 dr_test_solution.md                         19     0     0
 dr_test_design_patterns.md                   7     0     0
 dr_test_new_commands.md                      3     0     0
 dr_test_action_author.md                     8     0     0
 
-TOTALS: 195 SUCCESS  47 FAILURE  1 WARNING
+TOTALS: 199 SUCCESS  46 FAILURE  2 WARNING
