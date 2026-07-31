@@ -88,8 +88,22 @@ class ViewProcessor(AsyncBaseCommandProcessor):
         for canonical_name, attr_data in attributes.items():
             if canonical_name in ["Report Spec", "Output Format"]:
                 continue
-                
-            # If we have a variable_name in the spec, use it. 
+
+            # "Report Parameters" is a Dictionary attribute carrying arbitrary
+            # report-spec-specific params (e.g. collection_guid for the
+            # "Collection Members" report) that aren't part of the standard
+            # find/search attribute set -- merge its entries directly into
+            # params rather than nesting the whole dict under one key, so
+            # e.g. {"collection_guid": "..."} becomes params["collection_guid"],
+            # matching exactly what the target report spec's
+            # ActionParameter.required_params/optional_params expect.
+            if canonical_name == "Report Parameters":
+                value = attr_data.get("value")
+                if isinstance(value, dict):
+                    params.update(value)
+                continue
+
+            # If we have a variable_name in the spec, use it.
             # Otherwise fallback to a snake_case version of the canonical name.
             var_name = name_to_var.get(canonical_name, canonical_name.lower().replace(" ", "_"))
             params[var_name] = attr_data.get("value")

@@ -78,6 +78,23 @@ def _report_additional_properties(attributes: Dict[str, Any]) -> Dict[str, str]:
     user_extra = attributes.get("Additional Properties", {}).get("value")
     if isinstance(user_extra, dict):
         merged.update({str(k): str(v) for k, v in user_extra.items() if v is not None})
+
+    # Arbitrary report-spec-specific params (e.g. {"collection_guid": "..."}
+    # for the "Collection Members" report) that aren't part of the standard
+    # 22-key find/search vocabulary in _REPORT_PARAM_ATTRS. Merged FLAT
+    # (unlike analyticParams below, which is JSON-encoded under its own key)
+    # because the consumption side (egeria-workspaces-fs's
+    # local_dashboards_handler.py:_find_report_by_name) already passes
+    # through any additionalProperties key not in
+    # {"reportSpec","outputFormat","analyticParams"} as a flat params dict
+    # -- keys here must exactly match the target report spec's
+    # ActionParameter.required_params/optional_params (snake_case, e.g.
+    # "collection_guid"), since format_set_executor.py does a direct
+    # params[key] lookup with no aliasing.
+    report_params = attributes.get("Report Parameters", {}).get("value")
+    if isinstance(report_params, dict):
+        merged.update({str(k): str(v) for k, v in report_params.items() if v is not None})
+
     for canonical_name, key in _REPORT_PARAM_ATTRS.items():
         value = attributes.get(canonical_name, {}).get("value")
         if value is not None and value != "":
