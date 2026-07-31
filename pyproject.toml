@@ -50,7 +50,7 @@ dependencies = [
 ]
 
 [project.scripts]
-    pyegeria-mcp = "pyegeria.mcp_server:main"
+    pyegeria-mcp = "pyegeria.core.mcp_server:main"
     run_report = "commands.cat.run_report:main"
     run_report_orig = "commands.cat.run_report_orig:main"
     my_reports = "commands.cat.my_reports:start_exp2"

@@ -10,7 +10,7 @@ from loguru import logger
 
 from typing import Any, Dict, Optional, Literal
 
-from mcp.server.fastmcp.exceptions import ValidationError
+from pydantic_core import ValidationError
 
 from pyegeria.egeria_tech_client import EgeriaTech
 from pyegeria.core._exceptions import print_validation_error
@@ -21,7 +21,7 @@ nest_asyncio.apply()
 
 try:
     # We use Optional[] and List[] types, so we import them.
-    from mcp.server.fastmcp import FastMCP
+    from mcp.server.mcpserver import MCPServer
     from pyegeria.core.mcp_adapter import (
         list_reports,
         describe_report,
@@ -75,7 +75,7 @@ def main() -> None:
         logger.debug(f"Exception occurred: {str(e)}")
         raise
 
-    srv = FastMCP(name="pyegeria-mcp")
+    srv = MCPServer(name="pyegeria-mcp")
     print("Starting MCP server...", file=sys.stderr)
 
     # list_reports tool (formerly list_format_sets)
@@ -95,7 +95,7 @@ def main() -> None:
     @srv.tool(name="describe_report")
     def describe_report_tool(name: str, output_type: Literal["DICT", "JSON", "MARKDOWN"] = "DICT") -> Dict[str, Any]:
         """Returns the schema and details for a specified report."""
-        # FastMCP handles validation of 'name' and 'output_type' types automatically.
+        # MCPServer handles validation of 'name' and 'output_type' types automatically.
         effective_output_type = "REPORT" if output_type == "MARKDOWN" else ("DICT" if output_type == "JSON" else output_type)
 
         logger.debug(f"Describing report: {name} with output type: {effective_output_type}")
@@ -126,7 +126,7 @@ def main() -> None:
 
         """Run a report with the specified parameters."""
         print("DEBUG: Running report...", file=sys.stderr)
-        # 1. Automatic Validation: FastMCP/Pydantic ensures types are correct.
+        # 1. Automatic Validation: MCPServer/Pydantic ensures types are correct.
 
         # 2. Manual Validation (for specific values like output_format)
         # "MARKDOWN" is a friendly alias for the executor's internal "REPORT".
@@ -167,7 +167,7 @@ def main() -> None:
             # GLOBAL_EGERIA_CLIENT (created in the server's startup loop) caused
             # intermittent CLIENT_ERROR_400 ("unable to connect") because its
             # httpx async client is bound to a different loop than the one
-            # FastMCP runs tool handlers in. A per-call client (mirroring
+            # MCPServer runs tool handlers in. A per-call client (mirroring
             # exec_report_spec / the CLI) is reliable.
             from pyegeria.core.config import settings as _settings
             _user = _settings.User_Profile.user_name
