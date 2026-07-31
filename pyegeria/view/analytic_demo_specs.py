@@ -143,9 +143,10 @@ _DEMOS: Dict[str, FormatSet] = {
         result_shape="dict (byType, total)",
         chart_types=["BAR"],
     ),
-    "Analytic Demo - Usage Context Counts": _demo(
-        heading="Usage Context Counts (ISC / Blueprints)",
-        what="InformationSupplyChain and SolutionBlueprint counts.",
+    "Analytic Demo - Usage Context: Supply Chains & Blueprints": _demo(
+        heading="Usage Context: Supply Chains & Blueprints",
+        what="InformationSupplyChain and SolutionBlueprint counts -- the two structures that put "
+             "assets in a business usage context (supply chain membership, blueprint realization).",
         analytic_function_name="usage_context_counts",
         demo_params={},
         result_shape="dict (informationSupplyChains, blueprints)",

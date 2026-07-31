@@ -171,8 +171,9 @@ _BUILTINS: Dict[str, AnalyticFunctionSpec] = {
     "usage_context_counts": AnalyticFunctionSpec(
         name="usage_context_counts",
         function="pyegeria.view.overview_metrics.usage_context_counts",
-        description="InformationSupplyChain and SolutionBlueprint counts -- what puts assets in a "
-                    "usage context.",
+        description="InformationSupplyChain and SolutionBlueprint counts -- the two structures that "
+                    "put assets in a business usage context (supply chain membership, blueprint "
+                    "realization).",
         returns="dict (informationSupplyChains, blueprints)",
         generic=False,
         binding_note="Fixed to InformationSupplyChain and SolutionBlueprint -- not a parameter.",
