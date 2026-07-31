@@ -1,6 +1,6 @@
 {
   "family": "Report",
-  "exported": "Jul 31, 2026 at 4:03:20 PM",
+  "exported": "Jul 31, 2026 at 4:09:47 PM",
   "attribute_definitions": {
     "Analytic Parameters": {
       "variable_name": "analytic_parameters",
@@ -797,8 +797,7 @@
       "own_attributes": [
         "Dashboard Sheet Description",
         "Dashboard Sheet Family",
-        "Dashboard Sheet Heading",
-        "Dashboard Sheet Name"
+        "Dashboard Sheet Heading"
       ]
     },
     "Report to Dashboard Sheet Link Base": {

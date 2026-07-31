@@ -22,14 +22,6 @@ ___
 >	**Description**: Display title for the Dashboard Sheet.
 
 
-### Dashboard Sheet Name
->	**Input Required**: True
-
->	**Attribute Type**: Simple
-
->	**Description**: The unique name of a Dashboard Sheet — a local pyegeria-managed record (planned to become a Collection subtype in Egeria; see Container/ContainerDict in pyegeria.view._output_container_models for the current pre-Egeria model). Used both to define a new Dashboard Sheet's identity (Create Dashboard Sheet) and to reference an existing one (Link Report to Dashboard Sheet).
-
-
 ### Journal Entry
 >	**Input Required**: False
 
