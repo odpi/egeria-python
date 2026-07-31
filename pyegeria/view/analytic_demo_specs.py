@@ -185,6 +185,38 @@ _DEMOS: Dict[str, FormatSet] = {
         result_shape="list[dict] (time series: {label, date, <series_key>: count, ...})",
         chart_types=["SERIES"],
     ),
+    "Analytic Demo - Term Definition Completeness": _demo(
+        heading="Term Definition Completeness",
+        what="Share of GlossaryTerms carrying a non-empty description. undefinedPct is the gap "
+             "(not the coverage) -- a near-100%-defined glossary is the uninteresting case, and "
+             "the gap is what's actionable.",
+        analytic_function_name="term_definition_completeness",
+        demo_params={},
+        result_shape="dict (total, defined, undefinedPct)",
+    ),
+    "Analytic Demo - Active Contributors": _demo(
+        heading="Active Contributors",
+        what="Distinct usernames behind at least one feedback relationship (ratings/comments/"
+             "likes/tags/noteLogs) -- pick BAR below for a by-type breakdown. A real engagement "
+             "signal Feedback Summary's raw relationship counts don't give you: ten comments from "
+             "one person and ten comments from ten people both show up as '10' there, but "
+             "differently here.",
+        analytic_function_name="active_contributors",
+        demo_params={},
+        result_shape="dict (contributors, byType)",
+        chart_types=["BAR"],
+    ),
+    "Analytic Demo - Metric Trend (Governance Coverage)": _demo(
+        heading="Metric Trend: Governance Coverage Over Time",
+        what="governed_coverage re-run at each snapshot, turning a point-in-time metric into a "
+             "series -- copy this spec and change metric_path in analytic_spec_params to trend "
+             "any other function in this module (e.g. people_counts, feedback_summary) the same "
+             "way. Run with output_format SERIES for a Vega-Lite line chart of governedCount.",
+        analytic_function_name="metric_trend",
+        demo_params={"metric_path": "pyegeria.view.overview_metrics.governed_coverage", "window": "6mo"},
+        result_shape="list[dict] (time series: {label, date, **snapshot})",
+        chart_types=["SERIES"],
+    ),
 }
 
 

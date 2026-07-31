@@ -24,6 +24,7 @@ concerns. `overview_handler.py` is the reference caller; see its git history
 for the original inline versions this was extracted from.
 """
 
+import inspect
 from typing import Any, Callable, Dict, List, Optional, Sequence, Tuple
 
 from loguru import logger
@@ -42,6 +43,9 @@ __all__ = [
     "feedback_summary",
     "usage_context_counts",
     "growth_series",
+    "metric_trend",
+    "term_definition_completeness",
+    "active_contributors",
     "WINDOWS",
     "growth_label",
 ]
@@ -530,3 +534,183 @@ def growth_series(
                 point.setdefault(key, None)
         series.append(point)
     return series
+
+
+# Parameter names this module's own functions use for their leading client
+# argument(s) -- a small local copy of format_set_executor._bind_client_args'
+# binding logic (mgr/ce only; nothing here uses "expert"/"client") rather than
+# importing that module, to keep this module's stated design boundary intact
+# (independently callable/testable, no report-spec-registry dependency).
+_CLIENT_PARAM_NAMES = ("mgr", "ce")
+
+
+def metric_trend(
+    mgr,
+    ce,
+    metric_path: str,
+    window: str = "6mo",
+    points: Optional[int] = None,
+    metric_params: Optional[Dict[str, Any]] = None,
+) -> List[Dict[str, Any]]:
+    """
+    Turn any single-snapshot function in this module into a time series, by
+    re-calling it once per `asOfTime` snapshot -- the same windowing
+    `growth_series` uses (BACKLOG NEXT-17), generalized to any function here
+    instead of one hardcoded type_map. This is what gives every existing
+    (and future) fixed-metric function trend support for free, without
+    adding `window`/`points` params to each one individually.
+
+    `metric_path` is a dotted import path exactly like `analytic_function`/
+    `extra_find` declarations use (e.g. "pyegeria.view.overview_metrics.
+    governed_coverage") -- resolved via `importlib`, not the analytic
+    registry, to keep this module free of the report-spec-registry layer
+    (see module docstring's design boundary; the registry itself already
+    carries these same dotted paths in `AnalyticFunctionSpec.function`).
+
+    Pass both `mgr` and `ce` regardless of what the target function actually
+    needs -- only the client parameter names it declares (by leading
+    positional parameter named "mgr"/"ce") are bound; the other is unused.
+
+    `metric_params` are extra keyword arguments forwarded to the target
+    function at every snapshot (e.g. `classifications` for `count_elements`);
+    `as_of` is supplied by this function and must not be included there.
+
+    Returns a list of dicts, oldest first: {"label", "date", **snapshot} --
+    the target function's result is merged directly into the point if it's a
+    dict (matching growth_series's flat-per-point shape), else stored under
+    "value". A snapshot that raises logs at debug and stores None instead of
+    aborting the whole series.
+    """
+    import importlib
+    from datetime import datetime, timezone
+
+    module_path, func_name = metric_path.rsplit(".", 1)
+    module = importlib.import_module(module_path)
+    func = getattr(module, func_name, None)
+    if func is None or not callable(func):
+        raise AttributeError(f"'{func_name}' not found in module '{module_path}'")
+
+    clients = {"mgr": mgr, "ce": ce}
+    bound_args = []
+    for pname, param in inspect.signature(func).parameters.items():
+        if pname in _CLIENT_PARAM_NAMES and param.kind in (
+            inspect.Parameter.POSITIONAL_ONLY, inspect.Parameter.POSITIONAL_OR_KEYWORD,
+        ):
+            bound_args.append(clients[pname])
+        else:
+            break
+
+    span_s, default_pts = WINDOWS.get(window, WINDOWS["6mo"])
+    n = points or default_pts
+    now = datetime.now(timezone.utc)
+    step = span_s / (n - 1)
+    date_fmt = "%d %b %Y %H:%M" if span_s <= 2 * 86400 else "%d %b %Y"
+
+    series = []
+    for i in range(n - 1, -1, -1):
+        if i == 0:
+            d, as_of = now, None
+        else:
+            d = datetime.fromtimestamp(now.timestamp() - i * step, tz=timezone.utc)
+            as_of = d.isoformat()
+        point = {"label": growth_label(d, span_s), "date": d.strftime(date_fmt)}
+        try:
+            result = func(*bound_args, as_of=as_of, **(metric_params or {}))
+            if isinstance(result, dict):
+                point.update(result)
+            else:
+                point["value"] = result
+        except Exception as exc:  # noqa: BLE001
+            logger.debug(f"overview_metrics metric_trend: snapshot {i} of {metric_path} failed: {exc}")
+            point["value"] = None
+        series.append(point)
+    return series
+
+
+def term_definition_completeness(mgr, as_of: Optional[str] = None) -> Dict[str, Any]:
+    """
+    Share of GlossaryTerms carrying a non-empty `description` -- a
+    definitions-coverage metric (BACKLOG NEXT-17), distinct from
+    `semantic_grounding` (which measures term<->asset linkage, not whether
+    the term itself is actually defined).
+
+    Unlike `count_elements`'s classification-only filter, "has a
+    description" is a field-value check, so this fetches term bodies (via
+    `_find`, same `FindRequestBody`/`metadataElementTypeName` shape
+    `count_elements` uses) rather than using a native count -- no fast
+    native-count path exists for this, same tradeoff `governed_coverage`
+    accepts for its by-classification breakdown. `description` is read the
+    same way `_zone_names` reads `zoneMembership`: verified live against a
+    running server that `find_metadata_elements` returns raw
+    `elementProperties.propertyValueMap.description.primitiveValue`, not a
+    flat `properties.description` (that flatter shape belongs to the
+    output_format='JSON' relationship/report path other functions here use,
+    e.g. `certifications_summary`'s `end2`, not this raw element-query path).
+
+    Returns {"total": int, "defined": int, "undefinedPct": int|None}
+    (`undefinedPct` mirrors `semantic_grounding.groundingPct`'s naming: the
+    gap, not the coverage, since a near-100%-defined glossary is the
+    uninteresting case and the gap is what's actionable).
+    """
+    body: Dict[str, Any] = {"class": "FindRequestBody", "limitResultsByStatus": ["ACTIVE"],
+                             "metadataElementTypeName": "GlossaryTerm"}
+    if as_of:
+        body["asOfTime"] = as_of
+    terms = _find(mgr, body)
+    total = len(terms)
+    defined = 0
+    for t in terms:
+        pvm = (t.get("elementProperties") or {}).get("propertyValueMap") or {}
+        desc = (pvm.get("description") or {}).get("primitiveValue")
+        if isinstance(desc, str) and desc.strip():
+            defined += 1
+    undefined_pct = round(100 * (total - defined) / total) if total else None
+    return {"total": total, "defined": defined, "undefinedPct": undefined_pct}
+
+
+def active_contributors(ce, as_of: Optional[str] = None) -> Dict[str, Any]:
+    """
+    Distinct usernames behind at least one feedback relationship (ratings/
+    comments/likes/tags/noteLogs -- the same Collaboration OMAS types
+    `feedback_summary` counts) -- a real engagement signal
+    `feedback_summary`'s raw relationship counts don't give you: ten
+    comments from one person and ten comments from ten people both show up
+    as "10" there, but very differently here (BACKLOG NEXT-17).
+
+    Neither relationship end is a Person -- `AttachedComment`/`AttachedRating`/
+    etc. link a Referenceable to the Comment/Rating/... element itself, and
+    `CommentProperties` (etc.) carry no author field. The actor is instead
+    the relationship's own audit metadata: `relationshipHeader.versions.
+    createdBy` (verified live against a running server -- who *attached* the
+    feedback, distinct from `end1`/`end2`, which are the commented-on
+    element and the comment/rating/... element). `count_relationships`'
+    native count can't give this since it only returns a number, not the
+    relationship bodies.
+
+    Returns {"contributors": int, "byType": {ratings, comments, likes, tags,
+    noteLogs}} where byType is the distinct-username count per relationship
+    type (one person active in two types counts once in "contributors" but
+    once per type in byType).
+    """
+    body = {"class": "ResultsRequestBody", "asOfTime": as_of} if as_of else None
+
+    def _actor_usernames(rel_type: str) -> set:
+        rels = _json_list(ce.get_relationships(
+            relationship_type=rel_type, output_format="JSON",
+            start_from=0, page_size=DEFAULT_CAP, body=body))
+        return {
+            u for rel in rels
+            if (u := (rel.get("relationshipHeader") or {}).get("versions", {}).get("createdBy"))
+        }
+
+    by_type: Dict[str, int] = {}
+    all_users: set = set()
+    for rel_type, key in _FEEDBACK_RELATIONSHIP_TYPES:
+        try:
+            users = _actor_usernames(rel_type)
+        except Exception as exc:  # noqa: BLE001
+            logger.debug(f"overview_metrics active_contributors: {rel_type} failed: {exc}")
+            users = set()
+        by_type[key] = len(users)
+        all_users |= users
+    return {"contributors": len(all_users), "byType": by_type}
