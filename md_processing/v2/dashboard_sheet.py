@@ -63,11 +63,15 @@ class CreateDashboardSheetProcessor(AsyncBaseCommandProcessor):
 
     def derive_qualified_name(self, attributes: Optional[Dict[str, Any]] = None) -> str:
         """Override the inherited Egeria-style qn_prefix/org/version qualified-name
-        derivation -- local records are keyed by their plain Dashboard Sheet Name,
-        so that's what fetch_as_is()/resolve_element_guid() need to match against."""
+        derivation -- local records are keyed by their plain Display Name,
+        so that's what fetch_as_is()/resolve_element_guid() need to match against.
+
+        2026-07-31: switched from the family-specific "Dashboard Sheet Name"
+        attribute to the universal "Display Name" -- Dashboard Sheet Base no
+        longer carries its own duplicate naming attribute."""
         if attributes is None:
             attributes = self.parsed_output.get("attributes", {})
-        return attributes.get("Dashboard Sheet Name", {}).get("value") or ""
+        return attributes.get("Display Name", {}).get("value") or ""
 
     async def resolve_element_guid(self, name_or_guid: str, tech_type: Optional[str] = None) -> Optional[str]:
         if not name_or_guid:
@@ -82,9 +86,9 @@ class CreateDashboardSheetProcessor(AsyncBaseCommandProcessor):
 
     async def apply_changes(self) -> str:
         attributes = self.parsed_output["attributes"]
-        name = attributes.get("Dashboard Sheet Name", {}).get("value")
+        name = attributes.get("Display Name", {}).get("value")
         if not name:
-            raise ValueError("Dashboard Sheet Name is required.")
+            raise ValueError("Display Name is required.")
         heading = attributes.get("Dashboard Sheet Heading", {}).get("value") or name
         description = attributes.get("Dashboard Sheet Description", {}).get("value") or ""
         family = attributes.get("Dashboard Sheet Family", {}).get("value") or None
