@@ -70,6 +70,14 @@ _REPORT_PARAM_ATTRS = {
 }
 
 
+def _snake_to_camel(snake: str) -> str:
+    """snake_case -> camelCase, the exact functional inverse of
+    local-dashboards.html's JS snakeKey() (which does the reverse for
+    display/execution) -- keep the two in sync if either changes."""
+    parts = snake.split("_")
+    return parts[0] + "".join(p[:1].upper() + p[1:] for p in parts[1:] if p)
+
+
 def _report_additional_properties(attributes: Dict[str, Any]) -> Dict[str, str]:
     """Merge the user's own 'Additional Properties' dict (if any) with the
     report-execution params, stringified (additionalProperties is
@@ -86,14 +94,28 @@ def _report_additional_properties(attributes: Dict[str, Any]) -> Dict[str, str]:
     # because the consumption side (egeria-workspaces-fs's
     # local_dashboards_handler.py:_find_report_by_name) already passes
     # through any additionalProperties key not in
-    # {"reportSpec","outputFormat","analyticParams"} as a flat params dict
-    # -- keys here must exactly match the target report spec's
-    # ActionParameter.required_params/optional_params (snake_case, e.g.
-    # "collection_guid"), since format_set_executor.py does a direct
-    # params[key] lookup with no aliasing.
+    # {"reportSpec","outputFormat","analyticParams"} as a flat params dict.
+    #
+    # Stored camelCase (like every _REPORT_PARAM_ATTRS key), NOT the raw
+    # snake_case the user typed in the Dr.Egeria markdown -- found live
+    # 2026-07-31: local-dashboards.html's camelKey()/snakeKey() round-trip
+    # (its own comment: "additionalProperties uses camelCase keys... matches
+    # ReportProcessor's _REPORT_PARAM_ATTRS") assumes EVERY additionalProperties
+    # key is camelCase and converts accordingly when checking
+    # `required_params` are present and when building the execute-time params
+    # dict. Storing collection_guid unconverted made camelKey('collection_guid')
+    # -> 'collectionGuid' not match the stored 'collection_guid' key, so the
+    # placement reported it as missing even though it was set. Converting here
+    # (rather than changing local-dashboards.html to special-case Report
+    # Parameters) keeps additionalProperties internally consistent -- one
+    # convention for every key, not two -- and needs no JS change, since the
+    # existing round-trip already un-camelCases correctly before the final
+    # /api/report-specs/execute call (format_set_executor.py's params[key]
+    # lookup there still sees the original snake_case name the report spec's
+    # required_params/optional_params expect).
     report_params = attributes.get("Report Parameters", {}).get("value")
     if isinstance(report_params, dict):
-        merged.update({str(k): str(v) for k, v in report_params.items() if v is not None})
+        merged.update({_snake_to_camel(str(k)): str(v) for k, v in report_params.items() if v is not None})
 
     for canonical_name, key in _REPORT_PARAM_ATTRS.items():
         value = attributes.get(canonical_name, {}).get("value")
