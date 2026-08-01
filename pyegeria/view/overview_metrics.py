@@ -448,24 +448,67 @@ def semantic_grounding(mgr, ce, as_of: Optional[str] = None) -> Dict[str, Any]:
     return {"groundingLinks": links, "groundingPct": pct}
 
 
-def context_readiness_funnel(mgr, as_of: Optional[str] = None) -> Dict[str, Optional[int]]:
+def context_readiness_funnel(mgr, ce, as_of: Optional[str] = None) -> Dict[str, Optional[int]]:
     """
     Context-readiness funnel stages: how much cataloged data becomes
-    trustworthy AI context. `documented`/`lineage`/`aiReady` remain None --
-    each needs a traversal query not yet available as a simple count (see
-    egeria-workspaces OVERVIEW_NEXT_STEPS.md R-2 for the design work needed
-    before these can be honestly computed).
+    trustworthy AI context.
 
-    Returns {"cataloged": int, "documented": None, "classified": int,
-    "lineage": None, "aiReady": None}.
+    `documented` -- count of `Asset` elements carrying a non-empty
+    `description`, same field-value-check approach `term_definition_completeness`
+    uses for GlossaryTerm (fetches element bodies via `_find`, capped at
+    DEFAULT_CAP -- no native count exists for "has a description", same
+    tradeoff `governed_coverage`'s by-classification breakdown already accepts).
+
+    `lineage` -- count of `DataFlow` relationships (design/business lineage --
+    literal data-movement edges between assets/processes; distinct from
+    OpenLineage's *operational*, run-level lineage, which is a separate
+    signal not computed here). Verified live: `DataFlow`'s end1/end2 connect
+    real infrastructure types (e.g. SoftwareServer -> Topic), unlike the
+    `LineageRelationship` supertype (which also sweeps in unrelated things
+    like `ActionRequester`, a governance-action assignment, not data lineage
+    -- confirmed by inspecting live relationship type names before picking
+    `DataFlow`). Same "relationship count as a coverage proxy" convention
+    `semantic_grounding` already uses for `groundingLinks` -- not a
+    deduplicated distinct-asset count, a rough signal.
+
+    `aiReady` remains None -- a true reading needs assets meeting ALL of
+    documented+classified+lineage simultaneously (a real cross-criteria
+    intersection, not another independent count), which none of the above
+    three cheaply gives on their own. This is the same "composite/derived
+    analytic metric" gap egeria-workspaces BACKLOG.md NEXT-18 already
+    flagged (no analytic function here composes/derives across multiple
+    underlying queries yet) -- fold `aiReady` into that work rather than
+    faking an approximate number here.
+
+    Returns {"cataloged": int, "documented": int|None, "classified": int,
+    "lineage": int|None, "aiReady": None}.
     """
     cataloged = count_elements(mgr, "Asset", as_of)
     classified = count_elements(mgr, None, as_of, classifications=GOVERNANCE_CLASSIFICATIONS)
+
+    documented = None
+    try:
+        body: Dict[str, Any] = {"class": "FindRequestBody", "limitResultsByStatus": ["ACTIVE"],
+                                 "metadataElementTypeName": "Asset"}
+        if as_of:
+            body["asOfTime"] = as_of
+        assets = _find(mgr, body)
+        documented = 0
+        for a in assets:
+            pvm = (a.get("elementProperties") or {}).get("propertyValueMap") or {}
+            desc = (pvm.get("description") or {}).get("primitiveValue")
+            if isinstance(desc, str) and desc.strip():
+                documented += 1
+    except Exception as exc:  # noqa: BLE001
+        logger.debug(f"context_readiness_funnel: documented query failed: {exc}")
+
+    lineage = count_relationships(ce, "DataFlow", as_of)
+
     return {
         "cataloged": cataloged or None,
-        "documented": None,
+        "documented": documented,
         "classified": classified or None,
-        "lineage": None,
+        "lineage": lineage,
         "aiReady": None,
     }
 

@@ -179,12 +179,15 @@ _DEMOS: Dict[str, FormatSet] = {
     ),
     "Analytic Demo - AI Context Readiness": _demo(
         heading="AI Context Readiness Funnel",
-        what="Only 'cataloged' (Asset supertype count) and 'classified' (elements matching ANY "
-             "of the same governance classifications governed_coverage uses) are actually "
-             "computed today. 'documented', 'lineage', and 'aiReady' are always None -- each "
-             "needs a traversal query (e.g. lineage relationships, a documentation-completeness "
-             "rule) that doesn't exist yet as a cheap count; they're placeholders for a real "
-             "funnel definition, not yet a complete one.",
+        what="'cataloged' (Asset supertype count), 'documented' (Assets with a non-empty "
+             "description, capped at DEFAULT_CAP -- a floor, not exact, on a large catalog), "
+             "'classified' (elements matching ANY of the same governance classifications "
+             "governed_coverage uses), and 'lineage' (count of DataFlow relationships -- design/ "
+             "business lineage, distinct from OpenLineage's operational lineage) are all computed "
+             "as of 2026-08-01. 'aiReady' is still None -- it needs a true cross-criteria "
+             "intersection (assets that are documented AND classified AND lineage-traced "
+             "simultaneously), not another independent count; see NEXT-18 (composite/derived "
+             "analytic metrics) for that follow-up.",
         analytic_function_name="context_readiness_funnel",
         demo_params={},
         result_shape="dict (cataloged, documented, classified, lineage, aiReady)",

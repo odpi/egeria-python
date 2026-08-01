@@ -206,7 +206,10 @@ _BUILTINS: Dict[str, AnalyticFunctionSpec] = {
     "context_readiness_funnel": AnalyticFunctionSpec(
         name="context_readiness_funnel",
         function="pyegeria.view.overview_metrics.context_readiness_funnel",
-        description="Cataloged -> Documented -> Classified -> Lineage-traced -> AI-Ready funnel counts.",
+        description="Cataloged -> Documented -> Classified -> Lineage-traced -> AI-Ready funnel counts. "
+                    "Takes two leading clients (mgr, ce) -- the executor supplies the same EgeriaTech "
+                    "instance for both, matching semantic_grounding's convention. aiReady remains None "
+                    "(needs a true cross-criteria intersection -- see NEXT-18, composite/derived metrics).",
         returns="dict (cataloged, documented, classified, lineage, aiReady)",
         generic=False,
         binding_note="Fixed 5-stage readiness definition baked into the function body -- not a parameter.",

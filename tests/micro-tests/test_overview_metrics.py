@@ -209,11 +209,32 @@ def test_semantic_grounding_caps_at_100():
 def test_context_readiness_funnel_shape():
     mgr = _mgr()
     mgr.find_metadata_elements.return_value = [{}] * 5
-    result = om.context_readiness_funnel(mgr)
+    ce = MagicMock()
+    ce.get_relationships.return_value = [{}] * 3
+    result = om.context_readiness_funnel(mgr, ce)
     assert set(result.keys()) == {"cataloged", "documented", "classified", "lineage", "aiReady"}
-    assert result["documented"] is None
-    assert result["lineage"] is None
+    # documented/lineage are now computed (2026-08-01); aiReady still isn't --
+    # it needs a true cross-criteria intersection, not another independent
+    # count (see NEXT-18, composite/derived analytic metrics).
+    assert result["documented"] == 0   # 5 elements, none carry a description
+    assert result["lineage"] == 3      # DataFlow relationship count
     assert result["aiReady"] is None
+
+
+def test_context_readiness_funnel_counts_nonempty_description():
+    mgr = _mgr()
+    mgr.find_metadata_elements.return_value = [
+        {"elementProperties": {"propertyValueMap": {
+            "description": {"primitiveValue": "A real description."}}}},
+        {"elementProperties": {"propertyValueMap": {
+            "description": {"primitiveValue": "   "}}}},   # blank -> not documented
+        {"elementProperties": {"propertyValueMap": {}}},    # missing -> not documented
+    ]
+    ce = MagicMock()
+    ce.get_relationships.return_value = []
+    result = om.context_readiness_funnel(mgr, ce)
+    assert result["documented"] == 1
+    assert result["lineage"] == 0
 
 
 def test_people_counts_shape():
