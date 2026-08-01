@@ -36,6 +36,7 @@ __all__ = [
     "count_relationships",
     "counts_by_type",
     "governed_coverage",
+    "ownership_coverage",
     "certifications_summary",
     "semantic_grounding",
     "context_readiness_funnel",
@@ -318,6 +319,53 @@ def governed_coverage(mgr, as_of: Optional[str] = None) -> Dict[str, Any]:
         "governedCapped": len(hits) >= DEFAULT_CAP,
         "byClassification": by_classification,
         "topZones": [{"zone": z, "count": c} for z, c in top_zones],
+    }
+
+
+def _owner_type_name(el: dict) -> Optional[str]:
+    for c in el.get("classifications") or []:
+        if isinstance(c, dict) and c.get("classificationName") == "Ownership":
+            pvm = (c.get("classificationProperties") or {}).get("propertyValueMap") or {}
+            owner_type = pvm.get("ownerTypeName")
+            if isinstance(owner_type, dict):
+                return owner_type.get("primitiveValue")
+    return None
+
+
+def ownership_coverage(mgr, as_of: Optional[str] = None) -> Dict[str, Any]:
+    """
+    Ownership-classification-based coverage tally: how many elements carry an
+    `Ownership` classification (a named owner responsible for management/
+    governance decisions), broken down by the owner's type (Person, Team,
+    SolutionActorRole, ...). Same shape as `governed_coverage` -- a distinct
+    Data Mesh / data-contract-adjacent signal ("clean, owned, product-based
+    data" is repeatedly named as the foundation for trustworthy AI
+    consumption), not a duplicate of governance-classification coverage.
+
+    Returns {"ownershipCount": int, "ownershipCapped": bool,
+    "byOwnerType": {typeName: count}}.
+    """
+    body = {
+        "class": "FindRequestBody",
+        "matchClassifications": {
+            "class": "SearchClassifications", "matchCriteria": "ANY",
+            "conditions": [{"name": "Ownership"}],
+        },
+        "limitResultsByStatus": ["ACTIVE"],
+    }
+    if as_of:
+        body["asOfTime"] = as_of
+    hits = _find(mgr, body)
+
+    by_owner_type: Dict[str, int] = {}
+    for el in hits:
+        owner_type = _owner_type_name(el) or "Unspecified"
+        by_owner_type[owner_type] = by_owner_type.get(owner_type, 0) + 1
+
+    return {
+        "ownershipCount": len(hits),
+        "ownershipCapped": len(hits) >= DEFAULT_CAP,
+        "byOwnerType": by_owner_type,
     }
 
 

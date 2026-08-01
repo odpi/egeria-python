@@ -140,6 +140,19 @@ _BUILTINS: Dict[str, AnalyticFunctionSpec] = {
                      "Criticality, Impact, Retention -- not a parameter.",
         params=[_as_of()],
     ),
+    "ownership_coverage": AnalyticFunctionSpec(
+        name="ownership_coverage",
+        function="pyegeria.view.overview_metrics.ownership_coverage",
+        description="Share of assets carrying an Ownership classification (a named owner "
+                    "responsible for management/governance decisions), plus a by-owner-type "
+                    "breakdown. Distinct from governed_coverage -- data mesh literature names "
+                    "'clean, owned, product-based data' as its own foundation for trustworthy "
+                    "AI consumption, not a synonym for governance-classification coverage.",
+        returns="dict (ownershipCount, ownershipCapped, byOwnerType)",
+        generic=False,
+        binding_note="Fixed to the Ownership classification -- not a parameter.",
+        params=[_as_of()],
+    ),
     "certifications_summary": AnalyticFunctionSpec(
         name="certifications_summary",
         function="pyegeria.view.overview_metrics.certifications_summary",

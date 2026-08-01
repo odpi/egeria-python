@@ -100,6 +100,19 @@ _DEMOS: Dict[str, FormatSet] = {
         result_shape="list[dict] ({label, type, count})",
         chart_types=["BAR", "PIE"],
     ),
+    "Analytic Demo - Ownership Coverage": _demo(
+        heading="Ownership Coverage",
+        what="Count of elements carrying an Ownership classification -- NOT a percentage, same "
+             "caveat as Governance Coverage (no cheap total-elements denominator yet). "
+             "ownershipCapped=true means the query hit its result-page cap (DEFAULT_CAP), so "
+             "ownershipCount is a floor, not exact, when true. byOwnerType is a nested breakdown "
+             "of the same ownershipCount elements by the owner's type (Person, Team, "
+             "SolutionActorRole, ...) -- pick BAR below for a chart of byOwnerType.",
+        analytic_function_name="ownership_coverage",
+        demo_params={},
+        result_shape="dict (ownershipCount, ownershipCapped, byOwnerType)",
+        chart_types=["BAR"],
+    ),
     "Analytic Demo - Governance Coverage": _demo(
         heading="Governance Classification Coverage",
         what="Count of elements carrying at least one governance classification "
