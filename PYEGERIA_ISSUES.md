@@ -476,6 +476,95 @@ decision tree for "which OMVS client class do I need" across
 
 ---
 
+## Section 5 — New issues found after this file's initial cleanup, open
+
+### ISSUE-20: `Analytic Parameters`/`Report Parameters` stringify every value, breaking list-valued analytic function params (e.g. `type_map`)
+
+**Status:** fixed 2026-08-01 (Pyegeria — `md_processing/v2/report.py`),
+found 2026-07-31 while building an Analytic Function demo (Projects/Terms
+comparison) for the Local Dashboards sample.
+
+**What:** `parse_key_value()` (`md_processing/v2/utils.py`) parses every
+Dictionary-style attribute value (simple/list/table form) as a plain string
+— there's no JSON/type coercion. `_report_additional_properties()`
+(`md_processing/v2/report.py:132-135`) then does
+`{str(k): str(v) for k, v in analytic_params.items() if v is not None}`
+before `json.dumps(...)` into the stored `analyticParams` key. For a scalar
+param (`window: 90d`, `type_name: Project`) this round-trips fine — the
+string IS the value. But for a param whose real type is a list (e.g.
+`counts_by_type`/`growth_series`'s `type_map: list[tuple[str, str]]`), the
+markdown author's only way to express it is typing the literal text
+`type_map: [["Projects", "Project"], ["Terms", "GlossaryTerm"]]` on one
+line — `parse_key_value` stores that whole thing as ONE string value, which
+then gets `str()`'d (no-op, already a string) and JSON-encoded as a STRING,
+not a real JSON array. At read time (`local_dashboards_handler.py`'s
+`json.loads(raw_analytic_params)`, or any other consumer), `type_map` comes
+back as a Python `str`, not a `list`. When `format_set_executor.py`'s
+`_run_analytic_function` forwards it as a kwarg,
+`counts_by_type(type_map="[[\"Projects\", \"Project\"], ...]")` tries to
+iterate the string character-by-character and unpack each character into
+`(label, type_name)` → `ValueError: not enough values to unpack (expected
+2, got 1)`.
+
+**Where seen:** live repro — created a throwaway `Report` via `Create
+Report` with `Report Spec: Analytic Demo - Assets by Type Breakdown` and
+`Analytic Parameters: type_map: [["Projects", "Project"], ["Terms",
+"GlossaryTerm"]]`. `--validate`/`--process` both succeeded (no attribute-
+level error — the value parses as *a* string just fine). Fetching the
+created element's `additionalProperties.analyticParams` showed
+`{"type_map": "[[\"Projects\", \"Project\"], [\"Terms\", \"GlossaryTerm\"]]"}`
+— the outer JSON is valid, but `type_map`'s VALUE is itself a string, not a
+nested array. Calling `POST /api/report-specs/execute` with that exact
+params dict reproduced the crash: `"not enough values to unpack (expected
+2, got 1)"`. Cleaned up the throwaway Report afterward (`AssetMaker.delete_asset`).
+
+**Impact:** any analytic function whose parameter type is a list/dict
+(`counts_by_type`'s `type_map`, `growth_series`'s custom `type_map`,
+`metric_trend`'s `metric_params`) cannot be set via Dr.Egeria's `Analytic
+Parameters` (or `Report Parameters`, same code path) today — only flat
+scalar params (`type_name`, `window`, `points`, `collection_guid`, etc.)
+work. Worked around in the Local Dashboards sample/tutorial by sticking to
+`count_elements(type_name=...)` (scalar) instead of `counts_by_type`
+(list) for the Projects-vs-Terms comparison.
+
+**Fix:** added `_coerce_analytic_value()` in `md_processing/v2/report.py` —
+attempts `json.loads(v)` per-value before it's packed into the
+`analyticParams` JSON blob, falling back to the original string if it isn't
+valid JSON. Applied in `_report_additional_properties()`'s `Analytic
+Parameters` handling (`Create Report`) and, since `View Report`
+(`md_processing/v2/view.py`) turned out to have a second, related gap —
+`Analytic Parameters` wasn't handled there **at all**, falling through to
+the generic per-attribute branch and being treated as one param literally
+named `analytic_parameters` holding the whole dict — added a matching
+`Analytic Parameters` branch there too (merges flat into `params`, coerced,
+mirroring the existing `Report Parameters` branch immediately above it).
+
+Deliberately scoped to `analyticParams` only, not `_REPORT_PARAM_ATTRS` or
+`Report Parameters` — those remain `Map<String,String>` at the Egeria
+element level (a real constraint, not a bug) and must stay strings;
+`analyticParams` is a single JSON-encoded blob consumed purely by Python's
+own `**kwargs` at execution time, where real types matter.
+
+**Verified live** (not just `--validate`): created a throwaway `Report`
+with the exact original repro (`type_map: [["Projects", "Project"],
+["Terms", "GlossaryTerm"]]`), confirmed `additionalProperties.analyticParams`
+now stores `type_map` as a real nested JSON array, then called
+`POST /api/report-specs/execute` with it — `counts_by_type` returned the
+correct per-type breakdown (`Projects: 29, Terms: 591`) instead of
+crashing. Also caught and fixed a second latent bug the same coercion
+exposes: an `int`-typed scalar param (`points: 3`) previously round-tripped
+as the string `"3"` too, which broke `growth_series` outright
+(`TypeError: unsupported operand type(s) for -: 'str' and 'int'`) — now
+correctly coerces to a real `int`. Ran
+`tests/micro-tests/test_overview_metrics.py`,
+`test_gen_report_specs.py`, `test_base_report_formats_mermaid.py` (34
+tests) — all pass, no regressions. Cleaned up the throwaway Report
+afterward. Not yet released to PyPI — still pinned at `6.0.17.8` in
+egeria-workspaces-fs's `requirements.txt`; needs a version bump when the
+next release goes out.
+
+---
+
 *(Add new entries at the end of the appropriate section as they're found.
 Keep the format: status, layer classification, what, where seen, candidate
 fix — so entries are self-contained enough to hand to whoever eventually

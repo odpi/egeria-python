@@ -70,6 +70,38 @@ _REPORT_PARAM_ATTRS = {
 }
 
 
+def _coerce_analytic_value(v: Any) -> Any:
+    """Recover a value's real type before it's packed into the analyticParams
+    JSON blob. parse_key_value() (md_processing/v2/utils.py) always produces
+    plain strings, even for values the user typed as a JSON list/dict (e.g.
+    `type_map: [["Projects", "Project"], ["Terms", "GlossaryTerm"]]`) or a
+    number/bool (e.g. `points: 12`). Left as a bare str(), a value like that
+    gets double-encoded -- the outer analyticParams JSON is valid, but a key's
+    *value* is itself the literal string "[[...]]" or "12", not a real
+    list/int -- so it comes back out via json.loads(raw_analytic_params) at
+    execution time still a str, and the analytic function breaks trying to
+    use it as its real type (`counts_by_type(type_map="[[...]]")` -> "not
+    enough values to unpack"; `growth_series(points="3")` -> "unsupported
+    operand type(s) for -: 'str' and 'int'"). Both confirmed live 2026-07-31
+    (PYEGERIA_ISSUES.md ISSUE-20).
+
+    Only applied here, not to the other additionalProperties keys in this
+    module (_REPORT_PARAM_ATTRS, Report Parameters, Additional Properties) --
+    those are genuinely Map<String,String> at the Egeria element level and
+    must stay strings; analyticParams is a single JSON-encoded blob consumed
+    purely by Python's own **kwargs at execution time, where real types
+    matter and there's no Egeria-side string constraint to honor.
+    """
+    if not isinstance(v, str):
+        return v
+    try:
+        return json.loads(v)
+    except (ValueError, TypeError):
+        # Not valid JSON (e.g. "Project", "6mo", "GlossaryTerm") -- it really
+        # is meant to be a plain string; keep it as-is.
+        return v
+
+
 def _snake_to_camel(snake: str) -> str:
     """snake_case -> camelCase, the exact functional inverse of
     local-dashboards.html's JS snakeKey() (which does the reverse for
@@ -132,7 +164,7 @@ def _report_additional_properties(attributes: Dict[str, Any]) -> Dict[str, str]:
     analytic_params = attributes.get("Analytic Parameters", {}).get("value")
     if isinstance(analytic_params, dict) and analytic_params:
         merged["analyticParams"] = json.dumps(
-            {str(k): str(v) for k, v in analytic_params.items() if v is not None}
+            {str(k): _coerce_analytic_value(v) for k, v in analytic_params.items() if v is not None}
         )
     return merged
 
