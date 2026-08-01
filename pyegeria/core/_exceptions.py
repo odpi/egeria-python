@@ -305,23 +305,48 @@ class PyegeriaAPIException(PyegeriaException):
 #         self.message = self.error_details["message_template"].format(additional_info.get("userid",""))
 #         logger.info(self.__str__(), ip=self.response_url, http_code=self.response_code, pyegeria_code=self.pyegeria_code)
 
-class PyegeriaUnauthorizedException(PyegeriaException):
-    """Raised for 403 authorization errors."""
+class PyegeriaUnauthorizedException(PyegeriaAPIException):
+    """Raised for 401/403 authorization errors.
+
+    Subclasses PyegeriaAPIException (rather than PyegeriaException directly) so
+    existing `except PyegeriaAPIException` handlers keep catching this. Calls
+    PyegeriaException.__init__ directly, skipping PyegeriaAPIException.__init__,
+    since that parent unconditionally calls response.json() and assumes an
+    Egeria-wrapped 200 response — this exception is also raised for bare
+    401/403 HTTP responses with no JSON body (e.g. an expired/invalid bearer
+    token), which would otherwise crash exception construction itself.
+    """
     def __init__(self, response: Response,
                  context: dict = None, additional_info: dict = None, e: Exception = None) -> None:
-        super().__init__(response, PyegeriaErrorCode.AUTHORIZATION_ERROR,
+        PyegeriaException.__init__(self, response, PyegeriaErrorCode.AUTHORIZATION_ERROR,
                          context, additional_info, e)
-        self.message = self.error_details["message_template"].format(additional_info.get("userid", ""))
+        # PyegeriaAPIException.__init__ normally sets this from the Egeria-wrapped
+        # JSON body; since we bypass it, set it here too so `except
+        # PyegeriaAPIException as e: e.related_http_code` keeps working for both
+        # the Egeria-wrapped-200 case (additional_info carries relatedHTTPCode)
+        # and the bare-401 transport case (fall back to the real HTTP status).
+        self.related_http_code = (additional_info or {}).get("relatedHTTPCode") or getattr(response, "status_code", None)
+        self.message = self.error_details["message_template"].format((additional_info or {}).get("userid", ""))
         logger.info(self.__str__(), ip=self.response_url, http_code=self.response_code, pyegeria_code=self.pyegeria_code)
 
 
 
-class PyegeriaNotFoundException(PyegeriaException):
-    """Raised for 404 Not Found errors."""
+class PyegeriaNotFoundException(PyegeriaAPIException):
+    """Raised for 404 Not Found errors.
+
+    Subclasses PyegeriaAPIException (rather than PyegeriaException directly) so
+    existing `except PyegeriaAPIException` handlers keep catching this. Calls
+    PyegeriaException.__init__ directly, skipping PyegeriaAPIException.__init__,
+    since that parent unconditionally calls response.json() and assumes an
+    Egeria-wrapped 200 response.
+    """
     def __init__(self, response: Response,
                  context: dict = None, additional_info: dict = None, e: Exception = None) -> None:
-        super().__init__(response, PyegeriaErrorCode.CLIENT_ERROR,
+        PyegeriaException.__init__(self, response, PyegeriaErrorCode.CLIENT_ERROR,
                          context, additional_info, e)
+        # See PyegeriaUnauthorizedException.__init__ for why this is set explicitly
+        # here rather than inherited from PyegeriaAPIException.__init__.
+        self.related_http_code = (additional_info or {}).get("relatedHTTPCode") or getattr(response, "status_code", None)
         logger.info(self.__str__(), ip=self.response_url, http_code=self.response_code, pyegeria_code=self.pyegeria_code)
 
 

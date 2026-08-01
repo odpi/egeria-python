@@ -67,12 +67,12 @@ This means the `Create` commands that would establish this baseline dataset are 
 
 ## 🟡 Medium Priority — Bearer token expires mid-run on long `dr_egeria --process` batches
 
-**Status:** open
+**Status:** fixed (2026-07-31)
 **Added:** 2026-07-08
 
 Running `dr_egeria <100+ command file> --process` against `localhost:9443` (e.g. the generated `dr-egeria-help-*.md`, ~100+ commands) took ~1h20m end to end and started failing every remaining command with HTTP 401 partway through — the bearer token created at the start of the run expired before the run finished, and nothing re-authenticates or refreshes it mid-batch. Confirmed directly in `logs/pyegeria.log`: the "Create Risk" term's `_async_create_element_body_request` call at 23:12:14 got a 401 (`Client error '401' for url .../glossary-manager/glossaries/terms`), as did every command after it in that run (~6+ trailing Solution Architect `Link` commands all failed the same way). Re-running the single "Create Risk" term in isolation (a few seconds) succeeded immediately with the same credentials — confirming it's a token-lifetime/duration issue, not a bad request or bad credentials.
 
-**Fix:** either (a) proactively refresh/recreate the bearer token partway through a long batch (e.g. every N commands or every N minutes) inside the v2 dispatcher's command loop, or (b) on a 401 mid-batch, transparently re-authenticate and retry the failed command once before surfacing it as a failure. Without one of these, any `--process` run over enough commands to exceed the token's lifetime will silently corrupt the back half of a large Glossary/help-doc sync — as happened here for the regenerated `dr-egeria-help-2026-07-07T20:51:10.md` run.
+**Fixed:** option (b) implemented, but in `pyegeria` core (`_async_make_request` in `pyegeria/core/_base_server_client.py`) rather than the v2 dispatcher loop — so it fixes every caller of any pyegeria client, not just Dr.Egeria's batch pipeline. On a 401, if the client holds stored credentials, it now transparently re-authenticates via `_async_create_egeria_bearer_token()` and retries the original request exactly once before surfacing a failure. Also fixed a bug in `_async_create_egeria_bearer_token()` itself found while implementing this: it was sending the token-refresh request with the stale/expired Authorization header still attached, which got that request itself rejected with 401 — silently defeating both this new auto-retry and the pre-existing manual "call this if your token expired" use case. See `PYEGERIA_ISSUES.md` ISSUE-7 for full detail; live-verified end-to-end against `qs-view-server`.
 
 ---
 
@@ -116,3 +116,88 @@ Neither breaks `pytest tests/`, so day-to-day test runs are unaffected — this 
 `pyegeria/view/_output_format_models.py` (lines 164, 172, 221, 238, 275) still uses Pydantic v1-style `@root_validator(pre=True)` and `@validator(...)` decorators. These emit `PydanticDeprecatedSince20` warnings on every collection/import that touches this module (visible in `pytest` output) — they still work today (v2 keeps them as deprecated shims) but are slated for removal in a future Pydantic major version. Not urgent — no functional bug, and the project's Pydantic version (2.12.3) is current — but the warning noise will become a hard break eventually.
 
 **Fix:** migrate `@root_validator(pre=True)` → `@model_validator(mode="before")` and `@validator(...)` → `@field_validator(...)` for each of the 5 flagged validators in `_output_format_models.py`, then re-run `pytest -m unit` to confirm the warnings are gone and behavior is unchanged.
+
+---
+
+## 🟠 High Priority — Forward references to elements later in the same Dr.Egeria file don't actually resolve (design limitation, not yet fixed)
+
+**Status:** open
+**Added:** 2026-08-01
+
+**Context:** investigating a user report that `Sub-Projects` on `Create Project`
+(and variants: Campaign/Task/Personal Project/Study Project) was "being
+ignored." The wiring itself is correct and works (fixed 2026-07-08, commit
+`71202ef`) — live-verified end-to-end for both plain `Create Project` and
+`Create Campaign`, both correctly created `ProjectHierarchy` relationships.
+The actual bug: it only works when every referenced sub-project is already
+created *or listed earlier* in the same file. If the parent project is
+listed **before** its children — a very natural way to write a Dr.Egeria
+doc — the reference silently failed to resolve. (A related, smaller bug —
+list-style reference resolution silently dropping unresolvable items with
+zero error, instead of reporting them like single-value references already
+did — was fixed same day, see `md_processing/v2/processors.py`'s Step 7
+list-resolution loop. That fix alone turns "silently ignored" into "clearly
+reported: `Execution blocked: Referenced element(s) [...] not found`," so
+users at least get an actionable error now.)
+
+**Root cause (why true forward-reference support is a bigger job):**
+Dr.Egeria processes commands strictly sequentially in `--process` mode. By
+the time command N runs, commands 1..N-1 have *already fully executed* —
+so a **backward** reference (child listed before parent) never needs the
+"planned" placeholder mechanism at all; it just finds the real,
+already-created GUID via cache/live-lookup. The "planned" mechanism
+(`context["planned_elements"]`, populated incrementally as each command
+executes) only helps a **forward** reference if the referenced name is
+already registered by the time the referencing command's own resolution
+step runs — which is never true for command K > N referenced by command N,
+since command K hasn't executed yet. There's already a well-built "resolve
+planned GUIDs right before applying changes" step in the code (~line
+557-610 in `processors.py`) that correctly detects a still-unresolved
+planned item and blocks with a clear "Prerequisite element ... was not
+successfully created" error — but it can only help if the item was
+recognized as *planned* in the first place, which requires it to already be
+in `planned_elements`, which requires its own command to have executed.
+
+**Real fix would require a two-phase batch design:**
+1. A pre-scan pass over the whole batch (before any command executes) to
+   register every Create/Update-verb command's target name into
+   `planned_elements` upfront — so forward references are recognized as
+   "planned" rather than "not found at all."
+2. Defer the actual relationship-sync API calls (e.g.
+   `_sync_sub_projects`'s `add_fn`/`remove_fn`) for any reference still
+   showing a `(Planned:...)` placeholder until *after* the full batch has
+   executed and the referenced element genuinely exists — not just
+   "recognized as planned."
+3. Error handling for the case where the referenced element's own command
+   later fails (e.g. the forward-referenced child project itself fails to
+   create) — the deferred relationship-sync needs to surface a clear error
+   in that case too, not fail silently or crash.
+
+This is a genuine architectural change to the core dispatch pipeline
+(`md_processing/v2/dispatcher.py`, `processors.py`), affecting every
+list-style *and* single-value reference attribute across every command
+family — not scoped to Sub-Projects. Deferred pending a scoping discussion;
+not started.
+
+**Workaround for users today:** list every element a command will
+reference *before* the command that references it, in file order (e.g.
+create sub-projects first, then the parent project that lists them under
+`Sub-Projects`). This is exactly what the newly-added blocking error
+message will now tell you to do if you get it wrong.
+
+**Bonus finding while validating the Tier 1 fix:** the same silent-drop bug
+was independently reproduced (pre-existing, unrelated to Sub-Projects) in
+two of the regression fixtures under `tests/dr-egeria-command-tests/`:
+- `dr_test_glossary.md`'s GL-08 scenario ("member of multiple glossaries")
+  references `Glossary::CRM::Domain::1.0` as a second glossary membership,
+  but no such glossary is ever actually created anywhere in the file — the
+  term was silently only added to one glossary instead of two.
+- `dr_test_products_good.md`'s `Link Agreement to Actor` scenario
+  references actor `<jane.smith@example.com>`, which was never created —
+  same root cause as the already-tracked "SalesForecast regression
+  fixtures need a baseline seed sequence" entry above.
+
+Both now correctly fail with a clear blocking error instead of silently
+"succeeding." Not fixed as part of this entry — the fixtures themselves
+need either a missing `Create Glossary`/actor block added, or the stale
+reference corrected.

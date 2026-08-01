@@ -1,6 +1,6 @@
 {
   "family": "Report",
-  "exported": "Jul 30, 2026 at 2:30:07 PM",
+  "exported": "Jul 31, 2026 at 4:09:47 PM",
   "attribute_definitions": {
     "Analytic Parameters": {
       "variable_name": "analytic_parameters",
@@ -520,6 +520,25 @@
       "level": "Domain",
       "Journal Entry": ""
     },
+    "Report Parameters": {
+      "variable_name": "report_parameters",
+      "inUpdate": true,
+      "attr_labels": "",
+      "examples": "",
+      "default_value": "",
+      "valid_values": [],
+      "existing_element": "",
+      "description": "Name-Value pairs of extra parameters for the target Report Spec's action that aren't part of the standard find\/search attribute set (e.g. collection_guid for the \"Collection Members\" report). Keys must match exactly what the target report spec's action expects.",
+      "generated": false,
+      "style": "Dictionary",
+      "user_specified": true,
+      "unique": false,
+      "input_required": false,
+      "min_cardinality": 1,
+      "max_cardinality": 1,
+      "level": "Basic",
+      "Journal Entry": "Name-Value pairs of extra parameters for the target Report Spec's action that aren't part of the standard find\/search attribute set (e.g. collection_guid for the \"Collection Members\" report). Keys must match exactly what the target report spec's ActionParameter.required_params\/optional_params expect (snake_case, e.g. \"collection_guid\") -- format_set_executor.py does a direct params[key] lookup with no aliasing."
+    },
     "Report Spec": {
       "variable_name": "report_spec",
       "inUpdate": true,
@@ -778,8 +797,7 @@
       "own_attributes": [
         "Dashboard Sheet Description",
         "Dashboard Sheet Family",
-        "Dashboard Sheet Heading",
-        "Dashboard Sheet Name"
+        "Dashboard Sheet Heading"
       ]
     },
     "Report to Dashboard Sheet Link Base": {
@@ -811,6 +829,7 @@
         "Output Format",
         "Output Sort Order",
         "Page Size",
+        "Report Parameters",
         "Report Spec",
         "Search String",
         "Skip Classified Elements",
@@ -859,7 +878,8 @@
         "Order Property Name",
         "Page Size",
         "Start From",
-        "Anchor Scope ID"
+        "Anchor Scope ID",
+        "Report Parameters"
       ],
       "Journal Entry": "Runs a pyegeria report spec via hey_egeria run_report. Discovers and executes a named FormatSet against the Egeria repository. Not an element-creation command — no upsert, no qualified name prefix. Output format and report spec control what is returned and how it is rendered."
     },

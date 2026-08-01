@@ -93,6 +93,41 @@ Attributes can also be defined using lists or tables for better readability:
 | Start From | 0 |
 ```
 
+### Dictionary-Style Attributes
+
+Some attributes (`style: Dictionary` in the command spec — e.g. `Analytic
+Parameters`, `Report Parameters`, `Additional Properties`) hold arbitrary
+name-value pairs rather than a single value. Three equivalent forms are
+accepted, parsed the same way as the List/Table styles above:
+
+**Simple block** (one `key: value` per line, no bullets — the most common
+form in practice):
+```markdown
+### Analytic Parameters
+window: 90d
+points: 12
+```
+
+**List style**:
+```markdown
+### Analytic Parameters
+- window: 90d
+- points: 12
+```
+
+**Table style**:
+```markdown
+### Analytic Parameters
+| Key | Value |
+| --- | --- |
+| window | 90d |
+| points | 12 |
+```
+
+See [Create Report's two Dictionary attributes, worked examples](#create-reports-two-dictionary-attributes-worked-examples)
+below for two complete worked examples (`Analytic Parameters` and `Report
+Parameters`) in context.
+
 ---
 
 ## Core Concepts
@@ -145,11 +180,96 @@ Dr.Egeria organizes its commands into "families," each corresponding to a specif
 - **Feedback**: Add comments, ratings, and informal tags to any Egeria element (e.g., `Add Comment`, `Attach Tag`).
 - **External Reference**: Link Egeria elements to external resources, media, or cited documents (e.g., `Create External Reference`, `Link Media Reference`).
 - **Report**: Run and author report specs (`FormatSet`s), and compose them — plus real Egeria `Report` assets and literal markdown text — into user-authored Dashboard Sheets:
-  - `View Report`: Run a report spec ad hoc, supplying execution parameters (search string, output format, ...) at run time — no persistent element created.
-  - `Create Report`: Persist a real Egeria `Report` asset that names a report spec and pins its own default execution parameters (including, for an analytic-function-backed spec, `Analytic Parameters` — see [`output-formats-and-report-specs.md`](output-formats-and-report-specs.md) for the find-method vs. analytic-function distinction), so it can be referenced by name and placed on a dashboard.
+  - `View Report`: Run a report spec ad hoc, supplying execution parameters (search string, output format, `Report Parameters` for a find-method spec's non-standard parameter, `Analytic Parameters` for an analytic-function spec's parameters, ...) at run time — no persistent element created.
+  - `Create Report`: Persist a real Egeria `Report` asset that names a report spec and pins its own default execution parameters (including, for an analytic-function-backed spec, `Analytic Parameters`; or, for a report spec's action needing a parameter outside the standard find/search set — e.g. `collection_guid` for the `Collection Members` report — `Report Parameters` — see [`output-formats-and-report-specs.md`](output-formats-and-report-specs.md) for the find-method vs. analytic-function distinction), so it can be referenced by name and placed on a dashboard.
   - `Create Dashboard Sheet`: Create a named, ordered, nestable Dashboard Sheet — a local pyegeria-managed layout record (not yet an Egeria element; see `pyegeria/view/_output_dashboard_sheet_models.py`).
   - `Link Report to Dashboard Sheet`: Place a `Report` (by name) onto a Dashboard Sheet as an ordered Placement, with layout hints (`Placement Span`/`Placement Emphasis`).
   - `Add Text on Dashboard Sheet`: Place literal markdown text (a section header, explanation, or caption) onto a Dashboard Sheet as an ordered Placement, alongside Report placements — no Egeria element involved.
+
+#### `Create Report`'s two Dictionary attributes, worked examples
+
+`Create Report` (and `View Report`, for an ad-hoc run) has two Dictionary-style
+attributes for supplying parameters beyond the standard 22 find/search
+attributes — which one to use depends on what kind of report spec you're
+targeting (see [`output-formats-and-report-specs.md`](output-formats-and-report-specs.md)
+for the full find-method vs. analytic-function distinction):
+
+- **`Analytic Parameters`** — for a report spec backed by an **analytic
+  function** (a Python routine returning an already-aggregated
+  count/breakdown/series, not a live Egeria query). These are **defaults**,
+  not fixed pins — a caller, or a later `Update Report`, can still override
+  the same keys. Values can be plain strings (`type_name: Project`), but
+  also numbers, booleans, or JSON lists/dicts typed literally (`points: 12`,
+  `type_map: [["Projects", "Project"], ["Terms", "GlossaryTerm"]]`) — each
+  value is decoded back to its real type before the analytic function runs,
+  so a list-typed parameter like `type_map` reaches the function as an
+  actual list, not a string. (Fixed 2026-08-01 — before this, every value
+  was stored as a literal string, so any non-scalar parameter broke the
+  analytic function outright; see `PYEGERIA_ISSUES.md` ISSUE-20.)
+- **`Report Parameters`** — for a report spec backed by a **find method**
+  (a live Egeria query) whose action needs a parameter that isn't part of
+  the standard find/search vocabulary — most commonly a GUID identifying
+  which element the report is scoped to. Unlike `Analytic Parameters`,
+  keys here must match the target report spec's `required_params`/
+  `optional_params` exactly (snake_case) — there's no aliasing.
+
+  > **Implementation note** (only matters if you're debugging a Dashboard
+  > Sheet placement, not for authoring): what you type is always plain
+  > snake_case, matching `required_params` exactly (e.g. `collection_guid`)
+  > — `Create Report` converts keys to camelCase internally when persisting
+  > them into the Report's `additionalProperties`, to match the storage
+  > convention every other execution parameter already uses there, and
+  > converts back before the report actually runs. If a placement ever
+  > reports a `Report Parameters` key as unexpectedly "missing" despite it
+  > being set, this snake↔camel round trip (`_snake_to_camel()` in
+  > `md_processing/v2/report.py`, `camelKey()`/`snakeKey()` in
+  > egeria-workspaces-fs's `local-dashboards.html`) is the first place to
+  > check.
+
+**Example 1 — `Analytic Parameters`**, against `Analytic Demo - Catalog
+Growth Trend` (an analytic-function-backed spec — `Output Format: SERIES`
+renders it as a Vega-Lite line chart):
+
+```markdown
+## Create Report
+
+### Display Name
+Terms Growth (90 Days)
+
+### Report Spec
+Analytic Demo - Catalog Growth Trend
+
+### Output Format
+SERIES
+
+### Analytic Parameters
+window: 90d
+points: 12
+```
+
+**Example 2 — `Report Parameters`**, against `Collection Members` (a
+find-method-backed spec whose action requires `collection_guid` — without
+it, the report has no way to know which collection to list members of):
+
+```markdown
+## Create Report
+
+### Display Name
+Local Dashboards Tasks
+
+### Report Spec
+Collection Members
+
+### Output Format
+TABLE
+
+### Report Parameters
+collection_guid: 0affb580-fa81-4d00-9438-b26faf11845d
+```
+
+Both attributes accept any of the three Dictionary forms described in
+[Attributes](#attributes) above (simple block, list, or table) — the
+`key: value` block shown here is just the most common in practice.
 
 ---
 

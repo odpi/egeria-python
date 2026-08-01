@@ -29,6 +29,7 @@ from pyegeria.core._validators import (
     validate_server_name,
     validate_url,
     validate_user_id,
+    _validate_url_path_safe,
 )
 
 ...
@@ -84,6 +85,8 @@ class BasePlatformClient:
         self.server_name = server_name
         self.platform_url = platform_url
         self.user_id = user_id or settings.User_Profile.user_name
+        if self.user_id:
+            _validate_url_path_safe(self.user_id, "user_id")
         self.user_pwd = user_pwd or settings.User_Profile.user_pwd
         self.page_size = page_size or max_paging_size
         self.timeout = timeout or settings.Debug.timeout_seconds or 30
@@ -249,7 +252,12 @@ class BasePlatformClient:
             data["newPassword"] = new_password
         async with AsyncClient(verify=enable_ssl_check) as client:
             try:
-                response = await client.post(url, json=data, headers=self.headers)
+                # Deliberately not self.headers: it may still carry a stale/expired
+                # Authorization header (that's exactly what we're refreshing), and
+                # this endpoint authenticates via the body credentials, not a bearer
+                # token - sending a bad Authorization header here gets this request
+                # itself rejected with 401, defeating the whole refresh.
+                response = await client.post(url, json=data, headers=self.json_header)
                 token = response.text
             except httpx.HTTPError as e:
                 print(e)

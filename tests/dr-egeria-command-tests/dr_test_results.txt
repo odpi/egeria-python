@@ -1,12 +1,18 @@
-Dr. Egeria Test Run — 2026-07-30 09:22:39.659149
+Dr. Egeria Test Run — 2026-08-01 17:21:38.098181
 
 
 ### VALIDATE MODE ###
 
 ================================================================================
-FILE: dr_test_glossary.md  |  DIRECTIVE: validate  |  09:22:41
+FILE: dr_test_glossary.md  |  DIRECTIVE: validate  |  17:21:39
 ================================================================================
 v2: Processing Markdown File: /Users/dwolfson/localGit/egeria-python/tests/dr-egeria-command-tests/dr_test_glossary.md
+Processing Errors:
+
+-- Create Glossary Term (GlossaryTerm::SalesForecast::Opportunity::1.0) --
+   - Referenced element(s) ['Glossary::CRM::Domain::1.0'] for attribute 'Glossary Name' not found.
+
+
 
 
                                                                                     Dr. Egeria v2 Processing Summary                                                                                    
@@ -40,8 +46,9 @@ v2: Processing Markdown File: /Users/dwolfson/localGit/egeria-python/tests/dr-eg
 │ Create Glossary Term          │ Create Glossary Term          │ SUCCESS │ No    │ Commit Forecast                │ GlossaryTerm::SalesForecast::CommitFore │ Validated Create Glossary Term          │
 │                               │                               │         │       │                                │ cast::1.0                               │                                         │
 ├·······························┼·······························┼·········┼·······┼································┼·········································┼·········································┤
-│ Create Glossary Term          │ Create Glossary Term          │ SUCCESS │ No    │ Opportunity                    │ GlossaryTerm::SalesForecast::Opportunit │ Validated Create Glossary Term          │
-│                               │                               │         │       │                                │ y::1.0                                  │                                         │
+│ Create Glossary Term          │ Create Glossary Term          │ FAILURE │ No    │ Opportunity                    │ GlossaryTerm::SalesForecast::Opportunit │ Referenced element(s)                   │
+│                               │                               │         │       │                                │ y::1.0                                  │ ['Glossary::CRM::Domain::1.0'] for      │
+│                               │                               │         │       │                                │                                         │ attribute 'Glossary Name' not found.    │
 ├·······························┼·······························┼·········┼·······┼································┼·········································┼·········································┤
 │ Update Glossary Term          │ Update Glossary Term          │ SUCCESS │ Yes   │ Pipeline Coverage Ratio        │ GlossaryTerm::SalesForecast::PipelineCo │ Validated Update Glossary Term (GUID:   │
 │                               │                               │         │       │                                │ verageRatio::1.0                        │ (Planned:                               │
@@ -66,10 +73,10 @@ v2: Processing Markdown File: /Users/dwolfson/localGit/egeria-python/tests/dr-eg
 v2: Processing complete for '/Users/dwolfson/localGit/egeria-python/tests/dr-egeria-command-tests/dr_test_glossary.md'
 
 
-SCORE: 16 SUCCESS  0 FAILURE  0 WARNING
+SCORE: 15 SUCCESS  1 FAILURE  0 WARNING
 
 ================================================================================
-FILE: dr_test_governance.md  |  DIRECTIVE: validate  |  09:22:46
+FILE: dr_test_governance.md  |  DIRECTIVE: validate  |  17:21:44
 ================================================================================
 v2: Processing Markdown File: /Users/dwolfson/localGit/egeria-python/tests/dr-egeria-command-tests/dr_test_governance.md
 Processing Errors:
@@ -262,7 +269,7 @@ v2: Processing complete for '/Users/dwolfson/localGit/egeria-python/tests/dr-ege
 SCORE: 38 SUCCESS  8 FAILURE  1 WARNING
 
 ================================================================================
-FILE: dr_test_projects.md  |  DIRECTIVE: validate  |  09:23:04
+FILE: dr_test_projects.md  |  DIRECTIVE: validate  |  17:22:03
 ================================================================================
 v2: Processing Markdown File: /Users/dwolfson/localGit/egeria-python/tests/dr-egeria-command-tests/dr_test_projects.md
 
@@ -317,7 +324,7 @@ v2: Processing complete for '/Users/dwolfson/localGit/egeria-python/tests/dr-ege
 SCORE: 14 SUCCESS  0 FAILURE  0 WARNING
 
 ================================================================================
-FILE: dr_test_collections_good.md  |  DIRECTIVE: validate  |  09:23:08
+FILE: dr_test_collections_good.md  |  DIRECTIVE: validate  |  17:22:07
 ================================================================================
 v2: Processing Markdown File: /Users/dwolfson/localGit/egeria-python/tests/dr-egeria-command-tests/dr_test_collections_good.md
 Processing Errors:
@@ -431,7 +438,7 @@ v2: Processing complete for '/Users/dwolfson/localGit/egeria-python/tests/dr-ege
 SCORE: 20 SUCCESS  3 FAILURE  0 WARNING
 
 ================================================================================
-FILE: dr_test_collections_mean.md  |  DIRECTIVE: validate  |  09:23:17
+FILE: dr_test_collections_mean.md  |  DIRECTIVE: validate  |  17:22:16
 ================================================================================
 v2: Processing Markdown File: /Users/dwolfson/localGit/egeria-python/tests/dr-egeria-command-tests/dr_test_collections_mean.md
 Processing Errors:
@@ -541,13 +548,15 @@ v2: Processing complete for '/Users/dwolfson/localGit/egeria-python/tests/dr-ege
 SCORE: 2 SUCCESS  8 FAILURE  0 WARNING
 
 ================================================================================
-FILE: dr_test_products_good.md  |  DIRECTIVE: validate  |  09:23:22
+FILE: dr_test_products_good.md  |  DIRECTIVE: validate  |  17:22:21
 ================================================================================
 v2: Processing Markdown File: /Users/dwolfson/localGit/egeria-python/tests/dr-egeria-command-tests/dr_test_products_good.md
 Processing Errors:
 
 -- Link Product Dependency (None) --
    - Referenced element 'PDR::DigitalProduct::Sales-Forecast-Data-Feed::1.0' for attribute 'Digital Product 2' not found.
+-- Link Agreement Actor (None) --
+   - Referenced element(s) ['<jane.smith@example.com>'] for attribute 'Actors' not found.
 -- Add Digital Subscriber (None) --
    - Referenced element 'Campaign:Sustainability' for attribute 'Subscriber Id' not found.
 -- Unlink Digital Subscriber (None) --
@@ -594,8 +603,9 @@ Processing Errors:
 │                                │                                │         │       │                                     │                                     │ -Data-Feed::1.0' for attribute       │
 │                                │                                │         │       │                                     │                                     │ 'Digital Product 2' not found.       │
 ├································┼································┼·········┼·······┼·····································┼·····································┼······································┤
-│ Link Agreement to Actor        │ Link Agreement Actor           │ SUCCESS │ No    │ Agreement::SalesForecast::Finance:: │                                     │ Validated Link Agreement to Actor    │
-│                                │                                │         │       │ DataSharing::1.0                    │                                     │                                      │
+│ Link Agreement to Actor        │ Link Agreement Actor           │ FAILURE │ No    │ Agreement::SalesForecast::Finance:: │                                     │ Referenced element(s)                │
+│                                │                                │         │       │ DataSharing::1.0                    │                                     │ ['<jane.smith@example.com>'] for     │
+│                                │                                │         │       │                                     │                                     │ attribute 'Actors' not found.        │
 ├································┼································┼·········┼·······┼·····································┼·····································┼······································┤
 │ Attach Agreement to Item       │ Attach Agreement Item          │ SUCCESS │ No    │ Agreement::SalesForecast::Finance:: │                                     │ Validated Attach Agreement to Item   │
 │                                │                                │         │       │ DataSharing::1.0                    │                                     │                                      │
@@ -619,10 +629,10 @@ Processing Errors:
 v2: Processing complete for '/Users/dwolfson/localGit/egeria-python/tests/dr-egeria-command-tests/dr_test_products_good.md'
 
 
-SCORE: 12 SUCCESS  3 FAILURE  0 WARNING
+SCORE: 11 SUCCESS  4 FAILURE  0 WARNING
 
 ================================================================================
-FILE: dr_test_external_ref.md  |  DIRECTIVE: validate  |  09:23:27
+FILE: dr_test_external_ref.md  |  DIRECTIVE: validate  |  17:22:26
 ================================================================================
 v2: Processing Markdown File: /Users/dwolfson/localGit/egeria-python/tests/dr-egeria-command-tests/dr_test_external_ref.md
 Processing Errors:
@@ -734,7 +744,7 @@ v2: Processing complete for '/Users/dwolfson/localGit/egeria-python/tests/dr-ege
 SCORE: 10 SUCCESS  8 FAILURE  0 WARNING
 
 ================================================================================
-FILE: dr_test_feedback.md  |  DIRECTIVE: validate  |  09:23:36
+FILE: dr_test_feedback.md  |  DIRECTIVE: validate  |  17:22:33
 ================================================================================
 v2: Processing Markdown File: /Users/dwolfson/localGit/egeria-python/tests/dr-egeria-command-tests/dr_test_feedback.md
 Processing Errors:
@@ -875,7 +885,7 @@ v2: Processing complete for '/Users/dwolfson/localGit/egeria-python/tests/dr-ege
 SCORE: 5 SUCCESS  15 FAILURE  0 WARNING
 
 ================================================================================
-FILE: dr_test_data_designer.md  |  DIRECTIVE: validate  |  09:23:47
+FILE: dr_test_data_designer.md  |  DIRECTIVE: validate  |  17:22:42
 ================================================================================
 v2: Processing Markdown File: /Users/dwolfson/localGit/egeria-python/tests/dr-egeria-command-tests/dr_test_data_designer.md
 
@@ -952,7 +962,7 @@ v2: Processing complete for '/Users/dwolfson/localGit/egeria-python/tests/dr-ege
 SCORE: 19 SUCCESS  0 FAILURE  1 WARNING
 
 ================================================================================
-FILE: dr_test_report.md  |  DIRECTIVE: validate  |  09:23:55
+FILE: dr_test_report.md  |  DIRECTIVE: validate  |  17:22:50
 ================================================================================
 v2: Processing Markdown File: /Users/dwolfson/localGit/egeria-python/tests/dr-egeria-command-tests/dr_test_report.md
 Processing Errors:
@@ -1052,7 +1062,7 @@ v2: Processing complete for '/Users/dwolfson/localGit/egeria-python/tests/dr-ege
 SCORE: 26 SUCCESS  1 FAILURE  0 WARNING
 
 ================================================================================
-FILE: dr_test_solution.md  |  DIRECTIVE: validate  |  09:24:01
+FILE: dr_test_solution.md  |  DIRECTIVE: validate  |  17:22:55
 ================================================================================
 v2: Processing Markdown File: /Users/dwolfson/localGit/egeria-python/tests/dr-egeria-command-tests/dr_test_solution.md
 
@@ -1125,7 +1135,7 @@ v2: Processing complete for '/Users/dwolfson/localGit/egeria-python/tests/dr-ege
 SCORE: 19 SUCCESS  0 FAILURE  0 WARNING
 
 ================================================================================
-FILE: dr_test_design_patterns.md  |  DIRECTIVE: validate  |  09:24:05
+FILE: dr_test_design_patterns.md  |  DIRECTIVE: validate  |  17:23:00
 ================================================================================
 v2: Processing Markdown File: /Users/dwolfson/localGit/egeria-python/tests/dr-egeria-command-tests/dr_test_design_patterns.md
 
@@ -1157,7 +1167,7 @@ v2: Processing complete for '/Users/dwolfson/localGit/egeria-python/tests/dr-ege
 SCORE: 7 SUCCESS  0 FAILURE  0 WARNING
 
 ================================================================================
-FILE: dr_test_new_commands.md  |  DIRECTIVE: validate  |  09:24:08
+FILE: dr_test_new_commands.md  |  DIRECTIVE: validate  |  17:23:03
 ================================================================================
 v2: Processing Markdown File: /Users/dwolfson/localGit/egeria-python/tests/dr-egeria-command-tests/dr_test_new_commands.md
 
@@ -1181,7 +1191,7 @@ v2: Processing complete for '/Users/dwolfson/localGit/egeria-python/tests/dr-ege
 SCORE: 3 SUCCESS  0 FAILURE  0 WARNING
 
 ================================================================================
-FILE: dr_test_action_author.md  |  DIRECTIVE: validate  |  09:24:10
+FILE: dr_test_action_author.md  |  DIRECTIVE: validate  |  17:23:05
 ================================================================================
 v2: Processing Markdown File: /Users/dwolfson/localGit/egeria-python/tests/dr-egeria-command-tests/dr_test_action_author.md
 
@@ -1225,12 +1235,12 @@ SCORE: 8 SUCCESS  0 FAILURE  0 WARNING
 VALIDATE MODE SUMMARY
 ================================================================================
 File                                         S     F     W
-dr_test_glossary.md                         16     0     0
+dr_test_glossary.md                         15     1     0
 dr_test_governance.md                       38     8     1
 dr_test_projects.md                         14     0     0
 dr_test_collections_good.md                 20     3     0
 dr_test_collections_mean.md                  2     8     0
-dr_test_products_good.md                    12     3     0
+dr_test_products_good.md                    11     4     0
 dr_test_external_ref.md                     10     8     0
 dr_test_feedback.md                          5    15     0
 dr_test_data_designer.md                    19     0     1
@@ -1240,4 +1250,4 @@ dr_test_design_patterns.md                   7     0     0
 dr_test_new_commands.md                      3     0     0
 dr_test_action_author.md                     8     0     0
 
-TOTALS: 199 SUCCESS  46 FAILURE  2 WARNING
+TOTALS: 197 SUCCESS  48 FAILURE  2 WARNING

@@ -70,6 +70,46 @@ _REPORT_PARAM_ATTRS = {
 }
 
 
+def _coerce_analytic_value(v: Any) -> Any:
+    """Recover a value's real type before it's packed into the analyticParams
+    JSON blob. parse_key_value() (md_processing/v2/utils.py) always produces
+    plain strings, even for values the user typed as a JSON list/dict (e.g.
+    `type_map: [["Projects", "Project"], ["Terms", "GlossaryTerm"]]`) or a
+    number/bool (e.g. `points: 12`). Left as a bare str(), a value like that
+    gets double-encoded -- the outer analyticParams JSON is valid, but a key's
+    *value* is itself the literal string "[[...]]" or "12", not a real
+    list/int -- so it comes back out via json.loads(raw_analytic_params) at
+    execution time still a str, and the analytic function breaks trying to
+    use it as its real type (`counts_by_type(type_map="[[...]]")` -> "not
+    enough values to unpack"; `growth_series(points="3")` -> "unsupported
+    operand type(s) for -: 'str' and 'int'"). Both confirmed live 2026-07-31
+    (PYEGERIA_ISSUES.md ISSUE-20).
+
+    Only applied here, not to the other additionalProperties keys in this
+    module (_REPORT_PARAM_ATTRS, Report Parameters, Additional Properties) --
+    those are genuinely Map<String,String> at the Egeria element level and
+    must stay strings; analyticParams is a single JSON-encoded blob consumed
+    purely by Python's own **kwargs at execution time, where real types
+    matter and there's no Egeria-side string constraint to honor.
+    """
+    if not isinstance(v, str):
+        return v
+    try:
+        return json.loads(v)
+    except (ValueError, TypeError):
+        # Not valid JSON (e.g. "Project", "6mo", "GlossaryTerm") -- it really
+        # is meant to be a plain string; keep it as-is.
+        return v
+
+
+def _snake_to_camel(snake: str) -> str:
+    """snake_case -> camelCase, the exact functional inverse of
+    local-dashboards.html's JS snakeKey() (which does the reverse for
+    display/execution) -- keep the two in sync if either changes."""
+    parts = snake.split("_")
+    return parts[0] + "".join(p[:1].upper() + p[1:] for p in parts[1:] if p)
+
+
 def _report_additional_properties(attributes: Dict[str, Any]) -> Dict[str, str]:
     """Merge the user's own 'Additional Properties' dict (if any) with the
     report-execution params, stringified (additionalProperties is
@@ -78,6 +118,37 @@ def _report_additional_properties(attributes: Dict[str, Any]) -> Dict[str, str]:
     user_extra = attributes.get("Additional Properties", {}).get("value")
     if isinstance(user_extra, dict):
         merged.update({str(k): str(v) for k, v in user_extra.items() if v is not None})
+
+    # Arbitrary report-spec-specific params (e.g. {"collection_guid": "..."}
+    # for the "Collection Members" report) that aren't part of the standard
+    # 22-key find/search vocabulary in _REPORT_PARAM_ATTRS. Merged FLAT
+    # (unlike analyticParams below, which is JSON-encoded under its own key)
+    # because the consumption side (egeria-workspaces-fs's
+    # local_dashboards_handler.py:_find_report_by_name) already passes
+    # through any additionalProperties key not in
+    # {"reportSpec","outputFormat","analyticParams"} as a flat params dict.
+    #
+    # Stored camelCase (like every _REPORT_PARAM_ATTRS key), NOT the raw
+    # snake_case the user typed in the Dr.Egeria markdown -- found live
+    # 2026-07-31: local-dashboards.html's camelKey()/snakeKey() round-trip
+    # (its own comment: "additionalProperties uses camelCase keys... matches
+    # ReportProcessor's _REPORT_PARAM_ATTRS") assumes EVERY additionalProperties
+    # key is camelCase and converts accordingly when checking
+    # `required_params` are present and when building the execute-time params
+    # dict. Storing collection_guid unconverted made camelKey('collection_guid')
+    # -> 'collectionGuid' not match the stored 'collection_guid' key, so the
+    # placement reported it as missing even though it was set. Converting here
+    # (rather than changing local-dashboards.html to special-case Report
+    # Parameters) keeps additionalProperties internally consistent -- one
+    # convention for every key, not two -- and needs no JS change, since the
+    # existing round-trip already un-camelCases correctly before the final
+    # /api/report-specs/execute call (format_set_executor.py's params[key]
+    # lookup there still sees the original snake_case name the report spec's
+    # required_params/optional_params expect).
+    report_params = attributes.get("Report Parameters", {}).get("value")
+    if isinstance(report_params, dict):
+        merged.update({_snake_to_camel(str(k)): str(v) for k, v in report_params.items() if v is not None})
+
     for canonical_name, key in _REPORT_PARAM_ATTRS.items():
         value = attributes.get(canonical_name, {}).get("value")
         if value is not None and value != "":
@@ -93,7 +164,7 @@ def _report_additional_properties(attributes: Dict[str, Any]) -> Dict[str, str]:
     analytic_params = attributes.get("Analytic Parameters", {}).get("value")
     if isinstance(analytic_params, dict) and analytic_params:
         merged["analyticParams"] = json.dumps(
-            {str(k): str(v) for k, v in analytic_params.items() if v is not None}
+            {str(k): _coerce_analytic_value(v) for k, v in analytic_params.items() if v is not None}
         )
     return merged
 

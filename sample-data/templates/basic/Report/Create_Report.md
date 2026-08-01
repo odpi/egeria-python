@@ -229,4 +229,16 @@ ___
 >	**Default Value**: 1.0
 
 
+### Report Parameters
+>	**Input Required**: False
+
+>	**Attribute Type**: Dictionary
+
+>	**Description**: Name-Value pairs of extra parameters for the target Report Spec's action that aren't part of the standard find/search attribute set (e.g. collection_guid for the "Collection Members" report). Keys must match exactly what the target report spec's action expects.
+
+>	| Parameter Name | Parameter Value |
+>	|---|---|
+>	| example_key | example_value |
+
+
 ___

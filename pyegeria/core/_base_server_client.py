@@ -20,7 +20,8 @@ from loguru import logger
 from pyegeria.core.config import settings
 from pyegeria.core._exceptions import (
     PyegeriaAPIException, PyegeriaConnectionException, PyegeriaInvalidParameterException,
-    PyegeriaUnknownException, PyegeriaClientException, PyegeriaTimeoutException
+    PyegeriaUnknownException, PyegeriaClientException, PyegeriaTimeoutException,
+    PyegeriaNotFoundException, PyegeriaUnauthorizedException
 )
 from pyegeria.core._globals import enable_ssl_check, max_paging_size
 from pyegeria.core._validators import (
@@ -28,6 +29,7 @@ from pyegeria.core._validators import (
     validate_server_name,
     validate_url,
     validate_user_id,
+    _validate_url_path_safe,
 )
 
 ...
@@ -86,6 +88,8 @@ class BaseServerClient:
         self.server_name = server_name
         self.platform_url = platform_url
         self.user_id = user_id or settings.User_Profile.user_name
+        if self.user_id:
+            _validate_url_path_safe(self.user_id, "user_id")
         self.user_pwd = user_pwd or settings.User_Profile.user_pwd
         self.page_size = page_size or max_paging_size
         self.token_src = token_src
@@ -239,7 +243,12 @@ class BaseServerClient:
             data["newPassword"] = new_password
         async with AsyncClient(verify=enable_ssl_check) as client:
             try:
-                response = await client.post(url, json=data, headers=self.headers)
+                # Deliberately not self.headers: it may still carry a stale/expired
+                # Authorization header (that's exactly what we're refreshing), and
+                # this endpoint authenticates via the body credentials, not a bearer
+                # token - sending a bad Authorization header here gets this request
+                # itself rejected with 401, defeating the whole refresh.
+                response = await client.post(url, json=data, headers=self.json_header)
                 token = response.text
             except httpx.HTTPError as e:
                 print(e)
@@ -467,7 +476,8 @@ class BaseServerClient:
             is_json: bool = True,
             params: dict | None = None,
             *,
-            timeout: int = None
+            timeout: int = None,
+            _retry_on_auth: bool = True,
     ) -> Response | str:
         """Make an asynchronous request to the Egeria API.
 
@@ -485,6 +495,12 @@ class BaseServerClient:
             Query parameters for the request.
         timeout : int, optional
             The timeout for the request in seconds.
+        _retry_on_auth : bool, internal use only
+            Whether a 401 response is eligible for one transparent
+            re-authenticate-and-retry attempt using this client's stored
+            credentials. Always True on the initial call; the retry itself
+            passes False so at most one retry ever happens. Not intended to
+            be set by external callers.
 
         Returns
         -------
@@ -495,6 +511,11 @@ class BaseServerClient:
         ------
         PyegeriaAPIException
             If the server returns an error.
+        PyegeriaNotFoundException
+            If Egeria reports a 404 (wrapped in a 200 response).
+        PyegeriaUnauthorizedException
+            If Egeria reports a 401/403 (wrapped in a 200 response), or if a
+            bare 401 HTTP response persists after the one auto-retry above.
         PyegeriaConnectionException
             If there is a connection issue.
         PyegeriaInvalidParameterException
@@ -562,10 +583,33 @@ class BaseServerClient:
             raise PyegeriaConnectionException(context, additional_info, e)
 
         except (HTTPStatusError, httpx.HTTPStatusError, httpx.RequestError) as e:
+            status_code_from_error = getattr(response, "status_code", None)
+
+            # A 401 here is a bare/transport-level auth failure (no Egeria-wrapped
+            # JSON body), most commonly an expired bearer token. If this client
+            # holds its own credentials, attempt exactly one transparent
+            # re-authenticate + retry before giving up - this is the only
+            # feasible fix, since the response carries no signal to distinguish
+            # "expired" from "wrong credentials"/"insufficient permission".
+            # _retry_on_auth=False on the recursive call guarantees at most one
+            # retry ever happens.
+            if status_code_from_error == 401 and _retry_on_auth and self.user_pwd:
+                try:
+                    new_token = await self._async_create_egeria_bearer_token()
+                except Exception:
+                    new_token = None
+                if new_token and new_token != "FAILED":
+                    return await self._async_make_request(
+                        request_type, endpoint, payload, is_json, params,
+                        timeout=timeout, _retry_on_auth=False,
+                    )
+
             additional_info = {"userid": self.user_id}
             if response is not None:
                 additional_info["reason"] = response.text
 
+            if status_code_from_error == 401:
+                raise PyegeriaUnauthorizedException(response, context, additional_info, e)
             raise PyegeriaClientException(response, context, additional_info, e)
 
         except Exception as e:
@@ -583,6 +627,10 @@ class BaseServerClient:
                     related_http_code = json_response.get("relatedHTTPCode", 0)
                     if related_http_code == 200:
                         return response
+                    elif related_http_code == 404:
+                        raise PyegeriaNotFoundException(response, context, additional_info=json_response)
+                    elif related_http_code in (401, 403):
+                        raise PyegeriaUnauthorizedException(response, context, additional_info=json_response)
                     else:
                         raise PyegeriaAPIException(response, context, additional_info=json_response)
 

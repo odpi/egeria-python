@@ -2066,7 +2066,7 @@ base_report_specs = FormatSetDict({
         action=ActionParameter(
             function="CollectionManager.get_collection_members",
             required_params=["collection_guid"],
-            optional_params=OPTIONAL_FILTER_PARAMS + TIME_PARAMETERS,
+            optional_params=OPTIONAL_FILTER_PARAMS + TIME_PARAMETERS + ["body"],
             spec_params={"output_format": "DICT"},
         )
     ),

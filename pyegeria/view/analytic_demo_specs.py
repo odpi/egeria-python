@@ -100,6 +100,19 @@ _DEMOS: Dict[str, FormatSet] = {
         result_shape="list[dict] ({label, type, count})",
         chart_types=["BAR", "PIE"],
     ),
+    "Analytic Demo - Ownership Coverage": _demo(
+        heading="Ownership Coverage",
+        what="Count of elements carrying an Ownership classification -- NOT a percentage, same "
+             "caveat as Governance Coverage (no cheap total-elements denominator yet). "
+             "ownershipCapped=true means the query hit its result-page cap (DEFAULT_CAP), so "
+             "ownershipCount is a floor, not exact, when true. byOwnerType is a nested breakdown "
+             "of the same ownershipCount elements by the owner's type (Person, Team, "
+             "SolutionActorRole, ...) -- pick BAR below for a chart of byOwnerType.",
+        analytic_function_name="ownership_coverage",
+        demo_params={},
+        result_shape="dict (ownershipCount, ownershipCapped, byOwnerType)",
+        chart_types=["BAR"],
+    ),
     "Analytic Demo - Governance Coverage": _demo(
         heading="Governance Classification Coverage",
         what="Count of elements carrying at least one governance classification "
@@ -143,9 +156,10 @@ _DEMOS: Dict[str, FormatSet] = {
         result_shape="dict (byType, total)",
         chart_types=["BAR"],
     ),
-    "Analytic Demo - Usage Context Counts": _demo(
-        heading="Usage Context Counts (ISC / Blueprints)",
-        what="InformationSupplyChain and SolutionBlueprint counts.",
+    "Analytic Demo - Usage Context: Supply Chains & Blueprints": _demo(
+        heading="Usage Context: Supply Chains & Blueprints",
+        what="InformationSupplyChain and SolutionBlueprint counts -- the two structures that put "
+             "assets in a business usage context (supply chain membership, blueprint realization).",
         analytic_function_name="usage_context_counts",
         demo_params={},
         result_shape="dict (informationSupplyChains, blueprints)",
@@ -165,12 +179,15 @@ _DEMOS: Dict[str, FormatSet] = {
     ),
     "Analytic Demo - AI Context Readiness": _demo(
         heading="AI Context Readiness Funnel",
-        what="Only 'cataloged' (Asset supertype count) and 'classified' (elements matching ANY "
-             "of the same governance classifications governed_coverage uses) are actually "
-             "computed today. 'documented', 'lineage', and 'aiReady' are always None -- each "
-             "needs a traversal query (e.g. lineage relationships, a documentation-completeness "
-             "rule) that doesn't exist yet as a cheap count; they're placeholders for a real "
-             "funnel definition, not yet a complete one.",
+        what="'cataloged' (Asset supertype count), 'documented' (Assets with a non-empty "
+             "description, capped at DEFAULT_CAP -- a floor, not exact, on a large catalog), "
+             "'classified' (elements matching ANY of the same governance classifications "
+             "governed_coverage uses), and 'lineage' (count of DataFlow relationships -- design/ "
+             "business lineage, distinct from OpenLineage's operational lineage) are all computed "
+             "as of 2026-08-01. 'aiReady' is still None -- it needs a true cross-criteria "
+             "intersection (assets that are documented AND classified AND lineage-traced "
+             "simultaneously), not another independent count; see NEXT-18 (composite/derived "
+             "analytic metrics) for that follow-up.",
         analytic_function_name="context_readiness_funnel",
         demo_params={},
         result_shape="dict (cataloged, documented, classified, lineage, aiReady)",
@@ -182,6 +199,38 @@ _DEMOS: Dict[str, FormatSet] = {
         analytic_function_name="growth_series",
         demo_params={"window": "6mo"},
         result_shape="list[dict] (time series: {label, date, <series_key>: count, ...})",
+        chart_types=["SERIES"],
+    ),
+    "Analytic Demo - Term Definition Completeness": _demo(
+        heading="Term Definition Completeness",
+        what="Share of GlossaryTerms carrying a non-empty description. undefinedPct is the gap "
+             "(not the coverage) -- a near-100%-defined glossary is the uninteresting case, and "
+             "the gap is what's actionable.",
+        analytic_function_name="term_definition_completeness",
+        demo_params={},
+        result_shape="dict (total, defined, undefinedPct)",
+    ),
+    "Analytic Demo - Active Contributors": _demo(
+        heading="Active Contributors",
+        what="Distinct usernames behind at least one feedback relationship (ratings/comments/"
+             "likes/tags/noteLogs) -- pick BAR below for a by-type breakdown. A real engagement "
+             "signal Feedback Summary's raw relationship counts don't give you: ten comments from "
+             "one person and ten comments from ten people both show up as '10' there, but "
+             "differently here.",
+        analytic_function_name="active_contributors",
+        demo_params={},
+        result_shape="dict (contributors, byType)",
+        chart_types=["BAR"],
+    ),
+    "Analytic Demo - Metric Trend (Governance Coverage)": _demo(
+        heading="Metric Trend: Governance Coverage Over Time",
+        what="governed_coverage re-run at each snapshot, turning a point-in-time metric into a "
+             "series -- copy this spec and change metric_path in analytic_spec_params to trend "
+             "any other function in this module (e.g. people_counts, feedback_summary) the same "
+             "way. Run with output_format SERIES for a Vega-Lite line chart of governedCount.",
+        analytic_function_name="metric_trend",
+        demo_params={"metric_path": "pyegeria.view.overview_metrics.governed_coverage", "window": "6mo"},
+        result_shape="list[dict] (time series: {label, date, **snapshot})",
         chart_types=["SERIES"],
     ),
 }

@@ -409,9 +409,18 @@ class AsyncBaseCommandProcessor(ABC):
                     ) or (
                         spec_existing != "" and spec_style in ["Simple", "Simple List", "List", "NameList"]
                     ) or (
-                        any(k in attr_name for k in ["Id", "GUID", "Name", "Reference"]) 
+                        any(k in attr_name for k in ["Id", "GUID", "Name", "Reference"])
                         and attr_name not in non_ref_names
-                        and spec_style not in ["Simple", "Enum", "Valid Value", "ValidValue", "Dictionary", "KeyValue", "Enumeration", "Integer", "Boolean"]
+                        # "Simple"/"Simple List"/"List"/"NameList" without an explicit
+                        # `existing_element` type (already handled above) are plain data,
+                        # not element references, regardless of what the attribute name
+                        # contains - e.g. "Match Property Names" (Simple List) is a list
+                        # of arbitrary property-name strings, not a list of Egeria
+                        # elements to resolve. Without this exclusion, the substring
+                        # heuristic on "Name" wrongly flagged it as a reference
+                        # candidate, and every one of its plain string values then
+                        # failed resolution.
+                        and spec_style not in ["Simple", "Simple List", "List", "NameList", "Enum", "Valid Value", "ValidValue", "Dictionary", "KeyValue", "Enumeration", "Integer", "Boolean"]
                     )
 
                 # More precise check: if it's already got a GUID or guid_list, don't re-resolve.
@@ -420,15 +429,33 @@ class AsyncBaseCommandProcessor(ABC):
                 if val and not attr_data.get("guid") and not attr_data.get("guid_list") and is_ref_candidate:
                     if isinstance(val, list):
                         guid_list = []
+                        failed_items = []
                         for item in val:
                             guid = await self.resolve_element_guid(item, tech_type=sanitized_spec_existing)
                             if guid:
                                 guid_list.append(guid)
+                            else:
+                                failed_items.append(item)
                         if guid_list:
                             attr_data["guid_list"] = guid_list
                             attr_data["exists"] = len(guid_list) == len(val)
                             if any(g.startswith("(Planned:") for g in guid_list):
                                 attr_data["is_planned"] = True
+                        if failed_items:
+                            # Mirror the single-value branch below: an unresolvable list item must
+                            # not be silently dropped - previously, a wholly- or partially-unresolvable
+                            # list (e.g. a "Reference Name List" attribute like Sub-Projects referencing
+                            # an element listed later in the same file) produced no error at all, so
+                            # the attribute appeared to succeed while quietly doing nothing.
+                            attr_data["exists"] = False
+                            attr_data["valid"] = False  # Treat as invalid to block execution
+                            msg = f"Referenced element(s) {failed_items} for attribute '{attr_name}' not found."
+                            if attr_data.get("errors") is None: attr_data["errors"] = []
+                            attr_data["errors"].append(msg)
+                            logger.error(msg)
+                            if "errors" not in self.parsed_output:
+                                self.parsed_output["errors"] = []
+                            self.parsed_output["errors"].append(msg)
                     else:
                         # Try to resolve GUID from cache or Egeria
                         guid = await self.resolve_element_guid(val, tech_type=sanitized_spec_existing)

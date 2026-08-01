@@ -209,11 +209,32 @@ def test_semantic_grounding_caps_at_100():
 def test_context_readiness_funnel_shape():
     mgr = _mgr()
     mgr.find_metadata_elements.return_value = [{}] * 5
-    result = om.context_readiness_funnel(mgr)
+    ce = MagicMock()
+    ce.get_relationships.return_value = [{}] * 3
+    result = om.context_readiness_funnel(mgr, ce)
     assert set(result.keys()) == {"cataloged", "documented", "classified", "lineage", "aiReady"}
-    assert result["documented"] is None
-    assert result["lineage"] is None
+    # documented/lineage are now computed (2026-08-01); aiReady still isn't --
+    # it needs a true cross-criteria intersection, not another independent
+    # count (see NEXT-18, composite/derived analytic metrics).
+    assert result["documented"] == 0   # 5 elements, none carry a description
+    assert result["lineage"] == 3      # DataFlow relationship count
     assert result["aiReady"] is None
+
+
+def test_context_readiness_funnel_counts_nonempty_description():
+    mgr = _mgr()
+    mgr.find_metadata_elements.return_value = [
+        {"elementProperties": {"propertyValueMap": {
+            "description": {"primitiveValue": "A real description."}}}},
+        {"elementProperties": {"propertyValueMap": {
+            "description": {"primitiveValue": "   "}}}},   # blank -> not documented
+        {"elementProperties": {"propertyValueMap": {}}},    # missing -> not documented
+    ]
+    ce = MagicMock()
+    ce.get_relationships.return_value = []
+    result = om.context_readiness_funnel(mgr, ce)
+    assert result["documented"] == 1
+    assert result["lineage"] == 0
 
 
 def test_people_counts_shape():
@@ -269,3 +290,97 @@ def test_growth_label_granularity():
     assert om.growth_label(d, 3600) == "14:00"          # <= 2 days -> hourly
     assert om.growth_label(d, 7 * 86400) == "15 Mar"    # <= 120 days -> daily
     assert om.growth_label(d, 200 * 86400) == "Mar"     # > 120 days -> monthly
+
+
+# ── term_definition_completeness ──────────────────────────────────────────
+
+def test_term_definition_completeness_counts_nonempty_description():
+    mgr = _mgr()
+    mgr.find_metadata_elements.return_value = [
+        {"elementProperties": {"propertyValueMap": {
+            "description": {"primitiveValue": "A real definition."}}}},
+        {"elementProperties": {"propertyValueMap": {
+            "description": {"primitiveValue": "   "}}}},   # blank -> not defined
+        {"elementProperties": {"propertyValueMap": {}}},    # missing -> not defined
+    ]
+    result = om.term_definition_completeness(mgr)
+    assert result == {"total": 3, "defined": 1, "undefinedPct": 67}
+
+
+def test_term_definition_completeness_empty_glossary():
+    mgr = _mgr()
+    mgr.find_metadata_elements.return_value = []
+    result = om.term_definition_completeness(mgr)
+    assert result == {"total": 0, "defined": 0, "undefinedPct": None}
+
+
+# ── active_contributors ───────────────────────────────────────────────────
+
+def test_active_contributors_dedupes_by_username_across_types():
+    ce = MagicMock()
+    ce.get_relationships.side_effect = [
+        [{"relationshipHeader": {"versions": {"createdBy": "alice"}}},
+         {"relationshipHeader": {"versions": {"createdBy": "alice"}}}],  # ratings
+        [{"relationshipHeader": {"versions": {"createdBy": "bob"}}}],    # comments
+        [],  # likes
+        [],  # tags
+        [{"relationshipHeader": {"versions": {"createdBy": "alice"}}}],  # noteLogs
+    ]
+    result = om.active_contributors(ce)
+    assert result["contributors"] == 2  # alice, bob
+    assert result["byType"] == {"ratings": 1, "comments": 1, "likes": 0, "tags": 0, "noteLogs": 1}
+
+
+def test_active_contributors_degrades_per_type_on_failure():
+    ce = MagicMock()
+    ce.get_relationships.side_effect = [
+        RuntimeError("boom"),
+        [{"relationshipHeader": {"versions": {"createdBy": "bob"}}}],
+        [], [], [],
+    ]
+    result = om.active_contributors(ce)
+    assert result["byType"]["ratings"] == 0
+    assert result["contributors"] == 1
+
+
+# ── metric_trend ──────────────────────────────────────────────────────────
+
+def test_metric_trend_calls_target_once_per_point_and_merges_dict_result():
+    mgr = _mgr()
+    mgr.find_metadata_elements.return_value = [{}] * 3
+    series = om.metric_trend(
+        mgr, MagicMock(), "pyegeria.view.overview_metrics.people_counts",
+        window="7d", points=3,
+    )
+    assert len(series) == 3
+    assert all("label" in p and "date" in p and p["persons"] == 3 for p in series)
+
+
+def test_metric_trend_scalar_result_stored_under_value():
+    mgr = _mgr(count_metadata_elements=MagicMock(return_value=5))
+    series = om.metric_trend(
+        mgr, MagicMock(), "pyegeria.view.overview_metrics.count_elements",
+        window="7d", points=2, metric_params={"type_name": "Asset"},
+    )
+    assert len(series) == 2
+    assert all(p["value"] == 5 for p in series)
+
+
+def test_metric_trend_snapshot_failure_yields_none_not_raise():
+    mgr = _mgr()
+    mgr.find_metadata_elements.side_effect = RuntimeError("boom")
+
+    def _boom(mgr, as_of=None):
+        raise RuntimeError("boom")
+
+    import pyegeria.view.overview_metrics as om_module
+    om_module._boom_for_test = _boom
+    try:
+        series = om.metric_trend(
+            mgr, MagicMock(), "pyegeria.view.overview_metrics._boom_for_test",
+            window="7d", points=2,
+        )
+        assert len(series) == 2
+        assert all(p["value"] is None for p in series)
+    finally:
+        del om_module._boom_for_test
