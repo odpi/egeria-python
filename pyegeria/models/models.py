@@ -526,10 +526,16 @@ class NewOpenMetadataElementRequestBody(RequestBody):
 
 
 class NewRelatedElementsRequestBody(RequestBody):
+    # Field names/aliases match the real Java DTO
+    # (frameworkservices/omf/rest/NewRelatedElementsRequestBody.java):
+    # typeName, metadataElement1GUID, metadataElement2GUID, properties -
+    # previously named relationship_type_name/end_1_guid/end_2_guid, which
+    # don't exist on the server-side class at all (silently ignored, causing
+    # e.g. "the name passed on the relationshipTypeName parameter ... is null").
     class_: Annotated[Literal["NewRelatedElementsRequestBody"], Field(alias="class")]
-    relationship_type_name: str | None = None
-    end_1_guid: str | None = None
-    end_2_guid: str | None = None
+    type_name: str | None = None
+    metadata_element_1_guid: str | None = None
+    metadata_element_2_guid: str | None = None
     properties: dict | None = None
 
 

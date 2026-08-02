@@ -595,8 +595,13 @@ class SolutionLinkProcessor(AsyncBaseCommandProcessor):
                     id2_key = candidates[1]
 
         if not (id1_key and id2_key):
-            logger.error(f"Command {object_type} has fewer than 2 attributes for linking - {attributes.keys()}")
-            return self.command.raw_block
+            msg = f"Command {object_type} has fewer than 2 attributes for linking - {list(attributes.keys())}"
+            logger.error(msg)
+            # Must raise, not return raw_block: execute() reports "status": "success"
+            # for any string apply_changes() returns without raising - a silent
+            # `return self.command.raw_block` here was previously misreported as
+            # a successful link.
+            raise ValueError(msg)
             
         id1 = attributes.get(id1_key, {}).get('guid')
         id2 = attributes.get(id2_key, {}).get('guid')
@@ -635,8 +640,33 @@ class SolutionLinkProcessor(AsyncBaseCommandProcessor):
             id2 = await self.resolve_element_guid(attributes[id2_key]['value'], tech_type=type2)
 
         if not (id1 and id2):
-            logger.warning(f"Missing GUIDs for {object_type}: {id1_key}={id1}, {id2_key}={id2}")
-            return self.command.raw_block
+            # This duplicate resolution (see note above the id1_key/id2_key
+            # selection) is the one path in this processor that doesn't go
+            # through execute()'s Step-7 loop, so it doesn't get that loop's
+            # batch_target_qns-aware forward-reference deferral for free.
+            # Check for it directly here: if whichever side failed to resolve
+            # is a legitimate target of some other (not-yet-run) command in
+            # this batch, defer the whole command instead of failing it.
+            batch_targets = self.context.get("batch_target_qns", set())
+            unresolved_names = []
+            if not id1:
+                unresolved_names.append(attributes.get(id1_key, {}).get('value'))
+            if not id2:
+                unresolved_names.append(attributes.get(id2_key, {}).get('value'))
+            unresolved_names = [n for n in unresolved_names if n]
+
+            if unresolved_names and all(n in batch_targets for n in unresolved_names):
+                self.parsed_output["deferred"] = True
+                logger.debug(f"Deferring {object_type}: waiting on {unresolved_names}")
+                return self.command.raw_block
+
+            msg = f"Missing GUIDs for {object_type}: {id1_key}={id1}, {id2_key}={id2}"
+            logger.error(msg)
+            # Must raise, not return raw_block: execute() reports "status": "success"
+            # for any string apply_changes() returns without raising - a silent
+            # `return self.command.raw_block` here was previously misreported as
+            # a successful link.
+            raise ValueError(msg)
 
         label = attributes.get('Wire Label', {}).get('value') or attributes.get('Link Label', {}).get('value') or attributes.get('Label', {}).get('value', "")
         description = attributes.get('Description', {}).get('value', "")

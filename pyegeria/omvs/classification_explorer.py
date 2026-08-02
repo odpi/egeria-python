@@ -5344,8 +5344,8 @@ class ClassificationExplorer(ServerClient):
            "class" : "NewClassificationRequestBody",
            "properties" : {
                "class" : "ConfidenceProperties",
-               "levelIdentifier" : 0,
-               "status" : 0,
+               "confidenceLevel" : 0,
+               "statusIdentifier" : 0,
                "confidence" : 0,
                "steward" : "Add value here",
                "stewardTypeName" : "Add value here",
@@ -5408,8 +5408,8 @@ class ClassificationExplorer(ServerClient):
            "class" : "NewClassificationRequestBody",
            "properties" : {
                "class" : "ConfidenceProperties",
-               "levelIdentifier" : 0,
-               "status" : 0,
+               "confidenceLevel" : 0,
+               "statusIdentifier" : 0,
                "confidence" : 0,
                "steward" : "Add value here",
                "stewardTypeName" : "Add value here",
@@ -5612,8 +5612,8 @@ class ClassificationExplorer(ServerClient):
            "class" : "NewClassificationRequestBody",
            "properties" : {
                "class" : "ConfidentialityProperties",
-               "levelIdentifier" : 0,
-               "status" : 0,
+               "confidentialityLevel" : 0,
+               "statusIdentifier" : 0,
                "confidence" : 0,
                "steward" : "Add value here",
                "stewardTypeName" : "Add value here",
@@ -5677,8 +5677,8 @@ class ClassificationExplorer(ServerClient):
            "class" : "NewClassificationRequestBody",
            "properties" : {
                "class" : "ConfidentialityProperties",
-               "levelIdentifier" : 0,
-               "status" : 0,
+               "confidentialityLevel" : 0,
+               "statusIdentifier" : 0,
                "confidence" : 0,
                "steward" : "Add value here",
                "stewardTypeName" : "Add value here",
@@ -5876,8 +5876,8 @@ class ClassificationExplorer(ServerClient):
            "class" : "NewClassificationRequestBody",
            "properties" : {
                "class" : "ImpactProperties",
-               "levelIdentifier" : 0,
-               "status" : 0,
+               "severityLevel" : 0,
+               "statusIdentifier" : 0,
                "confidence" : 0,
                "steward" : "Add value here",
                "stewardTypeName" : "Add value here",
@@ -5940,8 +5940,8 @@ class ClassificationExplorer(ServerClient):
            "class" : "NewClassificationRequestBody",
            "properties" : {
                "class" : "ImpactProperties",
-               "levelIdentifier" : 0,
-               "status" : 0,
+               "severityLevel" : 0,
+               "statusIdentifier" : 0,
                "confidence" : 0,
                "steward" : "Add value here",
                "stewardTypeName" : "Add value here",
@@ -6139,8 +6139,8 @@ class ClassificationExplorer(ServerClient):
            "class" : "NewClassificationRequestBody",
            "properties" : {
                "class" : "CriticalityProperties",
-               "levelIdentifier" : 0,
-               "status" : 0,
+               "criticalityLevel" : 0,
+               "statusIdentifier" : 0,
                "confidence" : 0,
                "steward" : "Add value here",
                "stewardTypeName" : "Add value here",
@@ -6202,8 +6202,8 @@ class ClassificationExplorer(ServerClient):
            "class" : "NewClassificationRequestBody",
            "properties" : {
                "class" : "CriticalityProperties",
-               "levelIdentifier" : 0,
-               "status" : 0,
+               "criticalityLevel" : 0,
+               "statusIdentifier" : 0,
                "confidence" : 0,
                "steward" : "Add value here",
                "stewardTypeName" : "Add value here",
@@ -8134,6 +8134,13 @@ class ClassificationExplorer(ServerClient):
         is to be retained by the organization. The policy to apply to the element/resource is captured by the
         retentionBasis property. The dates after which the element/resource is archived and then deleted are specified
         in the archiveAfter and deleteAfter properties respectively. Async version.
+
+        NOTE (2026-08-02): confirmed live against a qs-view-server-class server that this call is currently
+        rejected server-side regardless of what properties are supplied - `OMRS-REPOSITORY-400-028 A property
+        called statusIdentifier has been proposed for a metadata instance of category ClassificationDef and
+        type Retention; it is not supported for this type`. A wire-level body dump confirmed the outgoing
+        request never actually includes that field, so this looks like an Egeria-side Retention ClassificationDef
+        registration gap, not a pyegeria bug - see BACKLOG.md in egeria-python for the investigation.
 
         Governance Action Classifications: https://egeria-project.org/types/4/0422-Governed-Data-Classifications/
 

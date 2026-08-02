@@ -6238,10 +6238,10 @@ class ServerClient(BaseServerClient):
 
     @dynamic_catch
     def validate_new_related_elements_request(self, body: dict | NewRelatedElementsRequestBody) -> NewRelatedElementsRequestBody | None:
-        if isinstance(body, NewRelationshipRequestBody):
+        if isinstance(body, NewRelatedElementsRequestBody):
             validated_body = body
         elif isinstance(body, dict):
-            validated_body = self._validate_body(self._new_relationship_request_adapter.validate_python, body)
+            validated_body = self._validate_body(self._new_related_elements_request_adapter.validate_python, body)
         else:
             validated_body = None
         return validated_body

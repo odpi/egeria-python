@@ -596,12 +596,23 @@ class MetadataExpert(ServerClient):
     @dynamic_catch
     async def _async_create_related_elements(self, body: Optional[dict | NewRelatedElementsRequestBody] = None) -> str:
         """
-        Create a relationship between two metadata elements. Async version.
+        Create a relationship between two metadata elements, of any Egeria relationship type by name -
+        the generic mechanism behind Dr.Egeria's AsyncBaseCommandProcessor._sync_parent_relationship()
+        (md_processing/v2/processors.py), which uses this to apply `Parent ID`/`Parent Relationship Type
+        Name` on Update commands (Create gets it for free via NewElementRequestBody's own parentGUID/
+        parentRelationshipTypeName shortcut fields; there's no Update-time equivalent of that shortcut,
+        so this generic call is what fills the gap). Async version.
 
         Parameters
         ----------
         body : dict | NewRelatedElementsRequestBody, optional
-            The details of the relationship to create.
+            The details of the relationship to create - see NewRelatedElementsRequestBody
+            (pyegeria/models/models.py): type_name, metadata_element_1_guid, metadata_element_2_guid,
+            properties. Field names/aliases match the real Java DTO
+            (frameworkservices/omf/rest/NewRelatedElementsRequestBody.java) - typeName,
+            metadataElement1GUID, metadataElement2GUID - not "relationshipTypeName"/"end1GUID"/
+            "end2GUID", which don't exist on that class at all (a real bug, fixed 2026-08-02:
+            the server previously silently ignored those wrong names rather than erroring).
 
         Returns
         -------
@@ -610,15 +621,21 @@ class MetadataExpert(ServerClient):
 
         Notes
         -----
-        Sample JSON body:
+        Sample JSON body - e.g. establishing a ProjectHierarchy relationship between two projects:
         {
           "class" : "NewRelatedElementsRequestBody",
-          "externalSourceGUID" :  "",
-          "externalSourceName" : "",
+          "typeName": "ProjectHierarchy",
+          "metadataElement1GUID": "<parent project GUID>",
+          "metadataElement2GUID": "<child project GUID>",
           "forLineage" : false,
-          "forDuplicateProcessing" : false,
-          "effectiveTime" : "2024-01-01T00:00:00.000+00:00"
+          "forDuplicateProcessing" : false
         }
+
+        Use element_guid, "any-type", and _async_get_all_related_elements() first to check whether an
+        equivalent relationship already exists before calling this, if idempotency matters for your use
+        case - that call returns a dict (`{"elementList": [...], ...}`, NOT a list) with a different,
+        lower-level per-entry shape (`type.typeName`/`relationshipGUID`/`element.elementGUID`) than
+        domain-specific calls like ProjectManager._async_get_project_by_guid()'s `managedProjects` field.
         """
         url = f"{self.command_root}/related-elements"
         return await self._async_create_related_elements_body_request(url, body)

@@ -146,9 +146,30 @@ Dr.Egeria implements "Upsert" logic to make metadata scripts more robust and ide
 - **Create → Update**: If a `Create` command is issued but the element already exists (matched by Qualified Name), Dr.Egeria automatically rewrites the command to `Update`.
 - **Update → Create**: If an `Update` command is issued but the element does not exist and hasn't been "Planned" by a previous command, it is rewritten to `Create`.
 
-### Planned Elements
+### Planned Elements and Forward References
 
-Dr.Egeria supports inter-command dependencies within a single file. If a command creates a new element (e.g., a Glossary), subsequent commands in the same file (e.g., creating a Term in that Glossary) can resolve the new element's GUID even before the first command is fully committed to Egeria. These are tracked as "Planned" elements.
+Dr.Egeria supports inter-command dependencies within a single file — a command can reference an element that another command in the same file is also creating, in **either order**:
+
+- **Backward reference** (the referenced element is defined by an *earlier* command): resolves immediately via the "Planned" mechanism, as it always has.
+- **Forward reference** (the referenced element is defined by a *later* command, e.g. a parent project listing sub-projects that come afterward in the file): Dr.Egeria pre-scans the whole batch before running anything, recognizes the name as a legitimate target, and defers the referencing command until the target actually exists — retrying automatically over one or more passes. You do not need to reorder your file.
+
+```markdown
+## Create Project
+### Display Name
+Sales Forecast Program
+### Sub-Projects
+Q1 Delivery
+
+___
+
+## Create Project
+### Display Name
+Q1 Delivery
+```
+
+`Q1 Delivery` is only defined *after* `Sales Forecast Program` references it — this now works correctly, creating a real `ProjectHierarchy` relationship once `Q1 Delivery` exists. A reference to a name that isn't defined *anywhere* in the file (a genuine typo or missing block) still fails immediately with a clear `Referenced element(s) [...] not found` error — deferral only applies to names Dr.Egeria recognizes as a real target elsewhere in the same batch.
+
+In `--validate` mode, a command with a still-pending forward reference is reported with a note (`| Note: forward reference(s) not yet creatable in this preview - will resolve during --process`) rather than an unqualified success, since validation never actually creates anything for the reference to resolve against.
 
 ### Reference Resolution
 
@@ -157,6 +178,42 @@ Dr.Egeria attempts to resolve element references (like a parent Glossary for a T
 2. **Reference Name**: A structured name in the format `Type::QualifiedName` (e.g., `Glossary::PDR::SalesGlossary`). This is the preferred way to refer to elements in Link commands.
 3. **Qualified Name**: The unique string path for the element.
 4. **Display Name**: The human-readable name (ambiguous matches will result in warnings/errors).
+
+### Parent Relationships and Governance Classifications on `Update`
+
+Several "advanced" attributes available on every Create/Update command are baked into `Create` as a shortcut — Egeria's create endpoint bundles "create the element" and "establish this one relationship/classification" into a single call. Whether the same attribute also works on `Update` depends on which one:
+
+- **`Parent ID` + `Parent Relationship Type Name`** (+ `Parent Relationship Attributes`/`Parent at End1`) — works on both `Create` and `Update`. Changing `Parent ID` on an `Update` re-parents the element (removes the old relationship, creates the new one); repeating the same `Update` is a safe no-op.
+
+  ```markdown
+  ## Update Project
+  ### Display Name
+  Q1 Delivery
+  ### Qualified Name
+  Q1 Delivery::1.0
+  ### Parent ID
+  Sales Forecast Program
+  ### Parent Relationship Type Name
+  ProjectHierarchy
+  ```
+
+- **`Confidentiality Classification` / `Confidence Classification` / `Criticality Classification` / `Impact Classification`** — work on both `Create` and `Update`; changing the value on an `Update` re-classifies the element.
+
+  ```markdown
+  ## Update Project
+  ### Display Name
+  Sensitive Analysis
+  ### Qualified Name
+  Sensitive Analysis::1.0
+  ### Confidentiality Classification
+  RESTRICTED
+  ```
+
+  Valid values follow Egeria's `0422 Governed Data Classifications` model, e.g. Confidentiality: `UNCLASSIFIED`, `INTERNAL`, `CONFIDENTIAL`, `SENSITIVE`, `RESTRICTED`, `OTHER`. Use `gen_dr_help`/`dr_egeria_help` to see the valid values for each classification attribute on a specific command.
+
+  **`Retention Classification` does not currently work** on either verb, due to an Egeria server-side issue unrelated to Dr.Egeria (see `BACKLOG.md`) — it fails cleanly as a per-item error rather than silently doing nothing.
+
+- **`Anchor ID` / `Anchor Scope ID`** — **Create-time only, by design.** Anchoring in Egeria is create-time-only plumbing; there is no supported way to change an element's anchor after creation. Setting these on an `Update` command has no effect.
 
 ---
 

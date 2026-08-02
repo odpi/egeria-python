@@ -301,7 +301,7 @@ def set_create_body(object_type: str, attributes: dict)->dict:
         "parentRelationshipTypeName": attributes.get('Parent Relationship Type Name', {}).get('value', None) or attributes.get('Parent Relationship Type', {}).get('value', None),
         "parentRelationshipProperties": attributes.get('Parent Relationship Attributes', {}).get('value', None) or attributes.get('Parent Relationship Properties', {}).get('value', None),
         "parentAtEnd1": attributes.get('Parent at End1', {}).get('value', True),
-        "anchorScopeGUID": attributes.get('Anchor Scope GUID', {}).get('guid', None),
+        "anchorScopeGUID": attributes.get('Anchor Scope ID', {}).get('guid', None),
         "properties": "",
         "initialStatus": attributes.get('Status', {}).get('value', "ACTIVE"),
         "initialClassifications": {}}
