@@ -237,6 +237,107 @@ def test_context_readiness_funnel_counts_nonempty_description():
     assert result["lineage"] == 0
 
 
+# ── ai_ready_assets ──────────────────────────────────────────────────────
+
+def _asset(guid, description=None, classifications=None):
+    """Build a fake find_metadata_elements-shaped Asset element."""
+    props = {}
+    if description is not None:
+        props["description"] = {"primitiveValue": description}
+    return {
+        "elementGUID": guid,
+        "elementProperties": {"propertyValueMap": props},
+        "classifications": [{"classificationName": c} for c in (classifications or [])],
+    }
+
+
+def test_ai_ready_assets_requires_all_three_criteria():
+    mgr = _mgr()
+    mgr.find_metadata_elements.return_value = [
+        _asset("a1", "documented", ["Confidentiality"]),   # governed + documented, NOT lineage-traced
+        _asset("a2", "documented", ["Confidentiality"]),   # governed + documented + lineage-traced -> AI-ready
+        _asset("a3", None, ["Confidentiality"]),            # governed + lineage-traced, NOT documented
+        _asset("a4", "documented", []),                     # documented + lineage-traced, NOT governed
+    ]
+    ce = MagicMock()
+    ce.get_relationships.return_value = [
+        {"end1": {"guid": "a2"}, "end2": {"guid": "a3"}},
+        {"end1": {"guid": "a4"}, "end2": {"guid": "other-asset"}},
+    ]
+    result = om.ai_ready_assets(mgr, ce)
+    assert result == {"aiReadyCount": 1, "total": 4, "capped": False}
+
+
+def test_ai_ready_assets_empty_catalog():
+    mgr = _mgr()
+    mgr.find_metadata_elements.return_value = []
+    ce = MagicMock()
+    ce.get_relationships.return_value = []
+    result = om.ai_ready_assets(mgr, ce)
+    assert result == {"aiReadyCount": 0, "total": 0, "capped": False}
+
+
+def test_ai_ready_assets_lineage_query_failure_degrades_to_none_ai_ready():
+    mgr = _mgr()
+    mgr.find_metadata_elements.return_value = [
+        _asset("a1", "documented", ["Confidentiality"]),
+    ]
+    ce = MagicMock()
+    ce.get_relationships.side_effect = Exception("boom")
+    result = om.ai_ready_assets(mgr, ce)
+    # lineage query failed -> no asset can be lineage-traced -> 0, not a crash
+    assert result["aiReadyCount"] == 0
+    assert result["total"] == 1
+
+
+def test_business_value_signals_counts_confidential_and_described_from_one_fetch():
+    mgr = _mgr()
+    mgr.find_metadata_elements.side_effect = [
+        [
+            _asset("a1", "has a description", ["Confidentiality"]),
+            _asset("a2", None, ["Confidentiality"]),
+            _asset("a3", "has a description", []),
+            _asset("a4", None, []),
+        ],
+        [],   # second find_metadata_elements call: count_elements' ConsolidatedDuplicate fetch
+    ]
+    result = om.business_value_signals(mgr)
+    assert result == {
+        "assetTotal": 4, "assetCapped": False,
+        "confidentialCount": 2, "describedCount": 2, "duplicateCount": 0,
+    }
+
+
+def test_business_value_signals_capped_flag():
+    mgr = _mgr()
+    mgr.find_metadata_elements.side_effect = [
+        [_asset(f"a{i}") for i in range(om.DEFAULT_CAP)],
+        [],
+    ]
+    result = om.business_value_signals(mgr)
+    assert result["assetCapped"] is True
+
+
+def test_business_value_signals_counts_duplicates_separately():
+    mgr = _mgr()
+    mgr.find_metadata_elements.side_effect = [
+        [_asset("a1")],
+        [_asset("d1"), _asset("d2")],   # ConsolidatedDuplicate-classified elements
+    ]
+    result = om.business_value_signals(mgr)
+    assert result["duplicateCount"] == 2
+
+
+def test_business_value_signals_empty_catalog():
+    mgr = _mgr()
+    mgr.find_metadata_elements.side_effect = [[], []]
+    result = om.business_value_signals(mgr)
+    assert result == {
+        "assetTotal": 0, "assetCapped": False,
+        "confidentialCount": 0, "describedCount": 0, "duplicateCount": 0,
+    }
+
+
 def test_people_counts_shape():
     mgr = _mgr()
     mgr.find_metadata_elements.return_value = [{}] * 2
