@@ -37,16 +37,22 @@ class MainScreen(Screen):
         yield Header(show_clock=True, id="main_header")
 
         yield ScrollableContainer(
-            Static("Projects"),
-            DataTable(id="projects_table"),
-            id="main_projects_container"
+            Static("User Associations"),
+            DataTable(id="associations_table"),
+            id="main_associations_container"
         )
 
-        yield ScrollableContainer(
-            Static("Communities"),
-            DataTable(id="communities_table"),
-            id="main_communities_container"
-        )
+        # yield ScrollableContainer(
+        #     Static("Projects"),
+        #     DataTable(id="projects_table"),
+        #     id="main_projects_container"
+        # )
+        #
+        # yield ScrollableContainer(
+        #     Static("Communities"),
+        #     DataTable(id="communities_table"),
+        #     id="main_communities_container"
+        # )
 
         yield ScrollableContainer(
             Static(f"Other Functions"),

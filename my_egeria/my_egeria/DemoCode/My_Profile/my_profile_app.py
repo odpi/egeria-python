@@ -37,6 +37,7 @@ from EditRolesScreen import EditRolesScreen
 from EditTeamsScreen import EditTeamsScreen
 from EditBlogsScreen import EditBlogsScreen
 from EditJournalScreen import EditJournalScreen
+from EditAssociationsScreen import EditAssociationsScreen
 from TechnologyTypesScreen import TechnologyTypesScreen
 from TechnologyTypeOptionsScreen import TechnologyTypeOptionsScreen
 from TechnologyTypeTemplatesScreen import TechnologyTypeTemplatesScreen
@@ -76,6 +77,8 @@ class MyProfileApp(App):
         "edit_todos": EditTodosScreen,
         "edit_projects": EditProjectsScreen,
         "edit_blogs": EditBlogsScreen,
+        "edit_journal": EditJournalScreen,
+        "edit_associations": EditAssociationsScreen,
         "tech_types": TechnologyTypesScreen,
         "tech_type_options": TechnologyTypeOptionsScreen,
         "tech_type_templates": TechnologyTypeTemplatesScreen,
@@ -117,7 +120,7 @@ class MyProfileApp(App):
         self.todos = []
         self.teams = []
         self.other_function_list = []
-        self.tech_type_json: str
+        self.tech_type_json: str = ""
         self.tech_type_response = None
         self.tech_type_list = []
         self.tech_type_guid = ""
@@ -308,79 +311,87 @@ class MyProfileApp(App):
 
         main_screen = self.get_screen("main")
 
-        self.projects_table = main_screen.query_one("#projects_table", DataTable)
-        self.communities_table = main_screen.query_one("#communities_table", DataTable)
+        # self.projects_table = main_screen.query_one("#projects_table", DataTable)
+        # self.communities_table = main_screen.query_one("#communities_table", DataTable)
         self.roles_table = main_screen.query_one("#roles_table", DataTable)
         self.blogs_table = main_screen.query_one("#blogs_table", DataTable)
         self.journal_table = main_screen.query_one("#journal_table", DataTable)
         self.todos_table = main_screen.query_one("#todos_table", DataTable)
         self.user_identity_table = main_screen.query_one("#user_identity_table", DataTable)
         self.teams_table = main_screen.query_one("#teams_table", DataTable)
+        self.associations_table = main_screen.query_one("#associations_table", DataTable)
 
-        assert self.projects_table is not None
-        assert self.communities_table is not None
+        # assert self.projects_table is not None
+        # assert self.communities_table is not None
         assert self.roles_table is not None
         assert self.blogs_table is not None
         assert self.journal_table is not None
         assert self.todos_table is not None
         assert self.user_identity_table is not None
         assert self.teams_table is not None
+        assert self.associations_table is not None
 
-        self.projects_table.clear(columns=True)
-        self.projects_table.add_columns("Project Name", "Description", "Qualified Name")
-        self.projects_table.zebra = True
-        self.projects_table.cursor_type = "row"
+        # self.projects_table.clear(columns=True)
+        # self.projects_table.add_columns("Status or Type", "Name", "Description", "GUID")
+        # self.projects_table.zebra_stripes = True
+        # self.projects_table.cursor_type = "row"
 
-        self.communities_table.clear(columns=True)
-        self.communities_table.add_columns("Assignment Type", "Community Name", "Description", "GUID")
-        self.communities_table.zebra = True
-        self.communities_table.cursor_type = "row"
+        # self.communities_table.clear(columns=True)
+        # self.communities_table.add_columns("Assignment Type", "Community Name", "Description", "GUID")
+        # self.communities_table.zebra_stripes = True
+        # self.communities_table.cursor_type = "row"
 
         self.roles_table.clear(columns=True)
         self.roles_table.add_columns("Role Name", "Role Type","Description", "GUID")
-        self.roles_table.zebra = True
+        self.roles_table.zebra_stripes = True
         self.roles_table.cursor_type = "row"
 
         self.teams_table.clear(columns=True)
         self.teams_table.add_columns("Assignment Type", "Team Name", "Description","GUID")
-        self.teams_table.zebra = True
+        self.teams_table.zebra_stripes = True
         self.teams_table.cursor_type = "row"
 
         self.blogs_table.clear(columns=True)
         self.blogs_table.add_columns("Blog Title", "Date", "Text", "GUID")
-        self.blogs_table.zebra = True
+        self.blogs_table.zebra_stripes = True
         self.blogs_table.cursor_type = "row"
 
         self.journal_table.clear(columns=True)
         self.journal_table.add_columns("Journal Entry", "Date", "Text", "GUID")
-        self.journal_table.zebra = True
+        self.journal_table.zebra_stripes = True
         self.journal_table.cursor_type = "row"
 
         self.todos_table.clear(columns=True)
         self.todos_table.add_columns("To-Do Name", "Activity Status", "Description", "GUID")
-        self.todos_table.zebra = True
+        self.todos_table.zebra_stripes = True
         self.todos_table.cursor_type = "row"
 
         self.user_identity_table.clear(columns=True)
         self.user_identity_table.add_columns("Display Name", "User ID", "Distinguished Name", "GUID")
-        self.user_identity_table.zebra = True
+        self.user_identity_table.zebra_stripes = True
         self.user_identity_table.cursor_type = "row"
 
-        # Populate rows
-        for p in self.projects if isinstance(self.projects, list) else []:
-            self.projects_table.add_row(
-                str(p.get("Name", "")),
-                str(p.get("Description", "")),
-                str(p.get("Qualified Name", p.get("qualified_name", ""))),
-            )
+        self.associations_table.clear(columns=True)
+        self.associations_table.add_columns("Status or Type", "Name", "Description", "GUID")
+        self.associations_table.zebra_stripes = True
+        self.associations_table.cursor_type = "row"
 
-        for c in self.communities if isinstance(self.communities, list) else []:
-            self.communities_table.add_row(
-                str(c.get("Assignment Type", "")),
-                str(c.get("Name", "")),
-                str(c.get("Description", "")),
-                str(c.get("GUID", c.get("guid", "")))
-            )
+        # Populate rows
+        # for p in self.projects if isinstance(self.projects, list) else []:
+        #     self.projects_table.add_row(
+        #         str(p.get("Project Status", "")),
+        #         str(p.get("Name", "")),
+        #         str(p.get("Description", "")),
+        #         str(p.get("GUID", "")),
+        #     )
+        #
+        # for c in self.communities if isinstance(self.communities, list) else []:
+        #     self.communities_table.add_row(
+        #         str(c.get("Assignment Type", "")),
+        #         str(c.get("Name", "")),
+        #         str(c.get("Description", "")),
+        #         str(c.get("GUID", c.get("guid", "")))
+        #     )
 
         for r in self.roles if isinstance(self.roles, list) else []:
             self.roles_table.add_row(
@@ -420,6 +431,22 @@ class MyProfileApp(App):
                 str(t.get("Name", "")),
                 str(t.get("Description", "")),
                 str(t.get("GUID", t.get("guid", ""))),
+            )
+
+        for p in self.projects if isinstance(self.projects, list) else []:
+            self.associations_table.add_row(
+                str(p.get("Project Status", "")),
+                str(p.get("Name", "")),
+                str(p.get("Description", "")),
+                str(p.get("GUID", "")),
+            )
+
+        for c in self.communities if isinstance(self.communities, list) else []:
+            self.associations_table.add_row(
+                str(c.get("Assignment Type", "")),
+                str(c.get("Name", "")),
+                str(c.get("Description", "")),
+                str(c.get("GUID", c.get("guid", "")))
             )
 
     def action_quit(self) -> None:
@@ -590,43 +617,6 @@ class MyProfileApp(App):
                                                        domain.get("Type Name", ""),
                                                        domain.get("GUID", ""))
                     continue
-
-            # Data Specifications removed from the display, code is working but being replaced by Root Collections table
-            # data_specification_table: DataTable = DataTable(id="data_specification_table")
-            # data_specification_table.add_columns("Display Name", "Description", "Qualified Name")
-            # data_specification_table.cursor_type = "row"
-            # data_specification_table.zebra_stripes = True
-            # try:
-            #     self.data_specification_data = exec_report_spec(format_set_name="Data-Specifications",
-            #                                                      output_format="DICT",
-            #                                                      params = {"search_string": "*"},
-            #                                                      view_server=self.view_server,
-            #                                                      view_url=self.platform_url,
-            #                                                      user=self.user_name,
-            #                                                      user_pass=self.user_password)
-            # except PyegeriaException as e:
-            #     self.log(f"Error retrieving data specification details: {e!s}")
-            #     self.exit(423)
-            #     return (423)
-            #
-            # if isinstance(self.data_specification_data, dict):
-            #     self.data_specification_data_extract = self.data_specification_data.get("data")
-            # elif isinstance(self.data_specification_data, list):
-            #     self.data_specification_data_extract = self.data_specification_data
-            # else:
-            #     self.data_specification_data_extract = self.data_specification_data.get("Data-Specifications") or []
-            #
-            # if self.data_specification_data_extract == [] or self.data_specification_data_extract == {} or self.data_specification_data_extract == None:
-            #     self.log(f"No data specifications found for user {self.user_name}")
-            #     data_specification_table.add_row("No data specifications found", "No data returned from Egeria", "")
-            # else:
-            #     self.log(f"Found {self.data_specification_data_extract} data specifications for user {self.user_name}")
-            #
-            #     for spec in self.data_specification_data_extract:
-            #         data_specification_table.add_row(spec.get("Display Name", ""),
-            #                                       spec.get("Description", ""),
-            #                                       spec.get("Qualified Name", ""))
-            #         continue
 
             # Root Collections
 
@@ -2022,8 +2012,25 @@ class MyProfileApp(App):
             self.push_screen(EditJournalScreen(), callback=self.edit_journal_callback)
         elif table_name == "todos_table":
             self.push_screen(EditTodosScreen(), callback=self.edit_todos_callback)
+        elif table_name == "associations_table":
+            self.push_screen(EditAssociationsScreen(), callback=self.edit_assaociations_callback)
         else:
             self.log(f"Unexpected table name: {table_name}")
+
+    def edit_projects_callback(self, return_c):
+        pass
+
+    def edit_blogs_callback(self, return_c):
+        pass
+
+    def edit_journal_callback(self, return_c):
+        pass
+
+    def edit_todos_callback(self, return_c):
+        pass
+
+    def edit_assaociations_callback(self, return_c):
+        pass
 
     def show_comments(self, table_name, row_k):
         """ Show comments for the selected table """

@@ -10,11 +10,10 @@ from typing import Any
 from textual.app import ComposeResult
 from textual.containers import ScrollableContainer
 from textual.css.query import NoMatches
-from textual.screen import Screen, ModalScreen
-from textual.widgets import DataTable, OptionList, Header, Static, Footer, Input, Button
-from textual.widgets._option_list import Option
+from textual.screen import ModalScreen
+from textual.widgets import DataTable, Header, Static, Footer, Input, Button
 
-from pyegeria import Egeria, PyegeriaException, EgeriaTech, exec_report_spec
+from pyegeria import PyegeriaException, EgeriaTech, exec_report_spec
 
 
 class ShowCommentsScreen(ModalScreen):
@@ -39,6 +38,7 @@ class ShowCommentsScreen(ModalScreen):
         self.comment_text = ""
         self.comment_type = ""
         self.backend_id = ""
+        self.show_comments_datratable: DataTable = DataTable(id="show_comments_dt")
 
     def on_mount(self):
         """On mount, find the GUID for the Row """
@@ -50,18 +50,10 @@ class ShowCommentsScreen(ModalScreen):
         if backend_id:
             self.notify(f"Accessing backend system with identifier: {backend_id}")
             self.backend_id = backend_id
-            # replace this by using the report format comment-by-element to retrieve linked comments
             try:
-                # cclient = Egeria(self.view_server,
-                #                  self.platform_url,
-                #                  self.user_name,
-                #                  self.user_password)
-                # token = cclient.create_egeria_bearer_token(self.user_name, self.user_password)
-                # comments_list = cclient.get_attached_comments(backend_id)
-                # self.log(f"Retrieved: {comments_list} :for element {backend_id}, type: {type(comments_list)}")
                 comments_list: dict = exec_report_spec(format_set_name="Comment-by-Element",
                                                        output_format="DICT",
-                                                       params = {"element_guid" : backend_id,})
+                                                       params={"element_guid" : backend_id,})
                 if isinstance(comments_list, str) or comments_list == "No elements found":
                     self.log(f"processing str comment: {comments_list}")
                     comment_text = str(comments_list)
@@ -121,7 +113,7 @@ class ShowCommentsScreen(ModalScreen):
             # use pyegeria to obtain a GUID for that Qualified Name entity and use it as the index (upper)
             comment_attributes = exec_report_spec(format_set_name="Search-Keywords",
                                                    output_format="DICT",
-                                                   search_params=(v["QUALIFIED NAME"]))
+                                                   params=({"search_string":upper_mapping["QUALIFIED NAME"]}))
             backend_id = comment_attributes["GUID"]
             idx = backend_id
         self.log(f"Target column idx value: {idx}")
