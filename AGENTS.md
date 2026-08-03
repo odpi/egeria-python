@@ -54,6 +54,7 @@
 - Generate Markdown command templates: `gen_md_cmd_templates` (basic) or `gen_md_cmd_templates --advanced` → outputs to `sample-data/templates/`.
 - Generate Dr.Egeria help docs: `gen_dr_help` → writes to configured Egeria Inbox path.
 - Validate compact command JSON specs: `validate_compact_specs`.
+- Edit compact command JSON (attributes/bundles/commands) without Tinderbox: `dr_egeria_spec_editor` (one-time `uv sync --extra spec-editor`) — local FastAPI+JS editor at `http://localhost:8420`, writes directly to `md_processing/data/compact_commands/*.json`, review via `git diff`. See `md_processing/data/compact_commands/README.md`.
 - Debug Dr.Egeria API calls: `dr_egeria <file> --process --debug` (monkey-patches `_async_make_request` for the duration of the call; auto-restored on exit).
 - Dr.Egeria directive shortcuts: `--validate` and `--process` are shorthand for `--directive validate/process`; `--summary-only` suppresses per-command diagnostic output; `--advanced` shows non-Basic attributes. Resolution order: `--process` > `--validate` > `--directive` > default (`"validate"`).
 - Async tests: `asyncio_mode = auto` in `tests/pytest.ini` — write `async def test_*` functions without explicit event-loop boilerplate.

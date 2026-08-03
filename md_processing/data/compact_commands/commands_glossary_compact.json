@@ -1,6 +1,6 @@
 {
   "family": "Glossary",
-  "exported": "Jul 27, 2026 at 8:28:04 AM",
+  "exported": "Jul 27, 2026 at 8:28:04\u202fAM",
   "attribute_definitions": {
     "Activity Status": {
       "variable_name": "activity_status",
@@ -811,7 +811,7 @@
       "variable_name": "file_path",
       "inUpdate": true,
       "attr_labels": "File Path Name",
-      "examples": "\/home\/mumble.csv",
+      "examples": "/home/mumble.csv",
       "default_value": "",
       "valid_values": [],
       "existing_element": "",
@@ -1106,7 +1106,7 @@
       "default_value": "",
       "valid_values": [],
       "existing_element": "",
-      "description": "Copyright and\/or license information for the element or associated resource.",
+      "description": "Copyright and/or license information for the element or associated resource.",
       "generated": false,
       "style": "Simple",
       "user_specified": true,
@@ -1505,7 +1505,7 @@
       "default_value": "",
       "valid_values": [],
       "existing_element": "",
-      "description": "The purpose of this collection — a short description of why it exists or what it is used for.",
+      "description": "The purpose of this collection \u2014 a short description of why it exists or what it is used for.",
       "generated": false,
       "style": "Simple",
       "user_specified": true,
@@ -2082,7 +2082,7 @@
       "default_value": "",
       "valid_values": [],
       "existing_element": "",
-      "description": "The usage guidance for this element — how it is intended to be used in context.",
+      "description": "The usage guidance for this element \u2014 how it is intended to be used in context.",
       "generated": false,
       "style": "Simple",
       "user_specified": true,
@@ -2913,7 +2913,7 @@
       "qn_prefix": "Glossary",
       "alternate_names": [],
       "family": "Glossary",
-      "description": "Creates or updates a glossary — a collection of related terms for a specific domain or purpose.",
+      "description": "Creates or updates a glossary \u2014 a collection of related terms for a specific domain or purpose.",
       "verb": "Create",
       "upsert": true,
       "attach": false,
@@ -2934,7 +2934,7 @@
         "Term"
       ],
       "family": "Glossary",
-      "description": "Creates or updates a glossary term — a concept, phrase, or word defined within a glossary.",
+      "description": "Creates or updates a glossary term \u2014 a concept, phrase, or word defined within a glossary.",
       "verb": "Create",
       "upsert": true,
       "attach": false,
@@ -3014,6 +3014,27 @@
       "custom_attributes": [
         "Term 1",
         "Term 2"
+      ],
+      "Journal Entry": ""
+    },
+    "Declassify Term as Question": {
+      "display_name": "Set Term as Question",
+      "qn_prefix": "",
+      "alternate_names": [],
+      "family": "Glossary",
+      "description": "Remove the Question classification from a glossary term",
+      "verb": "Declassify",
+      "upsert": true,
+      "attach": false,
+      "level": "Basic",
+      "find_method": "",
+      "find_constraints": "",
+      "extra_find": "",
+      "extra_constraints": "",
+      "OM_TYPE": "GlossaryTerm",
+      "bundle": "Request Base",
+      "custom_attributes": [
+        "Term Name"
       ],
       "Journal Entry": ""
     }

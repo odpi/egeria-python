@@ -3,6 +3,56 @@ ___
 ## Create Blog Entry
 > Add a blog entry.
 
+### Display Name
+>	**Input Required**: True
+
+>	**Attribute Type**: Simple
+
+>	**Description**: The common name of an element.
+
+>	**Alternative Labels**: "Term Name"
+
+
+### Expected Behavior
+>	**Input Required**: False
+
+>	**Attribute Type**: Simple
+
+>	**Description**: Optionally descibe action to be taken.
+
+
+### Situation
+>	**Input Required**: False
+
+>	**Attribute Type**: Simple
+
+>	**Description**: Describe the notification (title/summary)
+
+
+### Journal Entry
+>	**Input Required**: False
+
+>	**Attribute Type**: Simple
+
+>	**Description**: A text entry into a journal.
+
+
+### Description
+>	**Input Required**: False
+
+>	**Attribute Type**: Simple
+
+>	**Description**: A description.
+
+
+### Qualified Name
+>	**Input Required**: False
+
+>	**Attribute Type**: QN
+
+>	**Description**: The unique, text name of an element.
+
+
 ### Category
 >	**Input Required**: False
 
@@ -13,20 +63,14 @@ ___
 >	**Alternative Labels**: Category Name
 
 
-### Qualified Name
+### GUID
 >	**Input Required**: False
 
->	**Attribute Type**: QN
+>	**Attribute Type**: GUID
 
->	**Description**: A unique qualified name for the element. Generated using the qualified name pattern  if not user specified.
+>	**Description**: A unique identifier - typically of an element in this context.
 
-
-### Journal Entry
->	**Input Required**: False
-
->	**Attribute Type**: Simple
-
->	**Description**: 
+>	**Alternative Labels**: guid; Guid
 
 
 ### Version Identifier
@@ -51,16 +95,6 @@ ___
 >	**Alternative Labels**: ID
 
 
-### GUID
->	**Input Required**: False
-
->	**Attribute Type**: GUID
-
->	**Description**: A system generated unique identifier.
-
->	**Alternative Labels**: Guid; guid
-
-
 ### URL
 >	**Input Required**: False
 
@@ -75,6 +109,70 @@ ___
 >	**Attribute Type**: Simple List
 
 >	**Description**: Keywords to facilitate finding the element
+
+
+### Effective From
+>	**Input Required**: False
+
+>	**Attribute Type**: Simple
+
+>	**Description**: The beginning of when an element is viewable.
+
+
+### Effective Time
+>	**Input Required**: False
+
+>	**Attribute Type**: Simple
+
+>	**Description**: The time at which an element must be effective in order to be returned by the request.
+
+
+### Effective To
+>	**Input Required**: False
+
+>	**Attribute Type**: Simple
+
+>	**Description**: The ending time at which an element is visible.
+
+
+### External Source GUID
+>	**Input Required**: False
+
+>	**Attribute Type**: GUID
+
+>	**Description**: The unique identifier of an external source.
+
+
+### External Source Name
+>	**Input Required**: False
+
+>	**Attribute Type**: Simple
+
+>	**Description**: The name of an external source
+
+
+### For Duplicate Processing
+>	**Input Required**: False
+
+>	**Attribute Type**: Bool
+
+>	**Description**: Flag indicating if the request is to support duplicate processing.
+
+
+### For Lineage
+>	**Input Required**: False
+
+>	**Attribute Type**: Bool
+
+>	**Description**: Flag indicating if the request is to support lineage.
+
+
+### Request ID
+>	**Input Required**: False
+
+>	**Attribute Type**: Simple
+
+>	**Description**: A user provided or system generated request id for a conversation.
 
 
 ### Status
@@ -165,30 +263,6 @@ ___
 >	**Default Value**: True
 
 
-### Effective Time
->	**Input Required**: False
-
->	**Attribute Type**: Simple
-
->	**Description**: An ISO-8601 string representing the time to use for evaluating effectivity of the elements related to this one.
-
-
-### Effective From
->	**Input Required**: False
-
->	**Attribute Type**: Simple
-
->	**Description**: A string in ISO-8601 format that defines the when an element becomes effective (visible).
-
-
-### Effective To
->	**Input Required**: False
-
->	**Attribute Type**: Simple
-
->	**Description**: A string in ISO-8601 format that defines the when an element is no longer effective (visible).
-
-
 ### Merge Update
 >	**Input Required**: False
 
@@ -211,22 +285,6 @@ ___
 >	| Parameter Name | Parameter Value |
 >	|---|---|
 >	| example_key | example_value |
-
-
-### External Source GUID
->	**Input Required**: False
-
->	**Attribute Type**: Simple
-
->	**Description**: Identifier of an external source that is associated with this element.
-
-
-### External Source Name
->	**Input Required**: False
-
->	**Attribute Type**: Simple
-
->	**Description**: Name of an external element that is associated with this element.
 
 
 ### Supplementary Properties

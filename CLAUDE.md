@@ -62,7 +62,29 @@ validate_compact_specs
 # Generate Markdown command template files (for user authoring)
 gen_md_cmd_templates                # Basic attributes only
 gen_md_cmd_templates --advanced     # All attributes
+
+# Local web editor for compact command JSON (attributes/bundles/commands) —
+# replaces Tinderbox for editing existing families. One-time: uv sync --extra spec-editor
+dr_egeria_spec_editor                   # http://localhost:8420
+dr_egeria_spec_editor --port 8500       # custom port
+dr_egeria_spec_editor --dir <path>      # target a different compact_commands directory
 ```
+### Dr.Egeria Spec Editor
+
+`commands/tech/spec_editor.py` — a local FastAPI + vanilla-JS tool for editing
+`md_processing/data/compact_commands/*.json` directly, without Tinderbox.
+Reuses `parse_compact_export`, `validate_compact_json`, and
+`compact_spec_validator` rather than reimplementing their logic. Writes
+straight to the JSON files on disk; review changes with `git diff` the same
+way you'd review a Tinderbox export.
+
+Scope: create/edit/delete attributes, bundles, and commands within an
+**existing** family, plus a "New Family" action that scaffolds an empty
+compact-JSON file from a template. It does not create new Tinderbox-side
+structure — Tinderbox remains the tool of record for anyone still
+maintaining families there in parallel. Every attribute/bundle/command
+reference in the UI is a picker over real names (never free text), so it's
+not possible to create a dangling reference from the editor.
 
 ## Commits
 
@@ -159,7 +181,8 @@ These files are **Tinderbox exports — never hand-edit**. Describe desired chan
 
 **Dispatcher registration** — how new commands get wired in:
 - `COLLECTION_SUBTYPES` and `PROJECT_SUBTYPES` drive automatic `Create/Update` routing to `CollectionManagerProcessor` / `ProjectProcessor` — adding a type to these lists is all that's required.
-- Families driven entirely by compact spec (Actor Manager, Governance, Solution Architect) use a `register_*_processors()` helper loop in `dr_egeria.py`.
+- Families driven entirely by compact spec (Actor Manager, Governance, Solution Architect, Curation) use a `register_*_processors()` helper loop in `dr_egeria.py`.
+- **`register_curation_processors()` routes by `OM_TYPE`, not verb** — `"Update"` is ambiguous between a classification update and a relationship update, so it looks up each command's `OM_TYPE` in `CLASSIFICATION_METHODS` (`md_processing/v2/curation.py`) → `CurationClassifyProcessor`, or in the local `CURATION_LINK_OM_TYPES` set → `CurationLinkProcessor`; anything in neither (currently: Class Word/Modifier/Policy Management Point — real Egeria classification types confirmed live via `get_all_classification_defs`, but with no backing pyegeria SDK method) is left unregistered on purpose and stays parse-only. `CLASSIFICATION_METHODS` keys must be the real Egeria classification type name (confirmed against a live server), not a Dr.Egeria-side display convention — a prior Tinderbox export used `ImpactClassification`/`ConfidenceClassification`/etc., which `validate_compact_specs`' `OM_TYPE_INVALID` check caught since the real names are unsuffixed (`Impact`, `Confidence`, ...).
 - **`register_governance_processors()` is family-name-gated, not automatic** — it only registers commands whose compact-spec `family` is literally `"Governance Officer"` (or, as of the `Action Author` family, also `"Action Author"`). Adding a brand-new family whose commands should reuse `GovernanceProcessor`/`GovernanceLinkProcessor` means adding its name to that check explicitly — nothing is wired up just because the compact JSON exists and validates. Within `Action Author`, the four `Link` commands are routed by `OM_TYPE`, not by verb alone, across two dedicated processors in `md_processing/v2/action_author.py` (neither uses the generic peer-link mechanism, since both need relationship properties `PeerDefinitionProperties` has no room for):
   - `Link First/Next Process Step` (`OM_TYPE` `GovernanceActionProcessFlow`/`NextGovernanceActionProcessStep`) → `ActionProcessStepLinkProcessor`, calling `action_author.setup_first/next_action_process_step` with `GovernanceActionProcessFlowProperties` (guard/requestParameters) / `NextGovernanceActionProcessStepProperties` (guard/mandatoryGuard). Verified end-to-end against a live server — relationship properties persist correctly.
   - `Link Action to Action Executor/Target` (`OM_TYPE` `GovernanceActionExecutor`/`TargetForGovernanceAction`) → `ActionExecutorTargetLinkProcessor`, calling `action_author.link_governance_action_executor`/`link_target_for_governance_action` with `GovernanceActionExecutorProperties` (requestType/requestParameters/requestParameterFilter/requestParameterMap/actionTargetFilter/actionTargetMap) / `TargetForGovernanceActionProperties` (actionTargetName). Added 2026-07-15 — not yet verified against a live server.

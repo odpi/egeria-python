@@ -488,7 +488,7 @@ class TimeKeeper(ServerClient):
         ```
         """
         url = f"{self.platform_url}/servers/{self.view_server}/api/open-metadata/time-keeper/context-events/{parent_context_event_guid}/dependent-context-events/{child_context_event_guid}/attach"
-        await self._async_create_related_elements_body_request(url, body)
+        await self._async_new_relationship_request(url, ["DependentContextEventProperties"], body)
 
     def link_dependent_context_events(
         self,

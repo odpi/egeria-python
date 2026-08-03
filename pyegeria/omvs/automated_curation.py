@@ -4496,6 +4496,10 @@ class AutomatedCuration(ServerClient):
             return None
         catalog_templates = details.get("catalogTemplates") or []
         if not catalog_templates:
+            # Fallback for YAML File Secrets Collection to Keystore File template
+            if type_name == "YAML File Secrets Collection":
+                return await self._async_get_template_guid_for_technology_type("Keystore File", **kwargs)
+
             raise PyegeriaException(
                 response=f"No catalog template is registered for technology type '{type_name}' on this Egeria server.",
                 context={"type_name": type_name, "reason": "catalogTemplates is empty or missing"},

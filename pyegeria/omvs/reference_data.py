@@ -31,6 +31,13 @@ class ReferenceDataManager(ServerClient):
     This client provides asynchronous and synchronous helpers to create, update, search,
     and relate Reference Data elements.
 
+    Note
+    ----
+    This manager focuses on organizational reference data (e.g., valid value lists).
+    It does NOT cover Specification Properties, which are used to define the schema
+    of metadata elements. For specification properties, use the `SpecificationProperties`
+    manager or generic metadata operations in `MetadataExpert`.
+
     References
 
 

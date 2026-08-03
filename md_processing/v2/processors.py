@@ -235,6 +235,14 @@ class AsyncBaseCommandProcessor(ABC):
         ),
     }
 
+    _GOVERNANCE_STATUS_MAP = {
+        "PROPOSED": 0,
+        "VALIDATED": 1,
+        "DEPRECATED": 2,
+        "OBSOLETE": 3,
+        "OTHER": 99
+    }
+
     async def _sync_governance_classifications(self, guid: str, attributes: Dict[str, Any]) -> None:
         """
         Apply Confidentiality/Confidence/Criticality/Retention/Impact classifications
@@ -245,6 +253,12 @@ class AsyncBaseCommandProcessor(ABC):
         calling set_X_classification again with a new value is a safe update, not a
         duplicate-classification error (confirmed live).
         """
+        status_attr = attributes.get("Status", {})
+        status_value = status_attr.get("value")
+        status_ordinal = None
+        if status_value:
+            status_ordinal = self._GOVERNANCE_STATUS_MAP.get(str(status_value).strip().upper())
+
         for attr_name, (short_name, prop_class, field_name, enum_map) in self._GOVERNANCE_CLASSIFICATION_MAP.items():
             attr_data = attributes.get(attr_name, {})
             if "value" not in attr_data:
@@ -261,7 +275,12 @@ class AsyncBaseCommandProcessor(ABC):
                 if level is None:
                     logger.warning(f"Unrecognized value '{value}' for '{attr_name}'; skipping classification sync.")
                     continue
-                body = {"class": "NewClassificationRequestBody", "properties": {"class": prop_class, field_name: level}}
+
+                properties = {"class": prop_class, field_name: level}
+                if status_ordinal is not None:
+                    properties["statusIdentifier"] = status_ordinal
+
+                body = {"class": "NewClassificationRequestBody", "properties": properties}
                 await set_method(guid, body)
                 self.add_related_result(attr_name, guid=guid, message=f"Set to {value}")
             except PyegeriaException as e:
@@ -596,7 +615,7 @@ class AsyncBaseCommandProcessor(ABC):
                         # heuristic on "Name" wrongly flagged it as a reference
                         # candidate, and every one of its plain string values then
                         # failed resolution.
-                        and spec_style not in ["Simple", "Simple List", "List", "NameList", "Enum", "Valid Value", "ValidValue", "Dictionary", "KeyValue", "Enumeration", "Integer", "Boolean"]
+                        and spec_style not in ["Simple", "Simple List", "List", "NameList", "Enum", "Valid Value", "ValidValue", "Dictionary", "KeyValue", "Enumeration", "Integer", "Boolean", "Simple Int", "Simple Float", "Bool"]
                     )
 
                 # More precise check: if it's already got a GUID or guid_list, don't re-resolve.

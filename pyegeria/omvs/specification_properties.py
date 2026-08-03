@@ -13,6 +13,13 @@ class SpecificationProperties(ValidMetadataManager):
     Client for the Specification Properties View Service.
     This is a specialized version of the Valid Metadata Manager focusing on specification properties.
 
+    Note
+    ----
+    Use this manager for defining the schema-level properties of metadata elements.
+    For business-oriented reference data (like country codes or currency lists), use
+    the `ReferenceDataManager` instead. Generic metadata operations are also
+    available via `MetadataExpert`.
+
     Attributes
     ----------
     view_server : str

@@ -1219,6 +1219,170 @@ class MyProfile(AssetMaker):
                                                                       description, situation, priority))
         return response
 
+    async def _async_create_meeting(self, meeting_name: str, activity_status: str = "REQUESTED",
+                                    description:Optional[str]=None, situation: Optional[str]=None,priority:Optional[int]=0) -> str:
+        """Create a Meeting person action. Async version.
+
+        Parameters
+        ----------
+        meeting_name : str
+            The name of the meeting to be created.
+        activity_status : str, optional
+            The status of the action, by default "REQUESTED"
+        description : Optional[str], optional
+            The description of the action, by default None
+        situation : Optional[str], optional
+            The situation of the action, by default None
+        priority : Optional[int], optional
+            The priority of the action, by default 0
+        Returns
+        -------
+        GUID
+            GUID of the person action
+
+        Raises
+        ------
+        PyegeriaException
+        ValidationError
+
+        """
+        qualified_name = self.__create_qualified_name__("Meeting", meeting_name)+f"-{int(time.time())}"
+        if not self.my_profile_guid:
+            me = self.get_my_profile()
+            self.my_profile_guid = me['elementHeader']["guid"]
+
+        body = {
+            "class": "ActionRequestBody",
+            "isOwnAnchor": True,
+            "properties": {
+                "class": "MeetingProperties",
+                "qualifiedName": qualified_name,
+                "displayName": meeting_name,
+                "description": description,
+                "situation": situation,
+                "priority": priority,
+                "activityStatus": activity_status,
+                "originatorGUID": self.my_profile_guid,
+                "assignToActorGUID": self.my_profile_guid
+            }
+        }
+        response = await super()._async_create_action(body)
+        return response
+
+    def create_meeting(self, meeting_name: str, activity_status: str = "REQUESTED",
+                    description:Optional[str]=None, situation: Optional[str]=None,priority:Optional[int]=0) -> str:
+        """Create a Meeting person action.
+
+        Parameters
+        ----------
+        meeting_name : str
+            The name of the meeting to be created.
+        activity_status : str, optional
+            The status of the action, by default "REQUESTED"
+        description : Optional[str], optional
+            The description of the action, by default None
+        situation : Optional[str], optional
+            The situation of the action, by default None
+        priority : Optional[int], optional
+            The priority of the action, by default 0
+        Returns
+        -------
+        GUID
+            GUID of the person action
+
+        Raises
+        ------
+        PyegeriaException
+        ValidationError
+
+        """
+        loop = asyncio.get_event_loop()
+        response = loop.run_until_complete(self._async_create_meeting(meeting_name, activity_status,
+                                                                      description, situation, priority))
+        return response
+
+    async def _async_create_review(self, review_name: str, activity_status: str = "REQUESTED",
+                                    description:Optional[str]=None, situation: Optional[str]=None,priority:Optional[int]=0) -> str:
+        """Create a Review person action. Async version.
+
+        Parameters
+        ----------
+        review_name : str
+            The name of the review to be created.
+        activity_status : str, optional
+            The status of the action, by default "REQUESTED"
+        description : Optional[str], optional
+            The description of the action, by default None
+        situation : Optional[str], optional
+            The situation of the action, by default None
+        priority : Optional[int], optional
+            The priority of the action, by default 0
+        Returns
+        -------
+        GUID
+            GUID of the person action
+
+        Raises
+        ------
+        PyegeriaException
+        ValidationError
+
+        """
+        qualified_name = self.__create_qualified_name__("Review", review_name)+f"-{int(time.time())}"
+        if not self.my_profile_guid:
+            me = self.get_my_profile()
+            self.my_profile_guid = me['elementHeader']["guid"]
+
+        body = {
+            "class": "ActionRequestBody",
+            "isOwnAnchor": True,
+            "properties": {
+                "class": "ReviewProperties",
+                "qualifiedName": qualified_name,
+                "displayName": review_name,
+                "description": description,
+                "situation": situation,
+                "priority": priority,
+                "activityStatus": activity_status,
+                "originatorGUID": self.my_profile_guid,
+                "assignToActorGUID": self.my_profile_guid
+            }
+        }
+        response = await super()._async_create_action(body)
+        return response
+
+    def create_review(self, review_name: str, activity_status: str = "REQUESTED",
+                    description:Optional[str]=None, situation: Optional[str]=None,priority:Optional[int]=0) -> str:
+        """Create a Review person action.
+
+        Parameters
+        ----------
+        review_name : str
+            The name of the review to be created.
+        activity_status : str, optional
+            The status of the action, by default "REQUESTED"
+        description : Optional[str], optional
+            The description of the action, by default None
+        situation : Optional[str], optional
+            The situation of the action, by default None
+        priority : Optional[int], optional
+            The priority of the action, by default 0
+        Returns
+        -------
+        GUID
+            GUID of the person action
+
+        Raises
+        ------
+        PyegeriaException
+        ValidationError
+
+        """
+        loop = asyncio.get_event_loop()
+        response = loop.run_until_complete(self._async_create_review(review_name, activity_status,
+                                                                      description, situation, priority))
+        return response
+
 
     @dynamic_catch
     async def _async_get_my_to_dos(

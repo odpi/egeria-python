@@ -1256,6 +1256,28 @@ class ServerClient(BaseServerClient):
             context = {"issue": "Invalid comment and body not provided"}
             raise PyegeriaInvalidParameterException(context=context)
 
+        # Workaround for ISSUE-14: fetch qualifiedName if missing from body properties
+        if isinstance(body, UpdateElementRequestBody):
+            props = body.properties
+        else:
+            if "properties" not in body:
+                body["properties"] = {}
+            props = body["properties"]
+
+        if not props.get("qualifiedName"):
+            try:
+                current_comment = await self._async_get_comment_by_guid(comment_guid)
+                if isinstance(current_comment, dict):
+                    # Check for qualifiedName in properties or header
+                    qn = current_comment.get("properties", {}).get("qualifiedName")
+                    if not qn:
+                        qn = current_comment.get("elementHeader", {}).get("qualifiedName")
+
+                    if qn:
+                        props["qualifiedName"] = qn
+            except Exception as e:
+                logger.warning(f"Failed to fetch existing comment {comment_guid} for qualifiedName workaround: {e}")
+
         url = f"{self.command_root}feedback-manager/comments/{comment_guid}/update"
         await self._async_update_element_body_request(url, ["Comment"], body)
 

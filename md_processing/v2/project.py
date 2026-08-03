@@ -38,6 +38,22 @@ class ProjectProcessor(AsyncBaseCommandProcessor):
         merge_update = attributes.get('Merge Update', {}).get('value', True)
         sub_project_guids = set(attributes.get('Sub-Projects', {}).get('guid_list', []))
 
+        if object_type == "Meeting":
+            # Person Action Base bundle -- not a Project subtype, routed through
+            # my_profile.create_meeting rather than the generic Project properties path.
+            raw_guid = await self.client.my_profile._async_create_meeting(
+                display_name,
+                activity_status=attributes.get('Activity Status', {}).get('value') or "REQUESTED",
+                description=attributes.get('Description', {}).get('value'),
+                situation=attributes.get('Situation', {}).get('value'),
+                priority=attributes.get('Priority', {}).get('value', 0),
+            )
+            guid = self.extract_guid_or_raise(raw_guid, "Create Meeting")
+            self.parsed_output["guid"] = guid
+            update_element_dictionary(qualified_name, {'guid': guid, 'display_name': display_name})
+            logger.success(f"Created Meeting '{display_name}' with GUID {guid}")
+            return await self.render_result_markdown(guid)
+
         spec = self.get_command_spec()
         om_type = spec.get("OM_TYPE")
 

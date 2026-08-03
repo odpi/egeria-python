@@ -10,7 +10,8 @@ from loguru import logger
 STANDARD_VERBS = {
     "Create", "Update", "Delete", "Link", "Attach", "Add",
     "Unlink", "Detach", "Remove", "Display", "Run", "View",
-    "Search", "Find", "Provenance", "Validate", "Process"
+    "Search", "Find", "Provenance", "Validate", "Process",
+    "Classify", "Reclassify", "Declassify"
 }
 
 # Commands that appear as a single word (no separate verb) and map to canonical verb+object

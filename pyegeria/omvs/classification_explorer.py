@@ -1048,11 +1048,11 @@ class ClassificationExplorer(ServerClient):
     async def _async_get_governed_elements(
             self,
             gov_def_guid: str,
-            body: Optional[dict | ResultsRequestBody] = None,
-            output_format: str = "JSON",
-            report_spec: dict | str = None,
             start_from: int = 0,
             page_size: int = 0,
+            output_format: str = "JSON",
+            report_spec: dict | str = None,
+            body: Optional[dict | ResultsRequestBody] = None,
             **kwargs
     ) -> list | str:
         """
@@ -1063,16 +1063,16 @@ class ClassificationExplorer(ServerClient):
         __________
         gov_def_guid: str
             Governance definition linked by governed-by relationship.
-        body: dict | ResultsRequestBody
-            Details of the query.
-        output_format: str, default = "JSON"
-            Type of output to return.
-        report_spec: dict | str, default = None
-            Output format set to use. If None, the default output format set is used.
         start_from: int, default = 0
             When multiple pages of results are available, the element number to start from.
         page_size: int, default = 0
             The number of elements returned per page.
+        output_format: str, default = "JSON"
+            Type of output to return.
+        report_spec: dict | str, default = None
+            Output format set to use. If None, the default output format set is used.
+        body: dict | ResultsRequestBody
+            Details of the query.
 
         Returns
         -------
@@ -1104,19 +1104,20 @@ class ClassificationExplorer(ServerClient):
         url = (f"{self.classification_command_root}/elements/governed-by/{gov_def_guid}")
 
         response = await self._async_get_results_body_request(url, "Referenceable", self._generate_referenceable_output,
-                                                              start_from, page_size, output_format,
-                                                              report_spec, body, **kwargs)
+                                                              start_from=start_from, page_size=page_size,
+                                                              output_format=output_format,
+                                                              report_spec=report_spec, body=body, **kwargs)
         return response
 
     @dynamic_catch
     def get_governed_elements(
             self,
             gov_def_guid: str,
-            body: Optional[dict | ResultsRequestBody] = None,
-            output_format: str = "JSON",
-            report_spec: dict | str = None,
             start_from: int = 0,
             page_size: int = 0,
+            output_format: str = "JSON",
+            report_spec: dict | str = None,
+            body: Optional[dict | ResultsRequestBody] = None,
             **kwargs
     ) -> list | str:
         """
@@ -1127,16 +1128,16 @@ class ClassificationExplorer(ServerClient):
         __________
         gov_def_guid: str
             Governance definition linked by governed-by relationship.
-        body: dict | ResultsRequestBody
-            Details of the query.
-        output_format: str, default = "JSON"
-            Type of output to return.
-        report_spec: dict | str, default = None
-            Output format set to use. If None, the default output format set is used.
         start_from: int, default = 0
             When multiple pages of results are available, the element number to start from.
         page_size: int, default = 0
             The number of elements returned per page.
+        output_format: str, default = "JSON"
+            Type of output to return.
+        report_spec: dict | str, default = None
+            Output format set to use. If None, the default output format set is used.
+        body: dict | ResultsRequestBody
+            Details of the query.
 
         Returns
         -------
@@ -1167,8 +1168,8 @@ class ClassificationExplorer(ServerClient):
 
         loop = asyncio.get_event_loop()
         response = loop.run_until_complete(
-            self._async_get_governed_elements(gov_def_guid, body, output_format, report_spec,
-                                             start_from, page_size, **kwargs)
+            self._async_get_governed_elements(gov_def_guid, start_from, page_size, output_format,
+                                             report_spec, body, **kwargs)
         )
         return response
 
@@ -1176,11 +1177,11 @@ class ClassificationExplorer(ServerClient):
     async def _async_get_governed_by_definitions(
             self,
             element_guid: str,
-            body: Optional[dict | ResultsRequestBody] = None,
-            output_format: str = "JSON",
-            report_spec: dict | str = None,
             start_from: int = 0,
             page_size: int = 0,
+            output_format: str = "JSON",
+            report_spec: dict | str = None,
+            body: Optional[dict | ResultsRequestBody] = None,
             **kwargs
     ) -> list | str:
         """
@@ -1191,16 +1192,16 @@ class ClassificationExplorer(ServerClient):
         __________
         element_guid: str
             Element to retrieve information for.
-        body: dict | ResultsRequestBody
-            Details of the query.
-        output_format: str, default = "JSON"
-            Type of output to return.
-        report_spec: dict | str, default = None
-            Output format set to use. If None, the default output format set is used.
         start_from: int, default = 0
             When multiple pages of results are available, the element number to start from.
         page_size: int, default = 0
             The number of elements returned per page.
+        output_format: str, default = "JSON"
+            Type of output to return.
+        report_spec: dict | str, default = None
+            Output format set to use. If None, the default output format set is used.
+        body: dict | ResultsRequestBody
+            Details of the query.
 
         Returns
         -------
@@ -1232,19 +1233,20 @@ class ClassificationExplorer(ServerClient):
         url = (f"{self.classification_command_root}/elements/{element_guid}/governed-by")
 
         response = await self._async_get_results_body_request(url, "Referenceable", self._generate_referenceable_output,
-                                                              start_from, page_size, output_format,
-                                                              report_spec, body, **kwargs)
+                                                              start_from=start_from, page_size=page_size,
+                                                              output_format=output_format,
+                                                              report_spec=report_spec, body=body, **kwargs)
         return response
 
     @dynamic_catch
     def get_governed_by_definitions(
             self,
             element_guid: str,
-            body: Optional[dict | ResultsRequestBody] = None,
-            output_format: str = "JSON",
-            report_spec: dict | str = None,
             start_from: int = 0,
             page_size: int = 0,
+            output_format: str = "JSON",
+            report_spec: dict | str = None,
+            body: Optional[dict | ResultsRequestBody] = None,
             **kwargs
     ) -> list | str:
         """
@@ -1255,16 +1257,16 @@ class ClassificationExplorer(ServerClient):
         __________
         element_guid: str
             element to retrieve governed-by relationship for.
-        body: dict | ResultsRequestBody
-            Details of the query.
-        output_format: str, default = "JSON"
-            Type of output to return.
-        report_spec: dict | str, default = None
-            Output format set to use. If None, the default output format set is used.
         start_from: int, default = 0
             When multiple pages of results are available, the element number to start from.
         page_size: int, default = 0
             The number of elements returned per page.
+        output_format: str, default = "JSON"
+            Type of output to return.
+        report_spec: dict | str, default = None
+            Output format set to use. If None, the default output format set is used.
+        body: dict | ResultsRequestBody
+            Details of the query.
 
         Returns
         -------
@@ -1295,8 +1297,8 @@ class ClassificationExplorer(ServerClient):
 
         loop = asyncio.get_event_loop()
         response = loop.run_until_complete(
-            self._async_get_governed_by_definitions(element_guid, body, output_format, report_spec,
-                                                   start_from, page_size, **kwargs)
+            self._async_get_governed_by_definitions(element_guid, start_from, page_size, output_format,
+                                                   report_spec, body, **kwargs)
         )
         return response
 
@@ -1304,11 +1306,11 @@ class ClassificationExplorer(ServerClient):
     async def _async_get_source_elements(
             self,
             element_guid: str,
-            body: Optional[dict | ResultsRequestBody] = None,
-            output_format: str = "JSON",
-            report_spec: dict | str = None,
             start_from: int = 0,
             page_size: int = 0,
+            output_format: str = "JSON",
+            report_spec: dict | str = None,
+            body: Optional[dict | ResultsRequestBody] = None,
             **kwargs
     ) -> list | str:
         """
@@ -1322,16 +1324,16 @@ class ClassificationExplorer(ServerClient):
         __________
         element_guid: str
             Element to retrieve information for.
-        body: dict | ResultsRequestBody
-            Details of the query.
-        output_format: str, default = "JSON"
-            Type of output to return.
-        report_spec: dict | str, default = None
-            Output format set to use. If None, the default output format set is used.
         start_from: int, default = 0
             When multiple pages of results are available, the element number to start from.
         page_size: int, default = 0
             The number of elements returned per page.
+        output_format: str, default = "JSON"
+            Type of output to return.
+        report_spec: dict | str, default = None
+            Output format set to use. If None, the default output format set is used.
+        body: dict | ResultsRequestBody
+            Details of the query.
 
         Returns
         -------
@@ -1363,19 +1365,20 @@ class ClassificationExplorer(ServerClient):
         url = (f"{self.classification_command_root}/glossaries/elements/{element_guid}/source")
 
         response = await self._async_get_results_body_request(url, "Referenceable", self._generate_referenceable_output,
-                                                              start_from, page_size, output_format,
-                                                              report_spec, body, **kwargs)
+                                                              start_from=start_from, page_size=page_size,
+                                                              output_format=output_format,
+                                                              report_spec=report_spec, body=body, **kwargs)
         return response
 
     @dynamic_catch
     def get_source_elements(
             self,
             element_guid: str,
-            body: Optional[dict | ResultsRequestBody] = None,
-            output_format: str = "JSON",
-            report_spec: dict | str = None,
             start_from: int = 0,
             page_size: int = 0,
+            output_format: str = "JSON",
+            report_spec: dict | str = None,
+            body: Optional[dict | ResultsRequestBody] = None,
             **kwargs
     ) -> list | str:
         """
@@ -1389,16 +1392,16 @@ class ClassificationExplorer(ServerClient):
         __________
         element_guid: str
             Element to retrieve information for.
-        body: dict | ResultsRequestBody
-            Details of the query.
-        output_format: str, default = "JSON"
-            Type of output to return.
-        report_spec: dict | str, default = None
-            Output format set to use. If None, the default output format set is used.
         start_from: int, default = 0
             When multiple pages of results are available, the element number to start from.
         page_size: int, default = 0
             The number of elements returned per page.
+        output_format: str, default = "JSON"
+            Type of output to return.
+        report_spec: dict | str, default = None
+            Output format set to use. If None, the default output format set is used.
+        body: dict | ResultsRequestBody
+            Details of the query.
 
         Returns
         -------
@@ -1429,8 +1432,8 @@ class ClassificationExplorer(ServerClient):
 
         loop = asyncio.get_event_loop()
         response = loop.run_until_complete(
-            self._async_get_source_elements(element_guid, body, output_format, report_spec, start_from,
-                                              page_size, **kwargs)
+            self._async_get_source_elements(element_guid, start_from, page_size, output_format,
+                                              report_spec, body, **kwargs)
         )
         return response
 
@@ -1438,11 +1441,11 @@ class ClassificationExplorer(ServerClient):
     async def _async_get_elements_sourced_from(
             self,
             element_guid: str,
-            body: Optional[dict | ResultsRequestBody] = None,
-            output_format: str = "JSON",
-            report_spec: dict | str = None,
             start_from: int = 0,
             page_size: int = 0,
+            output_format: str = "JSON",
+            report_spec: dict | str = None,
+            body: Optional[dict | ResultsRequestBody] = None,
             **kwargs
     ) -> list | str:
         """
@@ -1455,16 +1458,16 @@ class ClassificationExplorer(ServerClient):
         __________
         element_guid: str
             Element to retrieve information for.
-        body: dict | ResultsRequestBody
-            Details of the query.
-        output_format: str, default = "JSON"
-            Type of output to return.
-        report_spec: dict | str, default = None
-            Output format set to use. If None, the default output format set is used.
         start_from: int, default = 0
             When multiple pages of results are available, the element number to start from.
         page_size: int, default = 0
             The number of elements returned per page.
+        output_format: str, default = "JSON"
+            Type of output to return.
+        report_spec: dict | str, default = None
+            Output format set to use. If None, the default output format set is used.
+        body: dict | ResultsRequestBody
+            Details of the query.
 
         Returns
         -------
@@ -1496,19 +1499,20 @@ class ClassificationExplorer(ServerClient):
         url = (f"{self.classification_command_root}/glossaries/elements/{element_guid}/sourced-from")
 
         response = await self._async_get_results_body_request(url, "Referenceable", self._generate_referenceable_output,
-                                                              start_from, page_size, output_format,
-                                                              report_spec, body, **kwargs)
+                                                              start_from=start_from, page_size=page_size,
+                                                              output_format=output_format,
+                                                              report_spec=report_spec, body=body, **kwargs)
         return response
 
     @dynamic_catch
     def get_elements_sourced_from(
             self,
             element_guid: str,
-            body: Optional[dict | ResultsRequestBody] = None,
-            output_format: str = "JSON",
-            report_spec: dict | str = None,
             start_from: int = 0,
             page_size: int = 0,
+            output_format: str = "JSON",
+            report_spec: dict | str = None,
+            body: Optional[dict | ResultsRequestBody] = None,
             **kwargs
     ) -> list | str:
         """
@@ -1521,16 +1525,16 @@ class ClassificationExplorer(ServerClient):
         __________
         element_guid: str
             Element to retrieve information for.
-        body: dict | ResultsRequestBody
-            Details of the query.
-        output_format: str, default = "JSON"
-            Type of output to return.
-        report_spec: dict | str, default = None
-            Output format set to use. If None, the default output format set is used.
         start_from: int, default = 0
             When multiple pages of results are available, the element number to start from.
         page_size: int, default = 0
             The number of elements returned per page.
+        output_format: str, default = "JSON"
+            Type of output to return.
+        report_spec: dict | str, default = None
+            Output format set to use. If None, the default output format set is used.
+        body: dict | ResultsRequestBody
+            Details of the query.
 
         Returns
         -------
@@ -1561,8 +1565,8 @@ class ClassificationExplorer(ServerClient):
 
         loop = asyncio.get_event_loop()
         response = loop.run_until_complete(
-            self._async_get_elements_sourced_from(element_guid, body, output_format, report_spec,
-                                                 start_from, page_size, **kwargs)
+            self._async_get_elements_sourced_from(element_guid, start_from, page_size, output_format,
+                                                 report_spec, body, **kwargs)
         )
         return response
 
@@ -1570,11 +1574,11 @@ class ClassificationExplorer(ServerClient):
     async def _async_get_scopes(
             self,
             element_guid: str,
-            body: Optional[dict | ResultsRequestBody] = None,
-            output_format: str = "JSON",
-            report_spec: dict | str = None,
             start_from: int = 0,
             page_size: int = 0,
+            output_format: str = "JSON",
+            report_spec: dict | str = None,
+            body: Optional[dict | ResultsRequestBody] = None,
             **kwargs
     ) -> list | str:
         """
@@ -1585,16 +1589,16 @@ class ClassificationExplorer(ServerClient):
         __________
         element_guid: str
             Element to retrieve information for.
-        body: dict | ResultsRequestBody
-            Details of the query.
-        output_format: str, default = "JSON"
-            Type of output to return.
-        report_spec: dict | str, default = None
-            Output format set to use. If None, the default output format set is used.
         start_from: int, default = 0
             When multiple pages of results are available, the element number to start from.
         page_size: int, default = 0
             The number of elements returned per page.
+        output_format: str, default = "JSON"
+            Type of output to return.
+        report_spec: dict | str, default = None
+            Output format set to use. If None, the default output format set is used.
+        body: dict | ResultsRequestBody
+            Details of the query.
 
         Returns
         -------
@@ -1626,19 +1630,20 @@ class ClassificationExplorer(ServerClient):
         url = (f"{self.classification_command_root}/elements/{element_guid}/scoped-by")
 
         response = await self._async_get_results_body_request(url, "Referenceable", self._generate_referenceable_output,
-                                                              start_from, page_size, output_format,
-                                                              report_spec, body, **kwargs)
+                                                              start_from=start_from, page_size=page_size,
+                                                              output_format=output_format,
+                                                              report_spec=report_spec, body=body, **kwargs)
         return response
 
     @dynamic_catch
     def get_scopes(
             self,
             element_guid: str,
-            body: Optional[dict | ResultsRequestBody] = None,
-            output_format: str = "JSON",
-            report_spec: dict | str = None,
             start_from: int = 0,
             page_size: int = 0,
+            output_format: str = "JSON",
+            report_spec: dict | str = None,
+            body: Optional[dict | ResultsRequestBody] = None,
             **kwargs
     ) -> list | str:
         """
@@ -1649,16 +1654,16 @@ class ClassificationExplorer(ServerClient):
         __________
         element_guid: str
             Element to retrieve information for.
-        body: dict | ResultsRequestBody
-            Details of the query.
-        output_format: str, default = "JSON"
-            Type of output to return.
-        report_spec: dict | str, default = None
-            Output format set to use. If None, the default output format set is used.
         start_from: int, default = 0
             When multiple pages of results are available, the element number to start from.
         page_size: int, default = 0
             The number of elements returned per page.
+        output_format: str, default = "JSON"
+            Type of output to return.
+        report_spec: dict | str, default = None
+            Output format set to use. If None, the default output format set is used.
+        body: dict | ResultsRequestBody
+            Details of the query.
 
         Returns
         -------
@@ -1689,8 +1694,8 @@ class ClassificationExplorer(ServerClient):
 
         loop = asyncio.get_event_loop()
         response = loop.run_until_complete(
-            self._async_get_scopes(element_guid, body, output_format, report_spec, start_from,
-                                              page_size, **kwargs)
+            self._async_get_scopes(element_guid, start_from, page_size, output_format, report_spec,
+                                              body, **kwargs)
         )
         return response
 
@@ -1698,11 +1703,11 @@ class ClassificationExplorer(ServerClient):
     async def _async_get_scoped_elements(
             self,
             scope_guid: str,
-            body: Optional[dict | ResultsRequestBody] = None,
-            output_format: str = "JSON",
-            report_spec: dict | str = None,
             start_from: int = 0,
             page_size: int = 0,
+            output_format: str = "JSON",
+            report_spec: dict | str = None,
+            body: Optional[dict | ResultsRequestBody] = None,
             **kwargs
     ) -> list | str:
         """
@@ -1713,16 +1718,16 @@ class ClassificationExplorer(ServerClient):
         __________
         scope_guid: str
              Scope to retrieve information for.
-        body: dict | ResultsRequestBody
-            Details of the query.
-        output_format: str, default = "JSON"
-            Type of output to return.
-        report_spec: dict | str, default = None
-            Output format set to use. If None, the default output format set is used.
         start_from: int, default = 0
             When multiple pages of results are available, the element number to start from.
         page_size: int, default = 0
             The number of elements returned per page.
+        output_format: str, default = "JSON"
+            Type of output to return.
+        report_spec: dict | str, default = None
+            Output format set to use. If None, the default output format set is used.
+        body: dict | ResultsRequestBody
+            Details of the query.
 
         Returns
         -------
@@ -1754,19 +1759,20 @@ class ClassificationExplorer(ServerClient):
         url = (f"{self.classification_command_root}/glossaries/elements/scoped-by/{scope_guid}")
 
         response = await self._async_get_results_body_request(url, "Referenceable", self._generate_referenceable_output,
-                                                              start_from, page_size, output_format,
-                                                              report_spec, body, **kwargs)
+                                                              start_from=start_from, page_size=page_size,
+                                                              output_format=output_format,
+                                                              report_spec=report_spec, body=body, **kwargs)
         return response
 
     @dynamic_catch
     def get_scoped_elements(
             self,
             scope_guid: str,
-            body: Optional[dict | ResultsRequestBody] = None,
-            output_format: str = "JSON",
-            report_spec: dict | str = None,
             start_from: int = 0,
             page_size: int = 0,
+            output_format: str = "JSON",
+            report_spec: dict | str = None,
+            body: Optional[dict | ResultsRequestBody] = None,
             **kwargs
     ) -> list | str:
         """
@@ -1777,16 +1783,16 @@ class ClassificationExplorer(ServerClient):
         __________
         scope_guid: str
             Scope to retrieve information for.
-        body: dict | ResultsRequestBody
-            Details of the query.
-        output_format: str, default = "JSON"
-            Type of output to return.
-        report_spec: dict | str, default = None
-            Output format set to use. If None, the default output format set is used.
         start_from: int, default = 0
             When multiple pages of results are available, the element number to start from.
         page_size: int, default = 0
             The number of elements returned per page.
+        output_format: str, default = "JSON"
+            Type of output to return.
+        report_spec: dict | str, default = None
+            Output format set to use. If None, the default output format set is used.
+        body: dict | ResultsRequestBody
+            Details of the query.
 
         Returns
         -------
@@ -1817,7 +1823,7 @@ class ClassificationExplorer(ServerClient):
 
         loop = asyncio.get_event_loop()
         response = loop.run_until_complete(
-            self._async_get_scoped_elements(scope_guid, body, output_format, report_spec, start_from, page_size, **kwargs)
+            self._async_get_scoped_elements(scope_guid, start_from, page_size, output_format, report_spec, body, **kwargs)
         )
         return response
 
@@ -1825,11 +1831,11 @@ class ClassificationExplorer(ServerClient):
     async def _async_get_licensed_elements(
             self,
             license_type_guid: str,
-            body: Optional[dict | ResultsRequestBody] = None,
-            output_format: str = "JSON",
-            report_spec: dict | str = None,
             start_from: int = 0,
             page_size: int = 0,
+            output_format: str = "JSON",
+            report_spec: dict | str = None,
+            body: Optional[dict | ResultsRequestBody] = None,
             **kwargs
     ) -> list | str:
         """
@@ -1839,16 +1845,16 @@ class ClassificationExplorer(ServerClient):
         __________
         license_type_guid: str
             License type to retrieve information for.
-        body: dict | ResultsRequestBody
-            Details of the query.
-        output_format: str, default = "JSON"
-            Type of output to return.
-        report_spec: dict | str, default = None
-            Output format set to use. If None, the default output format set is used.
         start_from: int, default = 0
             When multiple pages of results are available, the element number to start from.
         page_size: int, default = 0
             The number of elements returned per page.
+        output_format: str, default = "JSON"
+            Type of output to return.
+        report_spec: dict | str, default = None
+            Output format set to use. If None, the default output format set is used.
+        body: dict | ResultsRequestBody
+            Details of the query.
 
         Returns
         -------
@@ -1880,19 +1886,20 @@ class ClassificationExplorer(ServerClient):
         url = (f"{self.classification_command_root}/glossaries/elements/licenses/{license_type_guid}")
 
         response = await self._async_get_results_body_request(url, "Referenceable", self._generate_referenceable_output,
-                                                              start_from, page_size, output_format,
-                                                              report_spec, body, **kwargs)
+                                                              start_from=start_from, page_size=page_size,
+                                                              output_format=output_format,
+                                                              report_spec=report_spec, body=body, **kwargs)
         return response
 
     @dynamic_catch
     def get_licensed_elements(
             self,
             license_type_guid: str,
-            body: Optional[dict | ResultsRequestBody] = None,
-            output_format: str = "JSON",
-            report_spec: dict | str = None,
             start_from: int = 0,
             page_size: int = 0,
+            output_format: str = "JSON",
+            report_spec: dict | str = None,
+            body: Optional[dict | ResultsRequestBody] = None,
             **kwargs
     ) -> list | str:
         """
@@ -1903,16 +1910,16 @@ class ClassificationExplorer(ServerClient):
         __________
         license_type_guid: str
             License type to retrieve information for.
-        body: dict | ResultsRequestBody
-            Details of the query.
-        output_format: str, default = "JSON"
-            Type of output to return.
-        report_spec: dict | str, default = None
-            Output format set to use. If None, the default output format set is used.
         start_from: int, default = 0
             When multiple pages of results are available, the element number to start from.
         page_size: int, default = 0
             The number of elements returned per page.
+        output_format: str, default = "JSON"
+            Type of output to return.
+        report_spec: dict | str, default = None
+            Output format set to use. If None, the default output format set is used.
+        body: dict | ResultsRequestBody
+            Details of the query.
 
         Returns
         -------
@@ -1943,7 +1950,8 @@ class ClassificationExplorer(ServerClient):
 
         loop = asyncio.get_event_loop()
         response = loop.run_until_complete(
-            self._async_get_licensed_elements(license_type_guid, body, output_format, report_spec, start_from, page_size, **kwargs)
+            self._async_get_licensed_elements(license_type_guid, start_from, page_size, output_format,
+                                             report_spec, body, **kwargs)
         )
         return response
 
@@ -1951,11 +1959,11 @@ class ClassificationExplorer(ServerClient):
     async def _async_get_licenses(
             self,
             element_guid: str,
-            body: Optional[dict | ResultsRequestBody] = None,
-            output_format: str = "JSON",
-            report_spec: dict | str = None,
             start_from: int = 0,
             page_size: int = 0,
+            output_format: str = "JSON",
+            report_spec: dict | str = None,
+            body: Optional[dict | ResultsRequestBody] = None,
             **kwargs
     ) -> list | str:
         """
@@ -1966,16 +1974,16 @@ class ClassificationExplorer(ServerClient):
         __________
         element_guid: str
             Element to retrieve information for.
-        body: dict | ResultsRequestBody
-            Details of the query.
-        output_format: str, default = "JSON"
-            Type of output to return.
-        report_spec: dict | str, default = None
-            Output format set to use. If None, the default output format set is used.
         start_from: int, default = 0
             When multiple pages of results are available, the element number to start from.
         page_size: int, default = 0
             The number of elements returned per page.
+        output_format: str, default = "JSON"
+            Type of output to return.
+        report_spec: dict | str, default = None
+            Output format set to use. If None, the default output format set is used.
+        body: dict | ResultsRequestBody
+            Details of the query.
 
         Returns
         -------
@@ -2007,19 +2015,20 @@ class ClassificationExplorer(ServerClient):
         url = (f"{self.classification_command_root}/glossaries/elements/{element_guid}/licenses")
 
         response = await self._async_get_results_body_request(url, "Referenceable", self._generate_referenceable_output,
-                                                              start_from, page_size, output_format,
-                                                              report_spec, body, **kwargs)
+                                                              start_from=start_from, page_size=page_size,
+                                                              output_format=output_format,
+                                                              report_spec=report_spec, body=body, **kwargs)
         return response
 
     @dynamic_catch
     def get_licenses(
             self,
             element_guid: str,
-            body: Optional[dict | ResultsRequestBody] = None,
-            output_format: str = "JSON",
-            report_spec: dict | str = None,
             start_from: int = 0,
             page_size: int = 0,
+            output_format: str = "JSON",
+            report_spec: dict | str = None,
+            body: Optional[dict | ResultsRequestBody] = None,
             **kwargs
     ) -> list | str:
         """
@@ -2030,16 +2039,16 @@ class ClassificationExplorer(ServerClient):
         __________
         element_guid: str
             Element to retrieve information for.
-        body: dict | ResultsRequestBody
-            Details of the query.
-        output_format: str, default = "JSON"
-            Type of output to return.
-        report_spec: dict | str, default = None
-            Output format set to use. If None, the default output format set is used.
         start_from: int, default = 0
             When multiple pages of results are available, the element number to start from.
         page_size: int, default = 0
             The number of elements returned per page.
+        output_format: str, default = "JSON"
+            Type of output to return.
+        report_spec: dict | str, default = None
+            Output format set to use. If None, the default output format set is used.
+        body: dict | ResultsRequestBody
+            Details of the query.
 
         Returns
         -------
@@ -2070,8 +2079,8 @@ class ClassificationExplorer(ServerClient):
 
         loop = asyncio.get_event_loop()
         response = loop.run_until_complete(
-            self._async_get_licenses(element_guid, body, output_format, report_spec,
-                                    start_from, page_size, **kwargs)
+            self._async_get_licenses(element_guid, start_from, page_size, output_format,
+                                    report_spec, body, **kwargs)
         )
         return response
 
@@ -2079,11 +2088,11 @@ class ClassificationExplorer(ServerClient):
     async def _async_get_certified_elements(
             self,
             certification_type_guid: str,
-            body: Optional[dict | ResultsRequestBody] = None,
-            output_format: str = "JSON",
-            report_spec: dict | str = None,
             start_from: int = 0,
             page_size: int = 0,
+            output_format: str = "JSON",
+            report_spec: dict | str = None,
+            body: Optional[dict | ResultsRequestBody] = None,
             **kwargs
     ) -> list | str:
         """
@@ -2094,16 +2103,16 @@ class ClassificationExplorer(ServerClient):
         __________
         certification_type_guid: str
             Certification type to retrieve information for.
-        body: dict | ResultsRequestBody
-            Details of the query.
-        output_format: str, default = "JSON"
-            Type of output to return.
-        report_spec: dict | str, default = None
-            Output format set to use. If None, the default output format set is used.
         start_from: int, default = 0
             When multiple pages of results are available, the element number to start from.
         page_size: int, default = 0
             The number of elements returned per page.
+        output_format: str, default = "JSON"
+            Type of output to return.
+        report_spec: dict | str, default = None
+            Output format set to use. If None, the default output format set is used.
+        body: dict | ResultsRequestBody
+            Details of the query.
 
         Returns
         -------
@@ -2135,19 +2144,20 @@ class ClassificationExplorer(ServerClient):
         url = (f"{self.classification_command_root}/glossaries/elements/certifications/{certification_type_guid}")
 
         response = await self._async_get_results_body_request(url, "Referenceable", self._generate_referenceable_output,
-                                                              start_from, page_size, output_format,
-                                                              report_spec, body, **kwargs)
+                                                              start_from=start_from, page_size=page_size,
+                                                              output_format=output_format,
+                                                              report_spec=report_spec, body=body, **kwargs)
         return response
 
     @dynamic_catch
     def get_certified_elements(
             self,
             certification_type_guid: str,
-            body: Optional[dict | ResultsRequestBody] = None,
-            output_format: str = "JSON",
-            report_spec: dict | str = None,
             start_from: int = 0,
             page_size: int = 0,
+            output_format: str = "JSON",
+            report_spec: dict | str = None,
+            body: Optional[dict | ResultsRequestBody] = None,
             **kwargs
     ) -> list | str:
         """
@@ -2158,16 +2168,16 @@ class ClassificationExplorer(ServerClient):
         __________
         certification_type_guid: str
             Certification type to retrieve information for.
-        body: dict | ResultsRequestBody
-            Details of the query.
-        output_format: str, default = "JSON"
-            Type of output to return.
-        report_spec: dict | str, default = None
-            Output format set to use. If None, the default output format set is used.
         start_from: int, default = 0
             When multiple pages of results are available, the element number to start from.
         page_size: int, default = 0
             The number of elements returned per page.
+        output_format: str, default = "JSON"
+            Type of output to return.
+        report_spec: dict | str, default = None
+            Output format set to use. If None, the default output format set is used.
+        body: dict | ResultsRequestBody
+            Details of the query.
 
         Returns
         -------
@@ -2198,8 +2208,8 @@ class ClassificationExplorer(ServerClient):
 
         loop = asyncio.get_event_loop()
         response = loop.run_until_complete(
-            self._async_get_certified_elements(certification_type_guid, body, output_format, report_spec,
-                                              start_from, page_size, **kwargs)
+            self._async_get_certified_elements(certification_type_guid, start_from, page_size, output_format,
+                                              report_spec, body, **kwargs)
         )
         return response
 
@@ -2207,11 +2217,11 @@ class ClassificationExplorer(ServerClient):
     async def _async_get_certifications(
             self,
             element_guid: str,
-            body: Optional[dict | ResultsRequestBody] = None,
-            output_format: str = "JSON",
-            report_spec: dict | str = None,
             start_from: int = 0,
             page_size: int = 0,
+            output_format: str = "JSON",
+            report_spec: dict | str = None,
+            body: Optional[dict | ResultsRequestBody] = None,
             **kwargs
     ) -> list | str:
         """
@@ -2223,16 +2233,16 @@ class ClassificationExplorer(ServerClient):
         __________
         element_guid: str
             Element to retrieve information for.
-        body: dict | ResultsRequestBody
-            Details of the query.
-        output_format: str, default = "JSON"
-            Type of output to return.
-        report_spec: dict | str, default = None
-            Output format set to use. If None, the default output format set is used.
         start_from: int, default = 0
             When multiple pages of results are available, the element number to start from.
         page_size: int, default = 0
             The number of elements returned per page.
+        output_format: str, default = "JSON"
+            Type of output to return.
+        report_spec: dict | str, default = None
+            Output format set to use. If None, the default output format set is used.
+        body: dict | ResultsRequestBody
+            Details of the query.
 
         Returns
         -------
@@ -2264,19 +2274,20 @@ class ClassificationExplorer(ServerClient):
         url = (f"{self.classification_command_root}/elements/{element_guid}/certifications")
 
         response = await self._async_get_results_body_request(url, "Referenceable", self._generate_referenceable_output,
-                                                              start_from, page_size, output_format,
-                                                              report_spec, body, **kwargs)
+                                                              start_from=start_from, page_size=page_size,
+                                                              output_format=output_format,
+                                                              report_spec=report_spec, body=body, **kwargs)
         return response
 
     @dynamic_catch
     def get_certifications(
             self,
             element_guid: str,
-            body: Optional[dict | ResultsRequestBody] = None,
-            output_format: str = "JSON",
-            report_spec: dict | str = None,
             start_from: int = 0,
             page_size: int = 0,
+            output_format: str = "JSON",
+            report_spec: dict | str = None,
+            body: Optional[dict | ResultsRequestBody] = None,
             **kwargs
     ) -> list | str:
         """
@@ -2287,16 +2298,16 @@ class ClassificationExplorer(ServerClient):
         __________
         element_guid: str
             Element to retrieve information for.
-        body: dict | ResultsRequestBody
-            Details of the query.
-        output_format: str, default = "JSON"
-            Type of output to return.
-        report_spec: dict | str, default = None
-            Output format set to use. If None, the default output format set is used.
         start_from: int, default = 0
             When multiple pages of results available, the element number to start from.
         page_size: int, default = 0
             The number of elements returned per page.
+        output_format: str, default = "JSON"
+            Type of output to return.
+        report_spec: dict | str, default = None
+            Output format set to use. If None, the default output format set is used.
+        body: dict | ResultsRequestBody
+            Details of the query.
 
         Returns
         -------
@@ -2327,8 +2338,8 @@ class ClassificationExplorer(ServerClient):
 
         loop = asyncio.get_event_loop()
         response = loop.run_until_complete(
-            self._async_get_certifications(element_guid, body, output_format, report_spec, start_from,
-                                          page_size, **kwargs)
+            self._async_get_certifications(element_guid, start_from, page_size, output_format,
+                                          report_spec, body, **kwargs)
         )
         return response
 
@@ -6707,6 +6718,283 @@ class ClassificationExplorer(ServerClient):
         loop = asyncio.get_event_loop()
         loop.run_until_complete(
             self._async_clear_scope_from_element(scoped_by_guid, element_guid, body)
+        )
+
+    async def _async_add_resource_to_element(
+            self,
+            resource_guid: str,
+            element_guid: str,
+            body: Optional[dict | NewRelationshipRequestBody] = None,
+    ) -> None:
+        """
+        Link a resource to an element using the ResourceList relationship. Async version.
+
+        NOTE: this endpoint is not yet confirmed against a live server or an .http example --
+        the URL path segment ('resource-list') follows the same naming convention as every other
+        attach/detach endpoint in this file (e.g. 'scoped-by', 'peer-duplicate'), but has not been
+        verified. Verify against a live server before relying on this in production.
+
+        ResourceList: https://egeria-project.org/types/0/0019-More-Information/
+
+        Parameters
+        ----------
+        resource_guid: str
+            - identity of the resource element to add
+        element_guid: str
+            - the identity of the element to update
+        body: dict | NewRelationshipRequestBody, optional
+            - structure containing resource-use information - see Notes
+
+        Returns
+        -------
+        None
+
+        Raises
+        ------
+        PyegeriaException
+
+        """
+
+        url = f"{self.classification_command_root}/elements/{element_guid}/resource-list/{resource_guid}/attach"
+
+        await self._async_new_relationship_request(url, ['ResourceList'], body)
+
+    def add_resource_to_element(
+            self,
+            resource_guid: str,
+            element_guid: str,
+            body: Optional[dict | NewRelationshipRequestBody] = None,
+    ) -> None:
+        """
+        Link a resource to an element using the ResourceList relationship.
+
+        ResourceList: https://egeria-project.org/types/0/0019-More-Information/
+
+        Parameters
+        ----------
+        resource_guid: str
+            - identity of the resource element to add
+        element_guid: str
+            - the identity of the element to update
+        body: dict | NewRelationshipRequestBody, optional
+            - structure containing resource-use information - see Notes
+
+        """
+
+        loop = asyncio.get_event_loop()
+        loop.run_until_complete(
+            self._async_add_resource_to_element(
+                resource_guid,
+                element_guid,
+                body
+            )
+        )
+
+    async def _async_remove_resource_from_element(
+            self,
+            resource_guid: str,
+            element_guid: str,
+            body: Optional[dict | DeleteRelationshipRequestBody] = None,
+    ) -> None:
+        """
+        Remove the ResourceList relationship between a resource and an element. Async version.
+
+        ResourceList: https://egeria-project.org/types/0/0019-More-Information/
+
+        Parameters
+        ----------
+        resource_guid: str
+            - identity of the resource element to remove
+        element_guid: str
+            - the identity of the element to update
+        body: dict | DeleteRelationshipRequestBody, optional
+            - structure request information
+
+        Returns
+        -------
+        None
+
+        Raises
+        ------
+        PyegeriaException
+
+        """
+
+        url = f"{self.classification_command_root}/elements/{element_guid}/resource-list/{resource_guid}/detach"
+
+        await self._async_delete_relationship_request(url, body_slimmer(body))
+
+    def remove_resource_from_element(
+            self,
+            resource_guid: str,
+            element_guid: str,
+            body: dict | DeleteRelationshipRequestBody = None,
+    ) -> None:
+        """
+        Remove the ResourceList relationship between a resource and an element.
+
+        ResourceList: https://egeria-project.org/types/0/0019-More-Information/
+
+        Parameters
+        ----------
+        resource_guid: str
+            - identity of the resource element to remove
+        element_guid: str
+            - the identity of the element to update
+        body: dict | DeleteRelationshipRequestBody, optional
+            - structure request information
+
+        Returns
+        -------
+        None
+
+        Raises
+        ------
+        PyegeriaException
+
+        """
+
+        loop = asyncio.get_event_loop()
+        loop.run_until_complete(
+            self._async_remove_resource_from_element(resource_guid, element_guid, body)
+        )
+
+    async def _async_add_more_information(
+            self,
+            more_info_guid: str,
+            element_guid: str,
+            body: Optional[dict | NewRelationshipRequestBody] = None,
+    ) -> None:
+        """
+        Link a more-information resource to an element using the MoreInformation relationship. Async version.
+
+        NOTE: this endpoint is not yet confirmed against a live server or an .http example --
+        the URL path segment ('more-information') follows the same naming convention as every other
+        attach/detach endpoint in this file. Verify against a live server before relying on this.
+
+        MoreInformation: https://egeria-project.org/types/0/0019-More-Information/
+
+        Parameters
+        ----------
+        more_info_guid: str
+            - identity of the element that provides more information
+        element_guid: str
+            - the identity of the element to update
+        body: dict | NewRelationshipRequestBody, optional
+            - structure containing relationship information - see Notes
+
+        Returns
+        -------
+        None
+
+        Raises
+        ------
+        PyegeriaException
+
+        """
+
+        url = f"{self.classification_command_root}/elements/{element_guid}/more-information/{more_info_guid}/attach"
+
+        await self._async_new_relationship_request(url, ['MoreInformation'], body)
+
+    def add_more_information(
+            self,
+            more_info_guid: str,
+            element_guid: str,
+            body: Optional[dict | NewRelationshipRequestBody] = None,
+    ) -> None:
+        """
+        Link a more-information resource to an element using the MoreInformation relationship.
+
+        MoreInformation: https://egeria-project.org/types/0/0019-More-Information/
+
+        Parameters
+        ----------
+        more_info_guid: str
+            - identity of the element that provides more information
+        element_guid: str
+            - the identity of the element to update
+        body: dict | NewRelationshipRequestBody, optional
+            - structure containing relationship information - see Notes
+
+        """
+
+        loop = asyncio.get_event_loop()
+        loop.run_until_complete(
+            self._async_add_more_information(
+                more_info_guid,
+                element_guid,
+                body
+            )
+        )
+
+    async def _async_remove_more_information(
+            self,
+            more_info_guid: str,
+            element_guid: str,
+            body: Optional[dict | DeleteRelationshipRequestBody] = None,
+    ) -> None:
+        """
+        Remove the MoreInformation relationship between an element and its more-information resource. Async version.
+
+        MoreInformation: https://egeria-project.org/types/0/0019-More-Information/
+
+        Parameters
+        ----------
+        more_info_guid: str
+            - identity of the element that provides more information
+        element_guid: str
+            - the identity of the element to update
+        body: dict | DeleteRelationshipRequestBody, optional
+            - structure request information
+
+        Returns
+        -------
+        None
+
+        Raises
+        ------
+        PyegeriaException
+
+        """
+
+        url = f"{self.classification_command_root}/elements/{element_guid}/more-information/{more_info_guid}/detach"
+
+        await self._async_delete_relationship_request(url, body_slimmer(body))
+
+    def remove_more_information(
+            self,
+            more_info_guid: str,
+            element_guid: str,
+            body: dict | DeleteRelationshipRequestBody = None,
+    ) -> None:
+        """
+        Remove the MoreInformation relationship between an element and its more-information resource.
+
+        MoreInformation: https://egeria-project.org/types/0/0019-More-Information/
+
+        Parameters
+        ----------
+        more_info_guid: str
+            - identity of the element that provides more information
+        element_guid: str
+            - the identity of the element to update
+        body: dict | DeleteRelationshipRequestBody, optional
+            - structure request information
+
+        Returns
+        -------
+        None
+
+        Raises
+        ------
+        PyegeriaException
+
+        """
+
+        loop = asyncio.get_event_loop()
+        loop.run_until_complete(
+            self._async_remove_more_information(more_info_guid, element_guid, body)
         )
 
     async def _async_assign_actor_to_element(
