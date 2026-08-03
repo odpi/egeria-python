@@ -98,7 +98,16 @@ class V2Dispatcher:
             if not processor.supports_target_element_lookup():
                 continue
             raw_shim = {k: {"value": v} for k, v in command.attributes.items()}
-            qn = processor.derive_qualified_name(raw_shim)
+            # An explicit user-supplied "Qualified Name" must take priority over
+            # auto-derivation here, exactly as it does in the real execution path
+            # (AsyncBaseCommandProcessor.execute(), which only calls
+            # derive_qualified_name() when parsed_output["qualified_name"] isn't
+            # already set from an explicit value). derive_qualified_name() always
+            # auto-generates from Display Name and has no knowledge of an explicit
+            # override, so calling it unconditionally here silently registers the
+            # wrong name for any command using an explicit Qualified Name - making
+            # a forward reference *by that explicit name* invisible to the pre-scan.
+            qn = raw_shim.get("Qualified Name", {}).get("value") or processor.derive_qualified_name(raw_shim)
             if qn:
                 target_qns.add(qn)
             # A forward reference is typically typed as the raw Display Name,

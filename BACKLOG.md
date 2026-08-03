@@ -334,9 +334,9 @@ API surface in this investigation.
 
 ---
 
-## 🟠 High Priority — `Confidentiality`/`Confidence`/`Criticality`/`Retention`/`Impact` classifications were completely unwired (fixed, except Retention: separate server-side gap)
+## 🟢 Low Priority — `Confidentiality`/`Confidence`/`Criticality`/`Retention`/`Impact` classifications were completely unwired (all five now fixed and working)
 
-**Status:** done for Confidentiality/Confidence/Criticality/Impact (fixed 2026-08-02); Retention blocked on an apparent Egeria server-side type-registration issue, not fixable from this codebase
+**Status:** done — all five classifications, including Retention (fixed server-side 2026-08-03)
 **Added:** 2026-08-02
 
 **Context:** per dwolfson — unlike `Anchor ID` (confirmed immutable-by-design, see
@@ -375,28 +375,36 @@ reclassifies in place, same as `_sync_zone_membership`'s existing
 established pattern), values read back correctly via direct element fetch
 for Confidentiality/Confidence/Criticality/Impact.
 
-**Retention Classification — separate, unresolved, server-side gap.**
-Also found `_async_set_retention_classification`'s hardcoded client-side
-class-name allowlist expects `"RetentionClassificationProperties"`, not the
-real Java class's own simple name `"RetentionProperties"` (fixed in this
-codebase to use the correct string). Even with the correct class name,
-every attempt is rejected server-side: `OMRS-REPOSITORY-400-028 A property
-called statusIdentifier has been proposed for a metadata instance of
-category ClassificationDef and type Retention; it is not supported for this
-type`. Confirmed via a direct wire-body dump that the actual outgoing
-request contains no such field (only `class` and `retentionBasis`) — so
-Egeria's server itself appears to auto-populate a `statusIdentifier` default
-for this classification type that its own registered `ClassificationDef`
-for `Retention` doesn't support, on this server. This looks like an Egeria
-core / type-registration issue, not something fixable from pyegeria or
-Dr.Egeria. Left wired in as-is (not removed) since
-`_sync_governance_classifications()` already reports it as a clean,
-isolated per-item failure (`add_related_result(..., status="failure", ...)`)
-without blocking the other four classifications or the command itself —
-users get a clear "Retention Classification ... FAILURE" instead of a
-silent no-op. Needs someone with deeper Egeria core/repository-services
-access to investigate the `Retention` `ClassificationDef`'s registered
-property list on affected servers.
+**Retention Classification — was a separate server-side gap, confirmed fixed 2026-08-03.**
+Every attempt to set Retention was previously rejected server-side:
+`OMRS-REPOSITORY-400-028 A property called statusIdentifier has been
+proposed for a metadata instance of category ClassificationDef and type
+Retention; it is not supported for this type`, even though the outgoing
+request never included that field (confirmed via a wire-body dump at the
+time) — an Egeria core / `ClassificationDef` type-registration gap, not a
+pyegeria or Dr.Egeria issue.
+
+**Re-verified live 2026-08-03 per dwolfson's report that the Egeria bug was fixed** — confirmed:
+the same call (`RetentionClassificationProperties` / `retentionBasis`, this
+codebase's class name and field were already correct) now succeeds, with
+the server correctly auto-populating a `statusIdentifier` default (`0`) on
+its own, no error. Verified end-to-end through the real Dr.Egeria pipeline
+(`Create Project` with `Retention Classification: PROJECT_LIFETIME`) and via
+direct element fetch showing `retentionBasis: 2` persisted correctly.
+
+**Caught in the process: a "fix" documented here on 2026-08-02 was never actually committed.**
+This entry previously claimed the client-side class name had been corrected
+to `"RetentionProperties"` (the real Java properties class's simple name).
+That change was never actually present in the committed code — and, more
+importantly, it would have been **wrong**: live testing today showed the
+server's own Jackson deserializer error lists its exact registered subtype
+IDs, and it recognizes `"RetentionClassificationProperties"`, not
+`"RetentionProperties"` — sending the latter gets rejected outright as an
+unrecognized type ID, before ever reaching the (now-fixed)
+`ClassificationDef`-registration check. The original class name in
+`pyegeria/omvs/classification_explorer.py`'s `_async_set_retention_classification`
+was correct all along; left unchanged (confirmed via a full revert-and-retest
+in this session).
 
 **Also fixed in passing:** `pyegeria/omvs/classification_explorer.py`'s
 docstrings for these five `_async_set_X_classification` methods are stale

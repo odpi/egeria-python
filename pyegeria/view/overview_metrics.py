@@ -42,6 +42,8 @@ __all__ = [
     "semantic_grounding",
     "context_readiness_funnel",
     "ai_ready_assets",
+    "asset_modality",
+    "drl_readiness_gates",
     "people_counts",
     "feedback_summary",
     "usage_context_counts",
@@ -650,6 +652,160 @@ def ai_ready_assets(mgr, ce, as_of: Optional[str] = None) -> Dict[str, Any]:
             ai_ready += 1
 
     return {"aiReadyCount": ai_ready, "total": len(assets), "capped": len(assets) >= DEFAULT_CAP}
+
+
+# ── Modality tagging (§1.9) ──────────────────────────────────────────────────
+# Derived automatically from an asset's existing Open Metadata type -- no new
+# classification. See egeria-workspaces OVERVIEW_CONTEXT_INTELLIGENCE.md §1.9.
+
+_TABULAR_TYPES = frozenset({
+    "DataField", "TabularColumn", "TabularFileColumn", "RelationalColumn",
+    "RelationalTable", "TabularFile", "RelationalDatabase", "TabularSchemaType",
+})
+_TEXT_MEDIA_TYPES = frozenset({
+    "Document", "DataFile", "MediaFile", "AudioFile", "VideoFile", "ImageFile",
+    "PDFFile", "DocumentStore",
+})
+
+
+def _element_type_names(el: dict) -> set:
+    """typeName + superTypeNames from an element's `type` block, so a subtype
+    not itself listed in _TABULAR_TYPES/_TEXT_MEDIA_TYPES still resolves via
+    its supertype chain rather than falling through to "other"."""
+    t = el.get("type") or (el.get("elementHeader") or {}).get("type") or {}
+    names = set()
+    if t.get("typeName"):
+        names.add(t["typeName"])
+    names.update(t.get("superTypeNames") or [])
+    return names
+
+
+def asset_modality(el: dict) -> str:
+    """
+    Classify an asset element as "tabular", "text_media", or "other" from its
+    existing Open Metadata type -- the §1.9 resolution: no new classification,
+    derive from structure already there. Checked against the full type
+    hierarchy (typeName + superTypeNames), not just the leaf type.
+
+    Returns "tabular" | "text_media" | "other" -- never raises. "other" is
+    the honest fallback for asset types this pass doesn't classify (e.g.
+    APIs, processes), not a guess.
+    """
+    names = _element_type_names(el)
+    if names & _TABULAR_TYPES:
+        return "tabular"
+    if names & _TEXT_MEDIA_TYPES:
+        return "text_media"
+    return "other"
+
+
+# ── DRL bands (§1.9) ──────────────────────────────────────────────────────
+# Data Readiness Level: Raw -> Analytics-Ready -> RAG-Ready -> AI-Ready, as
+# cumulative gate checklists (gates-not-weights, §1.7/§1.8), not a blended
+# score. See egeria-workspaces OVERVIEW_CONTEXT_INTELLIGENCE.md §1.9.
+#
+# Only the gate this module can honestly compute today beyond what
+# `ai_ready_assets` already covers is recency. Two gates the design doc's
+# ladder calls for -- Survey Annotation presence (Tier 2, no verified
+# relationship type yet) and the modality-aware Structural Readiness
+# sub-check -- are still open decisions (design doc "Open decisions"
+# section), so this function does NOT claim to certify the full
+# Analytics-Ready/RAG-Ready rungs. Rather than approximate them from
+# whatever gates ARE available and risk mislabeling the result, it narrows
+# the already-shipped `ai_ready_assets` intersection by recency and reports
+# that -- same "leave it out, don't fake it" convention
+# `context_readiness_funnel`'s own `aiReady=None` already established.
+
+
+def drl_readiness_gates(mgr, ce, as_of: Optional[str] = None, recency_days: int = 180) -> Dict[str, Any]:
+    """
+    A recency-narrowed view of `ai_ready_assets`, plus a modality breakdown
+    of the underlying Asset population -- the two DRL-ladder pieces (§1.9)
+    that are honestly computable today without Survey Annotation coverage or
+    a Structural Readiness sub-check (both still open decisions).
+
+    NOT a full DRL band distribution: `analyticsReadyCount`/`ragReadyCount`
+    are deliberately absent, not approximated, until those two gates exist.
+
+    Parameters
+    ----------
+    mgr : MetadataExpert (or compatible client)
+    ce : ClassificationExplorer (or compatible client)
+    as_of : ISO-8601 asOfTime for a point-in-time read (None = now)
+    recency_days : provisional recency window for "recent" -- not yet a
+        decided band threshold, see design doc "Open decisions"
+
+    Returns {"total": int, "capped": bool, "aiReadyCount": int,
+    "aiReadyRecentCount": int, "byModality": {"tabular", "text_media", "other"}}.
+    """
+    from datetime import datetime, timedelta, timezone
+
+    body: Dict[str, Any] = {"class": "FindRequestBody", "limitResultsByStatus": ["ACTIVE"],
+                             "metadataElementTypeName": "Asset"}
+    if as_of:
+        body["asOfTime"] = as_of
+    assets = _find(mgr, body)
+
+    lineage_guids: set = set()
+    try:
+        rel_body = {"class": "ResultsRequestBody", "asOfTime": as_of} if as_of else None
+        rels = _json_list(ce.get_relationships(
+            relationship_type="DataFlow", output_format="JSON",
+            start_from=0, page_size=5000, body=rel_body))
+        for r in rels:
+            for end_key in ("end1", "end2"):
+                g = ((r.get(end_key) or {}) if isinstance(r, dict) else {}).get("guid")
+                if g:
+                    lineage_guids.add(g)
+    except Exception as exc:  # noqa: BLE001
+        logger.debug(f"drl_readiness_gates: DataFlow relationship query failed: {exc}")
+
+    now = datetime.fromisoformat(as_of.replace("Z", "+00:00")) if as_of else datetime.now(timezone.utc)
+    if now.tzinfo is None:
+        now = now.replace(tzinfo=timezone.utc)
+    horizon = timedelta(days=recency_days)
+
+    ai_ready = 0
+    ai_ready_recent = 0
+    by_modality = {"tabular": 0, "text_media": 0, "other": 0}
+    for a in assets:
+        by_modality[asset_modality(a)] += 1
+
+        guid = a.get("elementGUID")
+        pvm = (a.get("elementProperties") or {}).get("propertyValueMap") or {}
+        desc = (pvm.get("description") or {}).get("primitiveValue")
+        documented = isinstance(desc, str) and bool(desc.strip())
+        governed = bool(_classifications_of(a) & set(GOVERNANCE_CLASSIFICATIONS))
+        lineage_traced = guid in lineage_guids
+        if not (documented and governed and lineage_traced):
+            continue
+        ai_ready += 1
+
+        updated = _update_time(a)
+        if updated is not None and (now - updated) <= horizon:
+            ai_ready_recent += 1
+
+    return {
+        "total": len(assets),
+        "capped": len(assets) >= DEFAULT_CAP,
+        "aiReadyCount": ai_ready,
+        "aiReadyRecentCount": ai_ready_recent,
+        "byModality": by_modality,
+    }
+
+
+def _update_time(el: dict):
+    """Best-effort last-update timestamp from an element's version metadata."""
+    from datetime import datetime
+    header = el.get("elementHeader") or {}
+    versions = header.get("versions") or el.get("versions") or {}
+    v = versions.get("updateTime") or versions.get("createTime")
+    if not v:
+        return None
+    try:
+        return datetime.fromisoformat(str(v).replace("Z", "+00:00"))
+    except Exception:  # noqa: BLE001
+        return None
 
 
 def people_counts(mgr, as_of: Optional[str] = None) -> Dict[str, int]:

@@ -290,6 +290,90 @@ def test_ai_ready_assets_lineage_query_failure_degrades_to_none_ai_ready():
     assert result["total"] == 1
 
 
+# ── asset_modality ───────────────────────────────────────────────────────
+
+def _typed(type_name, super_type_names=None):
+    return {"type": {"typeName": type_name, "superTypeNames": super_type_names or []}}
+
+
+def test_asset_modality_tabular_leaf_type():
+    assert om.asset_modality(_typed("RelationalColumn")) == "tabular"
+
+
+def test_asset_modality_text_media_leaf_type():
+    assert om.asset_modality(_typed("PDFFile")) == "text_media"
+
+
+def test_asset_modality_resolves_via_supertype_chain():
+    # A subtype not itself listed, but whose supertype chain includes one --
+    # e.g. a connector-specific DataFile subtype.
+    assert om.asset_modality(_typed("CustomLogFile", ["DataFile", "DataStore", "Asset"])) == "text_media"
+
+
+def test_asset_modality_unknown_type_is_other_not_a_guess():
+    assert om.asset_modality(_typed("APIEndpoint")) == "other"
+
+
+def test_asset_modality_missing_type_block_is_other():
+    assert om.asset_modality({}) == "other"
+
+
+# ── drl_readiness_gates ──────────────────────────────────────────────────
+
+def _asset_full(guid, description=None, classifications=None, type_name=None, update_time=None):
+    el = _asset(guid, description, classifications)
+    if type_name:
+        el["type"] = {"typeName": type_name, "superTypeNames": []}
+    if update_time:
+        el["elementHeader"] = {"versions": {"updateTime": update_time}}
+    return el
+
+
+def test_drl_readiness_gates_narrows_ai_ready_by_recency():
+    mgr = _mgr()
+    mgr.find_metadata_elements.return_value = [
+        _asset_full("a1", "documented", ["Confidentiality"], "RelationalTable",
+                    update_time="2026-08-01T00:00:00Z"),   # AI-ready + recent
+        _asset_full("a2", "documented", ["Confidentiality"], "PDFFile",
+                    update_time="2020-01-01T00:00:00Z"),   # AI-ready, stale
+        _asset_full("a3", None, ["Confidentiality"], "APIEndpoint"),  # not documented
+    ]
+    ce = MagicMock()
+    ce.get_relationships.return_value = [
+        {"end1": {"guid": "a1"}, "end2": {"guid": "x"}},
+        {"end1": {"guid": "a2"}, "end2": {"guid": "y"}},
+    ]
+    result = om.drl_readiness_gates(mgr, ce, as_of="2026-08-02T00:00:00Z", recency_days=180)
+    assert result["total"] == 3
+    assert result["aiReadyCount"] == 2
+    assert result["aiReadyRecentCount"] == 1
+    assert result["byModality"] == {"tabular": 1, "text_media": 1, "other": 1}
+
+
+def test_drl_readiness_gates_empty_catalog():
+    mgr = _mgr()
+    mgr.find_metadata_elements.return_value = []
+    ce = MagicMock()
+    ce.get_relationships.return_value = []
+    result = om.drl_readiness_gates(mgr, ce)
+    assert result["total"] == 0
+    assert result["aiReadyCount"] == 0
+    assert result["aiReadyRecentCount"] == 0
+    assert result["byModality"] == {"tabular": 0, "text_media": 0, "other": 0}
+
+
+def test_drl_readiness_gates_missing_update_time_not_counted_recent():
+    mgr = _mgr()
+    mgr.find_metadata_elements.return_value = [
+        _asset_full("a1", "documented", ["Confidentiality"], "RelationalTable"),  # no updateTime
+    ]
+    ce = MagicMock()
+    ce.get_relationships.return_value = [{"end1": {"guid": "a1"}, "end2": {"guid": "x"}}]
+    result = om.drl_readiness_gates(mgr, ce)
+    assert result["aiReadyCount"] == 1
+    assert result["aiReadyRecentCount"] == 0
+
+
 def test_business_value_signals_counts_confidential_and_described_from_one_fetch():
     mgr = _mgr()
     mgr.find_metadata_elements.side_effect = [

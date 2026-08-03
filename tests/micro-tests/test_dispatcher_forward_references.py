@@ -106,6 +106,66 @@ async def test_forward_reference_parent_before_child_resolves_across_rounds():
 
 
 @pytest.mark.asyncio
+async def test_forward_reference_by_explicit_qualified_name_resolves():
+    """
+    Regression test: prescan_batch_target_qns() must register a command's
+    *explicit* user-supplied "Qualified Name" (when present), not just its
+    auto-derived one - derive_qualified_name() has no knowledge of an
+    explicit override and always auto-generates from Display Name, so
+    calling it unconditionally (as the pre-scan previously did) silently
+    registered the wrong name for any command using an explicit Qualified
+    Name. This made a forward reference *by that explicit name* invisible
+    to the pre-scan, even though the exact same file structure worked fine
+    when the reference used the referenced element's Display Name instead.
+
+    Found live 2026-08-03 in a real user file (jules-90-day-plan.md) where
+    every project used an explicit, human-designed Qualified Name (e.g.
+    "JulesKeeper::Project::First30DaysLearningPhase") and a parent Campaign
+    referenced its Sub-Projects by those exact qualified names.
+    """
+    load_commands()
+
+    parent_cmd = DrECommand(
+        verb="Create",
+        object_type="Project",
+        attributes={
+            "Display Name": "TwoPassTest QN Parent",
+            "Sub-Projects": "TwoPassTest::QN::Child",
+        },
+        raw_block="## Create Project\n### Display Name\nTwoPassTest QN Parent\n### Sub-Projects\nTwoPassTest::QN::Child\n",
+    )
+    child_cmd = DrECommand(
+        verb="Create",
+        object_type="Project",
+        attributes={
+            "Display Name": "TwoPassTest QN Child",
+            "Qualified Name": "TwoPassTest::QN::Child",
+        },
+        raw_block="## Create Project\n### Display Name\nTwoPassTest QN Child\n### Qualified Name\nTwoPassTest::QN::Child\n",
+    )
+
+    dispatcher = V2Dispatcher(_FakeClient())
+    dispatcher.register("Create Project", _FakeParentChildProcessor)
+
+    context: Dict[str, Any] = {"directive": "process"}
+    results = await dispatcher.dispatch_batch([parent_cmd, child_cmd], context)
+
+    assert len(results) == 2
+    assert results[0]["status"] == "success"
+    assert results[1]["status"] == "success"
+
+    # The pre-scan must recognize the child's *explicit* qualified name, not
+    # just whatever name it would have auto-derived from Display Name.
+    assert "TwoPassTest::QN::Child" in context["batch_target_qns"]
+
+    parent_qn = results[0]["qualified_name"]
+    child_qn = results[1]["qualified_name"]
+    assert child_qn == "TwoPassTest::QN::Child"
+    store = context["_store"]
+    assert store["links"][parent_qn] == {f"guid::{child_qn}"}
+
+
+@pytest.mark.asyncio
 async def test_genuinely_unresolvable_reference_still_fails_clearly_not_forever_deferred():
     load_commands()
 

@@ -209,20 +209,23 @@ class AsyncBaseCommandProcessor(ABC):
             {"UNCLASSIFIED": 0, "MARGINAL": 1, "IMPORTANT": 2, "CRITICAL": 3, "CATASTROPHIC": 4, "OTHER": 99},
         ),
         "Retention Classification": (
-            # "RetentionClassificationProperties" (not "RetentionProperties", despite
-            # that being the actual Java class's simple name) is what
-            # classification_manager._async_set_retention_classification's own
-            # hardcoded client-side allowlist (pyegeria/omvs/classification_explorer.py,
-            # prop=["RetentionClassificationProperties"]) requires - confirmed live.
-            # Retention is still NOT functional even with the right class name - see
-            # BACKLOG.md: the server rejects every attempt with "a property called
-            # statusIdentifier ... is not supported for this type", even though this
-            # code sends no such field. Confirmed via a client-side wire-body dump
-            # that the request truly doesn't include it - this is a server-side (or
-            # Retention's ClassificationDef registration) issue, not fixable from
-            # here. Left wired in (rather than removed) since _sync_governance_classifications
-            # already reports it as a clean per-item failure without blocking the
-            # other four classifications or the command itself.
+            # "RetentionClassificationProperties" (the server's registered Jackson
+            # subtype ID for this classification - confirmed live via its own
+            # InvalidTypeIdException error listing all valid ids) is the correct
+            # class name to send, despite the real Java properties class's own
+            # simple name being "RetentionProperties" - do not "fix" this to
+            # "RetentionProperties", that's the wrong direction (confirmed live
+            # 2026-08-03: sending "RetentionProperties" gets rejected by Jackson
+            # outright as an unrecognized subtype id).
+            #
+            # Previously blocked server-side (see BACKLOG.md history) by
+            # OMRS-REPOSITORY-400-028 ("a property called statusIdentifier ...
+            # is not supported for this type") even though this code never sent
+            # that field - an Egeria server-side ClassificationDef registration
+            # gap, not a pyegeria issue. Confirmed fixed server-side 2026-08-03:
+            # live round-trip (Create Project with Retention Classification:
+            # PROJECT_LIFETIME through the real Dr.Egeria pipeline) now persists
+            # correctly, server-populated statusIdentifier default included.
             "retention", "RetentionClassificationProperties", "retentionBasis",
             {"UNCLASSIFIED": 0, "TEMPORARY": 1, "PROJECT_LIFETIME": 2, "TEAM_LIFETIME": 3, "CONTRACT_LIFETIME": 4, "REGULATED_LIFETIME": 5, "TIMEBOXED_LIFETIME": 6, "OTHER": 99},
         ),

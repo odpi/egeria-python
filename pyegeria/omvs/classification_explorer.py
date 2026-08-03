@@ -8135,12 +8135,13 @@ class ClassificationExplorer(ServerClient):
         retentionBasis property. The dates after which the element/resource is archived and then deleted are specified
         in the archiveAfter and deleteAfter properties respectively. Async version.
 
-        NOTE (2026-08-02): confirmed live against a qs-view-server-class server that this call is currently
-        rejected server-side regardless of what properties are supplied - `OMRS-REPOSITORY-400-028 A property
-        called statusIdentifier has been proposed for a metadata instance of category ClassificationDef and
-        type Retention; it is not supported for this type`. A wire-level body dump confirmed the outgoing
-        request never actually includes that field, so this looks like an Egeria-side Retention ClassificationDef
-        registration gap, not a pyegeria bug - see BACKLOG.md in egeria-python for the investigation.
+        NOTE (2026-08-02, resolved 2026-08-03): this call was previously rejected server-side
+        regardless of what properties were supplied - `OMRS-REPOSITORY-400-028 A property called
+        statusIdentifier has been proposed for a metadata instance of category ClassificationDef
+        and type Retention; it is not supported for this type` - an Egeria-side Retention
+        ClassificationDef registration gap, not a pyegeria bug (see BACKLOG.md in egeria-python
+        for the investigation). Confirmed fixed server-side 2026-08-03: a live round-trip now
+        persists correctly.
 
         Governance Action Classifications: https://egeria-project.org/types/4/0422-Governed-Data-Classifications/
 
