@@ -140,12 +140,32 @@ class ComponentProcessor(AsyncBaseCommandProcessor):
 
         # 1. Properties
         prop_body = set_element_prop_body(om_type or "SolutionComponent", qualified_name, attributes)
-        
+        # SolutionComponentProperties-specific fields -- set_element_prop_body() only builds
+        # the generic Referenceable-level property set, so these need adding here.
+        # solutionComponentType/plannedDeployedImplementationType are SolutionComponentProperties'
+        # own fields; canonicalName is inherited from DesignModelElementProperties (the shared
+        # superclass for every "design model element" type -- SolutionComponent, SolutionPort,
+        # and the ConceptBead* concept-modeling types -- confirmed via
+        # frameworks/open-metadata-framework/.../designmodels/DesignModelElementProperties.java).
+        # Solution Port and Concept Bead have no Dr.Egeria commands yet, so this is currently
+        # Solution Component-only; wire canonicalName the same way if/when those are added.
+        prop_body.update({
+            "solutionComponentType": attributes.get('Solution Component Type', {}).get('value'),
+            "plannedDeployedImplementationType": attributes.get('Planned Deployed Implementation Type', {}).get('value'),
+            "canonicalName": attributes.get('Canonical Name', {}).get('value'),
+        })
+
         # 2. Relationships
         actor_guids = set(attributes.get('Actors', {}).get('guid_list', []))
         blueprint_guids = set(attributes.get('In Solution Blueprints', {}).get('guid_list', []))
-        supply_chain_guids = set(attributes.get('In Information Supply Chains', {}).get('guid_list', []))
-        parent_comp_guids = set(attributes.get('Parent Components', {}).get('guid_list', []))
+        # NOTE: attribute names below must match commands_solution_architect_compact.json's
+        # attribute_definitions exactly -- "In Information Supply Chains" (plural) and
+        # "Parent Components" don't exist there (the real names are singular "In Information
+        # Supply Chain" and "In Solution Components"), so those spellings always resolved to
+        # an empty attributes.get() default and silently synced nothing.
+        supply_chain_guids = set(attributes.get('In Information Supply Chain', {}).get('guid_list', []))
+        parent_comp_guids = set(attributes.get('In Solution Components', {}).get('guid_list', []))
+        sub_comp_guids = set(attributes.get('Solution SubComponents', {}).get('guid_list', []))
         keywords = set(attributes.get('Search Keywords', {}).get('value', []))
 
         if verb == "Update":
@@ -161,7 +181,7 @@ class ComponentProcessor(AsyncBaseCommandProcessor):
             await self.client._async_update_solution_component(guid, body)
             self.parsed_output["guid"] = guid
             
-            sync_res = await self._sync_all_rels(guid, supply_chain_guids, parent_comp_guids, actor_guids, blueprint_guids, keywords, not merge_update)
+            sync_res = await self._sync_all_rels(guid, supply_chain_guids, parent_comp_guids, actor_guids, blueprint_guids, keywords, not merge_update, sub_comp_guids)
             if sync_res.get("errors"):
                 self.add_related_result("Relationships Sync", status="failure", message="; ".join(sync_res["errors"][:5]))
             elif sync_res.get("added") or sync_res.get("removed"):
@@ -195,7 +215,7 @@ class ComponentProcessor(AsyncBaseCommandProcessor):
             guid = self.extract_guid_or_raise(raw_guid, "Create Solution Component")
             if guid:
                 self.parsed_output["guid"] = guid
-                sync_res = await self._sync_all_rels(guid, supply_chain_guids, parent_comp_guids, actor_guids, blueprint_guids, keywords, replace_all=True)
+                sync_res = await self._sync_all_rels(guid, supply_chain_guids, parent_comp_guids, actor_guids, blueprint_guids, keywords, replace_all=True, sc_sub_guids=sub_comp_guids)
                 if sync_res.get("errors"):
                     self.add_related_result("Relationships Sync", status="failure", message="; ".join(sync_res["errors"][:5]))
                 elif sync_res.get("added") or sync_res.get("removed"):
@@ -215,7 +235,7 @@ class ComponentProcessor(AsyncBaseCommandProcessor):
 
         return self.command.raw_block
 
-    async def _sync_all_rels(self, guid: str, sc_guids: Set[str], parent_guids: Set[str], actor_guids: Set[str], bp_guids: Set[str], keywords: Set[str], replace_all: bool) -> Dict[str, Any]:
+    async def _sync_all_rels(self, guid: str, sc_guids: Set[str], parent_guids: Set[str], actor_guids: Set[str], bp_guids: Set[str], keywords: Set[str], replace_all: bool, sc_sub_guids: Set[str] = frozenset()) -> Dict[str, Any]:
         rel_els = await self._get_component_related_elements(guid)
         combined_results = {"added": [], "removed": [], "errors": []}
         
@@ -235,6 +255,14 @@ class ComponentProcessor(AsyncBaseCommandProcessor):
                                replace_all)
         for k in combined_results: combined_results[k].extend(res.get(k, []))
                                
+        # 2b. Sub-Components (this component's own children -- reverse direction of #2)
+        as_is_subs = set(rel_els.get("sub_component_guids", []))
+        res = await self.sync_members(as_is_subs, sc_sub_guids,
+                               lambda s: self.client._async_link_subcomponent(guid, s, None),
+                               lambda s: self.client._async_detach_sub_component(guid, s, None),
+                               replace_all)
+        for k in combined_results: combined_results[k].extend(res.get(k, []))
+
         # 3. Actors
         as_is_actors = set(rel_els.get("actor_guids", []))
         res = await self.sync_members(as_is_actors, actor_guids,
