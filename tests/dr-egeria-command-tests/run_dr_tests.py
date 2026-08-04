@@ -39,6 +39,7 @@ TEST_FILES = [
     "dr_test_design_patterns.md",
     "dr_test_new_commands.md",
     "dr_test_action_author.md",
+    "dr_test_curation.md",
 ]
 
 

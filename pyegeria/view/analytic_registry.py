@@ -153,6 +153,20 @@ _BUILTINS: Dict[str, AnalyticFunctionSpec] = {
         binding_note="Fixed to the Ownership classification -- not a parameter.",
         params=[_as_of()],
     ),
+    "business_value_signals": AnalyticFunctionSpec(
+        name="business_value_signals",
+        function="pyegeria.view.overview_metrics.business_value_signals",
+        description="Real signals behind the four Overview dashboard Business Value tiles "
+                    "(Risk & Compliance, Productivity, Trust & Adoption, Cost Avoidance): "
+                    "Confidentiality-classified asset count, described-asset count, "
+                    "ConsolidatedDuplicate-flagged element count -- all proxies with a "
+                    "documented causal-claim caveat, not direct measures (NEXT-9).",
+        returns="dict (assetTotal, assetCapped, confidentialCount, describedCount, duplicateCount)",
+        generic=False,
+        binding_note="Fixed to the Asset type hierarchy and Confidentiality/ConsolidatedDuplicate "
+                     "classifications -- not a parameter.",
+        params=[_as_of()],
+    ),
     "certifications_summary": AnalyticFunctionSpec(
         name="certifications_summary",
         function="pyegeria.view.overview_metrics.certifications_summary",
@@ -208,11 +222,27 @@ _BUILTINS: Dict[str, AnalyticFunctionSpec] = {
         function="pyegeria.view.overview_metrics.context_readiness_funnel",
         description="Cataloged -> Documented -> Classified -> Lineage-traced -> AI-Ready funnel counts. "
                     "Takes two leading clients (mgr, ce) -- the executor supplies the same EgeriaTech "
-                    "instance for both, matching semantic_grounding's convention. aiReady remains None "
-                    "(needs a true cross-criteria intersection -- see NEXT-18, composite/derived metrics).",
+                    "instance for both, matching semantic_grounding's convention. This function's own "
+                    "aiReady stays None always by design -- it's four independent counts, and aiReady "
+                    "needs a true cross-criteria intersection instead. Pair with ai_ready_assets "
+                    "(below) for that -- overview_handler.py calls both and merges the result.",
         returns="dict (cataloged, documented, classified, lineage, aiReady)",
         generic=False,
         binding_note="Fixed 5-stage readiness definition baked into the function body -- not a parameter.",
+        params=[_as_of()],
+    ),
+    "ai_ready_assets": AnalyticFunctionSpec(
+        name="ai_ready_assets",
+        function="pyegeria.view.overview_metrics.ai_ready_assets",
+        description="The true 'AI-Ready' composite: Asset elements that are governed AND documented "
+                    "AND lineage-traced simultaneously, not three independent counts intersected after "
+                    "the fact. First real implementation of the composite/derived analytic metric "
+                    "pattern -- see NEXT-18 (egeria-workspaces BACKLOG.md) for why this pattern didn't "
+                    "exist here before. Takes two leading clients (mgr, ce), same convention as "
+                    "semantic_grounding/context_readiness_funnel.",
+        returns="dict (aiReadyCount, total, capped)",
+        generic=False,
+        binding_note="Fixed to governed+documented+lineage-traced over Asset elements -- not a parameter.",
         params=[_as_of()],
     ),
     "growth_series": AnalyticFunctionSpec(

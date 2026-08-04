@@ -92,8 +92,9 @@ sequenceDiagram
 
     ORCH->>DISP: register processors
     ORCH->>DISP: dispatch_batch(commands, context)
+    Note over DISP: prescan_batch_target_qns() runs once here,<br/>before round 1 - see dr_egeria_design_v2.md<br/>for the round-based retry loop this diagram<br/>simplifies to a single sequential pass
 
-    loop for each DrECommand (sequential)
+    loop for each DrECommand (sequential within a round)
         DISP->>PROC: processor_cls(client, command, context)
         PROC->>PRSR: await parse()
         PRSR->>SDK: resolve valid-values / GUIDs
@@ -170,7 +171,9 @@ sequenceDiagram
 | `input_file` | `str` | Source file path |
 | `request_id` | `str` | UUID for this run |
 | `debug` | `bool` | Whether debug mode is active |
-| `planned_elements` | `set[str]` | QNs of elements created earlier in the same document |
+| `planned_elements` | `set[str]` | QNs registered incrementally as each command is dispatched (own create-vs-update transition check) |
+| `batch_target_qns` | `set[str]` | Every command's own QN + Display Name, pre-populated once for the whole batch before execution starts (added 2026-08-02) — lets a *forward* reference (element defined later in the file) be recognized as "will exist" rather than "not found"; see `dr_egeria_design_v2.md` |
+| `final_round` | `bool` | Set only on the forced last round of `dispatch_batch()`'s retry loop, once a round makes no further progress — turns a "still deferred" state into a permanent failure with today's clear error message |
 
 ---
 

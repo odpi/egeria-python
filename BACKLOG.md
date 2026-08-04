@@ -119,9 +119,9 @@ Neither breaks `pytest tests/`, so day-to-day test runs are unaffected — this 
 
 ---
 
-## 🟠 High Priority — Forward references to elements later in the same Dr.Egeria file don't actually resolve (design limitation, not yet fixed)
+## 🟠 High Priority — Forward references to elements later in the same Dr.Egeria file don't actually resolve
 
-**Status:** open
+**Status:** done (fixed 2026-08-02)
 **Added:** 2026-08-01
 
 **Context:** investigating a user report that `Sub-Projects` on `Create Project`
@@ -201,3 +201,215 @@ Both now correctly fail with a clear blocking error instead of silently
 "succeeding." Not fixed as part of this entry — the fixtures themselves
 need either a missing `Create Glossary`/actor block added, or the stale
 reference corrected.
+
+**Fixed 2026-08-02:** implemented the two-phase batch design described
+above, smaller in scope than originally framed — none of the 11
+relationship-establishing call sites across `project.py`/
+`solution_architect.py`/`glossary.py`/`data_designer.py`/`governance.py`/
+`collection_manager_processor.py` needed to change; the entire mechanism
+lives in `dispatcher.py` and `processors.py`:
+- `V2Dispatcher.prescan_batch_target_qns()` walks the full batch once
+  before execution, deriving each Create/Update command's own qualified
+  name (reusing the real `derive_qualified_name()`, byte-identical to the
+  later real parse) plus its raw Display Name (a forward reference is
+  typically typed as the display name, matching how a *backward* reference
+  already resolves via `find_key_with_value()`).
+- `dispatch_batch()` now runs in rounds: a command whose reference is
+  recognized as a legitimate batch target but not yet resolvable is
+  deferred (not failed) and retried next round; stops when nothing's
+  deferred, or forces one final round (treating anything still unresolved
+  as a genuine, final failure) once a round makes zero progress.
+- Two "flavors" of command, discriminated automatically by whether
+  `derive_qualified_name()` returns non-empty: **embedded** (`Create
+  Project` etc.) always creates its own element immediately regardless of
+  unresolved embedded references, so same-round dependents aren't falsely
+  blocked; **standalone** (`Link Project Hierarchy` etc., the whole command
+  *is* the relationship) defers the entire command.
+- Also fixed a genuine multi-level-chain bug found during design (grandparent→parent→child
+  forward-reference chains failed one level too early without a
+  `context["final_round"]` guard on the existing "resolve Planned GUIDs"
+  gate), and a pre-existing silent-success bug in
+  `SolutionLinkProcessor.apply_changes()` (unresolved `id1`/`id2` returned
+  `raw_block` without setting an error, so `execute()` reported `"success"`
+  on a silently-skipped link).
+
+Live-verified against `qs-view-server`: a parent-before-child `Sub-Projects`
+forward reference now resolves and creates the real `ProjectHierarchy`
+relationship. New test coverage: `tests/micro-tests/test_dispatcher_forward_references.py`.
+Backward-compatibility confirmed byte-for-byte via all 12 `dr_test_*.md`
+regression fixtures (identical SCORE lines before/after). Full design
+history and validated rationale in the session that implemented this — see
+git history around 2026-08-02 for `md_processing/v2/dispatcher.py` and
+`md_processing/v2/processors.py`.
+
+The two bonus fixtures noted above (`dr_test_glossary.md` GL-08,
+`dr_test_products_good.md` Agreement-to-Actor) are still open — not
+forward-reference cases (nothing in either file ever creates the referenced
+element), so this fix doesn't change their outcome. Still need a decision:
+add the missing block, or correct the stale reference.
+
+---
+
+## 🟡 Medium Priority — `Parent ID`/`Parent Relationship Type Name` silently dropped on Update (fixed); `Anchor ID`/`Anchor Scope ID` cannot be changed post-creation (confirmed architectural constraint, not a bug)
+
+**Status:** done (Parent Relationship fixed 2026-08-02); Anchor — confirmed not fixable, no further action planned
+**Added:** 2026-08-02
+
+**Context:** also fixed in passing: `set_create_body()` looked up the
+attribute under the wrong key, `'Anchor Scope GUID'`, when the compact
+spec's actual attribute name is `'Anchor Scope ID'` — silently broke
+`anchorScopeGUID` even on **Create**, independent of the Update-time gap
+below. Corrected the key name.
+
+`set_create_body()` bakes `Anchor ID`/`Parent ID`/`Anchor Scope
+ID` (+ `Parent Relationship Type Name`/`Parent Relationship Attributes`/
+`Parent at End1`) into Create's `NewElementRequestBody` as a shortcut —
+Egeria's create endpoint bundles "create the element" and "establish this
+one relationship/anchor" into a single call. `set_update_body()` has no
+equivalent fields at all (confirmed: Egeria's real `UpdateElementRequestBody`
+Java class has only a `properties` field — no anchor/parent slot exists on
+the update endpoint). Since the compact spec marks these attributes
+`inUpdate: True`, they were being resolved to real GUIDs on `Update`
+commands and then silently discarded — parsed, resolved, never sent
+anywhere.
+
+**Parent ID / Parent Relationship Type Name — fixed.** The relationship
+these fields represent (an ordinary Egeria relationship, e.g.
+`ProjectHierarchy`) can be established explicitly post-creation, the same
+way a standalone `Link X` command would. Added
+`AsyncBaseCommandProcessor._sync_parent_relationship()` (one generic method,
+called from `execute()` after `apply_changes()` succeeds, for both Create
+and Update) using `MetadataExpert`'s generic relationship calls
+(`_async_create_related_elements`/`_async_get_all_related_elements`/
+`_async_delete_related_elements` — any Egeria relationship type, not just
+ones with a dedicated OMVS wrapper). Live-verified against `qs-view-server`:
+creates the relationship on Update, idempotent on repeat (checked via direct
+GUID comparison), and correctly re-parents (old relationship removed, new
+one created) when `Parent ID` changes.
+
+Fixing this surfaced three independent, pre-existing pyegeria bugs (all
+fixed as part of this same pass, since they directly blocked verifying the
+above):
+1. `validate_new_related_elements_request()` (`pyegeria/core/_server_client.py`)
+   used the wrong `TypeAdapter` (`_new_relationship_request_adapter`, for an
+   unrelated model) instead of the already-defined-but-unused
+   `_new_related_elements_request_adapter`.
+2. `NewRelatedElementsRequestBody` (`pyegeria/models/models.py`) had field
+   names (`relationship_type_name`/`end_1_guid`/`end_2_guid`) that don't
+   match the real Java DTO (`typeName`/`metadataElement1GUID`/
+   `metadataElement2GUID`, confirmed against
+   `frameworkservices/omf/rest/NewRelatedElementsRequestBody.java`) — the
+   server silently ignored the wrong field names rather than erroring.
+3. `_async_get_all_related_elements()` (`pyegeria/omvs/metadata_expert.py`)
+   returns a **dict** (`{"startingElement":..., "elementList":[...],
+   "mermaidGraph":...}`), not a list, and `elementList` entries use a
+   different, lower-level shape (`type.typeName`/`relationshipGUID`/
+   `element.elementGUID`) than domain-specific calls like
+   `ProjectManager._async_get_project_by_guid()`'s `managedProjects` field.
+
+**Anchor ID / Anchor Scope ID — investigated, confirmed NOT fixable the same
+way; no code change made.** Anchoring is implemented as a **classification**
+(`"Anchors"`/`AnchorsProperties`: `anchorGUID`, `anchorTypeName`,
+`anchorDomainName`, `anchorScopeGUIDs`, `zoneMembership`), not a
+relationship, so the relationship-based fix above doesn't apply. Tried the
+obvious equivalent — `MetadataExpert._async_reclassify_metadata_element()`
+with an updated `anchorGUID` — and it **succeeds at the API level but does
+not establish real anchor semantics**: live-tested twice (two independent
+throwaway-element pairs), reclassifying one element's `Anchors` to point at
+another, then deleting the "anchor" with `cascade=True` — the reclassified
+element survived both times and had to be deleted independently, proving no
+real cascade-delete relationship was established. Traced into
+`OpenMetadataAPIAnchorHandler.java`: `anchorGUID` maintenance there is wired
+into specific entity-**creation** flows (schema types, attributes,
+connections, comments, ratings, etc.), not into any generic post-creation
+reclassify path. This reads as an intentional constraint — anchoring
+governs lifecycle/security/visibility scope, which is the kind of thing
+that's reasonable to keep immutable after creation for governance reasons,
+unlike an ordinary Parent relationship. **Recommendation: leave `Anchor
+ID`/`Anchor Scope ID`'s current Update-time silent-no-op behavior as-is.**
+If this needs revisiting, the next step would be finding whichever
+repository-services-level operation (if any) actually re-evaluates an
+entity's anchor after creation — not found via the generic MetadataExpert
+API surface in this investigation.
+
+---
+
+## 🟢 Low Priority — `Confidentiality`/`Confidence`/`Criticality`/`Retention`/`Impact` classifications were completely unwired (all five now fixed and working)
+
+**Status:** done — all five classifications, including Retention (fixed server-side 2026-08-03)
+**Added:** 2026-08-02
+
+**Context:** per dwolfson — unlike `Anchor ID` (confirmed immutable-by-design, see
+entry above), Confidentiality/Retention/Criticality/Confidence genuinely need
+to be changeable over an element's lifetime. Investigating this found these
+five "0422 Governed Data Classifications" attributes (`Confidentiality
+Classification`, `Confidence Classification`, `Criticality Classification`,
+`Retention Classification`, `Impact Classification` — all `style: "Valid
+Value"`, `inUpdate: true`, present on every family via the shared bundle)
+were **not wired into any processor at all** — not Create, not Update. Parsed
+and validated by `AttributeFirstParser`, then silently discarded; a bigger gap
+than the Parent/Anchor case, which at least worked on Create.
+
+**Fixed:** added `AsyncBaseCommandProcessor._sync_governance_classifications()`
+(`md_processing/v2/processors.py`), called from `execute()` alongside
+`_sync_zone_membership`/`_sync_parent_relationship` for both Create and
+Update. Uses `classification_manager`'s (`ClassificationExplorer`) dedicated
+`_async_set_X_classification`/`_async_clear_X_classification` methods.
+
+**Found and worked around a systemic, previously-unknown bug across ALL FIVE
+of pyegeria's own classification methods while implementing this:** both
+`classification_explorer.py`'s docstrings and the compact spec's attribute
+descriptions document the "level" property uniformly (and wrongly) as
+`levelIdentifier` (Retention: `basisIdentifier`, Impact:
+`severityIdentifier`). **Confirmed live** that calling `set_confidentiality_
+classification` with the documented `levelIdentifier` field returns **no
+error** but the classification silently fails to attach at all. Cross-checked
+each real Java class
+(`frameworks/openmetadata/properties/governance/*Properties.java`) and
+confirmed live, round-trip, that the *real* field names are:
+`confidentialityLevel`, `confidenceLevel`, `criticalityLevel`,
+`severityLevel` (Impact), and `retentionBasis` (Retention — matches its
+docstring, unlike the other four). Verified end-to-end: set on Create,
+re-set to a different value on Update (confirmed idempotent — Egeria
+reclassifies in place, same as `_sync_zone_membership`'s existing
+established pattern), values read back correctly via direct element fetch
+for Confidentiality/Confidence/Criticality/Impact.
+
+**Retention Classification — was a separate server-side gap, confirmed fixed 2026-08-03.**
+Every attempt to set Retention was previously rejected server-side:
+`OMRS-REPOSITORY-400-028 A property called statusIdentifier has been
+proposed for a metadata instance of category ClassificationDef and type
+Retention; it is not supported for this type`, even though the outgoing
+request never included that field (confirmed via a wire-body dump at the
+time) — an Egeria core / `ClassificationDef` type-registration gap, not a
+pyegeria or Dr.Egeria issue.
+
+**Re-verified live 2026-08-03 per dwolfson's report that the Egeria bug was fixed** — confirmed:
+the same call (`RetentionClassificationProperties` / `retentionBasis`, this
+codebase's class name and field were already correct) now succeeds, with
+the server correctly auto-populating a `statusIdentifier` default (`0`) on
+its own, no error. Verified end-to-end through the real Dr.Egeria pipeline
+(`Create Project` with `Retention Classification: PROJECT_LIFETIME`) and via
+direct element fetch showing `retentionBasis: 2` persisted correctly.
+
+**Caught in the process: a "fix" documented here on 2026-08-02 was never actually committed.**
+This entry previously claimed the client-side class name had been corrected
+to `"RetentionProperties"` (the real Java properties class's simple name).
+That change was never actually present in the committed code — and, more
+importantly, it would have been **wrong**: live testing today showed the
+server's own Jackson deserializer error lists its exact registered subtype
+IDs, and it recognizes `"RetentionClassificationProperties"`, not
+`"RetentionProperties"` — sending the latter gets rejected outright as an
+unrecognized type ID, before ever reaching the (now-fixed)
+`ClassificationDef`-registration check. The original class name in
+`pyegeria/omvs/classification_explorer.py`'s `_async_set_retention_classification`
+was correct all along; left unchanged (confirmed via a full revert-and-retest
+in this session).
+
+**Also fixed in passing:** `pyegeria/omvs/classification_explorer.py`'s
+docstrings for these five `_async_set_X_classification` methods are stale
+(still show the wrong "level" field names) — not corrected as part of this
+pass since they're documentation only (the actual behavior is determined by
+whatever the caller passes, not by the docstring), but worth a follow-up
+cleanup so future users don't fall into the same "no error, but silently
+did nothing" trap this session found for Confidentiality.

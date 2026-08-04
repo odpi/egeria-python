@@ -3,6 +3,56 @@ ___
 ## Create Journal Activity
 > Journal about your actiity.
 
+### Display Name
+>	**Input Required**: True
+
+>	**Attribute Type**: Simple
+
+>	**Description**: The common name of an element.
+
+>	**Alternative Labels**: "Term Name"
+
+
+### Expected Behavior
+>	**Input Required**: False
+
+>	**Attribute Type**: Simple
+
+>	**Description**: Optionally descibe action to be taken.
+
+
+### Situation
+>	**Input Required**: False
+
+>	**Attribute Type**: Simple
+
+>	**Description**: Describe the notification (title/summary)
+
+
+### Journal Entry
+>	**Input Required**: False
+
+>	**Attribute Type**: Simple
+
+>	**Description**: A text entry into a journal.
+
+
+### Description
+>	**Input Required**: False
+
+>	**Attribute Type**: Simple
+
+>	**Description**: A description.
+
+
+### Qualified Name
+>	**Input Required**: False
+
+>	**Attribute Type**: QN
+
+>	**Description**: The unique, text name of an element.
+
+
 ### Category
 >	**Input Required**: False
 
@@ -13,20 +63,14 @@ ___
 >	**Alternative Labels**: Category Name
 
 
-### Qualified Name
+### GUID
 >	**Input Required**: False
 
->	**Attribute Type**: QN
+>	**Attribute Type**: GUID
 
->	**Description**: A unique qualified name for the element. Generated using the qualified name pattern  if not user specified.
+>	**Description**: A unique identifier - typically of an element in this context.
 
-
-### Journal Entry
->	**Input Required**: False
-
->	**Attribute Type**: Simple
-
->	**Description**: 
+>	**Alternative Labels**: guid; Guid
 
 
 ### Version Identifier
@@ -49,16 +93,6 @@ ___
 >	**Description**: role identifier
 
 >	**Alternative Labels**: ID
-
-
-### GUID
->	**Input Required**: False
-
->	**Attribute Type**: GUID
-
->	**Description**: A system generated unique identifier.
-
->	**Alternative Labels**: Guid; guid
 
 
 ### URL

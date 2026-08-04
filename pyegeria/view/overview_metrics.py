@@ -37,9 +37,13 @@ __all__ = [
     "counts_by_type",
     "governed_coverage",
     "ownership_coverage",
+    "business_value_signals",
     "certifications_summary",
     "semantic_grounding",
     "context_readiness_funnel",
+    "ai_ready_assets",
+    "asset_modality",
+    "drl_readiness_gates",
     "people_counts",
     "feedback_summary",
     "usage_context_counts",
@@ -369,6 +373,71 @@ def ownership_coverage(mgr, as_of: Optional[str] = None) -> Dict[str, Any]:
     }
 
 
+def business_value_signals(mgr, as_of: Optional[str] = None) -> Dict[str, Any]:
+    """
+    Real signals behind the Overview dashboard's four "Business Value" tiles
+    (NEXT-9) -- replaces the four previously-synthetic narrative numbers
+    (Risk & Compliance, Productivity, Trust & Adoption, Cost Avoidance) with
+    honest, precisely-scoped proxies. Deliberately proxies, not direct
+    measures -- see each field's use-site in overview_handler.py / this
+    function's own module docs for the causal-claim caveat that goes with
+    it (e.g. "more described assets" is a proxy for self-service findability,
+    not a measure of actual query/access frequency).
+
+    A single Asset-hierarchy fetch answers two of the four fields
+    (confidentiality exposure and description coverage -- both are
+    per-element checks on the same fetched set, same "check several signals
+    from one fetch" shape `context_readiness_funnel` already uses).
+
+    IMPORTANT scoping distinction from `governed_coverage`'s own
+    `byClassification["Confidentiality"]`: that number is NOT Asset-scoped
+    (any element type carrying the classification counts, per its own
+    documented caveat), whereas `confidentialCount` here IS Asset-scoped by
+    construction (checked only on elements this function's own Asset-
+    hierarchy fetch returned). Confirmed live 2026-08-02 on a real dataset:
+    5 total Confidentiality-classified elements exist, only 1 of which is
+    Asset-typed (a CSVFile; the other 4 are typed `Referenceable`, not under
+    `Asset`) -- the two numbers are both correct, just different
+    populations, not a discrepancy to "fix."
+
+    Duplicate detection is a separate classification count. Data Products
+    (Trust & Adoption) is deliberately NOT duplicated here -- callers already
+    have a live `dataProducts` count from `count_elements(mgr, "DigitalProduct", as_of)`
+    elsewhere in the same request; no rating/adoption signal is wired (no
+    `AttachedRating` relationships exist against `DigitalProduct` in a typical
+    demo dataset, confirmed live -- so a rating average is honestly omitted
+    rather than faked).
+
+    Returns {"assetTotal": int, "assetCapped": bool, "confidentialCount": int,
+    "describedCount": int, "duplicateCount": int}.
+    """
+    body = {"class": "FindRequestBody", "limitResultsByStatus": ["ACTIVE"],
+            "metadataElementTypeName": "Asset"}
+    if as_of:
+        body["asOfTime"] = as_of
+    assets = _find(mgr, body)
+
+    confidential = 0
+    described = 0
+    for a in assets:
+        if "Confidentiality" in _classifications_of(a):
+            confidential += 1
+        pvm = (a.get("elementProperties") or {}).get("propertyValueMap") or {}
+        desc = (pvm.get("description") or {}).get("primitiveValue")
+        if isinstance(desc, str) and desc.strip():
+            described += 1
+
+    duplicate = count_elements(mgr, None, as_of, classifications=["ConsolidatedDuplicate"])
+
+    return {
+        "assetTotal": len(assets),
+        "assetCapped": len(assets) >= DEFAULT_CAP,
+        "confidentialCount": confidential,
+        "describedCount": described,
+        "duplicateCount": duplicate,
+    }
+
+
 def _rel_end_date(rel: dict):
     """Best-effort expiry date for a relationship: domain property, then effectivity."""
     from datetime import datetime
@@ -511,6 +580,232 @@ def context_readiness_funnel(mgr, ce, as_of: Optional[str] = None) -> Dict[str, 
         "lineage": lineage,
         "aiReady": None,
     }
+
+
+def ai_ready_assets(mgr, ce, as_of: Optional[str] = None) -> Dict[str, Any]:
+    """
+    The actual "AI-Ready" claim `context_readiness_funnel`'s own UI already
+    makes ("48% -- governed + documented + lineage"): a true composite --
+    Asset elements that are simultaneously governed (>=1 of
+    GOVERNANCE_CLASSIFICATIONS), documented (non-empty description), AND
+    lineage-traced (participates in >=1 DataFlow relationship) -- not three
+    independent counts intersected after the fact from separate endpoints,
+    which is what `context_readiness_funnel` alone can give you. First real
+    implementation of the "composite/derived analytic metric" pattern
+    egeria-workspaces BACKLOG.md NEXT-18 flagged as missing (no analytic
+    function here composed across multiple underlying queries before this).
+
+    Implementation note -- one fetch, not three: a single capped `_find` on
+    `metadataElementTypeName: "Asset"` already returns each element's own
+    `classifications` list (confirmed live -- the same shape
+    `governed_coverage`'s `_classifications_of()` already reads) alongside
+    `elementProperties` (for the description check), so "governed" and
+    "documented" are checked per-element from that one fetch; only "lineage"
+    needs a second query (the DataFlow relationships, to build the set of
+    GUIDs that participate in at least one). Field-name gotcha, verified
+    live: a `find_metadata_elements` result's own GUID is `elementGUID`, but
+    a relationship's `end1`/`end2` (`ElementStub`) GUID is plain `guid` --
+    genuinely two different key names for the same concept depending on
+    which API path returned the data; using the wrong one silently produces
+    an empty intersection instead of an error, so this was checked against
+    live responses before writing the intersection logic, not assumed.
+
+    Same DEFAULT_CAP tradeoff every field-value-check function in this
+    module already accepts (`term_definition_completeness`,
+    `context_readiness_funnel`'s own `documented` stage) -- a floor, not
+    exact, on a catalog larger than DEFAULT_CAP.
+
+    Returns {"aiReadyCount": int, "total": int, "capped": bool} -- "total" is
+    the (possibly capped) Asset population actually checked, so a caller can
+    compute a percentage without a separate cataloged-count call.
+    """
+    body: Dict[str, Any] = {"class": "FindRequestBody", "limitResultsByStatus": ["ACTIVE"],
+                             "metadataElementTypeName": "Asset"}
+    if as_of:
+        body["asOfTime"] = as_of
+    assets = _find(mgr, body)
+
+    lineage_guids: set = set()
+    try:
+        rel_body = {"class": "ResultsRequestBody", "asOfTime": as_of} if as_of else None
+        rels = _json_list(ce.get_relationships(
+            relationship_type="DataFlow", output_format="JSON",
+            start_from=0, page_size=5000, body=rel_body))
+        for r in rels:
+            for end_key in ("end1", "end2"):
+                end = (r.get(end_key) or {}) if isinstance(r, dict) else {}
+                g = end.get("guid")
+                if g:
+                    lineage_guids.add(g)
+    except Exception as exc:  # noqa: BLE001
+        logger.debug(f"ai_ready_assets: lineage relationship query failed: {exc}")
+
+    ai_ready = 0
+    for a in assets:
+        guid = a.get("elementGUID")
+        pvm = (a.get("elementProperties") or {}).get("propertyValueMap") or {}
+        desc = (pvm.get("description") or {}).get("primitiveValue")
+        documented = isinstance(desc, str) and bool(desc.strip())
+        governed = bool(_classifications_of(a) & set(GOVERNANCE_CLASSIFICATIONS))
+        lineage_traced = guid in lineage_guids
+        if documented and governed and lineage_traced:
+            ai_ready += 1
+
+    return {"aiReadyCount": ai_ready, "total": len(assets), "capped": len(assets) >= DEFAULT_CAP}
+
+
+# ── Modality tagging (§1.9) ──────────────────────────────────────────────────
+# Derived automatically from an asset's existing Open Metadata type -- no new
+# classification. See egeria-workspaces OVERVIEW_CONTEXT_INTELLIGENCE.md §1.9.
+
+_TABULAR_TYPES = frozenset({
+    "DataField", "TabularColumn", "TabularFileColumn", "RelationalColumn",
+    "RelationalTable", "TabularFile", "RelationalDatabase", "TabularSchemaType",
+})
+_TEXT_MEDIA_TYPES = frozenset({
+    "Document", "DataFile", "MediaFile", "AudioFile", "VideoFile", "ImageFile",
+    "PDFFile", "DocumentStore",
+})
+
+
+def _element_type_names(el: dict) -> set:
+    """typeName + superTypeNames from an element's `type` block, so a subtype
+    not itself listed in _TABULAR_TYPES/_TEXT_MEDIA_TYPES still resolves via
+    its supertype chain rather than falling through to "other"."""
+    t = el.get("type") or (el.get("elementHeader") or {}).get("type") or {}
+    names = set()
+    if t.get("typeName"):
+        names.add(t["typeName"])
+    names.update(t.get("superTypeNames") or [])
+    return names
+
+
+def asset_modality(el: dict) -> str:
+    """
+    Classify an asset element as "tabular", "text_media", or "other" from its
+    existing Open Metadata type -- the §1.9 resolution: no new classification,
+    derive from structure already there. Checked against the full type
+    hierarchy (typeName + superTypeNames), not just the leaf type.
+
+    Returns "tabular" | "text_media" | "other" -- never raises. "other" is
+    the honest fallback for asset types this pass doesn't classify (e.g.
+    APIs, processes), not a guess.
+    """
+    names = _element_type_names(el)
+    if names & _TABULAR_TYPES:
+        return "tabular"
+    if names & _TEXT_MEDIA_TYPES:
+        return "text_media"
+    return "other"
+
+
+# ── DRL bands (§1.9) ──────────────────────────────────────────────────────
+# Data Readiness Level: Raw -> Analytics-Ready -> RAG-Ready -> AI-Ready, as
+# cumulative gate checklists (gates-not-weights, §1.7/§1.8), not a blended
+# score. See egeria-workspaces OVERVIEW_CONTEXT_INTELLIGENCE.md §1.9.
+#
+# Only the gate this module can honestly compute today beyond what
+# `ai_ready_assets` already covers is recency. Two gates the design doc's
+# ladder calls for -- Survey Annotation presence (Tier 2, no verified
+# relationship type yet) and the modality-aware Structural Readiness
+# sub-check -- are still open decisions (design doc "Open decisions"
+# section), so this function does NOT claim to certify the full
+# Analytics-Ready/RAG-Ready rungs. Rather than approximate them from
+# whatever gates ARE available and risk mislabeling the result, it narrows
+# the already-shipped `ai_ready_assets` intersection by recency and reports
+# that -- same "leave it out, don't fake it" convention
+# `context_readiness_funnel`'s own `aiReady=None` already established.
+
+
+def drl_readiness_gates(mgr, ce, as_of: Optional[str] = None, recency_days: int = 180) -> Dict[str, Any]:
+    """
+    A recency-narrowed view of `ai_ready_assets`, plus a modality breakdown
+    of the underlying Asset population -- the two DRL-ladder pieces (§1.9)
+    that are honestly computable today without Survey Annotation coverage or
+    a Structural Readiness sub-check (both still open decisions).
+
+    NOT a full DRL band distribution: `analyticsReadyCount`/`ragReadyCount`
+    are deliberately absent, not approximated, until those two gates exist.
+
+    Parameters
+    ----------
+    mgr : MetadataExpert (or compatible client)
+    ce : ClassificationExplorer (or compatible client)
+    as_of : ISO-8601 asOfTime for a point-in-time read (None = now)
+    recency_days : provisional recency window for "recent" -- not yet a
+        decided band threshold, see design doc "Open decisions"
+
+    Returns {"total": int, "capped": bool, "aiReadyCount": int,
+    "aiReadyRecentCount": int, "byModality": {"tabular", "text_media", "other"}}.
+    """
+    from datetime import datetime, timedelta, timezone
+
+    body: Dict[str, Any] = {"class": "FindRequestBody", "limitResultsByStatus": ["ACTIVE"],
+                             "metadataElementTypeName": "Asset"}
+    if as_of:
+        body["asOfTime"] = as_of
+    assets = _find(mgr, body)
+
+    lineage_guids: set = set()
+    try:
+        rel_body = {"class": "ResultsRequestBody", "asOfTime": as_of} if as_of else None
+        rels = _json_list(ce.get_relationships(
+            relationship_type="DataFlow", output_format="JSON",
+            start_from=0, page_size=5000, body=rel_body))
+        for r in rels:
+            for end_key in ("end1", "end2"):
+                g = ((r.get(end_key) or {}) if isinstance(r, dict) else {}).get("guid")
+                if g:
+                    lineage_guids.add(g)
+    except Exception as exc:  # noqa: BLE001
+        logger.debug(f"drl_readiness_gates: DataFlow relationship query failed: {exc}")
+
+    now = datetime.fromisoformat(as_of.replace("Z", "+00:00")) if as_of else datetime.now(timezone.utc)
+    if now.tzinfo is None:
+        now = now.replace(tzinfo=timezone.utc)
+    horizon = timedelta(days=recency_days)
+
+    ai_ready = 0
+    ai_ready_recent = 0
+    by_modality = {"tabular": 0, "text_media": 0, "other": 0}
+    for a in assets:
+        by_modality[asset_modality(a)] += 1
+
+        guid = a.get("elementGUID")
+        pvm = (a.get("elementProperties") or {}).get("propertyValueMap") or {}
+        desc = (pvm.get("description") or {}).get("primitiveValue")
+        documented = isinstance(desc, str) and bool(desc.strip())
+        governed = bool(_classifications_of(a) & set(GOVERNANCE_CLASSIFICATIONS))
+        lineage_traced = guid in lineage_guids
+        if not (documented and governed and lineage_traced):
+            continue
+        ai_ready += 1
+
+        updated = _update_time(a)
+        if updated is not None and (now - updated) <= horizon:
+            ai_ready_recent += 1
+
+    return {
+        "total": len(assets),
+        "capped": len(assets) >= DEFAULT_CAP,
+        "aiReadyCount": ai_ready,
+        "aiReadyRecentCount": ai_ready_recent,
+        "byModality": by_modality,
+    }
+
+
+def _update_time(el: dict):
+    """Best-effort last-update timestamp from an element's version metadata."""
+    from datetime import datetime
+    header = el.get("elementHeader") or {}
+    versions = header.get("versions") or el.get("versions") or {}
+    v = versions.get("updateTime") or versions.get("createTime")
+    if not v:
+        return None
+    try:
+        return datetime.fromisoformat(str(v).replace("Z", "+00:00"))
+    except Exception:  # noqa: BLE001
+        return None
 
 
 def people_counts(mgr, as_of: Optional[str] = None) -> Dict[str, int]:

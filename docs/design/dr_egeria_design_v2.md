@@ -86,7 +86,7 @@ Before execution, Dr. Egeria must resolve references inside the input string.
    - Standard output summarizes success, including all generated GUIDs in the message.
    - **Console Analysis**: During `process`, the detailed "Command Analysis" is sent to the console (standard out) instead of the markdown file.
 
-## Robust Inter-Command Architecture (`planned_elements`)
+## Robust Inter-Command Architecture (`planned_elements` + two-pass batch resolution)
 
 Because users define multiple elements in a single file (e.g., defining a Glossary, and then a Category bound to that Glossary), Dr. Egeria must track elements that don't exist yet but *will* exist.
 
@@ -95,6 +95,66 @@ During processing, anytime an element is validated for creation or modification,
 
 ### Update on Planned Elements
 Dr. Egeria v2 supports `Update` commands on elements that are marked as "Planned" in the current document. If an `Update` command targets an element created earlier in the same file, the processor recognizes it as a planned update. In `validate` mode, these commands are marked as `🕒 Planned` in the diagnostic summary, and the "Found" status indicates `Planned` instead of `No`, providing a realistic preview of the final state.
+
+### Forward references (element listed *after* the command that references it)
+
+The mechanism above only ever helps a **backward** reference — `planned_elements` is populated incrementally, in file order, as each command is dispatched, so a reference to a name that belongs to a *later* command in the file simply isn't there yet when the referencing command's own resolution step runs.
+
+`V2Dispatcher.dispatch_batch()` now runs in **rounds** to close this gap:
+
+1. **Pre-scan** (`V2Dispatcher.prescan_batch_target_qns()`): before any command executes, the full batch is walked once and every Create/Update command's own target — both its derived qualified name and its raw Display Name — is collected into `context["batch_target_qns"]`. This is what lets a forward reference be recognized as "will exist" rather than "not found at all," from round 1 onward.
+2. **Round-based retry**: a command whose reference resolves to a name in `batch_target_qns` but isn't creatable *yet* is **deferred**, not failed, and retried on the next round. Rounds continue until nothing is deferred, or — once a round makes no further progress — one final forced round treats anything still unresolved as a genuine, permanent failure (so a truly broken reference still gets today's clear error, just correctly scoped).
+3. Two command "flavors," discriminated automatically by whether the command derives its own qualified name: **embedded** (e.g. `Create Project`, which creates a real element of its own) always creates that element immediately, even with an unresolved embedded reference — so other commands depending on *it* aren't falsely blocked in the same round. **Standalone** (e.g. `Link Project Hierarchy` — the entire command *is* the relationship, nothing else to create) defers the whole command.
+
+**Example — a parent listed before its child, previously impossible:**
+
+```markdown
+## Create Project
+### Display Name
+Sales Forecast Program
+### Sub-Projects
+Q1 Delivery
+
+___
+
+## Create Project
+### Display Name
+Q1 Delivery
+```
+
+Before this fix, `Sub-Projects` referencing `Q1 Delivery` (defined in the *next* command) failed immediately with `Referenced element(s) ['Q1 Delivery'] for attribute 'Sub-Projects' not found.` It now resolves in a later round and creates the real `ProjectHierarchy` relationship once `Q1 Delivery` exists — no reordering required. `--validate` mode reports this case plainly (`... | Note: forward reference(s) not yet creatable in this preview - will resolve during --process`) rather than a misleading bare success, since validate mode never actually creates anything to resolve against.
+
+## Parent relationships and governance classifications on `Update`
+
+`Anchor ID`/`Parent ID`/`Anchor Scope ID` (+ `Parent Relationship Type Name`/`Attributes`/`at End1`) are baked into `Create`'s `NewElementRequestBody` as a shortcut — Egeria's create endpoint bundles "create the element" and "establish this one relationship" into a single call. There is no equivalent `Update`-time shortcut (Egeria's `UpdateElementRequestBody` has no anchor/parent fields at all), so these attributes used to be silently dropped on `Update`.
+
+- **`Parent ID`/`Parent Relationship Type Name` now work on `Update` too**, via `AsyncBaseCommandProcessor._sync_parent_relationship()` — a generic method (works for any Egeria relationship type, not a hardcoded list) called after every successful Create/Update. It's idempotent (re-running with the same `Parent ID` is a no-op) and correctly re-parents (removes the old relationship, creates the new one) when `Parent ID` changes.
+- **`Anchor ID`/`Anchor Scope ID` remain Create-time-only, by design** — Egeria implements anchoring as a classification, and its maintenance is wired into specific entity-creation flows, not any generic post-creation path (confirmed by testing: reclassifying `Anchors` succeeds at the API level but does not establish real anchor/cascade-delete semantics). Changing these on `Update` still has no effect — this is an intentional Egeria constraint, not a Dr.Egeria gap.
+- **`Confidentiality Classification`/`Confidence Classification`/`Criticality Classification`/`Impact Classification` now work on both Create and Update**, via `AsyncBaseCommandProcessor._sync_governance_classifications()` — previously these were parsed and validated but never applied at all, on either verb. `Retention Classification` remains non-functional due to an apparent Egeria server-side type-registration gap unrelated to Dr.Egeria (see `BACKLOG.md`).
+
+**Example — setting and later changing a project's parent and confidentiality:**
+
+```markdown
+## Create Project
+### Display Name
+Sensitive Analysis
+
+___
+
+## Update Project
+### Display Name
+Sensitive Analysis
+### Qualified Name
+Sensitive Analysis::1.0
+### Parent ID
+Sales Forecast Program
+### Parent Relationship Type Name
+ProjectHierarchy
+### Confidentiality Classification
+CONFIDENTIAL
+```
+
+Re-running the same `Update` later with `### Confidentiality Classification` set to `RESTRICTED` (and/or a different `Parent ID`) correctly changes the classification level / re-parents the project, rather than silently doing nothing.
 
 ## Document Preservation and Provenance
 

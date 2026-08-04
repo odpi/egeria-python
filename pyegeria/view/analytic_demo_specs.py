@@ -113,6 +113,20 @@ _DEMOS: Dict[str, FormatSet] = {
         result_shape="dict (ownershipCount, ownershipCapped, byOwnerType)",
         chart_types=["BAR"],
     ),
+    "Analytic Demo - Business Value Signals": _demo(
+        heading="Business Value Signals",
+        what="Real signals behind the Overview dashboard's four Business Value tiles "
+             "(NEXT-9): confidentialCount and describedCount come from a single "
+             "Asset-hierarchy fetch (assetTotal is that fetch's size, assetCapped=true "
+             "if it hit DEFAULT_CAP); duplicateCount is a separate ConsolidatedDuplicate "
+             "classification count. Each is a documented proxy, not a direct measure -- "
+             "see business_value_signals()'s docstring for the causal-claim caveat that "
+             "belongs with each field before treating it as more than that.",
+        analytic_function_name="business_value_signals",
+        demo_params={},
+        result_shape="dict (assetTotal, assetCapped, confidentialCount, describedCount, duplicateCount)",
+        chart_types=["BAR"],
+    ),
     "Analytic Demo - Governance Coverage": _demo(
         heading="Governance Classification Coverage",
         what="Count of elements carrying at least one governance classification "
@@ -184,13 +198,30 @@ _DEMOS: Dict[str, FormatSet] = {
              "'classified' (elements matching ANY of the same governance classifications "
              "governed_coverage uses), and 'lineage' (count of DataFlow relationships -- design/ "
              "business lineage, distinct from OpenLineage's operational lineage) are all computed "
-             "as of 2026-08-01. 'aiReady' is still None -- it needs a true cross-criteria "
-             "intersection (assets that are documented AND classified AND lineage-traced "
-             "simultaneously), not another independent count; see NEXT-18 (composite/derived "
-             "analytic metrics) for that follow-up.",
+             "as of 2026-08-01. 'aiReady' stays None from this function ALWAYS, by design -- these "
+             "four are independent counts, not a per-asset check, so they can't answer 'how many "
+             "assets are ALL of these at once'. See 'Analytic Demo - AI-Ready Assets' (below) for "
+             "that -- a genuinely different function, not a missing field on this one.",
         analytic_function_name="context_readiness_funnel",
         demo_params={},
         result_shape="dict (cataloged, documented, classified, lineage, aiReady)",
+    ),
+    "Analytic Demo - AI-Ready Assets": _demo(
+        heading="AI-Ready Assets (Composite)",
+        what="The actual per-asset intersection context_readiness_funnel's 'aiReady' field can't "
+             "give you: Asset elements that are governed AND documented AND lineage-traced, all "
+             "three, checked per element from a single capped Asset fetch plus one DataFlow "
+             "relationship query (not three separate counts intersected client-side after the "
+             "fact -- see the function's own docstring for the exact field-name gotchas this hit "
+             "while being built, e.g. find_metadata_elements results key their GUID as "
+             "'elementGUID' but a relationship end's GUID is plain 'guid'). 'total' is the "
+             "(possibly capped) Asset population actually checked -- divide aiReadyCount by total "
+             "for a percentage, don't assume it's the full catalog. First worked example of the "
+             "composite/derived analytic metric pattern NEXT-18 (egeria-workspaces BACKLOG.md) "
+             "flagged as missing.",
+        analytic_function_name="ai_ready_assets",
+        demo_params={},
+        result_shape="dict (aiReadyCount, total, capped)",
     ),
     "Analytic Demo - Catalog Growth Trend": _demo(
         heading="Catalog Growth Trend (6 Month)",

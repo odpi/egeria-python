@@ -30,7 +30,23 @@ class ActorManagerProcessor(AsyncBaseCommandProcessor):
 
         # Use canonical egeria type name for property construction
         egeria_type = self.egeria_type_name or object_type
-        
+
+        if verb == "Create" and object_type == "ToDo":
+            # Person Action Base bundle -- not an Actor Profile/Role, routed through
+            # my_profile.create_my_todo rather than the generic actor-manager properties path.
+            raw_guid = await self.client.my_profile._async_create_my_todo(
+                display_name,
+                activity_status=attributes.get('Activity Status', {}).get('value') or "REQUESTED",
+                description=attributes.get('Description', {}).get('value'),
+                situation=attributes.get('Situation', {}).get('value'),
+                priority=attributes.get('Priority', {}).get('value', 0),
+            )
+            new_guid = self.extract_guid_or_raise(raw_guid, "Create ToDo")
+            self.parsed_output["guid"] = new_guid
+            update_element_dictionary(qualified_name, {'guid': new_guid, 'display_name': display_name})
+            logger.success(f"Created ToDo '{display_name}' with GUID {new_guid}")
+            return await self.render_result_markdown(new_guid)
+
         props = set_actor_manager_prop_body(egeria_type, qualified_name, attributes)
 
         if verb == "Create":

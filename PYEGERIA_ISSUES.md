@@ -565,6 +565,82 @@ next release goes out.
 
 ---
 
+### ISSUE-21: `ClassificationExplorer.get_scoped_elements`/`get_scopes` sync wrappers pass `output_format` into the wrong positional slot
+
+**Status:** open, found 2026-08-03 while live-verifying the new Curation
+family's `Link Element To Scope` command (`md_processing/v2/curation.py`).
+
+**Layer:** Pyegeria (`pyegeria/omvs/classification_explorer.py`).
+
+**What:** `get_scoped_elements(scope_guid, body=None, output_format="JSON",
+report_spec=None, start_from=0, page_size=0, **kwargs)` calls
+`self._async_get_scoped_elements(scope_guid, body, output_format,
+report_spec, start_from, page_size, **kwargs)` positionally, but
+`_async_get_scoped_elements`'s own parameter order doesn't match — the
+`output_format` string ends up landing in the `page_size` slot of the
+`ResultsRequestBody` pydantic model, which then rejects it (`page_size`
+must be an int). Same bug shape in `get_scopes`. Repro:
+
+```python
+from pyegeria import EgeriaTech
+client = EgeriaTech("qs-view-server", "https://localhost:9443", user_id="erinoverview")
+client.create_egeria_bearer_token("erinoverview", "secret")
+client.classification_manager.get_scoped_elements("<any-guid>")
+# pydantic_core._pydantic_core.ValidationError: 1 validation error for ResultsRequestBody
+# page_size: Input should be a valid integer, unable to parse string as an integer [input_value='JSON', ...]
+```
+
+**Impact:** cannot read back ScopedBy relationships through these two
+convenience methods at all (any call fails, regardless of arguments) —
+had to fall back to `add_scope_to_element`'s own SUCCESS status as
+verification evidence for `Link Element To Scope`, rather than an
+independent readback, since this repo has no other exposed way to list
+ScopedBy relationships. Doesn't block the `add_scope_to_element`/
+`clear_scope_from_element` write path used by Curation and Actor
+Manager's `Link Perspective to Question` — only the read-back path.
+
+**Candidate fix:** align `_async_get_scoped_elements`/`_async_get_scopes`'s
+parameter order with what their sync wrappers pass, or switch the wrappers
+to keyword-only calls — not attempted here, out of scope for the Curation
+family work in progress.
+
+---
+
+### ISSUE-22: `Ownership`/`Impact`/`Confidence`/`Confidentiality`/`Criticality` classification `status` field expects an int enum, not the free-text value the Dr.Egeria "Status" attribute style implies
+
+**Status:** open, found 2026-08-03 during a live smoke test of `Classify
+Impact` (Curation family).
+
+**Layer:** Not strictly a pyegeria bug — a Dr.Egeria compact-spec design
+gap (`md_processing/data/compact_commands/commands_curation_compact.json`,
+`Status` attribute, style `Simple`) combined with `curation.py`'s field
+mapping (`_GOVERNANCE_SHARED_FIELDS = {"Status": "status", ...}`).
+
+**What:** `ImpactProperties`/etc.'s real `status` field is an integer
+`GovernanceClassificationStatus` enum ordinal (per
+`Egeria-api-classification-explorer.http`'s worked example: `"status" : 0`),
+not a free-text string. Passing `"ACTIVE"` (a plausible-looking value given
+the attribute's `Simple` style) doesn't error — it's silently dropped by
+the server, and the classification's `statusIdentifier` (the field's
+readback name) stays at its default `0`.
+
+**Where seen:** live repro — `Classify Impact` with `Status: ACTIVE`,
+`Level Identifier: 2`, `Steward`/`Source`/`Description` set. Fetching the
+classified element back showed `severityLevel: "2"`, `steward`, `source`,
+`notes` all correct, but `statusIdentifier: "0"` regardless of the `Status`
+value sent — confirms `status` never took effect as text.
+
+**Candidate fix:** change the `Status` attribute's style to `Valid Value`/
+`Enum` with the real `GovernanceClassificationStatus` ordinal labels (needs
+confirming the exact enum from the Egeria type system rather than guessing
+further), authored in Tinderbox per the usual compact-spec workflow — not
+attempted here, since it's a spec authoring change, not a Curation
+processor-wiring bug. Doesn't block Impact/Confidence/etc. classification
+overall — `severityLevel`, `steward`, `source`, `notes` all confirmed
+working correctly.
+
+---
+
 *(Add new entries at the end of the appropriate section as they're found.
 Keep the format: status, layer classification, what, where seen, candidate
 fix — so entries are self-contained enough to hand to whoever eventually

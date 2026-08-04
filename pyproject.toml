@@ -3,7 +3,7 @@
 
 [project]
 name = "pyegeria"
-version = "6.0.17.8"
+version = "6.0.17.13"
 license = 'Apache-2.0'
 license-files = ["LICENSE"]
 authors = [{name = "Dan Wolfson", email = "dan.wolfson@pdr-associates.com"},]
@@ -182,6 +182,7 @@ dependencies = [
     gen_md_cmd_templates = "commands.tech.generate_md_cmd_templates:main"
     gen_dr_help = "commands.tech.generate_dr_help:main"
     refresh_specs = "commands.tech.refresh_specs:main"
+    dr_egeria_spec_editor = "commands.tech.spec_editor:main"
 
 
 [tool.uv.workspace]
@@ -215,7 +216,9 @@ exclude = ["tests", "config"]
     "md_processing_utils/tests/*.txt"
 ]
 "my_egeria" = ["**/*.tcss"]
+"commands" = ["tech/spec_editor_static/*"]
 
 
 [project.optional-dependencies]
 test = ["pytest"]
+spec-editor = ["fastapi>=0.115", "uvicorn>=0.32"]

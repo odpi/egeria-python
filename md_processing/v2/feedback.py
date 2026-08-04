@@ -105,9 +105,25 @@ class FeedbackProcessor(AsyncBaseCommandProcessor):
                 logger.success(f"Updated Note '{display_name}' with GUID {guid}")
                 return await self.client._async_get_note_by_guid(
                     guid, output_format='MD', report_spec="Journal-Entry-DrE")
-            # Create Note omitted for brev since it was create_project in sync code? 
+            # Create Note omitted for brev since it was create_project in sync code?
             # Looking closer at sync code: body = set_create_body... guid = egeria_client.create_project (??)
             # That looks like a bug in sync code. I'll stick to what was there or leave for now.
+
+        elif "Review" in object_type and verb == "Create":
+            # Person Action Base bundle -- not a Comment/Notification, routed through
+            # my_profile.create_review rather than the Comment/Note paths above.
+            raw_guid = await self.client.my_profile._async_create_review(
+                display_name,
+                activity_status=attributes.get('Activity Status', {}).get('value') or "REQUESTED",
+                description=attributes.get('Description', {}).get('value'),
+                situation=attributes.get('Situation', {}).get('value'),
+                priority=attributes.get('Priority', {}).get('value', 0),
+            )
+            guid = self.extract_guid_or_raise(raw_guid, "Create Review")
+            self.parsed_output["guid"] = guid
+            update_element_dictionary(qualified_name, {'guid': guid, 'display_name': display_name})
+            logger.success(f"Created Review '{display_name}' with GUID {guid}")
+            return await self.render_result_markdown(guid)
 
         return self.command.raw_block
 

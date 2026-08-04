@@ -146,9 +146,30 @@ Dr.Egeria implements "Upsert" logic to make metadata scripts more robust and ide
 - **Create → Update**: If a `Create` command is issued but the element already exists (matched by Qualified Name), Dr.Egeria automatically rewrites the command to `Update`.
 - **Update → Create**: If an `Update` command is issued but the element does not exist and hasn't been "Planned" by a previous command, it is rewritten to `Create`.
 
-### Planned Elements
+### Planned Elements and Forward References
 
-Dr.Egeria supports inter-command dependencies within a single file. If a command creates a new element (e.g., a Glossary), subsequent commands in the same file (e.g., creating a Term in that Glossary) can resolve the new element's GUID even before the first command is fully committed to Egeria. These are tracked as "Planned" elements.
+Dr.Egeria supports inter-command dependencies within a single file — a command can reference an element that another command in the same file is also creating, in **either order**:
+
+- **Backward reference** (the referenced element is defined by an *earlier* command): resolves immediately via the "Planned" mechanism, as it always has.
+- **Forward reference** (the referenced element is defined by a *later* command, e.g. a parent project listing sub-projects that come afterward in the file): Dr.Egeria pre-scans the whole batch before running anything, recognizes the name as a legitimate target, and defers the referencing command until the target actually exists — retrying automatically over one or more passes. You do not need to reorder your file.
+
+```markdown
+## Create Project
+### Display Name
+Sales Forecast Program
+### Sub-Projects
+Q1 Delivery
+
+___
+
+## Create Project
+### Display Name
+Q1 Delivery
+```
+
+`Q1 Delivery` is only defined *after* `Sales Forecast Program` references it — this now works correctly, creating a real `ProjectHierarchy` relationship once `Q1 Delivery` exists. A reference to a name that isn't defined *anywhere* in the file (a genuine typo or missing block) still fails immediately with a clear `Referenced element(s) [...] not found` error — deferral only applies to names Dr.Egeria recognizes as a real target elsewhere in the same batch.
+
+In `--validate` mode, a command with a still-pending forward reference is reported with a note (`| Note: forward reference(s) not yet creatable in this preview - will resolve during --process`) rather than an unqualified success, since validation never actually creates anything for the reference to resolve against.
 
 ### Reference Resolution
 
@@ -157,6 +178,42 @@ Dr.Egeria attempts to resolve element references (like a parent Glossary for a T
 2. **Reference Name**: A structured name in the format `Type::QualifiedName` (e.g., `Glossary::PDR::SalesGlossary`). This is the preferred way to refer to elements in Link commands.
 3. **Qualified Name**: The unique string path for the element.
 4. **Display Name**: The human-readable name (ambiguous matches will result in warnings/errors).
+
+### Parent Relationships and Governance Classifications on `Update`
+
+Several "advanced" attributes available on every Create/Update command are baked into `Create` as a shortcut — Egeria's create endpoint bundles "create the element" and "establish this one relationship/classification" into a single call. Whether the same attribute also works on `Update` depends on which one:
+
+- **`Parent ID` + `Parent Relationship Type Name`** (+ `Parent Relationship Attributes`/`Parent at End1`) — works on both `Create` and `Update`. Changing `Parent ID` on an `Update` re-parents the element (removes the old relationship, creates the new one); repeating the same `Update` is a safe no-op.
+
+  ```markdown
+  ## Update Project
+  ### Display Name
+  Q1 Delivery
+  ### Qualified Name
+  Q1 Delivery::1.0
+  ### Parent ID
+  Sales Forecast Program
+  ### Parent Relationship Type Name
+  ProjectHierarchy
+  ```
+
+- **`Confidentiality Classification` / `Confidence Classification` / `Criticality Classification` / `Impact Classification`** — work on both `Create` and `Update`; changing the value on an `Update` re-classifies the element.
+
+  ```markdown
+  ## Update Project
+  ### Display Name
+  Sensitive Analysis
+  ### Qualified Name
+  Sensitive Analysis::1.0
+  ### Confidentiality Classification
+  RESTRICTED
+  ```
+
+  Valid values follow Egeria's `0422 Governed Data Classifications` model, e.g. Confidentiality: `UNCLASSIFIED`, `INTERNAL`, `CONFIDENTIAL`, `SENSITIVE`, `RESTRICTED`, `OTHER`. Use `gen_dr_help`/`dr_egeria_help` to see the valid values for each classification attribute on a specific command.
+
+  **`Retention Classification` does not currently work** on either verb, due to an Egeria server-side issue unrelated to Dr.Egeria (see `BACKLOG.md`) — it fails cleanly as a per-item error rather than silently doing nothing.
+
+- **`Anchor ID` / `Anchor Scope ID`** — **Create-time only, by design.** Anchoring in Egeria is create-time-only plumbing; there is no supported way to change an element's anchor after creation. Setting these on an `Update` command has no effect.
 
 ---
 
@@ -174,10 +231,16 @@ Dr.Egeria organizes its commands into "families," each corresponding to a specif
 - **Solution Architect**: Manage solution blueprints, components, information supply chains, and design patterns (e.g., `Create Design Pattern`, `Link Nested Design Patterns`, `Link Specialized Design Patterns`, `Link Related Design Patterns`).
 - **Governance Officer**: Manage governance definitions, policies, and responsibilities.
 - **Action Author**: Define governance action process flows — reusable single-step action types and multi-step processes — and wire them to the engines and elements that execute them, without writing code (e.g., `Create Governance Action Process`, `Create Governance Action Process Step`, `Link First Process Step`, `Link Next Process Step`, `Link Action to Action Executor`, `Link Action to Target`).
+- **Curation**: Apply classifications and relationships to *existing* Referenceable elements after the fact — this family creates no elements of its own, it curates ones created elsewhere. Every command names a `Target Element` (Reference Name) and either a classification level/status or a second element to relate to.
+  - **Classifications** (`Classify`/`Reclassify`/`Declassify`, or `Classify`/`Update`/`Declassify` for the three multi-value ones): Impact, Confidence, Confidentiality, Criticality, Retention, Ownership, Digital Resource Origin, Zone Membership, Security Tags, Data Scope, Governance Expectations, Governance Measurements, Known Duplicate, Consolidated Duplicate.
+  - **Relationships** (`Link`/`Unlink`, or `Attach`/`Detach` for Search Keyword): Search Keyword (attach-only — see gap note below), Semantic Assignment, Semantic Definition, Link Element To Scope (`ScopedBy`), Link Resource To Element (`ResourceList`), Link More Information, Peer Duplicate, Consolidated Duplicate Link.
+  - **Not implemented** (`Classify`/`Declassify` Class Word, Modifier, Policy Management Point — 6 commands): these are real Egeria classification types, but no pyegeria SDK method exists for any of them yet (confirmed via `ClassificationExplorer` — not even a stub). They parse and validate but aren't registered with the dispatcher, so `--process` reports "No processor registered," same as an unimplemented command in any other family. Add the pyegeria methods first, then register them in `register_curation_processors()` (`md_processing/dr_egeria.py`) by adding their `OM_TYPE` to `CLASSIFICATION_METHODS` in `md_processing/v2/curation.py`.
+  - **Partially implemented**: `Update Search Keyword` and `Detach Search Keyword` need the previously-created `SearchKeyword` entity's own GUID, which the current compact-JSON attribute set for this command has no way to reference (only `Target Element`, `Keyword`, `Keyword Description` are captured — there's no `Search Keyword GUID` attribute). Only `Attach Search Keyword` (create + attach in one call) is wired; running `Update`/`Detach` raises a clear error rather than silently no-op'ing.
+  - Two related commands live in *other* families' compact specs (via the shared `Person Action Base` bundle), routed to those families' own processors rather than `CurationClassifyProcessor`/`CurationLinkProcessor`: `Create Meeting` (Project family, via `my_profile.create_meeting`) and `Create ToDo` (Actor Manager family, via `my_profile.create_my_todo`). `Create Review` (Feedback family, via `my_profile.create_review`) and `Create Note` are also `Person Action Base` commands but documented under **Feedback** below, since that's their family.
 
 ### Enrichment and Metadata Management
 
-- **Feedback**: Add comments, ratings, and informal tags to any Egeria element (e.g., `Add Comment`, `Attach Tag`).
+- **Feedback**: Add comments, ratings, and informal tags to any Egeria element (e.g., `Add Comment`, `Attach Tag`). Also includes two `Person Action Base` commands (shared with Curation's `Create Meeting`/`Create ToDo` — see above): `Create Review`, implemented via `my_profile.create_review`; and `Create Note`, which parses but is **not yet processed** — its compact-spec `OM_TYPE` (`Notification`) is a real Egeria entity type, but no dedicated create path is wired for it yet (the existing `FeedbackProcessor.apply_changes()` only implements `Update Note`).
 - **External Reference**: Link Egeria elements to external resources, media, or cited documents (e.g., `Create External Reference`, `Link Media Reference`).
 - **Report**: Run and author report specs (`FormatSet`s), and compose them — plus real Egeria `Report` assets and literal markdown text — into user-authored Dashboard Sheets:
   - `View Report`: Run a report spec ad hoc, supplying execution parameters (search string, output format, `Report Parameters` for a find-method spec's non-standard parameter, `Analytic Parameters` for an analytic-function spec's parameters, ...) at run time — no persistent element created.

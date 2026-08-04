@@ -1256,6 +1256,28 @@ class ServerClient(BaseServerClient):
             context = {"issue": "Invalid comment and body not provided"}
             raise PyegeriaInvalidParameterException(context=context)
 
+        # Workaround for ISSUE-14: fetch qualifiedName if missing from body properties
+        if isinstance(body, UpdateElementRequestBody):
+            props = body.properties
+        else:
+            if "properties" not in body:
+                body["properties"] = {}
+            props = body["properties"]
+
+        if not props.get("qualifiedName"):
+            try:
+                current_comment = await self._async_get_comment_by_guid(comment_guid)
+                if isinstance(current_comment, dict):
+                    # Check for qualifiedName in properties or header
+                    qn = current_comment.get("properties", {}).get("qualifiedName")
+                    if not qn:
+                        qn = current_comment.get("elementHeader", {}).get("qualifiedName")
+
+                    if qn:
+                        props["qualifiedName"] = qn
+            except Exception as e:
+                logger.warning(f"Failed to fetch existing comment {comment_guid} for qualifiedName workaround: {e}")
+
         url = f"{self.command_root}feedback-manager/comments/{comment_guid}/update"
         await self._async_update_element_body_request(url, ["Comment"], body)
 
@@ -6238,10 +6260,10 @@ class ServerClient(BaseServerClient):
 
     @dynamic_catch
     def validate_new_related_elements_request(self, body: dict | NewRelatedElementsRequestBody) -> NewRelatedElementsRequestBody | None:
-        if isinstance(body, NewRelationshipRequestBody):
+        if isinstance(body, NewRelatedElementsRequestBody):
             validated_body = body
         elif isinstance(body, dict):
-            validated_body = self._validate_body(self._new_relationship_request_adapter.validate_python, body)
+            validated_body = self._validate_body(self._new_related_elements_request_adapter.validate_python, body)
         else:
             validated_body = None
         return validated_body
