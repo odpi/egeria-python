@@ -19,7 +19,7 @@ class MainScreen(Screen):
     BINDINGS = [
         ("q", "app.quit", "Quit"),
         ("ctrl+e", "edit_table", "Edit Selected Table"),
-        ("ctrl+s", "show_comments", "Show Comments for Selected Table"),
+        ("ctrl+s", "show_comments", "Show Comments for Selected Row"),
     ]
 
     CSS_PATH = "my_profile.tcss"
@@ -53,6 +53,11 @@ class MainScreen(Screen):
         #     DataTable(id="communities_table"),
         #     id="main_communities_container"
         # )
+        yield ScrollableContainer(
+            Static(f"My Collections"),
+            DataTable(id=("my_collections_table")),
+            id="my_collections_container"
+            )
 
         yield ScrollableContainer(
             Static(f"Other Functions"),

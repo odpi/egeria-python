@@ -320,6 +320,7 @@ class MyProfileApp(App):
         self.user_identity_table = main_screen.query_one("#user_identity_table", DataTable)
         self.teams_table = main_screen.query_one("#teams_table", DataTable)
         self.associations_table = main_screen.query_one("#associations_table", DataTable)
+        self.my_collections_table = main_screen.query_one("#my_collections_table", DataTable)
 
         # assert self.projects_table is not None
         # assert self.communities_table is not None
@@ -330,6 +331,7 @@ class MyProfileApp(App):
         assert self.user_identity_table is not None
         assert self.teams_table is not None
         assert self.associations_table is not None
+        assert self.my_collections_table is not None
 
         # self.projects_table.clear(columns=True)
         # self.projects_table.add_columns("Status or Type", "Name", "Description", "GUID")
@@ -375,6 +377,11 @@ class MyProfileApp(App):
         self.associations_table.add_columns("Status or Type", "Name", "Description", "GUID")
         self.associations_table.zebra_stripes = True
         self.associations_table.cursor_type = "row"
+
+        self.my_collections_table.clear(columns=True)
+        self.my_collections_table.add_columns("Collection Name", "Collection Description", "Collection GUID")
+        self.my_collections_table.zebra_stripes = True
+        self.my_collections_table.cursor_type = "row"
 
         # Populate rows
         # for p in self.projects if isinstance(self.projects, list) else []:
@@ -1584,7 +1591,12 @@ class MyProfileApp(App):
                     }"""
                     self.push_screen(CreateSubscriptionRequestScreen(), callback=self.create_subscription_callback)
             else:
-                self.push_screen(ShopForDataScreen(self.view_server, self.platform_url, self.user_name, self.user_password, self.selected_item, self.selected_tree), callback=self.shop_for_data_callback)
+                self.push_screen(ShopForDataScreen(self.view_server,
+                                                   self.platform_url,
+                                                   self.user_name, self.user_password,
+                                                   self.selected_item,
+                                                   self.selected_tree),
+                                 callback=self.shop_for_data_callback)
 
     def create_subscription_callback(self, result):
         """ Callback routine for create subscription request screen
