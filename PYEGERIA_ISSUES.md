@@ -1675,17 +1675,34 @@ call chain, not just the internal request construction. Full
 `tests/micro-tests` suite: 228 passed, same one pre-existing unrelated
 failure as throughout this session, no regressions.
 
+**Follow-up cleanup, same day:** `output_format`, `for_lineage`,
+`for_duplicate_processing`, and `**kwargs` were also removed from both
+`_async_find_metadata_elements` and `find_metadata_elements` — none of the
+four were ever referenced anywhere in either method's body (confirmed by
+reading the full implementation), so declaring them implied controls that
+never existed, the same "extraneous parameter" shape as `start_from`/
+`page_size`/`graph_query_depth` above. Final signature for both: `(self,
+body: dict, timeout: int = default_timeout)` — nothing else. Verified: live
+call still succeeds (a `pageSize: 1` body field correctly limits to 1
+result), full `tests/micro-tests` suite still clean.
+
+**This raises the severity of the note below** — removing `**kwargs`
+specifically means a caller still passing `start_from=`/`page_size=`/
+`graph_query_depth=` as keyword arguments no longer gets silently ignored,
+it now gets a hard `TypeError: find_metadata_elements() got an unexpected
+keyword argument`. Worth knowing before upgrading pyegeria in any consumer
+that hasn't been updated yet.
+
 **Not carried over from pyegeria's fix:** `egeria-workspaces-fs/
 insights_handler.py`'s `search_elements()` still calls `find_metadata_elements`
-with `start_from=`/`page_size=`/`graph_query_depth=` as keyword arguments
-— these are now silently absorbed by `**kwargs` and have **no effect**
-(not an error, but not real pagination either; the existing GUID-dedup
-workaround still produces correct *results*, it just now always fetches
-the full set in one call rather than genuinely paginating, same net
-behavior as before this whole investigation started). That repo's own
-call site needs a follow-up update to put `startFrom`/`pageSize` in its
-own `find_body` dict to get real, efficient pagination — flagged, not
-fixed here (different repo).
+with `start_from=`/`page_size=`/`graph_query_depth=` as keyword arguments —
+as of the follow-up cleanup above, this will now **raise `TypeError` on
+every call** rather than silently no-op (see previous paragraph; this is a
+stronger warning than when this entry was first written). That repo's own
+call site needs a follow-up update to put `startFrom`/`pageSize` in its own
+`find_body` dict to get real, efficient pagination — flagged, not fixed
+here (different repo), but now genuinely blocking rather than just a
+missed optimization.
 
 ---
 

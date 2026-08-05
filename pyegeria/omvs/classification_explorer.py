@@ -1756,7 +1756,12 @@ class ClassificationExplorer(ServerClient):
 
         """
 
-        url = (f"{self.classification_command_root}/glossaries/elements/scoped-by/{scope_guid}")
+        # Ground truth: Egeria-api-classification-explorer.http's
+        # "Retrieve the elements linked via the ScopedBy relationship to the
+        # scope" worked example - no "glossaries/" segment (a stray leftover
+        # that 404'd every call regardless of arguments; not glossary-specific
+        # despite the erroneous path, ScopedBy works on any Referenceable).
+        url = (f"{self.classification_command_root}/elements/scoped-by/{scope_guid}")
 
         response = await self._async_get_results_body_request(url, "Referenceable", self._generate_referenceable_output,
                                                               start_from=start_from, page_size=page_size,

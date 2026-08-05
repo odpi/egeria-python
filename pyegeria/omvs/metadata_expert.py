@@ -2990,11 +2990,7 @@ class MetadataExpert(ServerClient):
     async def _async_find_metadata_elements(
         self,
         body: dict,
-        output_format: str = "JSON",
-        for_lineage: bool = None,
-        for_duplicate_processing: bool = None,
         timeout: int = default_timeout,
-        **kwargs,
     ) -> list | str:
         """Return a list of metadata elements that match the supplied criteria.
         The results can be returned over many pages. Async version.
@@ -3004,9 +3000,11 @@ class MetadataExpert(ServerClient):
         body: dict
             - A structure containing the search criteria (example below). Sent
               exactly as provided - the caller is fully responsible for the
-              ENTIRE body, including "graphQueryDepth", "startFrom", and
-              "pageSize" if wanted; nothing is merged or injected into it.
-              (ISSUE-34, PYEGERIA_ISSUES.md: startFrom/pageSize used to be
+              ENTIRE body, including "graphQueryDepth", "startFrom",
+              "pageSize", "forLineage", "forDuplicateProcessing", or any
+              other field this endpoint accepts; nothing is merged or
+              injected into it, and no other parameter here does anything to
+              it. (ISSUE-34, PYEGERIA_ISSUES.md: startFrom/pageSize used to be
               accepted as separate parameters here and appended to the URL as
               query params -- that was Egeria's OLDER convention for this
               endpoint and stopped working once Egeria moved pagination for
@@ -3021,11 +3019,11 @@ class MetadataExpert(ServerClient):
               information is exactly what went stale here; the caller
               already owns the body and is better positioned to track
               Egeria's current contract for a given endpoint than pyegeria's
-              own hardcoded assumption is.)
-        for_lineage: bool, default is set by server
-            - determines if elements classified as Memento should be returned - normally false
-        for_duplicate_processing: bool, default is set by server
-            - Normally false. Set true when the caller is part of a deduplication function
+              own hardcoded assumption is. `output_format`/`for_lineage`/
+              `for_duplicate_processing`/`**kwargs` were removed the same way
+              2026-08-05 -- none of them were ever referenced anywhere in this
+              method's body; declaring them implied a control that never
+              existed.)
         timeout: int, default = default_timeout
             - http request timeout for this request
 
@@ -3120,11 +3118,7 @@ class MetadataExpert(ServerClient):
     def find_metadata_elements(
         self,
         body: dict,
-        output_format: str = "JSON",
-        for_lineage: bool = None,
-        for_duplicate_processing: bool = None,
         timeout: int = default_timeout,
-        **kwargs,
     ) -> list | str:
         """
         Retrieve the relationships linking the supplied elements.
@@ -3134,14 +3128,11 @@ class MetadataExpert(ServerClient):
         body: dict
             - A structure containing the search criteria (example below). Sent
               exactly as provided - the caller is fully responsible for the
-              ENTIRE body, including "graphQueryDepth", "startFrom", and
-              "pageSize" if wanted (ISSUE-34, PYEGERIA_ISSUES.md -- see
-              _async_find_metadata_elements's docstring for the full story
-              on why these are no longer separate parameters here).
-        for_lineage: bool, default is set by server
-            - determines if elements classified as Memento should be returned - normally false
-        for_duplicate_processing: bool, default is set by server
-            - Normally false. Set true when the caller is part of a deduplication function
+              ENTIRE body, including "graphQueryDepth", "startFrom",
+              "pageSize", "forLineage", "forDuplicateProcessing", or any
+              other field this endpoint accepts (ISSUE-34, PYEGERIA_ISSUES.md
+              -- see _async_find_metadata_elements's docstring for the full
+              story on why these aren't separate parameters here).
         timeout: int, default = default_timeout
             - http request timeout for this request
 
@@ -3217,14 +3208,7 @@ class MetadataExpert(ServerClient):
         """
         loop = asyncio.get_event_loop()
         response = loop.run_until_complete(
-            self._async_find_metadata_elements(
-                body,
-                output_format=output_format,
-                for_lineage=for_lineage,
-                for_duplicate_processing=for_duplicate_processing,
-                timeout=timeout,
-                **kwargs,
-            )
+            self._async_find_metadata_elements(body, timeout=timeout)
         )
         return response
 
