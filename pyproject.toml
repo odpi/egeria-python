@@ -3,7 +3,7 @@
 
 [project]
 name = "pyegeria"
-version = "6.0.17.16"
+version = "6.0.17.17"
 license = 'Apache-2.0'
 license-files = ["LICENSE"]
 authors = [{name = "Dan Wolfson", email = "dan.wolfson@pdr-associates.com"},]
@@ -52,7 +52,6 @@ dependencies = [
 [project.scripts]
     pyegeria-mcp = "pyegeria.core.mcp_server:main"
     run_report = "commands.cat.run_report:main"
-    run_report_orig = "commands.cat.run_report_orig:main"
     my_reports = "commands.cat.my_reports:start_exp2"
     list_reports = "commands.cat.list_reports:main"
     load_report_specs = "commands.cat.load_report_specs:main"
@@ -65,7 +64,6 @@ dependencies = [
     get_tech_type_elements = "commands.cat.get_tech_type_elements:main"
     list_tech_type_elements = "commands.cat.list_tech_type_elements:main"
     list_projects = "commands.cat.list_projects:main"
-    list_todos = "commands.cat.list_todos:main"
     list_cert_types = "commands.cat.list_cert_types:main"
     get_project_structure = "commands.cat.get_project_structure:main"
     get_project_dependencies = "commands.cat.get_project_dependencies:main"
@@ -81,12 +79,16 @@ dependencies = [
     list_glossaries = "commands.cat.list_glossaries:main"
     load_terms_from_csv_file = "commands.cat.glossary_actions:import_terms_csv"
     export_terms_to_csv_file = "commands.cat.glossary_actions:export_terms_csv"
-    list_categories = "commands.cat.list_categories:main"
-    create_category = "commands.cat.glossary_actions:create_category"
-    update_category = "commands.cat.glossary_actions:update_category"
-    delete_category = "commands.cat.glossary_actions:delete_category"
-    add_term_to_category = "commands.cat.glossary_actions:add_term_to_category"
-    remove_term_from_category = "commands.cat.glossary_actions:remove_term_from_category"
+    # list_categories/create_category/update_category/delete_category/
+    # add_term_to_category/remove_term_from_category removed 2026-08-05 -
+    # pointed at commands.cat.list_categories (file no longer exists) and
+    # commands.cat.glossary_actions:{create,update,delete}_category /
+    # {add,remove}_term_to_category (functions no longer exist in that file -
+    # confirmed via git log that category-management commands existed and
+    # were removed at some point; only glossary/term-level commands remain
+    # today). See ISSUE-47 in PYEGERIA_ISSUES.md - restore this feature as a
+    # separate task if category management is still wanted, don't just
+    # re-add the entries.
 
 
     dr_egeria = "commands.cat.dr_egeria:process_markdown_file"
@@ -102,7 +104,6 @@ dependencies = [
 
     list_collections = "commands.cat.list_collections:main"
 
-    monitor_coco_status = "commands.ops.monitor_coco_status:main"
     monitor_active_engine_activity = "commands.ops.monitor_active_engine_activity:main_live"
 
     list_active_engine_activity = "commands.ops.monitor_active_engine_activity:main_paging"
@@ -115,17 +116,22 @@ dependencies = [
     monitor_daemon_status = "commands.ops.monitor_daemon_status:main_live"
     list_daemon_status = "commands.ops.monitor_daemon_status:main_paging"
     monitor_platform_status = "commands.ops.monitor_platform_status:main"
-    monitor_server_list = "commands.ops.orig_monitor_server_list:main"
     monitor_server_startup = "commands.ops.monitor_server_startup:main"
     monitor_server_status = "commands.ops.monitor_server_status:main"
     refresh_integration_daemon = "commands.ops.refresh_integration_daemon:main"
     restart_integration_daemon = "commands.ops.restart_integration_daemon:main"
     load_archive = "commands.ops.load_archive:load_archive"
-    load_archive_tui = "commands.ops.load_archive:tui"
     list_catalog_targets = "commands.ops.list_catalog_targets:main"
-    start_daemon = "commands.ops.engine_actions:start_daemon"
-    stop_daemon = "commands.ops.engine_actions:stop_daemon"
     list_archives = "commands.ops.list_archives:main"
+    # load_archive_tui/start_daemon/stop_daemon removed 2026-08-05 - pointed
+    # at commands.ops.load_archive:tui (no such function - load_archive.py
+    # only defines load_archive) and commands.ops.engine_actions (file no
+    # longer exists per git log). Start/stop functionality lives on today as
+    # gov_server_actions.py's start_server/stop_server, but those are click
+    # subcommands taking a @click.pass_context config object (ctx.obj) from
+    # the hey_egeria_ops group - not standalone entry points - so the fix is
+    # `hey_egeria_ops start`/`hey_egeria_ops stop`, not a 1:1 script rename.
+    # See ISSUE-47 in PYEGERIA_ISSUES.md.
 
     # my_egeria TUI apps — terminal mode
     my_egeria = "my_egeria.main:main"
@@ -167,7 +173,7 @@ dependencies = [
     validate_compact_specs = "commands.tech.validate_compact_specs:main"
     get_tech_type_template = "commands.tech.get_tech_type_template:main"
     list_relationships = "commands.tech.list_relationships:main"
-    generate_md_cmd_templates = "commands.tech.generate_md_cmd_template:main"
+    generate_md_cmd_templates = "commands.tech.generate_md_cmd_templates:main"
     list_valid_metadata_values = "commands.tech.list_valid_metadata_values:main"
     list_anchored_elements = "commands.tech.list_anchored_elements:main"
     list_gov_action_processes = "commands.tech.list_gov_action_processes:main"
@@ -176,7 +182,7 @@ dependencies = [
     list_solution_blueprints = "commands.tech.list_solution_blueprints:main"
     list_solution_roles = "commands.tech.list_solution_roles:main"
     list_solution_components = "commands.tech.list_solution_components:main"
-    delete_element = "commands.tech.generic_actions:delete_element"
+    delete_element = "commands.tech.element_actions:delete_element"
 
     gen_report_specs = "commands.tech.gen_report_specs:main"
     gen_md_cmd_templates = "commands.tech.generate_md_cmd_templates:main"

@@ -261,7 +261,15 @@ class PyegeriaInvalidParameterException(PyegeriaException):
         super().__init__(response, PyegeriaErrorCode.VALIDATION_ERROR,
                          context, additional_info, e)
         self.message = self.error_details["message_template"].format(self.additional_info.get('reason', ''))
-        logger.info(self.__str__(), ip=self.response_url, http_code=self.response_code, pyegeria_code=self.pyegeria_code)
+        # Escape braces - see PyegeriaAPIException's identical comment. additional_info
+        # commonly carries a dict-valued exceptionProperties (e.g. `{parameterName:
+        # elementGUID}` after __str__'s quote->backtick substitution), and loguru's
+        # logger.info(msg, **kwargs) always calls msg.format(**kwargs) - any literal
+        # "{" in msg that isn't one of ip/http_code/pyegeria_code raises a KeyError
+        # from inside the logging call itself, masking the real exception with an
+        # opaque traceback instead of printing it. Confirmed live 2026-08-05 via
+        # commands/my/todo_actions.py's create-todo CLI.
+        logger.info(self.__str__().replace("{", "{{").replace("}", "}}"), ip=self.response_url, http_code=self.response_code, pyegeria_code=self.pyegeria_code)
 
 class PyegeriaClientException(PyegeriaException):
     """Raised for invalid parameters - parameters that might be missing or incorrect."""
@@ -270,7 +278,8 @@ class PyegeriaClientException(PyegeriaException):
         # base_exception = context.get('caught_exception', None)
         super().__init__(response, PyegeriaErrorCode.CLIENT_ERROR,
                          context, additional_info, e)
-        logger.info(self.__str__(), ip=self.response_url, http_code=self.response_code, pyegeria_code=self.pyegeria_code)
+        # See PyegeriaInvalidParameterException's comment above.
+        logger.info(self.__str__().replace("{", "{{").replace("}", "}}"), ip=self.response_url, http_code=self.response_code, pyegeria_code=self.pyegeria_code)
 
 
 class PyegeriaAPIException(PyegeriaException):
@@ -327,7 +336,8 @@ class PyegeriaUnauthorizedException(PyegeriaAPIException):
         # and the bare-401 transport case (fall back to the real HTTP status).
         self.related_http_code = (additional_info or {}).get("relatedHTTPCode") or getattr(response, "status_code", None)
         self.message = self.error_details["message_template"].format((additional_info or {}).get("userid", ""))
-        logger.info(self.__str__(), ip=self.response_url, http_code=self.response_code, pyegeria_code=self.pyegeria_code)
+        # See PyegeriaInvalidParameterException's comment above.
+        logger.info(self.__str__().replace("{", "{{").replace("}", "}}"), ip=self.response_url, http_code=self.response_code, pyegeria_code=self.pyegeria_code)
 
 
 
@@ -347,7 +357,8 @@ class PyegeriaNotFoundException(PyegeriaAPIException):
         # See PyegeriaUnauthorizedException.__init__ for why this is set explicitly
         # here rather than inherited from PyegeriaAPIException.__init__.
         self.related_http_code = (additional_info or {}).get("relatedHTTPCode") or getattr(response, "status_code", None)
-        logger.info(self.__str__(), ip=self.response_url, http_code=self.response_code, pyegeria_code=self.pyegeria_code)
+        # See PyegeriaInvalidParameterException's comment above.
+        logger.info(self.__str__().replace("{", "{{").replace("}", "}}"), ip=self.response_url, http_code=self.response_code, pyegeria_code=self.pyegeria_code)
 
 
 # class PyegeriaInvalidResponseException(PyegeriaException):
@@ -386,7 +397,8 @@ class PyegeriaUnknownException(PyegeriaException):
                  context: dict = None, additional_info: dict = None, e: Exception = None) -> None:
         super().__init__(response, PyegeriaErrorCode.CLIENT_ERROR,
                          context, additional_info, e)
-        logger.info(self.__str__(), ip=self.response_url, http_code=self.response_code, pyegeria_code=self.pyegeria_code)
+        # See PyegeriaInvalidParameterException's comment above.
+        logger.info(self.__str__().replace("{", "{{").replace("}", "}}"), ip=self.response_url, http_code=self.response_code, pyegeria_code=self.pyegeria_code)
 
 
 
