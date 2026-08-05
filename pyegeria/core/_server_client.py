@@ -6544,12 +6544,25 @@ class ServerClient(BaseServerClient):
         json_body = validated_body.model_dump_json(indent=2, exclude_none=True)
 
         response = await self._async_make_request("POST", url, json_body)
-        elements = response.json().get("element", NO_ELEMENTS_FOUND)
+        resp_json = response.json()
+        elements = resp_json.get("element", NO_ELEMENTS_FOUND)
         if type(elements) is str:
-            elements = response.json().get("elementGraph", NO_ELEMENTS_FOUND)
+            elements = resp_json.get("elementGraph", NO_ELEMENTS_FOUND)
             if type(elements) is str:
-                logger.info(NO_ELEMENTS_FOUND)
-                return NO_ELEMENTS_FOUND
+                # ISSUE-42 (PY-22): some endpoints reached through this shared
+                # helper return a LIST under the plural "elements" key rather
+                # than the singular "element"/"elementGraph" checked above --
+                # e.g. ProjectManager.get_linked_projects's .../projects
+                # endpoint. Confirmed live: that method always returned
+                # NO_ELEMENTS_FOUND even when the raw response body genuinely
+                # had elements: [...] (verified via a request-spy). Checked
+                # last (not first) so callers whose endpoint really does use
+                # "element"/"elementGraph" are unaffected -- this fallback is
+                # only reached once both of those have already failed.
+                elements = resp_json.get("elements", NO_ELEMENTS_FOUND)
+                if type(elements) is str:
+                    logger.info(NO_ELEMENTS_FOUND)
+                    return NO_ELEMENTS_FOUND
 
         if output_format and output_format.upper() != 'JSON':  # return a simplified markdown representation
             logger.info(f"Found elements, output format: {output_format} and report_spec: {report_spec}")

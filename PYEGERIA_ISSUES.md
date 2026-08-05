@@ -409,54 +409,6 @@ redeploy used for this session, or a real, currently-unreleased endpoint.
 
 ---
 
-### ISSUE-42 (PY-22): `ProjectManager.get_linked_projects()` doesn't surface real `ProjectHierarchy` relationships
-
-**Status:** open — found 2026-07-31 while finishing an `as_of_time`
-verification pass (ISSUE-4/ISSUE-18's remainder — this method was one of
-the "not yet confirmed" ones, originally attributed to "the guid used
-didn't have linked projects"). Consolidated in from `egeria-workspaces-fs/
-PYEGERIA_ISSUES.md` 2026-08-05; about to be investigated/fixed.
-
-**How to trigger:**
-```python
-from pyegeria import ProjectManager
-pm = ProjectManager(view_server="qs-view-server", platform_url="https://localhost:9443",
-                     user_id="peterprofile", user_pwd="secret")
-pm.create_egeria_bearer_token()
-
-guid = "5d0057f6-7bb5-4693-961c-48cec3ea5307"  # "Sustainability Campaign"
-
-# Returns "No elements found" -- wrong, this project has real child projects.
-print(pm.get_linked_projects(guid))
-
-# The same relationship IS there, in get_project_by_guid's own response:
-p = pm.get_project_by_guid(guid)
-print(p["managedProjects"])  # RelatedMetadataHierarchySummary, typeName "ProjectHierarchy" -- real data
-```
-
-**Confirmed not a data-availability problem:** checked all 29 qs demo
-projects (`find_projects("*", graph_query_depth=0)`) — `get_linked_projects`
-returns `"No elements found"` for every single one, including several with
-an obvious parent/child naming pattern ("Sustainability Campaign" →
-"Design/Define/Implement/Run the sustainability..."). `get_project_by_guid`'s
-`managedProjects` field confirms the real relationship exists for at least
-"Sustainability Campaign". So `get_linked_projects` itself isn't resolving
-`ProjectHierarchy` (or whatever relationship type it's meant to cover) at
-all today, independent of any `as_of_time` question.
-
-**Impact:** any caller relying on `get_linked_projects` for project
-hierarchy (e.g. Egeria Explorer's Projects tab, if it uses this method for
-the parent/child tree) is silently missing real relationship data.
-
-**Not yet investigated:** whether this is a wrong relationship-type filter
-inside `get_linked_projects`'s implementation, a wrong request-body shape,
-or an Egeria-server-side gap specific to that endpoint (cf. ISSUE-38's "two
-OMVS layers can disagree" pattern, and ISSUE-39's structurally similar
-"count > 0 but find returns nothing" symptom for a different method) —
-needs a source read of `ProjectManager._async_get_linked_projects` next.
-
----
-
 ## Dr.Egeria / compact-spec design gap
 
 ### ISSUE-22: `Ownership`/`Impact`/`Confidence`/`Confidentiality`/`Criticality` classification `status` field expects an int enum, not the free-text value the Dr.Egeria "Status" attribute style implies
@@ -883,7 +835,7 @@ returns zero rows).
 | Multi-classification search (`matchClassifications`, 2+ conditions) | `MetadataExpert.find_metadata_elements` | Fixed in Egeria server (ISSUE-35) |
 | Paging a large `find_metadata_elements` result (`start_from`/`page_size`) | Don't rely on it | Egeria server ignores both regardless of pyegeria version (ISSUE-34, open) — dedupe by GUID client-side while accumulating pages instead |
 | Relationships for a single element by guid | `MetadataExpert.get_all_related_elements(guid)` | **Not** `get_metadata_element_by_guid` — that call never returns relationships, by design (ISSUE-37, not a bug) |
-| Project parent/child hierarchy | Don't use `ProjectManager.get_linked_projects()` yet | Returns "No elements found" even when `ProjectHierarchy` relationships exist (ISSUE-42, open) — use `get_project_by_guid()`'s `managedProjects` field instead |
+| Project parent/child hierarchy (any linked project, not just hierarchy) | `ProjectManager.get_linked_projects(guid)` | Fixed (ISSUE-42) — was silently returning "No elements found" regardless of real data |
 
 ---
 
@@ -1627,6 +1579,64 @@ Classification calls (`set_known_duplicate_classification`/
 **Fix:** `pyegeria/omvs/classification_explorer.py`,
 `_async_link_elements_as_peer_duplicates` (and its detach twin) now build
 the URL from the `related-elements` path.
+
+---
+
+### ISSUE-42 (PY-22): `ProjectManager.get_linked_projects()` didn't surface real `ProjectHierarchy` relationships
+
+**Status: FIXED** (2026-08-05, `pyegeria/core/_server_client.py`).
+
+**Layer:** Pyegeria (shared response-parsing helper, not the Egeria
+server). Originally found 2026-07-31 while finishing an `as_of_time`
+verification pass; consolidated in from `egeria-workspaces-fs/
+PYEGERIA_ISSUES.md` 2026-08-05 as open, then investigated and fixed the
+same day.
+
+**Root cause:** `get_linked_projects` delegates to the shared
+`ServerClient._async_get_guid_request` helper (used by 40+ callers across
+the OMVS classes), which parsed a response by checking only two keys —
+singular `"element"`, then `"elementGraph"` — before giving up and
+returning `NO_ELEMENTS_FOUND`. But the real Egeria response for this
+endpoint (`.../project-manager/metadata-elements/{guid}/projects`) returns
+a genuine list under the **plural** `"elements"` key, which was never
+checked at all. Confirmed live via a request-spy on `_async_make_request`:
+
+```
+RAW RESPONSE KEYS: ['class', 'requestId', 'relatedHTTPCode', 'elements']
+get_linked_projects("5d0057f6-...") -> "No elements found"   # wrong
+# but the raw body's "elements" list genuinely had 1 item
+```
+
+**Confirmed not a data-availability problem** (as originally suspected
+when this was found): checked all 29 qs demo projects — every single one
+returned `"No elements found"` regardless of whether it had real linked
+projects (confirmed via `get_project_by_guid`'s own `managedProjects`
+field, which does surface the same `ProjectHierarchy` relationships
+correctly through a different code path).
+
+**Fix:** added the plural `"elements"` key as a third fallback in
+`_async_get_guid_request`, checked *last* (only reached once both
+`"element"` and `"elementGraph"` have already failed) — purely additive,
+so the other 40+ callers whose endpoints genuinely return the singular
+shape are unaffected; none of their existing behavior changes since they
+never reach the new branch.
+
+**Verified:**
+- Live against `qs-view-server`: `get_linked_projects("5d0057f6-...")` (no
+  body, matching the original repro exactly) now returns a real 1-element
+  list (`"Sustainability Bootstrap Project"`); a second project
+  ("Next 30 Days (Initiation Phase)") returns 11 linked projects — matches
+  its 10 `managedProjects` (children) + 1 `managingProjects` (parent),
+  consistent with the method's own docstring ("any relationship will do").
+- New unit tests, `tests/micro-tests/test_get_guid_request.py` (4 tests,
+  mocked `_async_make_request`): the plural-`elements` case now parses
+  correctly; the singular-`element` and `elementGraph` cases are
+  unaffected (still checked first); the true-empty case still degrades to
+  `NO_ELEMENTS_FOUND`, not an exception.
+- Full micro-test suite: 228 passed (was 224; +4 new), same single
+  pre-existing unrelated failure (`test_dashboard_sheet_models.py`) as
+  before this change — no regressions across the other 40+ callers of the
+  shared helper.
 
 ---
 
