@@ -44,55 +44,35 @@ the same query, thanks to governance zone visibility — don't assume a
 result mismatch is a pyegeria bug before checking whether the same user was
 used on both sides of the comparison.
 
+**Consolidated 2026-08-05**: `egeria-workspaces-fs` had grown its own
+independent `PYEGERIA_ISSUES.md` (started 2026-06, own `PY-#` numbering,
+last entry `PY-23`) in parallel with this file — the two repos accumulated
+overlapping and unique issues separately rather than sharing one tracker.
+**This file is now the sole canonical tracker for both repos.**
+`egeria-workspaces-fs/PYEGERIA_ISSUES.md` has been replaced with a pointer
+here. Reconciliation: `PY-1` through `PY-14` in that file were pure
+duplicates of entries already tracked here (via this file's own
+`ISSUE-# (PY-#)` aliases) and were dropped, not re-added.
+`PY-15`/`PY-16`/`PY-17`/`PY-18`/`PY-19`/`PY-20`/`PY-21`/`PY-22` were unique
+to that file and are now `ISSUE-35` through `ISSUE-42` respectively (same
+`ISSUE-# (PY-#)` alias convention as the original merge). `PY-23` was the
+same investigation as this file's own `ISSUE-34` (both about
+`find_metadata_elements` ignoring pagination) — merged into `ISSUE-34`
+rather than duplicated. **Update 2026-08-05, same day:** `ISSUE-34` was
+itself provisionally misdiagnosed as a residual Egeria-server-side bug at
+the point of that merge; further investigation (prompted by the user)
+found the real root cause — a moved Egeria pagination convention pyegeria
+was tracking incorrectly — and fully fixed it, so `ISSUE-34` is now closed
+and lives in the Appendix, not the open "Egeria Server" section. Read
+`ISSUE-34`'s own entry for the full story; it's worth reading even though
+it's closed. If a comment anywhere still cites a bare `PY-#` in the 15-22
+range, search this file for `(PY-#)` to find its new `ISSUE-#` home.
+
 ---
 
 # Open Issues
 
 ## Pyegeria — fixable here
-
-### ISSUE-21: `ClassificationExplorer.get_scoped_elements`/`get_scopes` sync wrappers pass `output_format` into the wrong positional slot
-
-**Status:** open, found 2026-08-03 while live-verifying the new Curation
-family's `Link Element To Scope` command (`md_processing/v2/curation.py`).
-
-**Layer:** Pyegeria (`pyegeria/omvs/classification_explorer.py`).
-
-**What:** `get_scoped_elements(scope_guid, body=None, output_format="JSON",
-report_spec=None, start_from=0, page_size=0, **kwargs)` calls
-`self._async_get_scoped_elements(scope_guid, body, output_format,
-report_spec, start_from, page_size, **kwargs)` positionally, but
-`_async_get_scoped_elements`'s own parameter order doesn't match — the
-`output_format` string ends up landing in the `page_size` slot of the
-`ResultsRequestBody` pydantic model, which then rejects it (`page_size`
-must be an int). Same bug shape in `get_scopes`. Repro:
-
-```python
-from pyegeria import EgeriaTech
-client = EgeriaTech("qs-view-server", "https://localhost:9443", user_id="erinoverview")
-client.create_egeria_bearer_token("erinoverview", "secret")
-client.classification_manager.get_scoped_elements("<any-guid>")
-# pydantic_core._pydantic_core.ValidationError: 1 validation error for ResultsRequestBody
-# page_size: Input should be a valid integer, unable to parse string as an integer [input_value='JSON', ...]
-```
-
-**Impact:** cannot read back ScopedBy relationships through these two
-convenience methods at all (any call fails, regardless of arguments) —
-had to fall back to `add_scope_to_element`'s own SUCCESS status as
-verification evidence for `Link Element To Scope`, rather than an
-independent readback, since this repo has no other exposed way to list
-ScopedBy relationships. Doesn't block the `add_scope_to_element`/
-`clear_scope_from_element` write path used by Curation and Actor
-Manager's `Link Perspective to Question` — only the read-back path.
-
-**Candidate fix:** align `_async_get_scoped_elements`/`_async_get_scopes`'s
-parameter order with what their sync wrappers pass, or switch the wrappers
-to keyword-only calls — not attempted here, out of scope for the Curation
-family work in progress. **Update 2026-08-04:** confirmed this exact bug
-shape is not isolated — see ISSUE-25 (`find_root_elements` had the
-identical problem, fixed) and ISSUE-27 (~50 more unaudited call sites of
-the same shape).
-
----
 
 ### ISSUE-23: `max_mermaid_node_count` defaults to 5 across every shared find/get request helper, silently truncating server-generated mermaid graphs
 
@@ -218,50 +198,6 @@ elsewhere in this file).
 
 ---
 
-### ISSUE-26: `get_info_supply_chain_by_guid`/`get_solution_role_by_guid` accept `graph_query_depth`/`max_mermaid_node_count` but never use them — same "dead parameter" shape as ISSUE-23's third case
-
-**Status:** open, found 2026-08-04 while chasing ISSUE-25's repro further
-(checking whether the by-GUID retrieve returns a richer graph than
-by-search-string).
-
-**Layer:** Pyegeria (`pyegeria/omvs/solution_architect.py`).
-
-**What:** `_async_get_info_supply_chain_by_guid` and
-`_async_get_solution_role_by_guid` declare `graph_query_depth` and accept
-`**kwargs`, but when `body` is `None` they send **no body at all**
-(`self._async_make_request("POST", url, **kwargs)` — note there's no body
-positional argument in that call). If a caller tries to pass
-`graph_query_depth`/`max_mermaid_node_count` explicitly, they land in
-`**kwargs` and get forwarded straight into `_async_make_request()`, which
-doesn't accept them — a `TypeError` on every attempt, confirmed live:
-
-```python
-from pyegeria import SolutionArchitect
-sa = SolutionArchitect("qs-view-server", "https://localhost:9443", user_id="erinoverview")
-sa.create_egeria_bearer_token("erinoverview", "secret")
-sa.get_info_supply_chain_by_guid("<any-guid>", graph_query_depth=10, max_mermaid_node_count=10)
-# TypeError: BaseServerClient._async_make_request() got an unexpected keyword argument 'max_mermaid_node_count'
-```
-
-Exact same shape already documented in ISSUE-23's "third shape" for
-`get_solution_blueprint_by_guid`/`get_solution_component_by_guid` — this
-confirms two more sibling methods have it too.
-
-**Impact:** cannot control the mermaid graph depth/node count on a by-GUID
-retrieve for an information supply chain or solution role at all, short of
-passing a fully custom `body` dict (the `AnyTimeRequestBody` workaround
-ISSUE-23 already validated live: `{"class": "AnyTimeRequestBody",
-"graphQueryDepth": ..., "maxMermaidNodeCount": ...}`).
-
-**Candidate fix:** when `body is None`, build a body dict from the
-declared parameters (mirroring how every other `_by_guid` method in this
-file does it) instead of sending no body / dumping stray kwargs into
-`_async_make_request`. Same fix needed at
-`get_solution_blueprint_by_guid`/`get_solution_component_by_guid` per
-ISSUE-23 — worth doing all four together.
-
----
-
 ### ISSUE-27: ~50 more sync methods delegate to their async counterpart with an all-positional argument list — unaudited for the same scrambling bug as ISSUE-21/25
 
 **Status:** open, found 2026-08-04 as a byproduct of the ISSUE-25 sentinel
@@ -285,35 +221,6 @@ positional argument order against the target method's actual parameter
 order (the same manual check done for `find_root_elements` in ISSUE-25)
 and convert to keyword arguments wherever they've drifted. Not attempted
 here — flagged for a dedicated follow-up pass.
-
----
-
-### ISSUE-28: `get_specification_property_by_guid` raises a bare `NameError: name 'validate_guid' is not defined` — cannot be called at all
-
-**Status:** open, found 2026-08-04 as a byproduct of the ISSUE-25 sentinel
-audit.
-
-**Layer:** Pyegeria — affects `SpecificationProperties`,
-`ValidMetadataManager`, `ValidMetadataLists`, `ValidTypeLists` (all share
-the same `get_specification_property_by_guid` implementation via
-inheritance).
-
-**What:** a missing import — `validate_guid` is referenced but never
-imported in whichever module defines this method. Every call fails
-immediately with `NameError`, regardless of arguments:
-
-```python
-from pyegeria import SpecificationProperties
-mgr = SpecificationProperties(view_server="qs-view-server", platform_url="https://localhost:9443", user_id="erinoverview")
-mgr.create_egeria_bearer_token("erinoverview", "secret")
-mgr.get_specification_property_by_guid("<any-guid>")
-# NameError: name 'validate_guid' is not defined
-```
-
-**Candidate fix:** add the missing `from pyegeria.core._validators import
-validate_guid` (or wherever the shared helper lives) import. Not attempted
-here — a one-line fix, but outside the scope of the ISSUE-25 pass that
-found it.
 
 ---
 
@@ -478,6 +385,196 @@ mgr.get_specification_property_by_type(list(types.keys())[0])
 
 ---
 
+### ISSUE-43: Pagination location for `find_metadata_elements`'s endpoint — audit finding, plausible but not yet confirmed live
+
+**Status:** open (pyegeria, suspected) — found 2026-08-05 while auditing
+for the same drift class as ISSUE-34 (see that entry's "design principle"
+paragraph — Egeria's pagination convention moved from URL query params to
+request-body fields for at least one endpoint a few months ago; worth
+checking any method still doing URL-based `startFrom`/`pageSize`
+injection). Grepped `pyegeria/omvs/*.py` for the same
+`?startFrom={..}&pageSize={..}` URL-construction shape ISSUE-34 had; found
+2 more matches besides `metadata_expert.py` (already fixed there) —
+`runtime_manager.py` and `valid_metadata.py`.
+
+**`valid_metadata.py`'s `_async_get_valid_metadata_values`: checked, NOT a
+bug.** This is a plain `GET` request (`get-valid-metadata-values/{property_name}`)
+— there is no request body at all for a GET, so URL query parameters are
+the only place `startFrom`/`pageSize` *can* go. Confirmed against the
+`.http` ground truth (`Egeria-api-classification-explorer.http`) — also a
+bare GET, no body shown. Correctly implemented as-is.
+
+**`runtime_manager.py`'s `_async_get_server_templates_by_dep_impl_type`:
+suspicious, not yet confirmed.** Line ~2612 unconditionally appends
+`?startFrom={start_from}&pageSize={page_size}&getTemplates=true` to the URL
+*regardless* of whether `start_from`/`page_size` are also meaningful via
+the `body` path — and the shared helper it delegates to
+(`ServerClient._async_get_name_request`) **already** builds a correct
+`"startFrom"`/`"pageSize"` pair into the body it constructs when the
+caller doesn't supply an explicit `body` (confirmed by reading
+`_async_get_name_request`'s source directly, `_server_client.py` ~line
+6493). So the URL suffix here is at best redundant with what the body path
+already does correctly, and at worst sends conflicting information when a
+caller supplies their own explicit `body` without `startFrom`/`pageSize`
+set (in that case pagination could only come from the URL, which per
+ISSUE-34's finding is exactly the convention that stopped working for a
+sibling endpoint).
+
+**Not yet empirically confirmed**, unlike ISSUE-34's `find_metadata_elements`
+finding — this demo dataset doesn't have enough `Template`-classified
+servers of the same `deployedImplementationType` to construct a real
+2-page pagination test (tried `cots-application-server` — 5 total
+`SoftwareServer`s of that type exist, but zero are `Template`-classified;
+every filter value tested returned either 0 or 1 `Template`-classified
+result, never 2+, so a same-content-vs-distinct-content comparison isn't
+possible with this data). **Next step:** either seed enough demo data to
+get a real 2+ result test, or read the Java source for this specific
+endpoint the way ISSUE-15's `QueryBuilder` investigation did, rather than
+guessing from the pattern match alone.
+
+---
+
+### ISSUE-38 (PY-18): `count_relationships_between_elements("Exception")` (276) disagrees with `ClassificationExplorer.get_relationships("Exception")` (55)
+
+**Status:** open (Egeria server) — needs Egeria-side investigation. Found
+2026-07-24 while wiring the Egeria Overview dashboard to native counting
+(odpi/egeria#9168). Consolidated in from `egeria-workspaces-fs/
+PYEGERIA_ISSUES.md` 2026-08-05.
+
+**Summary:** the OMF metadata-expert native relationship count and the
+classification-explorer `get_relationships` return materially different
+totals for the `Exception` relationship type — and *only* that type, among
+those tested.
+
+**How to trigger:**
+```python
+from pyegeria import MetadataExpert, ClassificationExplorer
+me = MetadataExpert(view_server="qs-view-server", platform_url="https://localhost:9443",
+                    user_id="erinoverview", user_pwd="secret"); me.create_egeria_bearer_token()
+ce = ClassificationExplorer(view_server="qs-view-server", platform_url="https://localhost:9443",
+                    user_id="erinoverview", user_pwd="secret"); ce.create_egeria_bearer_token()
+
+me.count_relationships_between_elements({"class":"FindRelationshipRequestBody","relationshipTypeName":"Exception"})
+# -> 276
+len(ce.get_relationships(relationship_type="Exception", output_format="JSON", start_from=0, page_size=5000))
+# -> 55  (all 55 have exact typeName "Exception"; no effectivity dates)
+```
+
+**What it is NOT:**
+- Not the type filter — `count("SemanticAssignment")` = 397 =
+  `get_relationships` = 397; `License` 2 = 2; `Certification` 0 = 0;
+  `AttachedRating` 0 = 0. Every other tested type matches; only `Exception`
+  diverges.
+- Not status/effectivity — `count("Exception")` is 276 with
+  `limitResultsByStatus=[ACTIVE]`, with `effectiveTime=<now>`, and with
+  neither; the 55 `get_relationships` results carry no
+  `effectiveFromTime`/`effectiveToTime`.
+- `count(no relationshipTypeName)` = 31857 (all relationships), so 276 is
+  a genuine type-scoped subset, not "count ignores the filter".
+
+**Open question for Egeria:** what does the metadata-expert count include
+for `Exception` that the classification-explorer traversal excludes
+(subtypes counted under the supertype? relationships to non-visible/
+anchored/dangling ends? access/zone filtering that differs between the two
+OMVS)? Whichever is "true", the two APIs should agree for a given type —
+or the difference should be documented.
+
+**Impact / workaround:** egeria-workspaces-fs's Overview dashboard keeps
+**relationship** counts on `ClassificationExplorer.get_relationships` (so
+"Open Exceptions" stays consistent with the Audit app at 55) and uses
+native counting only for **element** counts.
+
+---
+
+### ISSUE-39 (PY-19): `MetadataExpert.find_relationships_between_elements(relationshipTypeName=…)` returns "No elements found" even when the matching count is non-zero
+
+**Status:** open (Egeria server) — found 2026-07-24 alongside ISSUE-38,
+same environment. Consolidated in from `egeria-workspaces-fs/
+PYEGERIA_ISSUES.md` 2026-08-05.
+
+**How to trigger:**
+```python
+me.count_relationships_between_elements({"class":"FindRelationshipRequestBody","relationshipTypeName":"SemanticAssignment"})
+# -> 397
+me.find_relationships_between_elements({"class":"FindRelationshipRequestBody","relationshipTypeName":"SemanticAssignment"},
+                                       start_from=0, page_size=5000)
+# -> "No elements found"   (same for "Exception", which counts 276)
+```
+
+**Expected:** a plain type-scoped `find_relationships_between_elements`
+should return the relationships the sibling
+`count_relationships_between_elements` counts (or the two methods should
+document why they differ).
+
+**Actual:** the find returns the empty-result string for a bare
+`relationshipTypeName` query even though the count is non-zero —
+suggesting the find needs anchor element GUIDs (or has a bug), while the
+count does not.
+
+**Impact / workaround:** none needed in egeria-workspaces-fs — element
+counts use `count_metadata_elements`; relationship counts/lists use
+`ClassificationExplorer.get_relationships`, which works. Flagged because
+the count/find asymmetry within the same OMVS is confusing and blocks
+using the metadata-expert find as a fallback for the native relationship
+count.
+
+---
+
+### ISSUE-41 (PY-21): `find_glossary_terms(sequencing_order=..., include_only_classified_elements=...)` returns ZERO results when combined — each filter alone works fine
+
+**Status:** confirmed bug (Egeria server) — found 2026-07-28 debugging
+Egeria Explorer's Perspectives page showing Perspectives but no Questions.
+Related to ISSUE-40 below (same broken parameter, different — and more
+severe — failure mode: not just wrong order, but zero rows). Consolidated
+in from `egeria-workspaces-fs/PYEGERIA_ISSUES.md` 2026-08-05.
+
+**How to trigger** (`GlossaryManager.find_glossary_terms`, qs-view-server,
+33 `GlossaryTerm`s classified `Question`):
+```python
+# classification filter alone: 33 hits
+mgr.find_glossary_terms(search_string="*", starts_with=True, output_format="JSON",
+                        page_size=200, graph_query_depth=0,
+                        include_only_classified_elements=["Question"])
+
+# sequencing_order alone (no classification filter): 200 hits (unrelated terms, page_size ceiling)
+mgr.find_glossary_terms(search_string="*", starts_with=True, output_format="JSON",
+                        page_size=200, graph_query_depth=0,
+                        sequencing_order="PROPERTY_ASCENDING")
+
+# BOTH together: 0 hits
+mgr.find_glossary_terms(search_string="*", starts_with=True, output_format="JSON",
+                        page_size=200, graph_query_depth=0,
+                        sequencing_order="PROPERTY_ASCENDING",
+                        include_only_classified_elements=["Question"])
+# -> []  (or a "No elements found" string, depending on call shape)
+```
+Isolated further: `sequencing_order="PROPERTY_ASCENDING"` is the trigger —
+`sequencing_property` alone (no `sequencing_order`) does **not** break it
+(still 33 hits). It's specifically `sequencing_order` + a classification
+filter.
+
+**Expected:** the classification filter's 33 matches, sorted by the given
+sequencing property (or, per ISSUE-40, at least returned in server-internal
+order — but not silently emptied).
+
+**Actual:** zero rows, with no error — the query silently looks like
+"nothing matches" rather than failing loudly, which is what made this hard
+to spot (the egeria-workspaces-fs `/api/questions` endpoint returned
+`{"total": 0}` with a 200 status; only comparing against a live count of
+Question-classified terms in Egeria surfaced that this was wrong, not just
+an empty demo).
+
+**Impact / workaround:** egeria-workspaces-fs's `perspectives_handler.py`'s
+`get_questions()` used exactly this broken combination. Fixed by dropping
+`sequencing_order`/`sequencing_property` from the call — the endpoint
+already sorts client-side, so the server-side sequencing was redundant
+even before this bug was found. No other known callers currently combine
+`sequencing_order` with a classification filter, but worth checking
+`include_only_classified_elements`/`matchClassifications` callers
+generally if new zero-result reports show up elsewhere.
+
+---
+
 ## Docs / class-organization sharp edges
 
 ### ISSUE-19 (PY-12): `ReferenceDataManager` has no specification-property or valid-metadata-value methods
@@ -506,6 +603,66 @@ decision tree for "which OMVS client class do I need" across
 
 ---
 
+## Design discussions (not confirmed bugs — decisions needed)
+
+### ISSUE-40 (PY-20): Paging / sequencing strategy for "load-all" list endpoints
+
+**Status:** open — design discussion, not a confirmed bug. High-priority
+follow-up. Raised 2026-07-24 from a glossary-term aliases fix: aliased
+terms were missing from egeria-workspaces-fs's default listing because of
+how the portal loads and sorts lists. Consolidated in from
+`egeria-workspaces-fs/PYEGERIA_ISSUES.md` 2026-08-05.
+
+**Observations** (repro, `find_glossary_terms`, qs-view-server, 388 terms):
+```python
+# start_from paging works -- each page is a different, non-overlapping slice:
+m.find_glossary_terms(search_string="*", start_from=0,  page_size=10, output_format="JSON")   # 10 terms
+m.find_glossary_terms(search_string="*", start_from=10, page_size=10, output_format="JSON")   # next 10, no overlap
+
+# BUT sequencing is not reflected in the result order:
+m.find_glossary_terms(search_string="*", page_size=10, output_format="JSON",
+                      sequencing_order="PROPERTY_ASCENDING", sequencing_property="displayName")
+# -> ['Rolling base year','Carbon Intensity','Megawatt Hour','Inventory','Shall', ...]  (server-internal order, not A->Z)
+```
+
+So a "load-all up to a page-size ceiling, then sort/filter in JS" pattern
+(used across several egeria-workspaces-fs apps) silently returns an
+*arbitrary* subset when a collection exceeds the ceiling: e.g. default
+`page_size=200` on 388 terms returns some 200, the endpoint re-sorts *those
+200* by `displayName`, and terms outside that slice (incl.
+alphabetically-early ones) simply never appear. (Note: `find_glossary_terms`
+paginates correctly here via `start_from`/`page_size` as method parameters
+— a different method from ISSUE-34's `find_metadata_elements`, whose
+pagination bug/fix was about a different endpoint's request shape
+entirely; this entry's own issue is about sequencing order, not
+duplication or missing pages.)
+
+**Open questions to decide (not asserting any of these is a defect):**
+1. Is `sequencing_order`/`sequencing_property` expected to order the
+   result here, or is that behavior config/connector-dependent?
+   (Determines whether true server-side paged UIs are even feasible, or
+   whether fetch-all-then-sort-in-JS remains the only reliable sort.)
+2. Preferred model: **bounded server-side fetch-all** (loop `start_from`
+   until the native `count_metadata_elements` total is reached or a
+   ceiling is hit, return a `truncated`/`total` flag) vs. a true paged UI.
+   Fetch-all keeps the existing instant client-side search; paged UI needs
+   #1 resolved first.
+3. **Page-size ceiling is bounded by the view server's configured
+   `maxPageSize`** (OMAG server config) — likely well below 5000. Any
+   fetch-all loop must chunk at ≤ that limit; the overall load ceiling is a
+   separate product decision. TBD.
+4. Apply the chosen strategy consistently via a shared helper across all
+   "load-all" endpoints, rather than per-handler.
+
+**Current mitigation:** none beyond raising `page_size`, which only lowers
+the odds (a single page is still unsorted, so it sorts an arbitrary
+slice). Tracked for a deliberate fix once the strategy + `maxPageSize` are
+agreed. See ISSUE-41 for the more severe related failure mode (combined
+with a classification filter, this doesn't just misorder — it silently
+returns zero rows).
+
+---
+
 # Quick reference: which OMVS client class for which purpose
 
 | Need | Class | Notes |
@@ -521,6 +678,10 @@ decision tree for "which OMVS client class do I need" across
 | Note logs (entries) | `get_notes_for_note_log(guid, page_size=100)` | ISSUE-3 — never pass `metadata_element_type_name="NoteLog"` |
 | Collection members | `get_collection_members(collection_guid)` | ISSUE-8 — now returns members of any type, not just the collection's own type |
 | Comparing results across two runs/environments that don't match | — | Check whether the same user's credentials were used in both — governance zone visibility can legitimately change results per-user (ISSUE-29) before assuming a pyegeria bug |
+| Multi-classification search (`matchClassifications`, 2+ conditions) | `MetadataExpert.find_metadata_elements` | Fixed in Egeria server (ISSUE-35) |
+| Paging a `find_metadata_elements` result | Set `"startFrom"`/`"pageSize"` **in the body dict** | Fixed (ISSUE-34) — these are NOT separate parameters on this method anymore; passing them as kwargs is silently a no-op. Same for `"graphQueryDepth"`. |
+| Relationships for a single element by guid | `MetadataExpert.get_all_related_elements(guid)` | **Not** `get_metadata_element_by_guid` — that call never returns relationships, by design (ISSUE-37, not a bug) |
+| Project parent/child hierarchy (any linked project, not just hierarchy) | `ProjectManager.get_linked_projects(guid)` | Fixed (ISSUE-42) — was silently returning "No elements found" regardless of real data |
 
 ---
 
@@ -1190,51 +1351,358 @@ against the live server.
 
 ---
 
-### ISSUE-34: `MetadataExpert._async_find_metadata_elements` accepted `start_from`/`page_size`/`graph_query_depth` but never used any of them — reported directly by the user, with the correct fix already identified
+### ISSUE-21: `ClassificationExplorer.get_scoped_elements`/`get_scopes` — real bug was a stray `glossaries/` URL segment, not the positional-arg scramble originally suspected
 
-**Status:** fixed 2026-08-05 (Pyegeria — `pyegeria/omvs/metadata_expert.py`).
+**Status:** fixed 2026-08-05 (Pyegeria — `pyegeria/omvs/classification_explorer.py`).
 
-**Layer:** Pyegeria.
+**Original report (2026-08-03):** suspected `get_scoped_elements`/`get_scopes`'s
+sync wrappers passed `output_format` into the wrong positional slot when
+calling their async counterparts, based on a `pydantic_core.ValidationError`
+citing `page_size` receiving the string `'JSON'`.
 
-**What:** the method built its request with a bare URL and the caller's
-`body` passed straight through unmodified:
+**Re-investigated 2026-08-05:** checked the current code directly rather
+than assuming the original diagnosis still applied — the sync-to-async
+positional calls in both methods now match their target signatures exactly
+(`element_guid/scope_guid, start_from, page_size, output_format,
+report_spec, body` in both the caller and the callee), so the originally
+reported scramble either was already fixed by an unrelated prior change or
+the diagnosis was off. Re-running the exact original repro no longer
+reproduces a `ValidationError` at all.
+
+**What was actually still broken:** `_async_get_scoped_elements` built its
+URL with a stray `glossaries/` path segment —
+`{classification_command_root}/glossaries/elements/scoped-by/{scope_guid}`
+— that doesn't match the real endpoint. Checked
+`Egeria-api-classification-explorer.http`'s worked example ("Retrieve the
+elements linked via the ScopedBy relationship to the scope"): the real path
+is `.../classification-explorer/elements/scoped-by/{scopeGUID}`, no
+`glossaries/` segment — ScopedBy isn't glossary-specific, it works on any
+`Referenceable`. Every call 404'd regardless of arguments.
+`_async_get_scopes`'s URL was already correct.
+
+**Fix:** removed the stray `glossaries/` segment.
+
+**Verified live:** `get_scoped_elements`/`get_scopes` against a real
+element guid both now return `"No elements found"` (correct — that
+element has no `ScopedBy` relationships) instead of a 404 exception.
+Confirmed the fix doesn't regress the write path
+(`add_scope_to_element`/`clear_scope_from_element`, unaffected by this
+change, still used successfully elsewhere in this session's work).
+
+---
+
+### ISSUE-26: `get_info_supply_chain_by_guid`/`get_solution_role_by_guid` accept `graph_query_depth`/`max_mermaid_node_count` but never use them — same "dead parameter" shape as ISSUE-23's third case
+
+**Status:** fixed 2026-08-05 (Pyegeria — `pyegeria/omvs/solution_architect.py`).
+
+**What:** `_async_get_info_supply_chain_by_guid` and
+`_async_get_solution_role_by_guid` declared `graph_query_depth` but, when
+`body` was `None`, sent **no body at all**
+(`self._async_make_request("POST", url, **kwargs)`); passing
+`max_mermaid_node_count` explicitly landed in `**kwargs` and was forwarded
+straight into `_async_make_request()`, which doesn't accept it — a
+`TypeError` on every attempt. Confirmed live before the fix:
 
 ```python
-url = f"{base_path(self, self.view_server)}/metadata-elements/by-search-conditions"
-response = await self._async_make_request("POST", url, body_slimmer(body), timeout=timeout)
+sa.get_info_supply_chain_by_guid("<any-guid>", graph_query_depth=10, max_mermaid_node_count=10)
+# TypeError: BaseServerClient._async_make_request() got an unexpected keyword argument 'max_mermaid_node_count'
 ```
 
-No query string, and `start_from`/`page_size`/`graph_query_depth` were
-silently dropped — never merged into `body`, never appended to `url`. The
-sync wrapper `find_metadata_elements` correctly forwarded all three
-parameters down to this async method; the drop happened one layer further
-in.
+Same shape as ISSUE-23's "third case" for `get_solution_blueprint_by_guid`/
+`get_solution_component_by_guid` (those two remain open/unfixed — this
+entry only covers the two methods ISSUE-26 was scoped to).
 
-**Root-caused against the `.http` ground truth** (both worked examples in
-`Egeria-api-metadata-expert.http` for `by-search-conditions`), confirming
-two different fix shapes were needed for the three parameters:
-- `startFrom`/`pageSize` never appear in either worked-example body —
-  confirmed (cross-checking `Egeria-api-solution-architect.http`'s
-  `by-name?addImplementation=true&startFrom=0&pageSize=10`) they're URL
-  query parameters for this family of endpoint, not body fields.
-- `graphQueryDepth`, by contrast, **is** a body field here — the second
-  worked example (`findMetadataElements (nested condition)`) shows
-  `"graphQueryDepth": 10` inside the `FindRequestBody`.
+**Fix:** when `body is None`, build an `AnyTimeRequestBody` with
+`graphQueryDepth`/`maxMermaidNodeCount` populated from the (now also
+added) `max_mermaid_node_count` parameter, instead of sending no body /
+dumping stray kwargs into `_async_make_request`.
 
-**Fix:** appended `?startFrom={start_from}&pageSize={page_size}` to the
-URL; merged `graphQueryDepth` into `body` only when the caller's own body
-dict didn't already set it explicitly (preserves an explicit caller value
-rather than overwriting it).
+**Verified live, both methods:** calls that previously raised `TypeError`
+on every attempt now succeed and return the expected element.
+
+---
+
+### ISSUE-28: `get_specification_property_by_guid` raised a bare `NameError: name 'validate_guid' is not defined` — cannot be called at all
+
+**Status:** fixed 2026-08-05 (Pyegeria — `pyegeria/omvs/valid_metadata.py`).
+
+**What:** `validate_guid` was referenced in
+`_async_get_specification_property_by_guid` but never imported anywhere in
+`valid_metadata.py`. Every call failed immediately with `NameError`,
+regardless of arguments — affecting `SpecificationProperties`,
+`ValidMetadataManager`, `ValidMetadataLists`, `ValidTypeLists` (all share
+this one implementation via inheritance).
+
+**Fix:** added `from pyegeria.core._validators import validate_guid`,
+matching the exact import convention already used in sibling OMVS modules
+(`solution_architect.py`, `glossary_manager.py`, `automated_curation.py`,
+`core_omag_server_config.py`).
+
+**Verified live, end-to-end:** confirmed the `NameError` is gone (a bogus
+guid now correctly raises `PyegeriaNotFoundException` instead), then ran a
+full round trip — found a real specification property via
+`find_specification_property`, fetched it by guid, got back the correct
+`identifier` (`placeholderProperty`).
+
+---
+
+### ISSUE-35 (PY-15): Postgres repository connector ignored `matchCriteria` on `SearchClassifications` — multi-classification search always returned 0
+
+**Status: FIXED and CLOSED (Egeria server, not pyegeria)** — verified
+2026-07-17. Consolidated in from `egeria-workspaces-fs/PYEGERIA_ISSUES.md`
+2026-08-05 (both files independently tracked pyegeria/Egeria issues; this
+one and ISSUE-36 through ISSUE-41 below were unique to that copy — see this
+file's top-of-doc note for the consolidation).
+
+Originally confirmed as a server-side bug 2026-07-15, while building Egeria
+Insights (`insights_handler.py`) — not a pyegeria client bug, the client
+sent the body faithfully; the Postgres repository connector's SQL
+generation dropped `matchCriteria` on the classification-matching path
+only. Fixed server-side and re-verified live against `qs-view-server` once
+the fixed server was deployed:
+
+```
+ZoneMembership ANY:      150   (unchanged -- single-condition baseline)
+Confidentiality ANY:       1   (unchanged -- single-condition baseline)
+Both ANY:                150   (was 0 -- now a real, differentiated union)
+Both ALL:                  0   ("No elements found" -- correct, empty intersection)
+Both NONE:               1000  (was 0 -- now a real, differentiated count)
+```
+
+`ANY`/`ALL`/`NONE` now produce distinct, semantically correct results
+instead of all being an unconditional AND that always returned zero.
+
+**Root cause:** `QueryBuilder.getSearchClassificationsClause()` in
+`open-metadata-implementation/adapters/open-connectors/repository-services-connectors/open-metadata-collection-store-connectors/postgres-repository-connector/src/main/java/org/odpi/openmetadata/adapters/repositoryservices/postgres/repositoryconnector/database/QueryBuilder.java`
+(lines 1036–1078) unconditionally `AND`s an `AND (type_name LIKE
+'%:<Name>:%' ...)` clause per classification condition and never reads
+`matchClassifications.getMatchCriteria()` at all — confirmed by grepping
+the whole file: `MatchCriteria` is read in the *property*-matching path
+(`getPropertyComparisonFromPropertyConditions()`, ~line 896) but never in
+the classification-matching path. So the generated SQL always required
+every named classification to appear on the same classification-table join
+simultaneously, regardless of what `matchCriteria` the caller asked for.
+
+**Regression coverage:**
+- `egeria-python/tests/functional-tests/test_metadata_expert.py::test_find_metadata_elements_multi_classification_any_match_criteria`
+  (pytest, asserts ANY's count >= max of the two single-condition counts) —
+  passes as of 2026-07-17.
+- `egeria-python/pyegeria/http clients/Egeria-PY15-matchClassifications-bug.http`
+  (PyCharm/IntelliJ HTTP Client collection, same assertions via raw REST
+  calls).
+
+---
+
+### ISSUE-36 (PY-16): `ClassificationExplorer.link_elements_as_peer_duplicates` (and its `_async_*` twin) POST to the wrong URL path — always 404s
+
+**Status: FIXED** — confirmed 2026-07-17 on pyegeria 6.0.16.20.
+Consolidated in from `egeria-workspaces-fs/PYEGERIA_ISSUES.md` 2026-08-05.
+
+`_async_link_elements_as_peer_duplicates` now builds the URL from
+`f"{self.classification_command_root}/related-elements/{element_guid}/peer-duplicate/{peer_duplicate_guid}/attach"`
+— verified directly against the running `quickstart-pyegeria-web`
+container's installed pyegeria source. Originally confirmed as a
+client-side bug 2026-07-16, while seeding demo data for
+egeria-workspaces-fs's Duplicate Resolution Review pane
+(`duplicate_review_handler.py`).
+
+**Root cause:** the client posted to
+`.../classification-explorer/elements/{elementGUID}/peer-duplicate/{peerDuplicateGUID}/attach`
+but the real Spring endpoint
+(`ClassificationExplorerResource.linkElementsAsPeerDuplicates`) is mapped
+at `.../classification-explorer/related-elements/{elementGUID}/peer-duplicate/{peerDuplicateGUID}/attach`
+— `elements` vs `related-elements`. Same root cause likely affected
+`unlink_elements_as_peer_duplicates` (detach, same path shape).
+Classification calls (`set_known_duplicate_classification`/
+`set_consolidated_duplicate_classification`) and the read path
+(`get_relationships`/`get_elements_by_classification`) were unaffected.
+
+**Fix:** `pyegeria/omvs/classification_explorer.py`,
+`_async_link_elements_as_peer_duplicates` (and its detach twin) now build
+the URL from the `related-elements` path.
+
+---
+
+### ISSUE-42 (PY-22): `ProjectManager.get_linked_projects()` didn't surface real `ProjectHierarchy` relationships
+
+**Status: FIXED** (2026-08-05, `pyegeria/core/_server_client.py`).
+
+**Layer:** Pyegeria (shared response-parsing helper, not the Egeria
+server). Originally found 2026-07-31 while finishing an `as_of_time`
+verification pass; consolidated in from `egeria-workspaces-fs/
+PYEGERIA_ISSUES.md` 2026-08-05 as open, then investigated and fixed the
+same day.
+
+**Root cause:** `get_linked_projects` delegates to the shared
+`ServerClient._async_get_guid_request` helper (used by 40+ callers across
+the OMVS classes), which parsed a response by checking only two keys —
+singular `"element"`, then `"elementGraph"` — before giving up and
+returning `NO_ELEMENTS_FOUND`. But the real Egeria response for this
+endpoint (`.../project-manager/metadata-elements/{guid}/projects`) returns
+a genuine list under the **plural** `"elements"` key, which was never
+checked at all. Confirmed live via a request-spy on `_async_make_request`:
+
+```
+RAW RESPONSE KEYS: ['class', 'requestId', 'relatedHTTPCode', 'elements']
+get_linked_projects("5d0057f6-...") -> "No elements found"   # wrong
+# but the raw body's "elements" list genuinely had 1 item
+```
+
+**Confirmed not a data-availability problem** (as originally suspected
+when this was found): checked all 29 qs demo projects — every single one
+returned `"No elements found"` regardless of whether it had real linked
+projects (confirmed via `get_project_by_guid`'s own `managedProjects`
+field, which does surface the same `ProjectHierarchy` relationships
+correctly through a different code path).
+
+**Fix:** added the plural `"elements"` key as a third fallback in
+`_async_get_guid_request`, checked *last* (only reached once both
+`"element"` and `"elementGraph"` have already failed) — purely additive,
+so the other 40+ callers whose endpoints genuinely return the singular
+shape are unaffected; none of their existing behavior changes since they
+never reach the new branch.
 
 **Verified:**
-- Runtime capture (mocked `_async_make_request`) confirmed all three reach
-  the wire correctly: `?startFrom=20&pageSize=50` in the URL,
-  `"graphQueryDepth": 7` in the body.
-- Confirmed a caller-supplied `graphQueryDepth` in `body` is preserved,
-  not overwritten by the parameter default.
-- Live call against `qs-view-server` (`find_metadata_elements` searching
-  `InformationSupplyChain` by `displayName LIKE "Onboarding"`) succeeds
-  and returns results.
+- Live against `qs-view-server`: `get_linked_projects("5d0057f6-...")` (no
+  body, matching the original repro exactly) now returns a real 1-element
+  list (`"Sustainability Bootstrap Project"`); a second project
+  ("Next 30 Days (Initiation Phase)") returns 11 linked projects — matches
+  its 10 `managedProjects` (children) + 1 `managingProjects` (parent),
+  consistent with the method's own docstring ("any relationship will do").
+- New unit tests, `tests/micro-tests/test_get_guid_request.py` (4 tests,
+  mocked `_async_make_request`): the plural-`elements` case now parses
+  correctly; the singular-`element` and `elementGraph` cases are
+  unaffected (still checked first); the true-empty case still degrades to
+  `NO_ELEMENTS_FOUND`, not an exception.
+- Full micro-test suite: 228 passed (was 224; +4 new), same single
+  pre-existing unrelated failure (`test_dashboard_sheet_models.py`) as
+  before this change — no regressions across the other 40+ callers of the
+  shared helper.
+
+---
+
+### ISSUE-34: `MetadataExpert.find_metadata_elements` ignored `start_from`/`page_size` — traced through THREE fix attempts before landing on the actual root cause (a moved Egeria convention), and a design change to prevent the whole bug class recurring
+
+**Status: FIXED** (final fix 2026-08-05, `pyegeria/omvs/metadata_expert.py` +
+`pyegeria/view/overview_metrics.py` + tests). Worth reading in full even
+though it's closed — the misdiagnosis in the middle is as instructive as
+the fix.
+
+**Attempt 1 (dropped parameter).** `_async_find_metadata_elements`
+originally built its request with a bare URL and the caller's `body`
+passed straight through unmodified — `start_from`/`page_size`/
+`graph_query_depth` were silently dropped, never merged into `body`, never
+appended to `url`. Root-caused against the `.http` ground truth
+(`Egeria-api-metadata-expert.http`'s worked examples): `graphQueryDepth`
+**is** a body field there; `startFrom`/`pageSize` are not shown in the body
+at all, so the fix assumed they were URL query parameters (matching the
+older, pre-migration Egeria convention this same file's `.http` examples
+still document) — appended `?startFrom={..}&pageSize={..}` to the URL and
+merged `graphQueryDepth` into `body` when not already present. Verified via
+runtime capture that the values reached the wire correctly.
+
+**Attempt 2 (misdiagnosed as an Egeria-server bug).** Re-verified live
+against `qs-view-server` and found real pagination still didn't work —
+`start_from=0`/`start_from=5` (both `page_size=5`) returned the identical
+full ~1,837-element population both times, 100% GUID overlap. Since the
+*client* was confirmed (via request-spy) to be sending the spec-correct
+URL, this was logged as an open **Egeria-server-side** gap — "the server
+ignores these query parameters regardless of client version." **This
+conclusion was wrong.**
+
+**Attempt 3 (the actual root cause, found by the user).** Egeria's
+pagination convention for this endpoint changed a few months before this
+investigation — from URL query parameters to **request-body fields**. The
+`.http` contract files pyegeria's fix was root-caused against were
+themselves stale for this specific endpoint. Confirmed empirically:
+```python
+body1 = {..., "startFrom": 0, "pageSize": 5}
+body2 = {..., "startFrom": 5, "pageSize": 5}
+# len(r1) == len(r2) == 5 (page_size genuinely respected, not the full 1837)
+# set(guids in r1) & set(guids in r2) == set()  -- two real, distinct pages
+```
+There is no Egeria-server-side bug here at all — pagination works
+correctly and always has; pyegeria was sending the right values to the
+wrong location, and "the server ignores it" was the visible symptom of
+that, not evidence the server itself was broken.
+
+**Final fix — a design change, not just a relocated injection.** Rather
+than moving the URL-based injection into a body-based injection (which
+would just be the same "pyegeria guesses where pagination goes for this
+endpoint" model, now proven to go stale at least once already),
+`start_from`/`page_size` were **removed from the method signature
+entirely** — same treatment `graph_query_depth` had already gotten a few
+hours earlier in this same investigation, for the same underlying reason
+(pushback from the user: "I think that they should have full control over
+the body and not have me inject anything in it"). For endpoints where the
+caller already constructs the full `body` themselves, a second parameter
+channel for the same information is exactly the shape that goes stale —
+this is the second time in one investigation (dropped parameter, then
+wrong location) that pyegeria's own tracking of "where does this value
+belong" broke a caller. The caller already has to know Egeria's current
+contract to build a correct body; they're better positioned to keep
+`startFrom`/`pageSize` current for a given endpoint than pyegeria's
+hardcoded assumption is. `body` is now sent to `_async_make_request`
+completely unmodified, in every code path, for both the async and sync
+forms of this method.
+
+**Design principle adopted from this investigation** (see also ISSUE-43,
+an audit for the same drift shape elsewhere): for any method where the
+caller is required to supply the complete request body, do not *also*
+accept overlapping parameters (`start_from`, `page_size`,
+`graph_query_depth`, or similar) that pyegeria tries to inject somewhere —
+document where the field belongs in the body and let the caller put it
+there. This does **not** apply to convenience methods that build their own
+body internally from named kwargs (most of the OMVS-specific `find_*`/
+`get_*` wrappers) — there, pyegeria owns body construction either way, so
+there's no second channel to remove.
+
+**Callers updated to the new signature:**
+`pyegeria/view/overview_metrics.py`'s `_find()` (production code — now
+puts `"startFrom": 0, "pageSize": page_size` directly in the body dict
+alongside the already-updated `"graphQueryDepth": 0`) and 5 call sites
+across `tests/functional-tests/test_metadata_expert.py` /
+`test_metadata_explorer.py` (previously passed `page_size=`/`start_from=`
+as kwargs; now set `"pageSize"`/`"startFrom"` in the body dict itself). A
+stale `PY-15` cross-reference in `test_metadata_expert.py` (predating this
+file's 2026-08-05 consolidation) was also corrected to `ISSUE-35 (PY-15)`
+while in there.
+
+**Verified:** live against `qs-view-server`, two real distinct 5-element
+pages via the *public* `find_metadata_elements(body)` call (no separate
+pagination parameters at all) — confirms the fix works through the whole
+call chain, not just the internal request construction. Full
+`tests/micro-tests` suite: 228 passed, same one pre-existing unrelated
+failure as throughout this session, no regressions.
+
+**Follow-up cleanup, same day:** `output_format`, `for_lineage`,
+`for_duplicate_processing`, and `**kwargs` were also removed from both
+`_async_find_metadata_elements` and `find_metadata_elements` — none of the
+four were ever referenced anywhere in either method's body (confirmed by
+reading the full implementation), so declaring them implied controls that
+never existed, the same "extraneous parameter" shape as `start_from`/
+`page_size`/`graph_query_depth` above. Final signature for both: `(self,
+body: dict, timeout: int = default_timeout)` — nothing else. Verified: live
+call still succeeds (a `pageSize: 1` body field correctly limits to 1
+result), full `tests/micro-tests` suite still clean.
+
+**This raises the severity of the note below** — removing `**kwargs`
+specifically means a caller still passing `start_from=`/`page_size=`/
+`graph_query_depth=` as keyword arguments no longer gets silently ignored,
+it now gets a hard `TypeError: find_metadata_elements() got an unexpected
+keyword argument`. Worth knowing before upgrading pyegeria in any consumer
+that hasn't been updated yet.
+
+**Not carried over from pyegeria's fix:** `egeria-workspaces-fs/
+insights_handler.py`'s `search_elements()` still calls `find_metadata_elements`
+with `start_from=`/`page_size=`/`graph_query_depth=` as keyword arguments —
+as of the follow-up cleanup above, this will now **raise `TypeError` on
+every call** rather than silently no-op (see previous paragraph; this is a
+stronger warning than when this entry was first written). That repo's own
+call site needs a follow-up update to put `startFrom`/`pageSize` in its own
+`find_body` dict to get real, efficient pagination — flagged, not fixed
+here (different repo), but now genuinely blocking rather than just a
+missed optimization.
 
 ---
 
@@ -1370,6 +1838,49 @@ Egeria Explorer UI result and results don't match, check whether the same
 user/credentials were used in both before assuming a client-side bug —
 this cost real investigation time in ISSUE-25's process. Added a pointer
 to this in the Quick Reference table above and in this file's intro.
+
+---
+
+### ISSUE-37 (PY-17): `MetadataExpert.get_metadata_element_by_guid` never returns relationships, at any `graph_query_depth` — use `get_all_related_elements` instead
+
+**Status: not a bug — working as designed** (confirmed 2026-07-17, Dan).
+Consolidated in from `egeria-workspaces-fs/PYEGERIA_ISSUES.md` 2026-08-05.
+
+`get_metadata_element_by_guid` is deliberately scoped to the element
+itself; `get_all_related_elements` is the correct, separate call for
+relationships — a two-call design, not a gap in the by-guid method.
+Originally flagged 2026-07-16 while fixing egeria-workspaces-fs's Action
+Center pane cross-links (`action_center_handler.py`), because the accepted
+`graph_query_depth` parameter suggested it should affect relationship
+inclusion; it doesn't, and that's correct behavior.
+
+**How to trigger:**
+```python
+guid = "<a Notification guid known to have Actions/ActionRequester/AssignmentScope relationships>"
+for depth in (0, 1, 2, 3):
+    el = mgr.get_metadata_element_by_guid(guid, graph_query_depth=depth, output_format="JSON")
+    print(depth, sorted(el.keys()))
+# every depth prints the same 8 keys -- no relationship key ever appears:
+# ['classifications', 'elementGUID', 'elementProperties', 'headerVersion',
+#  'origin', 'status', 'type', 'versions']
+```
+
+**Working alternative:** `MetadataExpert.get_all_related_elements(guid, output_format="JSON")`
+returns `{"startingElement": <the element>, "elementList": [...], "mermaidGraph": ...}`.
+Each `elementList` entry is a relationship-header dict with its own
+`type.typeName` (the *relationship* type) and a nested `element` key
+holding the *other* end, in the same raw `elementGUID`/
+`elementProperties.propertyValueMap` shape everything else uses. Confirmed
+live against a real Notification with 3 genuine relationships — all three
+showed up via this call, none via `get_metadata_element_by_guid` at any
+depth.
+
+**Usage note (not a fix, a caller guideline):** any by-guid detail call
+that needs relationships should use `get_all_related_elements` (or a
+type-specific OMVS method that already merges both, e.g.
+`ActorManager.get_actor_role_by_guid`), never
+`get_metadata_element_by_guid` alone, plus `graph_query_depth` as if it
+controlled relationship inclusion.
 
 ---
 

@@ -2104,7 +2104,8 @@ class SolutionArchitect(ServerClient):
         return response
 
     async def _async_get_info_supply_chain_by_guid(self, guid: str = None, body: dict = None, add_implementation: bool = True,
-                                                   graph_query_depth: int = 3, output_format: str = "JSON", report_spec: str | dict = None, **kwargs) -> dict | str:
+                                                   graph_query_depth: int = 3, max_mermaid_node_count: int = 10,
+                                                   output_format: str = "JSON", report_spec: str | dict = None, **kwargs) -> dict | str:
         """Return the properties of a specific information supply chain. Async Version.
 
             Parameters
@@ -2156,7 +2157,17 @@ class SolutionArchitect(ServerClient):
                f"information-supply-chains/{guid}/retrieve?addImplementation={add_impl}")
 
         if body is None:
-            response = await self._async_make_request("POST", url, **kwargs)
+            # graph_query_depth/max_mermaid_node_count were previously dead here -
+            # this endpoint's own **kwargs parameter was never used at all, and no
+            # body means _async_make_request got nothing (or stray kwargs it
+            # doesn't accept). Build an AnyTimeRequestBody so callers can actually
+            # control the mermaid graph (see PYEGERIA_ISSUES.md ISSUE-26/23).
+            body = {
+                "class": "AnyTimeRequestBody",
+                "graphQueryDepth": graph_query_depth,
+                "maxMermaidNodeCount": max_mermaid_node_count,
+            }
+            response = await self._async_make_request("POST", url, body_slimmer(body))
         else:
             response = await self._async_make_request("POST", url, body_slimmer(body), **kwargs)
         element = response.json().get("element", NO_ELEMENTS_FOUND)
@@ -6325,7 +6336,8 @@ class SolutionArchitect(ServerClient):
 
 
     async def _async_get_solution_role_by_guid(self, guid: str = None, body: dict = None,
-                                               graph_query_depth: int = 3, output_format: str = "JSON", report_spec: str | dict = None, **kwargs) -> dict | str:
+                                               graph_query_depth: int = 3, max_mermaid_node_count: int = 10,
+                                               output_format: str = "JSON", report_spec: str | dict = None, **kwargs) -> dict | str:
         """ Return the properties of a specific solution role. Async Version.
 
             Parameters
@@ -6373,7 +6385,15 @@ class SolutionArchitect(ServerClient):
                f"solution-roles/{guid}/retrieve")
 
         if body is None:
-            response = await self._async_make_request("POST", url, **kwargs)
+            # Same dead-parameter shape as _async_get_info_supply_chain_by_guid
+            # (PYEGERIA_ISSUES.md ISSUE-26) - build an AnyTimeRequestBody so
+            # graph_query_depth/max_mermaid_node_count actually reach the server.
+            body = {
+                "class": "AnyTimeRequestBody",
+                "graphQueryDepth": graph_query_depth,
+                "maxMermaidNodeCount": max_mermaid_node_count,
+            }
+            response = await self._async_make_request("POST", url, body_slimmer(body))
         else:
             response = await self._async_make_request("POST", url, body_slimmer(body), **kwargs)
         element = response.json().get("element", NO_ELEMENTS_FOUND)

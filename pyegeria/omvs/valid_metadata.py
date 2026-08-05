@@ -9,6 +9,7 @@ Copyright Contributors to the ODPi Egeria project.
 import asyncio
 from typing import Any, Optional
 from pyegeria.core._server_client import ServerClient
+from pyegeria.core._validators import validate_guid
 from pyegeria.models import SearchStringRequestBody, ResultsRequestBody, FilterRequestBody, GetRequestBody, \
     DeleteElementRequestBody
 from pyegeria.core.utils import dict_to_markdown_list, dynamic_catch, body_slimmer

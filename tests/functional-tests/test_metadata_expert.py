@@ -580,7 +580,7 @@ class TestMetadataExpert:
             },
         }
         try:
-            response = expert_client.find_metadata_elements(body, page_size=1000)
+            response = expert_client.find_metadata_elements({**body, "pageSize": 1000})
             print(f"\nResponse type: {type(response).__name__}")
             if isinstance(response, (dict, list, str)):
                 print(response)
@@ -630,7 +630,7 @@ class TestMetadataExpert:
             print(f"Caught exception: {type(e).__name__}: {e}")
 
     def test_find_metadata_elements_multi_classification_any_match_criteria(self, expert_client):
-        """Regression test for PY-15 (see PYEGERIA_ISSUES.md in egeria-workspaces-fs).
+        """Regression test for ISSUE-35 (PY-15), PYEGERIA_ISSUES.md.
 
         The Postgres repository connector's QueryBuilder.getSearchClassificationsClause()
         was found to ignore SearchClassifications.matchCriteria entirely once 2+
@@ -651,8 +651,11 @@ class TestMetadataExpert:
                     "conditions": [{"name": n} for n in names],
                 },
                 "limitResultsByStatus": ["ACTIVE"],
+                "graphQueryDepth": 0,
+                "startFrom": 0,
+                "pageSize": 500,
             }
-            return expert_client.find_metadata_elements(body, start_from=0, page_size=500, graph_query_depth=0)
+            return expert_client.find_metadata_elements(body)
 
         try:
             zone_only = _find(["ZoneMembership"], "ANY")
@@ -680,7 +683,7 @@ class TestMetadataExpert:
             f"matchCriteria=ANY across ['ZoneMembership', 'Confidentiality'] returned "
             f"{both_any_count} elements, but ZoneMembership alone returned {zone_count} and "
             f"Confidentiality alone returned {confidentiality_count} — matchCriteria is being "
-            f"ignored for classification conditions (PY-15)."
+            f"ignored for classification conditions (ISSUE-35/PY-15)."
         )
 
     def test_find_glossary_terms_cim(self, expert_client):
@@ -715,7 +718,7 @@ class TestMetadataExpert:
             },
         }
         try:
-            response = expert_client.find_metadata_elements(body, page_size=100)
+            response = expert_client.find_metadata_elements({**body, "pageSize": 100})
             print(f"\nResponse type: {type(response).__name__}")
             if isinstance(response, (dict, list, str)):
                 print(response)

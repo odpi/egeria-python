@@ -631,7 +631,7 @@ class TestMetadataExpert:
 
             m_client.create_egeria_bearer_token(self.user_id, self.password)
             start_time = time.perf_counter()
-            response = m_client.find_metadata_elements(body, page_size=page_size)
+            response = m_client.find_metadata_elements({**body, "pageSize": page_size})
             duration = time.perf_counter() - start_time
             print(
                 f"\n\tDuration was {duration:.2f} seconds, Page Size {page_size}, Element count is {len(response)}"
@@ -753,7 +753,7 @@ class TestMetadataExpert:
 
             m_client.create_egeria_bearer_token(self.user_id, self.password)
             start_time = time.perf_counter()
-            response = m_client.find_metadata_elements(body, page_size=page_size)
+            response = m_client.find_metadata_elements({**body, "pageSize": page_size})
             duration = time.perf_counter() - start_time
 
             console.print(
