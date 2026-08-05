@@ -21,9 +21,14 @@ from pyegeria.core._exceptions import (
     PyegeriaException, PyegeriaInvalidParameterException
 )
 
-erins_guid = "dcfd7e32-8074-4cdf-bdc5-9a6f28818a9d"
-peter_guid = "59f0232c-f834-4365-8e06-83695d238d2d"
-tanya_guid = "a987c2d2-c8b6-4882-b344-c47956d2de97"
+# Previously hardcoded demo actor GUIDs (erins_guid/peter_guid/tanya_guid)
+# lived here as the --assigned-to default. They no longer exist on the
+# current qs-view-server (confirmed live 2026-08-05: create-todo with no
+# --assigned-to 404s - "OMAG-REPOSITORY-HANDLER-404-007 ...
+# 59f0232c-f834-4365-8e06-83695d238d2d ... not found"), and any single
+# hardcoded GUID is inherently fragile across servers/demo datasets. Removed
+# in favor of self-assignment (see create_todo below) - a ToDo assigned to
+# whichever user is actually running the CLI always resolves to a real GUID.
 
 EGERIA_METADATA_STORE = os.environ.get("EGERIA_METADATA_STORE", "active-metadata-store")
 EGERIA_KAFKA_ENDPOINT = os.environ.get("KAFKA_ENDPOINT", "localhost:9092")
@@ -73,9 +78,10 @@ EGERIA_USER_PASSWORD = os.environ.get("EGERIA_USER_PASSWORD", "secret")
 )
 @click.option(
     "--assigned-to",
-    help="Party the Todo is assigned to",
-    required=True,
-    default=peter_guid,
+    help="GUID of the party the Todo is assigned to. Defaults to the "
+         "calling user (--userid) if not given.",
+    required=False,
+    default=None,
 )
 @click.option(
     "--sponsor",
@@ -100,6 +106,15 @@ def create_todo(
     m_client = EgeriaTech(server, url, user_id=userid, user_pwd=password)
     m_client.create_egeria_bearer_token()
     try:
+        # Resolve the calling user's own profile GUID - used as originator
+        # always, and as the assignment default rather than a hardcoded demo
+        # GUID (see the module-level comment above), so both always resolve
+        # to a real GUID on whatever server this is run against.
+        me = m_client.get_my_profile()
+        my_guid = me["elementHeader"]["guid"]
+        if assigned_to is None:
+            assigned_to = my_guid
+
         body = {
             "class": "ActionRequestBody",
             "properties": {
@@ -112,6 +127,7 @@ def create_todo(
                 "dueTime": due,
                 "activityStatus": "REQUESTED",
             },
+            "originatorGUID": my_guid,
             "assignToActorGUID": assigned_to,
             "actionSponsorGUID": sponsor
         }

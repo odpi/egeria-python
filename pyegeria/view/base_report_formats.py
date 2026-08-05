@@ -538,6 +538,81 @@ base_report_specs = FormatSetDict({
         #     spec_params={"property_names": ["displayName", "qualifiedName"]},
         # )
     ),
+    # ToDo/Meeting/Review are Person Action Base bundle commands routed through
+    # my_profile.py (create_my_todo/create_meeting/create_review) rather than
+    # a standard OMVS wrapper, so refresh_specs' auto-generation never sees
+    # them and no "<Type>-DrE-Basic"/"-Advanced" spec gets generated. Hand
+    # maintained here (base name, no level suffix) so render_result_markdown's
+    # fallback to base_report_spec_name picks these up instead of warning
+    # "Report spec '<Type>-DrE-Basic' not found" on every Create. See
+    # "Journal-Entry-DrE" below for the same pattern applied to another
+    # my_profile-routed family, and ISSUE-44 in PYEGERIA_ISSUES.md.
+    "ToDo-DrE": FormatSet(
+        target_type="ToDo",
+        heading="ToDo",
+        description="Details of a ToDo action.",
+        annotations={},
+        family="My Profile",
+        formats=[
+            Format(
+                types=["ALL"],
+                attributes=[
+                    Column(name='Display Name', key='display_name'),
+                    Column(name='Qualified Name', key='qualified_name', format=False),
+                    Column(name='GUID', key='guid'),
+                    Column(name='Description', key='description', format=True),
+                    Column(name='Situation', key='situation'),
+                    Column(name='Activity Status', key='activity_status'),
+                    Column(name='Priority', key='priority'),
+                    Column(name='Requested Time', key='requested_time'),
+                ],
+            )
+        ],
+    ),
+    "Meeting-DrE": FormatSet(
+        target_type="Meeting",
+        heading="Meeting",
+        description="Details of a Meeting action.",
+        annotations={},
+        family="My Profile",
+        formats=[
+            Format(
+                types=["ALL"],
+                attributes=[
+                    Column(name='Display Name', key='display_name'),
+                    Column(name='Qualified Name', key='qualified_name', format=False),
+                    Column(name='GUID', key='guid'),
+                    Column(name='Description', key='description', format=True),
+                    Column(name='Situation', key='situation'),
+                    Column(name='Activity Status', key='activity_status'),
+                    Column(name='Priority', key='priority'),
+                    Column(name='Requested Time', key='requested_time'),
+                ],
+            )
+        ],
+    ),
+    "Review-DrE": FormatSet(
+        target_type="Review",
+        heading="Review",
+        description="Details of a Review action.",
+        annotations={},
+        family="My Profile",
+        formats=[
+            Format(
+                types=["ALL"],
+                attributes=[
+                    Column(name='Display Name', key='display_name'),
+                    Column(name='Qualified Name', key='qualified_name', format=False),
+                    Column(name='GUID', key='guid'),
+                    Column(name='Description', key='description', format=True),
+                    Column(name='Situation', key='situation'),
+                    Column(name='Activity Status', key='activity_status'),
+                    Column(name='Priority', key='priority'),
+                    Column(name='Requested Time', key='requested_time'),
+                ],
+            )
+        ],
+    ),
     "Default": FormatSet(
         heading="Default Base Attributes",
         target_type="Any Metadata Element",

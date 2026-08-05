@@ -296,6 +296,159 @@ redeploy used for this session, or a real, currently-unreleased endpoint.
 
 ---
 
+### ISSUE-45: `tests/functional-tests/test_my_profile.py::test_create_my_todo` has no teardown — leaves a live ToDo behind on every run
+
+**Status:** open (test hygiene) — found 2026-08-05 while investigating
+ISSUE-44's follow-up. Running the test suite against the live
+`qs-view-server` created a real `ToDo` (`do-my-backup`, confirmed via
+`find_metadata_elements(metadataElementTypeName="ToDo")` immediately after a
+test run, `createTime` matching the run) that isn't deleted afterward. Over
+repeated test runs this silently accumulates orphaned `ToDo` entities on
+whatever server the suite is pointed at. Same class of issue as the
+already-known pattern in this file of "confirm via live GUID, then clean up
+afterward" — this test doesn't do the second half.
+
+**Candidate fix:** add a fixture/teardown that deletes the created GUID via
+`MetadataExpert.delete_metadata_element(guid, body={"class":
+"OpenMetadataDeleteRequestBody"})`, matching the pattern used everywhere else
+in this file's own verification steps.
+
+---
+
+### ISSUE-46: `logger.info(self.__str__(), ip=..., http_code=..., pyegeria_code=...)` crashed with `KeyError` on any exception whose message contained literal `{}` — masked the real error behind an opaque traceback across 5 of 7 exception classes
+
+**Status:** fixed 2026-08-05 (Pyegeria — `pyegeria/core/_exceptions.py`). Found
+while investigating the user's report that "many CLI scripts under
+`/commands` are broken" — the first repro (`create_todo` CLI) crashed not
+with a clean Egeria error but with a bare `KeyError: '\`parameterName\`'`.
+
+**Root cause:** loguru's `Logger.info(message, *args, **kwargs)` always calls
+`message.format(*args, **kwargs)` when any args/kwargs are given (this is
+loguru's structured-logging feature — `logger.info("Processing {file}",
+file=name)`). `PyegeriaException.__str__()` embeds `additional_info` values
+(e.g. `exceptionProperties`) via `str(value).replace('"','\`').replace("'",
+'\`')`, which preserves any literal `{`/`}` characters already present in a
+dict repr (e.g. `` `{`parameterName`: `elementGUID`}` ``). Six call sites
+across five exception classes did `logger.info(self.__str__(), ip=...,
+http_code=..., pyegeria_code=...)` — passing that literal-brace string as
+the format string. Whenever the underlying Egeria error included any
+`exceptionProperties` (common - it's present on most `InvalidParameterException`
+translations), `.format()` tried to resolve `parameterName` as a kwarg,
+found only `ip`/`http_code`/`pyegeria_code`, and raised `KeyError` from
+*inside the exception's own constructor* - so the caller never even got a
+`PyegeriaException` to catch; it got a raw `KeyError` traceback instead.
+
+**Not a new regression** - `PyegeriaAPIException.__init__` (the class
+actually raised for real Egeria error responses) already had the fix,
+complete with an explanatory comment: `msg.replace("{", "{{").replace("}",
+"}}")`. But the identical `logger.info(self.__str__(), ...)` pattern in
+`PyegeriaInvalidParameterException`, `PyegeriaClientException`,
+`PyegeriaUnauthorizedException`, `PyegeriaNotFoundException`, and
+`PyegeriaUnknownException` never got the same treatment - so any 404, 401,
+or invalid-parameter response with a curly-brace-shaped error message
+crashed instead of printing.
+
+**Fix:** applied the same `.replace("{", "{{").replace("}", "}}")` escaping
+to all five remaining call sites.
+
+**Verified live:** re-ran `create_todo --name ... --description ...` (no
+`--assigned-to`, so the CLI's stale hardcoded `peter_guid` default 404s) -
+before the fix this crashed with `KeyError: '\`parameterName\`'`; after the
+fix it prints a clean, readable Egeria error message via
+`print_basic_exception` with no traceback. `tests/micro-tests` clean (same
+one pre-existing unrelated failure).
+
+---
+
+### ISSUE-47: CLI scan of `/commands` (triggered by ISSUE-44's `create_todo` follow-up) - several genuine breakages found and fixed, 8 stale `pyproject.toml` entries removed
+
+**Status:** fixed 2026-08-05. User reported "many of my cli
+scripts/commands (under the /commands folder) are broken - probably due to
+the change in signatures" and asked for a scan. Ran a static AST pass over
+all ~337 `client.<method>(...)` calls across every file in `commands/`
+cross-referenced against every real method signature in
+`pyegeria/omvs/*.py` + `_server_client.py` + `egeria_tech_client.py`
+(2131 unique callable names), plus an import/`--help`-level smoke test of
+all 106 `pyproject.toml` console-script entry points.
+
+**Confirmed NOT caused by today's `my_profile.py`/`find_metadata_elements`
+signature changes** - the static AST cross-reference found zero calls
+incompatible with every registered overload of the method name they use;
+nothing in `commands/` calls `find_metadata_elements` directly at all.
+
+**Genuine bugs found and fixed:**
+1. `commands/tech/element_actions.py`'s `delete-element` called
+   `m_client.delete_metadata_element_in_store(guid, cascade=cascade)` - that
+   method never existed anywhere in pyegeria, and the real
+   `delete_metadata_element(metadata_element_guid, body)` has no `cascade`
+   concept at all (`OpenMetadataDeleteRequestBody` has no such field).
+   Fixed to call the real method with a bare `OpenMetadataDeleteRequestBody`.
+2. `commands/cat/list_assets.py`'s `display_assets()` had a literal duplicate
+   parameter - `timeout: int = 60,` immediately followed by `timeout: int =
+   None,` - a guaranteed `SyntaxError` that made the module (and therefore
+   anything importing from it, including the top-level `hey_egeria` CLI
+   group) fail to import at all. Fixed by removing the dead second
+   declaration.
+3. `commands/cli/egeria_ops.py` (`hey_egeria_ops`) referenced `settings` at
+   module level (`app_settings = settings`) without ever importing it -
+   `NameError` at import time, so the whole `hey_egeria_ops` CLI group was
+   unusable. Fixed by adding `from pyegeria.core.config import settings`
+   (the same import every sibling command file uses).
+4. Two 1-line `pyproject.toml` entry-point typos, both trivial renames now
+   corrected: `generate_md_cmd_templates` pointed at the (nonexistent)
+   module `commands.tech.generate_md_cmd_template` (missing trailing "s");
+   `delete_element` pointed at the (nonexistent, long-deleted per `git log`)
+   module `commands.tech.generic_actions` instead of the real
+   `commands.tech.element_actions`.
+
+**Also found: 6 stale hardcoded GUIDs in `commands/my/todo_actions.py`**
+(`peter_guid`/`tanya_guid`/`erins_guid`, used as CLI option defaults) that no
+longer exist on the current `qs-view-server` - confirmed live (a `create-todo`
+run with no `--assigned-to` 404s: `OMAG-REPOSITORY-HANDLER-404-007 ...
+59f0232c-f834-4365-8e06-83695d238d2d ... not found`). Not fixed here (no
+single correct replacement GUID - depends on which demo actors exist on
+whatever server the CLI is pointed at); flagging so the defaults aren't
+mistaken for real, working values.
+
+**5. Removed 8 stale `pyproject.toml` entries pointing at genuinely removed
+code** (confirmed via `git log --all` that these files existed and were
+deleted/renamed at various points; not silently re-implemented, just
+removed so `uv sync`/`pip install` no longer advertises commands guaranteed
+to fail):
+- `create_category`/`update_category`/`delete_category`/
+  `add_term_to_category`/`remove_term_from_category` → pointed at
+  `commands.cat.glossary_actions`, which has never (as far as current source
+  shows) defined any of these five functions - only glossary/term-level
+  commands remain in that file today. Restoring category-management is a
+  separate feature task, not a re-add of these entries.
+- `load_archive_tui` → `commands.ops.load_archive:tui` - no `tui` function
+  exists in that module (only `load_archive`).
+- `run_report_orig`, `list_todos`, `list_categories`, `monitor_coco_status`,
+  `monitor_server_list` (→ `commands.ops.orig_monitor_server_list`) - all
+  five point at files that no longer exist.
+- `start_daemon`/`stop_daemon` → `commands.ops.engine_actions` - file no
+  longer exists; equivalent functionality lives on today as
+  `hey_egeria_ops start`/`hey_egeria_ops stop`
+  (`gov_server_actions.py`'s `start_server`/`stop_server` - those are click
+  subcommands taking a `@click.pass_context` config object, not standalone
+  entry points, so this isn't a 1:1 script rename).
+
+**Verified after fixes:** `uv sync --extra spec-editor` (needed to
+regenerate the installed console-script wrappers after the `pyproject.toml`
+corrections) then a full re-scan of all entry points: **0 of 93 remaining
+entries fail to import** (down from 18 of 106 failing at the start of this
+investigation - the 13-entry gap between 106 and 93 is the 8 removed plus a
+handful the smoke-test script itself double-counted across duplicated
+`[project.scripts]` table keys). `tests/micro-tests` clean throughout (same
+one pre-existing unrelated failure). Also added
+`tests/scenario-tests/test_todo_scenarios.py`, a full-lifecycle regression
+suite (Create → verify relationships → verify visibility → Dr.Egeria
+reporting → reassign/update → Delete) for ToDo/Meeting/Review that asserts
+real failures rather than swallowing them - written specifically to catch a
+regression on ISSUE-44's three bugs.
+
+---
+
 ## Dr.Egeria / compact-spec design gap
 
 ### ISSUE-22: `Ownership`/`Impact`/`Confidence`/`Confidentiality`/`Criticality` classification `status` field expects an int enum, not the free-text value the Dr.Egeria "Status" attribute style implies
@@ -688,6 +841,150 @@ returns zero rows).
 # Appendix: Closed / Not-a-bug entries
 
 ## Fixed (Pyegeria)
+
+### ISSUE-44: `create_my_todo`/`create_meeting`/`create_review` (my_profile.py) always invented their own `qualifiedName` (random timestamp suffix, wrong casing), silently diverging from what Dr.Egeria's `Create ToDo`/`Create Meeting`/`Create Review` reported having created
+
+**Status:** fixed 2026-08-05 (Pyegeria — `pyegeria/omvs/my_profile.py` +
+`md_processing/v2/actor_manager.py`/`project.py`/`feedback.py`). Reported
+directly by the user: "the Dr.Egeria command Create ToDo does not appear to
+create a todo."
+
+**What actually happened:** `Create ToDo` genuinely succeeded — a real
+`ToDo` entity was created, correct `displayName`/`description`/`situation`/
+`priority`/`activityStatus`, `SUCCESS` reported with a real GUID. But
+`_async_create_my_todo(todo_name, ...)` has no parameter at all for
+accepting a caller-supplied qualified name — it always computes its own via
+`self.__create_qualified_name__("Todo", todo_name)+f"-{int(time.time())}"`,
+ignoring whatever qualified name Dr.Egeria's dispatcher already derived and
+displays in its own analysis table. Confirmed live: Dr.Egeria reported
+creating `Coco Pharmaceuticals::ToDo::Go-to-Lunch-with-Peter`; the entity
+actually stored was `Coco Pharmaceuticals::Todo::Go-to-Lunch-with-Peter-1785955953`
+— different casing (`Todo` vs `ToDo`) *and* an unpredictable numeric
+suffix. Anyone searching for the element by the name Dr.Egeria reported —
+Egeria Explorer, a fresh `find_*` call, a later Dr.Egeria command
+referencing it by qualified name in a separate run — finds nothing, which
+is exactly why it "does not appear to" have been created even though it
+was.
+
+**Systemic, not isolated:** `_async_create_meeting` and `_async_create_review`
+have the identical pattern (confirmed by reading both) — both already wired
+as Dr.Egeria commands (`Create Meeting` via `ProjectProcessor`, `Create
+Review` via `FeedbackProcessor`), so both had the same latent bug.
+
+**Fix:** added an optional `qualified_name: Optional[str] = None` parameter
+to all three async methods and their sync wrappers — used verbatim when
+provided (falls back to the existing auto-generation only when the caller
+doesn't supply one, so no other caller's behavior changes). Updated all
+three Dr.Egeria processor call sites
+(`actor_manager.py`'s `Create ToDo` branch, `project.py`'s `Create Meeting`
+branch, `feedback.py`'s `Create Review` branch) to pass the `qualified_name`
+the dispatcher already computed.
+
+**Verified live:** re-ran the user's exact `actor_actions.md` — `Create
+ToDo` still `SUCCESS`, and the real stored element's `qualifiedName` now
+matches Dr.Egeria's reported qualified name exactly (`Coco
+Pharmaceuticals::ToDo::Go-to-Lunch-with-Peter`, confirmed via direct
+`get_element_by_guid` comparison). Cleaned up both the original mismatched
+throwaway and the corrected one afterward. Full `tests/micro-tests` suite
+clean (same one pre-existing unrelated failure).
+
+**Follow-up 2026-08-05 — the deeper bug: assigned ToDos never showed up in
+`get_my_to_dos()` at all.** User reported: "I ran test_get_to_dos in
+test_my_profile.py as erinoverview and don't see any Todos?" Root-caused in
+three layers, all now fixed:
+
+1. **`_async_get_my_assigned_actions` had a parameter-name bug** (typo
+   `metadtata_element_subtypes` plus wrong field names `metadata_element_type`/
+   `metadata_element_subtypes` instead of the real `GetRequestBody` fields
+   `metadata_element_type_name`/`metadata_element_subtype_names`) — silently
+   dropped by pydantic's `extra='ignore'` on every call. Fixing the names
+   uncovered that this endpoint's own worked example
+   (`Egeria-api-my-profile.http`) never sends these fields at all, and doing
+   so live produces `OMAG-COMMON-400-019 ... type name ToDo ... is not a
+   sub-type of UserIdentity` — the endpoint evidently applies them against
+   the assigned actor's type, not the action's. Fix: stop forwarding these
+   two fields into the request body for this endpoint (kept as inert public
+   parameters for call-site compatibility with `get_my_to_dos`/
+   `get_my_sponsored_actions`).
+2. **The actual root cause: `_async_create_my_todo`/`_async_create_meeting`/
+   `_async_create_review` put `originatorGUID`/`assignToActorGUID` *inside*
+   `properties` (i.e. as fields of `ToDoProperties`/`MeetingProperties`/
+   `ReviewProperties`)**, instead of at the top level of `ActionRequestBody`
+   as siblings of `properties` — confirmed against
+   `AssetMaker._async_create_action`'s own docstring/worked example, which
+   shows `originatorGUID`/`actionSponsorGUID`/`assignToActorGUID` as
+   top-level `ActionRequestBody` fields. Since `ToDoProperties` etc. have no
+   such fields, they were silently dropped there too — the create call always
+   succeeded, but no `ActionRequester`/`AssignmentScope` relationship was
+   ever created, so the new ToDo was structurally invisible to any
+   "assigned to me" query, no matter how the query itself was fixed. This
+   was misdiagnosed mid-investigation as a possible Egeria-server-side gap
+   (a raw REST call reproducing the same nested-properties mistake showed
+   the identical missing-relationship symptom) before the nesting bug was
+   spotted — flagged by the user, not found independently. Fix: moved both
+   fields to the top level of the body in all three methods.
+3. Also added `qualified_name: Optional[str] = None` support to
+   `_async_log_my_activity`/`_async_journal_my_activity`/`_async_blog_my_activity`
+   (the milder, deterministic-but-still-caller-ignored variant noted below in
+   the original write-up), and added hand-maintained `ToDo-DrE`/`Meeting-DrE`/
+   `Review-DrE` `FormatSet`s to `base_report_specs` (same fallback pattern as
+   the existing `Journal-Entry-DrE`), fixing the `Report spec
+   'ToDo-DrE-Basic' not found. Falling back to default.` warning noted below.
+
+**Verified live (2026-08-05):** created a fresh ToDo via `create_my_todo()`;
+`get_all_related_elements(guid)` now shows a real `ActionRequester`
+relationship to the `Person` entity; `get_my_to_dos(output_format='JSON')`
+returns the new ToDo's GUID. `select_report_spec('ToDo-DrE-Basic', 'MD')`
+correctly falls through to the new `ToDo-DrE` spec. Cleaned up all
+throwaway test elements afterward.
+
+**Second follow-up 2026-08-05 — checked Meeting/Review through to reporting
+too, not just ToDo:**
+
+4. Verified live that `create_meeting`/`create_review` also now produce real
+   `ActionRequester`/`AssignmentScope` relationships after the fix, and both
+   show up via `get_my_assigned_actions()`.
+5. **Found and fixed a separate, `Meeting`-specific bug**:
+   `ProjectProcessor.fetch_element()` (`md_processing/v2/project.py`)
+   unconditionally calls `_async_get_project_by_guid` — but `Meeting` is a
+   Person Action Base type routed through `my_profile.create_meeting`, not a
+   `Project` at all (see the `Meeting` branch in `apply_changes()`). Calling
+   the Project-typed getter on a Meeting GUID 404s server-side
+   (`OMAG-REPOSITORY-HANDLER-404-001 ... retrieved an object ... of type
+   Meeting rather than type Project`), which `fetch_element` silently
+   swallowed and turned into "Could not fetch element" — so
+   `render_result_markdown` never rendered a Meeting's report at all, always
+   falling back to `raw_block`. `Review` was unaffected (`FeedbackProcessor`
+   doesn't override `fetch_element`, so it already used the generic
+   `ClassificationExplorer`-based fetch in the base class). Fix: special-case
+   `Meeting` in `ProjectProcessor.fetch_element()` to use the inherited
+   base-class fetch instead. Verified live end-to-end (`fetch_element` +
+   `render_result_markdown`) — a Meeting now renders its full `Meeting-DrE`
+   report with no warnings.
+6. Confirmed `AssetMaker._async_create_action`'s own worked examples in
+   `Egeria-api-asset-maker.http` were already correct (top-level
+   `originatorGUID`/`actionSponsorGUID`/`assignToActorGUID`) — the bug was
+   purely in `my_profile.py` not following its own ground truth, not a gap in
+   the `.http` file. Confirmed no other caller of `_async_create_action`
+   exists, so the bug's blast radius was exactly the three methods fixed
+   above.
+7. Added a `KNOWN ISSUE` comment directly above the `getMyAssignedActions`
+   worked example in `Egeria-api-my-profile.http`, documenting the confirmed
+   `metadataElementTypeName`/`metadataElementSubtypeNames` 400 so it isn't
+   reintroduced by a future edit that "helpfully" adds those fields back
+   without re-checking live.
+8. **Pre-existing broken ToDos found and deleted** (user's explicit
+   decision): 6 `ToDo` entities existed from before this fix (`Go to Lunch
+   with Peter` ×2, `Have a burger`/`Burger` ×2, `Curation Smoke ToDo`, plus
+   one test-run leftover `do-my-backup`) — all created via the pre-fix nested
+   -properties bug, so none had an `ActionRequester`/`AssignmentScope`
+   relationship and none would ever appear in `get_my_to_dos()`. There is no
+   retroactive repair (the relationship was simply never created); user chose
+   to delete all 6 rather than recreate them. Also note: `do-my-backup`
+   reveals `tests/functional-tests/test_my_profile.py::test_create_my_todo`
+   has no teardown/cleanup — it leaves a live ToDo behind on every run.
+
+---
 
 ### ISSUE-1 (PY-1): `DataDesigner.find_data_value_specifications` called non-existent `_async_post`
 
