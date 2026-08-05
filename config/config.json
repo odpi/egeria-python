@@ -21,7 +21,7 @@
     "Egeria Normalize Mermaid": true,
     "Egeria Metadata Store": "qs-metadata-store",
     "Egeria Platform URL": "https://localhost:9443",
-    "Egeria View Server": "qs-view-server2",
+    "Egeria View Server": "qs-view-server",
     "Egeria View Server URL": "https://localhost:9443",
     "Pyegeria Root": "sample-data",
     "Pyegeria Config Directory": "config",

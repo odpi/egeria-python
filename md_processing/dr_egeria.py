@@ -374,7 +374,14 @@ def setup_dispatcher(client: EgeriaTech) -> V2Dispatcher:
     # Feedback / Tags / External References
     reg("Add Comment", FeedbackProcessor)
     reg("Update Comment", FeedbackProcessor)
+    reg("Create Note", FeedbackProcessor)
+    # Person's own activity stream (My Journal Base bundle) - JournalEntry/
+    # ActivityEntry/BlogEntry are all Notification subtypes, same NoteLog
+    # mechanism as Note, distinguished by visibility (see egeria-project.org/
+    # concepts/notification/: journal=private, blog/activity=public).
     reg("Create Journal Entry", FeedbackProcessor)
+    reg("Create Activity Entry", FeedbackProcessor)
+    reg("Create Blog Entry", FeedbackProcessor)
     reg("Create Informal Tag", TagProcessor)
     reg("Update Informal Tag", TagProcessor)
     reg("Add Informal Tag", FeedbackLinkProcessor)

@@ -1,7 +1,9 @@
 ___
 
-## Create Journal Activity
-> Journal about your actiity.
+## Create Journal Entry
+> Creates a private journal entry about your own activity, attached to your personal activity note log. JournalEntry is a Notification subtype (see egeria-project.org/concepts/notification/).
+>
+>	**Alternative Names**: Journal Activity
 
 ### Display Name
 >	**Input Required**: True

@@ -2785,8 +2785,8 @@ class ServerClient(BaseServerClient):
           "parentRelationshipTypeName": "AttachedNoteLogEntry",
           "parentAtEnd1": true,
           "properties": {
-            "class" : "NotificationProperties",
-            "typeName" : "Notification",
+            "class" : "NoteProperties",
+            "typeName" : "Note",
             "qualifiedName": "add unique name here",
             "displayName": "add short name here",
             "description": "add description here",
@@ -2823,8 +2823,8 @@ class ServerClient(BaseServerClient):
                 "parentRelationshipTypeName": "AttachedNoteLogEntry",
                 "parentAtEnd1": True,
                 "properties": {
-                    "class": "NotificationProperties",
-                    "typeName": "Notification",
+                    "class": "NoteProperties",
+                    "typeName": "Note",
                     "qualifiedName": self.make_feedback_qn("Note", note_log_guid, display_name),
                     "displayName": display_name,
                     "description": description,
@@ -2852,7 +2852,7 @@ class ServerClient(BaseServerClient):
             raise PyegeriaInvalidParameterException(context=context)
 
         url = f"{self.command_root}feedback-manager/assets"
-        return await self._async_create_element_body_request(url, ['NotificationProperties'], body)
+        return await self._async_create_element_body_request(url, ['NoteProperties'], body)
 
     @dynamic_catch
     def create_note(
@@ -2897,8 +2897,8 @@ class ServerClient(BaseServerClient):
           "parentRelationshipTypeName": "AttachedNoteLogEntry",
           "parentAtEnd1": true,
           "properties": {
-            "class" : "NotificationProperties",
-            "typeName" : "Notification",
+            "class" : "NoteProperties",
+            "typeName" : "Note",
             "qualifiedName": "add unique name here",
             "displayName": "add short name here",
             "description": "add description here",
@@ -2977,8 +2977,8 @@ class ServerClient(BaseServerClient):
           "parentRelationshipTypeName": "AttachedNoteLogEntry",
           "parentAtEnd1": true,
           "properties": {
-            "class" : "NotificationProperties",
-            "typeName" : "Notification",
+            "class" : "NoteProperties",
+            "typeName" : "Note",
             "qualifiedName": "add unique name here",
             "displayName": "add short name here",
             "description": "add description here",
@@ -3080,8 +3080,8 @@ class ServerClient(BaseServerClient):
           "parentRelationshipTypeName": "AttachedNoteLogEntry",
           "parentAtEnd1": true,
           "properties": {
-            "class" : "NotificationProperties",
-            "typeName" : "Notification",
+            "class" : "NoteProperties",
+            "typeName" : "Note",
             "qualifiedName": "add unique name here",
             "displayName": "add short name here",
             "description": "add description here",
@@ -3150,8 +3150,8 @@ class ServerClient(BaseServerClient):
           "class" : "UpdateElementRequestBody",
           "mergeUpdate": true,
           "properties": {
-            "class" : "NotificationProperties",
-            "typeName" : "Notification",
+            "class" : "NoteProperties",
+            "typeName" : "Note",
             "qualifiedName": "add unique name here",
             "displayName": "add short name here",
             "description": "add description here",
@@ -3184,7 +3184,8 @@ class ServerClient(BaseServerClient):
                 "class": "UpdateElementRequestBody",
                 "mergeUpdate": merge_update,
                 "properties": {
-                    "class": "NotificationProperties",
+                    "class": "NoteProperties",
+                    "typeName": "Note",
                     "displayName": display_name,
                     "description": description,
                 }
@@ -3195,7 +3196,7 @@ class ServerClient(BaseServerClient):
             raise PyegeriaInvalidParameterException(context=context)
 
         url = f"{self.command_root}feedback-manager/notes/{note_guid}"
-        await self._async_update_element_body_request(url, ['Notification'], body)
+        await self._async_update_element_body_request(url, ['Note'], body)
 
     @dynamic_catch
     def update_note(
@@ -3233,8 +3234,8 @@ class ServerClient(BaseServerClient):
           "class" : "UpdateElementRequestBody",
           "mergeUpdate": true,
           "properties": {
-            "class" : "NotificationProperties",
-            "typeName" : "Notification",
+            "class" : "NoteProperties",
+            "typeName" : "Note",
             "qualifiedName": "add unique name here",
             "displayName": "add short name here",
             "description": "add description here",
@@ -6356,7 +6357,7 @@ class ServerClient(BaseServerClient):
                                   include_only_relationships: Optional[list[str]] = None,
                                   skip_classified_elements: Optional[list[str]] = None,
                                   include_only_classified_elements: Optional[list[str]] = None,
-                                  graph_query_depth: int = 3, max_mermaid_node_count: int = 5,
+                                  graph_query_depth: int = 3, max_mermaid_node_count: int = 10,
                                   governance_zone_filter: Optional[list[str]] = None, as_of_time: Optional[str] = None,
                                   effective_time: Optional[str] = None, relationship_page_size: int = 0,
                                   limit_results_by_status: Optional[list[str]] = None,

@@ -519,7 +519,8 @@ class ProductManager(CollectionManager):
                                                       _gen_output=self._generate_collection_output,
                                                       filter_string=name,
                                                       classification_names=classification_names, start_from=start_from,
-                                                      page_size=page_size, output_format=output_format,
+                                                      page_size=page_size, graph_query_depth=graph_query_depth,
+                                                      output_format=output_format,
                                                       report_spec=report_spec, body=body)
         return response
 
@@ -1507,7 +1508,8 @@ class ProductManager(CollectionManager):
         response = await self._async_get_name_request(url, _type="DigitalProductCatalog", _gen_output=None,
                                                       filter_string=name,
                                                       classification_names=classification_names, start_from=start_from,
-                                                      page_size=page_size, output_format=output_format,
+                                                      page_size=page_size, graph_query_depth=graph_query_depth,
+                                                      output_format=output_format,
                                                       report_spec=report_spec, body=body)
         return response
 

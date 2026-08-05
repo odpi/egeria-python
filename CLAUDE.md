@@ -80,11 +80,24 @@ way you'd review a Tinderbox export.
 
 Scope: create/edit/delete attributes, bundles, and commands within an
 **existing** family, plus a "New Family" action that scaffolds an empty
-compact-JSON file from a template. It does not create new Tinderbox-side
-structure — Tinderbox remains the tool of record for anyone still
-maintaining families there in parallel. Every attribute/bundle/command
+compact-JSON file from a template. Every attribute/bundle/command
 reference in the UI is a picker over real names (never free text), so it's
 not possible to create a dangling reference from the editor.
+
+**This is Claude's edit path, not just a human UI, and Tinderbox is
+retired.** Confirmed 2026-08-05: when Claude needs to change a compact
+command spec, it makes the edit itself through this app's REST API (start
+it with `dr_egeria_spec_editor` if not already running, then
+`GET/POST/PUT/DELETE` against
+`http://localhost:8420/api/families/{family}/attributes|bundles|commands/{name}`,
+`POST /api/validate/{family}` to check the result) — not by hand-editing
+the JSON text directly (skips the API's structural validation:
+bundle-chain resolution, unknown-attribute checks, duplicate-name checks).
+The compact JSON files in this repo are now the sole system of record —
+the user confirmed the same day they will not maintain the Tinderbox file
+going forward, so there's no mirroring step: once the API edit +
+`refresh_specs` regeneration + processor wiring are done and verified,
+that's the complete change.
 
 ## Commits
 
@@ -170,14 +183,22 @@ Markdown file
 | `v2/rewriters.py` | `CommandRewriter` — Create↔Update auto-transitions |
 | `md_processing_utils/md_processing_constants.py` | `COLLECTION_SUBTYPES`, `PROJECT_SUBTYPES`, `COMMAND_DEFINITIONS`, verb groups |
 | `md_processing_utils/common_md_utils.py` | Body builders (`set_element_prop_body`, domain helpers) |
-| `data/compact_commands/*.json` | Tinderbox-exported command specs — ground truth for attributes |
+| `data/compact_commands/*.json` | Compact command specs — ground truth for attributes; system of record as of 2026-08-05 (Tinderbox retired) |
 
 **Compact command JSON format** — three sections per file:
 - `attribute_definitions` — full metadata per attribute (style, labels, valid values, etc.)
 - `bundles` — reusable attribute groups; single inheritance via `"inherits"`
 - `commands` — references a bundle + adds custom attributes; expands to a full command spec at load time
 
-These files are **Tinderbox exports — never hand-edit**. Describe desired changes so the user can make them in Tinderbox and re-export. After any change, run `refresh_specs` to regenerate `base_report_formats.py`.
+**Never hand-edit the JSON text directly.** Use the Dr.Egeria Spec Editor's
+REST API (`dr_egeria_spec_editor`, `http://localhost:8420` — see the
+"Dr.Egeria Spec Editor" section above) to make the change — it does
+structural validation (bundle-chain resolution, unknown-attribute checks)
+that raw editing skips. These files were originally Tinderbox exports, but
+as of 2026-08-05 that's retired: the user confirmed they will not maintain
+the Tinderbox file going forward, so this repo's compact JSON is the sole
+system of record — no mirroring/re-export step needed after an edit. After
+any change, run `refresh_specs` to regenerate `base_report_formats.py`.
 
 **Dispatcher registration** — how new commands get wired in:
 - `COLLECTION_SUBTYPES` and `PROJECT_SUBTYPES` drive automatic `Create/Update` routing to `CollectionManagerProcessor` / `ProjectProcessor` — adding a type to these lists is all that's required.
@@ -194,7 +215,7 @@ These files are **Tinderbox exports — never hand-edit**. Describe desired chan
 - To add a new `Referenceable`-level property, add it once to `set_element_prop_body()`.
 
 **Adding a new processor** — minimum steps:
-1. Add the command spec to the relevant compact JSON (user does this in Tinderbox).
+1. Add the command spec to the relevant compact JSON via the Dr.Egeria Spec Editor's REST API (see above — Tinderbox is retired, this repo's compact JSON is the system of record).
 2. Add the type to `COLLECTION_SUBTYPES` / `PROJECT_SUBTYPES` if it's a collection/project subtype (auto-routes).
 3. Otherwise implement `apply_changes()` in a new `AsyncBaseCommandProcessor` subclass and register it in `setup_dispatcher()`.
 4. Run `refresh_specs` to generate the result-table format spec.

@@ -1,7 +1,9 @@
 ___
 
-## Create Log Activity
-> Log my activity.
+## Create Activity Entry
+> Creates a public activity log entry recording an activity and its completion status, attached to your personal activity note log. ActivityEntry is a Notification subtype (see egeria-project.org/concepts/notification/).
+>
+>	**Alternative Names**: Log Activity
 
 ### Display Name
 >	**Input Required**: True
