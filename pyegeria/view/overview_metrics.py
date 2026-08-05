@@ -149,7 +149,15 @@ def _json_list(raw) -> list:
 def _find(mgr, body: dict, page_size: int = DEFAULT_CAP) -> list:
     """Run a FindRequestBody, always returning a (possibly empty) list. Never raises."""
     try:
-        raw = mgr.find_metadata_elements(body, start_from=0, page_size=page_size, graph_query_depth=0)
+        # find_metadata_elements sends body exactly as given (no injected
+        # defaults) -- graphQueryDepth/startFrom/pageSize all belong in the
+        # body itself now, not separate kwargs (ISSUE-34, PYEGERIA_ISSUES.md:
+        # startFrom/pageSize as URL query params -- the older convention --
+        # stopped working once Egeria moved pagination for this endpoint
+        # into the request body; find_metadata_elements no longer accepts
+        # them as parameters at all, to avoid this drifting stale again).
+        b = {**body, "graphQueryDepth": 0, "startFrom": 0, "pageSize": page_size}
+        raw = mgr.find_metadata_elements(b)
         return [el for el in (raw if isinstance(raw, list) else []) if isinstance(el, dict)]
     except Exception as exc:  # noqa: BLE001 -- best-effort, degrade don't fail
         logger.debug(f"overview_metrics _find failed for {body.get('metadataElementTypeName')!r}: {exc}")
