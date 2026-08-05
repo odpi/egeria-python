@@ -3090,7 +3090,15 @@ class MetadataExpert(ServerClient):
 
         url = (
             f"{base_path(self, self.view_server)}/metadata-elements/by-search-conditions"
+            f"?startFrom={start_from}&pageSize={page_size}"
         )
+
+        # graphQueryDepth is a body field for this endpoint (confirmed against
+        # Egeria-api-metadata-expert.http's worked example), unlike
+        # startFrom/pageSize above - merge it in only if the caller's body
+        # didn't already set it explicitly.
+        if isinstance(body, dict) and "graphQueryDepth" not in body:
+            body = {**body, "graphQueryDepth": graph_query_depth}
 
         response: Response = await self._async_make_request(
             "POST", url, body_slimmer(body), timeout=timeout

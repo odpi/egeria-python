@@ -341,6 +341,7 @@ class ReferenceDataManager(ServerClient):
                 body=body,
                 start_from=start_from,
                 page_size=page_size,
+                graph_query_depth=graph_query_depth,
                 output_format=output_format,
                 report_spec=report_spec,
                 **kwargs,

@@ -1250,7 +1250,7 @@ base_report_specs = FormatSetDict({
                                Column(name="Action Mermaid Graph", key='actionMermaidGraph'),
                                Column(name="Local Lineage Graph", key="localLineageGraph"),
                                Column(name="Edge Mermaid", key="edgeMermaidGraph"),
-                               Column(name="ISC Implementation Graph", key='iscImplementationGraph'),
+                               Column(name="ISC Implementation Graph", key='iscImplementationMermaidGraph'),
                                Column(name="Specification Mermaid Graph", key='specificationMermaidGraph'),
                                Column(name="Solution Blueprint Mermaid Graph", key='solutionBlueprintMermaidGraph'),
                                Column(name="Solution Subcomponent Mermaid Graph",

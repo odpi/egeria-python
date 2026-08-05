@@ -3095,6 +3095,7 @@ class ClassificationExplorer(ServerClient):
             self._async_get_element_by_guid(
                 guid=guid,
                 element_type_name=element_type_name,
+                graph_query_depth=graph_query_depth,
                 output_format=output_format,
                 report_spec=report_spec,
                 body=body,
@@ -11995,18 +11996,25 @@ class ClassificationExplorer(ServerClient):
         list | str
             Returns a string if no elements found and a list of dict of elements with the results.
         """
+        # NOTE: must be called with keyword arguments only. A previous all-positional call
+        # here omitted graph_query_depth from the argument list, silently shifting every
+        # subsequent positional argument one slot to the left (output_format landing in
+        # graph_query_depth, report_spec in output_format, timeout in report_spec, body in
+        # timeout, and body itself dropped) — the same bug shape as ISSUE-21
+        # (get_scoped_elements/get_scopes).
         loop = asyncio.get_event_loop()
         return loop.run_until_complete(
             self._async_find_root_elements(
-                metadata_element_type_name,
-                search_properties,
-                match_classifications,
-                start_from,
-                page_size,
-                output_format,
-                report_spec,
-                timeout,
-                body,
+                metadata_element_type_name=metadata_element_type_name,
+                search_properties=search_properties,
+                match_classifications=match_classifications,
+                start_from=start_from,
+                page_size=page_size,
+                graph_query_depth=graph_query_depth,
+                output_format=output_format,
+                report_spec=report_spec,
+                timeout=timeout,
+                body=body,
                 **kwargs
             )
         )

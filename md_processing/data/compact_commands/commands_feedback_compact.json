@@ -2779,44 +2779,6 @@
       "custom_attributes": [],
       "Journal Entry": ""
     },
-    "Create Log Activity": {
-      "display_name": "Log Activity",
-      "qn_prefix": "LogActivity",
-      "alternate_names": [],
-      "family": "Feedback",
-      "description": "Log my activity.",
-      "verb": "Create",
-      "upsert": false,
-      "attach": false,
-      "level": "Basic",
-      "find_method": "",
-      "find_constraints": "",
-      "extra_find": "",
-      "extra_constraints": "",
-      "OM_TYPE": "Notification",
-      "bundle": "My Journal Base",
-      "custom_attributes": [],
-      "Journal Entry": ""
-    },
-    "Create Journal Activity": {
-      "display_name": "Journal Activity",
-      "qn_prefix": "JournalActivity",
-      "alternate_names": [],
-      "family": "Feedback",
-      "description": "Journal about your actiity.",
-      "verb": "Create",
-      "upsert": false,
-      "attach": false,
-      "level": "Basic",
-      "find_method": "",
-      "find_constraints": "",
-      "extra_find": "",
-      "extra_constraints": "",
-      "OM_TYPE": "Notification",
-      "bundle": "My Journal Base",
-      "custom_attributes": [],
-      "Journal Entry": ""
-    },
     "Create Like": {
       "display_name": "Like",
       "qn_prefix": "Like",
@@ -2971,7 +2933,7 @@
       "qn_prefix": "Note",
       "alternate_names": [],
       "family": "Feedback",
-      "description": "PARSE-ONLY STUB: no NoteProperties/NoteLogEntryProperties type exists anywhere in pyegeria yet \u2014 a new Egeria type is in progress. Template/help generation only; do NOT wire a processor for this command until the type ships and is confirmed.",
+      "description": "Creates a note (an opinion or additional information about an element), attached via a note log to the specified element. Egeria added a dedicated Note type (subtype of Notification) in PR #9191, confirmed live 2026-08-04.",
       "verb": "Create",
       "upsert": false,
       "attach": false,
@@ -2980,8 +2942,52 @@
       "find_constraints": "",
       "extra_find": "",
       "extra_constraints": "",
-      "OM_TYPE": "Notification",
+      "OM_TYPE": "Note",
       "bundle": "Person Action Base",
+      "custom_attributes": [
+        "Commented On Element"
+      ],
+      "Journal Entry": ""
+    },
+    "Create Journal Entry": {
+      "display_name": "Journal Entry",
+      "qn_prefix": "JournalEntry",
+      "alternate_names": [
+        "Journal Activity"
+      ],
+      "family": "Feedback",
+      "description": "Creates a private journal entry about your own activity, attached to your personal activity note log. JournalEntry is a Notification subtype (see egeria-project.org/concepts/notification/).",
+      "verb": "Create",
+      "upsert": false,
+      "attach": false,
+      "level": "Basic",
+      "find_method": "",
+      "find_constraints": "",
+      "extra_find": "",
+      "extra_constraints": "",
+      "OM_TYPE": "JournalEntry",
+      "bundle": "My Journal Base",
+      "custom_attributes": [],
+      "Journal Entry": ""
+    },
+    "Create Activity Entry": {
+      "display_name": "Activity Entry",
+      "qn_prefix": "ActivityEntry",
+      "alternate_names": [
+        "Log Activity"
+      ],
+      "family": "Feedback",
+      "description": "Creates a public activity log entry recording an activity and its completion status, attached to your personal activity note log. ActivityEntry is a Notification subtype (see egeria-project.org/concepts/notification/).",
+      "verb": "Create",
+      "upsert": false,
+      "attach": false,
+      "level": "Basic",
+      "find_method": "",
+      "find_constraints": "",
+      "extra_find": "",
+      "extra_constraints": "",
+      "OM_TYPE": "ActivityEntry",
+      "bundle": "My Journal Base",
       "custom_attributes": [],
       "Journal Entry": ""
     }

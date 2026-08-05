@@ -1,7 +1,7 @@
 ___
 
 ## Create Note
-> PARSE-ONLY STUB: no NoteProperties/NoteLogEntryProperties type exists anywhere in pyegeria yet — a new Egeria type is in progress. Template/help generation only; do NOT wire a processor for this command until the type ships and is confirmed.
+> Creates a note (an opinion or additional information about an element), attached via a note log to the specified element. Egeria added a dedicated Note type (subtype of Notification) in PR #9191, confirmed live 2026-08-04.
 
 ### Display Name
 >	**Input Required**: True
@@ -11,6 +11,16 @@ ___
 >	**Description**: The common name of an element.
 
 >	**Alternative Labels**: "Term Name"
+
+
+### Commented On Element
+>	**Input Required**: True
+
+>	**Attribute Type**: Reference Name
+
+>	**Description**: The element being commented on.
+
+>	**Alternative Labels**: Associated Element
 
 
 ### Situation

@@ -114,12 +114,16 @@ class TestSolutionArchitect:
         sa_client = None
         try:
             sa_client = SolutionArchitect(self.good_view_server_2, self.good_platform1_url, user_id=self.good_user_2)
-            token = sa_client.create_egeria_bearer_token(self.good_user_2, "secret")
+            token = sa_client.create_egeria_bearer_token('peterprofile', "secret")
             start_time = time.perf_counter()
 
-            search_string = "InformationSupplyChain::Sustainability Reporting"
+            search_string = "InformationSupplyChain::New Employee Onboarding"
+
             response = sa_client.find_information_supply_chains(
                 search_string,
+                graph_query_depth = 10,
+                max_mermaid_node_count = 10,
+                # report_spce = "Common-Mermaid",
                 output_format="JSON"
             )
             duration = time.perf_counter() - start_time
@@ -128,6 +132,7 @@ class TestSolutionArchitect:
             if type(response) is list:
                 print(f"Found {len(response)} information supply chains")
                 print("\n\n" + json.dumps(response, indent=4))
+                print(response[0].get("iscimplementationMermaidGraph"))
             elif type(response) is str:
                 print("\n\nResponse: " + response)
             assert True

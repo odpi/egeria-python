@@ -725,6 +725,10 @@ class AssetCatalog(ServerClient):
                 "filter": type_name,
                 "startFrom": start_from,
                 "pageSize": page_size,
+                "includeOnlyRelationships": include_only_relationships,
+                "skipRelationships": skip_relationships,
+                "graphQueryDepth": graph_query_depth,
+                **kwargs,
             }
         body_s = body_slimmer(body)
         response = await self._async_make_request("POST", url, body_s)

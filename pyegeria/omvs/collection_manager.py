@@ -635,6 +635,12 @@ class CollectionManager(ServerClient):
                 "ignoreCase": ignore_case,
                 "startFrom": start_from,
                 "pageSize": page_size,
+                "metadataElementTypeName": metadata_element_type_name,
+                "metadataElementSubtypeNames": metadata_element_subtypes,
+                "includeOnlyRelationships": include_only_relationships,
+                "skipRelationships": skip_relationships,
+                "graphQueryDepth": graph_query_depth,
+                **kwargs,
             }
             validated_body = DeploymentStatusSearchString.model_validate(body_dict)
 

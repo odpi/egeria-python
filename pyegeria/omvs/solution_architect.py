@@ -1667,25 +1667,39 @@ class SolutionArchitect(ServerClient):
 
         """
 
-        return self.find_information_supply_chains("*", add_implementation,
-                                                   starts_with, ends_with, ignore_case,
-                                                   anchor_domain,
-                                                   metadata_element_type,
-                                                   metadata_element_subtypes,
-                                                   skip_relationships,
-                                                   include_only_relationships,
-                                                   skip_classified_elements,
-                                                   include_only_classified_elements,
-                                                   graph_query_depth,
-                                                   governance_zone_filter,
-                                                   as_of_time, effective_time,
-                                                   relationship_page_size,
-                                                   limit_results_by_status,
-                                                   sequencing_order,
-                                                   sequencing_property,
-                                                   output_format, report_spec,
-                                                   start_from, page_size,
-                                                   property_names, body, **kwargs)
+        # NOTE: must be called with keyword arguments only. find_information_supply_chains'
+        # own positional parameter order does not match this method's — a previous
+        # all-positional call here silently mismatched almost every argument (and, once this
+        # method also grew a `body` parameter, overflowed to a TypeError on every call).
+        return self.find_information_supply_chains(
+            search_string="*",
+            add_implementation=add_implementation,
+            body=body,
+            starts_with=starts_with,
+            ends_with=ends_with,
+            ignore_case=ignore_case,
+            anchor_domain=anchor_domain,
+            metadata_element_type=metadata_element_type,
+            metadata_element_subtypes=metadata_element_subtypes,
+            skip_relationships=skip_relationships,
+            include_only_relationships=include_only_relationships,
+            skip_classified_elements=skip_classified_elements,
+            include_only_classified_elements=include_only_classified_elements,
+            graph_query_depth=graph_query_depth,
+            governance_zone_filter=governance_zone_filter,
+            as_of_time=as_of_time,
+            effective_time=effective_time,
+            relationship_page_size=relationship_page_size,
+            limit_results_by_status=limit_results_by_status,
+            sequencing_order=sequencing_order,
+            sequencing_property=sequencing_property,
+            output_format=output_format,
+            report_spec=report_spec,
+            start_from=start_from,
+            page_size=page_size,
+            property_names=property_names,
+            **kwargs
+        )
 
     async def _async_find_information_supply_chains(
         self,
@@ -1795,7 +1809,8 @@ class SolutionArchitect(ServerClient):
 
         """
 
-        url = f"{self.solution_architect_command_root}/information-supply-chains/by-search-string?addImplementation={add_implementation}"
+        add_impl = str(add_implementation).lower()
+        url = f"{self.solution_architect_command_root}/information-supply-chains/by-search-string?addImplementation={add_impl}"
         
         # Merge explicit parameters with kwargs
         params = {
@@ -1938,6 +1953,7 @@ class SolutionArchitect(ServerClient):
                 ignore_case=ignore_case,
                 start_from=start_from,
                 page_size=page_size,
+                graph_query_depth=graph_query_depth,
                 output_format=output_format,
                 report_spec=report_spec,
                 **kwargs
@@ -3291,9 +3307,25 @@ class SolutionArchitect(ServerClient):
         """Retrieve a list of all solution blueprint elements
         https://egeria-project.org/concepts/solution-blueprint
         """
-        return self.find_solution_blueprints("*", classification_names, metadata_element_subtypes,
-                                              starts_with, ends_with, ignore_case, start_from,
-                                              page_size, output_format, report_spec, body, **kwargs)
+        # NOTE: must be called with keyword arguments only. find_solution_blueprints' own
+        # positional parameter order does not match this method's — a previous all-positional
+        # call here silently mismatched every argument after search_string and, once this
+        # method also grew a `body` parameter, overflowed to a TypeError on every call.
+        return self.find_solution_blueprints(
+            search_string="*",
+            body=body,
+            starts_with=starts_with,
+            ends_with=ends_with,
+            ignore_case=ignore_case,
+            start_from=start_from,
+            page_size=page_size,
+            graph_query_depth=graph_query_depth,
+            output_format=output_format,
+            report_spec=report_spec,
+            metadata_element_subtypes=metadata_element_subtypes,
+            skip_classified_elements=classification_names,
+            **kwargs
+        )
 
 
     async def _async_get_solution_blueprint_by_guid(self, guid: str = None, body: dict = None,
@@ -4690,7 +4722,24 @@ class SolutionArchitect(ServerClient):
         """Retrieve a list of all solution component elements
         https://egeria-project.org/concepts/solution-components
         """
-        return self.find_solution_components("*", classification_names, metadata_element_subtypes, starts_with, ends_with, ignore_case, start_from, page_size, output_format, report_spec, body, **kwargs)
+        # NOTE: must be called with keyword arguments only — see find_all_solution_blueprints
+        # for why an all-positional call here is unsafe (parameter orders don't match, and it
+        # overflows to a TypeError on every call once `body` is included positionally).
+        return self.find_solution_components(
+            search_string="*",
+            body=body,
+            starts_with=starts_with,
+            ends_with=ends_with,
+            ignore_case=ignore_case,
+            start_from=start_from,
+            page_size=page_size,
+            graph_query_depth=graph_query_depth,
+            output_format=output_format,
+            report_spec=report_spec,
+            metadata_element_subtypes=metadata_element_subtypes,
+            skip_classified_elements=classification_names,
+            **kwargs
+        )
 
 
     async def _async_get_solution_components_by_name(self, name: Optional[str] = None, body: dict = None, start_from: int = 0,
@@ -6134,6 +6183,7 @@ class SolutionArchitect(ServerClient):
             ignore_case=ignore_case,
             start_from=start_from,
             page_size=page_size,
+            graph_query_depth=graph_query_depth,
             output_format=output_format,
             report_spec=report_spec,
             skip_classified_elements=classification_names,
