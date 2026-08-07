@@ -1904,7 +1904,8 @@ class RuntimeManager(ServerClient):
 
         return await self._async_get_name_request(url, _type="Platforms", _gen_output=self._generate_platform_output,
                                                   filter_string=filter_string, start_from=start_from,
-                                                  page_size=page_size, output_format=output_format,
+                                                  page_size=page_size, graph_query_depth=graph_query_depth,
+                                                  output_format=output_format,
                                                   report_spec=report_spec, body=body)
 
     @dynamic_catch
@@ -2244,6 +2245,7 @@ class RuntimeManager(ServerClient):
             url=url,
             _type="SoftwareServerPlatform",
             _gen_output=self._generate_platform_output,
+            graph_query_depth=graph_query_depth,
             output_format=output_format,
             report_spec=report_spec,
             body=body
@@ -2324,6 +2326,7 @@ class RuntimeManager(ServerClient):
             url=url,
             _type="SoftwareServer",
             _gen_output=self._generate_omag_server_output,
+            graph_query_depth=graph_query_depth,
             output_format=output_format,
             report_spec=report_spec,
             body=body
@@ -2417,7 +2420,8 @@ class RuntimeManager(ServerClient):
         return await self._async_get_name_request(url, _type="SoftwareServer",
                                                   _gen_output=self._generate_omag_server_output,
                                                   filter_string=filter_string, start_from=start_from,
-                                                  page_size=page_size, output_format=output_format,
+                                                  page_size=page_size, graph_query_depth=graph_query_depth,
+                                                  output_format=output_format,
                                                   report_spec=report_spec, body=body)
 
     @dynamic_catch

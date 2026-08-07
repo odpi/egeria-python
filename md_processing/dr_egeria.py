@@ -2,6 +2,13 @@ from md_processing.md_processing_utils.md_processing_constants import load_comma
 
 # Ensure compact command specs are loaded before any v2 processing
 load_commands()
+
+# Analytic Function Demo report specs (pyegeria.view.analytic_demo_specs) --
+# and any other extra report-spec source -- are auto-loaded by
+# get_report_registry() itself (CONFIG tier, driven by
+# settings.Environment.pyegeria_report_spec_modules / config.json's "Pyegeria
+# Report Spec Modules") the first time anything calls it. No explicit
+# registration call needed here anymore.
 """
 This is an ongoing experiment in parsing and playing with Dr.Egeria docs
 """
@@ -34,7 +41,9 @@ from md_processing.v2 import (
     FeedbackProcessor, TagProcessor, ExternalReferenceProcessor, FeedbackLinkProcessor,
     ViewProcessor, ActorManagerProcessor, ActorManagerLinkProcessor,
     ActionProcessStepLinkProcessor, ActionExecutorTargetLinkProcessor,
-    CreateDashboardSheetProcessor, LinkReportToDashboardSheetProcessor
+    CreateDashboardSheetProcessor, LinkReportToDashboardSheetProcessor,
+    AddTextOnDashboardSheetProcessor, ReportProcessor,
+    CurationClassifyProcessor, CurationLinkProcessor, CLASSIFICATION_METHODS
 )
 
 from pyegeria import settings, EgeriaTech, PyegeriaException, print_basic_exception, print_validation_error
@@ -189,6 +198,48 @@ def register_governance_processors(register_processor: Callable[[str, Type[Async
     register_processor("View Governance Definition Context", GovernanceContextProcessor)
 
 
+# OM_TYPEs handled by CurationLinkProcessor.apply_changes(); anything in the
+# Curation family whose OM_TYPE is in neither this set nor CLASSIFICATION_METHODS
+# (Class Word / Modifier / Policy Management Point) is left unregistered on
+# purpose -- no backing pyegeria method exists, so it stays parse-only.
+CURATION_LINK_OM_TYPES = {
+    "ScopedBy", "SemanticAssignment", "SemanticDefinition", "PeerDuplicateLink",
+    "ConsolidatedDuplicateLink", "ResourceList", "MoreInformation", "SearchKeywordLink",
+}
+
+
+def register_curation_processors(register_processor: Callable[[str, Type[AsyncBaseCommandProcessor]], None]) -> None:
+    """Register Curation family processors from compact command specs."""
+    from md_processing.md_processing_utils.md_processing_constants import (
+        COMMAND_DEFINITIONS,
+        build_command_variants,
+        load_commands,
+    )
+
+    load_commands()
+    specs = COMMAND_DEFINITIONS.get("Command Specifications", {})
+
+    for base_name, spec in specs.items():
+        if not isinstance(spec, dict):
+            continue
+        if spec.get("family") != "Curation":
+            continue
+
+        om_type = spec.get("OM_TYPE")
+        if om_type in CLASSIFICATION_METHODS:
+            processor_cls = CurationClassifyProcessor
+        elif om_type in CURATION_LINK_OM_TYPES:
+            processor_cls = CurationLinkProcessor
+        else:
+            # Tier 3 -- no backing pyegeria method (Class Word/Modifier/Policy
+            # Management Point) or unrecognized OM_TYPE. Leave parse-only.
+            continue
+
+        variants = build_command_variants(base_name, spec)
+        for variant in variants:
+            register_processor(variant, processor_cls)
+
+
 def normalize_command_key(key: str) -> str:
     """Collapse whitespace and strip for consistent command matching."""
     import re
@@ -297,20 +348,40 @@ def setup_dispatcher(client: EgeriaTech) -> V2Dispatcher:
     # Governance (spec-driven to keep coverage aligned with compact commands)
     register_governance_processors(reg)
     # Actor Manager (spec-driven to keep coverage aligned with compact commands)
+    # NOTE: "Create ToDo" is family "Actor Manager" in its compact spec, so it's
+    # already auto-registered here (verb "Create" -> ActorManagerProcessor) --
+    # no explicit reg() call needed.
     register_actor_manager_processors(reg)
+
+    # Curation (classifications + relationships on existing Referenceable elements)
+    register_curation_processors(reg)
+
+    # Person actions living in other families (Person Action Base bundle)
+    reg("Create Meeting", ProjectProcessor)
+    reg("Create Review", FeedbackProcessor)
 
     # Reporting / View
     reg("View Report", ViewProcessor)
+    reg("Create Report", ReportProcessor)
+    reg("Update Report", ReportProcessor)
 
     # Dashboard Sheets (local pyegeria-only records, not Egeria elements yet --
     # see OVERVIEW_REPORTING_MODEL.md SS10 for the planned Collection-subtype migration)
     reg("Create Dashboard Sheet", CreateDashboardSheetProcessor)
     reg("Link Report to Dashboard Sheet", LinkReportToDashboardSheetProcessor)
+    reg("Add Text on Dashboard Sheet", AddTextOnDashboardSheetProcessor)
 
     # Feedback / Tags / External References
     reg("Add Comment", FeedbackProcessor)
     reg("Update Comment", FeedbackProcessor)
+    reg("Create Note", FeedbackProcessor)
+    # Person's own activity stream (My Journal Base bundle) - JournalEntry/
+    # ActivityEntry/BlogEntry are all Notification subtypes, same NoteLog
+    # mechanism as Note, distinguished by visibility (see egeria-project.org/
+    # concepts/notification/: journal=private, blog/activity=public).
     reg("Create Journal Entry", FeedbackProcessor)
+    reg("Create Activity Entry", FeedbackProcessor)
+    reg("Create Blog Entry", FeedbackProcessor)
     reg("Create Informal Tag", TagProcessor)
     reg("Update Informal Tag", TagProcessor)
     reg("Add Informal Tag", FeedbackLinkProcessor)

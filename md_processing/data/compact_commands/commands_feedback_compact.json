@@ -1,6 +1,6 @@
 {
   "family": "Feedback",
-  "exported": "Jul 27, 2026 at 8:27:43 AM",
+  "exported": "Aug 3, 2026 at 10:52:33\u202fAM",
   "attribute_definitions": {
     "Activity Status": {
       "variable_name": "activity_status",
@@ -579,6 +579,25 @@
       "level": "Basic",
       "Journal Entry": ""
     },
+    "Due Time": {
+      "variable_name": "due_time",
+      "inUpdate": true,
+      "attr_labels": "",
+      "examples": "",
+      "default_value": "",
+      "valid_values": [],
+      "existing_element": "",
+      "description": "Due date/time for a Meeting, ToDo, or Review person action.",
+      "generated": false,
+      "style": "Simple",
+      "user_specified": true,
+      "unique": false,
+      "input_required": false,
+      "min_cardinality": 0,
+      "max_cardinality": 1,
+      "level": "Domain",
+      "Journal Entry": ""
+    },
     "Effective From": {
       "variable_name": "effective_from",
       "inUpdate": true,
@@ -811,7 +830,7 @@
       "variable_name": "file_path",
       "inUpdate": true,
       "attr_labels": "File Path Name",
-      "examples": "\/home\/mumble.csv",
+      "examples": "/home/mumble.csv",
       "default_value": "",
       "valid_values": [],
       "existing_element": "",
@@ -967,7 +986,7 @@
       "default_value": "",
       "valid_values": [],
       "existing_element": "",
-      "description": "An identier",
+      "description": "An identifier",
       "generated": false,
       "style": "Simple",
       "user_specified": true,
@@ -1106,7 +1125,7 @@
       "default_value": "",
       "valid_values": [],
       "existing_element": "",
-      "description": "Copyright and\/or license information for the element or associated resource.",
+      "description": "Copyright and/or license information for the element or associated resource.",
       "generated": false,
       "style": "Simple",
       "user_specified": true,
@@ -1265,6 +1284,25 @@
       "unique": false,
       "input_required": false,
       "min_cardinality": 1,
+      "max_cardinality": 1,
+      "level": "Domain",
+      "Journal Entry": ""
+    },
+    "Objective": {
+      "variable_name": "objective",
+      "inUpdate": true,
+      "attr_labels": "",
+      "examples": "",
+      "default_value": "",
+      "valid_values": [],
+      "existing_element": "",
+      "description": "The intended outcome/goal of a Meeting, ToDo, or Review person action.",
+      "generated": false,
+      "style": "Simple",
+      "user_specified": true,
+      "unique": false,
+      "input_required": false,
+      "min_cardinality": 0,
       "max_cardinality": 1,
       "level": "Domain",
       "Journal Entry": ""
@@ -1505,7 +1543,7 @@
       "default_value": "",
       "valid_values": [],
       "existing_element": "",
-      "description": "The purpose of this collection — a short description of why it exists or what it is used for.",
+      "description": "The purpose of this collection \u2014 a short description of why it exists or what it is used for.",
       "generated": false,
       "style": "Simple",
       "user_specified": true,
@@ -1590,6 +1628,25 @@
       "min_cardinality": 0,
       "max_cardinality": 1,
       "level": "Advanced",
+      "Journal Entry": ""
+    },
+    "Requested Start Time": {
+      "variable_name": "requested_start_time",
+      "inUpdate": true,
+      "attr_labels": "",
+      "examples": "",
+      "default_value": "",
+      "valid_values": [],
+      "existing_element": "",
+      "description": "Requested start date/time for a Meeting, ToDo, or Review person action.",
+      "generated": false,
+      "style": "Simple",
+      "user_specified": true,
+      "unique": false,
+      "input_required": false,
+      "min_cardinality": 0,
+      "max_cardinality": 1,
+      "level": "Domain",
       "Journal Entry": ""
     },
     "Resource Description": {
@@ -2082,7 +2139,7 @@
       "default_value": "",
       "valid_values": [],
       "existing_element": "",
-      "description": "The usage guidance for this element — how it is intended to be used in context.",
+      "description": "The usage guidance for this element \u2014 how it is intended to be used in context.",
       "generated": false,
       "style": "Simple",
       "user_specified": true,
@@ -2432,7 +2489,7 @@
       "default_value": "",
       "valid_values": [],
       "existing_element": "",
-      "description": "Describe the notification (title\/summary)",
+      "description": "Describe the notification (title/summary)",
       "generated": false,
       "style": "Simple",
       "user_specified": true,
@@ -2565,6 +2622,19 @@
         "Zone Membership"
       ]
     },
+    "Person Action Base": {
+      "inherits": "Request Base",
+      "own_attributes": [
+        "Display Name",
+        "Description",
+        "Situation",
+        "Objective",
+        "Priority",
+        "Activity Status",
+        "Requested Start Time",
+        "Due Time"
+      ]
+    },
     "Referenceable": {
       "inherits": "New-Element",
       "own_attributes": [
@@ -2611,6 +2681,17 @@
         "Additional Properties",
         "Resource Use"
       ]
+    },
+    "My Journal Base": {
+      "inherits": "Request Base",
+      "own_attributes": [
+        "Description",
+        "Display Name",
+        "Expected Behavior",
+        "GUID",
+        "Qualified Name",
+        "Situation"
+      ]
     }
   },
   "commands": {
@@ -2643,7 +2724,7 @@
       "qn_prefix": "InformalTag",
       "alternate_names": [],
       "family": "Feedback",
-      "description": "Creates an informal tag — a user-defined label that can be attached to any referenceable element.",
+      "description": "Creates an informal tag \u2014 a user-defined label that can be attached to any referenceable element.",
       "verb": "Create",
       "upsert": true,
       "attach": false,
@@ -2694,44 +2775,6 @@
       "extra_find": "",
       "extra_constraints": "",
       "OM_TYPE": "BlogEntry",
-      "bundle": "My Journal Base",
-      "custom_attributes": [],
-      "Journal Entry": ""
-    },
-    "Create Log Activity": {
-      "display_name": "Log Activity",
-      "qn_prefix": "LogActivity",
-      "alternate_names": [],
-      "family": "Feedback",
-      "description": "Log my activity.",
-      "verb": "Create",
-      "upsert": false,
-      "attach": false,
-      "level": "Basic",
-      "find_method": "",
-      "find_constraints": "",
-      "extra_find": "",
-      "extra_constraints": "",
-      "OM_TYPE": "Notification",
-      "bundle": "My Journal Base",
-      "custom_attributes": [],
-      "Journal Entry": ""
-    },
-    "Create Journal Activity": {
-      "display_name": "Journal Activity",
-      "qn_prefix": "JournalActivity",
-      "alternate_names": [],
-      "family": "Feedback",
-      "description": "Journal about your actiity.",
-      "verb": "Create",
-      "upsert": false,
-      "attach": false,
-      "level": "Basic",
-      "find_method": "",
-      "find_constraints": "",
-      "extra_find": "",
-      "extra_constraints": "",
-      "OM_TYPE": "Notification",
       "bundle": "My Journal Base",
       "custom_attributes": [],
       "Journal Entry": ""
@@ -2864,6 +2907,88 @@
         "Accepted Answer Comment",
         "Answering Comment"
       ],
+      "Journal Entry": ""
+    },
+    "Create Review": {
+      "display_name": "review",
+      "qn_prefix": "Review",
+      "alternate_names": [],
+      "family": "Feedback",
+      "description": "Create a Review person action via the generic asset-maker/actions endpoint (ActionRequestBody, properties.class=ReviewProperties). No named create_review wrapper exists yet in pyegeria.",
+      "verb": "Create",
+      "upsert": false,
+      "attach": false,
+      "level": "Basic",
+      "find_method": "",
+      "find_constraints": "",
+      "extra_find": "",
+      "extra_constraints": "",
+      "OM_TYPE": "Review",
+      "bundle": "Person Action Base",
+      "custom_attributes": [],
+      "Journal Entry": ""
+    },
+    "Create Note": {
+      "display_name": "note",
+      "qn_prefix": "Note",
+      "alternate_names": [],
+      "family": "Feedback",
+      "description": "Creates a note (an opinion or additional information about an element), attached via a note log to the specified element. Egeria added a dedicated Note type (subtype of Notification) in PR #9191, confirmed live 2026-08-04.",
+      "verb": "Create",
+      "upsert": false,
+      "attach": false,
+      "level": "Basic",
+      "find_method": "",
+      "find_constraints": "",
+      "extra_find": "",
+      "extra_constraints": "",
+      "OM_TYPE": "Note",
+      "bundle": "Person Action Base",
+      "custom_attributes": [
+        "Commented On Element"
+      ],
+      "Journal Entry": ""
+    },
+    "Create Journal Entry": {
+      "display_name": "Journal Entry",
+      "qn_prefix": "JournalEntry",
+      "alternate_names": [
+        "Journal Activity"
+      ],
+      "family": "Feedback",
+      "description": "Creates a private journal entry about your own activity, attached to your personal activity note log. JournalEntry is a Notification subtype (see egeria-project.org/concepts/notification/).",
+      "verb": "Create",
+      "upsert": false,
+      "attach": false,
+      "level": "Basic",
+      "find_method": "",
+      "find_constraints": "",
+      "extra_find": "",
+      "extra_constraints": "",
+      "OM_TYPE": "JournalEntry",
+      "bundle": "My Journal Base",
+      "custom_attributes": [],
+      "Journal Entry": ""
+    },
+    "Create Activity Entry": {
+      "display_name": "Activity Entry",
+      "qn_prefix": "ActivityEntry",
+      "alternate_names": [
+        "Log Activity"
+      ],
+      "family": "Feedback",
+      "description": "Creates a public activity log entry recording an activity and its completion status, attached to your personal activity note log. ActivityEntry is a Notification subtype (see egeria-project.org/concepts/notification/).",
+      "verb": "Create",
+      "upsert": false,
+      "attach": false,
+      "level": "Basic",
+      "find_method": "",
+      "find_constraints": "",
+      "extra_find": "",
+      "extra_constraints": "",
+      "OM_TYPE": "ActivityEntry",
+      "bundle": "My Journal Base",
+      "custom_attributes": [],
       "Journal Entry": ""
     }
   }

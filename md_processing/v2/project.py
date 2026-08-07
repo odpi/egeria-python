@@ -22,6 +22,15 @@ class ProjectProcessor(AsyncBaseCommandProcessor):
     """
 
     async def fetch_element(self, guid: str) -> Optional[Dict[str, Any]]:
+        # Meeting isn't a Project - it's a Person Action Base type (see the
+        # "Meeting" branch in apply_changes()) - _async_get_project_by_guid
+        # 404s on it ("...retrieved an object ... of type Meeting rather than
+        # type Project"), which silently produced a "Could not fetch element"
+        # warning and dropped back to raw_block instead of rendering the
+        # Meeting-DrE report. Fall back to the generic base-class fetch
+        # (ClassificationExplorer) for it instead.
+        if self.canonical_object_type == "Meeting" or self.command.object_type == "Meeting":
+            return await super().fetch_element(guid)
         try:
             return await self.client._async_get_project_by_guid(guid)
         except PyegeriaException:
@@ -37,6 +46,26 @@ class ProjectProcessor(AsyncBaseCommandProcessor):
         journal_entry = attributes.get('Journal Entry', {}).get('value')
         merge_update = attributes.get('Merge Update', {}).get('value', True)
         sub_project_guids = set(attributes.get('Sub-Projects', {}).get('guid_list', []))
+
+        if object_type == "Meeting":
+            # Person Action Base bundle -- not a Project subtype, routed through
+            # my_profile.create_meeting rather than the generic Project properties path.
+            raw_guid = await self.client.my_profile._async_create_meeting(
+                display_name,
+                activity_status=attributes.get('Activity Status', {}).get('value') or "REQUESTED",
+                description=attributes.get('Description', {}).get('value'),
+                situation=attributes.get('Situation', {}).get('value'),
+                priority=attributes.get('Priority', {}).get('value', 0),
+                # See actor_manager.py's Create ToDo branch for why this
+                # matters - without it, the real stored qualifiedName never
+                # matches what Dr.Egeria reports having created.
+                qualified_name=qualified_name,
+            )
+            guid = self.extract_guid_or_raise(raw_guid, "Create Meeting")
+            self.parsed_output["guid"] = guid
+            update_element_dictionary(qualified_name, {'guid': guid, 'display_name': display_name})
+            logger.success(f"Created Meeting '{display_name}' with GUID {guid}")
+            return await self.render_result_markdown(guid)
 
         spec = self.get_command_spec()
         om_type = spec.get("OM_TYPE")
@@ -169,37 +198,48 @@ class ProjectLinkProcessor(AsyncBaseCommandProcessor):
         verb = self.command.verb
         object_type = getattr(self, 'canonical_object_type', self.command.object_type)
         attributes = self.parsed_output["attributes"]
-        
+
         spec = self.get_command_spec()
         om_type = spec.get("OM_TYPE")
 
-        parent_guid = attributes.get('Parent Project', {}).get('guid')
-        child_guid = attributes.get('Child Project', {}).get('guid')
+        is_hierarchy = "Hierarchy" in object_type
         label = attributes.get('Link Label', {}).get('value', "")
-        
-        if not (parent_guid and child_guid):
+
+        if is_hierarchy:
+            # End1 = Parent Project, End2 = Child Project
+            end1_guid = attributes.get('Parent Project', {}).get('guid')
+            end2_guid = attributes.get('Child Project', {}).get('guid')
+        else:
+            # ProjectDependency: End1 = Dependent Project (has the dependency),
+            # End2 = Depends on Project (the upstream project it depends on) -
+            # confirmed against Egeria core's ProjectHandler.setupProjectDependency
+            # -> createRelatedElementsInStore(userId, typeName, projectGUID, dependsOnProjectGUID, ...).
+            end1_guid = attributes.get('Dependent Project', {}).get('guid')
+            end2_guid = attributes.get('Depends on Project', {}).get('guid')
+
+        if not (end1_guid and end2_guid):
             return self.command.raw_block
 
         if verb in ["Link", "Attach", "Add"]:
-            if "Hierarchy" in object_type:
+            if is_hierarchy:
                 self.last_body = body = set_rel_request_body_for_type(om_type or "ProjectHierarchy", attributes)
 
-                await self.client._async_set_project_hierarchy(project_guid=child_guid, parent_project_guid=parent_guid, body=body_slimmer(body))
+                await self.client._async_set_project_hierarchy(project_guid=end2_guid, parent_project_guid=end1_guid, body=body_slimmer(body))
             else:
                 self.last_body = body = set_rel_request_body_for_type(om_type or "ProjectDependency", attributes)
-                await self.client._async_set_project_dependency(project_guid=child_guid, upstream_project_guid=parent_guid, body=body_slimmer(body))
-            
+                await self.client._async_set_project_dependency(project_guid=end1_guid, upstream_project_guid=end2_guid, body=body_slimmer(body))
+
             logger.success(f"Linked Project {object_type}")
-            return f"\n\n## {verb} {object_type}\n\nLinked {child_guid} to {parent_guid} ({label})"
+            return f"\n\n## {verb} {object_type}\n\nLinked {end1_guid} to {end2_guid} ({label})"
 
         elif verb in ["Detach", "Unlink", "Remove"]:
             self.last_body = body = set_delete_rel_request_body(object_type, attributes)
-            if "Hierarchy" in object_type:
-                await self.client._async_clear_project_hierarchy(child_guid, parent_guid, body)
+            if is_hierarchy:
+                await self.client._async_clear_project_hierarchy(end2_guid, end1_guid, body)
             else:
-                await self.client._async_clear_project_dependency(child_guid, parent_guid, body)
-                
+                await self.client._async_clear_project_dependency(end1_guid, end2_guid, body)
+
             logger.success(f"Detached Project {object_type}")
-            return f"\n\n## {verb} {object_type}\n\nDetached {child_guid} from {parent_guid} ({label})"
+            return f"\n\n## {verb} {object_type}\n\nDetached {end1_guid} from {end2_guid} ({label})"
 
         return self.command.raw_block

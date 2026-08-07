@@ -17,7 +17,7 @@ from typing import Any, Optional
 
 from httpx import Response
 from loguru import logger
-from pydantic import TypeAdapter
+from pydantic import TypeAdapter, ValidationError
 
 from pyegeria.core._base_server_client import BaseServerClient
 from pyegeria.core._exceptions import (
@@ -640,7 +640,7 @@ class ServerClient(BaseServerClient):
             "forDuplicateProcessing": for_duplicate_processing,
             **kwargs
         }
-        validated_body = FindPropertyNamesRequestBody.model_validate(body)
+        validated_body = self._validate_body(FindPropertyNamesRequestBody.model_validate, body)
 
         url = f"{self.platform_url}/servers/{self.server_name}/api/open-metadata/classification-explorer/elements/by-exact-property-value"
 
@@ -1255,6 +1255,28 @@ class ServerClient(BaseServerClient):
         elif body is None and comment is None:
             context = {"issue": "Invalid comment and body not provided"}
             raise PyegeriaInvalidParameterException(context=context)
+
+        # Workaround for ISSUE-14: fetch qualifiedName if missing from body properties
+        if isinstance(body, UpdateElementRequestBody):
+            props = body.properties
+        else:
+            if "properties" not in body:
+                body["properties"] = {}
+            props = body["properties"]
+
+        if not props.get("qualifiedName"):
+            try:
+                current_comment = await self._async_get_comment_by_guid(comment_guid)
+                if isinstance(current_comment, dict):
+                    # Check for qualifiedName in properties or header
+                    qn = current_comment.get("properties", {}).get("qualifiedName")
+                    if not qn:
+                        qn = current_comment.get("elementHeader", {}).get("qualifiedName")
+
+                    if qn:
+                        props["qualifiedName"] = qn
+            except Exception as e:
+                logger.warning(f"Failed to fetch existing comment {comment_guid} for qualifiedName workaround: {e}")
 
         url = f"{self.command_root}feedback-manager/comments/{comment_guid}/update"
         await self._async_update_element_body_request(url, ["Comment"], body)
@@ -2763,8 +2785,8 @@ class ServerClient(BaseServerClient):
           "parentRelationshipTypeName": "AttachedNoteLogEntry",
           "parentAtEnd1": true,
           "properties": {
-            "class" : "NotificationProperties",
-            "typeName" : "Notification",
+            "class" : "NoteProperties",
+            "typeName" : "Note",
             "qualifiedName": "add unique name here",
             "displayName": "add short name here",
             "description": "add description here",
@@ -2801,8 +2823,8 @@ class ServerClient(BaseServerClient):
                 "parentRelationshipTypeName": "AttachedNoteLogEntry",
                 "parentAtEnd1": True,
                 "properties": {
-                    "class": "NotificationProperties",
-                    "typeName": "Notification",
+                    "class": "NoteProperties",
+                    "typeName": "Note",
                     "qualifiedName": self.make_feedback_qn("Note", note_log_guid, display_name),
                     "displayName": display_name,
                     "description": description,
@@ -2830,7 +2852,7 @@ class ServerClient(BaseServerClient):
             raise PyegeriaInvalidParameterException(context=context)
 
         url = f"{self.command_root}feedback-manager/assets"
-        return await self._async_create_element_body_request(url, ['NotificationProperties'], body)
+        return await self._async_create_element_body_request(url, ['NoteProperties'], body)
 
     @dynamic_catch
     def create_note(
@@ -2875,8 +2897,8 @@ class ServerClient(BaseServerClient):
           "parentRelationshipTypeName": "AttachedNoteLogEntry",
           "parentAtEnd1": true,
           "properties": {
-            "class" : "NotificationProperties",
-            "typeName" : "Notification",
+            "class" : "NoteProperties",
+            "typeName" : "Note",
             "qualifiedName": "add unique name here",
             "displayName": "add short name here",
             "description": "add description here",
@@ -2955,8 +2977,8 @@ class ServerClient(BaseServerClient):
           "parentRelationshipTypeName": "AttachedNoteLogEntry",
           "parentAtEnd1": true,
           "properties": {
-            "class" : "NotificationProperties",
-            "typeName" : "Notification",
+            "class" : "NoteProperties",
+            "typeName" : "Note",
             "qualifiedName": "add unique name here",
             "displayName": "add short name here",
             "description": "add description here",
@@ -3058,8 +3080,8 @@ class ServerClient(BaseServerClient):
           "parentRelationshipTypeName": "AttachedNoteLogEntry",
           "parentAtEnd1": true,
           "properties": {
-            "class" : "NotificationProperties",
-            "typeName" : "Notification",
+            "class" : "NoteProperties",
+            "typeName" : "Note",
             "qualifiedName": "add unique name here",
             "displayName": "add short name here",
             "description": "add description here",
@@ -3128,8 +3150,8 @@ class ServerClient(BaseServerClient):
           "class" : "UpdateElementRequestBody",
           "mergeUpdate": true,
           "properties": {
-            "class" : "NotificationProperties",
-            "typeName" : "Notification",
+            "class" : "NoteProperties",
+            "typeName" : "Note",
             "qualifiedName": "add unique name here",
             "displayName": "add short name here",
             "description": "add description here",
@@ -3162,7 +3184,8 @@ class ServerClient(BaseServerClient):
                 "class": "UpdateElementRequestBody",
                 "mergeUpdate": merge_update,
                 "properties": {
-                    "class": "NotificationProperties",
+                    "class": "NoteProperties",
+                    "typeName": "Note",
                     "displayName": display_name,
                     "description": description,
                 }
@@ -3173,7 +3196,7 @@ class ServerClient(BaseServerClient):
             raise PyegeriaInvalidParameterException(context=context)
 
         url = f"{self.command_root}feedback-manager/notes/{note_guid}"
-        await self._async_update_element_body_request(url, ['Notification'], body)
+        await self._async_update_element_body_request(url, ['Note'], body)
 
     @dynamic_catch
     def update_note(
@@ -3211,8 +3234,8 @@ class ServerClient(BaseServerClient):
           "class" : "UpdateElementRequestBody",
           "mergeUpdate": true,
           "properties": {
-            "class" : "NotificationProperties",
-            "typeName" : "Notification",
+            "class" : "NoteProperties",
+            "typeName" : "Note",
             "qualifiedName": "add unique name here",
             "displayName": "add short name here",
             "description": "add description here",
@@ -5986,6 +6009,26 @@ class ServerClient(BaseServerClient):
     # Helper functions for requests
     #
 
+    @staticmethod
+    def _validate_body(validator: Callable[[dict], Any], body: dict) -> Any:
+        """Run a body validator (a TypeAdapter.validate_python or Model.model_validate
+        bound method) and convert a raw pydantic ValidationError into a clear
+        PyegeriaInvalidParameterException naming the offending field(s), instead of
+        letting it propagate raw out of the many request-body construction sites in
+        this class (e.g. a malformed as_of_time string reaching a datetime-typed
+        field). Both call styles (`self._xxx_adapter.validate_python` and
+        `SomeModel.model_validate`) are plain callables taking the raw dict, so one
+        helper covers both uniformly.
+        """
+        try:
+            return validator(body)
+        except ValidationError as e:
+            additional_info = {
+                "reason": "Request body failed validation",
+                "validation_errors": e.errors(include_url=False),
+            }
+            raise PyegeriaInvalidParameterException(None, None, additional_info, e) from e
+
     @dynamic_catch
     def validate_new_attachment_request(self, body: dict | NewAttachmentRequestBody,
                                         prop: Optional[list[str]] = None) -> NewAttachmentRequestBody | None:
@@ -5993,7 +6036,7 @@ class ServerClient(BaseServerClient):
             validated_body = body
 
         elif isinstance(body, dict):
-            validated_body = self._new_attachment_request_adapter.validate_python(body)
+            validated_body = self._validate_body(self._new_attachment_request_adapter.validate_python, body)
         else:
             return None
         return validated_body
@@ -6010,7 +6053,7 @@ class ServerClient(BaseServerClient):
 
         elif isinstance(body, dict):
             # if body.get("properties", {}).get("class", "") == prop:
-            validated_body = self._new_element_request_adapter.validate_python(body)
+            validated_body = self._validate_body(self._new_element_request_adapter.validate_python, body)
             # else:
             #     raise PyegeriaInvalidParameterException(additional_info=
             #                                             {"reason": "unexpected property class name"})
@@ -6025,7 +6068,7 @@ class ServerClient(BaseServerClient):
             validated_body = body
 
         elif isinstance(body, dict):
-            validated_body = self._new_external_id_request_adapter.validate_python(body)
+            validated_body = self._validate_body(self._new_external_id_request_adapter.validate_python, body)
         else:
             return None
         return validated_body
@@ -6038,7 +6081,7 @@ class ServerClient(BaseServerClient):
 
         elif isinstance(body, dict):
             # if body.get("properties", {}).get("class", "") == prop:
-            validated_body = self._template_request_adapter.validate_python(body)
+            validated_body = self._validate_body(self._template_request_adapter.validate_python, body)
         else:
             return None
         return validated_body
@@ -6059,10 +6102,10 @@ class ServerClient(BaseServerClient):
                 validated_body = body
         elif isinstance(body, dict):
             if prop is None or body.get("properties", {}).get("class", "") in prop:
-                validated_body = self._new_relationship_request_adapter.validate_python(body)
+                validated_body = self._validate_body(self._new_relationship_request_adapter.validate_python, body)
             else:
                 # Fallback: try to validate even if prop doesn't match
-                validated_body = self._new_relationship_request_adapter.validate_python(body)
+                validated_body = self._validate_body(self._new_relationship_request_adapter.validate_python, body)
         else:
             return None
         return validated_body
@@ -6079,7 +6122,7 @@ class ServerClient(BaseServerClient):
 
         elif isinstance(body, dict):
             if prop is None or body.get("properties", {}).get("class", "") in prop:
-                validated_body = self._new_classification_request_adapter.validate_python(body)
+                validated_body = self._validate_body(self._new_classification_request_adapter.validate_python, body)
             else:
                 raise PyegeriaInvalidParameterException(additional_info=
                                                         {"reason": "unexpected property class name"})
@@ -6094,13 +6137,13 @@ class ServerClient(BaseServerClient):
         if isinstance(body, DeleteElementRequestBody):
             validated_body = body
         elif isinstance(body, dict):
-            validated_body = self._delete_element_request_adapter.validate_python(body)
+            validated_body = self._validate_body(self._delete_element_request_adapter.validate_python, body)
         else:  # handle case where body not provided
             body = {
                 "class": "DeleteElementRequestBody",
                 "cascadeDelete": cascade_delete
             }
-            validated_body = DeleteElementRequestBody.model_validate(body)
+            validated_body = self._validate_body(DeleteElementRequestBody.model_validate, body)
         return validated_body
 
     @dynamic_catch
@@ -6109,13 +6152,13 @@ class ServerClient(BaseServerClient):
         if isinstance(body, DeleteRelationshipRequestBody):
             validated_body = body
         elif isinstance(body, dict):
-            validated_body = self._delete_relationship_request_adapter.validate_python(body)
+            validated_body = self._validate_body(self._delete_relationship_request_adapter.validate_python, body)
         else:  # handle case where body not provided
             # body = {
             #     "class": "DeleteRelationshipRequestBody",
             #     "cascadeDelete": cascade_delete
             # }
-            # validated_body = DeleteRelationshipRequestBody.model_validate(body)
+            # validated_body = self._validate_body(DeleteRelationshipRequestBody.model_validate, body)
             return None
         return validated_body
 
@@ -6125,13 +6168,13 @@ class ServerClient(BaseServerClient):
         if isinstance(body, DeleteClassificationRequestBody):
             validated_body = body
         elif isinstance(body, dict):
-            validated_body = self._delete_classification_request_adapter.validate_python(body)
+            validated_body = self._validate_body(self._delete_classification_request_adapter.validate_python, body)
         else:  # handle case where body not provided
             body = {
                 "class": "DeleteClassificationRequestBody",
                 "cascadeDelete": cascade_delete
             }
-            validated_body = DeleteClassificationRequestBody.model_validate(body)
+            validated_body = self._validate_body(DeleteClassificationRequestBody.model_validate, body)
         return validated_body
 
     @dynamic_catch
@@ -6148,7 +6191,7 @@ class ServerClient(BaseServerClient):
 
         elif isinstance(body, dict):
             # if body.get("properties", {}).get("class", "") in prop:
-            validated_body = self._update_element_request_adapter.validate_python(body)
+            validated_body = self._validate_body(self._update_element_request_adapter.validate_python, body)
             # else:
             #     raise PyegeriaInvalidParameterException(additional_info=
             #                                             {"reason": "unexpected property class name"})
@@ -6161,7 +6204,7 @@ class ServerClient(BaseServerClient):
         if isinstance(body, UpdatePropertiesRequestBody):
             validated_body = body
         elif isinstance(body, dict):
-            validated_body = self._update_properties_request_adapter.validate_python(body)
+            validated_body = self._validate_body(self._update_properties_request_adapter.validate_python, body)
         else:
             validated_body = None
         return validated_body
@@ -6171,7 +6214,7 @@ class ServerClient(BaseServerClient):
         if isinstance(body, MetadataSourceRequestBody):
             validated_body = body
         elif isinstance(body, dict):
-            validated_body = self._metadata_source_request_adapter.validate_python(body)
+            validated_body = self._validate_body(self._metadata_source_request_adapter.validate_python, body)
         else:
             validated_body = None
         return validated_body
@@ -6181,7 +6224,7 @@ class ServerClient(BaseServerClient):
         if isinstance(body, UpdateEffectivityDatesRequestBody):
             validated_body = body
         elif isinstance(body, dict):
-            validated_body = self._update_effectivity_dates_request_adapter.validate_python(body)
+            validated_body = self._validate_body(self._update_effectivity_dates_request_adapter.validate_python, body)
         else:
             validated_body = None
         return validated_body
@@ -6191,7 +6234,7 @@ class ServerClient(BaseServerClient):
         if isinstance(body, OpenMetadataDeleteRequestBody):
             validated_body = body
         elif isinstance(body, dict):
-            validated_body = self._open_metadata_delete_request_adapter.validate_python(body)
+            validated_body = self._validate_body(self._open_metadata_delete_request_adapter.validate_python, body)
         else:
             validated_body = None
         return validated_body
@@ -6201,7 +6244,7 @@ class ServerClient(BaseServerClient):
         if isinstance(body, ArchiveRequestBody):
             validated_body = body
         elif isinstance(body, dict):
-            validated_body = self._archive_request_adapter.validate_python(body)
+            validated_body = self._validate_body(self._archive_request_adapter.validate_python, body)
         else:
             validated_body = None
         return validated_body
@@ -6211,17 +6254,17 @@ class ServerClient(BaseServerClient):
         if isinstance(body, NewOpenMetadataElementRequestBody):
             validated_body = body
         elif isinstance(body, dict):
-            validated_body = self._new_open_metadata_element_request_adapter.validate_python(body)
+            validated_body = self._validate_body(self._new_open_metadata_element_request_adapter.validate_python, body)
         else:
             validated_body = None
         return validated_body
 
     @dynamic_catch
     def validate_new_related_elements_request(self, body: dict | NewRelatedElementsRequestBody) -> NewRelatedElementsRequestBody | None:
-        if isinstance(body, NewRelationshipRequestBody):
+        if isinstance(body, NewRelatedElementsRequestBody):
             validated_body = body
         elif isinstance(body, dict):
-            validated_body = self._new_relationship_request_adapter.validate_python(body)
+            validated_body = self._validate_body(self._new_related_elements_request_adapter.validate_python, body)
         else:
             validated_body = None
         return validated_body
@@ -6270,14 +6313,14 @@ class ServerClient(BaseServerClient):
     #         validated_body = body
     #
     #     elif isinstance(body, dict):
-    #         validated_body = self._update_element_request_adapter.validate_python(body)
+    #         validated_body = self._validate_body(self._update_element_request_adapter.validate_python, body)
     #
     #     elif status:
     #         body = {
     #             "class": "UpdateStatusRequestBody",
     #             "newStatus": status
     #         }
-    #         validated_body = UpdateStatusRequestBody.model_validate(body)
+    #         validated_body = self._validate_body(UpdateStatusRequestBody.model_validate, body)
     #     else:
     #         raise PyegeriaInvalidParameterException
     #
@@ -6295,7 +6338,7 @@ class ServerClient(BaseServerClient):
 
         elif isinstance(body, dict):
             # if body.get("properties", {}).get("class", "") == prop:
-            validated_body = self._update_relationship_request_adapter.validate_python(body)
+            validated_body = self._validate_body(self._update_relationship_request_adapter.validate_python, body)
             # else:
             #     raise PyegeriaInvalidParameterException(additional_info=
             #                                             {"reason": "unexpected property class name"})
@@ -6314,7 +6357,7 @@ class ServerClient(BaseServerClient):
                                   include_only_relationships: Optional[list[str]] = None,
                                   skip_classified_elements: Optional[list[str]] = None,
                                   include_only_classified_elements: Optional[list[str]] = None,
-                                  graph_query_depth: int = 3, max_mermaid_node_count: int = 5,
+                                  graph_query_depth: int = 3, max_mermaid_node_count: int = 10,
                                   governance_zone_filter: Optional[list[str]] = None, as_of_time: Optional[str] = None,
                                   effective_time: Optional[str] = None, relationship_page_size: int = 0,
                                   limit_results_by_status: Optional[list[str]] = None,
@@ -6331,9 +6374,9 @@ class ServerClient(BaseServerClient):
             validated_body = body
         elif isinstance(body, dict):
             if body.get("class") == "FindPropertyNamesProperties":
-                validated_body = self._find_property_names_request_adapter.validate_python(body)
+                validated_body = self._validate_body(self._find_property_names_request_adapter.validate_python, body)
             else:
-                validated_body = self._search_string_request_adapter.validate_python(body)
+                validated_body = self._validate_body(self._search_string_request_adapter.validate_python, body)
         else:
             # Treat a lone '*' as a wildcard for any content: map to '.*' regex understood by Egeria
             search_string = None if search_string == "*" else search_string
@@ -6369,7 +6412,7 @@ class ServerClient(BaseServerClient):
                 }
                 if not metadata_element_type:
                     body.pop("metadataElementTypeName", None)
-                validated_body = FindPropertyNamesRequestBody.model_validate(body)
+                validated_body = self._validate_body(FindPropertyNamesRequestBody.model_validate, body)
             else:
                 body = {
                     "class": "SearchStringRequestBody",
@@ -6402,7 +6445,7 @@ class ServerClient(BaseServerClient):
                 }
                 if not metadata_element_type:
                     body.pop("metadataElementTypeName", None)
-                validated_body = SearchStringRequestBody.model_validate(body)
+                validated_body = self._validate_body(SearchStringRequestBody.model_validate, body)
 
         json_body = validated_body.model_dump_json(indent=2, exclude_none=True, by_alias=True)
 
@@ -6435,7 +6478,7 @@ class ServerClient(BaseServerClient):
         if isinstance(body, FilterRequestBody):
             validated_body = body
         elif isinstance(body, dict):
-            validated_body = self._filter_request_adapter.validate_python(body)
+            validated_body = self._validate_body(self._filter_request_adapter.validate_python, body)
         else:
             filter_string = None if filter_string == "*" else filter_string
             classification_names = None if classification_names == [] else classification_names
@@ -6453,7 +6496,7 @@ class ServerClient(BaseServerClient):
                 "maxMermaidNodeCount": max_mermaid_node_count,
                 **kwargs
             }
-            validated_body = FilterRequestBody.model_validate(body)
+            validated_body = self._validate_body(FilterRequestBody.model_validate, body)
 
         # classification_names = validated_body.include_only_classified_elements
         # element_type_name = classification_names[0] if classification_names else _type
@@ -6484,7 +6527,7 @@ class ServerClient(BaseServerClient):
         if isinstance(body, GetRequestBody):
             validated_body = body
         elif isinstance(body, dict):
-            validated_body = self._get_request_adapter.validate_python(body)
+            validated_body = self._validate_body(self._get_request_adapter.validate_python, body)
         else:
             _type = _type.replace(" ", "")
             body = {
@@ -6496,17 +6539,30 @@ class ServerClient(BaseServerClient):
                 "maxMermaidNodeCount": max_mermaid_node_count,
                 **kwargs
             }
-            validated_body = GetRequestBody.model_validate(body)
+            validated_body = self._validate_body(GetRequestBody.model_validate, body)
 
         json_body = validated_body.model_dump_json(indent=2, exclude_none=True)
 
         response = await self._async_make_request("POST", url, json_body)
-        elements = response.json().get("element", NO_ELEMENTS_FOUND)
+        resp_json = response.json()
+        elements = resp_json.get("element", NO_ELEMENTS_FOUND)
         if type(elements) is str:
-            elements = response.json().get("elementGraph", NO_ELEMENTS_FOUND)
+            elements = resp_json.get("elementGraph", NO_ELEMENTS_FOUND)
             if type(elements) is str:
-                logger.info(NO_ELEMENTS_FOUND)
-                return NO_ELEMENTS_FOUND
+                # ISSUE-42 (PY-22): some endpoints reached through this shared
+                # helper return a LIST under the plural "elements" key rather
+                # than the singular "element"/"elementGraph" checked above --
+                # e.g. ProjectManager.get_linked_projects's .../projects
+                # endpoint. Confirmed live: that method always returned
+                # NO_ELEMENTS_FOUND even when the raw response body genuinely
+                # had elements: [...] (verified via a request-spy). Checked
+                # last (not first) so callers whose endpoint really does use
+                # "element"/"elementGraph" are unaffected -- this fallback is
+                # only reached once both of those have already failed.
+                elements = resp_json.get("elements", NO_ELEMENTS_FOUND)
+                if type(elements) is str:
+                    logger.info(NO_ELEMENTS_FOUND)
+                    return NO_ELEMENTS_FOUND
 
         if output_format and output_format.upper() != 'JSON':  # return a simplified markdown representation
             logger.info(f"Found elements, output format: {output_format} and report_spec: {report_spec}")
@@ -6530,7 +6586,7 @@ class ServerClient(BaseServerClient):
         if isinstance(body, GetRequestBody):
             validated_body = body
         elif isinstance(body, dict):
-            validated_body = self._get_request_adapter.validate_python(body)
+            validated_body = self._validate_body(self._get_request_adapter.validate_python, body)
         else:
             body = {
                 "class": "GetRequestBody",
@@ -6539,7 +6595,7 @@ class ServerClient(BaseServerClient):
                 "graphQueryDepth": graph_query_depth,
                 **kwargs
             }
-            validated_body = GetRequestBody.model_validate(body)
+            validated_body = self._validate_body(GetRequestBody.model_validate, body)
 
         json_body = validated_body.model_dump_json(indent=2, exclude_none=True)
 
@@ -6594,7 +6650,7 @@ class ServerClient(BaseServerClient):
         if isinstance(body, ActivityStatusSearchString):
             validated_body = body
         elif isinstance(body, dict):
-            validated_body = self._activity_status_search_request_adapter.validate_python(body)
+            validated_body = self._validate_body(self._activity_status_search_request_adapter.validate_python, body)
         else:
             search_string = None if search_string == "*" else search_string
             if page_size is None:
@@ -6626,7 +6682,7 @@ class ServerClient(BaseServerClient):
                 "page_size": page_size,
                 **kwargs
             }
-            validated_body = ActivityStatusSearchString.model_validate(body)
+            validated_body = self._validate_body(ActivityStatusSearchString.model_validate, body)
 
         json_body = validated_body.model_dump_json(indent=2, exclude_none=True)
         response = await self._async_make_request("POST", url, json_body, timeout=90)
@@ -6658,7 +6714,7 @@ class ServerClient(BaseServerClient):
         if isinstance(body, ActivityStatusFilterRequestBody):
             validated_body = body
         elif isinstance(body, dict):
-            validated_body = self._activity_status_filter_request_adapter.validate_python(body)
+            validated_body = self._validate_body(self._activity_status_filter_request_adapter.validate_python, body)
         else:
             filter_string = None if filter_string == "*" else filter_string
             body = {
@@ -6669,7 +6725,7 @@ class ServerClient(BaseServerClient):
                 "page_size": page_size,
                 **kwargs
             }
-            validated_body = ActivityStatusFilterRequestBody.model_validate(body)
+            validated_body = self._validate_body(ActivityStatusFilterRequestBody.model_validate, body)
 
         json_body = validated_body.model_dump_json(indent=2, exclude_none=True)
         response = await self._async_make_request("POST", url, json_body)
@@ -6703,7 +6759,7 @@ class ServerClient(BaseServerClient):
         if isinstance(body, ActivityStatusRequestBody):
             validated_body = body
         elif isinstance(body, dict):
-            validated_body = self._activity_status_request_adapter.validate_python(body)
+            validated_body = self._validate_body(self._activity_status_request_adapter.validate_python, body)
         else:
             body = {
                 "class": "ActivityStatusRequestBody",
@@ -6715,7 +6771,7 @@ class ServerClient(BaseServerClient):
                 "sequencingProperty": sequencing_property,
                 **kwargs
             }
-            validated_body = ActivityStatusRequestBody.model_validate(body)
+            validated_body = self._validate_body(ActivityStatusRequestBody.model_validate, body)
 
         json_body = validated_body.model_dump_json(indent=2, exclude_none=True)
         response = await self._async_make_request("POST", url, json_body)
@@ -6766,7 +6822,7 @@ class ServerClient(BaseServerClient):
         if isinstance(body, ContentStatusSearchString):
             validated_body = body
         elif isinstance(body, dict):
-            validated_body = self._content_status_search_request_adapter.validate_python(body)
+            validated_body = self._validate_body(self._content_status_search_request_adapter.validate_python, body)
         else:
             search_string = None if search_string == "*" else search_string
             if page_size is None:
@@ -6798,7 +6854,7 @@ class ServerClient(BaseServerClient):
                 "page_size": page_size,
                 **kwargs
             }
-            validated_body = ContentStatusSearchString.model_validate(body)
+            validated_body = self._validate_body(ContentStatusSearchString.model_validate, body)
 
         json_body = validated_body.model_dump_json(indent=2, exclude_none=True)
         response = await self._async_make_request("POST", url, json_body, timeout=90)
@@ -6830,7 +6886,7 @@ class ServerClient(BaseServerClient):
         if isinstance(body, ContentStatusFilterRequestBody):
             validated_body = body
         elif isinstance(body, dict):
-            validated_body = self._content_status_filter_request_adapter.validate_python(body)
+            validated_body = self._validate_body(self._content_status_filter_request_adapter.validate_python, body)
         else:
             filter_string = None if filter_string == "*" else filter_string
             body = {
@@ -6841,7 +6897,7 @@ class ServerClient(BaseServerClient):
                 "page_size": page_size,
                 **kwargs
             }
-            validated_body = ContentStatusFilterRequestBody.model_validate(body)
+            validated_body = self._validate_body(ContentStatusFilterRequestBody.model_validate, body)
 
         json_body = validated_body.model_dump_json(indent=2, exclude_none=True)
         response = await self._async_make_request("POST", url, json_body)
@@ -6892,7 +6948,7 @@ class ServerClient(BaseServerClient):
         if isinstance(body, DeploymentStatusSearchString):
             validated_body = body
         elif isinstance(body, dict):
-            validated_body = self._deployment_status_search_request_adapter.validate_python(body)
+            validated_body = self._validate_body(self._deployment_status_search_request_adapter.validate_python, body)
         else:
             search_string = None if search_string == "*" else search_string
             if page_size is None:
@@ -6924,7 +6980,7 @@ class ServerClient(BaseServerClient):
                 "pageSize": page_size,
                 **kwargs
             }
-            validated_body = DeploymentStatusSearchString.model_validate(body)
+            validated_body = self._validate_body(DeploymentStatusSearchString.model_validate, body)
 
         json_body = validated_body.model_dump_json(indent=2, exclude_none=True)
         response = await self._async_make_request("POST", url, json_body, timeout=90)
@@ -6956,7 +7012,7 @@ class ServerClient(BaseServerClient):
         if isinstance(body, DeploymentStatusFilterRequestBody):
             validated_body = body
         elif isinstance(body, dict):
-            validated_body = self._deployment_status_filter_request_adapter.validate_python(body)
+            validated_body = self._validate_body(self._deployment_status_filter_request_adapter.validate_python, body)
         else:
             filter_string = None if filter_string == "*" else filter_string
             body = {
@@ -6967,7 +7023,7 @@ class ServerClient(BaseServerClient):
                 "page_size": page_size,
                 **kwargs
             }
-            validated_body = DeploymentStatusFilterRequestBody.model_validate(body)
+            validated_body = self._validate_body(DeploymentStatusFilterRequestBody.model_validate, body)
 
         json_body = validated_body.model_dump_json(indent=2, exclude_none=True)
         response = await self._async_make_request("POST", url, json_body)
@@ -6987,22 +7043,34 @@ class ServerClient(BaseServerClient):
                                               start_from: int = 0, page_size: int = 0, output_format: str = 'JSON',
                                               report_spec: Optional[str | dict] = None,
                                               body: Optional[dict | ResultsRequestBody] = None,
+                                              filter_results_by_type: bool = True,
                                               **kwargs) -> Any:
-        """Handles request; returns elements or formatted output"""
+        """Handles request; returns elements or formatted output
+
+        Note on `_type` vs `filter_results_by_type`: `_type` is reused by callers for
+        two different purposes - as the actual results filter (e.g. "only Comment
+        elements") AND, in some callers, purely as an output-rendering hint (e.g.
+        `_generate_collection_output` needing to know the calling context is
+        "Collection", even though the *members returned* aren't guaranteed to be
+        Collections themselves - see `_async_get_collection_members`). Set
+        `filter_results_by_type=False` when `_type` is only a rendering hint, so the
+        default request body doesn't wrongly filter results by it.
+        """
         if isinstance(body, ResultsRequestBody):
             validated_body = body
         elif isinstance(body, dict):
-            validated_body = self._results_request_adapter.validate_python(body)
+            validated_body = self._validate_body(self._results_request_adapter.validate_python, body)
         else:
             body = {
                 "class": "ResultsRequestBody",
-                "metadataElementTypeName": _type,
                 "graphQueryDepth": graph_query_depth,
                 "start_from": start_from,
                 "page_size": page_size,
                 **kwargs
             }
-            validated_body = ResultsRequestBody.model_validate(body)
+            if filter_results_by_type:
+                body["metadataElementTypeName"] = _type
+            validated_body = self._validate_body(ResultsRequestBody.model_validate, body)
 
         json_body = validated_body.model_dump_json(indent=2, exclude_none=True)
 
@@ -7030,7 +7098,7 @@ class ServerClient(BaseServerClient):
         if isinstance(body, LevelIdentifierQueryBody):
             validated_body = body
         elif isinstance(body, dict):
-            validated_body = self._level_identifier_query_body.validate_python(body)
+            validated_body = self._validate_body(self._level_identifier_query_body.validate_python, body)
         else:
             return None
 

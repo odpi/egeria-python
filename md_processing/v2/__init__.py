@@ -36,4 +36,6 @@ from .feedback import (
 )
 from .view import ViewProcessor
 from .actor_manager import ActorManagerProcessor, ActorManagerLinkProcessor
-from .dashboard_sheet import CreateDashboardSheetProcessor, LinkReportToDashboardSheetProcessor
+from .dashboard_sheet import CreateDashboardSheetProcessor, LinkReportToDashboardSheetProcessor, AddTextOnDashboardSheetProcessor
+from .report import ReportProcessor
+from .curation import CurationClassifyProcessor, CurationLinkProcessor, CLASSIFICATION_METHODS

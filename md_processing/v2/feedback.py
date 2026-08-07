@@ -6,6 +6,7 @@ from loguru import logger
 import json
 
 from pyegeria import EgeriaTech, PyegeriaException, COMMENT_TYPES
+from pyegeria.core._exceptions import PyegeriaInvalidParameterException
 from md_processing.v2.processors import AsyncBaseCommandProcessor
 from md_processing.md_processing_utils.common_md_utils import (
     set_element_prop_body, set_create_body, set_update_body, 
@@ -68,46 +69,98 @@ class FeedbackProcessor(AsyncBaseCommandProcessor):
                     logger.success(f"Created Comment '{display_name}' with GUID {guid}")
                     return await self.client._async_get_comment_by_guid(guid, output_format='MD')
 
-        elif "Journal Entry" in object_type:
-            # Journal entries are weird in sync code: add_journal_entry handled log creation too
-            journal_qn = attributes.get('Journal Name', {}).get('qualified_name')
-            journal_name = attributes.get('Journal Name', {}).get('value')
-            note_entry = attributes.get('Note Entry', {}).get('value')
-            
-            # Use 'Commented On Element' or 'Associated Element' for target
-            target = attributes.get('Commented On Element') or attributes.get('Associated Element')
-            elem_qn = target.get('qualified_name') if target else None
-            
-            guid = await self.client._async_add_journal_entry(
-                note_log_qn=journal_qn,
-                element_qn=elem_qn,
-                note_log_display_name=journal_name,
-                note_entry=note_entry
-            )
-            guid = self.extract_guid_or_raise(guid, "Create Journal Entry")
+        elif object_type in ("Journal Entry", "Activity Entry", "Blog Entry"):
+            # A person's own activity stream (My Journal Base bundle):
+            # JournalEntry (private), ActivityEntry (public), BlogEntry
+            # (public) are all Notification subtypes attached via the same
+            # NoteLog mechanism as Note (AttachedNoteLogEntry) - confirmed
+            # against egeria-project.org/concepts/notification/ and
+            # /types/1/0160-Notes/, 2026-08-05 - but scoped to the calling
+            # user's own profile rather than an arbitrary target element, via
+            # my_profile.py's log/journal/blog-my-activity endpoints.
+            text = attributes.get('Description', {}).get('value')
+            method_by_type = {
+                "Journal Entry": self.client.my_profile._async_journal_my_activity,
+                "Activity Entry": self.client.my_profile._async_log_my_activity,
+                "Blog Entry": self.client.my_profile._async_blog_my_activity,
+            }
+            guid = await method_by_type[object_type](text=text, display_name=display_name)
+            guid = self.extract_guid_or_raise(guid, f"Create {object_type}")
             if guid:
                 self.parsed_output["guid"] = guid
-                logger.success(f"Added Journal Entry to '{journal_name}' with GUID {guid}")
-                # A note is a Journal Entry in Dr.Egeria; render with the Journal Entry spec.
+                update_element_dictionary(qualified_name, {'guid': guid, 'display_name': display_name})
+                logger.success(f"Created {object_type} '{display_name}' with GUID {guid}")
                 return await self.client._async_get_note_by_guid(
                     guid, output_format='MD', report_spec="Journal-Entry-DrE")
 
         elif "Note" in object_type:
-             # A note is a Journal Entry; at the metadata level it is a Notification (NotificationProperties).
-            prop_body = set_element_prop_body("Notification", qualified_name, attributes)
+            # Egeria added a real "Note" entity type (subtype of Notification, PR #9191,
+            # OpenMetadataType.NOTE) confirmed live on qs-view-server 2026-08-04. Previously
+            # this branch had no dedicated type to target and used "Notification" as a
+            # placeholder typeName/class - now uses the real "Note"/"NoteProperties".
+            prop_body = set_element_prop_body("Note", qualified_name, attributes)
             if verb == "Update":
                 guid = self.parsed_output.get("guid")
                 if not guid: return self.command.raw_block
-                body = set_update_body("Notification", attributes)
+                body = set_update_body("Note", attributes)
                 body['properties'] = self.filter_update_properties(prop_body, body.get('mergeUpdate', True))
                 await self.client._async_update_note(guid, body=body_slimmer(body))
                 self.parsed_output["guid"] = guid
                 logger.success(f"Updated Note '{display_name}' with GUID {guid}")
                 return await self.client._async_get_note_by_guid(
                     guid, output_format='MD', report_spec="Journal-Entry-DrE")
-            # Create Note omitted for brev since it was create_project in sync code? 
-            # Looking closer at sync code: body = set_create_body... guid = egeria_client.create_project (??)
-            # That looks like a bug in sync code. I'll stick to what was there or leave for now.
+
+            elif verb == "Create":
+                # A Note is attached to its target element via a NoteLog
+                # (AttachedNoteLogEntry relationship) - it can't stand alone.
+                # "Commented On Element" (aliased "Associated Element" - the
+                # same attribute Comment uses) supplies that target, resolved
+                # to a guid (matching the Comment branch above - reference
+                # attributes reliably carry 'guid', not 'qualified_name').
+                target = attributes.get('Commented On Element') or attributes.get('Associated Element')
+                associated_guid = target.get('guid') if target else None
+                description = attributes.get('Description', {}).get('value')
+
+                if not associated_guid:
+                    context = {"issue": "Commented On Element / Associated Element did not resolve to a GUID"}
+                    raise PyegeriaInvalidParameterException(context=context)
+
+                note_log_guid = await self.client._async_create_note_log(
+                    element_guid=associated_guid,
+                    display_name=f"NoteLog for {display_name}",
+                )
+                note_log_guid = self.extract_guid_or_raise(note_log_guid, "Create Note (note log)")
+
+                guid = await self.client._async_create_note(
+                    note_log_guid, display_name, description, associated_element=associated_guid,
+                )
+                guid = self.extract_guid_or_raise(guid, "Create Note")
+                if guid:
+                    self.parsed_output["guid"] = guid
+                    update_element_dictionary(qualified_name, {'guid': guid, 'display_name': display_name})
+                    logger.success(f"Created Note '{display_name}' with GUID {guid}")
+                    return await self.client._async_get_note_by_guid(
+                        guid, output_format='MD', report_spec="Journal-Entry-DrE")
+
+        elif "Review" in object_type and verb == "Create":
+            # Person Action Base bundle -- not a Comment/Notification, routed through
+            # my_profile.create_review rather than the Comment/Note paths above.
+            raw_guid = await self.client.my_profile._async_create_review(
+                display_name,
+                activity_status=attributes.get('Activity Status', {}).get('value') or "REQUESTED",
+                description=attributes.get('Description', {}).get('value'),
+                situation=attributes.get('Situation', {}).get('value'),
+                priority=attributes.get('Priority', {}).get('value', 0),
+                # See actor_manager.py's Create ToDo branch for why this
+                # matters - without it, the real stored qualifiedName never
+                # matches what Dr.Egeria reports having created.
+                qualified_name=qualified_name,
+            )
+            guid = self.extract_guid_or_raise(raw_guid, "Create Review")
+            self.parsed_output["guid"] = guid
+            update_element_dictionary(qualified_name, {'guid': guid, 'display_name': display_name})
+            logger.success(f"Created Review '{display_name}' with GUID {guid}")
+            return await self.render_result_markdown(guid)
 
         return self.command.raw_block
 

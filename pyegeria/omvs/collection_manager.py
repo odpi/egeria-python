@@ -635,6 +635,12 @@ class CollectionManager(ServerClient):
                 "ignoreCase": ignore_case,
                 "startFrom": start_from,
                 "pageSize": page_size,
+                "metadataElementTypeName": metadata_element_type_name,
+                "metadataElementSubtypeNames": metadata_element_subtypes,
+                "includeOnlyRelationships": include_only_relationships,
+                "skipRelationships": skip_relationships,
+                "graphQueryDepth": graph_query_depth,
+                **kwargs,
             }
             validated_body = DeploymentStatusSearchString.model_validate(body_dict)
 
@@ -1183,11 +1189,15 @@ class CollectionManager(ServerClient):
 
         url = str(HttpUrl(f"{self.collection_command_root}/{collection_guid}/members"))
 
-
+        # filter_results_by_type=False: "Collection" here is a rendering hint for
+        # _generate_collection_output, not a real filter - a collection's members
+        # are never guaranteed to share the collection's own type (e.g. a
+        # WorkItemList's members are Projects), so the default request body must
+        # not filter results by it.
         response = await self._async_get_results_body_request(url, _type="Collection",
                                                   _gen_output=self._generate_collection_output,
                                                   output_format=output_format, report_spec=report_spec,
-                                                  body=body, **kwargs)
+                                                  body=body, filter_results_by_type=False, **kwargs)
 
         return response
 

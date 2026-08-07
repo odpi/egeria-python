@@ -209,11 +209,217 @@ def test_semantic_grounding_caps_at_100():
 def test_context_readiness_funnel_shape():
     mgr = _mgr()
     mgr.find_metadata_elements.return_value = [{}] * 5
-    result = om.context_readiness_funnel(mgr)
+    ce = MagicMock()
+    ce.get_relationships.return_value = [{}] * 3
+    result = om.context_readiness_funnel(mgr, ce)
     assert set(result.keys()) == {"cataloged", "documented", "classified", "lineage", "aiReady"}
-    assert result["documented"] is None
-    assert result["lineage"] is None
+    # documented/lineage are now computed (2026-08-01); aiReady still isn't --
+    # it needs a true cross-criteria intersection, not another independent
+    # count (see NEXT-18, composite/derived analytic metrics).
+    assert result["documented"] == 0   # 5 elements, none carry a description
+    assert result["lineage"] == 3      # DataFlow relationship count
     assert result["aiReady"] is None
+
+
+def test_context_readiness_funnel_counts_nonempty_description():
+    mgr = _mgr()
+    mgr.find_metadata_elements.return_value = [
+        {"elementProperties": {"propertyValueMap": {
+            "description": {"primitiveValue": "A real description."}}}},
+        {"elementProperties": {"propertyValueMap": {
+            "description": {"primitiveValue": "   "}}}},   # blank -> not documented
+        {"elementProperties": {"propertyValueMap": {}}},    # missing -> not documented
+    ]
+    ce = MagicMock()
+    ce.get_relationships.return_value = []
+    result = om.context_readiness_funnel(mgr, ce)
+    assert result["documented"] == 1
+    assert result["lineage"] == 0
+
+
+# ── ai_ready_assets ──────────────────────────────────────────────────────
+
+def _asset(guid, description=None, classifications=None):
+    """Build a fake find_metadata_elements-shaped Asset element."""
+    props = {}
+    if description is not None:
+        props["description"] = {"primitiveValue": description}
+    return {
+        "elementGUID": guid,
+        "elementProperties": {"propertyValueMap": props},
+        "classifications": [{"classificationName": c} for c in (classifications or [])],
+    }
+
+
+def test_ai_ready_assets_requires_all_three_criteria():
+    mgr = _mgr()
+    mgr.find_metadata_elements.return_value = [
+        _asset("a1", "documented", ["Confidentiality"]),   # governed + documented, NOT lineage-traced
+        _asset("a2", "documented", ["Confidentiality"]),   # governed + documented + lineage-traced -> AI-ready
+        _asset("a3", None, ["Confidentiality"]),            # governed + lineage-traced, NOT documented
+        _asset("a4", "documented", []),                     # documented + lineage-traced, NOT governed
+    ]
+    ce = MagicMock()
+    ce.get_relationships.return_value = [
+        {"end1": {"guid": "a2"}, "end2": {"guid": "a3"}},
+        {"end1": {"guid": "a4"}, "end2": {"guid": "other-asset"}},
+    ]
+    result = om.ai_ready_assets(mgr, ce)
+    assert result == {"aiReadyCount": 1, "total": 4, "capped": False}
+
+
+def test_ai_ready_assets_empty_catalog():
+    mgr = _mgr()
+    mgr.find_metadata_elements.return_value = []
+    ce = MagicMock()
+    ce.get_relationships.return_value = []
+    result = om.ai_ready_assets(mgr, ce)
+    assert result == {"aiReadyCount": 0, "total": 0, "capped": False}
+
+
+def test_ai_ready_assets_lineage_query_failure_degrades_to_none_ai_ready():
+    mgr = _mgr()
+    mgr.find_metadata_elements.return_value = [
+        _asset("a1", "documented", ["Confidentiality"]),
+    ]
+    ce = MagicMock()
+    ce.get_relationships.side_effect = Exception("boom")
+    result = om.ai_ready_assets(mgr, ce)
+    # lineage query failed -> no asset can be lineage-traced -> 0, not a crash
+    assert result["aiReadyCount"] == 0
+    assert result["total"] == 1
+
+
+# ── asset_modality ───────────────────────────────────────────────────────
+
+def _typed(type_name, super_type_names=None):
+    return {"type": {"typeName": type_name, "superTypeNames": super_type_names or []}}
+
+
+def test_asset_modality_tabular_leaf_type():
+    assert om.asset_modality(_typed("RelationalColumn")) == "tabular"
+
+
+def test_asset_modality_text_media_leaf_type():
+    assert om.asset_modality(_typed("PDFFile")) == "text_media"
+
+
+def test_asset_modality_resolves_via_supertype_chain():
+    # A subtype not itself listed, but whose supertype chain includes one --
+    # e.g. a connector-specific DataFile subtype.
+    assert om.asset_modality(_typed("CustomLogFile", ["DataFile", "DataStore", "Asset"])) == "text_media"
+
+
+def test_asset_modality_unknown_type_is_other_not_a_guess():
+    assert om.asset_modality(_typed("APIEndpoint")) == "other"
+
+
+def test_asset_modality_missing_type_block_is_other():
+    assert om.asset_modality({}) == "other"
+
+
+# ── drl_readiness_gates ──────────────────────────────────────────────────
+
+def _asset_full(guid, description=None, classifications=None, type_name=None, update_time=None):
+    el = _asset(guid, description, classifications)
+    if type_name:
+        el["type"] = {"typeName": type_name, "superTypeNames": []}
+    if update_time:
+        el["elementHeader"] = {"versions": {"updateTime": update_time}}
+    return el
+
+
+def test_drl_readiness_gates_narrows_ai_ready_by_recency():
+    mgr = _mgr()
+    mgr.find_metadata_elements.return_value = [
+        _asset_full("a1", "documented", ["Confidentiality"], "RelationalTable",
+                    update_time="2026-08-01T00:00:00Z"),   # AI-ready + recent
+        _asset_full("a2", "documented", ["Confidentiality"], "PDFFile",
+                    update_time="2020-01-01T00:00:00Z"),   # AI-ready, stale
+        _asset_full("a3", None, ["Confidentiality"], "APIEndpoint"),  # not documented
+    ]
+    ce = MagicMock()
+    ce.get_relationships.return_value = [
+        {"end1": {"guid": "a1"}, "end2": {"guid": "x"}},
+        {"end1": {"guid": "a2"}, "end2": {"guid": "y"}},
+    ]
+    result = om.drl_readiness_gates(mgr, ce, as_of="2026-08-02T00:00:00Z", recency_days=180)
+    assert result["total"] == 3
+    assert result["aiReadyCount"] == 2
+    assert result["aiReadyRecentCount"] == 1
+    assert result["byModality"] == {"tabular": 1, "text_media": 1, "other": 1}
+
+
+def test_drl_readiness_gates_empty_catalog():
+    mgr = _mgr()
+    mgr.find_metadata_elements.return_value = []
+    ce = MagicMock()
+    ce.get_relationships.return_value = []
+    result = om.drl_readiness_gates(mgr, ce)
+    assert result["total"] == 0
+    assert result["aiReadyCount"] == 0
+    assert result["aiReadyRecentCount"] == 0
+    assert result["byModality"] == {"tabular": 0, "text_media": 0, "other": 0}
+
+
+def test_drl_readiness_gates_missing_update_time_not_counted_recent():
+    mgr = _mgr()
+    mgr.find_metadata_elements.return_value = [
+        _asset_full("a1", "documented", ["Confidentiality"], "RelationalTable"),  # no updateTime
+    ]
+    ce = MagicMock()
+    ce.get_relationships.return_value = [{"end1": {"guid": "a1"}, "end2": {"guid": "x"}}]
+    result = om.drl_readiness_gates(mgr, ce)
+    assert result["aiReadyCount"] == 1
+    assert result["aiReadyRecentCount"] == 0
+
+
+def test_business_value_signals_counts_confidential_and_described_from_one_fetch():
+    mgr = _mgr()
+    mgr.find_metadata_elements.side_effect = [
+        [
+            _asset("a1", "has a description", ["Confidentiality"]),
+            _asset("a2", None, ["Confidentiality"]),
+            _asset("a3", "has a description", []),
+            _asset("a4", None, []),
+        ],
+        [],   # second find_metadata_elements call: count_elements' ConsolidatedDuplicate fetch
+    ]
+    result = om.business_value_signals(mgr)
+    assert result == {
+        "assetTotal": 4, "assetCapped": False,
+        "confidentialCount": 2, "describedCount": 2, "duplicateCount": 0,
+    }
+
+
+def test_business_value_signals_capped_flag():
+    mgr = _mgr()
+    mgr.find_metadata_elements.side_effect = [
+        [_asset(f"a{i}") for i in range(om.DEFAULT_CAP)],
+        [],
+    ]
+    result = om.business_value_signals(mgr)
+    assert result["assetCapped"] is True
+
+
+def test_business_value_signals_counts_duplicates_separately():
+    mgr = _mgr()
+    mgr.find_metadata_elements.side_effect = [
+        [_asset("a1")],
+        [_asset("d1"), _asset("d2")],   # ConsolidatedDuplicate-classified elements
+    ]
+    result = om.business_value_signals(mgr)
+    assert result["duplicateCount"] == 2
+
+
+def test_business_value_signals_empty_catalog():
+    mgr = _mgr()
+    mgr.find_metadata_elements.side_effect = [[], []]
+    result = om.business_value_signals(mgr)
+    assert result == {
+        "assetTotal": 0, "assetCapped": False,
+        "confidentialCount": 0, "describedCount": 0, "duplicateCount": 0,
+    }
 
 
 def test_people_counts_shape():
@@ -269,3 +475,97 @@ def test_growth_label_granularity():
     assert om.growth_label(d, 3600) == "14:00"          # <= 2 days -> hourly
     assert om.growth_label(d, 7 * 86400) == "15 Mar"    # <= 120 days -> daily
     assert om.growth_label(d, 200 * 86400) == "Mar"     # > 120 days -> monthly
+
+
+# ── term_definition_completeness ──────────────────────────────────────────
+
+def test_term_definition_completeness_counts_nonempty_description():
+    mgr = _mgr()
+    mgr.find_metadata_elements.return_value = [
+        {"elementProperties": {"propertyValueMap": {
+            "description": {"primitiveValue": "A real definition."}}}},
+        {"elementProperties": {"propertyValueMap": {
+            "description": {"primitiveValue": "   "}}}},   # blank -> not defined
+        {"elementProperties": {"propertyValueMap": {}}},    # missing -> not defined
+    ]
+    result = om.term_definition_completeness(mgr)
+    assert result == {"total": 3, "defined": 1, "undefinedPct": 67}
+
+
+def test_term_definition_completeness_empty_glossary():
+    mgr = _mgr()
+    mgr.find_metadata_elements.return_value = []
+    result = om.term_definition_completeness(mgr)
+    assert result == {"total": 0, "defined": 0, "undefinedPct": None}
+
+
+# ── active_contributors ───────────────────────────────────────────────────
+
+def test_active_contributors_dedupes_by_username_across_types():
+    ce = MagicMock()
+    ce.get_relationships.side_effect = [
+        [{"relationshipHeader": {"versions": {"createdBy": "alice"}}},
+         {"relationshipHeader": {"versions": {"createdBy": "alice"}}}],  # ratings
+        [{"relationshipHeader": {"versions": {"createdBy": "bob"}}}],    # comments
+        [],  # likes
+        [],  # tags
+        [{"relationshipHeader": {"versions": {"createdBy": "alice"}}}],  # noteLogs
+    ]
+    result = om.active_contributors(ce)
+    assert result["contributors"] == 2  # alice, bob
+    assert result["byType"] == {"ratings": 1, "comments": 1, "likes": 0, "tags": 0, "noteLogs": 1}
+
+
+def test_active_contributors_degrades_per_type_on_failure():
+    ce = MagicMock()
+    ce.get_relationships.side_effect = [
+        RuntimeError("boom"),
+        [{"relationshipHeader": {"versions": {"createdBy": "bob"}}}],
+        [], [], [],
+    ]
+    result = om.active_contributors(ce)
+    assert result["byType"]["ratings"] == 0
+    assert result["contributors"] == 1
+
+
+# ── metric_trend ──────────────────────────────────────────────────────────
+
+def test_metric_trend_calls_target_once_per_point_and_merges_dict_result():
+    mgr = _mgr()
+    mgr.find_metadata_elements.return_value = [{}] * 3
+    series = om.metric_trend(
+        mgr, MagicMock(), "pyegeria.view.overview_metrics.people_counts",
+        window="7d", points=3,
+    )
+    assert len(series) == 3
+    assert all("label" in p and "date" in p and p["persons"] == 3 for p in series)
+
+
+def test_metric_trend_scalar_result_stored_under_value():
+    mgr = _mgr(count_metadata_elements=MagicMock(return_value=5))
+    series = om.metric_trend(
+        mgr, MagicMock(), "pyegeria.view.overview_metrics.count_elements",
+        window="7d", points=2, metric_params={"type_name": "Asset"},
+    )
+    assert len(series) == 2
+    assert all(p["value"] == 5 for p in series)
+
+
+def test_metric_trend_snapshot_failure_yields_none_not_raise():
+    mgr = _mgr()
+    mgr.find_metadata_elements.side_effect = RuntimeError("boom")
+
+    def _boom(mgr, as_of=None):
+        raise RuntimeError("boom")
+
+    import pyegeria.view.overview_metrics as om_module
+    om_module._boom_for_test = _boom
+    try:
+        series = om.metric_trend(
+            mgr, MagicMock(), "pyegeria.view.overview_metrics._boom_for_test",
+            window="7d", points=2,
+        )
+        assert len(series) == 2
+        assert all(p["value"] is None for p in series)
+    finally:
+        del om_module._boom_for_test

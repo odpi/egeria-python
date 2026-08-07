@@ -1,12 +1,18 @@
-Dr. Egeria Test Run — 2026-07-15 13:14:09.939787
+Dr. Egeria Test Run — 2026-08-03 15:56:45.552541
 
 
 ### VALIDATE MODE ###
 
 ================================================================================
-FILE: dr_test_glossary.md  |  DIRECTIVE: validate  |  13:14:11
+FILE: dr_test_glossary.md  |  DIRECTIVE: validate  |  15:56:46
 ================================================================================
 v2: Processing Markdown File: /Users/dwolfson/localGit/egeria-python/tests/dr-egeria-command-tests/dr_test_glossary.md
+Processing Errors:
+
+-- Create Glossary Term (GlossaryTerm::SalesForecast::Opportunity::1.0) --
+   - Referenced element(s) ['Glossary::CRM::Domain::1.0'] for attribute 'Glossary Name' not found.
+
+
 
 
                                                                                     Dr. Egeria v2 Processing Summary                                                                                    
@@ -40,8 +46,9 @@ v2: Processing Markdown File: /Users/dwolfson/localGit/egeria-python/tests/dr-eg
 │ Create Glossary Term          │ Create Glossary Term          │ SUCCESS │ No    │ Commit Forecast                │ GlossaryTerm::SalesForecast::CommitFore │ Validated Create Glossary Term          │
 │                               │                               │         │       │                                │ cast::1.0                               │                                         │
 ├·······························┼·······························┼·········┼·······┼································┼·········································┼·········································┤
-│ Create Glossary Term          │ Create Glossary Term          │ SUCCESS │ No    │ Opportunity                    │ GlossaryTerm::SalesForecast::Opportunit │ Validated Create Glossary Term          │
-│                               │                               │         │       │                                │ y::1.0                                  │                                         │
+│ Create Glossary Term          │ Create Glossary Term          │ FAILURE │ No    │ Opportunity                    │ GlossaryTerm::SalesForecast::Opportunit │ Referenced element(s)                   │
+│                               │                               │         │       │                                │ y::1.0                                  │ ['Glossary::CRM::Domain::1.0'] for      │
+│                               │                               │         │       │                                │                                         │ attribute 'Glossary Name' not found.    │
 ├·······························┼·······························┼·········┼·······┼································┼·········································┼·········································┤
 │ Update Glossary Term          │ Update Glossary Term          │ SUCCESS │ Yes   │ Pipeline Coverage Ratio        │ GlossaryTerm::SalesForecast::PipelineCo │ Validated Update Glossary Term (GUID:   │
 │                               │                               │         │       │                                │ verageRatio::1.0                        │ (Planned:                               │
@@ -66,10 +73,10 @@ v2: Processing Markdown File: /Users/dwolfson/localGit/egeria-python/tests/dr-eg
 v2: Processing complete for '/Users/dwolfson/localGit/egeria-python/tests/dr-egeria-command-tests/dr_test_glossary.md'
 
 
-SCORE: 16 SUCCESS  0 FAILURE  0 WARNING
+SCORE: 15 SUCCESS  1 FAILURE  0 WARNING
 
 ================================================================================
-FILE: dr_test_governance.md  |  DIRECTIVE: validate  |  13:14:14
+FILE: dr_test_governance.md  |  DIRECTIVE: validate  |  15:56:50
 ================================================================================
 v2: Processing Markdown File: /Users/dwolfson/localGit/egeria-python/tests/dr-egeria-command-tests/dr_test_governance.md
 Processing Errors:
@@ -262,7 +269,7 @@ v2: Processing complete for '/Users/dwolfson/localGit/egeria-python/tests/dr-ege
 SCORE: 38 SUCCESS  8 FAILURE  1 WARNING
 
 ================================================================================
-FILE: dr_test_projects.md  |  DIRECTIVE: validate  |  13:14:26
+FILE: dr_test_projects.md  |  DIRECTIVE: validate  |  15:57:02
 ================================================================================
 v2: Processing Markdown File: /Users/dwolfson/localGit/egeria-python/tests/dr-egeria-command-tests/dr_test_projects.md
 
@@ -317,7 +324,7 @@ v2: Processing complete for '/Users/dwolfson/localGit/egeria-python/tests/dr-ege
 SCORE: 14 SUCCESS  0 FAILURE  0 WARNING
 
 ================================================================================
-FILE: dr_test_collections_good.md  |  DIRECTIVE: validate  |  13:14:29
+FILE: dr_test_collections_good.md  |  DIRECTIVE: validate  |  15:57:05
 ================================================================================
 v2: Processing Markdown File: /Users/dwolfson/localGit/egeria-python/tests/dr-egeria-command-tests/dr_test_collections_good.md
 Processing Errors:
@@ -431,7 +438,7 @@ v2: Processing complete for '/Users/dwolfson/localGit/egeria-python/tests/dr-ege
 SCORE: 20 SUCCESS  3 FAILURE  0 WARNING
 
 ================================================================================
-FILE: dr_test_collections_mean.md  |  DIRECTIVE: validate  |  13:14:36
+FILE: dr_test_collections_mean.md  |  DIRECTIVE: validate  |  15:57:10
 ================================================================================
 v2: Processing Markdown File: /Users/dwolfson/localGit/egeria-python/tests/dr-egeria-command-tests/dr_test_collections_mean.md
 Processing Errors:
@@ -538,13 +545,15 @@ v2: Processing complete for '/Users/dwolfson/localGit/egeria-python/tests/dr-ege
 SCORE: 1 SUCCESS  9 FAILURE  0 WARNING
 
 ================================================================================
-FILE: dr_test_products_good.md  |  DIRECTIVE: validate  |  13:14:39
+FILE: dr_test_products_good.md  |  DIRECTIVE: validate  |  15:57:13
 ================================================================================
 v2: Processing Markdown File: /Users/dwolfson/localGit/egeria-python/tests/dr-egeria-command-tests/dr_test_products_good.md
 Processing Errors:
 
 -- Link Product Dependency (None) --
    - Referenced element 'PDR::DigitalProduct::Sales-Forecast-Data-Feed::1.0' for attribute 'Digital Product 2' not found.
+-- Link Agreement Actor (None) --
+   - Referenced element(s) ['<jane.smith@example.com>'] for attribute 'Actors' not found.
 -- Add Digital Subscriber (None) --
    - Referenced element 'Campaign:Sustainability' for attribute 'Subscriber Id' not found.
 -- Unlink Digital Subscriber (None) --
@@ -591,8 +600,9 @@ Processing Errors:
 │                                │                                │         │       │                                     │                                     │ -Data-Feed::1.0' for attribute       │
 │                                │                                │         │       │                                     │                                     │ 'Digital Product 2' not found.       │
 ├································┼································┼·········┼·······┼·····································┼·····································┼······································┤
-│ Link Agreement to Actor        │ Link Agreement Actor           │ SUCCESS │ No    │ Agreement::SalesForecast::Finance:: │                                     │ Validated Link Agreement to Actor    │
-│                                │                                │         │       │ DataSharing::1.0                    │                                     │                                      │
+│ Link Agreement to Actor        │ Link Agreement Actor           │ FAILURE │ No    │ Agreement::SalesForecast::Finance:: │                                     │ Referenced element(s)                │
+│                                │                                │         │       │ DataSharing::1.0                    │                                     │ ['<jane.smith@example.com>'] for     │
+│                                │                                │         │       │                                     │                                     │ attribute 'Actors' not found.        │
 ├································┼································┼·········┼·······┼·····································┼·····································┼······································┤
 │ Attach Agreement to Item       │ Attach Agreement Item          │ SUCCESS │ No    │ Agreement::SalesForecast::Finance:: │                                     │ Validated Attach Agreement to Item   │
 │                                │                                │         │       │ DataSharing::1.0                    │                                     │                                      │
@@ -616,10 +626,10 @@ Processing Errors:
 v2: Processing complete for '/Users/dwolfson/localGit/egeria-python/tests/dr-egeria-command-tests/dr_test_products_good.md'
 
 
-SCORE: 12 SUCCESS  3 FAILURE  0 WARNING
+SCORE: 11 SUCCESS  4 FAILURE  0 WARNING
 
 ================================================================================
-FILE: dr_test_external_ref.md  |  DIRECTIVE: validate  |  13:14:42
+FILE: dr_test_external_ref.md  |  DIRECTIVE: validate  |  15:57:16
 ================================================================================
 v2: Processing Markdown File: /Users/dwolfson/localGit/egeria-python/tests/dr-egeria-command-tests/dr_test_external_ref.md
 Processing Errors:
@@ -731,7 +741,7 @@ v2: Processing complete for '/Users/dwolfson/localGit/egeria-python/tests/dr-ege
 SCORE: 10 SUCCESS  8 FAILURE  0 WARNING
 
 ================================================================================
-FILE: dr_test_feedback.md  |  DIRECTIVE: validate  |  13:14:47
+FILE: dr_test_feedback.md  |  DIRECTIVE: validate  |  15:57:20
 ================================================================================
 v2: Processing Markdown File: /Users/dwolfson/localGit/egeria-python/tests/dr-egeria-command-tests/dr_test_feedback.md
 Processing Errors:
@@ -872,7 +882,7 @@ v2: Processing complete for '/Users/dwolfson/localGit/egeria-python/tests/dr-ege
 SCORE: 5 SUCCESS  15 FAILURE  0 WARNING
 
 ================================================================================
-FILE: dr_test_data_designer.md  |  DIRECTIVE: validate  |  13:14:53
+FILE: dr_test_data_designer.md  |  DIRECTIVE: validate  |  15:57:26
 ================================================================================
 v2: Processing Markdown File: /Users/dwolfson/localGit/egeria-python/tests/dr-egeria-command-tests/dr_test_data_designer.md
 
@@ -937,8 +947,8 @@ v2: Processing Markdown File: /Users/dwolfson/localGit/egeria-python/tests/dr-eg
 │ Link Certification Type to Data   │ Link Certification Type to Data   │ SUCCESS │ No    │                                   │                                   │ Validated Link Certification Type to
 │ Structure                         │ Structure                         │         │       │                                   │                                   │ Data Structure                      
 ├···································┼···································┼·········┼·······┼···································┼···································┼·····································
-│ Attach Data Description to        │ Attach Data Description to        │ SUCCESS │ No    │ DataSpecification::SalesForecast: │                                   │ Validated Attach Data Description to
-│ Element                           │ Element                           │         │       │ :1.0                              │                                   │ Element                             
+│ Attach Data Description to        │ Attach Data Description to        │ WARNING │ No    │                                   │                                   │ No processor registered for 'Attach 
+│ Element                           │ Element                           │         │       │                                   │                                   │ Data Description to Element'        
 └───────────────────────────────────┴───────────────────────────────────┴─────────┴───────┴───────────────────────────────────┴───────────────────────────────────┴─────────────────────────────────────
 
 
@@ -946,10 +956,10 @@ v2: Processing Markdown File: /Users/dwolfson/localGit/egeria-python/tests/dr-eg
 v2: Processing complete for '/Users/dwolfson/localGit/egeria-python/tests/dr-egeria-command-tests/dr_test_data_designer.md'
 
 
-SCORE: 20 SUCCESS  0 FAILURE  0 WARNING
+SCORE: 19 SUCCESS  0 FAILURE  1 WARNING
 
 ================================================================================
-FILE: dr_test_report.md  |  DIRECTIVE: validate  |  13:14:59
+FILE: dr_test_report.md  |  DIRECTIVE: validate  |  15:57:31
 ================================================================================
 v2: Processing Markdown File: /Users/dwolfson/localGit/egeria-python/tests/dr-egeria-command-tests/dr_test_report.md
 Processing Errors:
@@ -958,69 +968,98 @@ Processing Errors:
    - Referenced element 'Collection::SalesForecast::Root::1.0' for attribute 'Anchor Scope ID' not found.
 
 
+Processing Warnings:
+
+-- Create Report (Coco Pharmaceuticals::DeployedReport::Sales-Forecast-Pipeline-Report::1.0) --
+   - Value '['ACTIVE']' is not a valid metadata value for 'Limit Result by Status'
+-- Create Report (Coco Pharmaceuticals::DeployedReport::Sales-Forecast-Collections-Table::1.0) --
+   - Value '['ACTIVE']' is not a valid metadata value for 'Limit Result by Status'
+-- Create Report (Coco Pharmaceuticals::DeployedReport::Sales-Forecast-Products-Governed-View::1.0) --
+   - Value '['ACTIVE']' is not a valid metadata value for 'Limit Result by Status'
+-- Create Report (Coco Pharmaceuticals::DeployedReport::Sales-Forecast-Pipeline-Report::1.0) --
+   - Value '['ACTIVE']' is not a valid metadata value for 'Limit Result by Status'
+
+
 
 
                                                                                     Dr. Egeria v2 Processing Summary                                                                                    
-┏━━━━━━━━━━━━━━━━━━┳━━━━━━━━━━━━━━━━━━━┳━━━━━━━━━┳━━━━━━━┳━━━━━━━━━━━━━━━━━━━━━━┳━━━━━━━━━━━━━━━━━━━━━━━┳━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━┓
-┃ Markdown Command ┃ Canonical Command ┃ Status  ┃ Found ┃ Display Name / End 1 ┃ Qualified Name / End2 ┃ Message                                                                                      ┃
-┡━━━━━━━━━━━━━━━━━━╇━━━━━━━━━━━━━━━━━━━╇━━━━━━━━━╇━━━━━━━╇━━━━━━━━━━━━━━━━━━━━━━╇━━━━━━━━━━━━━━━━━━━━━━━╇━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━┩
-│ View Report      │ View Report       │ SUCCESS │ No    │ Default              │                       │ Validated View Report                                                                        │
-├··················┼···················┼·········┼·······┼······················┼·······················┼······························································································┤
-│ View Report      │ View Report       │ SUCCESS │ No    │ Collections          │                       │ Validated View Report                                                                        │
-├··················┼···················┼·········┼·······┼······················┼·······················┼······························································································┤
-│ View Report      │ View Report       │ SUCCESS │ No    │ Collections          │                       │ Validated View Report                                                                        │
-├··················┼···················┼·········┼·······┼······················┼·······················┼······························································································┤
-│ View Report      │ View Report       │ SUCCESS │ No    │ Digital-Products     │                       │ Validated View Report                                                                        │
-├··················┼···················┼·········┼·······┼······················┼·······················┼······························································································┤
-│ View Report      │ View Report       │ SUCCESS │ No    │ Glossaries           │                       │ Validated View Report                                                                        │
-├··················┼···················┼·········┼·······┼······················┼·······················┼······························································································┤
-│ View Report      │ View Report       │ SUCCESS │ No    │ Projects             │                       │ Validated View Report                                                                        │
-├··················┼···················┼·········┼·······┼······················┼·······················┼······························································································┤
-│ View Report      │ View Report       │ SUCCESS │ No    │ Glossaries           │                       │ Validated View Report                                                                        │
-├··················┼···················┼·········┼·······┼······················┼·······················┼······························································································┤
-│ View Report      │ View Report       │ SUCCESS │ No    │ Collections          │                       │ Validated View Report                                                                        │
-├··················┼···················┼·········┼·······┼······················┼·······················┼······························································································┤
-│ View Report      │ View Report       │ SUCCESS │ No    │ Digital-Products     │                       │ Validated View Report                                                                        │
-├··················┼···················┼·········┼·······┼······················┼·······················┼······························································································┤
-│ View Report      │ View Report       │ SUCCESS │ No    │ Digital-Products     │                       │ Validated View Report                                                                        │
-├··················┼···················┼·········┼·······┼······················┼·······················┼······························································································┤
-│ View Report      │ View Report       │ SUCCESS │ No    │ Collections          │                       │ Validated View Report                                                                        │
-├··················┼···················┼·········┼·······┼······················┼·······················┼······························································································┤
-│ View Report      │ View Report       │ SUCCESS │ No    │ Glossaries           │                       │ Validated View Report                                                                        │
-├··················┼···················┼·········┼·······┼······················┼·······················┼······························································································┤
-│ View Report      │ View Report       │ SUCCESS │ No    │ Glossaries           │                       │ Validated View Report                                                                        │
-├··················┼···················┼·········┼·······┼······················┼·······················┼······························································································┤
-│ View Report      │ View Report       │ SUCCESS │ No    │ Collections          │                       │ Validated View Report                                                                        │
-├··················┼···················┼·········┼·······┼······················┼·······················┼······························································································┤
-│ View Report      │ View Report       │ SUCCESS │ No    │ Glossaries           │                       │ Validated View Report                                                                        │
-├··················┼···················┼·········┼·······┼······················┼·······················┼······························································································┤
-│ View Report      │ View Report       │ SUCCESS │ No    │ Projects             │                       │ Validated View Report                                                                        │
-├··················┼···················┼·········┼·······┼······················┼·······················┼······························································································┤
-│ View Report      │ View Report       │ SUCCESS │ No    │ Collections          │                       │ Validated View Report                                                                        │
-├··················┼···················┼·········┼·······┼······················┼·······················┼······························································································┤
-│ View Report      │ View Report       │ SUCCESS │ No    │ Digital-Products     │                       │ Validated View Report                                                                        │
-├··················┼···················┼·········┼·······┼······················┼·······················┼······························································································┤
-│ View Report      │ View Report       │ SUCCESS │ No    │ Collections          │                       │ Validated View Report                                                                        │
-├··················┼···················┼·········┼·······┼······················┼·······················┼······························································································┤
-│ View Report      │ View Report       │ SUCCESS │ No    │ Digital-Products     │                       │ Validated View Report                                                                        │
-├··················┼···················┼·········┼·······┼······················┼·······················┼······························································································┤
-│ View Report      │ View Report       │ FAILURE │ No    │ Collections          │                       │ Referenced element 'Collection::SalesForecast::Root::1.0' for attribute 'Anchor Scope ID'    │
-│                  │                   │         │       │                      │                       │ not found.                                                                                   │
-├··················┼···················┼·········┼·······┼······················┼·······················┼······························································································┤
-│ View Report      │ View Report       │ SUCCESS │ No    │ Collections          │                       │ Validated View Report                                                                        │
-├··················┼···················┼·········┼·······┼······················┼·······················┼······························································································┤
-│ View Report      │ View Report       │ SUCCESS │ No    │ Glossaries           │                       │ Validated View Report                                                                        │
-└──────────────────┴───────────────────┴─────────┴───────┴──────────────────────┴───────────────────────┴──────────────────────────────────────────────────────────────────────────────────────────────┘
+┏━━━━━━━━━━━━━━━━━━┳━━━━━━━━━━━━━━━━━━━┳━━━━━━━━━┳━━━━━━━┳━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━┳━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━┳━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━┓
+┃ Markdown Command ┃ Canonical Command ┃ Status  ┃ Found ┃ Display Name / End 1                  ┃ Qualified Name / End2                            ┃ Message                                          ┃
+┡━━━━━━━━━━━━━━━━━━╇━━━━━━━━━━━━━━━━━━━╇━━━━━━━━━╇━━━━━━━╇━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━╇━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━╇━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━┩
+│ View Report      │ View Report       │ SUCCESS │ No    │ Default                               │                                                  │ Validated View Report                            │
+├··················┼···················┼·········┼·······┼·······································┼··················································┼··················································┤
+│ View Report      │ View Report       │ SUCCESS │ No    │ Collections                           │                                                  │ Validated View Report                            │
+├··················┼···················┼·········┼·······┼·······································┼··················································┼··················································┤
+│ View Report      │ View Report       │ SUCCESS │ No    │ Collections                           │                                                  │ Validated View Report                            │
+├··················┼···················┼·········┼·······┼·······································┼··················································┼··················································┤
+│ View Report      │ View Report       │ SUCCESS │ No    │ Digital-Products                      │                                                  │ Validated View Report                            │
+├··················┼···················┼·········┼·······┼·······································┼··················································┼··················································┤
+│ View Report      │ View Report       │ SUCCESS │ No    │ Glossaries                            │                                                  │ Validated View Report                            │
+├··················┼···················┼·········┼·······┼·······································┼··················································┼··················································┤
+│ View Report      │ View Report       │ SUCCESS │ No    │ Projects                              │                                                  │ Validated View Report                            │
+├··················┼···················┼·········┼·······┼·······································┼··················································┼··················································┤
+│ View Report      │ View Report       │ SUCCESS │ No    │ Glossaries                            │                                                  │ Validated View Report                            │
+├··················┼···················┼·········┼·······┼·······································┼··················································┼··················································┤
+│ View Report      │ View Report       │ SUCCESS │ No    │ Collections                           │                                                  │ Validated View Report                            │
+├··················┼···················┼·········┼·······┼·······································┼··················································┼··················································┤
+│ View Report      │ View Report       │ SUCCESS │ No    │ Digital-Products                      │                                                  │ Validated View Report                            │
+├··················┼···················┼·········┼·······┼·······································┼··················································┼··················································┤
+│ View Report      │ View Report       │ SUCCESS │ No    │ Digital-Products                      │                                                  │ Validated View Report                            │
+├··················┼···················┼·········┼·······┼·······································┼··················································┼··················································┤
+│ View Report      │ View Report       │ SUCCESS │ No    │ Collections                           │                                                  │ Validated View Report                            │
+├··················┼···················┼·········┼·······┼·······································┼··················································┼··················································┤
+│ View Report      │ View Report       │ SUCCESS │ No    │ Glossaries                            │                                                  │ Validated View Report                            │
+├··················┼···················┼·········┼·······┼·······································┼··················································┼··················································┤
+│ View Report      │ View Report       │ SUCCESS │ No    │ Glossaries                            │                                                  │ Validated View Report                            │
+├··················┼···················┼·········┼·······┼·······································┼··················································┼··················································┤
+│ View Report      │ View Report       │ SUCCESS │ No    │ Collections                           │                                                  │ Validated View Report                            │
+├··················┼···················┼·········┼·······┼·······································┼··················································┼··················································┤
+│ View Report      │ View Report       │ SUCCESS │ No    │ Glossaries                            │                                                  │ Validated View Report                            │
+├··················┼···················┼·········┼·······┼·······································┼··················································┼··················································┤
+│ View Report      │ View Report       │ SUCCESS │ No    │ Projects                              │                                                  │ Validated View Report                            │
+├··················┼···················┼·········┼·······┼·······································┼··················································┼··················································┤
+│ View Report      │ View Report       │ SUCCESS │ No    │ Collections                           │                                                  │ Validated View Report                            │
+├··················┼···················┼·········┼·······┼·······································┼··················································┼··················································┤
+│ View Report      │ View Report       │ SUCCESS │ No    │ Digital-Products                      │                                                  │ Validated View Report                            │
+├··················┼···················┼·········┼·······┼·······································┼··················································┼··················································┤
+│ View Report      │ View Report       │ SUCCESS │ No    │ Collections                           │                                                  │ Validated View Report                            │
+├··················┼···················┼·········┼·······┼·······································┼··················································┼··················································┤
+│ View Report      │ View Report       │ SUCCESS │ No    │ Digital-Products                      │                                                  │ Validated View Report                            │
+├··················┼···················┼·········┼·······┼·······································┼··················································┼··················································┤
+│ View Report      │ View Report       │ FAILURE │ No    │ Collections                           │                                                  │ Referenced element                               │
+│                  │                   │         │       │                                       │                                                  │ 'Collection::SalesForecast::Root::1.0' for       │
+│                  │                   │         │       │                                       │                                                  │ attribute 'Anchor Scope ID' not found.           │
+├··················┼···················┼·········┼·······┼·······································┼··················································┼··················································┤
+│ View Report      │ View Report       │ SUCCESS │ No    │ Collections                           │                                                  │ Validated View Report                            │
+├··················┼···················┼·········┼·······┼·······································┼··················································┼··················································┤
+│ View Report      │ View Report       │ SUCCESS │ No    │ Glossaries                            │                                                  │ Validated View Report                            │
+├··················┼···················┼·········┼·······┼·······································┼··················································┼··················································┤
+│ Create Report    │ Create Report     │ SUCCESS │ No    │ Sales Forecast Pipeline Report        │ Coco                                             │ Validated Create Report                          │
+│                  │                   │         │       │                                       │ Pharmaceuticals::DeployedReport::Sales-Forecast- │                                                  │
+│                  │                   │         │       │                                       │ Pipeline-Report::1.0                             │                                                  │
+├··················┼···················┼·········┼·······┼·······································┼··················································┼··················································┤
+│ Create Report    │ Create Report     │ SUCCESS │ No    │ Sales Forecast Collections Table      │ Coco                                             │ Validated Create Report                          │
+│                  │                   │         │       │                                       │ Pharmaceuticals::DeployedReport::Sales-Forecast- │                                                  │
+│                  │                   │         │       │                                       │ Collections-Table::1.0                           │                                                  │
+├··················┼···················┼·········┼·······┼·······································┼··················································┼··················································┤
+│ Create Report    │ Create Report     │ SUCCESS │ No    │ Sales Forecast Products Governed View │ Coco                                             │ Validated Create Report                          │
+│                  │                   │         │       │                                       │ Pharmaceuticals::DeployedReport::Sales-Forecast- │                                                  │
+│                  │                   │         │       │                                       │ Products-Governed-View::1.0                      │                                                  │
+├··················┼···················┼·········┼·······┼·······································┼··················································┼··················································┤
+│ Create Report    │ Create Report     │ SUCCESS │ Yes   │ Sales Forecast Pipeline Report        │ Coco                                             │ Validated Create Report (GUID: (Planned: Coco    │
+│                  │                   │         │       │                                       │ Pharmaceuticals::DeployedReport::Sales-Forecast- │ Pharmaceuticals::DeployedReport::Sales-Forecast- │
+│                  │                   │         │       │                                       │ Pipeline-Report::1.0                             │ Pipeline-Report::1.0))                           │
+└──────────────────┴───────────────────┴─────────┴───────┴───────────────────────────────────────┴──────────────────────────────────────────────────┴──────────────────────────────────────────────────┘
 
 
 
 v2: Processing complete for '/Users/dwolfson/localGit/egeria-python/tests/dr-egeria-command-tests/dr_test_report.md'
 
 
-SCORE: 22 SUCCESS  1 FAILURE  0 WARNING
+SCORE: 26 SUCCESS  1 FAILURE  0 WARNING
 
 ================================================================================
-FILE: dr_test_solution.md  |  DIRECTIVE: validate  |  13:15:02
+FILE: dr_test_solution.md  |  DIRECTIVE: validate  |  15:57:34
 ================================================================================
 v2: Processing Markdown File: /Users/dwolfson/localGit/egeria-python/tests/dr-egeria-command-tests/dr_test_solution.md
 
@@ -1093,7 +1132,7 @@ v2: Processing complete for '/Users/dwolfson/localGit/egeria-python/tests/dr-ege
 SCORE: 19 SUCCESS  0 FAILURE  0 WARNING
 
 ================================================================================
-FILE: dr_test_design_patterns.md  |  DIRECTIVE: validate  |  13:15:05
+FILE: dr_test_design_patterns.md  |  DIRECTIVE: validate  |  15:57:38
 ================================================================================
 v2: Processing Markdown File: /Users/dwolfson/localGit/egeria-python/tests/dr-egeria-command-tests/dr_test_design_patterns.md
 
@@ -1125,31 +1164,55 @@ v2: Processing complete for '/Users/dwolfson/localGit/egeria-python/tests/dr-ege
 SCORE: 7 SUCCESS  0 FAILURE  0 WARNING
 
 ================================================================================
-FILE: dr_test_new_commands.md  |  DIRECTIVE: validate  |  13:15:07
+FILE: dr_test_new_commands.md  |  DIRECTIVE: validate  |  15:57:39
 ================================================================================
 v2: Processing Markdown File: /Users/dwolfson/localGit/egeria-python/tests/dr-egeria-command-tests/dr_test_new_commands.md
+Processing Errors:
+
+-- Classify Term as Question (GlossaryTerm::SalesForecast::1.0) --
+   - Referenced element 'GlossaryTerm::SalesForecast' for attribute 'Term Name' not found.
+-- Declassify Term as Question (GlossaryTerm::SalesForecast::1.0) --
+   - Referenced element 'GlossaryTerm::SalesForecast' for attribute 'Term Name' not found.
 
 
-                                                                       Dr. Egeria v2 Processing Summary                                                                       
-┏━━━━━━━━━━━━━━━━━━━━┳━━━━━━━━━━━━━━━━━━━━┳━━━━━━━━━┳━━━━━━━┳━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━┳━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━┳━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━┓
-┃ Markdown Command   ┃ Canonical Command  ┃ Status  ┃ Found ┃ Display Name / End 1               ┃ Qualified Name / End2              ┃ Message                              ┃
-┡━━━━━━━━━━━━━━━━━━━━╇━━━━━━━━━━━━━━━━━━━━╇━━━━━━━━━╇━━━━━━━╇━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━╇━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━╇━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━┩
-│ Create Skill Set   │ Create Skill Set   │ SUCCESS │ No    │ Data Analysis Skills               │ SkillSet::DataAnalysisSkills       │ Validated Create Skill Set           │
-├····················┼····················┼·········┼·······┼····································┼····································┼······································┤
-│ Create Perspective │ Create Perspective │ SUCCESS │ No    │ Operational Resilience Perspective │ Perspective::OperationalResilience │ Validated Create Perspective         │
-├····················┼····················┼·········┼·······┼····································┼····································┼······································┤
-│ Create Skill       │ Create Skill       │ SUCCESS │ No    │ Data Profiling                     │ Skill::DataProfiling               │ Validated Create Skill               │
-└────────────────────┴────────────────────┴─────────┴───────┴────────────────────────────────────┴────────────────────────────────────┴──────────────────────────────────────┘
+Processing Warnings:
+
+-- Classify Term as Question (GlossaryTerm::SalesForecast::1.0) --
+   - Value 'ACTIVE' is not a valid metadata value for 'Status'
+-- Declassify Term as Question (GlossaryTerm::SalesForecast::1.0) --
+   - Value 'ACTIVE' is not a valid metadata value for 'Status'
+
+
+
+
+                                                                                    Dr. Egeria v2 Processing Summary                                                                                    
+┏━━━━━━━━━━━━━━━━━━━━━━━━━━━━━┳━━━━━━━━━━━━━━━━━━━━━━━━━━━━━┳━━━━━━━━━┳━━━━━━━┳━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━┳━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━┳━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━┓
+┃ Markdown Command            ┃ Canonical Command           ┃ Status  ┃ Found ┃ Display Name / End 1               ┃ Qualified Name / End2              ┃ Message                                      ┃
+┡━━━━━━━━━━━━━━━━━━━━━━━━━━━━━╇━━━━━━━━━━━━━━━━━━━━━━━━━━━━━╇━━━━━━━━━╇━━━━━━━╇━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━╇━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━╇━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━┩
+│ Create Skill Set            │ Create Skill Set            │ SUCCESS │ No    │ Data Analysis Skills               │ SkillSet::DataAnalysisSkills       │ Validated Create Skill Set                   │
+├·····························┼·····························┼·········┼·······┼····································┼····································┼··············································┤
+│ Create Perspective          │ Create Perspective          │ SUCCESS │ No    │ Operational Resilience Perspective │ Perspective::OperationalResilience │ Validated Create Perspective                 │
+├·····························┼·····························┼·········┼·······┼····································┼····································┼··············································┤
+│ Create Skill                │ Create Skill                │ SUCCESS │ No    │ Data Profiling                     │ Skill::DataProfiling               │ Validated Create Skill                       │
+├·····························┼·····························┼·········┼·······┼····································┼····································┼··············································┤
+│ Classify Term as Question   │ Classify Term as Question   │ FAILURE │ No    │ GlossaryTerm::SalesForecast        │ GlossaryTerm::SalesForecast::1.0   │ Referenced element                           │
+│                             │                             │         │       │                                    │                                    │ 'GlossaryTerm::SalesForecast' for attribute  │
+│                             │                             │         │       │                                    │                                    │ 'Term Name' not found.                       │
+├·····························┼·····························┼·········┼·······┼····································┼····································┼··············································┤
+│ Declassify Term as Question │ Declassify Term as Question │ FAILURE │ No    │ GlossaryTerm::SalesForecast        │ GlossaryTerm::SalesForecast::1.0   │ Referenced element                           │
+│                             │                             │         │       │                                    │                                    │ 'GlossaryTerm::SalesForecast' for attribute  │
+│                             │                             │         │       │                                    │                                    │ 'Term Name' not found.                       │
+└─────────────────────────────┴─────────────────────────────┴─────────┴───────┴────────────────────────────────────┴────────────────────────────────────┴──────────────────────────────────────────────┘
 
 
 
 v2: Processing complete for '/Users/dwolfson/localGit/egeria-python/tests/dr-egeria-command-tests/dr_test_new_commands.md'
 
 
-SCORE: 3 SUCCESS  0 FAILURE  0 WARNING
+SCORE: 3 SUCCESS  2 FAILURE  0 WARNING
 
 ================================================================================
-FILE: dr_test_action_author.md  |  DIRECTIVE: validate  |  13:15:08
+FILE: dr_test_action_author.md  |  DIRECTIVE: validate  |  15:57:41
 ================================================================================
 v2: Processing Markdown File: /Users/dwolfson/localGit/egeria-python/tests/dr-egeria-command-tests/dr_test_action_author.md
 
@@ -1188,24 +1251,218 @@ v2: Processing complete for '/Users/dwolfson/localGit/egeria-python/tests/dr-ege
 
 SCORE: 8 SUCCESS  0 FAILURE  0 WARNING
 
+================================================================================
+FILE: dr_test_curation.md  |  DIRECTIVE: validate  |  15:57:43
+================================================================================
+v2: Processing Markdown File: /Users/dwolfson/localGit/egeria-python/tests/dr-egeria-command-tests/dr_test_curation.md
+Processing Warnings:
+
+-- Classify Impact (None) --
+   - Value 'ACTIVE' is not a valid metadata value for 'Governance Status'
+-- Reclassify Impact (None) --
+   - Value 'ACTIVE' is not a valid metadata value for 'Governance Status'
+-- Classify Confidence (None) --
+   - Value 'ACTIVE' is not a valid metadata value for 'Governance Status'
+-- Reclassify Confidence (None) --
+   - Value 'ACTIVE' is not a valid metadata value for 'Governance Status'
+-- Classify Confidentiality (None) --
+   - Value 'ACTIVE' is not a valid metadata value for 'Governance Status'
+-- Reclassify Confidentiality (None) --
+   - Value 'ACTIVE' is not a valid metadata value for 'Governance Status'
+-- Classify Criticality (None) --
+   - Value 'ACTIVE' is not a valid metadata value for 'Governance Status'
+-- Reclassify Criticality (None) --
+   - Value 'ACTIVE' is not a valid metadata value for 'Governance Status'
+-- Classify Retention (None) --
+   - Value 'ACTIVE' is not a valid metadata value for 'Governance Status'
+   - Value 'PROJECT_LIFETIME' is not a valid enum value for 'Retention Basis'
+-- Reclassify Retention (None) --
+   - Value 'ACTIVE' is not a valid metadata value for 'Governance Status'
+   - Value 'PROJECT_LIFETIME' is not a valid enum value for 'Retention Basis'
+-- Link Semantic Assignment (None) --
+   - Value 'ACTIVE' is not a valid metadata value for 'Governance Status'
+
+
+
+
+                                                                                     Dr. Egeria v2 Processing Summary                                                                                   
+┏━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━┳━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━┳━━━━━━━━━┳━━━━━━━┳━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━┳━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━┳━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+┃ Markdown Command                  ┃ Canonical Command                 ┃ Status  ┃ Found ┃ Display Name / End 1              ┃ Qualified Name / End2              ┃ Message                            
+┡━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━╇━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━╇━━━━━━━━━╇━━━━━━━╇━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━╇━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━╇━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+│ Create Data Dictionary            │ Create Data Dictionary            │ SUCCESS │ No    │ Curation Test Target              │ DataDictionary::CurationTest::Targ │ Validated Create Data Dictionary   
+│                                   │                                   │         │       │                                   │ et::1.0                            │                                    
+├···································┼···································┼·········┼·······┼···································┼····································┼····································
+│ Create Data Dictionary            │ Create Data Dictionary            │ SUCCESS │ No    │ Curation Test Peer                │ DataDictionary::CurationTest::Peer │ Validated Create Data Dictionary   
+│                                   │                                   │         │       │                                   │ ::1.0                              │                                    
+├···································┼···································┼·········┼·······┼···································┼····································┼····································
+│ Create Glossary                   │ Create Glossary                   │ SUCCESS │ No    │ Curation Test Glossary            │ Glossary::CurationTest::1.0        │ Validated Create Glossary          
+├···································┼···································┼·········┼·······┼···································┼····································┼····································
+│ Create Glossary Term              │ Create Glossary Term              │ SUCCESS │ No    │ Curation Test Term                │ GlossaryTerm::CurationTest::Term:: │ Validated Create Glossary Term     
+│                                   │                                   │         │       │                                   │ 1.0                                │                                    
+├···································┼···································┼·········┼·······┼···································┼····································┼····································
+│ Classify Impact                   │ Classify Impact                   │ SUCCESS │ No    │                                   │                                    │ Validated Classify Impact          
+├···································┼···································┼·········┼·······┼···································┼····································┼····································
+│ Reclassify Impact                 │ Reclassify Impact                 │ SUCCESS │ No    │                                   │                                    │ Validated Reclassify Impact        
+├···································┼···································┼·········┼·······┼···································┼····································┼····································
+│ Declassify Impact                 │ Declassify Impact                 │ SUCCESS │ No    │                                   │                                    │ Validated Declassify Impact        
+├···································┼···································┼·········┼·······┼···································┼····································┼····································
+│ Classify Confidence               │ Classify Confidence               │ SUCCESS │ No    │                                   │                                    │ Validated Classify Confidence      
+├···································┼···································┼·········┼·······┼···································┼····································┼····································
+│ Reclassify Confidence             │ Reclassify Confidence             │ SUCCESS │ No    │                                   │                                    │ Validated Reclassify Confidence    
+├···································┼···································┼·········┼·······┼···································┼····································┼····································
+│ Declassify Confidence             │ Declassify Confidence             │ SUCCESS │ No    │                                   │                                    │ Validated Declassify Confidence    
+├···································┼···································┼·········┼·······┼···································┼····································┼····································
+│ Classify Confidentiality          │ Classify Confidentiality          │ SUCCESS │ No    │                                   │                                    │ Validated Classify Confidentiality 
+├···································┼···································┼·········┼·······┼···································┼····································┼····································
+│ Reclassify Confidentiality        │ Reclassify Confidentiality        │ SUCCESS │ No    │                                   │                                    │ Validated Reclassify Confidentialit
+├···································┼···································┼·········┼·······┼···································┼····································┼····································
+│ Declassify Confidentiality        │ Declassify Confidentiality        │ SUCCESS │ No    │                                   │                                    │ Validated Declassify Confidentialit
+├···································┼···································┼·········┼·······┼···································┼····································┼····································
+│ Classify Criticality              │ Classify Criticality              │ SUCCESS │ No    │                                   │                                    │ Validated Classify Criticality     
+├···································┼···································┼·········┼·······┼···································┼····································┼····································
+│ Reclassify Criticality            │ Reclassify Criticality            │ SUCCESS │ No    │                                   │                                    │ Validated Reclassify Criticality   
+├···································┼···································┼·········┼·······┼···································┼····································┼····································
+│ Declassify Criticality            │ Declassify Criticality            │ SUCCESS │ No    │                                   │                                    │ Validated Declassify Criticality   
+├···································┼···································┼·········┼·······┼···································┼····································┼····································
+│ Classify Retention                │ Classify Retention                │ SUCCESS │ No    │                                   │                                    │ Validated Classify Retention       
+├···································┼···································┼·········┼·······┼···································┼····································┼····································
+│ Reclassify Retention              │ Reclassify Retention              │ SUCCESS │ No    │                                   │                                    │ Validated Reclassify Retention     
+├···································┼···································┼·········┼·······┼···································┼····································┼····································
+│ Declassify Retention              │ Declassify Retention              │ SUCCESS │ No    │                                   │                                    │ Validated Declassify Retention     
+├···································┼···································┼·········┼·······┼···································┼····································┼····································
+│ Classify Ownership                │ Classify Ownership                │ SUCCESS │ No    │                                   │                                    │ Validated Classify Ownership       
+├···································┼···································┼·········┼·······┼···································┼····································┼····································
+│ Reclassify Ownership              │ Reclassify Ownership              │ SUCCESS │ No    │                                   │                                    │ Validated Reclassify Ownership     
+├···································┼···································┼·········┼·······┼···································┼····································┼····································
+│ Declassify Ownership              │ Declassify Ownership              │ SUCCESS │ No    │                                   │                                    │ Validated Declassify Ownership     
+├···································┼···································┼·········┼·······┼···································┼····································┼····································
+│ Classify Digital Resource Origin  │ Classify Digital Resource Origin  │ SUCCESS │ No    │                                   │                                    │ Validated Classify Digital Resource
+│                                   │                                   │         │       │                                   │                                    │ Origin                             
+├···································┼···································┼·········┼·······┼···································┼····································┼····································
+│ Reclassify Digital Resource       │ Reclassify Digital Resource       │ SUCCESS │ No    │                                   │                                    │ Validated Reclassify Digital       
+│ Origin                            │ Origin                            │         │       │                                   │                                    │ Resource Origin                    
+├···································┼···································┼·········┼·······┼···································┼····································┼····································
+│ Declassify Digital Resource       │ Declassify Digital Resource       │ SUCCESS │ No    │                                   │                                    │ Validated Declassify Digital       
+│ Origin                            │ Origin                            │         │       │                                   │                                    │ Resource Origin                    
+├···································┼···································┼·········┼·······┼···································┼····································┼····································
+│ Classify Zone Membership          │ Classify Zone Membership          │ SUCCESS │ No    │                                   │                                    │ Validated Classify Zone Membership 
+├···································┼···································┼·········┼·······┼···································┼····································┼····································
+│ Reclassify Zone Membership        │ Reclassify Zone Membership        │ SUCCESS │ No    │                                   │                                    │ Validated Reclassify Zone Membershi
+├···································┼···································┼·········┼·······┼···································┼····································┼····································
+│ Declassify Zone Membership        │ Declassify Zone Membership        │ SUCCESS │ No    │                                   │                                    │ Validated Declassify Zone Membershi
+├···································┼···································┼·········┼·······┼···································┼····································┼····································
+│ Classify Security Tags            │ Classify Security Tags            │ SUCCESS │ No    │                                   │                                    │ Validated Classify Security Tags   
+├···································┼···································┼·········┼·······┼···································┼····································┼····································
+│ Reclassify Security Tags          │ Reclassify Security Tags          │ SUCCESS │ No    │                                   │                                    │ Validated Reclassify Security Tags 
+├···································┼···································┼·········┼·······┼···································┼····································┼····································
+│ Declassify Security Tags          │ Declassify Security Tags          │ SUCCESS │ No    │                                   │                                    │ Validated Declassify Security Tags 
+├···································┼···································┼·········┼·······┼···································┼····································┼····································
+│ Classify Data Scope               │ Classify Data Scope               │ SUCCESS │ No    │                                   │                                    │ Validated Classify Data Scope      
+├···································┼···································┼·········┼·······┼···································┼····································┼····································
+│ Create Data Scope                 │ Create Data Scope                 │ SUCCESS │ No    │                                   │                                    │ Validated Create Data Scope        
+├···································┼···································┼·········┼·······┼···································┼····································┼····································
+│ Declassify Data Scope             │ Declassify Data Scope             │ SUCCESS │ No    │                                   │                                    │ Validated Declassify Data Scope    
+├···································┼···································┼·········┼·······┼···································┼····································┼····································
+│ Classify Governance Expectations  │ Classify Governance Expectations  │ SUCCESS │ No    │                                   │                                    │ Validated Classify Governance      
+│                                   │                                   │         │       │                                   │                                    │ Expectations                       
+├···································┼···································┼·········┼·······┼···································┼····································┼····································
+│ Create Governance Expectations    │ Create Governance Expectations    │ SUCCESS │ No    │                                   │                                    │ Validated Create Governance        
+│                                   │                                   │         │       │                                   │                                    │ Expectations                       
+├···································┼···································┼·········┼·······┼···································┼····································┼····································
+│ Declassify Governance             │ Declassify Governance             │ SUCCESS │ No    │                                   │                                    │ Validated Declassify Governance    
+│ Expectations                      │ Expectations                      │         │       │                                   │                                    │ Expectations                       
+├···································┼···································┼·········┼·······┼···································┼····································┼····································
+│ Classify Governance Measurements  │ Classify Governance Measurements  │ SUCCESS │ No    │                                   │                                    │ Validated Classify Governance      
+│                                   │                                   │         │       │                                   │                                    │ Measurements                       
+├···································┼···································┼·········┼·······┼···································┼····································┼····································
+│ Create Governance Measurements    │ Create Governance Measurements    │ SUCCESS │ No    │                                   │                                    │ Validated Create Governance        
+│                                   │                                   │         │       │                                   │                                    │ Measurements                       
+├···································┼···································┼·········┼·······┼···································┼····································┼····································
+│ Declassify Governance             │ Declassify Governance             │ SUCCESS │ No    │                                   │                                    │ Validated Declassify Governance    
+│ Measurements                      │ Measurements                      │         │       │                                   │                                    │ Measurements                       
+├···································┼···································┼·········┼·······┼···································┼····································┼····································
+│ Classify Known Duplicate          │ Classify Known Duplicate          │ SUCCESS │ No    │                                   │                                    │ Validated Classify Known Duplicate 
+├···································┼···································┼·········┼·······┼···································┼····································┼····································
+│ Declassify Known Duplicate        │ Declassify Known Duplicate        │ SUCCESS │ No    │                                   │                                    │ Validated Declassify Known Duplicat
+├···································┼···································┼·········┼·······┼···································┼····································┼····································
+│ Classify Consolidated Duplicate   │ Classify Consolidated Duplicate   │ SUCCESS │ No    │                                   │                                    │ Validated Classify Consolidated    
+│                                   │                                   │         │       │                                   │                                    │ Duplicate                          
+├···································┼···································┼·········┼·······┼···································┼····································┼····································
+│ Declassify Consolidated Duplicate │ Declassify Consolidated Duplicate │ SUCCESS │ No    │                                   │                                    │ Validated Declassify Consolidated  
+│                                   │                                   │         │       │                                   │                                    │ Duplicate                          
+├···································┼···································┼·········┼·······┼···································┼····································┼····································
+│ Attach Search Keyword             │ Attach Search Keyword             │ SUCCESS │ No    │                                   │                                    │ Validated Attach Search Keyword    
+├···································┼···································┼·········┼·······┼···································┼····································┼····································
+│ Link Semantic Assignment          │ Link Semantic Assignment          │ SUCCESS │ No    │                                   │                                    │ Validated Link Semantic Assignment 
+├···································┼···································┼·········┼·······┼···································┼····································┼····································
+│ Unlink Semantic Assignment        │ Unlink Semantic Assignment        │ SUCCESS │ No    │                                   │                                    │ Validated Unlink Semantic Assignmen
+├···································┼···································┼·········┼·······┼···································┼····································┼····································
+│ Link Semantic Definition          │ Link Semantic Definition          │ SUCCESS │ No    │                                   │                                    │ Validated Link Semantic Definition 
+├···································┼···································┼·········┼·······┼···································┼····································┼····································
+│ Unlink Semantic Definition        │ Unlink Semantic Definition        │ SUCCESS │ No    │                                   │                                    │ Validated Unlink Semantic Definitio
+├···································┼···································┼·········┼·······┼···································┼····································┼····································
+│ Link Element To Scope             │ Link Element To Scope             │ SUCCESS │ No    │                                   │                                    │ Validated Link Element To Scope    
+├···································┼···································┼·········┼·······┼···································┼····································┼····································
+│ Unlink Element From Scope         │ Unlink Element From Scope         │ SUCCESS │ No    │                                   │                                    │ Validated Unlink Element From Scope
+├···································┼···································┼·········┼·······┼···································┼····································┼····································
+│ Link Resource To Element          │ Link Resource To Element          │ SUCCESS │ No    │                                   │                                    │ Validated Link Resource To Element 
+├···································┼···································┼·········┼·······┼···································┼····································┼····································
+│ Unlink Resource From Element      │ Unlink Resource From Element      │ SUCCESS │ No    │                                   │                                    │ Validated Unlink Resource From     
+│                                   │                                   │         │       │                                   │                                    │ Element                            
+├···································┼···································┼·········┼·······┼···································┼····································┼····································
+│ Link More Information             │ Link More Information             │ SUCCESS │ No    │                                   │                                    │ Validated Link More Information    
+├···································┼···································┼·········┼·······┼···································┼····································┼····································
+│ Unlink More Information           │ Unlink More Information           │ SUCCESS │ No    │                                   │                                    │ Validated Unlink More Information  
+├···································┼···································┼·········┼·······┼···································┼····································┼····································
+│ Link Peer Duplicate               │ Link Peer Duplicate               │ SUCCESS │ No    │                                   │                                    │ Validated Link Peer Duplicate      
+├···································┼···································┼·········┼·······┼···································┼····································┼····································
+│ Unlink Peer Duplicate             │ Unlink Peer Duplicate             │ SUCCESS │ No    │                                   │                                    │ Validated Unlink Peer Duplicate    
+├···································┼···································┼·········┼·······┼···································┼····································┼····································
+│ Link Consolidated Duplicate To    │ Link Consolidated Duplicate To    │ SUCCESS │ No    │                                   │                                    │ Validated Link Consolidated        
+│ Source                            │ Source                            │         │       │                                   │                                    │ Duplicate To Source                
+├···································┼···································┼·········┼·······┼···································┼····································┼····································
+│ Unlink Consolidated Duplicate     │ Unlink Consolidated Duplicate     │ SUCCESS │ No    │                                   │                                    │ Validated Unlink Consolidated      
+│ From Source                       │ From Source                       │         │       │                                   │                                    │ Duplicate From Source              
+├···································┼···································┼·········┼·······┼···································┼····································┼····································
+│ Create Meeting                    │ Create Meeting                    │ SUCCESS │ No    │ Curation Regression Kickoff       │ Coco                               │ Validated Create Meeting           
+│                                   │                                   │         │       │                                   │ Pharmaceuticals::Meeting::Curation │                                    
+│                                   │                                   │         │       │                                   │ -Regression-Kickoff                │                                    
+├···································┼···································┼·········┼·······┼···································┼····································┼····································
+│ Create ToDo                       │ Create ToDo                       │ SUCCESS │ No    │ Follow up on Curation regression  │ Coco                               │ Validated Create ToDo              
+│                                   │                                   │         │       │ results                           │ Pharmaceuticals::ToDo::Follow-up-o │                                    
+│                                   │                                   │         │       │                                   │ n-Curation-regression-results      │                                    
+├···································┼···································┼·········┼·······┼···································┼····································┼····································
+│ Create Review                     │ Create Review                     │ SUCCESS │ No    │ Review Curation family output     │ Coco                               │ Validated Create Review            
+│                                   │                                   │         │       │                                   │ Pharmaceuticals::Review::Review-Cu │                                    
+│                                   │                                   │         │       │                                   │ ration-family-output               │                                    
+└───────────────────────────────────┴───────────────────────────────────┴─────────┴───────┴───────────────────────────────────┴────────────────────────────────────┴────────────────────────────────────
+
+
+
+v2: Processing complete for '/Users/dwolfson/localGit/egeria-python/tests/dr-egeria-command-tests/dr_test_curation.md'
+
+
+SCORE: 62 SUCCESS  0 FAILURE  0 WARNING
+
 
 ================================================================================
 VALIDATE MODE SUMMARY
 ================================================================================
 File                                         S     F     W
-dr_test_glossary.md                         16     0     0
+dr_test_glossary.md                         15     1     0
 dr_test_governance.md                       38     8     1
 dr_test_projects.md                         14     0     0
 dr_test_collections_good.md                 20     3     0
 dr_test_collections_mean.md                  1     9     0
-dr_test_products_good.md                    12     3     0
+dr_test_products_good.md                    11     4     0
 dr_test_external_ref.md                     10     8     0
 dr_test_feedback.md                          5    15     0
-dr_test_data_designer.md                    20     0     0
-dr_test_report.md                           22     1     0
+dr_test_data_designer.md                    19     0     1
+dr_test_report.md                           26     1     0
 dr_test_solution.md                         19     0     0
 dr_test_design_patterns.md                   7     0     0
-dr_test_new_commands.md                      3     0     0
+dr_test_new_commands.md                      3     2     0
 dr_test_action_author.md                     8     0     0
+dr_test_curation.md                         62     0     0
 
-TOTALS: 195 SUCCESS  47 FAILURE  1 WARNING
+TOTALS: 258 SUCCESS  51 FAILURE  2 WARNING

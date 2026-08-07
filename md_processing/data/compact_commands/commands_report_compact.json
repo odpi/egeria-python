@@ -1,7 +1,26 @@
 {
   "family": "Report",
-  "exported": "Jul 28, 2026 at 4:37:04 PM",
+  "exported": "Jul 31, 2026 at 4:09:47 PM",
   "attribute_definitions": {
+    "Analytic Parameters": {
+      "variable_name": "analytic_parameters",
+      "inUpdate": true,
+      "attr_labels": "",
+      "examples": "",
+      "default_value": "",
+      "valid_values": [],
+      "existing_element": "",
+      "description": "Name-Value pairs of analytic parameters",
+      "generated": false,
+      "style": "Dictionary",
+      "user_specified": true,
+      "unique": false,
+      "input_required": false,
+      "min_cardinality": 0,
+      "max_cardinality": 1,
+      "level": "Domain",
+      "Journal Entry": ""
+    },
     "AsOfTime": {
       "variable_name": "as_of_time",
       "inUpdate": true,
@@ -268,6 +287,25 @@
       "level": "Advanced",
       "Journal Entry": ""
     },
+    "MD Content": {
+      "variable_name": "md_content",
+      "inUpdate": true,
+      "attr_labels": "",
+      "examples": "",
+      "default_value": "",
+      "valid_values": [],
+      "existing_element": "",
+      "description": "Markdown text to display at this placement — section headers, explanations, captions. Rendered as-is (mermaid fences supported), no Egeria element involved.",
+      "generated": false,
+      "style": "Simple",
+      "user_specified": true,
+      "unique": false,
+      "input_required": true,
+      "min_cardinality": 1,
+      "max_cardinality": 1,
+      "level": "Basic",
+      "Journal Entry": ""
+    },
     "Metadata Element Subtype Names": {
       "variable_name": "metadata_element_subtype_names",
       "inUpdate": true,
@@ -421,6 +459,25 @@
       "level": "Basic",
       "Journal Entry": "Presentation hint for a Report Spec placed in a Container — 'kpi' (compact tile) or 'panel' (larger, detailed)."
     },
+    "Placement Name": {
+      "variable_name": "placement_name",
+      "inUpdate": true,
+      "attr_labels": "",
+      "examples": "",
+      "default_value": "",
+      "valid_values": [],
+      "existing_element": "",
+      "description": "Stable identifier for this text placement within its Dashboard Sheet — re-running with the same Dashboard Sheet Name + Placement Name updates it in place, same as Report placements are replaced by Report Name.",
+      "generated": false,
+      "style": "Simple",
+      "user_specified": true,
+      "unique": false,
+      "input_required": true,
+      "min_cardinality": 1,
+      "max_cardinality": 1,
+      "level": "Basic",
+      "Journal Entry": "Presentation hint for a Report Spec placed in a Container — 'kpi' (compact tile) or 'panel' (larger, detailed)."
+    },
     "Placement Span": {
       "variable_name": "span",
       "inUpdate": true,
@@ -443,6 +500,44 @@
       "max_cardinality": 1,
       "level": "Basic",
       "Journal Entry": "Layout width hint for a Report Spec placed in a Container — '1'\/'2' (relative columns) or 'full' (row width)."
+    },
+    "Report Name": {
+      "variable_name": "report_name",
+      "inUpdate": true,
+      "attr_labels": "",
+      "examples": "",
+      "default_value": "Referenceable",
+      "valid_values": [],
+      "existing_element": "",
+      "description": "The name of a report asset.",
+      "generated": false,
+      "style": "Reference Name",
+      "user_specified": true,
+      "unique": false,
+      "input_required": true,
+      "min_cardinality": 1,
+      "max_cardinality": 1,
+      "level": "Domain",
+      "Journal Entry": ""
+    },
+    "Report Parameters": {
+      "variable_name": "report_parameters",
+      "inUpdate": true,
+      "attr_labels": "",
+      "examples": "",
+      "default_value": "",
+      "valid_values": [],
+      "existing_element": "",
+      "description": "Name-Value pairs of extra parameters for the target Report Spec's action that aren't part of the standard find\/search attribute set (e.g. collection_guid for the \"Collection Members\" report). Keys must match exactly what the target report spec's action expects.",
+      "generated": false,
+      "style": "Dictionary",
+      "user_specified": true,
+      "unique": false,
+      "input_required": false,
+      "min_cardinality": 1,
+      "max_cardinality": 1,
+      "level": "Basic",
+      "Journal Entry": "Name-Value pairs of extra parameters for the target Report Spec's action that aren't part of the standard find\/search attribute set (e.g. collection_guid for the \"Collection Members\" report). Keys must match exactly what the target report spec's ActionParameter.required_params\/optional_params expect (snake_case, e.g. \"collection_guid\") -- format_set_executor.py does a direct params[key] lookup with no aliasing."
     },
     "Report Spec": {
       "variable_name": "report_spec",
@@ -682,13 +777,27 @@
         "Resource Use"
       ]
     },
+    "Dashboard Sheet Placement Base": {
+      "inherits": null,
+      "own_attributes": [
+        "Dashboard Sheet Name",
+        "Placement Emphasis",
+        "Placement Span"
+      ]
+    },
+    "Text Placement Base": {
+      "inherits": "Dashboard Sheet Placement Base",
+      "own_attributes": [
+        "MD Content",
+        "Placement Name"
+      ]
+    },
     "Dashboard Sheet Base": {
       "inherits": "Collection Base",
       "own_attributes": [
         "Dashboard Sheet Description",
         "Dashboard Sheet Family",
-        "Dashboard Sheet Heading",
-        "Dashboard Sheet Name"
+        "Dashboard Sheet Heading"
       ]
     },
     "Report to Dashboard Sheet Link Base": {
@@ -697,13 +806,42 @@
         "Dashboard Sheet Name",
         "Placement Emphasis",
         "Placement Span",
-        "Report Spec"
+        "Report Name"
+      ]
+    },
+    "Report Base": {
+      "inherits": "Asset",
+      "own_attributes": [
+        "Analytic Parameters",
+        "Anchor Scope ID",
+        "AsOfTime",
+        "Effective Time",
+        "Ends With",
+        "Governance Zone Filter",
+        "Graph Query Depth",
+        "Ignore Case",
+        "Include Only Classified Elements",
+        "Include Only Relationships",
+        "Limit Result by Status",
+        "Metadata Element Subtype Names",
+        "Metadata Element Type Name",
+        "Order Property Name",
+        "Output Format",
+        "Output Sort Order",
+        "Page Size",
+        "Report Parameters",
+        "Report Spec",
+        "Search String",
+        "Skip Classified Elements",
+        "Skip Relationships",
+        "Start From",
+        "Starts With"
       ]
     }
   },
   "commands": {
-    "Report": {
-      "display_name": "View Report",
+    "View Report": {
+      "display_name": "Report",
       "qn_prefix": "",
       "alternate_names": [],
       "family": "Report",
@@ -712,7 +850,7 @@
       "upsert": false,
       "attach": false,
       "level": "Basic",
-      "find_method": "Report.run_report",
+      "find_method": "",
       "find_constraints": "",
       "extra_find": "",
       "extra_constraints": "",
@@ -740,9 +878,29 @@
         "Order Property Name",
         "Page Size",
         "Start From",
-        "Anchor Scope ID"
+        "Anchor Scope ID",
+        "Report Parameters"
       ],
       "Journal Entry": "Runs a pyegeria report spec via hey_egeria run_report. Discovers and executes a named FormatSet against the Egeria repository. Not an element-creation command — no upsert, no qualified name prefix. Output format and report spec control what is returned and how it is rendered."
+    },
+    "Create Report": {
+      "display_name": "Report",
+      "qn_prefix": "DeployedReport",
+      "alternate_names": [],
+      "family": "Report",
+      "description": "Defines a report with optional default parameters set, that can be placed on a Dashboard.",
+      "verb": "Create",
+      "upsert": true,
+      "attach": false,
+      "level": "Basic",
+      "find_method": "MetadataExpert.find_metadata_elements_with_string",
+      "find_constraints": "",
+      "extra_find": "",
+      "extra_constraints": "",
+      "OM_TYPE": "Report",
+      "bundle": "Report Base",
+      "custom_attributes": [],
+      "Journal Entry": ""
     },
     "Create Dashboard Sheet": {
       "display_name": "Dashboard Sheet",
@@ -782,6 +940,25 @@
       "extra_constraints": "",
       "OM_TYPE": "",
       "bundle": "Report to Dashboard Sheet Link Base",
+      "custom_attributes": [],
+      "Journal Entry": "Places a Report Spec (FormatSet) into a Dashboard Sheet as an ordered Placement, with layout hints (span\/emphasis). A local pyegeria Container\/Placement record, not an Egeria relationship — no upsert. The target Dashboard Sheet must already exist (created via Create Dashboard Sheet)."
+    },
+    "Add Text on Dashboard Sheet": {
+      "display_name": "",
+      "qn_prefix": "",
+      "alternate_names": [],
+      "family": "Report",
+      "description": "Places literal markdown text (a section header, explanation, or caption) into a Dashboard Sheet as an ordered Placement, alongside Report placements. A local pyegeria Placement record, not an Egeria element or relationship — no upsert. The target Dashboard Sheet must already exist (Create Dashboard Sheet).",
+      "verb": "Place",
+      "upsert": false,
+      "attach": false,
+      "level": "Basic",
+      "find_method": "",
+      "find_constraints": "",
+      "extra_find": "",
+      "extra_constraints": "",
+      "OM_TYPE": "",
+      "bundle": "Text Placement Base",
       "custom_attributes": [],
       "Journal Entry": "Places a Report Spec (FormatSet) into a Dashboard Sheet as an ordered Placement, with layout hints (span\/emphasis). A local pyegeria Container\/Placement record, not an Egeria relationship — no upsert. The target Dashboard Sheet must already exist (created via Create Dashboard Sheet)."
     }

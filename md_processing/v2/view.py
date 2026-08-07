@@ -88,8 +88,46 @@ class ViewProcessor(AsyncBaseCommandProcessor):
         for canonical_name, attr_data in attributes.items():
             if canonical_name in ["Report Spec", "Output Format"]:
                 continue
-                
-            # If we have a variable_name in the spec, use it. 
+
+            # "Report Parameters" is a Dictionary attribute carrying arbitrary
+            # report-spec-specific params (e.g. collection_guid for the
+            # "Collection Members" report) that aren't part of the standard
+            # find/search attribute set -- merge its entries directly into
+            # params rather than nesting the whole dict under one key, so
+            # e.g. {"collection_guid": "..."} becomes params["collection_guid"],
+            # matching exactly what the target report spec's
+            # ActionParameter.required_params/optional_params expect.
+            if canonical_name == "Report Parameters":
+                value = attr_data.get("value")
+                if isinstance(value, dict):
+                    params.update(value)
+                continue
+
+            # "Analytic Parameters" -- the View-side equivalent of Create
+            # Report's Analytic Parameters (see report.py's
+            # _report_additional_properties/_coerce_analytic_value docstrings
+            # for the full story): arbitrary keyword arguments for a report
+            # spec's analytic_function (extra_find), merged flat into params
+            # exactly like Report Parameters above so
+            # format_set_executor._run_analytic_function's `params.update(...)`
+            # forwards them straight through as **kwargs. Previously entirely
+            # unhandled here -- fell through to the generic branch below and
+            # got treated as one param literally named "analytic_parameters"
+            # holding the whole dict, which no analytic function accepts.
+            # Values are coerced back to their real JSON type (list/dict/
+            # number/bool) rather than left as parse_key_value()'s raw
+            # strings, for the same reason report.py's Create Report path
+            # needs it: an analytic function called with e.g.
+            # type_map="[[...]]" or points="3" (strings) breaks outright
+            # (PYEGERIA_ISSUES.md ISSUE-20).
+            if canonical_name == "Analytic Parameters":
+                value = attr_data.get("value")
+                if isinstance(value, dict):
+                    from md_processing.v2.report import _coerce_analytic_value
+                    params.update({str(k): _coerce_analytic_value(v) for k, v in value.items() if v is not None})
+                continue
+
+            # If we have a variable_name in the spec, use it.
             # Otherwise fallback to a snake_case version of the canonical name.
             var_name = name_to_var.get(canonical_name, canonical_name.lower().replace(" ", "_"))
             params[var_name] = attr_data.get("value")

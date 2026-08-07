@@ -103,7 +103,38 @@ If you specify a full phrase like `"Attach Solution Component"`, the system will
 
 ## Adding New Commands
 
-To add or refactor commands into the compact format:
+### Recommended: the Dr.Egeria Spec Editor
+
+The easiest way to add or edit attributes, bundles, and commands within an
+**existing** family — or to scaffold a **brand-new** family from a template —
+is the local Spec Editor rather than hand-editing JSON:
+
+```bash
+uv sync --extra spec-editor   # one-time
+dr_egeria_spec_editor         # opens http://localhost:8420
+```
+
+It writes straight to the files in this directory, so review your changes
+with `git diff` before committing — the same review habit as reviewing a
+Tinderbox export. Every attribute/bundle/command reference in the UI is a
+picker over real names (never free text), so it isn't possible to create a
+dangling reference from the editor, and a "Validate family" button runs the
+same checks described under [Validation](#validation) below without leaving
+the browser.
+
+`dr_egeria_spec_editor --dir <path>` targets a different compact_commands
+directory; `--port <n>` picks a different port.
+
+This tool doesn't create new *Tinderbox-side* structure — if your team
+still maintains families in Tinderbox in parallel (see `CLAUDE.md`), that
+remains the tool of record for those families; use the Spec Editor for
+families that have moved off Tinderbox, or for quick fixes you'll
+reconcile back into Tinderbox afterward.
+
+### Manual / low-level format
+
+To hand-edit the compact format directly (useful for understanding the
+underlying mechanics, or scripting bulk changes):
 
 1.  Create a new JSON file in this directory (e.g., `commands_my_service_compact.json`).
 2.  Add any new `attribute_definitions` required for your service.
@@ -131,3 +162,15 @@ or using `uv`:
 uv run python md_processing/md_processing_utils/validate_compact_json.py
 ```
 It is recommended to run this script whenever new attributes, bundles, or commands are added or modified.
+
+A second, complementary validator (`validate_compact_specs`, installed as a
+console script) checks command-level correctness — `OM_TYPE`/`find_method`
+validity, `find_constraints` shape, duplicate command names across files.
+Run both for full coverage:
+
+```bash
+validate_compact_specs
+```
+
+If you're using the Spec Editor (see [Adding New Commands](#adding-new-commands)
+above), its "Validate family" button runs both validators for you.

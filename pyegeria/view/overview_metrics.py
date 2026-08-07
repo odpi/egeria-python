@@ -24,6 +24,7 @@ concerns. `overview_handler.py` is the reference caller; see its git history
 for the original inline versions this was extracted from.
 """
 
+import inspect
 from typing import Any, Callable, Dict, List, Optional, Sequence, Tuple
 
 from loguru import logger
@@ -35,13 +36,21 @@ __all__ = [
     "count_relationships",
     "counts_by_type",
     "governed_coverage",
+    "ownership_coverage",
+    "business_value_signals",
     "certifications_summary",
     "semantic_grounding",
     "context_readiness_funnel",
+    "ai_ready_assets",
+    "asset_modality",
+    "drl_readiness_gates",
     "people_counts",
     "feedback_summary",
     "usage_context_counts",
     "growth_series",
+    "metric_trend",
+    "term_definition_completeness",
+    "active_contributors",
     "WINDOWS",
     "growth_label",
 ]
@@ -140,7 +149,15 @@ def _json_list(raw) -> list:
 def _find(mgr, body: dict, page_size: int = DEFAULT_CAP) -> list:
     """Run a FindRequestBody, always returning a (possibly empty) list. Never raises."""
     try:
-        raw = mgr.find_metadata_elements(body, start_from=0, page_size=page_size, graph_query_depth=0)
+        # find_metadata_elements sends body exactly as given (no injected
+        # defaults) -- graphQueryDepth/startFrom/pageSize all belong in the
+        # body itself now, not separate kwargs (ISSUE-34, PYEGERIA_ISSUES.md:
+        # startFrom/pageSize as URL query params -- the older convention --
+        # stopped working once Egeria moved pagination for this endpoint
+        # into the request body; find_metadata_elements no longer accepts
+        # them as parameters at all, to avoid this drifting stale again).
+        b = {**body, "graphQueryDepth": 0, "startFrom": 0, "pageSize": page_size}
+        raw = mgr.find_metadata_elements(b)
         return [el for el in (raw if isinstance(raw, list) else []) if isinstance(el, dict)]
     except Exception as exc:  # noqa: BLE001 -- best-effort, degrade don't fail
         logger.debug(f"overview_metrics _find failed for {body.get('metadataElementTypeName')!r}: {exc}")
@@ -317,6 +334,118 @@ def governed_coverage(mgr, as_of: Optional[str] = None) -> Dict[str, Any]:
     }
 
 
+def _owner_type_name(el: dict) -> Optional[str]:
+    for c in el.get("classifications") or []:
+        if isinstance(c, dict) and c.get("classificationName") == "Ownership":
+            pvm = (c.get("classificationProperties") or {}).get("propertyValueMap") or {}
+            owner_type = pvm.get("ownerTypeName")
+            if isinstance(owner_type, dict):
+                return owner_type.get("primitiveValue")
+    return None
+
+
+def ownership_coverage(mgr, as_of: Optional[str] = None) -> Dict[str, Any]:
+    """
+    Ownership-classification-based coverage tally: how many elements carry an
+    `Ownership` classification (a named owner responsible for management/
+    governance decisions), broken down by the owner's type (Person, Team,
+    SolutionActorRole, ...). Same shape as `governed_coverage` -- a distinct
+    Data Mesh / data-contract-adjacent signal ("clean, owned, product-based
+    data" is repeatedly named as the foundation for trustworthy AI
+    consumption), not a duplicate of governance-classification coverage.
+
+    Returns {"ownershipCount": int, "ownershipCapped": bool,
+    "byOwnerType": {typeName: count}}.
+    """
+    body = {
+        "class": "FindRequestBody",
+        "matchClassifications": {
+            "class": "SearchClassifications", "matchCriteria": "ANY",
+            "conditions": [{"name": "Ownership"}],
+        },
+        "limitResultsByStatus": ["ACTIVE"],
+    }
+    if as_of:
+        body["asOfTime"] = as_of
+    hits = _find(mgr, body)
+
+    by_owner_type: Dict[str, int] = {}
+    for el in hits:
+        owner_type = _owner_type_name(el) or "Unspecified"
+        by_owner_type[owner_type] = by_owner_type.get(owner_type, 0) + 1
+
+    return {
+        "ownershipCount": len(hits),
+        "ownershipCapped": len(hits) >= DEFAULT_CAP,
+        "byOwnerType": by_owner_type,
+    }
+
+
+def business_value_signals(mgr, as_of: Optional[str] = None) -> Dict[str, Any]:
+    """
+    Real signals behind the Overview dashboard's four "Business Value" tiles
+    (NEXT-9) -- replaces the four previously-synthetic narrative numbers
+    (Risk & Compliance, Productivity, Trust & Adoption, Cost Avoidance) with
+    honest, precisely-scoped proxies. Deliberately proxies, not direct
+    measures -- see each field's use-site in overview_handler.py / this
+    function's own module docs for the causal-claim caveat that goes with
+    it (e.g. "more described assets" is a proxy for self-service findability,
+    not a measure of actual query/access frequency).
+
+    A single Asset-hierarchy fetch answers two of the four fields
+    (confidentiality exposure and description coverage -- both are
+    per-element checks on the same fetched set, same "check several signals
+    from one fetch" shape `context_readiness_funnel` already uses).
+
+    IMPORTANT scoping distinction from `governed_coverage`'s own
+    `byClassification["Confidentiality"]`: that number is NOT Asset-scoped
+    (any element type carrying the classification counts, per its own
+    documented caveat), whereas `confidentialCount` here IS Asset-scoped by
+    construction (checked only on elements this function's own Asset-
+    hierarchy fetch returned). Confirmed live 2026-08-02 on a real dataset:
+    5 total Confidentiality-classified elements exist, only 1 of which is
+    Asset-typed (a CSVFile; the other 4 are typed `Referenceable`, not under
+    `Asset`) -- the two numbers are both correct, just different
+    populations, not a discrepancy to "fix."
+
+    Duplicate detection is a separate classification count. Data Products
+    (Trust & Adoption) is deliberately NOT duplicated here -- callers already
+    have a live `dataProducts` count from `count_elements(mgr, "DigitalProduct", as_of)`
+    elsewhere in the same request; no rating/adoption signal is wired (no
+    `AttachedRating` relationships exist against `DigitalProduct` in a typical
+    demo dataset, confirmed live -- so a rating average is honestly omitted
+    rather than faked).
+
+    Returns {"assetTotal": int, "assetCapped": bool, "confidentialCount": int,
+    "describedCount": int, "duplicateCount": int}.
+    """
+    body = {"class": "FindRequestBody", "limitResultsByStatus": ["ACTIVE"],
+            "metadataElementTypeName": "Asset"}
+    if as_of:
+        body["asOfTime"] = as_of
+    assets = _find(mgr, body)
+
+    confidential = 0
+    described = 0
+    for a in assets:
+        if "Confidentiality" in _classifications_of(a):
+            confidential += 1
+        pvm = (a.get("elementProperties") or {}).get("propertyValueMap") or {}
+        desc = (pvm.get("description") or {}).get("primitiveValue")
+        if isinstance(desc, str) and desc.strip():
+            described += 1
+
+    duplicate = count_elements(mgr, None, as_of, classifications=["ConsolidatedDuplicate"])
+
+    return {
+        "assetTotal": len(assets),
+        "assetCapped": len(assets) >= DEFAULT_CAP,
+        "confidentialCount": confidential,
+        "describedCount": described,
+        "duplicateCount": duplicate,
+    }
+
+
 def _rel_end_date(rel: dict):
     """Best-effort expiry date for a relationship: domain property, then effectivity."""
     from datetime import datetime
@@ -396,26 +525,295 @@ def semantic_grounding(mgr, ce, as_of: Optional[str] = None) -> Dict[str, Any]:
     return {"groundingLinks": links, "groundingPct": pct}
 
 
-def context_readiness_funnel(mgr, as_of: Optional[str] = None) -> Dict[str, Optional[int]]:
+def context_readiness_funnel(mgr, ce, as_of: Optional[str] = None) -> Dict[str, Optional[int]]:
     """
     Context-readiness funnel stages: how much cataloged data becomes
-    trustworthy AI context. `documented`/`lineage`/`aiReady` remain None --
-    each needs a traversal query not yet available as a simple count (see
-    egeria-workspaces OVERVIEW_NEXT_STEPS.md R-2 for the design work needed
-    before these can be honestly computed).
+    trustworthy AI context.
 
-    Returns {"cataloged": int, "documented": None, "classified": int,
-    "lineage": None, "aiReady": None}.
+    `documented` -- count of `Asset` elements carrying a non-empty
+    `description`, same field-value-check approach `term_definition_completeness`
+    uses for GlossaryTerm (fetches element bodies via `_find`, capped at
+    DEFAULT_CAP -- no native count exists for "has a description", same
+    tradeoff `governed_coverage`'s by-classification breakdown already accepts).
+
+    `lineage` -- count of `DataFlow` relationships (design/business lineage --
+    literal data-movement edges between assets/processes; distinct from
+    OpenLineage's *operational*, run-level lineage, which is a separate
+    signal not computed here). Verified live: `DataFlow`'s end1/end2 connect
+    real infrastructure types (e.g. SoftwareServer -> Topic), unlike the
+    `LineageRelationship` supertype (which also sweeps in unrelated things
+    like `ActionRequester`, a governance-action assignment, not data lineage
+    -- confirmed by inspecting live relationship type names before picking
+    `DataFlow`). Same "relationship count as a coverage proxy" convention
+    `semantic_grounding` already uses for `groundingLinks` -- not a
+    deduplicated distinct-asset count, a rough signal.
+
+    `aiReady` remains None -- a true reading needs assets meeting ALL of
+    documented+classified+lineage simultaneously (a real cross-criteria
+    intersection, not another independent count), which none of the above
+    three cheaply gives on their own. This is the same "composite/derived
+    analytic metric" gap egeria-workspaces BACKLOG.md NEXT-18 already
+    flagged (no analytic function here composes/derives across multiple
+    underlying queries yet) -- fold `aiReady` into that work rather than
+    faking an approximate number here.
+
+    Returns {"cataloged": int, "documented": int|None, "classified": int,
+    "lineage": int|None, "aiReady": None}.
     """
     cataloged = count_elements(mgr, "Asset", as_of)
     classified = count_elements(mgr, None, as_of, classifications=GOVERNANCE_CLASSIFICATIONS)
+
+    documented = None
+    try:
+        body: Dict[str, Any] = {"class": "FindRequestBody", "limitResultsByStatus": ["ACTIVE"],
+                                 "metadataElementTypeName": "Asset"}
+        if as_of:
+            body["asOfTime"] = as_of
+        assets = _find(mgr, body)
+        documented = 0
+        for a in assets:
+            pvm = (a.get("elementProperties") or {}).get("propertyValueMap") or {}
+            desc = (pvm.get("description") or {}).get("primitiveValue")
+            if isinstance(desc, str) and desc.strip():
+                documented += 1
+    except Exception as exc:  # noqa: BLE001
+        logger.debug(f"context_readiness_funnel: documented query failed: {exc}")
+
+    lineage = count_relationships(ce, "DataFlow", as_of)
+
     return {
         "cataloged": cataloged or None,
-        "documented": None,
+        "documented": documented,
         "classified": classified or None,
-        "lineage": None,
+        "lineage": lineage,
         "aiReady": None,
     }
+
+
+def ai_ready_assets(mgr, ce, as_of: Optional[str] = None) -> Dict[str, Any]:
+    """
+    The actual "AI-Ready" claim `context_readiness_funnel`'s own UI already
+    makes ("48% -- governed + documented + lineage"): a true composite --
+    Asset elements that are simultaneously governed (>=1 of
+    GOVERNANCE_CLASSIFICATIONS), documented (non-empty description), AND
+    lineage-traced (participates in >=1 DataFlow relationship) -- not three
+    independent counts intersected after the fact from separate endpoints,
+    which is what `context_readiness_funnel` alone can give you. First real
+    implementation of the "composite/derived analytic metric" pattern
+    egeria-workspaces BACKLOG.md NEXT-18 flagged as missing (no analytic
+    function here composed across multiple underlying queries before this).
+
+    Implementation note -- one fetch, not three: a single capped `_find` on
+    `metadataElementTypeName: "Asset"` already returns each element's own
+    `classifications` list (confirmed live -- the same shape
+    `governed_coverage`'s `_classifications_of()` already reads) alongside
+    `elementProperties` (for the description check), so "governed" and
+    "documented" are checked per-element from that one fetch; only "lineage"
+    needs a second query (the DataFlow relationships, to build the set of
+    GUIDs that participate in at least one). Field-name gotcha, verified
+    live: a `find_metadata_elements` result's own GUID is `elementGUID`, but
+    a relationship's `end1`/`end2` (`ElementStub`) GUID is plain `guid` --
+    genuinely two different key names for the same concept depending on
+    which API path returned the data; using the wrong one silently produces
+    an empty intersection instead of an error, so this was checked against
+    live responses before writing the intersection logic, not assumed.
+
+    Same DEFAULT_CAP tradeoff every field-value-check function in this
+    module already accepts (`term_definition_completeness`,
+    `context_readiness_funnel`'s own `documented` stage) -- a floor, not
+    exact, on a catalog larger than DEFAULT_CAP.
+
+    Returns {"aiReadyCount": int, "total": int, "capped": bool} -- "total" is
+    the (possibly capped) Asset population actually checked, so a caller can
+    compute a percentage without a separate cataloged-count call.
+    """
+    body: Dict[str, Any] = {"class": "FindRequestBody", "limitResultsByStatus": ["ACTIVE"],
+                             "metadataElementTypeName": "Asset"}
+    if as_of:
+        body["asOfTime"] = as_of
+    assets = _find(mgr, body)
+
+    lineage_guids: set = set()
+    try:
+        rel_body = {"class": "ResultsRequestBody", "asOfTime": as_of} if as_of else None
+        rels = _json_list(ce.get_relationships(
+            relationship_type="DataFlow", output_format="JSON",
+            start_from=0, page_size=5000, body=rel_body))
+        for r in rels:
+            for end_key in ("end1", "end2"):
+                end = (r.get(end_key) or {}) if isinstance(r, dict) else {}
+                g = end.get("guid")
+                if g:
+                    lineage_guids.add(g)
+    except Exception as exc:  # noqa: BLE001
+        logger.debug(f"ai_ready_assets: lineage relationship query failed: {exc}")
+
+    ai_ready = 0
+    for a in assets:
+        guid = a.get("elementGUID")
+        pvm = (a.get("elementProperties") or {}).get("propertyValueMap") or {}
+        desc = (pvm.get("description") or {}).get("primitiveValue")
+        documented = isinstance(desc, str) and bool(desc.strip())
+        governed = bool(_classifications_of(a) & set(GOVERNANCE_CLASSIFICATIONS))
+        lineage_traced = guid in lineage_guids
+        if documented and governed and lineage_traced:
+            ai_ready += 1
+
+    return {"aiReadyCount": ai_ready, "total": len(assets), "capped": len(assets) >= DEFAULT_CAP}
+
+
+# ── Modality tagging (§1.9) ──────────────────────────────────────────────────
+# Derived automatically from an asset's existing Open Metadata type -- no new
+# classification. See egeria-workspaces OVERVIEW_CONTEXT_INTELLIGENCE.md §1.9.
+
+_TABULAR_TYPES = frozenset({
+    "DataField", "TabularColumn", "TabularFileColumn", "RelationalColumn",
+    "RelationalTable", "TabularFile", "RelationalDatabase", "TabularSchemaType",
+})
+_TEXT_MEDIA_TYPES = frozenset({
+    "Document", "DataFile", "MediaFile", "AudioFile", "VideoFile", "ImageFile",
+    "PDFFile", "DocumentStore",
+})
+
+
+def _element_type_names(el: dict) -> set:
+    """typeName + superTypeNames from an element's `type` block, so a subtype
+    not itself listed in _TABULAR_TYPES/_TEXT_MEDIA_TYPES still resolves via
+    its supertype chain rather than falling through to "other"."""
+    t = el.get("type") or (el.get("elementHeader") or {}).get("type") or {}
+    names = set()
+    if t.get("typeName"):
+        names.add(t["typeName"])
+    names.update(t.get("superTypeNames") or [])
+    return names
+
+
+def asset_modality(el: dict) -> str:
+    """
+    Classify an asset element as "tabular", "text_media", or "other" from its
+    existing Open Metadata type -- the §1.9 resolution: no new classification,
+    derive from structure already there. Checked against the full type
+    hierarchy (typeName + superTypeNames), not just the leaf type.
+
+    Returns "tabular" | "text_media" | "other" -- never raises. "other" is
+    the honest fallback for asset types this pass doesn't classify (e.g.
+    APIs, processes), not a guess.
+    """
+    names = _element_type_names(el)
+    if names & _TABULAR_TYPES:
+        return "tabular"
+    if names & _TEXT_MEDIA_TYPES:
+        return "text_media"
+    return "other"
+
+
+# ── DRL bands (§1.9) ──────────────────────────────────────────────────────
+# Data Readiness Level: Raw -> Analytics-Ready -> RAG-Ready -> AI-Ready, as
+# cumulative gate checklists (gates-not-weights, §1.7/§1.8), not a blended
+# score. See egeria-workspaces OVERVIEW_CONTEXT_INTELLIGENCE.md §1.9.
+#
+# Only the gate this module can honestly compute today beyond what
+# `ai_ready_assets` already covers is recency. Two gates the design doc's
+# ladder calls for -- Survey Annotation presence (Tier 2, no verified
+# relationship type yet) and the modality-aware Structural Readiness
+# sub-check -- are still open decisions (design doc "Open decisions"
+# section), so this function does NOT claim to certify the full
+# Analytics-Ready/RAG-Ready rungs. Rather than approximate them from
+# whatever gates ARE available and risk mislabeling the result, it narrows
+# the already-shipped `ai_ready_assets` intersection by recency and reports
+# that -- same "leave it out, don't fake it" convention
+# `context_readiness_funnel`'s own `aiReady=None` already established.
+
+
+def drl_readiness_gates(mgr, ce, as_of: Optional[str] = None, recency_days: int = 180) -> Dict[str, Any]:
+    """
+    A recency-narrowed view of `ai_ready_assets`, plus a modality breakdown
+    of the underlying Asset population -- the two DRL-ladder pieces (§1.9)
+    that are honestly computable today without Survey Annotation coverage or
+    a Structural Readiness sub-check (both still open decisions).
+
+    NOT a full DRL band distribution: `analyticsReadyCount`/`ragReadyCount`
+    are deliberately absent, not approximated, until those two gates exist.
+
+    Parameters
+    ----------
+    mgr : MetadataExpert (or compatible client)
+    ce : ClassificationExplorer (or compatible client)
+    as_of : ISO-8601 asOfTime for a point-in-time read (None = now)
+    recency_days : provisional recency window for "recent" -- not yet a
+        decided band threshold, see design doc "Open decisions"
+
+    Returns {"total": int, "capped": bool, "aiReadyCount": int,
+    "aiReadyRecentCount": int, "byModality": {"tabular", "text_media", "other"}}.
+    """
+    from datetime import datetime, timedelta, timezone
+
+    body: Dict[str, Any] = {"class": "FindRequestBody", "limitResultsByStatus": ["ACTIVE"],
+                             "metadataElementTypeName": "Asset"}
+    if as_of:
+        body["asOfTime"] = as_of
+    assets = _find(mgr, body)
+
+    lineage_guids: set = set()
+    try:
+        rel_body = {"class": "ResultsRequestBody", "asOfTime": as_of} if as_of else None
+        rels = _json_list(ce.get_relationships(
+            relationship_type="DataFlow", output_format="JSON",
+            start_from=0, page_size=5000, body=rel_body))
+        for r in rels:
+            for end_key in ("end1", "end2"):
+                g = ((r.get(end_key) or {}) if isinstance(r, dict) else {}).get("guid")
+                if g:
+                    lineage_guids.add(g)
+    except Exception as exc:  # noqa: BLE001
+        logger.debug(f"drl_readiness_gates: DataFlow relationship query failed: {exc}")
+
+    now = datetime.fromisoformat(as_of.replace("Z", "+00:00")) if as_of else datetime.now(timezone.utc)
+    if now.tzinfo is None:
+        now = now.replace(tzinfo=timezone.utc)
+    horizon = timedelta(days=recency_days)
+
+    ai_ready = 0
+    ai_ready_recent = 0
+    by_modality = {"tabular": 0, "text_media": 0, "other": 0}
+    for a in assets:
+        by_modality[asset_modality(a)] += 1
+
+        guid = a.get("elementGUID")
+        pvm = (a.get("elementProperties") or {}).get("propertyValueMap") or {}
+        desc = (pvm.get("description") or {}).get("primitiveValue")
+        documented = isinstance(desc, str) and bool(desc.strip())
+        governed = bool(_classifications_of(a) & set(GOVERNANCE_CLASSIFICATIONS))
+        lineage_traced = guid in lineage_guids
+        if not (documented and governed and lineage_traced):
+            continue
+        ai_ready += 1
+
+        updated = _update_time(a)
+        if updated is not None and (now - updated) <= horizon:
+            ai_ready_recent += 1
+
+    return {
+        "total": len(assets),
+        "capped": len(assets) >= DEFAULT_CAP,
+        "aiReadyCount": ai_ready,
+        "aiReadyRecentCount": ai_ready_recent,
+        "byModality": by_modality,
+    }
+
+
+def _update_time(el: dict):
+    """Best-effort last-update timestamp from an element's version metadata."""
+    from datetime import datetime
+    header = el.get("elementHeader") or {}
+    versions = header.get("versions") or el.get("versions") or {}
+    v = versions.get("updateTime") or versions.get("createTime")
+    if not v:
+        return None
+    try:
+        return datetime.fromisoformat(str(v).replace("Z", "+00:00"))
+    except Exception:  # noqa: BLE001
+        return None
 
 
 def people_counts(mgr, as_of: Optional[str] = None) -> Dict[str, int]:
@@ -530,3 +928,183 @@ def growth_series(
                 point.setdefault(key, None)
         series.append(point)
     return series
+
+
+# Parameter names this module's own functions use for their leading client
+# argument(s) -- a small local copy of format_set_executor._bind_client_args'
+# binding logic (mgr/ce only; nothing here uses "expert"/"client") rather than
+# importing that module, to keep this module's stated design boundary intact
+# (independently callable/testable, no report-spec-registry dependency).
+_CLIENT_PARAM_NAMES = ("mgr", "ce")
+
+
+def metric_trend(
+    mgr,
+    ce,
+    metric_path: str,
+    window: str = "6mo",
+    points: Optional[int] = None,
+    metric_params: Optional[Dict[str, Any]] = None,
+) -> List[Dict[str, Any]]:
+    """
+    Turn any single-snapshot function in this module into a time series, by
+    re-calling it once per `asOfTime` snapshot -- the same windowing
+    `growth_series` uses (BACKLOG NEXT-17), generalized to any function here
+    instead of one hardcoded type_map. This is what gives every existing
+    (and future) fixed-metric function trend support for free, without
+    adding `window`/`points` params to each one individually.
+
+    `metric_path` is a dotted import path exactly like `analytic_function`/
+    `extra_find` declarations use (e.g. "pyegeria.view.overview_metrics.
+    governed_coverage") -- resolved via `importlib`, not the analytic
+    registry, to keep this module free of the report-spec-registry layer
+    (see module docstring's design boundary; the registry itself already
+    carries these same dotted paths in `AnalyticFunctionSpec.function`).
+
+    Pass both `mgr` and `ce` regardless of what the target function actually
+    needs -- only the client parameter names it declares (by leading
+    positional parameter named "mgr"/"ce") are bound; the other is unused.
+
+    `metric_params` are extra keyword arguments forwarded to the target
+    function at every snapshot (e.g. `classifications` for `count_elements`);
+    `as_of` is supplied by this function and must not be included there.
+
+    Returns a list of dicts, oldest first: {"label", "date", **snapshot} --
+    the target function's result is merged directly into the point if it's a
+    dict (matching growth_series's flat-per-point shape), else stored under
+    "value". A snapshot that raises logs at debug and stores None instead of
+    aborting the whole series.
+    """
+    import importlib
+    from datetime import datetime, timezone
+
+    module_path, func_name = metric_path.rsplit(".", 1)
+    module = importlib.import_module(module_path)
+    func = getattr(module, func_name, None)
+    if func is None or not callable(func):
+        raise AttributeError(f"'{func_name}' not found in module '{module_path}'")
+
+    clients = {"mgr": mgr, "ce": ce}
+    bound_args = []
+    for pname, param in inspect.signature(func).parameters.items():
+        if pname in _CLIENT_PARAM_NAMES and param.kind in (
+            inspect.Parameter.POSITIONAL_ONLY, inspect.Parameter.POSITIONAL_OR_KEYWORD,
+        ):
+            bound_args.append(clients[pname])
+        else:
+            break
+
+    span_s, default_pts = WINDOWS.get(window, WINDOWS["6mo"])
+    n = points or default_pts
+    now = datetime.now(timezone.utc)
+    step = span_s / (n - 1)
+    date_fmt = "%d %b %Y %H:%M" if span_s <= 2 * 86400 else "%d %b %Y"
+
+    series = []
+    for i in range(n - 1, -1, -1):
+        if i == 0:
+            d, as_of = now, None
+        else:
+            d = datetime.fromtimestamp(now.timestamp() - i * step, tz=timezone.utc)
+            as_of = d.isoformat()
+        point = {"label": growth_label(d, span_s), "date": d.strftime(date_fmt)}
+        try:
+            result = func(*bound_args, as_of=as_of, **(metric_params or {}))
+            if isinstance(result, dict):
+                point.update(result)
+            else:
+                point["value"] = result
+        except Exception as exc:  # noqa: BLE001
+            logger.debug(f"overview_metrics metric_trend: snapshot {i} of {metric_path} failed: {exc}")
+            point["value"] = None
+        series.append(point)
+    return series
+
+
+def term_definition_completeness(mgr, as_of: Optional[str] = None) -> Dict[str, Any]:
+    """
+    Share of GlossaryTerms carrying a non-empty `description` -- a
+    definitions-coverage metric (BACKLOG NEXT-17), distinct from
+    `semantic_grounding` (which measures term<->asset linkage, not whether
+    the term itself is actually defined).
+
+    Unlike `count_elements`'s classification-only filter, "has a
+    description" is a field-value check, so this fetches term bodies (via
+    `_find`, same `FindRequestBody`/`metadataElementTypeName` shape
+    `count_elements` uses) rather than using a native count -- no fast
+    native-count path exists for this, same tradeoff `governed_coverage`
+    accepts for its by-classification breakdown. `description` is read the
+    same way `_zone_names` reads `zoneMembership`: verified live against a
+    running server that `find_metadata_elements` returns raw
+    `elementProperties.propertyValueMap.description.primitiveValue`, not a
+    flat `properties.description` (that flatter shape belongs to the
+    output_format='JSON' relationship/report path other functions here use,
+    e.g. `certifications_summary`'s `end2`, not this raw element-query path).
+
+    Returns {"total": int, "defined": int, "undefinedPct": int|None}
+    (`undefinedPct` mirrors `semantic_grounding.groundingPct`'s naming: the
+    gap, not the coverage, since a near-100%-defined glossary is the
+    uninteresting case and the gap is what's actionable).
+    """
+    body: Dict[str, Any] = {"class": "FindRequestBody", "limitResultsByStatus": ["ACTIVE"],
+                             "metadataElementTypeName": "GlossaryTerm"}
+    if as_of:
+        body["asOfTime"] = as_of
+    terms = _find(mgr, body)
+    total = len(terms)
+    defined = 0
+    for t in terms:
+        pvm = (t.get("elementProperties") or {}).get("propertyValueMap") or {}
+        desc = (pvm.get("description") or {}).get("primitiveValue")
+        if isinstance(desc, str) and desc.strip():
+            defined += 1
+    undefined_pct = round(100 * (total - defined) / total) if total else None
+    return {"total": total, "defined": defined, "undefinedPct": undefined_pct}
+
+
+def active_contributors(ce, as_of: Optional[str] = None) -> Dict[str, Any]:
+    """
+    Distinct usernames behind at least one feedback relationship (ratings/
+    comments/likes/tags/noteLogs -- the same Collaboration OMAS types
+    `feedback_summary` counts) -- a real engagement signal
+    `feedback_summary`'s raw relationship counts don't give you: ten
+    comments from one person and ten comments from ten people both show up
+    as "10" there, but very differently here (BACKLOG NEXT-17).
+
+    Neither relationship end is a Person -- `AttachedComment`/`AttachedRating`/
+    etc. link a Referenceable to the Comment/Rating/... element itself, and
+    `CommentProperties` (etc.) carry no author field. The actor is instead
+    the relationship's own audit metadata: `relationshipHeader.versions.
+    createdBy` (verified live against a running server -- who *attached* the
+    feedback, distinct from `end1`/`end2`, which are the commented-on
+    element and the comment/rating/... element). `count_relationships`'
+    native count can't give this since it only returns a number, not the
+    relationship bodies.
+
+    Returns {"contributors": int, "byType": {ratings, comments, likes, tags,
+    noteLogs}} where byType is the distinct-username count per relationship
+    type (one person active in two types counts once in "contributors" but
+    once per type in byType).
+    """
+    body = {"class": "ResultsRequestBody", "asOfTime": as_of} if as_of else None
+
+    def _actor_usernames(rel_type: str) -> set:
+        rels = _json_list(ce.get_relationships(
+            relationship_type=rel_type, output_format="JSON",
+            start_from=0, page_size=DEFAULT_CAP, body=body))
+        return {
+            u for rel in rels
+            if (u := (rel.get("relationshipHeader") or {}).get("versions", {}).get("createdBy"))
+        }
+
+    by_type: Dict[str, int] = {}
+    all_users: set = set()
+    for rel_type, key in _FEEDBACK_RELATIONSHIP_TYPES:
+        try:
+            users = _actor_usernames(rel_type)
+        except Exception as exc:  # noqa: BLE001
+            logger.debug(f"overview_metrics active_contributors: {rel_type} failed: {exc}")
+            users = set()
+        by_type[key] = len(users)
+        all_users |= users
+    return {"contributors": len(all_users), "byType": by_type}
