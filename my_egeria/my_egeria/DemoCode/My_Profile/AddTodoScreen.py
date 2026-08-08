@@ -14,7 +14,7 @@ from textual.screen import ModalScreen
 from textual.widgets import DataTable, OptionList, Header, Static, Footer, Input, Button
 from textual.widgets._option_list import Option
 
-from pyegeria import Egeria, PyegeriaException
+from pyegeria import Egeria, PyegeriaException, load_app_config, settings
 
 
 class AddTodoScreen(ModalScreen):
@@ -30,6 +30,17 @@ class AddTodoScreen(ModalScreen):
     def __init__(self, selected_table, *args, **kwargs):
         super().__init__(id="main_screen", *args, **kwargs)
         self.selected_table = selected_table
+        load_app_config()
+        app_config = settings.Environment
+        app_user = settings.User_Profile
+        self.user_name = app_user.user_name or "garygeeke"
+        self.user_password = app_user.user_pwd or "secret"
+        self.view_server = app_config.egeria_view_server or "qs-view-server"
+        self.platform_url = app_config.egeria_platform_url or "https://127.0.0.1:9443"
+        self.todo_name = ""
+        self.todo_description = ""
+        self.todo_priority = ""
+        self.todo_guid = ""
 
     def on_mount(self):
         main_screen = self.app.get_screen("main")
@@ -52,28 +63,33 @@ class AddTodoScreen(ModalScreen):
         yield Button("Add Todo", id="add_todo_button", variant="primary")
 
     def action_add_new_role(self):
-        client = Egeria(
+        tclient = Egeria(
             view_server=self.view_server,
             platform_url=self.platform_url,
             user_id=self.user_name,
-            user_pwd=self.user_password,
-        )
+            user_pwd=self.user_password
+            )
 
         try:
-            client.create_egeria_bearer_token()
-
-            todo_guid = client.create_my_todo(
-                todo_name=self.todo_name,
-                description=self.todo_description,
-                priority=self.todo_priority,
-                activity_status="REQUESTED"
-                )
-           self.log(f"Created ToDo assigned to the current user: {todo_guid}")
+            tclient.create_egeria_bearer_token()
+            todo_guid = tclient.create_my_todo(
+                        todo_name=self.todo_name,
+                        description=self.todo_description,
+                        priority=self.todo_priority,
+                        activity_status="REQUESTED"
+                        )
+            self.log(f"Created ToDo assigned to the current user: {todo_guid}")
         except PyegeriaException as e:
             self.notify(f"Add todo failed with return: {e}", timeout=10, severity="error")
         finally:
-            client.close_session()
-        pass
+            tclient.close_session()
+            self.todo_name = ""
+            self.todo_description = ""
+            self.todo_priority = ""
+            self.todo_guid = ""
+            self.query_one("3todo_name", Input).clear()
+            self.query_one("#todo_description", Input).clear()
+            self.query_one("#todo_priority", Input).clear()
 
     @on(Input.Changed)
     def handle_input_changed(self, event: Input.Changed):
