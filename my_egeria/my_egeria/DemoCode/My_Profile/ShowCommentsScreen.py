@@ -54,11 +54,9 @@ class ShowCommentsScreen(ModalScreen):
                 comments_list = exec_report_spec(format_set_name="Comment-by-Element",
                                                        output_format="DICT",
                                                        params={"element_guid" : backend_id,})
-                if isinstance(comments_list, str):
-                    self.log(f"processing str comment: {comments_list}")
-                    comment_text = str(comments_list)
-                    self.query_one("#show_comments_container", ScrollableContainer).mount(Static(comment_text))
-                elif isinstance(comments_list, dict):
+                self.log(f"comments_list: {comments_list}")
+
+                if isinstance(comments_list, dict):
                     comment_count = 0
                     structured_comments: list[list] = []
                     comment_text: list[Any] = []
@@ -72,6 +70,10 @@ class ShowCommentsScreen(ModalScreen):
                     for row in structured_comments:
                         comment_text.append[row]
                         self.query_one("#show_comments_container", ScrollableContainer).mount(Static(row))
+                elif isinstance(comments_list, str):
+                    self.log(f"processing str comment: {comments_list}")
+                    comment_text = str(comments_list)
+                    self.query_one("#show_comments_container", ScrollableContainer).mount(Static(comment_text))
                 else:
                     self.log(f"processing list of: {len(comments_list)} comments")
                     for comment in comments_list:

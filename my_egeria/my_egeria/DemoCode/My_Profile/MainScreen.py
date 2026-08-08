@@ -20,6 +20,7 @@ class MainScreen(Screen):
         ("q", "app.quit", "Quit"),
         ("ctrl+e", "edit_table", "Edit Selected Table"),
         ("ctrl+s", "show_comments", "Show Comments for Selected Row"),
+        ("ctrl+a", "add_to_table", "Add to Selected Table")
     ]
 
     CSS_PATH = "my_profile.tcss"
@@ -127,3 +128,10 @@ class MainScreen(Screen):
             self.app.show_comments(self.selected_table, self.selected_row)
         else:
             self.notify("Please select a row and table to show comments.", timeout=5, severity="warning")
+
+    async def action_add_to_table(self):
+        """ Add to the selected table """
+        if self.selected_table and self.selected_row:
+            await self.app.add_to_tables(self.selected_table, self.selected_row)
+        else:
+            self.notify("Please select a row and table to add to.", timeout=5, severity="warning")
