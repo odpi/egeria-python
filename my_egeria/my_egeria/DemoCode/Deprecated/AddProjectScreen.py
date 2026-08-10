@@ -21,7 +21,7 @@ class AddProjectScreen(ModalScreen):
         ("ctrl+a", "add_new_role", "Add New Role")
         ]
 
-    CSS_PATH = "my_profile.tcss"
+    CSS_PATH = "../My_Profile/my_profile.tcss"
 
     def __init__(self, selected_table, *args, **kwargs):
         super().__init__(id="main_screen", *args, **kwargs)

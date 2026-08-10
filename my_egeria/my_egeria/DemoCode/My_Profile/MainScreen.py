@@ -20,7 +20,10 @@ class MainScreen(Screen):
         ("q", "app.quit", "Quit"),
         ("ctrl+e", "edit_table", "Edit Selected Table"),
         ("ctrl+s", "show_comments", "Show Comments for Selected Row"),
-        ("ctrl+a", "add_to_table", "Add to Selected Table")
+        # ("ctrl+a", "add_to_table", "Add to Selected Table"),
+        ("ctrl+t", "add_todos", "Add Todos"),
+        ("ctrl+j", "add_journals", "Add Journals"),
+        ("ctrl+b", "add_blogs", "Add Blogs")
     ]
 
     CSS_PATH = "my_profile.tcss"
@@ -42,24 +45,11 @@ class MainScreen(Screen):
             DataTable(id="associations_table"),
             id="main_associations_container"
         )
-
-        # yield ScrollableContainer(
-        #     Static("Projects"),
-        #     DataTable(id="projects_table"),
-        #     id="main_projects_container"
-        # )
-        #
-        # yield ScrollableContainer(
-        #     Static("Communities"),
-        #     DataTable(id="communities_table"),
-        #     id="main_communities_container"
-        # )
         yield ScrollableContainer(
             Static(f"My Collections"),
             DataTable(id=("my_collections_table")),
             id="my_collections_container"
             )
-
         yield ScrollableContainer(
             Static(f"Other Functions"),
             Static(f"[b]Select a function[/b]"),
@@ -74,19 +64,16 @@ class MainScreen(Screen):
             ),
             id="other_function_container"
         )
-
         yield ScrollableContainer(
             Static("Roles"),
             DataTable(id="roles_table"),
             id="main_roles_container"
         )
-
         yield ScrollableContainer(
             Static("Teams"),
             DataTable(id="teams_table"),
             id="main_teams_container"
         )
-
         yield ScrollableContainer(
             Static("Blogs"),
             DataTable(id="blogs_table"),
@@ -135,3 +122,21 @@ class MainScreen(Screen):
             await self.app.add_to_tables(self.selected_table, self.selected_row)
         else:
             self.notify("Please select a row and table to add to.", timeout=5, severity="warning")
+
+    async def action_add_todos(self):
+        """ Add to the selected table """
+        self.selected_table = "todos_table"
+        self.selected_row = 0
+        await self.app.add_to_tables(self.selected_table, self.selected_row)
+
+    async def action_add_journals(self):
+        """ Add to the selected table """
+        self.selected_table = "journal_table"
+        self.selected_row = 0
+        await self.app.add_to_tables(self.selected_table, self.selected_row)
+
+    async def action_add_blogs(self):
+        """ Add to the selected table """
+        self.selected_table = "blogs_table"
+        self.selected_row = 0
+        await self.app.add_to_tables(self.selected_table, self.selected_row)

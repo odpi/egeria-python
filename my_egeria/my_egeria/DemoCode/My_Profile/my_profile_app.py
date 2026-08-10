@@ -18,9 +18,8 @@ if str(root_path) not in sys.path:
     sys.path.append(str(root_path))
 
 from pyegeria import load_app_config, settings, MyProfile, PyegeriaException, print_basic_exception, exec_report_spec, \
-    AutomatedCuration, MetadataExpert, ActorManager, EgeriaCat, CollectionManager, ProductManager, \
-    PyegeriaInvalidParameterException, PyegeriaAPIException, DataEngineer, copy_to_clipboard
-from pyegeria.omvs import GovernanceOfficer
+    AutomatedCuration, ProductManager, \
+    PyegeriaInvalidParameterException, PyegeriaAPIException, DataEngineer
 from textual import on
 from textual.app import App, ComposeResult
 from textual.containers import ScrollableContainer
@@ -50,14 +49,8 @@ from SearchForTermScreen import SearchForTermScreen
 from CreateSubscriptionRequestScreen import CreateSubscriptionRequestScreen
 from UserIdentitiesScreen import UserIdentitiesScreen
 from ShowCommentsScreen import ShowCommentsScreen
-from AddRoleScreen import AddRoleScreen
-from AddProjectScreen import AddProjectScreen
-from AddCommunityScreen import AddCommunityScreen
-from AddTeamScreen import AddTeamScreen
-from AddBlogEntryScreen import AddBlogEntryScreen
-from AddJournalEntryScreen import AddJournalEntryScreen
-from AddTodoScreen import AddTodoScreen
-from AddAssociationScreen import AddAssociationScreen
+from AddToElementsScreens import (AddRoleScreen, AddProjectScreen, AddCommunityScreen, AddTeamScreen,
+                                  AddBlogEntryScreen, AddJournalEntryScreen, AddTodoScreen, AddAssociationScreen)
 
 class MyProfileApp(App):
     """My Profile App.
@@ -2091,28 +2084,28 @@ class MyProfileApp(App):
             self.push_screen("main")
         return
 
-    def add_to_tables(self, selected_table, selected_row):
+    async def add_to_tables(self, selected_table, selected_row):
         """ called from main screen when user selects to add a row to a table
             This might not be a supported function for all tables"""
         self.log(f"Adding row {selected_row} to table {selected_table}")
         self.selected_table = selected_table
         self.selected_row = selected_row
         if self.selected_table == "roles_table":
-            self.push_screen(AddRoleScreen(self.selected_table), callback=self.add_role_callback)
+            await self.push_screen(AddRoleScreen(self.selected_table), callback=self.add_role_callback)
         elif self.selected_table == "projects_table":
-            self.push_screen(AddProjectScreen(self.selected_table), callback=self.add_project_callback)
+            await self.push_screen(AddProjectScreen(self.selected_table), callback=self.add_project_callback)
         elif self.selected_table == "communities_table":
-            self.push_screen(AddCommunityScreen(self.selected_table), callback=self.add_community_callback)
+            await self.push_screen(AddCommunityScreen(self.selected_table), callback=self.add_community_callback)
         elif self.selected_table == "teams_table":
-            self.push_screen(AddTeamScreen(self.selected_table), callback=self.add_team_callback)
+            await self.push_screen(AddTeamScreen(self.selected_table), callback=self.add_team_callback)
         elif self.selected_table == "blogs_table":
-            self.push_screen(AddBlogEntryScreen(self.selected_table), callback=self.add_blog_entry_callback)
+            await self.push_screen(AddBlogEntryScreen(self.selected_table), callback=self.add_blog_entry_callback)
         elif self.selected_table == "journal_table":
-            self.push_screen(AddJournalEntryScreen(self.selected_table), callback=self.add_journal_entry_callback)
+            await self.push_screen(AddJournalEntryScreen(self.selected_table), callback=self.add_journal_entry_callback)
         elif self.selected_table == "todos_table":
-            self.push_screen(AddTodoScreen(self.selected_table), callback=self.add_todo_callback)
+            await self.push_screen(AddTodoScreen(self.selected_table), callback=self.add_todo_callback)
         elif self.selected_table == "associations_table":
-            self.push_screen(AddAssociationScreen(self.selected_table), callback=self.add_association_callback)
+            await self.push_screen(AddAssociationScreen(self.selected_table), callback=self.add_association_callback)
         else:
             self.log(f"Unexpected table name: {self.selected_table}")
 
@@ -2120,56 +2113,56 @@ class MyProfileApp(App):
         """ called from AddRoleScreen when user adds a role """
         if result:
             self.log(f"Added role {result}")
-            self.push_screen("main")
+            self.switch_screen("main")
         return
 
     def add_association_callback(self, result):
         """ called from AddAssociationScreen when user adds an association """
         if result:
             self.log(f"Added association {result}")
-            self.push_screen("main")
+            self.switch_screen("main")
         return
 
     def add_project_callback(self, result):
         """ called from AddProjectScreen when user adds a project """
         if result:
             self.log(f"Added project {result}")
-            self.push_screen("main")
+            self.switch_screen("main")
         return
 
     def add_community_callback(self, result):
         """ called from AddCommunityScreen when user adds a community """
         if result:
             self.log(f"Added community {result}")
-            self.push_screen("main")
+            self.switch_screen("main")
         return
 
     def add_team_callback(self, result):
         """ called from AddTeamScreen when user adds a team """
         if result:
             self.log(f"Added team {result}")
-            self.push_screen("main")
+            self.switch_screen("main")
         return
 
     def add_blog_entry_callback(self, result):
         """ called from AddBlogEntryScreen when user adds a blog entry """
         if result:
             self.log(f"Added blog entry {result}")
-            self.push_screen("main")
+            self.switch_screen("main")
         return
 
     def add_journal_entry_callback(self, result):
         """ called from AddJournalEntryScreen when user adds a journal entry """
         if result:
             self.log(f"Added journal entry {result}")
-            self.push_screen("main")
+            self.switch_screen("main")
         return
 
     def add_todo_callback(self, result):
         """ called from AddTodoScreen when user adds a todo """
         if result:
             self.log(f"Added todo {result}")
-            self.push_screen("main")
+            self.switch_screen("main")
         return
 
 if __name__ == "__main__":

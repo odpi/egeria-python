@@ -9,7 +9,7 @@ import pwd
 
 from textual import on
 from textual.app import ComposeResult
-from textual.containers import ScrollableContainer
+from textual.containers import ScrollableContainer, Horizontal
 from textual.screen import ModalScreen
 from textual.widgets import DataTable, OptionList, Header, Static, Footer, Input, Button
 from textual.widgets._option_list import Option
@@ -22,13 +22,13 @@ class AddTodoScreen(ModalScreen):
 
     BINDINGS = [
         ("q", "app.quit", "Quit"),
-        ("ctrl+a", "add_new_role", "Add New Role")
+        ("ctrl+a", "add_new_todo", "Add New Todo")
         ]
 
-    CSS_PATH = "my_profile.tcss"
+    CSS_PATH = "../My_Profile/my_profile.tcss"
 
     def __init__(self, selected_table, *args, **kwargs):
-        super().__init__(id="main_screen", *args, **kwargs)
+        super().__init__(id="add_todo_screen", *args, **kwargs)
         self.selected_table = selected_table
         load_app_config()
         app_config = settings.Environment
@@ -50,19 +50,25 @@ class AddTodoScreen(ModalScreen):
 
         self.todos_table.zebra_stripes = True
         self.todos_table.cursor_type = "row"
+        self.todos_table.focus()
 
     def compose(self) -> ComposeResult:
         yield Static("Add Todo Screen")
-        yield Static("This screen is intended for the user who wants to add a small number of Todos\n"
+        yield ScrollableContainer(
+            Static("This screen is intended for the user who wants to add a small number of Todos\n"
                      "Please ensure that you have filled in all fields before clicking 'Add Todo'\n"
-                     "For bulk additions please use Dr_Egeria instead.")
-        yield Input("Name of Todo", id="todo_name")
-        yield Input("Description of Todo", id="todo_description")
-        yield Input("Priority of Todo", id="todo_priority")
-        yield Static("Status will be automatically set to 'REQUESTED'")
-        yield Button("Add Todo", id="add_todo_button", variant="primary")
+                     "For bulk additions please use Dr_Egeria instead."),
+            Input("Name of Todo", id="todo_name"),
+            Input("Description of Todo", id="todo_description"),
+            Input("Priority of Todo", id="todo_priority"),
+            Static("Status will be automatically set to 'REQUESTED'"),
+            Horizontal(
+                Button("Add Todo", id="add_todo_button", variant="primary"),
+                Button("Quit", id="quit_button", variant="warning")
+            ))
 
-    def action_add_new_role(self):
+    def action_add_new_todo(self):
+        """ Call Egeria to add the new todo """
         tclient = Egeria(
             view_server=self.view_server,
             platform_url=self.platform_url,
@@ -87,9 +93,10 @@ class AddTodoScreen(ModalScreen):
             self.todo_description = ""
             self.todo_priority = ""
             self.todo_guid = ""
-            self.query_one("3todo_name", Input).clear()
+            self.query_one("#todo_name", Input).clear()
             self.query_one("#todo_description", Input).clear()
             self.query_one("#todo_priority", Input).clear()
+        return
 
     @on(Input.Changed)
     def handle_input_changed(self, event: Input.Changed):
@@ -99,3 +106,19 @@ class AddTodoScreen(ModalScreen):
             self.todo_description = event.input.value
         if event.input.id == "todo_priority":
             self.todo_priority = event.input.value
+
+    def action_quit(self):
+        self.dismiss(200)
+
+    @on(Button.Pressed, "#add_todo_button")
+    def handle_add_todo_button(self, event: Button.Pressed):
+        """ Handle the add button press """
+        if self.todo_name and self.todo_description:
+            self.action_add_new_todo()
+        else:
+            self.notify("Please enter at least anew todo name and description", timeout=10, severity="error")
+
+    @on(Button.Pressed, "#quit_button")
+    def handle_quit_button(self, event: Button.Pressed):
+        """ Handle the quit button press """
+        self.action_quit()
