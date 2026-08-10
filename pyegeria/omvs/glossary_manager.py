@@ -4050,6 +4050,186 @@ class GlossaryManager(CollectionManager):
         loop = asyncio.get_event_loop()
         return loop.run_until_complete(self._async_get_glossary_for_term(term_guid))
 
+    #
+    # Naming standards classifications (0438) -- Egeria PR #9166. Simple marker
+    # classifications (no properties beyond the classification's own type name)
+    # applied to a glossary term. Dr.Egeria wiring: md_processing/v2/curation.py's
+    # CLASSIFICATION_METHODS "ClassWord"/"Modifier"/"PrimeWord" entries.
+    #
+
+    @dynamic_catch
+    async def _async_set_is_prime_word(self, term_guid: str,
+                                       body: Optional[dict | NewClassificationRequestBody] = None) -> None:
+        """Classify a glossary term as a prime word in a naming standard. Async version.
+
+        Parameters
+        ----------
+        term_guid: str
+            Unique identifier of the glossary term.
+        body: dict | NewClassificationRequestBody, optional
+            No custom properties -- PrimeWordProperties carries only its own type name.
+
+        Returns
+        -------
+        None
+
+        Notes
+        -----
+        Sample body:
+        {
+          "class" : "NewClassificationRequestBody",
+          "properties": {"class": "PrimeWordProperties"}
+        }
+        """
+        url = f"{self.glossary_command_root}/glossaries/terms/{term_guid}/is-prime-word"
+        # _async_new_classification_request POSTs with no body at all when body=None
+        # (unlike _async_new_relationship_request, which builds a default properties
+        # body itself) -- always pass an explicit body, same workaround as ISSUE-31.
+        body = body or {"class": "NewClassificationRequestBody", "properties": {"class": "PrimeWordProperties"}}
+        await self._async_new_classification_request(url, ["PrimeWordProperties"], body)
+        logger.info(f"Classified term {term_guid} as a prime word")
+
+    @dynamic_catch
+    def set_is_prime_word(self, term_guid: str,
+                          body: Optional[dict | NewClassificationRequestBody] = None) -> None:
+        """Classify a glossary term as a prime word in a naming standard."""
+        loop = asyncio.get_event_loop()
+        loop.run_until_complete(self._async_set_is_prime_word(term_guid, body))
+
+    @dynamic_catch
+    async def _async_clear_is_prime_word(self, term_guid: str,
+                                         body: Optional[dict | DeleteClassificationRequestBody] = None) -> None:
+        """Remove the prime word designation from a glossary term. Async version.
+
+        Parameters
+        ----------
+        term_guid: str
+            Unique identifier of the glossary term.
+        body: dict | DeleteClassificationRequestBody, optional
+
+        Returns
+        -------
+        None
+        """
+        url = f"{self.glossary_command_root}/glossaries/terms/{term_guid}/is-prime-word/delete"
+        await self._async_delete_classification_request(url, body)
+        logger.info(f"Removed prime word classification from term {term_guid}")
+
+    @dynamic_catch
+    def clear_is_prime_word(self, term_guid: str,
+                            body: Optional[dict | DeleteClassificationRequestBody] = None) -> None:
+        """Remove the prime word designation from a glossary term."""
+        loop = asyncio.get_event_loop()
+        loop.run_until_complete(self._async_clear_is_prime_word(term_guid, body))
+
+    @dynamic_catch
+    async def _async_set_is_modifier(self, term_guid: str,
+                                     body: Optional[dict | NewClassificationRequestBody] = None) -> None:
+        """Classify a glossary term as a modifier in a naming standard. Async version.
+
+        Parameters
+        ----------
+        term_guid: str
+            Unique identifier of the glossary term.
+        body: dict | NewClassificationRequestBody, optional
+            No custom properties -- ModifierProperties carries only its own type name.
+
+        Returns
+        -------
+        None
+        """
+        url = f"{self.glossary_command_root}/glossaries/terms/{term_guid}/is-modifier"
+        body = body or {"class": "NewClassificationRequestBody", "properties": {"class": "ModifierProperties"}}
+        await self._async_new_classification_request(url, ["ModifierProperties"], body)
+        logger.info(f"Classified term {term_guid} as a modifier")
+
+    @dynamic_catch
+    def set_is_modifier(self, term_guid: str,
+                        body: Optional[dict | NewClassificationRequestBody] = None) -> None:
+        """Classify a glossary term as a modifier in a naming standard."""
+        loop = asyncio.get_event_loop()
+        loop.run_until_complete(self._async_set_is_modifier(term_guid, body))
+
+    @dynamic_catch
+    async def _async_clear_is_modifier(self, term_guid: str,
+                                       body: Optional[dict | DeleteClassificationRequestBody] = None) -> None:
+        """Remove the modifier designation from a glossary term. Async version.
+
+        Parameters
+        ----------
+        term_guid: str
+            Unique identifier of the glossary term.
+        body: dict | DeleteClassificationRequestBody, optional
+
+        Returns
+        -------
+        None
+        """
+        url = f"{self.glossary_command_root}/glossaries/terms/{term_guid}/is-modifier/delete"
+        await self._async_delete_classification_request(url, body)
+        logger.info(f"Removed modifier classification from term {term_guid}")
+
+    @dynamic_catch
+    def clear_is_modifier(self, term_guid: str,
+                          body: Optional[dict | DeleteClassificationRequestBody] = None) -> None:
+        """Remove the modifier designation from a glossary term."""
+        loop = asyncio.get_event_loop()
+        loop.run_until_complete(self._async_clear_is_modifier(term_guid, body))
+
+    @dynamic_catch
+    async def _async_set_is_class_word(self, term_guid: str,
+                                       body: Optional[dict | NewClassificationRequestBody] = None) -> None:
+        """Classify a glossary term as a class word in a naming standard. Async version.
+
+        Parameters
+        ----------
+        term_guid: str
+            Unique identifier of the glossary term.
+        body: dict | NewClassificationRequestBody, optional
+            No custom properties -- ClassWordProperties carries only its own type name.
+
+        Returns
+        -------
+        None
+        """
+        url = f"{self.glossary_command_root}/glossaries/terms/{term_guid}/is-class-word"
+        body = body or {"class": "NewClassificationRequestBody", "properties": {"class": "ClassWordProperties"}}
+        await self._async_new_classification_request(url, ["ClassWordProperties"], body)
+        logger.info(f"Classified term {term_guid} as a class word")
+
+    @dynamic_catch
+    def set_is_class_word(self, term_guid: str,
+                          body: Optional[dict | NewClassificationRequestBody] = None) -> None:
+        """Classify a glossary term as a class word in a naming standard."""
+        loop = asyncio.get_event_loop()
+        loop.run_until_complete(self._async_set_is_class_word(term_guid, body))
+
+    @dynamic_catch
+    async def _async_clear_is_class_word(self, term_guid: str,
+                                         body: Optional[dict | DeleteClassificationRequestBody] = None) -> None:
+        """Remove the class word designation from a glossary term. Async version.
+
+        Parameters
+        ----------
+        term_guid: str
+            Unique identifier of the glossary term.
+        body: dict | DeleteClassificationRequestBody, optional
+
+        Returns
+        -------
+        None
+        """
+        url = f"{self.glossary_command_root}/glossaries/terms/{term_guid}/is-class-word/delete"
+        await self._async_delete_classification_request(url, body)
+        logger.info(f"Removed class word classification from term {term_guid}")
+
+    @dynamic_catch
+    def clear_is_class_word(self, term_guid: str,
+                            body: Optional[dict | DeleteClassificationRequestBody] = None) -> None:
+        """Remove the class word designation from a glossary term."""
+        loop = asyncio.get_event_loop()
+        loop.run_until_complete(self._async_clear_is_class_word(term_guid, body))
+
 
 if __name__ == "__main__":
     print("Main-Glossary Manager")

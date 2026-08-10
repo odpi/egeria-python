@@ -1,6 +1,6 @@
 {
   "family": "Report",
-  "exported": "Jul 31, 2026 at 4:09:47 PM",
+  "exported": "Jul 31, 2026 at 4:09:47\u202fPM",
   "attribute_definitions": {
     "Analytic Parameters": {
       "variable_name": "analytic_parameters",
@@ -105,7 +105,7 @@
       "default_value": "",
       "valid_values": [],
       "existing_element": "",
-      "description": "The unique name of a Dashboard Sheet — a local pyegeria-managed record (planned to become a Collection subtype in Egeria; see Container\/ContainerDict in pyegeria.view._output_container_models for the current pre-Egeria model). Used both to define a new Dashboard Sheet's identity (Create Dashboard Sheet) and to reference an existing one (Link Report to Dashboard Sheet).",
+      "description": "The unique name of a Dashboard Sheet \u2014 a local pyegeria-managed record (planned to become a Collection subtype in Egeria; see Container/ContainerDict in pyegeria.view._output_container_models for the current pre-Egeria model). Used both to define a new Dashboard Sheet's identity (Create Dashboard Sheet) and to reference an existing one (Link Report to Dashboard Sheet).",
       "generated": false,
       "style": "Simple",
       "user_specified": true,
@@ -114,7 +114,7 @@
       "min_cardinality": 1,
       "max_cardinality": 1,
       "level": "Basic",
-      "Journal Entry": "The unique name of a Container — a local pyegeria-managed record (see Container\/ContainerDict in pyegeria.view._output_container_models), not an Egeria element. Used both to define a new Container's identity (Create Container) and to reference an existing one (Link Report to Container)."
+      "Journal Entry": "The unique name of a Container \u2014 a local pyegeria-managed record (see Container/ContainerDict in pyegeria.view._output_container_models), not an Egeria element. Used both to define a new Container's identity (Create Container) and to reference an existing one (Link Report to Container)."
     },
     "Effective Time": {
       "variable_name": "effective_time",
@@ -295,7 +295,7 @@
       "default_value": "",
       "valid_values": [],
       "existing_element": "",
-      "description": "Markdown text to display at this placement — section headers, explanations, captions. Rendered as-is (mermaid fences supported), no Egeria element involved.",
+      "description": "Markdown text to display at this placement \u2014 section headers, explanations, captions. Rendered as-is (mermaid fences supported), no Egeria element involved.",
       "generated": false,
       "style": "Simple",
       "user_specified": true,
@@ -448,7 +448,7 @@
         "panel"
       ],
       "existing_element": "",
-      "description": "Presentation hint for a Report Spec placed in a Dashboard Sheet — 'kpi' (compact tile) or 'panel' (larger, detailed).",
+      "description": "Presentation hint for a Report Spec placed in a Dashboard Sheet \u2014 'kpi' (compact tile) or 'panel' (larger, detailed).",
       "generated": false,
       "style": "Valid Value",
       "user_specified": true,
@@ -457,7 +457,7 @@
       "min_cardinality": 0,
       "max_cardinality": 1,
       "level": "Basic",
-      "Journal Entry": "Presentation hint for a Report Spec placed in a Container — 'kpi' (compact tile) or 'panel' (larger, detailed)."
+      "Journal Entry": "Presentation hint for a Report Spec placed in a Container \u2014 'kpi' (compact tile) or 'panel' (larger, detailed)."
     },
     "Placement Name": {
       "variable_name": "placement_name",
@@ -467,7 +467,7 @@
       "default_value": "",
       "valid_values": [],
       "existing_element": "",
-      "description": "Stable identifier for this text placement within its Dashboard Sheet — re-running with the same Dashboard Sheet Name + Placement Name updates it in place, same as Report placements are replaced by Report Name.",
+      "description": "Stable identifier for this text placement within its Dashboard Sheet \u2014 re-running with the same Dashboard Sheet Name + Placement Name updates it in place, same as Report placements are replaced by Report Name.",
       "generated": false,
       "style": "Simple",
       "user_specified": true,
@@ -476,7 +476,7 @@
       "min_cardinality": 1,
       "max_cardinality": 1,
       "level": "Basic",
-      "Journal Entry": "Presentation hint for a Report Spec placed in a Container — 'kpi' (compact tile) or 'panel' (larger, detailed)."
+      "Journal Entry": "Presentation hint for a Report Spec placed in a Container \u2014 'kpi' (compact tile) or 'panel' (larger, detailed)."
     },
     "Placement Span": {
       "variable_name": "span",
@@ -490,7 +490,7 @@
         "full"
       ],
       "existing_element": "",
-      "description": "Layout width hint for a Report Spec placed in a Dashboard Sheet — '1'\/'2' (relative columns) or 'full' (row width).",
+      "description": "Layout width hint for a Report Spec placed in a Dashboard Sheet \u2014 '1'/'2' (relative columns) or 'full' (row width).",
       "generated": false,
       "style": "Valid Value",
       "user_specified": true,
@@ -499,7 +499,7 @@
       "min_cardinality": 0,
       "max_cardinality": 1,
       "level": "Basic",
-      "Journal Entry": "Layout width hint for a Report Spec placed in a Container — '1'\/'2' (relative columns) or 'full' (row width)."
+      "Journal Entry": "Layout width hint for a Report Spec placed in a Container \u2014 '1'/'2' (relative columns) or 'full' (row width)."
     },
     "Report Name": {
       "variable_name": "report_name",
@@ -528,7 +528,7 @@
       "default_value": "",
       "valid_values": [],
       "existing_element": "",
-      "description": "Name-Value pairs of extra parameters for the target Report Spec's action that aren't part of the standard find\/search attribute set (e.g. collection_guid for the \"Collection Members\" report). Keys must match exactly what the target report spec's action expects.",
+      "description": "Name-Value pairs of extra parameters for the target Report Spec's action that aren't part of the standard find/search attribute set (e.g. collection_guid for the \"Collection Members\" report). Keys must match exactly what the target report spec's action expects.",
       "generated": false,
       "style": "Dictionary",
       "user_specified": true,
@@ -537,7 +537,7 @@
       "min_cardinality": 1,
       "max_cardinality": 1,
       "level": "Basic",
-      "Journal Entry": "Name-Value pairs of extra parameters for the target Report Spec's action that aren't part of the standard find\/search attribute set (e.g. collection_guid for the \"Collection Members\" report). Keys must match exactly what the target report spec's ActionParameter.required_params\/optional_params expect (snake_case, e.g. \"collection_guid\") -- format_set_executor.py does a direct params[key] lookup with no aliasing."
+      "Journal Entry": "Name-Value pairs of extra parameters for the target Report Spec's action that aren't part of the standard find/search attribute set (e.g. collection_guid for the \"Collection Members\" report). Keys must match exactly what the target report spec's ActionParameter.required_params/optional_params expect (snake_case, e.g. \"collection_guid\") -- format_set_executor.py does a direct params[key] lookup with no aliasing."
     },
     "Report Spec": {
       "variable_name": "report_spec",
@@ -547,7 +547,7 @@
       "default_value": "Referenceable",
       "valid_values": [],
       "existing_element": "",
-      "description": "The name of the report spec (FormatSet) to run, e.g. 'Digital-Products', 'Collections', 'My-User-MD'. This is the primary identifier for the report — equivalent to --report in the CLI.",
+      "description": "The name of the report spec (FormatSet) to run, e.g. 'Digital-Products', 'Collections', 'My-User-MD'. This is the primary identifier for the report \u2014 equivalent to --report in the CLI.",
       "generated": false,
       "style": "Simple",
       "user_specified": true,
@@ -649,6 +649,101 @@
       "unique": false,
       "input_required": false,
       "min_cardinality": 0,
+      "max_cardinality": 1,
+      "level": "Domain",
+      "Journal Entry": ""
+    },
+    "Anchor Scope ID": {
+      "variable_name": "anchor_scope_id",
+      "inUpdate": true,
+      "attr_labels": "Anchor Scope",
+      "examples": "",
+      "default_value": "",
+      "valid_values": [],
+      "existing_element": "Referenceable",
+      "description": "Anchor scope to restrict search.",
+      "generated": false,
+      "style": "Reference Name",
+      "user_specified": true,
+      "unique": false,
+      "input_required": false,
+      "min_cardinality": 0,
+      "max_cardinality": 1,
+      "level": "Advanced",
+      "Journal Entry": ""
+    },
+    "Query URL": {
+      "variable_name": "query_url",
+      "inUpdate": true,
+      "attr_labels": "",
+      "examples": "",
+      "default_value": "",
+      "valid_values": [],
+      "existing_element": "",
+      "description": "The REST URL used to issue the saved query.",
+      "generated": false,
+      "style": "Simple",
+      "user_specified": true,
+      "unique": false,
+      "input_required": false,
+      "min_cardinality": 0,
+      "max_cardinality": 1,
+      "level": "Basic",
+      "Journal Entry": ""
+    },
+    "Query Request Body": {
+      "variable_name": "query_request_body",
+      "inUpdate": true,
+      "attr_labels": "",
+      "examples": "",
+      "default_value": "",
+      "valid_values": [],
+      "existing_element": "",
+      "description": "The REST request body (typically JSON) used to issue the saved query.",
+      "generated": false,
+      "style": "Simple",
+      "user_specified": true,
+      "unique": false,
+      "input_required": false,
+      "min_cardinality": 0,
+      "max_cardinality": 1,
+      "level": "Basic",
+      "Journal Entry": ""
+    },
+    "Saved Query": {
+      "variable_name": "saved_query",
+      "inUpdate": true,
+      "attr_labels": "",
+      "examples": "",
+      "default_value": "",
+      "valid_values": [],
+      "existing_element": "SavedQuery",
+      "description": "A saved query name. Preferably a qualified name.",
+      "generated": false,
+      "style": "Reference Name",
+      "user_specified": true,
+      "unique": false,
+      "input_required": true,
+      "min_cardinality": 1,
+      "max_cardinality": 1,
+      "level": "Domain",
+      "Journal Entry": ""
+    },
+    "Results Set": {
+      "variable_name": "results_set",
+      "inUpdate": true,
+      "attr_labels": "",
+      "examples": "",
+      "default_value": "",
+      "valid_values": [],
+      "existing_element": "ResultsSet",
+      "description": "A results set (collection) name. Preferably a qualified name.",
+      "generated": false,
+      "style": "Reference Name",
+      "user_specified": true,
+      "unique": false,
+      "input_required": true,
+      "min_cardinality": 1,
       "max_cardinality": 1,
       "level": "Domain",
       "Journal Entry": ""
@@ -837,6 +932,13 @@
         "Start From",
         "Starts With"
       ]
+    },
+    "Saved Query Base": {
+      "inherits": "Asset",
+      "own_attributes": [
+        "Query URL",
+        "Query Request Body"
+      ]
     }
   },
   "commands": {
@@ -844,8 +946,8 @@
       "display_name": "Report",
       "qn_prefix": "",
       "alternate_names": [],
-      "family": "Report",
-      "description": "Runs a named pyegeria report spec (FormatSet) via hey_egeria run_report. Returns formatted output from the Egeria repository — not an element creation command.",
+      "family": "Views & Reports",
+      "description": "Runs a named pyegeria report spec (FormatSet) via hey_egeria run_report. Returns formatted output from the Egeria repository \u2014 not an element creation command.",
       "verb": "View",
       "upsert": false,
       "attach": false,
@@ -881,13 +983,13 @@
         "Anchor Scope ID",
         "Report Parameters"
       ],
-      "Journal Entry": "Runs a pyegeria report spec via hey_egeria run_report. Discovers and executes a named FormatSet against the Egeria repository. Not an element-creation command — no upsert, no qualified name prefix. Output format and report spec control what is returned and how it is rendered."
+      "Journal Entry": "Runs a pyegeria report spec via hey_egeria run_report. Discovers and executes a named FormatSet against the Egeria repository. Not an element-creation command \u2014 no upsert, no qualified name prefix. Output format and report spec control what is returned and how it is rendered."
     },
     "Create Report": {
       "display_name": "Report",
       "qn_prefix": "DeployedReport",
       "alternate_names": [],
-      "family": "Report",
+      "family": "Views & Reports",
       "description": "Defines a report with optional default parameters set, that can be placed on a Dashboard.",
       "verb": "Create",
       "upsert": true,
@@ -909,7 +1011,7 @@
         "Dashboard",
         "Sheet"
       ],
-      "family": "Report",
+      "family": "Views & Reports",
       "description": "",
       "verb": "Create",
       "upsert": true,
@@ -922,13 +1024,13 @@
       "OM_TYPE": "",
       "bundle": "Dashboard Sheet Base",
       "custom_attributes": [],
-      "Journal Entry": "Creates a named, ordered, nestable Dashboard Sheet — a local pyegeria-managed layout record (see Container\/ContainerDict in pyegeria.view._output_container_models), NOT yet an Egeria element. PLANNED: Dashboard Sheet will become an Egeria Collection subtype — when that lands, this bundle (Dashboard Sheet Base) should switch BundleInherits from none to Collection Base (see \/Command Specifications\/Common Bundles\/Collection Base), picking up Purpose + the full Referenceable\/AuthoredReferenceable chain. Not immediate — until then this stays a local record: no upsert, no qualified name prefix, mirroring the Report command's own non-element-creation pattern."
+      "Journal Entry": "Creates a named, ordered, nestable Dashboard Sheet \u2014 a local pyegeria-managed layout record (see Container/ContainerDict in pyegeria.view._output_container_models), NOT yet an Egeria element. PLANNED: Dashboard Sheet will become an Egeria Collection subtype \u2014 when that lands, this bundle (Dashboard Sheet Base) should switch BundleInherits from none to Collection Base (see /Command Specifications/Common Bundles/Collection Base), picking up Purpose + the full Referenceable/AuthoredReferenceable chain. Not immediate \u2014 until then this stays a local record: no upsert, no qualified name prefix, mirroring the Report command's own non-element-creation pattern."
     },
     "Link Report to Dashboard Sheet": {
       "display_name": "",
       "qn_prefix": "",
       "alternate_names": [],
-      "family": "Report",
+      "family": "Views & Reports",
       "description": "",
       "verb": "Link",
       "upsert": false,
@@ -941,14 +1043,14 @@
       "OM_TYPE": "",
       "bundle": "Report to Dashboard Sheet Link Base",
       "custom_attributes": [],
-      "Journal Entry": "Places a Report Spec (FormatSet) into a Dashboard Sheet as an ordered Placement, with layout hints (span\/emphasis). A local pyegeria Container\/Placement record, not an Egeria relationship — no upsert. The target Dashboard Sheet must already exist (created via Create Dashboard Sheet)."
+      "Journal Entry": "Places a Report Spec (FormatSet) into a Dashboard Sheet as an ordered Placement, with layout hints (span/emphasis). A local pyegeria Container/Placement record, not an Egeria relationship \u2014 no upsert. The target Dashboard Sheet must already exist (created via Create Dashboard Sheet)."
     },
     "Add Text on Dashboard Sheet": {
       "display_name": "",
       "qn_prefix": "",
       "alternate_names": [],
-      "family": "Report",
-      "description": "Places literal markdown text (a section header, explanation, or caption) into a Dashboard Sheet as an ordered Placement, alongside Report placements. A local pyegeria Placement record, not an Egeria element or relationship — no upsert. The target Dashboard Sheet must already exist (Create Dashboard Sheet).",
+      "family": "Views & Reports",
+      "description": "Places literal markdown text (a section header, explanation, or caption) into a Dashboard Sheet as an ordered Placement, alongside Report placements. A local pyegeria Placement record, not an Egeria element or relationship \u2014 no upsert. The target Dashboard Sheet must already exist (Create Dashboard Sheet).",
       "verb": "Place",
       "upsert": false,
       "attach": false,
@@ -960,7 +1062,50 @@
       "OM_TYPE": "",
       "bundle": "Text Placement Base",
       "custom_attributes": [],
-      "Journal Entry": "Places a Report Spec (FormatSet) into a Dashboard Sheet as an ordered Placement, with layout hints (span\/emphasis). A local pyegeria Container\/Placement record, not an Egeria relationship — no upsert. The target Dashboard Sheet must already exist (created via Create Dashboard Sheet)."
+      "Journal Entry": "Places a Report Spec (FormatSet) into a Dashboard Sheet as an ordered Placement, with layout hints (span/emphasis). A local pyegeria Container/Placement record, not an Egeria relationship \u2014 no upsert. The target Dashboard Sheet must already exist (created via Create Dashboard Sheet)."
+    },
+    "Create Saved Query": {
+      "display_name": "Saved Query",
+      "qn_prefix": "SavedQuery",
+      "alternate_names": [],
+      "family": "Views & Reports",
+      "description": "Defines a saved query -- a RESTful query to Egeria that returns Open Metadata Elements -- that can be connected to a Results Set via the SmartQuery relationship (Egeria PR #9200, 0725 Smart Collections).",
+      "verb": "Create",
+      "upsert": true,
+      "attach": false,
+      "level": "Basic",
+      "find_method": "MetadataExpert.find_metadata_elements_with_string",
+      "find_constraints": "",
+      "extra_find": "",
+      "extra_constraints": "",
+      "OM_TYPE": "SavedQuery",
+      "bundle": "Saved Query Base",
+      "custom_attributes": [],
+      "Journal Entry": ""
+    },
+    "Link Saved Query to Results Set": {
+      "display_name": "Link Saved Query to Results Set",
+      "qn_prefix": "",
+      "alternate_names": [
+        "Link Saved Query to ResultsSet"
+      ],
+      "family": "Views & Reports",
+      "description": "Connects a Saved Query to a Results Set via the SmartQuery relationship (0725 Smart Collections), indicating the results set is populated by the saved query.",
+      "verb": "Link",
+      "upsert": false,
+      "attach": false,
+      "level": "Basic",
+      "find_method": "",
+      "find_constraints": "",
+      "extra_find": "",
+      "extra_constraints": "",
+      "OM_TYPE": "SmartQuery",
+      "bundle": "Link Command Base",
+      "custom_attributes": [
+        "Results Set",
+        "Saved Query"
+      ],
+      "Journal Entry": ""
     }
   }
 }

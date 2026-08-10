@@ -1957,7 +1957,7 @@ base_report_specs = FormatSetDict({
         heading="Common Collection Information",
         description="Attributes generic to all Collections.",
         aliases=["Collection", "RootCollection", "Folder", "ReferenceList", "HomeCollection",
-                 "ResultSet", "RecentAccess", "WorkItemList", "Namespace"],
+                 "ResultsSet", "RecentAccess", "WorkItemList", "Namespace"],
         annotations=COMMON_ANNOTATIONS,
         family="Collection Manager",
         formats=[MERMAID_FORMAT, COLLECTION_DICT, COLLECTION_TABLE, COLLECTION_REPORT, COMMON_FORMATS_ALL],
