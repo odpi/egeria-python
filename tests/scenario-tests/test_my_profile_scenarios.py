@@ -208,7 +208,7 @@ class MyProfileScenarioTester:
 
             console.print(f"Logging activity...")
             try:
-                guid = self.client.log_my_activity(body)
+                guid = self.client.log_my_activity(body=body)
                 console.print(f"[green]✓[/green] Logged activity GUID: {guid}")
             except Exception as e:
                 console.print(f"[yellow]⚠[/yellow] Logging activity failed (expected in some envs): {str(e)}")
@@ -224,7 +224,7 @@ class MyProfileScenarioTester:
             }
             console.print(f"Journaling activity...")
             try:
-                guid = self.client.journal_my_activity(body)
+                guid = self.client.journal_my_activity(body=body)
                 console.print(f"[green]✓[/green] Journaled activity GUID: {guid}")
             except Exception as e:
                 console.print(f"[yellow]⚠[/yellow] Journaling activity failed: {str(e)}")
@@ -240,7 +240,7 @@ class MyProfileScenarioTester:
             }
             console.print(f"Blogging activity...")
             try:
-                guid = self.client.blog_my_activity(body)
+                guid = self.client.blog_my_activity(body=body)
                 console.print(f"[green]✓[/green] Blogged activity GUID: {guid}")
             except Exception as e:
                 print_basic_exception(e)
