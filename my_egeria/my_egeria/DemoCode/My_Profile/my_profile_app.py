@@ -219,6 +219,10 @@ class MyProfileApp(App):
             self.exit(413)
             return
 
+        # clear the target data structures.
+        self.my_blogs_data = [{}]
+        self.my_journal_data = [{}]
+
         # strip out the individual profile elements
         self.user_profile = self.user_profile_struct[0]
         self.contribution_record = self.user_profile.get("Contribution Record") or {}
@@ -229,8 +233,15 @@ class MyProfileApp(App):
         self.my_teams_data = self.user_profile.get("Teams") or []
         self.my_communities_data = self.user_profile.get("Communities") or []
         self.my_roles_data = self.user_profile.get("Roles") or []
-        self.my_blogs_data = self.user_profile.get("Blogs") or []
-        self.my_journal_data = self.user_profile.get("Journal") or []
+        self.my_note_logs = self.user_profile.get("Note Logs") or []
+        self.log(f"my_note_logs: {self.my_note_logs}, type: {type(self.my_note_logs)}")
+        for entry in self.my_note_logs:
+            if entry.get("class") == "BlogEntryProperties":
+                self.my_blogs_data.append(entry)
+                continue
+            elif entry.get("class") == "JournalEntryProperties":
+                self.my_journal_data.append(entry)
+                continue
         self.log(f"Contribution Record: {self.contribution_record}")
         self.log(f"Karma Points: {self.karma_points}")
         self.log(f"my_projects_data: {self.my_projects_data}")
@@ -268,7 +279,7 @@ class MyProfileApp(App):
         # the app (this runs in on_mount, before first paint, so an unguarded
         # TypeError here kills the whole session).
         self.user_GUID = ""
-        # Preferred: the current user's own profile already carries its GUID when
+        # The current user's own profile already carries its GUID when
         # the My-User-MD format set includes it — no directory search required.
         if isinstance(self.user_profile, dict) and self.user_profile.get("GUID"):
             self.user_GUID = self.user_profile.get("GUID")

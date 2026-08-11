@@ -294,22 +294,22 @@ class AddBlogEntryScreen(ModalScreen):
         )
 
         try:
-            tclient.create_egeria_bearer_token()
+            token = tclient.create_egeria_bearer_token(self.user_name, self.user_password)
 
             body = {
                 "class": "NewAttachmentRequestBody",
                 "properties": {
-                    "class": "NotificationProperties",
+                    "class": "BlogEntryProperties",
                     "qualifiedName": f"Blog::Blog-{datetime.now().isoformat()}",
                     "displayName": self.blog_entry_name,
                     "situation": self.blog_entry_situation,
                     "description": self.blog_entry_text,
                 }
             }
-            blog_entry_response = tclient.blog_my_activity(body)
+            blog_entry_response = tclient.blog_my_activity(body=body)
 
-            assert isinstance(blog_entry_response, dict)
-            blog_entry_guid = blog_entry_response["guid"]
+            assert isinstance(blog_entry_response, str)
+            blog_entry_guid = blog_entry_response
             self.log(f"Created Blog Entry assigned to the current user: {blog_entry_guid}")
         except PyegeriaException as e:
             self.notify(f"Add blog entry failed with return: {e}", timeout=10, severity="error")
@@ -516,7 +516,7 @@ class AddJournalEntryScreen(ModalScreen):
         body = {
             "class": "NewAttachmentRequestBody",
             "properties": {
-                "class": "NotificationProperties",
+                "class": "JournalEntryProperties",
                 "qualifiedName": self.qualified_name,
                 "displayName": self.journal_entry_title,
                 "situation": self.journal_entry_situation,
@@ -532,10 +532,10 @@ class AddJournalEntryScreen(ModalScreen):
         )
 
         try:
-            tclient.create_egeria_bearer_token()
-            journal_entry_response = tclient.journal_my_activity(body)
-            assert isinstance(journal_entry_response, dict)
-            self.log(f"Created ToDo assigned to the current user: {journal_entry_response['guid']}")
+            token = tclient.create_egeria_bearer_token(self.user_name, self.user_password)
+            journal_entry_response = tclient.journal_my_activity(body=body)
+            assert isinstance(journal_entry_response, str)
+            self.log(f"Created ToDo assigned to the current user: {journal_entry_response}")
         except PyegeriaException as e:
             self.notify(f"Add journal entry failed with return: {e}", timeout=10, severity="error")
         finally:
