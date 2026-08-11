@@ -246,8 +246,8 @@ Dr.Egeria organizes its commands into "families," each corresponding to a specif
   - `View Report`: Run a report spec ad hoc, supplying execution parameters (search string, output format, `Report Parameters` for a find-method spec's non-standard parameter, `Analytic Parameters` for an analytic-function spec's parameters, ...) at run time — no persistent element created.
   - `Create Report`: Persist a real Egeria `Report` asset that names a report spec and pins its own default execution parameters (including, for an analytic-function-backed spec, `Analytic Parameters`; or, for a report spec's action needing a parameter outside the standard find/search set — e.g. `collection_guid` for the `Collection Members` report — `Report Parameters` — see [`output-formats-and-report-specs.md`](output-formats-and-report-specs.md) for the find-method vs. analytic-function distinction), so it can be referenced by name and placed on a dashboard.
   - `Create Dashboard Sheet`: Create a named, ordered, nestable Dashboard Sheet — a local pyegeria-managed layout record (not yet an Egeria element; see `pyegeria/view/_output_dashboard_sheet_models.py`).
-  - `Link Report to Dashboard Sheet`: Place a `Report` (by name) onto a Dashboard Sheet as an ordered Placement, with layout hints (`Placement Span`/`Placement Emphasis`).
-  - `Add Text on Dashboard Sheet`: Place literal markdown text (a section header, explanation, or caption) onto a Dashboard Sheet as an ordered Placement, alongside Report placements — no Egeria element involved.
+  - `Link Report to Dashboard Sheet`: Place a `Report` (by name) onto a Dashboard Sheet as an ordered Placement, with layout hints (`Placement Span`/`Placement Emphasis`), optional viewer-role tagging (`Placement Perspectives`), and an optional drill-down target (`Placement Detail Spec`).
+  - `Add Text on Dashboard Sheet`: Place literal markdown text (a section header, explanation, or caption) onto a Dashboard Sheet as an ordered Placement, alongside Report placements — no Egeria element involved; also supports `Placement Perspectives` for viewer-role tagging.
 
 #### `Create Report`'s two Dictionary attributes, worked examples
 

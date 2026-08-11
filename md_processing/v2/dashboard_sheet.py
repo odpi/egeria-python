@@ -38,6 +38,22 @@ def _default_store_path() -> str:
     )
 
 
+def _parse_placement_perspectives(attributes: Dict[str, Any]) -> list:
+    """Read "Placement Perspectives" (BACKLOG.md NEXT-19, egeria-workspaces-fs)
+    out of a command's parsed attributes -- a "Simple List"-style attribute,
+    which the base attribute-parsing pipeline may hand back either as an
+    already-split list or as a raw comma-separated string (both shapes seen
+    elsewhere for this attribute style, see _normalize_report_params's own
+    _to_string_list coercion in format_set_executor.py); tolerate either
+    rather than assume one. Shared by both LinkReportToDashboardSheetProcessor
+    and AddTextOnDashboardSheetProcessor so the parsing rule lives in one
+    place, not duplicated per processor."""
+    value = attributes.get("Placement Perspectives", {}).get("value") or []
+    if isinstance(value, str):
+        return [p.strip() for p in value.split(",") if p.strip()]
+    return list(value)
+
+
 def _load_store(path: str) -> DashboardSheetDict:
     if os.path.exists(path):
         return DashboardSheetDict.load_from_json(path)
@@ -145,6 +161,10 @@ class LinkReportToDashboardSheetProcessor(AsyncBaseCommandProcessor):
         report_guid = attributes.get("Report Name", {}).get("guid")
         span = attributes.get("Placement Span", {}).get("value") or "1"
         emphasis = attributes.get("Placement Emphasis", {}).get("value") or "kpi"
+        # BACKLOG.md NEXT-19/NEXT-21 (egeria-workspaces-fs). "Placement Detail
+        # Spec" is a plain optional string, same pattern as report_name.
+        perspectives = _parse_placement_perspectives(attributes)
+        detail_spec = attributes.get("Placement Detail Spec", {}).get("value") or None
 
         if not sheet_name:
             raise ValueError("Dashboard Sheet Name is required.")
@@ -165,7 +185,10 @@ class LinkReportToDashboardSheetProcessor(AsyncBaseCommandProcessor):
                 f"Dashboard Sheet '{sheet_name}' does not exist. Create it first with 'Create Dashboard Sheet'."
             )
 
-        placement = Placement(ref=report_name, span=span, emphasis=emphasis)
+        placement = Placement(
+            ref=report_name, span=span, emphasis=emphasis,
+            perspectives=perspectives, detail_spec=detail_spec,
+        )
         replaced = False
         for i, p in enumerate(sheet.placements):
             if p.ref == report_name:
@@ -178,10 +201,16 @@ class LinkReportToDashboardSheetProcessor(AsyncBaseCommandProcessor):
         sheets.save_to_json(path)
         verb_word = "Updated placement of" if replaced else "Placed"
         logger.success(f"{verb_word} Report '{report_name}' in Dashboard Sheet '{sheet_name}'")
+        extra = []
+        if perspectives:
+            extra.append(f"perspectives={','.join(perspectives)}")
+        if detail_spec:
+            extra.append(f"detail_spec={detail_spec}")
+        extra_str = (", " + ", ".join(extra)) if extra else ""
         return (
             f"\n\n## {self.command.verb} Report to Dashboard Sheet\n\n"
             f"{verb_word} **{report_name}** in Dashboard Sheet **{sheet_name}** "
-            f"(span={span}, emphasis={emphasis})\n"
+            f"(span={span}, emphasis={emphasis}{extra_str})\n"
         )
 
 
@@ -209,6 +238,11 @@ class AddTextOnDashboardSheetProcessor(AsyncBaseCommandProcessor):
         content = attributes.get("MD Content", {}).get("value")
         span = attributes.get("Placement Span", {}).get("value") or "1"
         emphasis = attributes.get("Placement Emphasis", {}).get("value") or "kpi"
+        # BACKLOG.md NEXT-19 (egeria-workspaces-fs) -- a text placement (e.g. a
+        # section header) can be perspective-scoped too, not just a Report
+        # placement; no detail_spec here, a text block has no result to drill
+        # into.
+        perspectives = _parse_placement_perspectives(attributes)
 
         if not sheet_name:
             raise ValueError("Dashboard Sheet Name is required.")
@@ -225,7 +259,10 @@ class AddTextOnDashboardSheetProcessor(AsyncBaseCommandProcessor):
                 f"Dashboard Sheet '{sheet_name}' does not exist. Create it first with 'Create Dashboard Sheet'."
             )
 
-        placement = Placement(ref=placement_name, span=span, emphasis=emphasis, content=content)
+        placement = Placement(
+            ref=placement_name, span=span, emphasis=emphasis, content=content,
+            perspectives=perspectives,
+        )
         replaced = False
         for i, p in enumerate(sheet.placements):
             if p.ref == placement_name:
@@ -238,8 +275,9 @@ class AddTextOnDashboardSheetProcessor(AsyncBaseCommandProcessor):
         sheets.save_to_json(path)
         verb_word = "Updated" if replaced else "Placed"
         logger.success(f"{verb_word} text placement '{placement_name}' in Dashboard Sheet '{sheet_name}'")
+        extra_str = f", perspectives={','.join(perspectives)}" if perspectives else ""
         return (
             f"\n\n## {self.command.verb} Text on Dashboard Sheet\n\n"
             f"{verb_word} text placement **{placement_name}** in Dashboard Sheet **{sheet_name}** "
-            f"(span={span}, emphasis={emphasis})\n"
+            f"(span={span}, emphasis={emphasis}{extra_str})\n"
         )

@@ -275,6 +275,47 @@ def counts_by_type(mgr, type_map: Sequence[Tuple[str, str]], as_of: Optional[str
             for label, type_name in type_map]
 
 
+def sum_type_counts(mgr, type_map: Sequence[Tuple[str, str]], as_of: Optional[str] = None) -> Dict[str, Any]:
+    """
+    Composite: sum counts_by_type() across a caller-given (label, type_name)
+    list -- e.g. the Overview dashboard's "Cataloged Assets" total, which
+    used to be raw Python (`asset_total = sum(r["count"] for r in by_type)`)
+    in overview_handler.py rather than a reusable analytic function
+    (BACKLOG.md NEXT-18, egeria-workspaces).
+
+    Implemented via the generic fetch+analytic action executor
+    (`format_set_executor.run_analytic_action`) instead of hand-composing
+    the two calls inline, so this also doubles as the first real exercise of
+    that two-step action shape (`analytic_registry.AnalyticActionSpec`) --
+    see its docstring for why a composite metric is modeled as
+    (fetch, analytic) rather than one more hand-written function that
+    repeats `counts_by_type`'s own fetch inline (the way `ai_ready_assets`
+    does today).
+
+    A caller that already has a `counts_by_type()` result in hand (as
+    overview_handler.py does, for its own breakdown/chart) should call
+    `sum_counts()` directly on it instead -- this function re-fetches.
+    """
+    from pyegeria.view.format_set_executor import run_analytic_action
+    from pyegeria.view.analytic_registry import AnalyticActionSpec
+    spec = AnalyticActionSpec(
+        fetch="pyegeria.view.overview_metrics.counts_by_type",
+        analytic="pyegeria.view.overview_metrics.sum_counts",
+    )
+    return run_analytic_action(spec, mgr, fetch_kwargs={"type_map": type_map, "as_of": as_of})
+
+
+def sum_counts(by_type: List[Dict[str, Any]], mgr=None) -> Dict[str, Any]:
+    """The analytic step for `sum_type_counts` -- receives `counts_by_type`'s
+    raw result plus the same client `counts_by_type` itself was given
+    (unused here; kept purely for calling-convention consistency with an
+    analytic step that DOES need to fetch more -- e.g. following a
+    relationship to enrich, the pattern `ai_ready_assets` already uses
+    inline). Also directly reusable on a `by_type` result a caller already
+    has, without re-fetching (see `sum_type_counts`'s docstring)."""
+    return {"total": sum(r["count"] for r in by_type), "byType": by_type}
+
+
 def _classifications_of(el: dict) -> set:
     out = set()
     for c in el.get("classifications") or []:

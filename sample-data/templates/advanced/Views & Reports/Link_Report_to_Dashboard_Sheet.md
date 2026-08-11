@@ -44,6 +44,22 @@ ___
 >	**Default Value**: 1
 
 
+### Placement Perspectives
+>	**Input Required**: False
+
+>	**Attribute Type**: Simple List
+
+>	**Description**: Comma-separated viewer-role/perspective tags this placement is relevant to (e.g. governance, steward, owner, consumer, engineer, builder, privacy, community -- the same vocabulary Egeria Overview's own perspective filtering uses). Empty means relevant to every perspective.
+
+
+### Placement Detail Spec
+>	**Input Required**: False
+
+>	**Attribute Type**: Simple
+
+>	**Description**: Optional drill-down target -- the name of another Report Spec to navigate to for more detail on this placement's result.
+
+
 ### Effective Time
 >	**Input Required**: False
 

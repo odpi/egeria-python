@@ -33,6 +33,7 @@ from pyegeria.view.base_report_formats import (
     get_report_registry,
 )
 from pyegeria.view.output_formatter import generate_output
+from pyegeria.view.analytic_registry import AnalyticActionSpec
 from pyegeria.egeria_tech_client import EgeriaTech
 
 _CLIENT_CLASS_MAP = {
@@ -122,6 +123,41 @@ def _bind_client_args(func, client: Any) -> list:
         else:
             break
     return args
+
+
+def run_analytic_action(
+    action: AnalyticActionSpec, client: Any, *,
+    fetch_kwargs: Optional[Dict[str, Any]] = None,
+    analytic_kwargs: Optional[Dict[str, Any]] = None,
+) -> Any:
+    """Run an `analytic_registry.AnalyticActionSpec`'s fetch step, then (if
+    declared) its analytic step over the fetch's raw result -- the executor
+    for the fetch+analytic action shape (BACKLOG.md NEXT-18, egeria-workspaces).
+    Generalizes the pattern `ai_ready_assets` (overview_metrics.py) already
+    used by hand into a declared, reusable shape; every existing registered
+    analytic function with a plain `.function` string is untouched by this
+    and keeps using `_run_analytic_function`/`_resolve_analytic_function`
+    below exactly as before -- this is a separate, additive entry point, not
+    a replacement.
+
+    `client` is resolved once by the caller (same convention as
+    `_run_analytic_function`) and bound positionally to both steps' leading
+    client-shaped parameters -- `fetch` via the usual signature introspection
+    (`_bind_client_args`), `analytic` via the SAME resolved client args
+    (not re-introspected from `analytic`'s own signature, since its first
+    positional parameter is the fetch result, not a client) -- so `analytic`
+    can itself make a further client call (e.g. follow a relationship to
+    enrich) using the identical already-authenticated client `fetch` used.
+    """
+    fetch_func = _resolve_analytic_function(action.fetch)
+    fetch_clients = _bind_client_args(fetch_func, client)
+    raw_result = fetch_func(*fetch_clients, **(fetch_kwargs or {}))
+
+    if not action.analytic:
+        return raw_result
+
+    analytic_func = _resolve_analytic_function(action.analytic)
+    return analytic_func(raw_result, *fetch_clients, **(analytic_kwargs or {}))
 
 
 def _run_analytic_function(

@@ -130,11 +130,30 @@ class Placement(BaseModel):
             explanations, captions. None for a Report/Sheet placement. A
             consuming app checks this before attempting to resolve `ref`
             against a Report or Sheet, since text needs no such lookup.
+        perspectives: Viewer-role tags this placement is relevant to (e.g.
+            "governance", "steward" — the same vocabulary
+            `overview_specs.PERSP_KPIS`/`question_spec.perspectives` already
+            uses for Overview's own perspective filtering,
+            `overview_containers.view_for_perspective()`; egeria-workspaces
+            BACKLOG.md NEXT-19). Empty list (the default) means "relevant to
+            every perspective" — a consumer filtering by perspective should
+            keep an untagged placement rather than hide it, the same
+            fail-open default `view_for_perspective` uses for sub-containers.
+        detail_spec: Optional drill-down target — the name of another Report
+            Spec/FormatSet a consuming app can navigate to for more detail on
+            this placement's result, mirroring `Attribute.detail_spec` on
+            `FormatSet` (`_output_format_models.py`) exactly — same field
+            name, same "a plain string reference resolved by the caller"
+            contract this whole module's docstring already describes for
+            `Placement.ref` (egeria-workspaces BACKLOG.md NEXT-21). None
+            means this placement has no drill-down target.
     """
     ref: str
     span: Span = "1"
     emphasis: Emphasis = "kpi"
     content: Optional[str] = None
+    perspectives: List[str] = Field(default_factory=list)
+    detail_spec: Optional[str] = None
 
 
 class DashboardSheet(BaseModel):

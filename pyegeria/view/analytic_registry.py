@@ -47,6 +47,7 @@ from pydantic import BaseModel, Field
 __all__ = [
     'AnalyticParam',
     'AnalyticFunctionSpec',
+    'AnalyticActionSpec',
     'AnalyticRegistryCollision',
     'refresh_analytic_functions',
     'get_analytic_registry',
@@ -67,6 +68,37 @@ class AnalyticParam(BaseModel):
     description: str = ""
 
 
+class AnalyticActionSpec(BaseModel):
+    """A composite/derived analytic action, formalizing the pattern
+    `ai_ready_assets` pioneered by hand (see its docstring) into a declared
+    shape (BACKLOG.md NEXT-18, egeria-workspaces): a data-producing **fetch**
+    step (typically one of this module's own `find_*`-backed functions, e.g.
+    `counts_by_type`) whose raw result is passed to an optional **analytic**
+    step, which may itself fetch further related data if needed (e.g. follow
+    a relationship to enrich -- exactly what `ai_ready_assets` already does
+    inline, just as an undeclared implementation detail rather than a named
+    step). Both `fetch` and `analytic` are dotted import paths, resolved and
+    client-bound the same way a plain `AnalyticFunctionSpec.function` always
+    has been (see `format_set_executor._resolve_analytic_function`/
+    `_bind_client_args`, and its `run_analytic_action` for the two-step
+    invocation itself).
+
+    Deliberately *not* concerned with which of the resulting attributes
+    appear in a given output (TABLE/REPORT/KPI/...) -- that selection is
+    `Format.attributes`' existing job (its `key` projects a named field out
+    of whatever dict the action returns), unchanged by this model. An action
+    ends at producing the full attribute set; formatting picks from it.
+
+    A future non-local step (e.g. a Prefect flow or other remote service,
+    rather than an in-process Python callable) would only need `fetch`/
+    `analytic` to grow beyond a plain dotted-path string -- not designed
+    here, deliberately parked pending that real use case."""
+    fetch: str
+    analytic: Optional[str] = None
+    fetch_params: List[AnalyticParam] = Field(default_factory=list)
+    analytic_params: List[AnalyticParam] = Field(default_factory=list)
+
+
 class AnalyticFunctionSpec(BaseModel):
     """One entry in the analytic function registry.
 
@@ -79,7 +111,16 @@ class AnalyticFunctionSpec(BaseModel):
     spec can still point at it, but always gets that one fixed metric --
     retargeting it means editing the Python function, not authoring a new
     report spec). `binding_note` names exactly what's fixed, for the generic=False
-    case (blank when generic=True, since there's nothing fixed to name)."""
+    case (blank when generic=True, since there's nothing fixed to name).
+
+    `action`, if set, is a structured (fetch, analytic) breakdown of what
+    `function` does internally (see `AnalyticActionSpec`) -- additive only:
+    `function` always still resolves to a real, directly-callable entry
+    point that returns exactly what `returns` describes (for an
+    action-backed entry, a thin composite wrapper -- see `sum_type_counts`
+    -- built via `format_set_executor.run_analytic_action`), so every
+    existing consumer that only reads `.function` -- including every other
+    entry in this registry -- keeps working completely unchanged."""
     name: str
     function: str  # dotted import path, e.g. "pyegeria.view.overview_metrics.growth_series"
     description: str = ""
@@ -87,6 +128,7 @@ class AnalyticFunctionSpec(BaseModel):
     generic: bool = False
     binding_note: str = ""
     params: List[AnalyticParam] = Field(default_factory=list)
+    action: Optional[AnalyticActionSpec] = None
 
 
 class AnalyticFunctionDict(Dict[str, AnalyticFunctionSpec]):
@@ -284,6 +326,33 @@ _BUILTINS: Dict[str, AnalyticFunctionSpec] = {
         generic=False,
         binding_note="Fixed to Collaboration OMAS's feedback relationship types -- not a parameter.",
         params=[_as_of()],
+    ),
+    "sum_type_counts": AnalyticFunctionSpec(
+        name="sum_type_counts",
+        function="pyegeria.view.overview_metrics.sum_type_counts",
+        description="Sum of counts_by_type() across a caller-given (label, type_name) list -- "
+                    "e.g. the Overview dashboard's 'Cataloged Assets' total. First real registered "
+                    "user of the fetch+analytic action shape (see AnalyticActionSpec) -- fetch is "
+                    "counts_by_type itself (already registered above, reused as-is), analytic is a "
+                    "small sum-reducer over its result; `function` above is the thin composite "
+                    "wrapper that runs both via run_analytic_action, so calling it directly (the "
+                    "old, single-function path) still works exactly like every other entry here.",
+        returns="dict (total, byType)",
+        generic=True,
+        action=AnalyticActionSpec(
+            fetch="pyegeria.view.overview_metrics.counts_by_type",
+            analytic="pyegeria.view.overview_metrics.sum_counts",
+            fetch_params=[
+                AnalyticParam(name="type_map", type="list[tuple[str, str]]", required=True,
+                              description="(label, type_name) pairs to count and sum."),
+                _as_of(),
+            ],
+        ),
+        params=[
+            AnalyticParam(name="type_map", type="list[tuple[str, str]]", required=True,
+                          description="(label, type_name) pairs to count and sum."),
+            _as_of(),
+        ],
     ),
     "metric_trend": AnalyticFunctionSpec(
         name="metric_trend",

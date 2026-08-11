@@ -747,6 +747,44 @@
       "max_cardinality": 1,
       "level": "Domain",
       "Journal Entry": ""
+    },
+    "Placement Perspectives": {
+      "variable_name": "perspectives",
+      "inUpdate": true,
+      "attr_labels": "",
+      "examples": "",
+      "default_value": "",
+      "valid_values": [],
+      "existing_element": "",
+      "description": "Comma-separated viewer-role/perspective tags this placement is relevant to (e.g. governance, steward, owner, consumer, engineer, builder, privacy, community -- the same vocabulary Egeria Overview's own perspective filtering uses). Empty means relevant to every perspective.",
+      "generated": false,
+      "style": "Simple List",
+      "user_specified": true,
+      "unique": false,
+      "input_required": false,
+      "min_cardinality": 0,
+      "max_cardinality": 1,
+      "level": "Basic",
+      "Journal Entry": ""
+    },
+    "Placement Detail Spec": {
+      "variable_name": "detail_spec",
+      "inUpdate": true,
+      "attr_labels": "",
+      "examples": "",
+      "default_value": "",
+      "valid_values": [],
+      "existing_element": "",
+      "description": "Optional drill-down target -- the name of another Report Spec to navigate to for more detail on this placement's result.",
+      "generated": false,
+      "style": "Simple",
+      "user_specified": true,
+      "unique": false,
+      "input_required": false,
+      "min_cardinality": 0,
+      "max_cardinality": 1,
+      "level": "Basic",
+      "Journal Entry": ""
     }
   },
   "bundles": {
@@ -877,7 +915,8 @@
       "own_attributes": [
         "Dashboard Sheet Name",
         "Placement Emphasis",
-        "Placement Span"
+        "Placement Span",
+        "Placement Perspectives"
       ]
     },
     "Text Placement Base": {
@@ -901,7 +940,9 @@
         "Dashboard Sheet Name",
         "Placement Emphasis",
         "Placement Span",
-        "Report Name"
+        "Report Name",
+        "Placement Perspectives",
+        "Placement Detail Spec"
       ]
     },
     "Report Base": {
