@@ -18,12 +18,14 @@ class MainScreen(Screen):
 
     BINDINGS = [
         ("q", "app.quit", "Quit"),
-        ("ctrl+e", "edit_table", "Edit Selected Table"),
         ("ctrl+s", "show_comments", "Show Comments for Selected Row"),
-        # ("ctrl+a", "add_to_table", "Add to Selected Table"),
         ("ctrl+t", "add_todos", "Add Todos"),
         ("ctrl+j", "add_journals", "Add Journals"),
-        ("ctrl+b", "add_blogs", "Add Blogs")
+        ("ctrl+b", "add_blogs", "Add Blogs"),
+        ("ctrl+c", "add_association", "Add Association"),
+        ("ctrl+r", "add_role", "Add Role"),
+        ("ctrl+g", "add_team", "Add Team"),
+        ("ctrl+m", "add_my_collections", "Add My Collections"),
     ]
 
     CSS_PATH = "my_profile.tcss"
@@ -138,5 +140,29 @@ class MainScreen(Screen):
     async def action_add_blogs(self):
         """ Add to the selected table """
         self.selected_table = "blogs_table"
+        self.selected_row = 0
+        await self.app.add_to_tables(self.selected_table, self.selected_row)
+
+    async def action_add_my_collections(self):
+        """ Add to the selected table """
+        self.selected_table = "my_collections_table"
+        self.selected_row = 0
+        await self.app.add_to_tables(self.selected_table, self.selected_row)
+
+    async def action_add_association(self):
+        """ Add to the selected table """
+        self.selected_table = "associations_table"
+        self.selected_row = 0
+        await self.app.add_to_tables(self.selected_table, self.selected_row)
+
+    async def action_add_role(self):
+        """ Add to the selected table """
+        self.selected_table = "roles_table"
+        self.selected_row = 0
+        await self.app.add_to_tables(self.selected_table, self.selected_row)
+
+    async def action_add_team(self):
+        """ Add to the selected table """
+        self.selected_table = "my_team_table"
         self.selected_row = 0
         await self.app.add_to_tables(self.selected_table, self.selected_row)

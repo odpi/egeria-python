@@ -2101,13 +2101,11 @@ class MyProfileApp(App):
         self.log(f"Adding row {selected_row} to table {selected_table}")
         self.selected_table = selected_table
         self.selected_row = selected_row
-        if self.selected_table == "roles_table":
+        if self.selected_table == "role_table":
             await self.push_screen(AddRoleScreen(self.selected_table), callback=self.add_role_callback)
-        elif self.selected_table == "projects_table":
-            await self.push_screen(AddProjectScreen(self.selected_table), callback=self.add_project_callback)
-        elif self.selected_table == "communities_table":
+        elif self.selected_table == "associations_table":
             await self.push_screen(AddCommunityScreen(self.selected_table), callback=self.add_community_callback)
-        elif self.selected_table == "teams_table":
+        elif self.selected_table == "my_team_table":
             await self.push_screen(AddTeamScreen(self.selected_table), callback=self.add_team_callback)
         elif self.selected_table == "blogs_table":
             await self.push_screen(AddBlogEntryScreen(self.selected_table), callback=self.add_blog_entry_callback)
