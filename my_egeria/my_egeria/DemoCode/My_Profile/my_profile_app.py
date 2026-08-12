@@ -7,7 +7,6 @@
 """
 
 import datetime
-import pprint
 import re
 import json
 import sys
@@ -19,9 +18,8 @@ if str(root_path) not in sys.path:
     sys.path.append(str(root_path))
 
 from pyegeria import load_app_config, settings, MyProfile, PyegeriaException, print_basic_exception, exec_report_spec, \
-    AutomatedCuration, MetadataExpert, ActorManager, EgeriaCat, CollectionManager, ProductManager, \
-    PyegeriaInvalidParameterException, PyegeriaAPIException, DataEngineer, copy_to_clipboard
-from pyegeria.omvs import GovernanceOfficer
+    AutomatedCuration, ProductManager, \
+    PyegeriaInvalidParameterException, PyegeriaAPIException, DataEngineer
 from textual import on
 from textual.app import App, ComposeResult
 from textual.containers import ScrollableContainer
@@ -37,6 +35,7 @@ from EditRolesScreen import EditRolesScreen
 from EditTeamsScreen import EditTeamsScreen
 from EditBlogsScreen import EditBlogsScreen
 from EditJournalScreen import EditJournalScreen
+from EditAssociationsScreen import EditAssociationsScreen
 from TechnologyTypesScreen import TechnologyTypesScreen
 from TechnologyTypeOptionsScreen import TechnologyTypeOptionsScreen
 from TechnologyTypeTemplatesScreen import TechnologyTypeTemplatesScreen
@@ -50,7 +49,8 @@ from SearchForTermScreen import SearchForTermScreen
 from CreateSubscriptionRequestScreen import CreateSubscriptionRequestScreen
 from UserIdentitiesScreen import UserIdentitiesScreen
 from ShowCommentsScreen import ShowCommentsScreen
-
+from AddToElementsScreens import (AddRoleScreen, AddProjectScreen, AddCommunityScreen, AddTeamScreen,
+                                  AddBlogEntryScreen, AddJournalEntryScreen, AddTodoScreen, AddAssociationScreen)
 
 class MyProfileApp(App):
     """My Profile App.
@@ -76,6 +76,8 @@ class MyProfileApp(App):
         "edit_todos": EditTodosScreen,
         "edit_projects": EditProjectsScreen,
         "edit_blogs": EditBlogsScreen,
+        "edit_journal": EditJournalScreen,
+        "edit_associations": EditAssociationsScreen,
         "tech_types": TechnologyTypesScreen,
         "tech_type_options": TechnologyTypeOptionsScreen,
         "tech_type_templates": TechnologyTypeTemplatesScreen,
@@ -87,6 +89,14 @@ class MyProfileApp(App):
         "create_subscription": CreateSubscriptionRequestScreen,
         "my_team": MyTeam,
         "show_comments": ShowCommentsScreen,
+        "add_role": AddRoleScreen,
+        "add_project": AddProjectScreen,
+        "add_community": AddCommunityScreen,
+        "add_team": AddTeamScreen,
+        "add_blog_entry": AddBlogEntryScreen,
+        "add_journal_entry": AddJournalEntryScreen,
+        "add_todo": AddTodoScreen,
+        "add_association": AddAssociationScreen,
     }
 
     def __init__(self, *args, **kwargs):
@@ -117,7 +127,7 @@ class MyProfileApp(App):
         self.todos = []
         self.teams = []
         self.other_function_list = []
-        self.tech_type_json: str
+        self.tech_type_json: str = ""
         self.tech_type_response = None
         self.tech_type_list = []
         self.tech_type_guid = ""
@@ -209,6 +219,10 @@ class MyProfileApp(App):
             self.exit(413)
             return
 
+        # clear the target data structures.
+        self.my_blogs_data = [{}]
+        self.my_journal_data = [{}]
+
         # strip out the individual profile elements
         self.user_profile = self.user_profile_struct[0]
         self.contribution_record = self.user_profile.get("Contribution Record") or {}
@@ -219,8 +233,15 @@ class MyProfileApp(App):
         self.my_teams_data = self.user_profile.get("Teams") or []
         self.my_communities_data = self.user_profile.get("Communities") or []
         self.my_roles_data = self.user_profile.get("Roles") or []
-        self.my_blogs_data = self.user_profile.get("Blogs") or []
-        self.my_journal_data = self.user_profile.get("Journal") or []
+        self.my_note_logs = self.user_profile.get("Note Logs") or []
+        self.log(f"my_note_logs: {self.my_note_logs}, type: {type(self.my_note_logs)}")
+        for entry in self.my_note_logs:
+            if entry.get("class") == "BlogEntryProperties":
+                self.my_blogs_data.append(entry)
+                continue
+            elif entry.get("class") == "JournalEntryProperties":
+                self.my_journal_data.append(entry)
+                continue
         self.log(f"Contribution Record: {self.contribution_record}")
         self.log(f"Karma Points: {self.karma_points}")
         self.log(f"my_projects_data: {self.my_projects_data}")
@@ -258,7 +279,7 @@ class MyProfileApp(App):
         # the app (this runs in on_mount, before first paint, so an unguarded
         # TypeError here kills the whole session).
         self.user_GUID = ""
-        # Preferred: the current user's own profile already carries its GUID when
+        # The current user's own profile already carries its GUID when
         # the My-User-MD format set includes it — no directory search required.
         if isinstance(self.user_profile, dict) and self.user_profile.get("GUID"):
             self.user_GUID = self.user_profile.get("GUID")
@@ -308,79 +329,94 @@ class MyProfileApp(App):
 
         main_screen = self.get_screen("main")
 
-        self.projects_table = main_screen.query_one("#projects_table", DataTable)
-        self.communities_table = main_screen.query_one("#communities_table", DataTable)
+        # self.projects_table = main_screen.query_one("#projects_table", DataTable)
+        # self.communities_table = main_screen.query_one("#communities_table", DataTable)
         self.roles_table = main_screen.query_one("#roles_table", DataTable)
         self.blogs_table = main_screen.query_one("#blogs_table", DataTable)
         self.journal_table = main_screen.query_one("#journal_table", DataTable)
         self.todos_table = main_screen.query_one("#todos_table", DataTable)
         self.user_identity_table = main_screen.query_one("#user_identity_table", DataTable)
         self.teams_table = main_screen.query_one("#teams_table", DataTable)
+        self.associations_table = main_screen.query_one("#associations_table", DataTable)
+        self.my_collections_table = main_screen.query_one("#my_collections_table", DataTable)
 
-        assert self.projects_table is not None
-        assert self.communities_table is not None
+        # assert self.projects_table is not None
+        # assert self.communities_table is not None
         assert self.roles_table is not None
         assert self.blogs_table is not None
         assert self.journal_table is not None
         assert self.todos_table is not None
         assert self.user_identity_table is not None
         assert self.teams_table is not None
+        assert self.associations_table is not None
+        assert self.my_collections_table is not None
 
-        self.projects_table.clear(columns=True)
-        self.projects_table.add_columns("Project Name", "Description", "Qualified Name")
-        self.projects_table.zebra = True
-        self.projects_table.cursor_type = "row"
+        # self.projects_table.clear(columns=True)
+        # self.projects_table.add_columns("Status or Type", "Name", "Description", "GUID")
+        # self.projects_table.zebra_stripes = True
+        # self.projects_table.cursor_type = "row"
 
-        self.communities_table.clear(columns=True)
-        self.communities_table.add_columns("Assignment Type", "Community Name", "Description", "GUID")
-        self.communities_table.zebra = True
-        self.communities_table.cursor_type = "row"
+        # self.communities_table.clear(columns=True)
+        # self.communities_table.add_columns("Assignment Type", "Community Name", "Description", "GUID")
+        # self.communities_table.zebra_stripes = True
+        # self.communities_table.cursor_type = "row"
 
         self.roles_table.clear(columns=True)
         self.roles_table.add_columns("Role Name", "Role Type","Description", "GUID")
-        self.roles_table.zebra = True
+        self.roles_table.zebra_stripes = True
         self.roles_table.cursor_type = "row"
 
         self.teams_table.clear(columns=True)
         self.teams_table.add_columns("Assignment Type", "Team Name", "Description","GUID")
-        self.teams_table.zebra = True
+        self.teams_table.zebra_stripes = True
         self.teams_table.cursor_type = "row"
 
         self.blogs_table.clear(columns=True)
         self.blogs_table.add_columns("Blog Title", "Date", "Text", "GUID")
-        self.blogs_table.zebra = True
+        self.blogs_table.zebra_stripes = True
         self.blogs_table.cursor_type = "row"
 
         self.journal_table.clear(columns=True)
         self.journal_table.add_columns("Journal Entry", "Date", "Text", "GUID")
-        self.journal_table.zebra = True
+        self.journal_table.zebra_stripes = True
         self.journal_table.cursor_type = "row"
 
         self.todos_table.clear(columns=True)
         self.todos_table.add_columns("To-Do Name", "Activity Status", "Description", "GUID")
-        self.todos_table.zebra = True
+        self.todos_table.zebra_stripes = True
         self.todos_table.cursor_type = "row"
 
         self.user_identity_table.clear(columns=True)
         self.user_identity_table.add_columns("Display Name", "User ID", "Distinguished Name", "GUID")
-        self.user_identity_table.zebra = True
+        self.user_identity_table.zebra_stripes = True
         self.user_identity_table.cursor_type = "row"
 
-        # Populate rows
-        for p in self.projects if isinstance(self.projects, list) else []:
-            self.projects_table.add_row(
-                str(p.get("Name", "")),
-                str(p.get("Description", "")),
-                str(p.get("Qualified Name", p.get("qualified_name", ""))),
-            )
+        self.associations_table.clear(columns=True)
+        self.associations_table.add_columns("Status or Type", "Name", "Description", "GUID")
+        self.associations_table.zebra_stripes = True
+        self.associations_table.cursor_type = "row"
 
-        for c in self.communities if isinstance(self.communities, list) else []:
-            self.communities_table.add_row(
-                str(c.get("Assignment Type", "")),
-                str(c.get("Name", "")),
-                str(c.get("Description", "")),
-                str(c.get("GUID", c.get("guid", "")))
-            )
+        self.my_collections_table.clear(columns=True)
+        self.my_collections_table.add_columns("Collection Name", "Collection Description", "Collection GUID")
+        self.my_collections_table.zebra_stripes = True
+        self.my_collections_table.cursor_type = "row"
+
+        # Populate rows
+        # for p in self.projects if isinstance(self.projects, list) else []:
+        #     self.projects_table.add_row(
+        #         str(p.get("Project Status", "")),
+        #         str(p.get("Name", "")),
+        #         str(p.get("Description", "")),
+        #         str(p.get("GUID", "")),
+        #     )
+        #
+        # for c in self.communities if isinstance(self.communities, list) else []:
+        #     self.communities_table.add_row(
+        #         str(c.get("Assignment Type", "")),
+        #         str(c.get("Name", "")),
+        #         str(c.get("Description", "")),
+        #         str(c.get("GUID", c.get("guid", "")))
+        #     )
 
         for r in self.roles if isinstance(self.roles, list) else []:
             self.roles_table.add_row(
@@ -420,6 +456,22 @@ class MyProfileApp(App):
                 str(t.get("Name", "")),
                 str(t.get("Description", "")),
                 str(t.get("GUID", t.get("guid", ""))),
+            )
+        self.associations_table.add_row(f"[b u]Projects[/b u]", "", "", "")
+        for p in self.projects if isinstance(self.projects, list) else []:
+            self.associations_table.add_row(
+                str(p.get("Project Status", "")),
+                str(p.get("Name", "")),
+                str(p.get("Description", "")),
+                str(p.get("GUID", "")),
+            )
+        self.associations_table.add_row(f"[b u]Communities[/b u]", "", "", "")
+        for c in self.communities if isinstance(self.communities, list) else []:
+            self.associations_table.add_row(
+                str(c.get("Assignment Type", "")),
+                str(c.get("Name", "")),
+                str(c.get("Description", "")),
+                str(c.get("GUID", c.get("guid", "")))
             )
 
     def action_quit(self) -> None:
@@ -590,43 +642,6 @@ class MyProfileApp(App):
                                                        domain.get("Type Name", ""),
                                                        domain.get("GUID", ""))
                     continue
-
-            # Data Specifications removed from the display, code is working but being replaced by Root Collections table
-            # data_specification_table: DataTable = DataTable(id="data_specification_table")
-            # data_specification_table.add_columns("Display Name", "Description", "Qualified Name")
-            # data_specification_table.cursor_type = "row"
-            # data_specification_table.zebra_stripes = True
-            # try:
-            #     self.data_specification_data = exec_report_spec(format_set_name="Data-Specifications",
-            #                                                      output_format="DICT",
-            #                                                      params = {"search_string": "*"},
-            #                                                      view_server=self.view_server,
-            #                                                      view_url=self.platform_url,
-            #                                                      user=self.user_name,
-            #                                                      user_pass=self.user_password)
-            # except PyegeriaException as e:
-            #     self.log(f"Error retrieving data specification details: {e!s}")
-            #     self.exit(423)
-            #     return (423)
-            #
-            # if isinstance(self.data_specification_data, dict):
-            #     self.data_specification_data_extract = self.data_specification_data.get("data")
-            # elif isinstance(self.data_specification_data, list):
-            #     self.data_specification_data_extract = self.data_specification_data
-            # else:
-            #     self.data_specification_data_extract = self.data_specification_data.get("Data-Specifications") or []
-            #
-            # if self.data_specification_data_extract == [] or self.data_specification_data_extract == {} or self.data_specification_data_extract == None:
-            #     self.log(f"No data specifications found for user {self.user_name}")
-            #     data_specification_table.add_row("No data specifications found", "No data returned from Egeria", "")
-            # else:
-            #     self.log(f"Found {self.data_specification_data_extract} data specifications for user {self.user_name}")
-            #
-            #     for spec in self.data_specification_data_extract:
-            #         data_specification_table.add_row(spec.get("Display Name", ""),
-            #                                       spec.get("Description", ""),
-            #                                       spec.get("Qualified Name", ""))
-            #         continue
 
             # Root Collections
 
@@ -1594,7 +1609,12 @@ class MyProfileApp(App):
                     }"""
                     self.push_screen(CreateSubscriptionRequestScreen(), callback=self.create_subscription_callback)
             else:
-                self.push_screen(ShopForDataScreen(self.view_server, self.platform_url, self.user_name, self.user_password, self.selected_item, self.selected_tree), callback=self.shop_for_data_callback)
+                self.push_screen(ShopForDataScreen(self.view_server,
+                                                   self.platform_url,
+                                                   self.user_name, self.user_password,
+                                                   self.selected_item,
+                                                   self.selected_tree),
+                                 callback=self.shop_for_data_callback)
 
     def create_subscription_callback(self, result):
         """ Callback routine for create subscription request screen
@@ -2022,8 +2042,25 @@ class MyProfileApp(App):
             self.push_screen(EditJournalScreen(), callback=self.edit_journal_callback)
         elif table_name == "todos_table":
             self.push_screen(EditTodosScreen(), callback=self.edit_todos_callback)
+        elif table_name == "associations_table":
+            self.push_screen(EditAssociationsScreen(), callback=self.edit_assaociations_callback)
         else:
             self.log(f"Unexpected table name: {table_name}")
+
+    def edit_projects_callback(self, return_c):
+        pass
+
+    def edit_blogs_callback(self, return_c):
+        pass
+
+    def edit_journal_callback(self, return_c):
+        pass
+
+    def edit_todos_callback(self, return_c):
+        pass
+
+    def edit_assaociations_callback(self, return_c):
+        pass
 
     def show_comments(self, table_name, row_k):
         """ Show comments for the selected table """
@@ -2056,6 +2093,87 @@ class MyProfileApp(App):
             # if it doesnt exist then push the main screen
             self.log("Main screen does not exist")
             self.push_screen("main")
+        return
+
+    async def add_to_tables(self, selected_table, selected_row):
+        """ called from main screen when user selects to add a row to a table
+            This might not be a supported function for all tables"""
+        self.log(f"Adding row {selected_row} to table {selected_table}")
+        self.selected_table = selected_table
+        self.selected_row = selected_row
+        if self.selected_table == "roles_table":
+            await self.push_screen(AddRoleScreen(self.selected_table), callback=self.add_role_callback)
+        elif self.selected_table == "projects_table":
+            await self.push_screen(AddProjectScreen(self.selected_table), callback=self.add_project_callback)
+        elif self.selected_table == "communities_table":
+            await self.push_screen(AddCommunityScreen(self.selected_table), callback=self.add_community_callback)
+        elif self.selected_table == "teams_table":
+            await self.push_screen(AddTeamScreen(self.selected_table), callback=self.add_team_callback)
+        elif self.selected_table == "blogs_table":
+            await self.push_screen(AddBlogEntryScreen(self.selected_table), callback=self.add_blog_entry_callback)
+        elif self.selected_table == "journal_table":
+            await self.push_screen(AddJournalEntryScreen(self.selected_table), callback=self.add_journal_entry_callback)
+        elif self.selected_table == "todos_table":
+            await self.push_screen(AddTodoScreen(self.selected_table), callback=self.add_todo_callback)
+        elif self.selected_table == "associations_table":
+            await self.push_screen(AddAssociationScreen(self.selected_table), callback=self.add_association_callback)
+        else:
+            self.log(f"Unexpected table name: {self.selected_table}")
+
+    def add_role_callback(self, result):
+        """ called from AddRoleScreen when user adds a role """
+        if result:
+            self.log(f"Added role {result}")
+            self.switch_screen("main")
+        return
+
+    def add_association_callback(self, result):
+        """ called from AddAssociationScreen when user adds an association """
+        if result:
+            self.log(f"Added association {result}")
+            self.switch_screen("main")
+        return
+
+    def add_project_callback(self, result):
+        """ called from AddProjectScreen when user adds a project """
+        if result:
+            self.log(f"Added project {result}")
+            self.switch_screen("main")
+        return
+
+    def add_community_callback(self, result):
+        """ called from AddCommunityScreen when user adds a community """
+        if result:
+            self.log(f"Added community {result}")
+            self.switch_screen("main")
+        return
+
+    def add_team_callback(self, result):
+        """ called from AddTeamScreen when user adds a team """
+        if result:
+            self.log(f"Added team {result}")
+            self.switch_screen("main")
+        return
+
+    def add_blog_entry_callback(self, result):
+        """ called from AddBlogEntryScreen when user adds a blog entry """
+        if result:
+            self.log(f"Added blog entry {result}")
+            self.switch_screen("main")
+        return
+
+    def add_journal_entry_callback(self, result):
+        """ called from AddJournalEntryScreen when user adds a journal entry """
+        if result:
+            self.log(f"Added journal entry {result}")
+            self.switch_screen("main")
+        return
+
+    def add_todo_callback(self, result):
+        """ called from AddTodoScreen when user adds a todo """
+        if result:
+            self.log(f"Added todo {result}")
+            self.switch_screen("main")
         return
 
 if __name__ == "__main__":
