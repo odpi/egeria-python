@@ -253,6 +253,23 @@ _DEMOS: Dict[str, FormatSet] = {
         result_shape="dict (contributors, byType)",
         chart_types=["BAR"],
     ),
+    "Analytic Demo - Assets by Type Total (Composite)": _demo(
+        heading="Assets by Type Total (Composite)",
+        what="Sum of counts_by_type() across a caller-given (label, type_name) list -- e.g. the "
+             "Overview dashboard's 'Cataloged Assets' total. First real registered user of the "
+             "fetch+analytic action shape (NEXT-18, egeria-workspaces BACKLOG.md): fetch is "
+             "counts_by_type itself (see 'Analytic Demo - Assets by Type Breakdown' above, same "
+             "function), analytic is a small sum-reducer over its result -- see "
+             "AnalyticActionSpec/run_analytic_action (format_set_executor.py) for the two-step "
+             "mechanism this exercises end to end. byType in the result is counts_by_type's own "
+             "unmodified rows, same shape as that demo's result.",
+        analytic_function_name="sum_type_counts",
+        demo_params={"type_map": [
+            ["Data Stores", "DataStore"], ["Data Sets", "DataSet"],
+            ["Software Components", "DeployedSoftwareComponent"],
+        ]},
+        result_shape="dict (total, byType)",
+    ),
     "Analytic Demo - Metric Trend (Governance Coverage)": _demo(
         heading="Metric Trend: Governance Coverage Over Time",
         what="governed_coverage re-run at each snapshot, turning a point-in-time metric into a "

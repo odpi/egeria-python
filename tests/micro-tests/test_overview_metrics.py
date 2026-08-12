@@ -116,6 +116,49 @@ def test_counts_by_type_composes_count_elements():
     ]
 
 
+# ── sum_counts / sum_type_counts (BACKLOG.md NEXT-18) ────────────────────────
+
+def test_sum_counts_totals_a_counts_by_type_result():
+    by_type = [
+        {"label": "Data Stores", "type": "DataStore", "count": 3},
+        {"label": "Data Sets", "type": "DataSet", "count": 5},
+    ]
+    assert om.sum_counts(by_type) == {"total": 8, "byType": by_type}
+
+
+def test_sum_counts_ignores_the_unused_client_arg():
+    # mgr is accepted but unused -- present purely for calling-convention
+    # consistency with an analytic step that DOES need to fetch more.
+    by_type = [{"label": "A", "type": "Alpha", "count": 2}]
+    assert om.sum_counts(by_type, mgr=object()) == {"total": 2, "byType": by_type}
+
+
+def test_sum_type_counts_runs_the_real_fetch_then_analytic_pipeline():
+    # End-to-end through run_analytic_action -- not a mocked shortcut -- using
+    # a real MetadataExpert-shaped mock, same convention as the
+    # counts_by_type test above.
+    mgr = _mgr()
+    mgr.find_metadata_elements.side_effect = [[{"a": 1}] * 3, [{"a": 1}] * 5]
+    result = om.sum_type_counts(mgr, [("Data Stores", "DataStore"), ("Data Sets", "DataSet")])
+    assert result == {
+        "total": 8,
+        "byType": [
+            {"label": "Data Stores", "type": "DataStore", "count": 3},
+            {"label": "Data Sets", "type": "DataSet", "count": 5},
+        ],
+    }
+
+
+def test_sum_type_counts_is_registered_with_a_matching_action_spec():
+    from pyegeria.view.analytic_registry import get_analytic_registry
+
+    spec = get_analytic_registry()["sum_type_counts"]
+    assert spec.function == "pyegeria.view.overview_metrics.sum_type_counts"
+    assert spec.action is not None
+    assert spec.action.fetch == "pyegeria.view.overview_metrics.counts_by_type"
+    assert spec.action.analytic == "pyegeria.view.overview_metrics.sum_counts"
+
+
 # ── governed_coverage ────────────────────────────────────────────────────
 
 def test_governed_coverage_extracts_classifications_and_zones():

@@ -1,10 +1,10 @@
-Dr. Egeria Test Run — 2026-08-03 15:56:45.552541
+Dr. Egeria Test Run — 2026-08-11 21:27:07.496812
 
 
 ### VALIDATE MODE ###
 
 ================================================================================
-FILE: dr_test_glossary.md  |  DIRECTIVE: validate  |  15:56:46
+FILE: dr_test_glossary.md  |  DIRECTIVE: validate  |  21:27:08
 ================================================================================
 v2: Processing Markdown File: /Users/dwolfson/localGit/egeria-python/tests/dr-egeria-command-tests/dr_test_glossary.md
 Processing Errors:
@@ -76,7 +76,7 @@ v2: Processing complete for '/Users/dwolfson/localGit/egeria-python/tests/dr-ege
 SCORE: 15 SUCCESS  1 FAILURE  0 WARNING
 
 ================================================================================
-FILE: dr_test_governance.md  |  DIRECTIVE: validate  |  15:56:50
+FILE: dr_test_governance.md  |  DIRECTIVE: validate  |  21:27:11
 ================================================================================
 v2: Processing Markdown File: /Users/dwolfson/localGit/egeria-python/tests/dr-egeria-command-tests/dr_test_governance.md
 Processing Errors:
@@ -269,7 +269,7 @@ v2: Processing complete for '/Users/dwolfson/localGit/egeria-python/tests/dr-ege
 SCORE: 38 SUCCESS  8 FAILURE  1 WARNING
 
 ================================================================================
-FILE: dr_test_projects.md  |  DIRECTIVE: validate  |  15:57:02
+FILE: dr_test_projects.md  |  DIRECTIVE: validate  |  21:27:22
 ================================================================================
 v2: Processing Markdown File: /Users/dwolfson/localGit/egeria-python/tests/dr-egeria-command-tests/dr_test_projects.md
 
@@ -324,7 +324,7 @@ v2: Processing complete for '/Users/dwolfson/localGit/egeria-python/tests/dr-ege
 SCORE: 14 SUCCESS  0 FAILURE  0 WARNING
 
 ================================================================================
-FILE: dr_test_collections_good.md  |  DIRECTIVE: validate  |  15:57:05
+FILE: dr_test_collections_good.md  |  DIRECTIVE: validate  |  21:27:24
 ================================================================================
 v2: Processing Markdown File: /Users/dwolfson/localGit/egeria-python/tests/dr-egeria-command-tests/dr_test_collections_good.md
 Processing Errors:
@@ -438,7 +438,7 @@ v2: Processing complete for '/Users/dwolfson/localGit/egeria-python/tests/dr-ege
 SCORE: 20 SUCCESS  3 FAILURE  0 WARNING
 
 ================================================================================
-FILE: dr_test_collections_mean.md  |  DIRECTIVE: validate  |  15:57:10
+FILE: dr_test_collections_mean.md  |  DIRECTIVE: validate  |  21:27:30
 ================================================================================
 v2: Processing Markdown File: /Users/dwolfson/localGit/egeria-python/tests/dr-egeria-command-tests/dr_test_collections_mean.md
 Processing Errors:
@@ -545,7 +545,7 @@ v2: Processing complete for '/Users/dwolfson/localGit/egeria-python/tests/dr-ege
 SCORE: 1 SUCCESS  9 FAILURE  0 WARNING
 
 ================================================================================
-FILE: dr_test_products_good.md  |  DIRECTIVE: validate  |  15:57:13
+FILE: dr_test_products_good.md  |  DIRECTIVE: validate  |  21:27:32
 ================================================================================
 v2: Processing Markdown File: /Users/dwolfson/localGit/egeria-python/tests/dr-egeria-command-tests/dr_test_products_good.md
 Processing Errors:
@@ -629,7 +629,7 @@ v2: Processing complete for '/Users/dwolfson/localGit/egeria-python/tests/dr-ege
 SCORE: 11 SUCCESS  4 FAILURE  0 WARNING
 
 ================================================================================
-FILE: dr_test_external_ref.md  |  DIRECTIVE: validate  |  15:57:16
+FILE: dr_test_external_ref.md  |  DIRECTIVE: validate  |  21:27:35
 ================================================================================
 v2: Processing Markdown File: /Users/dwolfson/localGit/egeria-python/tests/dr-egeria-command-tests/dr_test_external_ref.md
 Processing Errors:
@@ -741,7 +741,7 @@ v2: Processing complete for '/Users/dwolfson/localGit/egeria-python/tests/dr-ege
 SCORE: 10 SUCCESS  8 FAILURE  0 WARNING
 
 ================================================================================
-FILE: dr_test_feedback.md  |  DIRECTIVE: validate  |  15:57:20
+FILE: dr_test_feedback.md  |  DIRECTIVE: validate  |  21:27:40
 ================================================================================
 v2: Processing Markdown File: /Users/dwolfson/localGit/egeria-python/tests/dr-egeria-command-tests/dr_test_feedback.md
 Processing Errors:
@@ -882,7 +882,7 @@ v2: Processing complete for '/Users/dwolfson/localGit/egeria-python/tests/dr-ege
 SCORE: 5 SUCCESS  15 FAILURE  0 WARNING
 
 ================================================================================
-FILE: dr_test_data_designer.md  |  DIRECTIVE: validate  |  15:57:26
+FILE: dr_test_data_designer.md  |  DIRECTIVE: validate  |  21:27:45
 ================================================================================
 v2: Processing Markdown File: /Users/dwolfson/localGit/egeria-python/tests/dr-egeria-command-tests/dr_test_data_designer.md
 
@@ -959,7 +959,7 @@ v2: Processing complete for '/Users/dwolfson/localGit/egeria-python/tests/dr-ege
 SCORE: 19 SUCCESS  0 FAILURE  1 WARNING
 
 ================================================================================
-FILE: dr_test_report.md  |  DIRECTIVE: validate  |  15:57:31
+FILE: dr_test_report.md  |  DIRECTIVE: validate  |  21:27:49
 ================================================================================
 v2: Processing Markdown File: /Users/dwolfson/localGit/egeria-python/tests/dr-egeria-command-tests/dr_test_report.md
 Processing Errors:
@@ -1059,7 +1059,92 @@ v2: Processing complete for '/Users/dwolfson/localGit/egeria-python/tests/dr-ege
 SCORE: 26 SUCCESS  1 FAILURE  0 WARNING
 
 ================================================================================
-FILE: dr_test_solution.md  |  DIRECTIVE: validate  |  15:57:34
+FILE: dr_test_dashboard_sheet.md  |  DIRECTIVE: validate  |  21:27:52
+================================================================================
+v2: Processing Markdown File: /Users/dwolfson/localGit/egeria-python/tests/dr-egeria-command-tests/dr_test_dashboard_sheet.md
+Processing Warnings:
+
+-- Create Report (Coco Pharmaceuticals::DeployedReport::Sales-Forecast-Placement-Test-Report::1.0) --
+   - Value '['ACTIVE']' is not a valid metadata value for 'Limit Result by Status'
+-- Create Report (Coco Pharmaceuticals::DeployedReport::Sales-Forecast-Placement-Test-Report-2::1.0) --
+   - Value '['ACTIVE']' is not a valid metadata value for 'Limit Result by Status'
+
+
+
+
+                                                                                    Dr. Egeria v2 Processing Summary                                                                                    
+┏━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━┳━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━┳━━━━━━━━━┳━━━━━━━┳━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━┳━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━┳━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+┃ Markdown Command               ┃ Canonical Command              ┃ Status  ┃ Found ┃ Display Name / End 1                ┃ Qualified Name / End2                ┃ Message                              
+┡━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━╇━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━╇━━━━━━━━━╇━━━━━━━╇━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━╇━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━╇━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+│ Create Dashboard Sheet         │ Create Dashboard Sheet         │ SUCCESS │ No    │ Sales Forecast Placement Test Sheet │ Sales Forecast Placement Test Sheet  │ Validated Create Dashboard Sheet     
+├································┼································┼·········┼·······┼·····································┼······································┼······································
+│ Create Dashboard Sheet         │ Create Dashboard Sheet         │ SUCCESS │ No    │ Sales Forecast Placement Test Sheet │ Sales Forecast Placement Test Sheet  │ Validated Create Dashboard Sheet     
+│                                │                                │         │       │ 2                                   │ 2                                    │                                      
+├································┼································┼·········┼·······┼·····································┼······································┼······································
+│ Create Report                  │ Create Report                  │ SUCCESS │ No    │ Sales Forecast Placement Test       │ Coco                                 │ Validated Create Report              
+│                                │                                │         │       │ Report                              │ Pharmaceuticals::DeployedReport::Sal │                                      
+│                                │                                │         │       │                                     │ es-Forecast-Placement-Test-Report::1 │                                      
+│                                │                                │         │       │                                     │ .0                                   │                                      
+├································┼································┼·········┼·······┼·····································┼······································┼······································
+│ Create Report                  │ Create Report                  │ SUCCESS │ No    │ Sales Forecast Placement Test       │ Coco                                 │ Validated Create Report              
+│                                │                                │         │       │ Report 2                            │ Pharmaceuticals::DeployedReport::Sal │                                      
+│                                │                                │         │       │                                     │ es-Forecast-Placement-Test-Report-2: │                                      
+│                                │                                │         │       │                                     │ :1.0                                 │                                      
+├································┼································┼·········┼·······┼·····································┼······································┼······································
+│ Link Report to Dashboard Sheet │ Link Report to Dashboard Sheet │ SUCCESS │ No    │ Sales Forecast Placement Test Sheet │                                      │ Validated Link Report to Dashboard   
+│                                │                                │         │       │                                     │                                      │ Sheet | Note: forward reference(s)   
+│                                │                                │         │       │                                     │                                      │ not yet creatable in this preview -  
+│                                │                                │         │       │                                     │                                      │ will resolve during --process        
+├································┼································┼·········┼·······┼·····································┼······································┼······································
+│ Link Report to Dashboard Sheet │ Link Report to Dashboard Sheet │ SUCCESS │ No    │ Sales Forecast Placement Test Sheet │                                      │ Validated Link Report to Dashboard   
+│                                │                                │         │       │ 2                                   │                                      │ Sheet | Note: forward reference(s)   
+│                                │                                │         │       │                                     │                                      │ not yet creatable in this preview -  
+│                                │                                │         │       │                                     │                                      │ will resolve during --process        
+├································┼································┼·········┼·······┼·····································┼······································┼······································
+│ Link Report to Dashboard Sheet │ Link Report to Dashboard Sheet │ SUCCESS │ No    │ Sales Forecast Placement Test Sheet │                                      │ Validated Link Report to Dashboard   
+│                                │                                │         │       │                                     │                                      │ Sheet | Note: forward reference(s)   
+│                                │                                │         │       │                                     │                                      │ not yet creatable in this preview -  
+│                                │                                │         │       │                                     │                                      │ will resolve during --process        
+├································┼································┼·········┼·······┼·····································┼······································┼······································
+│ Link Report to Dashboard Sheet │ Link Report to Dashboard Sheet │ SUCCESS │ No    │ Sales Forecast Placement Test Sheet │                                      │ Validated Link Report to Dashboard   
+│                                │                                │         │       │ 2                                   │                                      │ Sheet | Note: forward reference(s)   
+│                                │                                │         │       │                                     │                                      │ not yet creatable in this preview -  
+│                                │                                │         │       │                                     │                                      │ will resolve during --process        
+├································┼································┼·········┼·······┼·····································┼······································┼······································
+│ Link Report to Dashboard Sheet │ Link Report to Dashboard Sheet │ SUCCESS │ No    │ Sales Forecast Placement Test Sheet │                                      │ Validated Link Report to Dashboard   
+│                                │                                │         │       │                                     │                                      │ Sheet | Note: forward reference(s)   
+│                                │                                │         │       │                                     │                                      │ not yet creatable in this preview -  
+│                                │                                │         │       │                                     │                                      │ will resolve during --process        
+├································┼································┼·········┼·······┼·····································┼······································┼······································
+│ Link Report to Dashboard Sheet │ Link Report to Dashboard Sheet │ SUCCESS │ No    │ Sales Forecast Placement Test Sheet │                                      │ Validated Link Report to Dashboard   
+│                                │                                │         │       │ 2                                   │                                      │ Sheet | Note: forward reference(s)   
+│                                │                                │         │       │                                     │                                      │ not yet creatable in this preview -  
+│                                │                                │         │       │                                     │                                      │ will resolve during --process        
+├································┼································┼·········┼·······┼·····································┼······································┼······································
+│ Link Report to Dashboard Sheet │ Link Report to Dashboard Sheet │ SUCCESS │ No    │ Sales Forecast Placement Test Sheet │                                      │ Validated Link Report to Dashboard   
+│                                │                                │         │       │ 2                                   │                                      │ Sheet | Note: forward reference(s)   
+│                                │                                │         │       │                                     │                                      │ not yet creatable in this preview -  
+│                                │                                │         │       │                                     │                                      │ will resolve during --process        
+├································┼································┼·········┼·······┼·····································┼······································┼······································
+│ Add Text on Dashboard Sheet    │ Add Text on Dashboard Sheet    │ SUCCESS │ No    │ Sales Forecast Placement Test Sheet │                                      │ Validated Add Text on Dashboard      
+│                                │                                │         │       │                                     │                                      │ Sheet                                
+├································┼································┼·········┼·······┼·····································┼······································┼······································
+│ Add Text on Dashboard Sheet    │ Add Text on Dashboard Sheet    │ SUCCESS │ No    │ Sales Forecast Placement Test Sheet │                                      │ Validated Add Text on Dashboard      
+│                                │                                │         │       │                                     │                                      │ Sheet                                
+├································┼································┼·········┼·······┼·····································┼······································┼······································
+│ Add Text on Dashboard Sheet    │ Add Text on Dashboard Sheet    │ SUCCESS │ No    │ Sales Forecast Placement Test Sheet │                                      │ Validated Add Text on Dashboard      
+│                                │                                │         │       │ 2                                   │                                      │ Sheet                                
+└────────────────────────────────┴────────────────────────────────┴─────────┴───────┴─────────────────────────────────────┴──────────────────────────────────────┴──────────────────────────────────────
+
+
+
+v2: Processing complete for '/Users/dwolfson/localGit/egeria-python/tests/dr-egeria-command-tests/dr_test_dashboard_sheet.md'
+
+
+SCORE: 14 SUCCESS  0 FAILURE  0 WARNING
+
+================================================================================
+FILE: dr_test_solution.md  |  DIRECTIVE: validate  |  21:27:58
 ================================================================================
 v2: Processing Markdown File: /Users/dwolfson/localGit/egeria-python/tests/dr-egeria-command-tests/dr_test_solution.md
 
@@ -1132,7 +1217,7 @@ v2: Processing complete for '/Users/dwolfson/localGit/egeria-python/tests/dr-ege
 SCORE: 19 SUCCESS  0 FAILURE  0 WARNING
 
 ================================================================================
-FILE: dr_test_design_patterns.md  |  DIRECTIVE: validate  |  15:57:38
+FILE: dr_test_design_patterns.md  |  DIRECTIVE: validate  |  21:28:01
 ================================================================================
 v2: Processing Markdown File: /Users/dwolfson/localGit/egeria-python/tests/dr-egeria-command-tests/dr_test_design_patterns.md
 
@@ -1164,7 +1249,7 @@ v2: Processing complete for '/Users/dwolfson/localGit/egeria-python/tests/dr-ege
 SCORE: 7 SUCCESS  0 FAILURE  0 WARNING
 
 ================================================================================
-FILE: dr_test_new_commands.md  |  DIRECTIVE: validate  |  15:57:39
+FILE: dr_test_new_commands.md  |  DIRECTIVE: validate  |  21:28:02
 ================================================================================
 v2: Processing Markdown File: /Users/dwolfson/localGit/egeria-python/tests/dr-egeria-command-tests/dr_test_new_commands.md
 Processing Errors:
@@ -1212,7 +1297,7 @@ v2: Processing complete for '/Users/dwolfson/localGit/egeria-python/tests/dr-ege
 SCORE: 3 SUCCESS  2 FAILURE  0 WARNING
 
 ================================================================================
-FILE: dr_test_action_author.md  |  DIRECTIVE: validate  |  15:57:41
+FILE: dr_test_action_author.md  |  DIRECTIVE: validate  |  21:28:03
 ================================================================================
 v2: Processing Markdown File: /Users/dwolfson/localGit/egeria-python/tests/dr-egeria-command-tests/dr_test_action_author.md
 
@@ -1252,7 +1337,7 @@ v2: Processing complete for '/Users/dwolfson/localGit/egeria-python/tests/dr-ege
 SCORE: 8 SUCCESS  0 FAILURE  0 WARNING
 
 ================================================================================
-FILE: dr_test_curation.md  |  DIRECTIVE: validate  |  15:57:43
+FILE: dr_test_curation.md  |  DIRECTIVE: validate  |  21:28:05
 ================================================================================
 v2: Processing Markdown File: /Users/dwolfson/localGit/egeria-python/tests/dr-egeria-command-tests/dr_test_curation.md
 Processing Warnings:
@@ -1459,10 +1544,11 @@ dr_test_external_ref.md                     10     8     0
 dr_test_feedback.md                          5    15     0
 dr_test_data_designer.md                    19     0     1
 dr_test_report.md                           26     1     0
+dr_test_dashboard_sheet.md                  14     0     0
 dr_test_solution.md                         19     0     0
 dr_test_design_patterns.md                   7     0     0
 dr_test_new_commands.md                      3     2     0
 dr_test_action_author.md                     8     0     0
 dr_test_curation.md                         62     0     0
 
-TOTALS: 258 SUCCESS  51 FAILURE  2 WARNING
+TOTALS: 272 SUCCESS  51 FAILURE  2 WARNING

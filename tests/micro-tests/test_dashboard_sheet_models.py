@@ -27,6 +27,17 @@ def test_placement_defaults():
     p = Placement(ref="assets")
     assert p.span == "1"
     assert p.emphasis == "kpi"
+    assert p.content is None
+    # BACKLOG.md NEXT-19/NEXT-21 (egeria-workspaces-fs) -- empty perspectives
+    # means "relevant to every perspective" (fail-open), not "relevant to none".
+    assert p.perspectives == []
+    assert p.detail_spec is None
+
+
+def test_placement_accepts_perspectives_and_detail_spec():
+    p = Placement(ref="assets", perspectives=["governance", "steward"], detail_spec="assets-detail")
+    assert p.perspectives == ["governance", "steward"]
+    assert p.detail_spec == "assets-detail"
 
 
 def test_dashboard_sheet_placements_accept_dicts():
@@ -43,7 +54,15 @@ def test_dashboard_sheet_dict_roundtrip():
                         placements=[Placement(ref="assets")])
     d = s.dict()
     assert d["name"] == "dash"
-    assert d["placements"] == [{"ref": "assets", "span": "1", "emphasis": "kpi"}]
+    # Pre-existing failure fixed in passing (2026-08-11): this assertion was
+    # stale since `content` was added to Placement without updating it here
+    # (confirmed via git stash -- failed on main before this session's
+    # perspectives/detail_spec fields were ever added). Now lists every field
+    # explicitly rather than repeating the same drift.
+    assert d["placements"] == [{
+        "ref": "assets", "span": "1", "emphasis": "kpi",
+        "content": None, "perspectives": [], "detail_spec": None,
+    }]
     # round-trip through the dict form
     s2 = DashboardSheet(**d)
     assert s2.placements[0].ref == "assets"

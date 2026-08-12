@@ -74,6 +74,81 @@ range, search this file for `(PY-#)` to find its new `ISSUE-#` home.
 
 ## Pyegeria — fixable here
 
+### ISSUE-49: `MetadataExpert.get_metadata_element_relationships` (lookup a relationship by its two endpoint GUIDs) returns "No elements found" for a relationship confirmed to exist
+
+**Status:** open, found 2026-08-10 (Dan) building egeria-workspaces-fs's
+migration of Egeria Insights' saved queries onto the real `SavedQuery`/
+`SmartQuery` types (`insights_handler.py`, Track C.1 of
+`EGERIA_INSIGHTS_QUERY_MODEL.md`).
+
+**Layer:** Pyegeria (`pyegeria/omvs/metadata_expert.py`) — or possibly the
+view-service endpoint it calls; not yet narrowed further, see Candidate fix.
+
+**What:** created a `SmartQuery` relationship between a `ResultsSet` and a
+`SavedQuery` via `CollectionManager.link_saved_query_to_results_set()`
+(itself new in 6.0.17.18, part of the same feature — see that method's own
+docstring), which returned a real relationship GUID. Immediately after,
+looked the same relationship up by its two endpoint GUIDs via
+`MetadataExpert.get_metadata_element_relationships(end1_guid=<ResultsSet
+guid>, end2_guid=<SavedQuery guid>, relationship_type="SmartQuery",
+body={"class": "ResultsRequestBody"})` — the exact body shape from the
+method's own docstring sample — and got back the string `"No elements
+found"` rather than the relationship. Tried both `body={}` and
+`body={"class": "ResultsRequestBody"}`; same result both times.
+
+The relationship is genuinely there — independently confirmed via
+`ClassificationExplorer.get_relationships(relationship_type="SmartQuery",
+output_format="JSON")`, which lists it with the correct `end1`/`end2` and
+the same GUID `link_saved_query_to_results_set()` returned.
+
+**Where seen:** `insights_handler.py`'s saved-query delete path would have
+used this method to look up the `SmartQuery` relationship's GUID from the
+`ResultsSet`/`SavedQuery` GUIDs alone, if it needed to. Worked around
+entirely rather than root-caused further — see Candidate fix.
+
+**Repro:**
+```python
+from pyegeria import CollectionManager, MetadataExpert
+cm = CollectionManager(view_server="qs-view-server", platform_url=url, user_id=user, user_pwd=pwd)
+cm.create_egeria_bearer_token()
+rel_guid = cm.link_saved_query_to_results_set(results_set_guid, saved_query_guid)  # succeeds, real guid
+
+me = MetadataExpert(view_server="qs-view-server", platform_url=url, user_id=user, user_pwd=pwd)
+me.create_egeria_bearer_token()
+me.get_metadata_element_relationships(
+    end1_guid=results_set_guid, end2_guid=saved_query_guid,
+    relationship_type="SmartQuery", body={"class": "ResultsRequestBody"},
+)
+# -> "No elements found"
+
+from pyegeria import ClassificationExplorer
+ce = ClassificationExplorer(view_server="qs-view-server", platform_url=url, user_id=user, user_pwd=pwd)
+ce.create_egeria_bearer_token()
+ce.get_relationships(relationship_type="SmartQuery", output_format="JSON", body=None)
+# -> [{"relationshipHeader": {..."guid": rel_guid...}, "end1": {...ResultsSet...}, "end2": {...SavedQuery...}}]
+# same rel_guid, so the relationship is real and correctly formed
+```
+
+**Candidate fix:** not yet investigated — could be a body-shape mismatch
+this repro hasn't found, a wrong end1/end2 ordering assumption in the
+method's URL construction (`.../metadata-elements/{end1_guid}/linked-by-
+type/{relationship_type}/to-elements/{end2_guid}`), or a real server-side
+gap specific to this endpoint (`SmartQuery` has no bespoke view-service
+endpoint of its own — types/properties only, per Egeria PR #9200 — so it's
+plausible the generic linked-by-type endpoint doesn't handle every
+relationship type uniformly). Whoever picks this up should try swapping
+end1/end2, and try a relationship type with an established working example
+of this same method (if one exists) to isolate whether `SmartQuery`
+specifically is the problem or the method itself.
+
+**Workaround in use:** don't rely on this lookup at all — capture the
+relationship GUID from `link_saved_query_to_results_set()`'s own return
+value at creation time and persist it (in `insights_handler.py`'s case, in
+the `SavedQuery`'s own `additionalProperties`), so any later operation that
+needs to detach the relationship already has its GUID in hand.
+
+---
+
 ### ISSUE-23: `max_mermaid_node_count` defaults to 5 across every shared find/get request helper, silently truncating server-generated mermaid graphs
 
 **Status:** open at the pyegeria-default level (the user is raising the
@@ -256,6 +331,20 @@ matching the pattern every other `validate_*_request` helper in this file
 uses (they all handle the "no body given" case by building sensible
 defaults, not returning `None`). Not attempted here — found in passing,
 outside the scope of the `Note` type work that surfaced it.
+
+**Confirmed wider blast radius (2026-08-09):** this isn't specific to
+`delete_metadata_element` — `_async_open_metadata_delete_body_request` is a
+shared base-class helper, so every caller with an optional/default-`None`
+body hits the same crash. Reproduced live via the new
+`CollectionManager._async_detach_saved_query_from_results_set` (added for
+Egeria PR #9200's SmartQuery relationship, which itself calls
+`_async_open_metadata_delete_body_request` the same way
+`MetadataExpert._async_delete_related_elements` does) — worked around
+locally in that method the same way (`body or {"class":
+"OpenMetadataDeleteRequestBody"}`), rather than waiting on this issue.
+Any other no-args delete-style call sharing this helper (grep
+`_async_open_metadata_delete_body_request` for the full caller list) is
+suspect until the base helper itself is fixed.
 
 ---
 
@@ -487,6 +576,108 @@ working correctly.
 ---
 
 ## Egeria Server — not fixable in pyegeria
+
+### ISSUE-45: `findMetadataElements`'s `metadataElementSubtypeNames` is silently ignored — restricting to specific subtypes has no effect on results
+
+**Status:** open (Egeria server), found 2026-08-05 investigating whether
+Egeria Insights could express "elements that have a SemanticAssignment but
+are NOT type Notification" via an allow-list of subtypes (`Referenceable`
++ `metadataElementSubtypeNames: ["GlossaryTerm", "DataAsset"]`, per
+`Egeria-api-metadata-expert.http`'s worked "findMetadataElements (nested
+condition)" example, which documents this field alongside
+`metadataElementTypeName`).
+
+**Layer:** Egeria Server — not fixable in pyegeria. Confirmed via a raw
+`curl` bypassing pyegeria entirely (so this isn't a body-construction bug
+on the client side):
+
+```bash
+curl -sk -X POST ".../metadata-expert/metadata-elements/by-search-conditions" \
+  -H "Authorization: Bearer $TOKEN" -H "Content-Type: application/json" \
+  -d '{"class":"FindRequestBody","metadataElementTypeName":"Referenceable",
+       "metadataElementSubtypeNames":["GlossaryTerm"],
+       "limitResultsByStatus":["ACTIVE"],"graphQueryDepth":0,"startFrom":0,"pageSize":10}'
+# returns ContributionRecord/EngineAction/NotificationType — NOT GlossaryTerm
+```
+
+**What:** `metadataElementSubtypeNames` is accepted (no error, HTTP 200)
+but has **zero effect** on which elements come back — results are
+byte-identical to the same query with the field omitted entirely.
+Reproduced with two different base-type/subtype pairs to rule out a
+one-off: `Referenceable` + `["GlossaryTerm"]`, `Referenceable` +
+`["GlossaryTerm","DataAsset"]`, and `Asset` + `["DataAsset"]` — all three
+returned the same type mix (`ContributionRecord`/`EngineAction`/
+`Notification(Type)`) as the equivalent query with no subtype restriction
+at all.
+
+**Impact:** there is currently no way to narrow a `findMetadataElements`
+query to a specific allow-list of subtypes under a common base type — the
+only working filter is the single `metadataElementTypeName` (which
+includes ALL subtypes of that type, with no way to exclude any of them).
+This blocks the Egeria Insights use case that prompted the investigation:
+excluding noisy `Action` subtypes (`Notification`/`ToDo`/`Meeting`/
+`Review` — all real `Asset` subtypes, see ISSUE for the Explorer routing
+fix on 2026-08-05) from a broader `Asset`/`Referenceable` search without
+also losing every other subtype.
+
+**Candidate fix:** none client-side. Worth confirming against a newer
+Egeria server build whether this is a currently-unimplemented parameter
+(present in the request body schema/`.http` docs but never wired up
+server-side) versus a regression.
+
+---
+
+### ISSUE-47: `findMetadataElements` scoped to the universal base type `Referenceable` silently returns an incomplete, arbitrary subset instead of the true population
+
+**Status:** open (Egeria server), found 2026-08-06 fixing egeria-workspaces-fs's
+relationship-only search (see ISSUE-45's same investigation thread —
+looking for a safe fallback type once `metadataElementTypeName="Asset"`
+was confirmed wrong for `SemanticAssignment`, and `metadataElementSubtypeNames`
+confirmed non-functional).
+
+**Layer:** Egeria Server — not fixable in pyegeria.
+
+**What:** an exhaustive, fully-paginated `find_metadata_elements` scoped to
+`metadataElementTypeName="Referenceable"` (the universal base type — every
+open-metadata entity is a `Referenceable`) returns a small, arbitrary
+subset instead of the true population, with no error, no truncation flag,
+and pagination genuinely terminating normally (`added == 0`/`len(page) <
+page_size` on the last page — the loop believes it's done). Confirmed live
+against `qs-view-server` by direct comparison:
+
+| Scope | Elements found |
+|---|---|
+| `metadataElementTypeName="Referenceable"` (exhaustive) | 3,999 total |
+| ...of which `typeName="GlossaryTerm"` | 241 |
+| ...of which `typeName="GovernanceActionProcess"` | 22 |
+| `metadataElementTypeName="GlossaryTerm"` (exhaustive, direct) | **450** |
+| `metadataElementTypeName="GovernanceActionProcess"` (exhaustive, direct) | **378** |
+
+Cross-checked against a real, independently-known population: fetching
+every participant GUID of the `SemanticAssignment` relationship type
+(`ClassificationExplorer.get_relationships`, a separate, unrelated API
+path, previously verified complete) gives 410 distinct GUIDs. Only 23 of
+those 410 appear anywhere in the 3,999-element `Referenceable` scan — 387
+real participants (94%) are simply absent from a scan of the type that is
+supposed to be their common ancestor and therefore cover all of them.
+
+**Impact:** `metadataElementTypeName="Referenceable"` cannot be used as a
+"safe, unscoped, find-everything" fallback the way its position at the
+root of the type hierarchy implies — a caller that scopes a search this
+broadly on purpose (not just as an accidental fallback) will silently miss
+the majority of real results, not just cap them at a boundary. Confirmed
+this is specific to the base-type-wide scan, not pagination itself —
+directly-typed exhaustive searches for the exact same real types
+(`GlossaryTerm`, `GovernanceActionProcess`) are complete and correct.
+
+**Candidate fix:** none client-side. `egeria-workspaces-fs`'s workaround
+(see its `EGERIA_INSIGHTS_QUERY_MODEL.md`/`insights_handler.py`, commit
+`015916d0`) is to never scope a search to `Referenceable` (or any other
+broad base type) as a "safe fallback" — when the real target type isn't
+known, derive the actual candidate types from other data (e.g. a
+relationship's real participants) and search each directly instead.
+
+---
 
 ### ISSUE-14 (PY-4): `update_comment` demands `qualifiedName` even with `mergeUpdate: true`
 
@@ -758,7 +949,99 @@ decision tree for "which OMVS client class do I need" across
 
 ## Design discussions (not confirmed bugs — decisions needed)
 
-### ISSUE-40 (PY-20): Paging / sequencing strategy for "load-all" list endpoints
+### ISSUE-48: No OMVS wrapper exists for the `SchemaAttributeDefinition` relationship (physical `SchemaAttribute` ↔ logical `DataField`)
+
+**Status:** open — SDK gap to validate with the team, not yet a confirmed
+bug. Raised 2026-08-07 while triaging a request to add three "missing"
+Dr.Egeria Data Designer commands (SemanticAssignment, DataClassAssignment,
+SchemaTypeImplementation). Two of the three turned out not to be gaps at
+all once checked against the real type system and existing compact specs:
+
+- **SemanticAssignment** (schema/field → glossary term) already exists —
+  `Link Semantic Assignment` / `Unlink Semantic Assignment` in the
+  **Curation** family (`commands_curation_compact.json`, `OM_TYPE:
+  SemanticAssignment`, wired to `ClassificationExplorer.
+  _async_setup_semantic_assignment` in `CurationLinkProcessor`). Its
+  `Target Element` is a generic GUID, so it already works against a data
+  field or schema attribute today.
+- **DataClassAssignment** on a physical schema attribute is also already
+  covered — and the type name itself is stale. The old `DataClassAssignment`
+  relationship was replaced in this Egeria version by
+  `DataValueAssignmentRelationship` (0540 —
+  `OpenMetadataTypesArchive1_2.java`), whose end 1 is `Referenceable` (any
+  element, including a schema attribute). Data Designer's existing `Assign
+  Data Value Specification` command (`OM_TYPE: DataValueAssignment`)
+  already covers this generically via its `Element Id` attribute.
+
+**The third one is a real gap, at the SDK level, not just the Dr.Egeria
+command-spec level.** "SchemaTypeImplementation" isn't a real type name in
+this Egeria version at all. The type that actually connects a physical
+`SchemaAttribute` to a logical `DataField` is `SchemaAttributeDefinition`
+(0580, `OpenMetadataTypesArchive5_3.java` —
+`getSchemaAttributeDefinitionRelationship()`), ends `derivedFromDataField`
+(on `DataField`, AT_MOST_ONE) / `equivalentSchemaAttribute` (on
+`SchemaAttribute`, AT_MOST_ONE). Confirmed via grep across `pyegeria/omvs/`
+and `pyegeria/http clients/*.http`: **no bespoke wrapper method exists**
+for setting up or clearing this relationship — no `_async_link_*`/
+`_async_setup_*` method, no `.http` worked example, in `data_designer.py`,
+`data_engineer.py`, or `classification_explorer.py`.
+
+**Options considered, not yet decided:**
+1. Add a bespoke wrapper (e.g.
+   `DataDesigner._async_link_schema_attribute_definition`/
+   `_async_detach_schema_attribute_definition`) mirroring
+   `_async_setup_semantic_assignment`'s shape, then wire a Dr.Egeria
+   `Link/Unlink Schema Attribute Definition` command to it. Most
+   consistent with how other bespoke-family relationships are handled, but
+   requires new SDK surface first.
+2. Skip the bespoke wrapper and drive it through the existing generic
+   `MetadataExpert._async_create_related_elements`/
+   `_async_delete_related_elements` (typeName-based) — the same mechanism
+   `CurationLinkProcessor` already uses for other Tier-2 gaps with no
+   dedicated method (`ResourceList`, `MoreInformation`). No new SDK method
+   needed, but less discoverable/typed than a bespoke wrapper.
+
+No command has been added to the compact JSON for this yet — deferred
+pending the team's input on which approach (or whether the relationship
+is even meant to be user-authorable via Dr.Egeria, vs. only ever
+system-derived from a physical→logical mapping tool).
+
+---
+
+### ISSUE-46: Desired enhancement — true "exclude type" / NOT semantics for `findMetadataElements`
+
+**Status:** open — desired enhancement, not a bug. Raised 2026-08-05
+alongside ISSUE-45, from the same Egeria Insights use case ("elements that
+have a SemanticAssignment relationship but are NOT type Notification").
+
+**What's missing:** `FindRequestBody` has no negation operator for type at
+all. `metadataElementTypeName` is a single positive inclusion filter
+(that type plus all its subtypes); `metadataElementSubtypeNames` is meant
+to narrow that to a specific allow-list of subtypes (see ISSUE-45 — doesn't
+currently work, but even fixed, an allow-list is still not the same thing
+as an exclude-list: excluding one noisy subtype out of a large,
+open-ended family — e.g. "any `Asset` except `Notification`" — would
+require enumerating every OTHER `Asset` subtype by hand, which is
+impractical and silently stale the moment a new subtype is added).
+`searchProperties`/element-property conditions can't reach `typeName`
+either, since it's a structural/type-system attribute, not a regular
+property in `propertyValueMap`.
+
+**Desired shape (not designed in detail — flagging the need):** a genuine
+exclude-list, e.g. `metadataElementExcludedSubtypeNames` (or a NOT/negation
+option on the existing field), so a caller can say "type X or narrower,
+except these specific subtypes" without enumerating the full positive
+allow-list. Needs real Egeria-side API design work — this entry exists to
+make sure the need doesn't get lost, not to prescribe the exact shape.
+
+**Interim workaround, planned for Egeria Insights (`egeria-workspaces-fs`,
+not pyegeria):** client-side post-filter, mirroring the pattern already
+used there for relationship-presence conditions (which also have no
+server-side equivalent) — fetch normally, then drop results whose
+`typeName`/`superTypeNames` match a caller-specified exclude set, with an
+honest note that the exclusion applies only to the fetched page (same
+`relationshipFilterNote`/`defaultedTypeNote` transparency convention that
+module already uses). Not yet built.
 
 **Status:** open — design discussion, not a confirmed bug. High-priority
 follow-up. Raised 2026-07-24 from a glossary-term aliases fix: aliased
@@ -841,6 +1124,30 @@ returns zero rows).
 # Appendix: Closed / Not-a-bug entries
 
 ## Fixed (Pyegeria)
+
+### ISSUE-50: `base_report_formats.py`'s `Collections` FormatSet aliased the real Egeria type `ResultsSet` as `"ResultSet"` (missing the "s")
+
+**Status:** fixed 2026-08-09, alongside adding pyegeria SDK support for
+Egeria PR #9200 (SavedQuery/SmartQuery/ResultsSet). Originally found
+2026-08-05 building egeria-workspaces-fs's saved-query prototype (Egeria
+Insights `EGERIA_INSIGHTS_QUERY_MODEL.md`, Track A), which needed to
+create a real `ResultsSet` collection.
+
+Root cause: `pyegeria/view/base_report_formats.py`'s `"Collections"`
+`FormatSet` listed `aliases=[..., "ResultSet", ...]` — missing the "s".
+The real Egeria entity type is spelled **`ResultsSet`** (confirmed live
+against `qs-view-server`'s `/api/types` entity catalog); passing
+`"ResultSet"` as a `typeName` to `CollectionManager.create_collection` was
+rejected outright by the server (`OMAG-COMMON-400-018`). Impact was
+narrow but real: any caller rendering a genuine `ResultsSet` element
+through `generate_output()`'s alias-based `FormatSet` lookup would miss
+the match and silently fall through to a generic/default format instead
+of `Collections`.
+
+Fix: one-line change, `"ResultSet"` → `"ResultsSet"` in the `aliases`
+list (`pyegeria/view/base_report_formats.py`, `"Collections"` FormatSet).
+
+---
 
 ### ISSUE-44: `create_my_todo`/`create_meeting`/`create_review` (my_profile.py) always invented their own `qualifiedName` (random timestamp suffix, wrong casing), silently diverging from what Dr.Egeria's `Create ToDo`/`Create Meeting`/`Create Review` reported having created
 

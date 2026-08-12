@@ -43,6 +43,7 @@ from md_processing.v2 import (
     ActionProcessStepLinkProcessor, ActionExecutorTargetLinkProcessor,
     CreateDashboardSheetProcessor, LinkReportToDashboardSheetProcessor,
     AddTextOnDashboardSheetProcessor, ReportProcessor,
+    SavedQueryProcessor, SmartQueryLinkProcessor,
     CurationClassifyProcessor, CurationLinkProcessor, CLASSIFICATION_METHODS
 )
 
@@ -364,6 +365,9 @@ def setup_dispatcher(client: EgeriaTech) -> V2Dispatcher:
     reg("View Report", ViewProcessor)
     reg("Create Report", ReportProcessor)
     reg("Update Report", ReportProcessor)
+    reg("Create Saved Query", SavedQueryProcessor)
+    reg("Update Saved Query", SavedQueryProcessor)
+    reg("Link Saved Query to Results Set", SmartQueryLinkProcessor)
 
     # Dashboard Sheets (local pyegeria-only records, not Egeria elements yet --
     # see OVERVIEW_REPORTING_MODEL.md SS10 for the planned Collection-subtype migration)
