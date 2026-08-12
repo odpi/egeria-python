@@ -50,7 +50,6 @@ def display_assets(
     username: str,
     user_password: str,
     timeout: int = 60,
-    timeout: int = None,
     jupyter: bool = EGERIA_JUPYTER,
     width: int = EGERIA_WIDTH,
 ):
@@ -59,7 +58,6 @@ def display_assets(
         raise ValueError(
             "Invalid Search String - must be greater than four characters long"
         )
-    timeout = timeout or timeout
     g_client = AssetCatalog(server, url, username, timeout=timeout)
     token = g_client.create_egeria_bearer_token(username, user_password)
 

@@ -151,6 +151,10 @@ class FeedbackProcessor(AsyncBaseCommandProcessor):
                 description=attributes.get('Description', {}).get('value'),
                 situation=attributes.get('Situation', {}).get('value'),
                 priority=attributes.get('Priority', {}).get('value', 0),
+                # See actor_manager.py's Create ToDo branch for why this
+                # matters - without it, the real stored qualifiedName never
+                # matches what Dr.Egeria reports having created.
+                qualified_name=qualified_name,
             )
             guid = self.extract_guid_or_raise(raw_guid, "Create Review")
             self.parsed_output["guid"] = guid

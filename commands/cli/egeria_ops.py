@@ -15,6 +15,7 @@ import click
 from trogon import tui
 from loguru import logger
 
+from pyegeria.core.config import settings
 from commands.cli.ops_config import Config
 from commands.ops.gov_server_actions import (
     add_catalog_target,

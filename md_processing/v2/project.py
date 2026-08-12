@@ -22,6 +22,15 @@ class ProjectProcessor(AsyncBaseCommandProcessor):
     """
 
     async def fetch_element(self, guid: str) -> Optional[Dict[str, Any]]:
+        # Meeting isn't a Project - it's a Person Action Base type (see the
+        # "Meeting" branch in apply_changes()) - _async_get_project_by_guid
+        # 404s on it ("...retrieved an object ... of type Meeting rather than
+        # type Project"), which silently produced a "Could not fetch element"
+        # warning and dropped back to raw_block instead of rendering the
+        # Meeting-DrE report. Fall back to the generic base-class fetch
+        # (ClassificationExplorer) for it instead.
+        if self.canonical_object_type == "Meeting" or self.command.object_type == "Meeting":
+            return await super().fetch_element(guid)
         try:
             return await self.client._async_get_project_by_guid(guid)
         except PyegeriaException:
@@ -47,6 +56,10 @@ class ProjectProcessor(AsyncBaseCommandProcessor):
                 description=attributes.get('Description', {}).get('value'),
                 situation=attributes.get('Situation', {}).get('value'),
                 priority=attributes.get('Priority', {}).get('value', 0),
+                # See actor_manager.py's Create ToDo branch for why this
+                # matters - without it, the real stored qualifiedName never
+                # matches what Dr.Egeria reports having created.
+                qualified_name=qualified_name,
             )
             guid = self.extract_guid_or_raise(raw_guid, "Create Meeting")
             self.parsed_output["guid"] = guid

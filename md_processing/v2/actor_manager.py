@@ -40,6 +40,13 @@ class ActorManagerProcessor(AsyncBaseCommandProcessor):
                 description=attributes.get('Description', {}).get('value'),
                 situation=attributes.get('Situation', {}).get('value'),
                 priority=attributes.get('Priority', {}).get('value', 0),
+                # Without this, create_my_todo invents its own qualified name
+                # (different casing plus a random timestamp suffix) - the real
+                # stored element then never matches what Dr.Egeria reports
+                # having created, so nothing (search, a later Update/Link
+                # command, a human checking Egeria Explorer) can find it by
+                # that name afterward.
+                qualified_name=qualified_name,
             )
             new_guid = self.extract_guid_or_raise(raw_guid, "Create ToDo")
             self.parsed_output["guid"] = new_guid
