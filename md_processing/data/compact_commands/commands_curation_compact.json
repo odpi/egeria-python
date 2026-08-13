@@ -3025,6 +3025,13 @@
         "Target Element",
         "Consolidated Source"
       ]
+    },
+    "Prime Word Classification Base": {
+      "inherits": "Request Base",
+      "own_attributes": [
+        "Target Element",
+        "Additional Properties"
+      ]
     }
   },
   "commands": {
@@ -4222,6 +4229,44 @@
       "extra_constraints": "",
       "OM_TYPE": "ConsolidatedDuplicateLink",
       "bundle": "Consolidated Duplicate Link Base",
+      "custom_attributes": [],
+      "Journal Entry": ""
+    },
+    "Classify Prime Word": {
+      "display_name": "prime_word_classification",
+      "qn_prefix": "PrimeWord",
+      "alternate_names": [],
+      "family": "Curation",
+      "description": "Classify an existing element as a prime word in a naming standard (0438).",
+      "verb": "Classify",
+      "upsert": false,
+      "attach": false,
+      "level": "Basic",
+      "find_method": "",
+      "find_constraints": "",
+      "extra_find": "",
+      "extra_constraints": "",
+      "OM_TYPE": "PrimeWord",
+      "bundle": "Prime Word Classification Base",
+      "custom_attributes": [],
+      "Journal Entry": ""
+    },
+    "Declassify Prime Word": {
+      "display_name": "prime_word_classification",
+      "qn_prefix": "PrimeWord",
+      "alternate_names": [],
+      "family": "Curation",
+      "description": "Remove the PrimeWord classification (0438) from an element.",
+      "verb": "Declassify",
+      "upsert": false,
+      "attach": false,
+      "level": "Basic",
+      "find_method": "",
+      "find_constraints": "",
+      "extra_find": "",
+      "extra_constraints": "",
+      "OM_TYPE": "PrimeWord",
+      "bundle": "Declassify Base",
       "custom_attributes": [],
       "Journal Entry": ""
     }

@@ -11,7 +11,7 @@ import time
 from loguru import logger
 from typing import Any, Optional
 
-from pyegeria import NO_ELEMENTS_FOUND
+from pyegeria import NO_ELEMENTS_FOUND, PyegeriaInvalidParameterException
 from pyegeria.omvs.asset_maker import AssetMaker
 from pyegeria.core._validators import validate_name
 from pyegeria.core.utils import dynamic_catch, body_slimmer
@@ -1084,8 +1084,8 @@ class MyProfile(AssetMaker):
             body = {
                 "class": "NewAttachmentRequestBody",
                 "properties": {
-                    "class": "NotificationProperties",
-                    "typeName": "Notification",
+                    "class": "JournalEntryProperties",
+                    "typeName": "JournalEntry",
                     "qualifiedName": qualified_name,
                     "displayName": display_name,
                     "description": text,
@@ -1098,7 +1098,7 @@ class MyProfile(AssetMaker):
             }
 
         url = f"{self.my_profile_command_root}/journal-my-activity"
-        return await self._async_create_attachment_body_request(url, ["NotificationProperties"], body)
+        return await self._async_create_attachment_body_request(url, ["JournalEntryProperties"], body)
 
     @dynamic_catch
     def journal_my_activity(self, text: str = None, display_name: str = None,
@@ -1133,11 +1133,11 @@ class MyProfile(AssetMaker):
             body = {
                 "class": "NewAttachmentRequestBody",
                 "properties": {
-                    "class": "NotificationProperties",
-                    "typeName": "Notification",
+                    "class": "BlogEntryProperties",
+                    "typeName": "BlogEntry",
                     "qualifiedName": qualified_name,
                     "displayName": display_name,
-                    "description": text,
+                    "description": text
                 }
             }
         elif body is not None and isinstance(body, dict) and body.get("class") != "NewAttachmentRequestBody":
@@ -1147,7 +1147,7 @@ class MyProfile(AssetMaker):
             }
 
         url = f"{self.my_profile_command_root}/blog-my-activity"
-        return await self._async_create_attachment_body_request(url, ["NotificationProperties"], body)
+        return await self._async_create_attachment_body_request(url, ["BlogEntryProperties"], body)
 
     @dynamic_catch
     def blog_my_activity(self, text: str = None, display_name: str = None,

@@ -1,6 +1,6 @@
 {
   "family": "Solution Architect",
-  "exported": "Jul 27, 2026 at 8:30:25 AM",
+  "exported": "Jul 27, 2026 at 8:30:25\u202fAM",
   "attribute_definitions": {
     "Activity Status": {
       "variable_name": "activity_status",
@@ -811,7 +811,7 @@
       "variable_name": "file_path",
       "inUpdate": true,
       "attr_labels": "File Path Name",
-      "examples": "\/home\/mumble.csv",
+      "examples": "/home/mumble.csv",
       "default_value": "",
       "valid_values": [],
       "existing_element": "",
@@ -1106,7 +1106,7 @@
       "default_value": "",
       "valid_values": [],
       "existing_element": "",
-      "description": "Copyright and\/or license information for the element or associated resource.",
+      "description": "Copyright and/or license information for the element or associated resource.",
       "generated": false,
       "style": "Simple",
       "user_specified": true,
@@ -1505,7 +1505,7 @@
       "default_value": "",
       "valid_values": [],
       "existing_element": "",
-      "description": "The purpose of this collection — a short description of why it exists or what it is used for.",
+      "description": "The purpose of this collection \u2014 a short description of why it exists or what it is used for.",
       "generated": false,
       "style": "Simple",
       "user_specified": true,
@@ -2082,7 +2082,7 @@
       "default_value": "",
       "valid_values": [],
       "existing_element": "",
-      "description": "The usage guidance for this element — how it is intended to be used in context.",
+      "description": "The usage guidance for this element \u2014 how it is intended to be used in context.",
       "generated": false,
       "style": "Simple",
       "user_specified": true,
@@ -2709,7 +2709,7 @@
       "min_cardinality": 1,
       "max_cardinality": 1,
       "level": "Domain",
-      "Journal Entry": "**UML type:** int (GovernanceDomain enum)  \n**Stored as:** string — convert to int downstream  \n**Convention:** 0 = applies to all domains  \n**See:** \/Command Specifications\/Governance Officer - Refactored\/Docs\/String-to-Int Conversion Register"
+      "Journal Entry": "**UML type:** int (GovernanceDomain enum)  \n**Stored as:** string \u2014 convert to int downstream  \n**Convention:** 0 = applies to all domains  \n**See:** /Command Specifications/Governance Officer - Refactored/Docs/String-to-Int Conversion Register"
     },
     "Role Identifier": {
       "variable_name": "role_identifier",
@@ -2919,6 +2919,25 @@
       "max_cardinality": 1,
       "level": "Domain",
       "Journal Entry": ""
+    },
+    "Wire GUID": {
+      "variable_name": "wire_guid",
+      "inUpdate": true,
+      "attr_labels": "",
+      "examples": "",
+      "default_value": "",
+      "valid_values": [],
+      "existing_element": "",
+      "description": "The GUID of a specific SolutionLinkingWire relationship, used to target one wire when multiple wires exist between the same pair of components (Egeria PR #9156, multi-link). Optional -- omitted, Detach/Unlink removes all wires between the pair (server default behavior).",
+      "generated": false,
+      "style": "Simple",
+      "user_specified": true,
+      "unique": false,
+      "input_required": false,
+      "min_cardinality": 0,
+      "max_cardinality": 1,
+      "level": "Advanced",
+      "Journal Entry": ""
     }
   },
   "bundles": {
@@ -3125,7 +3144,7 @@
       "qn_prefix": "",
       "alternate_names": [],
       "family": "Solution Architect",
-      "description": "Creates or updates an information supply chain — a description of the flow of a particular type of data across a digital landscape.",
+      "description": "Creates or updates an information supply chain \u2014 a description of the flow of a particular type of data across a digital landscape.",
       "verb": "Create",
       "upsert": true,
       "attach": false,
@@ -3144,7 +3163,7 @@
       "qn_prefix": "",
       "alternate_names": [],
       "family": "Solution Architect",
-      "description": "Creates or updates a solution blueprint — a description of the architecture of a digital service in terms of solution components.",
+      "description": "Creates or updates a solution blueprint \u2014 a description of the architecture of a digital service in terms of solution components.",
       "verb": "Create",
       "upsert": true,
       "attach": false,
@@ -3182,7 +3201,7 @@
       "qn_prefix": "",
       "alternate_names": [],
       "family": "Solution Architect",
-      "description": "Creates or updates a reusable solution component — a building block of a solution blueprint or information supply chain.",
+      "description": "Creates or updates a reusable solution component \u2014 a building block of a solution blueprint or information supply chain.",
       "verb": "Create",
       "upsert": true,
       "attach": false,
@@ -3201,7 +3220,7 @@
       "qn_prefix": "",
       "alternate_names": [],
       "family": "Solution Architect",
-      "description": "Creates or updates a solution role — a collection of responsibilities associated with a solution component.",
+      "description": "Creates or updates a solution role \u2014 a collection of responsibilities associated with a solution component.",
       "verb": "Create",
       "upsert": true,
       "attach": false,
@@ -3239,7 +3258,8 @@
         "Integration Style",
         "Protocol",
         "Data Exchanged",
-        "ISC Qualified Names"
+        "ISC Qualified Names",
+        "Wire GUID"
       ],
       "Journal Entry": ""
     },

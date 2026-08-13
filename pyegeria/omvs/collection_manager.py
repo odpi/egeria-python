@@ -20,7 +20,7 @@ from pyegeria.models import (SearchStringRequestBody, FilterRequestBody, GetRequ
                              ReferenceableProperties, InitialClassifications, TemplateRequestBody,
                              UpdateElementRequestBody, NewRelationshipRequestBody,
                              DeleteElementRequestBody, DeleteRelationshipRequestBody, UpdateRelationshipRequestBody,
-                             ResultsRequestBody,
+                             ResultsRequestBody, NewRelatedElementsRequestBody, OpenMetadataDeleteRequestBody,
                              DeploymentStatusSearchString, DeploymentStatusFilterRequestBody,
                              get_defined_field_values, PyegeriaModel)
 from pyegeria.view.output_formatter import (generate_output,
@@ -220,6 +220,10 @@ class CollectionManager(ServerClient):
 
         self.collection_command_root: str = (
             f"{self.platform_url}/servers/{self.view_server}/api/open-metadata/collection-manager/collections")
+        # Generic metadata-expert root -- used by the SmartQuery relationship methods below, which have
+        # no bespoke collection-manager/asset-maker endpoint of their own (see comment there).
+        self.metadata_expert_command_root: str = (
+            f"{self.platform_url}/servers/{self.view_server}/api/open-metadata/metadata-expert")
         #
         #       Retrieving Collections - https://egeria-project.org/concepts/collection
         #
@@ -6216,6 +6220,164 @@ class CollectionManager(ServerClient):
         url = f"{self.collection_command_root}/{collection_guid}/members/{element_guid}/detach"
         await self._async_delete_relationship_request(url, body)
         logger.info(f"Removed member {element_guid} from collection {collection_guid}")
+
+    #
+    # SmartQuery relationship (0725 Smart Collections) -- connects a SavedQuery (an Asset/DataSet,
+    # created via AssetMaker._async_create_asset(["SavedQueryProperties"], ...) -- no dedicated
+    # SavedQuery wrapper needed there, it rides AssetMaker's generic asset methods the same way
+    # Report does) to a ResultsSet (a Collection subtype, hence these two methods living here
+    # rather than on AssetMaker or MetadataExpert). SmartQuery has no bespoke view-service endpoint
+    # (confirmed against Egeria PR #9200 -- types/properties only, zero new REST endpoints), so
+    # these build the generic typeName-based related-elements call directly, the same mechanism
+    # MetadataExpert._async_create_related_elements/_async_delete_related_elements uses and that
+    # AsyncBaseCommandProcessor._sync_parent_relationship() already relies on for other
+    # no-bespoke-method relationships.
+    #
+
+    @dynamic_catch
+    async def _async_link_saved_query_to_results_set(self, results_set_guid: str, saved_query_guid: str,
+                                                      body: Optional[dict | NewRelatedElementsRequestBody] = None) -> str:
+        """Connect a SavedQuery to a ResultsSet via the SmartQuery relationship (0725 Smart Collections),
+        indicating the results set is populated by the saved query. Async version.
+
+        Parameters
+        ----------
+        results_set_guid: str
+            GUID of the ResultsSet (end 1 -- "resultsStoredIn").
+        saved_query_guid: str
+            GUID of the SavedQuery (end 2 -- "populatedUsingQuery").
+        body: dict | NewRelatedElementsRequestBody, optional
+            Additional request properties (externalSourceGUID/Name, effectiveTime, etc.). SmartQuery
+            carries no relationship-specific properties of its own.
+
+        Returns
+        -------
+        str
+            The unique identifier (GUID) of the newly created SmartQuery relationship.
+
+        Raises
+        ------
+        PyegeriaException
+            One of the pyegeria exceptions will be raised if there are issues in communications, message format, or
+            Egeria errors.
+
+        Notes
+        -----
+        See: https://egeria-project.org/types/7/0725-Smart-Collections/
+
+        Sample body:
+        {
+          "class" : "NewRelatedElementsRequestBody",
+          "typeName": "SmartQuery",
+          "metadataElement1GUID": "<ResultsSet GUID>",
+          "metadataElement2GUID": "<SavedQuery GUID>",
+          "forLineage" : false,
+          "forDuplicateProcessing" : false
+        }
+
+        Use _async_find_relationships_between_elements(relationshipTypeName="SmartQuery", ...) first
+        to check whether an equivalent relationship already exists, if idempotency matters -- SmartQuery
+        has no cardinality constraint enforced client-side.
+        """
+        url = f"{self.metadata_expert_command_root}/related-elements"
+        if isinstance(body, dict):
+            body = dict(body)
+            body.setdefault("class", "NewRelatedElementsRequestBody")
+            body["typeName"] = "SmartQuery"
+            body["metadataElement1GUID"] = results_set_guid
+            body["metadataElement2GUID"] = saved_query_guid
+        elif body is None:
+            body = {
+                "class": "NewRelatedElementsRequestBody",
+                "typeName": "SmartQuery",
+                "metadataElement1GUID": results_set_guid,
+                "metadataElement2GUID": saved_query_guid,
+            }
+        guid = await self._async_create_related_elements_body_request(url, body)
+        logger.info(f"Linked SavedQuery {saved_query_guid} to ResultsSet {results_set_guid} via SmartQuery")
+        return guid
+
+    @dynamic_catch
+    def link_saved_query_to_results_set(self, results_set_guid: str, saved_query_guid: str,
+                                        body: Optional[dict | NewRelatedElementsRequestBody] = None) -> str:
+        """Connect a SavedQuery to a ResultsSet via the SmartQuery relationship (0725 Smart Collections).
+
+        Parameters
+        ----------
+        results_set_guid: str
+            GUID of the ResultsSet (end 1 -- "resultsStoredIn").
+        saved_query_guid: str
+            GUID of the SavedQuery (end 2 -- "populatedUsingQuery").
+        body: dict | NewRelatedElementsRequestBody, optional
+            Additional request properties.
+
+        Returns
+        -------
+        str
+            The unique identifier (GUID) of the newly created SmartQuery relationship.
+        """
+        loop = asyncio.get_event_loop()
+        return loop.run_until_complete(
+            self._async_link_saved_query_to_results_set(results_set_guid, saved_query_guid, body))
+
+    @dynamic_catch
+    async def _async_detach_saved_query_from_results_set(self, relationship_guid: str,
+                                                          body: Optional[dict | OpenMetadataDeleteRequestBody] = None) -> None:
+        """Remove a SmartQuery relationship, given its own relationship GUID. Async version.
+
+        Parameters
+        ----------
+        relationship_guid: str
+            GUID of the SmartQuery relationship to remove (not an element GUID -- look this up first via
+            _async_find_relationships_between_elements(relationshipTypeName="SmartQuery", ...) if only the
+            ResultsSet/SavedQuery GUIDs are known).
+        body: dict | OpenMetadataDeleteRequestBody, optional
+            Deletion details.
+
+        Returns
+        -------
+        None
+
+        Raises
+        ------
+        PyegeriaException
+            One of the pyegeria exceptions will be raised if there are issues in communications, message format, or
+            Egeria errors.
+
+        Notes
+        -----
+        Sample body:
+        {
+          "class" : "OpenMetadataDeleteRequestBody",
+          "forLineage" : false,
+          "forDuplicateProcessing" : false
+        }
+        """
+        url = f"{self.metadata_expert_command_root}/related-elements/{relationship_guid}/delete"
+        # Work around ISSUE-31 (PYEGERIA_ISSUES.md): _async_open_metadata_delete_body_request
+        # crashes with AttributeError on a None body (validate_open_metadata_delete_request
+        # returns None rather than a default instance) -- always pass an explicit body.
+        await self._async_open_metadata_delete_body_request(url, body or {"class": "OpenMetadataDeleteRequestBody"})
+        logger.info(f"Detached SmartQuery relationship {relationship_guid}")
+
+    @dynamic_catch
+    def detach_saved_query_from_results_set(self, relationship_guid: str,
+                                            body: Optional[dict | OpenMetadataDeleteRequestBody] = None) -> None:
+        """Remove a SmartQuery relationship, given its own relationship GUID.
+
+        Parameters
+        ----------
+        relationship_guid: str
+            GUID of the SmartQuery relationship to remove.
+        body: dict | OpenMetadataDeleteRequestBody, optional
+            Deletion details.
+
+        Returns
+        -------
+        None
+        """
+        loop = asyncio.get_event_loop()
+        loop.run_until_complete(self._async_detach_saved_query_from_results_set(relationship_guid, body))
 
 
     def remove_from_collection(self, collection_guid: str, element_guid: str,

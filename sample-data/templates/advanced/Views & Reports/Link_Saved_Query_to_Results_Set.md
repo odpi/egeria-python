@@ -1,22 +1,24 @@
 ___
 
-## Link Solution Components
-> Links or unlinks two solution compoents.
+## Link Saved Query to Results Set
+> Connects a Saved Query to a Results Set via the SmartQuery relationship (0725 Smart Collections), indicating the results set is populated by the saved query.
+>
+>	**Alternative Names**: Link Saved Query to ResultsSet
 
-### Component1
+### Results Set
 >	**Input Required**: True
 
 >	**Attribute Type**: Reference Name
 
->	**Description**: The first solution component to link.
+>	**Description**: A results set (collection) name. Preferably a qualified name.
 
 
-### Component2
+### Saved Query
 >	**Input Required**: True
 
 >	**Attribute Type**: Reference Name
 
->	**Description**: The second solution component in a peer linking relationship (SolutionLinkingWire).
+>	**Description**: A saved query name. Preferably a qualified name.
 
 
 ### Label
@@ -27,22 +29,6 @@ ___
 >	**Description**: A label used to identify or categorise a relationship link.
 
 >	**Alternative Labels**: Wire Label
-
-
-### Integration Style
->	**Input Required**: False
-
->	**Attribute Type**: Simple
-
->	**Description**: The integration style of the information supply chain (e.g. how data flows between segments).
-
-
-### Data Exchanged
->	**Input Required**: False
-
->	**Attribute Type**: Simple
-
->	**Description**: The data exchanged in an interaction.
 
 
 ### Journal Entry
@@ -59,34 +45,6 @@ ___
 >	**Attribute Type**: Simple
 
 >	**Description**: A description.
-
-
-### Protocol
->	**Input Required**: False
-
->	**Attribute Type**: Simple
-
->	**Description**: Name of the protocol used for interaction.
-
-
-### One Way
->	**Input Required**: False
-
->	**Attribute Type**: Bool
-
->	**Description**: Is the link one way or bi-directional?
-
->	**Alternative Labels**: Unidirectional
-
->	**Default Value**: True
-
-
-### Frequency
->	**Input Required**: False
-
->	**Attribute Type**: Simple
-
->	**Description**: A frequency of interaction.
 
 
 ### Effective From
@@ -169,30 +127,6 @@ ___
 >	**Description**: Is the element at end2 an anchor to end1?
 
 >	**Default Value**: false
-
-
-### ISC Qualified Names
->	**Input Required**: False
-
->	**Attribute Type**: Reference Name List
-
->	**Description**: The qualified names of the information supply chains that this wire implements. From SolutionLinkingWire (0735).
-
-
-### ISC Qualified Names
->	**Input Required**: False
-
->	**Attribute Type**: Reference Name List
-
->	**Description**: The qualified names of the information supply chains that this wire implements. From SolutionLinkingWire (0735).
-
-
-### Wire GUID
->	**Input Required**: False
-
->	**Attribute Type**: Simple
-
->	**Description**: The GUID of a specific SolutionLinkingWire relationship, used to target one wire when multiple wires exist between the same pair of components (Egeria PR #9156, multi-link). Optional -- omitted, Detach/Unlink removes all wires between the pair (server default behavior).
 
 
 ___

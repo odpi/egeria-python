@@ -44,4 +44,44 @@ ___
 >	**Default Value**: 1
 
 
+### Placement Perspectives
+>	**Input Required**: False
+
+>	**Attribute Type**: Simple List
+
+>	**Description**: Comma-separated viewer-role/perspective tags this placement is relevant to (e.g. governance, steward, owner, consumer, engineer, builder, privacy, community -- the same vocabulary Egeria Overview's own perspective filtering uses). Empty means relevant to every perspective.
+
+
+### Placement Detail Spec
+>	**Input Required**: False
+
+>	**Attribute Type**: Simple
+
+>	**Description**: Optional drill-down target -- the name of another Report Spec to navigate to for more detail on this placement's result.
+
+
+### Effective Time
+>	**Input Required**: False
+
+>	**Attribute Type**: Simple
+
+>	**Description**: An ISO-8601 string representing the time to use for evaluating effectivity of the elements related to this one.
+
+
+### Effective From
+>	**Input Required**: False
+
+>	**Attribute Type**: Simple
+
+>	**Description**: A string in ISO-8601 format that defines the when an element becomes effective (visible).
+
+
+### Effective To
+>	**Input Required**: False
+
+>	**Attribute Type**: Simple
+
+>	**Description**: A string in ISO-8601 format that defines the when an element is no longer effective (visible).
+
+
 ___

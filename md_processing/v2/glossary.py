@@ -346,12 +346,13 @@ class GlossaryClassifyProcessor(AsyncBaseCommandProcessor):
         command_name = f"{verb} {self.command.object_type}"
         attributes = self.parsed_output.get("attributes", {})
 
-        # --- dispatch table: command noun → (apply_coro, remove_coro) ---
+        # --- dispatch table: command noun → (apply_coro, remove_coro, properties "class" name) ---
         # Each coro accepts (guid, body). Add new classification commands here.
         dispatch = {
             "Term as Question": (
                 self.client._async_set_term_as_question,
                 self.client._async_clear_term_as_question,
+                "QuestionProperties",
             ),
         }
 
@@ -360,7 +361,7 @@ class GlossaryClassifyProcessor(AsyncBaseCommandProcessor):
         if noun not in dispatch:
             raise PyegeriaException(f"GlossaryClassifyProcessor: unsupported command '{command_name}'")
 
-        apply_coro, remove_coro = dispatch[noun]
+        apply_coro, remove_coro, props_class = dispatch[noun]
 
         # Resolve entity GUID — "Term Name" for term classifications
         term_name_attr = attributes.get("Term Name", {})
@@ -371,22 +372,33 @@ class GlossaryClassifyProcessor(AsyncBaseCommandProcessor):
             logger.error(f"GlossaryClassifyProcessor: no GUID resolved for '{entity_label}' in '{command_name}'")
             return self.command.raw_block
 
-        body = {
-            "class": "ClassificationRequestBody",
+        # NOTE: "class" must match what each pyegeria method's own request-body
+        # validator expects -- NewClassificationRequestBody for set, DeleteClassificationRequestBody
+        # for clear. A single shared "ClassificationRequestBody" body (the previous
+        # bug here) matches neither: pydantic's Literal check on "class" rejects it
+        # before any HTTP call is made, surfacing as "Request body failed validation".
+        apply_body = {
+            "class": "NewClassificationRequestBody",
+            "properties": {"class": props_class},
+            "forLineage": False,
+            "forDuplicateProcessing": False,
+        }
+        remove_body = {
+            "class": "DeleteClassificationRequestBody",
             "forLineage": False,
             "forDuplicateProcessing": False,
         }
 
         if verb in APPLY_CLASSIFICATION_VERBS:
-            await apply_coro(entity_guid, body)
+            await apply_coro(entity_guid, apply_body)
             logger.success(f"Classified '{entity_label}' via '{command_name}'")
         elif verb in REMOVE_CLASSIFICATION_VERBS:
-            await remove_coro(entity_guid, body)
+            await remove_coro(entity_guid, remove_body)
             logger.success(f"Removed classification '{noun}' from '{entity_label}'")
         elif verb in UPDATE_CLASSIFICATION_VERBS:
             # Reclassify: remove then re-apply (default; override per noun if needed)
-            await remove_coro(entity_guid, body)
-            await apply_coro(entity_guid, body)
+            await remove_coro(entity_guid, remove_body)
+            await apply_coro(entity_guid, apply_body)
             logger.success(f"Reclassified '{entity_label}' via '{command_name}'")
         else:
             raise PyegeriaException(f"GlossaryClassifyProcessor: unrecognised verb '{verb}'")
