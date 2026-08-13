@@ -11,35 +11,37 @@ import re
 import json
 import sys
 from pathlib import Path
+from typing import Any
 
 # Add the project root to sys.path to allow running this script from any directory
 root_path = Path(__file__).resolve().parents[4]
 if str(root_path) not in sys.path:
     sys.path.append(str(root_path))
 
-from pyegeria import load_app_config, settings, MyProfile, PyegeriaException, print_basic_exception, exec_report_spec, \
-    AutomatedCuration, ProductManager, \
-    PyegeriaInvalidParameterException, PyegeriaAPIException, DataEngineer
+from pyegeria import (load_app_config, settings, MyProfile, PyegeriaException,
+                        print_basic_exception, exec_report_spec,
+                        AutomatedCuration, ProductManager,
+                        PyegeriaInvalidParameterException, PyegeriaAPIException, DataEngineer)
 from textual import on
 from textual.app import App, ComposeResult
 from textual.containers import ScrollableContainer
 from textual.widgets import DataTable, OptionList, Header, Static, Footer, Tree
 
 from CreateProfileScreen import CreateProfileScreen
-from EditProfileScreen import EditProfileScreen
-from EditCommunitiesScreen import EditCommunitiesScreen
-from EditIdentitiesScreen import EditIdentitiesScreen
-from EditProjectsScreen import EditProjectsScreen
-from EditTodosScreen import EditTodosScreen
-from EditRolesScreen import EditRolesScreen
-from EditTeamsScreen import EditTeamsScreen
-from EditBlogsScreen import EditBlogsScreen
-from EditJournalScreen import EditJournalScreen
-from EditAssociationsScreen import EditAssociationsScreen
-from TechnologyTypesScreen import TechnologyTypesScreen
-from TechnologyTypeOptionsScreen import TechnologyTypeOptionsScreen
-from TechnologyTypeTemplatesScreen import TechnologyTypeTemplatesScreen
-from TechnologyTypeProcessesScreen import TechnologyTypeProcessesScreen
+from EditElementsScreens import (EditProfileScreen,
+                                 EditCommunitiesScreen,
+                                 EditIdentitiesScreen,
+                                 EditProjectsScreen,
+                                 EditTodosScreen,
+                                 EditRolesScreen,
+                                 EditTeamsScreen,
+                                 EditBlogsScreen,
+                                 EditJournalScreen,
+                                 EditAssociationsScreen)
+from TechnologyTypeScreens import (TechnologyTypesScreen,
+                                   TechnologyTypeOptionsScreen,
+                                   TechnologyTypeTemplatesScreen,
+                                   TechnologyTypeProcessesScreen)
 from StatusScreen import StatusScreen
 from ShopForDataScreen import ShopForDataScreen
 from SelectionOverviewScreen import SelectionOverviewScreen
@@ -49,8 +51,14 @@ from SearchForTermScreen import SearchForTermScreen
 from CreateSubscriptionRequestScreen import CreateSubscriptionRequestScreen
 from UserIdentitiesScreen import UserIdentitiesScreen
 from ShowCommentsScreen import ShowCommentsScreen
-from AddToElementsScreens import (AddRoleScreen, AddProjectScreen, AddCommunityScreen, AddTeamScreen,
-                                  AddBlogEntryScreen, AddJournalEntryScreen, AddTodoScreen, AddAssociationScreen)
+from AddToElementsScreens import (AddRoleScreen,
+                                  AddProjectScreen,
+                                  AddCommunityScreen,
+                                  AddTeamScreen,
+                                  AddBlogEntryScreen,
+                                  AddJournalEntryScreen,
+                                  AddTodoScreen,
+                                  AddAssociationScreen)
 
 class MyProfileApp(App):
     """My Profile App.
@@ -474,7 +482,7 @@ class MyProfileApp(App):
                 str(c.get("GUID", c.get("guid", "")))
             )
 
-    def action_quit(self) -> None:
+    def action_quit(self) -> Any:
         # quit selected by user, so exit app
         self.exit(200)
 

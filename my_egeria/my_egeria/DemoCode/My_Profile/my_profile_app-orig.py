@@ -7,7 +7,6 @@
 """
 
 import datetime
-import pprint
 import re
 import json
 import sys
@@ -19,24 +18,23 @@ if str(root_path) not in sys.path:
     sys.path.append(str(root_path))
 
 from pyegeria import load_app_config, settings, MyProfile, PyegeriaException, print_basic_exception, exec_report_spec, \
-    AutomatedCuration, MetadataExpert, ActorManager, EgeriaCat, CollectionManager, ProductManager, \
-    PyegeriaInvalidParameterException, PyegeriaAPIException, DataEngineer, copy_to_clipboard
-from pyegeria.omvs import GovernanceOfficer
+    AutomatedCuration, ProductManager, \
+    PyegeriaInvalidParameterException, PyegeriaAPIException, DataEngineer
 from textual import on
 from textual.app import App, ComposeResult
 from textual.containers import ScrollableContainer
 from textual.widgets import DataTable, OptionList, Header, Static, Footer, Tree
 
 from CreateProfileScreen import CreateProfileScreen
-from EditProfileScreen import EditProfileScreen
-from EditCommunitiesScreen import EditCommunitiesScreen
-from EditIdentitiesScreen import EditIdentitiesScreen
-from EditRolesScreen import EditRolesScreen
-from EditTeamsScreen import EditTeamsScreen
-from TechnologyTypesScreen import TechnologyTypesScreen
-from TechnologyTypeOptionsScreen import TechnologyTypeOptionsScreen
-from TechnologyTypeTemplatesScreen import TechnologyTypeTemplatesScreen
-from TechnologyTypeProcessesScreen import TechnologyTypeProcessesScreen
+from my_egeria.DemoCode.Deprecated.EditProfileScreen import EditProfileScreen
+from my_egeria.DemoCode.Deprecated.EditCommunitiesScreen import EditCommunitiesScreen
+from my_egeria.DemoCode.Deprecated.EditIdentitiesScreen import EditIdentitiesScreen
+from my_egeria.DemoCode.Deprecated.EditRolesScreen import EditRolesScreen
+from my_egeria.DemoCode.Deprecated.EditTeamsScreen import EditTeamsScreen
+from my_egeria.DemoCode.Deprecated.TechnologyTypesScreen import TechnologyTypesScreen
+from my_egeria.DemoCode.Deprecated.TechnologyTypeOptionsScreen import TechnologyTypeOptionsScreen
+from my_egeria.DemoCode.Deprecated.TechnologyTypeTemplatesScreen import TechnologyTypeTemplatesScreen
+from my_egeria.DemoCode.Deprecated.TechnologyTypeProcessesScreen import TechnologyTypeProcessesScreen
 from StatusScreen import StatusScreen
 from ShopForDataScreen import ShopForDataScreen
 from SelectionOverviewScreen import SelectionOverviewScreen

@@ -68,6 +68,7 @@ class AddTodoScreen(ModalScreen):
                 Button("Add Todo", id="add_todo_button", variant="primary"),
                 Button("Quit", id="quit_button", variant="warning")
             ))
+        yield Footer()
 
     def action_add_new_todo(self):
         """ Call Egeria to add the new todo """
@@ -174,6 +175,7 @@ class AddAssociationScreen(ModalScreen):
                 ),
             id="element_type_input",
             )
+        yield Footer()
 
     def display_add_new_project_screen(self):
         input_container = self.query_one("#element_type_input", ScrollableContainer)
@@ -425,6 +427,7 @@ class AddBlogEntryScreen(ModalScreen):
                 Button("Add Blog Entry", id="add_entry_button", variant="primary"),
                 Button("Quit", id="quit_button", variant="warning")
             ))
+        yield Footer()
 
     def action_add_new_blog(self):
         """ Call Egeria to add the new blog entry """
@@ -533,8 +536,9 @@ class AddCommunityScreen(ModalScreen):
             Horizontal(
                 Button("Add Community", id="add_community_button", variant="primary"),
                 Button("Quit", id="quit_button", variant="warning")
+                )
             )
-        )
+        yield Footer()
 
     def action_add_new_community(self):
         """ Call Egeria to add the new todo """
@@ -644,6 +648,7 @@ class AddJournalEntryScreen(ModalScreen):
                 Button("Add Journal Entry", id="add_journal_entry_button", variant="primary"),
                 Button("Quit", id="quit_button", variant="warning")
             ))
+        yield Footer()
 
     def action_add_new_journal_entry(self):
         """ Call Egeria to add the new entry """
@@ -751,6 +756,7 @@ class AddProjectScreen(ModalScreen):
                 Button("Add Project", id="add_project_button", variant="primary"),
                 Button("Quit", id="quit_button", variant="warning")
             ))
+        yield Footer()
 
     def action_add_new_project(self):
         """ Call Egeria to add the new project """
@@ -861,13 +867,14 @@ class AddRoleScreen(ModalScreen):
             Static("This screen is intended for the user who wants to add a small number of Roles\n"
                    "Please ensure that you have filled in all fields before clicking 'Add Role'\n"
                    "For bulk additions please use Dr_Egeria instead."
-                   "Once additions are complete use the Refresh hot key on the main screen to update the display."),
+                   "Once additions are complete Quit and use the Refresh hot key on the main screen to update the display."),
             Input("Name of role", id="role_name"),
             Input("Description of role", id="role_description"),
             Horizontal(
                 Button("Add Role", id="add_role_button", variant="primary"),
                 Button("Quit", id="quit_button", variant="warning")
             ))
+        yield Footer()
 
     def action_add_new_role(self):
         """ Call Egeria to add the new role """
@@ -908,21 +915,19 @@ class AddRoleScreen(ModalScreen):
 
     @on(Input.Changed)
     def handle_input_changed(self, event: Input.Changed):
-        if event.input.id == "todo_name":
-            self.todo_name = event.input.value
-        if event.input.id == "todo_description":
-            self.todo_description = event.input.value
-        if event.input.id == "todo_priority":
-            self.todo_priority = event.input.value
+        if event.input.id == "role_name":
+            self.role_name = event.input.value
+        if event.input.id == "role_description":
+            self.role_description = event.input.value
 
     def action_quit(self):
         self.dismiss(200)
 
-    @on(Button.Pressed, "#add_todo_button")
-    def handle_add_todo_button(self, event: Button.Pressed):
+    @on(Button.Pressed, "#add_role_button")
+    def handle_add_role_button(self, event: Button.Pressed):
         """ Handle the add button press """
-        if self.todo_name and self.todo_description:
-            self.action_add_new_todo()
+        if self.role_name and self.role_description:
+            self.action_add_new_role()
         else:
             self.notify("Please enter at least anew todo name and description", timeout=10, severity="error")
 
@@ -1003,6 +1008,8 @@ class AddTeamScreen(ModalScreen):
             }
         }
 
+        tclient.create_egeria_bearer_token(self.user_name, self.user_password)
+
         try:
             team_guid = tclient.create_project(
                 anchor_guid=None,
@@ -1035,7 +1042,7 @@ class AddTeamScreen(ModalScreen):
             self.team_guid = ""
             self.query_one("#team_name", Input).clear()
             self.query_one("#team_description", Input).clear()
-            self.query_one("#team_identity", Input).clear()
+            self.query_one("#team_identifier", Input).clear()
             self.query_one("#team_status", Input).clear()
             self.query_one("#team_phase", Input).clear()
             self.query_one("#team_health", Input).clear()
