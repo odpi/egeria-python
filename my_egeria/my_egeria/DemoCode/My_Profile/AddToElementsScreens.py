@@ -9,11 +9,12 @@
 import pwd
 from datetime import datetime
 
+import optional
 from textual import on
 from textual.app import ComposeResult
 from textual.containers import ScrollableContainer, Horizontal
 from textual.screen import ModalScreen
-from textual.widgets import DataTable, OptionList, Header, Static, Footer, Input, Button
+from textual.widgets import DataTable, OptionList, Header, Static, Footer, Input, Button, Switch
 from textual.widgets._option_list import Option
 
 from pyegeria import Egeria, PyegeriaException, load_app_config, settings, print_basic_exception
@@ -29,7 +30,7 @@ class AddTodoScreen(ModalScreen):
 
     CSS_PATH = "my_profile.tcss"
 
-    def __init__(self, selected_table, *args, **kwargs):
+    def __init__(self, selected_table, user_GUID, *args, **kwargs):
         super().__init__(id="add_todo_screen", *args, **kwargs)
         self.selected_table = selected_table
         load_app_config()
@@ -43,6 +44,8 @@ class AddTodoScreen(ModalScreen):
         self.todo_description = ""
         self.todo_priority = ""
         self.todo_guid = ""
+        self.user_guid = user_GUID
+        self.link_todo_to_profile = True
 
     def on_mount(self):
         main_screen = self.app.get_screen("main")
@@ -64,6 +67,10 @@ class AddTodoScreen(ModalScreen):
             Input("Description of Todo", id="todo_description"),
             Input("Priority of Todo", id="todo_priority"),
             Static("Status will be automatically set to 'REQUESTED'"),
+            Horizontal(
+                Static("Link Todo to your profile? True or False, Default = True"),
+                Switch(value=True, id="link_todo_to_profile")
+            ),
             Horizontal(
                 Button("Add Todo", id="add_todo_button", variant="primary"),
                 Button("Quit", id="quit_button", variant="warning")
@@ -88,6 +95,16 @@ class AddTodoScreen(ModalScreen):
                         activity_status="REQUESTED"
                         )
             self.log(f"Created ToDo assigned to the current user: {todo_guid}")
+            if self.link_todo_to_profile is True:
+                try:
+                    self.todo_link_guid = tclient.link_todo_to_profile(
+                        todo_guid=todo_guid,
+                        profile_guid=self.user_guid
+                    )
+                    self.notify(f"Linked ToDo to profile: {self.todo_link_guid}", timeout=10, severity="information")
+                except PyegeriaException as e:
+                    self.log(f"Link todo to profile failed with return: {e}")
+                    self.notify(f"Link todo to profile failed with return: {e}", timeout=10, severity="error")
         except PyegeriaException as e:
             self.notify(f"Add todo failed with return: {e}", timeout=10, severity="error")
         finally:
@@ -96,10 +113,15 @@ class AddTodoScreen(ModalScreen):
             self.todo_description = ""
             self.todo_priority = ""
             self.todo_guid = ""
+            self.todo_link_guid = ""
             self.query_one("#todo_name", Input).clear()
             self.query_one("#todo_description", Input).clear()
             self.query_one("#todo_priority", Input).clear()
         return
+
+    @on(Switch.Changed, "#link_todo_to_profile")
+    def handle_link_todo_to_profile_changed(self, event: Switch.Changed):
+        self.link_todo_to_profile = event.switch.value
 
     @on(Input.Changed)
     def handle_input_changed(self, event: Input.Changed):
@@ -137,12 +159,13 @@ class AddAssociationScreen(ModalScreen):
 
     CSS_PATH = "my_profile.tcss"
 
-    def __init__(self, selected_table, *args, **kwargs):
+    def __init__(self, selected_table, user_GUID, *args, **kwargs):
         super().__init__(id="add_association_screen", *args, **kwargs)
         self.selected_table = selected_table
         load_app_config()
         app_config = settings.Environment
         app_user = settings.User_Profile
+        self.user_guid = user_GUID
         self.user_name = app_user.user_name or "garygeeke"
         self.user_password = app_user.user_pwd or "secret"
         self.view_server = app_config.egeria_view_server or "qs-view-server"
@@ -156,6 +179,10 @@ class AddAssociationScreen(ModalScreen):
         self.community_name = ""
         self.community_description = ""
         self.community_guid = ""
+        self.community_link_guid = ""
+        self.project_link_guid = ""
+        self.link_community_to_profile = True
+        self.link_project_to_profile = True
 
     def on_mount(self):
         main_screen = self.app.get_screen("main")
@@ -190,6 +217,10 @@ class AddAssociationScreen(ModalScreen):
                               Input("Start Date (mm/dd/yyyy):", id="project_start_date"),
                               Input("Planned End Date (mm/dd/yyyy):", id="project_end_date"),
                               Horizontal(
+                                  Static("Link Project to your profile? True or False, Default = True"),
+                                  Switch(value=True, id="link_project_to_profile")
+                              ),
+                              Horizontal(
                                   Button("Add Project", id="add_project_button"),
                                   Button("Quit", id="quit_button")
                                   )
@@ -202,6 +233,10 @@ class AddAssociationScreen(ModalScreen):
         input_container.mount(Static("Please fill in all input fields before clicking 'Add Project'"),
                               Input("Name of the community:", id="community_name"),
                               Input("Description of the community:", id="community_description"),
+                              Horizontal(
+                                  Static("Link Community to your profile? True or False, Default = True"),
+                                  Switch(value=True, id="link_community_to_profile")
+                              ),
                               Horizontal(
                                   Button("Add Community", id="add_community_button"),
                                   Button("Quit", id="quit_button")
@@ -229,18 +264,24 @@ class AddAssociationScreen(ModalScreen):
                     "class": "CommunityProperties",
                     "qualifiedName": tclient.__create_qualified_name__("Community", self.community_name),
                     "displayName": self.community_name,  # community name to be displayed in UI
-                    "description": "...",  # description of the new element (optional)
+                    "description": self.community_description,  # description of the new element (optional)
                 }
             }
-
             community_guid = tclient.create_community(
                 body=community_body
             )
             self.log(f"Created Community: {community_guid}")
-
+            if self.link_community_to_profile is True:
+                try:
+                    self.community_link_guid = tclient.link_community_to_profile(
+                        community_guid=community_guid,
+                        profile_guid=self.user_guid
+                    )
+                    self.notify(f"Linked Community to profile: {self.community_link_guid}", timeout=10, severity="information")
+                except PyegeriaException as e:
+                    self.log(f"Link community to profile failed with return: {e}")
         except PyegeriaException as e:
             self.notify(f"Add todo failed with return: {e}", timeout=10, severity="error")
-
         finally:
             tclient.close_session()
             self.community_name = ""
@@ -252,27 +293,23 @@ class AddAssociationScreen(ModalScreen):
 
     def action_add_new_project(self):
         """ Call Egeria to add the new project """
-
         tclient = Egeria(
             view_server=self.view_server,
             platform_url=self.platform_url,
             user_id=self.user_name,
             user_pwd=self.user_password
         )
-
         try:
-            tclient.create_egeria_bearer_token()
-
+            token = tclient.create_egeria_bearer_token(self.user_name, self.user_password)
             project_body = {
                 "class": "NewElementRequestBody",
                 "properties": {
                     "classificationName": "Campaign",  # type of project
                     "displayName": self.project_name,  # display name
                     "description": self.project_description,  # description
-                    "identifier": "PROJ-001"  # business identifier for the project
+                    "identifier": self.project_identifier  # business identifier for the project
                 }
             }
-
             project_guid = tclient.create_project(
                 anchor_guid=None,               # The identity of the anchor element for the project.
                 parent_guid=None,                # The identity of the parent element for the project.
@@ -290,12 +327,19 @@ class AddAssociationScreen(ModalScreen):
                 planned_end_date=self.project_end_date,           # The planned completion date of the project.
                 body=project_body                        # A dict representing the details of the project to create.
             )
-
             self.log(f"Created project: {project_guid}")
-
+            if self.link_project_to_profile is True:
+                try:
+                    self.project_link_guid = tclient.link_project_to_profile(
+                        profile_guid=self.user_guid,
+                        project_guid=project_guid
+                    )
+                    self.log(f"Linked project: {self.project_link_guid}")
+                    self.notify(f"Linked project: {self.project_link_guid}", timeout=10, severity="information")
+                except PyegeriaException as e:
+                    self.notify(f"Link project to profile failed with return: {e}", timeout=10, severity="error")
         except PyegeriaException as e:
             self.notify(f"Add project failed with return: {e}", timeout=10, severity="error")
-
         finally:
             tclient.close_session()
             self.project_name = ""
@@ -311,6 +355,14 @@ class AddAssociationScreen(ModalScreen):
             self.query_one("#project_start_date", Input).clear()
             self.query_one("#project_end_date", Input).clear()
         return
+
+    @on(Switch.Changed, "#link_project_to_profile")
+    def handle_link_project_to_profile_changed(self, event: Switch.Changed):
+        self.link_project_to_profile = event.switch.value
+
+    @on(Switch.Changed, "#link_community_to_profile")
+    def handle_link_community_to_profile_changed(self, event: Switch.Changed):
+        self.link_community_to_profile = event.switch.value
 
     @on(Input.Changed)
     def handle_input_changed(self, event: Input.Changed):
@@ -386,12 +438,13 @@ class AddBlogEntryScreen(ModalScreen):
 
     CSS_PATH = "my_profile.tcss"
 
-    def __init__(self, selected_table, *args, **kwargs):
+    def __init__(self, selected_table, user_GUID, *args, **kwargs):
         super().__init__(id="add_blog_screen", *args, **kwargs)
         self.selected_table = selected_table
         load_app_config()
         app_config = settings.Environment
         app_user = settings.User_Profile
+        self.user_guid = user_GUID
         self.user_name = app_user.user_name or "garygeeke"
         self.user_password = app_user.user_pwd or "secret"
         self.view_server = app_config.egeria_view_server or "qs-view-server"
@@ -400,6 +453,7 @@ class AddBlogEntryScreen(ModalScreen):
         self.blog_entry_description = ""
         self.blog_entry_priority = ""
         self.blog_entry_guid = ""
+        self.link_blog_entry_to_profile = True
 
     def on_mount(self):
         main_screen = self.app.get_screen("main")
@@ -424,6 +478,10 @@ class AddBlogEntryScreen(ModalScreen):
             Static("Situation"),
             Input("Situation", id="blog_entry_situation"),
             Horizontal(
+                Static("Link Blog Entry to your profile? True or False, Default = True"),
+                Switch(value=True, id="link_blog_entry_to_profile")
+            ),
+            Horizontal(
                 Button("Add Blog Entry", id="add_entry_button", variant="primary"),
                 Button("Quit", id="quit_button", variant="warning")
             ))
@@ -437,10 +495,8 @@ class AddBlogEntryScreen(ModalScreen):
             user_id=self.user_name,
             user_pwd=self.user_password
         )
-
         try:
             token = tclient.create_egeria_bearer_token(self.user_name, self.user_password)
-
             body = {
                 "class": "NewAttachmentRequestBody",
                 "properties": {
@@ -452,10 +508,20 @@ class AddBlogEntryScreen(ModalScreen):
                 }
             }
             blog_entry_response = tclient.blog_my_activity(body=body)
-
             assert isinstance(blog_entry_response, str)
             blog_entry_guid = blog_entry_response
             self.log(f"Created Blog Entry assigned to the current user: {blog_entry_guid}")
+            if self.link_blog_entry_to_profile is True:
+                try:
+                    tclient.link_element_to_profile(
+                        element_guid=self.user_guid,
+                        linked_element_guid=blog_entry_guid,
+                        relationship_type="BlogEntryToUser",
+                        relationship_properties={"class": "BlogEntryToUserProperties"},
+                    )
+                    self.notify(f"Linked Blog Entry to Profile: {blog_entry_guid}", timeout=10, severity="information")
+                except PyegeriaException as e:
+                    self.notify(f"Link Blog Entry to Profile failed with return: {e}", timeout=10, severity="error")
         except PyegeriaException as e:
             self.notify(f"Add blog entry failed with return: {e}", timeout=10, severity="error")
         finally:
@@ -477,6 +543,10 @@ class AddBlogEntryScreen(ModalScreen):
             self.blog_entry_text = event.input.value
         if event.input.id == "blog_entry_situation":
             self.blog_entry_situation = event.input.value
+
+    @on(Switch.Changed, "#link_blog_entry_to_profile")
+    def handle_link_blog_entry_to_profile_changed(self, event: Switch.Changed):
+        self.link_blog_entry_to_profile = event.switch.value
 
     def action_quit(self):
         self.dismiss(200)
@@ -506,18 +576,20 @@ class AddCommunityScreen(ModalScreen):
 
     CSS_PATH = "my_profile.tcss"
 
-    def __init__(self, selected_table, *args, **kwargs):
+    def __init__(self, selected_table, user_GUID, *args, **kwargs):
         super().__init__(id="add_community_screen", *args, **kwargs)
         self.selected_table = selected_table
         load_app_config()
         app_config = settings.Environment
         app_user = settings.User_Profile
+        self.user_guid = user_GUID
         self.user_name = app_user.user_name or "garygeeke"
         self.user_password = app_user.user_pwd or "secret"
         self.view_server = app_config.egeria_view_server or "qs-view-server"
         self.platform_url = app_config.egeria_platform_url or "https://127.0.0.1:9443"
         self.community_description = ""
         self.community_name = ""
+        self.link_community_to_profile = True
     #
     def on_mount(self):
         main_screen = self.app.get_screen("main")
@@ -533,6 +605,11 @@ class AddCommunityScreen(ModalScreen):
             Input("Name of Community", id="community_display_name"),
             Input("Description of Community", id="community_description"),
             Static("Domain Identifier will be automatically set to '0 - All Domains'"),
+
+            Horizontal(
+                Static("Link Community to your profile? True or False, Default = True"),
+                Switch(value=True, id="link_community_to_profile")
+            ),
             Horizontal(
                 Button("Add Community", id="add_community_button", variant="primary"),
                 Button("Quit", id="quit_button", variant="warning")
@@ -561,17 +638,24 @@ class AddCommunityScreen(ModalScreen):
                     "domainIdentifier": 0,  # 0 = all domains
                 }
             }
-
             response = tclient.create_governance_definition(body)
-
             if isinstance(response, dict):
                 self.log(f"Created community with ID {response['guid']}")
+                if self.link_community_to_profile is True:
+                    try:
+                        tclient.link_element_to_profile(
+                            element_guid=self.user_guid,
+                            linked_element_guid=response["guid"],
+                            relationship_type="CommunityToUser",
+                            relationship_properties={"class": "CommunityToUserProperties"},
+                        )
+                        self.notify(f"Linked Community to Profile: {response['guid']}", timeout=10, severity="information")
+                    except PyegeriaException as e:
+                        self.notify(f"Link Community to Profile failed with return: {e}", timeout=10, severity="error")
             else:
                 self.log(f"Error creating community: {response}")
-
         except PyegeriaException as e:
             print_basic_exception(e)
-
         finally:
             tclient.close_session()
 
@@ -581,6 +665,10 @@ class AddCommunityScreen(ModalScreen):
             self.community_name = event.input.value
         if event.input.id == "community_description":
             self.community_description = event.input.value
+
+    @on(Switch.Changed, "#link_community_to_profile")
+    def handle_link_community_to_profile_changed(self, event: Switch.Changed):
+        self.link_community_to_profile = event.switch.value
 
     def action_quit(self):
         self.dismiss(200)
@@ -608,12 +696,13 @@ class AddJournalEntryScreen(ModalScreen):
 
     CSS_PATH = "my_profile.tcss"
 
-    def __init__(self, selected_table, *args, **kwargs):
+    def __init__(self, selected_table, user_GUID, *args, **kwargs):
         super().__init__(id="add_journal_entry_screen", *args, **kwargs)
         self.selected_table = selected_table
         load_app_config()
         app_config = settings.Environment
         app_user = settings.User_Profile
+        self.user_guid = user_GUID
         self.user_name = app_user.user_name or "garygeeke"
         self.user_password = app_user.user_pwd or "secret"
         self.view_server = app_config.egeria_view_server or "qs-view-server"
@@ -622,13 +711,12 @@ class AddJournalEntryScreen(ModalScreen):
         self.journal_entry_text = ""
         self.journal_entry_qualified_name = ""
         self.journal_entry_situation = ""
+        self.link_journal_entry_to_profile = True
 
     def on_mount(self):
         main_screen = self.app.get_screen("main")
 
         self.journal_table = main_screen.query_one("#journal_table", DataTable)
-        assert self.journal_table is not None
-
         self.journal_table.zebra_stripes = True
         self.journal_table.cursor_type = "row"
         self.journal_table.focus()
@@ -644,6 +732,10 @@ class AddJournalEntryScreen(ModalScreen):
             Input("Text of Entry", id="journal_entry_text"),
             Static("Situation"),
             Input("Situation of Entry", id="journal_entry_situation"),
+            Horizontal(
+                Static("Link Journal Entry to your profile? True or False, Default = True"),
+                Switch(value=True, id="link_journal_entry_to_profile")
+            ),
             Horizontal(
                 Button("Add Journal Entry", id="add_journal_entry_button", variant="primary"),
                 Button("Quit", id="quit_button", variant="warning")
@@ -664,19 +756,23 @@ class AddJournalEntryScreen(ModalScreen):
                 "description": self.journal_entry_text
                 }
             }
-
         tclient = Egeria(
             view_server=self.view_server,
             platform_url=self.platform_url,
             user_id=self.user_name,
             user_pwd=self.user_password
         )
-
         try:
             token = tclient.create_egeria_bearer_token(self.user_name, self.user_password)
             journal_entry_response = tclient.journal_my_activity(body=body)
             assert isinstance(journal_entry_response, str)
-            self.log(f"Created ToDo assigned to the current user: {journal_entry_response}")
+            self.log(f"Created Journal Entry for the current user: {journal_entry_response}")
+            if self.link_journal_entry_to_profile is True:
+                try:
+                    tclient.link_element_to_profile(journal_entry_response)
+                    self.notify(f"Linked Journal Entry to Profile: {journal_entry_response}", timeout=10, severity="success")
+                except PyegeriaException as e:
+                    self.notify(f"Link Journal Entry to Profile failed with return: {e}", timeout=10, severity="error")
         except PyegeriaException as e:
             self.notify(f"Add journal entry failed with return: {e}", timeout=10, severity="error")
         finally:
@@ -698,6 +794,10 @@ class AddJournalEntryScreen(ModalScreen):
             self.journal_entry_text = event.input.value
         if event.input.id == "journal_entry_situation":
             self.journal_entry_situation = event.input.value
+
+    @on(Switch.Changed, "#link_journal_entry_to_profile")
+    def handle_link_journal_entry_to_profile_changed(self, event: Switch.Changed):
+        self.link_journal_entry_to_profile = event.switch.value
 
     def action_quit(self):
         self.dismiss(200)
@@ -726,7 +826,7 @@ class AddProjectScreen(ModalScreen):
 
     CSS_PATH = "my_profile.tcss"
 
-    def __init__(self, selected_table, *args, **kwargs):
+    def __init__(self, selected_table, user_GUID, *args, **kwargs):
         super().__init__(id="add_project_screen", *args, **kwargs)
         self.selected_table = selected_table
         load_app_config()
@@ -752,6 +852,10 @@ class AddProjectScreen(ModalScreen):
             Input("Name of Project", id="project_name"),
             Input("Description of project", id="project_description"),
             Input("Poject Identifier", id="project_identifier"),
+            Horizontal(
+                Static("Link Project to your profile? True or False, Default = True"),
+                Switch(value=True, id="link_project_to_profile")
+            ),
             Horizontal(
                 Button("Add Project", id="add_project_button", variant="primary"),
                 Button("Quit", id="quit_button", variant="warning")
@@ -818,6 +922,10 @@ class AddProjectScreen(ModalScreen):
         if event.input.id == "project_identifier":
             self.project_identifier = event.input.value
 
+    @on(Switch.Changed, "#link_project_to_profile")
+    def handle_link_project_to_profile_changed(self, event: Switch.Changed):
+        self.link_project_to_profile = event.switch.value
+
     def action_quit(self):
         self.dismiss(200)
 
@@ -845,8 +953,9 @@ class AddRoleScreen(ModalScreen):
 
     CSS_PATH = "my_profile.tcss"
 
-    def __init__(self, selected_table, *args, **kwargs):
+    def __init__(self, selected_table, user_GUID, *args, **kwargs):
         super().__init__(id="add_role_screen", *args, **kwargs)
+        self.user_GUID = user_GUID
         self.selected_table = selected_table
         load_app_config()
         app_config = settings.Environment
@@ -857,6 +966,7 @@ class AddRoleScreen(ModalScreen):
         self.platform_url = app_config.egeria_platform_url or "https://127.0.0.1:9443"
         self.role_name = ""
         self.role_description = ""
+        self.link_self_to_role = True
 
     def on_mount(self):
         main_screen = self.app.get_screen("main")
@@ -870,6 +980,10 @@ class AddRoleScreen(ModalScreen):
                    "Once additions are complete Quit and use the Refresh hot key on the main screen to update the display."),
             Input("Name of role", id="role_name"),
             Input("Description of role", id="role_description"),
+            Horizontal(
+                Static("Link to this role in your profile? (True or False, default is True)"),
+                Switch(value=True, id="link_self_to_role"),
+            ),
             Horizontal(
                 Button("Add Role", id="add_role_button", variant="primary"),
                 Button("Quit", id="quit_button", variant="warning")
@@ -886,22 +1000,64 @@ class AddRoleScreen(ModalScreen):
             user_pwd=self.user_password
         )
 
-        token=tclient.create_bearer_token(self.user_name, self.user_password)
+        token = tclient.create_egeria_bearer_token(self.user_name, self.user_password)
 
         role_body = {
+            # "class": "NewElementRequestBody",
+            # "properties": {
+            #     "class": "RoleProperties",  # property class for roles
+            #     "typeName": "Role",  # actual Egeria type
+            #     "qualifiedName": tclient.__create_qualified_name__("Role:", self.role_name),
+            #     "displayName": self.role_name,
+            #     "description": self.role_description,
             "class": "NewElementRequestBody",
+            "isOwnAnchor": True,
+            "effectiveFrom": "{{$isoTimestamp}}",
+            "effectiveTo": "{{$isoTimestamp}}",
             "properties": {
-                "class": "RoleProperties",  # property class for roles
-                "typeName": "Role",  # actual Egeria type
+                "class": "ActorRoleProperties",
+                "typeName": "Role",
+                "actorProfileGroups": [],
                 "qualifiedName": tclient.__create_qualified_name__("Role:", self.role_name),
                 "displayName": self.role_name,
-                "description": "...",
+                "description": self.role_description,
+                "scope": "0",
+                "additionalProperties": {
+                },
+                "extendedProperties": {
+                    }
+                }
             }
-        }
 
         try:
-            self.role_guid = tclient.create_governance_definition(role_body)
-            self.log(f"Created Role assigned to the current user: {self.role_guid}")
+            self.role_guid = tclient.create_actor_role(body=role_body)
+            self.log(f"Created Role by the current user: {self.role_guid}")
+            if self.link_self_to_role is True:
+                link_body = {
+                    "class": "NewRelationshipRequestBody",
+                    "externalSourceGUID": "add guid here",
+                    "externalSourceName": "add qualified name here",
+                    "effectiveTime": "{{$isoTimestamp}}",
+                    "forLineage": False,
+                    "forDuplicateProcessing": False,
+                    "properties": {
+                        "class": "PersonRoleAppointmentProperties",
+                        "effectiveFrom": "{{$isoTimestamp}}",
+                        "effectiveTo": ""
+                        }
+                    }
+                try:
+                    self.link_guid = tclient.link_person_role_to_profile({
+                        self.role_guid: str,
+                        self.user_GUID: str,
+                        "body": link_body,
+                        })
+                except(PyegeriaException) as e:
+                    self.notify(f"Linking role failed with return: {e}", timeout=10, severity="error")
+                    print_basic_exception(e)
+            else:
+                self.link_guid = ""
+                self.log(f"Link to profile not requested: {self.link_self_to_role}")
         except PyegeriaException as e:
             self.notify(f"Add role failed with return: {e}", timeout=10, severity="error")
         finally:
@@ -912,6 +1068,10 @@ class AddRoleScreen(ModalScreen):
             self.query_one("#role_name", Input).clear()
             self.query_one("#role_description", Input).clear()
         return
+
+    @on(Switch.Changed, "#link_self_to_role")
+    def handle_link_self_to_role_changed(self, event: Switch.Changed):
+        self.link_self_to_role = event.switch.value
 
     @on(Input.Changed)
     def handle_input_changed(self, event: Input.Changed):
@@ -946,7 +1106,7 @@ class AddTeamScreen(ModalScreen):
 
     CSS_PATH = "my_profile.tcss"
 
-    def __init__(self, selected_table, *args, **kwargs):
+    def __init__(self, selected_table, user_GUID, *args, **kwargs):
         super().__init__(id="add_team_screen", *args, **kwargs)
         self.selected_table = selected_table
         load_app_config()
@@ -981,6 +1141,10 @@ class AddTeamScreen(ModalScreen):
             Input("Health of Team, 'green', 'yellow', 'red'", id="team_health"),
             Static("Domain will be automatically set to '0' - all domains"),
             Horizontal(
+                Static("Link Team to your profile? True or False, Default = True"),
+                Switch(value=True, id="link_team_to_profile")
+            ),
+            Horizontal(
                 Button("Add Team", id="add_team_button", variant="primary"),
                 Button("Quit", id="quit_button", variant="warning")
             ))
@@ -1011,7 +1175,7 @@ class AddTeamScreen(ModalScreen):
         tclient.create_egeria_bearer_token(self.user_name, self.user_password)
 
         try:
-            team_guid = tclient.create_project(
+            team_guid = tclient.create_team(
                 anchor_guid=None,
                 parent_guid=None,
                 parent_relationship_type_name=None,  # optional
@@ -1062,6 +1226,10 @@ class AddTeamScreen(ModalScreen):
             self.team_phase = event.input.value
         if event.input.id == "team_health":
             self.team_health = event.input.value
+
+    @on(Switch.Changed, "#link_team_to_profile")
+    def handle_link_team_to_profile_changed(self, event: Switch.Changed):
+        self.link_team_to_profile = event.switch.value
 
     def action_quit(self):
         self.dismiss(200)

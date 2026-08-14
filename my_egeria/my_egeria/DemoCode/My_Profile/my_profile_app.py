@@ -19,9 +19,9 @@ if str(root_path) not in sys.path:
     sys.path.append(str(root_path))
 
 from pyegeria import (load_app_config, settings, MyProfile, PyegeriaException,
-                        print_basic_exception, exec_report_spec,
-                        AutomatedCuration, ProductManager,
-                        PyegeriaInvalidParameterException, PyegeriaAPIException, DataEngineer)
+                      print_basic_exception, exec_report_spec,
+                      AutomatedCuration, ProductManager,
+                      PyegeriaInvalidParameterException, PyegeriaAPIException, DataEngineer, Egeria)
 from textual import on
 from textual.app import App, ComposeResult
 from textual.containers import ScrollableContainer
@@ -1399,7 +1399,7 @@ class MyProfileApp(App):
                             self.log(f"Processing dataset: {membership_qname}")
                             try:
                                 # create client instance and retrieve data
-                                dclient = DataEngineer(self.view_server, self.platform_url, self.user_name,
+                                dclient = Egeria(self.view_server, self.platform_url, self.user_name,
                                                        self.user_password)
                                 token = dclient.create_egeria_bearer_token(self.user_name, self.user_password)
                                 data_set_metadata = dclient.find_tabular_data_sets(
@@ -1409,7 +1409,7 @@ class MyProfileApp(App):
                                     output_format="DICT"
                                 )
                                 self.log(f"Dataset metadata retrieved: {data_set_metadata}")
-                                if isinstance(data_set_metadata, list) and len(data_set_metadata) > 0:
+                                if isinstance(data_set_metadata, list) and len(data_set_metadata) > 0 and data_set_metadata != "No elements found":
                                     data_set_guid = data_set_metadata[0].get("GUID")
                                     if data_set_guid:
                                         data_set_data = dclient.get_tabular_data_set(
@@ -1430,7 +1430,7 @@ class MyProfileApp(App):
                                 print_basic_exception(e)
                         else:
                             continue
-                    self.log(f"Sample data after product {product.get('Display Name')}: {sample_data}")
+                    self.log(f"Sample data after product  {product.get('Display Name')}: {sample_data}")
             self.log(f"Final sample data length: {len(sample_data)}")
 
         self.push_screen(SelectionOverviewScreen("catalog",
@@ -1580,8 +1580,9 @@ class MyProfileApp(App):
                     s_client = ProductManager(self.view_server, self.platform_url, self.user_name, self.user_password)
                     s_client.create_egeria_bearer_token(self.user_name, self.user_password)
                     s_client.create_digital_subscription(self.selected_item)
-                except (PyegeriaInvalidParameterException, PyegeriaAPIException, PyegeriaException):
+                except (PyegeriaException):
                     self.log(f"Error creating digital subscription: {self.selected_item} from {self.selected_tree}")
+                    self.notify("Error creating digital subscription")
                     # more error handling required here
                     """ Request Body layout, not all fields are required to be completed
                     {
@@ -2109,20 +2110,20 @@ class MyProfileApp(App):
         self.log(f"Adding row {selected_row} to table {selected_table}")
         self.selected_table = selected_table
         self.selected_row = selected_row
-        if self.selected_table == "role_table":
-            await self.push_screen(AddRoleScreen(self.selected_table), callback=self.add_role_callback)
+        if self.selected_table == "roles_table":
+            await self.push_screen(AddRoleScreen(self.selected_table, self.user_GUID), callback=self.add_role_callback)
         elif self.selected_table == "associations_table":
-            await self.push_screen(AddCommunityScreen(self.selected_table), callback=self.add_community_callback)
+            await self.push_screen(AddCommunityScreen(self.selected_table, self.user_GUID), callback=self.add_community_callback)
         elif self.selected_table == "my_team_table":
-            await self.push_screen(AddTeamScreen(self.selected_table), callback=self.add_team_callback)
+            await self.push_screen(AddTeamScreen(self.selected_table, self.user_GUID), callback=self.add_team_callback)
         elif self.selected_table == "blogs_table":
-            await self.push_screen(AddBlogEntryScreen(self.selected_table), callback=self.add_blog_entry_callback)
+            await self.push_screen(AddBlogEntryScreen(self.selected_table, self.user_GUID), callback=self.add_blog_entry_callback)
         elif self.selected_table == "journal_table":
-            await self.push_screen(AddJournalEntryScreen(self.selected_table), callback=self.add_journal_entry_callback)
+            await self.push_screen(AddJournalEntryScreen(self.selected_table, self.user_GUID), callback=self.add_journal_entry_callback)
         elif self.selected_table == "todos_table":
-            await self.push_screen(AddTodoScreen(self.selected_table), callback=self.add_todo_callback)
+            await self.push_screen(AddTodoScreen(self.selected_table, self.user_GUID), callback=self.add_todo_callback)
         elif self.selected_table == "associations_table":
-            await self.push_screen(AddAssociationScreen(self.selected_table), callback=self.add_association_callback)
+            await self.push_screen(AddAssociationScreen(self.selected_table, self.user_GUID), callback=self.add_association_callback)
         else:
             self.log(f"Unexpected table name: {self.selected_table}")
 

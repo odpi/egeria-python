@@ -353,7 +353,12 @@ class SelectionOverviewScreen(ModalScreen):
     def action_subscribe(self):
         """ The subscribe option in the footer has been selected. """
         self.log(f"Subscribe to data selected: {self.node_GUID}")
-        # return a completion code, the guid/qualified name of the selected item and the id of the tree it was selected from
-        self.dismiss([211, self.node_GUID, self.tree_selected])
+        if self.node_GUID == None:
+            self.log(f"No node GUID selected for subscription")
+            self.notify("The node selected for subscription has no Digital Products available, please select another node", timeout=10, severity="error")
+            return
+        else:
+            # return a completion code, the guid/qualified name of the selected item and the id of the tree it was selected from
+            self.dismiss([211, self.node_GUID, self.tree_selected])
 
 
