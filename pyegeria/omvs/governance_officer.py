@@ -29,7 +29,8 @@ from pyegeria.core._globals import NO_GUID_RETURNED
 from pyegeria.models import (GetRequestBody, SearchStringRequestBody, FilterRequestBody, NewElementRequestBody,
                              ReferenceableProperties, TemplateRequestBody,
                              UpdateElementRequestBody, NewRelationshipRequestBody,
-                             DeleteElementRequestBody, DeleteRelationshipRequestBody)
+                             DeleteElementRequestBody, DeleteRelationshipRequestBody,
+                             UpdateRelationshipRequestBody)
 from pyegeria.core.utils import dynamic_catch
 
 GOV_DEF_PROPERTIES_LIST = ["GovernanceDefinitionProperties", "GovernanceStrategyProperties", "RegulationProperties",
@@ -1729,6 +1730,264 @@ class GovernanceOfficer(ServerClient):
         loop = asyncio.get_event_loop()
         loop.run_until_complete(
             self._async_detach_governed_by_definition(element_guid, definition_guid, body))
+
+    @dynamic_catch
+    async def _async_license_element(self, element_guid: str, license_type_guid: str,
+                                      body: Optional[dict | NewRelationshipRequestBody] = None) -> str:
+        """ Link an element to a license type and include details of the license in the relationship
+            properties. The GUID returned is the identifier of the relationship. Async Version.
+
+        Parameters
+        ----------
+        element_guid: str
+            guid of the element to license.
+        license_type_guid: str
+            the license type guid.
+        body: dict
+            The body describing the license.
+
+        Returns
+        -------
+        str
+            guid of the new License relationship.
+
+        Raises
+        ------
+        PyegeriaException
+        ValidationError
+
+        Notes
+        ----
+
+        Body structure:
+        {
+           "class" : "NewRelationshipRequestBody",
+           "properties" : {
+             "class" : "LicenseProperties",
+             "licenseId" : "add license id here",
+             "startDate" : "{{$isoTimestamp}}",
+             "endDate" : "{{$isoTimestamp}}",
+             "conditions" : "add conditions here",
+             "licensedBy" : "add value here",
+             "licensedByTypeName" : "add value here",
+             "licensedByPropertyName" : "add value here",
+             "custodian" : "add value here",
+             "custodianTypeName" : "add value here",
+             "custodianPropertyName" : "add value here",
+             "licensee" : "add value here",
+             "licenseeTypeName" : "add value here",
+             "licenseePropertyName" : "add value here",
+             "entitlements" : "add value here",
+             "restrictions" : "add value here",
+             "obligations" : "add value here",
+             "notes" : "add value here"
+           },
+           "externalSourceGUID": "Add guid here",
+           "externalSourceName": "Add qualified name here",
+           "forLineage": false,
+           "forDuplicateProcessing": false,
+           "effectiveTime" : "{{$isoTimestamp}}"
+        }
+        """
+        url = (
+            f"{self.platform_url}/servers/{self.view_server}/api/open-metadata/"
+            f"{self.url_marker}/elements/{element_guid}/license-types/{license_type_guid}/license"
+        )
+        validated_body = self.validate_new_relationship_request(body, ["LicenseProperties"])
+        if validated_body:
+            json_body = validated_body.model_dump_json(indent=2, exclude_none=True)
+            resp = await self._async_make_request("POST", url, json_body)
+        else:
+            resp = await self._async_make_request("POST", url)
+        return resp.json().get("guid", NO_GUID_RETURNED)
+
+    @dynamic_catch
+    def license_element(self, element_guid: str, license_type_guid: str,
+                        body: Optional[dict | NewRelationshipRequestBody] = None) -> str:
+        """ Link an element to a license type and include details of the license in the relationship
+            properties. The GUID returned is the identifier of the relationship.
+
+        Parameters
+        ----------
+        element_guid: str
+            guid of the element to license.
+        license_type_guid: str
+            the license type guid.
+        body: dict
+            The body describing the license.
+
+        Returns
+        -------
+        str
+            guid of the new License relationship.
+
+        Raises
+        ------
+        PyegeriaException
+        ValidationError
+
+        Notes
+        ----
+
+        Body structure:
+        {
+           "class" : "NewRelationshipRequestBody",
+           "properties" : {
+             "class" : "LicenseProperties",
+             "licenseId" : "add license id here",
+             "startDate" : "{{$isoTimestamp}}",
+             "endDate" : "{{$isoTimestamp}}",
+             "conditions" : "add conditions here",
+             "licensedBy" : "add value here",
+             "licensedByTypeName" : "add value here",
+             "licensedByPropertyName" : "add value here",
+             "custodian" : "add value here",
+             "custodianTypeName" : "add value here",
+             "custodianPropertyName" : "add value here",
+             "licensee" : "add value here",
+             "licenseeTypeName" : "add value here",
+             "licenseePropertyName" : "add value here",
+             "entitlements" : "add value here",
+             "restrictions" : "add value here",
+             "obligations" : "add value here",
+             "notes" : "add value here"
+           },
+           "externalSourceGUID": "Add guid here",
+           "externalSourceName": "Add qualified name here",
+           "forLineage": false,
+           "forDuplicateProcessing": false,
+           "effectiveTime" : "{{$isoTimestamp}}"
+        }
+        """
+        loop = asyncio.get_event_loop()
+        return loop.run_until_complete(
+            self._async_license_element(element_guid, license_type_guid, body))
+
+    @dynamic_catch
+    async def _async_certify_element(self, element_guid: str, certification_type_guid: str,
+                                      body: Optional[dict | NewRelationshipRequestBody] = None) -> str:
+        """ Link an element to a certification type and include details of the certification in the
+            relationship properties. The GUID returned is the identifier of the relationship. Async Version.
+
+        Parameters
+        ----------
+        element_guid: str
+            guid of the element to certify.
+        certification_type_guid: str
+            the certification type guid.
+        body: dict
+            The body describing the certification.
+
+        Returns
+        -------
+        str
+            guid of the new Certification relationship.
+
+        Raises
+        ------
+        PyegeriaException
+        ValidationError
+
+        Notes
+        ----
+
+        Body structure:
+        {
+           "class" : "NewRelationshipRequestBody",
+           "properties" : {
+             "class" : "CertificationProperties",
+             "certificateId" : "add certificate id here",
+             "startDate" : "{{$isoTimestamp}}",
+             "endDate" : "{{$isoTimestamp}}",
+             "conditions" : "add conditions here",
+             "certifiedBy" : "add value here",
+             "certifiedByTypeName" : "add value here",
+             "certifiedByPropertyName" : "add value here",
+             "custodian" : "add value here",
+             "custodianTypeName" : "add value here",
+             "custodianPropertyName" : "add value here",
+             "recipient" : "add value here",
+             "recipientTypeName" : "add value here",
+             "recipientPropertyName" : "add value here",
+             "notes" : "add value here"
+           },
+           "externalSourceGUID": "Add guid here",
+           "externalSourceName": "Add qualified name here",
+           "forLineage": false,
+           "forDuplicateProcessing": false,
+           "effectiveTime" : "{{$isoTimestamp}}"
+        }
+        """
+        url = (
+            f"{self.platform_url}/servers/{self.view_server}/api/open-metadata/"
+            f"{self.url_marker}/elements/{element_guid}/certification-types/{certification_type_guid}/certify"
+        )
+        validated_body = self.validate_new_relationship_request(body, ["CertificationProperties"])
+        if validated_body:
+            json_body = validated_body.model_dump_json(indent=2, exclude_none=True)
+            resp = await self._async_make_request("POST", url, json_body)
+        else:
+            resp = await self._async_make_request("POST", url)
+        return resp.json().get("guid", NO_GUID_RETURNED)
+
+    @dynamic_catch
+    def certify_element(self, element_guid: str, certification_type_guid: str,
+                        body: Optional[dict | NewRelationshipRequestBody] = None) -> str:
+        """ Link an element to a certification type and include details of the certification in the
+            relationship properties. The GUID returned is the identifier of the relationship.
+
+        Parameters
+        ----------
+        element_guid: str
+            guid of the element to certify.
+        certification_type_guid: str
+            the certification type guid.
+        body: dict
+            The body describing the certification.
+
+        Returns
+        -------
+        str
+            guid of the new Certification relationship.
+
+        Raises
+        ------
+        PyegeriaException
+        ValidationError
+
+        Notes
+        ----
+
+        Body structure:
+        {
+           "class" : "NewRelationshipRequestBody",
+           "properties" : {
+             "class" : "CertificationProperties",
+             "certificateId" : "add certificate id here",
+             "startDate" : "{{$isoTimestamp}}",
+             "endDate" : "{{$isoTimestamp}}",
+             "conditions" : "add conditions here",
+             "certifiedBy" : "add value here",
+             "certifiedByTypeName" : "add value here",
+             "certifiedByPropertyName" : "add value here",
+             "custodian" : "add value here",
+             "custodianTypeName" : "add value here",
+             "custodianPropertyName" : "add value here",
+             "recipient" : "add value here",
+             "recipientTypeName" : "add value here",
+             "recipientPropertyName" : "add value here",
+             "notes" : "add value here"
+           },
+           "externalSourceGUID": "Add guid here",
+           "externalSourceName": "Add qualified name here",
+           "forLineage": false,
+           "forDuplicateProcessing": false,
+           "effectiveTime" : "{{$isoTimestamp}}"
+        }
+        """
+        loop = asyncio.get_event_loop()
+        return loop.run_until_complete(
+            self._async_certify_element(element_guid, certification_type_guid, body))
 
 
 

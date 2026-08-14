@@ -6865,6 +6865,270 @@ class ClassificationExplorer(ServerClient):
             self._async_remove_resource_from_element(resource_guid, element_guid, body)
         )
 
+    @dynamic_catch
+    async def _async_get_resource_list(
+            self,
+            element_guid: str,
+            start_from: int = 0,
+            page_size: int = 0,
+            output_format: str = "JSON",
+            report_spec: dict | str = None,
+            body: Optional[dict | ResultsRequestBody] = None,
+            **kwargs
+    ) -> list | str:
+        """
+            Retrieve the resources linked via the ResourceList relationship to the requested element. Async version.
+
+            ResourceList: https://egeria-project.org/types/0/0019-More-Information/
+
+        Parameters
+        __________
+        element_guid: str
+            Element to retrieve information for.
+        start_from: int, default = 0
+            When multiple pages of results are available, the element number to start from.
+        page_size: int, default = 0
+            The number of elements returned per page.
+        output_format: str, default = "JSON"
+            Type of output to return.
+        report_spec: dict | str, default = None
+            Output format set to use. If None, the default output format set is used.
+        body: dict | ResultsRequestBody
+            Details of the query.
+
+        Returns
+        -------
+        [dict] | str
+            Returns a string if no elements found and a list of dict of elements with the results.
+
+        Raises
+        ------
+        PyegeriaException
+
+        Notes
+        -----
+        Sample body:
+
+        {
+            "class": "ResultsRequestBody",
+            "effectiveTime": "{{$isoTimestamp}}",
+            "asOfTime": "{{$isoTimestamp}}",
+            "forLineage": false,
+            "forDuplicateProcessing": false,
+            "metadataElementTypeName": "Referenceable",
+            "limitResultsByStatus": [ "ACTIVE", "DRAFT"],
+            "sequencingProperty": "???",
+            "sequencingOrder": "LAST_UPDATE_RECENT"
+        }
+
+        """
+
+        url = (f"{self.classification_command_root}/elements/{element_guid}/resource-list")
+
+        response = await self._async_get_results_body_request(url, "Referenceable", self._generate_referenceable_output,
+                                                              start_from=start_from, page_size=page_size,
+                                                              output_format=output_format,
+                                                              report_spec=report_spec, body=body, **kwargs)
+        return response
+
+    @dynamic_catch
+    def get_resource_list(
+            self,
+            element_guid: str,
+            start_from: int = 0,
+            page_size: int = 0,
+            output_format: str = "JSON",
+            report_spec: dict | str = None,
+            body: Optional[dict | ResultsRequestBody] = None,
+            **kwargs
+    ) -> list | str:
+        """
+            Retrieve the resources linked via the ResourceList relationship to the requested element.
+
+            ResourceList: https://egeria-project.org/types/0/0019-More-Information/
+
+        Parameters
+        __________
+        element_guid: str
+            Element to retrieve information for.
+        start_from: int, default = 0
+            When multiple pages of results are available, the element number to start from.
+        page_size: int, default = 0
+            The number of elements returned per page.
+        output_format: str, default = "JSON"
+            Type of output to return.
+        report_spec: dict | str, default = None
+            Output format set to use. If None, the default output format set is used.
+        body: dict | ResultsRequestBody
+            Details of the query.
+
+        Returns
+        -------
+        [dict] | str
+            Returns a string if no elements found and a list of dict of elements with the results.
+
+        Raises
+        ------
+        PyegeriaException
+
+        Notes
+        -----
+        Sample body:
+
+        {
+            "class": "ResultsRequestBody",
+            "effectiveTime": "{{$isoTimestamp}}",
+            "asOfTime": "{{$isoTimestamp}}",
+            "forLineage": false,
+            "forDuplicateProcessing": false,
+            "metadataElementTypeName": "Referenceable",
+            "limitResultsByStatus": [ "ACTIVE", "DRAFT"],
+            "sequencingProperty": "???",
+            "sequencingOrder": "LAST_UPDATE_RECENT"
+        }
+
+        """
+
+        loop = asyncio.get_event_loop()
+        response = loop.run_until_complete(
+            self._async_get_resource_list(element_guid, start_from, page_size, output_format,
+                                            report_spec, body, **kwargs)
+        )
+        return response
+
+    @dynamic_catch
+    async def _async_get_supported_by_resource(
+            self,
+            resource_guid: str,
+            start_from: int = 0,
+            page_size: int = 0,
+            output_format: str = "JSON",
+            report_spec: dict | str = None,
+            body: Optional[dict | ResultsRequestBody] = None,
+            **kwargs
+    ) -> list | str:
+        """
+            Retrieve the elements linked via the ResourceList relationship to the requested resource -- ie the
+            elements that this resource supports. Async version.
+
+            ResourceList: https://egeria-project.org/types/0/0019-More-Information/
+
+        Parameters
+        __________
+        resource_guid: str
+            Resource to retrieve the supported elements for.
+        start_from: int, default = 0
+            When multiple pages of results are available, the element number to start from.
+        page_size: int, default = 0
+            The number of elements returned per page.
+        output_format: str, default = "JSON"
+            Type of output to return.
+        report_spec: dict | str, default = None
+            Output format set to use. If None, the default output format set is used.
+        body: dict | ResultsRequestBody
+            Details of the query.
+
+        Returns
+        -------
+        [dict] | str
+            Returns a string if no elements found and a list of dict of elements with the results.
+
+        Raises
+        ------
+        PyegeriaException
+
+        Notes
+        -----
+        Sample body:
+
+        {
+            "class": "ResultsRequestBody",
+            "effectiveTime": "{{$isoTimestamp}}",
+            "asOfTime": "{{$isoTimestamp}}",
+            "forLineage": false,
+            "forDuplicateProcessing": false,
+            "metadataElementTypeName": "Referenceable",
+            "limitResultsByStatus": [ "ACTIVE", "DRAFT"],
+            "sequencingProperty": "???",
+            "sequencingOrder": "LAST_UPDATE_RECENT"
+        }
+
+        """
+
+        url = (f"{self.classification_command_root}/elements/resource-list/{resource_guid}")
+
+        response = await self._async_get_results_body_request(url, "Referenceable", self._generate_referenceable_output,
+                                                              start_from=start_from, page_size=page_size,
+                                                              output_format=output_format,
+                                                              report_spec=report_spec, body=body, **kwargs)
+        return response
+
+    @dynamic_catch
+    def get_supported_by_resource(
+            self,
+            resource_guid: str,
+            start_from: int = 0,
+            page_size: int = 0,
+            output_format: str = "JSON",
+            report_spec: dict | str = None,
+            body: Optional[dict | ResultsRequestBody] = None,
+            **kwargs
+    ) -> list | str:
+        """
+            Retrieve the elements linked via the ResourceList relationship to the requested resource -- ie the
+            elements that this resource supports.
+
+            ResourceList: https://egeria-project.org/types/0/0019-More-Information/
+
+        Parameters
+        __________
+        resource_guid: str
+            Resource to retrieve the supported elements for.
+        start_from: int, default = 0
+            When multiple pages of results are available, the element number to start from.
+        page_size: int, default = 0
+            The number of elements returned per page.
+        output_format: str, default = "JSON"
+            Type of output to return.
+        report_spec: dict | str, default = None
+            Output format set to use. If None, the default output format set is used.
+        body: dict | ResultsRequestBody
+            Details of the query.
+
+        Returns
+        -------
+        [dict] | str
+            Returns a string if no elements found and a list of dict of elements with the results.
+
+        Raises
+        ------
+        PyegeriaException
+
+        Notes
+        -----
+        Sample body:
+
+        {
+            "class": "ResultsRequestBody",
+            "effectiveTime": "{{$isoTimestamp}}",
+            "asOfTime": "{{$isoTimestamp}}",
+            "forLineage": false,
+            "forDuplicateProcessing": false,
+            "metadataElementTypeName": "Referenceable",
+            "limitResultsByStatus": [ "ACTIVE", "DRAFT"],
+            "sequencingProperty": "???",
+            "sequencingOrder": "LAST_UPDATE_RECENT"
+        }
+
+        """
+
+        loop = asyncio.get_event_loop()
+        response = loop.run_until_complete(
+            self._async_get_supported_by_resource(resource_guid, start_from, page_size, output_format,
+                                                    report_spec, body, **kwargs)
+        )
+        return response
+
     async def _async_add_more_information(
             self,
             more_info_guid: str,
@@ -10834,10 +11098,10 @@ class ClassificationExplorer(ServerClient):
         """
 
         url = (
-            f"{self.classification_command_root}/elements/{element_guid}/peer-duplicate/{peer_duplicate_guid}/detach"
+            f"{self.classification_command_root}/related-elements/{element_guid}/peer-duplicate/{peer_duplicate_guid}/detach"
         )
 
-        await self._async_delete_classification_request(url, body)
+        await self._async_delete_relationship_request(url, body)
 
     def unlink_elements_as_peer_duplicates(
             self,
@@ -11189,7 +11453,7 @@ class ClassificationExplorer(ServerClient):
         """
 
         url = (
-            f"{self.classification_command_root}/elements/{element_guid}/consolidated-duplicate-source/{source_element_guid}/attach"
+            f"{self.classification_command_root}/related-elements/{element_guid}/consolidated-duplicate-source/{source_element_guid}/attach"
         )
 
         return await self._async_new_relationship_request(
@@ -11305,7 +11569,7 @@ class ClassificationExplorer(ServerClient):
         """
 
         url = (
-            f"{self.classification_command_root}/elements/{element_guid}/consolidated-duplicate-source/{source_element_guid}/detach"
+            f"{self.classification_command_root}/related-elements/{element_guid}/consolidated-duplicate-source/{source_element_guid}/detach"
         )
 
         await self._async_delete_relationship_request(url, body)

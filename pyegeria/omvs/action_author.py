@@ -273,16 +273,20 @@ class ActionAuthor(ServerClient):
     async def _async_remove_first_action_process_step(
         self,
         process_guid: str,
+        first_process_step_guid: str,
     ) -> None:
-        url = f"{self.platform_url}/servers/{self.view_server}/api/open-metadata/action-author/governance-action-processes/{process_guid}/first-process-step/detach"
+        url = f"{self.platform_url}/servers/{self.view_server}/api/open-metadata/action-author/governance-action-processes/{process_guid}/first-process-step/{first_process_step_guid}/detach"
         await self._async_make_request("POST", url)
 
     def remove_first_action_process_step(
         self,
         process_guid: str,
+        first_process_step_guid: str,
     ) -> None:
         loop = asyncio.get_event_loop()
-        loop.run_until_complete(self._async_remove_first_action_process_step(process_guid))
+        loop.run_until_complete(
+            self._async_remove_first_action_process_step(process_guid, first_process_step_guid)
+        )
 
     @dynamic_catch
     async def _async_setup_next_action_process_step(

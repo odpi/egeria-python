@@ -1014,8 +1014,9 @@ class ReferenceDataManager(ServerClient):
 
     @dynamic_catch
     async def _async_detach_valid_value_member(self, vv_set_guid: str, vv_member_guid: str,
-                                             body: dict | DeleteRelationshipRequestBody):
-        """ Link a valid value definition to another valid value definition. Async version.
+                                             body: Optional[dict | DeleteRelationshipRequestBody] = None,
+                                             cascade_delete: bool = False):
+        """ Detach a valid value definition from another valid value definition. Async version.
 
         Parameters
         __________
@@ -1023,8 +1024,10 @@ class ReferenceDataManager(ServerClient):
             Unique identifier for the valid value definition set in the role of parent.
         vv_member_guid: str
             Unique identifier for the valid value definition member.(Child)
-        body: dict | NewRelationshipRequestBody
-            A dict representing the details of the relationship.
+        body: dict | DeleteRelationshipRequestBody, optional
+            A dict representing the details of the relationship to remove.
+        cascade_delete: bool, default = False
+            Cascade the deletion through related elements.
 
         Returns
         ______
@@ -1038,32 +1041,27 @@ class ReferenceDataManager(ServerClient):
         Notes
         -----
         Sample body:
+
         {
-          "class" : "NewRelationshipRequestBody",
+          "class": "DeleteRelationshipRequestBody",
+          "deleteMethod": "LOOK_FOR_LINEAGE",
           "externalSourceGUID": "add guid here",
           "externalSourceName": "add qualified name here",
-          "effectiveTime" : "{{$isoTimestamp}}",
-          "forLineage" : false,
-          "forDuplicateProcessing" : false,
-          "properties": {
-            "class": "ValidValueMemberProperties",
-            "isDefaultValue": false,
-            "label": "",
-            "description": "",
-            "effectiveFrom": "{{$isoTimestamp}}",
-            "effectiveTo": "{{$isoTimestamp}}"
-          }
+          "effectiveTime": "{{$isoTimestamp}}",
+          "forLineage": false,
+          "forDuplicateProcessing": false
         }
 
         """
-        url = f"{self.ref_data_command_base}/valid-values/{vv_set_guid}/members/{vv_member_guid}/attach"
-        await self._async_create_element_body_request(url, ["ValidValueMemberProperties"], body)
-        logger.info(f"Linked valid value definition {vv_set_guid} to {vv_member_guid}")
+        url = f"{self.ref_data_command_base}/valid-values/{vv_set_guid}/members/{vv_member_guid}/detach"
+        await self._async_delete_relationship_request(url, body, cascade_delete=cascade_delete)
+        logger.info(f"Detached valid value definition {vv_set_guid} from {vv_member_guid}")
 
     @dynamic_catch
     def detach_valid_value_definition(
             self,
-            vv_set_guid: str, vv_member_guid: str, body: Optional[dict | DeleteRelationshipRequestBody] = None) -> None:
+            vv_set_guid: str, vv_member_guid: str, body: Optional[dict | DeleteRelationshipRequestBody] = None,
+            cascade_delete: bool = False) -> None:
         """ Detach a valid value definition from another valid value definition.
 
         Parameters
@@ -1072,8 +1070,10 @@ class ReferenceDataManager(ServerClient):
             Unique identifier for the valid value definition set in the role of parent.
         vv_member_guid: str
             Unique identifier for the valid value definition member.(Child)
-        body: dict | NewRelationshipRequestBody
-            A dict representing the details of the relationship.
+        body: dict | DeleteRelationshipRequestBody, optional
+            A dict representing the details of the relationship to remove.
+        cascade_delete: bool, default = False
+            Cascade the deletion through related elements.
 
         Returns
         ______
@@ -1100,7 +1100,1124 @@ class ReferenceDataManager(ServerClient):
 
         """
         loop = asyncio.get_event_loop()
-        loop.run_until_complete(self._async_detach_valid_value_member(vv_set_guid, vv_member_guid, body))
+        loop.run_until_complete(
+            self._async_detach_valid_value_member(vv_set_guid, vv_member_guid, body, cascade_delete))
+
+    @dynamic_catch
+    async def _async_link_valid_values_assignment(
+            self, element_guid: str, vv_def_guid: str, body: Optional[dict | NewRelationshipRequestBody] = None) -> None:
+        """ Attach a valid value to a consumer - probably a schema element or data set. Async version.
+
+        Parameters
+        __________
+        element_guid: str
+            Unique identifier of the consumer element (e.g. a schema element or data set).
+        vv_def_guid: str
+            Unique identifier of the valid value definition (or set) being assigned.
+        body: dict | NewRelationshipRequestBody, optional
+            A dict representing the details of the relationship.
+
+        Returns
+        ______
+        None
+
+        Raises
+        ______
+        PyegeriaException
+        ValidationError
+
+        Notes
+        -----
+        Sample body:
+        {
+          "class" : "NewRelationshipRequestBody",
+          "externalSourceGUID": "add guid here",
+          "externalSourceName": "add qualified name here",
+          "effectiveTime" : "{{$isoTimestamp}}",
+          "forLineage" : false,
+          "forDuplicateProcessing" : false,
+          "properties": {
+            "class": "ValidValuesAssignmentProperties",
+            "strictRequirement": false,
+            "effectiveFrom": "{{$isoTimestamp}}",
+            "effectiveTo": "{{$isoTimestamp}}"
+          }
+        }
+
+        """
+        url = f"{self.ref_data_command_base}/elements/{element_guid}/valid-values-assignment/{vv_def_guid}/attach"
+        await self._async_create_element_body_request(url, ["ValidValuesAssignmentProperties"], body)
+        logger.info(f"Linked valid value definition {vv_def_guid} to consumer {element_guid}")
+
+    @dynamic_catch
+    def link_valid_values_assignment(
+            self, element_guid: str, vv_def_guid: str, body: Optional[dict | NewRelationshipRequestBody] = None) -> None:
+        """ Attach a valid value to a consumer - probably a schema element or data set.
+
+        Parameters
+        __________
+        element_guid: str
+            Unique identifier of the consumer element (e.g. a schema element or data set).
+        vv_def_guid: str
+            Unique identifier of the valid value definition (or set) being assigned.
+        body: dict | NewRelationshipRequestBody, optional
+            A dict representing the details of the relationship.
+
+        Returns
+        ______
+        None
+
+        Raises
+        ______
+        PyegeriaException
+        ValidationError
+
+        Notes
+        -----
+        Sample body:
+        {
+          "class" : "NewRelationshipRequestBody",
+          "externalSourceGUID": "add guid here",
+          "externalSourceName": "add qualified name here",
+          "effectiveTime" : "{{$isoTimestamp}}",
+          "forLineage" : false,
+          "forDuplicateProcessing" : false,
+          "properties": {
+            "class": "ValidValuesAssignmentProperties",
+            "strictRequirement": false,
+            "effectiveFrom": "{{$isoTimestamp}}",
+            "effectiveTo": "{{$isoTimestamp}}"
+          }
+        }
+
+        """
+        loop = asyncio.get_event_loop()
+        loop.run_until_complete(self._async_link_valid_values_assignment(element_guid, vv_def_guid, body))
+
+    @dynamic_catch
+    async def _async_detach_valid_values_assignment(
+            self, element_guid: str, vv_def_guid: str, body: Optional[dict | DeleteRelationshipRequestBody] = None,
+            cascade_delete: bool = False) -> None:
+        """ Detach a valid value from a consumer - probably a schema element or data set. Async version.
+
+        Parameters
+        __________
+        element_guid: str
+            Unique identifier of the consumer element (e.g. a schema element or data set).
+        vv_def_guid: str
+            Unique identifier of the valid value definition (or set) being detached.
+        body: dict | DeleteRelationshipRequestBody, optional
+            A dict representing the details of the relationship to remove.
+        cascade_delete: bool, default = False
+            Cascade the deletion through related elements.
+
+        Returns
+        ______
+        None
+
+        Raises
+        ______
+        PyegeriaException
+        ValidationError
+
+        Notes
+        -----
+        Sample body:
+
+        {
+          "class": "DeleteRelationshipRequestBody",
+          "deleteMethod": "LOOK_FOR_LINEAGE",
+          "externalSourceGUID": "add guid here",
+          "externalSourceName": "add qualified name here",
+          "effectiveTime": "{{$isoTimestamp}}",
+          "forLineage": false,
+          "forDuplicateProcessing": false
+        }
+
+        """
+        url = f"{self.ref_data_command_base}/elements/{element_guid}/valid-values-assignment/{vv_def_guid}/detach"
+        await self._async_delete_relationship_request(url, body, cascade_delete=cascade_delete)
+        logger.info(f"Detached valid value definition {vv_def_guid} from consumer {element_guid}")
+
+    @dynamic_catch
+    def detach_valid_values_assignment(
+            self, element_guid: str, vv_def_guid: str, body: Optional[dict | DeleteRelationshipRequestBody] = None,
+            cascade_delete: bool = False) -> None:
+        """ Detach a valid value from a consumer - probably a schema element or data set.
+
+        Parameters
+        __________
+        element_guid: str
+            Unique identifier of the consumer element (e.g. a schema element or data set).
+        vv_def_guid: str
+            Unique identifier of the valid value definition (or set) being detached.
+        body: dict | DeleteRelationshipRequestBody, optional
+            A dict representing the details of the relationship to remove.
+        cascade_delete: bool, default = False
+            Cascade the deletion through related elements.
+
+        Returns
+        ______
+        None
+
+        Raises
+        ______
+        PyegeriaException
+        ValidationError
+
+        Notes
+        -----
+        Sample body:
+
+        {
+          "class": "DeleteRelationshipRequestBody",
+          "deleteMethod": "LOOK_FOR_LINEAGE",
+          "externalSourceGUID": "add guid here",
+          "externalSourceName": "add qualified name here",
+          "effectiveTime": "{{$isoTimestamp}}",
+          "forLineage": false,
+          "forDuplicateProcessing": false
+        }
+
+        """
+        loop = asyncio.get_event_loop()
+        loop.run_until_complete(
+            self._async_detach_valid_values_assignment(element_guid, vv_def_guid, body, cascade_delete))
+
+    @dynamic_catch
+    async def _async_link_reference_value_assignment(
+            self, element_guid: str, vv_def_guid: str, body: Optional[dict | NewRelationshipRequestBody] = None) -> None:
+        """ Attach a valid value to a tagged element. Async version.
+
+        Parameters
+        __________
+        element_guid: str
+            Unique identifier of the element being tagged.
+        vv_def_guid: str
+            Unique identifier of the valid value definition supplying the reference value.
+        body: dict | NewRelationshipRequestBody, optional
+            A dict representing the details of the relationship.
+
+        Returns
+        ______
+        None
+
+        Raises
+        ______
+        PyegeriaException
+        ValidationError
+
+        Notes
+        -----
+        Sample body:
+        {
+          "class" : "NewRelationshipRequestBody",
+          "externalSourceGUID": "add guid here",
+          "externalSourceName": "add qualified name here",
+          "effectiveTime" : "{{$isoTimestamp}}",
+          "forLineage" : false,
+          "forDuplicateProcessing" : false,
+          "properties": {
+            "class": "ReferenceValueAssignmentProperties",
+            "confidence": 0,
+            "steward": "",
+            "stewardTypeName": "",
+            "stewardPropertyName": "",
+            "notes": "",
+            "effectiveFrom": "{{$isoTimestamp}}",
+            "effectiveTo": "{{$isoTimestamp}}"
+          }
+        }
+
+        """
+        url = f"{self.ref_data_command_base}/elements/{element_guid}/reference-value-assignment/{vv_def_guid}/attach"
+        await self._async_create_element_body_request(url, ["ReferenceValueAssignmentProperties"], body)
+        logger.info(f"Linked reference value {vv_def_guid} to tagged element {element_guid}")
+
+    @dynamic_catch
+    def link_reference_value_assignment(
+            self, element_guid: str, vv_def_guid: str, body: Optional[dict | NewRelationshipRequestBody] = None) -> None:
+        """ Attach a valid value to a tagged element.
+
+        Parameters
+        __________
+        element_guid: str
+            Unique identifier of the element being tagged.
+        vv_def_guid: str
+            Unique identifier of the valid value definition supplying the reference value.
+        body: dict | NewRelationshipRequestBody, optional
+            A dict representing the details of the relationship.
+
+        Returns
+        ______
+        None
+
+        Raises
+        ______
+        PyegeriaException
+        ValidationError
+
+        Notes
+        -----
+        Sample body:
+        {
+          "class" : "NewRelationshipRequestBody",
+          "externalSourceGUID": "add guid here",
+          "externalSourceName": "add qualified name here",
+          "effectiveTime" : "{{$isoTimestamp}}",
+          "forLineage" : false,
+          "forDuplicateProcessing" : false,
+          "properties": {
+            "class": "ReferenceValueAssignmentProperties",
+            "confidence": 0,
+            "steward": "",
+            "stewardTypeName": "",
+            "stewardPropertyName": "",
+            "notes": "",
+            "effectiveFrom": "{{$isoTimestamp}}",
+            "effectiveTo": "{{$isoTimestamp}}"
+          }
+        }
+
+        """
+        loop = asyncio.get_event_loop()
+        loop.run_until_complete(self._async_link_reference_value_assignment(element_guid, vv_def_guid, body))
+
+    @dynamic_catch
+    async def _async_detach_reference_value_assignment(
+            self, element_guid: str, vv_def_guid: str, body: Optional[dict | DeleteRelationshipRequestBody] = None,
+            cascade_delete: bool = False) -> None:
+        """ Detach a valid value from a tagged element. Async version.
+
+        Parameters
+        __________
+        element_guid: str
+            Unique identifier of the tagged element.
+        vv_def_guid: str
+            Unique identifier of the valid value definition being detached.
+        body: dict | DeleteRelationshipRequestBody, optional
+            A dict representing the details of the relationship to remove.
+        cascade_delete: bool, default = False
+            Cascade the deletion through related elements.
+
+        Returns
+        ______
+        None
+
+        Raises
+        ______
+        PyegeriaException
+        ValidationError
+
+        Notes
+        -----
+        Sample body:
+
+        {
+          "class": "DeleteRelationshipRequestBody",
+          "deleteMethod": "LOOK_FOR_LINEAGE",
+          "externalSourceGUID": "add guid here",
+          "externalSourceName": "add qualified name here",
+          "effectiveTime": "{{$isoTimestamp}}",
+          "forLineage": false,
+          "forDuplicateProcessing": false
+        }
+
+        """
+        url = f"{self.ref_data_command_base}/elements/{element_guid}/reference-value-assignment/{vv_def_guid}/detach"
+        await self._async_delete_relationship_request(url, body, cascade_delete=cascade_delete)
+        logger.info(f"Detached reference value {vv_def_guid} from tagged element {element_guid}")
+
+    @dynamic_catch
+    def detach_reference_value_assignment(
+            self, element_guid: str, vv_def_guid: str, body: Optional[dict | DeleteRelationshipRequestBody] = None,
+            cascade_delete: bool = False) -> None:
+        """ Detach a valid value from a tagged element.
+
+        Parameters
+        __________
+        element_guid: str
+            Unique identifier of the tagged element.
+        vv_def_guid: str
+            Unique identifier of the valid value definition being detached.
+        body: dict | DeleteRelationshipRequestBody, optional
+            A dict representing the details of the relationship to remove.
+        cascade_delete: bool, default = False
+            Cascade the deletion through related elements.
+
+        Returns
+        ______
+        None
+
+        Raises
+        ______
+        PyegeriaException
+        ValidationError
+
+        Notes
+        -----
+        Sample body:
+
+        {
+          "class": "DeleteRelationshipRequestBody",
+          "deleteMethod": "LOOK_FOR_LINEAGE",
+          "externalSourceGUID": "add guid here",
+          "externalSourceName": "add qualified name here",
+          "effectiveTime": "{{$isoTimestamp}}",
+          "forLineage": false,
+          "forDuplicateProcessing": false
+        }
+
+        """
+        loop = asyncio.get_event_loop()
+        loop.run_until_complete(
+            self._async_detach_reference_value_assignment(element_guid, vv_def_guid, body, cascade_delete))
+
+    @dynamic_catch
+    async def _async_link_valid_value_implementation(
+            self, vv_def_guid: str, element_guid: str, body: Optional[dict | NewRelationshipRequestBody] = None) -> None:
+        """ Link a valid value definition to an element that implements it. Async version.
+
+        Parameters
+        __________
+        vv_def_guid: str
+            Unique identifier of the valid value definition.
+        element_guid: str
+            Unique identifier of the element that implements the valid value.
+        body: dict | NewRelationshipRequestBody, optional
+            A dict representing the details of the relationship.
+
+        Returns
+        ______
+        None
+
+        Raises
+        ______
+        PyegeriaException
+        ValidationError
+
+        Notes
+        -----
+        Sample body:
+        {
+          "class" : "NewRelationshipRequestBody",
+          "externalSourceGUID": "add guid here",
+          "externalSourceName": "add qualified name here",
+          "effectiveTime" : "{{$isoTimestamp}}",
+          "forLineage" : false,
+          "forDuplicateProcessing" : false,
+          "properties": {
+            "class": "ValidValuesImplementationProperties",
+            "symbolicName": "",
+            "implementationValue": "",
+            "additionalValues": {},
+            "effectiveFrom": "{{$isoTimestamp}}",
+            "effectiveTo": "{{$isoTimestamp}}"
+          }
+        }
+
+        """
+        url = f"{self.ref_data_command_base}/valid-values/{vv_def_guid}/implementation/elements/{element_guid}/attach"
+        await self._async_create_element_body_request(url, ["ValidValuesImplementationProperties"], body)
+        logger.info(f"Linked valid value definition {vv_def_guid} to implementation element {element_guid}")
+
+    @dynamic_catch
+    def link_valid_value_implementation(
+            self, vv_def_guid: str, element_guid: str, body: Optional[dict | NewRelationshipRequestBody] = None) -> None:
+        """ Link a valid value definition to an element that implements it.
+
+        Parameters
+        __________
+        vv_def_guid: str
+            Unique identifier of the valid value definition.
+        element_guid: str
+            Unique identifier of the element that implements the valid value.
+        body: dict | NewRelationshipRequestBody, optional
+            A dict representing the details of the relationship.
+
+        Returns
+        ______
+        None
+
+        Raises
+        ______
+        PyegeriaException
+        ValidationError
+
+        Notes
+        -----
+        Sample body:
+        {
+          "class" : "NewRelationshipRequestBody",
+          "externalSourceGUID": "add guid here",
+          "externalSourceName": "add qualified name here",
+          "effectiveTime" : "{{$isoTimestamp}}",
+          "forLineage" : false,
+          "forDuplicateProcessing" : false,
+          "properties": {
+            "class": "ValidValuesImplementationProperties",
+            "symbolicName": "",
+            "implementationValue": "",
+            "additionalValues": {},
+            "effectiveFrom": "{{$isoTimestamp}}",
+            "effectiveTo": "{{$isoTimestamp}}"
+          }
+        }
+
+        """
+        loop = asyncio.get_event_loop()
+        loop.run_until_complete(self._async_link_valid_value_implementation(vv_def_guid, element_guid, body))
+
+    @dynamic_catch
+    async def _async_detach_valid_value_implementation(
+            self, vv_def_guid: str, element_guid: str, body: Optional[dict | DeleteRelationshipRequestBody] = None,
+            cascade_delete: bool = False) -> None:
+        """ Detach a valid value definition from an element that implements it. Async version.
+
+        Parameters
+        __________
+        vv_def_guid: str
+            Unique identifier of the valid value definition.
+        element_guid: str
+            Unique identifier of the element that implements the valid value.
+        body: dict | DeleteRelationshipRequestBody, optional
+            A dict representing the details of the relationship to remove.
+        cascade_delete: bool, default = False
+            Cascade the deletion through related elements.
+
+        Returns
+        ______
+        None
+
+        Raises
+        ______
+        PyegeriaException
+        ValidationError
+
+        Notes
+        -----
+        Sample body:
+
+        {
+          "class": "DeleteRelationshipRequestBody",
+          "deleteMethod": "LOOK_FOR_LINEAGE",
+          "externalSourceGUID": "add guid here",
+          "externalSourceName": "add qualified name here",
+          "effectiveTime": "{{$isoTimestamp}}",
+          "forLineage": false,
+          "forDuplicateProcessing": false
+        }
+
+        """
+        url = f"{self.ref_data_command_base}/valid-values/{vv_def_guid}/implementation/elements/{element_guid}/detach"
+        await self._async_delete_relationship_request(url, body, cascade_delete=cascade_delete)
+        logger.info(f"Detached valid value definition {vv_def_guid} from implementation element {element_guid}")
+
+    @dynamic_catch
+    def detach_valid_value_implementation(
+            self, vv_def_guid: str, element_guid: str, body: Optional[dict | DeleteRelationshipRequestBody] = None,
+            cascade_delete: bool = False) -> None:
+        """ Detach a valid value definition from an element that implements it.
+
+        Parameters
+        __________
+        vv_def_guid: str
+            Unique identifier of the valid value definition.
+        element_guid: str
+            Unique identifier of the element that implements the valid value.
+        body: dict | DeleteRelationshipRequestBody, optional
+            A dict representing the details of the relationship to remove.
+        cascade_delete: bool, default = False
+            Cascade the deletion through related elements.
+
+        Returns
+        ______
+        None
+
+        Raises
+        ______
+        PyegeriaException
+        ValidationError
+
+        Notes
+        -----
+        Sample body:
+
+        {
+          "class": "DeleteRelationshipRequestBody",
+          "deleteMethod": "LOOK_FOR_LINEAGE",
+          "externalSourceGUID": "add guid here",
+          "externalSourceName": "add qualified name here",
+          "effectiveTime": "{{$isoTimestamp}}",
+          "forLineage": false,
+          "forDuplicateProcessing": false
+        }
+
+        """
+        loop = asyncio.get_event_loop()
+        loop.run_until_complete(
+            self._async_detach_valid_value_implementation(vv_def_guid, element_guid, body, cascade_delete))
+
+    @dynamic_catch
+    async def _async_link_associated_valid_values(
+            self, vv_def_one_guid: str, vv_def_two_guid: str,
+            body: Optional[dict | NewRelationshipRequestBody] = None) -> None:
+        """ Link two valid value definitions as associated (related) values. Async version.
+
+        Parameters
+        __________
+        vv_def_one_guid: str
+            Unique identifier of the first valid value definition.
+        vv_def_two_guid: str
+            Unique identifier of the second valid value definition.
+        body: dict | NewRelationshipRequestBody, optional
+            A dict representing the details of the relationship.
+
+        Returns
+        ______
+        None
+
+        Raises
+        ______
+        PyegeriaException
+        ValidationError
+
+        Notes
+        -----
+        Sample body:
+        {
+          "class" : "NewRelationshipRequestBody",
+          "externalSourceGUID": "add guid here",
+          "externalSourceName": "add qualified name here",
+          "effectiveTime" : "{{$isoTimestamp}}",
+          "forLineage" : false,
+          "forDuplicateProcessing" : false,
+          "properties": {
+            "class": "ValidValueAssociationProperties",
+            "associationDescription": "",
+            "additionalProperties": {},
+            "effectiveFrom": "{{$isoTimestamp}}",
+            "effectiveTo": "{{$isoTimestamp}}"
+          }
+        }
+
+        """
+        url = f"{self.ref_data_command_base}/valid-values/{vv_def_one_guid}/associated-valid-values/{vv_def_two_guid}/attach"
+        await self._async_create_element_body_request(url, ["ValidValueAssociationProperties"], body)
+        logger.info(f"Linked associated valid values {vv_def_one_guid} and {vv_def_two_guid}")
+
+    @dynamic_catch
+    def link_associated_valid_values(
+            self, vv_def_one_guid: str, vv_def_two_guid: str,
+            body: Optional[dict | NewRelationshipRequestBody] = None) -> None:
+        """ Link two valid value definitions as associated (related) values.
+
+        Parameters
+        __________
+        vv_def_one_guid: str
+            Unique identifier of the first valid value definition.
+        vv_def_two_guid: str
+            Unique identifier of the second valid value definition.
+        body: dict | NewRelationshipRequestBody, optional
+            A dict representing the details of the relationship.
+
+        Returns
+        ______
+        None
+
+        Raises
+        ______
+        PyegeriaException
+        ValidationError
+
+        Notes
+        -----
+        Sample body:
+        {
+          "class" : "NewRelationshipRequestBody",
+          "externalSourceGUID": "add guid here",
+          "externalSourceName": "add qualified name here",
+          "effectiveTime" : "{{$isoTimestamp}}",
+          "forLineage" : false,
+          "forDuplicateProcessing" : false,
+          "properties": {
+            "class": "ValidValueAssociationProperties",
+            "associationDescription": "",
+            "additionalProperties": {},
+            "effectiveFrom": "{{$isoTimestamp}}",
+            "effectiveTo": "{{$isoTimestamp}}"
+          }
+        }
+
+        """
+        loop = asyncio.get_event_loop()
+        loop.run_until_complete(self._async_link_associated_valid_values(vv_def_one_guid, vv_def_two_guid, body))
+
+    @dynamic_catch
+    async def _async_detach_associated_valid_values(
+            self, vv_def_one_guid: str, vv_def_two_guid: str,
+            body: Optional[dict | DeleteRelationshipRequestBody] = None,
+            cascade_delete: bool = False) -> None:
+        """ Detach two associated valid value definitions. Async version.
+
+        Parameters
+        __________
+        vv_def_one_guid: str
+            Unique identifier of the first valid value definition.
+        vv_def_two_guid: str
+            Unique identifier of the second valid value definition.
+        body: dict | DeleteRelationshipRequestBody, optional
+            A dict representing the details of the relationship to remove.
+        cascade_delete: bool, default = False
+            Cascade the deletion through related elements.
+
+        Returns
+        ______
+        None
+
+        Raises
+        ______
+        PyegeriaException
+        ValidationError
+
+        Notes
+        -----
+        Sample body:
+
+        {
+          "class": "DeleteRelationshipRequestBody",
+          "deleteMethod": "LOOK_FOR_LINEAGE",
+          "externalSourceGUID": "add guid here",
+          "externalSourceName": "add qualified name here",
+          "effectiveTime": "{{$isoTimestamp}}",
+          "forLineage": false,
+          "forDuplicateProcessing": false
+        }
+
+        """
+        url = f"{self.ref_data_command_base}/valid-values/{vv_def_one_guid}/associated-valid-values/{vv_def_two_guid}/detach"
+        await self._async_delete_relationship_request(url, body, cascade_delete=cascade_delete)
+        logger.info(f"Detached associated valid values {vv_def_one_guid} and {vv_def_two_guid}")
+
+    @dynamic_catch
+    def detach_associated_valid_values(
+            self, vv_def_one_guid: str, vv_def_two_guid: str,
+            body: Optional[dict | DeleteRelationshipRequestBody] = None,
+            cascade_delete: bool = False) -> None:
+        """ Detach two associated valid value definitions.
+
+        Parameters
+        __________
+        vv_def_one_guid: str
+            Unique identifier of the first valid value definition.
+        vv_def_two_guid: str
+            Unique identifier of the second valid value definition.
+        body: dict | DeleteRelationshipRequestBody, optional
+            A dict representing the details of the relationship to remove.
+        cascade_delete: bool, default = False
+            Cascade the deletion through related elements.
+
+        Returns
+        ______
+        None
+
+        Raises
+        ______
+        PyegeriaException
+        ValidationError
+
+        Notes
+        -----
+        Sample body:
+
+        {
+          "class": "DeleteRelationshipRequestBody",
+          "deleteMethod": "LOOK_FOR_LINEAGE",
+          "externalSourceGUID": "add guid here",
+          "externalSourceName": "add qualified name here",
+          "effectiveTime": "{{$isoTimestamp}}",
+          "forLineage": false,
+          "forDuplicateProcessing": false
+        }
+
+        """
+        loop = asyncio.get_event_loop()
+        loop.run_until_complete(
+            self._async_detach_associated_valid_values(vv_def_one_guid, vv_def_two_guid, body, cascade_delete))
+
+    @dynamic_catch
+    async def _async_link_consistent_valid_values(
+            self, vv_def_one_guid: str, vv_def_two_guid: str,
+            body: Optional[dict | NewRelationshipRequestBody] = None) -> None:
+        """ Link two valid value definitions as consistent with one another. Async version.
+
+        Parameters
+        __________
+        vv_def_one_guid: str
+            Unique identifier of the first valid value definition.
+        vv_def_two_guid: str
+            Unique identifier of the second valid value definition.
+        body: dict | NewRelationshipRequestBody, optional
+            A dict representing the details of the relationship.
+
+        Returns
+        ______
+        None
+
+        Raises
+        ______
+        PyegeriaException
+        ValidationError
+
+        Notes
+        -----
+        Notes
+        -----
+        This relationship has no properties of its own — request body is optional.
+
+        Sample body:
+        {
+          "class" : "NewRelationshipRequestBody",
+          "externalSourceGUID": "add guid here",
+          "externalSourceName": "add qualified name here",
+          "effectiveTime" : "{{$isoTimestamp}}",
+          "forLineage" : false,
+          "forDuplicateProcessing" : false
+        }
+
+        """
+        url = f"{self.ref_data_command_base}/valid-values/{vv_def_one_guid}/consistent-valid-values/{vv_def_two_guid}/attach"
+        await self._async_create_element_body_request(url, None, body)
+        logger.info(f"Linked consistent valid values {vv_def_one_guid} and {vv_def_two_guid}")
+
+    @dynamic_catch
+    def link_consistent_valid_values(
+            self, vv_def_one_guid: str, vv_def_two_guid: str,
+            body: Optional[dict | NewRelationshipRequestBody] = None) -> None:
+        """ Link two valid value definitions as consistent with one another.
+
+        Parameters
+        __________
+        vv_def_one_guid: str
+            Unique identifier of the first valid value definition.
+        vv_def_two_guid: str
+            Unique identifier of the second valid value definition.
+        body: dict | NewRelationshipRequestBody, optional
+            A dict representing the details of the relationship.
+
+        Returns
+        ______
+        None
+
+        Raises
+        ______
+        PyegeriaException
+        ValidationError
+
+        Notes
+        -----
+        This relationship has no properties of its own — request body is optional.
+
+        Sample body:
+        {
+          "class" : "NewRelationshipRequestBody",
+          "externalSourceGUID": "add guid here",
+          "externalSourceName": "add qualified name here",
+          "effectiveTime" : "{{$isoTimestamp}}",
+          "forLineage" : false,
+          "forDuplicateProcessing" : false
+        }
+
+        """
+        loop = asyncio.get_event_loop()
+        loop.run_until_complete(self._async_link_consistent_valid_values(vv_def_one_guid, vv_def_two_guid, body))
+
+    @dynamic_catch
+    async def _async_detach_consistent_valid_values(
+            self, vv_def_one_guid: str, vv_def_two_guid: str,
+            body: Optional[dict | DeleteRelationshipRequestBody] = None,
+            cascade_delete: bool = False) -> None:
+        """ Detach two consistent valid value definitions. Async version.
+
+        Parameters
+        __________
+        vv_def_one_guid: str
+            Unique identifier of the first valid value definition.
+        vv_def_two_guid: str
+            Unique identifier of the second valid value definition.
+        body: dict | DeleteRelationshipRequestBody, optional
+            A dict representing the details of the relationship to remove.
+        cascade_delete: bool, default = False
+            Cascade the deletion through related elements.
+
+        Returns
+        ______
+        None
+
+        Raises
+        ______
+        PyegeriaException
+        ValidationError
+
+        Notes
+        -----
+        Sample body:
+
+        {
+          "class": "DeleteRelationshipRequestBody",
+          "deleteMethod": "LOOK_FOR_LINEAGE",
+          "externalSourceGUID": "add guid here",
+          "externalSourceName": "add qualified name here",
+          "effectiveTime": "{{$isoTimestamp}}",
+          "forLineage": false,
+          "forDuplicateProcessing": false
+        }
+
+        """
+        url = f"{self.ref_data_command_base}/valid-values/{vv_def_one_guid}/consistent-valid-values/{vv_def_two_guid}/detach"
+        await self._async_delete_relationship_request(url, body, cascade_delete=cascade_delete)
+        logger.info(f"Detached consistent valid values {vv_def_one_guid} and {vv_def_two_guid}")
+
+    @dynamic_catch
+    def detach_consistent_valid_values(
+            self, vv_def_one_guid: str, vv_def_two_guid: str,
+            body: Optional[dict | DeleteRelationshipRequestBody] = None,
+            cascade_delete: bool = False) -> None:
+        """ Detach two consistent valid value definitions.
+
+        Parameters
+        __________
+        vv_def_one_guid: str
+            Unique identifier of the first valid value definition.
+        vv_def_two_guid: str
+            Unique identifier of the second valid value definition.
+        body: dict | DeleteRelationshipRequestBody, optional
+            A dict representing the details of the relationship to remove.
+        cascade_delete: bool, default = False
+            Cascade the deletion through related elements.
+
+        Returns
+        ______
+        None
+
+        Raises
+        ______
+        PyegeriaException
+        ValidationError
+
+        Notes
+        -----
+        Sample body:
+
+        {
+          "class": "DeleteRelationshipRequestBody",
+          "deleteMethod": "LOOK_FOR_LINEAGE",
+          "externalSourceGUID": "add guid here",
+          "externalSourceName": "add qualified name here",
+          "effectiveTime": "{{$isoTimestamp}}",
+          "forLineage": false,
+          "forDuplicateProcessing": false
+        }
+
+        """
+        loop = asyncio.get_event_loop()
+        loop.run_until_complete(
+            self._async_detach_consistent_valid_values(vv_def_one_guid, vv_def_two_guid, body, cascade_delete))
+
+    @dynamic_catch
+    async def _async_link_mapped_valid_values(
+            self, vv_def_one_guid: str, vv_def_two_guid: str,
+            body: Optional[dict | NewRelationshipRequestBody] = None) -> None:
+        """ Link two valid value definitions as a mapping from one to the other. Async version.
+
+        Parameters
+        __________
+        vv_def_one_guid: str
+            Unique identifier of the first valid value definition.
+        vv_def_two_guid: str
+            Unique identifier of the second valid value definition.
+        body: dict | NewRelationshipRequestBody, optional
+            A dict representing the details of the relationship.
+
+        Returns
+        ______
+        None
+
+        Raises
+        ______
+        PyegeriaException
+        ValidationError
+
+        Notes
+        -----
+        Sample body:
+        {
+          "class" : "NewRelationshipRequestBody",
+          "externalSourceGUID": "add guid here",
+          "externalSourceName": "add qualified name here",
+          "effectiveTime" : "{{$isoTimestamp}}",
+          "forLineage" : false,
+          "forDuplicateProcessing" : false,
+          "properties": {
+            "class": "ValidValuesMappingProperties",
+            "associationDescription": "",
+            "confidence": 0,
+            "steward": "",
+            "stewardTypeName": "",
+            "stewardPropertyName": "",
+            "notes": "",
+            "effectiveFrom": "{{$isoTimestamp}}",
+            "effectiveTo": "{{$isoTimestamp}}"
+          }
+        }
+
+        """
+        url = f"{self.ref_data_command_base}/valid-values/{vv_def_one_guid}/mapped-valid-values/{vv_def_two_guid}/attach"
+        await self._async_create_element_body_request(url, ["ValidValuesMappingProperties"], body)
+        logger.info(f"Linked mapped valid values {vv_def_one_guid} and {vv_def_two_guid}")
+
+    @dynamic_catch
+    def link_mapped_valid_values(
+            self, vv_def_one_guid: str, vv_def_two_guid: str,
+            body: Optional[dict | NewRelationshipRequestBody] = None) -> None:
+        """ Link two valid value definitions as a mapping from one to the other.
+
+        Parameters
+        __________
+        vv_def_one_guid: str
+            Unique identifier of the first valid value definition.
+        vv_def_two_guid: str
+            Unique identifier of the second valid value definition.
+        body: dict | NewRelationshipRequestBody, optional
+            A dict representing the details of the relationship.
+
+        Returns
+        ______
+        None
+
+        Raises
+        ______
+        PyegeriaException
+        ValidationError
+
+        Notes
+        -----
+        Sample body:
+        {
+          "class" : "NewRelationshipRequestBody",
+          "externalSourceGUID": "add guid here",
+          "externalSourceName": "add qualified name here",
+          "effectiveTime" : "{{$isoTimestamp}}",
+          "forLineage" : false,
+          "forDuplicateProcessing" : false,
+          "properties": {
+            "class": "ValidValuesMappingProperties",
+            "associationDescription": "",
+            "confidence": 0,
+            "steward": "",
+            "stewardTypeName": "",
+            "stewardPropertyName": "",
+            "notes": "",
+            "effectiveFrom": "{{$isoTimestamp}}",
+            "effectiveTo": "{{$isoTimestamp}}"
+          }
+        }
+
+        """
+        loop = asyncio.get_event_loop()
+        loop.run_until_complete(self._async_link_mapped_valid_values(vv_def_one_guid, vv_def_two_guid, body))
+
+    @dynamic_catch
+    async def _async_detach_mapped_valid_values(
+            self, vv_def_one_guid: str, vv_def_two_guid: str,
+            body: Optional[dict | DeleteRelationshipRequestBody] = None,
+            cascade_delete: bool = False) -> None:
+        """ Detach two mapped valid value definitions. Async version.
+
+        Parameters
+        __________
+        vv_def_one_guid: str
+            Unique identifier of the first valid value definition.
+        vv_def_two_guid: str
+            Unique identifier of the second valid value definition.
+        body: dict | DeleteRelationshipRequestBody, optional
+            A dict representing the details of the relationship to remove.
+        cascade_delete: bool, default = False
+            Cascade the deletion through related elements.
+
+        Returns
+        ______
+        None
+
+        Raises
+        ______
+        PyegeriaException
+        ValidationError
+
+        Notes
+        -----
+        Sample body:
+
+        {
+          "class": "DeleteRelationshipRequestBody",
+          "deleteMethod": "LOOK_FOR_LINEAGE",
+          "externalSourceGUID": "add guid here",
+          "externalSourceName": "add qualified name here",
+          "effectiveTime": "{{$isoTimestamp}}",
+          "forLineage": false,
+          "forDuplicateProcessing": false
+        }
+
+        """
+        url = f"{self.ref_data_command_base}/valid-values/{vv_def_one_guid}/mapped-valid-values/{vv_def_two_guid}/detach"
+        await self._async_delete_relationship_request(url, body, cascade_delete=cascade_delete)
+        logger.info(f"Detached mapped valid values {vv_def_one_guid} and {vv_def_two_guid}")
+
+    @dynamic_catch
+    def detach_mapped_valid_values(
+            self, vv_def_one_guid: str, vv_def_two_guid: str,
+            body: Optional[dict | DeleteRelationshipRequestBody] = None,
+            cascade_delete: bool = False) -> None:
+        """ Detach two mapped valid value definitions.
+
+        Parameters
+        __________
+        vv_def_one_guid: str
+            Unique identifier of the first valid value definition.
+        vv_def_two_guid: str
+            Unique identifier of the second valid value definition.
+        body: dict | DeleteRelationshipRequestBody, optional
+            A dict representing the details of the relationship to remove.
+        cascade_delete: bool, default = False
+            Cascade the deletion through related elements.
+
+        Returns
+        ______
+        None
+
+        Raises
+        ______
+        PyegeriaException
+        ValidationError
+
+        Notes
+        -----
+        Sample body:
+
+        {
+          "class": "DeleteRelationshipRequestBody",
+          "deleteMethod": "LOOK_FOR_LINEAGE",
+          "externalSourceGUID": "add guid here",
+          "externalSourceName": "add qualified name here",
+          "effectiveTime": "{{$isoTimestamp}}",
+          "forLineage": false,
+          "forDuplicateProcessing": false
+        }
+
+        """
+        loop = asyncio.get_event_loop()
+        loop.run_until_complete(
+            self._async_detach_mapped_valid_values(vv_def_one_guid, vv_def_two_guid, body, cascade_delete))
 
     @dynamic_catch
     async def _async_delete_valid_value_definition(

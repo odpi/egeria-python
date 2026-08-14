@@ -22,6 +22,7 @@ from pyegeria.models import (SearchStringRequestBody, FilterRequestBody, GetRequ
                              DeleteElementRequestBody, DeleteRelationshipRequestBody, UpdateRelationshipRequestBody,
                              ResultsRequestBody, NewRelatedElementsRequestBody, OpenMetadataDeleteRequestBody,
                              DeploymentStatusSearchString, DeploymentStatusFilterRequestBody,
+                             NewClassificationRequestBody, DeleteClassificationRequestBody,
                              get_defined_field_values, PyegeriaModel)
 from pyegeria.view.output_formatter import (generate_output,
                                             populate_common_columns)
@@ -3722,6 +3723,555 @@ class CollectionManager(ServerClient):
 
 
     @dynamic_catch
+    async def _async_set_editing_collection(self, collection_guid: str,
+                                             body: Optional[dict | NewClassificationRequestBody] = None) -> None:
+        """ Classify the collection to indicate that it is an editing collection - used to make changes to a
+            shared collection that will only appear in the shared collection when it is ready for release.
+            Request body is optional. Async version.
+
+        Parameters
+        ----------
+        collection_guid: str
+            The guid of the collection to classify.
+        body: dict | NewClassificationRequestBody, optional, default = None
+            A structure representing the details of the classification.
+
+        Returns
+        -------
+        Nothing
+
+        Raises
+        ------
+        PyegeriaInvalidParameterException
+          If the client passes incorrect parameters on the request - such as bad URLs or invalid values
+        PyegeriaAPIException
+          Raised by the server when an issue arises in processing a valid request
+        NotAuthorizedException
+          The principle specified by the user_id does not have authorization for the requested action
+
+        Notes
+        -----
+        Sample body:
+        {
+          "class" : "NewClassificationRequestBody",
+          "properties": {
+            "class": "EditingCollectionProperties",
+            "description": "Add description of the editing collection here"
+          },
+          "externalSourceGUID": "add guid here",
+          "externalSourceName": "add qualified name here",
+          "effectiveTime" : "{{$isoTimestamp}}",
+          "forLineage" : false,
+          "forDuplicateProcessing" : false
+        }
+
+        """
+        url = (
+            f"{self.platform_url}/servers/"
+            f"{self.view_server}/api/open-metadata/collection-manager/collections/"
+            f"{collection_guid}/is-editing-collection")
+        await self._async_new_classification_request(url, ["EditingCollectionProperties"], body)
+        logger.info(f"Set editing collection classification on {collection_guid}")
+
+    def set_editing_collection(self, collection_guid: str,
+                                body: Optional[dict | NewClassificationRequestBody] = None) -> None:
+        """ Classify the collection to indicate that it is an editing collection - used to make changes to a
+            shared collection that will only appear in the shared collection when it is ready for release.
+            Request body is optional.
+
+        Parameters
+        ----------
+        collection_guid: str
+            The guid of the collection to classify.
+        body: dict | NewClassificationRequestBody, optional, default = None
+            A structure representing the details of the classification.
+
+        Returns
+        -------
+        Nothing
+
+        Raises
+        ------
+        PyegeriaInvalidParameterException
+          If the client passes incorrect parameters on the request - such as bad URLs or invalid values
+        PyegeriaAPIException
+          Raised by the server when an issue arises in processing a valid request
+        NotAuthorizedException
+          The principle specified by the user_id does not have authorization for the requested action
+
+        Notes
+        -----
+        Sample body:
+        {
+          "class" : "NewClassificationRequestBody",
+          "properties": {
+            "class": "EditingCollectionProperties",
+            "description": "Add description of the editing collection here"
+          },
+          "externalSourceGUID": "add guid here",
+          "externalSourceName": "add qualified name here",
+          "effectiveTime" : "{{$isoTimestamp}}",
+          "forLineage" : false,
+          "forDuplicateProcessing" : false
+        }
+
+        """
+        loop = asyncio.get_event_loop()
+        loop.run_until_complete(
+            self._async_set_editing_collection(collection_guid, body))
+
+    @dynamic_catch
+    async def _async_clear_editing_collection(self, collection_guid: str,
+                                               body: Optional[dict | DeleteClassificationRequestBody] = None) -> None:
+        """ Remove the editing collection classification from a collection. Request body is optional. Async version.
+
+        Parameters
+        ----------
+        collection_guid: str
+            The guid of the collection to declassify.
+        body: dict | DeleteClassificationRequestBody, optional, default = None
+            A structure representing the details of the classification removal.
+
+        Returns
+        -------
+        Nothing
+
+        Raises
+        ------
+        PyegeriaInvalidParameterException
+          If the client passes incorrect parameters on the request - such as bad URLs or invalid values
+        PyegeriaAPIException
+          Raised by the server when an issue arises in processing a valid request
+        NotAuthorizedException
+          The principle specified by the user_id does not have authorization for the requested action
+
+        Notes
+        -----
+        Sample body:
+        {
+          "class": "DeleteClassificationRequestBody",
+          "externalSourceGUID": "add guid here",
+          "externalSourceName": "add qualified name here",
+          "effectiveTime": "{{$isoTimestamp}}",
+          "forLineage": false,
+          "forDuplicateProcessing": false
+        }
+
+        """
+        url = (
+            f"{self.platform_url}/servers/"
+            f"{self.view_server}/api/open-metadata/collection-manager/collections/"
+            f"{collection_guid}/is-editing-collection/delete")
+        await self._async_delete_classification_request(url, body)
+        logger.info(f"Cleared editing collection classification on {collection_guid}")
+
+    def clear_editing_collection(self, collection_guid: str,
+                                  body: Optional[dict | DeleteClassificationRequestBody] = None) -> None:
+        """ Remove the editing collection classification from a collection. Request body is optional.
+
+        Parameters
+        ----------
+        collection_guid: str
+            The guid of the collection to declassify.
+        body: dict | DeleteClassificationRequestBody, optional, default = None
+            A structure representing the details of the classification removal.
+
+        Returns
+        -------
+        Nothing
+
+        Raises
+        ------
+        PyegeriaInvalidParameterException
+          If the client passes incorrect parameters on the request - such as bad URLs or invalid values
+        PyegeriaAPIException
+          Raised by the server when an issue arises in processing a valid request
+        NotAuthorizedException
+          The principle specified by the user_id does not have authorization for the requested action
+
+        Notes
+        -----
+        Sample body:
+        {
+          "class": "DeleteClassificationRequestBody",
+          "externalSourceGUID": "add guid here",
+          "externalSourceName": "add qualified name here",
+          "effectiveTime": "{{$isoTimestamp}}",
+          "forLineage": false,
+          "forDuplicateProcessing": false
+        }
+
+        """
+        loop = asyncio.get_event_loop()
+        loop.run_until_complete(
+            self._async_clear_editing_collection(collection_guid, body))
+
+    @dynamic_catch
+    async def _async_set_scoping_collection(self, collection_guid: str,
+                                             body: Optional[dict | NewClassificationRequestBody] = None) -> None:
+        """ Classify the collection to indicate that it defines a set of elements that are working together to
+            support a specific initiative. Request body is optional. Async version.
+
+        Parameters
+        ----------
+        collection_guid: str
+            The guid of the collection to classify.
+        body: dict | NewClassificationRequestBody, optional, default = None
+            A structure representing the details of the classification.
+
+        Returns
+        -------
+        Nothing
+
+        Raises
+        ------
+        PyegeriaInvalidParameterException
+          If the client passes incorrect parameters on the request - such as bad URLs or invalid values
+        PyegeriaAPIException
+          Raised by the server when an issue arises in processing a valid request
+        NotAuthorizedException
+          The principle specified by the user_id does not have authorization for the requested action
+
+        Notes
+        -----
+        Sample body:
+        {
+          "class" : "NewClassificationRequestBody",
+          "properties": {
+            "class": "ScopingCollectionProperties",
+            "description": "Add description of the scoping collection here"
+          },
+          "externalSourceGUID": "add guid here",
+          "externalSourceName": "add qualified name here",
+          "effectiveTime" : "{{$isoTimestamp}}",
+          "forLineage" : false,
+          "forDuplicateProcessing" : false
+        }
+
+        """
+        url = (
+            f"{self.platform_url}/servers/"
+            f"{self.view_server}/api/open-metadata/collection-manager/collections/"
+            f"{collection_guid}/is-scoping-collection")
+        await self._async_new_classification_request(url, ["ScopingCollectionProperties"], body)
+        logger.info(f"Set scoping collection classification on {collection_guid}")
+
+    def set_scoping_collection(self, collection_guid: str,
+                                body: Optional[dict | NewClassificationRequestBody] = None) -> None:
+        """ Classify the collection to indicate that it defines a set of elements that are working together to
+            support a specific initiative. Request body is optional.
+
+        Parameters
+        ----------
+        collection_guid: str
+            The guid of the collection to classify.
+        body: dict | NewClassificationRequestBody, optional, default = None
+            A structure representing the details of the classification.
+
+        Returns
+        -------
+        Nothing
+
+        Raises
+        ------
+        PyegeriaInvalidParameterException
+          If the client passes incorrect parameters on the request - such as bad URLs or invalid values
+        PyegeriaAPIException
+          Raised by the server when an issue arises in processing a valid request
+        NotAuthorizedException
+          The principle specified by the user_id does not have authorization for the requested action
+
+        Notes
+        -----
+        Sample body:
+        {
+          "class" : "NewClassificationRequestBody",
+          "properties": {
+            "class": "ScopingCollectionProperties",
+            "description": "Add description of the scoping collection here"
+          },
+          "externalSourceGUID": "add guid here",
+          "externalSourceName": "add qualified name here",
+          "effectiveTime" : "{{$isoTimestamp}}",
+          "forLineage" : false,
+          "forDuplicateProcessing" : false
+        }
+
+        """
+        loop = asyncio.get_event_loop()
+        loop.run_until_complete(
+            self._async_set_scoping_collection(collection_guid, body))
+
+    @dynamic_catch
+    async def _async_clear_scoping_collection(self, collection_guid: str,
+                                               body: Optional[dict | DeleteClassificationRequestBody] = None) -> None:
+        """ Remove the scoping collection classification from a collection. Request body is optional. Async version.
+
+        Parameters
+        ----------
+        collection_guid: str
+            The guid of the collection to declassify.
+        body: dict | DeleteClassificationRequestBody, optional, default = None
+            A structure representing the details of the classification removal.
+
+        Returns
+        -------
+        Nothing
+
+        Raises
+        ------
+        PyegeriaInvalidParameterException
+          If the client passes incorrect parameters on the request - such as bad URLs or invalid values
+        PyegeriaAPIException
+          Raised by the server when an issue arises in processing a valid request
+        NotAuthorizedException
+          The principle specified by the user_id does not have authorization for the requested action
+
+        Notes
+        -----
+        Sample body:
+        {
+          "class": "DeleteClassificationRequestBody",
+          "externalSourceGUID": "add guid here",
+          "externalSourceName": "add qualified name here",
+          "effectiveTime": "{{$isoTimestamp}}",
+          "forLineage": false,
+          "forDuplicateProcessing": false
+        }
+
+        """
+        url = (
+            f"{self.platform_url}/servers/"
+            f"{self.view_server}/api/open-metadata/collection-manager/collections/"
+            f"{collection_guid}/is-scoping-collection/delete")
+        await self._async_delete_classification_request(url, body)
+        logger.info(f"Cleared scoping collection classification on {collection_guid}")
+
+    def clear_scoping_collection(self, collection_guid: str,
+                                  body: Optional[dict | DeleteClassificationRequestBody] = None) -> None:
+        """ Remove the scoping collection classification from a collection. Request body is optional.
+
+        Parameters
+        ----------
+        collection_guid: str
+            The guid of the collection to declassify.
+        body: dict | DeleteClassificationRequestBody, optional, default = None
+            A structure representing the details of the classification removal.
+
+        Returns
+        -------
+        Nothing
+
+        Raises
+        ------
+        PyegeriaInvalidParameterException
+          If the client passes incorrect parameters on the request - such as bad URLs or invalid values
+        PyegeriaAPIException
+          Raised by the server when an issue arises in processing a valid request
+        NotAuthorizedException
+          The principle specified by the user_id does not have authorization for the requested action
+
+        Notes
+        -----
+        Sample body:
+        {
+          "class": "DeleteClassificationRequestBody",
+          "externalSourceGUID": "add guid here",
+          "externalSourceName": "add qualified name here",
+          "effectiveTime": "{{$isoTimestamp}}",
+          "forLineage": false,
+          "forDuplicateProcessing": false
+        }
+
+        """
+        loop = asyncio.get_event_loop()
+        loop.run_until_complete(
+            self._async_clear_scoping_collection(collection_guid, body))
+
+    @dynamic_catch
+    async def _async_set_staging_collection(self, collection_guid: str,
+                                             body: Optional[dict | NewClassificationRequestBody] = None) -> None:
+        """ Classify the collection to indicate that it is holding elements that are staged for release, or some
+            other purpose, and should not be viewed as production-ready. Request body is optional. Async version.
+
+        Parameters
+        ----------
+        collection_guid: str
+            The guid of the collection to classify.
+        body: dict | NewClassificationRequestBody, optional, default = None
+            A structure representing the details of the classification.
+
+        Returns
+        -------
+        Nothing
+
+        Raises
+        ------
+        PyegeriaInvalidParameterException
+          If the client passes incorrect parameters on the request - such as bad URLs or invalid values
+        PyegeriaAPIException
+          Raised by the server when an issue arises in processing a valid request
+        NotAuthorizedException
+          The principle specified by the user_id does not have authorization for the requested action
+
+        Notes
+        -----
+        Sample body:
+        {
+          "class" : "NewClassificationRequestBody",
+          "properties": {
+            "class": "StagingCollectionProperties",
+            "description": "Add description of the staging collection here"
+          },
+          "externalSourceGUID": "add guid here",
+          "externalSourceName": "add qualified name here",
+          "effectiveTime" : "{{$isoTimestamp}}",
+          "forLineage" : false,
+          "forDuplicateProcessing" : false
+        }
+
+        """
+        url = (
+            f"{self.platform_url}/servers/"
+            f"{self.view_server}/api/open-metadata/collection-manager/collections/"
+            f"{collection_guid}/is-staging-collection")
+        await self._async_new_classification_request(url, ["StagingCollectionProperties"], body)
+        logger.info(f"Set staging collection classification on {collection_guid}")
+
+    def set_staging_collection(self, collection_guid: str,
+                                body: Optional[dict | NewClassificationRequestBody] = None) -> None:
+        """ Classify the collection to indicate that it is holding elements that are staged for release, or some
+            other purpose, and should not be viewed as production-ready. Request body is optional.
+
+        Parameters
+        ----------
+        collection_guid: str
+            The guid of the collection to classify.
+        body: dict | NewClassificationRequestBody, optional, default = None
+            A structure representing the details of the classification.
+
+        Returns
+        -------
+        Nothing
+
+        Raises
+        ------
+        PyegeriaInvalidParameterException
+          If the client passes incorrect parameters on the request - such as bad URLs or invalid values
+        PyegeriaAPIException
+          Raised by the server when an issue arises in processing a valid request
+        NotAuthorizedException
+          The principle specified by the user_id does not have authorization for the requested action
+
+        Notes
+        -----
+        Sample body:
+        {
+          "class" : "NewClassificationRequestBody",
+          "properties": {
+            "class": "StagingCollectionProperties",
+            "description": "Add description of the staging collection here"
+          },
+          "externalSourceGUID": "add guid here",
+          "externalSourceName": "add qualified name here",
+          "effectiveTime" : "{{$isoTimestamp}}",
+          "forLineage" : false,
+          "forDuplicateProcessing" : false
+        }
+
+        """
+        loop = asyncio.get_event_loop()
+        loop.run_until_complete(
+            self._async_set_staging_collection(collection_guid, body))
+
+    @dynamic_catch
+    async def _async_clear_staging_collection(self, collection_guid: str,
+                                               body: Optional[dict | DeleteClassificationRequestBody] = None) -> None:
+        """ Remove the staging collection classification from a collection. Request body is optional. Async version.
+
+        Parameters
+        ----------
+        collection_guid: str
+            The guid of the collection to declassify.
+        body: dict | DeleteClassificationRequestBody, optional, default = None
+            A structure representing the details of the classification removal.
+
+        Returns
+        -------
+        Nothing
+
+        Raises
+        ------
+        PyegeriaInvalidParameterException
+          If the client passes incorrect parameters on the request - such as bad URLs or invalid values
+        PyegeriaAPIException
+          Raised by the server when an issue arises in processing a valid request
+        NotAuthorizedException
+          The principle specified by the user_id does not have authorization for the requested action
+
+        Notes
+        -----
+        Sample body:
+        {
+          "class": "DeleteClassificationRequestBody",
+          "externalSourceGUID": "add guid here",
+          "externalSourceName": "add qualified name here",
+          "effectiveTime": "{{$isoTimestamp}}",
+          "forLineage": false,
+          "forDuplicateProcessing": false
+        }
+
+        """
+        url = (
+            f"{self.platform_url}/servers/"
+            f"{self.view_server}/api/open-metadata/collection-manager/collections/"
+            f"{collection_guid}/is-staging-collection/delete")
+        await self._async_delete_classification_request(url, body)
+        logger.info(f"Cleared staging collection classification on {collection_guid}")
+
+    def clear_staging_collection(self, collection_guid: str,
+                                  body: Optional[dict | DeleteClassificationRequestBody] = None) -> None:
+        """ Remove the staging collection classification from a collection. Request body is optional.
+
+        Parameters
+        ----------
+        collection_guid: str
+            The guid of the collection to declassify.
+        body: dict | DeleteClassificationRequestBody, optional, default = None
+            A structure representing the details of the classification removal.
+
+        Returns
+        -------
+        Nothing
+
+        Raises
+        ------
+        PyegeriaInvalidParameterException
+          If the client passes incorrect parameters on the request - such as bad URLs or invalid values
+        PyegeriaAPIException
+          Raised by the server when an issue arises in processing a valid request
+        NotAuthorizedException
+          The principle specified by the user_id does not have authorization for the requested action
+
+        Notes
+        -----
+        Sample body:
+        {
+          "class": "DeleteClassificationRequestBody",
+          "externalSourceGUID": "add guid here",
+          "externalSourceName": "add qualified name here",
+          "effectiveTime": "{{$isoTimestamp}}",
+          "forLineage": false,
+          "forDuplicateProcessing": false
+        }
+
+        """
+        loop = asyncio.get_event_loop()
+        loop.run_until_complete(
+            self._async_clear_staging_collection(collection_guid, body))
+
+
+    @dynamic_catch
     async def _async_create_digital_product(self, body: dict | NewElementRequestBody) -> str:
         """ Create a new collection that represents a digital product.
             Async version.
@@ -4589,18 +5139,16 @@ class CollectionManager(ServerClient):
 
 
     @dynamic_catch
-    async def _async_detach_agreement_actor(self, agreement_guid: str,
-                                             actor_guid: str,
+    async def _async_detach_agreement_actor(self, agreement_actor_relationship_guid: str,
                                              body: Optional[dict | DeleteRelationshipRequestBody] = None)-> None:
         """ Detach an actor from an agreement.
             Request body is optional. Async Version.
 
         Parameters
         ----------
-        agreement_guid: str
-            The guid of the agreement.
-        actor_guid: str
-            The guid of the actor.
+        agreement_actor_relationship_guid: str
+            The guid of the agreement actor relationship to detach (NOT the agreement guid or the actor guid -
+            this is the guid of the relationship itself, as returned when it was created/linked).
         body: dict | DeleteRelationshipRequestBody, optional, default = None
             A structure representing the details of the relationship.
 
@@ -4633,23 +5181,22 @@ class CollectionManager(ServerClient):
 
         url = (
             f"{self.platform_url}/servers/"
-            f"{self.view_server}/api/open-metadata/collection-manager/collections/agreements/"
-            f"{agreement_guid}/agreement-actors/{actor_guid}/detach")
-        self._async_delete_relationship_request(url, body)
-        logger.info(f"Detached digital product manager {agreement_guid} -> {actor_guid}")
+            f"{self.view_server}/api/open-metadata/collection-manager/collection/agreements/"
+            f"agreement-actors/{agreement_actor_relationship_guid}/detach")
+        await self._async_delete_relationship_request(url, body)
+        logger.info(f"Detached agreement actor relationship {agreement_actor_relationship_guid}")
 
 
-    def detach_agreement_actor(self, agreement_guid: str, actor_guid: str,
+    def detach_agreement_actor(self, agreement_actor_relationship_guid: str,
                                 body: dict | DeleteRelationshipRequestBody= None):
         """ Detach an actor from an agreement.
             Request body is optional.
 
         Parameters
         ----------
-        agreement_guid: str
-            The guid of the agreement.
-        actor_guid: str
-            The guid of the actor.
+        agreement_actor_relationship_guid: str
+            The guid of the agreement actor relationship to detach (NOT the agreement guid or the actor guid -
+            this is the guid of the relationship itself, as returned when it was created/linked).
         body: dict | DeleteRelationshipRequestBody, optional, default = None
             A structure representing the details of the relationship.
 
@@ -4681,7 +5228,7 @@ class CollectionManager(ServerClient):
         """
         loop = asyncio.get_event_loop()
         loop.run_until_complete(
-            self._async_detach_agreement_actor(agreement_guid, actor_guid,
+            self._async_detach_agreement_actor(agreement_actor_relationship_guid,
                                                         body))
 
 

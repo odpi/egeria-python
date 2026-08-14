@@ -755,6 +755,95 @@ class MetadataExpert(ServerClient):
         loop = asyncio.get_event_loop()
         return loop.run_until_complete(self._async_delete_related_elements(relationship_guid, body))
 
+    @dynamic_catch
+    async def _async_detach_related_elements_in_store(
+        self,
+        metadata_element_1_guid: str,
+        relationship_type_name: str,
+        metadata_element_2_guid: str,
+        body: Optional[dict | OpenMetadataDeleteRequestBody] = None,
+    ) -> None:
+        """
+        Delete ALL relationships of the given type between two specific metadata elements. Async version.
+
+        Unlike _async_delete_related_elements (which targets one specific relationship by its own
+        relationship GUID), this targets a relationship type name between a specific pair of elements -
+        useful when the caller does not already have the individual relationship GUID(s) in hand (e.g.
+        after _async_create_related_elements, or when several instances of the same relationship type
+        may exist between the pair and all should be removed).
+
+        Parameters
+        ----------
+        metadata_element_1_guid : str
+            Unique identifier of the metadata element at end 1.
+        relationship_type_name : str
+            Name of the relationship type to detach (e.g. "ProjectHierarchy").
+        metadata_element_2_guid : str
+            Unique identifier of the metadata element at end 2.
+        body : dict | OpenMetadataDeleteRequestBody, optional
+            Deletion details.
+
+        Notes
+        -----
+        Sample JSON body:
+        {
+          "class" : "OpenMetadataDeleteRequestBody",
+          "externalSourceGUID" :  "",
+          "externalSourceName" : "",
+          "forLineage" : false,
+          "forDuplicateProcessing" : false,
+          "effectiveTime" : "2024-01-01T00:00:00.000+00:00"
+        }
+        """
+        url = (f"{self.command_root}/related-elements/{metadata_element_1_guid}/{relationship_type_name}/"
+               f"{metadata_element_2_guid}/detach-all")
+        await self._async_open_metadata_delete_body_request(url, body)
+
+    @dynamic_catch
+    def detach_related_elements_in_store(
+        self,
+        metadata_element_1_guid: str,
+        relationship_type_name: str,
+        metadata_element_2_guid: str,
+        body: Optional[dict | OpenMetadataDeleteRequestBody] = None,
+    ) -> None:
+        """
+        Delete ALL relationships of the given type between two specific metadata elements.
+
+        Unlike delete_related_elements (which targets one specific relationship by its own
+        relationship GUID), this targets a relationship type name between a specific pair of elements -
+        useful when the caller does not already have the individual relationship GUID(s) in hand.
+
+        Parameters
+        ----------
+        metadata_element_1_guid : str
+            Unique identifier of the metadata element at end 1.
+        relationship_type_name : str
+            Name of the relationship type to detach (e.g. "ProjectHierarchy").
+        metadata_element_2_guid : str
+            Unique identifier of the metadata element at end 2.
+        body : dict | OpenMetadataDeleteRequestBody, optional
+            Deletion details.
+
+        Notes
+        -----
+        Sample JSON body:
+        {
+          "class" : "OpenMetadataDeleteRequestBody",
+          "externalSourceGUID" :  "",
+          "externalSourceName" : "",
+          "forLineage" : false,
+          "forDuplicateProcessing" : false,
+          "effectiveTime" : "2024-01-01T00:00:00.000+00:00"
+        }
+        """
+        loop = asyncio.get_event_loop()
+        return loop.run_until_complete(
+            self._async_detach_related_elements_in_store(
+                metadata_element_1_guid, relationship_type_name, metadata_element_2_guid, body
+            )
+        )
+
 
     # --- Explorer Methods ---
 

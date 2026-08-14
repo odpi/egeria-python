@@ -1141,7 +1141,7 @@ class AssetMaker(ServerClient):
           }
         }
         """
-        url = f"{self.curation_command_root}/integration-connectors/{integration_connector_guid}/catalog-targets/{metadata_element_guid}"
+        url = f"{self.asset_command_root}/integration-connectors/{integration_connector_guid}/catalog-targets/{metadata_element_guid}"
         await self._async_new_relationship_request(url, ["CatalogTargetProperties"], body)
         return "Relationship created"  # The base method doesn't return a GUID for relationships
 
@@ -1263,7 +1263,7 @@ class AssetMaker(ServerClient):
           "forDuplicateProcessing" : false
         }
         """
-        url = f"{self.curation_command_root}/catalog-targets/{relationship_guid}/update"
+        url = f"{self.asset_command_root}/catalog-targets/{relationship_guid}/update"
         await self._async_update_relationship_request(url, ["CatalogTargetProperties"], body)
 
     @dynamic_catch
@@ -1364,7 +1364,7 @@ class AssetMaker(ServerClient):
         -----
         See: https://egeria-project.org/concepts/integration-connector/
         """
-        url = f"{self.curation_command_root}/catalog-targets/{guid}"
+        url = f"{self.asset_command_root}/catalog-targets/{guid}"
         return await self._async_get_guid_request(
             url,
             _type="CatalogTarget",
@@ -1471,7 +1471,7 @@ class AssetMaker(ServerClient):
         See: https://egeria-project.org/concepts/integration-connector/
         """
         url = (
-            f"{self.curation_command_root}/integration-connectors/{integration_connector_guid}/"
+            f"{self.asset_command_root}/integration-connectors/{integration_connector_guid}/"
             f"catalog-targets"
         )
         return await self._async_get_results_body_request(
@@ -1576,7 +1576,7 @@ class AssetMaker(ServerClient):
         -----
         See: https://egeria-project.org/concepts/integration-connector/
         """
-        url = f"{self.curation_command_root}/catalog-targets/{relationship_guid}/remove"
+        url = f"{self.asset_command_root}/catalog-targets/{relationship_guid}/remove"
         await self._async_delete_relationship_request(url, body)
 
     @dynamic_catch
@@ -1611,6 +1611,92 @@ class AssetMaker(ServerClient):
         loop = asyncio.get_event_loop()
         loop.run_until_complete(
             self._async_remove_catalog_target(relationship_guid, body)
+        )
+
+    @dynamic_catch
+    async def _async_detach_catalog_target(
+        self,
+        integration_connector_guid: str,
+        metadata_element_guid: str,
+        body: dict | DeleteRelationshipRequestBody | None = None,
+    ) -> None:
+        """Unregister a catalog target from the integration connector, identifying the catalog target by
+        the integration connector's GUID and the metadata element's GUID. Async version.
+
+        Parameters
+        ----------
+        integration_connector_guid: str
+            Unique identifier of the integration connector.
+        metadata_element_guid: str
+            Unique identifier of the metadata element that is the catalog target.
+        body: dict | DeleteRelationshipRequestBody, optional
+            Additional parameters for the delete operation.
+
+        Returns
+        -------
+        None
+
+        Raises
+        ------
+        PyegeriaException
+            One of the pyegeria exceptions will be raised if there are issues in communications, message format, or
+            Egeria errors.
+
+        Notes
+        -----
+        See: https://egeria-project.org/concepts/integration-connector/
+
+        Sample body:
+        {
+          "class" : "DeleteRelationshipRequestBody"
+        }
+        """
+        url = f"{self.asset_command_root}/integration-connectors/{integration_connector_guid}/catalog-targets/{metadata_element_guid}/detach"
+        await self._async_delete_relationship_request(url, body)
+
+    @dynamic_catch
+    def detach_catalog_target(
+        self,
+        integration_connector_guid: str,
+        metadata_element_guid: str,
+        body: dict | DeleteRelationshipRequestBody | None = None,
+    ) -> None:
+        """Unregister a catalog target from the integration connector, identifying the catalog target by
+        the integration connector's GUID and the metadata element's GUID.
+
+        Parameters
+        ----------
+        integration_connector_guid: str
+            Unique identifier of the integration connector.
+        metadata_element_guid: str
+            Unique identifier of the metadata element that is the catalog target.
+        body: dict | DeleteRelationshipRequestBody, optional
+            Additional parameters for the delete operation.
+
+        Returns
+        -------
+        None
+
+        Raises
+        ------
+        PyegeriaException
+            One of the pyegeria exceptions will be raised if there are issues in communications, message format, or
+            Egeria errors.
+
+        Notes
+        -----
+        See: https://egeria-project.org/concepts/integration-connector/
+
+        Sample body:
+        {
+          "class" : "DeleteRelationshipRequestBody"
+        }
+        """
+        loop = asyncio.get_event_loop()
+        loop.run_until_complete(
+            self._async_detach_catalog_target(
+                integration_connector_guid, metadata_element_guid, body
+            )
         )
 
     #
@@ -4473,7 +4559,7 @@ class AssetMaker(ServerClient):
         actor_guid: str
         body: dict | DeleteRelationshipRequestBody, optional
         """
-        url = f"{self.asset_command_root}/actions/{action_guid}/reassign/{actor_guid}"
+        url = f"{self.asset_command_root}/actions/{action_guid}/unassign/{actor_guid}"
 
         await self._async_delete_relationship_request(url, body)
 

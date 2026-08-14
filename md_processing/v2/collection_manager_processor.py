@@ -21,6 +21,28 @@ class CollectionManagerProcessor(AsyncBaseCommandProcessor):
     Supports subtypes like Folders, Root Collections, Digital Products, and Agreements.
     """
 
+    async def _async_resolve_agreement_actor_relationship_guid(
+            self, agreement_guid: str, actor_guid: str) -> Optional[str]:
+        """Look up the AgreementActor relationship guid linking a given agreement and actor.
+
+        `detach_agreement_actor` (pyegeria.omvs.collection_manager) takes the relationship guid
+        directly rather than the two element guids it links, and `link_agreement_actor` doesn't
+        hand back the guid of the relationship it creates - so a standalone "Detach Agreement
+        Actor" command (run without a preceding "Link" in the same batch) has to resolve it via a
+        lookup. Uses Classification Explorer's generic `get_relationships` rather than
+        duplicating that logic here.
+        """
+        relationships = await self.client._async_get_relationships(
+            "AgreementActor", body={"class": "ResultsRequestBody"})
+        if isinstance(relationships, str) or not relationships:
+            return None
+        for rel in relationships:
+            end1 = rel.get("elementGUIDAtEnd1")
+            end2 = rel.get("elementGUIDAtEnd2")
+            if {end1, end2} == {agreement_guid, actor_guid}:
+                return rel.get("relationshipGUID")
+        return None
+
     async def apply_changes(self) -> str:
         verb = self.command.verb
         object_type = getattr(self, 'canonical_object_type', self.command.object_type)
@@ -359,7 +381,12 @@ class CollectionLinkProcessor(AsyncBaseCommandProcessor):
                 actor_guids = actor_data.get('guid_list') or ([actor_data.get('guid')] if actor_data.get('guid') else [])
                 for guid_ac in actor_guids:
                     if guid_ac:
-                        await self.client._async_detach_agreement_actor(guid_ag, guid_ac, body)
+                        rel_guid = await self._async_resolve_agreement_actor_relationship_guid(guid_ag, guid_ac)
+                        if rel_guid:
+                            await self.client._async_detach_agreement_actor(rel_guid, body)
+                        else:
+                            logger.warning(
+                                f"No AgreementActor relationship found between agreement {guid_ag} and actor {guid_ac} - skipping detach")
             elif "Collection Membership" in object_type or "Collection Member" in object_type:
                 await self.client._async_remove_from_collection(attributes.get('Collection Id', {}).get('guid'), attributes.get('Element Id', {}).get('guid'), body)
             elif "Product Dependency" in object_type:
