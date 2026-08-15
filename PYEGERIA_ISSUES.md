@@ -84,15 +84,72 @@ range, search this file for `(PY-#)` to find its new `ISSUE-#` home.
 
 ## Pyegeria — fixable here
 
-### ISSUE-57: Dr.Egeria's by-display-name element resolver (used by `Link Perspective to Question` and presumably other by-name `Link`/`Classify` commands) has no type-scoping — a name collision anywhere in the instance permanently blocks the command, even when the caller's intent is unambiguous
+### ISSUE-58: ~~Dr.Egeria's by-display-name element resolver has no type-scoping~~ — corrected: not a bug, a caller error (used a display name where a qualified name was needed, and used the wrong qualified-name string on the one retry)
 
-**Status:** open.
+**Status:** n/a — not a bug. Corrected 2026-08-15, same day filed, by the
+same reporting session. (Originally misnumbered ISSUE-57 — collided with
+the pre-existing, unrelated `GovernanceResults` entry of that number;
+renumbered same-day before anything referenced it externally.)
 
-**Layer:** Pyegeria (`md_processing/` — the shared name-to-GUID resolver
-`AsyncBaseCommandProcessor`'s `Link`-family processors call; exact call
-site not yet traced past the symptom, which showed up via
-`mcp__egeria__dr_egeria_run_block` in a downstream consumer repo, not a
-direct `md_processing` unit test).
+**What actually happened:** the original repro below is real (the
+"Multiple elements found" failure did occur, repeatedly), but the
+diagnosis was wrong twice over:
+1. The `Link Perspective to Question` compact-spec attribute
+   (`md_processing/data/compact_commands/commands_actor_manager_compact.json`)
+   literally documents `Perspective Name`'s `description` as **"Qualified
+   name of the Perspective"** — the field was never meant to take a bare
+   display name at all. `resolve_element_guid()`
+   (`md_processing/v2/processors.py`) confirms this: Pass 1 calls
+   `self.client.__async_get_guid__(qualified_name=name_or_guid,
+   display_name=name_or_guid, property_name="displayName",
+   tech_type=tech_type or None)` — it tries the input string as *both* an
+   exact qualified-name match and a display-name search in one call.
+   Passing a bare display name that happens to be non-unique
+   (`"Governance"`) hits the display-name branch and finds multiple
+   matches, exactly as designed for an ambiguous input — this is the
+   resolver behaving correctly given what it was handed, not a resolver
+   defect.
+2. The original repro's "the qualified name doesn't work either" claim
+   was itself wrong: the qualified name tried
+   (`Coco Pharmaceuticals::Term::Governance::1.0`) used the wrong type
+   segment — Questions (GlossaryTerms) really do get a `::Term::` segment,
+   but a `Perspective`-typed element's actual qualified name is
+   `Coco Pharmaceuticals::Perspective::Governance::1.0` (confirmed via
+   direct `get_element_by_guid()` read) — `::Term::` vs `::Perspective::`.
+   Retried with the correct string and it resolved cleanly on the first
+   try, no ambiguity error at all:
+   ```
+   ### Perspective Name
+   Coco Pharmaceuticals::Perspective::Governance::1.0
+   → "Successfully linked Perspective to Question relationship."
+   ```
+
+**Real root cause, on the consumer-repo side, not here:**
+`resource-explorer`'s `docs/dr-egeria/foundations.md` never gave its
+Perspective terms an explicit `### Qualified Name` at creation time, so
+they only had Dr.Egeria's auto-generated one — and every
+`Link Perspective to Question` command in that repo was passing the bare
+`### Display Name` instead of a qualified name, in violation of what the
+attribute actually expects. Fixed on that side: every Perspective now gets
+an explicit, unique `### Qualified Name` (`Perspective::<Name>`, not the
+auto-generated `Coco Pharmaceuticals::Perspective::<Name>::1.0` — kept
+portable rather than baking in this instance's default local
+qualifier/org name), and `Link Perspective to Question` commands reference
+Perspectives by that qualified name going forward. See
+`resource-explorer`'s `docs/dr-egeria/foundations.md` Perspectives section
+and `docs/survey-question-context-plan.md` for the full writeup.
+
+**No pyegeria/Dr.Egeria code change needed.** Kept as a closed entry
+(rather than deleted) since the original repro and the corrected
+diagnosis are both useful — the type-scoping idea in the old "candidate
+fix" below is still a reasonable resilience improvement (resolving
+`Perspective Name` should arguably fail loudly and immediately if handed a
+non-unique display name in a field documented as "qualified name", rather
+than the correct-but-easy-to-misread ambiguous-match error it already
+gives), but it's a nice-to-have, not a defect fix.
+
+<details>
+<summary>Original (incorrect) repro and diagnosis, kept for context</summary>
 
 **Repro:** in a live Egeria instance carrying the stock Coco
 Pharmaceuticals demo data alongside application-authored `GlossaryTerm`s,
@@ -111,45 +168,22 @@ Direct `ClassificationExplorer.get_guid_for_name("Governance")` (no
 ```
 PyegeriaException: CLIENT_ERROR_400 ... output=`Multiple elements found for supplied name!`
 ```
-— i.e. the *server* is behaving correctly (there genuinely are multiple
-elements named "Governance" in this instance, almost certainly Coco
-Pharmaceuticals demo content colliding with an application's own
-`GlossaryTerm`), but Dr.Egeria's own by-name resolver has no way to
-disambiguate — it has no `type_name`/type-scope parameter to narrow the
-search to (in this case) `GlossaryTerm`s classified as `Perspective`, even
-though the calling command (`Link Perspective to Question`) knows exactly
-what type it's looking for. The other 7 names used in the same file
-(`Financial`, `Data Owner`, `Consumer`, `App/AI Builder`, `Data Expert`,
-`Architecture`, `Admin`) resolve cleanly every time — this is a real,
-100%-reproducible collision for specific names, not transient
-indexing/resolution lag (that theory was tried first and disproven by
-direct, repeated `get_guid_for_name()` probes).
+The other 7 names used in the same file (`Financial`, `Data Owner`,
+`Consumer`, `App/AI Builder`, `Data Expert`, `Architecture`, `Admin`)
+resolve cleanly every time — this is a real, 100%-reproducible collision
+for specific names, not transient indexing/resolution lag.
 
-**Workaround used (not a fix):** since the ambiguous elements' own GUIDs
-were already known from their original creation, every blocked `ScopedBy`
-link was completed by calling `ClassificationExplorer.add_scope_to_element
-(scoped_by_guid=<known_perspective_guid>, element_guid=<question_guid>,
-body={"class": "NewRelationshipRequestBody", "properties": {"class":
+**Workaround used at the time (superseded by the real fix above):** since
+the ambiguous elements' own GUIDs were already known from their original
+creation, every blocked `ScopedBy` link was completed by calling
+`ClassificationExplorer.add_scope_to_element(scoped_by_guid=
+<known_perspective_guid>, element_guid=<question_guid>, body=
+{"class": "NewRelationshipRequestBody", "properties": {"class":
 "ScopedByProperties"}})` directly — bypassing Dr.Egeria's name resolver
-entirely. This only works because the caller already has the GUID from
-elsewhere; it isn't available to someone authoring a fresh Dr.Egeria
-markdown doc who only has a display name to work with. Passing the
-qualified name (`Coco Pharmaceuticals::Term::Governance::1.0`) instead of
-the bare display name was also tried and does **not** work — it fails
-"not found" (a different, and worse, failure than "multiple found") —
-Dr.Egeria's resolver in this command apparently only accepts a bare
-display name, not a qualified name.
+entirely. Not needed going forward now that Perspectives carry explicit
+qualified names.
 
-**Candidate fix:** thread a `type_name` (or richer type filter — e.g.
-"any `GlossaryTerm` classified as `Perspective`") into the name resolver
-used by `Link`-family commands, sourced from what the command's own
-compact-spec `find_constraints`/`extra_constraints` already declare (or
-should declare) for that attribute — `Perspective Name` should resolve
-against Perspective-classified terms only, not every `Referenceable` in
-the instance. A lighter partial fix: accept a qualified name as an
-alternate resolution path when the bare name is ambiguous (currently
-neither helps nor is silently ignored — it produces a different, more
-confusing error).
+</details>
 
 ### ISSUE-56: `ReferenceDataManager`'s 6 relationship-link methods all route through the element-body validator, not the relationship-body validator — every call built per the method's own documented sample body fails Pydantic validation
 
@@ -1295,14 +1329,32 @@ relationship's real participants) and search each directly instead.
 
 ### ISSUE-14 (PY-4): `update_comment` demands `qualifiedName` even with `mergeUpdate: true`
 
-**Status:** open (Egeria server) — workaround shipped in application code,
+**Status:** tracker was stale — re-checked 2026-08-15 and found the
+workaround has actually been **in pyegeria itself** since 2026-08-03
+(`92cde6a`), not "application code" as this entry previously said.
+`_async_update_comment` (`pyegeria/core/_server_client.py`) already
+auto-fetches the comment's current `qualifiedName` via
+`_async_get_comment_by_guid` whenever the caller's body doesn't supply one,
+and injects it before sending — the exact workaround this entry describes,
+just already shipped and never reflected here. **Verified live**: created a
+throwaway `DataStructure`, attached a comment via `add_comment_to_element`,
+then called `update_comment(comment_guid, comment="edited text")` with no
+`qualifiedName` in the body at all — succeeds cleanly (previously would
+have hit `OMAG-METADATA-400-004`). Cleaned up the test element afterward.
+Underlying server behavior (still demanding `qualifiedName` despite
+`mergeUpdate: true`) is unchanged and still worth an upstream Egeria report,
+but there is nothing left to do on the pyegeria side — every caller of
+`update_comment`/`_async_update_comment` already gets the workaround for
+free, no application-level workaround needed.
+
+**Original status:** open (Egeria server) — workaround shipped in application code,
 not a pyegeria fix. Passing `"mergeUpdate": true` should allow a partial
 update (only supplied fields required), but the server still demands
 `qualifiedName` regardless.
 
-**Workaround:** fetch the element first via `get_comment_by_guid`, extract
-`qualifiedName`, and always include it in the update body regardless of
-`mergeUpdate`.
+**Original workaround (superseded, no longer needed by callers):** fetch the
+element first via `get_comment_by_guid`, extract `qualifiedName`, and always
+include it in the update body regardless of `mergeUpdate`.
 
 ```python
 from pyegeria import EgeriaTech
