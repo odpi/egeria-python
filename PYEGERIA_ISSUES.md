@@ -84,6 +84,76 @@ range, search this file for `(PY-#)` to find its new `ISSUE-#` home.
 
 ## Pyegeria — fixable here
 
+### ISSUE-59: `Create <X>` upsert commands (`upsert: true` in the compact spec) silently create a duplicate element, instead of updating in place, when the caller changes `### Qualified Name` to something the as-is lookup has never seen before — an explicit `### GUID` on the same command is also ignored for that lookup
+
+**Status:** open.
+
+**Layer:** Pyegeria (`md_processing/v2/processors.py` — the `fetch_as_is`/
+`CommandRewriter` Create↔Update upsert-detection path; exact function not
+yet traced past the symptom).
+
+**Repro:** an existing `Perspective` named "Financial" already exists,
+created previously with no explicit qualified name (so it got
+Dr.Egeria's auto-generated `Coco Pharmaceuticals::Perspective::
+Financial::1.0`). Re-running `Create Perspective` for the same
+`### Display Name`, this time adding an explicit
+`### Qualified Name\nPerspective::Financial` (to give it a caller-chosen,
+portable qualified name instead — see ISSUE-58 above for why), was
+expected to update the existing element in place (`upsert: true`,
+matched by display name). Instead it silently created a **second**,
+distinct `Perspective` element sharing the display name "Financial" —
+confirmed via `get_element_by_guid()` on both GUIDs (the original and the
+new one) and via `get_guid_for_name("Financial")` immediately starting to
+raise `"Multiple elements found for supplied name!"` right after the
+re-run, where it had resolved cleanly before. The rendered output even
+prints `## Update Perspective` as its header, which reads as confirmation
+of an in-place update — that label is misleading here; it does not
+reflect what actually happened server-side.
+
+Also tried supplying `### GUID` (the bundle backing `Create Perspective`,
+`Referenceable` → `New-Element`, declares a `GUID` attribute) set to the
+existing element's real GUID, on the theory that an explicit GUID would
+let the as-is check target that specific element regardless of name/QN
+matching. Same result — a second, unrelated new GUID assigned, existing
+element untouched, `### GUID` had no observable effect on the outcome.
+
+**Impact:** any attempt to "rename" an existing element's qualified name
+via a `Create <X>` markdown command — the natural way to do it, since
+there is no separate `Update <X>` command family exposed to Dr.Egeria
+authors for most types — silently multiplies the element instead of
+correcting it, and only the *next* by-name lookup against that display
+name reveals anything went wrong (a `PyegeriaException`, not a validation
+error at authoring time). A caller who doesn't immediately re-query by
+name after the "successful" `Update` output has no signal that a
+duplicate was just created.
+
+**Workaround used:** deleted the accidental duplicates
+(`MetadataExpert.delete_metadata_element(guid)`) and instead used the
+type-specific dedicated update method directly against pyegeria
+(`ActorManager.update_perspective(perspective_guid, {"class":
+"UpdateElementRequestBody", "mergeUpdate": True, "properties": {"class":
+"PerspectiveProperties", "qualifiedName": "<new value>"}})`) — this
+targets the element purely by GUID with no name/QN-based as-is lookup
+involved at all, and correctly updated all 12 Perspectives in place
+(same GUID before/after, confirmed via direct read-back and via
+`get_guid_for_name()` on the new qualified name resolving to the
+unchanged GUID). Not a Dr.Egeria-markdown-level workaround — required
+dropping to raw pyegeria SDK calls.
+
+**Candidate fix:** when an explicit `### GUID` is present on a `Create`
+command whose spec has `upsert: true`, the as-is fetch should try that
+GUID directly (`fetch_element_by_guid`) before falling back to name-based
+matching — this is the more surprising half of the bug, since the
+attribute is declared and accepted without error, it just isn't used for
+what the author would reasonably expect. Separately, when no GUID is
+given but the as-is lookup by display name finds an existing element
+under a *different* qualified name than the one just supplied, that's a
+real ambiguity Dr.Egeria itself should surface to the caller (e.g. "found
+an existing element with this display name under a different qualified
+name — did you mean to update it? re-run with `### GUID <its-guid>` to
+confirm") rather than silently treating "new qualified name" as "new
+element."
+
 ### ISSUE-58: ~~Dr.Egeria's by-display-name element resolver has no type-scoping~~ — corrected: not a bug, a caller error (used a display name where a qualified name was needed, and used the wrong qualified-name string on the one retry)
 
 **Status:** n/a — not a bug. Corrected 2026-08-15, same day filed, by the
@@ -1369,7 +1439,45 @@ client.update_comment(comment_guid="<guid>", body={"commentText": "edited text"}
 
 ### ISSUE-17 (PY-13): `SpecificationProperties.get_specification_property_by_type` always returns 400
 
-**Status:** open (Egeria server), re-verified 2026-07-31 (live) — still
+**Status:** fixed 2026-08-15 (Pyegeria — `pyegeria/omvs/valid_metadata.py`).
+**The original diagnosis was wrong** — not a server-side enum-binding drift.
+Checked `Egeria-api-valid-metadata.http`'s `getSpecificationPropertyByType`
+worked example: it uses `specificationPropertyType=PRODUCED_GUARD` —
+`SCREAMING_SNAKE_CASE`, not the value shape the original repro tried
+(`"SpecificationPropertyType{placeholderProperty}"`, nor the raw
+PascalCase keys `get_specification_property_types()` returns, e.g.
+`"ProducedGuard"`). Tried `PRODUCED_GUARD` directly — **succeeded
+immediately**, no 400 at all. Root cause: `get_specification_property_types()`
+returns its `stringMap` verbatim from the server's own
+`specification-properties/type-names` endpoint, which genuinely uses
+PascalCase keys (`"ProducedGuard"`) — a different server endpoint using a
+different casing convention for the same enum than `by-type` expects. This
+is a real cross-endpoint inconsistency in the server, but the client-visible
+symptom ("every input 400s") was entirely avoidable: `get_specification_property_by_type`
+did zero conversion, so the single most natural, discoverable input for a
+caller (feeding it a key from `get_specification_property_types()`) always
+failed.
+
+**Fix:** `_async_get_specification_property_by_type` now auto-converts a
+PascalCase/camelCase input to `SCREAMING_SNAKE_CASE` before building the URL
+(a plain regex insert-underscore-before-each-capital + uppercase — no
+hardcoded type list, so it isn't tied to today's enum values); an
+already-`SCREAMING_SNAKE_CASE` value passes through untouched.
+
+**Verified live** against `qs-view-server`: all 12 real specification
+property types returned by `get_specification_property_types()`, fed
+straight into `get_specification_property_by_type()` unmodified, now
+resolve successfully (10 return real results, 2 correctly return "No
+elements found" — no data of that type, not an error); the already-correct
+`PRODUCED_GUARD` form still works unchanged. `pytest tests/ -m unit`
+passes.
+
+**Impact on the workaround downstream:** `find_specification_property("*",
+...)` + client-side filtering is no longer necessary to work around this
+specific method, though it may still be independently useful/faster for
+some callers.
+
+**Original status:** open (Egeria server), re-verified 2026-07-31 (live) — still
 reproduces exactly as described. Root cause is server-side: the OpenAPI
 schema declares `specificationPropertyType` as a required enum query param
 with values like `"SpecificationPropertyType{placeholderProperty}"`, but
@@ -1378,7 +1486,7 @@ every form of that value (plain, enum-wrapped, percent-encoded) still 400s
 OpenAPI-declared enum. No pyegeria code change can fix a 400 the server
 returns for every input.
 
-**Workaround (shipped in application code):** use
+**Original workaround (superseded, no longer needed for this method):** use
 `find_specification_property("*", ...)` (by-search-string) instead, and
 filter client-side on `element["properties"]["identifier"]` (camelCase form
 of the type name).
@@ -1390,7 +1498,7 @@ mgr = SpecificationProperties(view_server="qs-view-server", platform_url="https:
 mgr.create_egeria_bearer_token()
 types = mgr.get_specification_property_types()
 mgr.get_specification_property_by_type(list(types.keys())[0])
-# Still 400s for every input, confirmed 2026-07-31.
+# Now succeeds -- was previously 400ing for every input, confirmed 2026-07-31.
 ```
 
 ---
@@ -1852,7 +1960,7 @@ returns zero rows).
 |---|---|---|
 | Business reference data (country/currency codes) | `ReferenceDataManager` | Does **not** cover specification properties (ISSUE-19, docs-only) |
 | Valid metadata values for a property name | `ReferenceDataManager` or `MetadataExpert` | `get_valid_metadata_values` lives on shared `ServerClient` base; no `as_of_time` support — Egeria endpoint doesn't expose it (ISSUE-18) |
-| Specification properties (placeholders, guards, action targets, etc.) | `SpecificationProperties` | Avoid `get_specification_property_by_type` (ISSUE-17, Egeria server bug); use `find_specification_property` with `graph_query_depth=0` (ISSUE-15); `get_specification_property_by_guid` currently broken outright (ISSUE-28) |
+| Specification properties (placeholders, guards, action targets, etc.) | `SpecificationProperties` | `get_specification_property_by_type` now works with either PascalCase or `SCREAMING_SNAKE_CASE` input (ISSUE-17, fixed 2026-08-15); `find_specification_property` with `graph_query_depth=0` also available (ISSUE-15); `get_specification_property_by_guid` currently broken outright (ISSUE-28) |
 | `DataGrain` / `DataClass` listing | `find_data_value_specifications` / `get_data_value_specifications_by_name("*")` | Both fixed (ISSUE-1, ISSUE-2) |
 | `DataSpec` (Collection subtype) | `CollectionManager.find_collections(metadata_element_type="DataSpec")` | |
 | `DataStructure` / `DataField` | `DataDesigner.find_data_structures` / `find_data_fields` | |

@@ -7,6 +7,7 @@ Copyright Contributors to the ODPi Egeria project.
 """
 
 import asyncio
+import re
 from typing import Any, Optional
 from loguru import logger
 from pyegeria.core._server_client import ServerClient
@@ -3084,6 +3085,16 @@ class ValidMetadataManager(ServerClient):
               "sequencingProperty": ""
             }
             """
+
+        # ISSUE-17: this endpoint's specificationPropertyType query param expects the
+        # SCREAMING_SNAKE_CASE enum form (e.g. "PRODUCED_GUARD", confirmed against
+        # Egeria-api-valid-metadata.http's worked example), but the natural, most
+        # discoverable source of valid values -- get_specification_property_types()'s
+        # own stringMap -- returns PascalCase keys (e.g. "ProducedGuard") from a
+        # different server endpoint. Auto-convert PascalCase/camelCase input so callers
+        # can pass either form; leave an already-SCREAMING_SNAKE_CASE value untouched.
+        if spec_property_type and not spec_property_type.isupper():
+            spec_property_type = re.sub(r'(?<!^)(?=[A-Z])', '_', spec_property_type).upper()
 
         url = (f"{self.platform_url}/servers/{self.view_server}/api/open-metadata/valid-metadata/"
                f"specification-properties/by-type?specificationPropertyType={spec_property_type}")
