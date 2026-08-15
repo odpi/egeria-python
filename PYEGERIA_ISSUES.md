@@ -1806,7 +1806,12 @@ decision tree for "which OMVS client class do I need" across
 
 ### ISSUE-48: No OMVS wrapper exists for the `SchemaAttributeDefinition` relationship (physical `SchemaAttribute` ↔ logical `DataField`)
 
-**Status:** open — SDK gap to validate with the team, not yet a confirmed
+**Status:** deferred 2026-08-15 — user's decision: wait until Egeria ships
+the actual REST endpoint for this relationship before building a pyegeria
+wrapper or Dr.Egeria command against it. Both options considered below
+remain valid candidates once that lands; no implementation work done here.
+
+**Original status:** open — SDK gap to validate with the team, not yet a confirmed
 bug. Raised 2026-08-07 while triaging a request to add three "missing"
 Dr.Egeria Data Designer commands (SemanticAssignment, DataClassAssignment,
 SchemaTypeImplementation). Two of the three turned out not to be gaps at
