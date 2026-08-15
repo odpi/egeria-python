@@ -3341,7 +3341,8 @@ class SolutionArchitect(ServerClient):
 
 
     async def _async_get_solution_blueprint_by_guid(self, guid: str = None, body: dict = None,
-                                                    graph_query_depth: int = 3, output_format: str = "JSON",
+                                                    graph_query_depth: int = 3, max_mermaid_node_count: int = 10,
+                                                    output_format: str = "JSON",
                                                     report_spec: str| Dict = "Solution-Blueprint", **kwargs) -> dict | str:
         """Return the properties of a specific solution blueprint. Async Version.
 
@@ -3393,7 +3394,17 @@ class SolutionArchitect(ServerClient):
                f"solution-blueprints/{guid}/retrieve")
 
         if body is None:
-            response = await self._async_make_request("POST", url, **kwargs)
+            # graph_query_depth/max_mermaid_node_count were previously dead here -
+            # this endpoint's own **kwargs parameter was never used at all, and no
+            # body means _async_make_request got nothing (or stray kwargs it
+            # doesn't accept). Build an AnyTimeRequestBody so callers can actually
+            # control the mermaid graph (see PYEGERIA_ISSUES.md ISSUE-23/26).
+            body = {
+                "class": "AnyTimeRequestBody",
+                "graphQueryDepth": graph_query_depth,
+                "maxMermaidNodeCount": max_mermaid_node_count,
+            }
+            response = await self._async_make_request("POST", url, body_slimmer(body))
         else:
             response = await self._async_make_request("POST", url, body_slimmer(body), **kwargs)
         element = response.json().get("element", NO_ELEMENTS_FOUND)
@@ -3404,7 +3415,8 @@ class SolutionArchitect(ServerClient):
                                                            output_format, report_spec=report_spec)
         return response.json().get("element", NO_ELEMENTS_FOUND)
 
-    def get_solution_blueprint_by_guid(self, guid: str = None, body: dict = None, graph_query_depth: int = 3, output_format: str = "JSON",
+    def get_solution_blueprint_by_guid(self, guid: str = None, body: dict = None, graph_query_depth: int = 3,
+                                       max_mermaid_node_count: int = 10, output_format: str = "JSON",
                                        report_spec: str| Dict = "Solution-Blueprint", **kwargs) -> dict | str:
         """ Return the properties of a specific solution blueprint.
 
@@ -3452,6 +3464,7 @@ class SolutionArchitect(ServerClient):
         loop = asyncio.get_event_loop()
         response = loop.run_until_complete(self._async_get_solution_blueprint_by_guid(guid=guid, body=body,
                                                                                       graph_query_depth=graph_query_depth,
+                                                                                      max_mermaid_node_count=max_mermaid_node_count,
                                                                                       output_format=output_format, report_spec=report_spec, **kwargs))
         return response
 

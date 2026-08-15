@@ -450,7 +450,7 @@ class AssetCatalog(ServerClient):
         start_from: int = 0,
         page_size: int = 0,
         graph_query_depth: int = 5,
-        max_mermaid_node_count: int = 5,
+        max_mermaid_node_count: int = 10,
         output_format: str = "DICT",
         report_spec: str | dict = "Common-Mermaid",
         **kwargs,
@@ -558,7 +558,7 @@ class AssetCatalog(ServerClient):
         start_from: int = 0,
         page_size: int = 0,
         graph_query_depth: int = 5,
-        max_mermaid_node_count: int = 5,
+        max_mermaid_node_count: int = 10,
         output_format: str = "DICT",
         report_spec: str | dict = "Common-Mermaid",
         **kwargs,
@@ -640,7 +640,7 @@ class AssetCatalog(ServerClient):
         start_from: int = 0,
         page_size: int = 0,
         graph_query_depth: int = 5,
-        max_mermaid_node_count: int = 5,
+        max_mermaid_node_count: int = 10,
     ) -> str:
         """Return the asset lineage including a mermaid markdown string.
 

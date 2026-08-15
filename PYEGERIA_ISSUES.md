@@ -387,7 +387,40 @@ needs to detach the relationship already has its GUID in hand.
 
 ### ISSUE-23: `max_mermaid_node_count` defaults to 5 across every shared find/get request helper, silently truncating server-generated mermaid graphs
 
-**Status:** open at the pyegeria-default level (the user is raising the
+**Status:** fixed 2026-08-15 (Pyegeria). Raised every remaining
+`max_mermaid_node_count` default from 5 to 10, matching
+`_async_find_request`'s default (already 10 from an earlier pass):
+`_async_get_name_request`, `_async_get_guid_request`,
+`_async_get_request_body_request`, `_async_activity_status_search_request`,
+and the content-status/deployment-status search variants (all in
+`pyegeria/core/_server_client.py`), plus `AssetCatalog`'s three lineage-graph
+methods in `pyegeria/omvs/asset_catalog.py` (`_async_get_asset_lineage_graph_by_guid`,
+`get_asset_lineage_graph_by_guid`, `get_asset_lineage_mermaid_graph`, added
+as part of ISSUE-24 at 5, now raised to 10 for consistency). Verified live
+via request-body spies that the new default (10) actually reaches the wire
+for `_async_get_guid_request` and `_async_get_asset_lineage_graph_by_guid`.
+
+Also fixed the "third case" this issue flagged as a candidate follow-up:
+`get_solution_blueprint_by_guid`/`_async_get_solution_blueprint_by_guid`
+(`pyegeria/omvs/solution_architect.py`) built no body at all when the
+caller left `body=None`, so `graph_query_depth`/`max_mermaid_node_count`
+were genuinely dead parameters regardless of the shared default — same
+"dead parameter" shape ISSUE-26 already fixed for
+`get_info_supply_chain_by_guid`/`get_solution_role_by_guid`. Fixed the same
+way: build an `AnyTimeRequestBody` with `graphQueryDepth`/
+`maxMermaidNodeCount` populated when `body is None`, and added
+`max_mermaid_node_count` as an explicit parameter (was previously not even
+accepted). Verified live: a request-body spy confirmed caller-supplied
+`graph_query_depth=9`/`max_mermaid_node_count=77` now reach the wire, where
+previously neither did. `get_solution_component_by_guid` turned out **not**
+to share this bug — it already routes through the (now-also-fixed)
+`_async_get_guid_request` shared helper, so it correctly forwards both
+parameters; verified live the same way (`graph_query_depth=8`/
+`max_mermaid_node_count=66` both reached the wire) before ruling it out.
+
+`pytest tests/ -m unit -q` passes (exit 0) after all changes.
+
+**Original status:** open at the pyegeria-default level (the user is raising the
 shared default from 5 to 10 separately); worked around explicitly in
 egeria-workspaces-fs across all detail-view call sites that render a
 mermaid diagram — `isc_handler.py`, `mermaid_handler.py`,
