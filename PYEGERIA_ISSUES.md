@@ -2108,7 +2108,7 @@ returns zero rows).
 |---|---|---|
 | Business reference data (country/currency codes) | `ReferenceDataManager` | Does **not** cover specification properties (ISSUE-19, docs-only) |
 | Valid metadata values for a property name | `ReferenceDataManager` or `MetadataExpert` | `get_valid_metadata_values` lives on shared `ServerClient` base; no `as_of_time` support — Egeria endpoint doesn't expose it (ISSUE-18) |
-| Specification properties (placeholders, guards, action targets, etc.) | `SpecificationProperties` | `get_specification_property_by_type` now works with either PascalCase or `SCREAMING_SNAKE_CASE` input (ISSUE-17, fixed 2026-08-15); `find_specification_property` with `graph_query_depth=0` also available (ISSUE-15); `get_specification_property_by_guid` currently broken outright (ISSUE-28) |
+| Specification properties (placeholders, guards, action targets, etc.) | `SpecificationProperties` | `get_specification_property_by_type` now works with either PascalCase or `SCREAMING_SNAKE_CASE` input (ISSUE-17, fixed 2026-08-15); `find_specification_property` with `graph_query_depth=0` also available (ISSUE-15); `get_specification_property_by_guid` works too, `NameError` fixed (ISSUE-28, fixed 2026-08-05, re-verified 2026-08-15) |
 | `DataGrain` / `DataClass` listing | `find_data_value_specifications` / `get_data_value_specifications_by_name("*")` | Both fixed (ISSUE-1, ISSUE-2) |
 | `DataSpec` (Collection subtype) | `CollectionManager.find_collections(metadata_element_type="DataSpec")` | |
 | `DataStructure` / `DataField` | `DataDesigner.find_data_structures` / `find_data_fields` | |
@@ -3041,6 +3041,13 @@ on every attempt now succeed and return the expected element.
 ---
 
 ### ISSUE-28: `get_specification_property_by_guid` raised a bare `NameError: name 'validate_guid' is not defined` — cannot be called at all
+
+**Re-verified 2026-08-15, no regression.** Bogus GUID now correctly raises
+`PyegeriaNotFoundException` (not `NameError`); a real round trip (find a
+specification property, fetch it by the returned GUID) succeeds and
+returns the correct `identifier` (`supportedAnalysisStep`). Also fixed a
+stale "currently broken outright" note pointing at this issue in the
+Quick-reference table further down this file.
 
 **Status:** fixed 2026-08-05 (Pyegeria — `pyegeria/omvs/valid_metadata.py`).
 
