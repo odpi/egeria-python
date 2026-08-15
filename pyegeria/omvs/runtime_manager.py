@@ -2727,10 +2727,7 @@ class RuntimeManager(ServerClient):
 
         """
 
-        url = (
-            f"{self.runtime_command_root}/software-servers/"
-            f"by-deployed-implementation-type?startFrom={start_from}&pageSize={page_size}&getTemplates=true"
-        )
+        url = f"{self.runtime_command_root}/software-servers/by-deployed-implementation-type"
 
         return await self._async_get_name_request(url, _type="OMAGServers",
                                                   _gen_output=self._generate_omag_server_output,

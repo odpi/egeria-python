@@ -1278,7 +1278,33 @@ mgr.get_specification_property_by_type(list(types.keys())[0])
 
 ### ISSUE-43: Pagination location for `find_metadata_elements`'s endpoint — audit finding, plausible but not yet confirmed live
 
-**Status:** open (pyegeria, suspected) — found 2026-08-05 while auditing
+**Status:** fixed 2026-08-15 (Pyegeria — `pyegeria/omvs/runtime_manager.py`).
+Resolved the "not yet empirically confirmed" `_async_get_server_templates_by_dep_impl_type`
+finding via ground-truth comparison rather than waiting for 2+-page demo
+data (the blocker noted below, still unavailable): checked
+`Egeria-api-runtime-manager.http`'s `getServerTemplatesByDeployedImplementationType`
+worked example — a plain `POST .../software-servers/by-deployed-implementation-type`
+with **no query string at all**, pagination and the `Template` filter both
+carried entirely in the `FilterRequestBody` (`includeOnlyClassifiedElements:
+["Template"]`). The sibling, non-templates method in the same file
+(`_async_get_servers_by_dep_impl_type`) already builds the URL with no query
+string, confirming the correct pattern exists right next to the bug. Removed
+the spurious `?startFrom={..}&pageSize={..}&getTemplates=true` suffix
+entirely — none of those three query params exist on the real endpoint;
+pagination was already being built correctly into the body by the shared
+`_async_get_name_request` helper regardless (confirmed via a request-body
+spy, before and after: `startFrom`/`pageSize` land in the body either way,
+so the URL suffix was purely spurious/redundant, not silently required for
+anything to work).
+
+**Verified live:** the call now succeeds against `qs-view-server`
+(`get_server_templates_by_dep_impl_type("cots-application-server", ...)` →
+`No elements found`, same empty-but-successful result as before, for the
+reason already documented below — no `Template`-classified software servers
+of any tested type exist in this demo dataset, so a real 2+-page comparison
+still isn't possible here). `pytest tests/ -m unit` passes.
+
+**Original status:** open (pyegeria, suspected) — found 2026-08-05 while auditing
 for the same drift class as ISSUE-34 (see that entry's "design principle"
 paragraph — Egeria's pagination convention moved from URL query params to
 request-body fields for at least one endpoint a few months ago; worth
