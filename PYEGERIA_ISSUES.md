@@ -285,6 +285,11 @@ qualified names.
 
 ### ISSUE-56: `ReferenceDataManager`'s 6 relationship-link methods all route through the element-body validator, not the relationship-body validator — every call built per the method's own documented sample body fails Pydantic validation
 
+**Re-verified 2026-08-15 (same day, third check — asked twice more after
+the original fix), no regression.** Created a fresh `ValidValueDefinition`
+pair and linked them via `_async_link_valid_value_member()` — succeeds
+(previously failed 100% of the time). Test elements cleaned up.
+
 **Status:** fixed 2026-08-15 (Pyegeria — `pyegeria/omvs/reference_data.py`).
 Applied the candidate fix as described (mechanical, same call shape):
 swapped `_async_create_element_body_request(url, [PropClassName], body)` →
