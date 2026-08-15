@@ -67,15 +67,15 @@
             "format": false,
             "detail_spec": null,
             "valid_values": [
-              "ALL",
-              "DATA",
-              "PRIVACY",
-              "SECURITY",
-              "IT_INFRASTRUCTURE",
-              "SOFTWARE_DEVELOPMENT",
-              "CORPORATE",
-              "ASSET_MANAGEMENT",
-              "OTHER"
+              "All Domains",
+              "Data",
+              "Privacy",
+              "Security",
+              "IT Infrastructure",
+              "Software Development",
+              "Corporate",
+              "Asset Management",
+              "Other"
             ]
           },
           {
@@ -232,15 +232,15 @@
             "format": false,
             "detail_spec": null,
             "valid_values": [
-              "ALL",
-              "DATA",
-              "PRIVACY",
-              "SECURITY",
-              "IT_INFRASTRUCTURE",
-              "SOFTWARE_DEVELOPMENT",
-              "CORPORATE",
-              "ASSET_MANAGEMENT",
-              "OTHER"
+              "All Domains",
+              "Data",
+              "Privacy",
+              "Security",
+              "IT Infrastructure",
+              "Software Development",
+              "Corporate",
+              "Asset Management",
+              "Other"
             ]
           },
           {
@@ -443,15 +443,15 @@
             "format": false,
             "detail_spec": null,
             "valid_values": [
-              "ALL",
-              "DATA",
-              "PRIVACY",
-              "SECURITY",
-              "IT_INFRASTRUCTURE",
-              "SOFTWARE_DEVELOPMENT",
-              "CORPORATE",
-              "ASSET_MANAGEMENT",
-              "OTHER"
+              "All Domains",
+              "Data",
+              "Privacy",
+              "Security",
+              "IT Infrastructure",
+              "Software Development",
+              "Corporate",
+              "Asset Management",
+              "Other"
             ]
           },
           {
@@ -616,15 +616,15 @@
             "format": false,
             "detail_spec": null,
             "valid_values": [
-              "ALL",
-              "DATA",
-              "PRIVACY",
-              "SECURITY",
-              "IT_INFRASTRUCTURE",
-              "SOFTWARE_DEVELOPMENT",
-              "CORPORATE",
-              "ASSET_MANAGEMENT",
-              "OTHER"
+              "All Domains",
+              "Data",
+              "Privacy",
+              "Security",
+              "IT Infrastructure",
+              "Software Development",
+              "Corporate",
+              "Asset Management",
+              "Other"
             ]
           },
           {
@@ -969,15 +969,15 @@
             "format": false,
             "detail_spec": null,
             "valid_values": [
-              "ALL",
-              "DATA",
-              "PRIVACY",
-              "SECURITY",
-              "IT_INFRASTRUCTURE",
-              "SOFTWARE_DEVELOPMENT",
-              "CORPORATE",
-              "ASSET_MANAGEMENT",
-              "OTHER"
+              "All Domains",
+              "Data",
+              "Privacy",
+              "Security",
+              "IT Infrastructure",
+              "Software Development",
+              "Corporate",
+              "Asset Management",
+              "Other"
             ]
           },
           {
@@ -1363,15 +1363,15 @@
             "format": false,
             "detail_spec": null,
             "valid_values": [
-              "ALL",
-              "DATA",
-              "PRIVACY",
-              "SECURITY",
-              "IT_INFRASTRUCTURE",
-              "SOFTWARE_DEVELOPMENT",
-              "CORPORATE",
-              "ASSET_MANAGEMENT",
-              "OTHER"
+              "All Domains",
+              "Data",
+              "Privacy",
+              "Security",
+              "IT Infrastructure",
+              "Software Development",
+              "Corporate",
+              "Asset Management",
+              "Other"
             ]
           },
           {
@@ -1819,15 +1819,15 @@
             "format": false,
             "detail_spec": null,
             "valid_values": [
-              "ALL",
-              "DATA",
-              "PRIVACY",
-              "SECURITY",
-              "IT_INFRASTRUCTURE",
-              "SOFTWARE_DEVELOPMENT",
-              "CORPORATE",
-              "ASSET_MANAGEMENT",
-              "OTHER"
+              "All Domains",
+              "Data",
+              "Privacy",
+              "Security",
+              "IT Infrastructure",
+              "Software Development",
+              "Corporate",
+              "Asset Management",
+              "Other"
             ]
           },
           {
@@ -2221,15 +2221,15 @@
             "format": false,
             "detail_spec": null,
             "valid_values": [
-              "ALL",
-              "DATA",
-              "PRIVACY",
-              "SECURITY",
-              "IT_INFRASTRUCTURE",
-              "SOFTWARE_DEVELOPMENT",
-              "CORPORATE",
-              "ASSET_MANAGEMENT",
-              "OTHER"
+              "All Domains",
+              "Data",
+              "Privacy",
+              "Security",
+              "IT Infrastructure",
+              "Software Development",
+              "Corporate",
+              "Asset Management",
+              "Other"
             ]
           },
           {
@@ -2425,15 +2425,15 @@
             "format": false,
             "detail_spec": null,
             "valid_values": [
-              "ALL",
-              "DATA",
-              "PRIVACY",
-              "SECURITY",
-              "IT_INFRASTRUCTURE",
-              "SOFTWARE_DEVELOPMENT",
-              "CORPORATE",
-              "ASSET_MANAGEMENT",
-              "OTHER"
+              "All Domains",
+              "Data",
+              "Privacy",
+              "Security",
+              "IT Infrastructure",
+              "Software Development",
+              "Corporate",
+              "Asset Management",
+              "Other"
             ]
           },
           {
@@ -2606,15 +2606,15 @@
             "format": false,
             "detail_spec": null,
             "valid_values": [
-              "ALL",
-              "DATA",
-              "PRIVACY",
-              "SECURITY",
-              "IT_INFRASTRUCTURE",
-              "SOFTWARE_DEVELOPMENT",
-              "CORPORATE",
-              "ASSET_MANAGEMENT",
-              "OTHER"
+              "All Domains",
+              "Data",
+              "Privacy",
+              "Security",
+              "IT Infrastructure",
+              "Software Development",
+              "Corporate",
+              "Asset Management",
+              "Other"
             ]
           },
           {
@@ -2833,15 +2833,15 @@
             "format": false,
             "detail_spec": null,
             "valid_values": [
-              "ALL",
-              "DATA",
-              "PRIVACY",
-              "SECURITY",
-              "IT_INFRASTRUCTURE",
-              "SOFTWARE_DEVELOPMENT",
-              "CORPORATE",
-              "ASSET_MANAGEMENT",
-              "OTHER"
+              "All Domains",
+              "Data",
+              "Privacy",
+              "Security",
+              "IT Infrastructure",
+              "Software Development",
+              "Corporate",
+              "Asset Management",
+              "Other"
             ]
           },
           {
@@ -3022,15 +3022,15 @@
             "format": false,
             "detail_spec": null,
             "valid_values": [
-              "ALL",
-              "DATA",
-              "PRIVACY",
-              "SECURITY",
-              "IT_INFRASTRUCTURE",
-              "SOFTWARE_DEVELOPMENT",
-              "CORPORATE",
-              "ASSET_MANAGEMENT",
-              "OTHER"
+              "All Domains",
+              "Data",
+              "Privacy",
+              "Security",
+              "IT Infrastructure",
+              "Software Development",
+              "Corporate",
+              "Asset Management",
+              "Other"
             ]
           },
           {
@@ -3391,15 +3391,15 @@
             "format": false,
             "detail_spec": null,
             "valid_values": [
-              "ALL",
-              "DATA",
-              "PRIVACY",
-              "SECURITY",
-              "IT_INFRASTRUCTURE",
-              "SOFTWARE_DEVELOPMENT",
-              "CORPORATE",
-              "ASSET_MANAGEMENT",
-              "OTHER"
+              "All Domains",
+              "Data",
+              "Privacy",
+              "Security",
+              "IT Infrastructure",
+              "Software Development",
+              "Corporate",
+              "Asset Management",
+              "Other"
             ]
           },
           {
@@ -3801,15 +3801,15 @@
             "format": false,
             "detail_spec": null,
             "valid_values": [
-              "ALL",
-              "DATA",
-              "PRIVACY",
-              "SECURITY",
-              "IT_INFRASTRUCTURE",
-              "SOFTWARE_DEVELOPMENT",
-              "CORPORATE",
-              "ASSET_MANAGEMENT",
-              "OTHER"
+              "All Domains",
+              "Data",
+              "Privacy",
+              "Security",
+              "IT Infrastructure",
+              "Software Development",
+              "Corporate",
+              "Asset Management",
+              "Other"
             ]
           },
           {
@@ -4273,15 +4273,15 @@
             "format": false,
             "detail_spec": null,
             "valid_values": [
-              "ALL",
-              "DATA",
-              "PRIVACY",
-              "SECURITY",
-              "IT_INFRASTRUCTURE",
-              "SOFTWARE_DEVELOPMENT",
-              "CORPORATE",
-              "ASSET_MANAGEMENT",
-              "OTHER"
+              "All Domains",
+              "Data",
+              "Privacy",
+              "Security",
+              "IT Infrastructure",
+              "Software Development",
+              "Corporate",
+              "Asset Management",
+              "Other"
             ]
           },
           {
@@ -4691,15 +4691,15 @@
             "format": false,
             "detail_spec": null,
             "valid_values": [
-              "ALL",
-              "DATA",
-              "PRIVACY",
-              "SECURITY",
-              "IT_INFRASTRUCTURE",
-              "SOFTWARE_DEVELOPMENT",
-              "CORPORATE",
-              "ASSET_MANAGEMENT",
-              "OTHER"
+              "All Domains",
+              "Data",
+              "Privacy",
+              "Security",
+              "IT Infrastructure",
+              "Software Development",
+              "Corporate",
+              "Asset Management",
+              "Other"
             ]
           },
           {
@@ -4911,15 +4911,15 @@
             "format": false,
             "detail_spec": null,
             "valid_values": [
-              "ALL",
-              "DATA",
-              "PRIVACY",
-              "SECURITY",
-              "IT_INFRASTRUCTURE",
-              "SOFTWARE_DEVELOPMENT",
-              "CORPORATE",
-              "ASSET_MANAGEMENT",
-              "OTHER"
+              "All Domains",
+              "Data",
+              "Privacy",
+              "Security",
+              "IT Infrastructure",
+              "Software Development",
+              "Corporate",
+              "Asset Management",
+              "Other"
             ]
           },
           {
@@ -5100,15 +5100,15 @@
             "format": false,
             "detail_spec": null,
             "valid_values": [
-              "ALL",
-              "DATA",
-              "PRIVACY",
-              "SECURITY",
-              "IT_INFRASTRUCTURE",
-              "SOFTWARE_DEVELOPMENT",
-              "CORPORATE",
-              "ASSET_MANAGEMENT",
-              "OTHER"
+              "All Domains",
+              "Data",
+              "Privacy",
+              "Security",
+              "IT Infrastructure",
+              "Software Development",
+              "Corporate",
+              "Asset Management",
+              "Other"
             ]
           },
           {
@@ -5335,15 +5335,15 @@
             "format": false,
             "detail_spec": null,
             "valid_values": [
-              "ALL",
-              "DATA",
-              "PRIVACY",
-              "SECURITY",
-              "IT_INFRASTRUCTURE",
-              "SOFTWARE_DEVELOPMENT",
-              "CORPORATE",
-              "ASSET_MANAGEMENT",
-              "OTHER"
+              "All Domains",
+              "Data",
+              "Privacy",
+              "Security",
+              "IT Infrastructure",
+              "Software Development",
+              "Corporate",
+              "Asset Management",
+              "Other"
             ]
           },
           {
@@ -5532,15 +5532,15 @@
             "format": false,
             "detail_spec": null,
             "valid_values": [
-              "ALL",
-              "DATA",
-              "PRIVACY",
-              "SECURITY",
-              "IT_INFRASTRUCTURE",
-              "SOFTWARE_DEVELOPMENT",
-              "CORPORATE",
-              "ASSET_MANAGEMENT",
-              "OTHER"
+              "All Domains",
+              "Data",
+              "Privacy",
+              "Security",
+              "IT Infrastructure",
+              "Software Development",
+              "Corporate",
+              "Asset Management",
+              "Other"
             ]
           },
           {
@@ -5909,15 +5909,15 @@
             "format": false,
             "detail_spec": null,
             "valid_values": [
-              "ALL",
-              "DATA",
-              "PRIVACY",
-              "SECURITY",
-              "IT_INFRASTRUCTURE",
-              "SOFTWARE_DEVELOPMENT",
-              "CORPORATE",
-              "ASSET_MANAGEMENT",
-              "OTHER"
+              "All Domains",
+              "Data",
+              "Privacy",
+              "Security",
+              "IT Infrastructure",
+              "Software Development",
+              "Corporate",
+              "Asset Management",
+              "Other"
             ]
           },
           {
@@ -6327,15 +6327,15 @@
             "format": false,
             "detail_spec": null,
             "valid_values": [
-              "ALL",
-              "DATA",
-              "PRIVACY",
-              "SECURITY",
-              "IT_INFRASTRUCTURE",
-              "SOFTWARE_DEVELOPMENT",
-              "CORPORATE",
-              "ASSET_MANAGEMENT",
-              "OTHER"
+              "All Domains",
+              "Data",
+              "Privacy",
+              "Security",
+              "IT Infrastructure",
+              "Software Development",
+              "Corporate",
+              "Asset Management",
+              "Other"
             ]
           },
           {
@@ -6807,15 +6807,15 @@
             "format": false,
             "detail_spec": null,
             "valid_values": [
-              "ALL",
-              "DATA",
-              "PRIVACY",
-              "SECURITY",
-              "IT_INFRASTRUCTURE",
-              "SOFTWARE_DEVELOPMENT",
-              "CORPORATE",
-              "ASSET_MANAGEMENT",
-              "OTHER"
+              "All Domains",
+              "Data",
+              "Privacy",
+              "Security",
+              "IT Infrastructure",
+              "Software Development",
+              "Corporate",
+              "Asset Management",
+              "Other"
             ]
           },
           {
@@ -7233,15 +7233,15 @@
             "format": false,
             "detail_spec": null,
             "valid_values": [
-              "ALL",
-              "DATA",
-              "PRIVACY",
-              "SECURITY",
-              "IT_INFRASTRUCTURE",
-              "SOFTWARE_DEVELOPMENT",
-              "CORPORATE",
-              "ASSET_MANAGEMENT",
-              "OTHER"
+              "All Domains",
+              "Data",
+              "Privacy",
+              "Security",
+              "IT Infrastructure",
+              "Software Development",
+              "Corporate",
+              "Asset Management",
+              "Other"
             ]
           },
           {
@@ -127381,15 +127381,15 @@
             "format": false,
             "detail_spec": null,
             "valid_values": [
-              "ALL",
-              "DATA",
-              "PRIVACY",
-              "SECURITY",
-              "IT_INFRASTRUCTURE",
-              "SOFTWARE_DEVELOPMENT",
-              "CORPORATE",
-              "ASSET_MANAGEMENT",
-              "OTHER"
+              "All Domains",
+              "Data",
+              "Privacy",
+              "Security",
+              "IT Infrastructure",
+              "Software Development",
+              "Corporate",
+              "Asset Management",
+              "Other"
             ]
           },
           {
@@ -127538,15 +127538,15 @@
             "format": false,
             "detail_spec": null,
             "valid_values": [
-              "ALL",
-              "DATA",
-              "PRIVACY",
-              "SECURITY",
-              "IT_INFRASTRUCTURE",
-              "SOFTWARE_DEVELOPMENT",
-              "CORPORATE",
-              "ASSET_MANAGEMENT",
-              "OTHER"
+              "All Domains",
+              "Data",
+              "Privacy",
+              "Security",
+              "IT Infrastructure",
+              "Software Development",
+              "Corporate",
+              "Asset Management",
+              "Other"
             ]
           },
           {
@@ -127741,15 +127741,15 @@
             "format": false,
             "detail_spec": null,
             "valid_values": [
-              "ALL",
-              "DATA",
-              "PRIVACY",
-              "SECURITY",
-              "IT_INFRASTRUCTURE",
-              "SOFTWARE_DEVELOPMENT",
-              "CORPORATE",
-              "ASSET_MANAGEMENT",
-              "OTHER"
+              "All Domains",
+              "Data",
+              "Privacy",
+              "Security",
+              "IT Infrastructure",
+              "Software Development",
+              "Corporate",
+              "Asset Management",
+              "Other"
             ]
           },
           {
@@ -127906,15 +127906,15 @@
             "format": false,
             "detail_spec": null,
             "valid_values": [
-              "ALL",
-              "DATA",
-              "PRIVACY",
-              "SECURITY",
-              "IT_INFRASTRUCTURE",
-              "SOFTWARE_DEVELOPMENT",
-              "CORPORATE",
-              "ASSET_MANAGEMENT",
-              "OTHER"
+              "All Domains",
+              "Data",
+              "Privacy",
+              "Security",
+              "IT Infrastructure",
+              "Software Development",
+              "Corporate",
+              "Asset Management",
+              "Other"
             ]
           },
           {
@@ -128251,15 +128251,15 @@
             "format": false,
             "detail_spec": null,
             "valid_values": [
-              "ALL",
-              "DATA",
-              "PRIVACY",
-              "SECURITY",
-              "IT_INFRASTRUCTURE",
-              "SOFTWARE_DEVELOPMENT",
-              "CORPORATE",
-              "ASSET_MANAGEMENT",
-              "OTHER"
+              "All Domains",
+              "Data",
+              "Privacy",
+              "Security",
+              "IT Infrastructure",
+              "Software Development",
+              "Corporate",
+              "Asset Management",
+              "Other"
             ]
           },
           {
@@ -128637,15 +128637,15 @@
             "format": false,
             "detail_spec": null,
             "valid_values": [
-              "ALL",
-              "DATA",
-              "PRIVACY",
-              "SECURITY",
-              "IT_INFRASTRUCTURE",
-              "SOFTWARE_DEVELOPMENT",
-              "CORPORATE",
-              "ASSET_MANAGEMENT",
-              "OTHER"
+              "All Domains",
+              "Data",
+              "Privacy",
+              "Security",
+              "IT Infrastructure",
+              "Software Development",
+              "Corporate",
+              "Asset Management",
+              "Other"
             ]
           },
           {
@@ -129085,15 +129085,15 @@
             "format": false,
             "detail_spec": null,
             "valid_values": [
-              "ALL",
-              "DATA",
-              "PRIVACY",
-              "SECURITY",
-              "IT_INFRASTRUCTURE",
-              "SOFTWARE_DEVELOPMENT",
-              "CORPORATE",
-              "ASSET_MANAGEMENT",
-              "OTHER"
+              "All Domains",
+              "Data",
+              "Privacy",
+              "Security",
+              "IT Infrastructure",
+              "Software Development",
+              "Corporate",
+              "Asset Management",
+              "Other"
             ]
           },
           {
@@ -129479,15 +129479,15 @@
             "format": false,
             "detail_spec": null,
             "valid_values": [
-              "ALL",
-              "DATA",
-              "PRIVACY",
-              "SECURITY",
-              "IT_INFRASTRUCTURE",
-              "SOFTWARE_DEVELOPMENT",
-              "CORPORATE",
-              "ASSET_MANAGEMENT",
-              "OTHER"
+              "All Domains",
+              "Data",
+              "Privacy",
+              "Security",
+              "IT Infrastructure",
+              "Software Development",
+              "Corporate",
+              "Asset Management",
+              "Other"
             ]
           },
           {
@@ -129675,15 +129675,15 @@
             "format": false,
             "detail_spec": null,
             "valid_values": [
-              "ALL",
-              "DATA",
-              "PRIVACY",
-              "SECURITY",
-              "IT_INFRASTRUCTURE",
-              "SOFTWARE_DEVELOPMENT",
-              "CORPORATE",
-              "ASSET_MANAGEMENT",
-              "OTHER"
+              "All Domains",
+              "Data",
+              "Privacy",
+              "Security",
+              "IT Infrastructure",
+              "Software Development",
+              "Corporate",
+              "Asset Management",
+              "Other"
             ]
           },
           {
@@ -129864,15 +129864,15 @@
             "format": false,
             "detail_spec": null,
             "valid_values": [
-              "ALL",
-              "DATA",
-              "PRIVACY",
-              "SECURITY",
-              "IT_INFRASTRUCTURE",
-              "SOFTWARE_DEVELOPMENT",
-              "CORPORATE",
-              "ASSET_MANAGEMENT",
-              "OTHER"
+              "All Domains",
+              "Data",
+              "Privacy",
+              "Security",
+              "IT Infrastructure",
+              "Software Development",
+              "Corporate",
+              "Asset Management",
+              "Other"
             ]
           },
           {
@@ -130099,15 +130099,15 @@
             "format": false,
             "detail_spec": null,
             "valid_values": [
-              "ALL",
-              "DATA",
-              "PRIVACY",
-              "SECURITY",
-              "IT_INFRASTRUCTURE",
-              "SOFTWARE_DEVELOPMENT",
-              "CORPORATE",
-              "ASSET_MANAGEMENT",
-              "OTHER"
+              "All Domains",
+              "Data",
+              "Privacy",
+              "Security",
+              "IT Infrastructure",
+              "Software Development",
+              "Corporate",
+              "Asset Management",
+              "Other"
             ]
           },
           {
@@ -130296,15 +130296,15 @@
             "format": false,
             "detail_spec": null,
             "valid_values": [
-              "ALL",
-              "DATA",
-              "PRIVACY",
-              "SECURITY",
-              "IT_INFRASTRUCTURE",
-              "SOFTWARE_DEVELOPMENT",
-              "CORPORATE",
-              "ASSET_MANAGEMENT",
-              "OTHER"
+              "All Domains",
+              "Data",
+              "Privacy",
+              "Security",
+              "IT Infrastructure",
+              "Software Development",
+              "Corporate",
+              "Asset Management",
+              "Other"
             ]
           },
           {
@@ -130673,15 +130673,15 @@
             "format": false,
             "detail_spec": null,
             "valid_values": [
-              "ALL",
-              "DATA",
-              "PRIVACY",
-              "SECURITY",
-              "IT_INFRASTRUCTURE",
-              "SOFTWARE_DEVELOPMENT",
-              "CORPORATE",
-              "ASSET_MANAGEMENT",
-              "OTHER"
+              "All Domains",
+              "Data",
+              "Privacy",
+              "Security",
+              "IT Infrastructure",
+              "Software Development",
+              "Corporate",
+              "Asset Management",
+              "Other"
             ]
           },
           {
@@ -131059,15 +131059,15 @@
             "format": false,
             "detail_spec": null,
             "valid_values": [
-              "ALL",
-              "DATA",
-              "PRIVACY",
-              "SECURITY",
-              "IT_INFRASTRUCTURE",
-              "SOFTWARE_DEVELOPMENT",
-              "CORPORATE",
-              "ASSET_MANAGEMENT",
-              "OTHER"
+              "All Domains",
+              "Data",
+              "Privacy",
+              "Security",
+              "IT Infrastructure",
+              "Software Development",
+              "Corporate",
+              "Asset Management",
+              "Other"
             ]
           },
           {
@@ -131507,15 +131507,15 @@
             "format": false,
             "detail_spec": null,
             "valid_values": [
-              "ALL",
-              "DATA",
-              "PRIVACY",
-              "SECURITY",
-              "IT_INFRASTRUCTURE",
-              "SOFTWARE_DEVELOPMENT",
-              "CORPORATE",
-              "ASSET_MANAGEMENT",
-              "OTHER"
+              "All Domains",
+              "Data",
+              "Privacy",
+              "Security",
+              "IT Infrastructure",
+              "Software Development",
+              "Corporate",
+              "Asset Management",
+              "Other"
             ]
           },
           {
@@ -131901,15 +131901,15 @@
             "format": false,
             "detail_spec": null,
             "valid_values": [
-              "ALL",
-              "DATA",
-              "PRIVACY",
-              "SECURITY",
-              "IT_INFRASTRUCTURE",
-              "SOFTWARE_DEVELOPMENT",
-              "CORPORATE",
-              "ASSET_MANAGEMENT",
-              "OTHER"
+              "All Domains",
+              "Data",
+              "Privacy",
+              "Security",
+              "IT Infrastructure",
+              "Software Development",
+              "Corporate",
+              "Asset Management",
+              "Other"
             ]
           },
           {
@@ -132097,15 +132097,15 @@
             "format": false,
             "detail_spec": null,
             "valid_values": [
-              "ALL",
-              "DATA",
-              "PRIVACY",
-              "SECURITY",
-              "IT_INFRASTRUCTURE",
-              "SOFTWARE_DEVELOPMENT",
-              "CORPORATE",
-              "ASSET_MANAGEMENT",
-              "OTHER"
+              "All Domains",
+              "Data",
+              "Privacy",
+              "Security",
+              "IT Infrastructure",
+              "Software Development",
+              "Corporate",
+              "Asset Management",
+              "Other"
             ]
           },
           {
@@ -132334,15 +132334,15 @@
             "format": false,
             "detail_spec": null,
             "valid_values": [
-              "ALL",
-              "DATA",
-              "PRIVACY",
-              "SECURITY",
-              "IT_INFRASTRUCTURE",
-              "SOFTWARE_DEVELOPMENT",
-              "CORPORATE",
-              "ASSET_MANAGEMENT",
-              "OTHER"
+              "All Domains",
+              "Data",
+              "Privacy",
+              "Security",
+              "IT Infrastructure",
+              "Software Development",
+              "Corporate",
+              "Asset Management",
+              "Other"
             ]
           },
           {
@@ -132617,15 +132617,15 @@
             "format": false,
             "detail_spec": null,
             "valid_values": [
-              "ALL",
-              "DATA",
-              "PRIVACY",
-              "SECURITY",
-              "IT_INFRASTRUCTURE",
-              "SOFTWARE_DEVELOPMENT",
-              "CORPORATE",
-              "ASSET_MANAGEMENT",
-              "OTHER"
+              "All Domains",
+              "Data",
+              "Privacy",
+              "Security",
+              "IT Infrastructure",
+              "Software Development",
+              "Corporate",
+              "Asset Management",
+              "Other"
             ]
           },
           {
@@ -132862,15 +132862,15 @@
             "format": false,
             "detail_spec": null,
             "valid_values": [
-              "ALL",
-              "DATA",
-              "PRIVACY",
-              "SECURITY",
-              "IT_INFRASTRUCTURE",
-              "SOFTWARE_DEVELOPMENT",
-              "CORPORATE",
-              "ASSET_MANAGEMENT",
-              "OTHER"
+              "All Domains",
+              "Data",
+              "Privacy",
+              "Security",
+              "IT Infrastructure",
+              "Software Development",
+              "Corporate",
+              "Asset Management",
+              "Other"
             ]
           },
           {
@@ -133287,15 +133287,15 @@
             "format": false,
             "detail_spec": null,
             "valid_values": [
-              "ALL",
-              "DATA",
-              "PRIVACY",
-              "SECURITY",
-              "IT_INFRASTRUCTURE",
-              "SOFTWARE_DEVELOPMENT",
-              "CORPORATE",
-              "ASSET_MANAGEMENT",
-              "OTHER"
+              "All Domains",
+              "Data",
+              "Privacy",
+              "Security",
+              "IT Infrastructure",
+              "Software Development",
+              "Corporate",
+              "Asset Management",
+              "Other"
             ]
           },
           {
@@ -133721,15 +133721,15 @@
             "format": false,
             "detail_spec": null,
             "valid_values": [
-              "ALL",
-              "DATA",
-              "PRIVACY",
-              "SECURITY",
-              "IT_INFRASTRUCTURE",
-              "SOFTWARE_DEVELOPMENT",
-              "CORPORATE",
-              "ASSET_MANAGEMENT",
-              "OTHER"
+              "All Domains",
+              "Data",
+              "Privacy",
+              "Security",
+              "IT Infrastructure",
+              "Software Development",
+              "Corporate",
+              "Asset Management",
+              "Other"
             ]
           },
           {
@@ -134217,15 +134217,15 @@
             "format": false,
             "detail_spec": null,
             "valid_values": [
-              "ALL",
-              "DATA",
-              "PRIVACY",
-              "SECURITY",
-              "IT_INFRASTRUCTURE",
-              "SOFTWARE_DEVELOPMENT",
-              "CORPORATE",
-              "ASSET_MANAGEMENT",
-              "OTHER"
+              "All Domains",
+              "Data",
+              "Privacy",
+              "Security",
+              "IT Infrastructure",
+              "Software Development",
+              "Corporate",
+              "Asset Management",
+              "Other"
             ]
           },
           {
@@ -134659,15 +134659,15 @@
             "format": false,
             "detail_spec": null,
             "valid_values": [
-              "ALL",
-              "DATA",
-              "PRIVACY",
-              "SECURITY",
-              "IT_INFRASTRUCTURE",
-              "SOFTWARE_DEVELOPMENT",
-              "CORPORATE",
-              "ASSET_MANAGEMENT",
-              "OTHER"
+              "All Domains",
+              "Data",
+              "Privacy",
+              "Security",
+              "IT Infrastructure",
+              "Software Development",
+              "Corporate",
+              "Asset Management",
+              "Other"
             ]
           },
           {
@@ -134903,15 +134903,15 @@
             "format": false,
             "detail_spec": null,
             "valid_values": [
-              "ALL",
-              "DATA",
-              "PRIVACY",
-              "SECURITY",
-              "IT_INFRASTRUCTURE",
-              "SOFTWARE_DEVELOPMENT",
-              "CORPORATE",
-              "ASSET_MANAGEMENT",
-              "OTHER"
+              "All Domains",
+              "Data",
+              "Privacy",
+              "Security",
+              "IT Infrastructure",
+              "Software Development",
+              "Corporate",
+              "Asset Management",
+              "Other"
             ]
           },
           {
@@ -135068,15 +135068,15 @@
             "format": false,
             "detail_spec": null,
             "valid_values": [
-              "ALL",
-              "DATA",
-              "PRIVACY",
-              "SECURITY",
-              "IT_INFRASTRUCTURE",
-              "SOFTWARE_DEVELOPMENT",
-              "CORPORATE",
-              "ASSET_MANAGEMENT",
-              "OTHER"
+              "All Domains",
+              "Data",
+              "Privacy",
+              "Security",
+              "IT Infrastructure",
+              "Software Development",
+              "Corporate",
+              "Asset Management",
+              "Other"
             ]
           },
           {
@@ -135279,15 +135279,15 @@
             "format": false,
             "detail_spec": null,
             "valid_values": [
-              "ALL",
-              "DATA",
-              "PRIVACY",
-              "SECURITY",
-              "IT_INFRASTRUCTURE",
-              "SOFTWARE_DEVELOPMENT",
-              "CORPORATE",
-              "ASSET_MANAGEMENT",
-              "OTHER"
+              "All Domains",
+              "Data",
+              "Privacy",
+              "Security",
+              "IT Infrastructure",
+              "Software Development",
+              "Corporate",
+              "Asset Management",
+              "Other"
             ]
           },
           {
@@ -135452,15 +135452,15 @@
             "format": false,
             "detail_spec": null,
             "valid_values": [
-              "ALL",
-              "DATA",
-              "PRIVACY",
-              "SECURITY",
-              "IT_INFRASTRUCTURE",
-              "SOFTWARE_DEVELOPMENT",
-              "CORPORATE",
-              "ASSET_MANAGEMENT",
-              "OTHER"
+              "All Domains",
+              "Data",
+              "Privacy",
+              "Security",
+              "IT Infrastructure",
+              "Software Development",
+              "Corporate",
+              "Asset Management",
+              "Other"
             ]
           },
           {
@@ -135805,15 +135805,15 @@
             "format": false,
             "detail_spec": null,
             "valid_values": [
-              "ALL",
-              "DATA",
-              "PRIVACY",
-              "SECURITY",
-              "IT_INFRASTRUCTURE",
-              "SOFTWARE_DEVELOPMENT",
-              "CORPORATE",
-              "ASSET_MANAGEMENT",
-              "OTHER"
+              "All Domains",
+              "Data",
+              "Privacy",
+              "Security",
+              "IT Infrastructure",
+              "Software Development",
+              "Corporate",
+              "Asset Management",
+              "Other"
             ]
           },
           {
@@ -136167,15 +136167,15 @@
             "format": false,
             "detail_spec": null,
             "valid_values": [
-              "ALL",
-              "DATA",
-              "PRIVACY",
-              "SECURITY",
-              "IT_INFRASTRUCTURE",
-              "SOFTWARE_DEVELOPMENT",
-              "CORPORATE",
-              "ASSET_MANAGEMENT",
-              "OTHER"
+              "All Domains",
+              "Data",
+              "Privacy",
+              "Security",
+              "IT Infrastructure",
+              "Software Development",
+              "Corporate",
+              "Asset Management",
+              "Other"
             ]
           },
           {
@@ -136591,15 +136591,15 @@
             "format": false,
             "detail_spec": null,
             "valid_values": [
-              "ALL",
-              "DATA",
-              "PRIVACY",
-              "SECURITY",
-              "IT_INFRASTRUCTURE",
-              "SOFTWARE_DEVELOPMENT",
-              "CORPORATE",
-              "ASSET_MANAGEMENT",
-              "OTHER"
+              "All Domains",
+              "Data",
+              "Privacy",
+              "Security",
+              "IT Infrastructure",
+              "Software Development",
+              "Corporate",
+              "Asset Management",
+              "Other"
             ]
           },
           {
@@ -136961,15 +136961,15 @@
             "format": false,
             "detail_spec": null,
             "valid_values": [
-              "ALL",
-              "DATA",
-              "PRIVACY",
-              "SECURITY",
-              "IT_INFRASTRUCTURE",
-              "SOFTWARE_DEVELOPMENT",
-              "CORPORATE",
-              "ASSET_MANAGEMENT",
-              "OTHER"
+              "All Domains",
+              "Data",
+              "Privacy",
+              "Security",
+              "IT Infrastructure",
+              "Software Development",
+              "Corporate",
+              "Asset Management",
+              "Other"
             ]
           },
           {
@@ -137133,15 +137133,15 @@
             "format": false,
             "detail_spec": null,
             "valid_values": [
-              "ALL",
-              "DATA",
-              "PRIVACY",
-              "SECURITY",
-              "IT_INFRASTRUCTURE",
-              "SOFTWARE_DEVELOPMENT",
-              "CORPORATE",
-              "ASSET_MANAGEMENT",
-              "OTHER"
+              "All Domains",
+              "Data",
+              "Privacy",
+              "Security",
+              "IT Infrastructure",
+              "Software Development",
+              "Corporate",
+              "Asset Management",
+              "Other"
             ]
           },
           {
@@ -137290,15 +137290,15 @@
             "format": false,
             "detail_spec": null,
             "valid_values": [
-              "ALL",
-              "DATA",
-              "PRIVACY",
-              "SECURITY",
-              "IT_INFRASTRUCTURE",
-              "SOFTWARE_DEVELOPMENT",
-              "CORPORATE",
-              "ASSET_MANAGEMENT",
-              "OTHER"
+              "All Domains",
+              "Data",
+              "Privacy",
+              "Security",
+              "IT Infrastructure",
+              "Software Development",
+              "Corporate",
+              "Asset Management",
+              "Other"
             ]
           },
           {
@@ -137493,15 +137493,15 @@
             "format": false,
             "detail_spec": null,
             "valid_values": [
-              "ALL",
-              "DATA",
-              "PRIVACY",
-              "SECURITY",
-              "IT_INFRASTRUCTURE",
-              "SOFTWARE_DEVELOPMENT",
-              "CORPORATE",
-              "ASSET_MANAGEMENT",
-              "OTHER"
+              "All Domains",
+              "Data",
+              "Privacy",
+              "Security",
+              "IT Infrastructure",
+              "Software Development",
+              "Corporate",
+              "Asset Management",
+              "Other"
             ]
           },
           {
@@ -137658,15 +137658,15 @@
             "format": false,
             "detail_spec": null,
             "valid_values": [
-              "ALL",
-              "DATA",
-              "PRIVACY",
-              "SECURITY",
-              "IT_INFRASTRUCTURE",
-              "SOFTWARE_DEVELOPMENT",
-              "CORPORATE",
-              "ASSET_MANAGEMENT",
-              "OTHER"
+              "All Domains",
+              "Data",
+              "Privacy",
+              "Security",
+              "IT Infrastructure",
+              "Software Development",
+              "Corporate",
+              "Asset Management",
+              "Other"
             ]
           },
           {
@@ -138003,15 +138003,15 @@
             "format": false,
             "detail_spec": null,
             "valid_values": [
-              "ALL",
-              "DATA",
-              "PRIVACY",
-              "SECURITY",
-              "IT_INFRASTRUCTURE",
-              "SOFTWARE_DEVELOPMENT",
-              "CORPORATE",
-              "ASSET_MANAGEMENT",
-              "OTHER"
+              "All Domains",
+              "Data",
+              "Privacy",
+              "Security",
+              "IT Infrastructure",
+              "Software Development",
+              "Corporate",
+              "Asset Management",
+              "Other"
             ]
           },
           {
@@ -138357,15 +138357,15 @@
             "format": false,
             "detail_spec": null,
             "valid_values": [
-              "ALL",
-              "DATA",
-              "PRIVACY",
-              "SECURITY",
-              "IT_INFRASTRUCTURE",
-              "SOFTWARE_DEVELOPMENT",
-              "CORPORATE",
-              "ASSET_MANAGEMENT",
-              "OTHER"
+              "All Domains",
+              "Data",
+              "Privacy",
+              "Security",
+              "IT Infrastructure",
+              "Software Development",
+              "Corporate",
+              "Asset Management",
+              "Other"
             ]
           },
           {
@@ -138773,15 +138773,15 @@
             "format": false,
             "detail_spec": null,
             "valid_values": [
-              "ALL",
-              "DATA",
-              "PRIVACY",
-              "SECURITY",
-              "IT_INFRASTRUCTURE",
-              "SOFTWARE_DEVELOPMENT",
-              "CORPORATE",
-              "ASSET_MANAGEMENT",
-              "OTHER"
+              "All Domains",
+              "Data",
+              "Privacy",
+              "Security",
+              "IT Infrastructure",
+              "Software Development",
+              "Corporate",
+              "Asset Management",
+              "Other"
             ]
           },
           {
@@ -139135,15 +139135,15 @@
             "format": false,
             "detail_spec": null,
             "valid_values": [
-              "ALL",
-              "DATA",
-              "PRIVACY",
-              "SECURITY",
-              "IT_INFRASTRUCTURE",
-              "SOFTWARE_DEVELOPMENT",
-              "CORPORATE",
-              "ASSET_MANAGEMENT",
-              "OTHER"
+              "All Domains",
+              "Data",
+              "Privacy",
+              "Security",
+              "IT Infrastructure",
+              "Software Development",
+              "Corporate",
+              "Asset Management",
+              "Other"
             ]
           },
           {
@@ -139299,15 +139299,15 @@
             "format": false,
             "detail_spec": null,
             "valid_values": [
-              "ALL",
-              "DATA",
-              "PRIVACY",
-              "SECURITY",
-              "IT_INFRASTRUCTURE",
-              "SOFTWARE_DEVELOPMENT",
-              "CORPORATE",
-              "ASSET_MANAGEMENT",
-              "OTHER"
+              "All Domains",
+              "Data",
+              "Privacy",
+              "Security",
+              "IT Infrastructure",
+              "Software Development",
+              "Corporate",
+              "Asset Management",
+              "Other"
             ]
           },
           {
@@ -139464,15 +139464,15 @@
             "format": false,
             "detail_spec": null,
             "valid_values": [
-              "ALL",
-              "DATA",
-              "PRIVACY",
-              "SECURITY",
-              "IT_INFRASTRUCTURE",
-              "SOFTWARE_DEVELOPMENT",
-              "CORPORATE",
-              "ASSET_MANAGEMENT",
-              "OTHER"
+              "All Domains",
+              "Data",
+              "Privacy",
+              "Security",
+              "IT Infrastructure",
+              "Software Development",
+              "Corporate",
+              "Asset Management",
+              "Other"
             ]
           },
           {
@@ -139675,15 +139675,15 @@
             "format": false,
             "detail_spec": null,
             "valid_values": [
-              "ALL",
-              "DATA",
-              "PRIVACY",
-              "SECURITY",
-              "IT_INFRASTRUCTURE",
-              "SOFTWARE_DEVELOPMENT",
-              "CORPORATE",
-              "ASSET_MANAGEMENT",
-              "OTHER"
+              "All Domains",
+              "Data",
+              "Privacy",
+              "Security",
+              "IT Infrastructure",
+              "Software Development",
+              "Corporate",
+              "Asset Management",
+              "Other"
             ]
           },
           {
@@ -139848,15 +139848,15 @@
             "format": false,
             "detail_spec": null,
             "valid_values": [
-              "ALL",
-              "DATA",
-              "PRIVACY",
-              "SECURITY",
-              "IT_INFRASTRUCTURE",
-              "SOFTWARE_DEVELOPMENT",
-              "CORPORATE",
-              "ASSET_MANAGEMENT",
-              "OTHER"
+              "All Domains",
+              "Data",
+              "Privacy",
+              "Security",
+              "IT Infrastructure",
+              "Software Development",
+              "Corporate",
+              "Asset Management",
+              "Other"
             ]
           },
           {
@@ -140201,15 +140201,15 @@
             "format": false,
             "detail_spec": null,
             "valid_values": [
-              "ALL",
-              "DATA",
-              "PRIVACY",
-              "SECURITY",
-              "IT_INFRASTRUCTURE",
-              "SOFTWARE_DEVELOPMENT",
-              "CORPORATE",
-              "ASSET_MANAGEMENT",
-              "OTHER"
+              "All Domains",
+              "Data",
+              "Privacy",
+              "Security",
+              "IT Infrastructure",
+              "Software Development",
+              "Corporate",
+              "Asset Management",
+              "Other"
             ]
           },
           {
@@ -140563,15 +140563,15 @@
             "format": false,
             "detail_spec": null,
             "valid_values": [
-              "ALL",
-              "DATA",
-              "PRIVACY",
-              "SECURITY",
-              "IT_INFRASTRUCTURE",
-              "SOFTWARE_DEVELOPMENT",
-              "CORPORATE",
-              "ASSET_MANAGEMENT",
-              "OTHER"
+              "All Domains",
+              "Data",
+              "Privacy",
+              "Security",
+              "IT Infrastructure",
+              "Software Development",
+              "Corporate",
+              "Asset Management",
+              "Other"
             ]
           },
           {
@@ -140987,15 +140987,15 @@
             "format": false,
             "detail_spec": null,
             "valid_values": [
-              "ALL",
-              "DATA",
-              "PRIVACY",
-              "SECURITY",
-              "IT_INFRASTRUCTURE",
-              "SOFTWARE_DEVELOPMENT",
-              "CORPORATE",
-              "ASSET_MANAGEMENT",
-              "OTHER"
+              "All Domains",
+              "Data",
+              "Privacy",
+              "Security",
+              "IT Infrastructure",
+              "Software Development",
+              "Corporate",
+              "Asset Management",
+              "Other"
             ]
           },
           {
@@ -141357,15 +141357,15 @@
             "format": false,
             "detail_spec": null,
             "valid_values": [
-              "ALL",
-              "DATA",
-              "PRIVACY",
-              "SECURITY",
-              "IT_INFRASTRUCTURE",
-              "SOFTWARE_DEVELOPMENT",
-              "CORPORATE",
-              "ASSET_MANAGEMENT",
-              "OTHER"
+              "All Domains",
+              "Data",
+              "Privacy",
+              "Security",
+              "IT Infrastructure",
+              "Software Development",
+              "Corporate",
+              "Asset Management",
+              "Other"
             ]
           },
           {
@@ -141529,15 +141529,15 @@
             "format": false,
             "detail_spec": null,
             "valid_values": [
-              "ALL",
-              "DATA",
-              "PRIVACY",
-              "SECURITY",
-              "IT_INFRASTRUCTURE",
-              "SOFTWARE_DEVELOPMENT",
-              "CORPORATE",
-              "ASSET_MANAGEMENT",
-              "OTHER"
+              "All Domains",
+              "Data",
+              "Privacy",
+              "Security",
+              "IT Infrastructure",
+              "Software Development",
+              "Corporate",
+              "Asset Management",
+              "Other"
             ]
           },
           {
@@ -141686,15 +141686,15 @@
             "format": false,
             "detail_spec": null,
             "valid_values": [
-              "ALL",
-              "DATA",
-              "PRIVACY",
-              "SECURITY",
-              "IT_INFRASTRUCTURE",
-              "SOFTWARE_DEVELOPMENT",
-              "CORPORATE",
-              "ASSET_MANAGEMENT",
-              "OTHER"
+              "All Domains",
+              "Data",
+              "Privacy",
+              "Security",
+              "IT Infrastructure",
+              "Software Development",
+              "Corporate",
+              "Asset Management",
+              "Other"
             ]
           },
           {
@@ -141889,15 +141889,15 @@
             "format": false,
             "detail_spec": null,
             "valid_values": [
-              "ALL",
-              "DATA",
-              "PRIVACY",
-              "SECURITY",
-              "IT_INFRASTRUCTURE",
-              "SOFTWARE_DEVELOPMENT",
-              "CORPORATE",
-              "ASSET_MANAGEMENT",
-              "OTHER"
+              "All Domains",
+              "Data",
+              "Privacy",
+              "Security",
+              "IT Infrastructure",
+              "Software Development",
+              "Corporate",
+              "Asset Management",
+              "Other"
             ]
           },
           {
@@ -142054,15 +142054,15 @@
             "format": false,
             "detail_spec": null,
             "valid_values": [
-              "ALL",
-              "DATA",
-              "PRIVACY",
-              "SECURITY",
-              "IT_INFRASTRUCTURE",
-              "SOFTWARE_DEVELOPMENT",
-              "CORPORATE",
-              "ASSET_MANAGEMENT",
-              "OTHER"
+              "All Domains",
+              "Data",
+              "Privacy",
+              "Security",
+              "IT Infrastructure",
+              "Software Development",
+              "Corporate",
+              "Asset Management",
+              "Other"
             ]
           },
           {
@@ -142399,15 +142399,15 @@
             "format": false,
             "detail_spec": null,
             "valid_values": [
-              "ALL",
-              "DATA",
-              "PRIVACY",
-              "SECURITY",
-              "IT_INFRASTRUCTURE",
-              "SOFTWARE_DEVELOPMENT",
-              "CORPORATE",
-              "ASSET_MANAGEMENT",
-              "OTHER"
+              "All Domains",
+              "Data",
+              "Privacy",
+              "Security",
+              "IT Infrastructure",
+              "Software Development",
+              "Corporate",
+              "Asset Management",
+              "Other"
             ]
           },
           {
@@ -142785,15 +142785,15 @@
             "format": false,
             "detail_spec": null,
             "valid_values": [
-              "ALL",
-              "DATA",
-              "PRIVACY",
-              "SECURITY",
-              "IT_INFRASTRUCTURE",
-              "SOFTWARE_DEVELOPMENT",
-              "CORPORATE",
-              "ASSET_MANAGEMENT",
-              "OTHER"
+              "All Domains",
+              "Data",
+              "Privacy",
+              "Security",
+              "IT Infrastructure",
+              "Software Development",
+              "Corporate",
+              "Asset Management",
+              "Other"
             ]
           },
           {
@@ -143233,15 +143233,15 @@
             "format": false,
             "detail_spec": null,
             "valid_values": [
-              "ALL",
-              "DATA",
-              "PRIVACY",
-              "SECURITY",
-              "IT_INFRASTRUCTURE",
-              "SOFTWARE_DEVELOPMENT",
-              "CORPORATE",
-              "ASSET_MANAGEMENT",
-              "OTHER"
+              "All Domains",
+              "Data",
+              "Privacy",
+              "Security",
+              "IT Infrastructure",
+              "Software Development",
+              "Corporate",
+              "Asset Management",
+              "Other"
             ]
           },
           {
@@ -143627,15 +143627,15 @@
             "format": false,
             "detail_spec": null,
             "valid_values": [
-              "ALL",
-              "DATA",
-              "PRIVACY",
-              "SECURITY",
-              "IT_INFRASTRUCTURE",
-              "SOFTWARE_DEVELOPMENT",
-              "CORPORATE",
-              "ASSET_MANAGEMENT",
-              "OTHER"
+              "All Domains",
+              "Data",
+              "Privacy",
+              "Security",
+              "IT Infrastructure",
+              "Software Development",
+              "Corporate",
+              "Asset Management",
+              "Other"
             ]
           },
           {
@@ -143823,15 +143823,15 @@
             "format": false,
             "detail_spec": null,
             "valid_values": [
-              "ALL",
-              "DATA",
-              "PRIVACY",
-              "SECURITY",
-              "IT_INFRASTRUCTURE",
-              "SOFTWARE_DEVELOPMENT",
-              "CORPORATE",
-              "ASSET_MANAGEMENT",
-              "OTHER"
+              "All Domains",
+              "Data",
+              "Privacy",
+              "Security",
+              "IT Infrastructure",
+              "Software Development",
+              "Corporate",
+              "Asset Management",
+              "Other"
             ]
           },
           {
@@ -143980,15 +143980,15 @@
             "format": false,
             "detail_spec": null,
             "valid_values": [
-              "ALL",
-              "DATA",
-              "PRIVACY",
-              "SECURITY",
-              "IT_INFRASTRUCTURE",
-              "SOFTWARE_DEVELOPMENT",
-              "CORPORATE",
-              "ASSET_MANAGEMENT",
-              "OTHER"
+              "All Domains",
+              "Data",
+              "Privacy",
+              "Security",
+              "IT Infrastructure",
+              "Software Development",
+              "Corporate",
+              "Asset Management",
+              "Other"
             ]
           },
           {
@@ -144183,15 +144183,15 @@
             "format": false,
             "detail_spec": null,
             "valid_values": [
-              "ALL",
-              "DATA",
-              "PRIVACY",
-              "SECURITY",
-              "IT_INFRASTRUCTURE",
-              "SOFTWARE_DEVELOPMENT",
-              "CORPORATE",
-              "ASSET_MANAGEMENT",
-              "OTHER"
+              "All Domains",
+              "Data",
+              "Privacy",
+              "Security",
+              "IT Infrastructure",
+              "Software Development",
+              "Corporate",
+              "Asset Management",
+              "Other"
             ]
           },
           {
@@ -144348,15 +144348,15 @@
             "format": false,
             "detail_spec": null,
             "valid_values": [
-              "ALL",
-              "DATA",
-              "PRIVACY",
-              "SECURITY",
-              "IT_INFRASTRUCTURE",
-              "SOFTWARE_DEVELOPMENT",
-              "CORPORATE",
-              "ASSET_MANAGEMENT",
-              "OTHER"
+              "All Domains",
+              "Data",
+              "Privacy",
+              "Security",
+              "IT Infrastructure",
+              "Software Development",
+              "Corporate",
+              "Asset Management",
+              "Other"
             ]
           },
           {
@@ -144693,15 +144693,15 @@
             "format": false,
             "detail_spec": null,
             "valid_values": [
-              "ALL",
-              "DATA",
-              "PRIVACY",
-              "SECURITY",
-              "IT_INFRASTRUCTURE",
-              "SOFTWARE_DEVELOPMENT",
-              "CORPORATE",
-              "ASSET_MANAGEMENT",
-              "OTHER"
+              "All Domains",
+              "Data",
+              "Privacy",
+              "Security",
+              "IT Infrastructure",
+              "Software Development",
+              "Corporate",
+              "Asset Management",
+              "Other"
             ]
           },
           {
@@ -145047,15 +145047,15 @@
             "format": false,
             "detail_spec": null,
             "valid_values": [
-              "ALL",
-              "DATA",
-              "PRIVACY",
-              "SECURITY",
-              "IT_INFRASTRUCTURE",
-              "SOFTWARE_DEVELOPMENT",
-              "CORPORATE",
-              "ASSET_MANAGEMENT",
-              "OTHER"
+              "All Domains",
+              "Data",
+              "Privacy",
+              "Security",
+              "IT Infrastructure",
+              "Software Development",
+              "Corporate",
+              "Asset Management",
+              "Other"
             ]
           },
           {
@@ -145463,15 +145463,15 @@
             "format": false,
             "detail_spec": null,
             "valid_values": [
-              "ALL",
-              "DATA",
-              "PRIVACY",
-              "SECURITY",
-              "IT_INFRASTRUCTURE",
-              "SOFTWARE_DEVELOPMENT",
-              "CORPORATE",
-              "ASSET_MANAGEMENT",
-              "OTHER"
+              "All Domains",
+              "Data",
+              "Privacy",
+              "Security",
+              "IT Infrastructure",
+              "Software Development",
+              "Corporate",
+              "Asset Management",
+              "Other"
             ]
           },
           {
@@ -145825,15 +145825,15 @@
             "format": false,
             "detail_spec": null,
             "valid_values": [
-              "ALL",
-              "DATA",
-              "PRIVACY",
-              "SECURITY",
-              "IT_INFRASTRUCTURE",
-              "SOFTWARE_DEVELOPMENT",
-              "CORPORATE",
-              "ASSET_MANAGEMENT",
-              "OTHER"
+              "All Domains",
+              "Data",
+              "Privacy",
+              "Security",
+              "IT Infrastructure",
+              "Software Development",
+              "Corporate",
+              "Asset Management",
+              "Other"
             ]
           },
           {
@@ -145989,15 +145989,15 @@
             "format": false,
             "detail_spec": null,
             "valid_values": [
-              "ALL",
-              "DATA",
-              "PRIVACY",
-              "SECURITY",
-              "IT_INFRASTRUCTURE",
-              "SOFTWARE_DEVELOPMENT",
-              "CORPORATE",
-              "ASSET_MANAGEMENT",
-              "OTHER"
+              "All Domains",
+              "Data",
+              "Privacy",
+              "Security",
+              "IT Infrastructure",
+              "Software Development",
+              "Corporate",
+              "Asset Management",
+              "Other"
             ]
           },
           {
@@ -146170,15 +146170,15 @@
             "format": false,
             "detail_spec": null,
             "valid_values": [
-              "ALL",
-              "DATA",
-              "PRIVACY",
-              "SECURITY",
-              "IT_INFRASTRUCTURE",
-              "SOFTWARE_DEVELOPMENT",
-              "CORPORATE",
-              "ASSET_MANAGEMENT",
-              "OTHER"
+              "All Domains",
+              "Data",
+              "Privacy",
+              "Security",
+              "IT Infrastructure",
+              "Software Development",
+              "Corporate",
+              "Asset Management",
+              "Other"
             ]
           },
           {
@@ -146397,15 +146397,15 @@
             "format": false,
             "detail_spec": null,
             "valid_values": [
-              "ALL",
-              "DATA",
-              "PRIVACY",
-              "SECURITY",
-              "IT_INFRASTRUCTURE",
-              "SOFTWARE_DEVELOPMENT",
-              "CORPORATE",
-              "ASSET_MANAGEMENT",
-              "OTHER"
+              "All Domains",
+              "Data",
+              "Privacy",
+              "Security",
+              "IT Infrastructure",
+              "Software Development",
+              "Corporate",
+              "Asset Management",
+              "Other"
             ]
           },
           {
@@ -146586,15 +146586,15 @@
             "format": false,
             "detail_spec": null,
             "valid_values": [
-              "ALL",
-              "DATA",
-              "PRIVACY",
-              "SECURITY",
-              "IT_INFRASTRUCTURE",
-              "SOFTWARE_DEVELOPMENT",
-              "CORPORATE",
-              "ASSET_MANAGEMENT",
-              "OTHER"
+              "All Domains",
+              "Data",
+              "Privacy",
+              "Security",
+              "IT Infrastructure",
+              "Software Development",
+              "Corporate",
+              "Asset Management",
+              "Other"
             ]
           },
           {
@@ -146955,15 +146955,15 @@
             "format": false,
             "detail_spec": null,
             "valid_values": [
-              "ALL",
-              "DATA",
-              "PRIVACY",
-              "SECURITY",
-              "IT_INFRASTRUCTURE",
-              "SOFTWARE_DEVELOPMENT",
-              "CORPORATE",
-              "ASSET_MANAGEMENT",
-              "OTHER"
+              "All Domains",
+              "Data",
+              "Privacy",
+              "Security",
+              "IT Infrastructure",
+              "Software Development",
+              "Corporate",
+              "Asset Management",
+              "Other"
             ]
           },
           {
@@ -147333,15 +147333,15 @@
             "format": false,
             "detail_spec": null,
             "valid_values": [
-              "ALL",
-              "DATA",
-              "PRIVACY",
-              "SECURITY",
-              "IT_INFRASTRUCTURE",
-              "SOFTWARE_DEVELOPMENT",
-              "CORPORATE",
-              "ASSET_MANAGEMENT",
-              "OTHER"
+              "All Domains",
+              "Data",
+              "Privacy",
+              "Security",
+              "IT Infrastructure",
+              "Software Development",
+              "Corporate",
+              "Asset Management",
+              "Other"
             ]
           },
           {
@@ -147773,15 +147773,15 @@
             "format": false,
             "detail_spec": null,
             "valid_values": [
-              "ALL",
-              "DATA",
-              "PRIVACY",
-              "SECURITY",
-              "IT_INFRASTRUCTURE",
-              "SOFTWARE_DEVELOPMENT",
-              "CORPORATE",
-              "ASSET_MANAGEMENT",
-              "OTHER"
+              "All Domains",
+              "Data",
+              "Privacy",
+              "Security",
+              "IT Infrastructure",
+              "Software Development",
+              "Corporate",
+              "Asset Management",
+              "Other"
             ]
           },
           {
@@ -148159,15 +148159,15 @@
             "format": false,
             "detail_spec": null,
             "valid_values": [
-              "ALL",
-              "DATA",
-              "PRIVACY",
-              "SECURITY",
-              "IT_INFRASTRUCTURE",
-              "SOFTWARE_DEVELOPMENT",
-              "CORPORATE",
-              "ASSET_MANAGEMENT",
-              "OTHER"
+              "All Domains",
+              "Data",
+              "Privacy",
+              "Security",
+              "IT Infrastructure",
+              "Software Development",
+              "Corporate",
+              "Asset Management",
+              "Other"
             ]
           },
           {
@@ -148347,15 +148347,15 @@
             "format": false,
             "detail_spec": null,
             "valid_values": [
-              "ALL",
-              "DATA",
-              "PRIVACY",
-              "SECURITY",
-              "IT_INFRASTRUCTURE",
-              "SOFTWARE_DEVELOPMENT",
-              "CORPORATE",
-              "ASSET_MANAGEMENT",
-              "OTHER"
+              "All Domains",
+              "Data",
+              "Privacy",
+              "Security",
+              "IT Infrastructure",
+              "Software Development",
+              "Corporate",
+              "Asset Management",
+              "Other"
             ]
           },
           {
@@ -148504,15 +148504,15 @@
             "format": false,
             "detail_spec": null,
             "valid_values": [
-              "ALL",
-              "DATA",
-              "PRIVACY",
-              "SECURITY",
-              "IT_INFRASTRUCTURE",
-              "SOFTWARE_DEVELOPMENT",
-              "CORPORATE",
-              "ASSET_MANAGEMENT",
-              "OTHER"
+              "All Domains",
+              "Data",
+              "Privacy",
+              "Security",
+              "IT Infrastructure",
+              "Software Development",
+              "Corporate",
+              "Asset Management",
+              "Other"
             ]
           },
           {
@@ -148707,15 +148707,15 @@
             "format": false,
             "detail_spec": null,
             "valid_values": [
-              "ALL",
-              "DATA",
-              "PRIVACY",
-              "SECURITY",
-              "IT_INFRASTRUCTURE",
-              "SOFTWARE_DEVELOPMENT",
-              "CORPORATE",
-              "ASSET_MANAGEMENT",
-              "OTHER"
+              "All Domains",
+              "Data",
+              "Privacy",
+              "Security",
+              "IT Infrastructure",
+              "Software Development",
+              "Corporate",
+              "Asset Management",
+              "Other"
             ]
           },
           {
@@ -148872,15 +148872,15 @@
             "format": false,
             "detail_spec": null,
             "valid_values": [
-              "ALL",
-              "DATA",
-              "PRIVACY",
-              "SECURITY",
-              "IT_INFRASTRUCTURE",
-              "SOFTWARE_DEVELOPMENT",
-              "CORPORATE",
-              "ASSET_MANAGEMENT",
-              "OTHER"
+              "All Domains",
+              "Data",
+              "Privacy",
+              "Security",
+              "IT Infrastructure",
+              "Software Development",
+              "Corporate",
+              "Asset Management",
+              "Other"
             ]
           },
           {
@@ -149217,15 +149217,15 @@
             "format": false,
             "detail_spec": null,
             "valid_values": [
-              "ALL",
-              "DATA",
-              "PRIVACY",
-              "SECURITY",
-              "IT_INFRASTRUCTURE",
-              "SOFTWARE_DEVELOPMENT",
-              "CORPORATE",
-              "ASSET_MANAGEMENT",
-              "OTHER"
+              "All Domains",
+              "Data",
+              "Privacy",
+              "Security",
+              "IT Infrastructure",
+              "Software Development",
+              "Corporate",
+              "Asset Management",
+              "Other"
             ]
           },
           {
@@ -149571,15 +149571,15 @@
             "format": false,
             "detail_spec": null,
             "valid_values": [
-              "ALL",
-              "DATA",
-              "PRIVACY",
-              "SECURITY",
-              "IT_INFRASTRUCTURE",
-              "SOFTWARE_DEVELOPMENT",
-              "CORPORATE",
-              "ASSET_MANAGEMENT",
-              "OTHER"
+              "All Domains",
+              "Data",
+              "Privacy",
+              "Security",
+              "IT Infrastructure",
+              "Software Development",
+              "Corporate",
+              "Asset Management",
+              "Other"
             ]
           },
           {
@@ -149987,15 +149987,15 @@
             "format": false,
             "detail_spec": null,
             "valid_values": [
-              "ALL",
-              "DATA",
-              "PRIVACY",
-              "SECURITY",
-              "IT_INFRASTRUCTURE",
-              "SOFTWARE_DEVELOPMENT",
-              "CORPORATE",
-              "ASSET_MANAGEMENT",
-              "OTHER"
+              "All Domains",
+              "Data",
+              "Privacy",
+              "Security",
+              "IT Infrastructure",
+              "Software Development",
+              "Corporate",
+              "Asset Management",
+              "Other"
             ]
           },
           {
@@ -150349,15 +150349,15 @@
             "format": false,
             "detail_spec": null,
             "valid_values": [
-              "ALL",
-              "DATA",
-              "PRIVACY",
-              "SECURITY",
-              "IT_INFRASTRUCTURE",
-              "SOFTWARE_DEVELOPMENT",
-              "CORPORATE",
-              "ASSET_MANAGEMENT",
-              "OTHER"
+              "All Domains",
+              "Data",
+              "Privacy",
+              "Security",
+              "IT Infrastructure",
+              "Software Development",
+              "Corporate",
+              "Asset Management",
+              "Other"
             ]
           },
           {
@@ -150513,15 +150513,15 @@
             "format": false,
             "detail_spec": null,
             "valid_values": [
-              "ALL",
-              "DATA",
-              "PRIVACY",
-              "SECURITY",
-              "IT_INFRASTRUCTURE",
-              "SOFTWARE_DEVELOPMENT",
-              "CORPORATE",
-              "ASSET_MANAGEMENT",
-              "OTHER"
+              "All Domains",
+              "Data",
+              "Privacy",
+              "Security",
+              "IT Infrastructure",
+              "Software Development",
+              "Corporate",
+              "Asset Management",
+              "Other"
             ]
           },
           {
@@ -150670,15 +150670,15 @@
             "format": false,
             "detail_spec": null,
             "valid_values": [
-              "ALL",
-              "DATA",
-              "PRIVACY",
-              "SECURITY",
-              "IT_INFRASTRUCTURE",
-              "SOFTWARE_DEVELOPMENT",
-              "CORPORATE",
-              "ASSET_MANAGEMENT",
-              "OTHER"
+              "All Domains",
+              "Data",
+              "Privacy",
+              "Security",
+              "IT Infrastructure",
+              "Software Development",
+              "Corporate",
+              "Asset Management",
+              "Other"
             ]
           },
           {
@@ -150873,15 +150873,15 @@
             "format": false,
             "detail_spec": null,
             "valid_values": [
-              "ALL",
-              "DATA",
-              "PRIVACY",
-              "SECURITY",
-              "IT_INFRASTRUCTURE",
-              "SOFTWARE_DEVELOPMENT",
-              "CORPORATE",
-              "ASSET_MANAGEMENT",
-              "OTHER"
+              "All Domains",
+              "Data",
+              "Privacy",
+              "Security",
+              "IT Infrastructure",
+              "Software Development",
+              "Corporate",
+              "Asset Management",
+              "Other"
             ]
           },
           {
@@ -151038,15 +151038,15 @@
             "format": false,
             "detail_spec": null,
             "valid_values": [
-              "ALL",
-              "DATA",
-              "PRIVACY",
-              "SECURITY",
-              "IT_INFRASTRUCTURE",
-              "SOFTWARE_DEVELOPMENT",
-              "CORPORATE",
-              "ASSET_MANAGEMENT",
-              "OTHER"
+              "All Domains",
+              "Data",
+              "Privacy",
+              "Security",
+              "IT Infrastructure",
+              "Software Development",
+              "Corporate",
+              "Asset Management",
+              "Other"
             ]
           },
           {
@@ -151383,15 +151383,15 @@
             "format": false,
             "detail_spec": null,
             "valid_values": [
-              "ALL",
-              "DATA",
-              "PRIVACY",
-              "SECURITY",
-              "IT_INFRASTRUCTURE",
-              "SOFTWARE_DEVELOPMENT",
-              "CORPORATE",
-              "ASSET_MANAGEMENT",
-              "OTHER"
+              "All Domains",
+              "Data",
+              "Privacy",
+              "Security",
+              "IT Infrastructure",
+              "Software Development",
+              "Corporate",
+              "Asset Management",
+              "Other"
             ]
           },
           {
@@ -151737,15 +151737,15 @@
             "format": false,
             "detail_spec": null,
             "valid_values": [
-              "ALL",
-              "DATA",
-              "PRIVACY",
-              "SECURITY",
-              "IT_INFRASTRUCTURE",
-              "SOFTWARE_DEVELOPMENT",
-              "CORPORATE",
-              "ASSET_MANAGEMENT",
-              "OTHER"
+              "All Domains",
+              "Data",
+              "Privacy",
+              "Security",
+              "IT Infrastructure",
+              "Software Development",
+              "Corporate",
+              "Asset Management",
+              "Other"
             ]
           },
           {
@@ -152153,15 +152153,15 @@
             "format": false,
             "detail_spec": null,
             "valid_values": [
-              "ALL",
-              "DATA",
-              "PRIVACY",
-              "SECURITY",
-              "IT_INFRASTRUCTURE",
-              "SOFTWARE_DEVELOPMENT",
-              "CORPORATE",
-              "ASSET_MANAGEMENT",
-              "OTHER"
+              "All Domains",
+              "Data",
+              "Privacy",
+              "Security",
+              "IT Infrastructure",
+              "Software Development",
+              "Corporate",
+              "Asset Management",
+              "Other"
             ]
           },
           {
@@ -152515,15 +152515,15 @@
             "format": false,
             "detail_spec": null,
             "valid_values": [
-              "ALL",
-              "DATA",
-              "PRIVACY",
-              "SECURITY",
-              "IT_INFRASTRUCTURE",
-              "SOFTWARE_DEVELOPMENT",
-              "CORPORATE",
-              "ASSET_MANAGEMENT",
-              "OTHER"
+              "All Domains",
+              "Data",
+              "Privacy",
+              "Security",
+              "IT Infrastructure",
+              "Software Development",
+              "Corporate",
+              "Asset Management",
+              "Other"
             ]
           },
           {
@@ -152679,15 +152679,15 @@
             "format": false,
             "detail_spec": null,
             "valid_values": [
-              "ALL",
-              "DATA",
-              "PRIVACY",
-              "SECURITY",
-              "IT_INFRASTRUCTURE",
-              "SOFTWARE_DEVELOPMENT",
-              "CORPORATE",
-              "ASSET_MANAGEMENT",
-              "OTHER"
+              "All Domains",
+              "Data",
+              "Privacy",
+              "Security",
+              "IT Infrastructure",
+              "Software Development",
+              "Corporate",
+              "Asset Management",
+              "Other"
             ]
           },
           {
@@ -152836,15 +152836,15 @@
             "format": false,
             "detail_spec": null,
             "valid_values": [
-              "ALL",
-              "DATA",
-              "PRIVACY",
-              "SECURITY",
-              "IT_INFRASTRUCTURE",
-              "SOFTWARE_DEVELOPMENT",
-              "CORPORATE",
-              "ASSET_MANAGEMENT",
-              "OTHER"
+              "All Domains",
+              "Data",
+              "Privacy",
+              "Security",
+              "IT Infrastructure",
+              "Software Development",
+              "Corporate",
+              "Asset Management",
+              "Other"
             ]
           },
           {
@@ -153039,15 +153039,15 @@
             "format": false,
             "detail_spec": null,
             "valid_values": [
-              "ALL",
-              "DATA",
-              "PRIVACY",
-              "SECURITY",
-              "IT_INFRASTRUCTURE",
-              "SOFTWARE_DEVELOPMENT",
-              "CORPORATE",
-              "ASSET_MANAGEMENT",
-              "OTHER"
+              "All Domains",
+              "Data",
+              "Privacy",
+              "Security",
+              "IT Infrastructure",
+              "Software Development",
+              "Corporate",
+              "Asset Management",
+              "Other"
             ]
           },
           {
@@ -153204,15 +153204,15 @@
             "format": false,
             "detail_spec": null,
             "valid_values": [
-              "ALL",
-              "DATA",
-              "PRIVACY",
-              "SECURITY",
-              "IT_INFRASTRUCTURE",
-              "SOFTWARE_DEVELOPMENT",
-              "CORPORATE",
-              "ASSET_MANAGEMENT",
-              "OTHER"
+              "All Domains",
+              "Data",
+              "Privacy",
+              "Security",
+              "IT Infrastructure",
+              "Software Development",
+              "Corporate",
+              "Asset Management",
+              "Other"
             ]
           },
           {
@@ -153549,15 +153549,15 @@
             "format": false,
             "detail_spec": null,
             "valid_values": [
-              "ALL",
-              "DATA",
-              "PRIVACY",
-              "SECURITY",
-              "IT_INFRASTRUCTURE",
-              "SOFTWARE_DEVELOPMENT",
-              "CORPORATE",
-              "ASSET_MANAGEMENT",
-              "OTHER"
+              "All Domains",
+              "Data",
+              "Privacy",
+              "Security",
+              "IT Infrastructure",
+              "Software Development",
+              "Corporate",
+              "Asset Management",
+              "Other"
             ]
           },
           {
@@ -153903,15 +153903,15 @@
             "format": false,
             "detail_spec": null,
             "valid_values": [
-              "ALL",
-              "DATA",
-              "PRIVACY",
-              "SECURITY",
-              "IT_INFRASTRUCTURE",
-              "SOFTWARE_DEVELOPMENT",
-              "CORPORATE",
-              "ASSET_MANAGEMENT",
-              "OTHER"
+              "All Domains",
+              "Data",
+              "Privacy",
+              "Security",
+              "IT Infrastructure",
+              "Software Development",
+              "Corporate",
+              "Asset Management",
+              "Other"
             ]
           },
           {
@@ -154319,15 +154319,15 @@
             "format": false,
             "detail_spec": null,
             "valid_values": [
-              "ALL",
-              "DATA",
-              "PRIVACY",
-              "SECURITY",
-              "IT_INFRASTRUCTURE",
-              "SOFTWARE_DEVELOPMENT",
-              "CORPORATE",
-              "ASSET_MANAGEMENT",
-              "OTHER"
+              "All Domains",
+              "Data",
+              "Privacy",
+              "Security",
+              "IT Infrastructure",
+              "Software Development",
+              "Corporate",
+              "Asset Management",
+              "Other"
             ]
           },
           {
@@ -154681,15 +154681,15 @@
             "format": false,
             "detail_spec": null,
             "valid_values": [
-              "ALL",
-              "DATA",
-              "PRIVACY",
-              "SECURITY",
-              "IT_INFRASTRUCTURE",
-              "SOFTWARE_DEVELOPMENT",
-              "CORPORATE",
-              "ASSET_MANAGEMENT",
-              "OTHER"
+              "All Domains",
+              "Data",
+              "Privacy",
+              "Security",
+              "IT Infrastructure",
+              "Software Development",
+              "Corporate",
+              "Asset Management",
+              "Other"
             ]
           },
           {
@@ -154845,15 +154845,15 @@
             "format": false,
             "detail_spec": null,
             "valid_values": [
-              "ALL",
-              "DATA",
-              "PRIVACY",
-              "SECURITY",
-              "IT_INFRASTRUCTURE",
-              "SOFTWARE_DEVELOPMENT",
-              "CORPORATE",
-              "ASSET_MANAGEMENT",
-              "OTHER"
+              "All Domains",
+              "Data",
+              "Privacy",
+              "Security",
+              "IT Infrastructure",
+              "Software Development",
+              "Corporate",
+              "Asset Management",
+              "Other"
             ]
           },
           {
@@ -155010,15 +155010,15 @@
             "format": false,
             "detail_spec": null,
             "valid_values": [
-              "ALL",
-              "DATA",
-              "PRIVACY",
-              "SECURITY",
-              "IT_INFRASTRUCTURE",
-              "SOFTWARE_DEVELOPMENT",
-              "CORPORATE",
-              "ASSET_MANAGEMENT",
-              "OTHER"
+              "All Domains",
+              "Data",
+              "Privacy",
+              "Security",
+              "IT Infrastructure",
+              "Software Development",
+              "Corporate",
+              "Asset Management",
+              "Other"
             ]
           },
           {
@@ -155221,15 +155221,15 @@
             "format": false,
             "detail_spec": null,
             "valid_values": [
-              "ALL",
-              "DATA",
-              "PRIVACY",
-              "SECURITY",
-              "IT_INFRASTRUCTURE",
-              "SOFTWARE_DEVELOPMENT",
-              "CORPORATE",
-              "ASSET_MANAGEMENT",
-              "OTHER"
+              "All Domains",
+              "Data",
+              "Privacy",
+              "Security",
+              "IT Infrastructure",
+              "Software Development",
+              "Corporate",
+              "Asset Management",
+              "Other"
             ]
           },
           {
@@ -155394,15 +155394,15 @@
             "format": false,
             "detail_spec": null,
             "valid_values": [
-              "ALL",
-              "DATA",
-              "PRIVACY",
-              "SECURITY",
-              "IT_INFRASTRUCTURE",
-              "SOFTWARE_DEVELOPMENT",
-              "CORPORATE",
-              "ASSET_MANAGEMENT",
-              "OTHER"
+              "All Domains",
+              "Data",
+              "Privacy",
+              "Security",
+              "IT Infrastructure",
+              "Software Development",
+              "Corporate",
+              "Asset Management",
+              "Other"
             ]
           },
           {
@@ -155747,15 +155747,15 @@
             "format": false,
             "detail_spec": null,
             "valid_values": [
-              "ALL",
-              "DATA",
-              "PRIVACY",
-              "SECURITY",
-              "IT_INFRASTRUCTURE",
-              "SOFTWARE_DEVELOPMENT",
-              "CORPORATE",
-              "ASSET_MANAGEMENT",
-              "OTHER"
+              "All Domains",
+              "Data",
+              "Privacy",
+              "Security",
+              "IT Infrastructure",
+              "Software Development",
+              "Corporate",
+              "Asset Management",
+              "Other"
             ]
           },
           {
@@ -156109,15 +156109,15 @@
             "format": false,
             "detail_spec": null,
             "valid_values": [
-              "ALL",
-              "DATA",
-              "PRIVACY",
-              "SECURITY",
-              "IT_INFRASTRUCTURE",
-              "SOFTWARE_DEVELOPMENT",
-              "CORPORATE",
-              "ASSET_MANAGEMENT",
-              "OTHER"
+              "All Domains",
+              "Data",
+              "Privacy",
+              "Security",
+              "IT Infrastructure",
+              "Software Development",
+              "Corporate",
+              "Asset Management",
+              "Other"
             ]
           },
           {
@@ -156533,15 +156533,15 @@
             "format": false,
             "detail_spec": null,
             "valid_values": [
-              "ALL",
-              "DATA",
-              "PRIVACY",
-              "SECURITY",
-              "IT_INFRASTRUCTURE",
-              "SOFTWARE_DEVELOPMENT",
-              "CORPORATE",
-              "ASSET_MANAGEMENT",
-              "OTHER"
+              "All Domains",
+              "Data",
+              "Privacy",
+              "Security",
+              "IT Infrastructure",
+              "Software Development",
+              "Corporate",
+              "Asset Management",
+              "Other"
             ]
           },
           {
@@ -156903,15 +156903,15 @@
             "format": false,
             "detail_spec": null,
             "valid_values": [
-              "ALL",
-              "DATA",
-              "PRIVACY",
-              "SECURITY",
-              "IT_INFRASTRUCTURE",
-              "SOFTWARE_DEVELOPMENT",
-              "CORPORATE",
-              "ASSET_MANAGEMENT",
-              "OTHER"
+              "All Domains",
+              "Data",
+              "Privacy",
+              "Security",
+              "IT Infrastructure",
+              "Software Development",
+              "Corporate",
+              "Asset Management",
+              "Other"
             ]
           },
           {
@@ -157075,15 +157075,15 @@
             "format": false,
             "detail_spec": null,
             "valid_values": [
-              "ALL",
-              "DATA",
-              "PRIVACY",
-              "SECURITY",
-              "IT_INFRASTRUCTURE",
-              "SOFTWARE_DEVELOPMENT",
-              "CORPORATE",
-              "ASSET_MANAGEMENT",
-              "OTHER"
+              "All Domains",
+              "Data",
+              "Privacy",
+              "Security",
+              "IT Infrastructure",
+              "Software Development",
+              "Corporate",
+              "Asset Management",
+              "Other"
             ]
           },
           {
@@ -157240,15 +157240,15 @@
             "format": false,
             "detail_spec": null,
             "valid_values": [
-              "ALL",
-              "DATA",
-              "PRIVACY",
-              "SECURITY",
-              "IT_INFRASTRUCTURE",
-              "SOFTWARE_DEVELOPMENT",
-              "CORPORATE",
-              "ASSET_MANAGEMENT",
-              "OTHER"
+              "All Domains",
+              "Data",
+              "Privacy",
+              "Security",
+              "IT Infrastructure",
+              "Software Development",
+              "Corporate",
+              "Asset Management",
+              "Other"
             ]
           },
           {
@@ -157451,15 +157451,15 @@
             "format": false,
             "detail_spec": null,
             "valid_values": [
-              "ALL",
-              "DATA",
-              "PRIVACY",
-              "SECURITY",
-              "IT_INFRASTRUCTURE",
-              "SOFTWARE_DEVELOPMENT",
-              "CORPORATE",
-              "ASSET_MANAGEMENT",
-              "OTHER"
+              "All Domains",
+              "Data",
+              "Privacy",
+              "Security",
+              "IT Infrastructure",
+              "Software Development",
+              "Corporate",
+              "Asset Management",
+              "Other"
             ]
           },
           {
@@ -157624,15 +157624,15 @@
             "format": false,
             "detail_spec": null,
             "valid_values": [
-              "ALL",
-              "DATA",
-              "PRIVACY",
-              "SECURITY",
-              "IT_INFRASTRUCTURE",
-              "SOFTWARE_DEVELOPMENT",
-              "CORPORATE",
-              "ASSET_MANAGEMENT",
-              "OTHER"
+              "All Domains",
+              "Data",
+              "Privacy",
+              "Security",
+              "IT Infrastructure",
+              "Software Development",
+              "Corporate",
+              "Asset Management",
+              "Other"
             ]
           },
           {
@@ -157977,15 +157977,15 @@
             "format": false,
             "detail_spec": null,
             "valid_values": [
-              "ALL",
-              "DATA",
-              "PRIVACY",
-              "SECURITY",
-              "IT_INFRASTRUCTURE",
-              "SOFTWARE_DEVELOPMENT",
-              "CORPORATE",
-              "ASSET_MANAGEMENT",
-              "OTHER"
+              "All Domains",
+              "Data",
+              "Privacy",
+              "Security",
+              "IT Infrastructure",
+              "Software Development",
+              "Corporate",
+              "Asset Management",
+              "Other"
             ]
           },
           {
@@ -158339,15 +158339,15 @@
             "format": false,
             "detail_spec": null,
             "valid_values": [
-              "ALL",
-              "DATA",
-              "PRIVACY",
-              "SECURITY",
-              "IT_INFRASTRUCTURE",
-              "SOFTWARE_DEVELOPMENT",
-              "CORPORATE",
-              "ASSET_MANAGEMENT",
-              "OTHER"
+              "All Domains",
+              "Data",
+              "Privacy",
+              "Security",
+              "IT Infrastructure",
+              "Software Development",
+              "Corporate",
+              "Asset Management",
+              "Other"
             ]
           },
           {
@@ -158763,15 +158763,15 @@
             "format": false,
             "detail_spec": null,
             "valid_values": [
-              "ALL",
-              "DATA",
-              "PRIVACY",
-              "SECURITY",
-              "IT_INFRASTRUCTURE",
-              "SOFTWARE_DEVELOPMENT",
-              "CORPORATE",
-              "ASSET_MANAGEMENT",
-              "OTHER"
+              "All Domains",
+              "Data",
+              "Privacy",
+              "Security",
+              "IT Infrastructure",
+              "Software Development",
+              "Corporate",
+              "Asset Management",
+              "Other"
             ]
           },
           {
@@ -159133,15 +159133,15 @@
             "format": false,
             "detail_spec": null,
             "valid_values": [
-              "ALL",
-              "DATA",
-              "PRIVACY",
-              "SECURITY",
-              "IT_INFRASTRUCTURE",
-              "SOFTWARE_DEVELOPMENT",
-              "CORPORATE",
-              "ASSET_MANAGEMENT",
-              "OTHER"
+              "All Domains",
+              "Data",
+              "Privacy",
+              "Security",
+              "IT Infrastructure",
+              "Software Development",
+              "Corporate",
+              "Asset Management",
+              "Other"
             ]
           },
           {
@@ -159305,15 +159305,15 @@
             "format": false,
             "detail_spec": null,
             "valid_values": [
-              "ALL",
-              "DATA",
-              "PRIVACY",
-              "SECURITY",
-              "IT_INFRASTRUCTURE",
-              "SOFTWARE_DEVELOPMENT",
-              "CORPORATE",
-              "ASSET_MANAGEMENT",
-              "OTHER"
+              "All Domains",
+              "Data",
+              "Privacy",
+              "Security",
+              "IT Infrastructure",
+              "Software Development",
+              "Corporate",
+              "Asset Management",
+              "Other"
             ]
           },
           {
@@ -159470,15 +159470,15 @@
             "format": false,
             "detail_spec": null,
             "valid_values": [
-              "ALL",
-              "DATA",
-              "PRIVACY",
-              "SECURITY",
-              "IT_INFRASTRUCTURE",
-              "SOFTWARE_DEVELOPMENT",
-              "CORPORATE",
-              "ASSET_MANAGEMENT",
-              "OTHER"
+              "All Domains",
+              "Data",
+              "Privacy",
+              "Security",
+              "IT Infrastructure",
+              "Software Development",
+              "Corporate",
+              "Asset Management",
+              "Other"
             ]
           },
           {
@@ -159681,15 +159681,15 @@
             "format": false,
             "detail_spec": null,
             "valid_values": [
-              "ALL",
-              "DATA",
-              "PRIVACY",
-              "SECURITY",
-              "IT_INFRASTRUCTURE",
-              "SOFTWARE_DEVELOPMENT",
-              "CORPORATE",
-              "ASSET_MANAGEMENT",
-              "OTHER"
+              "All Domains",
+              "Data",
+              "Privacy",
+              "Security",
+              "IT Infrastructure",
+              "Software Development",
+              "Corporate",
+              "Asset Management",
+              "Other"
             ]
           },
           {
@@ -159854,15 +159854,15 @@
             "format": false,
             "detail_spec": null,
             "valid_values": [
-              "ALL",
-              "DATA",
-              "PRIVACY",
-              "SECURITY",
-              "IT_INFRASTRUCTURE",
-              "SOFTWARE_DEVELOPMENT",
-              "CORPORATE",
-              "ASSET_MANAGEMENT",
-              "OTHER"
+              "All Domains",
+              "Data",
+              "Privacy",
+              "Security",
+              "IT Infrastructure",
+              "Software Development",
+              "Corporate",
+              "Asset Management",
+              "Other"
             ]
           },
           {
@@ -160207,15 +160207,15 @@
             "format": false,
             "detail_spec": null,
             "valid_values": [
-              "ALL",
-              "DATA",
-              "PRIVACY",
-              "SECURITY",
-              "IT_INFRASTRUCTURE",
-              "SOFTWARE_DEVELOPMENT",
-              "CORPORATE",
-              "ASSET_MANAGEMENT",
-              "OTHER"
+              "All Domains",
+              "Data",
+              "Privacy",
+              "Security",
+              "IT Infrastructure",
+              "Software Development",
+              "Corporate",
+              "Asset Management",
+              "Other"
             ]
           },
           {
@@ -160569,15 +160569,15 @@
             "format": false,
             "detail_spec": null,
             "valid_values": [
-              "ALL",
-              "DATA",
-              "PRIVACY",
-              "SECURITY",
-              "IT_INFRASTRUCTURE",
-              "SOFTWARE_DEVELOPMENT",
-              "CORPORATE",
-              "ASSET_MANAGEMENT",
-              "OTHER"
+              "All Domains",
+              "Data",
+              "Privacy",
+              "Security",
+              "IT Infrastructure",
+              "Software Development",
+              "Corporate",
+              "Asset Management",
+              "Other"
             ]
           },
           {
@@ -160993,15 +160993,15 @@
             "format": false,
             "detail_spec": null,
             "valid_values": [
-              "ALL",
-              "DATA",
-              "PRIVACY",
-              "SECURITY",
-              "IT_INFRASTRUCTURE",
-              "SOFTWARE_DEVELOPMENT",
-              "CORPORATE",
-              "ASSET_MANAGEMENT",
-              "OTHER"
+              "All Domains",
+              "Data",
+              "Privacy",
+              "Security",
+              "IT Infrastructure",
+              "Software Development",
+              "Corporate",
+              "Asset Management",
+              "Other"
             ]
           },
           {
@@ -161363,15 +161363,15 @@
             "format": false,
             "detail_spec": null,
             "valid_values": [
-              "ALL",
-              "DATA",
-              "PRIVACY",
-              "SECURITY",
-              "IT_INFRASTRUCTURE",
-              "SOFTWARE_DEVELOPMENT",
-              "CORPORATE",
-              "ASSET_MANAGEMENT",
-              "OTHER"
+              "All Domains",
+              "Data",
+              "Privacy",
+              "Security",
+              "IT Infrastructure",
+              "Software Development",
+              "Corporate",
+              "Asset Management",
+              "Other"
             ]
           },
           {
@@ -161535,15 +161535,15 @@
             "format": false,
             "detail_spec": null,
             "valid_values": [
-              "ALL",
-              "DATA",
-              "PRIVACY",
-              "SECURITY",
-              "IT_INFRASTRUCTURE",
-              "SOFTWARE_DEVELOPMENT",
-              "CORPORATE",
-              "ASSET_MANAGEMENT",
-              "OTHER"
+              "All Domains",
+              "Data",
+              "Privacy",
+              "Security",
+              "IT Infrastructure",
+              "Software Development",
+              "Corporate",
+              "Asset Management",
+              "Other"
             ]
           },
           {
@@ -161700,15 +161700,15 @@
             "format": false,
             "detail_spec": null,
             "valid_values": [
-              "ALL",
-              "DATA",
-              "PRIVACY",
-              "SECURITY",
-              "IT_INFRASTRUCTURE",
-              "SOFTWARE_DEVELOPMENT",
-              "CORPORATE",
-              "ASSET_MANAGEMENT",
-              "OTHER"
+              "All Domains",
+              "Data",
+              "Privacy",
+              "Security",
+              "IT Infrastructure",
+              "Software Development",
+              "Corporate",
+              "Asset Management",
+              "Other"
             ]
           },
           {
@@ -161911,15 +161911,15 @@
             "format": false,
             "detail_spec": null,
             "valid_values": [
-              "ALL",
-              "DATA",
-              "PRIVACY",
-              "SECURITY",
-              "IT_INFRASTRUCTURE",
-              "SOFTWARE_DEVELOPMENT",
-              "CORPORATE",
-              "ASSET_MANAGEMENT",
-              "OTHER"
+              "All Domains",
+              "Data",
+              "Privacy",
+              "Security",
+              "IT Infrastructure",
+              "Software Development",
+              "Corporate",
+              "Asset Management",
+              "Other"
             ]
           },
           {
@@ -162084,15 +162084,15 @@
             "format": false,
             "detail_spec": null,
             "valid_values": [
-              "ALL",
-              "DATA",
-              "PRIVACY",
-              "SECURITY",
-              "IT_INFRASTRUCTURE",
-              "SOFTWARE_DEVELOPMENT",
-              "CORPORATE",
-              "ASSET_MANAGEMENT",
-              "OTHER"
+              "All Domains",
+              "Data",
+              "Privacy",
+              "Security",
+              "IT Infrastructure",
+              "Software Development",
+              "Corporate",
+              "Asset Management",
+              "Other"
             ]
           },
           {
@@ -162437,15 +162437,15 @@
             "format": false,
             "detail_spec": null,
             "valid_values": [
-              "ALL",
-              "DATA",
-              "PRIVACY",
-              "SECURITY",
-              "IT_INFRASTRUCTURE",
-              "SOFTWARE_DEVELOPMENT",
-              "CORPORATE",
-              "ASSET_MANAGEMENT",
-              "OTHER"
+              "All Domains",
+              "Data",
+              "Privacy",
+              "Security",
+              "IT Infrastructure",
+              "Software Development",
+              "Corporate",
+              "Asset Management",
+              "Other"
             ]
           },
           {
@@ -162831,15 +162831,15 @@
             "format": false,
             "detail_spec": null,
             "valid_values": [
-              "ALL",
-              "DATA",
-              "PRIVACY",
-              "SECURITY",
-              "IT_INFRASTRUCTURE",
-              "SOFTWARE_DEVELOPMENT",
-              "CORPORATE",
-              "ASSET_MANAGEMENT",
-              "OTHER"
+              "All Domains",
+              "Data",
+              "Privacy",
+              "Security",
+              "IT Infrastructure",
+              "Software Development",
+              "Corporate",
+              "Asset Management",
+              "Other"
             ]
           },
           {
@@ -163287,15 +163287,15 @@
             "format": false,
             "detail_spec": null,
             "valid_values": [
-              "ALL",
-              "DATA",
-              "PRIVACY",
-              "SECURITY",
-              "IT_INFRASTRUCTURE",
-              "SOFTWARE_DEVELOPMENT",
-              "CORPORATE",
-              "ASSET_MANAGEMENT",
-              "OTHER"
+              "All Domains",
+              "Data",
+              "Privacy",
+              "Security",
+              "IT Infrastructure",
+              "Software Development",
+              "Corporate",
+              "Asset Management",
+              "Other"
             ]
           },
           {
@@ -163689,15 +163689,15 @@
             "format": false,
             "detail_spec": null,
             "valid_values": [
-              "ALL",
-              "DATA",
-              "PRIVACY",
-              "SECURITY",
-              "IT_INFRASTRUCTURE",
-              "SOFTWARE_DEVELOPMENT",
-              "CORPORATE",
-              "ASSET_MANAGEMENT",
-              "OTHER"
+              "All Domains",
+              "Data",
+              "Privacy",
+              "Security",
+              "IT Infrastructure",
+              "Software Development",
+              "Corporate",
+              "Asset Management",
+              "Other"
             ]
           },
           {
@@ -163893,15 +163893,15 @@
             "format": false,
             "detail_spec": null,
             "valid_values": [
-              "ALL",
-              "DATA",
-              "PRIVACY",
-              "SECURITY",
-              "IT_INFRASTRUCTURE",
-              "SOFTWARE_DEVELOPMENT",
-              "CORPORATE",
-              "ASSET_MANAGEMENT",
-              "OTHER"
+              "All Domains",
+              "Data",
+              "Privacy",
+              "Security",
+              "IT Infrastructure",
+              "Software Development",
+              "Corporate",
+              "Asset Management",
+              "Other"
             ]
           },
           {
@@ -164066,15 +164066,15 @@
             "format": false,
             "detail_spec": null,
             "valid_values": [
-              "ALL",
-              "DATA",
-              "PRIVACY",
-              "SECURITY",
-              "IT_INFRASTRUCTURE",
-              "SOFTWARE_DEVELOPMENT",
-              "CORPORATE",
-              "ASSET_MANAGEMENT",
-              "OTHER"
+              "All Domains",
+              "Data",
+              "Privacy",
+              "Security",
+              "IT Infrastructure",
+              "Software Development",
+              "Corporate",
+              "Asset Management",
+              "Other"
             ]
           },
           {
@@ -164285,15 +164285,15 @@
             "format": false,
             "detail_spec": null,
             "valid_values": [
-              "ALL",
-              "DATA",
-              "PRIVACY",
-              "SECURITY",
-              "IT_INFRASTRUCTURE",
-              "SOFTWARE_DEVELOPMENT",
-              "CORPORATE",
-              "ASSET_MANAGEMENT",
-              "OTHER"
+              "All Domains",
+              "Data",
+              "Privacy",
+              "Security",
+              "IT Infrastructure",
+              "Software Development",
+              "Corporate",
+              "Asset Management",
+              "Other"
             ]
           },
           {
@@ -164466,15 +164466,15 @@
             "format": false,
             "detail_spec": null,
             "valid_values": [
-              "ALL",
-              "DATA",
-              "PRIVACY",
-              "SECURITY",
-              "IT_INFRASTRUCTURE",
-              "SOFTWARE_DEVELOPMENT",
-              "CORPORATE",
-              "ASSET_MANAGEMENT",
-              "OTHER"
+              "All Domains",
+              "Data",
+              "Privacy",
+              "Security",
+              "IT Infrastructure",
+              "Software Development",
+              "Corporate",
+              "Asset Management",
+              "Other"
             ]
           },
           {
@@ -164827,15 +164827,15 @@
             "format": false,
             "detail_spec": null,
             "valid_values": [
-              "ALL",
-              "DATA",
-              "PRIVACY",
-              "SECURITY",
-              "IT_INFRASTRUCTURE",
-              "SOFTWARE_DEVELOPMENT",
-              "CORPORATE",
-              "ASSET_MANAGEMENT",
-              "OTHER"
+              "All Domains",
+              "Data",
+              "Privacy",
+              "Security",
+              "IT Infrastructure",
+              "Software Development",
+              "Corporate",
+              "Asset Management",
+              "Other"
             ]
           },
           {
@@ -165197,15 +165197,15 @@
             "format": false,
             "detail_spec": null,
             "valid_values": [
-              "ALL",
-              "DATA",
-              "PRIVACY",
-              "SECURITY",
-              "IT_INFRASTRUCTURE",
-              "SOFTWARE_DEVELOPMENT",
-              "CORPORATE",
-              "ASSET_MANAGEMENT",
-              "OTHER"
+              "All Domains",
+              "Data",
+              "Privacy",
+              "Security",
+              "IT Infrastructure",
+              "Software Development",
+              "Corporate",
+              "Asset Management",
+              "Other"
             ]
           },
           {
@@ -165629,15 +165629,15 @@
             "format": false,
             "detail_spec": null,
             "valid_values": [
-              "ALL",
-              "DATA",
-              "PRIVACY",
-              "SECURITY",
-              "IT_INFRASTRUCTURE",
-              "SOFTWARE_DEVELOPMENT",
-              "CORPORATE",
-              "ASSET_MANAGEMENT",
-              "OTHER"
+              "All Domains",
+              "Data",
+              "Privacy",
+              "Security",
+              "IT Infrastructure",
+              "Software Development",
+              "Corporate",
+              "Asset Management",
+              "Other"
             ]
           },
           {
@@ -166007,15 +166007,15 @@
             "format": false,
             "detail_spec": null,
             "valid_values": [
-              "ALL",
-              "DATA",
-              "PRIVACY",
-              "SECURITY",
-              "IT_INFRASTRUCTURE",
-              "SOFTWARE_DEVELOPMENT",
-              "CORPORATE",
-              "ASSET_MANAGEMENT",
-              "OTHER"
+              "All Domains",
+              "Data",
+              "Privacy",
+              "Security",
+              "IT Infrastructure",
+              "Software Development",
+              "Corporate",
+              "Asset Management",
+              "Other"
             ]
           },
           {
@@ -166187,15 +166187,15 @@
             "format": false,
             "detail_spec": null,
             "valid_values": [
-              "ALL",
-              "DATA",
-              "PRIVACY",
-              "SECURITY",
-              "IT_INFRASTRUCTURE",
-              "SOFTWARE_DEVELOPMENT",
-              "CORPORATE",
-              "ASSET_MANAGEMENT",
-              "OTHER"
+              "All Domains",
+              "Data",
+              "Privacy",
+              "Security",
+              "IT Infrastructure",
+              "Software Development",
+              "Corporate",
+              "Asset Management",
+              "Other"
             ]
           },
           {
@@ -166376,15 +166376,15 @@
             "format": false,
             "detail_spec": null,
             "valid_values": [
-              "ALL",
-              "DATA",
-              "PRIVACY",
-              "SECURITY",
-              "IT_INFRASTRUCTURE",
-              "SOFTWARE_DEVELOPMENT",
-              "CORPORATE",
-              "ASSET_MANAGEMENT",
-              "OTHER"
+              "All Domains",
+              "Data",
+              "Privacy",
+              "Security",
+              "IT Infrastructure",
+              "Software Development",
+              "Corporate",
+              "Asset Management",
+              "Other"
             ]
           },
           {
@@ -166611,15 +166611,15 @@
             "format": false,
             "detail_spec": null,
             "valid_values": [
-              "ALL",
-              "DATA",
-              "PRIVACY",
-              "SECURITY",
-              "IT_INFRASTRUCTURE",
-              "SOFTWARE_DEVELOPMENT",
-              "CORPORATE",
-              "ASSET_MANAGEMENT",
-              "OTHER"
+              "All Domains",
+              "Data",
+              "Privacy",
+              "Security",
+              "IT Infrastructure",
+              "Software Development",
+              "Corporate",
+              "Asset Management",
+              "Other"
             ]
           },
           {
@@ -166808,15 +166808,15 @@
             "format": false,
             "detail_spec": null,
             "valid_values": [
-              "ALL",
-              "DATA",
-              "PRIVACY",
-              "SECURITY",
-              "IT_INFRASTRUCTURE",
-              "SOFTWARE_DEVELOPMENT",
-              "CORPORATE",
-              "ASSET_MANAGEMENT",
-              "OTHER"
+              "All Domains",
+              "Data",
+              "Privacy",
+              "Security",
+              "IT Infrastructure",
+              "Software Development",
+              "Corporate",
+              "Asset Management",
+              "Other"
             ]
           },
           {
@@ -167185,15 +167185,15 @@
             "format": false,
             "detail_spec": null,
             "valid_values": [
-              "ALL",
-              "DATA",
-              "PRIVACY",
-              "SECURITY",
-              "IT_INFRASTRUCTURE",
-              "SOFTWARE_DEVELOPMENT",
-              "CORPORATE",
-              "ASSET_MANAGEMENT",
-              "OTHER"
+              "All Domains",
+              "Data",
+              "Privacy",
+              "Security",
+              "IT Infrastructure",
+              "Software Development",
+              "Corporate",
+              "Asset Management",
+              "Other"
             ]
           },
           {
@@ -167571,15 +167571,15 @@
             "format": false,
             "detail_spec": null,
             "valid_values": [
-              "ALL",
-              "DATA",
-              "PRIVACY",
-              "SECURITY",
-              "IT_INFRASTRUCTURE",
-              "SOFTWARE_DEVELOPMENT",
-              "CORPORATE",
-              "ASSET_MANAGEMENT",
-              "OTHER"
+              "All Domains",
+              "Data",
+              "Privacy",
+              "Security",
+              "IT Infrastructure",
+              "Software Development",
+              "Corporate",
+              "Asset Management",
+              "Other"
             ]
           },
           {
@@ -168019,15 +168019,15 @@
             "format": false,
             "detail_spec": null,
             "valid_values": [
-              "ALL",
-              "DATA",
-              "PRIVACY",
-              "SECURITY",
-              "IT_INFRASTRUCTURE",
-              "SOFTWARE_DEVELOPMENT",
-              "CORPORATE",
-              "ASSET_MANAGEMENT",
-              "OTHER"
+              "All Domains",
+              "Data",
+              "Privacy",
+              "Security",
+              "IT Infrastructure",
+              "Software Development",
+              "Corporate",
+              "Asset Management",
+              "Other"
             ]
           },
           {
@@ -168413,15 +168413,15 @@
             "format": false,
             "detail_spec": null,
             "valid_values": [
-              "ALL",
-              "DATA",
-              "PRIVACY",
-              "SECURITY",
-              "IT_INFRASTRUCTURE",
-              "SOFTWARE_DEVELOPMENT",
-              "CORPORATE",
-              "ASSET_MANAGEMENT",
-              "OTHER"
+              "All Domains",
+              "Data",
+              "Privacy",
+              "Security",
+              "IT Infrastructure",
+              "Software Development",
+              "Corporate",
+              "Asset Management",
+              "Other"
             ]
           },
           {
@@ -168609,15 +168609,15 @@
             "format": false,
             "detail_spec": null,
             "valid_values": [
-              "ALL",
-              "DATA",
-              "PRIVACY",
-              "SECURITY",
-              "IT_INFRASTRUCTURE",
-              "SOFTWARE_DEVELOPMENT",
-              "CORPORATE",
-              "ASSET_MANAGEMENT",
-              "OTHER"
+              "All Domains",
+              "Data",
+              "Privacy",
+              "Security",
+              "IT Infrastructure",
+              "Software Development",
+              "Corporate",
+              "Asset Management",
+              "Other"
             ]
           },
           {
@@ -168774,15 +168774,15 @@
             "format": false,
             "detail_spec": null,
             "valid_values": [
-              "ALL",
-              "DATA",
-              "PRIVACY",
-              "SECURITY",
-              "IT_INFRASTRUCTURE",
-              "SOFTWARE_DEVELOPMENT",
-              "CORPORATE",
-              "ASSET_MANAGEMENT",
-              "OTHER"
+              "All Domains",
+              "Data",
+              "Privacy",
+              "Security",
+              "IT Infrastructure",
+              "Software Development",
+              "Corporate",
+              "Asset Management",
+              "Other"
             ]
           },
           {
@@ -168985,15 +168985,15 @@
             "format": false,
             "detail_spec": null,
             "valid_values": [
-              "ALL",
-              "DATA",
-              "PRIVACY",
-              "SECURITY",
-              "IT_INFRASTRUCTURE",
-              "SOFTWARE_DEVELOPMENT",
-              "CORPORATE",
-              "ASSET_MANAGEMENT",
-              "OTHER"
+              "All Domains",
+              "Data",
+              "Privacy",
+              "Security",
+              "IT Infrastructure",
+              "Software Development",
+              "Corporate",
+              "Asset Management",
+              "Other"
             ]
           },
           {
@@ -169158,15 +169158,15 @@
             "format": false,
             "detail_spec": null,
             "valid_values": [
-              "ALL",
-              "DATA",
-              "PRIVACY",
-              "SECURITY",
-              "IT_INFRASTRUCTURE",
-              "SOFTWARE_DEVELOPMENT",
-              "CORPORATE",
-              "ASSET_MANAGEMENT",
-              "OTHER"
+              "All Domains",
+              "Data",
+              "Privacy",
+              "Security",
+              "IT Infrastructure",
+              "Software Development",
+              "Corporate",
+              "Asset Management",
+              "Other"
             ]
           },
           {
@@ -169511,15 +169511,15 @@
             "format": false,
             "detail_spec": null,
             "valid_values": [
-              "ALL",
-              "DATA",
-              "PRIVACY",
-              "SECURITY",
-              "IT_INFRASTRUCTURE",
-              "SOFTWARE_DEVELOPMENT",
-              "CORPORATE",
-              "ASSET_MANAGEMENT",
-              "OTHER"
+              "All Domains",
+              "Data",
+              "Privacy",
+              "Security",
+              "IT Infrastructure",
+              "Software Development",
+              "Corporate",
+              "Asset Management",
+              "Other"
             ]
           },
           {
@@ -169873,15 +169873,15 @@
             "format": false,
             "detail_spec": null,
             "valid_values": [
-              "ALL",
-              "DATA",
-              "PRIVACY",
-              "SECURITY",
-              "IT_INFRASTRUCTURE",
-              "SOFTWARE_DEVELOPMENT",
-              "CORPORATE",
-              "ASSET_MANAGEMENT",
-              "OTHER"
+              "All Domains",
+              "Data",
+              "Privacy",
+              "Security",
+              "IT Infrastructure",
+              "Software Development",
+              "Corporate",
+              "Asset Management",
+              "Other"
             ]
           },
           {
@@ -170297,15 +170297,15 @@
             "format": false,
             "detail_spec": null,
             "valid_values": [
-              "ALL",
-              "DATA",
-              "PRIVACY",
-              "SECURITY",
-              "IT_INFRASTRUCTURE",
-              "SOFTWARE_DEVELOPMENT",
-              "CORPORATE",
-              "ASSET_MANAGEMENT",
-              "OTHER"
+              "All Domains",
+              "Data",
+              "Privacy",
+              "Security",
+              "IT Infrastructure",
+              "Software Development",
+              "Corporate",
+              "Asset Management",
+              "Other"
             ]
           },
           {
@@ -170667,15 +170667,15 @@
             "format": false,
             "detail_spec": null,
             "valid_values": [
-              "ALL",
-              "DATA",
-              "PRIVACY",
-              "SECURITY",
-              "IT_INFRASTRUCTURE",
-              "SOFTWARE_DEVELOPMENT",
-              "CORPORATE",
-              "ASSET_MANAGEMENT",
-              "OTHER"
+              "All Domains",
+              "Data",
+              "Privacy",
+              "Security",
+              "IT Infrastructure",
+              "Software Development",
+              "Corporate",
+              "Asset Management",
+              "Other"
             ]
           },
           {
@@ -170839,15 +170839,15 @@
             "format": false,
             "detail_spec": null,
             "valid_values": [
-              "ALL",
-              "DATA",
-              "PRIVACY",
-              "SECURITY",
-              "IT_INFRASTRUCTURE",
-              "SOFTWARE_DEVELOPMENT",
-              "CORPORATE",
-              "ASSET_MANAGEMENT",
-              "OTHER"
+              "All Domains",
+              "Data",
+              "Privacy",
+              "Security",
+              "IT Infrastructure",
+              "Software Development",
+              "Corporate",
+              "Asset Management",
+              "Other"
             ]
           },
           {
@@ -171012,15 +171012,15 @@
             "format": false,
             "detail_spec": null,
             "valid_values": [
-              "ALL",
-              "DATA",
-              "PRIVACY",
-              "SECURITY",
-              "IT_INFRASTRUCTURE",
-              "SOFTWARE_DEVELOPMENT",
-              "CORPORATE",
-              "ASSET_MANAGEMENT",
-              "OTHER"
+              "All Domains",
+              "Data",
+              "Privacy",
+              "Security",
+              "IT Infrastructure",
+              "Software Development",
+              "Corporate",
+              "Asset Management",
+              "Other"
             ]
           },
           {
@@ -171231,15 +171231,15 @@
             "format": false,
             "detail_spec": null,
             "valid_values": [
-              "ALL",
-              "DATA",
-              "PRIVACY",
-              "SECURITY",
-              "IT_INFRASTRUCTURE",
-              "SOFTWARE_DEVELOPMENT",
-              "CORPORATE",
-              "ASSET_MANAGEMENT",
-              "OTHER"
+              "All Domains",
+              "Data",
+              "Privacy",
+              "Security",
+              "IT Infrastructure",
+              "Software Development",
+              "Corporate",
+              "Asset Management",
+              "Other"
             ]
           },
           {
@@ -171412,15 +171412,15 @@
             "format": false,
             "detail_spec": null,
             "valid_values": [
-              "ALL",
-              "DATA",
-              "PRIVACY",
-              "SECURITY",
-              "IT_INFRASTRUCTURE",
-              "SOFTWARE_DEVELOPMENT",
-              "CORPORATE",
-              "ASSET_MANAGEMENT",
-              "OTHER"
+              "All Domains",
+              "Data",
+              "Privacy",
+              "Security",
+              "IT Infrastructure",
+              "Software Development",
+              "Corporate",
+              "Asset Management",
+              "Other"
             ]
           },
           {
@@ -171773,15 +171773,15 @@
             "format": false,
             "detail_spec": null,
             "valid_values": [
-              "ALL",
-              "DATA",
-              "PRIVACY",
-              "SECURITY",
-              "IT_INFRASTRUCTURE",
-              "SOFTWARE_DEVELOPMENT",
-              "CORPORATE",
-              "ASSET_MANAGEMENT",
-              "OTHER"
+              "All Domains",
+              "Data",
+              "Privacy",
+              "Security",
+              "IT Infrastructure",
+              "Software Development",
+              "Corporate",
+              "Asset Management",
+              "Other"
             ]
           },
           {
@@ -172143,15 +172143,15 @@
             "format": false,
             "detail_spec": null,
             "valid_values": [
-              "ALL",
-              "DATA",
-              "PRIVACY",
-              "SECURITY",
-              "IT_INFRASTRUCTURE",
-              "SOFTWARE_DEVELOPMENT",
-              "CORPORATE",
-              "ASSET_MANAGEMENT",
-              "OTHER"
+              "All Domains",
+              "Data",
+              "Privacy",
+              "Security",
+              "IT Infrastructure",
+              "Software Development",
+              "Corporate",
+              "Asset Management",
+              "Other"
             ]
           },
           {
@@ -172575,15 +172575,15 @@
             "format": false,
             "detail_spec": null,
             "valid_values": [
-              "ALL",
-              "DATA",
-              "PRIVACY",
-              "SECURITY",
-              "IT_INFRASTRUCTURE",
-              "SOFTWARE_DEVELOPMENT",
-              "CORPORATE",
-              "ASSET_MANAGEMENT",
-              "OTHER"
+              "All Domains",
+              "Data",
+              "Privacy",
+              "Security",
+              "IT Infrastructure",
+              "Software Development",
+              "Corporate",
+              "Asset Management",
+              "Other"
             ]
           },
           {
@@ -172953,15 +172953,15 @@
             "format": false,
             "detail_spec": null,
             "valid_values": [
-              "ALL",
-              "DATA",
-              "PRIVACY",
-              "SECURITY",
-              "IT_INFRASTRUCTURE",
-              "SOFTWARE_DEVELOPMENT",
-              "CORPORATE",
-              "ASSET_MANAGEMENT",
-              "OTHER"
+              "All Domains",
+              "Data",
+              "Privacy",
+              "Security",
+              "IT Infrastructure",
+              "Software Development",
+              "Corporate",
+              "Asset Management",
+              "Other"
             ]
           },
           {
@@ -173133,15 +173133,15 @@
             "format": false,
             "detail_spec": null,
             "valid_values": [
-              "ALL",
-              "DATA",
-              "PRIVACY",
-              "SECURITY",
-              "IT_INFRASTRUCTURE",
-              "SOFTWARE_DEVELOPMENT",
-              "CORPORATE",
-              "ASSET_MANAGEMENT",
-              "OTHER"
+              "All Domains",
+              "Data",
+              "Privacy",
+              "Security",
+              "IT Infrastructure",
+              "Software Development",
+              "Corporate",
+              "Asset Management",
+              "Other"
             ]
           },
           {
@@ -173354,15 +173354,15 @@
             "format": false,
             "detail_spec": null,
             "valid_values": [
-              "ALL",
-              "DATA",
-              "PRIVACY",
-              "SECURITY",
-              "IT_INFRASTRUCTURE",
-              "SOFTWARE_DEVELOPMENT",
-              "CORPORATE",
-              "ASSET_MANAGEMENT",
-              "OTHER"
+              "All Domains",
+              "Data",
+              "Privacy",
+              "Security",
+              "IT Infrastructure",
+              "Software Development",
+              "Corporate",
+              "Asset Management",
+              "Other"
             ]
           },
           {
@@ -173621,15 +173621,15 @@
             "format": false,
             "detail_spec": null,
             "valid_values": [
-              "ALL",
-              "DATA",
-              "PRIVACY",
-              "SECURITY",
-              "IT_INFRASTRUCTURE",
-              "SOFTWARE_DEVELOPMENT",
-              "CORPORATE",
-              "ASSET_MANAGEMENT",
-              "OTHER"
+              "All Domains",
+              "Data",
+              "Privacy",
+              "Security",
+              "IT Infrastructure",
+              "Software Development",
+              "Corporate",
+              "Asset Management",
+              "Other"
             ]
           },
           {
@@ -173850,15 +173850,15 @@
             "format": false,
             "detail_spec": null,
             "valid_values": [
-              "ALL",
-              "DATA",
-              "PRIVACY",
-              "SECURITY",
-              "IT_INFRASTRUCTURE",
-              "SOFTWARE_DEVELOPMENT",
-              "CORPORATE",
-              "ASSET_MANAGEMENT",
-              "OTHER"
+              "All Domains",
+              "Data",
+              "Privacy",
+              "Security",
+              "IT Infrastructure",
+              "Software Development",
+              "Corporate",
+              "Asset Management",
+              "Other"
             ]
           },
           {
@@ -174259,15 +174259,15 @@
             "format": false,
             "detail_spec": null,
             "valid_values": [
-              "ALL",
-              "DATA",
-              "PRIVACY",
-              "SECURITY",
-              "IT_INFRASTRUCTURE",
-              "SOFTWARE_DEVELOPMENT",
-              "CORPORATE",
-              "ASSET_MANAGEMENT",
-              "OTHER"
+              "All Domains",
+              "Data",
+              "Privacy",
+              "Security",
+              "IT Infrastructure",
+              "Software Development",
+              "Corporate",
+              "Asset Management",
+              "Other"
             ]
           },
           {
@@ -174677,15 +174677,15 @@
             "format": false,
             "detail_spec": null,
             "valid_values": [
-              "ALL",
-              "DATA",
-              "PRIVACY",
-              "SECURITY",
-              "IT_INFRASTRUCTURE",
-              "SOFTWARE_DEVELOPMENT",
-              "CORPORATE",
-              "ASSET_MANAGEMENT",
-              "OTHER"
+              "All Domains",
+              "Data",
+              "Privacy",
+              "Security",
+              "IT Infrastructure",
+              "Software Development",
+              "Corporate",
+              "Asset Management",
+              "Other"
             ]
           },
           {
@@ -175157,15 +175157,15 @@
             "format": false,
             "detail_spec": null,
             "valid_values": [
-              "ALL",
-              "DATA",
-              "PRIVACY",
-              "SECURITY",
-              "IT_INFRASTRUCTURE",
-              "SOFTWARE_DEVELOPMENT",
-              "CORPORATE",
-              "ASSET_MANAGEMENT",
-              "OTHER"
+              "All Domains",
+              "Data",
+              "Privacy",
+              "Security",
+              "IT Infrastructure",
+              "Software Development",
+              "Corporate",
+              "Asset Management",
+              "Other"
             ]
           },
           {
@@ -175583,15 +175583,15 @@
             "format": false,
             "detail_spec": null,
             "valid_values": [
-              "ALL",
-              "DATA",
-              "PRIVACY",
-              "SECURITY",
-              "IT_INFRASTRUCTURE",
-              "SOFTWARE_DEVELOPMENT",
-              "CORPORATE",
-              "ASSET_MANAGEMENT",
-              "OTHER"
+              "All Domains",
+              "Data",
+              "Privacy",
+              "Security",
+              "IT Infrastructure",
+              "Software Development",
+              "Corporate",
+              "Asset Management",
+              "Other"
             ]
           },
           {
@@ -175811,15 +175811,15 @@
             "format": false,
             "detail_spec": null,
             "valid_values": [
-              "ALL",
-              "DATA",
-              "PRIVACY",
-              "SECURITY",
-              "IT_INFRASTRUCTURE",
-              "SOFTWARE_DEVELOPMENT",
-              "CORPORATE",
-              "ASSET_MANAGEMENT",
-              "OTHER"
+              "All Domains",
+              "Data",
+              "Privacy",
+              "Security",
+              "IT Infrastructure",
+              "Software Development",
+              "Corporate",
+              "Asset Management",
+              "Other"
             ]
           },
           {
@@ -175984,15 +175984,15 @@
             "format": false,
             "detail_spec": null,
             "valid_values": [
-              "ALL",
-              "DATA",
-              "PRIVACY",
-              "SECURITY",
-              "IT_INFRASTRUCTURE",
-              "SOFTWARE_DEVELOPMENT",
-              "CORPORATE",
-              "ASSET_MANAGEMENT",
-              "OTHER"
+              "All Domains",
+              "Data",
+              "Privacy",
+              "Security",
+              "IT Infrastructure",
+              "Software Development",
+              "Corporate",
+              "Asset Management",
+              "Other"
             ]
           },
           {
@@ -176203,15 +176203,15 @@
             "format": false,
             "detail_spec": null,
             "valid_values": [
-              "ALL",
-              "DATA",
-              "PRIVACY",
-              "SECURITY",
-              "IT_INFRASTRUCTURE",
-              "SOFTWARE_DEVELOPMENT",
-              "CORPORATE",
-              "ASSET_MANAGEMENT",
-              "OTHER"
+              "All Domains",
+              "Data",
+              "Privacy",
+              "Security",
+              "IT Infrastructure",
+              "Software Development",
+              "Corporate",
+              "Asset Management",
+              "Other"
             ]
           },
           {
@@ -176384,15 +176384,15 @@
             "format": false,
             "detail_spec": null,
             "valid_values": [
-              "ALL",
-              "DATA",
-              "PRIVACY",
-              "SECURITY",
-              "IT_INFRASTRUCTURE",
-              "SOFTWARE_DEVELOPMENT",
-              "CORPORATE",
-              "ASSET_MANAGEMENT",
-              "OTHER"
+              "All Domains",
+              "Data",
+              "Privacy",
+              "Security",
+              "IT Infrastructure",
+              "Software Development",
+              "Corporate",
+              "Asset Management",
+              "Other"
             ]
           },
           {
@@ -176745,15 +176745,15 @@
             "format": false,
             "detail_spec": null,
             "valid_values": [
-              "ALL",
-              "DATA",
-              "PRIVACY",
-              "SECURITY",
-              "IT_INFRASTRUCTURE",
-              "SOFTWARE_DEVELOPMENT",
-              "CORPORATE",
-              "ASSET_MANAGEMENT",
-              "OTHER"
+              "All Domains",
+              "Data",
+              "Privacy",
+              "Security",
+              "IT Infrastructure",
+              "Software Development",
+              "Corporate",
+              "Asset Management",
+              "Other"
             ]
           },
           {
@@ -177115,15 +177115,15 @@
             "format": false,
             "detail_spec": null,
             "valid_values": [
-              "ALL",
-              "DATA",
-              "PRIVACY",
-              "SECURITY",
-              "IT_INFRASTRUCTURE",
-              "SOFTWARE_DEVELOPMENT",
-              "CORPORATE",
-              "ASSET_MANAGEMENT",
-              "OTHER"
+              "All Domains",
+              "Data",
+              "Privacy",
+              "Security",
+              "IT Infrastructure",
+              "Software Development",
+              "Corporate",
+              "Asset Management",
+              "Other"
             ]
           },
           {
@@ -177547,15 +177547,15 @@
             "format": false,
             "detail_spec": null,
             "valid_values": [
-              "ALL",
-              "DATA",
-              "PRIVACY",
-              "SECURITY",
-              "IT_INFRASTRUCTURE",
-              "SOFTWARE_DEVELOPMENT",
-              "CORPORATE",
-              "ASSET_MANAGEMENT",
-              "OTHER"
+              "All Domains",
+              "Data",
+              "Privacy",
+              "Security",
+              "IT Infrastructure",
+              "Software Development",
+              "Corporate",
+              "Asset Management",
+              "Other"
             ]
           },
           {
@@ -177925,15 +177925,15 @@
             "format": false,
             "detail_spec": null,
             "valid_values": [
-              "ALL",
-              "DATA",
-              "PRIVACY",
-              "SECURITY",
-              "IT_INFRASTRUCTURE",
-              "SOFTWARE_DEVELOPMENT",
-              "CORPORATE",
-              "ASSET_MANAGEMENT",
-              "OTHER"
+              "All Domains",
+              "Data",
+              "Privacy",
+              "Security",
+              "IT Infrastructure",
+              "Software Development",
+              "Corporate",
+              "Asset Management",
+              "Other"
             ]
           },
           {
@@ -178105,15 +178105,15 @@
             "format": false,
             "detail_spec": null,
             "valid_values": [
-              "ALL",
-              "DATA",
-              "PRIVACY",
-              "SECURITY",
-              "IT_INFRASTRUCTURE",
-              "SOFTWARE_DEVELOPMENT",
-              "CORPORATE",
-              "ASSET_MANAGEMENT",
-              "OTHER"
+              "All Domains",
+              "Data",
+              "Privacy",
+              "Security",
+              "IT Infrastructure",
+              "Software Development",
+              "Corporate",
+              "Asset Management",
+              "Other"
             ]
           },
           {
@@ -178262,15 +178262,15 @@
             "format": false,
             "detail_spec": null,
             "valid_values": [
-              "ALL",
-              "DATA",
-              "PRIVACY",
-              "SECURITY",
-              "IT_INFRASTRUCTURE",
-              "SOFTWARE_DEVELOPMENT",
-              "CORPORATE",
-              "ASSET_MANAGEMENT",
-              "OTHER"
+              "All Domains",
+              "Data",
+              "Privacy",
+              "Security",
+              "IT Infrastructure",
+              "Software Development",
+              "Corporate",
+              "Asset Management",
+              "Other"
             ]
           },
           {
@@ -178465,15 +178465,15 @@
             "format": false,
             "detail_spec": null,
             "valid_values": [
-              "ALL",
-              "DATA",
-              "PRIVACY",
-              "SECURITY",
-              "IT_INFRASTRUCTURE",
-              "SOFTWARE_DEVELOPMENT",
-              "CORPORATE",
-              "ASSET_MANAGEMENT",
-              "OTHER"
+              "All Domains",
+              "Data",
+              "Privacy",
+              "Security",
+              "IT Infrastructure",
+              "Software Development",
+              "Corporate",
+              "Asset Management",
+              "Other"
             ]
           },
           {
@@ -178630,15 +178630,15 @@
             "format": false,
             "detail_spec": null,
             "valid_values": [
-              "ALL",
-              "DATA",
-              "PRIVACY",
-              "SECURITY",
-              "IT_INFRASTRUCTURE",
-              "SOFTWARE_DEVELOPMENT",
-              "CORPORATE",
-              "ASSET_MANAGEMENT",
-              "OTHER"
+              "All Domains",
+              "Data",
+              "Privacy",
+              "Security",
+              "IT Infrastructure",
+              "Software Development",
+              "Corporate",
+              "Asset Management",
+              "Other"
             ]
           },
           {
@@ -178975,15 +178975,15 @@
             "format": false,
             "detail_spec": null,
             "valid_values": [
-              "ALL",
-              "DATA",
-              "PRIVACY",
-              "SECURITY",
-              "IT_INFRASTRUCTURE",
-              "SOFTWARE_DEVELOPMENT",
-              "CORPORATE",
-              "ASSET_MANAGEMENT",
-              "OTHER"
+              "All Domains",
+              "Data",
+              "Privacy",
+              "Security",
+              "IT Infrastructure",
+              "Software Development",
+              "Corporate",
+              "Asset Management",
+              "Other"
             ]
           },
           {
@@ -179329,15 +179329,15 @@
             "format": false,
             "detail_spec": null,
             "valid_values": [
-              "ALL",
-              "DATA",
-              "PRIVACY",
-              "SECURITY",
-              "IT_INFRASTRUCTURE",
-              "SOFTWARE_DEVELOPMENT",
-              "CORPORATE",
-              "ASSET_MANAGEMENT",
-              "OTHER"
+              "All Domains",
+              "Data",
+              "Privacy",
+              "Security",
+              "IT Infrastructure",
+              "Software Development",
+              "Corporate",
+              "Asset Management",
+              "Other"
             ]
           },
           {
@@ -179745,15 +179745,15 @@
             "format": false,
             "detail_spec": null,
             "valid_values": [
-              "ALL",
-              "DATA",
-              "PRIVACY",
-              "SECURITY",
-              "IT_INFRASTRUCTURE",
-              "SOFTWARE_DEVELOPMENT",
-              "CORPORATE",
-              "ASSET_MANAGEMENT",
-              "OTHER"
+              "All Domains",
+              "Data",
+              "Privacy",
+              "Security",
+              "IT Infrastructure",
+              "Software Development",
+              "Corporate",
+              "Asset Management",
+              "Other"
             ]
           },
           {
@@ -180107,15 +180107,15 @@
             "format": false,
             "detail_spec": null,
             "valid_values": [
-              "ALL",
-              "DATA",
-              "PRIVACY",
-              "SECURITY",
-              "IT_INFRASTRUCTURE",
-              "SOFTWARE_DEVELOPMENT",
-              "CORPORATE",
-              "ASSET_MANAGEMENT",
-              "OTHER"
+              "All Domains",
+              "Data",
+              "Privacy",
+              "Security",
+              "IT Infrastructure",
+              "Software Development",
+              "Corporate",
+              "Asset Management",
+              "Other"
             ]
           },
           {
@@ -180271,15 +180271,15 @@
             "format": false,
             "detail_spec": null,
             "valid_values": [
-              "ALL",
-              "DATA",
-              "PRIVACY",
-              "SECURITY",
-              "IT_INFRASTRUCTURE",
-              "SOFTWARE_DEVELOPMENT",
-              "CORPORATE",
-              "ASSET_MANAGEMENT",
-              "OTHER"
+              "All Domains",
+              "Data",
+              "Privacy",
+              "Security",
+              "IT Infrastructure",
+              "Software Development",
+              "Corporate",
+              "Asset Management",
+              "Other"
             ]
           },
           {
@@ -180428,15 +180428,15 @@
             "format": false,
             "detail_spec": null,
             "valid_values": [
-              "ALL",
-              "DATA",
-              "PRIVACY",
-              "SECURITY",
-              "IT_INFRASTRUCTURE",
-              "SOFTWARE_DEVELOPMENT",
-              "CORPORATE",
-              "ASSET_MANAGEMENT",
-              "OTHER"
+              "All Domains",
+              "Data",
+              "Privacy",
+              "Security",
+              "IT Infrastructure",
+              "Software Development",
+              "Corporate",
+              "Asset Management",
+              "Other"
             ]
           },
           {
@@ -180631,15 +180631,15 @@
             "format": false,
             "detail_spec": null,
             "valid_values": [
-              "ALL",
-              "DATA",
-              "PRIVACY",
-              "SECURITY",
-              "IT_INFRASTRUCTURE",
-              "SOFTWARE_DEVELOPMENT",
-              "CORPORATE",
-              "ASSET_MANAGEMENT",
-              "OTHER"
+              "All Domains",
+              "Data",
+              "Privacy",
+              "Security",
+              "IT Infrastructure",
+              "Software Development",
+              "Corporate",
+              "Asset Management",
+              "Other"
             ]
           },
           {
@@ -180796,15 +180796,15 @@
             "format": false,
             "detail_spec": null,
             "valid_values": [
-              "ALL",
-              "DATA",
-              "PRIVACY",
-              "SECURITY",
-              "IT_INFRASTRUCTURE",
-              "SOFTWARE_DEVELOPMENT",
-              "CORPORATE",
-              "ASSET_MANAGEMENT",
-              "OTHER"
+              "All Domains",
+              "Data",
+              "Privacy",
+              "Security",
+              "IT Infrastructure",
+              "Software Development",
+              "Corporate",
+              "Asset Management",
+              "Other"
             ]
           },
           {
@@ -181141,15 +181141,15 @@
             "format": false,
             "detail_spec": null,
             "valid_values": [
-              "ALL",
-              "DATA",
-              "PRIVACY",
-              "SECURITY",
-              "IT_INFRASTRUCTURE",
-              "SOFTWARE_DEVELOPMENT",
-              "CORPORATE",
-              "ASSET_MANAGEMENT",
-              "OTHER"
+              "All Domains",
+              "Data",
+              "Privacy",
+              "Security",
+              "IT Infrastructure",
+              "Software Development",
+              "Corporate",
+              "Asset Management",
+              "Other"
             ]
           },
           {
@@ -181495,15 +181495,15 @@
             "format": false,
             "detail_spec": null,
             "valid_values": [
-              "ALL",
-              "DATA",
-              "PRIVACY",
-              "SECURITY",
-              "IT_INFRASTRUCTURE",
-              "SOFTWARE_DEVELOPMENT",
-              "CORPORATE",
-              "ASSET_MANAGEMENT",
-              "OTHER"
+              "All Domains",
+              "Data",
+              "Privacy",
+              "Security",
+              "IT Infrastructure",
+              "Software Development",
+              "Corporate",
+              "Asset Management",
+              "Other"
             ]
           },
           {
@@ -181911,15 +181911,15 @@
             "format": false,
             "detail_spec": null,
             "valid_values": [
-              "ALL",
-              "DATA",
-              "PRIVACY",
-              "SECURITY",
-              "IT_INFRASTRUCTURE",
-              "SOFTWARE_DEVELOPMENT",
-              "CORPORATE",
-              "ASSET_MANAGEMENT",
-              "OTHER"
+              "All Domains",
+              "Data",
+              "Privacy",
+              "Security",
+              "IT Infrastructure",
+              "Software Development",
+              "Corporate",
+              "Asset Management",
+              "Other"
             ]
           },
           {
@@ -182273,15 +182273,15 @@
             "format": false,
             "detail_spec": null,
             "valid_values": [
-              "ALL",
-              "DATA",
-              "PRIVACY",
-              "SECURITY",
-              "IT_INFRASTRUCTURE",
-              "SOFTWARE_DEVELOPMENT",
-              "CORPORATE",
-              "ASSET_MANAGEMENT",
-              "OTHER"
+              "All Domains",
+              "Data",
+              "Privacy",
+              "Security",
+              "IT Infrastructure",
+              "Software Development",
+              "Corporate",
+              "Asset Management",
+              "Other"
             ]
           },
           {
@@ -182437,15 +182437,15 @@
             "format": false,
             "detail_spec": null,
             "valid_values": [
-              "ALL",
-              "DATA",
-              "PRIVACY",
-              "SECURITY",
-              "IT_INFRASTRUCTURE",
-              "SOFTWARE_DEVELOPMENT",
-              "CORPORATE",
-              "ASSET_MANAGEMENT",
-              "OTHER"
+              "All Domains",
+              "Data",
+              "Privacy",
+              "Security",
+              "IT Infrastructure",
+              "Software Development",
+              "Corporate",
+              "Asset Management",
+              "Other"
             ]
           },
           {
@@ -182602,15 +182602,15 @@
             "format": false,
             "detail_spec": null,
             "valid_values": [
-              "ALL",
-              "DATA",
-              "PRIVACY",
-              "SECURITY",
-              "IT_INFRASTRUCTURE",
-              "SOFTWARE_DEVELOPMENT",
-              "CORPORATE",
-              "ASSET_MANAGEMENT",
-              "OTHER"
+              "All Domains",
+              "Data",
+              "Privacy",
+              "Security",
+              "IT Infrastructure",
+              "Software Development",
+              "Corporate",
+              "Asset Management",
+              "Other"
             ]
           },
           {
@@ -182813,15 +182813,15 @@
             "format": false,
             "detail_spec": null,
             "valid_values": [
-              "ALL",
-              "DATA",
-              "PRIVACY",
-              "SECURITY",
-              "IT_INFRASTRUCTURE",
-              "SOFTWARE_DEVELOPMENT",
-              "CORPORATE",
-              "ASSET_MANAGEMENT",
-              "OTHER"
+              "All Domains",
+              "Data",
+              "Privacy",
+              "Security",
+              "IT Infrastructure",
+              "Software Development",
+              "Corporate",
+              "Asset Management",
+              "Other"
             ]
           },
           {
@@ -182986,15 +182986,15 @@
             "format": false,
             "detail_spec": null,
             "valid_values": [
-              "ALL",
-              "DATA",
-              "PRIVACY",
-              "SECURITY",
-              "IT_INFRASTRUCTURE",
-              "SOFTWARE_DEVELOPMENT",
-              "CORPORATE",
-              "ASSET_MANAGEMENT",
-              "OTHER"
+              "All Domains",
+              "Data",
+              "Privacy",
+              "Security",
+              "IT Infrastructure",
+              "Software Development",
+              "Corporate",
+              "Asset Management",
+              "Other"
             ]
           },
           {
@@ -183339,15 +183339,15 @@
             "format": false,
             "detail_spec": null,
             "valid_values": [
-              "ALL",
-              "DATA",
-              "PRIVACY",
-              "SECURITY",
-              "IT_INFRASTRUCTURE",
-              "SOFTWARE_DEVELOPMENT",
-              "CORPORATE",
-              "ASSET_MANAGEMENT",
-              "OTHER"
+              "All Domains",
+              "Data",
+              "Privacy",
+              "Security",
+              "IT Infrastructure",
+              "Software Development",
+              "Corporate",
+              "Asset Management",
+              "Other"
             ]
           },
           {
@@ -183701,15 +183701,15 @@
             "format": false,
             "detail_spec": null,
             "valid_values": [
-              "ALL",
-              "DATA",
-              "PRIVACY",
-              "SECURITY",
-              "IT_INFRASTRUCTURE",
-              "SOFTWARE_DEVELOPMENT",
-              "CORPORATE",
-              "ASSET_MANAGEMENT",
-              "OTHER"
+              "All Domains",
+              "Data",
+              "Privacy",
+              "Security",
+              "IT Infrastructure",
+              "Software Development",
+              "Corporate",
+              "Asset Management",
+              "Other"
             ]
           },
           {
@@ -184125,15 +184125,15 @@
             "format": false,
             "detail_spec": null,
             "valid_values": [
-              "ALL",
-              "DATA",
-              "PRIVACY",
-              "SECURITY",
-              "IT_INFRASTRUCTURE",
-              "SOFTWARE_DEVELOPMENT",
-              "CORPORATE",
-              "ASSET_MANAGEMENT",
-              "OTHER"
+              "All Domains",
+              "Data",
+              "Privacy",
+              "Security",
+              "IT Infrastructure",
+              "Software Development",
+              "Corporate",
+              "Asset Management",
+              "Other"
             ]
           },
           {
@@ -184495,15 +184495,15 @@
             "format": false,
             "detail_spec": null,
             "valid_values": [
-              "ALL",
-              "DATA",
-              "PRIVACY",
-              "SECURITY",
-              "IT_INFRASTRUCTURE",
-              "SOFTWARE_DEVELOPMENT",
-              "CORPORATE",
-              "ASSET_MANAGEMENT",
-              "OTHER"
+              "All Domains",
+              "Data",
+              "Privacy",
+              "Security",
+              "IT Infrastructure",
+              "Software Development",
+              "Corporate",
+              "Asset Management",
+              "Other"
             ]
           },
           {
@@ -184667,15 +184667,15 @@
             "format": false,
             "detail_spec": null,
             "valid_values": [
-              "ALL",
-              "DATA",
-              "PRIVACY",
-              "SECURITY",
-              "IT_INFRASTRUCTURE",
-              "SOFTWARE_DEVELOPMENT",
-              "CORPORATE",
-              "ASSET_MANAGEMENT",
-              "OTHER"
+              "All Domains",
+              "Data",
+              "Privacy",
+              "Security",
+              "IT Infrastructure",
+              "Software Development",
+              "Corporate",
+              "Asset Management",
+              "Other"
             ]
           },
           {
@@ -184832,15 +184832,15 @@
             "format": false,
             "detail_spec": null,
             "valid_values": [
-              "ALL",
-              "DATA",
-              "PRIVACY",
-              "SECURITY",
-              "IT_INFRASTRUCTURE",
-              "SOFTWARE_DEVELOPMENT",
-              "CORPORATE",
-              "ASSET_MANAGEMENT",
-              "OTHER"
+              "All Domains",
+              "Data",
+              "Privacy",
+              "Security",
+              "IT Infrastructure",
+              "Software Development",
+              "Corporate",
+              "Asset Management",
+              "Other"
             ]
           },
           {
@@ -185043,15 +185043,15 @@
             "format": false,
             "detail_spec": null,
             "valid_values": [
-              "ALL",
-              "DATA",
-              "PRIVACY",
-              "SECURITY",
-              "IT_INFRASTRUCTURE",
-              "SOFTWARE_DEVELOPMENT",
-              "CORPORATE",
-              "ASSET_MANAGEMENT",
-              "OTHER"
+              "All Domains",
+              "Data",
+              "Privacy",
+              "Security",
+              "IT Infrastructure",
+              "Software Development",
+              "Corporate",
+              "Asset Management",
+              "Other"
             ]
           },
           {
@@ -185216,15 +185216,15 @@
             "format": false,
             "detail_spec": null,
             "valid_values": [
-              "ALL",
-              "DATA",
-              "PRIVACY",
-              "SECURITY",
-              "IT_INFRASTRUCTURE",
-              "SOFTWARE_DEVELOPMENT",
-              "CORPORATE",
-              "ASSET_MANAGEMENT",
-              "OTHER"
+              "All Domains",
+              "Data",
+              "Privacy",
+              "Security",
+              "IT Infrastructure",
+              "Software Development",
+              "Corporate",
+              "Asset Management",
+              "Other"
             ]
           },
           {
@@ -185569,15 +185569,15 @@
             "format": false,
             "detail_spec": null,
             "valid_values": [
-              "ALL",
-              "DATA",
-              "PRIVACY",
-              "SECURITY",
-              "IT_INFRASTRUCTURE",
-              "SOFTWARE_DEVELOPMENT",
-              "CORPORATE",
-              "ASSET_MANAGEMENT",
-              "OTHER"
+              "All Domains",
+              "Data",
+              "Privacy",
+              "Security",
+              "IT Infrastructure",
+              "Software Development",
+              "Corporate",
+              "Asset Management",
+              "Other"
             ]
           },
           {
@@ -185931,15 +185931,15 @@
             "format": false,
             "detail_spec": null,
             "valid_values": [
-              "ALL",
-              "DATA",
-              "PRIVACY",
-              "SECURITY",
-              "IT_INFRASTRUCTURE",
-              "SOFTWARE_DEVELOPMENT",
-              "CORPORATE",
-              "ASSET_MANAGEMENT",
-              "OTHER"
+              "All Domains",
+              "Data",
+              "Privacy",
+              "Security",
+              "IT Infrastructure",
+              "Software Development",
+              "Corporate",
+              "Asset Management",
+              "Other"
             ]
           },
           {
@@ -186355,15 +186355,15 @@
             "format": false,
             "detail_spec": null,
             "valid_values": [
-              "ALL",
-              "DATA",
-              "PRIVACY",
-              "SECURITY",
-              "IT_INFRASTRUCTURE",
-              "SOFTWARE_DEVELOPMENT",
-              "CORPORATE",
-              "ASSET_MANAGEMENT",
-              "OTHER"
+              "All Domains",
+              "Data",
+              "Privacy",
+              "Security",
+              "IT Infrastructure",
+              "Software Development",
+              "Corporate",
+              "Asset Management",
+              "Other"
             ]
           },
           {
@@ -186725,15 +186725,15 @@
             "format": false,
             "detail_spec": null,
             "valid_values": [
-              "ALL",
-              "DATA",
-              "PRIVACY",
-              "SECURITY",
-              "IT_INFRASTRUCTURE",
-              "SOFTWARE_DEVELOPMENT",
-              "CORPORATE",
-              "ASSET_MANAGEMENT",
-              "OTHER"
+              "All Domains",
+              "Data",
+              "Privacy",
+              "Security",
+              "IT Infrastructure",
+              "Software Development",
+              "Corporate",
+              "Asset Management",
+              "Other"
             ]
           },
           {
@@ -186897,15 +186897,15 @@
             "format": false,
             "detail_spec": null,
             "valid_values": [
-              "ALL",
-              "DATA",
-              "PRIVACY",
-              "SECURITY",
-              "IT_INFRASTRUCTURE",
-              "SOFTWARE_DEVELOPMENT",
-              "CORPORATE",
-              "ASSET_MANAGEMENT",
-              "OTHER"
+              "All Domains",
+              "Data",
+              "Privacy",
+              "Security",
+              "IT Infrastructure",
+              "Software Development",
+              "Corporate",
+              "Asset Management",
+              "Other"
             ]
           },
           {
@@ -187086,15 +187086,15 @@
             "format": false,
             "detail_spec": null,
             "valid_values": [
-              "ALL",
-              "DATA",
-              "PRIVACY",
-              "SECURITY",
-              "IT_INFRASTRUCTURE",
-              "SOFTWARE_DEVELOPMENT",
-              "CORPORATE",
-              "ASSET_MANAGEMENT",
-              "OTHER"
+              "All Domains",
+              "Data",
+              "Privacy",
+              "Security",
+              "IT Infrastructure",
+              "Software Development",
+              "Corporate",
+              "Asset Management",
+              "Other"
             ]
           },
           {
@@ -187321,15 +187321,15 @@
             "format": false,
             "detail_spec": null,
             "valid_values": [
-              "ALL",
-              "DATA",
-              "PRIVACY",
-              "SECURITY",
-              "IT_INFRASTRUCTURE",
-              "SOFTWARE_DEVELOPMENT",
-              "CORPORATE",
-              "ASSET_MANAGEMENT",
-              "OTHER"
+              "All Domains",
+              "Data",
+              "Privacy",
+              "Security",
+              "IT Infrastructure",
+              "Software Development",
+              "Corporate",
+              "Asset Management",
+              "Other"
             ]
           },
           {
@@ -187518,15 +187518,15 @@
             "format": false,
             "detail_spec": null,
             "valid_values": [
-              "ALL",
-              "DATA",
-              "PRIVACY",
-              "SECURITY",
-              "IT_INFRASTRUCTURE",
-              "SOFTWARE_DEVELOPMENT",
-              "CORPORATE",
-              "ASSET_MANAGEMENT",
-              "OTHER"
+              "All Domains",
+              "Data",
+              "Privacy",
+              "Security",
+              "IT Infrastructure",
+              "Software Development",
+              "Corporate",
+              "Asset Management",
+              "Other"
             ]
           },
           {
@@ -187895,15 +187895,15 @@
             "format": false,
             "detail_spec": null,
             "valid_values": [
-              "ALL",
-              "DATA",
-              "PRIVACY",
-              "SECURITY",
-              "IT_INFRASTRUCTURE",
-              "SOFTWARE_DEVELOPMENT",
-              "CORPORATE",
-              "ASSET_MANAGEMENT",
-              "OTHER"
+              "All Domains",
+              "Data",
+              "Privacy",
+              "Security",
+              "IT Infrastructure",
+              "Software Development",
+              "Corporate",
+              "Asset Management",
+              "Other"
             ]
           },
           {
@@ -188281,15 +188281,15 @@
             "format": false,
             "detail_spec": null,
             "valid_values": [
-              "ALL",
-              "DATA",
-              "PRIVACY",
-              "SECURITY",
-              "IT_INFRASTRUCTURE",
-              "SOFTWARE_DEVELOPMENT",
-              "CORPORATE",
-              "ASSET_MANAGEMENT",
-              "OTHER"
+              "All Domains",
+              "Data",
+              "Privacy",
+              "Security",
+              "IT Infrastructure",
+              "Software Development",
+              "Corporate",
+              "Asset Management",
+              "Other"
             ]
           },
           {
@@ -188729,15 +188729,15 @@
             "format": false,
             "detail_spec": null,
             "valid_values": [
-              "ALL",
-              "DATA",
-              "PRIVACY",
-              "SECURITY",
-              "IT_INFRASTRUCTURE",
-              "SOFTWARE_DEVELOPMENT",
-              "CORPORATE",
-              "ASSET_MANAGEMENT",
-              "OTHER"
+              "All Domains",
+              "Data",
+              "Privacy",
+              "Security",
+              "IT Infrastructure",
+              "Software Development",
+              "Corporate",
+              "Asset Management",
+              "Other"
             ]
           },
           {
@@ -189123,15 +189123,15 @@
             "format": false,
             "detail_spec": null,
             "valid_values": [
-              "ALL",
-              "DATA",
-              "PRIVACY",
-              "SECURITY",
-              "IT_INFRASTRUCTURE",
-              "SOFTWARE_DEVELOPMENT",
-              "CORPORATE",
-              "ASSET_MANAGEMENT",
-              "OTHER"
+              "All Domains",
+              "Data",
+              "Privacy",
+              "Security",
+              "IT Infrastructure",
+              "Software Development",
+              "Corporate",
+              "Asset Management",
+              "Other"
             ]
           },
           {
@@ -189319,15 +189319,15 @@
             "format": false,
             "detail_spec": null,
             "valid_values": [
-              "ALL",
-              "DATA",
-              "PRIVACY",
-              "SECURITY",
-              "IT_INFRASTRUCTURE",
-              "SOFTWARE_DEVELOPMENT",
-              "CORPORATE",
-              "ASSET_MANAGEMENT",
-              "OTHER"
+              "All Domains",
+              "Data",
+              "Privacy",
+              "Security",
+              "IT Infrastructure",
+              "Software Development",
+              "Corporate",
+              "Asset Management",
+              "Other"
             ]
           },
           {
@@ -189476,15 +189476,15 @@
             "format": false,
             "detail_spec": null,
             "valid_values": [
-              "ALL",
-              "DATA",
-              "PRIVACY",
-              "SECURITY",
-              "IT_INFRASTRUCTURE",
-              "SOFTWARE_DEVELOPMENT",
-              "CORPORATE",
-              "ASSET_MANAGEMENT",
-              "OTHER"
+              "All Domains",
+              "Data",
+              "Privacy",
+              "Security",
+              "IT Infrastructure",
+              "Software Development",
+              "Corporate",
+              "Asset Management",
+              "Other"
             ]
           },
           {
@@ -189679,15 +189679,15 @@
             "format": false,
             "detail_spec": null,
             "valid_values": [
-              "ALL",
-              "DATA",
-              "PRIVACY",
-              "SECURITY",
-              "IT_INFRASTRUCTURE",
-              "SOFTWARE_DEVELOPMENT",
-              "CORPORATE",
-              "ASSET_MANAGEMENT",
-              "OTHER"
+              "All Domains",
+              "Data",
+              "Privacy",
+              "Security",
+              "IT Infrastructure",
+              "Software Development",
+              "Corporate",
+              "Asset Management",
+              "Other"
             ]
           },
           {
@@ -189844,15 +189844,15 @@
             "format": false,
             "detail_spec": null,
             "valid_values": [
-              "ALL",
-              "DATA",
-              "PRIVACY",
-              "SECURITY",
-              "IT_INFRASTRUCTURE",
-              "SOFTWARE_DEVELOPMENT",
-              "CORPORATE",
-              "ASSET_MANAGEMENT",
-              "OTHER"
+              "All Domains",
+              "Data",
+              "Privacy",
+              "Security",
+              "IT Infrastructure",
+              "Software Development",
+              "Corporate",
+              "Asset Management",
+              "Other"
             ]
           },
           {
@@ -190189,15 +190189,15 @@
             "format": false,
             "detail_spec": null,
             "valid_values": [
-              "ALL",
-              "DATA",
-              "PRIVACY",
-              "SECURITY",
-              "IT_INFRASTRUCTURE",
-              "SOFTWARE_DEVELOPMENT",
-              "CORPORATE",
-              "ASSET_MANAGEMENT",
-              "OTHER"
+              "All Domains",
+              "Data",
+              "Privacy",
+              "Security",
+              "IT Infrastructure",
+              "Software Development",
+              "Corporate",
+              "Asset Management",
+              "Other"
             ]
           },
           {
@@ -190543,15 +190543,15 @@
             "format": false,
             "detail_spec": null,
             "valid_values": [
-              "ALL",
-              "DATA",
-              "PRIVACY",
-              "SECURITY",
-              "IT_INFRASTRUCTURE",
-              "SOFTWARE_DEVELOPMENT",
-              "CORPORATE",
-              "ASSET_MANAGEMENT",
-              "OTHER"
+              "All Domains",
+              "Data",
+              "Privacy",
+              "Security",
+              "IT Infrastructure",
+              "Software Development",
+              "Corporate",
+              "Asset Management",
+              "Other"
             ]
           },
           {
@@ -190959,15 +190959,15 @@
             "format": false,
             "detail_spec": null,
             "valid_values": [
-              "ALL",
-              "DATA",
-              "PRIVACY",
-              "SECURITY",
-              "IT_INFRASTRUCTURE",
-              "SOFTWARE_DEVELOPMENT",
-              "CORPORATE",
-              "ASSET_MANAGEMENT",
-              "OTHER"
+              "All Domains",
+              "Data",
+              "Privacy",
+              "Security",
+              "IT Infrastructure",
+              "Software Development",
+              "Corporate",
+              "Asset Management",
+              "Other"
             ]
           },
           {
@@ -191321,15 +191321,15 @@
             "format": false,
             "detail_spec": null,
             "valid_values": [
-              "ALL",
-              "DATA",
-              "PRIVACY",
-              "SECURITY",
-              "IT_INFRASTRUCTURE",
-              "SOFTWARE_DEVELOPMENT",
-              "CORPORATE",
-              "ASSET_MANAGEMENT",
-              "OTHER"
+              "All Domains",
+              "Data",
+              "Privacy",
+              "Security",
+              "IT Infrastructure",
+              "Software Development",
+              "Corporate",
+              "Asset Management",
+              "Other"
             ]
           },
           {
@@ -221615,15 +221615,15 @@
             "format": false,
             "detail_spec": null,
             "valid_values": [
-              "ALL",
-              "DATA",
-              "PRIVACY",
-              "SECURITY",
-              "IT_INFRASTRUCTURE",
-              "SOFTWARE_DEVELOPMENT",
-              "CORPORATE",
-              "ASSET_MANAGEMENT",
-              "OTHER"
+              "All Domains",
+              "Data",
+              "Privacy",
+              "Security",
+              "IT Infrastructure",
+              "Software Development",
+              "Corporate",
+              "Asset Management",
+              "Other"
             ]
           },
           {
@@ -221748,15 +221748,15 @@
             "format": false,
             "detail_spec": null,
             "valid_values": [
-              "ALL",
-              "DATA",
-              "PRIVACY",
-              "SECURITY",
-              "IT_INFRASTRUCTURE",
-              "SOFTWARE_DEVELOPMENT",
-              "CORPORATE",
-              "ASSET_MANAGEMENT",
-              "OTHER"
+              "All Domains",
+              "Data",
+              "Privacy",
+              "Security",
+              "IT Infrastructure",
+              "Software Development",
+              "Corporate",
+              "Asset Management",
+              "Other"
             ]
           },
           {
@@ -221927,15 +221927,15 @@
             "format": false,
             "detail_spec": null,
             "valid_values": [
-              "ALL",
-              "DATA",
-              "PRIVACY",
-              "SECURITY",
-              "IT_INFRASTRUCTURE",
-              "SOFTWARE_DEVELOPMENT",
-              "CORPORATE",
-              "ASSET_MANAGEMENT",
-              "OTHER"
+              "All Domains",
+              "Data",
+              "Privacy",
+              "Security",
+              "IT Infrastructure",
+              "Software Development",
+              "Corporate",
+              "Asset Management",
+              "Other"
             ]
           },
           {
@@ -222068,15 +222068,15 @@
             "format": false,
             "detail_spec": null,
             "valid_values": [
-              "ALL",
-              "DATA",
-              "PRIVACY",
-              "SECURITY",
-              "IT_INFRASTRUCTURE",
-              "SOFTWARE_DEVELOPMENT",
-              "CORPORATE",
-              "ASSET_MANAGEMENT",
-              "OTHER"
+              "All Domains",
+              "Data",
+              "Privacy",
+              "Security",
+              "IT Infrastructure",
+              "Software Development",
+              "Corporate",
+              "Asset Management",
+              "Other"
             ]
           },
           {
@@ -222387,15 +222387,15 @@
             "format": false,
             "detail_spec": null,
             "valid_values": [
-              "ALL",
-              "DATA",
-              "PRIVACY",
-              "SECURITY",
-              "IT_INFRASTRUCTURE",
-              "SOFTWARE_DEVELOPMENT",
-              "CORPORATE",
-              "ASSET_MANAGEMENT",
-              "OTHER"
+              "All Domains",
+              "Data",
+              "Privacy",
+              "Security",
+              "IT Infrastructure",
+              "Software Development",
+              "Corporate",
+              "Asset Management",
+              "Other"
             ]
           },
           {
@@ -222749,15 +222749,15 @@
             "format": false,
             "detail_spec": null,
             "valid_values": [
-              "ALL",
-              "DATA",
-              "PRIVACY",
-              "SECURITY",
-              "IT_INFRASTRUCTURE",
-              "SOFTWARE_DEVELOPMENT",
-              "CORPORATE",
-              "ASSET_MANAGEMENT",
-              "OTHER"
+              "All Domains",
+              "Data",
+              "Privacy",
+              "Security",
+              "IT Infrastructure",
+              "Software Development",
+              "Corporate",
+              "Asset Management",
+              "Other"
             ]
           },
           {
@@ -223173,15 +223173,15 @@
             "format": false,
             "detail_spec": null,
             "valid_values": [
-              "ALL",
-              "DATA",
-              "PRIVACY",
-              "SECURITY",
-              "IT_INFRASTRUCTURE",
-              "SOFTWARE_DEVELOPMENT",
-              "CORPORATE",
-              "ASSET_MANAGEMENT",
-              "OTHER"
+              "All Domains",
+              "Data",
+              "Privacy",
+              "Security",
+              "IT Infrastructure",
+              "Software Development",
+              "Corporate",
+              "Asset Management",
+              "Other"
             ]
           },
           {
@@ -223543,15 +223543,15 @@
             "format": false,
             "detail_spec": null,
             "valid_values": [
-              "ALL",
-              "DATA",
-              "PRIVACY",
-              "SECURITY",
-              "IT_INFRASTRUCTURE",
-              "SOFTWARE_DEVELOPMENT",
-              "CORPORATE",
-              "ASSET_MANAGEMENT",
-              "OTHER"
+              "All Domains",
+              "Data",
+              "Privacy",
+              "Security",
+              "IT Infrastructure",
+              "Software Development",
+              "Corporate",
+              "Asset Management",
+              "Other"
             ]
           },
           {
