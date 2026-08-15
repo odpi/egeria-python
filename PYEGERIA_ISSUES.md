@@ -2014,7 +2014,34 @@ module already uses). Not yet built.
 
 ### ISSUE-60: `find_glossary_terms`'s `sequencing_order`/`sequencing_property` sorts only the fetched page, not the full result set — a "fetch one page, sort in JS" pattern silently drops alphabetically-early/late terms once the collection exceeds the page
 
-**Status:** open — design discussion, not a confirmed bug. High-priority
+**Status:** re-verified 2026-08-15 — **open question #1 below is now
+answered, confirmed a real defect, not a design ambiguity.** Checked
+pyegeria's request shape against `Egeria-api-glossary-manager.http`'s
+`findGlossaryTerms` worked example first — byte-identical
+(`sequencingOrder`/`sequencingProperty` field names and
+`"PROPERTY_ASCENDING"` value form both match exactly), so this isn't a
+pyegeria body-construction bug. Then tested live against `qs-view-server`:
+`sequencing_property="displayName"` and `sequencing_property="qualifiedName"`
+both still return **server-internal order, not alphabetical**
+(`['Inventory', 'GHG offset', 'GHG Protocol...', 'Ratio indicator', ...]`
+— not A→Z under either property). Went further than the original repro:
+compared `None`/`PROPERTY_ASCENDING`/`PROPERTY_DESCENDING`/
+`CREATION_DATE_RECENT` against the same query — `None`, `DESCENDING`, and
+`CREATION_DATE_RECENT` all return the *identical* first-page term set,
+while `ASCENDING` returns a genuinely different subset — so the parameter
+isn't fully inert (it does influence which underlying scan/index strategy
+picks the first page), it just never resolves to an actual sorted-by-property
+order. **Answers open question #1: no, `sequencing_order`/`sequencing_property`
+is not reliably usable as a true server-side sort for this endpoint today**
+— any UI needing real alphabetical order must fetch-all-then-sort
+client-side, confirming the workaround already in use is necessary, not
+just cautious. Questions #2–4 (fetch-all vs. paged-UI strategy,
+`maxPageSize` ceiling, shared-helper consistency) remain genuine product
+decisions for the team/user, not resolved by this investigation and not
+attempted here — nothing client-side to fix regardless of how those are
+answered, since the underlying sort isn't reliable at the source.
+
+**Original status:** open — design discussion, not a confirmed bug. High-priority
 follow-up. Raised 2026-07-24 from a glossary-term aliases fix: aliased
 terms were missing from egeria-workspaces-fs's default listing because of
 how the portal loads and sorts lists. Consolidated in from
