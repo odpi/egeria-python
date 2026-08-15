@@ -656,7 +656,17 @@ redeploy used for this session, or a real, currently-unreleased endpoint.
 
 ### ISSUE-45: `tests/functional-tests/test_my_profile.py::test_create_my_todo` has no teardown — leaves a live ToDo behind on every run
 
-**Status:** open (test hygiene) — found 2026-08-05 while investigating
+**Status:** fixed 2026-08-15 (test hygiene —
+`tests/functional-tests/test_my_profile.py`). Added a `finally` block that
+deletes the created `ToDo` via a `MetadataExpert` client
+(`delete_metadata_element(guid, body={"class":
+"OpenMetadataDeleteRequestBody"})`), matching the candidate fix below.
+Verified live: ran the test, confirmed the `ToDo` was created (real GUID
+returned), then confirmed via a direct `get_metadata_element_by_guid` call
+immediately after the test run that the same GUID is now soft-deleted
+(`OMRS-REPOSITORY-404-013`). `pytest tests/ -m unit` passes.
+
+**Original status:** open (test hygiene) — found 2026-08-05 while investigating
 ISSUE-44's follow-up. Running the test suite against the live
 `qs-view-server` created a real `ToDo` (`do-my-backup`, confirmed via
 `find_metadata_elements(metadataElementTypeName="ToDo")` immediately after a

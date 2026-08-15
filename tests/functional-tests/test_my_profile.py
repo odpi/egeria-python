@@ -4,6 +4,7 @@ from datetime import datetime
 import pytest
 import asyncio
 from pyegeria.omvs.my_profile import MyProfile
+from pyegeria.omvs.metadata_expert import MetadataExpert
 from pyegeria.models import NewElementRequestBody
 from pyegeria.core._exceptions import PyegeriaException, print_basic_exception
 from rich.markdown import Markdown
@@ -189,6 +190,11 @@ class TestMyProfile:
             pytest.fail(f"get_my_to_dos failed with unexpected exception: {e}")
 
     def test_create_my_todo(self,profile_client):
+        # ISSUE-45: this test used to create a real ToDo on the live server and
+        # never delete it, silently accumulating orphaned ToDo entities across
+        # repeated runs. Teardown added below, matching the delete pattern used
+        # elsewhere in this file's own live verification steps.
+        response = None
         try:
 
             response = profile_client.create_my_todo("do-my-backup","REQUESTED","do-backup",
@@ -201,6 +207,17 @@ class TestMyProfile:
             print_basic_exception(e)
         except Exception as e:
             pytest.fail(f"create_my_todo failed with unexpected exception: {e}")
+        finally:
+            if isinstance(response, str) and response:
+                try:
+                    me_client = MetadataExpert(VIEW_SERVER, PLATFORM_URL, USER_ID, USER_PWD)
+                    me_client.create_egeria_bearer_token(USER_ID, USER_PWD)
+                    me_client.delete_metadata_element(
+                        response, body={"class": "OpenMetadataDeleteRequestBody"}
+                    )
+                    print(f"\nDeleted test to-do {response}")
+                except Exception as e:
+                    print(f"\nTeardown: failed to delete test to-do {response}: {e}")
 
     def test_get_assigned_actions_for_actor(self, profile_client):
         try:
