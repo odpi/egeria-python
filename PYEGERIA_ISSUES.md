@@ -1982,11 +1982,20 @@ honest note that the exclusion applies only to the fetched page (same
 `relationshipFilterNote`/`defaultedTypeNote` transparency convention that
 module already uses). Not yet built.
 
+---
+
+### ISSUE-60: `find_glossary_terms`'s `sequencing_order`/`sequencing_property` sorts only the fetched page, not the full result set — a "fetch one page, sort in JS" pattern silently drops alphabetically-early/late terms once the collection exceeds the page
+
 **Status:** open — design discussion, not a confirmed bug. High-priority
 follow-up. Raised 2026-07-24 from a glossary-term aliases fix: aliased
 terms were missing from egeria-workspaces-fs's default listing because of
 how the portal loads and sorts lists. Consolidated in from
-`egeria-workspaces-fs/PYEGERIA_ISSUES.md` 2026-08-05.
+`egeria-workspaces-fs/PYEGERIA_ISSUES.md` 2026-08-05. **Split out
+2026-08-15 from ISSUE-55** — this entry had been accidentally merged under
+that heading with no `---` divider during the original consolidation
+(unrelated topic: this is about sort scope, not exclude-type semantics);
+no content changed, just given its own number so it's no longer buried
+inside a different issue.
 
 **Observations** (repro, `find_glossary_terms`, qs-view-server, 388 terms):
 ```python
