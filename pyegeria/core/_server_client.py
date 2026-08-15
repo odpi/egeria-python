@@ -6230,13 +6230,14 @@ class ServerClient(BaseServerClient):
         return validated_body
 
     @dynamic_catch
-    def validate_open_metadata_delete_request(self, body: dict | OpenMetadataDeleteRequestBody) -> OpenMetadataDeleteRequestBody | None:
+    def validate_open_metadata_delete_request(self, body: Optional[dict | OpenMetadataDeleteRequestBody] = None) -> OpenMetadataDeleteRequestBody | None:
         if isinstance(body, OpenMetadataDeleteRequestBody):
             validated_body = body
         elif isinstance(body, dict):
             validated_body = self._validate_body(self._open_metadata_delete_request_adapter.validate_python, body)
-        else:
-            validated_body = None
+        else:  # handle case where body not provided
+            body = {"class": "OpenMetadataDeleteRequestBody"}
+            validated_body = self._validate_body(OpenMetadataDeleteRequestBody.model_validate, body)
         return validated_body
 
     @dynamic_catch

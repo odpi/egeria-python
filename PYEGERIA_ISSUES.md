@@ -33,6 +33,16 @@ under a "pyegeria Upstream Bugs" section using the same `PY-#` numbering —
 checked git history, that section never existed in `BACKLOG.md`. That
 cross-reference was already stale; not carried forward here.
 
+**Renumbered 2026-08-15**: found three `ISSUE-#` collisions — each number
+had been independently reused for a genuinely different entry (`ISSUE-45`,
+`ISSUE-46`, `ISSUE-47`, each with two unrelated titles). Kept the original
+number on whichever entry came first by file position and renumbered the
+later duplicate: old `ISSUE-45` (`findMetadataElements` subtype filter,
+found 2026-08-05) → `ISSUE-53`; old `ISSUE-47` (`findMetadataElements`
+scoped to `Referenceable`, found 2026-08-06) → `ISSUE-54`; old `ISSUE-46`
+(exclude-type enhancement, found 2026-08-05) → `ISSUE-55`. No content
+changed, only the header numbers.
+
 Unless noted otherwise, repro commands assume a running Egeria view server
 reachable at `https://localhost:9443`, view server name `qs-view-server`,
 user `erinoverview` / `secret` (adjust to your env) — updated from the
@@ -73,6 +83,82 @@ range, search this file for `(PY-#)` to find its new `ISSUE-#` home.
 # Open Issues
 
 ## Pyegeria — fixable here
+
+### ISSUE-51: `AsyncBaseCommandProcessor.fetch_element()`'s two fallback paths return incompatible shapes — the MetadataExpert fallback crashes downstream code that assumes ClassificationExplorer's envelope
+
+**Status:** fixed 2026-08-15 (Pyegeria — `md_processing/v2/processors.py`).
+Fix shape changed from the original candidate below after discussion: on a
+`PyegeriaTimeoutException` specifically, `fetch_element()` now retries the
+*same* ClassificationExplorer call (up to 2 attempts) instead of falling
+through to the shape-incompatible MetadataExpert path — a timeout means
+either the request was transient (retrying the same call is exactly as
+likely to succeed as switching endpoints) or the server is under sustained
+load (in which case a different endpoint is no more likely to help, and
+risks the exact shape-mismatch crash this issue describes). MetadataExpert
+remains the fallback for every *non*-timeout failure (not found,
+unsupported type, etc.), and as a last resort after timeout retries are
+exhausted. Verified: `pytest tests/ -m unit` passes; re-ran the same
+100+-command help file that originally triggered the crash against a
+freshly-restarted server with 0 errors in the first several minutes (vs.
+crashing on the very first command before). The underlying shape
+inconsistency between the two paths (described below) still exists — this
+fix avoids hitting it in the timeout case rather than resolving the shape
+mismatch itself; a genuine non-timeout MetadataExpert-fallback call could
+still hit it, so the original diagnosis is left below for reference.
+
+**Original status:** open, found 2026-08-15 (Dan) processing the regenerated
+`dr-egeria` help file (100+ `Create`/`Update Term` commands) against
+`qs-view-server` while the server was under heavy, unrelated background
+load (see ISSUE-52 — same session).
+
+**Layer:** Pyegeria (`md_processing/v2/processors.py`).
+
+**What:** `AsyncBaseCommandProcessor.fetch_element()` (`processors.py:1146`)
+tries ClassificationExplorer first (`self.client._async_get_element_by_guid_`),
+unwraps `res["element"]` if present, and returns that. If that call raises
+(caught silently, logged at `debug` only), it falls back to
+`self.client._async_get_metadata_element_by_guid(guid)` (MetadataExpert) and
+returns *that* result directly, with no unwrapping. Every caller of
+`fetch_as_is()`/`fetch_element()` downstream (e.g.
+`CollectionManagerProcessor.apply_changes()`) then does
+`self.as_is_element['elementHeader']['guid']` unconditionally, assuming both
+paths hand back the same `{"elementHeader": {...}, "properties"/"element"...}`
+envelope shape.
+
+**Reproduced:** processing `## Update Glossary` for the pre-existing
+`dr-egeria` glossary crashed with `KeyError: 'elementHeader'` —
+`self.as_is_element` at the point of the crash was
+`{'headerVersion': 0, 'status': 'ACTIVE', 'type': {..., 'typeName':
+'Glossary', ...}, ...}`, i.e. the *contents* of an `elementHeader` object,
+not a dict containing one — consistent with the ClassificationExplorer call
+timing out under load (confirmed independently: a standalone repro of
+`client._async_get_element_by_guid_(guid)` against the same server, same
+session, hit a hard 30s `PyegeriaTimeoutException` on this exact endpoint),
+falling through to the MetadataExpert path, whose
+`_async_get_metadata_element_by_guid` routes through
+`_async_get_guid_request(..., output_format="JSON")` — that helper's
+`output_format == "JSON"` branch returns `resp_json.get("element", ...)`
+raw, without the normalization/unwrapping ClassificationExplorer's own path
+already does elsewhere in the codebase, for at least this element type.
+
+**Impact:** any `Update`/upsert-style Dr.Egeria command whose primary
+element-lookup call fails or times out (not narrow to Glossary — any type
+routed through the shared base `fetch_element()`) crashes with an
+unhandled `KeyError` instead of retrying, warning, or falling back to
+`Create`, and aborts that one command while the rest of a batch continues
+(confirmed: the batch run kept going after this crash).
+
+**Candidate fix:** make the two fallback paths agree on shape before
+`fetch_element()` returns — either normalize the MetadataExpert path to
+always produce `{"elementHeader": ..., ...}` (checking what
+`_async_get_metadata_element_by_guid` actually returns for a few element
+types to confirm whether it's ever *already* wrapped, or always flat), or
+make the single downstream contract explicit and defensive
+(`self.as_is_element.get('elementHeader', self.as_is_element).get('guid')`
+as a minimal guard) so a shape mismatch degrades to "treat as not found"
+rather than crashing. Needs a live server that isn't under load (see
+ISSUE-52) to safely re-verify the exact MetadataExpert raw shape without
+every repro attempt itself timing out.
 
 ### ISSUE-49: `MetadataExpert.get_metadata_element_relationships` (lookup a relationship by its two endpoint GUIDs) returns "No elements found" for a relationship confirmed to exist
 
@@ -301,7 +387,18 @@ here — flagged for a dedicated follow-up pass.
 
 ### ISSUE-31: `MetadataExpert.delete_metadata_element` crashes with `AttributeError: 'NoneType' object has no attribute 'model_dump'` when called with no explicit body
 
-**Status:** open, found 2026-08-04/05 while cleaning up throwaway test
+**Status:** fixed 2026-08-15 (Pyegeria — `pyegeria/core/_server_client.py`).
+`validate_open_metadata_delete_request` now builds a default
+`{"class": "OpenMetadataDeleteRequestBody"}` when `body` is `None`,
+matching `validate_delete_element_request`'s existing pattern, instead of
+returning `None` straight into `.model_dump()`. Verified live:
+`client.metadata_expert.delete_metadata_element(<guid>)` with no body now
+raises a clean `PyegeriaNotFoundException` for a nonexistent GUID instead
+of crashing with `AttributeError`. Fixes the wider blast radius too, since
+every other caller of the shared `_async_open_metadata_delete_body_request`
+helper goes through this same validator.
+
+**Original status:** open, found 2026-08-04/05 while cleaning up throwaway test
 elements created during the ISSUE-32 (`Note` type) live verification.
 
 **Layer:** Pyegeria (`pyegeria/core/_server_client.py`).
@@ -577,7 +674,80 @@ working correctly.
 
 ## Egeria Server — not fixable in pyegeria
 
-### ISSUE-45: `findMetadataElements`'s `metadataElementSubtypeNames` is silently ignored — restricting to specific subtypes has no effect on results
+### ISSUE-52: `qs-nanny-daemon`/`qs-integration-daemon`'s own connectors generate sustained, heavy background write load against the shared repository — starves interactive requests, plausible cause of "frequent Postgres checkpoints"
+
+**Status:** open (Egeria server / deployment config), found 2026-08-15 (Dan)
+investigating why a `dr_egeria --validate`/`--process` run against the
+`dr-egeria` help file (100+ commands) was taking 70+ minutes and timing out
+individual calls (see ISSUE-51), and independently reported by the user as
+"frequent checkpoints" observed in the Postgres console.
+
+**Layer:** Egeria Server (`egeria-quickstart` deployment's integration
+daemon connector configuration), not pyegeria — this is a deployment/config
+issue in the `egeria-shared-postgres`-backed local quickstart stack, not a
+pyegeria code defect.
+
+**What:** confirmed live, same session:
+- `egeria-shared-postgres` (the `pgvector/pgvector:pg17` container backing
+  `qs-view-server`'s repository, port 5442) is issuing time-based
+  checkpoints every 5 minutes (the Postgres default `checkpoint_timeout`)
+  with real, non-trivial WAL volume behind each one (~10-22 MB/checkpoint,
+  i.e. roughly 35-75 KB/s of sustained write throughput) continuously,
+  including in windows where no interactive Dr.Egeria/pyegeria work was
+  running — meaning the load is coming from something else running inside
+  the platform itself, not from client-side testing.
+- `docker logs quickstart-egeria-main` shows the source: `qs-nanny-daemon`'s
+  `JacquardDigitalProductLoom` integration connector logged a single
+  refresh cycle that took **4,370,395 ms (~73 minutes)** to complete
+  (`INTEGRATION-DAEMON-SERVICES-0043`). `qs-integration-daemon`'s
+  `OpenAPICataloguer` connector is continuously creating new `APIOperation`
+  catalog entities — confirmed 703 total in the container's full log
+  history, 36 of them in the last 30 minutes of a single ~2 hour window
+  sampled — each one a real metadata write, evidently crawling/re-crawling
+  the platform's own REST API surface (dozens of
+  `/open-metadata/access-services/open-metadata-store/...` and
+  `/open-metadata/conformance-suite/...` paths) rather than converging to a
+  steady state.
+- Directly reproduced the contention: a single, otherwise-simple
+  `client._async_get_element_by_guid_(guid)` call against `qs-view-server`,
+  issued from a fresh script with nothing else running client-side, hit the
+  30-second client timeout and raised `PyegeriaTimeoutException` —
+  confirming the server itself, not the client or network, is the
+  bottleneck.
+
+**Impact:** any pyegeria/Dr.Egeria workload that does more than a handful
+of sequential server calls (bulk `--process` runs, the help-file Glossary
+sync in particular) becomes unreliable — individual calls time out
+(`TIMEOUT_ERROR_408`) or the whole run takes an order of magnitude longer
+than expected — while these background connectors are active. This is very
+likely the direct cause of ISSUE-51's crash (the ClassificationExplorer
+call it depends on timed out under this exact load) and of the multi-hour
+`dr_egeria --validate` run in this same session.
+
+**Update 2026-08-15, same day:** user restarted the Egeria environment with
+the latest configuration. Post-restart, a `dr_egeria --process` run against
+the same 100+-command help file completed its first ~4 minutes with 0
+errors (vs. timing out repeatedly before), and `OpenAPICataloguer` created
+0 new `APIOperation` entities in a 10-minute post-restart sample (vs. 36 in
+30 minutes before) — consistent with the crawl having converged/settled
+after the restart rather than continuously re-cataloguing. Not yet
+confirmed whether this is a durable fix or the connectors will resume the
+same pattern once they hit their next scheduled refresh; worth re-checking
+`docker logs quickstart-egeria-main | grep JacquardDigitalProductLoom` after
+it's been up for a few hours.
+
+**Candidate next step (not yet done):** narrow which specific connector(s)
+are the dominant contributor — `JacquardDigitalProductLoom`'s single
+73-minute cycle and `OpenAPICataloguer`'s continuous entity creation are
+the two strongest leads — and either increase their refresh interval,
+narrow `OpenAPICataloguer`'s crawl scope (it may be re-cataloguing
+`localhost:9443`'s own REST surface on every refresh instead of once), or
+disable/reconfigure them in the `egeria-quickstart` compose config if
+they're not needed for this deployment's actual use case. This needs
+Egeria-server-side (or deployment-config-side) investigation — nothing here
+is fixable from pyegeria's side.
+
+### ISSUE-53: `findMetadataElements`'s `metadataElementSubtypeNames` is silently ignored — restricting to specific subtypes has no effect on results
 
 **Status:** open (Egeria server), found 2026-08-05 investigating whether
 Egeria Insights could express "elements that have a SemanticAssignment but
@@ -627,7 +797,7 @@ server-side) versus a regression.
 
 ---
 
-### ISSUE-47: `findMetadataElements` scoped to the universal base type `Referenceable` silently returns an incomplete, arbitrary subset instead of the true population
+### ISSUE-54: `findMetadataElements` scoped to the universal base type `Referenceable` silently returns an incomplete, arbitrary subset instead of the true population
 
 **Status:** open (Egeria server), found 2026-08-06 fixing egeria-workspaces-fs's
 relationship-only search (see ISSUE-45's same investigation thread —
@@ -923,7 +1093,18 @@ generally if new zero-result reports show up elsewhere.
 
 ### ISSUE-19 (PY-12): `ReferenceDataManager` has no specification-property or valid-metadata-value methods
 
-**Status:** open (docs/organization), re-verified 2026-07-31 — still true.
+**Status:** fixed — re-verified 2026-08-15, found already resolved (never
+marked closed here). `ReferenceDataManager`'s class docstring
+(`pyegeria/omvs/reference_data.py`) now has a `Note` section stating it
+does NOT cover Specification Properties and pointing callers at
+`SpecificationProperties`/`MetadataExpert` instead — exactly the
+"suggested improvement" below, already applied. Not clear which session
+added it since this entry was last touched; recommending a class-selection
+decision tree across `ReferenceDataManager`/`SpecificationProperties`/
+`ValidMetadataLists`/`ValidTypeLists`/`MetadataExpert` is still open as a
+nice-to-have, not a defect.
+
+**Originally filed as:** open (docs/organization), re-verified 2026-07-31 — still true.
 `ReferenceDataManager` inherits only from `ServerClient` (it's for
 *business* reference data — country codes, currency codes, etc.), not from
 `ValidMetadataManager`. `get_valid_metadata_values` happens to work on it
@@ -1008,7 +1189,7 @@ system-derived from a physical→logical mapping tool).
 
 ---
 
-### ISSUE-46: Desired enhancement — true "exclude type" / NOT semantics for `findMetadataElements`
+### ISSUE-55: Desired enhancement — true "exclude type" / NOT semantics for `findMetadataElements`
 
 **Status:** open — desired enhancement, not a bug. Raised 2026-08-05
 alongside ISSUE-45, from the same Egeria Insights use case ("elements that

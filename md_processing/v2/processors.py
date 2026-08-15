@@ -9,7 +9,7 @@ from abc import ABC, abstractmethod
 from typing import Any, Dict, List, Optional
 from loguru import logger
 
-from pyegeria import EgeriaTech, PyegeriaException, NO_ELEMENTS_FOUND, print_basic_exception
+from pyegeria import EgeriaTech, PyegeriaException, PyegeriaTimeoutException, NO_ELEMENTS_FOUND, print_basic_exception
 from pyegeria.core.utils import make_format_set_name_from_type
 from pyegeria.view.base_report_formats import select_report_spec
 from pyegeria.view.output_formatter import generate_output, format_for_markdown_table, populate_columns_from_properties
@@ -1143,27 +1143,43 @@ class AsyncBaseCommandProcessor(ABC):
             logger.error(f"Error generating markdown: {e}")
             return self.command.raw_block
 
-    async def fetch_element(self, guid: str) -> Optional[Dict[str, Any]]:
+    async def fetch_element(self, guid: str, _max_timeout_retries: int = 2) -> Optional[Dict[str, Any]]:
         """
-        Fetch the details of an element by GUID. 
+        Fetch the details of an element by GUID.
         Subclasses should override if MetadataExpert/Explorer is unavailable or if a specific OMAS method is needed.
+
+        On a timeout, retries the *same* ClassificationExplorer call rather than falling
+        through to the MetadataExpert fallback (ISSUE-51/52): a timeout means either the
+        request was transient (a retry of the same call is exactly as likely to succeed as
+        any other call would be) or the server is under sustained load (in which case a
+        different endpoint is no more likely to succeed, and MetadataExpert's raw response
+        isn't guaranteed to have the same shape as ClassificationExplorer's -- switching
+        endpoints on a timeout traded a clean failure for a downstream KeyError crash).
+        MetadataExpert stays the fallback for everything that *isn't* a timeout (not found,
+        unsupported type, etc.), where switching endpoints is actually likely to help.
         """
-        try:
-            # First try ClassificationExplorer (most standard and lightweight)
-            logger.debug(f"fetch_element('{guid}') using client {self.client}")
-            res = await getattr(self.client, "_async_get_element_by_guid_")(guid)
-            logger.debug(f"fetch_element returned {res is not None}")
-            if res and isinstance(res, dict):
-                # The structure from classification-explorer comes under "element" usually
-                if "element" in res:
-                    return res["element"]
+        for attempt in range(_max_timeout_retries):
+            try:
+                # First try ClassificationExplorer (most standard and lightweight)
+                logger.debug(f"fetch_element('{guid}') using client {self.client} (attempt {attempt + 1})")
+                res = await getattr(self.client, "_async_get_element_by_guid_")(guid)
+                logger.debug(f"fetch_element returned {res is not None}")
+                if res and isinstance(res, dict):
+                    # The structure from classification-explorer comes under "element" usually
+                    if "element" in res:
+                        return res["element"]
+                    return res
                 return res
-            return res
-        except Exception as e:
-            logger.debug(f"ClassificationExplorer fetch failed: {e}")
+            except PyegeriaTimeoutException as e:
+                logger.debug(f"ClassificationExplorer fetch timed out (attempt {attempt + 1}/{_max_timeout_retries}): {e}")
+                continue
+            except Exception as e:
+                logger.debug(f"ClassificationExplorer fetch failed: {e}")
+                break
 
         try:
-            # Fallback to MetadataExpert (more detailed properties)
+            # Fallback to MetadataExpert (more detailed properties) -- only reached for a
+            # non-timeout failure, or after exhausting timeout retries above.
             # Reordered subclients in EgeriaTech ensure this hits metadata-expert first
             res = await self.client._async_get_metadata_element_by_guid(guid)
             if res and isinstance(res, dict):
