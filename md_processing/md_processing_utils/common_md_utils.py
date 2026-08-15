@@ -445,6 +445,10 @@ def set_collection_manager_body(object_type: str, qualified_name: str, attribute
     if object_type in ["Security Group", "Security List", "Security Role", "SecurityGroup", "SecurityList", "SecurityRole"]:
         prop_bod['distinguishedName'] = attributes.get('Distinguished Name', {}).get('value', None)
 
+    # Handle Working Set
+    if "Working Set" in object_type:
+        prop_bod['disposition'] = attributes.get('Disposition', {}).get('value', None)
+
     return prop_bod
 
 

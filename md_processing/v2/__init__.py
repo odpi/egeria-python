@@ -40,3 +40,4 @@ from .dashboard_sheet import CreateDashboardSheetProcessor, LinkReportToDashboar
 from .report import ReportProcessor
 from .saved_query import SavedQueryProcessor, SmartQueryLinkProcessor
 from .curation import CurationClassifyProcessor, CurationLinkProcessor, CLASSIFICATION_METHODS
+from .reference_data import ReferenceDataLinkProcessor, ValidMetadataValueProcessor

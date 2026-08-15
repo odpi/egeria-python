@@ -44,7 +44,8 @@ from md_processing.v2 import (
     CreateDashboardSheetProcessor, LinkReportToDashboardSheetProcessor,
     AddTextOnDashboardSheetProcessor, ReportProcessor,
     SavedQueryProcessor, SmartQueryLinkProcessor,
-    CurationClassifyProcessor, CurationLinkProcessor, CLASSIFICATION_METHODS
+    CurationClassifyProcessor, CurationLinkProcessor, CLASSIFICATION_METHODS,
+    ReferenceDataLinkProcessor, ValidMetadataValueProcessor
 )
 
 from pyegeria import settings, EgeriaTech, PyegeriaException, print_basic_exception, print_validation_error
@@ -411,6 +412,31 @@ def setup_dispatcher(client: EgeriaTech) -> V2Dispatcher:
     reg("Update External Model Source", ExternalReferenceProcessor)
     reg("Create External Source Code", ExternalReferenceProcessor)
     reg("Update External Source Code", ExternalReferenceProcessor)
+    reg("Create External Standard", ExternalReferenceProcessor)
+    reg("Update External Standard", ExternalReferenceProcessor)
+
+    # Valid Values / Reference Data relationships (ValidValuesAssignment,
+    # ReferenceValueAssignment, SpecificationPropertyAssignment) -- one
+    # OM_TYPE-dispatched processor shared across the families that expose a
+    # Link/Detach command for them.
+    reg("Link Question to Valid Values", ReferenceDataLinkProcessor)
+    reg("Detach Question from Valid Values", ReferenceDataLinkProcessor)
+    reg("Link Data Field to Valid Values", ReferenceDataLinkProcessor)
+    reg("Detach Data Field from Valid Values", ReferenceDataLinkProcessor)
+    reg("Link Element to Valid Values", ReferenceDataLinkProcessor)
+    reg("Detach Element from Valid Values", ReferenceDataLinkProcessor)
+    reg("Link Reference Value Assignment", ReferenceDataLinkProcessor)
+    reg("Detach Reference Value Assignment", ReferenceDataLinkProcessor)
+    reg("Link Specification Property Assignment", ReferenceDataLinkProcessor)
+    reg("Detach Specification Property Assignment", ReferenceDataLinkProcessor)
+
+    reg("Setup Valid Metadata Value", ValidMetadataValueProcessor)
+    reg("Clear Valid Metadata Value", ValidMetadataValueProcessor)
+    reg("Setup Valid Metadata Map Name", ValidMetadataValueProcessor)
+    reg("Clear Valid Metadata Map Name", ValidMetadataValueProcessor)
+    reg("Setup Valid Metadata Map Value", ValidMetadataValueProcessor)
+    reg("Clear Valid Metadata Map Value", ValidMetadataValueProcessor)
+    reg("Set Consistent Metadata Values", ValidMetadataValueProcessor)
     reg("Attach Comment", FeedbackLinkProcessor)
     reg("Detach Comment", FeedbackLinkProcessor)
     reg("Attach Rating", FeedbackLinkProcessor)

@@ -10406,6 +10406,257 @@ class ClassificationExplorer(ServerClient):
             )
         )
 
+    async def _async_set_accounting_codes_classification(
+            self,
+            element_guid: str,
+            body: dict | NewClassificationRequestBody,
+            timeout: int = default_timeout,
+    ) -> None:
+        """
+        Add or replace the accounting codes for an element. Async version.
+
+        Accounting Codes: https://egeria-project.org/types/7/0715-Digital-Business/
+
+        Parameters
+        ----------
+        element_guid: str
+            - the identity of the element to update
+        body: dict | NewClassificationRequestBody
+            - a dictionary or Pydantic model containing the properties to set - see note below
+
+        timeout: int, default = default_timeout
+            - http request timeout for this request
+
+        Returns
+        -------
+        None
+
+        Raises
+        ------
+        PyegeriaException
+
+        Note:
+        -----
+        Sample body:
+
+        {
+           "class" : "NewClassificationRequestBody",
+           "properties" : {
+               "class" : "AccountingCodesProperties",
+               "accountingCode" : "Add accounting code here",
+               "description" : "Add description here",
+               "accountingCodeList" : [ "Code1", "Code2" ],
+               "accountingCodeMap" : {
+                   "name1" : "code1",
+                   "name2" : "code2"
+               }
+           },
+           "externalSourceGUID": "Add guid here",
+           "externalSourceName": "Add qualified name here",
+           "forLineage": false,
+           "forDuplicateProcessing": false,
+           "effectiveTime" : "isoTimestamp"
+        }
+        """
+
+        url = (
+            f"{self.classification_command_root}/elements/{element_guid}/accounting-codes"
+        )
+
+        await self._async_new_classification_request(
+            url, prop=["AccountingCodesProperties"], body=body
+        )
+
+    def set_accounting_codes_classification(
+            self,
+            element_guid: str,
+            body: dict | NewClassificationRequestBody,
+            timeout: int = default_timeout,
+    ) -> None:
+        """
+        Add or replace the accounting codes for an element.
+
+        Accounting Codes: https://egeria-project.org/types/7/0715-Digital-Business/
+
+        Parameters
+        ----------
+        element_guid: str
+            - the identity of the element to update
+        body: dict | NewClassificationRequestBody
+            - a dictionary or Pydantic model containing the properties to set - see note below
+
+        timeout: int, default = default_timeout
+            - http request timeout for this request
+
+        Returns
+        -------
+        None
+
+        Raises
+        ------
+        PyegeriaException
+
+        Note:
+        -----
+        Sample body:
+
+        {
+           "class" : "NewClassificationRequestBody",
+           "properties" : {
+               "class" : "AccountingCodesProperties",
+               "accountingCode" : "Add accounting code here",
+               "description" : "Add description here",
+               "accountingCodeList" : [ "Code1", "Code2" ],
+               "accountingCodeMap" : {
+                   "name1" : "code1",
+                   "name2" : "code2"
+               }
+           },
+           "externalSourceGUID": "Add guid here",
+           "externalSourceName": "Add qualified name here",
+           "forLineage": false,
+           "forDuplicateProcessing": false,
+           "effectiveTime" : "isoTimestamp"
+        }
+        """
+
+        loop = asyncio.get_event_loop()
+        loop.run_until_complete(
+            self._async_set_accounting_codes_classification(
+                element_guid,
+                body,
+                timeout,
+            )
+        )
+
+    async def _async_clear_accounting_codes_classification(
+            self,
+            element_guid: str,
+            body: Optional[dict | DeleteClassificationRequestBody] = None,
+            for_lineage: bool = False,
+            for_duplicate_processing: bool = False,
+            effective_time: Optional[str] = None,
+            timeout: int = default_timeout,
+    ) -> None:
+        """
+        Remove the accounting-codes classification from the element. Async version.
+
+        Accounting Codes: https://egeria-project.org/types/7/0715-Digital-Business/
+
+        Parameters
+        ----------
+        element_guid: str
+            - the identity of the element to update
+        body: dict | DeleteClassificationRequestBody, default = None
+            - a dictionary or Pydantic model containing the properties for the request - see note below
+        for_lineage: bool, default is set by server
+            - determines if elements classified as Memento should be returned - normally false
+        for_duplicate_processing: bool, default is set by server
+            - Normally false. Set true when the caller is part of a deduplication function
+        effective_time: str, default = None
+            - Time format is "YYYY-MM-DDTHH:MM:SS" (ISO 8601)
+        timeout: int, default = default_timeout
+            - http request timeout for this request
+
+        Returns
+        -------
+           None
+
+        Raises
+        ------
+        PyegeriaException
+
+        Note:
+        -----
+        Sample body:
+
+        {
+           "class" : "DeleteClassificationRequestBody",
+           "externalSourceGUID": "Add guid here",
+           "externalSourceName": "Add qualified name here",
+           "forLineage": false,
+           "forDuplicateProcessing": false,
+           "effectiveTime" : "isoTimestamp"
+        }
+
+        """
+
+        url = (
+            f"{self.classification_command_root}/elements/{element_guid}/accounting-codes/remove"
+        )
+
+        if body is None:
+            body = {"class": "DeleteClassificationRequestBody", "effectiveTime": effective_time, "forLineage": for_lineage,
+                    "forDuplicateProcessing": for_duplicate_processing}
+
+        await self._async_delete_classification_request(url, body)
+
+    def clear_accounting_codes_classification(
+            self,
+            element_guid: str,
+            body: Optional[dict | DeleteClassificationRequestBody] = None,
+            for_lineage: bool = False,
+            for_duplicate_processing: bool = False,
+            effective_time: Optional[str] = None,
+            timeout: int = default_timeout,
+    ) -> None:
+        """
+        Remove the accounting-codes classification from the element.
+
+        Accounting Codes: https://egeria-project.org/types/7/0715-Digital-Business/
+
+        Parameters
+        ----------
+        element_guid: str
+            - the identity of the element to update
+        body: dict | DeleteClassificationRequestBody, default = None
+            - a dictionary or Pydantic model containing the properties for the request - see note below
+        for_lineage: bool, default is set by server
+            - determines if elements classified as Memento should be returned - normally false
+        for_duplicate_processing: bool, default is set by server
+            - Normally false. Set true when the caller is part of a deduplication function
+        effective_time: str, default = None
+           - Time format is "YYYY-MM-DDTHH:MM:SS" (ISO 8601)
+
+
+        timeout: int, default = default_timeout
+            - http request timeout for this request
+
+        Returns
+        -------
+           None
+
+        Raises
+        ------
+        PyegeriaException
+
+        Note:
+        -----
+        Sample body:
+
+        {
+           "class" : "DeleteClassificationRequestBody",
+           "externalSourceGUID": "Add guid here",
+           "externalSourceName": "Add qualified name here",
+           "forLineage": false,
+           "forDuplicateProcessing": false,
+           "effectiveTime" : "isoTimestamp"
+        }
+
+        """
+
+        loop = asyncio.get_event_loop()
+        loop.run_until_complete(
+            self._async_clear_accounting_codes_classification(
+                element_guid,
+                body,
+                for_lineage,
+                for_duplicate_processing,
+                effective_time,
+                timeout,
+            )
+        )
+
     async def _async_add_search_keyword_to_element(
             self,
             element_guid: str,

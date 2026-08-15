@@ -25,10 +25,12 @@ from pyegeria.view.output_formatter import (generate_output,
 from pyegeria.core.utils import dynamic_catch
 
 EXTERNAL_REFERENCE_PROPS = ["ExternalReferenceProperties", "ExternalDataSourceProperties",
-                            "ExternalModelSourceProperties",
+                            "ExternalModelSourceProperties", "ExternalSourceCodeProperties",
+                            "ExternalStandardProperties",
                             "RelatedMediaProperties", "CitedDocumentProperties"]
 
 EXTERNAL_REFERENCE_TYPES = ["ExternalReference", "ExternalDataSource", "ExternalModelSource",
+                            "ExternalSourceCode", "ExternalStandard",
                             "RelatedMedia", "CitedDocument"]
 
 EXTERNAL_ID_PROPS = ["ExternalIdProperties"]

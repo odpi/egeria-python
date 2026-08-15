@@ -117,6 +117,10 @@ CLASSIFICATION_METHODS: Dict[str, ClassificationSpec] = {
     "SecurityTags": ClassificationSpec(
         "_async_set_security_tags_classification", "_async_clear_security_tags_classification", "SecurityTagsProperties",
         fields={"Security Labels": "securityLabels", "Security Properties": "securityProperties"}),
+    "AccountingCodes": ClassificationSpec(
+        "_async_set_accounting_codes_classification", "_async_clear_accounting_codes_classification", "AccountingCodesProperties",
+        fields={"Accounting Code": "accountingCode", "Description": "description",
+                "Accounting Code List": "accountingCodeList", "Accounting Code Map": "accountingCodeMap"}),
     "DataScope": ClassificationSpec(
         "_async_add_data_scope", "_async_clear_data_scope", "DataScopeProperties",
         update_method="_async_update_data_scope",
