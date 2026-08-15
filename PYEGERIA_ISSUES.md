@@ -478,6 +478,13 @@ every repro attempt itself timing out.
 
 ### ISSUE-49: `MetadataExpert.get_metadata_element_relationships` (lookup a relationship by its two endpoint GUIDs) returns "No elements found" for a relationship confirmed to exist
 
+**Re-verified 2026-08-15 (same day, follow-up run), no regression.**
+Recreated the exact repro fresh (new `ResultsSet` + `SavedQuery` pair,
+real `SmartQuery` link) — `get_metadata_element_relationships(rs_guid,
+sq_guid, "SmartQuery", None)` correctly returns the real relationship
+(`relationshipGUID`, both ends populated) instead of "No elements found".
+Test elements cleaned up. `pytest tests/ -m unit` passes.
+
 **Status:** fixed 2026-08-15 (Pyegeria — `pyegeria/omvs/metadata_expert.py`).
 Root cause: the shared `process_related_element_list()` helper has two
 envelope shapes it can parse — a related-*element* envelope
