@@ -972,6 +972,14 @@ redeploy used for this session, or a real, currently-unreleased endpoint.
 
 ### ISSUE-45: `tests/functional-tests/test_my_profile.py::test_create_my_todo` has no teardown — leaves a live ToDo behind on every run
 
+**Re-verified 2026-08-15 (same day, follow-up run), no regression.**
+Re-ran the test directly (`PYEG_LIVE_EGERIA=1 pytest
+tests/functional-tests/test_my_profile.py::TestMyProfile::test_create_my_todo
+-v`) — passes, prints its own "Deleted test to-do <guid>" confirmation, and
+a direct `get_metadata_element_by_guid` on that exact GUID immediately
+afterward correctly raises `PyegeriaNotFoundException` — genuinely gone
+server-side, not just claimed by the test's own output.
+
 **Status:** fixed 2026-08-15 (test hygiene —
 `tests/functional-tests/test_my_profile.py`). Added a `finally` block that
 deletes the created `ToDo` via a `MetadataExpert` client
