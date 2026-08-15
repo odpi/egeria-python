@@ -84,6 +84,73 @@ range, search this file for `(PY-#)` to find its new `ISSUE-#` home.
 
 ## Pyegeria — fixable here
 
+### ISSUE-57: Dr.Egeria's by-display-name element resolver (used by `Link Perspective to Question` and presumably other by-name `Link`/`Classify` commands) has no type-scoping — a name collision anywhere in the instance permanently blocks the command, even when the caller's intent is unambiguous
+
+**Status:** open.
+
+**Layer:** Pyegeria (`md_processing/` — the shared name-to-GUID resolver
+`AsyncBaseCommandProcessor`'s `Link`-family processors call; exact call
+site not yet traced past the symptom, which showed up via
+`mcp__egeria__dr_egeria_run_block` in a downstream consumer repo, not a
+direct `md_processing` unit test).
+
+**Repro:** in a live Egeria instance carrying the stock Coco
+Pharmaceuticals demo data alongside application-authored `GlossaryTerm`s,
+running `Link Perspective to Question` (`resource-explorer`'s
+`docs/dr-egeria/scouting-questions.md` pattern — see its `CLAUDE.md`-
+adjacent `docs/survey-question-context-plan.md`) with `Perspective Name`
+set to any of `Governance`, `Steward`, `Privacy`, `Community`, `Security`
+fails 100% of the time (confirmed across ~50+ independent attempts, 6
+separate batched Dr.Egeria `process` calls) with:
+```
+❌ Execution Blocked
+Referenced element 'Governance' for attribute 'Perspective Name' not found.
+```
+Direct `ClassificationExplorer.get_guid_for_name("Governance")` (no
+`type_name` filter) reproduces the underlying cause exactly:
+```
+PyegeriaException: CLIENT_ERROR_400 ... output=`Multiple elements found for supplied name!`
+```
+— i.e. the *server* is behaving correctly (there genuinely are multiple
+elements named "Governance" in this instance, almost certainly Coco
+Pharmaceuticals demo content colliding with an application's own
+`GlossaryTerm`), but Dr.Egeria's own by-name resolver has no way to
+disambiguate — it has no `type_name`/type-scope parameter to narrow the
+search to (in this case) `GlossaryTerm`s classified as `Perspective`, even
+though the calling command (`Link Perspective to Question`) knows exactly
+what type it's looking for. The other 7 names used in the same file
+(`Financial`, `Data Owner`, `Consumer`, `App/AI Builder`, `Data Expert`,
+`Architecture`, `Admin`) resolve cleanly every time — this is a real,
+100%-reproducible collision for specific names, not transient
+indexing/resolution lag (that theory was tried first and disproven by
+direct, repeated `get_guid_for_name()` probes).
+
+**Workaround used (not a fix):** since the ambiguous elements' own GUIDs
+were already known from their original creation, every blocked `ScopedBy`
+link was completed by calling `ClassificationExplorer.add_scope_to_element
+(scoped_by_guid=<known_perspective_guid>, element_guid=<question_guid>,
+body={"class": "NewRelationshipRequestBody", "properties": {"class":
+"ScopedByProperties"}})` directly — bypassing Dr.Egeria's name resolver
+entirely. This only works because the caller already has the GUID from
+elsewhere; it isn't available to someone authoring a fresh Dr.Egeria
+markdown doc who only has a display name to work with. Passing the
+qualified name (`Coco Pharmaceuticals::Term::Governance::1.0`) instead of
+the bare display name was also tried and does **not** work — it fails
+"not found" (a different, and worse, failure than "multiple found") —
+Dr.Egeria's resolver in this command apparently only accepts a bare
+display name, not a qualified name.
+
+**Candidate fix:** thread a `type_name` (or richer type filter — e.g.
+"any `GlossaryTerm` classified as `Perspective`") into the name resolver
+used by `Link`-family commands, sourced from what the command's own
+compact-spec `find_constraints`/`extra_constraints` already declare (or
+should declare) for that attribute — `Perspective Name` should resolve
+against Perspective-classified terms only, not every `Referenceable` in
+the instance. A lighter partial fix: accept a qualified name as an
+alternate resolution path when the bare name is ambiguous (currently
+neither helps nor is silently ignored — it produces a different, more
+confusing error).
+
 ### ISSUE-56: `ReferenceDataManager`'s 6 relationship-link methods all route through the element-body validator, not the relationship-body validator — every call built per the method's own documented sample body fails Pydantic validation
 
 **Status:** fixed 2026-08-15 (Pyegeria — `pyegeria/omvs/reference_data.py`).
@@ -1353,7 +1420,37 @@ guessing from the pattern match alone.
 
 ### ISSUE-38 (PY-18): `count_relationships_between_elements("Exception")` (276) disagrees with `ClassificationExplorer.get_relationships("Exception")` (55)
 
-**Status:** open (Egeria server) — needs Egeria-side investigation. Found
+**Status:** re-investigated 2026-08-15, narrowed and re-confirmed
+**Egeria server, not pyegeria-fixable** — this is a genuine, real bug, just
+smaller than originally measured (demo data has evidently changed since
+2026-07-24: `count` is now 58 and `get_relationships` is now 57, not
+276/55). Cross-checked against a **second, independent pyegeria list-based
+method** — `MetadataExpert.find_relationships_between_elements` (a
+different OMVS client, different endpoint,
+`.../relationships/by-search-conditions` rather than
+`ClassificationExplorer`'s `.../relationships/{type}`) — with the same
+`relationshipTypeName: "Exception"` filter: it also returns exactly 57,
+and its 57 relationship GUIDs are the **identical set** to
+`get_relationships`'s 57 (zero difference either direction). Two
+independently-implemented pyegeria code paths through two different
+endpoints agree exactly with each other; only the server's native
+`COUNT(*)` endpoint (`.../relationships/by-search-conditions/count`)
+disagrees, by exactly 1. Also re-confirmed the original "not the type
+filter" finding still holds with current data — re-ran `count` vs.
+`get_relationships` for `SemanticAssignment` (401=401), `License` (2=2),
+`Certification` (0=0), `AttachedRating` (0=0): all match; only `Exception`
+diverges. Also checked whether the count includes non-`ACTIVE`/soft-deleted
+relationships the list endpoints filter out — no: `limitResultsByStatus:
+["ACTIVE"]` and `["ACTIVE","DELETED"]` both still return 58 from `count`
+(no status-filter difference). Since both retrieval paths agree with each
+other and only the count differs, there's genuinely nothing to fix on the
+pyegeria side — this is squarely a server-side discrepancy between the
+native COUNT(*) query and the list-materialization logic for this one
+relationship type. No further pyegeria action needed; still needs
+Egeria-side investigation to say what specifically triggers it for
+`Exception`.
+
+**Original status:** open (Egeria server) — needs Egeria-side investigation. Found
 2026-07-24 while wiring the Egeria Overview dashboard to native counting
 (odpi/egeria#9168). Consolidated in from `egeria-workspaces-fs/
 PYEGERIA_ISSUES.md` 2026-08-05.
