@@ -1295,6 +1295,43 @@ they're not needed for this deployment's actual use case. This needs
 Egeria-server-side (or deployment-config-side) investigation — nothing here
 is fixable from pyegeria's side.
 
+**Update 2026-08-15, done (partial):** `quickstart-egeria-main` had been
+restarted again since the note above (container uptime ~1h at check time,
+vs. the earlier 8h+ uptime of sibling containers) — so this was actually a
+fresh post-restart observation window, not a stale one. Findings:
+- **`OpenAPICataloguer`'s behavior is better characterized as a one-time
+  cold-start catalog crawl that converges, not continuous unbounded
+  re-crawling** — the earlier framing was too pessimistic. Creation rate
+  measured in shrinking trailing windows since restart: 134 (50 min) → 86
+  (40 min) → 48 (30 min) → 26 (20 min) → 8 (10 min) → 6 (5 min) new
+  `APIOperation` entities — a clear deceleration, not a steady/repeating
+  rate. 201 total `APIOperation`s exist in the full container log history;
+  171 of them were created in just this last hour, meaning the connector
+  is doing its first post-restart crawl right now and tapering off, not
+  perpetually re-cataloguing the same ground.
+- **`JacquardDigitalProductLoom` logged zero refresh-cycle activity in this
+  1-hour post-restart window** — can't yet say whether its 73-minute cycle
+  is gone for good or just hasn't fired again yet (container too young to
+  rule out a recurrence on its next scheduled interval).
+- **Server responsiveness confirmed fast right now**: 3 sequential
+  `get_metadata_element_by_guid` calls against `qs-view-server` completed
+  in 0.19s/0.03s/0.02s — no timeouts, nothing close to the earlier
+  30-second `PyegeriaTimeoutException` symptom.
+- Could not directly inspect Postgres checkpoint stats this pass (`psql`
+  isn't installed as a client tool inside the `egeria-shared-postgres`
+  container in a way this session could reach it) — server-response timing
+  above stands in as an indirect but consistent signal instead.
+
+**Net assessment:** the acute symptom (timeouts, multi-hour bulk-processing
+runs) is not currently reproducing, and the mechanism now looks more like
+"cold-start crawl briefly saturates the server after every restart, then
+settles" than "sustained, unbounded background load." Still genuinely
+Egeria-server/deployment-config territory, not pyegeria-fixable — if this
+pattern recurs and is disruptive on every restart, the original candidate
+fixes (narrow `OpenAPICataloguer`'s crawl scope, stagger connector startup,
+or increase refresh intervals) remain the right next step, just lower
+urgency than originally assessed.
+
 ### ISSUE-53: `findMetadataElements`'s `metadataElementSubtypeNames` is silently ignored — restricting to specific subtypes has no effect on results
 
 **Status:** open (Egeria server), found 2026-08-05 investigating whether
