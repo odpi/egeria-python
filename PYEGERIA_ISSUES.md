@@ -1334,7 +1334,17 @@ urgency than originally assessed.
 
 ### ISSUE-53: `findMetadataElements`'s `metadataElementSubtypeNames` is silently ignored — restricting to specific subtypes has no effect on results
 
-**Status:** open (Egeria server), found 2026-08-05 investigating whether
+**Status:** still open (Egeria server), re-confirmed 2026-08-15 against the
+current, restarted `qs-view-server` — not a stale finding. Re-ran with a
+raw body passed straight through `MetadataExpert.find_metadata_elements`
+(bypassing any pyegeria body-construction logic, equivalent to the original
+raw-`curl` repro): `metadataElementTypeName: "Referenceable"` with and
+without `metadataElementSubtypeNames: ["GlossaryTerm"]` returned the
+byte-identical type mix both times (`APIParameter`/`ConnectorActivityReport`/
+`ContributionRecord`, 50/50 results) — the subtype filter still has zero
+effect. Nothing changed client-side; still not fixable in pyegeria.
+
+**Original status:** open (Egeria server), found 2026-08-05 investigating whether
 Egeria Insights could express "elements that have a SemanticAssignment but
 are NOT type Notification" via an allow-list of subtypes (`Referenceable`
 + `metadataElementSubtypeNames: ["GlossaryTerm", "DataAsset"]`, per
