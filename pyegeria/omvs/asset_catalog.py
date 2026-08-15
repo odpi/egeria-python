@@ -449,6 +449,8 @@ class AssetCatalog(ServerClient):
         all_anchors: bool = False,
         start_from: int = 0,
         page_size: int = 0,
+        graph_query_depth: int = 5,
+        max_mermaid_node_count: int = 5,
         output_format: str = "DICT",
         report_spec: str | dict = "Common-Mermaid",
         **kwargs,
@@ -477,6 +479,10 @@ class AssetCatalog(ServerClient):
             The index from which to start fetching.
         page_size : int, default 0
             The maximum number of items to fetch.
+        graph_query_depth : int, default 5
+            How many hops of the lineage graph to traverse.
+        max_mermaid_node_count : int, default 5
+            Maximum number of nodes to include in the generated mermaid graph.
         output_format : str, default "DICT"
             The desired output format.
         report_spec : str | dict, default "Common-Mermaid"
@@ -493,6 +499,21 @@ class AssetCatalog(ServerClient):
         ------
         PyegeriaException
             If there are issues in communications, message format, or Egeria errors.
+
+        Notes
+        -----
+        ISSUE-24 (PYEGERIA_ISSUES.md): the body previously hardcoded
+        "queryGraphDepth": 5 with no way to override it -- that field name
+        doesn't exist on the real request body at all (confirmed against
+        AssetLineageGraphRequestBody -> QueryOptions -> GetOptions in the
+        Egeria source; the real field is "graphQueryDepth", inherited from
+        GetOptions, same class that also defines "maxMermaidNodeCount" and
+        "includeOnlyRelationships"), so it was always silently ignored by
+        the server -- the server's own default (also 5) was what actually
+        applied. "relationshipTypes" had the same problem: the real field is
+        "includeOnlyRelationships". Both field names fixed here alongside
+        adding the graph_query_depth/max_mermaid_node_count parameters this
+        issue asked for.
         """
 
         url = f"{self.platform_url}/servers/{self.view_server}/api/open-metadata/asset-catalog/assets/{guid}/as-lineage-graph"
@@ -500,13 +521,14 @@ class AssetCatalog(ServerClient):
             "class": "AssetLineageGraphRequestBody",
             "effectiveTime": effective_time,
             "asOfTime": as_of_time,
-            "relationshipTypes": relationship_types,
+            "includeOnlyRelationships": relationship_types,
             "limitToISCQualifiedName": limit_to_isc_q_name,
             "highlightISCQualifiedName": hilight_isc_q_name,
             "allAnchors": all_anchors,
             "startFrom": start_from,
             "pageSize": page_size,
-            "queryGraphDepth": 5,
+            "graphQueryDepth": graph_query_depth,
+            "maxMermaidNodeCount": max_mermaid_node_count,
         }
 
         response = await self._async_make_request("POST", url, body_slimmer(body))
@@ -535,6 +557,8 @@ class AssetCatalog(ServerClient):
         all_anchors: bool = False,
         start_from: int = 0,
         page_size: int = 0,
+        graph_query_depth: int = 5,
+        max_mermaid_node_count: int = 5,
         output_format: str = "DICT",
         report_spec: str | dict = "Common-Mermaid",
         **kwargs,
@@ -561,6 +585,10 @@ class AssetCatalog(ServerClient):
             The index from which to start fetching.
         page_size : int, default 0
             The maximum number of items to fetch.
+        graph_query_depth : int, default 5
+            How many hops of the lineage graph to traverse.
+        max_mermaid_node_count : int, default 5
+            Maximum number of nodes to include in the generated mermaid graph.
         output_format : str, default "DICT"
             The desired output format.
         report_spec : str | dict, default "Common-Mermaid"
@@ -591,6 +619,8 @@ class AssetCatalog(ServerClient):
                 all_anchors=all_anchors,
                 start_from=start_from,
                 page_size=page_size,
+                graph_query_depth=graph_query_depth,
+                max_mermaid_node_count=max_mermaid_node_count,
                 output_format=output_format,
                 report_spec=report_spec,
                 **kwargs,
@@ -609,6 +639,8 @@ class AssetCatalog(ServerClient):
         all_anchors: bool = False,
         start_from: int = 0,
         page_size: int = 0,
+        graph_query_depth: int = 5,
+        max_mermaid_node_count: int = 5,
     ) -> str:
         """Return the asset lineage including a mermaid markdown string.
 
@@ -632,6 +664,10 @@ class AssetCatalog(ServerClient):
             The index from which to start fetching.
         page_size : int, default 0
             The maximum number of items to fetch.
+        graph_query_depth : int, default 5
+            How many hops of the lineage graph to traverse.
+        max_mermaid_node_count : int, default 5
+            Maximum number of nodes to include in the generated mermaid graph.
 
         Returns
         -------
@@ -656,6 +692,8 @@ class AssetCatalog(ServerClient):
             all_anchors=all_anchors,
             start_from=start_from,
             page_size=page_size,
+            graph_query_depth=graph_query_depth,
+            max_mermaid_node_count=max_mermaid_node_count,
             output_format="JSON",
         )
         return asset_graph.get("mermaidGraph")

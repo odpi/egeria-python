@@ -99,6 +99,20 @@ via `link_valid_value_member()` with exactly the body shape shown in the
 Reproduced section below — succeeded (previously failed with
 `PyegeriaInvalidParameterException`). `pytest tests/ -m unit` passes.
 
+**Independently re-verified from the reporting side** (resource-explorer
+session, same day, after `uv lock --upgrade-package pyegeria` picked up
+6.0.18.1 from PyPI): confirmed via `inspect.getsource` that
+`_async_link_valid_value_member`/`_async_link_valid_values_assignment`/
+`_async_link_reference_value_assignment` now call
+`_async_new_relationship_request` instead of
+`_async_create_element_body_request`; ran the real blocked caller
+(`resource-explorer/scripts/create_measure_definitions.py`) against a live
+server — all 3 `ValidValueMember` links that previously failed 100% of the
+time now succeed, and a second run confirms idempotency (find-or-create
+skips existing elements, re-linking an already-linked member doesn't
+error). `resource-explorer/pyproject.toml`'s `pyegeria` constraint bumped
+to `>=6.0.18.1` accordingly.
+
 **Original status:** open, found 2026-08-15 (Dan/Claude, resource-explorer session)
 resuming `scripts/create_measure_definitions.py`'s `ValidValueMember` linking
 step (docs/survey-question-context-plan.md), which was blocked on this exact
@@ -462,7 +476,29 @@ benefit from an actual fix to thread `graph_query_depth`/
 
 ### ISSUE-24: `AssetCatalog._async_get_asset_lineage_graph_by_guid` hardcodes `queryGraphDepth: 5` with no override parameter at all
 
-**Status:** open, found 2026-08-04 alongside ISSUE-23 while auditing
+**Status:** fixed 2026-08-15 (Pyegeria — `pyegeria/omvs/asset_catalog.py`).
+Turned out to be worse than "no override" — checked the real
+`AssetLineageGraphRequestBody` Java class (`-> QueryOptions -> GetOptions`)
+and the field pyegeria was sending, `"queryGraphDepth"`, **doesn't exist on
+the real body at all**; the actual field is `"graphQueryDepth"`. So the
+hardcoded `5` was always silently dropped by the server regardless — the
+server's own default (also 5, coincidentally) was what actually applied
+the whole time, even before this fix. Found the same problem one field
+over: `"relationshipTypes"` isn't real either — the actual field,
+`GetOptions.includeOnlyRelationships`, means that caller-supplied
+relationship-type filter has also never worked. Fixed both field names,
+added `graph_query_depth`/`max_mermaid_node_count` parameters (the real
+`GetOptions.maxMermaidNodeCount` field was never sent at all before) to
+all three call layers (`_async_get_asset_lineage_graph_by_guid`,
+`get_asset_lineage_graph_by_guid`, `get_asset_lineage_mermaid_graph`).
+
+**Verified live**: created a real throwaway asset, spied on the outgoing
+request body, and confirmed `graph_query_depth=7`/`max_mermaid_node_count=42`
+now actually appear in the POST body as `graphQueryDepth`/
+`maxMermaidNodeCount` and the server accepts the call successfully.
+`pytest tests/ -m unit` passes.
+
+**Original status:** open, found 2026-08-04 alongside ISSUE-23 while auditing
 `egeria-workspaces-fs/.../lineage_handler.py`'s mermaid-graph call sites.
 
 **Layer:** Pyegeria (`pyegeria/omvs/asset_catalog.py`).
