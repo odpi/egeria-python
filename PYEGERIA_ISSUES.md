@@ -723,7 +723,20 @@ suspect until the base helper itself is fixed.
 
 ### ISSUE-30: `updateNote` REST operation (`POST .../feedback-manager/notes/{noteGUID}`) returns 404 on a live server, despite matching the documented `.http` ground truth exactly
 
-**Status:** open (Egeria Server), found 2026-08-05 while live-verifying the
+**Status:** still open (Egeria Server), re-confirmed 2026-08-15 against the
+current `qs-view-server` (post the environment restart noted in ISSUE-52) —
+not just a stale finding from the original redeploy. Re-ran the full
+repro end-to-end via pyegeria itself this time (not just raw `curl`):
+created a throwaway `DataStructure`, attached a `NoteLog`, created a `Note`
+on it — all three succeeded — then `_async_update_note` on the real note
+GUID still 404s with the identical shape (`CLIENT_ERROR_400`/HTTP 404 at
+`.../feedback-manager/notes/{noteGUID}`). Test elements cleaned up
+(cascade-deleting the anchor `DataStructure` also removed the attached
+`NoteLog`/`Note`, confirmed via a follow-up GUID lookup on all three).
+Nothing changed client-side — still not fixable in pyegeria; genuinely
+looks like an unregistered/unshipped endpoint on this server build.
+
+**Original status:** open (Egeria Server), found 2026-08-05 while live-verifying the
 ISSUE-32 `Note` type fix end-to-end (create worked; update did not).
 
 **Layer:** Egeria Server — not fixable in pyegeria. `_async_update_note`'s
