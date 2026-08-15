@@ -517,8 +517,19 @@ class AsyncBaseCommandProcessor(ABC):
                             ele_qn = ele_props.get("qualifiedName")
                             my_qn = self.parsed_output.get("qualified_name")
                             if ele_qn and my_qn and ele_qn != my_qn:
-                                msg = f"Found element with Display Name '{display_name}' (GUID: {existing_guid}) but different QN ('{ele_qn}'). Skipping Update transition."
+                                # ISSUE-59: this is a real, silent-duplication risk, not just an
+                                # informational log line -- proceeding as Create here will mint a
+                                # second element sharing this Display Name. Surface it to the
+                                # caller so it's visible in the rendered --process/--validate
+                                # output, not only in the debug log.
+                                msg = (
+                                    f"Found existing element with Display Name '{display_name}' (GUID: "
+                                    f"{existing_guid}) but under a different Qualified Name ('{ele_qn}' vs. "
+                                    f"'{my_qn}'). Proceeding as Create -- if you meant to update/rename that "
+                                    f"element, re-run with '### GUID {existing_guid}' to target it directly."
+                                )
                                 logger.info(msg)
+                                self._add_warning(msg)
                             else:
                                 self.as_is_element = element
                                 logger.info(f"Element with Display Name '{display_name}' found in Egeria (GUID: {existing_guid}). Transitioning to Update.")
@@ -1343,14 +1354,36 @@ class AsyncBaseCommandProcessor(ABC):
 
     async def fetch_as_is(self) -> Optional[Dict[str, Any]]:
         """
-        Standardized lookup for the target element. 
+        Standardized lookup for the target element.
         Checks the cache first.
         """
         if not self.supports_target_element_lookup():
             return None
 
+        # ISSUE-59: an explicit '### GUID' attribute on the command should target
+        # that specific element directly, regardless of what qualified_name/display
+        # name happen to resolve to -- this is the whole point of supplying one (e.g.
+        # "rename" a qualified name via Create <X>, which otherwise has no other way
+        # to say "this is the same element, just update it"). Try it first, before
+        # any name/QN-based lookup, so it isn't silently ignored.
+        explicit_guid = self.parsed_output.get("attributes", {}).get("GUID", {}).get("value")
+        if explicit_guid and isinstance(explicit_guid, str) and explicit_guid.strip():
+            try:
+                element = await self.fetch_element(explicit_guid.strip())
+                if element:
+                    logger.debug(f"fetch_as_is: Element found via explicit GUID '{explicit_guid}'")
+                    return element
+                else:
+                    msg = f"Warning: explicit GUID '{explicit_guid}' was supplied but no element was found for it."
+                    logger.warning(msg)
+                    self._add_warning(msg)
+            except Exception as e:
+                msg = f"Warning: explicit GUID '{explicit_guid}' was supplied but could not be fetched: {e}"
+                logger.warning(msg)
+                self._add_warning(msg)
+
         qn = self.parsed_output.get("qualified_name")
-        
+
         # If QN is missing but Display Name is present, try deriving it
         if not qn:
             qn = self.derive_qualified_name()

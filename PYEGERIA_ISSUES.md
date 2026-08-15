@@ -86,7 +86,35 @@ range, search this file for `(PY-#)` to find its new `ISSUE-#` home.
 
 ### ISSUE-59: `Create <X>` upsert commands (`upsert: true` in the compact spec) silently create a duplicate element, instead of updating in place, when the caller changes `### Qualified Name` to something the as-is lookup has never seen before — an explicit `### GUID` on the same command is also ignored for that lookup
 
-**Status:** open.
+**Status:** fixed 2026-08-15 (Pyegeria/Dr.Egeria — `md_processing/v2/processors.py`).
+Applied both halves of the candidate fix:
+1. **`fetch_as_is()` now honors an explicit `### GUID`** — tries
+   `fetch_element(guid)` directly, before any qualified-name-derivation or
+   name-based lookup, so an author who supplies a GUID to target a specific
+   element (e.g. to rename its qualified name) is no longer silently
+   ignored.
+2. **The existing "same Display Name, different QN" guard (step 4a) now
+   surfaces a real warning** (`self._add_warning(...)`, visible in
+   `--process`/`--validate` output) instead of only a `logger.info()` line
+   nobody authoring markdown would ever see. The message names the
+   existing element's GUID and tells the caller to re-run with
+   `### GUID <guid>` if they meant to update/rename it — turning a silent
+   duplicate into a caught, actionable warning when no GUID is supplied.
+
+**Verified live**, exact repro from the original report: created a
+`Perspective` with only `### Display Name` (auto-derived QN). Re-running
+`Create Perspective` with the same Display Name and a new
+`### Qualified Name`, no GUID → now correctly creates a second element
+**and prints an explicit warning** naming the original GUID and how to
+target it (previously: fully silent). Re-running a third time with the
+same new QN plus `### GUID <original-guid>` → correctly rewrote to
+`Update Perspective`, `Found: Yes`, same original GUID returned (no third
+duplicate) — confirmed via direct fetch that the *original* element's
+`qualifiedName` property actually changed and its version incremented
+(1→2), not a new element. Test elements cleaned up. `pytest tests/ -m unit`
+passes.
+
+**Original status:** open.
 
 **Layer:** Pyegeria (`md_processing/v2/processors.py` — the `fetch_as_is`/
 `CommandRewriter` Create↔Update upsert-detection path; exact function not
