@@ -53,7 +53,14 @@ def process_related_element_list(
     if mermaid_only:
         return elements.get("mermaidGraph", "No mermaid graph found")
 
-    el_list = elements.get("elementList", NO_ELEMENTS_FOUND)
+    # ISSUE-39/ISSUE-49: a relationship-list envelope (OpenMetadataRelationshipListResponse)
+    # nests its results under "relationships", not "elementList" -- confirmed live against
+    # a real SmartQuery relationship (both .../linked-by-type/... and
+    # .../relationships/by-search-conditions return {"relationshipList": {"relationships": [...]}}).
+    # "elementList" is the related-*element* envelope's key (relatedElementList branch above),
+    # not the relationship-list envelope's.
+    list_key = "relationships" if relationship_list else "elementList"
+    el_list = elements.get(list_key, NO_ELEMENTS_FOUND)
     if isinstance(el_list, str):
         return el_list
 
@@ -2808,7 +2815,7 @@ class MetadataExpert(ServerClient):
             "POST", url, body_slimmer(body), timeout=timeout
         )
 
-        return process_related_element_list(response, mermaid_only)
+        return process_related_element_list(response, mermaid_only, relationship_list=True)
 
     def get_all_metadata_element_relationships(
         self,
@@ -2982,7 +2989,7 @@ class MetadataExpert(ServerClient):
             "POST", url, body_slimmer(body), timeout=timeout
         )
 
-        return process_related_element_list(response, mermaid_only)
+        return process_related_element_list(response, mermaid_only, relationship_list=True)
 
     def get_metadata_element_relationships(
         self,

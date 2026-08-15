@@ -961,7 +961,7 @@ class ReferenceDataManager(ServerClient):
 
         """
         url = f"{self.ref_data_command_base}/valid-values/{vv_set_guid}/members/{vv_member_guid}/attach"
-        await self._async_create_element_body_request(url, ["ValidValueMemberProperties"], body)
+        await self._async_new_relationship_request(url, ["ValidValueMemberProperties"], body)
         logger.info(f"Linked valid value definition {vv_set_guid} to {vv_member_guid}")
 
     @dynamic_catch
@@ -1146,7 +1146,7 @@ class ReferenceDataManager(ServerClient):
 
         """
         url = f"{self.ref_data_command_base}/elements/{element_guid}/valid-values-assignment/{vv_def_guid}/attach"
-        await self._async_create_element_body_request(url, ["ValidValuesAssignmentProperties"], body)
+        await self._async_new_relationship_request(url, ["ValidValuesAssignmentProperties"], body)
         logger.info(f"Linked valid value definition {vv_def_guid} to consumer {element_guid}")
 
     @dynamic_catch
@@ -1331,7 +1331,7 @@ class ReferenceDataManager(ServerClient):
 
         """
         url = f"{self.ref_data_command_base}/elements/{element_guid}/reference-value-assignment/{vv_def_guid}/attach"
-        await self._async_create_element_body_request(url, ["ReferenceValueAssignmentProperties"], body)
+        await self._async_new_relationship_request(url, ["ReferenceValueAssignmentProperties"], body)
         logger.info(f"Linked reference value {vv_def_guid} to tagged element {element_guid}")
 
     @dynamic_catch
@@ -1518,7 +1518,7 @@ class ReferenceDataManager(ServerClient):
 
         """
         url = f"{self.ref_data_command_base}/valid-values/{vv_def_guid}/implementation/elements/{element_guid}/attach"
-        await self._async_create_element_body_request(url, ["ValidValuesImplementationProperties"], body)
+        await self._async_new_relationship_request(url, ["ValidValuesImplementationProperties"], body)
         logger.info(f"Linked valid value definition {vv_def_guid} to implementation element {element_guid}")
 
     @dynamic_catch
@@ -1703,7 +1703,7 @@ class ReferenceDataManager(ServerClient):
 
         """
         url = f"{self.ref_data_command_base}/valid-values/{vv_def_one_guid}/associated-valid-values/{vv_def_two_guid}/attach"
-        await self._async_create_element_body_request(url, ["ValidValueAssociationProperties"], body)
+        await self._async_new_relationship_request(url, ["ValidValueAssociationProperties"], body)
         logger.info(f"Linked associated valid values {vv_def_one_guid} and {vv_def_two_guid}")
 
     @dynamic_catch
@@ -1887,7 +1887,7 @@ class ReferenceDataManager(ServerClient):
 
         """
         url = f"{self.ref_data_command_base}/valid-values/{vv_def_one_guid}/consistent-valid-values/{vv_def_two_guid}/attach"
-        await self._async_create_element_body_request(url, None, body)
+        await self._async_new_relationship_request(url, None, body)
         logger.info(f"Linked consistent valid values {vv_def_one_guid} and {vv_def_two_guid}")
 
     @dynamic_catch
@@ -2073,7 +2073,7 @@ class ReferenceDataManager(ServerClient):
 
         """
         url = f"{self.ref_data_command_base}/valid-values/{vv_def_one_guid}/mapped-valid-values/{vv_def_two_guid}/attach"
-        await self._async_create_element_body_request(url, ["ValidValuesMappingProperties"], body)
+        await self._async_new_relationship_request(url, ["ValidValuesMappingProperties"], body)
         logger.info(f"Linked mapped valid values {vv_def_one_guid} and {vv_def_two_guid}")
 
     @dynamic_catch

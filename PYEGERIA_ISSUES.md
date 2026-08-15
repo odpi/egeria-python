@@ -84,6 +84,109 @@ range, search this file for `(PY-#)` to find its new `ISSUE-#` home.
 
 ## Pyegeria — fixable here
 
+### ISSUE-56: `ReferenceDataManager`'s 6 relationship-link methods all route through the element-body validator, not the relationship-body validator — every call built per the method's own documented sample body fails Pydantic validation
+
+**Status:** fixed 2026-08-15 (Pyegeria — `pyegeria/omvs/reference_data.py`).
+Applied the candidate fix as described (mechanical, same call shape):
+swapped `_async_create_element_body_request(url, [PropClassName], body)` →
+`_async_new_relationship_request(url, [PropClassName], body)` at all 7
+sites — the 6 listed below plus a 7th the original report flagged as
+"not individually re-checked" (`_async_link_consistent_valid_values`,
+which needed `None` instead of a properties-class list since that
+relationship has no properties of its own — same wrong helper, same fix).
+Verified live: created a real `ValidValueDefinition` pair and linked them
+via `link_valid_value_member()` with exactly the body shape shown in the
+Reproduced section below — succeeded (previously failed with
+`PyegeriaInvalidParameterException`). `pytest tests/ -m unit` passes.
+
+**Original status:** open, found 2026-08-15 (Dan/Claude, resource-explorer session)
+resuming `scripts/create_measure_definitions.py`'s `ValidValueMember` linking
+step (docs/survey-question-context-plan.md), which was blocked on this exact
+bug (`link_valid_value_definition()`) as of 2026-08-13 — expected it to be
+fixed now that `ValidValuesAssignment`/`ReferenceValueAssignment` linking
+methods exist (they didn't before), but re-verified live and the underlying
+bug is unchanged, just now present in 2 additional methods that didn't
+exist when it was first hit.
+
+**Layer:** Pyegeria (`pyegeria/omvs/reference_data.py`).
+
+**What:** `ReferenceDataManager` has (at least) 6 async relationship-link
+methods, each documented with a `"class": "NewRelationshipRequestBody"`
+sample body in its own docstring, but each calls
+`self._async_create_element_body_request(url, [PropClassName], body)`:
+
+- `_async_link_valid_value_member` (line 964) → `ValidValueMemberProperties`
+- `_async_link_valid_values_assignment` (line 1149) →
+  `ValidValuesAssignmentProperties`
+- `_async_link_reference_value_assignment` (line 1334) →
+  `ReferenceValueAssignmentProperties`
+- `_async_link_valid_values_implementation` (line 1521) →
+  `ValidValuesImplementationProperties`
+- `_async_link_valid_values_mapping` (line 2076) →
+  `ValidValuesMappingProperties`
+- (a 6th, ConsistentValidValues-shaped call — not individually re-checked
+  this session, flagged as likely affected by the same pattern; grep
+  `_async_create_element_body_request(url, \["` in this file to find any
+  others)
+
+`_async_create_element_body_request` (`pyegeria/core/_server_client.py:7134`)
+unconditionally calls `self.validate_new_element_request(body, prop)`
+(`_server_client.py:6045`), which validates a dict body against
+`TypeAdapter(NewElementRequestBody)` — a Pydantic model whose `class_` field
+is `Annotated[Literal["NewElementRequestBody"], ...]`
+(`pyegeria/models/models.py:418`). A `NewRelationshipRequestBody`-shaped
+dict (`class_: Literal["NewRelationshipRequestBody"]`,
+`pyegeria/models/models.py:277`) — exactly what each method's own docstring
+tells the caller to build — always fails that Literal check. The correct
+helper already exists and is unused by any of these 6 methods:
+`_async_new_relationship_request` (`_server_client.py:7188`), which calls
+`self.validate_new_relationship_request(body, prop)`
+(`_server_client.py:6090`) against `TypeAdapter(NewRelationshipRequestBody)`
+— the matching validator for the body shape these methods actually need.
+
+**Reproduced** (pure validation, no live server needed — confirmed the
+defect is in the client-side Pydantic check itself, not a server response):
+```python
+from pydantic import TypeAdapter
+from pyegeria.models.models import NewElementRequestBody
+
+body = {
+    "class": "NewRelationshipRequestBody",
+    "properties": {"class": "ValidValueMemberProperties",
+                    "isDefaultValue": False, "label": "test", "description": ""},
+}
+TypeAdapter(NewElementRequestBody).validate_python(body)
+# ValidationError: 1 validation error for NewElementRequestBody
+# class
+#   Input should be 'NewElementRequestBody' [type=literal_error, input_value='NewRelationshipRequestBody', ...]
+```
+`_validate_body` (`_server_client.py:6013`) re-raises any `ValidationError`
+as `PyegeriaInvalidParameterException` rather than degrading silently, so
+every one of these 6 methods raises that exception on any body built per
+its own documented sample — there is no way to call them successfully as
+documented today.
+
+**Impact:** `ReferenceDataManager.link_valid_value_definition()` (the only
+one of the 6 with a real caller in this session — `resource-explorer`'s
+`scripts/create_measure_definitions.py`) cannot link a `ValidValueMember`
+to its parent `ValidValueSet` at all — confirmed live 2026-08-13, the
+script's `ValidValueDefinition` elements are created successfully but every
+`link_valid_value_definition()` call fails, caught and reported by the
+script rather than crashing the run. The other 5 methods are unused by any
+downstream caller in this codebase yet (no live repro attempted for them),
+but the same Literal mismatch applies identically by inspection — same
+call pattern, same underlying helper.
+
+**Candidate fix:** swap
+`self._async_create_element_body_request(url, [PropClassName], body)` →
+`self._async_new_relationship_request(url, [PropClassName], body)` at each
+of the 6 (or more — re-grep) call sites. Mechanical, single-line-per-site
+change; `_async_new_relationship_request`'s signature
+(`url, prop, body`) already matches the existing call shape exactly, no
+other code needs to change. Not applied here — per this repo's own policy,
+egeria-python bugs are logged here and fixed only with explicit owner
+approval, not patched directly by an assisting session.
+
 ### ISSUE-51: `AsyncBaseCommandProcessor.fetch_element()`'s two fallback paths return incompatible shapes — the MetadataExpert fallback crashes downstream code that assumes ClassificationExplorer's envelope
 
 **Status:** fixed 2026-08-15 (Pyegeria — `md_processing/v2/processors.py`).
@@ -162,7 +265,40 @@ every repro attempt itself timing out.
 
 ### ISSUE-49: `MetadataExpert.get_metadata_element_relationships` (lookup a relationship by its two endpoint GUIDs) returns "No elements found" for a relationship confirmed to exist
 
-**Status:** open, found 2026-08-10 (Dan) building egeria-workspaces-fs's
+**Status:** fixed 2026-08-15 (Pyegeria — `pyegeria/omvs/metadata_expert.py`).
+Root cause: the shared `process_related_element_list()` helper has two
+envelope shapes it can parse — a related-*element* envelope
+(`{"relatedElementList": {"elementList": [...]}}`) and a relationship-list
+envelope (`{"relationshipList": {"relationships": [...]}}`) — selected by
+its `relationship_list` parameter. Two bugs stacked: (1)
+`_async_get_metadata_element_relationships` (and its sibling
+`_async_get_all_metadata_element_relationships`) called the helper with
+the default `relationship_list=False`, so it looked for the wrong
+top-level key (`relatedElementList`, which doesn't exist in a relationship
+response) and returned the `NO_ELEMENTS_FOUND` sentinel immediately; (2)
+even with `relationship_list=True` set (as `_async_find_relationships_
+between_elements`, ISSUE-39's method, already did), the helper's inner
+lookup used the wrong key too — `elementList` instead of the real
+`relationships` key nested inside `relationshipList`. Confirmed live via
+raw response inspection: `POST .../linked-by-type/{type}/to-elements/{guid}`
+returns `{"relationshipList": {"relationships": [...]}}` — never
+`relatedElementList`/`elementList` at all.
+
+**Fixed both bugs**: `process_related_element_list()` now looks up
+`"relationships"` (not `"elementList"`) when `relationship_list=True`; the
+two relationship-endpoint call sites that weren't already passing
+`relationship_list=True` now do
+(`_async_get_metadata_element_relationships`,
+`_async_get_all_metadata_element_relationships`).
+
+**Verified live**: recreated the exact repro below (`ResultsSet` +
+`SavedQuery` + real `SmartQuery` link via
+`link_saved_query_to_results_set`) — `get_metadata_element_relationships`
+now returns the relationship with the matching GUID instead of "No
+elements found". Also fixed ISSUE-39 as a side effect (same root cause,
+same helper) — see that entry. `pytest tests/ -m unit` passes throughout.
+
+**Original status:** open, found 2026-08-10 (Dan) building egeria-workspaces-fs's
 migration of Egeria Insights' saved queries onto the real `SavedQuery`/
 `SmartQuery` types (`insights_handler.py`, Track C.1 of
 `EGERIA_INSIGHTS_QUERY_MODEL.md`).
@@ -1002,7 +1138,21 @@ native counting only for **element** counts.
 
 ### ISSUE-39 (PY-19): `MetadataExpert.find_relationships_between_elements(relationshipTypeName=…)` returns "No elements found" even when the matching count is non-zero
 
-**Status:** open (Egeria server) — found 2026-07-24 alongside ISSUE-38,
+**Status:** fixed 2026-08-15 (Pyegeria — `pyegeria/omvs/metadata_expert.py`).
+**Reclassified from Egeria Server to Pyegeria** — the original diagnosis
+was wrong; this was never a server-side gap. Same root cause as ISSUE-49
+(read that entry for the full mechanism): the shared
+`process_related_element_list()` helper's `relationship_list=True` branch
+looked for the relationships under `elementList` instead of the real key,
+`relationships`. `_async_find_relationships_between_elements` already
+correctly passed `relationship_list=True`, so this method only ever hit
+the second half of the bug — fixed by the same one-line change to the
+shared helper, no call-site change needed here. Verified live: re-ran
+`find_relationships_between_elements({"relationshipTypeName": "SmartQuery"})`
+against a real, freshly-created `SmartQuery` relationship — now returns it
+instead of "No elements found". `pytest tests/ -m unit` passes.
+
+**Original status:** open (Egeria server) — found 2026-07-24 alongside ISSUE-38,
 same environment. Consolidated in from `egeria-workspaces-fs/
 PYEGERIA_ISSUES.md` 2026-08-05.
 
