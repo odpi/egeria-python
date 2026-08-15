@@ -3386,7 +3386,7 @@ class GovernanceOfficer(ServerClient):
          }
          """
         loop = asyncio.get_event_loop()
-        loop.run_until_complete(self._async_detach_governance_results(gov_metric_guid, data_asset_guid, data_asset_guid, body))
+        loop.run_until_complete(self._async_detach_governance_results(gov_metric_guid, data_asset_guid, body))
     @dynamic_catch
     async def _async_add_regulator_to_regulation(self, regulation_guid: str, regulator_guid,
                                                   body: Optional[dict | NewRelationshipRequestBody] = None) -> None:
@@ -3436,11 +3436,11 @@ class GovernanceOfficer(ServerClient):
 
         """
 
-        url = (f"{self.platform_url}/servers/{self.view_server}/api/open-metadata/{self.url_marker}/governance-officer/"
-               f"{regulation_guid}/organizations/{regulator_guid}/attach"
+        url = (f"{self.platform_url}/servers/{self.view_server}/api/open-metadata/{self.url_marker}/"
+               f"regulations/{regulation_guid}/regulators/organizations/{regulator_guid}/attach"
                )
-        await self._async_new_relationship_request(url, "GovernanceResultsProperties", body)
-        logger.info(f"Linked governance metric to a data asset containing its measurements.: {regulation_guid} -> {regulator_guid}")
+        await self._async_new_relationship_request(url, "RegulatorProperties", body)
+        logger.info(f"Linked regulation to regulator: {regulation_guid} -> {regulator_guid}")
 
     @dynamic_catch
     def add_regulator_to_regulation(self, regulation_guid: str, regulator_guid,
@@ -3490,7 +3490,7 @@ class GovernanceOfficer(ServerClient):
 
         """
         loop = asyncio.get_event_loop()
-        loop.run_until_complete(self._async_link_governance_results(regulation_guid, regulator_guid, body))
+        loop.run_until_complete(self._async_add_regulator_to_regulation(regulation_guid, regulator_guid, body))
 
     @dynamic_catch
     async def _async_detach_regulator_from_regulation(self, regulation_guid: str, regulator_guid, body: Optional[dict | DeleteRelationshipRequestBody] = None) -> None:
@@ -3529,8 +3529,8 @@ class GovernanceOfficer(ServerClient):
         }
         """
 
-        url = (f"{self.platform_url}/servers/{self.view_server}/api/open-metadata/{self.url_marker}/governance-officer/"
-               f"{regulation_guid}/organizations/{regulator_guid}/detach")
+        url = (f"{self.platform_url}/servers/{self.view_server}/api/open-metadata/{self.url_marker}/"
+               f"regulations/{regulation_guid}/regulators/organizations/{regulator_guid}/detach")
         await self._async_delete_relationship_request(url, body)
         logger.info(
             f"Detached regulator from the regulation: {regulation_guid} -> {regulator_guid}")

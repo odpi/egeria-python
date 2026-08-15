@@ -6054,7 +6054,7 @@ class SolutionArchitect(ServerClient):
             }
             """
         loop = asyncio.get_event_loop()
-        loop.run_until_complete(self._async_delete_solution_role(guid, cascade_delete, body))
+        loop.run_until_complete(self._async_delete_solution_role(guid, body, cascade_delete))
 
     async def _async_find_solution_roles(
         self,

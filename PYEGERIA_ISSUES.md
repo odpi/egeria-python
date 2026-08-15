@@ -566,7 +566,78 @@ elsewhere in this file).
 
 ### ISSUE-27: ~50 more sync methods delegate to their async counterpart with an all-positional argument list — unaudited for the same scrambling bug as ISSUE-21/25
 
-**Status:** open, found 2026-08-04 as a byproduct of the ISSUE-25 sentinel
+**Status:** fixed 2026-08-15 (Pyegeria). Full audit via a script (not manual
+grepping): every multi-line all-positional `self._async_*(...)` delegation
+across `pyegeria/omvs/*.py` (62 sites, dominated by
+`classification_explorer.py`), plus every single-line all-positional call
+with 3+ bare-identifier args (285 more candidates), each cross-checked
+against its target async method's *actual* parameter order (careful to use
+the target's **last** definition in the file, matching Python's real
+same-name-method resolution — one earlier false lead came from a stale,
+fully-shadowed duplicate `_async_delete_solution_blueprint` definition still
+sitting in `solution_architect.py`, dead code but harmless since it's never
+reachable).
+
+Of ~350 candidate sites, found and fixed **4 real bugs**, all in
+`pyegeria/omvs/governance_officer.py` and `pyegeria/omvs/solution_architect.py`
+(the rest were either exact matches or "different local variable name, same
+value, same position" false positives — e.g. `add_term_to_folder(folder_guid,
+term_guid, body)` calling `_async_add_to_collection(folder_guid, term_guid,
+body)` against a target expecting `(collection_guid, element_guid, body)` —
+positionally correct, just domain-specific local names):
+
+1. **`solution_architect.py`: `delete_solution_role`** — sync wrapper's own
+   signature is `(guid, body=None, cascade_delete=False)` (correct order,
+   matching the async target), but it called
+   `self._async_delete_solution_role(guid, cascade_delete, body)` —
+   transposed, sending the boolean into the `body` slot and the body dict
+   into the `cascade_delete` slot. Fixed to
+   `self._async_delete_solution_role(guid, body, cascade_delete)`.
+
+2. **`governance_officer.py`: `add_regulator_to_regulation`** — called the
+   **wrong async method entirely**: `self._async_link_governance_results(...)`
+   (a copy-paste leftover — a completely different relationship, hitting
+   `governance-metrics/{gov_metric_guid}/measurements/{data_asset_guid}/attach`
+   with `GovernanceResultsProperties`) instead of the correct
+   `self._async_add_regulator_to_regulation(...)`. Fixed the call target.
+
+3. **`governance_officer.py`: `_async_add_regulator_to_regulation`/
+   `_async_detach_regulator_from_regulation`** — found while fixing #2: both
+   built the wrong URL (`.../{url_marker}/governance-officer/regulations/...`
+   — `self.url_marker` is itself `"governance-officer"`, so this duplicated
+   the segment; ground truth per `Egeria-api-governance-officer.http` is
+   `.../governance-officer/regulations/{regulationGUID}/regulators/organizations/{regulatorGUID}/attach`,
+   single segment) and the attach method also used the wrong properties
+   class (`"GovernanceResultsProperties"` instead of `"RegulatorProperties"`,
+   also confirmed against the `.http` file). Fixed both URLs and the
+   properties class.
+
+4. **`governance_officer.py`: `detach_governance_results`** — sync wrapper
+   passed `data_asset_guid` **twice**:
+   `self._async_detach_governance_results(gov_metric_guid, data_asset_guid,
+   data_asset_guid, body)` against a 3-parameter target
+   `(gov_metric_guid, data_asset_guid, body)` — the extra positional arg
+   landed in the `body` slot, and the real `body` argument was silently
+   dropped (extra arg beyond the target's parameter count). Fixed by
+   removing the duplicate.
+
+**Verified live** against `qs-view-server`: `delete_solution_role`'s fix
+confirmed via a request-body spy (cascade/body no longer transposed);
+`add_regulator_to_regulation`/`detach_regulator_from_regulation` verified
+fully end-to-end — created a throwaway `Regulation` + `Organization`,
+linked via the fixed method, confirmed via `.http`-matching URL/body,
+detached, cleaned up. `detach_governance_results`'s fix confirmed via a
+request-body spy showing the correct 2-argument call now reaches
+`_async_delete_relationship_request` cleanly.
+
+**Found as a byproduct, NOT part of this issue's scope, tracked separately:**
+attempting to live-verify `_async_link_governance_results` (unrelated,
+untouched method) surfaced a real server-side/endpoint-design bug — see
+ISSUE-57.
+
+`pytest tests/ -m unit -q` passes (exit 0).
+
+**Original status:** open, found 2026-08-04 as a byproduct of the ISSUE-25 sentinel
 audit.
 
 **Layer:** Pyegeria (`classification_explorer.py`, `runtime_manager.py`,
@@ -925,6 +996,47 @@ working correctly.
 ---
 
 ## Egeria Server — not fixable in pyegeria
+
+### ISSUE-57: `GovernanceResults` relationship rejects the exact end1/end2 GUID order the `.http` ground truth and pyegeria's URL both use
+
+**Status:** open, found 2026-08-15 as a byproduct of live-verifying the
+ISSUE-27 fix (`detach_governance_results`'s duplicate-argument bug).
+
+**Layer:** Egeria Server (type definition or the governance-officer view
+service's endpoint handler), not pyegeria — pyegeria's request exactly
+matches `Egeria-api-governance-officer.http`'s `linkGovernanceResults`
+worked example (URL, body, and `GovernanceResultsProperties` class all
+byte-for-byte identical), so there's nothing to fix on the client side.
+
+**What:** calling `GovernanceOfficer._async_link_governance_results(
+governance_metric_guid, data_asset_guid)` — which builds
+`POST .../governance-metrics/{governanceMetricGUID}/measurements/{dataAssetGUID}/attach`,
+matching the `.http` file exactly — fails with a 500:
+
+```
+OMRS-REPOSITORY-400-047 A addRelationship request has been made ... for a
+relationship that has one or more ends of the wrong or invalid type.
+Relationship type is GovernanceResults; entity proxy <dataAssetGUID> for
+end 1 is of type DataSet rather than GovernanceMetric and entity proxy
+<governanceMetricGUID> for end 2 is of type GovernanceMetric rather than Asset
+```
+
+The server assigned end1 to the *second* URL path GUID (the data asset) and
+end2 to the *first* (the governance metric) — the reverse of what the
+`GovernanceResults` relationship type (end1=GovernanceMetric, end2=Asset)
+and the URL's own naming (`governance-metrics/{...}/measurements/{...}`)
+both imply. Reproduced live against `qs-view-server`: created a throwaway
+`GovernanceMetric` + `DataSet` asset, confirmed the 500, cleaned up both
+elements afterward.
+
+**Candidate fix:** none on the pyegeria side — either the
+`governance-officer` view service's endpoint handler has end1/end2
+swapped internally, or the `GovernanceResults` relationship's own type
+definition has end1/end2 the other way round from what the URL segment
+order and `.http` documentation suggest. Needs investigation against the
+Egeria server/type-system source, not pyegeria.
+
+---
 
 ### ISSUE-52: `qs-nanny-daemon`/`qs-integration-daemon`'s own connectors generate sustained, heavy background write load against the shared repository — starves interactive requests, plausible cause of "frequent Postgres checkpoints"
 
