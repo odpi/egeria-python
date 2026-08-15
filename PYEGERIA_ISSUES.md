@@ -2635,6 +2635,17 @@ next release goes out.
 
 ### ISSUE-25: `graph_query_depth` silently dropped (or scrambled) by ~20 sync/async OMVS wrapper methods — the actual root cause behind ISSUE-23/24's symptoms
 
+**Re-verified 2026-08-15, no regression.** Spot-checked live against
+`qs-view-server`: `find_information_supply_chains("Onboarding",
+graph_query_depth=9)` (the exact original repro) correctly forwards
+`graphQueryDepth: 9` into the body (request-spy confirmed); the three
+previously-crashing scramble sites (`find_all_information_supply_chains`,
+`find_all_solution_blueprints`, `find_all_solution_components`) all run
+clean with no `TypeError`; `ClassificationExplorer.find_root_elements`'s
+field-scramble fix also holds (`graphQueryDepth: 7` lands correctly,
+`output_format`/`report_spec`/`timeout`/`body` no longer misrouted).
+`pytest tests/ -m unit` passes. Fix from 2026-08-04 below is intact.
+
 **Status:** fixed 2026-08-04 (Pyegeria — 8 files). Found while investigating a live
 repro: `SolutionArchitect.find_information_supply_chains("Onboarding")`
 returned a 3-node mermaid graph vs. 5 nodes for the equivalent raw REST call,
