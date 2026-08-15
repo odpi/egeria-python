@@ -2705,17 +2705,20 @@
       "variable_name": "status",
       "inUpdate": true,
       "attr_labels": "",
-      "examples": "VALIDATED, PROPOSED",
-      "default_value": "VALIDATED",
+      "examples": "Validated, Proposed",
+      "default_value": "Validated",
       "valid_values": [
-        "PROPOSED",
-        "VALIDATED",
-        "DEPRECATED",
-        "OBSOLETE",
-        "OTHER"
+        "Discovered",
+        "Proposed",
+        "Imported",
+        "Validated",
+        "Deprecated",
+        "Obsolete",
+        "Other"
       ],
       "existing_element": "",
-      "description": "Status of a governance classification assignment.",
+      "property_name": "statusIdentifier",
+      "description": "Status of a governance classification assignment, looked up from the statusIdentifier valid value set. Accepts the current display name or a preferred-value integer.",
       "generated": false,
       "style": "Valid Value",
       "user_specified": true,
@@ -2724,7 +2727,7 @@
       "min_cardinality": 0,
       "max_cardinality": 1,
       "level": "Basic",
-      "Journal Entry": ""
+      "Journal Entry": "Fixed 2026-08-15 (PYEGERIA_ISSUES.md ISSUE-22): attribute was already migrated to Valid Value style but had no explicit property_name, so it auto-derived to the wrong property (governanceStatus, which does not exist) and silently fell back to a stale ALL-CAPS list, returning an unconverted string instead of the int statusIdentifier field actually expects."
     },
     "Accounting Code": {
       "variable_name": "accounting_code",

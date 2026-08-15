@@ -821,7 +821,44 @@ regression on ISSUE-44's three bugs.
 
 ### ISSUE-22: `Ownership`/`Impact`/`Confidence`/`Confidentiality`/`Criticality` classification `status` field expects an int enum, not the free-text value the Dr.Egeria "Status" attribute style implies
 
-**Status:** open, found 2026-08-03 during a live smoke test of `Classify
+**Status:** fixed 2026-08-15. `Ownership` was never actually affected — its
+`ClassificationSpec` uses its own explicit field map (`owner`/
+`ownerTypeName`/`ownerPropertyName`), not `_GOVERNANCE_SHARED_FIELDS`, so
+the issue title overstated its scope; `Retention` *is* affected (it also
+consumes `_GOVERNANCE_SHARED_FIELDS`) and is fixed by the same change as
+`Impact`/`Confidence`/`Confidentiality`/`Criticality`.
+
+Two separate bugs were involved:
+1. **Attribute-definition gap.** Between this issue being filed and now,
+   the compact-spec attribute had already been renamed `Status` →
+   `Governance Status` and migrated to `style: "Valid Value"` — but with no
+   explicit `property_name`, so it auto-derived to `governanceStatus` (a
+   property that doesn't exist), causing the live valid-metadata-value
+   lookup to silently return empty and fall through to a stale ALL-CAPS
+   fallback list, passing through an un-converted string. Fixed via the
+   Spec Editor API: `Governance Status` now has `property_name:
+   "statusIdentifier"` and `valid_values` = `["Discovered", "Proposed",
+   "Imported", "Validated", "Deprecated", "Obsolete", "Other"]`, matching
+   `GovernanceClassificationStatus`.
+2. **Wire-key mapping bug**, in `md_processing/v2/curation.py`:
+   `_GOVERNANCE_SHARED_FIELDS` mapped `"Governance Status"` to the outgoing
+   JSON key `"status"`, but the real field on `ImpactProperties`/
+   `ConfidenceProperties`/`ConfidentialityProperties`/`CriticalityProperties`/
+   `RetentionClassificationProperties` is `statusIdentifier` — `"status"` is
+   silently ignored by the server (confirmed live: sending `"status": 4`
+   left readback `statusIdentifier: "0"`; sending `"statusIdentifier": 4`
+   directly persisted correctly). Fixed: `_GOVERNANCE_SHARED_FIELDS =
+   {"Governance Status": "statusIdentifier", ...}`.
+
+Verified end-to-end through the real Dr.Egeria pipeline (not just manual
+body construction): `Create Data Structure` + `Classify Impact` with
+`Governance Status: Validated`, `Level Identifier: 2`, `Steward:
+test-steward` — both commands SUCCESS, and a direct element fetch afterward
+showed `statusIdentifier: 3` (the correct ordinal for `Validated`) alongside
+`severityLevel: 2` and `steward: "test-steward"`. Test element deleted
+afterward. `pytest tests/ -m unit -q` passes (exit 0).
+
+**Original status:** open, found 2026-08-03 during a live smoke test of `Classify
 Impact` (Curation family).
 
 **Layer:** Not strictly a pyegeria bug — a Dr.Egeria compact-spec design

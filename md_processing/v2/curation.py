@@ -77,7 +77,7 @@ class ClassificationSpec:
 # Shared governance-classification fields (Impact/Confidence/Confidentiality/Criticality/Retention)
 # "Governance Status" (not "Status" -- that name collides with the universal Referenceable/
 # element-header "Status" attribute shared by nearly every other family; see PYEGERIA_ISSUES.md).
-_GOVERNANCE_SHARED_FIELDS = {"Governance Status": "status", "Steward": "steward", "Source": "source", "Description": "notes"}
+_GOVERNANCE_SHARED_FIELDS = {"Governance Status": "statusIdentifier", "Steward": "steward", "Source": "source", "Description": "notes"}
 
 CLASSIFICATION_METHODS: Dict[str, ClassificationSpec] = {
     # Keys are real Egeria classification type names (confirmed live via
