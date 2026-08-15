@@ -1394,7 +1394,39 @@ server-side) versus a regression.
 
 ### ISSUE-54: `findMetadataElements` scoped to the universal base type `Referenceable` silently returns an incomplete, arbitrary subset instead of the true population
 
-**Status:** open (Egeria server), found 2026-08-06 fixing egeria-workspaces-fs's
+**Status:** still open (Egeria server), re-confirmed 2026-08-15 against the
+current, restarted `qs-view-server` — magnitude has shifted (as with
+ISSUE-38/52's re-checks) but the core defect persists. Re-ran the same two
+independent cross-checks with a fully-paginated exhaustive scan
+(`page_size=200`, following pagination to exhaustion):
+- Direct exhaustive `metadataElementTypeName="GlossaryTerm"`: **532**
+  elements. Of the exhaustive `Referenceable` scan's 19,166 elements
+  (19,127 distinct GUIDs — see below), only **324** carry `typeName:
+  "GlossaryTerm"` — **61%** coverage (better than the original run's ~54%,
+  still clearly incomplete, not just a rounding gap).
+- Independent check against `SemanticAssignment` relationship participants
+  (`ClassificationExplorer.get_relationships`, unrelated API path): 414
+  distinct participant GUIDs; only **302 (73%)** appear anywhere in the
+  19,166-element `Referenceable` scan (up from the original run's 23/410 =
+  5.6%, but still missing more than a quarter of real, independently-known
+  participants).
+- **New observation this pass:** the exhaustive `Referenceable` scan itself
+  returned 19,166 total elements across pages but only 19,127 **distinct**
+  GUIDs — 39 duplicate entries showing up more than once across different
+  pages of the same paginated scan. Not previously noted; suggests server-side
+  result ordering/stability issues for this specific broad-type scan, which
+  would also explain why elements can be silently skipped between pages
+  (an element shifting position between page fetches, due to unstable
+  ordering, could cause both duplication *and* omission depending on which
+  way it moves) — a plausible mechanism for the core bug, not confirmed as
+  the actual root cause.
+
+Both cross-checks still clearly demonstrate the defect; nothing changed
+client-side to warrant re-testing pyegeria's own pagination logic (already
+ruled out in the original investigation — direct exhaustive scans of real
+types are complete and correct, only the broad-base-type scan is affected).
+
+**Original status:** open (Egeria server), found 2026-08-06 fixing egeria-workspaces-fs's
 relationship-only search (see ISSUE-45's same investigation thread —
 looking for a safe fallback type once `metadataElementTypeName="Asset"`
 was confirmed wrong for `SemanticAssignment`, and `metadataElementSubtypeNames`
