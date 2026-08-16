@@ -199,7 +199,31 @@ Egeria server/type-system source, not pyegeria.
 
 ### ISSUE-52: `qs-nanny-daemon`/`qs-integration-daemon`'s own connectors generate sustained, heavy background write load against the shared repository — starves interactive requests, plausible cause of "frequent Postgres checkpoints"
 
-**Status:** open (Egeria server / deployment config), found 2026-08-15 (Dan)
+**Update 2026-08-16, more specific root-cause evidence.** Recurred while
+retrying the `dr-egeria` help-Glossary `--process` step (see ISSUE-52's own
+earlier "cold-start crawl" postscript — this shows the earlier optimism was
+premature, it recurs under real batch load, not just right after a
+restart): `docker stats` showed `egeria-shared-postgres` at up to **650%
+CPU**, and connecting directly (`docker exec ... psql -U postgres -p 5442
+-d egeria`) found the real mechanism — **38 connections stuck `idle in
+transaction`** against the `egeria` database, all holding open the same
+query shape (`select distinct * from entity where (version_end_time is
+null) and (exists (select 1 from en...`). This is a connection/transaction
+pileup, not simple CPU starvation as originally framed — many connections
+opened a transaction, are waiting on something (`wait_event_type: Client`/
+`ClientRead`, i.e. waiting on their own client, not blocked by Postgres
+itself), and never committed/closed, so newer requests (including a plain
+`get_glossaries_by_name` lookup) queue behind them. CPU eased from 650% →
+340% → 298% over ~15 minutes while sitting at this same connection count,
+without by-name-search latency improving at all (stayed pinned at
+25-30s/timeout) — the two aren't tightly coupled, reinforcing that this is
+a connection-holding problem, not a raw compute-load problem. Whatever is
+opening these `entity`-table transactions and not releasing them (almost
+certainly the same `qs-nanny-daemon`/`qs-integration-daemon` connectors
+already suspected) is the actual thing to fix, not just "connector load"
+in the abstract.
+
+**Original status:** open (Egeria server / deployment config), found 2026-08-15 (Dan)
 investigating why a `dr_egeria --validate`/`--process` run against the
 `dr-egeria` help file (100+ commands) was taking 70+ minutes and timing out
 individual calls (see ISSUE-51), and independently reported by the user as
