@@ -143,8 +143,19 @@ When running Dr.Egeria, you specify a **directive** that determines how the file
 ### Automatic Command Rewriting (Upsert)
 
 Dr.Egeria implements "Upsert" logic to make metadata scripts more robust and idempotent:
-- **Create → Update**: If a `Create` command is issued but the element already exists (matched by Qualified Name), Dr.Egeria automatically rewrites the command to `Update`.
+- **Create → Update**: If a `Create` command is issued but the element already exists, Dr.Egeria automatically rewrites the command to `Update`. Existence is checked, in order: (1) an explicit `### GUID` attribute, if supplied — this always wins and is fetched directly, regardless of what Qualified Name/Display Name are also present; (2) Qualified Name (explicit or auto-derived from Display Name).
 - **Update → Create**: If an `Update` command is issued but the element does not exist and hasn't been "Planned" by a previous command, it is rewritten to `Create`.
+
+**Renaming an element's Qualified Name.** Because matching is normally by Qualified Name, re-running `Create <X>` with the *same* Display Name but a *new* Qualified Name — the natural way to try to "rename" an element via markdown — does **not** update the original element. Dr.Egeria has never seen that Qualified Name before, so it creates a second, distinct element instead. If it also finds an existing element sharing the same Display Name under a different Qualified Name, it warns you about the ambiguity (visible in both `--validate` and `--process` output) rather than guessing:
+
+```
+Found existing element with Display Name 'X' (GUID: <guid>) but under a
+different Qualified Name ('<old-qn>' vs. '<new-qn>'). Proceeding as Create
+-- if you meant to update/rename that element, re-run with '### GUID
+<guid>' to target it directly.
+```
+
+To actually rename the Qualified Name of an existing element, supply its `### GUID` on the same `Create` command along with the new `### Qualified Name` — the explicit GUID makes Dr.Egeria fetch and update that specific element in place instead of creating a duplicate.
 
 ### Planned Elements and Forward References
 
