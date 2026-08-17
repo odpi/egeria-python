@@ -29,6 +29,8 @@ from typing import Any, Callable, Dict, List, Optional, Sequence, Tuple
 
 from loguru import logger
 
+from pyegeria.core._globals import max_paging_size
+
 __all__ = [
     "DEFAULT_CAP",
     "GOVERNANCE_CLASSIFICATIONS",
@@ -58,7 +60,14 @@ __all__ = [
 # Same ceiling used elsewhere in the Overview app (and the wider portal) --
 # Egeria's find API returns paged element lists with no total-count metadata,
 # so counts are capped here unless the server supports native counting.
-DEFAULT_CAP = 500
+# Derived from pyegeria's shared, env-configurable max_paging_size (EGERIA_MAX_
+# PAGE_SIZE / "Egeria Max Page Size") rather than an independent hardcoded
+# literal, so a future Egeria server-side page-size limit change (see
+# max_paging_size's own comment -- hit live 2026-08-17,
+# findRelationshipsBetweenMetadataElements rejected a hardcoded 5000 as
+# "greater than the allowable maximum of 1000") is a config edit, not another
+# hunt across every module with its own copy of this number.
+DEFAULT_CAP = max_paging_size
 
 # Governed-data classifications that count as "governed" (single-condition
 # tallies only -- some connectors' matchClassifications ANY/ALL silently
