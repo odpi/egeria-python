@@ -49,6 +49,7 @@ __all__ = [
     "people_counts",
     "feedback_summary",
     "usage_context_counts",
+    "contextualised_coverage",
     "growth_series",
     "metric_trend",
     "term_definition_completeness",
@@ -964,6 +965,76 @@ def usage_context_counts(mgr, as_of: Optional[str] = None) -> Dict[str, int]:
     return {
         "informationSupplyChains": count_elements(mgr, "InformationSupplyChain", as_of),
         "blueprints": count_elements(mgr, "SolutionBlueprint", as_of),
+    }
+
+
+def contextualised_coverage(mgr, ce, as_of: Optional[str] = None) -> Dict[str, Optional[int]]:
+    """
+    % of Assets that have been given business/solution-design context via a
+    SolutionComponent -- OVERVIEW_NEXT_STEPS.md's "Usage % contextualised",
+    stuck as a documented TODO since it looked like it needed a full
+    per-asset participation traversal (no native "count of elements reachable
+    from a relationship" API exists). It doesn't, once you go through the
+    right relationship instead of trying to walk every asset: `ImplementedBy`
+    (model 0737, Solution Implementation) links a SolutionComponent to its
+    concrete implementation -- end1 is always SolutionComponent, end2 is
+    whatever actually implements it. Confirmed live 2026-08-17: on this
+    dataset end2 is a real mix (109 GovernanceActionType, but 31 genuine
+    Asset-subtype elements -- IntegrationConnector/SoftwareServer/Topic/
+    SoftwareServerPlatform) -- so filtering end2 to Asset-subtype elements
+    and counting distinct GUIDs is a single bounded relationship fetch, not a
+    traversal. `ImplementationResource` (the sibling relationship) was also
+    checked live and found to connect only to GovernanceActionType in this
+    dataset -- not useful for this metric, not included here.
+
+    Honesty note (this is a proxy, not the literal metric): an asset
+    connected to a SolutionComponent via ImplementedBy has been given
+    *some* solution-design context, but confirming that specific
+    SolutionComponent is itself wired into an InformationSupplyChain or
+    SolutionBlueprint would need a second hop (SolutionComponent ->
+    composition relationship -> ISC/blueprint) this function doesn't take --
+    same "single relationship-count hop, not a full graph walk" tradeoff
+    every other proxy metric in this module already makes (e.g. `lineage`
+    counting DataFlow relationships rather than confirming each one sits on
+    a path Egeria would call "lineage" in the strict sense).
+
+    Capped at max_paging_size ImplementedBy relationships (matches every
+    other relationship fetch in this module) -- undercounts if a deployment
+    has more, same documented tradeoff as governed_coverage/
+    certifications_summary's own caps.
+
+    Returns {"contextualisedCount": int|None, "assetTotal": int|None,
+    "contextualisedPct": float|None}. Any field is None on total failure for
+    its own step (never raises).
+    """
+    contextualised_count = None
+    try:
+        rel_body = {"class": "ResultsRequestBody", "asOfTime": as_of} if as_of else None
+        rels = _json_list(ce.get_relationships(
+            relationship_type="ImplementedBy", output_format="JSON",
+            start_from=0, page_size=max_paging_size, body=rel_body))
+        asset_guids: set = set()
+        for r in rels:
+            for end_key in ("end1", "end2"):
+                end = (r.get(end_key) or {}) if isinstance(r, dict) else {}
+                end_type = end.get("type") or {}
+                type_names = {end_type.get("typeName")} | set(end_type.get("superTypeNames") or [])
+                if "Asset" in type_names and end.get("guid"):
+                    asset_guids.add(end["guid"])
+        contextualised_count = len(asset_guids)
+    except Exception as exc:  # noqa: BLE001
+        logger.debug(f"contextualised_coverage: ImplementedBy query failed: {exc}")
+
+    asset_total = count_elements(mgr, "Asset", as_of)
+
+    pct = None
+    if contextualised_count is not None and asset_total:
+        pct = round(100.0 * contextualised_count / asset_total, 1)
+
+    return {
+        "contextualisedCount": contextualised_count,
+        "assetTotal": asset_total or None,
+        "contextualisedPct": pct,
     }
 
 
