@@ -52,6 +52,8 @@ __all__ = [
     "contextualised_coverage",
     "karma_leaderboard",
     "engagement_series",
+    "orphan_glossary_terms",
+    "stale_assets",
     "growth_series",
     "metric_trend",
     "term_definition_completeness",
@@ -632,6 +634,95 @@ def certifications_summary(ce, as_of: Optional[str] = None) -> Dict[str, Any]:
     out["licenses"] = count_relationships(ce, "License", as_of)
     out["exceptions"] = count_relationships(ce, "Exception", as_of)
     return out
+
+
+def orphan_glossary_terms(mgr, ce, as_of: Optional[str] = None) -> Dict[str, Optional[int]]:
+    """
+    Approved-but-unassigned glossary terms -- the Attention Queue's "Orphan
+    glossary terms" row. A term with no `SemanticAssignment` relationship to
+    anything (asset, schema element, data field, ...) was authored but never
+    actually put to use grounding the catalog -- a stewardship gap distinct
+    from `semantic_grounding`'s own asset-side coverage % (that one asks "how
+    much of the catalog is grounded"; this one asks "how much of the
+    glossary is idle").
+
+    Same single-bounded-relationship-fetch shape as `contextualised_coverage`
+    (ImplementedBy) -- one `SemanticAssignment` fetch, filtered to the
+    GlossaryTerm-typed end, distinct-GUID count is the "referenced" set;
+    orphan = term total - referenced. Not scoped to "approved" status
+    specifically (Egeria's term status isn't filtered here) -- same
+    catalog-wide-not-sub-filtered tradeoff `governedCount` etc. already
+    carry, not a new one.
+
+    Returns {"termTotal": int|None, "referencedCount": int|None,
+    "orphanCount": int|None}. Any field is None on total failure for its own
+    step (never raises).
+    """
+    term_total = count_elements(mgr, "GlossaryTerm", as_of)
+
+    referenced_count = None
+    try:
+        rel_body = {"class": "ResultsRequestBody", "asOfTime": as_of} if as_of else None
+        rels = _json_list(ce.get_relationships(
+            relationship_type="SemanticAssignment", output_format="JSON",
+            start_from=0, page_size=max_paging_size, body=rel_body))
+        term_guids: set = set()
+        for r in rels:
+            for end_key in ("end1", "end2"):
+                end = (r.get(end_key) or {}) if isinstance(r, dict) else {}
+                end_type = end.get("type") or {}
+                type_names = {end_type.get("typeName")} | set(end_type.get("superTypeNames") or [])
+                if "GlossaryTerm" in type_names and end.get("guid"):
+                    term_guids.add(end["guid"])
+        referenced_count = len(term_guids)
+    except Exception as exc:  # noqa: BLE001
+        logger.debug(f"orphan_glossary_terms: SemanticAssignment query failed: {exc}")
+
+    orphan_count = None
+    if term_total is not None and referenced_count is not None:
+        orphan_count = max(term_total - referenced_count, 0)
+
+    return {"termTotal": term_total, "referencedCount": referenced_count, "orphanCount": orphan_count}
+
+
+def stale_assets(mgr, as_of: Optional[str] = None, days: int = 180) -> Dict[str, Optional[int]]:
+    """
+    Assets with no update in the last `days` -- the Attention Queue's "Stale
+    assets" row, candidates for archival review. One bounded `Asset` element
+    fetch (same cap as every other full-element scan in this module), each
+    element's own version metadata (`_update_time`, already used elsewhere
+    in this file) compared against the cutoff -- no relationship traversal.
+
+    `as_of` anchors both the query and the cutoff clock (an as-of-time
+    dashboard view should ask "stale as of that moment", not "stale as of
+    right now" -- consistent with `certifications_summary`'s own as_of
+    anchoring).
+
+    Returns {"staleCount": int|None, "assetTotal": int|None}. `staleCount`
+    is None on total failure; `assetTotal` reuses `count_elements` (native,
+    unaffected by this function's own element-fetch cap).
+    """
+    from datetime import datetime, timezone, timedelta
+
+    stale_count = None
+    try:
+        anchor = datetime.fromisoformat(as_of.replace("Z", "+00:00")) if as_of else datetime.now(timezone.utc)
+        if anchor.tzinfo is None:
+            anchor = anchor.replace(tzinfo=timezone.utc)
+        cutoff = anchor - timedelta(days=days)
+        body = {"class": "FindRequestBody", "metadataElementTypeName": "Asset", "limitResultsByStatus": ["ACTIVE"]}
+        if as_of:
+            body["asOfTime"] = as_of
+        elements = _find(mgr, body)
+        stale_count = 0
+        for el in elements:
+            updated = _update_time(el)
+            if updated is not None and updated < cutoff:
+                stale_count += 1
+    except Exception as exc:  # noqa: BLE001
+        logger.debug(f"stale_assets: query failed: {exc}")
+
+    return {"staleCount": stale_count, "assetTotal": count_elements(mgr, "Asset", as_of)}
 
 
 def semantic_grounding(mgr, ce, as_of: Optional[str] = None) -> Dict[str, Any]:
