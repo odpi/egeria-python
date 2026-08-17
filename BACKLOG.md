@@ -474,3 +474,25 @@ never accurate. Not rewriting the original commit message (already pushed);
 recording the correction here so nobody spends time hunting for a file that
 isn't there. The `egeria-workspaces-fs` half of that note is a different
 repo and out of scope for this file.
+
+---
+
+## 🔴 High Priority — Cross-family template scan found several Link/Attach spec defects that validation sweeps missed
+
+**Status:** open
+**Added:** 2026-07-06 (ported from PR #252, `docs/backlog-template-scan-findings`, closed as a stale duplicate 2026-08-17 — see below)
+
+A manual+agent-assisted scan of all `Create_*`/`Link_*`/`Attach_*` markdown templates across all 12 Dr.Egeria families (Action Author, Actor Manager, Collections, Data Designer, Digital Product Manager, External Reference, Feedback, Glossary, Governance Officer, Projects, Report, Solution Architect) — done while researching relationship-representation patterns for a chat-driven plan-editing feature — surfaced several template defects that existing `validate_compact_specs` / test sweeps apparently don't catch:
+
+- **`Link_Term-Term_Relationship`** (Glossary): has no Term1/Term2 (or equivalent) reference fields at all — only a `Relationship Type` enum. As specified, the command can't actually name which two terms to link.
+- **`Attach_Comment`** (Feedback): missing its target-element reference field entirely. Sibling commands `Attach_Like`, `Attach_Rating`, `Attach_Tag` all correctly carry theirs.
+- **`Link_Regulation_to_Regulator`** (Governance Officer): field names appear copy-pasted from `Link_Governed_By` — still labeled `Governance Definition`/`Referenceable` rather than Regulation/Regulator-specific names.
+- **`Link_Certification`** and **`Link_Regulation_Certification_Type`** (Governance Officer): field descriptions say "license type" where they should say "certification type" — looks like copy-paste from the parallel `Link_License` command.
+- **`Link_Data_Class_Composition`** (Data Designer): field descriptions carry text copy-pasted from the unrelated `DataValueDefinition` relationship.
+- Two related "naming trap" issues worth a lint rule rather than a one-off fix: `Create_Regulation.Regulators` (Governance Officer) is typed `Simple List` (free text) even though it reads like an embedded relationship declaration; `Link_Associated_Skill_Set.Actor Name` (Actor Manager) is typed `Simple` while every sibling Link command's actor-reference field is typed `Reference Name`.
+
+**Open question to resolve as part of this item:** these look like authoring/copy-paste artifacts rather than runtime logic bugs, so `validate_compact_specs` presumably isn't checking description-text content or field-name/type consistency against the command's own semantics — worth figuring out why the existing validation sweep didn't flag any of these, and whether a targeted lint (e.g., flag a Link/Attach command with zero `Reference Name`-typed fields, or flag description text mentioning an entity type absent from the command's own name/family) would have caught them, so this class of defect doesn't require another manual full-family read to find next time.
+
+**Fix:** correct each of the compact-spec attributes above via the Dr.Egeria Spec Editor's REST API (`dr_egeria_spec_editor` — see `CLAUDE.md`'s "Dr.Egeria Spec Editor" section; Tinderbox, this finding's original fix path, is retired as of 2026-08-05), then run `refresh_specs` + `validate_compact_specs`, then propagate via the usual `gen_md_cmd_templates` / `gen_dr_help` sync to egeria-workspaces and egeria-advisor.
+
+**Note on this entry's companion finding:** PR #252 also documented `Create Project`'s `Parent ID`/`Parent Relationship Type Name` being advanced-only inconsistently with other families' equivalent fields. That's superseded — see "`Parent ID`/`Parent Relationship Type Name` silently dropped on Update (fixed)" above (2026-08-02, `Status: done`), which fixed a related, more serious bug (values silently discarded on Update) and is the current source of truth; not re-added here.
