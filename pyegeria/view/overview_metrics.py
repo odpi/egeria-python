@@ -50,6 +50,8 @@ __all__ = [
     "feedback_summary",
     "usage_context_counts",
     "contextualised_coverage",
+    "karma_leaderboard",
+    "engagement_series",
     "growth_series",
     "metric_trend",
     "term_definition_completeness",
@@ -1036,6 +1038,147 @@ def contextualised_coverage(mgr, ce, as_of: Optional[str] = None) -> Dict[str, O
         "assetTotal": asset_total or None,
         "contextualisedPct": pct,
     }
+
+
+def karma_leaderboard(mgr, as_of: Optional[str] = None, top_n: int = 10,
+                       anchor_types: Sequence[str] = ("Person",)) -> List[Dict[str, Any]]:
+    """
+    Top-N people by karma -- OVERVIEW_NEXT_STEPS.md's "leaderboard" (per-person
+    karma rollup), previously left None as "deferred", turned out not to need
+    a per-person loop: karma is a scalar `karmaPoints` property directly on
+    each `ContributionRecord` element (not something derived from counting
+    related things), and every ContributionRecord is *anchored* to its owning
+    actor (Person/ITProfile/ActorProfile) via the standard `Anchors`
+    classification -- so `anchorGUID`/`anchorTypeName` are already attached
+    to the element itself, no relationship traversal needed to know whose
+    karma it is.
+
+    One bounded `find_metadata_elements` call (capped at max_paging_size,
+    same discipline as every other fetch in this module) returns every
+    ContributionRecord with properties + classifications attached; this
+    filters to `anchor_types` (Person only by default -- pass e.g.
+    `("Person", "ITProfile")` to include automation/engine contributors too),
+    sorts by karmaPoints descending, and returns the top N. Display name is
+    derived by stripping the "Contribution record for " prefix off the
+    ContributionRecord's own displayName (set by
+    ContributionRecordHandler.addContributionRecordToElement()) rather than
+    an extra per-person fetch of the anchor element -- zero additional round
+    trips.
+
+    Returns a list of {"name": str, "karmaPoints": int, "anchorGuid": str,
+    "anchorType": str}, longest-karma first, length ≤ top_n. Empty list on
+    total failure (never raises).
+    """
+    try:
+        body: Dict[str, Any] = {"class": "FindRequestBody", "limitResultsByStatus": ["ACTIVE"],
+                                 "metadataElementTypeName": "ContributionRecord"}
+        if as_of:
+            body["asOfTime"] = as_of
+        records = _find(mgr, body)
+    except Exception as exc:  # noqa: BLE001
+        logger.debug(f"karma_leaderboard: find failed: {exc}")
+        return []
+
+    entries: List[Dict[str, Any]] = []
+    for el in records:
+        pvm = (el.get("elementProperties") or {}).get("propertyValueMap") or {}
+        karma_raw = (pvm.get("karmaPoints") or {}).get("primitiveValue")
+        try:
+            karma = int(karma_raw)
+        except (TypeError, ValueError):
+            continue
+
+        anchor_type = None
+        anchor_guid = None
+        for c in (el.get("classifications") or []):
+            if c.get("classificationName") != "Anchors":
+                continue
+            apvm = (c.get("classificationProperties") or {}).get("propertyValueMap") or {}
+            anchor_type = (apvm.get("anchorTypeName") or {}).get("primitiveValue")
+            anchor_guid = (apvm.get("anchorGUID") or {}).get("primitiveValue")
+            break
+        if anchor_type not in anchor_types:
+            continue
+
+        display_name = (pvm.get("displayName") or {}).get("primitiveValue") or ""
+        name = display_name[len("Contribution record for "):] if display_name.startswith(
+            "Contribution record for ") else (display_name or "(unnamed)")
+
+        entries.append({"name": name, "karmaPoints": karma, "anchorGuid": anchor_guid, "anchorType": anchor_type})
+
+    entries.sort(key=lambda e: e["karmaPoints"], reverse=True)
+    return entries[:top_n]
+
+
+_FEEDBACK_RELATIONSHIP_TYPES_FOR_SERIES = _FEEDBACK_RELATIONSHIP_TYPES
+
+
+def engagement_series(ce, as_of: Optional[str] = None, weeks: int = 12) -> List[Dict[str, Any]]:
+    """
+    Weekly feedback-event trend -- OVERVIEW_NEXT_STEPS.md's "engagementSeries",
+    previously left None as "deferred". Reuses the exact same
+    `get_relationships` calls `feedback_summary()` already makes for each of
+    the 5 feedback relationship types (AttachedRating/Comment/Like/Tag/
+    NoteLog) -- that function only keeps `len()`; this keeps the relationship
+    objects themselves and buckets each one's `relationshipHeader.versions.
+    createTime` into its ISO week. No new API surface, no per-element loop
+    beyond the same bounded relationship fetches already happening elsewhere.
+
+    Weeks with zero events for every type are included (zero-filled, not
+    omitted) across the trailing `weeks` window ending at the current week (or
+    `as_of`'s week, if given) -- a real zero is a real data point for a trend
+    line, not a gap to hide. Honesty note: with sparse demo data this can be
+    a near-flat line with one or two non-zero weeks -- that's the real
+    signal, not a rendering bug.
+
+    Returns a list of {"week": "2026-W33", "comments": int, "ratings": int,
+    "likes": int, "tags": int, "noteLogs": int, "total": int}, oldest week
+    first, length == `weeks`. Empty list on total failure (never raises).
+    """
+    from datetime import datetime, timedelta, timezone
+
+    try:
+        anchor = datetime.fromisoformat(as_of.replace("Z", "+00:00")) if as_of else datetime.now(timezone.utc)
+    except Exception:  # noqa: BLE001
+        anchor = datetime.now(timezone.utc)
+
+    def _week_key(dt: datetime) -> str:
+        iso = dt.isocalendar()
+        return f"{iso[0]}-W{iso[1]:02d}"
+
+    week_keys: List[str] = []
+    for i in range(weeks - 1, -1, -1):
+        week_keys.append(_week_key(anchor - timedelta(weeks=i)))
+
+    buckets: Dict[str, Dict[str, int]] = {wk: {"comments": 0, "ratings": 0, "likes": 0, "tags": 0, "noteLogs": 0}
+                                           for wk in week_keys}
+
+    for rel_type, field in _FEEDBACK_RELATIONSHIP_TYPES_FOR_SERIES:
+        try:
+            rel_body = {"class": "ResultsRequestBody", "asOfTime": as_of} if as_of else None
+            rels = _json_list(ce.get_relationships(
+                relationship_type=rel_type, output_format="JSON",
+                start_from=0, page_size=max_paging_size, body=rel_body))
+        except Exception as exc:  # noqa: BLE001
+            logger.debug(f"engagement_series: {rel_type} query failed: {exc}")
+            continue
+        for r in rels:
+            create_time = (((r.get("relationshipHeader") or {}).get("versions") or {}).get("createTime"))
+            if not create_time:
+                continue
+            try:
+                dt = datetime.fromisoformat(str(create_time).replace("Z", "+00:00"))
+            except Exception:  # noqa: BLE001
+                continue
+            wk = _week_key(dt)
+            if wk in buckets:
+                buckets[wk][field] += 1
+
+    series = []
+    for wk in week_keys:
+        b = buckets[wk]
+        series.append({"week": wk, **b, "total": sum(b.values())})
+    return series
 
 
 def growth_series(
