@@ -3624,6 +3624,44 @@
       "max_cardinality": 1,
       "level": "Domain",
       "Journal Entry": ""
+    },
+    "Governance Metric": {
+      "variable_name": "governance_metric",
+      "inUpdate": true,
+      "attr_labels": "",
+      "examples": "Data Quality Score",
+      "default_value": "",
+      "valid_values": [],
+      "existing_element": "GovernanceMetric",
+      "description": "The governance metric whose measurements are captured by the linked data asset.",
+      "generated": false,
+      "style": "Reference Name",
+      "user_specified": true,
+      "unique": false,
+      "input_required": true,
+      "min_cardinality": 1,
+      "max_cardinality": 1,
+      "level": "Domain",
+      "Journal Entry": ""
+    },
+    "Data Asset": {
+      "variable_name": "data_asset",
+      "inUpdate": true,
+      "attr_labels": "",
+      "examples": "Data Quality Results Table",
+      "default_value": "",
+      "valid_values": [],
+      "existing_element": "Asset",
+      "description": "The data asset where the governance metric's measurements are kept.",
+      "generated": false,
+      "style": "Reference Name",
+      "user_specified": true,
+      "unique": false,
+      "input_required": true,
+      "min_cardinality": 1,
+      "max_cardinality": 1,
+      "level": "Domain",
+      "Journal Entry": ""
     }
   },
   "bundles": {
@@ -4728,6 +4766,28 @@
       "custom_attributes": [
         "Parent Zone",
         "Child Zone"
+      ],
+      "Journal Entry": ""
+    },
+    "Link Governance Results": {
+      "display_name": "Governance Results",
+      "qn_prefix": "",
+      "alternate_names": [],
+      "family": "Governance Officer",
+      "description": "Attach a governance metric to a data asset that describes where its measurements are kept.",
+      "verb": "Link",
+      "upsert": false,
+      "attach": false,
+      "level": "Basic",
+      "find_method": "",
+      "find_constraints": "",
+      "extra_find": "",
+      "extra_constraints": "",
+      "OM_TYPE": "GovernanceResults",
+      "bundle": "Link Command Base",
+      "custom_attributes": [
+        "Governance Metric",
+        "Data Asset"
       ],
       "Journal Entry": ""
     }
