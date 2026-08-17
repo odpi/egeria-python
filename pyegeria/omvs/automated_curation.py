@@ -3479,6 +3479,7 @@ class AutomatedCuration(ServerClient):
 
     async def _async_initiate_engine_action(
             self,
+            governance_engine_name: str,
             qualified_name: str,
             domain_identifier: int,
             display_name: str,
@@ -3500,6 +3501,10 @@ class AutomatedCuration(ServerClient):
 
         Parameters
         ----------
+        governance_engine_name : str
+            The name of the governance engine that should execute the request (path parameter
+            required by the REST endpoint -- .../governance-engines/{governanceEngineName}/
+            engine-actions/initiate -- see AutomatedCurationResource.java).
         qualified_name : str
             The unique name for the engine action.
         domain_identifier : int
@@ -3546,7 +3551,7 @@ class AutomatedCuration(ServerClient):
         start_time = (
             datetime.now() if start_time is None else start_time
         )
-        url = f"{self.ref_curation_command_base}/governance-engines/engine-actions/initiate"
+        url = f"{self.ref_curation_command_base}/governance-engines/{governance_engine_name}/engine-actions/initiate"
 
         body = {
             "class": "GovernanceActionRequestBody",
@@ -3573,6 +3578,7 @@ class AutomatedCuration(ServerClient):
 
     def initiate_engine_action(
             self,
+            governance_engine_name: str,
             qualified_name: str,
             domain_identifier: int,
             display_name: str,
@@ -3592,6 +3598,8 @@ class AutomatedCuration(ServerClient):
 
         Parameters
         ----------
+        governance_engine_name : str
+            The name of the governance engine that should execute the request.
         qualified_name : str
             The unique name for the engine action.
         domain_identifier : int
@@ -3629,6 +3637,7 @@ class AutomatedCuration(ServerClient):
         loop = asyncio.get_event_loop()
         response = loop.run_until_complete(
             self._async_initiate_engine_action(
+                governance_engine_name=governance_engine_name,
                 qualified_name=qualified_name,
                 domain_identifier=domain_identifier,
                 display_name=display_name,

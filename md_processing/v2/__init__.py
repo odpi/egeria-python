@@ -41,3 +41,6 @@ from .report import ReportProcessor
 from .saved_query import SavedQueryProcessor, SmartQueryLinkProcessor
 from .curation import CurationClassifyProcessor, CurationLinkProcessor, CLASSIFICATION_METHODS
 from .reference_data import ReferenceDataLinkProcessor, ValidMetadataValueProcessor
+from .embedded_process import EmbeddedProcessProcessor
+from .engine_action import InitiateEngineActionProcessor, CancelEngineActionProcessor
+from .lineage_linker import LineageLinkProcessor, UpdateLineageRelationshipProcessor

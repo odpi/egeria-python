@@ -296,6 +296,24 @@ class DeleteElementRequestBody(RequestBody):
 
 class DeleteRelationshipRequestBody(RequestBody):
     class_: Annotated[Literal["DeleteRelationshipRequestBody"], Field(alias="class")]
+    # No deleteMethod field previously -- when omitted, the Egeria server's
+    # deleteRelationshipInStore operation applies its own default of
+    # LookForLineage, which that specific operation's own validation then
+    # rejects as invalid (confirmed live 2026-08-17 against a real DataFlow
+    # relationship -- OMAG-COMMON-400-032, "The value DeleteMethod{...
+    # LookForLineage...} passed on the deleteMethod parameter... is
+    # invalid"). LookForLineage's semantics ("if the ELEMENT has lineage
+    # relationships then archive; otherwise soft-delete") don't apply to
+    # deleting a relationship in the first place, so the server-side default
+    # is simply the wrong one for this operation -- callers need to be able
+    # to override it explicitly. delete_method left optional/None by default
+    # (not defaulted to SOFT_DELETE here) since that changes existing
+    # callers' behavior invisibly; explicit callers (e.g.
+    # LineageLinker.detach_lineage) should pass one of the values the
+    # server's relationship-delete path actually accepts (SoftDelete/Purge/
+    # Archive have been reported as generally valid; LookForLineage/Other
+    # are not for this operation).
+    delete_method: Optional[DeleteMethod] = None
 
 
 class DeleteClassificationRequestBody(RequestBody):

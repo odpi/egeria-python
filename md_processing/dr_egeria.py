@@ -45,7 +45,9 @@ from md_processing.v2 import (
     AddTextOnDashboardSheetProcessor, ReportProcessor,
     SavedQueryProcessor, SmartQueryLinkProcessor,
     CurationClassifyProcessor, CurationLinkProcessor, CLASSIFICATION_METHODS,
-    ReferenceDataLinkProcessor, ValidMetadataValueProcessor
+    ReferenceDataLinkProcessor, ValidMetadataValueProcessor,
+    EmbeddedProcessProcessor, InitiateEngineActionProcessor, CancelEngineActionProcessor,
+    LineageLinkProcessor, UpdateLineageRelationshipProcessor,
 )
 
 from pyegeria import settings, EgeriaTech, PyegeriaException, print_basic_exception, print_validation_error
@@ -199,6 +201,17 @@ def register_governance_processors(register_processor: Callable[[str, Type[Async
     # Context retrieval is not in compact command specs; keep explicit registration.
     register_processor("View Governance Definition Context", GovernanceContextProcessor)
 
+    # Embedded Process / Engine Action (Action Author family) -- these three
+    # commands need bespoke processors (AssetMaker generic-asset create for
+    # EmbeddedProcess; AutomatedCuration.initiate_engine_action/
+    # cancel_engine_action for the other two), not the family's default
+    # GovernanceProcessor/GovernanceLinkProcessor path above, so re-register
+    # them explicitly here -- same pattern as "Create Report"/"Update Report"
+    # overriding their own family's generic walker further down.
+    register_processor("Create Embedded Process", EmbeddedProcessProcessor)
+    register_processor("Initiate Engine Action", InitiateEngineActionProcessor)
+    register_processor("Cancel Engine Action", CancelEngineActionProcessor)
+
 
 # OM_TYPEs handled by CurationLinkProcessor.apply_changes(); anything in the
 # Curation family whose OM_TYPE is in neither this set nor CLASSIFICATION_METHODS
@@ -349,6 +362,16 @@ def setup_dispatcher(client: EgeriaTech) -> V2Dispatcher:
 
     # Governance (spec-driven to keep coverage aligned with compact commands)
     register_governance_processors(reg)
+
+    # Lineage Linker -- one generic Link/Update/Unlink command triple covering
+    # all seven Lineage Linker OMVS relationship types (DataFlow, ControlFlow,
+    # ProcessCall, LineageMapping, DataMapping, UltimateSource,
+    # UltimateDestination) via a "Relationship Type" selector attribute,
+    # rather than a separate command pair per type.
+    reg("Link Lineage Relationship", LineageLinkProcessor)
+    reg("Unlink Lineage Relationship", LineageLinkProcessor)
+    reg("Update Lineage Relationship", UpdateLineageRelationshipProcessor)
+
     # Actor Manager (spec-driven to keep coverage aligned with compact commands)
     # NOTE: "Create ToDo" is family "Actor Manager" in its compact spec, so it's
     # already auto-registered here (verb "Create" -> ActorManagerProcessor) --
