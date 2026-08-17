@@ -397,10 +397,24 @@ def governed_coverage(mgr, as_of: Optional[str] = None) -> Dict[str, Any]:
     """
     Governance-classification-based coverage tally: how many elements carry
     at least one of `GOVERNANCE_CLASSIFICATIONS`, broken down by which
-    classification and by governance zone.
+    classification, by governance zone, and by a Fully/Partial 3-bucket split
+    (Ungoverned isn't returned here -- it's `assetTotal - fully - partial`,
+    computed the same way the frontend already derives its governed % using
+    `assetTotal` as denominator, see egeria-overview.html's `governedPctNum`).
+
+    The Fully/Partial split reuses the exact same `hits` list already
+    fetched for `byClassification`/`topZones` above -- no extra round trip.
+    "Partial (zone only)" = carries `ZoneMembership` and none of the other
+    (substantive) governance classifications; "Fully governed" = carries at
+    least one substantive classification (Confidentiality/Criticality/
+    Impact/Retention), with or without a zone. Same population-scope caveat
+    `governedCount` already carries: this query isn't restricted to Asset
+    type, so these are catalog-wide counts, not Asset-only -- an existing,
+    already-accepted proxy in this dashboard, not a new one introduced here.
 
     Returns {"governedCount": int, "byClassification": {name: count},
-    "topZones": [{"zone": name, "count": count}, ...8 max]}.
+    "topZones": [{"zone": name, "count": count}, ...8 max],
+    "fullyGoverned": int, "partialZoneOnly": int}.
     """
     body = {
         "class": "FindRequestBody",
@@ -414,14 +428,23 @@ def governed_coverage(mgr, as_of: Optional[str] = None) -> Dict[str, Any]:
         body["asOfTime"] = as_of
     hits = _find(mgr, body)
 
+    substantive = set(GOVERNANCE_CLASSIFICATIONS) - {"ZoneMembership"}
     by_classification: Dict[str, int] = {}
     zone_counts: Dict[str, int] = {}
+    fully_governed = 0
+    partial_zone_only = 0
     for el in hits:
-        for name in _classifications_of(el):
+        names = _classifications_of(el)
+        for name in names:
             by_classification[name] = by_classification.get(name, 0) + 1
         for z in _zone_names(el):
             if z:
                 zone_counts[z] = zone_counts.get(z, 0) + 1
+        governance_names = names & set(GOVERNANCE_CLASSIFICATIONS)
+        if governance_names & substantive:
+            fully_governed += 1
+        elif "ZoneMembership" in governance_names:
+            partial_zone_only += 1
     top_zones = sorted(zone_counts.items(), key=lambda kv: -kv[1])[:8]
 
     return {
@@ -429,6 +452,8 @@ def governed_coverage(mgr, as_of: Optional[str] = None) -> Dict[str, Any]:
         "governedCapped": len(hits) >= DEFAULT_CAP,
         "byClassification": by_classification,
         "topZones": [{"zone": z, "count": c} for z, c in top_zones],
+        "fullyGoverned": fully_governed,
+        "partialZoneOnly": partial_zone_only,
     }
 
 
