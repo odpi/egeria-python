@@ -301,7 +301,7 @@ def count_relationships(ce, relationship_type: str, as_of: Optional[str] = None,
         body = {"class": "ResultsRequestBody", "asOfTime": as_of} if as_of else None
         return len(_json_list(ce.get_relationships(
             relationship_type=relationship_type, output_format="JSON",
-            start_from=0, page_size=5000, body=body)))
+            start_from=0, page_size=DEFAULT_CAP, body=body)))
     except Exception as exc:  # noqa: BLE001
         logger.debug(f"overview_metrics count_relationships({relationship_type}) failed: {exc}")
         return None
@@ -724,7 +724,7 @@ def ai_ready_assets(mgr, ce, as_of: Optional[str] = None) -> Dict[str, Any]:
         rel_body = {"class": "ResultsRequestBody", "asOfTime": as_of} if as_of else None
         rels = _json_list(ce.get_relationships(
             relationship_type="DataFlow", output_format="JSON",
-            start_from=0, page_size=5000, body=rel_body))
+            start_from=0, page_size=DEFAULT_CAP, body=rel_body))
         for r in rels:
             for end_key in ("end1", "end2"):
                 end = (r.get(end_key) or {}) if isinstance(r, dict) else {}
@@ -845,7 +845,7 @@ def drl_readiness_gates(mgr, ce, as_of: Optional[str] = None, recency_days: int 
         rel_body = {"class": "ResultsRequestBody", "asOfTime": as_of} if as_of else None
         rels = _json_list(ce.get_relationships(
             relationship_type="DataFlow", output_format="JSON",
-            start_from=0, page_size=5000, body=rel_body))
+            start_from=0, page_size=DEFAULT_CAP, body=rel_body))
         for r in rels:
             for end_key in ("end1", "end2"):
                 g = ((r.get(end_key) or {}) if isinstance(r, dict) else {}).get("guid")
