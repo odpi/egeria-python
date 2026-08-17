@@ -812,57 +812,6 @@ module already uses). Not yet built.
 
 ---
 
-### ISSUE-61: No Dr.Egeria command exists to attach a `GovernanceMetric` to its implementation (the `GovernanceResults` relationship) — the OMVS wrapper already exists, it's just never wired to a compact-spec command
-
-**Status:** open — missing Dr.Egeria command, not an SDK gap (unlike
-ISSUE-48's shape). Raised 2026-08-17 while designing how the Egeria
-Overview dashboard's ~25 `pyegeria.view.overview_metrics` functions could
-be described as real Egeria metadata rather than only Python docstrings:
-`GovernanceMetric` (model 0450, `measurement`/`target` properties) is the
-purpose-built type for *defining* a metric, and `GovernanceResults` (Metric
-→ DataSet, "used to gather measurements from the landscape") is the
-purpose-built relationship for pointing a metric at where its values
-actually come from. `Report` (`Report → DataSet → Asset → Referenceable`,
-`Create Report`/`md_processing/v2/report.py`) is already a DataSet subtype,
-so `GovernanceMetric --[GovernanceResults]--> Report` is a natural,
-no-new-relationship-type way to link a metric's definition to its live,
-report-spec-backed implementation (a Report already carries a `reportSpec`
-reference + `Analytic Parameters`, and `analytic_registry.py` already
-catalogs every Python function a report spec's `action.analytic_function`
-can point to — see the Overview/Governance-Metric design discussion in
-`egeria-workspaces-fs`'s `OVERVIEW_NEXT_STEPS.md` for the full reasoning).
-
-**What's missing:** `commands_governance_officer_compact.json` has `Create
-Governance Metric` (`Measurement`/`Target` + the standard Governance
-Control Base attributes) but no companion `Link Governance Metric to
-Report` (or `...to Data Asset`, matching the relationship's own generic
-`data_asset_guid` naming) command. **This is not an SDK gap** —
-`GovernanceOfficer.link_governance_results`/`_async_link_governance_results`
-already exists (`pyegeria/omvs/governance_officer.py`, POSTs to
-`.../governance-metrics/{gov_metric_guid}/measurements/{data_asset_guid}/attach`)
-and a matching `_async_detach_governance_results` unlink method already
-exists too — purely a missing compact-spec command + processor wiring, the
-same "Link/Unlink" bundle shape every other relationship-only command in
-this repo already follows.
-
-**Candidate fix:** add `Link Governance Metric to Report` / `Unlink
-Governance Metric from Report` to the `Governance Officer` family (or a
-generically-named `...to Data Asset` pair, since `link_governance_results`
-takes any `data_asset_guid`, not specifically a `Report`), `OM_TYPE:
-GovernanceResults`, wired to `link_governance_results`/
-`detach_governance_results` the same way `CurationLinkProcessor` wires
-other bespoke-relationship commands. Two GUID-resolving attributes
-(`Governance Metric Name` → `gov_metric_guid`, `Report Name`/`Data Asset
-Name` → `data_asset_guid`), no new SDK work required.
-
-**Not yet built** — logged so the pattern (and the fact that the OMVS layer
-is already ready) isn't rediscovered from scratch. An experimental
-end-to-end chain (one `GovernanceMetric`, one `Report`, linked via a raw
-`link_governance_results` call rather than a Dr.Egeria command) was run
-2026-08-17 to validate the design before committing to building this
-command — see `egeria-workspaces-fs`'s `OVERVIEW_NEXT_STEPS.md` for the
-result.
-
 ---
 
 # Quick reference: which OMVS client class for which purpose
@@ -893,6 +842,43 @@ result.
 # Appendix: Closed / Not-a-bug entries
 
 ## Fixed / Resolved
+
+### ISSUE-61: No Dr.Egeria command exists to attach a `GovernanceMetric` to its implementation (the `GovernanceResults` relationship) — the OMVS wrapper already exists, it's just never wired to a compact-spec command
+
+**Status:** fixed 2026-08-17 (Pyegeria/Dr.Egeria — Dan, via the Dr.Egeria
+Spec Editor's REST API). Added `Link Governance Results` (`OM_TYPE
+GovernanceResults`, bundle `Link Command Base`) to the `Governance Officer`
+family, with two new Reference Name-style attributes ("Governance Metric" →
+`GovernanceMetric`, "Data Asset" → `Asset`) matching the sibling "Governance
+Definition"/"Referenceable" pair on `Link Governed By`. `GovernanceLinkProcessor`
+(`md_processing/v2/governance.py`) already handles Link/Detach/Unlink/Remove
+variants from one spec entry via `build_command_variants` — no separate
+registration needed; wired via a new `endpoint_map` entry + one
+`apply_changes` branch per direction, calling
+`_async_link_governance_results`/`_async_detach_governance_results` with a
+body built via the existing generic `set_rel_prop_body()` (no bespoke body
+builder needed).
+
+Originally raised 2026-08-17 while designing how the Egeria Overview
+dashboard's ~25 `pyegeria.view.overview_metrics` functions could be
+described as real Egeria metadata rather than only Python docstrings — see
+`egeria-workspaces-fs`'s `OVERVIEW_NEXT_STEPS.md` for the full design
+reasoning (`GovernanceMetric` for the definition, `GovernanceResults` →
+`Report` for the implementation, no new relationship type needed since
+`Report` is already a `DataSet` subtype).
+
+**Verified live 2026-08-17** against the pilot `GovernanceMetric`/`Report`
+pair created during the original design investigation: `--validate` and
+`--process` both succeed; detached the pilot's original raw-API-created
+`GovernanceResults` relationship (hit the known
+`deleteRelationshipInStore`-rejects-its-own-default-`deleteMethod` bug —
+worked around with an explicit `{"deleteMethod": "SOFT_DELETE"}` body, same
+issue this repo's `DeleteRelationshipRequestBody.delete_method` field
+already exists to work around elsewhere) and re-created it via the new
+`Link Governance Results` command; `mgr.get_all_related_elements(<metric
+guid>)` confirms the relationship resolves correctly afterward.
+
+---
 
 ### ISSUE-59: `Create <X>` upsert commands (`upsert: true` in the compact spec) silently create a duplicate element, instead of updating in place, when the caller changes `### Qualified Name` to something the as-is lookup has never seen before — an explicit `### GUID` on the same command is also ignored for that lookup
 
