@@ -3208,7 +3208,7 @@ class AutomatedCuration(ServerClient):
         loop = asyncio.get_event_loop()
         response = loop.run_until_complete(
             self._async_initiate_survey(
-                "PostgreSQLSurvey:survey-postgres-server", postgres_server_guid
+                "PostgreSQLSurvey::survey-postgres-server", postgres_server_guid
             )
         )
         return response

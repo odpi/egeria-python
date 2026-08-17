@@ -215,6 +215,51 @@ def count_elements(
     return _element_count(mgr, body, as_of)
 
 
+def count_elements_by_property(
+    mgr,
+    type_name: str,
+    property_name: str,
+    property_value: str,
+    as_of: Optional[str] = None,
+) -> int:
+    """
+    Count ACTIVE elements of a given type whose named string property equals
+    a given value -- e.g. counting DigitalProduct elements by deploymentStatus
+    (Overview dashboard's Data Products tile, OVERVIEW_NEXT_STEPS.md
+    "Remaining app wiring"). Same native-count-with-fallback seam as
+    count_elements, just with a searchProperties EQ condition instead of a
+    bare type filter -- one cheap native COUNT call per distinct value, no
+    element fetch, same cost class as the plain count.
+
+    Parameters
+    ----------
+    mgr : MetadataExpert (or compatible client)
+    type_name : the open-metadata type name to count
+    property_name : the element property to match (e.g. "deploymentStatus")
+    property_value : the exact string value to match
+    as_of : ISO-8601 asOfTime for a point-in-time count (None = now)
+
+    Returns
+    -------
+    int -- 0 on any failure (never raises)
+    """
+    body: Dict[str, Any] = {
+        "class": "FindRequestBody",
+        "metadataElementTypeName": type_name,
+        "limitResultsByStatus": ["ACTIVE"],
+        "searchProperties": {
+            "class": "SearchProperties",
+            "matchCriteria": "ALL",
+            "conditions": [{
+                "property": property_name,
+                "operator": "EQ",
+                "value": {"class": "PrimitiveTypePropertyValue", "typeName": "string", "primitiveValue": property_value},
+            }],
+        },
+    }
+    return _element_count(mgr, body, as_of)
+
+
 def count_relationships(ce, relationship_type: str, as_of: Optional[str] = None, expert=None) -> Optional[int]:
     """
     Count relationships of a type, optionally as of a past time.
