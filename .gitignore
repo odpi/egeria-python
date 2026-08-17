@@ -188,3 +188,4 @@ dmypy.json
 
 # Accidental pip install output files (from `pip install pkg =version` typos)
 /=*
+/logs/
