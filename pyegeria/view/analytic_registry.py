@@ -354,6 +354,98 @@ _BUILTINS: Dict[str, AnalyticFunctionSpec] = {
             _as_of(),
         ],
     ),
+    "count_elements_by_property": AnalyticFunctionSpec(
+        name="count_elements_by_property",
+        function="pyegeria.view.overview_metrics.count_elements_by_property",
+        description="Count active elements of a given type whose named string property equals a "
+                    "given value -- e.g. DigitalProduct elements with deploymentStatus=ACTIVE. Same "
+                    "native-count-with-fallback seam as count_elements, one cheap native COUNT call "
+                    "per distinct value, no element fetch.",
+        returns="scalar (int)",
+        generic=True,
+        params=[
+            AnalyticParam(name="type_name", type="str", required=True,
+                          description="Open metadata type to count, e.g. DigitalProduct."),
+            AnalyticParam(name="property_name", type="str", required=True,
+                          description="String property to match, e.g. deploymentStatus."),
+            AnalyticParam(name="property_value", type="str", required=True,
+                          description="Value to match the property against, e.g. ACTIVE."),
+            _as_of(),
+        ],
+    ),
+    "contextualised_coverage": AnalyticFunctionSpec(
+        name="contextualised_coverage",
+        function="pyegeria.view.overview_metrics.contextualised_coverage",
+        description="Percent of Assets given business/solution-design context via an ImplementedBy "
+                    "relationship to a SolutionComponent. A proxy, not the literal 'participates in "
+                    "an ISC/blueprint' metric -- confirms some solution-design context exists, not "
+                    "that the specific SolutionComponent is itself wired into an ISC/blueprint (a "
+                    "second hop this function doesn't take). Takes two leading clients (mgr, ce), "
+                    "same convention as semantic_grounding.",
+        returns="dict (contextualisedCount, assetTotal, contextualisedPct)",
+        generic=False,
+        binding_note="Fixed to the ImplementedBy relationship, filtered to Asset-subtype ends -- not a parameter.",
+        params=[_as_of()],
+    ),
+    "karma_leaderboard": AnalyticFunctionSpec(
+        name="karma_leaderboard",
+        function="pyegeria.view.overview_metrics.karma_leaderboard",
+        description="Top-N people by karma -- one bounded ContributionRecord fetch, karmaPoints is a "
+                    "scalar property on the record itself (not derived from counting related things), "
+                    "filtered to the given anchor type(s) via each record's own Anchors classification.",
+        returns="list[dict] (name, karmaPoints, anchorGuid, anchorType), longest-karma first",
+        generic=False,
+        binding_note="Fixed to ContributionRecord.karmaPoints -- top_n and anchor_types tune the "
+                     "result but don't change what's being measured.",
+        params=[
+            AnalyticParam(name="top_n", type="int", default=10, description="How many entries to return."),
+            AnalyticParam(name="anchor_types", type="list[str]", default=["Person"],
+                          description="Anchor typeName(s) to include, e.g. ['Person', 'ITProfile']."),
+            _as_of(),
+        ],
+    ),
+    "engagement_series": AnalyticFunctionSpec(
+        name="engagement_series",
+        function="pyegeria.view.overview_metrics.engagement_series",
+        description="Weekly-bucketed feedback-event trend (comments/ratings/likes/tags/noteLogs), "
+                    "zero-filled across the trailing window -- reuses the same 5 relationship-type "
+                    "queries feedback_summary() already makes, keeping createTime instead of only "
+                    "the count. Takes ce as its leading client.",
+        returns="list[dict] (week, comments, ratings, likes, tags, noteLogs, total), oldest week first",
+        generic=False,
+        binding_note="Fixed to Collaboration OMAS's 5 feedback relationship types -- weeks tunes the window, not what's measured.",
+        params=[
+            AnalyticParam(name="weeks", type="int", default=12, description="Trailing window size, in weeks."),
+            _as_of(),
+        ],
+    ),
+    "orphan_glossary_terms": AnalyticFunctionSpec(
+        name="orphan_glossary_terms",
+        function="pyegeria.view.overview_metrics.orphan_glossary_terms",
+        description="Approved-but-unassigned glossary terms -- a term with no SemanticAssignment "
+                    "relationship to anything was authored but never put to use grounding the "
+                    "catalog. One bounded SemanticAssignment fetch, distinct GlossaryTerm-end GUID "
+                    "count is the 'referenced' set; orphan = term total - referenced. Takes two "
+                    "leading clients (mgr, ce), same convention as semantic_grounding.",
+        returns="dict (termTotal, referencedCount, orphanCount)",
+        generic=False,
+        binding_note="Fixed to the SemanticAssignment relationship type and GlossaryTerm elements -- not a parameter.",
+        params=[_as_of()],
+    ),
+    "stale_assets": AnalyticFunctionSpec(
+        name="stale_assets",
+        function="pyegeria.view.overview_metrics.stale_assets",
+        description="Assets with no update in the last N days (default 180) -- candidates for "
+                    "archival review. One bounded Asset element fetch, each element's own version "
+                    "metadata compared against the cutoff, no relationship traversal.",
+        returns="dict (staleCount, assetTotal)",
+        generic=False,
+        binding_note="Fixed to the Asset type -- population isn't a parameter, but the staleness threshold (days) is.",
+        params=[
+            AnalyticParam(name="days", type="int", default=180, description="Staleness threshold, in days."),
+            _as_of(),
+        ],
+    ),
     "metric_trend": AnalyticFunctionSpec(
         name="metric_trend",
         function="pyegeria.view.overview_metrics.metric_trend",
