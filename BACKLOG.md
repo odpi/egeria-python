@@ -413,3 +413,43 @@ pass since they're documentation only (the actual behavior is determined by
 whatever the caller passes, not by the docstring), but worth a follow-up
 cleanup so future users don't fall into the same "no error, but silently
 did nothing" trap this session found for Confidentiality.
+
+---
+
+## 🟡 Medium Priority — `Initiate Engine Action` / `Cancel Engine Action` Dr.Egeria commands have no functional/scenario test coverage
+
+**Status:** open
+**Added:** 2026-08-17
+
+`Initiate Engine Action` and `Cancel Engine Action` (Action Author family,
+added `b17f71e`) currently have unit-level dispatcher-registration coverage
+only (`tests/micro-tests/test_action_author_processor_coverage.py`, confirms
+they route to `InitiateEngineActionProcessor`/`CancelEngineActionProcessor`)
+and a URL-shape regression test on the underlying
+`AutomatedCuration.initiate_engine_action` client method
+(`tests/micro-tests/test_automated_curation_engine_action.py`, mocked, no
+live server). Neither exercises the actual Dr.Egeria markdown pipeline for
+these two commands end-to-end.
+
+**Why not just add a live functional/scenario test the way `Create Embedded
+Process` and the Lineage Linker commands eventually should get:** unlike
+those, `Initiate Engine Action` has a real side effect — it kicks off
+whatever governance service the target governance engine is configured to
+run (arbitrary survey/curation/remediation logic, potentially against real
+catalogued resources), not just a metadata-element create/update. A test
+that runs unattended in CI or gets re-run casually against a shared dev
+server risks triggering something with real consequences (e.g. a
+survey/remediation connector configured with side effects, or simply engine
+actions piling up as clutter/audit noise on a shared server) — different
+risk profile from every other Dr.Egeria command test in this repo, which
+only ever create/update/delete metadata elements.
+
+**Needs a decision before adding live coverage:** run against an isolated,
+disposable Egeria instance/engine-host only (never the shared dev server);
+or pick a governance engine + request type known to be a safe no-op/dry-run
+for test purposes; or accept unit/mocked coverage as the permanent ceiling
+for these two commands and document why. `Cancel Engine Action` is lower
+risk (it should be safe to test against a guaranteed-already-completed or
+nonexistent engine-action GUID, exercising the error path) but was left
+out of live coverage alongside `Initiate` for now, pending the same
+decision.
