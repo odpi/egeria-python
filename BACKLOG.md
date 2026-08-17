@@ -453,3 +453,24 @@ risk (it should be safe to test against a guaranteed-already-completed or
 nonexistent engine-action GUID, exercising the error path) but was left
 out of live coverage alongside `Initiate` for now, pending the same
 decision.
+
+---
+
+## 🟢 Low Priority — stale pointer in `c631f0c`'s commit message: `test_overview_asof.py` doesn't exist
+
+**Status:** done (correction only, no code change needed)
+**Added:** 2026-08-17
+
+`c631f0c`'s commit message ("fix(overview-metrics): pageSize=5000 exceeds
+Egeria's new 1000 max") left a note for future readers: "`grep -rn
+"page_size=5000"` also hits egeria-workspaces-fs's insights_handler.py (one
+call site) and this repo's `test_overview_asof.py`". That file does not
+exist anywhere in this repo, and `grep -rn "page_size=5000"` across the
+whole tree now returns zero hits. Found while auditing test coverage
+2026-08-17 (see `test_globals_max_paging_size.py`) and confirmed the note is
+stale/inaccurate rather than pointing at a real remaining gap here — either
+already fixed/removed before this repo's history, or the filename was
+never accurate. Not rewriting the original commit message (already pushed);
+recording the correction here so nobody spends time hunting for a file that
+isn't there. The `egeria-workspaces-fs` half of that note is a different
+repo and out of scope for this file.
