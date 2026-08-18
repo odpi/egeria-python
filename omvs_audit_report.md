@@ -5,8 +5,8 @@ Subject: `pyegeria/omvs` (43 modules)
 
 | Result | Count |
 |---|---|
-| OK | 628 |
-| Mismatch (verb/path/body) | 31 |
+| OK | 632 |
+| Mismatch (verb/path/body) | 27 |
 | Missing | 288 |
 | Found in another module | 13 |
 | URL lint | 0 |
@@ -111,15 +111,11 @@ _Review only - cross-service overlap is often intentional._
 
 ### Service: actor-manager
 
-- detachAssetFromProfile: MISMATCH `detach_asset_from_profile`
-    - BODY sends DeleteElementRequestBody != DeleteRelationshipRequestBody
 - find All ContributionRecords: MISSING  (`POST /actor-manager/contribution-records/by-search-string`)
 - updateActorRole: MISMATCH `update_actor_role`
     - PATH
       SDK: /actor-manager/actor-roles/{}/update
       API: /actor-manager/actor-roles/update
-- detachPersonRoleFromProfile: MISMATCH `detach_person_role_from_profile`
-    - BODY sends DeleteElementRequestBody != DeleteRelationshipRequestBody
 - Detach a team role from a team profile.: MISSING  (`POST /actor-manager/actor-roles/{}/team-role-appointments/{}/detach`)
 - linkITProfileRoleToProfile: MISSING  (`POST /actor-manager/actor-roles/{}/it-profile-role-appointments/{}/attach`)
 - detachITProfileRoleFromProfile: MISSING  (`POST /actor-manager/actor-roles/{}/it-profile-role-appointments/{}/detach`)
@@ -133,14 +129,6 @@ _Review only - cross-service overlap is often intentional._
       SDK: /actor-manager/actor-roles/{}/retrieve
       API: /actor-manager/actor-roles/{}/retrieve"}
 - detachProfileIdentity: MISSING  (`POST /actor-manager/user-identities/{}/profile-identity/{}/detach`)
-- addSecurityGroupMembership: MISMATCH `add_security_group_membership`
-    - PATH
-      SDK: /actor-manager/user-identities/{}/security-group-membership/classify
-      API: /actor-manager/user-identities/{}/security-group-memberships/classify
-- updateSecurityGroupMembership: MISMATCH `update_security_group_membership`
-    - PATH
-      SDK: /actor-manager/user-identities/{}/security-group-membership/reclassify
-      API: /actor-manager/user-identities/{}/security-group-memberships/reclassify
 - removeAllSecurityGroupMembership: MISSING  (`POST /actor-manager/user-identities/{}/security-group-memberships/declassify`)
 
 ### Service: asset-catalog
