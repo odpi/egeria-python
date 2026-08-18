@@ -93,6 +93,24 @@ and lives in the Appendix, not the open "Egeria Server" section. Read
 it's closed. If a comment anywhere still cites a bare `PY-#` in the 15-22
 range, search this file for `(PY-#)` to find its new `ISSUE-#` home.
 
+**Full re-verification sweep 2026-08-18**, prompted by a round of pyegeria
+bug fixes (`492b84a` — reconciling OMVS client coverage against the
+`.http`/swagger ground truth) plus the platform having been redeployed/
+restarted since the last check. Every open issue was re-tested live against
+the current `qs-view-server` rather than trusting prior status text. Result:
+three Egeria-server-side issues that were open as of 2026-08-15 no longer
+reproduce and have moved to the Appendix as server-side fixes —
+**ISSUE-53** (`metadataElementSubtypeNames` now actually filters),
+**ISSUE-57** (`GovernanceResults` end1/end2 order no longer rejected), and
+**ISSUE-60** (`find_glossary_terms` sequencing now sorts the full result
+set, not just the fetched page). None of these three were pyegeria code
+changes — the client-side request shapes were already confirmed correct
+against ground truth before this sweep; something changed server-side.
+Every other open issue (ISSUE-30, 38, 41, 48, 52, 54, 55) was re-confirmed
+still reproducing as described, with fresh dated notes where the symptom's
+exact shape shifted (see ISSUE-54 in particular — dramatically different
+scale, same underlying incompleteness defect).
+
 ---
 
 # Open Issues
@@ -107,6 +125,17 @@ Egeria side lands, it's noted inline (also cross-referenced from the
 enough to track there too).
 
 ### ISSUE-30: `updateNote` REST operation (`POST .../feedback-manager/notes/{noteGUID}`) returns 404 on a live server, despite matching the documented `.http` ground truth exactly
+
+**Status:** still open (Egeria Server), re-confirmed 2026-08-18 during a
+full sweep re-verifying every open issue against the current `qs-view-server`
+(prompted by a round of pyegeria-side bug fixes — see the recently-closed
+ISSUE-53/57/60 entries in the appendix below, found during the same sweep).
+Re-ran end-to-end via pyegeria: created a throwaway `DataStructure`,
+attached a `NoteLog` (`create_note_log`), created a `Note` on it
+(`create_note`) — all three succeeded — then `update_note` on the real note
+GUID still 404s with the identical shape
+(`.../feedback-manager/notes/{noteGUID}`). No change from the 2026-08-15
+re-check below.
 
 **Status:** still open (Egeria Server), re-confirmed 2026-08-15 against the
 current `qs-view-server` (post the environment restart noted in ISSUE-52) —
@@ -153,47 +182,6 @@ the current server build.
 **Candidate fix:** none client-side. Worth confirming against a different/
 newer Egeria server build whether this is a temporary gap in the specific
 redeploy used for this session, or a real, currently-unreleased endpoint.
-
----
-
-### ISSUE-57: `GovernanceResults` relationship rejects the exact end1/end2 GUID order the `.http` ground truth and pyegeria's URL both use
-
-**Status:** open, found 2026-08-15 as a byproduct of live-verifying the
-ISSUE-27 fix (`detach_governance_results`'s duplicate-argument bug).
-
-**Layer:** Egeria Server (type definition or the governance-officer view
-service's endpoint handler), not pyegeria — pyegeria's request exactly
-matches `Egeria-api-governance-officer.http`'s `linkGovernanceResults`
-worked example (URL, body, and `GovernanceResultsProperties` class all
-byte-for-byte identical), so there's nothing to fix on the client side.
-
-**What:** calling `GovernanceOfficer._async_link_governance_results(
-governance_metric_guid, data_asset_guid)` — which builds
-`POST .../governance-metrics/{governanceMetricGUID}/measurements/{dataAssetGUID}/attach`,
-matching the `.http` file exactly — fails with a 500:
-
-```
-OMRS-REPOSITORY-400-047 A addRelationship request has been made ... for a
-relationship that has one or more ends of the wrong or invalid type.
-Relationship type is GovernanceResults; entity proxy <dataAssetGUID> for
-end 1 is of type DataSet rather than GovernanceMetric and entity proxy
-<governanceMetricGUID> for end 2 is of type GovernanceMetric rather than Asset
-```
-
-The server assigned end1 to the *second* URL path GUID (the data asset) and
-end2 to the *first* (the governance metric) — the reverse of what the
-`GovernanceResults` relationship type (end1=GovernanceMetric, end2=Asset)
-and the URL's own naming (`governance-metrics/{...}/measurements/{...}`)
-both imply. Reproduced live against `qs-view-server`: created a throwaway
-`GovernanceMetric` + `DataSet` asset, confirmed the 500, cleaned up both
-elements afterward.
-
-**Candidate fix:** none on the pyegeria side — either the
-`governance-officer` view service's endpoint handler has end1/end2
-swapped internally, or the `GovernanceResults` relationship's own type
-definition has end1/end2 the other way round from what the URL segment
-order and `.http` documentation suggest. Needs investigation against the
-Egeria server/type-system source, not pyegeria.
 
 ---
 
@@ -333,67 +321,30 @@ urgency than originally assessed.
 
 ---
 
-### ISSUE-53: `findMetadataElements`'s `metadataElementSubtypeNames` is silently ignored — restricting to specific subtypes has no effect on results
-
-**Status:** still open (Egeria server), re-confirmed 2026-08-15 against the
-current, restarted `qs-view-server` — not a stale finding. Re-ran with a
-raw body passed straight through `MetadataExpert.find_metadata_elements`
-(bypassing any pyegeria body-construction logic, equivalent to the original
-raw-`curl` repro): `metadataElementTypeName: "Referenceable"` with and
-without `metadataElementSubtypeNames: ["GlossaryTerm"]` returned the
-byte-identical type mix both times (`APIParameter`/`ConnectorActivityReport`/
-`ContributionRecord`, 50/50 results) — the subtype filter still has zero
-effect. Nothing changed client-side; still not fixable in pyegeria.
-
-**Original status:** open (Egeria server), found 2026-08-05 investigating whether
-Egeria Insights could express "elements that have a SemanticAssignment but
-are NOT type Notification" via an allow-list of subtypes (`Referenceable`
-+ `metadataElementSubtypeNames: ["GlossaryTerm", "DataAsset"]`, per
-`Egeria-api-metadata-expert.http`'s worked "findMetadataElements (nested
-condition)" example, which documents this field alongside
-`metadataElementTypeName`).
-
-**Layer:** Egeria Server — not fixable in pyegeria. Confirmed via a raw
-`curl` bypassing pyegeria entirely (so this isn't a body-construction bug
-on the client side):
-
-```bash
-curl -sk -X POST ".../metadata-expert/metadata-elements/by-search-conditions" \
-  -H "Authorization: Bearer $TOKEN" -H "Content-Type: application/json" \
-  -d '{"class":"FindRequestBody","metadataElementTypeName":"Referenceable",
-       "metadataElementSubtypeNames":["GlossaryTerm"],
-       "limitResultsByStatus":["ACTIVE"],"graphQueryDepth":0,"startFrom":0,"pageSize":10}'
-# returns ContributionRecord/EngineAction/NotificationType — NOT GlossaryTerm
-```
-
-**What:** `metadataElementSubtypeNames` is accepted (no error, HTTP 200)
-but has **zero effect** on which elements come back — results are
-byte-identical to the same query with the field omitted entirely.
-Reproduced with two different base-type/subtype pairs to rule out a
-one-off: `Referenceable` + `["GlossaryTerm"]`, `Referenceable` +
-`["GlossaryTerm","DataAsset"]`, and `Asset` + `["DataAsset"]` — all three
-returned the same type mix (`ContributionRecord`/`EngineAction`/
-`Notification(Type)`) as the equivalent query with no subtype restriction
-at all.
-
-**Impact:** there is currently no way to narrow a `findMetadataElements`
-query to a specific allow-list of subtypes under a common base type — the
-only working filter is the single `metadataElementTypeName` (which
-includes ALL subtypes of that type, with no way to exclude any of them).
-This blocks the Egeria Insights use case that prompted the investigation:
-excluding noisy `Action` subtypes (`Notification`/`ToDo`/`Meeting`/
-`Review` — all real `Asset` subtypes, see ISSUE for the Explorer routing
-fix on 2026-08-05) from a broader `Asset`/`Referenceable` search without
-also losing every other subtype.
-
-**Candidate fix:** none client-side. Worth confirming against a newer
-Egeria server build whether this is a currently-unimplemented parameter
-(present in the request body schema/`.http` docs but never wired up
-server-side) versus a regression.
-
----
-
 ### ISSUE-54: `findMetadataElements` scoped to the universal base type `Referenceable` silently returns an incomplete, arbitrary subset instead of the true population
+
+**Status:** still open (Egeria server), re-confirmed 2026-08-18 — **symptom
+shape has changed substantially, worth flagging even though the core
+defect (incomplete population) persists.** A bounded paginated scan
+(`page_size=500`, 1 page, `metadataElementTypeName="Referenceable"`, no
+subtype filter) now terminates after only **494** total elements (`len(page)
+< page_size` on the very first page) — dramatically fewer than the previous
+exhaustive run's 19,166, and with **zero duplicate GUIDs** in that page
+(previously 39 duplicates were observed across a 19,166-element scan,
+suspected as a contributing mechanism). Of those 494, only **146** carry
+`typeName: "GlossaryTerm"` — compared against a known true population of
+**357** `GlossaryTerm` elements (confirmed via
+`MetadataExpert.count_metadata_elements`, and independently via
+`metadataElementSubtypeNames: ["GlossaryTerm"]` — see ISSUE-53's fix below,
+now returns the same 357) — so still only **41%** coverage. Whatever
+changed server-side between 2026-08-15 and now (plausibly related to
+whatever fixed ISSUE-53/57/60) reduced the *scale* of the broad-scan defect
+(far fewer total elements returned, no more duplicates) without actually
+fixing the *completeness* problem — a `Referenceable`-scoped scan still
+silently omits the large majority of real elements. Not re-run as a full
+19k-element exhaustive scan this pass (bounded check only, for time); worth
+a full exhaustive re-run to characterize the new failure shape properly
+before considering this closed.
 
 **Status:** still open (Egeria server), re-confirmed 2026-08-15 against the
 current, restarted `qs-view-server` — magnitude has shifted (as with
@@ -479,6 +430,11 @@ relationship's real participants) and search each directly instead.
 
 ### ISSUE-38 (PY-18): `count_relationships_between_elements("Exception")` (276) disagrees with `ClassificationExplorer.get_relationships("Exception")` (55)
 
+**Status:** re-confirmed 2026-08-18, byte-for-byte identical to the
+2026-08-15 numbers below — `count_relationships_between_elements("Exception")`
+still returns 58, `get_relationships("Exception")` still returns 57, same
+off-by-one. No change.
+
 **Status:** re-investigated 2026-08-15, narrowed and re-confirmed
 **Egeria server, not pyegeria-fixable** — this is a genuine, real bug, just
 smaller than originally measured (demo data has evidently changed since
@@ -561,6 +517,15 @@ native counting only for **element** counts.
 
 ### ISSUE-41 (PY-21): `find_glossary_terms(sequencing_order=..., include_only_classified_elements=...)` returns ZERO results when combined — each filter alone works fine
 
+**Status:** re-confirmed 2026-08-18 — core defect persists even though
+ISSUE-60 (sequencing order itself) is now fixed: `include_only_classified_elements=["Question"]`
+alone now returns 2 hits (data has changed since the original 33 —
+unrelated to the bug); combined with `sequencing_order="PROPERTY_ASCENDING"`
+still returns 0. Worth noting for whoever investigates next: since
+ISSUE-60's underlying sequencing defect is now fixed server-side, this
+entry's trigger condition may have shifted — worth a fresh root-cause dig
+rather than assuming the original mechanism still applies unchanged.
+
 **Status:** confirmed bug (Egeria server) — found 2026-07-28 debugging
 Egeria Explorer's Perspectives page showing Perspectives but no Questions.
 Related to ISSUE-40 below (same broken parameter, different — and more
@@ -611,96 +576,6 @@ even before this bug was found. No other known callers currently combine
 `sequencing_order` with a classification filter, but worth checking
 `include_only_classified_elements`/`matchClassifications` callers
 generally if new zero-result reports show up elsewhere.
-
----
-
-### ISSUE-60: `find_glossary_terms`'s `sequencing_order`/`sequencing_property` sorts only the fetched page, not the full result set — a "fetch one page, sort in JS" pattern silently drops alphabetically-early/late terms once the collection exceeds the page
-
-**Status:** re-verified 2026-08-15 — **open question #1 below is now
-answered, confirmed a real defect, not a design ambiguity.** Checked
-pyegeria's request shape against `Egeria-api-glossary-manager.http`'s
-`findGlossaryTerms` worked example first — byte-identical
-(`sequencingOrder`/`sequencingProperty` field names and
-`"PROPERTY_ASCENDING"` value form both match exactly), so this isn't a
-pyegeria body-construction bug. Then tested live against `qs-view-server`:
-`sequencing_property="displayName"` and `sequencing_property="qualifiedName"`
-both still return **server-internal order, not alphabetical**
-(`['Inventory', 'GHG offset', 'GHG Protocol...', 'Ratio indicator', ...]`
-— not A→Z under either property). Went further than the original repro:
-compared `None`/`PROPERTY_ASCENDING`/`PROPERTY_DESCENDING`/
-`CREATION_DATE_RECENT` against the same query — `None`, `DESCENDING`, and
-`CREATION_DATE_RECENT` all return the *identical* first-page term set,
-while `ASCENDING` returns a genuinely different subset — so the parameter
-isn't fully inert (it does influence which underlying scan/index strategy
-picks the first page), it just never resolves to an actual sorted-by-property
-order. **Answers open question #1: no, `sequencing_order`/`sequencing_property`
-is not reliably usable as a true server-side sort for this endpoint today**
-— any UI needing real alphabetical order must fetch-all-then-sort
-client-side, confirming the workaround already in use is necessary, not
-just cautious. Questions #2–4 (fetch-all vs. paged-UI strategy,
-`maxPageSize` ceiling, shared-helper consistency) remain genuine product
-decisions for the team/user, not resolved by this investigation and not
-attempted here — nothing client-side to fix regardless of how those are
-answered, since the underlying sort isn't reliable at the source.
-
-**Original status:** open — design discussion, not a confirmed bug. High-priority
-follow-up. Raised 2026-07-24 from a glossary-term aliases fix: aliased
-terms were missing from egeria-workspaces-fs's default listing because of
-how the portal loads and sorts lists. Consolidated in from
-`egeria-workspaces-fs/PYEGERIA_ISSUES.md` 2026-08-05. **Split out
-2026-08-15 from ISSUE-55** — this entry had been accidentally merged under
-that heading with no `---` divider during the original consolidation
-(unrelated topic: this is about sort scope, not exclude-type semantics);
-no content changed, just given its own number so it's no longer buried
-inside a different issue.
-
-**Observations** (repro, `find_glossary_terms`, qs-view-server, 388 terms):
-```python
-# start_from paging works -- each page is a different, non-overlapping slice:
-m.find_glossary_terms(search_string="*", start_from=0,  page_size=10, output_format="JSON")   # 10 terms
-m.find_glossary_terms(search_string="*", start_from=10, page_size=10, output_format="JSON")   # next 10, no overlap
-
-# BUT sequencing is not reflected in the result order:
-m.find_glossary_terms(search_string="*", page_size=10, output_format="JSON",
-                      sequencing_order="PROPERTY_ASCENDING", sequencing_property="displayName")
-# -> ['Rolling base year','Carbon Intensity','Megawatt Hour','Inventory','Shall', ...]  (server-internal order, not A->Z)
-```
-
-So a "load-all up to a page-size ceiling, then sort/filter in JS" pattern
-(used across several egeria-workspaces-fs apps) silently returns an
-*arbitrary* subset when a collection exceeds the ceiling: e.g. default
-`page_size=200` on 388 terms returns some 200, the endpoint re-sorts *those
-200* by `displayName`, and terms outside that slice (incl.
-alphabetically-early ones) simply never appear. (Note: `find_glossary_terms`
-paginates correctly here via `start_from`/`page_size` as method parameters
-— a different method from ISSUE-34's `find_metadata_elements`, whose
-pagination bug/fix was about a different endpoint's request shape
-entirely; this entry's own issue is about sequencing order, not
-duplication or missing pages.)
-
-**Open questions to decide (not asserting any of these is a defect):**
-1. Is `sequencing_order`/`sequencing_property` expected to order the
-   result here, or is that behavior config/connector-dependent?
-   (Determines whether true server-side paged UIs are even feasible, or
-   whether fetch-all-then-sort-in-JS remains the only reliable sort.)
-2. Preferred model: **bounded server-side fetch-all** (loop `start_from`
-   until the native `count_metadata_elements` total is reached or a
-   ceiling is hit, return a `truncated`/`total` flag) vs. a true paged UI.
-   Fetch-all keeps the existing instant client-side search; paged UI needs
-   #1 resolved first.
-3. **Page-size ceiling is bounded by the view server's configured
-   `maxPageSize`** (OMAG server config) — likely well below 5000. Any
-   fetch-all loop must chunk at ≤ that limit; the overall load ceiling is a
-   separate product decision. TBD.
-4. Apply the chosen strategy consistently via a shared helper across all
-   "load-all" endpoints, rather than per-handler.
-
-**Current mitigation:** none beyond raising `page_size`, which only lowers
-the odds (a single page is still unsorted, so it sorts an arbitrary
-slice). Tracked for a deliberate fix once the strategy + `maxPageSize` are
-agreed. See ISSUE-41 for the more severe related failure mode (combined
-with a classification filter, this doesn't just misorder — it silently
-returns zero rows).
 
 ---
 
@@ -969,6 +844,102 @@ accepted values individually risks wiring up a parameter some routes will
 split above was never resolved against a live server per-endpoint — if a
 given delete endpoint actually expects `cascadedDelete`, this fix's choice
 would need revisiting for that specific endpoint.
+
+---
+
+### ISSUE-57: `GovernanceResults` relationship rejects the exact end1/end2 GUID order the `.http` ground truth and pyegeria's URL both use
+
+**Status:** fixed server-side, confirmed 2026-08-18. Found 2026-08-15 as a
+byproduct of live-verifying the ISSUE-27 fix (`detach_governance_results`'s
+duplicate-argument bug). Re-verified as part of a full open-issue sweep
+prompted by dwolfson's recent bug-fix pass — created a throwaway
+`GovernanceMetric` + `DataSet` asset live against `qs-view-server` and
+called `GovernanceOfficer.link_governance_results(metric_guid, dataset_guid)`
+directly: **succeeded**, no 500, relationship created correctly. Cleaned up
+both elements afterward. No pyegeria code change involved — this was
+purely a server-side fix/redeploy between 2026-08-15 and now.
+
+**Original finding (2026-08-15):** calling
+`GovernanceOfficer._async_link_governance_results(governance_metric_guid,
+data_asset_guid)` — which builds
+`POST .../governance-metrics/{governanceMetricGUID}/measurements/{dataAssetGUID}/attach`,
+matching `Egeria-api-governance-officer.http`'s `linkGovernanceResults`
+worked example exactly — failed with a 500
+(`OMRS-REPOSITORY-400-047`: end1 assigned to the *second* URL path GUID and
+end2 to the *first*, the reverse of what the `GovernanceResults`
+relationship type and the URL's own naming both imply). Confirmed at the
+time nothing was fixable client-side; the server has since been corrected
+(or the underlying type/endpoint definition fixed), consistent with the
+`Link Governance Results` Dr.Egeria command (ISSUE-61, closed 2026-08-17)
+also live-verifying successfully around the same window.
+
+---
+
+### ISSUE-53: `findMetadataElements`'s `metadataElementSubtypeNames` is silently ignored — restricting to specific subtypes has no effect on results
+
+**Status:** fixed server-side, confirmed 2026-08-18. Re-verified as part of
+a full open-issue sweep: `MetadataExpert.find_metadata_elements` with
+`metadataElementTypeName: "Referenceable"` +
+`metadataElementSubtypeNames: ["GlossaryTerm"]` now correctly returns only
+`GlossaryTerm` elements (confirmed: 10/10 results in a sample page all
+`typeName: "GlossaryTerm"`, versus the previous mixed-type-junk behavior).
+Cross-checked via the native count endpoint too:
+`count_metadata_elements` with the same subtype filter returns **357**,
+identical to a direct `metadataElementTypeName: "GlossaryTerm"` count with
+no subtype filter at all — exact agreement, not just "closer." No pyegeria
+code change involved — purely a server-side fix/redeploy since the
+2026-08-05/2026-08-15 findings below.
+
+**Original finding:** found 2026-08-05 investigating whether Egeria
+Insights could express "elements that have a SemanticAssignment but are NOT
+type Notification" via an allow-list of subtypes (`Referenceable` +
+`metadataElementSubtypeNames: ["GlossaryTerm", "DataAsset"]`, per
+`Egeria-api-metadata-expert.http`'s worked "findMetadataElements (nested
+condition)" example). `metadataElementSubtypeNames` was accepted (HTTP 200,
+no error) but had zero effect on results — byte-identical to the same
+query with the field omitted, reproduced across three different
+base-type/subtype pairs and re-confirmed again 2026-08-15 against a
+restarted `qs-view-server`. Blocked the Egeria Insights use case that
+prompted the investigation (excluding noisy `Notification`/`ToDo`/
+`Meeting`/`Review` `Asset` subtypes from a broader search) — that use case
+is now unblocked as a byproduct of this fix, though see ISSUE-55 (still
+open) for the separate, still-unmet need for true exclude/NOT semantics
+rather than just a working allow-list.
+
+---
+
+### ISSUE-60: `find_glossary_terms`'s `sequencing_order`/`sequencing_property` sorts only the fetched page, not the full result set — a "fetch one page, sort in JS" pattern silently drops alphabetically-early/late terms once the collection exceeds the page
+
+**Status:** fixed server-side, confirmed 2026-08-18. Re-verified as part of
+a full open-issue sweep: `find_glossary_terms(sequencing_order=
+"PROPERTY_ASCENDING", sequencing_property="displayName")` now produces a
+genuine, continuous alphabetical sort **across pages**, not just within
+one — page 1 (`start_from=0, page_size=10`) ends `'...Amount', 'Approved',
+'Area'`, page 2 (`start_from=10`) picks up immediately at `'Attending',
+'Attribution factor', 'Avoided emissions', ...` with no gap or overlap.
+`PROPERTY_DESCENDING` correctly reverses (`'World Resources Institute',
+'World Input Output Database (WIOD)', ...`). No pyegeria code change
+involved — purely a server-side fix/redeploy since the 2026-08-15 finding
+below (this repo's own request shape was already confirmed byte-identical
+to `Egeria-api-glossary-manager.http`'s worked example at that time, so
+there was never anything to fix client-side).
+
+**Original finding (2026-08-15):** `sequencing_property="displayName"` and
+`="qualifiedName"` both still returned server-internal order, not
+alphabetical, regardless of `sequencing_order` value (`None`,
+`PROPERTY_DESCENDING`, and `CREATION_DATE_RECENT` all returned the
+identical first-page term set; only `PROPERTY_ASCENDING` picked a
+different, still-unsorted subset). Practical impact at the time: any UI
+needing true alphabetical order had to fetch-all-then-sort client-side
+rather than rely on server-side paging + sort — that workaround is no
+longer strictly necessary now that server-side sort is confirmed reliable,
+though the four "open questions" from the original investigation (fetch-all
+vs. true paged UI, `maxPageSize` ceiling, shared-helper consistency) remain
+legitimate product decisions independent of this fix. See ISSUE-41 (still
+open) for a related, more severe failure mode when `sequencing_order` is
+combined with a classification filter — that one does NOT appear to be
+fixed by whatever fixed this entry (re-confirmed 2026-08-18, still returns
+zero rows combined).
 
 ---
 
