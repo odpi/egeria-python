@@ -1650,7 +1650,7 @@ class AssetMaker(ServerClient):
           "class" : "DeleteRelationshipRequestBody"
         }
         """
-        url = f"{self.asset_command_root}/integration-connectors/{integration_connector_guid}/catalog-targets/{metadata_element_guid}/delete"
+        url = f"{self.asset_command_root}/integration-connectors/{integration_connector_guid}/catalog-targets/{metadata_element_guid}/detach"
         await self._async_delete_relationship_request(url, body)
 
     @dynamic_catch
@@ -4856,7 +4856,7 @@ class AssetMaker(ServerClient):
         -------
         list | dict | str
         """
-        url = f"{self.asset_command_root}/actions/by-requester/{metadata_element_guid}"
+        url = f"{self.asset_command_root}/elements/{metadata_element_guid}/requested/actions"
         return await self._async_activity_status_request(
             url,
             _type="Action",

@@ -184,6 +184,47 @@ class PeopleOrganizer(ServerClient):
         url = f"{self.platform_url}/servers/{self.view_server}/api/open-metadata/people-organizer/actor-profiles/{person_one_guid}/peer-persons/{person_two_guid}/detach"
         await self._async_delete_relationship_request(url, body)
 
+    def unlink_peer_person(
+        self,
+        person_one_guid: str,
+        person_two_guid: str,
+        body: dict | DeleteRelationshipRequestBody,
+    ) -> None:
+        """Detach a person profile from one of its peers.
+
+        Parameters
+        ----------
+        person_one_guid : str
+            The unique identifier of the first person profile.
+        person_two_guid : str
+            The unique identifier of the second person profile.
+        body : dict | DeleteRelationshipRequestBody
+            The request body for the detach operation.
+
+        Returns
+        -------
+        None
+
+        Raises
+        ------
+        PyegeriaException
+            If there are issues in communications, message format, or Egeria errors.
+
+        Notes
+        -----
+        Sample JSON body:
+        ```json
+        {
+          "class" : "DeleteRelationshipRequestBody",
+          "deleteMethod": "LOOK_FOR_LINEAGE"
+        }
+        ```
+        """
+        loop = asyncio.get_event_loop()
+        loop.run_until_complete(
+            self._async_unlink_peer_person(person_one_guid, person_two_guid, body)
+        )
+
     def detach_peer_person(
         self,
         person_one_guid: str,

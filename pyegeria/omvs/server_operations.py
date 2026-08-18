@@ -39,8 +39,9 @@ class ServerOps(Platform):
         token: Optional[str] = None,
         timeout: int = None):
         Platform.__init__(self, server_name, platform_url, user_id, user_pwd, token=token)
+        # No trailing slash - every call site below appends "/servers/...".
         self.ops_command_root = (
-            f"{self.platform_url}/open-metadata/server-operations/"
+            f"{self.platform_url}/open-metadata/server-operations"
         )
 
     async def _async_get_active_configuration(self, server: str = None) -> dict | str:
@@ -221,7 +222,7 @@ class ServerOps(Platform):
         if server is None:
             server = self.server_name
 
-        url = self.ops_command_root + "servers/" + server + "/instance/status"
+        url = self.ops_command_root + "/servers/" + server + "/instance/status"
 
         response = await self._async_make_request("GET", url)
         return response

@@ -133,7 +133,8 @@ class SolutionArchitect(ServerClient):
 
     def create_design_pattern(self, body: dict | NewElementRequestBody):
         """Create a design pattern."""
-        return asyncio.run(self._async_create_design_pattern(body))
+        loop = asyncio.get_event_loop()
+        return loop.run_until_complete(self._async_create_design_pattern(body))
 
     async def _async_create_design_pattern_from_template(self, body: dict | TemplateRequestBody):
         url = f"{self.solution_architect_command_root}/design-patterns/from-template"
@@ -142,7 +143,8 @@ class SolutionArchitect(ServerClient):
 
     def create_design_pattern_from_template(self, body: dict | TemplateRequestBody):
         """Create a design pattern from template."""
-        return asyncio.run(self._async_create_design_pattern_from_template(body))
+        loop = asyncio.get_event_loop()
+        return loop.run_until_complete(self._async_create_design_pattern_from_template(body))
 
     async def _async_update_design_pattern(self, guid: str, body: dict | UpdateElementRequestBody):
         validate_guid(guid)
@@ -151,7 +153,8 @@ class SolutionArchitect(ServerClient):
 
     def update_design_pattern(self, guid: str, body: dict | UpdateElementRequestBody):
         """Update a design pattern."""
-        return asyncio.run(self._async_update_design_pattern(guid, body))
+        loop = asyncio.get_event_loop()
+        return loop.run_until_complete(self._async_update_design_pattern(guid, body))
 
     async def _async_link_nested_design_patterns(self, parent_guid: str, child_guid: str, body: Optional[dict | NewRelationshipRequestBody] = None):
         validate_guid(parent_guid)
@@ -161,7 +164,8 @@ class SolutionArchitect(ServerClient):
 
     def link_nested_design_patterns(self, parent_guid: str, child_guid: str, body: Optional[dict | NewRelationshipRequestBody] = None):
         """Link nested design patterns."""
-        return asyncio.run(self._async_link_nested_design_patterns(parent_guid, child_guid, body))
+        loop = asyncio.get_event_loop()
+        return loop.run_until_complete(self._async_link_nested_design_patterns(parent_guid, child_guid, body))
 
     async def _async_detach_nested_design_patterns(self, parent_guid: str, child_guid: str, body: Optional[dict | DeleteRelationshipRequestBody] = None):
         validate_guid(parent_guid)
@@ -171,7 +175,8 @@ class SolutionArchitect(ServerClient):
 
     def detach_nested_design_patterns(self, parent_guid: str, child_guid: str, body: Optional[dict | DeleteRelationshipRequestBody] = None):
         """Detach nested design patterns."""
-        return asyncio.run(self._async_detach_nested_design_patterns(parent_guid, child_guid, body))
+        loop = asyncio.get_event_loop()
+        return loop.run_until_complete(self._async_detach_nested_design_patterns(parent_guid, child_guid, body))
 
     async def _async_link_specialized_design_patterns(self, general_guid: str, special_guid: str, body: Optional[dict | NewRelationshipRequestBody] = None):
         validate_guid(general_guid)
@@ -181,7 +186,8 @@ class SolutionArchitect(ServerClient):
 
     def link_specialized_design_patterns(self, general_guid: str, special_guid: str, body: Optional[dict | NewRelationshipRequestBody] = None):
         """Link specialized design patterns."""
-        return asyncio.run(self._async_link_specialized_design_patterns(general_guid, special_guid, body))
+        loop = asyncio.get_event_loop()
+        return loop.run_until_complete(self._async_link_specialized_design_patterns(general_guid, special_guid, body))
 
     async def _async_detach_specialized_design_patterns(self, general_guid: str, special_guid: str, body: Optional[dict | DeleteRelationshipRequestBody] = None):
         validate_guid(general_guid)
@@ -191,7 +197,8 @@ class SolutionArchitect(ServerClient):
 
     def detach_specialized_design_patterns(self, general_guid: str, special_guid: str, body: Optional[dict | DeleteRelationshipRequestBody] = None):
         """Detach specialized design patterns."""
-        return asyncio.run(self._async_detach_specialized_design_patterns(general_guid, special_guid, body))
+        loop = asyncio.get_event_loop()
+        return loop.run_until_complete(self._async_detach_specialized_design_patterns(general_guid, special_guid, body))
 
     async def _async_link_related_design_patterns(self, guid1: str, guid2: str, body: Optional[dict | NewRelationshipRequestBody] = None):
         validate_guid(guid1)
@@ -201,7 +208,8 @@ class SolutionArchitect(ServerClient):
 
     def link_related_design_patterns(self, guid1: str, guid2: str, body: Optional[dict | NewRelationshipRequestBody] = None):
         """Link related design patterns."""
-        return asyncio.run(self._async_link_related_design_patterns(guid1, guid2, body))
+        loop = asyncio.get_event_loop()
+        return loop.run_until_complete(self._async_link_related_design_patterns(guid1, guid2, body))
 
     async def _async_detach_related_design_patterns(self, guid1: str, guid2: str, body: Optional[dict | DeleteRelationshipRequestBody] = None):
         validate_guid(guid1)
@@ -211,7 +219,8 @@ class SolutionArchitect(ServerClient):
 
     def detach_related_design_patterns(self, guid1: str, guid2: str, body: Optional[dict | DeleteRelationshipRequestBody] = None):
         """Detach related design patterns."""
-        return asyncio.run(self._async_detach_related_design_patterns(guid1, guid2, body))
+        loop = asyncio.get_event_loop()
+        return loop.run_until_complete(self._async_detach_related_design_patterns(guid1, guid2, body))
 
     async def _async_delete_design_pattern(self, guid: str, body: Optional[dict | DeleteElementRequestBody] = None):
         validate_guid(guid)
@@ -220,7 +229,8 @@ class SolutionArchitect(ServerClient):
 
     def delete_design_pattern(self, guid: str, body: Optional[dict | DeleteElementRequestBody] = None):
         """Delete a design pattern."""
-        return asyncio.run(self._async_delete_design_pattern(guid, body))
+        loop = asyncio.get_event_loop()
+        return loop.run_until_complete(self._async_delete_design_pattern(guid, body))
 
     async def _async_find_design_patterns(self, search_string: str = "*", body: Optional[dict | SearchStringRequestBody] = None,
                                   starts_with: bool = True, ends_with: bool = False, ignore_case: bool = False,
@@ -250,7 +260,8 @@ class SolutionArchitect(ServerClient):
                            start_from: int = 0, page_size: int = 100, graph_query_depth: int = 3, output_format: str = "JSON",
                            report_spec: str | dict = "Design-Pattern-DrE", **kwargs):
         """Find design patterns."""
-        return asyncio.run(self._async_find_design_patterns(search_string, body, starts_with, ends_with,
+        loop = asyncio.get_event_loop()
+        return loop.run_until_complete(self._async_find_design_patterns(search_string, body, starts_with, ends_with,
                                                          ignore_case, start_from, page_size,
                                                          graph_query_depth,
                                                          output_format, report_spec, **kwargs))
@@ -279,7 +290,8 @@ class SolutionArchitect(ServerClient):
                                   start_from: int = 0, page_size: int = max_paging_size,
                                   graph_query_depth: int = 3, output_format: str = "JSON", report_spec: str | dict = "Design-Pattern-DrE", **kwargs):
         """Get design patterns by name."""
-        return asyncio.run(self._async_get_design_patterns_by_name(name=name, body=body, start_from=start_from, page_size=page_size,
+        loop = asyncio.get_event_loop()
+        return loop.run_until_complete(self._async_get_design_patterns_by_name(name=name, body=body, start_from=start_from, page_size=page_size,
                                                                 graph_query_depth=graph_query_depth,
                                                                 output_format=output_format, report_spec=report_spec, **kwargs))
 
@@ -303,7 +315,8 @@ class SolutionArchitect(ServerClient):
     def get_design_pattern_by_guid(self, guid: str = None, body: Optional[dict | GetRequestBody] = None,
                                  graph_query_depth: int = 3, output_format: str = "JSON", report_spec: str | dict = "Design-Pattern-DrE", **kwargs):
         """Get a design pattern by GUID."""
-        return asyncio.run(self._async_get_design_pattern_by_guid(guid=guid, body=body, graph_query_depth=graph_query_depth, output_format=output_format, report_spec=report_spec, **kwargs))
+        loop = asyncio.get_event_loop()
+        return loop.run_until_complete(self._async_get_design_pattern_by_guid(guid=guid, body=body, graph_query_depth=graph_query_depth, output_format=output_format, report_spec=report_spec, **kwargs))
 
     async def _async_update_solution_blueprint_status(self, guid: str, body: dict | UpdateElementRequestBody):
         validate_guid(guid)
@@ -312,7 +325,8 @@ class SolutionArchitect(ServerClient):
 
     def update_solution_blueprint_status(self, guid: str, body: dict | UpdateElementRequestBody):
         """Update the status of a solution blueprint."""
-        return asyncio.run(self._async_update_solution_blueprint_status(guid, body))
+        loop = asyncio.get_event_loop()
+        return loop.run_until_complete(self._async_update_solution_blueprint_status(guid, body))
 
 
     def _get_supply_chain_rel_elements_dict(self, el_struct: dict)-> dict | str:
@@ -2232,6 +2246,7 @@ class SolutionArchitect(ServerClient):
     #
     #  Blueprints
     #
+
 
     @dynamic_catch
     async def _async_create_solution_blueprint(self, body: dict | NewElementRequestBody) -> str:
@@ -6062,6 +6077,7 @@ class SolutionArchitect(ServerClient):
             """
         loop = asyncio.get_event_loop()
         loop.run_until_complete(self._async_delete_solution_role(guid, body, cascade_delete))
+
 
     async def _async_find_solution_roles(
         self,
