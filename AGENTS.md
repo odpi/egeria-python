@@ -47,7 +47,7 @@
 ## Contributor workflows
 - Dev setup: `uv sync`, activate `.venv`, run tests from repo root.
 - Tests are split into three sub-folders: `tests/functional-tests/` (per-OMVS live tests), `tests/scenario-tests/` (lifecycle scenario tests), `tests/micro-tests/` (unit/formatter/MCP tests).
-- Default tests are unit/fake; live mode is opt-in via `pytest --live-egeria` or `PYEG_LIVE_EGERIA=1` (`tests/micro-tests/conftest_full.py`).
+- Default tests are unit/fake; live mode is opt-in via `PYEG_LIVE_EGERIA=1` (the `--live-egeria` CLI flag documented in `tests/micro-tests/conftest_full.py`'s skip messages isn't wired up in the active `conftest.py` and doesn't currently work).
 - Pytest markers in `tests/pytest.ini`: `unit`, `integration`, `slow`, `auth`, `format_sets`, `mcp`.
 - For command/report schema changes, regenerate and merge specs with `hey_egeria tech gen-report-specs md_processing/data/compact_commands --merge`.
 - Validate compatibility by exercising at least one report in `DICT`, `LIST`, and `REPORT` output modes after formatter/spec edits.
