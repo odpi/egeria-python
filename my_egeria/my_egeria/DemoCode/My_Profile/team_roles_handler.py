@@ -238,8 +238,7 @@ class TeamRolesMixin:
             return 440
         else:
             self.term_details_container: ScrollableContainer = self.screen.query_one(DataTable)
-            self.term_details_container.mount()
             if isinstance(self.term_details_data, dict):
                 for data_item_key, data_item_value in self.term_details_data.items():
-                    Static(f"Field: {data_item_key}, Value: {data_item_value}").mount(self.term_details_container)
+                    self.term_details_container.mount(Static(f"Field: {data_item_key}, Value: {data_item_value}"))
         return 200

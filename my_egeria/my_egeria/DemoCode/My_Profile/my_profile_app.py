@@ -177,6 +177,8 @@ class MyProfileApp(App, TechTypesMixin, ShopForDataMixin, TeamRolesMixin, Elemen
         self.graph_query_depth = 0  # This tell egeria not to include relationships in the response packet
         self.user_GUID = ""
         self.user_data = {}
+        self.user_identities = []
+        self.user_identity = []
 
     def compose(self) -> ComposeResult:
         yield Header()
@@ -352,8 +354,16 @@ class MyProfileApp(App, TechTypesMixin, ShopForDataMixin, TeamRolesMixin, Elemen
         """Populates tables from normalized profile data."""
         main_screen = self.get_screen("main")
 
-        self.projects_table = main_screen.query_one("#projects_table", DataTable)
-        self.communities_table = main_screen.query_one("#communities_table", DataTable)
+        try:
+            self.projects_table = main_screen.query_one("#projects_table", DataTable)
+        except Exception:
+            self.projects_table = None
+
+        try:
+            self.communities_table = main_screen.query_one("#communities_table", DataTable)
+        except Exception:
+            self.communities_table = None
+
         self.roles_table = main_screen.query_one("#roles_table", DataTable)
         self.blogs_table = main_screen.query_one("#blogs_table", DataTable)
         self.journal_table = main_screen.query_one("#journal_table", DataTable)
@@ -363,15 +373,17 @@ class MyProfileApp(App, TechTypesMixin, ShopForDataMixin, TeamRolesMixin, Elemen
         self.associations_table = main_screen.query_one("#associations_table", DataTable)
         self.my_collections_table = main_screen.query_one("#my_collections_table", DataTable)
 
-        self.projects_table.clear(columns=True)
-        self.projects_table.add_columns("Status or Type", "Name", "Description", "GUID")
-        self.projects_table.zebra_stripes = True
-        self.projects_table.cursor_type = "row"
+        if self.projects_table:
+            self.projects_table.clear(columns=True)
+            self.projects_table.add_columns("Status or Type", "Name", "Description", "GUID")
+            self.projects_table.zebra_stripes = True
+            self.projects_table.cursor_type = "row"
 
-        self.communities_table.clear(columns=True)
-        self.communities_table.add_columns("Assignment Type", "Community Name", "Description", "GUID")
-        self.communities_table.zebra_stripes = True
-        self.communities_table.cursor_type = "row"
+        if self.communities_table:
+            self.communities_table.clear(columns=True)
+            self.communities_table.add_columns("Assignment Type", "Community Name", "Description", "GUID")
+            self.communities_table.zebra_stripes = True
+            self.communities_table.cursor_type = "row"
 
         self.roles_table.clear(columns=True)
         self.roles_table.add_columns("Role Name", "Role Type", "Description", "GUID")
@@ -414,20 +426,22 @@ class MyProfileApp(App, TechTypesMixin, ShopForDataMixin, TeamRolesMixin, Elemen
         self.my_collections_table.cursor_type = "row"
 
         # Populate rows
-        for p in self.projects if isinstance(self.projects, list) else []:
-            self.projects_table.add_row(
-                str(p.get("Project Status", "")),
-                str(p.get("Name", "")),
-                str(p.get("Description", "")),
-                str(p.get("GUID", p.get("guid", ""))),
-            )
-        for c in self.communities if isinstance(self.communities, list) else []:
-            self.communities_table.add_row(
-                str(c.get("Assignment Type", "")),
-                str(c.get("Name", "")),
-                str(c.get("Description", "")),
-                str(c.get("GUID", c.get("guid", ""))),
-            )
+        if self.projects_table:
+            for p in self.projects if isinstance(self.projects, list) else []:
+                self.projects_table.add_row(
+                    str(p.get("Project Status", "")),
+                    str(p.get("Name", "")),
+                    str(p.get("Description", "")),
+                    str(p.get("GUID", p.get("guid", ""))),
+                )
+        if self.communities_table:
+            for c in self.communities if isinstance(self.communities, list) else []:
+                self.communities_table.add_row(
+                    str(c.get("Assignment Type", "")),
+                    str(c.get("Name", "")),
+                    str(c.get("Description", "")),
+                    str(c.get("GUID", c.get("guid", ""))),
+                )
         for r in self.roles if isinstance(self.roles, list) else []:
             self.roles_table.add_row(
                 str(r.get("Role Name", "")),
@@ -534,10 +548,12 @@ class MyProfileApp(App, TechTypesMixin, ShopForDataMixin, TeamRolesMixin, Elemen
         self.log("Returning to main screen")
         try:
             self.get_screen("main")
-            self.switch_screen("main")
-        except KeyError:
+            if getattr(self, "is_mounted", False) and len(getattr(self, "screen_stack", [])) > 0:
+                self.switch_screen("main")
+        except Exception:
             self.log("Main screen does not exist")
-            self.push_screen("main")
+            if getattr(self, "is_mounted", False):
+                self.push_screen("main")
 
     # Compatibility wrappers delegating to profile_utils
     def clean_structure(self, data: Any, target: str = "specificationMermaidGraph") -> Any:

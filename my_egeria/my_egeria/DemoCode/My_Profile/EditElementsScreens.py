@@ -25,17 +25,10 @@ class EditAssociationsScreen(ModalScreen):
         ("e", "exit_screen", "Exit"),
     ]
 
-    def __init__(self, columns, rows_with_keys, *args, **kwargs):
+    def __init__(self, columns=None, rows_with_keys=None, *args, **kwargs):
         super().__init__(*args, **kwargs, id="edit_associations_screen")
-        self.main_screen = self.query_screen("main_screen")
-        self.my_communities_table = self.main_screen.query_one("#communities_table", DataTable)
-        self.my_projects_table = self.main_screen.query_one("#projects_table", DataTable)
-        self.my_communities_table.id="my_communities_table"
-        self.my_projects_table.id="my_projects_table"
-        self.my_communities_table.cursor_type = "row"
-        self.my_projects_table.cursor_type = "row"
-        self.my_communities_table.zebra_stripes = True
-        self.my_projects_table.zebra_stripes = True
+        self.columns = columns or []
+        self.rows_with_keys = rows_with_keys or []
 
     def compose(self) -> ComposeResult:
         yield Header(show_clock=True)
@@ -103,12 +96,12 @@ class EditBlogsScreen(ModalScreen):
         ("d", "delete_row", "Delete Row")
     ]
 
-    def __init__(self, columns, rows_with_keys, *args, **kwargs):
+    def __init__(self, columns=None, rows_with_keys=None, *args, **kwargs):
         super().__init__(*args, **kwargs, id="edit_blogs_screen")
         self.my_blogs_table: DataTable = DataTable(id="blogs_destination")
         self.row_key = None
-        self.columns = columns
-        self.rows_with_keys = rows_with_keys
+        self.columns = columns or []
+        self.rows_with_keys = rows_with_keys or []
         self.blogs_container: ScrollableContainer
 
     def compose(self) -> ComposeResult:
@@ -181,12 +174,12 @@ class EditCommunitiesScreen(ModalScreen):
         ("d", "delete_row", "Delete Row")
     ]
 
-    def __init__(self, columns, rows_with_keys, *args, **kwargs):
+    def __init__(self, columns=None, rows_with_keys=None, *args, **kwargs):
         super().__init__(*args, **kwargs, id="edit_communities_screen")
         self.my_communities_table: DataTable = DataTable(id="communities_destination")
         self.row_key = None
-        self.columns = columns
-        self.rows_with_keys = rows_with_keys
+        self.columns = columns or []
+        self.rows_with_keys = rows_with_keys or []
         self.communities_container: ScrollableContainer
 
     def compose(self) -> ComposeResult:
@@ -259,12 +252,12 @@ class EditIdentitiesScreen(ModalScreen):
         ("d", "delete_row", "Delete Row")
     ]
 
-    def __init__(self, columns, rows_with_keys, *args, **kwargs):
+    def __init__(self, columns=None, rows_with_keys=None, *args, **kwargs):
         super().__init__(*args, **kwargs, id="edit_identities_screen")
         self.my_identities_table: DataTable = DataTable(id="identities_destination")
         self.row_key = None
-        self.columns = columns
-        self.rows_with_keys = rows_with_keys
+        self.columns = columns or []
+        self.rows_with_keys = rows_with_keys or []
         self.identities_container: ScrollableContainer
 
     def compose(self) -> ComposeResult:
@@ -337,12 +330,12 @@ class EditJournalScreen(ModalScreen):
         ("d", "delete_row", "Delete Row")
     ]
 
-    def __init__(self, columns, rows_with_keys, *args, **kwargs):
+    def __init__(self, columns=None, rows_with_keys=None, *args, **kwargs):
         super().__init__(*args, **kwargs, id="edit_journal_screen")
         self.my_journal_table: DataTable = DataTable(id="journal_destination")
         self.row_key = None
-        self.columns = columns
-        self.rows_with_keys = rows_with_keys
+        self.columns = columns or []
+        self.rows_with_keys = rows_with_keys or []
         self.journal_container: ScrollableContainer
 
     def compose(self) -> ComposeResult:
@@ -631,12 +624,12 @@ class EditProjectsScreen(ModalScreen):
         ("d", "delete_row", "Delete Row")
     ]
 
-    def __init__(self, columns, rows_with_keys, *args, **kwargs):
+    def __init__(self, columns=None, rows_with_keys=None, *args, **kwargs):
         super().__init__(*args, **kwargs, id="edit_projects_screen")
         self.my_projects_table: DataTable = DataTable(id="projects_destination")
         self.row_key = None
-        self.columns = columns
-        self.rows_with_keys = rows_with_keys
+        self.columns = columns or []
+        self.rows_with_keys = rows_with_keys or []
         self.projects_container: ScrollableContainer
 
     def compose(self) -> ComposeResult:
@@ -709,12 +702,12 @@ class EditRolesScreen(ModalScreen):
         ("d", "delete_row", "Delete Row")
     ]
 
-    def __init__(self, columns, rows_with_keys, *args, **kwargs):
+    def __init__(self, columns=None, rows_with_keys=None, *args, **kwargs):
         super().__init__(*args, **kwargs, id="edit_roles_screen")
         self.my_roles_table: DataTable = DataTable(id="roles_destination")
         self.row_key = None
-        self.columns = columns
-        self.rows_with_keys = rows_with_keys
+        self.columns = columns or []
+        self.rows_with_keys = rows_with_keys or []
         self.roles_container: ScrollableContainer
 
     def compose(self) -> ComposeResult:
@@ -787,12 +780,12 @@ class EditTeamsScreen(ModalScreen):
         ("d", "delete_row", "Delete Row")
     ]
 
-    def __init__(self, columns, rows_with_keys, *args, **kwargs):
+    def __init__(self, columns=None, rows_with_keys=None, *args, **kwargs):
         super().__init__(*args, **kwargs, id="edit_teams_screen")
         self.my_teams_table: DataTable = DataTable(id="teams_destination")
         self.row_key = None
-        self.columns = columns
-        self.rows_with_keys = rows_with_keys
+        self.columns = columns or []
+        self.rows_with_keys = rows_with_keys or []
         self.teams_container: ScrollableContainer
 
     def compose(self) -> ComposeResult:
@@ -864,12 +857,12 @@ class EditTodosScreen(ModalScreen):
         ("d", "delete_row", "Delete Row")
     ]
 
-    def __init__(self, columns, rows_with_keys, *args, **kwargs):
+    def __init__(self, columns=None, rows_with_keys=None, *args, **kwargs):
         super().__init__(*args, **kwargs, id="edit_todos_screen")
         self.my_todos_table: DataTable = DataTable(id="todos_destination")
         self.row_key = None
-        self.columns = columns
-        self.rows_with_keys = rows_with_keys
+        self.columns = columns or []
+        self.rows_with_keys = rows_with_keys or []
         self.todos_container: ScrollableContainer
 
     def compose(self) -> ComposeResult:

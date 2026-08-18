@@ -406,11 +406,19 @@ class ShopForDataMixin:
         else:
             self.domain_details_data = self.domain_details.get("data")
             self.log(f"domain_details_data: {self.domain_details_data}")
-            self.domain_display_name = self.domain_details_data.get("Qualified Name")
+            if isinstance(self.domain_details_data, dict):
+                self.domain_display_name = self.domain_details_data.get("Qualified Name") or target_type__name
+                domain_items = [self.domain_details_data]
+            elif isinstance(self.domain_details_data, list) and len(self.domain_details_data) > 0:
+                self.domain_display_name = self.domain_details_data[0].get("Qualified Name") if isinstance(self.domain_details_data[0], dict) else target_type__name
+                domain_items = self.domain_details_data
+            else:
+                self.domain_display_name = target_type__name
+                domain_items = []
             domain_tree = Tree(label=self.domain_display_name, id="business_domain_tree")
             domain_tree.root.expand()
             domain_tree.auto_expand = True
-            for term in self.domain_details_data:
+            for term in domain_items:
                 if term is None:
                     continue
                 term_qualified_name = term.get("Qualified Name") or ""
@@ -425,7 +433,7 @@ class ShopForDataMixin:
                     "term_memberof": term_memberof,
                 }
             for qualified_name, details in build_structure.items():
-                domain_branch = domain_tree.root.add(qualified_name, id=qualified_name, data=[details["term_type"], details["term_GUID"]])
+                domain_branch = domain_tree.root.add(qualified_name, data=[details["term_type"], details["term_GUID"]])
                 if details["term_members"] is not None:
                     domain_branch_members = domain_branch.add("Containing Members")
                     for member in details["term_members"]:
