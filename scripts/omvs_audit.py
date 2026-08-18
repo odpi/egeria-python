@@ -283,18 +283,29 @@ def _flatten(node: ast.AST, roots: dict[str, str]) -> str:
 
 
 def resolve_roots(tree: ast.AST) -> dict[str, str]:
-    """Resolve ``self.<x>_command_root``-style URL prefixes from __init__."""
+    """Resolve the service-root URL prefixes assigned in __init__.
+
+    Detected by *value*, not by name: any ``self.<attr>`` assigned a string
+    containing ``/open-metadata/`` is a service root. Name-matching missed
+    ``self.base_url`` in connection_maker.py, which made all 34 of its
+    endpoints report a bogus path mismatch.
+    """
     roots: dict[str, str] = {}
     for node in ast.walk(tree):
         if not isinstance(node, (ast.Assign, ast.AnnAssign)):
             continue
         targets = node.targets if isinstance(node, ast.Assign) else [node.target]
         for t in targets:
-            if (isinstance(t, ast.Attribute)
+            if not (isinstance(t, ast.Attribute)
                     and isinstance(t.value, ast.Name) and t.value.id == "self"
-                    and node.value is not None
-                    and re.search(r"(command_root|command_base|base_path|command_url)$", t.attr)):
-                roots[t.attr] = _flatten(node.value, roots)
+                    and node.value is not None):
+                continue
+            if t.attr == "platform_url":
+                continue
+            value = _flatten(node.value, roots)
+            if "/open-metadata/" in value or re.search(
+                    r"(command_root|command_base|base_path|command_url)$", t.attr):
+                roots[t.attr] = value
     return roots
 
 

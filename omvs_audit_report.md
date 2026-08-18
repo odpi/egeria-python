@@ -5,8 +5,8 @@ Subject: `pyegeria/omvs` (43 modules)
 
 | Result | Count |
 |---|---|
-| OK | 557 |
-| Mismatch (verb/path/body) | 102 |
+| OK | 598 |
+| Mismatch (verb/path/body) | 61 |
 | Missing | 288 |
 | Found in another module | 13 |
 | URL lint | 0 |
@@ -88,12 +88,12 @@ _Review only - cross-service overlap is often intentional._
 - `POST /runtime-manager/software-servers/by-deployed-implementation-type`
   - `runtime-manager.py`: `_async_get_servers_by_dep_impl_type`
   - `runtime-manager.py`: `_async_get_server_templates_by_dep_impl_type`
+- `POST /security-officer/collections/by-search-string`
+  - `security-officer.py`: `_async_find_security_roles`
+  - `security-officer.py`: `_async_find_security_groups`
 - `POST /solution-architect/solution-blueprints/{}/update`
   - `solution-architect.py`: `_async_update_solution_blueprint_status`
   - `solution-architect.py`: `_async_update_solution_blueprint`
-- `POST /{}/collections/by-search-string`
-  - `security-officer.py`: `_async_find_security_roles`
-  - `security-officer.py`: `_async_find_security_groups`
 - `POST /{}/governance-definitions`
   - `governance-officer.py`: `_async_create_governance_definition`
   - `governance-officer.py`: `_async_create_data_lens`
@@ -259,142 +259,6 @@ _Review only - cross-service overlap is often intentional._
 
 ### Service: connection-maker
 
-- createConnection: MISMATCH `create_connection`
-    - PATH
-      SDK: /{}/connections
-      API: /connection-maker/connections
-- createConnectionFromTemplate: MISMATCH `create_connection_from_template`
-    - PATH
-      SDK: /{}/connections/from-template
-      API: /connection-maker/connections/from-template
-- updateConnection: MISMATCH `update_connection`
-    - PATH
-      SDK: /{}/connections/{}/update
-      API: /connection-maker/connections/{}/update
-- linkConnectionConnectorType: MISMATCH `link_connection_connector_type`
-    - PATH
-      SDK: /{}/connections/{}/connector-types/{}/attach
-      API: /connection-maker/connections/{}/connector-types/{}/attach
-- detachConnectionConnectorType: MISMATCH `detach_connection_connector_type`
-    - PATH
-      SDK: /{}/connections/{}/connector-types/{}/detach
-      API: /connection-maker/connections/{}/connector-types/{}/detach
-- linkConnectionEndpoint: MISMATCH `link_connection_endpoint`
-    - PATH
-      SDK: /{}/connections/{}/endpoints/{}/attach
-      API: /connection-maker/connections/{}/endpoints/{}/attach
-- detachConnectionEndpoint: MISMATCH `detach_connection_endpoint`
-    - PATH
-      SDK: /{}/connections/{}/endpoints/{}/detach
-      API: /connection-maker/connections/{}/endpoints/{}/detach
-- linkEmbeddedConnection: MISMATCH `link_embedded_connection`
-    - PATH
-      SDK: /{}/connections/{}/embedded-connections/{}/attach
-      API: /connection-maker/connections/{}/embedded-connections/{}/attach
-- detachEmbeddedConnection: MISMATCH `detach_embedded_connection`
-    - PATH
-      SDK: /{}/connections/{}/embedded-connections/{}/detach
-      API: /connection-maker/connections/{}/embedded-connections/{}/detach
-- linkAssetToConnection: MISMATCH `link_asset_to_connection`
-    - PATH
-      SDK: /{}/assets/{}/connections/{}/attach
-      API: /connection-maker/assets/{}/connections/{}/attach
-- detachAssetFromConnection: MISMATCH `detach_asset_from_connection`
-    - PATH
-      SDK: /{}/assets/{}/connections/{}/detach
-      API: /connection-maker/assets/{}/connections/{}/detach
-- linkEndpointToITAsset: MISMATCH `link_endpoint_to_it_asset`
-    - PATH
-      SDK: /{}/assets/{}/endpoints/{}/attach
-      API: /connection-maker/assets/{}/endpoints/{}/attach
-- detachEndpointFromITAsset: MISMATCH `detach_endpoint_from_it_asset`
-    - PATH
-      SDK: /{}/assets/{}/endpoints/{}/detach
-      API: /connection-maker/assets/{}/endpoints/{}/detach
-- deleteConnection: MISMATCH `delete_connection`
-    - PATH
-      SDK: /{}/connections/{}/delete
-      API: /connection-maker/connections/{}/delete
-- getConnectionsByName: MISMATCH `get_connections_by_name`
-    - PATH
-      SDK: /{}/connections/by-name
-      API: /connection-maker/connections/by-name
-- findConnections: MISMATCH `find_connections`
-    - PATH
-      SDK: /{}/connections/by-search-string
-      API: /connection-maker/connections/by-search-string
-- getConnectionByGUID: MISMATCH `get_connection_by_guid`
-    - PATH
-      SDK: /{}/connections/{}/retrieve
-      API: /connection-maker/connections/{}/retrieve
-- createConnectorType: MISMATCH `create_connector_type`
-    - PATH
-      SDK: /{}/connector-types
-      API: /connection-maker/connector-types
-- createConnectorTypeFromTemplate: MISMATCH `create_connector_type_from_template`
-    - PATH
-      SDK: /{}/connector-types/from-template
-      API: /connection-maker/connector-types/from-template
-- updateConnectorType: MISMATCH `update_connector_type`
-    - PATH
-      SDK: /{}/connector-types/{}/update
-      API: /connection-maker/connector-types/{}/update
-- deleteConnectorType: MISMATCH `delete_connector_type`
-    - PATH
-      SDK: /{}/connector-types/{}/delete
-      API: /connection-maker/connector-types/{}/delete
-- getConnectorTypesByName: MISMATCH `get_connector_types_by_name`
-    - PATH
-      SDK: /{}/connector-types/by-name
-      API: /connection-maker/connector-types/by-name
-- getConnectorTypesByConnectorProviderClassName: MISMATCH `get_connector_types_by_connector_provider_class_name`
-    - PATH
-      SDK: /{}/connector-types/by-connector-provider-class-name
-      API: /connection-maker/connector-types/by-connector-provider-class-name
-- findConnectorTypes: MISMATCH `find_connector_types`
-    - PATH
-      SDK: /{}/connector-types/by-search-string
-      API: /connection-maker/connector-types/by-search-string
-- getConnectorTypeByGUID: MISMATCH `get_connector_type_by_guid`
-    - PATH
-      SDK: /{}/connector-types/{}/retrieve
-      API: /connection-maker/connector-types/{}/retrieve
-- createEndpoint: MISMATCH `create_endpoint`
-    - PATH
-      SDK: /{}/endpoints
-      API: /connection-maker/endpoints
-- createEndpointFromTemplate: MISMATCH `create_endpoint_from_template`
-    - PATH
-      SDK: /{}/endpoints/from-template
-      API: /connection-maker/endpoints/from-template
-- updateEndpoint: MISMATCH `update_endpoint`
-    - PATH
-      SDK: /{}/endpoints/{}/update
-      API: /connection-maker/endpoints/{}/update
-- deleteEndpoint: MISMATCH `delete_endpoint`
-    - PATH
-      SDK: /{}/endpoints/{}/delete
-      API: /connection-maker/endpoints/{}/delete
-- getEndpointsByName: MISMATCH `get_endpoints_by_name`
-    - PATH
-      SDK: /{}/endpoints/by-name
-      API: /connection-maker/endpoints/by-name
-- getEndpointsByNetworkAddress: MISMATCH `get_endpoints_by_network_address`
-    - PATH
-      SDK: /{}/endpoints/by-network-address
-      API: /connection-maker/endpoints/by-network-address
-- getEndpointsForAsset: MISMATCH `get_endpoints_for_asset`
-    - PATH
-      SDK: /{}/assets/{}/endpoints/retrieve
-      API: /connection-maker/assets/{}/endpoints/retrieve
-- findEndpoints: MISMATCH `find_endpoints`
-    - PATH
-      SDK: /{}/endpoints/by-search-string
-      API: /connection-maker/endpoints/by-search-string
-- getEndpointByGUID: MISMATCH `get_endpoint_by_guid`
-    - PATH
-      SDK: /{}/endpoints/{}/retrieve
-      API: /connection-maker/endpoints/{}/retrieve
 
 ### Service: data-designer
 
@@ -717,22 +581,6 @@ _Review only - cross-service overlap is often intentional._
 
 ### Service: privacy-officer
 
-- linkPermittedProcessing: MISMATCH `link_permitted_processing`
-    - PATH
-      SDK: /{}/data-processing-purposes/{}/permitted-processing/{}/attach
-      API: /privacy-officer/data-processing-purposes/{}/permitted-processing/{}/attach
-- detachPermittedProcessing: MISMATCH `detach_permitted_processing`
-    - PATH
-      SDK: /{}/data-processing-purposes/{}/permitted-processing/{}/detach
-      API: /privacy-officer/data-processing-purposes/{}/permitted-processing/{}/detach
-- linkDataProcessingTarget: MISMATCH `link_data_processing_target`
-    - PATH
-      SDK: /{}/data-processing-actions/{}/targets/{}/attach
-      API: /privacy-officer/data-processing-actions/{}/targets/{}/attach
-- detachDataProcessingTarget: MISMATCH `detach_data_processing_target`
-    - PATH
-      SDK: /{}/data-processing-actions/{}/targets/{}/detach
-      API: /privacy-officer/data-processing-actions/{}/targets/{}/detach
 
 ### Service: product-catalog
 
@@ -817,18 +665,6 @@ _Review only - cross-service overlap is often intentional._
 
 ### Service: security-officer
 
-- setSecurityAccessControl: MISMATCH `set_security_access_control`
-    - PATH
-      SDK: /{}/platforms/{}/security-access-control
-      API: /security-officer/platforms/{}/security-access-control
-- getSecurityAccessControl: MISMATCH `get_security_access_control`
-    - PATH
-      SDK: /{}/platforms/{}/security-access-control/{}
-      API: /security-officer/platforms/{}/security-access-control/{}
-- deleteSecurityAccessControl: MISMATCH `delete_security_access_control`
-    - PATH
-      SDK: /{}/platforms/{}/security-access-control/{}
-      API: /security-officer/platforms/{}/security-access-control/{}
 - find Security Roles: MISSING  (`POST /security-officer/collections/by-search-string`)
 - find Security Groups: MISSING  (`POST /security-officer/collections/by-search-string`)
 
