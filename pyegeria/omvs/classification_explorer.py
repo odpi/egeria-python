@@ -11108,7 +11108,7 @@ class ClassificationExplorer(ServerClient):
                 "effectiveTime": effective_time
             }
 
-        await self._async_delete_relationship_request(url, body)
+        await self._async_delete_classification_request(url, body)
 
     def clear_known_duplicate_classification(
             self,
@@ -11591,7 +11591,7 @@ class ClassificationExplorer(ServerClient):
                 "effectiveTime": effective_time
             }
 
-        await self._async_delete_relationship_request(url, body)
+        await self._async_delete_classification_request(url, body)
 
     def clear_consolidated_duplicate_classification(
             self,

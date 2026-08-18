@@ -219,7 +219,7 @@ class SubjectArea(ServerClient):
         ```
         """
         url = f"{self.platform_url}/servers/{self.view_server}/api/open-metadata/subject-area/collections/from-template"
-        return await self._async_create_element_body_request(url, "SubjectAreaProperties", body)
+        return await self._async_create_element_from_template(url, body)
 
     def create_subject_area_from_template(self, body: dict | TemplateRequestBody) -> str:
         """Create a subject area from a template.

@@ -251,7 +251,7 @@ class ActorManager(ServerClient):
 
         # Handle Optional body parameter
         body_to_use = body if body is not None else {}
-        return await self._async_create_element_from_template("POST", url, body_to_use)
+        return await self._async_create_element_from_template(url, body_to_use)
 
     @dynamic_catch
     def create_actor_profile_from_template(self, body: Optional[dict | TemplateRequestBody] = None) -> str:
@@ -1430,7 +1430,7 @@ class ActorManager(ServerClient):
 
         # Handle Optional body parameter
         body_to_use = body if body is not None else {}
-        return await self._async_create_element_from_template("POST", url, body_to_use)
+        return await self._async_create_element_from_template(url, body_to_use)
 
     @dynamic_catch
     def create_actor_role_from_template(self, body: Optional[dict | TemplateRequestBody] = None) -> str:
@@ -3002,7 +3002,7 @@ class ActorManager(ServerClient):
         """
         url = f"{self.command_root}/user-identities/from-template"
 
-        return await self._async_create_element_from_template("POST", url, body)
+        return await self._async_create_element_from_template(url, body)
 
     @dynamic_catch
     def create_user_identity_from_template(self, body: Optional[dict | TemplateRequestBody] = None) -> str:
@@ -5544,7 +5544,7 @@ class ActorManager(ServerClient):
         }
         """
         url = f"{self.command_root}/contact-details/from-template"
-        return await self._async_create_element_body_request(url, ["ContactDetailsProperties"], body)
+        return await self._async_create_element_from_template(url, body)
 
     @dynamic_catch
     def create_contact_details_from_template(self, body: Optional[dict | TemplateRequestBody] = None) -> str:
@@ -6582,7 +6582,7 @@ class ActorManager(ServerClient):
         """
         url = f"{self.command_root}/perspectives/from-template"
         body_to_use = body if body is not None else {}
-        return await self._async_create_element_body_request(url, ["PerspectiveProperties"], body_to_use)
+        return await self._async_create_element_from_template(url, body_to_use)
 
     @dynamic_catch
     def create_perspective_from_template(self, body: Optional[dict | TemplateRequestBody] = None) -> str:
@@ -7388,7 +7388,7 @@ class ActorManager(ServerClient):
         """
         url = f"{self.command_root}/skills/from-template"
         body_to_use = body if body is not None else {}
-        return await self._async_create_element_body_request(url, ["SkillProperties"], body_to_use)
+        return await self._async_create_element_from_template(url, body_to_use)
 
     @dynamic_catch
     def create_skill_from_template(self, body: Optional[dict | TemplateRequestBody] = None) -> str:

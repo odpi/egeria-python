@@ -30,7 +30,7 @@ from pyegeria.models import (GetRequestBody, SearchStringRequestBody, FilterRequ
                              ReferenceableProperties, TemplateRequestBody,
                              UpdateElementRequestBody, NewRelationshipRequestBody,
                              DeleteElementRequestBody, DeleteRelationshipRequestBody,
-                             UpdateRelationshipRequestBody)
+                             UpdateRelationshipRequestBody, ResultsRequestBody)
 from pyegeria.core.utils import dynamic_catch
 
 GOV_DEF_PROPERTIES_LIST = ["GovernanceDefinitionProperties", "GovernanceStrategyProperties", "RegulationProperties",
@@ -2739,10 +2739,14 @@ class GovernanceOfficer(ServerClient):
             f"{self.url_marker}/governance-action-processes/{guid}/graph")
         type = element_type if element_type else "GovernanceDefinition"
 
+        # This endpoint documents ResultsRequestBody, not the GetRequestBody
+        # this helper sends by default (Egeria-api-governance-officer.http).
+        # Kept on _async_get_guid_request because only it reads the singular
+        # "elementGraph" response key that the graph endpoint returns.
         response = await self._async_get_guid_request(url, _type=type,
                                                       _gen_output=self._generate_governance_definition_output,
                                                       output_format=output_format, report_spec=report_spec,
-                                                      body=body, **kwargs)
+                                                      body=body, body_model=ResultsRequestBody, **kwargs)
 
         return response
 

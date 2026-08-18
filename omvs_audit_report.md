@@ -5,8 +5,8 @@ Subject: `pyegeria/omvs` (43 modules)
 
 | Result | Count |
 |---|---|
-| OK | 603 |
-| Mismatch (verb/path/body) | 56 |
+| OK | 612 |
+| Mismatch (verb/path/body) | 47 |
 | Missing | 288 |
 | Found in another module | 13 |
 | URL lint | 0 |
@@ -139,12 +139,6 @@ _Review only - cross-service overlap is often intentional._
       SDK: /actor-manager/user-identities/{}/security-group-membership/reclassify
       API: /actor-manager/user-identities/{}/security-group-memberships/reclassify
 - removeAllSecurityGroupMembership: MISSING  (`POST /actor-manager/user-identities/{}/security-group-memberships/declassify`)
-- createContactDetailsFromTemplate: MISMATCH `create_contact_details_from_template`
-    - BODY sends NewElementRequestBody != TemplateRequestBody
-- createPerspectiveFromTemplate: MISMATCH `create_perspective_from_template`
-    - BODY sends NewElementRequestBody != TemplateRequestBody
-- createSkillFromTemplate: MISMATCH `create_skill_from_template`
-    - BODY sends NewElementRequestBody != TemplateRequestBody
 
 ### Service: asset-catalog
 
@@ -194,11 +188,7 @@ _Review only - cross-service overlap is often intentional._
 - addOwnership: MISSING  (`POST /classification-explorer/elements/{}/ownership`)
 - clearOwnership: MISSING  (`POST /classification-explorer/elements/{}/ownership/remove`)
 - clearDigitalResourceOrigin: MISSING  (`POST /classification-explorer/elements/{}/digital-resource-origin/remove`)
-- clearKnownDuplicateClassification: MISMATCH `clear_known_duplicate_classification`
-    - BODY sends DeleteRelationshipRequestBody != DeleteClassificationRequestBody
 - setupPeerDuplicates: MISSING  (`POST /classification-explorer/related-elements/{}/peer-duplicate/{}/attach`)
-- clearConsolidatedDuplicateClassification: MISMATCH `clear_consolidated_duplicate_classification`
-    - BODY sends DeleteRelationshipRequestBody != DeleteClassificationRequestBody
 - clearSemanticAssignment: MISSING  (`POST /classification-explorer/elements/{}/semantic-assignment/terms/{}/detach`)
 - getSemanticAssignees: MISMATCH `get_semantic_assignees`
     - PATH
@@ -306,8 +296,6 @@ _Review only - cross-service overlap is often intentional._
 
 ### Service: data-discovery
 
-- createAnnotationFromTemplate: MISMATCH `create_annotation_from_template`
-    - BODY sends NewElementRequestBody != TemplateRequestBody
 
 ### Service: data-engineer
 
@@ -397,8 +385,6 @@ _Review only - cross-service overlap is often intentional._
 - findGovernanceActionProcesses: MISSING  (`POST /governance-officer/governance-action-processes/by-search-string`)
 - getAllGovernanceActionProcesses: MISSING  (`POST /governance-officer/governance-definitions/by-search-string`)
 - getGovernanceActionProcessesByName: MISSING  (`POST /governance-officer/governance-definitions/by-name`)
-- getGovernanceActionProcessGraph: MISMATCH `get_governance_action_process_graph`
-    - BODY sends GetRequestBody != ResultsRequestBody
 - addGovernanceDefinitionToElement: MISSING  (`POST /governance-officer/elements/{}/governed-by/definition/{}/attach`)
 - removeGovernanceDefinitionFromElement: MISSING  (`POST /governance-officer/elements/{}/governed-by/definition/{}/detach`)
 - linkApprovedPurpose: MISSING  (`POST /governance-officer/elements/{}/approved-purposes/{}/attach`)
@@ -448,7 +434,7 @@ _Review only - cross-service overlap is often intentional._
       API: /metadata-expert/metadata-elements/guid-by-unique-name
     - BODY sends FilterRequestBody != UniqueNameRequestBody
 - getMetadataElementHistory: MISMATCH `get_metadata_element_history`
-    - BODY sends GetRequestBody != HistoryRequestBody
+    - BODY sends GetRequestBody|ResultsRequestBody != HistoryRequestBody
 - getClassificationHistory: MISMATCH `get_classification_history`
     - PATH
       SDK: /{}/metadata-elements/{}/classifications/{}/history
@@ -671,8 +657,6 @@ _Review only - cross-service overlap is often intentional._
 
 ### Service: subject-area
 
-- createSubjectAreaFromTemplate: MISMATCH `create_subject_area_from_template`
-    - BODY sends NewElementRequestBody != TemplateRequestBody
 - linkSubjectAreas: MISSING  (`POST /subject-area/collections/{}/collection-hierarchies/{}/attach`)
 - detachSubjectAreas: MISSING  (`POST /subject-area/collections/{}/collection-hierarchies/{}/detach`)
 - findAllSubjectAreas: MISSING  (`POST /subject-area/collectionss/by-search-string`)
@@ -686,8 +670,6 @@ _Review only - cross-service overlap is often intentional._
 
 ### Service: time-keeper
 
-- createContextEventFromTemplate: MISMATCH `create_context_event_from_template`
-    - BODY sends NewElementRequestBody != TemplateRequestBody
 
 ### Service: valid-metadata
 
