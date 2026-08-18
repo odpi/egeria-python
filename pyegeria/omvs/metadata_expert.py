@@ -137,6 +137,7 @@ class MetadataExpert(ServerClient):
         loop = asyncio.get_event_loop()
         return loop.run_until_complete(self._async_create_metadata_element(body))
 
+
     @dynamic_catch
     async def _async_create_metadata_element_from_template(self, body: Optional[dict | TemplateRequestBody] = None) -> str:
         """
@@ -196,6 +197,7 @@ class MetadataExpert(ServerClient):
         """
         loop = asyncio.get_event_loop()
         return loop.run_until_complete(self._async_create_metadata_element_from_template(body))
+
 
     @dynamic_catch
     async def _async_update_metadata_element_properties(self, metadata_element_guid: str, body: Optional[dict | UpdatePropertiesRequestBody] = None) -> None:
@@ -963,12 +965,12 @@ class MetadataExpert(ServerClient):
         property_name: str = "qualifiedName",
         as_of_time: Optional[str] = None,
         body: Optional[dict | FilterRequestBody] = None,
-        **kwargs,
+        **kwargs
     ) -> str:
         """
             Retrieve the metadata element GUID using its unique name (typically the qualified name, but it is possible to
             specify a different property name in the request body as long as it is unique).
-            If multiple matching instances are found, an exception is thrown. Async version.
+            If multiple matching instances are found, an exception is thrown.
 
             Parameters
             ----------
@@ -1543,6 +1545,42 @@ class MetadataExpert(ServerClient):
             )
         )
         return response
+
+    @dynamic_catch
+    async def _async_get_metadata_element_history(
+        self,
+        metadata_element_guid: str,
+        effective_time: Optional[str] = None,
+        oldest_first: bool = False,
+        body: Optional[dict] = None,
+        **kwargs,
+    ) -> list | str:
+        """Retrieve the history of a metadata element. Async version."""
+        if body is None:
+            body = {
+                "class": "HistoryRequestBody",
+                "effectiveTime": effective_time,
+                "oldestFirst": oldest_first,
+            }
+        url = f"{self.command_root}/metadata-elements/{metadata_element_guid}/history"
+        return await self._async_get_guid_request(
+            url, _type="MetadataElement", _gen_output=self._generate_referenceable_output, body=body, **kwargs
+        )
+
+    @dynamic_catch
+    def get_metadata_element_history(
+        self,
+        metadata_element_guid: str,
+        effective_time: Optional[str] = None,
+        oldest_first: bool = False,
+        body: Optional[dict] = None,
+        **kwargs,
+    ) -> list | str:
+        """Retrieve the history of a metadata element."""
+        loop = asyncio.get_event_loop()
+        return loop.run_until_complete(
+            self._async_get_metadata_element_history(metadata_element_guid, effective_time, oldest_first, body, **kwargs)
+        )
 
     @dynamic_catch
     async def _async_get_classification_history(
@@ -3981,3 +4019,29 @@ class MetadataExpert(ServerClient):
         return response
 
 
+
+    @dynamic_catch
+    async def _async_get_match_criteria_list(self) -> list:
+        """Retrieve the list of valid match criteria. Async version."""
+        url = f"{self.command_root}/metadata-search/match-criteria-values"
+        response = await self._async_make_request("GET", url)
+        return response.json().get("list")
+
+    @dynamic_catch
+    def get_match_criteria_list(self) -> list:
+        """Retrieve the list of valid match criteria."""
+        loop = asyncio.get_event_loop()
+        return loop.run_until_complete(self._async_get_match_criteria_list())
+
+    @dynamic_catch
+    async def _async_get_property_comparison_operator_list(self) -> list:
+        """Retrieve the list of valid property comparison operators. Async version."""
+        url = f"{self.command_root}/metadata-search/property-comparison-operator-values"
+        response = await self._async_make_request("GET", url)
+        return response.json().get("list")
+
+    @dynamic_catch
+    def get_property_comparison_operator_list(self) -> list:
+        """Retrieve the list of valid property comparison operators."""
+        loop = asyncio.get_event_loop()
+        return loop.run_until_complete(self._async_get_property_comparison_operator_list())

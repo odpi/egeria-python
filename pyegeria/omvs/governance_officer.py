@@ -2830,7 +2830,7 @@ class GovernanceOfficer(ServerClient):
         dict | list | str
             The governance action process.
         """
-        url = f"{self.platform_url}/servers/{self.view_server}/api/open-metadata/governance-officer/governance-action-processes/{guid}/retrieve"
+        url = f"{self.platform_url}/servers/{self.view_server}/api/open-metadata/governance-officer/governance-definitions/{guid}/retrieve"
         type = element_type if element_type else "GovernanceActionProcess"
         return await self._async_get_guid_request(
             url,

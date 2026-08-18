@@ -374,7 +374,7 @@ class ActionAuthor(ServerClient):
         dict | list | str
             The governance action process.
         """
-        url = f"{self.platform_url}/servers/{self.view_server}/api/open-metadata/action-author/governance-action-processes/{process_guid}/retrieve"
+        url = f"{self.platform_url}/servers/{self.view_server}/api/open-metadata/governance-officer/governance-definitions/{process_guid}/retrieve"
         return await self._async_get_guid_request(
             url,
             "GovernanceActionProcess",
@@ -446,7 +446,7 @@ class ActionAuthor(ServerClient):
         dict | list | str
             The governance action process graph.
         """
-        url = f"{self.platform_url}/servers/{self.view_server}/api/open-metadata/action-author/governance-action-processes/{process_guid}/graph"
+        url = f"{self.platform_url}/servers/{self.view_server}/api/open-metadata/governance-officer/governance-action-processes/{process_guid}/graph"
         return await self._async_get_guid_request(
             url,
             "GovernanceActionProcess",
