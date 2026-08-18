@@ -6015,28 +6015,6 @@ class ServerClient(BaseServerClient):
         # col_data = overlay_additional_values(col_data, extra)
         return col_data
 
-    def _extract_element_properties_for_keyword(self, element: dict, columns_struct: dict) -> dict:
-        keyword_elements = None
-        keyword_elements = element["keywordElements"]
-        out_body = {}
-        keyword = element["properties"].get('keyword', '')
-        for el in keyword_elements:
-            element = el.get("relatedElement", {})
-            element_guid = element['elementHeader']['guid']
-            element_type = element['elementHeader']['type']['typeName']
-            element_display_name = element['properties'].get('displayName',"")
-            element_description = element['properties'].get('description',"")
-            element_category = element['properties'].get('category',"")
-            out_body = {
-                "element_display_name": element_display_name,
-                "element_description": element_description,
-                "element_category": element_category,
-                "element_type": element_type,
-                "element_guid": element_guid,
-                "keyword": keyword
-            }
-        return out_body
-
     @dynamic_catch
     def _extract_feedback_properties(self, element: dict, columns_struct: dict) -> dict:
         props = element.get('properties', {}) or {}
