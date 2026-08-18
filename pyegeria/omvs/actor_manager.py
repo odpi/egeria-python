@@ -251,7 +251,7 @@ class ActorManager(ServerClient):
 
         # Handle Optional body parameter
         body_to_use = body if body is not None else {}
-        return await self._async_create_element_from_template("POST", url, body_to_use)
+        return await self._async_create_element_from_template(url, body_to_use)
 
     @dynamic_catch
     def create_actor_profile_from_template(self, body: Optional[dict | TemplateRequestBody] = None) -> str:
@@ -580,7 +580,7 @@ class ActorManager(ServerClient):
         """
         url = (f"{self.command_root}/assets/{asset_guid}/it-profiles/{it_profile_guid}/detach")
 
-        await self._async_delete_element_request(url, body)
+        await self._async_delete_relationship_request(url, body)
         logger.debug(f"Detached asset {asset_guid} from it profile {it_profile_guid}")
 
     def detach_asset_from_profile(self, asset_guid: str, it_profile_guid: str,
@@ -1430,7 +1430,7 @@ class ActorManager(ServerClient):
 
         # Handle Optional body parameter
         body_to_use = body if body is not None else {}
-        return await self._async_create_element_from_template("POST", url, body_to_use)
+        return await self._async_create_element_from_template(url, body_to_use)
 
     @dynamic_catch
     def create_actor_role_from_template(self, body: Optional[dict | TemplateRequestBody] = None) -> str:
@@ -1754,7 +1754,7 @@ class ActorManager(ServerClient):
         url = (
             f"{self.command_root}/actor-roles/{person_role_guid}/person-role-appointments/{person_profile_guid}/detach")
 
-        await self._async_delete_element_request(url, body)
+        await self._async_delete_relationship_request(url, body)
         logger.debug(f"Detached Person Rolet {person_role_guid} from Person Profile {person_profile_guid}")
 
     def detach_person_role_from_profile(self, person_role_guid: str, person_profile_guid: str,
@@ -2188,7 +2188,7 @@ class ActorManager(ServerClient):
 
     @dynamic_catch
     async def _async_delete_actor_role(self, actor_role_guid: str,
-                                       body: Optional[dict | DeleteElementRequestBody] = None,
+                                       body: Optional[dict | DeleteRelationshipRequestBody] = None,
                                        cascade: bool = False) -> None:
         """ Delete an actor role. Async Version.
 
@@ -2231,11 +2231,11 @@ class ActorManager(ServerClient):
         """
         url = f"{self.command_root}/actor-roles/{actor_role_guid}/delete"
 
-        await self._async_delete_element_request(url, body, cascade)
+        await self._async_delete_relationship_request(url, body, cascade)
         logger.debug(f"Deleted actor role {actor_role_guid} with cascade {cascade}")
 
     @dynamic_catch
-    def delete_actor_role(self, actor_role_guid: str, body: Optional[dict | DeleteElementRequestBody] = None,
+    def delete_actor_role(self, actor_role_guid: str, body: Optional[dict | DeleteRelationshipRequestBody] = None,
                           cascade: bool = False) -> None:
         """ Delete an actor role. Async Version.
 
@@ -3002,7 +3002,7 @@ class ActorManager(ServerClient):
         """
         url = f"{self.command_root}/user-identities/from-template"
 
-        return await self._async_create_element_from_template("POST", url, body)
+        return await self._async_create_element_from_template(url, body)
 
     @dynamic_catch
     def create_user_identity_from_template(self, body: Optional[dict | TemplateRequestBody] = None) -> str:
@@ -3613,7 +3613,7 @@ class ActorManager(ServerClient):
 
         """
 
-        url = url = (f"{self.command_root}/user-identities/{user_identity_guid}/security-group-membership/classify")
+        url = (f"{self.command_root}/user-identities/{user_identity_guid}/security-group-memberships/classify")
         await self._async_new_classification_request(url, ["SecurityGroupMembershipProperties"], body)
         logger.debug(f"Classifying User Identity {user_identity_guid} with Security Groups  {security_groups}")
 
@@ -3712,7 +3712,7 @@ class ActorManager(ServerClient):
           "forDuplicateProcessing" : false
         }
         """
-        url = (f"{self.command_root}/user-identities/{user_identity_guid}/security-group-membership/reclassify")
+        url = (f"{self.command_root}/user-identities/{user_identity_guid}/security-group-memberships/reclassify")
 
         await self._async_make_request("POST", url, body)
         logger.debug(f"Updated security classifications for {user_identity_guid}")
@@ -5544,7 +5544,7 @@ class ActorManager(ServerClient):
         }
         """
         url = f"{self.command_root}/contact-details/from-template"
-        return await self._async_create_element_body_request(url, ["ContactDetailsProperties"], body)
+        return await self._async_create_element_from_template(url, body)
 
     @dynamic_catch
     def create_contact_details_from_template(self, body: Optional[dict | TemplateRequestBody] = None) -> str:
@@ -6582,7 +6582,7 @@ class ActorManager(ServerClient):
         """
         url = f"{self.command_root}/perspectives/from-template"
         body_to_use = body if body is not None else {}
-        return await self._async_create_element_body_request(url, ["PerspectiveProperties"], body_to_use)
+        return await self._async_create_element_from_template(url, body_to_use)
 
     @dynamic_catch
     def create_perspective_from_template(self, body: Optional[dict | TemplateRequestBody] = None) -> str:
@@ -7388,7 +7388,7 @@ class ActorManager(ServerClient):
         """
         url = f"{self.command_root}/skills/from-template"
         body_to_use = body if body is not None else {}
-        return await self._async_create_element_body_request(url, ["SkillProperties"], body_to_use)
+        return await self._async_create_element_from_template(url, body_to_use)
 
     @dynamic_catch
     def create_skill_from_template(self, body: Optional[dict | TemplateRequestBody] = None) -> str:

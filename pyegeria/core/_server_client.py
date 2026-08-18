@@ -6522,17 +6522,30 @@ class ServerClient(BaseServerClient):
                                       skip_relationships: list[str] | None = None,
                                       graph_query_depth: int = 3,
                                       output_format: str = 'JSON', report_spec: Optional[str | dict] = None,
-                                      body: Optional[dict | GetRequestBody] = None, max_mermaid_node_count=10,
+                                      body: Optional[dict | GetRequestBody | ResultsRequestBody] = None,
+                                      max_mermaid_node_count=10,
+                                      body_model: type[GetRequestBody | ResultsRequestBody] = GetRequestBody,
                                       **kwargs) -> Any:
+        """Retrieve an element by GUID.
 
-        if isinstance(body, GetRequestBody):
+        `body_model` selects the request-body class to send. It defaults to
+        GetRequestBody, which is what nearly every endpoint reached through
+        this helper documents. A few endpoints document ResultsRequestBody
+        instead (e.g. governance-officer's .../graph); they pass it explicitly
+        rather than switching to _async_get_results_body_request, because only
+        this helper understands the singular "elementGraph" response key.
+        """
+        if isinstance(body, (GetRequestBody, ResultsRequestBody)):
             validated_body = body
         elif isinstance(body, dict):
-            validated_body = self._validate_body(self._get_request_adapter.validate_python, body)
+            adapter = (self._get_request_adapter.validate_python
+                       if body_model is GetRequestBody
+                       else self._results_request_adapter.validate_python)
+            validated_body = self._validate_body(adapter, body)
         else:
             _type = _type.replace(" ", "")
             body = {
-                "class": "GetRequestBody",
+                "class": body_model.__name__,
                 "metadataElementTypeName": _type,
                 "includeOnlyRelationships": include_only_relationships,
                 "skipRelationships": skip_relationships,
@@ -6540,7 +6553,7 @@ class ServerClient(BaseServerClient):
                 "maxMermaidNodeCount": max_mermaid_node_count,
                 **kwargs
             }
-            validated_body = self._validate_body(GetRequestBody.model_validate, body)
+            validated_body = self._validate_body(body_model.model_validate, body)
 
         json_body = validated_body.model_dump_json(indent=2, exclude_none=True)
 

@@ -159,9 +159,8 @@ class LineageLinker(ServerClient):
         }
         ```
         """
-        url = f"{self.platform_url}/servers/{self.view_server}/api/open-metadata/lineage-linker/elements/{element_one_guid}/{relationship_type_name}/{element_two_guid}/attach"
-        response = await self._async_make_request("POST", url, body)
-        return response.json().get("guid")
+        url = f"{self.platform_url}/servers/{self.view_server}/api/open-metadata/lineage-linker/from-elements/{element_one_guid}/via/{relationship_type_name}/to-elements/{element_two_guid}/attach"
+        return await self._async_new_relationship_request(url, ["LineageRelationshipProperties"], body)
 
     def link_lineage(
         self,

@@ -459,8 +459,7 @@ class ProjectManager(ServerClient):
             f"{self.platform_url}/servers/{self.view_server}/api/open-metadata/project-manager/"
             f"projects/{project_guid}/classification-properties/declassify"
         )
-        response = await self._async_new_classification_request(url, ["ProjectClassificationProperties"],
-                                                                body=body)
+        response = await self._async_delete_classification_request(url, body=body)
         return response
 
     @dynamic_catch
