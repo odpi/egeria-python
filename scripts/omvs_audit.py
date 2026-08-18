@@ -90,6 +90,12 @@ NAME_OVERRIDES = {
     "get_actions_for_requester": "get_actions_for_requester",
 }
 
+# Attributes holding a bare service marker that gets interpolated into a URL
+# (e.g. self.url_marker = "governance-officer"), and the shape their value
+# must have to be treated as a literal path segment.
+URL_SEGMENT_ATTR_RE = re.compile(r"(url_marker|marker|url_fragment|service_name)$")
+URL_SEGMENT_RE = re.compile(r"[a-z0-9]+(?:-[a-z0-9]+)*")
+
 # Transparent wrappers around a URL expression, e.g. str(HttpUrl(f"...")).
 URL_WRAPPERS = {"str", "HttpUrl", "AnyUrl", "quote", "urljoin"}
 
@@ -234,13 +240,39 @@ def discover_helper_verbs(path: str) -> dict[str, str]:
     return verbs
 
 
+def discover_helper_bodies(path: str) -> dict[str, frozenset[str]]:
+    """Map each ``_async_*_request`` helper to the body models it accepts.
+
+    A method that delegates to a helper sends *that helper's* model, whatever
+    its own ``body`` annotation claims - so this is what must be compared
+    against the ``"class"`` in the .http file.
+
+    The value is a *set*, because several helpers accept a union (e.g.
+    ``dict | UpdateElementRequestBody | UpdateClassificationRequestBody``).
+    Picking a single name out of a union produced false mismatches.
+    """
+    bodies: dict[str, frozenset[str]] = {}
+    if not os.path.exists(path):
+        return bodies
+    tree = ast.parse(open(path, encoding="utf-8").read())
+    for fn in ast.walk(tree):
+        if not isinstance(fn, (ast.FunctionDef, ast.AsyncFunctionDef)):
+            continue
+        for a in list(fn.args.args) + list(fn.args.kwonlyargs):
+            if a.arg == "body" and a.annotation is not None:
+                names = re.findall(r"\b(\w+RequestBody)\b", ast.unparse(a.annotation))
+                if names:
+                    bodies[fn.name] = frozenset(names)
+    return bodies
+
+
 @dataclass
 class PyMethod:
     name: str
     verb: str | None
     path: str | None
     raw_url: str | None
-    body_class: str | None
+    body_class: frozenset[str] | None
     lint: list[str] = field(default_factory=list)
 
 
@@ -306,10 +338,20 @@ def resolve_roots(tree: ast.AST) -> dict[str, str]:
             if "/open-metadata/" in value or re.search(
                     r"(command_root|command_base|base_path|command_url)$", t.attr):
                 roots[t.attr] = value
+            # A bare service marker interpolated straight into a URL, e.g.
+            # self.url_marker = "governance-officer". Restricted to constants
+            # that look like a URL path segment so identity/credential
+            # attributes are never substituted into a path.
+            elif (URL_SEGMENT_ATTR_RE.search(t.attr)
+                  and isinstance(node.value, ast.Constant)
+                  and isinstance(node.value.value, str)
+                  and URL_SEGMENT_RE.fullmatch(node.value.value)):
+                roots[t.attr] = node.value.value
     return roots
 
 
-def parse_py_file(filepath: str, helper_verbs: dict[str, str]) -> dict[str, PyMethod]:
+def parse_py_file(filepath: str, helper_verbs: dict[str, str],
+                  helper_bodies: dict[str, str] | None = None) -> dict[str, PyMethod]:
     content = open(filepath, encoding="utf-8").read()
     try:
         tree = ast.parse(content)
@@ -330,8 +372,17 @@ def parse_py_file(filepath: str, helper_verbs: dict[str, str]) -> dict[str, PyMe
             continue
 
         raw_url = path = body_class = None
-        direct_verb = helper_verb = None
+        direct_verb = helper_verb = helper_body = None
         lint: list[str] = []
+        helper_bodies = helper_bodies or {}
+
+        # What the method's own signature claims - the fallback when it does
+        # not delegate to a helper.
+        for a in list(fn.args.args) + list(fn.args.kwonlyargs):
+            if a.arg == "body" and a.annotation is not None:
+                names = re.findall(r"\b(\w+RequestBody)\b", ast.unparse(a.annotation))
+                if names:
+                    body_class = frozenset(names)
 
         for node in ast.walk(fn):
             # url = ...
@@ -351,20 +402,16 @@ def parse_py_file(filepath: str, helper_verbs: dict[str, str]) -> dict[str, PyMe
                     a0 = node.args[0]
                     if direct_verb is None and isinstance(a0, ast.Constant) and isinstance(a0.value, str):
                         direct_verb = a0.value.replace("POST-DATA", "POST").upper()
-                elif (helper_verb is None and fname in helper_verbs
+                elif (fname in helper_verbs
                       and not LOOKUP_HELPER_RE.search(fname or "")):
-                    helper_verb = helper_verbs[fname]
-
-            # request-body model referenced anywhere in the method
-            if body_class is None:
-                ident = (node.id if isinstance(node, ast.Name)
-                         else node.attr if isinstance(node, ast.Attribute) else None)
-                if ident and ident.endswith("RequestBody"):
-                    body_class = ident
+                    if helper_verb is None:
+                        helper_verb = helper_verbs[fname]
+                    if helper_body is None and fname in helper_bodies:
+                        helper_body = helper_bodies[fname]
 
         methods[fn.name] = PyMethod(
             name=fn.name, verb=direct_verb or helper_verb, path=path,
-            raw_url=raw_url, body_class=body_class, lint=lint,
+            raw_url=raw_url, body_class=helper_body or body_class, lint=lint,
         )
 
     for sm in sync_names:
@@ -395,6 +442,7 @@ def audit(service_filter: str | None, report_path: str, quiet: bool,
         sys.exit(f"ERROR: no .http collections found under '{http_dir}'.")
 
     helper_verbs = discover_helper_verbs(SERVER_CLIENT)
+    helper_bodies = discover_helper_bodies(SERVER_CLIENT)
 
     http_by_service = {}
     for hf in http_files:
@@ -405,7 +453,7 @@ def audit(service_filter: str | None, report_path: str, quiet: bool,
     py_by_service = {}
     for pf in sorted(glob.glob(f"{OMVS_DIR}/*.py")):
         svc = os.path.basename(pf).replace(".py", "").replace("_omvs", "").replace("_", "-")
-        py_by_service[svc] = parse_py_file(pf, helper_verbs)
+        py_by_service[svc] = parse_py_file(pf, helper_verbs, helper_bodies)
 
     flat = {m: (svc, d) for svc, ms in py_by_service.items() for m, d in ms.items()}
 
@@ -489,10 +537,13 @@ def audit(service_filter: str | None, report_path: str, quiet: bool,
                 issues.append(f"VERB {d.verb} != {req.verb}")
             if d.path and d.path != req.path:
                 issues.append(f"PATH\n      SDK: {d.path}\n      API: {req.path}")
+            # Mismatch only when the documented class is not among those the
+            # SDK path accepts (several helpers accept a union).
             if (d.body_class and req.body_class
-                    and d.body_class != req.body_class
-                    and "RequestBody" in req.body_class):
-                issues.append(f"BODY {d.body_class} != {req.body_class}")
+                    and "RequestBody" in req.body_class
+                    and req.body_class not in d.body_class):
+                issues.append(
+                    f"BODY sends {'|'.join(sorted(d.body_class))} != {req.body_class}")
 
             if issues:
                 counts["mismatch"] += 1
