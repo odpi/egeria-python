@@ -103,7 +103,7 @@ class TodoScenarioTester:
         for guid in self.created_guids:
             try:
                 self.client.metadata_expert.delete_metadata_element(
-                    guid, body={"class": "OpenMetadataDeleteRequestBody"}
+                    guid, body={"class": "DeleteElementRequestBody"}
                 )
                 console.print(f"[green]✓[/green] Cleaned up {guid}")
             except Exception as e:
@@ -457,7 +457,7 @@ class TodoScenarioTester:
             console.print(f"[green]✓[/green] Created ToDo {guid}")
 
             self.client.metadata_expert.delete_metadata_element(
-                guid, body={"class": "OpenMetadataDeleteRequestBody"}
+                guid, body={"class": "DeleteElementRequestBody"}
             )
             console.print(f"[green]✓[/green] Deleted ToDo {guid}")
 
