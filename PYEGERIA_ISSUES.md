@@ -333,6 +333,39 @@ Duplicated types skew heavily toward `ValidMetadataValue` (659 of 1,112)
 and `SpecificationPropertyValue` (300) — both likely large, frequently-
 reordered collections, consistent with an ordering-instability theory.
 
+**Follow-up, same day** — dwolfson asked the natural next question: how can
+a duplicate GUID even happen if the repository enforces uniqueness? Ruled
+out every "this is actually fine" explanation with direct evidence rather
+than just asserting server-side instability:
+- **Not a live-mutating dataset causing drift mid-scan.** Native
+  `count_metadata_elements` for `Referenceable` stayed exactly stable
+  (11,079 → 11,079) across a full 7.4-second, 23-page scan. Page 1
+  (`startFrom=0`) came back byte-for-byte identical before and after the
+  entire scan. Two immediate back-to-back identical requests also returned
+  the exact same elements in the exact same order — no evidence of
+  anything being written to this dataset during or around the scan.
+- **Not a simple page-boundary tie-break either** — checked how far apart
+  (in page-index terms) each duplicated GUID's two occurrences were: only
+  245/1,619 (15%) were adjacent pages; 1,374 (85%) spanned 2+ pages apart,
+  with a max observed gap of **10 pages** (~5,000 elements apart). An
+  element legitimately can't shift ~5,000 positions between two `startFrom`
+  calls unless the server's ordering for this query isn't a true
+  deterministic total order at all.
+- **Best-supported mechanism:** `findMetadataElements` on a broad
+  `Referenceable` scan most likely sorts by something like creation time
+  with no unique tiebreaker (e.g. GUID) appended to the effective
+  `ORDER BY`. `ValidMetadataValue`/`SpecificationPropertyValue` (the two
+  most-duplicated types, 659 + 300 of 1,112) are both bulk-loaded from an
+  archive, so plausibly thousands of rows share the *exact same* creation
+  timestamp. Each `startFrom`/`pageSize` call is a fresh query execution,
+  not a stable server-side cursor — when many rows tie on the sort key, the
+  database is free to resolve that tie differently on separate query
+  executions, so the identical single row can legitimately land in very
+  different offset windows across two calls. This is the well-known
+  `OFFSET`/`LIMIT`-without-a-fully-unique-`ORDER BY` SQL pagination
+  anti-pattern, surfacing here in Egeria's repository query — not a
+  pyegeria bug, not a real repository-level duplicate GUID.
+
 **Also found as a byproduct of this correction:** pyegeria's own
 `pyegeria/view/base_report_formats.py` (`load_egeria_report_specs()`) had
 exactly the `len(page) < page_size` anti-pattern in a real fetch-all loop
