@@ -3601,6 +3601,53 @@ deployment-timing issue, not a code defect — see ISSUE-12, below.
 
 ## Not a bug / n/a
 
+### ISSUE-65: `GlossaryManager.get_term_by_guid`'s naming-standards classifications (PrimeWord/ClassWord/Modifier) don't surface as individually-named `elementHeader` keys like most classifications do — undocumented response-shape gotcha, not a data-missing bug
+
+**Status:** n/a — not a bug, a response-shape gotcha worth documenting so
+the next caller doesn't make the same misdiagnosis. Reported 2026-08-18 by
+a peer session working in `egeria-workspaces-fs` (Egeria Explorer's
+Glossary panel), cross-posted here since it's a `pyegeria`/`GlossaryManager`
+behavior, not an `egeria-workspaces-fs`-side issue.
+
+**What looked like a bug:** `GlossaryManager.set_is_prime_word`/
+`set_is_class_word`/`set_is_modifier` (naming-standards classifications,
+model 0438 — `PrimeWord`/`ClassWord`/`Modifier`) work fine on the write
+side, but `GlossaryManager.get_term_by_guid`'s returned `elementHeader`
+does **not** surface them as individually-named keys the way most
+classifications do (e.g. `Confidentiality` shows up as
+`elementHeader.confidentiality` with `class=ElementClassification`). Easy
+to misdiagnose as "the data isn't returned at any depth" — the reporting
+session initially made exactly that mistake, testing only
+`ClassificationExplorer.get_element_by_guid` across `graphQueryDepth`
+values and `GlossaryManager.get_term_by_guid` at `graphQueryDepth=1` only.
+
+**What's actually happening:** re-tested properly (`graphQueryDepth`
+0/1/2/3, `GlossaryManager.get_term_by_guid` specifically) — the
+classifications ARE there, just bucketed together into one list-valued
+key, `elementHeader.glossaryTermKinds`, each entry an
+`AttachedClassification` (`classificationName` + `classificationProperties`),
+the same shape `MetadataExpert.get_metadata_element_by_guid`'s top-level
+`classifications` list already uses elsewhere. Confirmed live: setting
+both `PrimeWord` and `ClassWord` on a term returns `glossaryTermKinds` as a
+2-item list containing both. So this isn't a genuine "data missing"
+pyegeria/Egeria bug — it's that a generic classification extractor written
+against this method needs to also check list-valued header keys, not just
+dict-valued `class=ElementClassification` ones. Not found anywhere else in
+this codebase's own docstrings/`.http` reference files either (`grep`
+for `glossaryTermKinds` across `pyegeria/` and
+`pyegeria/http clients/*.http` returns nothing) —
+`GlossaryManager.get_term_by_guid`'s own docstring doesn't mention
+`glossaryTermKinds` at all, so this is a real documentation gap, just not
+a functional bug.
+
+**Candidate fix (docs-only, not attempted here):** add `glossaryTermKinds`
+to `GlossaryManager.get_term_by_guid`'s (and any sibling glossary-term
+fetch method's) docstring `Notes` section, and to
+`Egeria-api-glossary-manager.http` if it's shown in a worked example
+there, so this shape isn't only discoverable by reading a live response.
+
+---
+
 ### ISSUE-58: ~~Dr.Egeria's by-display-name element resolver has no type-scoping~~ — corrected: not a bug, a caller error (used a display name where a qualified name was needed, and used the wrong qualified-name string on the one retry)
 
 **Status:** n/a — not a bug. Corrected 2026-08-15, same day filed, by the
