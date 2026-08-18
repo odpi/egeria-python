@@ -1,7 +1,7 @@
 # SPDX-License-Identifier: Apache-2.0
 # Copyright Contributors to the ODPi Egeria project.
 """
-Regression test for ISSUE-63: `Create Information Supply Chain`'s `Purposes`/
+Regression test for ISSUE-64: `Create Information Supply Chain`'s `Purposes`/
 `Scope` attributes were silently dropped -- set_element_prop_body() (the
 generic Referenceable-level body builder) has no knowledge of
 InformationSupplyChainProperties-specific fields, and SupplyChainProcessor

@@ -123,7 +123,7 @@ stop condition still finds a real defect (duplicate GUIDs across pages,
 ~17% of the true population still missing) — just a different mechanism
 than the "short page = false last-page signal" first suspected. This same
 paging-anti-pattern check also found and fixed a real bug in pyegeria's own
-`load_egeria_report_specs()`. Also fixed **ISSUE-63** (`Create Information
+`load_egeria_report_specs()`. Also fixed **ISSUE-64** (`Create Information
 Supply Chain`'s `Purposes`/`Scope` silently dropped — renumbered from a
 same-day `ISSUE-62` collision with the `DeleteElementRequestBody` entry
 above) after root-causing it live. See each entry for full detail.
@@ -891,17 +891,85 @@ would need revisiting for that specific endpoint.
 
 ---
 
-### ISSUE-63: `Create Information Supply Chain`'s `Purposes`/`Scope` attributes were silently dropped — never read from `attributes` at all
+### ISSUE-63: `MetadataExpert.delete_related_elements()`/`delete_metadata_element()` were missed when the `deleteMethod`-dropped-silently bug was fixed everywhere else — still could never succeed against a stock Egeria server
+
+**Layer:** Pyegeria (`pyegeria/models/models.py`, `pyegeria/omvs/metadata_expert.py`).
+
+**Status:** fixed 2026-08-18 (Pyegeria — `pyegeria/omvs/metadata_expert.py`,
+`tests/micro-tests/test_metadata_expert_delete_methods.py`). Reported by
+dwolfson from Resource Explorer's own investigation (full text below,
+verbatim from the report).
+
+**Report as received:**
+
+**Status: partially fixed in 6.0.18.3 — re-verified 2026-08-18, `MetadataExpert`'s two delete methods were left behind.** The underlying bug class (a caller-supplied `deleteMethod` silently validating-then-dropping instead of reaching the server, because `PyegeriaModel`'s `extra='ignore'` swallows any field the target model doesn't declare) is now genuinely fixed for essentially every relationship-delete call site in the SDK: a new `DeleteRelationshipRequestBody` (`pyegeria/models/models.py`) declares `delete_method: Optional[DeleteMethod] = None`, and a new `_async_delete_relationship_request()` helper (`_server_client.py`) was wired into ~15 OMVS modules (`asset_maker.py`, `data_designer.py`, `connection_manager.py`, `classification_explorer.py`, `governance_officer.py`, `collection_manager.py`, `project_manager.py`, `glossary_manager.py`, `solution_architect.py`, `actor_manager.py`, `external_links.py`, `reference_data.py`, `lineage_linker.py`, and others). Confirmed live via direct model round-trip on the freshly-installed 6.0.18.3:
+```python
+DeleteRelationshipRequestBody.model_validate(
+    {"class": "DeleteRelationshipRequestBody", "deleteMethod": "SOFT_DELETE"}
+).model_dump(by_alias=True, exclude_none=True)
+# -> {'forLineage': False, 'forDuplicateProcessing': False,
+#     'class': 'DeleteRelationshipRequestBody', 'deleteMethod': 'SOFT_DELETE'}   # preserved
+```
+
+**What's still broken:** `MetadataExpert.delete_related_elements()`/`_async_delete_related_elements()` and `delete_metadata_element()`/`_async_delete_metadata_element()` (`pyegeria/omvs/metadata_expert.py`) were **not** migrated to the new pattern — both still declare `body: Optional[dict | OpenMetadataDeleteRequestBody]` and route through the old, still-unfixed `_async_open_metadata_delete_body_request()`/`OpenMetadataDeleteRequestBody` (`models.py`, unchanged: declares only `class_`, no `delete_method` field). Same direct test against 6.0.18.3, same input shape, different outcome:
+```python
+OpenMetadataDeleteRequestBody.model_validate(
+    {"class": "OpenMetadataDeleteRequestBody", "deleteMethod": "SOFT_DELETE"}
+).model_dump(by_alias=True, exclude_none=True)
+# -> {'forLineage': False, 'forDuplicateProcessing': False, 'class': 'OpenMetadataDeleteRequestBody'}
+# deleteMethod silently gone — the exact original bug, unchanged.
+```
+So `MetadataExpert`'s generic relationship-delete (no dedicated "unlink" method exists for most relationship types, so this is the fallback every caller without a bespoke delete method reaches for) is still unusable end-to-end on a stock server: the server's own default (`LookForLineage`) is still rejected by its own `deleteRelationshipInStore` validation (`OMAG-COMMON-400-032`), and pyegeria still gives no way to override it for this specific class of caller.
+
+**Where seen:** Resource Explorer's `SurveyDefinitionReader.reconcile_step_links()` (`packages/resource-explorer/resource_explorer/surveyors/survey_definition_reader.py`), deleting a stale/duplicate `Link Next Process Step` relationship left behind by a separate Dr.Egeria non-idempotency issue.
+
+**Workaround in RE** (not upstream — this repo's own calling code, needed until this fix landed): bypass `delete_related_elements()`/pydantic validation entirely for this one call — hit `MetadataExpert`'s own `command_root` + `.../related-elements/{guid}/delete` URL directly via its private `_async_make_request()` transport method with a raw dict body, wrapped in `asyncio.run(...)`. Verified live: the duplicate link deletes successfully with this workaround, `scripts/reconcile_survey_definition_links.py` runs clean, and the previously-unrunnable "Git Statistics Survey" Survey Definition (`GovActionProcess::RepoCoarseScout`) now fetches without the branching-guard exception. RE's own copy of this workaround was left in place, not reverted here — no need to force RE to re-deploy against a specific pyegeria patch version right away.
+
+**Fix applied here (2026-08-18):** migrated exactly as the report's own
+"Candidate fix" suggested — `_async_delete_related_elements()` now
+validates against `DeleteRelationshipRequestBody` via
+`_async_delete_relationship_request()` (mirroring the ~15 already-migrated
+modules); `_async_delete_metadata_element()` now validates against
+`DeleteElementRequestBody` via `_async_delete_element_request()` (mirroring
+`_async_archive_metadata_element` right above it in the same file, which
+already used `DeleteElementRequestBody`). Both sync wrappers and
+`delete_metadata_element`'s signature gained a `cascade_delete` parameter
+to match the pattern used everywhere else `DeleteElementRequestBody` is
+used. `OpenMetadataDeleteRequestBody` itself is untouched — it's correctly
+fieldless per its own real ground truth (confirmed in ISSUE-62's
+investigation), just no longer the class these two methods route through.
+
+**Verified live** against `qs-view-server`: created two throwaway assets
+and a real `DataFlow` relationship between them.
+`delete_related_elements(rel_guid)` with no body still fails with the same
+`OMAG-COMMON-400-032`-class 500 (expected and correct — Egeria's own
+default `deleteMethod` is still rejected by this endpoint; that half of
+the behavior is unchanged and not this fix's job to change).
+`delete_related_elements(rel_guid, {"deleteMethod": "SOFT_DELETE"})`
+**succeeded** — the override that was previously impossible now works
+end-to-end. `delete_metadata_element()` on both throwaway assets also
+succeeded. 6 new unit tests
+(`test_metadata_expert_delete_methods.py`) cover both methods' outgoing
+request bodies (mocked, no live server) plus a direct model round-trip
+matching the report's own verification snippets; full
+`pytest tests/micro-tests/` passes.
+
+---
+
+### ISSUE-64: `Create Information Supply Chain`'s `Purposes`/`Scope` attributes were silently dropped — never read from `attributes` at all
 
 **Status:** fixed 2026-08-18 (Pyegeria/Dr.Egeria —
 `md_processing/v2/solution_architect.py`,
-`tests/micro-tests/test_supply_chain_processor.py`). **Renumbered from a
-collision**: originally logged as `ISSUE-62` by dwolfson, colliding with
-this file's own `ISSUE-62` (`DeleteElementRequestBody`, above) added the
-same day — kept the original number on the entry already cross-referenced
-in code/test comments, renumbered this newer duplicate to `ISSUE-63` per
-this file's established collision convention (see the "Renumbered
-2026-08-15" note near the top).
+`tests/micro-tests/test_supply_chain_processor.py`). **Renumbered twice
+from collisions**: originally logged as `ISSUE-62` by dwolfson, colliding
+with this file's own `ISSUE-62` (`DeleteElementRequestBody`, above) added
+the same day — renumbered to `ISSUE-63`. Then a second, real `ISSUE-63`
+arrived the same day from Resource Explorer (below — `MetadataExpert`'s
+delete methods missing the `deleteMethod` fix) with its number already
+fixed by that report's own author, so this entry moved again to `ISSUE-64`
+per this file's established collision convention (see the "Renumbered
+2026-08-15" note near the top) — kept the number on whichever entry's
+number was harder to change at the point of collision.
 
 **Originally found** 2026-08-18 building `gen_governance_metrics.py`
 (egeria-workspaces-fs, `OVERVIEW_GOVERNANCE_METRICS.dr-egeria.md`) while
@@ -953,7 +1021,7 @@ in this codebase is `SolutionLinkingWireProperties.integrationStyle` — a
 `InformationSupplyChain` **element** property. This strongly suggests
 `Integration Style`/`Estimated Volumetrics` are misattributed to the wrong
 bundle in the compact spec (a relationship-level field incorrectly offered
-as a create-time element attribute), rather than sharing ISSUE-63's
+as a create-time element attribute), rather than sharing ISSUE-64's
 "processor never reads it" mechanism — but this is not confirmed against
 the real `InformationSupplyChainProperties` Java class, only against what
 ground truth `.http` examples happen to show. Worth a dedicated look
