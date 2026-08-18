@@ -3211,6 +3211,7 @@ class MetadataExpert(ServerClient):
                   "class" : "FindRequestBody",
                   "metadataElementTypeName": "add typeName here",
                   "metadataElementSubtypeNames": [],
+                  "skipSubtypes": false,
                   "searchProperties": {
                      "class" : "SearchProperties",
                      "conditions": [ {
@@ -3320,6 +3321,7 @@ class MetadataExpert(ServerClient):
                   "class" : "FindRequestBody",
                   "metadataElementTypeName": "add typeName here",
                   "metadataElementSubtypeNames": [],
+                  "skipSubtypes": false,
                   "searchProperties": {
                      "class" : "SearchProperties",
                      "conditions": [ {
@@ -3520,6 +3522,7 @@ class MetadataExpert(ServerClient):
                 {
                   "class" : "FindRelationshipRequestBody",
                   "relationshipTypeName": "add typeName here",
+                  "relationshipSubtypeNames": [],
                   "searchProperties": {
                      "class" : "SearchProperties",
                      "conditions": [ {
@@ -3615,6 +3618,7 @@ class MetadataExpert(ServerClient):
                 {
                   "class" : "FindRelationshipRequestBody",
                   "relationshipTypeName": "add typeName here",
+                  "relationshipSubtypeNames": [],
                   "searchProperties": {
                      "class" : "SearchProperties",
                      "conditions": [ {
@@ -3700,6 +3704,7 @@ class MetadataExpert(ServerClient):
                 {
                   "class" : "FindRelationshipRequestBody",
                   "relationshipTypeName": "add typeName here",
+                  "relationshipSubtypeNames": [],
                   "limitResultsByStatus" : ["ACTIVE"],
                   "asOfTime" : "{{$isoTimestamp}}"
                 }
