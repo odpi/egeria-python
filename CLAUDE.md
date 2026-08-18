@@ -99,6 +99,51 @@ going forward, so there's no mirroring step: once the API edit +
 `refresh_specs` regeneration + processor wiring are done and verified,
 that's the complete change.
 
+## Auditing the OMVS clients against the `.http` ground truth
+
+`scripts/omvs_audit.py` reconciles every `_async_*` method in `pyegeria/omvs/`
+against the `.http` collections, which are the ground truth for URLs, verbs,
+and request-body classes.
+
+```bash
+# pyegeria/http clients/ is GITIGNORED — absent in fresh worktrees.
+# Point the script at a checkout that has it:
+export PYEGERIA_HTTP_DIR="/path/to/egeria-python/pyegeria/http clients"
+
+python scripts/omvs_audit.py --quiet              # full audit -> omvs_audit_report.md
+python scripts/omvs_audit.py --service location-arena   # one service
+```
+
+Exit status is 1 when any confirmed defect is found, so it can gate CI.
+
+**What it checks, and why each check exists** — every category below was added
+after a real defect slipped through an earlier, weaker version of this script:
+
+- **VERB** — compares the actual HTTP verb. Helper verbs are discovered by
+  parsing `_server_client.py` rather than hardcoded: *every* `_async_*_request`
+  helper is POST, and an earlier hardcoded table wrongly mapped the `get_*`
+  helpers to GET, which is how a batch of GET-vs-POST defects went undetected.
+  A direct `_async_make_request` wins over a helper, because some methods call
+  a GUID-resolution helper first.
+- **PATH** — compares full normalised paths. It deliberately does **not** strip
+  trailing verbs (`/attach` vs `/detach`) or the leading service segment; an
+  earlier version did, and that masked exactly the bugs worth finding.
+- **BODY** — compares the request-body class (`FilterRequestBody` vs
+  `ResultsRequestBody`, etc.). Heuristic: it takes the first `*RequestBody`
+  identifier in the method, which may be a signature annotation, so treat body
+  findings as lower-confidence than verb/path.
+- **LINT** — structural URL defects detectable without ground truth: double
+  slashes, a path parameter with no separator before it (`/agreements{guid}`),
+  and underscores in path segments (Egeria uses hyphens).
+
+URL extraction is AST-based, not regex — multi-line f-strings silently produced
+empty paths under the regex version, which made whole modules look clean.
+
+When triaging a finding, confirm it against the `.http` file before changing
+code, and prefer the SDK's existing helpers (`_async_get_name_request`,
+`_async_get_results_body_request`, …) over hand-rolled `_async_make_request`
+calls, so verb and body shape stay correct by construction.
+
 ## Commits
 
 - Always use `git commit -s` to sign off commits. This appends `Signed-off-by: Dan Wolfson <dan.wolfson@pdr-associates.com>` — DCO is enforced on this repo and unsigned commits will be rejected.
@@ -125,6 +170,7 @@ Changes to `pyegeria/` (SDK API, config, report formatting) can break both.
 - `_base_platform_client.py` → `_base_server_client.py` → `_server_client.py`: layered HTTP stack
 - `config.py`: Pydantic-settings config; precedence = explicit args > OS env > `.env` > `config.json` > defaults
 - `utils.py`: shared helpers (`body_slimmer`, `make_format_set_name_from_type`, etc.)
+- **Gotcha — a request-body Pydantic model (`pyegeria/models/models.py`) missing a field silently drops it, not an error.** Every model inherits `PyegeriaModel`'s `extra='ignore'`, so a caller-supplied dict (or a raw no-body-provided construction in `_server_client.py`'s `validate_delete_*_request`-style helpers) with a field the model doesn't declare validates successfully and just vanishes before serialization — no exception, no warning. Confirmed live impact: `DeleteElementRequestBody` had neither `cascadeDelete` nor `deleteMethod` for a long time despite both being real, documented fields on the actual Egeria DTO (`.http` ground truth) — every caller passing `cascade_delete=True` through `_async_delete_element_request` had silently been sending it as unset (PYEGERIA_ISSUES.md ISSUE-62). When adding/using a request-body model, check its fields against the real body in `pyegeria/http clients/Egeria-api-*.http` rather than assuming "it validated without error" means the field will actually be sent.
 
 **`pyegeria/omvs/`** — 40+ service-specific clients (one file per OMVS)
 - Every public method has an `_async_*` implementation and a sync wrapper calling `asyncio.get_event_loop().run_until_complete(...)`.

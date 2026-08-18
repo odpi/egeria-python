@@ -133,7 +133,8 @@ class SolutionArchitect(ServerClient):
 
     def create_design_pattern(self, body: dict | NewElementRequestBody):
         """Create a design pattern."""
-        return asyncio.run(self._async_create_design_pattern(body))
+        loop = asyncio.get_event_loop()
+        return loop.run_until_complete(self._async_create_design_pattern(body))
 
     async def _async_create_design_pattern_from_template(self, body: dict | TemplateRequestBody):
         url = f"{self.solution_architect_command_root}/design-patterns/from-template"
@@ -142,7 +143,8 @@ class SolutionArchitect(ServerClient):
 
     def create_design_pattern_from_template(self, body: dict | TemplateRequestBody):
         """Create a design pattern from template."""
-        return asyncio.run(self._async_create_design_pattern_from_template(body))
+        loop = asyncio.get_event_loop()
+        return loop.run_until_complete(self._async_create_design_pattern_from_template(body))
 
     async def _async_update_design_pattern(self, guid: str, body: dict | UpdateElementRequestBody):
         validate_guid(guid)
@@ -151,7 +153,8 @@ class SolutionArchitect(ServerClient):
 
     def update_design_pattern(self, guid: str, body: dict | UpdateElementRequestBody):
         """Update a design pattern."""
-        return asyncio.run(self._async_update_design_pattern(guid, body))
+        loop = asyncio.get_event_loop()
+        return loop.run_until_complete(self._async_update_design_pattern(guid, body))
 
     async def _async_link_nested_design_patterns(self, parent_guid: str, child_guid: str, body: Optional[dict | NewRelationshipRequestBody] = None):
         validate_guid(parent_guid)
@@ -161,7 +164,8 @@ class SolutionArchitect(ServerClient):
 
     def link_nested_design_patterns(self, parent_guid: str, child_guid: str, body: Optional[dict | NewRelationshipRequestBody] = None):
         """Link nested design patterns."""
-        return asyncio.run(self._async_link_nested_design_patterns(parent_guid, child_guid, body))
+        loop = asyncio.get_event_loop()
+        return loop.run_until_complete(self._async_link_nested_design_patterns(parent_guid, child_guid, body))
 
     async def _async_detach_nested_design_patterns(self, parent_guid: str, child_guid: str, body: Optional[dict | DeleteRelationshipRequestBody] = None):
         validate_guid(parent_guid)
@@ -171,7 +175,8 @@ class SolutionArchitect(ServerClient):
 
     def detach_nested_design_patterns(self, parent_guid: str, child_guid: str, body: Optional[dict | DeleteRelationshipRequestBody] = None):
         """Detach nested design patterns."""
-        return asyncio.run(self._async_detach_nested_design_patterns(parent_guid, child_guid, body))
+        loop = asyncio.get_event_loop()
+        return loop.run_until_complete(self._async_detach_nested_design_patterns(parent_guid, child_guid, body))
 
     async def _async_link_specialized_design_patterns(self, general_guid: str, special_guid: str, body: Optional[dict | NewRelationshipRequestBody] = None):
         validate_guid(general_guid)
@@ -181,7 +186,8 @@ class SolutionArchitect(ServerClient):
 
     def link_specialized_design_patterns(self, general_guid: str, special_guid: str, body: Optional[dict | NewRelationshipRequestBody] = None):
         """Link specialized design patterns."""
-        return asyncio.run(self._async_link_specialized_design_patterns(general_guid, special_guid, body))
+        loop = asyncio.get_event_loop()
+        return loop.run_until_complete(self._async_link_specialized_design_patterns(general_guid, special_guid, body))
 
     async def _async_detach_specialized_design_patterns(self, general_guid: str, special_guid: str, body: Optional[dict | DeleteRelationshipRequestBody] = None):
         validate_guid(general_guid)
@@ -191,7 +197,8 @@ class SolutionArchitect(ServerClient):
 
     def detach_specialized_design_patterns(self, general_guid: str, special_guid: str, body: Optional[dict | DeleteRelationshipRequestBody] = None):
         """Detach specialized design patterns."""
-        return asyncio.run(self._async_detach_specialized_design_patterns(general_guid, special_guid, body))
+        loop = asyncio.get_event_loop()
+        return loop.run_until_complete(self._async_detach_specialized_design_patterns(general_guid, special_guid, body))
 
     async def _async_link_related_design_patterns(self, guid1: str, guid2: str, body: Optional[dict | NewRelationshipRequestBody] = None):
         validate_guid(guid1)
@@ -201,7 +208,8 @@ class SolutionArchitect(ServerClient):
 
     def link_related_design_patterns(self, guid1: str, guid2: str, body: Optional[dict | NewRelationshipRequestBody] = None):
         """Link related design patterns."""
-        return asyncio.run(self._async_link_related_design_patterns(guid1, guid2, body))
+        loop = asyncio.get_event_loop()
+        return loop.run_until_complete(self._async_link_related_design_patterns(guid1, guid2, body))
 
     async def _async_detach_related_design_patterns(self, guid1: str, guid2: str, body: Optional[dict | DeleteRelationshipRequestBody] = None):
         validate_guid(guid1)
@@ -211,7 +219,8 @@ class SolutionArchitect(ServerClient):
 
     def detach_related_design_patterns(self, guid1: str, guid2: str, body: Optional[dict | DeleteRelationshipRequestBody] = None):
         """Detach related design patterns."""
-        return asyncio.run(self._async_detach_related_design_patterns(guid1, guid2, body))
+        loop = asyncio.get_event_loop()
+        return loop.run_until_complete(self._async_detach_related_design_patterns(guid1, guid2, body))
 
     async def _async_delete_design_pattern(self, guid: str, body: Optional[dict | DeleteElementRequestBody] = None):
         validate_guid(guid)
@@ -220,7 +229,8 @@ class SolutionArchitect(ServerClient):
 
     def delete_design_pattern(self, guid: str, body: Optional[dict | DeleteElementRequestBody] = None):
         """Delete a design pattern."""
-        return asyncio.run(self._async_delete_design_pattern(guid, body))
+        loop = asyncio.get_event_loop()
+        return loop.run_until_complete(self._async_delete_design_pattern(guid, body))
 
     async def _async_find_design_patterns(self, search_string: str = "*", body: Optional[dict | SearchStringRequestBody] = None,
                                   starts_with: bool = True, ends_with: bool = False, ignore_case: bool = False,
@@ -250,7 +260,8 @@ class SolutionArchitect(ServerClient):
                            start_from: int = 0, page_size: int = 100, graph_query_depth: int = 3, output_format: str = "JSON",
                            report_spec: str | dict = "Design-Pattern-DrE", **kwargs):
         """Find design patterns."""
-        return asyncio.run(self._async_find_design_patterns(search_string, body, starts_with, ends_with,
+        loop = asyncio.get_event_loop()
+        return loop.run_until_complete(self._async_find_design_patterns(search_string, body, starts_with, ends_with,
                                                          ignore_case, start_from, page_size,
                                                          graph_query_depth,
                                                          output_format, report_spec, **kwargs))
@@ -260,7 +271,7 @@ class SolutionArchitect(ServerClient):
                                          graph_query_depth: int = 3, output_format: str = "JSON", report_spec: str | dict = "Design-Pattern-DrE", **kwargs):
         if name is None and "filter_string" in kwargs:
             name = kwargs.pop("filter_string")
-        url = f"{self.solution_architect_command_root}/design-patterns/by-name/{name}"
+        url = f"{self.solution_architect_command_root}/design-patterns/by-name"
         params = {
             'graph_query_depth': graph_query_depth,
             'filter_string': name,
@@ -279,7 +290,8 @@ class SolutionArchitect(ServerClient):
                                   start_from: int = 0, page_size: int = max_paging_size,
                                   graph_query_depth: int = 3, output_format: str = "JSON", report_spec: str | dict = "Design-Pattern-DrE", **kwargs):
         """Get design patterns by name."""
-        return asyncio.run(self._async_get_design_patterns_by_name(name=name, body=body, start_from=start_from, page_size=page_size,
+        loop = asyncio.get_event_loop()
+        return loop.run_until_complete(self._async_get_design_patterns_by_name(name=name, body=body, start_from=start_from, page_size=page_size,
                                                                 graph_query_depth=graph_query_depth,
                                                                 output_format=output_format, report_spec=report_spec, **kwargs))
 
@@ -303,7 +315,8 @@ class SolutionArchitect(ServerClient):
     def get_design_pattern_by_guid(self, guid: str = None, body: Optional[dict | GetRequestBody] = None,
                                  graph_query_depth: int = 3, output_format: str = "JSON", report_spec: str | dict = "Design-Pattern-DrE", **kwargs):
         """Get a design pattern by GUID."""
-        return asyncio.run(self._async_get_design_pattern_by_guid(guid=guid, body=body, graph_query_depth=graph_query_depth, output_format=output_format, report_spec=report_spec, **kwargs))
+        loop = asyncio.get_event_loop()
+        return loop.run_until_complete(self._async_get_design_pattern_by_guid(guid=guid, body=body, graph_query_depth=graph_query_depth, output_format=output_format, report_spec=report_spec, **kwargs))
 
     async def _async_update_solution_blueprint_status(self, guid: str, body: dict | UpdateElementRequestBody):
         validate_guid(guid)
@@ -312,7 +325,8 @@ class SolutionArchitect(ServerClient):
 
     def update_solution_blueprint_status(self, guid: str, body: dict | UpdateElementRequestBody):
         """Update the status of a solution blueprint."""
-        return asyncio.run(self._async_update_solution_blueprint_status(guid, body))
+        loop = asyncio.get_event_loop()
+        return loop.run_until_complete(self._async_update_solution_blueprint_status(guid, body))
 
 
     def _get_supply_chain_rel_elements_dict(self, el_struct: dict)-> dict | str:
@@ -2233,6 +2247,7 @@ class SolutionArchitect(ServerClient):
     #  Blueprints
     #
 
+
     @dynamic_catch
     async def _async_create_solution_blueprint(self, body: dict | NewElementRequestBody) -> str:
         """ Create a solution blueprint. To set a lifecycle status
@@ -3341,7 +3356,8 @@ class SolutionArchitect(ServerClient):
 
 
     async def _async_get_solution_blueprint_by_guid(self, guid: str = None, body: dict = None,
-                                                    graph_query_depth: int = 3, output_format: str = "JSON",
+                                                    graph_query_depth: int = 3, max_mermaid_node_count: int = 10,
+                                                    output_format: str = "JSON",
                                                     report_spec: str| Dict = "Solution-Blueprint", **kwargs) -> dict | str:
         """Return the properties of a specific solution blueprint. Async Version.
 
@@ -3393,7 +3409,17 @@ class SolutionArchitect(ServerClient):
                f"solution-blueprints/{guid}/retrieve")
 
         if body is None:
-            response = await self._async_make_request("POST", url, **kwargs)
+            # graph_query_depth/max_mermaid_node_count were previously dead here -
+            # this endpoint's own **kwargs parameter was never used at all, and no
+            # body means _async_make_request got nothing (or stray kwargs it
+            # doesn't accept). Build an AnyTimeRequestBody so callers can actually
+            # control the mermaid graph (see PYEGERIA_ISSUES.md ISSUE-23/26).
+            body = {
+                "class": "AnyTimeRequestBody",
+                "graphQueryDepth": graph_query_depth,
+                "maxMermaidNodeCount": max_mermaid_node_count,
+            }
+            response = await self._async_make_request("POST", url, body_slimmer(body))
         else:
             response = await self._async_make_request("POST", url, body_slimmer(body), **kwargs)
         element = response.json().get("element", NO_ELEMENTS_FOUND)
@@ -3404,7 +3430,8 @@ class SolutionArchitect(ServerClient):
                                                            output_format, report_spec=report_spec)
         return response.json().get("element", NO_ELEMENTS_FOUND)
 
-    def get_solution_blueprint_by_guid(self, guid: str = None, body: dict = None, graph_query_depth: int = 3, output_format: str = "JSON",
+    def get_solution_blueprint_by_guid(self, guid: str = None, body: dict = None, graph_query_depth: int = 3,
+                                       max_mermaid_node_count: int = 10, output_format: str = "JSON",
                                        report_spec: str| Dict = "Solution-Blueprint", **kwargs) -> dict | str:
         """ Return the properties of a specific solution blueprint.
 
@@ -3452,6 +3479,7 @@ class SolutionArchitect(ServerClient):
         loop = asyncio.get_event_loop()
         response = loop.run_until_complete(self._async_get_solution_blueprint_by_guid(guid=guid, body=body,
                                                                                       graph_query_depth=graph_query_depth,
+                                                                                      max_mermaid_node_count=max_mermaid_node_count,
                                                                                       output_format=output_format, report_spec=report_spec, **kwargs))
         return response
 
@@ -4226,7 +4254,7 @@ class SolutionArchitect(ServerClient):
         loop.run_until_complete(self._async_detach_sub_component(parent_component_guid, member_component_guid, body))
 
     @dynamic_catch
-    async def _async_link_solution_linking_wire(self, component1_guid: str, component2_guid: str, body: dict | NewRelationshipRequestBody) -> None:
+    async def _async_link_solution_linking_wire(self, component1_guid: str, component2_guid: str, body: dict | NewRelationshipRequestBody) -> Optional[str]:
         """ Attach a solution component to a solution component as a peer in a solution. Async Version.
 
         Parameters
@@ -4241,7 +4269,12 @@ class SolutionArchitect(ServerClient):
 
         Returns
         -------
-        None
+        str | None
+            The GUID of the newly created SolutionLinkingWire relationship -- needed
+            to target this specific wire later via
+            _async_update_solution_linking_wire/_async_detach_solution_linking_wire_by_guid,
+            since SolutionLinkingWire allows more than one wire between the same
+            pair of components. None if the server didn't return one.
 
         Raises
         ------
@@ -4274,11 +4307,12 @@ class SolutionArchitect(ServerClient):
 
         url = (f"{self.platform_url}/servers/{self.view_server}/api/open-metadata/solution-architect/"
                f"solution-components/{component1_guid}/wired-to/{component2_guid}/attach")
-        await self._async_new_relationship_request(url, "SolutionLinkingWireProperties", body)
+        guid = await self._async_new_relationship_request(url, "SolutionLinkingWireProperties", body)
         logger.info(f"Linked Solution Linking wires between {component1_guid} -> {component2_guid}")
+        return guid
 
     @dynamic_catch
-    def link_solution_linking_wire(self, component1_guid: str, component2_guid: str, body: dict | NewRelationshipRequestBody) -> None:
+    def link_solution_linking_wire(self, component1_guid: str, component2_guid: str, body: dict | NewRelationshipRequestBody) -> Optional[str]:
         """ Attach a solution component to a solution component as a peer in a solution.
 
                 Parameters
@@ -4292,7 +4326,8 @@ class SolutionArchitect(ServerClient):
 
                 Returns
                 -------
-                None
+                str | None
+                    The GUID of the newly created SolutionLinkingWire relationship.
 
                 Raises
                 ------
@@ -4323,7 +4358,7 @@ class SolutionArchitect(ServerClient):
                 }
                 """
         loop = asyncio.get_event_loop()
-        loop.run_until_complete(self._async_link_solution_linking_wire(component1_guid, component2_guid, body))
+        return loop.run_until_complete(self._async_link_solution_linking_wire(component1_guid, component2_guid, body))
 
     @dynamic_catch
     async def _async_detach_solution_linking_wire(self, component1_guid: str, component2_guid: str,
@@ -6041,7 +6076,8 @@ class SolutionArchitect(ServerClient):
             }
             """
         loop = asyncio.get_event_loop()
-        loop.run_until_complete(self._async_delete_solution_role(guid, cascade_delete, body))
+        loop.run_until_complete(self._async_delete_solution_role(guid, body, cascade_delete))
+
 
     async def _async_find_solution_roles(
         self,

@@ -280,6 +280,35 @@ class TestGlossaryManager:
         finally:
             g_client.close_session()
 
+    def test_add_is_prime_word(self):
+        try:
+            g_client = GlossaryManager(
+                self.good_view_server_2,
+                self.good_platform1_url,
+                user_id=self.good_user_2,
+                user_pwd=self.good_user_2_pwd,
+            )
+
+            token = g_client.create_egeria_bearer_token(
+                self.good_user_2, self.good_user_2_pwd
+            )
+
+
+            start_time = time.perf_counter()
+            term_guid =  "6bcc2e47-9ab1-455a-bb79-cdcedec706ea"
+            g_client.set_is_prime_word(term_guid)
+            duration = time.perf_counter() - start_time
+
+            print(f"\n\tDuration was {duration} seconds")
+            assert True
+        except  (PyegeriaException, PyegeriaInvalidParameterException) as e:
+            print_exception_table(e)
+            assert False, "Invalid request"
+        except ValidationError as e:
+            print_validation_error(e)
+        finally:
+            g_client.close_session()
+
     def test_set_glossary_as_taxonomy(self):
         try:
             g_client = GlossaryManager(
@@ -704,13 +733,13 @@ class TestGlossaryManager:
             glossary_guid = None
             start_time = time.perf_counter()
             response = g_client.find_glossary_terms(
-                "*",
+                "Condition",
                 True,
                 False,
                 True,
-                include_only_classified_elements=['Question'],
+                # include_only_classified_elements=['Question'],
                 graph_query_depth=2,
-                output_format="DICT",
+                output_format="JSON",
                 report_spec = "Basic-Terms"
             )
             print(f"Duration is {time.perf_counter() - start_time} seconds")

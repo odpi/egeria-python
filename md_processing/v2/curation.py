@@ -77,7 +77,7 @@ class ClassificationSpec:
 # Shared governance-classification fields (Impact/Confidence/Confidentiality/Criticality/Retention)
 # "Governance Status" (not "Status" -- that name collides with the universal Referenceable/
 # element-header "Status" attribute shared by nearly every other family; see PYEGERIA_ISSUES.md).
-_GOVERNANCE_SHARED_FIELDS = {"Governance Status": "status", "Steward": "steward", "Source": "source", "Description": "notes"}
+_GOVERNANCE_SHARED_FIELDS = {"Governance Status": "statusIdentifier", "Steward": "steward", "Source": "source", "Description": "notes"}
 
 CLASSIFICATION_METHODS: Dict[str, ClassificationSpec] = {
     # Keys are real Egeria classification type names (confirmed live via
@@ -117,6 +117,10 @@ CLASSIFICATION_METHODS: Dict[str, ClassificationSpec] = {
     "SecurityTags": ClassificationSpec(
         "_async_set_security_tags_classification", "_async_clear_security_tags_classification", "SecurityTagsProperties",
         fields={"Security Labels": "securityLabels", "Security Properties": "securityProperties"}),
+    "AccountingCodes": ClassificationSpec(
+        "_async_set_accounting_codes_classification", "_async_clear_accounting_codes_classification", "AccountingCodesProperties",
+        fields={"Accounting Code": "accountingCode", "Description": "description",
+                "Accounting Code List": "accountingCodeList", "Accounting Code Map": "accountingCodeMap"}),
     "DataScope": ClassificationSpec(
         "_async_add_data_scope", "_async_clear_data_scope", "DataScopeProperties",
         update_method="_async_update_data_scope",

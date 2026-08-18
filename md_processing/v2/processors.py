@@ -9,7 +9,7 @@ from abc import ABC, abstractmethod
 from typing import Any, Dict, List, Optional
 from loguru import logger
 
-from pyegeria import EgeriaTech, PyegeriaException, NO_ELEMENTS_FOUND, print_basic_exception
+from pyegeria import EgeriaTech, PyegeriaException, PyegeriaTimeoutException, NO_ELEMENTS_FOUND, print_basic_exception
 from pyegeria.core.utils import make_format_set_name_from_type
 from pyegeria.view.base_report_formats import select_report_spec
 from pyegeria.view.output_formatter import generate_output, format_for_markdown_table, populate_columns_from_properties
@@ -517,8 +517,19 @@ class AsyncBaseCommandProcessor(ABC):
                             ele_qn = ele_props.get("qualifiedName")
                             my_qn = self.parsed_output.get("qualified_name")
                             if ele_qn and my_qn and ele_qn != my_qn:
-                                msg = f"Found element with Display Name '{display_name}' (GUID: {existing_guid}) but different QN ('{ele_qn}'). Skipping Update transition."
+                                # ISSUE-59: this is a real, silent-duplication risk, not just an
+                                # informational log line -- proceeding as Create here will mint a
+                                # second element sharing this Display Name. Surface it to the
+                                # caller so it's visible in the rendered --process/--validate
+                                # output, not only in the debug log.
+                                msg = (
+                                    f"Found existing element with Display Name '{display_name}' (GUID: "
+                                    f"{existing_guid}) but under a different Qualified Name ('{ele_qn}' vs. "
+                                    f"'{my_qn}'). Proceeding as Create -- if you meant to update/rename that "
+                                    f"element, re-run with '### GUID {existing_guid}' to target it directly."
+                                )
                                 logger.info(msg)
+                                self._add_warning(msg)
                             else:
                                 self.as_is_element = element
                                 logger.info(f"Element with Display Name '{display_name}' found in Egeria (GUID: {existing_guid}). Transitioning to Update.")
@@ -1143,27 +1154,43 @@ class AsyncBaseCommandProcessor(ABC):
             logger.error(f"Error generating markdown: {e}")
             return self.command.raw_block
 
-    async def fetch_element(self, guid: str) -> Optional[Dict[str, Any]]:
+    async def fetch_element(self, guid: str, _max_timeout_retries: int = 2) -> Optional[Dict[str, Any]]:
         """
-        Fetch the details of an element by GUID. 
+        Fetch the details of an element by GUID.
         Subclasses should override if MetadataExpert/Explorer is unavailable or if a specific OMAS method is needed.
+
+        On a timeout, retries the *same* ClassificationExplorer call rather than falling
+        through to the MetadataExpert fallback (ISSUE-51/52): a timeout means either the
+        request was transient (a retry of the same call is exactly as likely to succeed as
+        any other call would be) or the server is under sustained load (in which case a
+        different endpoint is no more likely to succeed, and MetadataExpert's raw response
+        isn't guaranteed to have the same shape as ClassificationExplorer's -- switching
+        endpoints on a timeout traded a clean failure for a downstream KeyError crash).
+        MetadataExpert stays the fallback for everything that *isn't* a timeout (not found,
+        unsupported type, etc.), where switching endpoints is actually likely to help.
         """
-        try:
-            # First try ClassificationExplorer (most standard and lightweight)
-            logger.debug(f"fetch_element('{guid}') using client {self.client}")
-            res = await getattr(self.client, "_async_get_element_by_guid_")(guid)
-            logger.debug(f"fetch_element returned {res is not None}")
-            if res and isinstance(res, dict):
-                # The structure from classification-explorer comes under "element" usually
-                if "element" in res:
-                    return res["element"]
+        for attempt in range(_max_timeout_retries):
+            try:
+                # First try ClassificationExplorer (most standard and lightweight)
+                logger.debug(f"fetch_element('{guid}') using client {self.client} (attempt {attempt + 1})")
+                res = await getattr(self.client, "_async_get_element_by_guid_")(guid)
+                logger.debug(f"fetch_element returned {res is not None}")
+                if res and isinstance(res, dict):
+                    # The structure from classification-explorer comes under "element" usually
+                    if "element" in res:
+                        return res["element"]
+                    return res
                 return res
-            return res
-        except Exception as e:
-            logger.debug(f"ClassificationExplorer fetch failed: {e}")
+            except PyegeriaTimeoutException as e:
+                logger.debug(f"ClassificationExplorer fetch timed out (attempt {attempt + 1}/{_max_timeout_retries}): {e}")
+                continue
+            except Exception as e:
+                logger.debug(f"ClassificationExplorer fetch failed: {e}")
+                break
 
         try:
-            # Fallback to MetadataExpert (more detailed properties)
+            # Fallback to MetadataExpert (more detailed properties) -- only reached for a
+            # non-timeout failure, or after exhausting timeout retries above.
             # Reordered subclients in EgeriaTech ensure this hits metadata-expert first
             res = await self.client._async_get_metadata_element_by_guid(guid)
             if res and isinstance(res, dict):
@@ -1327,14 +1354,36 @@ class AsyncBaseCommandProcessor(ABC):
 
     async def fetch_as_is(self) -> Optional[Dict[str, Any]]:
         """
-        Standardized lookup for the target element. 
+        Standardized lookup for the target element.
         Checks the cache first.
         """
         if not self.supports_target_element_lookup():
             return None
 
+        # ISSUE-59: an explicit '### GUID' attribute on the command should target
+        # that specific element directly, regardless of what qualified_name/display
+        # name happen to resolve to -- this is the whole point of supplying one (e.g.
+        # "rename" a qualified name via Create <X>, which otherwise has no other way
+        # to say "this is the same element, just update it"). Try it first, before
+        # any name/QN-based lookup, so it isn't silently ignored.
+        explicit_guid = self.parsed_output.get("attributes", {}).get("GUID", {}).get("value")
+        if explicit_guid and isinstance(explicit_guid, str) and explicit_guid.strip():
+            try:
+                element = await self.fetch_element(explicit_guid.strip())
+                if element:
+                    logger.debug(f"fetch_as_is: Element found via explicit GUID '{explicit_guid}'")
+                    return element
+                else:
+                    msg = f"Warning: explicit GUID '{explicit_guid}' was supplied but no element was found for it."
+                    logger.warning(msg)
+                    self._add_warning(msg)
+            except Exception as e:
+                msg = f"Warning: explicit GUID '{explicit_guid}' was supplied but could not be fetched: {e}"
+                logger.warning(msg)
+                self._add_warning(msg)
+
         qn = self.parsed_output.get("qualified_name")
-        
+
         # If QN is missing but Display Name is present, try deriving it
         if not qn:
             qn = self.derive_qualified_name()

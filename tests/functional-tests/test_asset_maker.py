@@ -1002,7 +1002,7 @@ class TestAssetMaker:
             a_client.close_session()
 
     def test_action_management(self):
-        """Test action reassign, unassign, and get actions for requestor"""
+        """Test action reassign, unassign, and get actions for requester"""
         try:
             a_client = AssetMaker(self.good_view_server_2, self.good_platform1_url, user_id=self.good_user_2,
                                   user_pwd=self.good_user_2_pwd)
@@ -1011,7 +1011,7 @@ class TestAssetMaker:
             actor_guid = "actor-guid"
             a_client.reassign_action(action_guid, actor_guid)
             a_client.unassign_action(action_guid, actor_guid)
-            a_client.get_actions_for_requestor(metadata_element_guid=actor_guid, output_format="JSON")
+            a_client.get_actions_for_requester(metadata_element_guid=actor_guid, output_format="JSON")
         except Exception as e:
             print(f"\n\tAction management expected error: {e}")
         finally:

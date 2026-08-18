@@ -137,7 +137,7 @@ class SubjectArea(ServerClient):
         }
         ```
         """
-        url = f"{self.platform_url}/servers/{self.view_server}/api/open-metadata/subject-area/governance-definitions"
+        url = f"{self.platform_url}/servers/{self.view_server}/api/open-metadata/subject-area/collections"
         return await self._async_create_element_body_request(url, "SubjectAreaProperties", body)
 
     def create_subject_area(self, body: dict | NewElementRequestBody) -> str:
@@ -218,8 +218,8 @@ class SubjectArea(ServerClient):
         }
         ```
         """
-        url = f"{self.platform_url}/servers/{self.view_server}/api/open-metadata/subject-area/governance-definitions/from-template"
-        return await self._async_create_element_body_request(url, "SubjectAreaProperties", body)
+        url = f"{self.platform_url}/servers/{self.view_server}/api/open-metadata/subject-area/collections/from-template"
+        return await self._async_create_element_from_template(url, body)
 
     def create_subject_area_from_template(self, body: dict | TemplateRequestBody) -> str:
         """Create a subject area from a template.
@@ -298,7 +298,7 @@ class SubjectArea(ServerClient):
         }
         ```
         """
-        url = f"{self.platform_url}/servers/{self.view_server}/api/open-metadata/subject-area/governance-definitions/{subject_area_guid}/update"
+        url = f"{self.platform_url}/servers/{self.view_server}/api/open-metadata/subject-area/collections/{subject_area_guid}/update"
         await self._async_update_element_body_request(url, body)
 
     def update_subject_area(self, subject_area_guid: str, body: dict | UpdateElementRequestBody) -> None:
@@ -369,8 +369,8 @@ class SubjectArea(ServerClient):
         }
         ```
         """
-        url = f"{self.platform_url}/servers/{self.view_server}/api/open-metadata/subject-area/governance-definitions/{subject_area_guid}/delete"
-        await self._async_delete_element_body_request(url, body)
+        url = f"{self.platform_url}/servers/{self.view_server}/api/open-metadata/subject-area/collections/{subject_area_guid}/delete"
+        await self._async_delete_element_request(url, body)
 
     def delete_subject_area(self, subject_area_guid: str, body: dict | DeleteElementRequestBody) -> None:
         """Delete a subject area.
@@ -443,7 +443,7 @@ class SubjectArea(ServerClient):
         }
         ```
         """
-        url = f"{self.platform_url}/servers/{self.view_server}/api/open-metadata/subject-area/subject-areas/{parent_subject_area_guid}/subject-area-hierarchies/{nested_subject_area_guid}/attach"
+        url = f"{self.platform_url}/servers/{self.view_server}/api/open-metadata/subject-area/collections/{parent_subject_area_guid}/collection-hierarchies/{nested_subject_area_guid}/attach"
         await self._async_new_relationship_request(url, ["SubjectAreaHierarchyProperties"], body)
 
     def link_subject_area_hierarchy(
@@ -527,7 +527,7 @@ class SubjectArea(ServerClient):
         }
         ```
         """
-        url = f"{self.platform_url}/servers/{self.view_server}/api/open-metadata/subject-area/subject-areas/{parent_subject_area_guid}/subject-area-hierarchies/{nested_subject_area_guid}/detach"
+        url = f"{self.platform_url}/servers/{self.view_server}/api/open-metadata/subject-area/collections/{parent_subject_area_guid}/collection-hierarchies/{nested_subject_area_guid}/detach"
         await self._async_delete_relationship_request(url, body)
 
     def detach_subject_area_hierarchy(
@@ -635,7 +635,7 @@ class SubjectArea(ServerClient):
 
         if name is None and body is None:
             name = "*"
-        url = f"{self.platform_url}/servers/{self.view_server}/api/open-metadata/subject-area/governance-definitions/by-name"
+        url = f"{self.platform_url}/servers/{self.view_server}/api/open-metadata/subject-area/collections/by-name"
         params = {
             "filter_string": name,
             "metadata_element_type": metadata_element_type_name,
@@ -805,7 +805,7 @@ class SubjectArea(ServerClient):
         -------
         list | str
         """
-        url = f"{self.platform_url}/servers/{self.view_server}/api/open-metadata/subject-area/subject-areas/by-search-string"
+        url = f"{self.platform_url}/servers/{self.view_server}/api/open-metadata/subject-area/collections/by-search-string"
 
         params = {
             "search_string": search_string,
@@ -966,7 +966,7 @@ class SubjectArea(ServerClient):
         PyegeriaException
             If there are issues in communications, message format, or Egeria errors.
         """
-        url = f"{self.platform_url}/servers/{self.view_server}/api/open-metadata/subject-area/governance-definitions/{guid}/retrieve"
+        url = f"{self.platform_url}/servers/{self.view_server}/api/open-metadata/subject-area/collections/{guid}/retrieve"
         params = {
             "include_only_relationships": include_only_relationships,
             "skip_relationships": skip_relationships,

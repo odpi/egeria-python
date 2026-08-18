@@ -94,6 +94,46 @@ class TestDataDiscovery:
         finally:
             dd_client.close_session()
 
+    def test_create_analysis_report(self):
+        """Test creating an analysis report"""
+        dd_client = DataDiscovery(self.good_view_server_1, self.good_platform1_url, user_id=self.good_user_2)
+        try:
+            dd_client.create_egeria_bearer_token(self.good_user_2, USER_PWD)
+            
+            qualified_name = self._unique_qname("TestReport")
+            body = {
+                "class": "NewElementRequestBody",
+                "properties": {
+                    "class": "AnalysisReportProperties",
+                    "qualifiedName": qualified_name,
+                    "displayName": "Test Analysis Report",
+                }
+            }
+            try:
+                response = dd_client.create_analysis_report(body)
+                assert response is not None
+            except (PyegeriaInvalidParameterException, PyegeriaNotFoundException, PyegeriaAPIException):
+                pass
+
+        except PyegeriaConnectionException:
+            print("Skipping test_create_analysis_report due to connection error")
+        finally:
+            dd_client.close_session()
+
+    def test_link_analysis_report_to_asset(self):
+        """Test linking analysis report to asset"""
+        dd_client = DataDiscovery(self.good_view_server_1, self.good_platform1_url, user_id=self.good_user_2)
+        try:
+            dd_client.create_egeria_bearer_token(self.good_user_2, USER_PWD)
+            try:
+                dd_client.link_analysis_report_to_asset("report_guid", "asset_guid")
+            except (PyegeriaInvalidParameterException, PyegeriaNotFoundException, PyegeriaAPIException):
+                pass
+        except PyegeriaConnectionException:
+            pass
+        finally:
+            dd_client.close_session()
+
 
 # ── Annotation property body probe tests ──────────────────────────────────────
 

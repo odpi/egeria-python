@@ -13,6 +13,14 @@ ___
 >	**Alternative Labels**: "Term Name"
 
 
+### Usage
+>	**Input Required**: False
+
+>	**Attribute Type**: Simple
+
+>	**Description**: The usage guidance for this element — how it is intended to be used in context.
+
+
 ### Journal Entry
 >	**Input Required**: False
 

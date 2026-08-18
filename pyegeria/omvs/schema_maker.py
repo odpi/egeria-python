@@ -15,9 +15,12 @@ from pyegeria.models import (
     NewElementRequestBody,
     DeleteElementRequestBody,
     UpdateElementRequestBody,
+    TemplateRequestBody,
+    FilterRequestBody,
     SearchStringRequestBody,
     GetRequestBody,
     ReferenceableProperties,
+    MetadataSourceRequestBody,
 )
 from pyegeria.view.output_formatter import (
     populate_common_columns,
@@ -128,12 +131,12 @@ class SchemaMaker(ServerClient):
 
     @dynamic_catch
     async def _async_delete_schema_type(
-        self, schema_type_guid: str, body: dict | DeleteElementRequestBody
+        self, schema_type_guid: str, body: dict | MetadataSourceRequestBody
     ) -> None:
         url = f"{self.platform_url}/servers/{self.view_server}/api/open-metadata/schema-maker/schema-types/{schema_type_guid}/delete"
-        await self._async_delete_element_body_request(url, body)
+        await self._async_metadata_source_body_request(url, body)
 
-    def delete_schema_type(self, schema_type_guid: str, body: dict | DeleteElementRequestBody) -> None:
+    def delete_schema_type(self, schema_type_guid: str, body: dict | MetadataSourceRequestBody) -> None:
         loop = asyncio.get_event_loop()
         loop.run_until_complete(self._async_delete_schema_type(schema_type_guid, body))
 
@@ -163,13 +166,13 @@ class SchemaMaker(ServerClient):
 
     @dynamic_catch
     async def _async_delete_schema_attribute(
-        self, schema_attribute_guid: str, body: dict | DeleteElementRequestBody
+        self, schema_attribute_guid: str, body: dict | MetadataSourceRequestBody
     ) -> None:
         url = f"{self.platform_url}/servers/{self.view_server}/api/open-metadata/schema-maker/schema-attributes/{schema_attribute_guid}/delete"
-        await self._async_delete_element_body_request(url, body)
+        await self._async_metadata_source_body_request(url, body)
 
     def delete_schema_attribute(
-        self, schema_attribute_guid: str, body: dict | DeleteElementRequestBody
+        self, schema_attribute_guid: str, body: dict | MetadataSourceRequestBody
     ) -> None:
         loop = asyncio.get_event_loop()
         loop.run_until_complete(self._async_delete_schema_attribute(schema_attribute_guid, body))
@@ -437,3 +440,69 @@ class SchemaMaker(ServerClient):
                 **kwargs,
             )
         )
+
+    @dynamic_catch
+    async def _async_create_schema_type_from_template(self, body: dict | TemplateRequestBody) -> str:
+        """Create a schema type from a template. Async version."""
+        url = f"{self.platform_url}/servers/{self.view_server}/api/open-metadata/schema-maker/schema-types/from-template"
+        return await self._async_create_element_from_template(url, body)
+
+    def create_schema_type_from_template(self, body: dict | TemplateRequestBody) -> str:
+        """Create a schema type from a template."""
+        loop = asyncio.get_event_loop()
+        return loop.run_until_complete(self._async_create_schema_type_from_template(body))
+
+    @dynamic_catch
+    async def _async_create_schema_attribute_from_template(self, body: dict | TemplateRequestBody) -> str:
+        """Create a schema attribute from a template. Async version."""
+        url = f"{self.platform_url}/servers/{self.view_server}/api/open-metadata/schema-maker/schema-attributes/from-template"
+        return await self._async_create_element_from_template(url, body)
+
+    def create_schema_attribute_from_template(self, body: dict | TemplateRequestBody) -> str:
+        """Create a schema attribute from a template."""
+        loop = asyncio.get_event_loop()
+        return loop.run_until_complete(self._async_create_schema_attribute_from_template(body))
+
+    @dynamic_catch
+    async def _async_get_schema_types_by_name(self, name: str, start_from: int = 0, page_size: int = 100, **kwargs) -> list | str:
+        """Get schema types by name. Async version."""
+        url = f"{self.platform_url}/servers/{self.view_server}/api/open-metadata/schema-maker/schema-types/by-name"
+        return await self._async_get_name_request(url, _type="SchemaType", _gen_output=self._generate_schema_output, name=name, start_from=start_from, page_size=page_size, **kwargs)
+
+    def get_schema_types_by_name(self, name: str, start_from: int = 0, page_size: int = 100, **kwargs) -> list | str:
+        """Get schema types by name."""
+        loop = asyncio.get_event_loop()
+        return loop.run_until_complete(self._async_get_schema_types_by_name(name, start_from, page_size, **kwargs))
+
+    @dynamic_catch
+    async def _async_get_schema_attributes_by_name(self, name: str, start_from: int = 0, page_size: int = 100, **kwargs) -> list | str:
+        """Get schema attributes by name. Async version."""
+        url = f"{self.platform_url}/servers/{self.view_server}/api/open-metadata/schema-maker/schema-attributes/by-name"
+        return await self._async_get_name_request(url, _type="SchemaAttribute", _gen_output=self._generate_schema_output, name=name, start_from=start_from, page_size=page_size, **kwargs)
+
+    def get_schema_attributes_by_name(self, name: str, start_from: int = 0, page_size: int = 100, **kwargs) -> list | str:
+        """Get schema attributes by name."""
+        loop = asyncio.get_event_loop()
+        return loop.run_until_complete(self._async_get_schema_attributes_by_name(name, start_from, page_size, **kwargs))
+
+    @dynamic_catch
+    async def _async_find_schema_attributes(self, search_string: str = "*", start_from: int = 0, page_size: int = 100, **kwargs) -> list | str:
+        """Find schema attributes. Async version."""
+        url = f"{self.platform_url}/servers/{self.view_server}/api/open-metadata/schema-maker/schema-attributes/by-search-string"
+        return await self._async_find_request(url, _type="SchemaAttribute", _gen_output=self._generate_schema_output, search_string=search_string, start_from=start_from, page_size=page_size, **kwargs)
+
+    def find_schema_attributes(self, search_string: str = "*", start_from: int = 0, page_size: int = 100, **kwargs) -> list | str:
+        """Find schema attributes."""
+        loop = asyncio.get_event_loop()
+        return loop.run_until_complete(self._async_find_schema_attributes(search_string, start_from, page_size, **kwargs))
+
+    @dynamic_catch
+    async def _async_get_schema_attribute_by_guid(self, guid: str, **kwargs) -> dict | str:
+        """Get schema attribute by GUID. Async version."""
+        url = f"{self.platform_url}/servers/{self.view_server}/api/open-metadata/schema-maker/schema-attributes/{guid}/retrieve"
+        return await self._async_get_guid_request(url, _type="SchemaAttribute", _gen_output=self._generate_schema_output, **kwargs)
+
+    def get_schema_attribute_by_guid(self, guid: str, **kwargs) -> dict | str:
+        """Get schema attribute by GUID."""
+        loop = asyncio.get_event_loop()
+        return loop.run_until_complete(self._async_get_schema_attribute_by_guid(guid, **kwargs))

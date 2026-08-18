@@ -1,9 +1,7 @@
 ___
 
-## Create Data Hub
-> Create a DataHub entity - a collection of data assets that are availble for sharing, as long as the requester satisfies the requirements laid down by the data owner.
->
->	**Alternative Names**: DataHub
+## Create Event Set
+> Create an Event Set - a collection of related event types.
 
 ### Display Name
 >	**Input Required**: True

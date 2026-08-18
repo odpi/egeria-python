@@ -3195,7 +3195,7 @@ class ServerClient(BaseServerClient):
             context = {"issue": "Invalid display name and body not provided"}
             raise PyegeriaInvalidParameterException(context=context)
 
-        url = f"{self.command_root}feedback-manager/notes/{note_guid}"
+        url = f"{self.command_root}feedback-manager/assets/{note_guid}/update"
         await self._async_update_element_body_request(url, ['Note'], body)
 
     @dynamic_catch
@@ -6230,13 +6230,14 @@ class ServerClient(BaseServerClient):
         return validated_body
 
     @dynamic_catch
-    def validate_open_metadata_delete_request(self, body: dict | OpenMetadataDeleteRequestBody) -> OpenMetadataDeleteRequestBody | None:
+    def validate_open_metadata_delete_request(self, body: Optional[dict | OpenMetadataDeleteRequestBody] = None) -> OpenMetadataDeleteRequestBody | None:
         if isinstance(body, OpenMetadataDeleteRequestBody):
             validated_body = body
         elif isinstance(body, dict):
             validated_body = self._validate_body(self._open_metadata_delete_request_adapter.validate_python, body)
-        else:
-            validated_body = None
+        else:  # handle case where body not provided
+            body = {"class": "OpenMetadataDeleteRequestBody"}
+            validated_body = self._validate_body(OpenMetadataDeleteRequestBody.model_validate, body)
         return validated_body
 
     @dynamic_catch
@@ -6473,7 +6474,7 @@ class ServerClient(BaseServerClient):
                                       start_from: int = 0, page_size: int = 0, output_format: str = "JSON",
                                       report_spec: Optional[str | dict] = None,
                                       body: Optional[dict | FilterRequestBody] = None,
-                                      max_mermaid_node_count=5, **kwargs) -> Any:
+                                      max_mermaid_node_count=10, **kwargs) -> Any:
 
         if isinstance(body, FilterRequestBody):
             validated_body = body
@@ -6521,17 +6522,30 @@ class ServerClient(BaseServerClient):
                                       skip_relationships: list[str] | None = None,
                                       graph_query_depth: int = 3,
                                       output_format: str = 'JSON', report_spec: Optional[str | dict] = None,
-                                      body: Optional[dict | GetRequestBody] = None, max_mermaid_node_count=5,
+                                      body: Optional[dict | GetRequestBody | ResultsRequestBody] = None,
+                                      max_mermaid_node_count=10,
+                                      body_model: type[GetRequestBody | ResultsRequestBody] = GetRequestBody,
                                       **kwargs) -> Any:
+        """Retrieve an element by GUID.
 
-        if isinstance(body, GetRequestBody):
+        `body_model` selects the request-body class to send. It defaults to
+        GetRequestBody, which is what nearly every endpoint reached through
+        this helper documents. A few endpoints document ResultsRequestBody
+        instead (e.g. governance-officer's .../graph); they pass it explicitly
+        rather than switching to _async_get_results_body_request, because only
+        this helper understands the singular "elementGraph" response key.
+        """
+        if isinstance(body, (GetRequestBody, ResultsRequestBody)):
             validated_body = body
         elif isinstance(body, dict):
-            validated_body = self._validate_body(self._get_request_adapter.validate_python, body)
+            adapter = (self._get_request_adapter.validate_python
+                       if body_model is GetRequestBody
+                       else self._results_request_adapter.validate_python)
+            validated_body = self._validate_body(adapter, body)
         else:
             _type = _type.replace(" ", "")
             body = {
-                "class": "GetRequestBody",
+                "class": body_model.__name__,
                 "metadataElementTypeName": _type,
                 "includeOnlyRelationships": include_only_relationships,
                 "skipRelationships": skip_relationships,
@@ -6539,7 +6553,7 @@ class ServerClient(BaseServerClient):
                 "maxMermaidNodeCount": max_mermaid_node_count,
                 **kwargs
             }
-            validated_body = self._validate_body(GetRequestBody.model_validate, body)
+            validated_body = self._validate_body(body_model.model_validate, body)
 
         json_body = validated_body.model_dump_json(indent=2, exclude_none=True)
 
@@ -6575,7 +6589,7 @@ class ServerClient(BaseServerClient):
                                               output_format: str = 'JSON',
                                               report_spec: Optional[str | dict] = None,
                                               body: Optional[dict | GetRequestBody] = None,
-                                              max_mermaid_node_count=5, graph_query_depth=5,
+                                              max_mermaid_node_count=10, graph_query_depth=5,
                                               **kwargs) -> Any:
         """Handles request; returns elements or formatted output
 
@@ -6632,7 +6646,7 @@ class ServerClient(BaseServerClient):
         skip_classified_elements: Optional[list[str]] = None,
         include_only_classified_elements: Optional[list[str]] = None,
         graph_query_depth: int = 3,
-        max_mermaid_node_count: int = 5,
+        max_mermaid_node_count: int = 10,
         governance_zone_filter: Optional[list[str]] = None,
         as_of_time: Optional[str] = None,
         effective_time: Optional[str] = None,
@@ -6804,7 +6818,7 @@ class ServerClient(BaseServerClient):
         skip_classified_elements: Optional[list[str]] = None,
         include_only_classified_elements: Optional[list[str]] = None,
         graph_query_depth: int = 3,
-        max_mermaid_node_count: int = 5,
+        max_mermaid_node_count: int = 10,
         governance_zone_filter: Optional[list[str]] = None,
         as_of_time: Optional[str] = None,
         effective_time: Optional[str] = None,
@@ -6930,7 +6944,7 @@ class ServerClient(BaseServerClient):
         skip_classified_elements: Optional[list[str]] = None,
         include_only_classified_elements: Optional[list[str]] = None,
         graph_query_depth: int = 3,
-        max_mermaid_node_count: int = 5,
+        max_mermaid_node_count: int = 10,
         governance_zone_filter: Optional[list[str]] = None,
         as_of_time: Optional[str] = None,
         effective_time: Optional[str] = None,
@@ -7185,12 +7199,32 @@ class ServerClient(BaseServerClient):
 
     @dynamic_catch
     async def _async_new_relationship_request(self, url: str, prop: Optional[list[str]] = None,
-                                              body: Optional[dict | NewRelationshipRequestBody] = None) -> None:
+                                              body: Optional[dict | NewRelationshipRequestBody] = None) -> Optional[str]:
+        """Create a new relationship. Async version.
+
+        Returns
+        -------
+        str | None
+            The GUID of the newly created relationship, if the server returned one
+            (confirmed live: Egeria's relationship-create endpoints return
+            {"class": "GUIDResponse", "guid": "..."}). Previously discarded entirely
+            here -- every _async_link_X wrapper built on this shared helper was
+            silently unable to report the new relationship's own identity, which
+            matters most for MULTI_LINK relationship types (see
+            ValidMetadataManager.get_all_relationship_defs()'s relationshipCategory
+            field) where a caller needs that GUID to target this specific instance
+            later via Update/Detach, since there can be more than one relationship
+            of the same type between the same pair of elements. Existing callers
+            that ignore the return value are unaffected -- this is purely additive.
+            None if the server response had no "guid" key (e.g. some relationship-
+            create endpoints may not return one) or no body was ultimately sent.
+        """
         validated_body = self.validate_new_relationship_request(body, prop)
         if validated_body:
             json_body = validated_body.model_dump_json(indent=2, exclude_none=True)
             logger.info(json_body)
-            await self._async_make_request("POST", url, json_body)
+            response = await self._async_make_request("POST", url, json_body)
+            return response.json().get("guid")
         else:
             if prop:
                 prop_class = prop[0] if isinstance(prop, list) else prop
@@ -7200,9 +7234,11 @@ class ServerClient(BaseServerClient):
                         "class": prop_class
                     }
                 }
-                await self._async_make_request("POST", url, body)
+                response = await self._async_make_request("POST", url, body)
+                return response.json().get("guid")
             else:
-                await self._async_make_request("POST", url)
+                response = await self._async_make_request("POST", url)
+                return response.json().get("guid")
 
     @dynamic_catch
     async def _async_new_classification_request(self, url: str, prop: Optional[list[str]] = None,

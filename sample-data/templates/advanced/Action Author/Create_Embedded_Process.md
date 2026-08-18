@@ -1,9 +1,7 @@
 ___
 
-## Create Data Hub
-> Create a DataHub entity - a collection of data assets that are availble for sharing, as long as the requester satisfies the requirements laid down by the data owner.
->
->	**Alternative Names**: DataHub
+## Create Embedded Process
+> Create a child process (EmbeddedProcess) running under the control of another process -- e.g. a documented step of a larger pipeline for lineage/audit purposes.
 
 ### Display Name
 >	**Input Required**: True
@@ -13,6 +11,40 @@ ___
 >	**Description**: The common name of an element.
 
 >	**Alternative Labels**: "Term Name"
+
+
+### Deployed Implementation Type
+>	**Input Required**: False
+
+>	**Attribute Type**: Simple
+
+>	**Description**: The implementation type for a deploymed resource.
+
+>	**Alternative Labels**: Deployed Impl Type
+
+
+### Namespace Path
+>	**Input Required**: False
+
+>	**Attribute Type**: Simple
+
+>	**Description**: The namespace path that qualifies the element's name within a larger naming hierarchy.
+
+
+### Resource Name
+>	**Input Required**: False
+
+>	**Attribute Type**: Simple
+
+>	**Description**: Name of a resource.
+
+
+### Priority
+>	**Input Required**: False
+
+>	**Attribute Type**: Simple Int
+
+>	**Description**: An integer priority for the project.
 
 
 ### Journal Entry
@@ -57,26 +89,6 @@ ___
 >	**Description**: The unique, text name of an element.
 
 
-### Content Status
->	**Input Required**: False
-
->	**Attribute Type**: Valid Value
-
->	**Description**: The lifecycle status of an element.
-
->	**Valid Values**: DRAFT,PREPARED,PROPOSED,APPROVED,REJECTED,ACTIVE,DEPRECATED,OTHER
-
->	**Default Value**: ACTIVE
-
-
-### Purpose
->	**Input Required**: False
-
->	**Attribute Type**: Simple
-
->	**Description**: The purpose of this collection — a short description of why it exists or what it is used for.
-
-
 ### Search Keywords
 >	**Input Required**: False
 
@@ -113,14 +125,6 @@ ___
 >	**Alternative Labels**: Version
 
 >	**Default Value**: 1.0
-
-
-### Authors
->	**Input Required**: False
-
->	**Attribute Type**: Simple List
-
->	**Description**: The authors.
 
 
 ### Effective From
@@ -419,12 +423,36 @@ ___
 >	**Description**: Optional security tags for security processing.
 
 
-### User Defined Content Status
+### Source
 >	**Input Required**: False
 
 >	**Attribute Type**: Simple
 
->	**Description**: A user defined content status = only valid if content status is OTHER.
+>	**Description**: The source of the information.
+
+
+### Formula
+>	**Input Required**: False
+
+>	**Attribute Type**: Simple
+
+>	**Description**: The logic implemented by this process, expressed in the language of the business rather than any one implementation language.
+
+
+### Formula Type
+>	**Input Required**: False
+
+>	**Attribute Type**: Simple
+
+>	**Description**: The specification language used to express the Formula (e.g. SQL, Python, natural language).
+
+
+### Expected Behaviour
+>	**Input Required**: False
+
+>	**Attribute Type**: Simple
+
+>	**Description**: The behaviour that this process/action is expected to have.
 
 
 ### User Defined Status

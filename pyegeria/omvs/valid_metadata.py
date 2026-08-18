@@ -7,11 +7,13 @@ Copyright Contributors to the ODPi Egeria project.
 """
 
 import asyncio
+import re
 from typing import Any, Optional
+from loguru import logger
 from pyegeria.core._server_client import ServerClient
 from pyegeria.core._validators import validate_guid
 from pyegeria.models import SearchStringRequestBody, ResultsRequestBody, FilterRequestBody, GetRequestBody, \
-    DeleteElementRequestBody
+    DeleteElementRequestBody, NewRelationshipRequestBody, DeleteRelationshipRequestBody
 from pyegeria.core.utils import dict_to_markdown_list, dynamic_catch, body_slimmer
 from pyegeria.core._globals import max_paging_size, NO_ELEMENTS_FOUND
 from pyegeria.view.base_report_formats import select_report_spec, get_report_spec_match
@@ -2646,6 +2648,183 @@ class ValidMetadataManager(ServerClient):
         )
 
     @dynamic_catch
+    async def _async_link_specification_property(
+            self, element_guid: str, vv_def_guid: str, body: Optional[dict | NewRelationshipRequestBody] = None) -> None:
+        """ Link an element to a valid value that represents one of its specification properties. Async version.
+
+        Parameters
+        __________
+        element_guid: str
+            Unique identifier of the element the specification property is attached to.
+        vv_def_guid: str
+            Unique identifier of the valid value definition representing the specification property.
+        body: dict | NewRelationshipRequestBody, optional
+            A dict representing the details of the relationship.
+
+        Returns
+        ______
+        None
+
+        Raises
+        ______
+        PyegeriaException
+        ValidationError
+
+        Notes
+        -----
+        Sample body:
+        {
+          "class" : "NewRelationshipRequestBody",
+          "properties" : {
+            "class" : "SpecificationPropertyAssignmentProperties",
+            "propertyName" : "add property name here"
+          },
+          "externalSourceGUID": "add guid here",
+          "externalSourceName": "add qualified name here",
+          "effectiveTime" : "{{$isoTimestamp}}",
+          "forLineage" : false,
+          "forDuplicateProcessing" : false
+        }
+
+        """
+        url = (f"{self.platform_url}/servers/{self.view_server}/api/open-metadata/valid-metadata/"
+               f"elements/{element_guid}/specification-properties/{vv_def_guid}/attach")
+        await self._async_new_relationship_request(url, ["SpecificationPropertyAssignmentProperties"], body)
+        logger.info(f"Linked specification property {vv_def_guid} to element {element_guid}")
+
+    @dynamic_catch
+    def link_specification_property(
+            self, element_guid: str, vv_def_guid: str, body: Optional[dict | NewRelationshipRequestBody] = None) -> None:
+        """ Link an element to a valid value that represents one of its specification properties.
+
+        Parameters
+        __________
+        element_guid: str
+            Unique identifier of the element the specification property is attached to.
+        vv_def_guid: str
+            Unique identifier of the valid value definition representing the specification property.
+        body: dict | NewRelationshipRequestBody, optional
+            A dict representing the details of the relationship.
+
+        Returns
+        ______
+        None
+
+        Raises
+        ______
+        PyegeriaException
+        ValidationError
+
+        Notes
+        -----
+        Sample body:
+        {
+          "class" : "NewRelationshipRequestBody",
+          "properties" : {
+            "class" : "SpecificationPropertyAssignmentProperties",
+            "propertyName" : "add property name here"
+          },
+          "externalSourceGUID": "add guid here",
+          "externalSourceName": "add qualified name here",
+          "effectiveTime" : "{{$isoTimestamp}}",
+          "forLineage" : false,
+          "forDuplicateProcessing" : false
+        }
+
+        """
+        loop = asyncio.get_event_loop()
+        loop.run_until_complete(self._async_link_specification_property(element_guid, vv_def_guid, body))
+
+    @dynamic_catch
+    async def _async_detach_specification_property(
+            self, element_guid: str, vv_def_guid: str, body: Optional[dict | DeleteRelationshipRequestBody] = None,
+            cascade_delete: bool = False) -> None:
+        """ Unlink an element from a valid value that represents one of its specification properties. Async version.
+
+        Parameters
+        __________
+        element_guid: str
+            Unique identifier of the element the specification property is attached to.
+        vv_def_guid: str
+            Unique identifier of the valid value definition representing the specification property.
+        body: dict | DeleteRelationshipRequestBody, optional
+            A dict representing the details of the relationship to remove.
+        cascade_delete: bool, default = False
+            Cascade the deletion through related elements.
+
+        Returns
+        ______
+        None
+
+        Raises
+        ______
+        PyegeriaException
+        ValidationError
+
+        Notes
+        -----
+        Sample body:
+
+        {
+          "class" : "DeleteRelationshipRequestBody",
+          "externalSourceGUID": "add guid here",
+          "externalSourceName": "add qualified name here",
+          "effectiveTime" : "{{$isoTimestamp}}",
+          "forLineage" : false,
+          "forDuplicateProcessing" : false
+        }
+
+        """
+        url = (f"{self.platform_url}/servers/{self.view_server}/api/open-metadata/valid-metadata/"
+               f"elements/{element_guid}/specification-properties/{vv_def_guid}/detach")
+        await self._async_delete_relationship_request(url, body, cascade_delete=cascade_delete)
+        logger.info(f"Detached specification property {vv_def_guid} from element {element_guid}")
+
+    @dynamic_catch
+    def detach_specification_property(
+            self, element_guid: str, vv_def_guid: str, body: Optional[dict | DeleteRelationshipRequestBody] = None,
+            cascade_delete: bool = False) -> None:
+        """ Unlink an element from a valid value that represents one of its specification properties.
+
+        Parameters
+        __________
+        element_guid: str
+            Unique identifier of the element the specification property is attached to.
+        vv_def_guid: str
+            Unique identifier of the valid value definition representing the specification property.
+        body: dict | DeleteRelationshipRequestBody, optional
+            A dict representing the details of the relationship to remove.
+        cascade_delete: bool, default = False
+            Cascade the deletion through related elements.
+
+        Returns
+        ______
+        None
+
+        Raises
+        ______
+        PyegeriaException
+        ValidationError
+
+        Notes
+        -----
+        Sample body:
+
+        {
+          "class" : "DeleteRelationshipRequestBody",
+          "externalSourceGUID": "add guid here",
+          "externalSourceName": "add qualified name here",
+          "effectiveTime" : "{{$isoTimestamp}}",
+          "forLineage" : false,
+          "forDuplicateProcessing" : false
+        }
+
+        """
+        loop = asyncio.get_event_loop()
+        loop.run_until_complete(
+            self._async_detach_specification_property(element_guid, vv_def_guid, body, cascade_delete))
+
+    @dynamic_catch
     async def _async_find_specification_property(
         self,
         search_string: str = "*",
@@ -2906,6 +3085,16 @@ class ValidMetadataManager(ServerClient):
               "sequencingProperty": ""
             }
             """
+
+        # ISSUE-17: this endpoint's specificationPropertyType query param expects the
+        # SCREAMING_SNAKE_CASE enum form (e.g. "PRODUCED_GUARD", confirmed against
+        # Egeria-api-valid-metadata.http's worked example), but the natural, most
+        # discoverable source of valid values -- get_specification_property_types()'s
+        # own stringMap -- returns PascalCase keys (e.g. "ProducedGuard") from a
+        # different server endpoint. Auto-convert PascalCase/camelCase input so callers
+        # can pass either form; leave an already-SCREAMING_SNAKE_CASE value untouched.
+        if spec_property_type and not spec_property_type.isupper():
+            spec_property_type = re.sub(r'(?<!^)(?=[A-Z])', '_', spec_property_type).upper()
 
         url = (f"{self.platform_url}/servers/{self.view_server}/api/open-metadata/valid-metadata/"
                f"specification-properties/by-type?specificationPropertyType={spec_property_type}")

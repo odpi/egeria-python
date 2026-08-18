@@ -267,7 +267,7 @@ class DataDesigner(ServerClient):
         """
         url = (
             f"{self.ref_data_designer_command_base}/data-value-specifications/{spec_guid}"
-            f"/specialized-data-value-specification-definition/{grain_guid}/detach"
+            f"/specialized-data-value-specifications/{grain_guid}/detach"
         )
         await self._async_delete_relationship_request(url, body, cascade_delete)
 
