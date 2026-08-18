@@ -317,6 +317,14 @@ class PyMethod:
     raw_url: str | None
     body_class: frozenset[str] | None
     lint: list[str] = field(default_factory=list)
+    # Every "url = ..." assignment seen in the method, canonicalised. Most
+    # methods have exactly one, so this always contains `path`. A method with
+    # if/else branches building a different URL per branch (e.g.
+    # RuntimeManager._async_refresh_gov_engine, one branch per whether an
+    # engine name was supplied) has more than one - ground truth may document
+    # either branch under the same or a different @name, and `path` alone
+    # (whichever assignment the walk sees first) isn't enough to match both.
+    all_paths: list[str] = field(default_factory=list)
 
 
 def _flatten(node: ast.AST, roots: dict[str, str]) -> str:
@@ -483,13 +491,20 @@ def parse_py_file(filepath: str, helper_verbs: dict[str, str],
                 if "/open-metadata/" in value:
                     fn_roots[target] = value
 
+        all_paths: list[str] = []
         for node in ast.walk(fn):
-            # url = ...
-            if (raw_url is None and isinstance(node, ast.Assign)
+            # url = ... - collect every assignment (if/else branches each get
+            # their own), not just the first one seen.
+            if (isinstance(node, ast.Assign)
                     and any(isinstance(t, ast.Name) and t.id == "url" for t in node.targets)):
-                raw_url = _flatten(node.value, fn_roots)
-                lint = lint_url(raw_url)
-                path = canon_path(raw_url)
+                branch_raw = _flatten(node.value, fn_roots)
+                branch_path = canon_path(branch_raw)
+                if raw_url is None:
+                    raw_url = branch_raw
+                    lint = lint_url(branch_raw)
+                    path = branch_path
+                if branch_path not in all_paths:
+                    all_paths.append(branch_path)
 
             # verb: a direct _async_make_request wins over any helper, because
             # some methods first call a GUID-resolution helper (which issues its
@@ -511,6 +526,7 @@ def parse_py_file(filepath: str, helper_verbs: dict[str, str],
         methods[fn.name] = PyMethod(
             name=fn.name, verb=direct_verb or helper_verb, path=path,
             raw_url=raw_url, body_class=helper_body or body_class, lint=lint,
+            all_paths=all_paths,
         )
 
     for sm in sync_names:
@@ -574,8 +590,11 @@ def audit(service_filter: str | None, report_path: str, quiet: bool,
     by_path: dict[tuple[str, str], list[tuple[str, str]]] = defaultdict(list)
     for svc, ms in py_by_service.items():
         for m, d in ms.items():
-            if d.verb and d.path:
-                by_path[(d.verb, d.path)].append((svc, m))
+            if not d.verb:
+                continue
+            for p in (d.all_paths or ([d.path] if d.path else [])):
+                if (svc, m) not in by_path[(d.verb, p)]:
+                    by_path[(d.verb, p)].append((svc, m))
 
     counts = defaultdict(int)
     lines: list[str] = []
@@ -660,7 +679,8 @@ def audit(service_filter: str | None, report_path: str, quiet: bool,
             issues = []
             if d.verb and d.verb != req.verb:
                 issues.append(f"VERB {d.verb} != {req.verb}")
-            if d.path and not paths_compatible(d.path, req.path):
+            candidate_paths = d.all_paths or ([d.path] if d.path else [])
+            if candidate_paths and not any(paths_compatible(p, req.path) for p in candidate_paths):
                 issues.append(f"PATH\n      SDK: {d.path}\n      API: {req.path}")
             # Mismatch only when the documented class is not among those the
             # SDK path accepts (several helpers accept a union).

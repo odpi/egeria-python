@@ -126,7 +126,7 @@ class RuntimeManager(ServerClient):
             organization_name
         )
         url = (
-            f"{self.runtime_command_root}/integration-daemon/"
+            f"{self.runtime_command_root}/integration-daemons/"
             f"{server_guid}/integration-connectors/{connector_name}/configuration-properties"
         )
         response = await self._async_make_request("GET", url)
@@ -273,7 +273,7 @@ class RuntimeManager(ServerClient):
             organization_name,
         )
         url = (
-            f"{self.runtime_command_root}/integration-daemon/"
+            f"{self.runtime_command_root}/integration-daemons/"
             f"{server_guid}/integration-connectors/configuration-properties"
         )
 
@@ -394,7 +394,7 @@ class RuntimeManager(ServerClient):
             server_guid, display_name, "qualifiedName", qualified_name, "Connection"
         )
         url = (
-            f"{self.runtime_command_root}/integration-daemon/"
+            f"{self.runtime_command_root}/integration-daemons/"
             f"{server_guid}/integration-connectors/{connector_name}/endpoint-network-address"
         )
 
@@ -453,6 +453,121 @@ class RuntimeManager(ServerClient):
             self._async_update_endpoint_address(
                 connector_name,
                 endpoint_address,
+                server_guid,
+                display_name,
+                qualified_name,
+                body,
+            )
+        )
+        return
+
+    async def _async_update_connector_connection(
+        self,
+        connector_name: str,
+        connection: Optional[dict] = None,
+        server_guid: Optional[str] = None,
+        display_name: Optional[str] = None,
+        qualified_name: Optional[str] = None,
+        body: Optional[dict] = None,
+    ) -> None:
+        """Update the connection for a specific integration connector.
+            This update is in memory and will not persist over a server restart. Async version.
+
+            https://egeria-project.org/concepts/integration-connector/
+
+        Parameters
+        ----------
+        server_guid : str, default = None
+            Identity of the server to act on. If not specified, qualified_name or server_name must be.
+        display_name: str, default = None
+            Name of server to act on. If not specified, server_guid or qualified_name must be.
+        qualified_name: str, default = None
+            Unique name of server to act on. If not specified, server_guid or server_name must be.
+        connector_name : str
+            Name of the integration connector to update the connection for.
+        connection : dict, optional
+            The new Connection to use for this connector.
+
+        body : dict, optional
+            Request body to pass directly to the API - overrides `connection` if supplied.
+
+        Returns
+        -------
+           None
+
+        Raises
+        ------
+        PyegeriaInvalidParameterException
+        PyegeriaAPIException
+        PyegeriaUnauthorizedException
+
+        Notes
+        -----
+        Sample JSON body:
+        ```json
+        {
+          "class" : "Connection"
+        }
+        ```
+        """
+        server_guid = self.__get_guid__(
+            server_guid, display_name, "qualifiedName", qualified_name, "Connection"
+        )
+        url = (
+            f"{self.runtime_command_root}/integration-daemons/"
+            f"{server_guid}/integration-connectors/{connector_name}/connection"
+        )
+
+        payload = body if body is not None else (connection if connection is not None else {"class": "Connection"})
+        await self._async_make_request("POST", url, payload)
+        return
+
+    def update_connector_connection(
+        self,
+        connector_name: str,
+        connection: Optional[dict] = None,
+        server_guid: Optional[str] = None,
+        display_name: Optional[str] = None,
+        qualified_name: Optional[str] = None,
+        body: Optional[dict] = None,
+    ) -> None:
+        """Update the connection for a specific integration connector.
+            This update is in memory and will not persist over a server restart.
+
+            https://egeria-project.org/concepts/integration-connector/
+
+        Parameters
+        ----------
+        server_guid : str, default = None
+            Identity of the server to act on. If not specified, qualified_name or server_name must be.
+        display_name: str, default = None
+            Name of server to act on. If not specified, server_guid or qualified_name must be.
+        qualified_name: str, default = None
+            Unique name of server to act on. If not specified, server_guid or server_name must be.
+        connector_name : str
+            Name of the integration connector to update the connection for.
+        connection : dict, optional
+            The new Connection to use for this connector.
+
+        body : dict, optional
+            Request body to pass directly to the API - overrides `connection` if supplied.
+
+        Returns
+        -------
+           None
+
+        Raises
+        ------
+        PyegeriaInvalidParameterException
+        PyegeriaAPIException
+        PyegeriaUnauthorizedException
+
+        """
+        loop = asyncio.get_event_loop()
+        loop.run_until_complete(
+            self._async_update_connector_connection(
+                connector_name,
+                connection,
                 server_guid,
                 display_name,
                 qualified_name,
@@ -842,17 +957,17 @@ class RuntimeManager(ServerClient):
             display_name,
             "qualifiedName",
             qualified_name,
-            "Governance Engine",
+            "Engine Host",
         )
 
         if gov_engine_name is None:
             url = (
-                f"{self.runtime_command_root}/governance-engines/"
-                f"{server_guid}/refresh-config"
+                f"{self.runtime_command_root}/engine-hosts/"
+                f"{server_guid}/governance-engines/refresh-config"
             )
         else:
             url = (
-                f"{self.runtime_command_root}/governance-engines/"
+                f"{self.runtime_command_root}/engine-hosts/"
                 f"{server_guid}/governance-engines/{gov_engine_name}/refresh-config"
             )
 
@@ -958,7 +1073,7 @@ class RuntimeManager(ServerClient):
             organization_name,
         )
         url = (
-            f"{self.runtime_command_root}/integration-daemon/"
+            f"{self.runtime_command_root}/integration-daemons/"
             f"{server_guid}/integration-groups/{integ_group_name}/refresh-config"
         )
 
@@ -1515,7 +1630,7 @@ class RuntimeManager(ServerClient):
             "Metadata Access Server",
         )
         url = (
-            f"{self.runtime_command_root}/metadata-access-stores/{server_guid}/instance/load/open-metadata-archives/"
+            f"{self.runtime_command_root}/omag-servers/{server_guid}/instance/load/open-metadata-archives/"
             f"archive-content"
         )
 
@@ -1626,7 +1741,7 @@ class RuntimeManager(ServerClient):
             "Metadata Access Server",
             organization_name=organization_name,
         )
-        url = f"{self.runtime_command_root}/metadata-access-stores/{server_guid}/instance/load/open-metadata-archives/file"
+        url = f"{self.runtime_command_root}/omag-servers/{server_guid}/instance/load/open-metadata-archives/file"
 
         payload = body if body else archive_file
         await self._async_make_request(
@@ -2407,6 +2522,57 @@ class RuntimeManager(ServerClient):
             self._async_get_platform_by_guid(platform_guid, graph_query_depth, output_format, report_spec, body)
         )
         return response
+
+    @dynamic_catch
+    async def _async_get_connector_type(self, platform_guid: str, java_class_name: str) -> dict | str:
+        """Return the connector type for the connector implemented by the named Java class, as registered on the
+            named platform. Async version.
+
+        Parameters
+        ----------
+        platform_guid : str
+            Unique id of the platform the connector is registered on.
+        java_class_name : str
+            Fully-qualified Java class name of the connector provider.
+
+        Returns
+        -------
+        dict | str
+            The connector type properties.
+
+        Raises
+        ------
+        PyegeriaException
+            If there are issues in communications, message format, or Egeria errors.
+        """
+        url = f"{self.runtime_command_root}/platforms/{platform_guid}/connector-types/{java_class_name}"
+        response = await self._async_make_request("GET", url)
+        return response.json()
+
+    @dynamic_catch
+    def get_connector_type(self, platform_guid: str, java_class_name: str) -> dict | str:
+        """Return the connector type for the connector implemented by the named Java class, as registered on the
+            named platform.
+
+        Parameters
+        ----------
+        platform_guid : str
+            Unique id of the platform the connector is registered on.
+        java_class_name : str
+            Fully-qualified Java class name of the connector provider.
+
+        Returns
+        -------
+        dict | str
+            The connector type properties.
+
+        Raises
+        ------
+        PyegeriaException
+            If there are issues in communications, message format, or Egeria errors.
+        """
+        loop = asyncio.get_event_loop()
+        return loop.run_until_complete(self._async_get_connector_type(platform_guid, java_class_name))
 
     @dynamic_catch
     async def _async_get_server_by_guid(
@@ -3706,6 +3872,139 @@ class RuntimeManager(ServerClient):
         """ Unregister from a specific cohort and disconnect from cohort communications (GET variant)."""
         loop = asyncio.get_event_loop()
         loop.run_until_complete(self._async_unregister_from_cohort_get(server_guid, cohort_name))
+
+    @dynamic_catch
+    async def _async_get_elements_by_category(
+        self,
+        category: str,
+        start_from: int = 0,
+        page_size: int = 100,
+        skip_relationships: list[str] | None = None,
+        relationships_page_size: int | None = None,
+        output_format: str = "JSON",
+        report_spec: str | dict = None,
+        body: Optional[dict | FilterRequestBody] = None,
+        **kwargs,
+    ) -> list | str:
+        """Retrieve elements by a value found in the category property (e.g. Egeria infrastructure elements).
+            The value must match exactly. A mermaidGraph of the results is also supplied. Async version.
+
+        https://egeria-project.org/types/
+
+        Parameters
+        ----------
+        category: str
+            The category value to retrieve elements for. Must match exactly.
+        start_from: int, default = 0
+            - index of the list to start from (0 for start).
+        page_size: int, default = 100
+            - maximum number of elements to return.
+        skip_relationships: list[str], optional
+            - relationship types to omit from the result graph.
+        relationships_page_size: int, optional
+            - maximum number of relationships to return per element.
+        output_format: str, default = "JSON"
+            Type of output to return.
+        report_spec: dict | str, default = None
+            Output format set to use. If None, the default output format set is used.
+        body: dict | FilterRequestBody, optional
+            - full request specification - if provided, overrides other parameters.
+
+        Returns
+        -------
+        [dict] | str
+            Returns a string if no elements found and a list of dict of elements with the results.
+
+        Raises
+        ------
+        PyegeriaException
+            If there are issues in communications, message format, or Egeria errors.
+
+        Notes
+        -----
+        Sample JSON body:
+        ```json
+        {
+          "class" : "FilterRequestBody",
+          "filter" : "Egeria Deployment",
+          "startFrom" : 0,
+          "pageSize": 100,
+          "skipRelationships": ["DeployedOn", "SourcedFrom"],
+          "relationshipsPageSize": 1000
+        }
+        ```
+        """
+        url = f"{self.runtime_command_root}/elements/by-category"
+
+        return await self._async_get_name_request(
+            url,
+            _type="Referenceable",
+            _gen_output=self._generate_referenceable_output,
+            filter_string=category,
+            start_from=start_from,
+            page_size=page_size,
+            skip_relationships=skip_relationships,
+            relationships_page_size=relationships_page_size,
+            output_format=output_format,
+            report_spec=report_spec,
+            body=body,
+            **kwargs,
+        )
+
+    @dynamic_catch
+    def get_elements_by_category(
+        self,
+        category: str,
+        start_from: int = 0,
+        page_size: int = 100,
+        skip_relationships: list[str] | None = None,
+        relationships_page_size: int | None = None,
+        output_format: str = "JSON",
+        report_spec: str | dict = None,
+        body: Optional[dict | FilterRequestBody] = None,
+        **kwargs,
+    ) -> list | str:
+        """Retrieve elements by a value found in the category property (e.g. Egeria infrastructure elements).
+            The value must match exactly. A mermaidGraph of the results is also supplied.
+
+        https://egeria-project.org/types/
+
+        Parameters
+        ----------
+        category: str
+            The category value to retrieve elements for. Must match exactly.
+        start_from: int, default = 0
+            - index of the list to start from (0 for start).
+        page_size: int, default = 100
+            - maximum number of elements to return.
+        skip_relationships: list[str], optional
+            - relationship types to omit from the result graph.
+        relationships_page_size: int, optional
+            - maximum number of relationships to return per element.
+        output_format: str, default = "JSON"
+            Type of output to return.
+        report_spec: dict | str, default = None
+            Output format set to use. If None, the default output format set is used.
+        body: dict | FilterRequestBody, optional
+            - full request specification - if provided, overrides other parameters.
+
+        Returns
+        -------
+        [dict] | str
+            Returns a string if no elements found and a list of dict of elements with the results.
+
+        Raises
+        ------
+        PyegeriaException
+            If there are issues in communications, message format, or Egeria errors.
+        """
+        loop = asyncio.get_event_loop()
+        return loop.run_until_complete(
+            self._async_get_elements_by_category(
+                category, start_from, page_size, skip_relationships, relationships_page_size,
+                output_format, report_spec, body, **kwargs
+            )
+        )
 
 
 if __name__ == "__main__":

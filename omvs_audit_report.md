@@ -5,10 +5,10 @@ Subject: `pyegeria/omvs` (44 modules)
 
 | Result | Count |
 |---|---|
-| OK | 706 |
+| OK | 708 |
 | Mismatch (verb/path/body) | 7 |
-| Missing | 45 |
-| Renamed (implemented, verb+path matches under a different name) | 184 |
+| Missing | 36 |
+| Renamed (implemented, verb+path matches under a different name) | 191 |
 | Found in another module | 18 |
 | URL lint | 0 |
 
@@ -19,6 +19,9 @@ _Review only - cross-service overlap is often intentional._
 - `GET /my-profile`
   - `my-profile.py`: `_async_get_my_profile`
   - `my-profile.py`: `_async_get_my_profile_by_get`
+- `GET /runtime-manager/engine-hosts/{}/governance-engines/refresh-config`
+  - `runtime-manager.py`: `_async_refresh_gov_eng_config`
+  - `runtime-manager.py`: `_async_refresh_gov_engine`
 - `GET /valid-metadata/get-valid-metadata-values/{}`
   - `valid-metadata.py`: `_async_get_valid_metadata_values`
   - `feedback-manager.py`: `_async_get_valid_metadata_values`
@@ -126,6 +129,9 @@ _Review only - cross-service overlap is often intentional._
 - `POST /product-manager/collections/{}/update`
   - `product-manager.py`: `_async_update_digital_product`
   - `product-manager.py`: `_async_update_digital_product_catalog`
+- `POST /runtime-manager/omag-servers/{}/instance/load/open-metadata-archives/file`
+  - `runtime-manager.py`: `_async_add_archive_file`
+  - `feedback-manager.py`: `_async_add_archive_file`
 - `POST /runtime-manager/platforms/by-deployed-implementation-type`
   - `runtime-manager.py`: `_async_get_platforms_by_type`
   - `runtime-manager.py`: `_async_get_platform_templates_by_type`
@@ -427,20 +433,18 @@ _Review only - cross-service overlap is often intentional._
 
 - getPlatformsByDeployedImplementationType: RENAMED -> `runtime-manager.py`:`_async_get_platforms_by_type`, `runtime-manager.py`:`_async_get_platform_templates_by_type`
 - getPlatformTemplatesByDeployedImplementationType: RENAMED -> `runtime-manager.py`:`_async_get_platforms_by_type`, `runtime-manager.py`:`_async_get_platform_templates_by_type`
-- Get Connector Type: MISSING  (`GET /runtime-manager/platforms/{}/connector-types/{}`)
-- getElementsByCategory: MISSING  (`POST /runtime-manager/elements/by-category`)
+- Get Connector Type: RENAMED -> `runtime-manager.py`:`_async_get_connector_type`
 - getOMAGServerReport: RENAMED -> `runtime-manager.py`:`_async_get_server_report`
 - activateWithStoredConfig: RENAMED -> `runtime-manager.py`:`_async_activate_server_with_stored_config`
-- getConfigurationProperties: MISSING  (`GET /runtime-manager/integration-daemons/{}/integration-connectors/{}/configuration-properties`)
-- updateConfigurationProperties: MISSING  (`POST /runtime-manager/integration-daemons/{}/integration-connectors/configuration-properties`)
-- updateEndpointNetworkAddress: MISSING  (`POST /runtime-manager/integration-daemons/{}/integration-connectors/{}/endpoint-network-address`)
-- updateConnectorConnection: MISSING  (`POST /runtime-manager/integration-daemons/{}/integration-connectors/{}/connection`)
+- getConfigurationProperties: RENAMED -> `runtime-manager.py`:`_async_get_integration_connector_config_properties`
+- updateConfigurationProperties: RENAMED -> `runtime-manager.py`:`_async_update_connector_configuration`
+- updateEndpointNetworkAddress: RENAMED -> `runtime-manager.py`:`_async_update_endpoint_address`
 - refreshConnectors: RENAMED -> `runtime-manager.py`:`_async_refresh_integration_connector`
 - restartConnectors: RENAMED -> `runtime-manager.py`:`_async_restart_connector`
-- refreshIntegrationGroupConfig: MISSING  (`GET /runtime-manager/integration-daemons/{}/integration-groups/{}/refresh-config`)
-- refreshConfig: MISSING  (`GET /runtime-manager/engine-hosts/{}/governance-engines/{}/refresh-config`)
-- addOpenMetadataArchiveFile: RENAMED -> `feedback-manager.py`:`_async_add_archive_file`
-- addOpenMetadataArchiveContent: MISSING  (`POST /runtime-manager/omag-servers/{}/instance/load/open-metadata-archives/archive-content`)
+- refreshIntegrationGroupConfig: RENAMED -> `runtime-manager.py`:`_async_refresh_integ_group_config`
+- refreshConfig: RENAMED -> `runtime-manager.py`:`_async_refresh_gov_eng_config`, `runtime-manager.py`:`_async_refresh_gov_engine`
+- addOpenMetadataArchiveFile: RENAMED -> `runtime-manager.py`:`_async_add_archive_file`, `feedback-manager.py`:`_async_add_archive_file`
+- addOpenMetadataArchiveContent: RENAMED -> `runtime-manager.py`:`_async_add_archive_content`
 
 ### Service: schema-maker
 
