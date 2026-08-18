@@ -10,7 +10,7 @@ from datetime import datetime
 from enum import Enum, StrEnum
 from typing import Literal, Annotated, Any, Optional, Dict
 
-from pydantic import BaseModel, Field, ConfigDict, root_validator, model_validator
+from pydantic import BaseModel, Field, ConfigDict, root_validator, model_validator, AliasChoices
 
 
 
@@ -292,6 +292,38 @@ class DeleteRequestBody(RequestBody):
 
 class DeleteElementRequestBody(RequestBody):
     class_: Annotated[Literal["DeleteElementRequestBody"], Field(alias="class")]
+    # Both fields were previously missing entirely -- PyegeriaModel's
+    # extra='ignore' meant a caller-supplied dict with "cascadeDelete"/
+    # "deleteMethod" validated successfully but silently dropped both values
+    # before serialization (confirmed directly via model_validate + dump,
+    # no live server needed: DataDesigner.delete_data_structure(guid,
+    # cascade_delete=True) -- and every other _async_delete_X wrapper that
+    # threads cascade_delete through _async_delete_element_request's
+    # no-body-provided path -- has never actually sent cascadeDelete in the
+    # outgoing request body). See PYEGERIA_ISSUES.md ISSUE-62.
+    #
+    # deleteMethod: confirmed via ground-truth .http reference files
+    # (Egeria-api-actor-manager.http and others) that real
+    # DeleteElementRequestBody bodies carry "deleteMethod" consistently --
+    # no spelling ambiguity found for this field.
+    delete_method: Optional[DeleteMethod] = None
+    # cascadeDelete: ground-truth .http files are genuinely split roughly
+    # 50/50 between "cascadeDelete" and "cascadedDelete" for this same class
+    # -- even within a single file (Egeria-api-actor-manager.http uses
+    # both). Not resolved here; "cascadeDelete" was chosen as the
+    # OUTGOING/serialized name because it's what this repo's own code has
+    # already been trying to send since before this fix
+    # (validate_delete_element_request's no-body-provided branch). Both
+    # spellings are accepted on input via validation_alias so a
+    # caller-supplied dict using either one still populates correctly.
+    # Flagged in PYEGERIA_ISSUES.md ISSUE-62 for live verification -- if a
+    # given delete endpoint actually expects "cascadedDelete" instead, this
+    # choice would need revisiting for that specific endpoint.
+    cascade_delete: Optional[bool] = Field(
+        default=None,
+        validation_alias=AliasChoices("cascadeDelete", "cascadedDelete"),
+        serialization_alias="cascadeDelete",
+    )
 
 
 class DeleteRelationshipRequestBody(RequestBody):

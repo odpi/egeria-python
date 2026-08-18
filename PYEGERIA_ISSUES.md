@@ -880,6 +880,98 @@ guid>)` confirms the relationship resolves correctly afterward.
 
 ---
 
+### ISSUE-62: `DeleteElementRequestBody` had no `cascadeDelete`/`deleteMethod` fields — `extra='ignore'` silently discarded both, not just left them unsupported
+
+**Status:** fixed 2026-08-18 (Pyegeria — `pyegeria/models/models.py`,
+`tests/micro-tests/test_delete_element_request_body.py`).
+
+Raised by dwolfson noticing `_async_delete_element_request` and its
+Pydantic model didn't appear to support `deleteMethod`. Investigation found
+two gaps, not one:
+
+1. **`deleteMethod` missing entirely.** Ground truth (`.http` reference
+   files, e.g. `Egeria-api-actor-manager.http` lines 1452-1460, 2127-2135,
+   2409+) shows real `DeleteElementRequestBody` bodies legitimately
+   carrying `"deleteMethod": "LOOK_FOR_LINEAGE"`; the pydantic model had no
+   such field. Same bug class as ISSUE-61's mention of
+   `DeleteRelationshipRequestBody.delete_method` (added 2026-08-17 for
+   `OMAG-COMMON-400-032`) — that sibling class got the fix, this one never
+   did.
+2. **`cascadeDelete` was *also* silently dropped, and already
+   live-impacting.** `validate_delete_element_request`'s no-body-provided
+   path builds `{"class": "DeleteElementRequestBody", "cascadeDelete":
+   cascade_delete}` and validates it against the same model. Since the
+   model had neither field and `PyegeriaModel`'s `extra='ignore'`, both
+   values vanished before serialization — confirmed directly (no live
+   server needed):
+   ```python
+   >>> DeleteElementRequestBody.model_validate(
+   ...     {'class': 'DeleteElementRequestBody', 'cascadeDelete': True, 'deleteMethod': 'PURGE'}
+   ... ).model_dump_json(exclude_none=True)
+   {"forLineage": false, "forDuplicateProcessing": false, "class": "DeleteElementRequestBody"}
+   ```
+   This wasn't hypothetical: every `_async_delete_X` wrapper that threads
+   `cascade_delete` through `_async_delete_element_request` (e.g.
+   `DataDesigner.delete_data_structure(guid, cascade_delete=True)`,
+   exercised in `tests/scenario-tests/test_data_designer_scenarios.py`) has
+   been silently sending `cascade_delete` as unset every time, regardless
+   of caller intent — Egeria falls back to its own non-cascading default
+   instead.
+
+Checked the adjacent classes for the same gap: `DeleteClassificationRequestBody`
+and `OpenMetadataDeleteRequestBody` both correctly have neither field —
+matches their real ground-truth bodies, no bug there. The gap was isolated
+to `DeleteElementRequestBody`.
+
+**Fix (deliberately scoped — see "Possible future work" below for what was
+declined):** added both fields directly to `DeleteElementRequestBody`,
+mirroring `DeleteRelationshipRequestBody`'s existing fix pattern:
+- `delete_method: Optional[DeleteMethod] = None` — no spelling ambiguity
+  found in ground truth for this one, uses the model's normal
+  `alias_generator` (→ `deleteMethod`).
+- `cascade_delete: Optional[bool] = None` with
+  `validation_alias=AliasChoices("cascadeDelete", "cascadedDelete")` and
+  `serialization_alias="cascadeDelete"`. Ground-truth `.http` files are
+  genuinely split roughly 50/50 between `cascadeDelete` and
+  `cascadedDelete` for this same class — even within a single file
+  (`Egeria-api-actor-manager.http` uses both). Not resolved here;
+  `cascadeDelete` was chosen as the *outgoing* name because it's what this
+  repo's own code (`validate_delete_element_request`'s no-body-provided
+  branch) has already been trying to send since before this fix. Both
+  spellings are accepted on input so a caller-supplied dict using either
+  one still populates correctly.
+
+No changes needed to `_server_client.py` — `validate_delete_element_request`'s
+existing shape was already correct in intent, it was purely the missing
+model fields silently eating the values. Verified: 5 new unit tests
+(`test_delete_element_request_body.py`) covering both-spelling validation,
+canonical-name serialization, and the actual outgoing JSON body via a
+mocked `_async_make_request` on both the no-body-provided and
+caller-supplied-dict paths; full `pytest tests/micro-tests/` passes.
+
+**Possible future work (deliberately not done here):** `_async_delete_element_request`
+still has no first-class `delete_method` parameter (only `cascade_delete`)
+— a caller wanting to set it today must hand-build a body dict rather than
+pass a kwarg, asymmetric with how `cascade_delete` already works. Adding
+one would mean threading it through every `_async_delete_X`/`delete_X`
+wrapper across most OMVS modules that currently thread `cascade_delete`
+(dozens of call sites, each with its own docstring/"Full sample body"
+block) — declined for this pass because (a) it's convenience, not a
+correctness fix, the model fix alone already unblocks any caller that
+passes a body dict or a `DeleteElementRequestBody` instance directly, and
+(b) not every delete endpoint necessarily accepts every `DeleteMethod`
+value uniformly (`deleteRelationshipInStore` already rejects its own
+default `LookForLineage` — see ISSUE-61's live-verification note — so
+Egeria's validation isn't uniform across delete routes), and rolling a new
+kwarg out to dozens of wrappers without live-verifying each endpoint's
+accepted values individually risks wiring up a parameter some routes will
+400 on. Also still open: the `cascadeDelete`/`cascadedDelete` spelling
+split above was never resolved against a live server per-endpoint — if a
+given delete endpoint actually expects `cascadedDelete`, this fix's choice
+would need revisiting for that specific endpoint.
+
+---
+
 ### ISSUE-59: `Create <X>` upsert commands (`upsert: true` in the compact spec) silently create a duplicate element, instead of updating in place, when the caller changes `### Qualified Name` to something the as-is lookup has never seen before — an explicit `### GUID` on the same command is also ignored for that lookup
 
 **Status:** fixed 2026-08-15 (Pyegeria/Dr.Egeria — `md_processing/v2/processors.py`).
