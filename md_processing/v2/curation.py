@@ -8,17 +8,25 @@ CurationClassifyProcessor -- Classify/Reclassify/Update/Declassify commands
 for: Impact, Confidence, Confidentiality, Criticality, Retention, Ownership,
 Digital Resource Origin, Zone Membership, Data Scope, Governance
 Expectations, Governance Measurements, Security Tags, Known Duplicate,
-Consolidated Duplicate.
+Consolidated Duplicate, Class Word, Modifier, Prime Word.
 
 CurationLinkProcessor -- Link/Unlink/Attach/Detach relationship commands
 for: Semantic Assignment, Semantic Definition, Scoped By, Peer Duplicate,
 Consolidated Duplicate Link, Resource List, and the create-side of Search
 Keyword.
 
-NOT implemented (no backing pyegeria method exists -- confirmed absent from
-ClassificationExplorer, not a wiring gap): Classify/Declassify Class Word,
-Modifier, Policy Management Point. These commands parse but are not
-registered with the dispatcher, so they stay parse-only, same as Create Note.
+ClassWord/Modifier/PrimeWord (0438 naming standards classifications) were
+added 2026-08-09 once Egeria PR #9166 shipped the backing REST endpoints
+(glossary-manager's is-class-word/is-modifier/is-prime-word) -- see the new
+set/clear method pairs in pyegeria/omvs/glossary_manager.py. They route
+through GlossaryManager, not ClassificationExplorer (the module docstring
+here previously said "no backing pyegeria method exists" for these three --
+no longer true for these; still true for Policy Management Point, which
+has no matching Egeria PR yet and stays parse-only.
+
+NOT implemented (no backing pyegeria method exists): Classify/Declassify
+Policy Management Point. This command parses but is not registered with
+the dispatcher, so it stays parse-only, same as Create Note.
 
 PARTIALLY implemented: Update/Detach Search Keyword need the previously
 -created SearchKeyword entity's own GUID, which the current compact-JSON
@@ -69,7 +77,7 @@ class ClassificationSpec:
 # Shared governance-classification fields (Impact/Confidence/Confidentiality/Criticality/Retention)
 # "Governance Status" (not "Status" -- that name collides with the universal Referenceable/
 # element-header "Status" attribute shared by nearly every other family; see PYEGERIA_ISSUES.md).
-_GOVERNANCE_SHARED_FIELDS = {"Governance Status": "status", "Steward": "steward", "Source": "source", "Description": "notes"}
+_GOVERNANCE_SHARED_FIELDS = {"Governance Status": "statusIdentifier", "Steward": "steward", "Source": "source", "Description": "notes"}
 
 CLASSIFICATION_METHODS: Dict[str, ClassificationSpec] = {
     # Keys are real Egeria classification type names (confirmed live via
@@ -109,6 +117,10 @@ CLASSIFICATION_METHODS: Dict[str, ClassificationSpec] = {
     "SecurityTags": ClassificationSpec(
         "_async_set_security_tags_classification", "_async_clear_security_tags_classification", "SecurityTagsProperties",
         fields={"Security Labels": "securityLabels", "Security Properties": "securityProperties"}),
+    "AccountingCodes": ClassificationSpec(
+        "_async_set_accounting_codes_classification", "_async_clear_accounting_codes_classification", "AccountingCodesProperties",
+        fields={"Accounting Code": "accountingCode", "Description": "description",
+                "Accounting Code List": "accountingCodeList", "Accounting Code Map": "accountingCodeMap"}),
     "DataScope": ClassificationSpec(
         "_async_add_data_scope", "_async_clear_data_scope", "DataScopeProperties",
         update_method="_async_update_data_scope",
@@ -126,6 +138,24 @@ CLASSIFICATION_METHODS: Dict[str, ClassificationSpec] = {
     "ConsolidatedDuplicate": ClassificationSpec(
         "_async_set_consolidated_duplicate_classification", "_async_clear_consolidated_duplicate_classification", "ConsolidatedDuplicateProperties",
         fields={"Duplicate Notes": "notes"}),
+    # 0438 naming standards classifications (Egeria PR #9166) -- marker classifications
+    # with no custom properties, routed through GlossaryManager (not
+    # ClassificationExplorer/classification_manager, unlike every other entry above --
+    # see CURATION_CLASSIFICATION_CLIENTS below and apply_changes()'s client selection).
+    "ClassWord": ClassificationSpec(
+        "_async_set_is_class_word", "_async_clear_is_class_word", "ClassWordProperties"),
+    "Modifier": ClassificationSpec(
+        "_async_set_is_modifier", "_async_clear_is_modifier", "ModifierProperties"),
+    "PrimeWord": ClassificationSpec(
+        "_async_set_is_prime_word", "_async_clear_is_prime_word", "PrimeWordProperties"),
+}
+
+# OM_TYPEs in CLASSIFICATION_METHODS whose set/clear methods live on a client other than
+# self.client.classification_manager (the default every other entry above uses).
+CURATION_CLASSIFICATION_CLIENTS = {
+    "ClassWord": "glossary_manager",
+    "Modifier": "glossary_manager",
+    "PrimeWord": "glossary_manager",
 }
 
 
@@ -166,7 +196,7 @@ class CurationClassifyProcessor(AsyncBaseCommandProcessor):
         if not element_guid:
             raise PyegeriaException(f"Could not resolve 'Target Element' for {verb} {object_type}")
 
-        client = self.client.classification_manager
+        client = getattr(self.client, CURATION_CLASSIFICATION_CLIENTS.get(om_type, "classification_manager"))
 
         if verb == "Declassify":
             body = {"class": "DeleteClassificationRequestBody", **_audit_fields(attributes)}

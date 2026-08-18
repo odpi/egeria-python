@@ -58,11 +58,11 @@ ___
 
 >	**Attribute Type**: Valid Value
 
->	**Description**: Status of a governance classification assignment.
+>	**Description**: Status of a governance classification assignment, looked up from the statusIdentifier valid value set. Accepts the current display name or a preferred-value integer.
 
->	**Valid Values**: PROPOSED,VALIDATED,DEPRECATED,OBSOLETE,OTHER
+>	**Valid Values**: Discovered,Proposed,Imported,Validated,Deprecated,Obsolete,Other
 
->	**Default Value**: VALIDATED
+>	**Default Value**: Validated
 
 
 ___

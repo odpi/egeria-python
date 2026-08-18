@@ -6865,6 +6865,270 @@ class ClassificationExplorer(ServerClient):
             self._async_remove_resource_from_element(resource_guid, element_guid, body)
         )
 
+    @dynamic_catch
+    async def _async_get_resource_list(
+            self,
+            element_guid: str,
+            start_from: int = 0,
+            page_size: int = 0,
+            output_format: str = "JSON",
+            report_spec: dict | str = None,
+            body: Optional[dict | ResultsRequestBody] = None,
+            **kwargs
+    ) -> list | str:
+        """
+            Retrieve the resources linked via the ResourceList relationship to the requested element. Async version.
+
+            ResourceList: https://egeria-project.org/types/0/0019-More-Information/
+
+        Parameters
+        __________
+        element_guid: str
+            Element to retrieve information for.
+        start_from: int, default = 0
+            When multiple pages of results are available, the element number to start from.
+        page_size: int, default = 0
+            The number of elements returned per page.
+        output_format: str, default = "JSON"
+            Type of output to return.
+        report_spec: dict | str, default = None
+            Output format set to use. If None, the default output format set is used.
+        body: dict | ResultsRequestBody
+            Details of the query.
+
+        Returns
+        -------
+        [dict] | str
+            Returns a string if no elements found and a list of dict of elements with the results.
+
+        Raises
+        ------
+        PyegeriaException
+
+        Notes
+        -----
+        Sample body:
+
+        {
+            "class": "ResultsRequestBody",
+            "effectiveTime": "{{$isoTimestamp}}",
+            "asOfTime": "{{$isoTimestamp}}",
+            "forLineage": false,
+            "forDuplicateProcessing": false,
+            "metadataElementTypeName": "Referenceable",
+            "limitResultsByStatus": [ "ACTIVE", "DRAFT"],
+            "sequencingProperty": "???",
+            "sequencingOrder": "LAST_UPDATE_RECENT"
+        }
+
+        """
+
+        url = (f"{self.classification_command_root}/elements/{element_guid}/resource-list")
+
+        response = await self._async_get_results_body_request(url, "Referenceable", self._generate_referenceable_output,
+                                                              start_from=start_from, page_size=page_size,
+                                                              output_format=output_format,
+                                                              report_spec=report_spec, body=body, **kwargs)
+        return response
+
+    @dynamic_catch
+    def get_resource_list(
+            self,
+            element_guid: str,
+            start_from: int = 0,
+            page_size: int = 0,
+            output_format: str = "JSON",
+            report_spec: dict | str = None,
+            body: Optional[dict | ResultsRequestBody] = None,
+            **kwargs
+    ) -> list | str:
+        """
+            Retrieve the resources linked via the ResourceList relationship to the requested element.
+
+            ResourceList: https://egeria-project.org/types/0/0019-More-Information/
+
+        Parameters
+        __________
+        element_guid: str
+            Element to retrieve information for.
+        start_from: int, default = 0
+            When multiple pages of results are available, the element number to start from.
+        page_size: int, default = 0
+            The number of elements returned per page.
+        output_format: str, default = "JSON"
+            Type of output to return.
+        report_spec: dict | str, default = None
+            Output format set to use. If None, the default output format set is used.
+        body: dict | ResultsRequestBody
+            Details of the query.
+
+        Returns
+        -------
+        [dict] | str
+            Returns a string if no elements found and a list of dict of elements with the results.
+
+        Raises
+        ------
+        PyegeriaException
+
+        Notes
+        -----
+        Sample body:
+
+        {
+            "class": "ResultsRequestBody",
+            "effectiveTime": "{{$isoTimestamp}}",
+            "asOfTime": "{{$isoTimestamp}}",
+            "forLineage": false,
+            "forDuplicateProcessing": false,
+            "metadataElementTypeName": "Referenceable",
+            "limitResultsByStatus": [ "ACTIVE", "DRAFT"],
+            "sequencingProperty": "???",
+            "sequencingOrder": "LAST_UPDATE_RECENT"
+        }
+
+        """
+
+        loop = asyncio.get_event_loop()
+        response = loop.run_until_complete(
+            self._async_get_resource_list(element_guid, start_from, page_size, output_format,
+                                            report_spec, body, **kwargs)
+        )
+        return response
+
+    @dynamic_catch
+    async def _async_get_supported_by_resource(
+            self,
+            resource_guid: str,
+            start_from: int = 0,
+            page_size: int = 0,
+            output_format: str = "JSON",
+            report_spec: dict | str = None,
+            body: Optional[dict | ResultsRequestBody] = None,
+            **kwargs
+    ) -> list | str:
+        """
+            Retrieve the elements linked via the ResourceList relationship to the requested resource -- ie the
+            elements that this resource supports. Async version.
+
+            ResourceList: https://egeria-project.org/types/0/0019-More-Information/
+
+        Parameters
+        __________
+        resource_guid: str
+            Resource to retrieve the supported elements for.
+        start_from: int, default = 0
+            When multiple pages of results are available, the element number to start from.
+        page_size: int, default = 0
+            The number of elements returned per page.
+        output_format: str, default = "JSON"
+            Type of output to return.
+        report_spec: dict | str, default = None
+            Output format set to use. If None, the default output format set is used.
+        body: dict | ResultsRequestBody
+            Details of the query.
+
+        Returns
+        -------
+        [dict] | str
+            Returns a string if no elements found and a list of dict of elements with the results.
+
+        Raises
+        ------
+        PyegeriaException
+
+        Notes
+        -----
+        Sample body:
+
+        {
+            "class": "ResultsRequestBody",
+            "effectiveTime": "{{$isoTimestamp}}",
+            "asOfTime": "{{$isoTimestamp}}",
+            "forLineage": false,
+            "forDuplicateProcessing": false,
+            "metadataElementTypeName": "Referenceable",
+            "limitResultsByStatus": [ "ACTIVE", "DRAFT"],
+            "sequencingProperty": "???",
+            "sequencingOrder": "LAST_UPDATE_RECENT"
+        }
+
+        """
+
+        url = (f"{self.classification_command_root}/elements/resource-list/{resource_guid}")
+
+        response = await self._async_get_results_body_request(url, "Referenceable", self._generate_referenceable_output,
+                                                              start_from=start_from, page_size=page_size,
+                                                              output_format=output_format,
+                                                              report_spec=report_spec, body=body, **kwargs)
+        return response
+
+    @dynamic_catch
+    def get_supported_by_resource(
+            self,
+            resource_guid: str,
+            start_from: int = 0,
+            page_size: int = 0,
+            output_format: str = "JSON",
+            report_spec: dict | str = None,
+            body: Optional[dict | ResultsRequestBody] = None,
+            **kwargs
+    ) -> list | str:
+        """
+            Retrieve the elements linked via the ResourceList relationship to the requested resource -- ie the
+            elements that this resource supports.
+
+            ResourceList: https://egeria-project.org/types/0/0019-More-Information/
+
+        Parameters
+        __________
+        resource_guid: str
+            Resource to retrieve the supported elements for.
+        start_from: int, default = 0
+            When multiple pages of results are available, the element number to start from.
+        page_size: int, default = 0
+            The number of elements returned per page.
+        output_format: str, default = "JSON"
+            Type of output to return.
+        report_spec: dict | str, default = None
+            Output format set to use. If None, the default output format set is used.
+        body: dict | ResultsRequestBody
+            Details of the query.
+
+        Returns
+        -------
+        [dict] | str
+            Returns a string if no elements found and a list of dict of elements with the results.
+
+        Raises
+        ------
+        PyegeriaException
+
+        Notes
+        -----
+        Sample body:
+
+        {
+            "class": "ResultsRequestBody",
+            "effectiveTime": "{{$isoTimestamp}}",
+            "asOfTime": "{{$isoTimestamp}}",
+            "forLineage": false,
+            "forDuplicateProcessing": false,
+            "metadataElementTypeName": "Referenceable",
+            "limitResultsByStatus": [ "ACTIVE", "DRAFT"],
+            "sequencingProperty": "???",
+            "sequencingOrder": "LAST_UPDATE_RECENT"
+        }
+
+        """
+
+        loop = asyncio.get_event_loop()
+        response = loop.run_until_complete(
+            self._async_get_supported_by_resource(resource_guid, start_from, page_size, output_format,
+                                                    report_spec, body, **kwargs)
+        )
+        return response
+
     async def _async_add_more_information(
             self,
             more_info_guid: str,
@@ -10142,6 +10406,257 @@ class ClassificationExplorer(ServerClient):
             )
         )
 
+    async def _async_set_accounting_codes_classification(
+            self,
+            element_guid: str,
+            body: dict | NewClassificationRequestBody,
+            timeout: int = default_timeout,
+    ) -> None:
+        """
+        Add or replace the accounting codes for an element. Async version.
+
+        Accounting Codes: https://egeria-project.org/types/7/0715-Digital-Business/
+
+        Parameters
+        ----------
+        element_guid: str
+            - the identity of the element to update
+        body: dict | NewClassificationRequestBody
+            - a dictionary or Pydantic model containing the properties to set - see note below
+
+        timeout: int, default = default_timeout
+            - http request timeout for this request
+
+        Returns
+        -------
+        None
+
+        Raises
+        ------
+        PyegeriaException
+
+        Note:
+        -----
+        Sample body:
+
+        {
+           "class" : "NewClassificationRequestBody",
+           "properties" : {
+               "class" : "AccountingCodesProperties",
+               "accountingCode" : "Add accounting code here",
+               "description" : "Add description here",
+               "accountingCodeList" : [ "Code1", "Code2" ],
+               "accountingCodeMap" : {
+                   "name1" : "code1",
+                   "name2" : "code2"
+               }
+           },
+           "externalSourceGUID": "Add guid here",
+           "externalSourceName": "Add qualified name here",
+           "forLineage": false,
+           "forDuplicateProcessing": false,
+           "effectiveTime" : "isoTimestamp"
+        }
+        """
+
+        url = (
+            f"{self.classification_command_root}/elements/{element_guid}/accounting-codes"
+        )
+
+        await self._async_new_classification_request(
+            url, prop=["AccountingCodesProperties"], body=body
+        )
+
+    def set_accounting_codes_classification(
+            self,
+            element_guid: str,
+            body: dict | NewClassificationRequestBody,
+            timeout: int = default_timeout,
+    ) -> None:
+        """
+        Add or replace the accounting codes for an element.
+
+        Accounting Codes: https://egeria-project.org/types/7/0715-Digital-Business/
+
+        Parameters
+        ----------
+        element_guid: str
+            - the identity of the element to update
+        body: dict | NewClassificationRequestBody
+            - a dictionary or Pydantic model containing the properties to set - see note below
+
+        timeout: int, default = default_timeout
+            - http request timeout for this request
+
+        Returns
+        -------
+        None
+
+        Raises
+        ------
+        PyegeriaException
+
+        Note:
+        -----
+        Sample body:
+
+        {
+           "class" : "NewClassificationRequestBody",
+           "properties" : {
+               "class" : "AccountingCodesProperties",
+               "accountingCode" : "Add accounting code here",
+               "description" : "Add description here",
+               "accountingCodeList" : [ "Code1", "Code2" ],
+               "accountingCodeMap" : {
+                   "name1" : "code1",
+                   "name2" : "code2"
+               }
+           },
+           "externalSourceGUID": "Add guid here",
+           "externalSourceName": "Add qualified name here",
+           "forLineage": false,
+           "forDuplicateProcessing": false,
+           "effectiveTime" : "isoTimestamp"
+        }
+        """
+
+        loop = asyncio.get_event_loop()
+        loop.run_until_complete(
+            self._async_set_accounting_codes_classification(
+                element_guid,
+                body,
+                timeout,
+            )
+        )
+
+    async def _async_clear_accounting_codes_classification(
+            self,
+            element_guid: str,
+            body: Optional[dict | DeleteClassificationRequestBody] = None,
+            for_lineage: bool = False,
+            for_duplicate_processing: bool = False,
+            effective_time: Optional[str] = None,
+            timeout: int = default_timeout,
+    ) -> None:
+        """
+        Remove the accounting-codes classification from the element. Async version.
+
+        Accounting Codes: https://egeria-project.org/types/7/0715-Digital-Business/
+
+        Parameters
+        ----------
+        element_guid: str
+            - the identity of the element to update
+        body: dict | DeleteClassificationRequestBody, default = None
+            - a dictionary or Pydantic model containing the properties for the request - see note below
+        for_lineage: bool, default is set by server
+            - determines if elements classified as Memento should be returned - normally false
+        for_duplicate_processing: bool, default is set by server
+            - Normally false. Set true when the caller is part of a deduplication function
+        effective_time: str, default = None
+            - Time format is "YYYY-MM-DDTHH:MM:SS" (ISO 8601)
+        timeout: int, default = default_timeout
+            - http request timeout for this request
+
+        Returns
+        -------
+           None
+
+        Raises
+        ------
+        PyegeriaException
+
+        Note:
+        -----
+        Sample body:
+
+        {
+           "class" : "DeleteClassificationRequestBody",
+           "externalSourceGUID": "Add guid here",
+           "externalSourceName": "Add qualified name here",
+           "forLineage": false,
+           "forDuplicateProcessing": false,
+           "effectiveTime" : "isoTimestamp"
+        }
+
+        """
+
+        url = (
+            f"{self.classification_command_root}/elements/{element_guid}/accounting-codes/remove"
+        )
+
+        if body is None:
+            body = {"class": "DeleteClassificationRequestBody", "effectiveTime": effective_time, "forLineage": for_lineage,
+                    "forDuplicateProcessing": for_duplicate_processing}
+
+        await self._async_delete_classification_request(url, body)
+
+    def clear_accounting_codes_classification(
+            self,
+            element_guid: str,
+            body: Optional[dict | DeleteClassificationRequestBody] = None,
+            for_lineage: bool = False,
+            for_duplicate_processing: bool = False,
+            effective_time: Optional[str] = None,
+            timeout: int = default_timeout,
+    ) -> None:
+        """
+        Remove the accounting-codes classification from the element.
+
+        Accounting Codes: https://egeria-project.org/types/7/0715-Digital-Business/
+
+        Parameters
+        ----------
+        element_guid: str
+            - the identity of the element to update
+        body: dict | DeleteClassificationRequestBody, default = None
+            - a dictionary or Pydantic model containing the properties for the request - see note below
+        for_lineage: bool, default is set by server
+            - determines if elements classified as Memento should be returned - normally false
+        for_duplicate_processing: bool, default is set by server
+            - Normally false. Set true when the caller is part of a deduplication function
+        effective_time: str, default = None
+           - Time format is "YYYY-MM-DDTHH:MM:SS" (ISO 8601)
+
+
+        timeout: int, default = default_timeout
+            - http request timeout for this request
+
+        Returns
+        -------
+           None
+
+        Raises
+        ------
+        PyegeriaException
+
+        Note:
+        -----
+        Sample body:
+
+        {
+           "class" : "DeleteClassificationRequestBody",
+           "externalSourceGUID": "Add guid here",
+           "externalSourceName": "Add qualified name here",
+           "forLineage": false,
+           "forDuplicateProcessing": false,
+           "effectiveTime" : "isoTimestamp"
+        }
+
+        """
+
+        loop = asyncio.get_event_loop()
+        loop.run_until_complete(
+            self._async_clear_accounting_codes_classification(
+                element_guid,
+                body,
+                for_lineage,
+                for_duplicate_processing,
+                effective_time,
+                timeout,
+            )
+        )
+
     async def _async_add_search_keyword_to_element(
             self,
             element_guid: str,
@@ -10834,10 +11349,10 @@ class ClassificationExplorer(ServerClient):
         """
 
         url = (
-            f"{self.classification_command_root}/elements/{element_guid}/peer-duplicate/{peer_duplicate_guid}/detach"
+            f"{self.classification_command_root}/related-elements/{element_guid}/peer-duplicate/{peer_duplicate_guid}/detach"
         )
 
-        await self._async_delete_classification_request(url, body)
+        await self._async_delete_relationship_request(url, body)
 
     def unlink_elements_as_peer_duplicates(
             self,
@@ -11189,7 +11704,7 @@ class ClassificationExplorer(ServerClient):
         """
 
         url = (
-            f"{self.classification_command_root}/elements/{element_guid}/consolidated-duplicate-source/{source_element_guid}/attach"
+            f"{self.classification_command_root}/related-elements/{element_guid}/consolidated-duplicate-source/{source_element_guid}/attach"
         )
 
         return await self._async_new_relationship_request(
@@ -11305,7 +11820,7 @@ class ClassificationExplorer(ServerClient):
         """
 
         url = (
-            f"{self.classification_command_root}/elements/{element_guid}/consolidated-duplicate-source/{source_element_guid}/detach"
+            f"{self.classification_command_root}/related-elements/{element_guid}/consolidated-duplicate-source/{source_element_guid}/detach"
         )
 
         await self._async_delete_relationship_request(url, body)

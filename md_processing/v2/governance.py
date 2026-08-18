@@ -342,6 +342,7 @@ class GovernanceLinkProcessor(AsyncBaseCommandProcessor):
             "Monitored Resource": (("Notification Type", "Monitoring Control"), "Monitored Resource"),
             "Regulation Certification Type": ("Regulation", "Certification Type"),
             "Regulator": ("Regulation", "Organization Reference"),
+            "Governance Results": ("Governance Metric", "Data Asset"),
         }
 
         endpoint_keys = endpoint_map.get(object_type)
@@ -368,6 +369,12 @@ class GovernanceLinkProcessor(AsyncBaseCommandProcessor):
             )
 
         if verb in established_verbs:
+            # Populated only for MULTI_LINK relationship types (see
+            # pyegeria.core.relationship_multiplicity) where the relationship's
+            # own GUID is needed to target this specific instance later via
+            # Update/Detach -- e.g. GovernanceLinkProcessor's own Detach branch
+            # below already requires this GUID for Certification/License.
+            new_rel_guid = None
             if object_type in {"Governance Drivers", "Governance Policies", "Governance Controls"}:
                 rel_type = om_type or {
                     "Governance Drivers": "GovernanceDriverLink",
@@ -451,7 +458,7 @@ class GovernanceLinkProcessor(AsyncBaseCommandProcessor):
                         "effectiveTo": attributes.get("Effective To", {}).get("value"),
                     },
                 })
-                await self.client._async_add_certification_to_element(left_guid, right_guid, body)
+                new_rel_guid = await self.client._async_add_certification_to_element(left_guid, right_guid, body)
 
             elif object_type == "License":
                 body = body_slimmer({
@@ -478,7 +485,7 @@ class GovernanceLinkProcessor(AsyncBaseCommandProcessor):
                         "effectiveTo": attributes.get("Effective To", {}).get("value"),
                     },
                 })
-                await self.client._async_add_license_to_element(left_guid, right_guid, body)
+                new_rel_guid = await self.client._async_add_license_to_element(left_guid, right_guid, body)
 
             elif object_type == "Agreement T&C":
                 body = body_slimmer({
@@ -496,7 +503,7 @@ class GovernanceLinkProcessor(AsyncBaseCommandProcessor):
                         "effectiveTo": attributes.get("Effective To", {}).get("value"),
                     },
                 })
-                await self.client._async_link_agreement_item(left_guid, right_guid, body)
+                new_rel_guid = await self.client._async_link_agreement_item(left_guid, right_guid, body)
 
             elif object_type in {"Associated Group", "Regulation Certification Type"}:
                 rel_map = {
@@ -514,7 +521,17 @@ class GovernanceLinkProcessor(AsyncBaseCommandProcessor):
                 })
                 await self.client._async_link_monitored_resource(left_guid, right_guid, body)
 
+            elif object_type == "Governance Results":
+                body = body_slimmer({
+                    "class": "NewRelationshipRequestBody",
+                    "properties": set_rel_prop_body(object_type, attributes)
+                })
+                await self.client._async_link_governance_results(left_guid, right_guid, body)
+
             logger.success(f"Linked Governance {object_type}")
+            if new_rel_guid:
+                self.parsed_output["guid"] = new_rel_guid
+                return f"\n\n# {verb} {object_type}\n\nCreated relationship {new_rel_guid} between {left_guid} and {right_guid}."
             return f"\n\n# {verb} {object_type}\n\nOperation completed."
 
         elif verb in remove_verbs:
@@ -561,6 +578,9 @@ class GovernanceLinkProcessor(AsyncBaseCommandProcessor):
 
             elif object_type == "Monitored Resource":
                 await self.client._async_detach_monitored_resource(left_guid, right_guid, body)
+
+            elif object_type == "Governance Results":
+                await self.client._async_detach_governance_results(left_guid, right_guid, body)
 
             elif object_type in {"Certification", "License"}:
                 rel_guid = self._resolve_relationship_guid(object_type, attributes)

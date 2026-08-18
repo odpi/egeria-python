@@ -2677,6 +2677,25 @@
       "max_cardinality": 1,
       "level": "Domain",
       "Journal Entry": "The status of the term relationship. Enum values (TermRelationshipStatus): DRAFT, ACTIVE, DEPRECATED, OBSOLETE, OTHER."
+    },
+    "Valid Value Set": {
+      "variable_name": "valid_value_set",
+      "inUpdate": false,
+      "attr_labels": "Valid Value Definition",
+      "examples": "",
+      "default_value": "",
+      "valid_values": [],
+      "existing_element": "ValidValueDefinition",
+      "description": "The valid value set/definition that defines the allowed values for this element (ValidValuesAssignment relationship).",
+      "generated": false,
+      "style": "Reference Name",
+      "user_specified": true,
+      "unique": false,
+      "input_required": true,
+      "min_cardinality": 1,
+      "max_cardinality": 1,
+      "level": "Domain",
+      "Journal Entry": ""
     }
   },
   "bundles": {
@@ -2841,6 +2860,13 @@
         "Source",
         "Steward",
         "Term Relationship Status"
+      ]
+    },
+    "Question Valid Values Base": {
+      "inherits": "Request Base",
+      "own_attributes": [
+        "Term 1",
+        "Valid Value Set"
       ]
     }
   },
@@ -3036,6 +3062,44 @@
       "custom_attributes": [
         "Term Name"
       ],
+      "Journal Entry": ""
+    },
+    "Link Question to Valid Values": {
+      "display_name": "Question to Valid Values",
+      "qn_prefix": "",
+      "alternate_names": [],
+      "family": "Glossary",
+      "description": "Link a Question (GlossaryTerm) to the ValidValueSet defining how to interpret its answer (ValidValuesAssignment relationship).",
+      "verb": "Link",
+      "upsert": false,
+      "attach": false,
+      "level": "Basic",
+      "find_method": "",
+      "find_constraints": "",
+      "extra_find": "",
+      "extra_constraints": "",
+      "OM_TYPE": "ValidValuesAssignment",
+      "bundle": "Question Valid Values Base",
+      "custom_attributes": [],
+      "Journal Entry": ""
+    },
+    "Detach Question from Valid Values": {
+      "display_name": "Question from Valid Values",
+      "qn_prefix": "",
+      "alternate_names": [],
+      "family": "Glossary",
+      "description": "Remove the ValidValuesAssignment relationship between a Question (GlossaryTerm) and its ValidValueSet.",
+      "verb": "Detach",
+      "upsert": false,
+      "attach": false,
+      "level": "Basic",
+      "find_method": "",
+      "find_constraints": "",
+      "extra_find": "",
+      "extra_constraints": "",
+      "OM_TYPE": "ValidValuesAssignment",
+      "bundle": "Question Valid Values Base",
+      "custom_attributes": [],
       "Journal Entry": ""
     }
   }

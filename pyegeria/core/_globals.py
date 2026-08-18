@@ -41,7 +41,25 @@ def resolve_enum(enum_class: type[Enum], value: str | int) -> int | None:
 is_debug = False
 disable_ssl_warnings = True
 enable_ssl_check = False
-max_paging_size = 500
+
+# Default page size for paged find/relationship queries. Env-configurable
+# (EGERIA_MAX_PAGE_SIZE / "Egeria Max Page Size" in config.json/.env, see
+# pyegeria.core.config.EnvironmentConfig) so a future Egeria server-side page
+# limit change is a config edit, not a grep-and-patch across every hardcoded
+# page_size literal in every caller -- hit live 2026-08-17 when
+# findRelationshipsBetweenMetadataElements started rejecting a hardcoded 5000
+# with "greater than the allowable maximum of 1000" after a server upgrade.
+# Read at import time (module-level, not a live binding -- callers that
+# `from pyegeria.core._globals import max_paging_size` get the value as of
+# their own import, same as every other global in this file); falls back to
+# the bare default if settings can't load yet (e.g. mid-bootstrap, no .env
+# present) rather than failing the whole import.
+try:
+    from pyegeria.core.config import settings as _settings
+    max_paging_size = int(getattr(_settings.Environment, "egeria_max_page_size", 500))
+except Exception:  # noqa: BLE001 -- config not ready yet; safe default
+    max_paging_size = 500
+
 default_timeout = 30
 DEBUG_LEVEL = "quiet"
 COMMENT_TYPES = (

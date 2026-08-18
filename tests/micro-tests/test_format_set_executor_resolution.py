@@ -2,6 +2,7 @@ import pytest
 from typing import Any, cast
 
 from pyegeria.view import format_set_executor as fse
+from pyegeria.view.analytic_registry import AnalyticActionSpec
 
 
 class _WrongClient:
@@ -215,4 +216,52 @@ async def test_async_run_report_coerces_inherited_list_filters_from_strings(monk
     assert kwargs["include_only_classified_elements"] == ["Anchors", "SubjectArea"]
     assert kwargs["governance_zone_filter"] == ["PersonalZone", "BusinessZone"]
 
+
+# ── run_analytic_action (BACKLOG.md NEXT-18 -- fetch+analytic action shape) ──
+# Fake fetch/analytic functions are monkeypatched onto the real, importable
+# overview_metrics module (same pattern test_overview_metrics.py's
+# test_metric_trend_snapshot_failure_yields_none_not_raise already uses for
+# dotted-path resolution) rather than a local test-module path, since
+# "micro-tests" isn't a valid dotted package segment.
+
+def test_run_analytic_action_runs_fetch_then_analytic_with_same_client(monkeypatch):
+    import pyegeria.view.overview_metrics as om_module
+
+    def _fetch(mgr, type_map):
+        return [{"label": l, "type": t, "count": len(t)} for l, t in type_map]
+
+    def _analytic(by_type, mgr):
+        # Asserts the analytic step gets the SAME client instance the fetch
+        # step was bound to, not a fresh/re-resolved one -- the whole point
+        # of an analytic step being able to itself fetch further data.
+        assert mgr == "CLIENT-42"
+        return {"total": sum(r["count"] for r in by_type), "byType": by_type}
+
+    monkeypatch.setattr(om_module, "_fetch_for_test", _fetch, raising=False)
+    monkeypatch.setattr(om_module, "_analytic_for_test", _analytic, raising=False)
+
+    spec = AnalyticActionSpec(
+        fetch="pyegeria.view.overview_metrics._fetch_for_test",
+        analytic="pyegeria.view.overview_metrics._analytic_for_test",
+    )
+    result = fse.run_analytic_action(
+        spec, "CLIENT-42", fetch_kwargs={"type_map": [("A", "Alpha"), ("B", "Beta")]},
+    )
+    assert result == {
+        "total": 9,
+        "byType": [{"label": "A", "type": "Alpha", "count": 5}, {"label": "B", "type": "Beta", "count": 4}],
+    }
+
+
+def test_run_analytic_action_returns_raw_fetch_when_no_analytic_declared(monkeypatch):
+    import pyegeria.view.overview_metrics as om_module
+
+    def _fetch_only(mgr, type_map):
+        return [{"label": l, "type": t} for l, t in type_map]
+
+    monkeypatch.setattr(om_module, "_fetch_only_for_test", _fetch_only, raising=False)
+
+    spec = AnalyticActionSpec(fetch="pyegeria.view.overview_metrics._fetch_only_for_test")
+    result = fse.run_analytic_action(spec, "CLIENT-42", fetch_kwargs={"type_map": [("A", "Alpha")]})
+    assert result == [{"label": "A", "type": "Alpha"}]
 

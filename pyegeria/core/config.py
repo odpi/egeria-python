@@ -55,6 +55,14 @@ class PyegeriaSettings(BaseSettings):
     
     # Additional settings that can be loaded from .env
     egeria_width: int = 200
+    # Default page size for paged find/relationship queries (pyegeria.core._globals
+    # .max_paging_size). Egeria's server enforces its own hard maximum on some
+    # operations (e.g. findRelationshipsBetweenMetadataElements rejected 5000 with
+    # "greater than the allowable maximum of 1000" -- OMAG-COMMON-400-010, hit live
+    # 2026-08-17 after a server upgrade changed that limit) -- keeping this
+    # env-configurable means a future limit change is a .env edit, not a grep across
+    # every hardcoded page_size literal in every caller.
+    egeria_max_page_size: int = 500
     # Renamed: format_sets -> report_specs
     pyegeria_user_report_specs_dir: str = "~/.pyegeria/report_specs"
     egeria_user_name: str = Field(default="", validation_alias="EGERIA_USER")
@@ -98,6 +106,7 @@ class EnvironmentConfig(BaseModel):
     """Runtime environment parameters that influence formatting and behavior."""
     """Environment configuration settings"""
     egeria_width: int = Field(default=200, alias="Egeria Width")
+    egeria_max_page_size: int = Field(default=500, alias="Egeria Max Page Size")
     egeria_outbox: str = Field(default="egeria-outbox", alias="Egeria Outbox")
     egeria_inbox: str = Field(default="egeria-inbox", alias="Egeria Inbox")
     dr_egeria_inbox: str = Field(default="egeria-inbox/dr-egeria-inbox", alias="Dr.Egeria Inbox")
@@ -338,6 +347,8 @@ def load_app_config(env_file: str | None = None):
 
     env["Egeria Width"] = int(os.getenv("EGERIA_WIDTH", env.get("Egeria Width", env_settings.egeria_width)))
     env["egeria_width"] = env["Egeria Width"]
+    env["Egeria Max Page Size"] = int(os.getenv("EGERIA_MAX_PAGE_SIZE", env.get("Egeria Max Page Size", env_settings.egeria_max_page_size)))
+    env["egeria_max_page_size"] = env["Egeria Max Page Size"]
     # Egeria Outbox (new)
     env["Egeria Outbox"] = os.getenv("EGERIA_OUTBOX", env.get("Egeria Outbox", "egeria-outbox"))
     env["Egeria Inbox"] = os.getenv("EGERIA_INBOX", env.get("Egeria Inbox", "egeria-inbox"))

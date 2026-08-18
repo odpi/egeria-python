@@ -36,7 +36,7 @@ Copyright Contributors to the ODPi Egeria project.
 
 ## Exceptions in pyegeria
 
-pyegeria standardizes error handling around a clear hierarchy of exceptions defined in `_exceptions_new.py`. All high‑level exceptions inherit from the common base `PyegeriaException`, so you can safely catch `PyegeriaException` to handle any error raised by this library. For more granular handling, use the specific subclasses listed below.
+pyegeria standardizes error handling around a clear hierarchy of exceptions defined in `pyegeria/core/_exceptions.py`. All high‑level exceptions inherit from the common base `PyegeriaException`, so you can safely catch `PyegeriaException` to handle any error raised by this library. For more granular handling, use the specific subclasses listed below.
 
 Key classes:
 - `PyegeriaException` (base)

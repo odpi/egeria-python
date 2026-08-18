@@ -29,7 +29,8 @@ from pyegeria.core._globals import NO_GUID_RETURNED
 from pyegeria.models import (GetRequestBody, SearchStringRequestBody, FilterRequestBody, NewElementRequestBody,
                              ReferenceableProperties, TemplateRequestBody,
                              UpdateElementRequestBody, NewRelationshipRequestBody,
-                             DeleteElementRequestBody, DeleteRelationshipRequestBody)
+                             DeleteElementRequestBody, DeleteRelationshipRequestBody,
+                             UpdateRelationshipRequestBody)
 from pyegeria.core.utils import dynamic_catch
 
 GOV_DEF_PROPERTIES_LIST = ["GovernanceDefinitionProperties", "GovernanceStrategyProperties", "RegulationProperties",
@@ -1730,6 +1731,264 @@ class GovernanceOfficer(ServerClient):
         loop.run_until_complete(
             self._async_detach_governed_by_definition(element_guid, definition_guid, body))
 
+    @dynamic_catch
+    async def _async_license_element(self, element_guid: str, license_type_guid: str,
+                                      body: Optional[dict | NewRelationshipRequestBody] = None) -> str:
+        """ Link an element to a license type and include details of the license in the relationship
+            properties. The GUID returned is the identifier of the relationship. Async Version.
+
+        Parameters
+        ----------
+        element_guid: str
+            guid of the element to license.
+        license_type_guid: str
+            the license type guid.
+        body: dict
+            The body describing the license.
+
+        Returns
+        -------
+        str
+            guid of the new License relationship.
+
+        Raises
+        ------
+        PyegeriaException
+        ValidationError
+
+        Notes
+        ----
+
+        Body structure:
+        {
+           "class" : "NewRelationshipRequestBody",
+           "properties" : {
+             "class" : "LicenseProperties",
+             "licenseId" : "add license id here",
+             "startDate" : "{{$isoTimestamp}}",
+             "endDate" : "{{$isoTimestamp}}",
+             "conditions" : "add conditions here",
+             "licensedBy" : "add value here",
+             "licensedByTypeName" : "add value here",
+             "licensedByPropertyName" : "add value here",
+             "custodian" : "add value here",
+             "custodianTypeName" : "add value here",
+             "custodianPropertyName" : "add value here",
+             "licensee" : "add value here",
+             "licenseeTypeName" : "add value here",
+             "licenseePropertyName" : "add value here",
+             "entitlements" : "add value here",
+             "restrictions" : "add value here",
+             "obligations" : "add value here",
+             "notes" : "add value here"
+           },
+           "externalSourceGUID": "Add guid here",
+           "externalSourceName": "Add qualified name here",
+           "forLineage": false,
+           "forDuplicateProcessing": false,
+           "effectiveTime" : "{{$isoTimestamp}}"
+        }
+        """
+        url = (
+            f"{self.platform_url}/servers/{self.view_server}/api/open-metadata/"
+            f"{self.url_marker}/elements/{element_guid}/license-types/{license_type_guid}/license"
+        )
+        validated_body = self.validate_new_relationship_request(body, ["LicenseProperties"])
+        if validated_body:
+            json_body = validated_body.model_dump_json(indent=2, exclude_none=True)
+            resp = await self._async_make_request("POST", url, json_body)
+        else:
+            resp = await self._async_make_request("POST", url)
+        return resp.json().get("guid", NO_GUID_RETURNED)
+
+    @dynamic_catch
+    def license_element(self, element_guid: str, license_type_guid: str,
+                        body: Optional[dict | NewRelationshipRequestBody] = None) -> str:
+        """ Link an element to a license type and include details of the license in the relationship
+            properties. The GUID returned is the identifier of the relationship.
+
+        Parameters
+        ----------
+        element_guid: str
+            guid of the element to license.
+        license_type_guid: str
+            the license type guid.
+        body: dict
+            The body describing the license.
+
+        Returns
+        -------
+        str
+            guid of the new License relationship.
+
+        Raises
+        ------
+        PyegeriaException
+        ValidationError
+
+        Notes
+        ----
+
+        Body structure:
+        {
+           "class" : "NewRelationshipRequestBody",
+           "properties" : {
+             "class" : "LicenseProperties",
+             "licenseId" : "add license id here",
+             "startDate" : "{{$isoTimestamp}}",
+             "endDate" : "{{$isoTimestamp}}",
+             "conditions" : "add conditions here",
+             "licensedBy" : "add value here",
+             "licensedByTypeName" : "add value here",
+             "licensedByPropertyName" : "add value here",
+             "custodian" : "add value here",
+             "custodianTypeName" : "add value here",
+             "custodianPropertyName" : "add value here",
+             "licensee" : "add value here",
+             "licenseeTypeName" : "add value here",
+             "licenseePropertyName" : "add value here",
+             "entitlements" : "add value here",
+             "restrictions" : "add value here",
+             "obligations" : "add value here",
+             "notes" : "add value here"
+           },
+           "externalSourceGUID": "Add guid here",
+           "externalSourceName": "Add qualified name here",
+           "forLineage": false,
+           "forDuplicateProcessing": false,
+           "effectiveTime" : "{{$isoTimestamp}}"
+        }
+        """
+        loop = asyncio.get_event_loop()
+        return loop.run_until_complete(
+            self._async_license_element(element_guid, license_type_guid, body))
+
+    @dynamic_catch
+    async def _async_certify_element(self, element_guid: str, certification_type_guid: str,
+                                      body: Optional[dict | NewRelationshipRequestBody] = None) -> str:
+        """ Link an element to a certification type and include details of the certification in the
+            relationship properties. The GUID returned is the identifier of the relationship. Async Version.
+
+        Parameters
+        ----------
+        element_guid: str
+            guid of the element to certify.
+        certification_type_guid: str
+            the certification type guid.
+        body: dict
+            The body describing the certification.
+
+        Returns
+        -------
+        str
+            guid of the new Certification relationship.
+
+        Raises
+        ------
+        PyegeriaException
+        ValidationError
+
+        Notes
+        ----
+
+        Body structure:
+        {
+           "class" : "NewRelationshipRequestBody",
+           "properties" : {
+             "class" : "CertificationProperties",
+             "certificateId" : "add certificate id here",
+             "startDate" : "{{$isoTimestamp}}",
+             "endDate" : "{{$isoTimestamp}}",
+             "conditions" : "add conditions here",
+             "certifiedBy" : "add value here",
+             "certifiedByTypeName" : "add value here",
+             "certifiedByPropertyName" : "add value here",
+             "custodian" : "add value here",
+             "custodianTypeName" : "add value here",
+             "custodianPropertyName" : "add value here",
+             "recipient" : "add value here",
+             "recipientTypeName" : "add value here",
+             "recipientPropertyName" : "add value here",
+             "notes" : "add value here"
+           },
+           "externalSourceGUID": "Add guid here",
+           "externalSourceName": "Add qualified name here",
+           "forLineage": false,
+           "forDuplicateProcessing": false,
+           "effectiveTime" : "{{$isoTimestamp}}"
+        }
+        """
+        url = (
+            f"{self.platform_url}/servers/{self.view_server}/api/open-metadata/"
+            f"{self.url_marker}/elements/{element_guid}/certification-types/{certification_type_guid}/certify"
+        )
+        validated_body = self.validate_new_relationship_request(body, ["CertificationProperties"])
+        if validated_body:
+            json_body = validated_body.model_dump_json(indent=2, exclude_none=True)
+            resp = await self._async_make_request("POST", url, json_body)
+        else:
+            resp = await self._async_make_request("POST", url)
+        return resp.json().get("guid", NO_GUID_RETURNED)
+
+    @dynamic_catch
+    def certify_element(self, element_guid: str, certification_type_guid: str,
+                        body: Optional[dict | NewRelationshipRequestBody] = None) -> str:
+        """ Link an element to a certification type and include details of the certification in the
+            relationship properties. The GUID returned is the identifier of the relationship.
+
+        Parameters
+        ----------
+        element_guid: str
+            guid of the element to certify.
+        certification_type_guid: str
+            the certification type guid.
+        body: dict
+            The body describing the certification.
+
+        Returns
+        -------
+        str
+            guid of the new Certification relationship.
+
+        Raises
+        ------
+        PyegeriaException
+        ValidationError
+
+        Notes
+        ----
+
+        Body structure:
+        {
+           "class" : "NewRelationshipRequestBody",
+           "properties" : {
+             "class" : "CertificationProperties",
+             "certificateId" : "add certificate id here",
+             "startDate" : "{{$isoTimestamp}}",
+             "endDate" : "{{$isoTimestamp}}",
+             "conditions" : "add conditions here",
+             "certifiedBy" : "add value here",
+             "certifiedByTypeName" : "add value here",
+             "certifiedByPropertyName" : "add value here",
+             "custodian" : "add value here",
+             "custodianTypeName" : "add value here",
+             "custodianPropertyName" : "add value here",
+             "recipient" : "add value here",
+             "recipientTypeName" : "add value here",
+             "recipientPropertyName" : "add value here",
+             "notes" : "add value here"
+           },
+           "externalSourceGUID": "Add guid here",
+           "externalSourceName": "Add qualified name here",
+           "forLineage": false,
+           "forDuplicateProcessing": false,
+           "effectiveTime" : "{{$isoTimestamp}}"
+        }
+        """
+        loop = asyncio.get_event_loop()
+        return loop.run_until_complete(
+            self._async_certify_element(element_guid, certification_type_guid, body))
+
 
 
     # @dynamic_catch
@@ -2426,7 +2685,7 @@ class GovernanceOfficer(ServerClient):
 
 
     @dynamic_catch
-    async def _async_get_governance_process_graph(self, guid: str, element_type: Optional[str] = None,
+    async def _async_get_governance_action_process_graph(self, guid: str, element_type: Optional[str] = None,
                                                        body: Optional[dict | FilterRequestBody] = None,
                                                        output_format: str = "JSON",
                                                        report_spec: dict = None, **kwargs) -> dict | str:
@@ -2488,7 +2747,7 @@ class GovernanceOfficer(ServerClient):
         return response
 
     @dynamic_catch
-    def get_governance_process_graph(self, guid: str, element_type: Optional[str] = None, body: dict = None,
+    def get_governance_action_process_graph(self, guid: str, element_type: Optional[str] = None, body: dict = None,
                                           output_format: str = "JSON",
                                           report_spec: dict = None, **kwargs) -> dict | str:
 
@@ -2536,10 +2795,88 @@ class GovernanceOfficer(ServerClient):
        """
 
         loop = asyncio.get_event_loop()
-        response = loop.run_until_complete(self._async_get_governance_process_graph(guid, element_type, body,
+        response = loop.run_until_complete(self._async_get_governance_action_process_graph(guid, element_type, body,
                                                                                          output_format,
                                                                                          report_spec, **kwargs))
         return response
+
+    @dynamic_catch
+    async def _async_get_governance_action_process(
+        self,
+        guid: str,
+        element_type: Optional[str] = None,
+        output_format: str = "JSON",
+        report_spec: str | dict = None,
+        body: dict | GetRequestBody | None = None,
+        **kwargs
+    ) -> dict | list | str:
+        """Retrieve the governance action process metadata element with the supplied unique identifier. Async version.
+
+        Parameters
+        ----------
+        guid : str
+            The unique identifier of the governance action process.
+        element_type : str, optional
+            The element type. Defaults to None.
+        output_format : str, optional
+            The format of the output. Defaults to "JSON".
+        report_spec : str | dict, optional
+            The report specification. Defaults to None.
+        body : dict | GetRequestBody, optional
+            The request body. Defaults to None.
+
+        Returns
+        -------
+        dict | list | str
+            The governance action process.
+        """
+        url = f"{self.platform_url}/servers/{self.view_server}/api/open-metadata/governance-officer/governance-action-processes/{guid}/retrieve"
+        type = element_type if element_type else "GovernanceActionProcess"
+        return await self._async_get_guid_request(
+            url,
+            type,
+            self._generate_governance_definition_output,
+            output_format=output_format,
+            report_spec=report_spec,
+            body=body,
+            **kwargs
+        )
+
+    def get_governance_action_process(
+        self,
+        guid: str,
+        element_type: Optional[str] = None,
+        output_format: str = "JSON",
+        report_spec: str | dict = None,
+        body: dict | GetRequestBody | None = None,
+        **kwargs
+    ) -> dict | list | str:
+        """Retrieve the governance action process metadata element with the supplied unique identifier.
+
+        Parameters
+        ----------
+        guid : str
+            The unique identifier of the governance action process.
+        element_type : str, optional
+            The element type. Defaults to None.
+        output_format : str, optional
+            The format of the output. Defaults to "JSON".
+        report_spec : str | dict, optional
+            The report specification. Defaults to None.
+        body : dict | GetRequestBody, optional
+            The request body. Defaults to None.
+
+        Returns
+        -------
+        dict | list | str
+            The governance action process.
+        """
+        loop = asyncio.get_event_loop()
+        return loop.run_until_complete(
+            self._async_get_governance_action_process(
+                guid, element_type, output_format, report_spec, body, **kwargs
+            )
+        )
 
     @dynamic_catch
     async def _async_link_design_to_implementation(self, design_desc_guid: str, implementation_guid: str,
@@ -3127,7 +3464,7 @@ class GovernanceOfficer(ServerClient):
          }
          """
         loop = asyncio.get_event_loop()
-        loop.run_until_complete(self._async_detach_governance_results(gov_metric_guid, data_asset_guid, data_asset_guid, body))
+        loop.run_until_complete(self._async_detach_governance_results(gov_metric_guid, data_asset_guid, body))
     @dynamic_catch
     async def _async_add_regulator_to_regulation(self, regulation_guid: str, regulator_guid,
                                                   body: Optional[dict | NewRelationshipRequestBody] = None) -> None:
@@ -3177,11 +3514,11 @@ class GovernanceOfficer(ServerClient):
 
         """
 
-        url = (f"{self.platform_url}/servers/{self.view_server}/api/open-metadata/{self.url_marker}/governance-officer/"
-               f"{regulation_guid}/organizations/{regulator_guid}/attach"
+        url = (f"{self.platform_url}/servers/{self.view_server}/api/open-metadata/{self.url_marker}/"
+               f"regulations/{regulation_guid}/regulators/organizations/{regulator_guid}/attach"
                )
-        await self._async_new_relationship_request(url, "GovernanceResultsProperties", body)
-        logger.info(f"Linked governance metric to a data asset containing its measurements.: {regulation_guid} -> {regulator_guid}")
+        await self._async_new_relationship_request(url, "RegulatorProperties", body)
+        logger.info(f"Linked regulation to regulator: {regulation_guid} -> {regulator_guid}")
 
     @dynamic_catch
     def add_regulator_to_regulation(self, regulation_guid: str, regulator_guid,
@@ -3231,7 +3568,7 @@ class GovernanceOfficer(ServerClient):
 
         """
         loop = asyncio.get_event_loop()
-        loop.run_until_complete(self._async_link_governance_results(regulation_guid, regulator_guid, body))
+        loop.run_until_complete(self._async_add_regulator_to_regulation(regulation_guid, regulator_guid, body))
 
     @dynamic_catch
     async def _async_detach_regulator_from_regulation(self, regulation_guid: str, regulator_guid, body: Optional[dict | DeleteRelationshipRequestBody] = None) -> None:
@@ -3270,8 +3607,8 @@ class GovernanceOfficer(ServerClient):
         }
         """
 
-        url = (f"{self.platform_url}/servers/{self.view_server}/api/open-metadata/{self.url_marker}/governance-officer/"
-               f"{regulation_guid}/organizations/{regulator_guid}/detach")
+        url = (f"{self.platform_url}/servers/{self.view_server}/api/open-metadata/{self.url_marker}/"
+               f"regulations/{regulation_guid}/regulators/organizations/{regulator_guid}/detach")
         await self._async_delete_relationship_request(url, body)
         logger.info(
             f"Detached regulator from the regulation: {regulation_guid} -> {regulator_guid}")

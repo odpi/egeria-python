@@ -16,13 +16,13 @@ ___
 ### Domain Identifier
 >	**Input Required**: False
 
->	**Attribute Type**: Enum
+>	**Attribute Type**: Valid Value
 
->	**Description**: String representing the governance domain. All domains is ALL
+>	**Description**: The governance domain, looked up from the domainIdentifier valid value set (deployments may extend this set without rebuilding Egeria). All domains is "All Domains". Accepts either the current display name or a preferred-value integer; old-style ALL_CAPS enum names (e.g. IT_INFRASTRUCTURE) are still accepted for backward compatibility.
 
->	**Valid Values**: ALL,DATA,PRIVACY,SECURITY,IT_INFRASTRUCTURE,SOFTWARE_DEVELOPMENT,CORPORATE,ASSET_MANAGEMENT,OTHER
+>	**Valid Values**: All Domains,Data,Privacy,Security,IT Infrastructure,Software Development,Corporate,Asset Management,Other
 
->	**Default Value**: ALL
+>	**Default Value**: All Domains
 
 
 ### Implications

@@ -368,6 +368,15 @@ class SupplyChainProcessor(AsyncBaseCommandProcessor):
         om_type = spec.get("OM_TYPE")
 
         prop_body = set_element_prop_body(om_type or "InformationSupplyChain", qualified_name, attributes)
+        # InformationSupplyChainProperties-specific fields set_element_prop_body doesn't know
+        # about (confirmed against Egeria-api-solution-architect.http's createInformationSupplyChain/
+        # updateInformationSupplyChain worked examples -- ISSUE-64: these two were previously never
+        # read from attributes at all, so Purposes/Scope validated and processed with SUCCESS but
+        # were silently never persisted). Note the real wire property is "dataProcessingPurposes",
+        # not "purposes" -- the compact spec's "Purposes" attribute has no property_name override,
+        # so this can't be picked up generically; must be set explicitly here.
+        prop_body["dataProcessingPurposes"] = attributes.get('Purposes', {}).get('value')
+        prop_body["scope"] = attributes.get('Scope', {}).get('value')
 
         in_sc_guids = set(attributes.get('In Information Supply Chain', {}).get('guid_list', []))
         nested_sc_guids = set(attributes.get('Nested Information Supply Chains', {}).get('guid_list', []))
@@ -734,34 +743,39 @@ class SolutionLinkProcessor(AsyncBaseCommandProcessor):
             }
             
             if om_type == "SolutionLinkingWire":
-                # Egeria server behavior: a second SolutionLinkingWire attach call with the
-                # *same* ordered (id1, id2) pair silently overwrites the existing relationship's
-                # properties (including label) rather than creating a parallel wire - the type
-                # system allows ANY_NUMBER of these relationships per pair, but the view service
-                # attach handler does not. Warn so this isn't a silent data-loss surprise.
-                try:
-                    existing = await self.client._async_get_solution_component_by_guid(id1)
-                    for wire in (existing.get("wiredTo", []) or []):
-                        related_guid = wire.get('relatedElement', {}).get('elementHeader', {}).get('guid')
-                        at_end1 = wire.get('relatedElementAtEnd1')
-                        if related_guid == id2 and at_end1 is False:
-                            existing_label = wire.get('relationshipProperties', {}).get('label', '')
-                            logger.warning(
-                                f"Link Solution Components: a SolutionLinkingWire already exists from {id1} to {id2} "
-                                f"(label={existing_label!r}); this call will overwrite it in place rather than adding "
-                                f"a parallel wire, since Egeria does not create a second relationship for the same "
-                                f"ordered component pair. Use 'One Way: False' for bidirectional flow instead of two "
-                                f"same-direction Link commands."
-                            )
-                            self.add_related_result(
-                                "Existing Wire Overwrite", status="warning",
-                                message=f"Overwriting existing wire (was label={existing_label!r}) between these components in this direction"
-                            )
-                            break
-                except Exception as e:
-                    logger.debug(f"Could not pre-check existing SolutionLinkingWire for {id1}->{id2}: {e}")
+                # SolutionLinkingWire is a multi-link relationship (Egeria PR #9156,
+                # 2026-08-09) -- ANY_NUMBER of wires can exist between the same ordered
+                # pair of components. Dedupe on `label` so re-running the same markdown
+                # file updates the matching wire in place rather than piling up
+                # duplicates; a wire with no label is never matched (always creates a
+                # new one), and two wires with genuinely different labels both persist.
+                wire_guid = attributes.get('Wire GUID', {}).get('value')
+                if not wire_guid and label:
+                    try:
+                        found = await self.client._async_find_relationships_between_elements(
+                            {"class": "FindRelationshipRequestBody", "relationshipTypeName": "SolutionLinkingWire"}
+                        )
+                        for rel in (found if isinstance(found, list) else []):
+                            if not isinstance(rel, dict):
+                                continue
+                            if rel.get("elementGUIDAtEnd1") == id1 and rel.get("elementGUIDAtEnd2") == id2 \
+                                    and rel.get("relationshipProperties", {}).get("label") == label:
+                                wire_guid = rel.get("relationshipGUID")
+                                break
+                    except Exception as e:
+                        logger.debug(f"Could not look up existing SolutionLinkingWire for {id1}->{id2} label={label!r}: {e}")
 
-                await self.client._async_link_solution_linking_wire(id1, id2, body)
+                if wire_guid:
+                    update_body = {"class": "UpdateRelationshipRequestBody", "properties": properties, "mergeUpdate": True}
+                    await self.client._async_update_solution_linking_wire(wire_guid, update_body)
+                    logger.success(f"Updated existing SolutionLinkingWire {wire_guid} (label={label!r})")
+                    return f"\n\n# {verb} {object_type}\n\nUpdated wire {wire_guid} between {id1} and {id2}"
+                else:
+                    new_wire_guid = await self.client._async_link_solution_linking_wire(id1, id2, body)
+                    if new_wire_guid:
+                        self.parsed_output["guid"] = new_wire_guid
+                        logger.success(f"Created new SolutionLinkingWire {new_wire_guid} between {id1} and {id2}")
+                        return f"\n\n# {verb} {object_type}\n\nCreated wire {new_wire_guid} between {id1} and {id2}"
             elif om_type == "InformationSupplyChainLink":
                 await self.client._async_link_peer_info_supply_chains(id1, id2, body)
             elif om_type == "SolutionComposition":
@@ -792,7 +806,13 @@ class SolutionLinkProcessor(AsyncBaseCommandProcessor):
         elif verb in ["Detach", "Unlink", "Remove"]:
             body = {"class": "DeleteRelationshipRequestBody"}
             if om_type == "SolutionLinkingWire":
-                await self.client._async_detach_solution_linking_wire(id1, id2, body)
+                wire_guid = attributes.get('Wire GUID', {}).get('value')
+                if wire_guid:
+                    # Target one specific wire -- the pair-based endpoint below now
+                    # detaches ALL wires between the pair (Egeria PR #9156).
+                    await self.client._async_detach_solution_linking_wire_by_guid(wire_guid, body)
+                else:
+                    await self.client._async_detach_solution_linking_wire(id1, id2, body)
             elif om_type == "InformationSupplyChainLink":
                 await self.client._async_unlink_peer_info_supply_chains(id1, id2, body)
             elif om_type == "SolutionComposition":

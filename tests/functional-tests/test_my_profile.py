@@ -4,6 +4,7 @@ from datetime import datetime
 import pytest
 import asyncio
 from pyegeria.omvs.my_profile import MyProfile
+from pyegeria.omvs.metadata_expert import MetadataExpert
 from pyegeria.models import NewElementRequestBody
 from pyegeria.core._exceptions import PyegeriaException, print_basic_exception
 from rich.markdown import Markdown
@@ -125,7 +126,7 @@ class TestMyProfile:
             #         "description": "This is a test notification",
             #     }
             # }
-            # guid = profile_client.log_my_activity(body)
+            # guid = profile_client.log_my_activity(body=body)
             # assert isinstance(guid, str)
             # print(f"\nLogged activity GUID: {guid}")
             # body = {
@@ -138,7 +139,7 @@ class TestMyProfile:
             #         "description": "This is a test notification",
             #     }
             # }
-            # guid = profile_client.journal_my_activity(body)
+            # guid = profile_client.journal_my_activity(body=body)
             # assert isinstance(guid, str)
             # print(f"\nJournaled activity GUID: {guid}")
             body = {
@@ -151,13 +152,13 @@ class TestMyProfile:
                     "description": "This is a test notification",
                 }
             }
-            response = profile_client.blog_my_activity(body)
-            assert isinstance(response, dict)
-            print(f"\nBlogged activity GUID: {response['guid']}")
-            print(f"\nBlogged activity details: {json.dumps(response, indent=2)}")
+            response = profile_client.blog_my_activity(body=body)
+            assert isinstance(response, str)
+            print(f"\nBlogged activity GUID: {response}")
 
         except PyegeriaException as e:
-            print(f"activity logging failed as expected or due to env: {e}")
+            print_basic_exception(e)
+            pytest.fail(f"activity logging failed with PyegeriaException: {e}")
         except Exception as e:
             pytest.fail(f"activity logging failed with unexpected exception: {e}")
 
@@ -177,7 +178,7 @@ class TestMyProfile:
 
     def test_get_to_dos(self, profile_client):
         try:
-            response = profile_client.get_my_to_dos(output_format="DICT",report_spec="My-User-ToDos")
+            response = profile_client.get_my_to_dos(output_format="JSON",report_spec="My-User-ToDos")
             assert isinstance(response, (list, dict, str))
             if isinstance(response, list|dict):
                 print(f"\nRetrieved to-dos: {json.dumps(response, indent=2)}" if isinstance(response, (list, dict)) else f"\nRetrieved to-dos: {response}")
@@ -189,6 +190,11 @@ class TestMyProfile:
             pytest.fail(f"get_my_to_dos failed with unexpected exception: {e}")
 
     def test_create_my_todo(self,profile_client):
+        # ISSUE-45: this test used to create a real ToDo on the live server and
+        # never delete it, silently accumulating orphaned ToDo entities across
+        # repeated runs. Teardown added below, matching the delete pattern used
+        # elsewhere in this file's own live verification steps.
+        response = None
         try:
 
             response = profile_client.create_my_todo("do-my-backup","REQUESTED","do-backup",
@@ -201,6 +207,17 @@ class TestMyProfile:
             print_basic_exception(e)
         except Exception as e:
             pytest.fail(f"create_my_todo failed with unexpected exception: {e}")
+        finally:
+            if isinstance(response, str) and response:
+                try:
+                    me_client = MetadataExpert(VIEW_SERVER, PLATFORM_URL, USER_ID, USER_PWD)
+                    me_client.create_egeria_bearer_token(USER_ID, USER_PWD)
+                    me_client.delete_metadata_element(
+                        response, body={"class": "OpenMetadataDeleteRequestBody"}
+                    )
+                    print(f"\nDeleted test to-do {response}")
+                except Exception as e:
+                    print(f"\nTeardown: failed to delete test to-do {response}: {e}")
 
     def test_get_assigned_actions_for_actor(self, profile_client):
         try:
@@ -268,12 +285,9 @@ class TestMyProfile:
                     "description": "This is a test notification",
                 }
             }
-            response = profile_client.log_my_activity(body)
-            assert isinstance(response, (list, dict, str))
-            if isinstance(response, list|dict):
-                print(f"\nRetrieved to-dos: {json.dumps(response, indent=2)}" if isinstance(response, (list, dict)) else f"\nRetrieved to-dos: {response}")
-            else:
-                print(f"\nRetrieved to-dos: {response}")
+            response = profile_client.log_my_activity(body=body)
+            assert isinstance(response, str)
+            print(f"\nLogged activity GUID: {response}")
         except PyegeriaException as e:
             print(f"get_my_to_dos failed as expected or due to env: {e}")
         except Exception as e:

@@ -755,6 +755,93 @@ class ProjectManager(ServerClient):
         return resp
 
     @dynamic_catch
+    async def _async_get_project_hierarchy(
+            self,
+            project_guid: str,
+            output_format: str = 'JSON',
+            report_spec: str | dict = None,
+            body: Optional[dict | GetRequestBody] = None,
+            **kwargs) -> str | dict:
+        """Returns the hierarchy of managed projects and resources starting with the supplied project guid.
+           Request body is optional. Async version.
+
+        Parameters
+        ----------
+        project_guid: str
+            Identifier of the project to return the hierarchy for.
+        body: dict | GetRequestBody, optional, default = None
+            full request body.
+
+        Returns
+        -------
+        List | str
+
+        The hierarchy of managed projects and resources.
+
+        Raises
+        ------
+
+        PyegeriaException
+
+        """
+        url = (
+            f"{self.platform_url}/servers/{self.view_server}/api/open-metadata/project-manager/"
+            f"projects/{project_guid}/hierarchy"
+        )
+        if body:
+            response = await self._async_make_request("POST", url, body, **kwargs)
+        else:
+            response = await self._async_make_request("POST", url, **kwargs)
+
+        elements = response.json().get("elements", NO_ELEMENTS_FOUND)
+        if type(elements) is str or len(elements) == 0:
+            logger.info(NO_ELEMENTS_FOUND)
+            return NO_ELEMENTS_FOUND
+
+        if output_format != 'JSON':  # return a simplified markdown representation
+            logger.info(f"Found elements, output format: {output_format} and report_spec: {report_spec}")
+            return self._generate_project_output(elements, None, "Project Hierarchy",
+                                                 output_format, report_spec)
+        return elements
+
+    @dynamic_catch
+    def get_project_hierarchy(
+            self,
+            project_guid: str,
+            output_format: str = 'JSON',
+            report_spec: str | dict = None,
+            body: Optional[dict | GetRequestBody] = None,
+            **kwargs
+    ) -> str | dict:
+        """Returns the hierarchy of managed projects and resources starting with the supplied project guid.
+           Request body is optional.
+
+        Parameters
+        ----------
+        project_guid: str
+            Identifier of the project to return the hierarchy for.
+        body: dict | GetRequestBody, optional, default = None
+            full request body.
+
+        Returns
+        -------
+        List | str
+
+        The hierarchy of managed projects and resources.
+
+        Raises
+        ------
+
+        PyegeriaException
+
+        """
+        loop = asyncio.get_event_loop()
+        resp = loop.run_until_complete(
+            self._async_get_project_hierarchy(project_guid, output_format, report_spec, body, **kwargs)
+        )
+        return resp
+
+    @dynamic_catch
     async def _async_find_projects(
         self,
         search_string: str = "*",
@@ -1732,7 +1819,7 @@ class ProjectManager(ServerClient):
         url = (
             f"{self.project_command_base}/{project_guid}/project-dependencies/{upstream_project_guid}/attach"
         )
-        await self._async_new_relationship_request(url, "ProjectDependencyProperties", body)
+        await self._async_new_relationship_request(url, None, body)
         logger.info(f"Project {project_guid} depends on -> {upstream_project_guid}")
 
     @dynamic_catch
@@ -1901,7 +1988,7 @@ class ProjectManager(ServerClient):
         url = (
             f"{self.project_command_base}/{parent_project_guid}/project-hierarchies/{project_guid}/attach"
         )
-        await self._async_new_relationship_request(url, ["ProjectHierarchyProperties"], body)
+        await self._async_new_relationship_request(url, None, body)
         logger.info(f"Project {project_guid} managed by -> {parent_project_guid}")
 
     @dynamic_catch

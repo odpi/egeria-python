@@ -47,6 +47,7 @@ from pydantic import BaseModel, Field
 __all__ = [
     'AnalyticParam',
     'AnalyticFunctionSpec',
+    'AnalyticActionSpec',
     'AnalyticRegistryCollision',
     'refresh_analytic_functions',
     'get_analytic_registry',
@@ -67,6 +68,37 @@ class AnalyticParam(BaseModel):
     description: str = ""
 
 
+class AnalyticActionSpec(BaseModel):
+    """A composite/derived analytic action, formalizing the pattern
+    `ai_ready_assets` pioneered by hand (see its docstring) into a declared
+    shape (BACKLOG.md NEXT-18, egeria-workspaces): a data-producing **fetch**
+    step (typically one of this module's own `find_*`-backed functions, e.g.
+    `counts_by_type`) whose raw result is passed to an optional **analytic**
+    step, which may itself fetch further related data if needed (e.g. follow
+    a relationship to enrich -- exactly what `ai_ready_assets` already does
+    inline, just as an undeclared implementation detail rather than a named
+    step). Both `fetch` and `analytic` are dotted import paths, resolved and
+    client-bound the same way a plain `AnalyticFunctionSpec.function` always
+    has been (see `format_set_executor._resolve_analytic_function`/
+    `_bind_client_args`, and its `run_analytic_action` for the two-step
+    invocation itself).
+
+    Deliberately *not* concerned with which of the resulting attributes
+    appear in a given output (TABLE/REPORT/KPI/...) -- that selection is
+    `Format.attributes`' existing job (its `key` projects a named field out
+    of whatever dict the action returns), unchanged by this model. An action
+    ends at producing the full attribute set; formatting picks from it.
+
+    A future non-local step (e.g. a Prefect flow or other remote service,
+    rather than an in-process Python callable) would only need `fetch`/
+    `analytic` to grow beyond a plain dotted-path string -- not designed
+    here, deliberately parked pending that real use case."""
+    fetch: str
+    analytic: Optional[str] = None
+    fetch_params: List[AnalyticParam] = Field(default_factory=list)
+    analytic_params: List[AnalyticParam] = Field(default_factory=list)
+
+
 class AnalyticFunctionSpec(BaseModel):
     """One entry in the analytic function registry.
 
@@ -79,7 +111,16 @@ class AnalyticFunctionSpec(BaseModel):
     spec can still point at it, but always gets that one fixed metric --
     retargeting it means editing the Python function, not authoring a new
     report spec). `binding_note` names exactly what's fixed, for the generic=False
-    case (blank when generic=True, since there's nothing fixed to name)."""
+    case (blank when generic=True, since there's nothing fixed to name).
+
+    `action`, if set, is a structured (fetch, analytic) breakdown of what
+    `function` does internally (see `AnalyticActionSpec`) -- additive only:
+    `function` always still resolves to a real, directly-callable entry
+    point that returns exactly what `returns` describes (for an
+    action-backed entry, a thin composite wrapper -- see `sum_type_counts`
+    -- built via `format_set_executor.run_analytic_action`), so every
+    existing consumer that only reads `.function` -- including every other
+    entry in this registry -- keeps working completely unchanged."""
     name: str
     function: str  # dotted import path, e.g. "pyegeria.view.overview_metrics.growth_series"
     description: str = ""
@@ -87,6 +128,7 @@ class AnalyticFunctionSpec(BaseModel):
     generic: bool = False
     binding_note: str = ""
     params: List[AnalyticParam] = Field(default_factory=list)
+    action: Optional[AnalyticActionSpec] = None
 
 
 class AnalyticFunctionDict(Dict[str, AnalyticFunctionSpec]):
@@ -284,6 +326,125 @@ _BUILTINS: Dict[str, AnalyticFunctionSpec] = {
         generic=False,
         binding_note="Fixed to Collaboration OMAS's feedback relationship types -- not a parameter.",
         params=[_as_of()],
+    ),
+    "sum_type_counts": AnalyticFunctionSpec(
+        name="sum_type_counts",
+        function="pyegeria.view.overview_metrics.sum_type_counts",
+        description="Sum of counts_by_type() across a caller-given (label, type_name) list -- "
+                    "e.g. the Overview dashboard's 'Cataloged Assets' total. First real registered "
+                    "user of the fetch+analytic action shape (see AnalyticActionSpec) -- fetch is "
+                    "counts_by_type itself (already registered above, reused as-is), analytic is a "
+                    "small sum-reducer over its result; `function` above is the thin composite "
+                    "wrapper that runs both via run_analytic_action, so calling it directly (the "
+                    "old, single-function path) still works exactly like every other entry here.",
+        returns="dict (total, byType)",
+        generic=True,
+        action=AnalyticActionSpec(
+            fetch="pyegeria.view.overview_metrics.counts_by_type",
+            analytic="pyegeria.view.overview_metrics.sum_counts",
+            fetch_params=[
+                AnalyticParam(name="type_map", type="list[tuple[str, str]]", required=True,
+                              description="(label, type_name) pairs to count and sum."),
+                _as_of(),
+            ],
+        ),
+        params=[
+            AnalyticParam(name="type_map", type="list[tuple[str, str]]", required=True,
+                          description="(label, type_name) pairs to count and sum."),
+            _as_of(),
+        ],
+    ),
+    "count_elements_by_property": AnalyticFunctionSpec(
+        name="count_elements_by_property",
+        function="pyegeria.view.overview_metrics.count_elements_by_property",
+        description="Count active elements of a given type whose named string property equals a "
+                    "given value -- e.g. DigitalProduct elements with deploymentStatus=ACTIVE. Same "
+                    "native-count-with-fallback seam as count_elements, one cheap native COUNT call "
+                    "per distinct value, no element fetch.",
+        returns="scalar (int)",
+        generic=True,
+        params=[
+            AnalyticParam(name="type_name", type="str", required=True,
+                          description="Open metadata type to count, e.g. DigitalProduct."),
+            AnalyticParam(name="property_name", type="str", required=True,
+                          description="String property to match, e.g. deploymentStatus."),
+            AnalyticParam(name="property_value", type="str", required=True,
+                          description="Value to match the property against, e.g. ACTIVE."),
+            _as_of(),
+        ],
+    ),
+    "contextualised_coverage": AnalyticFunctionSpec(
+        name="contextualised_coverage",
+        function="pyegeria.view.overview_metrics.contextualised_coverage",
+        description="Percent of Assets given business/solution-design context via an ImplementedBy "
+                    "relationship to a SolutionComponent. A proxy, not the literal 'participates in "
+                    "an ISC/blueprint' metric -- confirms some solution-design context exists, not "
+                    "that the specific SolutionComponent is itself wired into an ISC/blueprint (a "
+                    "second hop this function doesn't take). Takes two leading clients (mgr, ce), "
+                    "same convention as semantic_grounding.",
+        returns="dict (contextualisedCount, assetTotal, contextualisedPct)",
+        generic=False,
+        binding_note="Fixed to the ImplementedBy relationship, filtered to Asset-subtype ends -- not a parameter.",
+        params=[_as_of()],
+    ),
+    "karma_leaderboard": AnalyticFunctionSpec(
+        name="karma_leaderboard",
+        function="pyegeria.view.overview_metrics.karma_leaderboard",
+        description="Top-N people by karma -- one bounded ContributionRecord fetch, karmaPoints is a "
+                    "scalar property on the record itself (not derived from counting related things), "
+                    "filtered to the given anchor type(s) via each record's own Anchors classification.",
+        returns="list[dict] (name, karmaPoints, anchorGuid, anchorType), longest-karma first",
+        generic=False,
+        binding_note="Fixed to ContributionRecord.karmaPoints -- top_n and anchor_types tune the "
+                     "result but don't change what's being measured.",
+        params=[
+            AnalyticParam(name="top_n", type="int", default=10, description="How many entries to return."),
+            AnalyticParam(name="anchor_types", type="list[str]", default=["Person"],
+                          description="Anchor typeName(s) to include, e.g. ['Person', 'ITProfile']."),
+            _as_of(),
+        ],
+    ),
+    "engagement_series": AnalyticFunctionSpec(
+        name="engagement_series",
+        function="pyegeria.view.overview_metrics.engagement_series",
+        description="Weekly-bucketed feedback-event trend (comments/ratings/likes/tags/noteLogs), "
+                    "zero-filled across the trailing window -- reuses the same 5 relationship-type "
+                    "queries feedback_summary() already makes, keeping createTime instead of only "
+                    "the count. Takes ce as its leading client.",
+        returns="list[dict] (week, comments, ratings, likes, tags, noteLogs, total), oldest week first",
+        generic=False,
+        binding_note="Fixed to Collaboration OMAS's 5 feedback relationship types -- weeks tunes the window, not what's measured.",
+        params=[
+            AnalyticParam(name="weeks", type="int", default=12, description="Trailing window size, in weeks."),
+            _as_of(),
+        ],
+    ),
+    "orphan_glossary_terms": AnalyticFunctionSpec(
+        name="orphan_glossary_terms",
+        function="pyegeria.view.overview_metrics.orphan_glossary_terms",
+        description="Approved-but-unassigned glossary terms -- a term with no SemanticAssignment "
+                    "relationship to anything was authored but never put to use grounding the "
+                    "catalog. One bounded SemanticAssignment fetch, distinct GlossaryTerm-end GUID "
+                    "count is the 'referenced' set; orphan = term total - referenced. Takes two "
+                    "leading clients (mgr, ce), same convention as semantic_grounding.",
+        returns="dict (termTotal, referencedCount, orphanCount)",
+        generic=False,
+        binding_note="Fixed to the SemanticAssignment relationship type and GlossaryTerm elements -- not a parameter.",
+        params=[_as_of()],
+    ),
+    "stale_assets": AnalyticFunctionSpec(
+        name="stale_assets",
+        function="pyegeria.view.overview_metrics.stale_assets",
+        description="Assets with no update in the last N days (default 180) -- candidates for "
+                    "archival review. One bounded Asset element fetch, each element's own version "
+                    "metadata compared against the cutoff, no relationship traversal.",
+        returns="dict (staleCount, assetTotal)",
+        generic=False,
+        binding_note="Fixed to the Asset type -- population isn't a parameter, but the staleness threshold (days) is.",
+        params=[
+            AnalyticParam(name="days", type="int", default=180, description="Staleness threshold, in days."),
+            _as_of(),
+        ],
     ),
     "metric_trend": AnalyticFunctionSpec(
         name="metric_trend",

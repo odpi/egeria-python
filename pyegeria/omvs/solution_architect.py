@@ -24,7 +24,8 @@ from pyegeria.models import NewElementRequestBody, TemplateRequestBody, UpdateEl
     AuthoredReferenceableProperties, SolutionBlueprintProperties, \
     NestedDesignPatternProperties, SpecializedDesignPatternProperties, \
     RelatedDesignPatternProperties, SolutionDesignProperties, \
-    SolutionComponentActorProperties, SolutionLinkingWireProperties, GetRequestBody
+    SolutionComponentActorProperties, SolutionLinkingWireProperties, GetRequestBody, \
+    UpdateRelationshipRequestBody
 from pyegeria.view.output_formatter import extract_mermaid_only, \
     populate_common_columns
 from pyegeria.core.utils import body_slimmer, dynamic_catch
@@ -3340,7 +3341,8 @@ class SolutionArchitect(ServerClient):
 
 
     async def _async_get_solution_blueprint_by_guid(self, guid: str = None, body: dict = None,
-                                                    graph_query_depth: int = 3, output_format: str = "JSON",
+                                                    graph_query_depth: int = 3, max_mermaid_node_count: int = 10,
+                                                    output_format: str = "JSON",
                                                     report_spec: str| Dict = "Solution-Blueprint", **kwargs) -> dict | str:
         """Return the properties of a specific solution blueprint. Async Version.
 
@@ -3392,7 +3394,17 @@ class SolutionArchitect(ServerClient):
                f"solution-blueprints/{guid}/retrieve")
 
         if body is None:
-            response = await self._async_make_request("POST", url, **kwargs)
+            # graph_query_depth/max_mermaid_node_count were previously dead here -
+            # this endpoint's own **kwargs parameter was never used at all, and no
+            # body means _async_make_request got nothing (or stray kwargs it
+            # doesn't accept). Build an AnyTimeRequestBody so callers can actually
+            # control the mermaid graph (see PYEGERIA_ISSUES.md ISSUE-23/26).
+            body = {
+                "class": "AnyTimeRequestBody",
+                "graphQueryDepth": graph_query_depth,
+                "maxMermaidNodeCount": max_mermaid_node_count,
+            }
+            response = await self._async_make_request("POST", url, body_slimmer(body))
         else:
             response = await self._async_make_request("POST", url, body_slimmer(body), **kwargs)
         element = response.json().get("element", NO_ELEMENTS_FOUND)
@@ -3403,7 +3415,8 @@ class SolutionArchitect(ServerClient):
                                                            output_format, report_spec=report_spec)
         return response.json().get("element", NO_ELEMENTS_FOUND)
 
-    def get_solution_blueprint_by_guid(self, guid: str = None, body: dict = None, graph_query_depth: int = 3, output_format: str = "JSON",
+    def get_solution_blueprint_by_guid(self, guid: str = None, body: dict = None, graph_query_depth: int = 3,
+                                       max_mermaid_node_count: int = 10, output_format: str = "JSON",
                                        report_spec: str| Dict = "Solution-Blueprint", **kwargs) -> dict | str:
         """ Return the properties of a specific solution blueprint.
 
@@ -3451,6 +3464,7 @@ class SolutionArchitect(ServerClient):
         loop = asyncio.get_event_loop()
         response = loop.run_until_complete(self._async_get_solution_blueprint_by_guid(guid=guid, body=body,
                                                                                       graph_query_depth=graph_query_depth,
+                                                                                      max_mermaid_node_count=max_mermaid_node_count,
                                                                                       output_format=output_format, report_spec=report_spec, **kwargs))
         return response
 
@@ -4225,7 +4239,7 @@ class SolutionArchitect(ServerClient):
         loop.run_until_complete(self._async_detach_sub_component(parent_component_guid, member_component_guid, body))
 
     @dynamic_catch
-    async def _async_link_solution_linking_wire(self, component1_guid: str, component2_guid: str, body: dict | NewRelationshipRequestBody) -> None:
+    async def _async_link_solution_linking_wire(self, component1_guid: str, component2_guid: str, body: dict | NewRelationshipRequestBody) -> Optional[str]:
         """ Attach a solution component to a solution component as a peer in a solution. Async Version.
 
         Parameters
@@ -4240,7 +4254,12 @@ class SolutionArchitect(ServerClient):
 
         Returns
         -------
-        None
+        str | None
+            The GUID of the newly created SolutionLinkingWire relationship -- needed
+            to target this specific wire later via
+            _async_update_solution_linking_wire/_async_detach_solution_linking_wire_by_guid,
+            since SolutionLinkingWire allows more than one wire between the same
+            pair of components. None if the server didn't return one.
 
         Raises
         ------
@@ -4273,11 +4292,12 @@ class SolutionArchitect(ServerClient):
 
         url = (f"{self.platform_url}/servers/{self.view_server}/api/open-metadata/solution-architect/"
                f"solution-components/{component1_guid}/wired-to/{component2_guid}/attach")
-        await self._async_new_relationship_request(url, "SolutionLinkingWireProperties", body)
+        guid = await self._async_new_relationship_request(url, "SolutionLinkingWireProperties", body)
         logger.info(f"Linked Solution Linking wires between {component1_guid} -> {component2_guid}")
+        return guid
 
     @dynamic_catch
-    def link_solution_linking_wire(self, component1_guid: str, component2_guid: str, body: dict | NewRelationshipRequestBody) -> None:
+    def link_solution_linking_wire(self, component1_guid: str, component2_guid: str, body: dict | NewRelationshipRequestBody) -> Optional[str]:
         """ Attach a solution component to a solution component as a peer in a solution.
 
                 Parameters
@@ -4291,7 +4311,8 @@ class SolutionArchitect(ServerClient):
 
                 Returns
                 -------
-                None
+                str | None
+                    The GUID of the newly created SolutionLinkingWire relationship.
 
                 Raises
                 ------
@@ -4322,13 +4343,23 @@ class SolutionArchitect(ServerClient):
                 }
                 """
         loop = asyncio.get_event_loop()
-        loop.run_until_complete(self._async_link_solution_linking_wire(component1_guid, component2_guid, body))
+        return loop.run_until_complete(self._async_link_solution_linking_wire(component1_guid, component2_guid, body))
 
     @dynamic_catch
     async def _async_detach_solution_linking_wire(self, component1_guid: str, component2_guid: str,
                                                   body: Optional[dict | DeleteRelationshipRequestBody] = None) -> None:
-        """ Detach a solution component from a peer solution component.
+        """ Detach a solution component from a peer solution component -- detaches
+            ALL SolutionLinkingWire relationships between this pair, not just one.
             Async Version.
+
+        Since Egeria PR #9156 (SolutionLinkingWire made a multi-link relationship --
+        multiple wires with distinct labels/purposes can now exist between the same
+        two components), this pair-based endpoint's semantics changed from "detach
+        the one wire" to "detach every wire between these two components." To target
+        one specific wire, look it up via
+        MetadataExpert._async_find_relationships_between_elements(relationshipTypeName=
+        "SolutionLinkingWire", ...) to get its relationship GUID, then use
+        _async_detach_solution_linking_wire_by_guid() instead.
 
         Parameters
         ----------
@@ -4418,6 +4449,118 @@ class SolutionArchitect(ServerClient):
         """
         loop = asyncio.get_event_loop()
         loop.run_until_complete(self._async_detach_solution_linking_wire(component1_guid, component2_guid, body))
+
+    #
+    # GUID-based SolutionLinkingWire update/detach (Egeria PR #9156, multi-link) --
+    # target one specific wire by its own relationship GUID, needed now that
+    # multiple wires can exist between the same pair of components. Look the GUID
+    # up via MetadataExpert._async_find_relationships_between_elements(
+    # relationshipTypeName="SolutionLinkingWire", ...) first.
+    #
+
+    @dynamic_catch
+    async def _async_update_solution_linking_wire(self, relationship_guid: str,
+                                                   body: dict | UpdateRelationshipRequestBody) -> None:
+        """ Update the properties of one specific SolutionLinkingWire relationship,
+        identified by its own relationship GUID. Async version.
+
+        Parameters
+        ----------
+        relationship_guid: str
+            GUID of the SolutionLinkingWire relationship to update.
+        body: dict | UpdateRelationshipRequestBody
+            The new properties for the relationship.
+
+        Returns
+        -------
+        None
+
+        Raises
+        ------
+        PyegeriaInvalidParameterException
+            one of the parameters is null or invalid or
+        PyegeriaAPIException
+            There is a problem adding the element properties to the metadata repository or
+        PyegeriaUnauthorizedException
+            the requesting user is not authorized to issue this request.
+
+        Notes
+        ----
+
+        Body structure:
+        {
+          "class" : "UpdateRelationshipRequestBody",
+          "properties": {
+             "class": "SolutionLinkingWireProperties",
+             "label": "",
+             "description": "",
+             "informationSupplyChainSegmentGUIDs": []
+          },
+          "mergeUpdate": true
+        }
+        """
+        url = (f"{self.platform_url}/servers/{self.view_server}/api/open-metadata/solution-architect/"
+               f"relationships/{relationship_guid}/update")
+        await self._async_update_relationship_request(url, ["SolutionLinkingWireProperties"], body)
+        logger.info(f"Updated solution linking wire {relationship_guid}")
+
+    @dynamic_catch
+    def update_solution_linking_wire(self, relationship_guid: str,
+                                     body: dict | UpdateRelationshipRequestBody) -> None:
+        """ Update the properties of one specific SolutionLinkingWire relationship,
+        identified by its own relationship GUID."""
+        loop = asyncio.get_event_loop()
+        loop.run_until_complete(self._async_update_solution_linking_wire(relationship_guid, body))
+
+    @dynamic_catch
+    async def _async_detach_solution_linking_wire_by_guid(self, relationship_guid: str,
+                                                           body: Optional[dict | DeleteRelationshipRequestBody] = None) -> None:
+        """ Detach one specific SolutionLinkingWire relationship, identified by its
+        own relationship GUID (as opposed to _async_detach_solution_linking_wire,
+        which detaches every wire between a pair of components). Async version.
+
+        Parameters
+        ----------
+        relationship_guid: str
+            GUID of the SolutionLinkingWire relationship to detach.
+        body: dict | DeleteRelationshipRequestBody, optional
+            The body describing the request.
+
+        Returns
+        -------
+        None
+
+        Raises
+        ------
+        PyegeriaInvalidParameterException
+            one of the parameters is null or invalid or
+        PyegeriaAPIException
+            There is a problem adding the element properties to the metadata repository or
+        PyegeriaUnauthorizedException
+            the requesting user is not authorized to issue this request.
+
+        Notes
+        ----
+
+        Body structure:
+        {
+          "class" : "DeleteRelationshipRequestBody",
+          "forLineage" : false,
+          "forDuplicateProcessing" : false
+        }
+        """
+        url = (f"{self.platform_url}/servers/{self.view_server}/api/open-metadata/solution-architect/"
+               f"solution-components/wires/{relationship_guid}/detach")
+        await self._async_delete_relationship_request(url, body)
+        logger.info(f"Detached solution linking wire {relationship_guid}")
+
+    @dynamic_catch
+    def detach_solution_linking_wire_by_guid(self, relationship_guid: str,
+                                             body: Optional[dict | DeleteRelationshipRequestBody] = None) -> None:
+        """ Detach one specific SolutionLinkingWire relationship, identified by its
+        own relationship GUID."""
+        loop = asyncio.get_event_loop()
+        loop.run_until_complete(self._async_detach_solution_linking_wire_by_guid(relationship_guid, body))
 
     @dynamic_catch
     async def _async_delete_solution_component(self, solution_component_guid: str, cascade_delete: bool = False,
@@ -5918,7 +6061,7 @@ class SolutionArchitect(ServerClient):
             }
             """
         loop = asyncio.get_event_loop()
-        loop.run_until_complete(self._async_delete_solution_role(guid, cascade_delete, body))
+        loop.run_until_complete(self._async_delete_solution_role(guid, body, cascade_delete))
 
     async def _async_find_solution_roles(
         self,

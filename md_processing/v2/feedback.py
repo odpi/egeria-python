@@ -221,7 +221,9 @@ class ExternalReferenceProcessor(AsyncBaseCommandProcessor):
             mapped_type = "ExternalModelSource"
         elif "Source Code" in object_type:
             mapped_type = "ExternalSourceCode"
-        
+        elif "Standard" in object_type:
+            mapped_type = "ExternalStandard"
+
         prop_body = set_element_prop_body(mapped_type, qualified_name, attributes)
         prop_body.update({
             "referenceTitle": attributes.get('Reference Title', {}).get('value'),

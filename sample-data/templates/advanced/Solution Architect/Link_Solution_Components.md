@@ -187,4 +187,12 @@ ___
 >	**Description**: The qualified names of the information supply chains that this wire implements. From SolutionLinkingWire (0735).
 
 
+### Wire GUID
+>	**Input Required**: False
+
+>	**Attribute Type**: Simple
+
+>	**Description**: The GUID of a specific SolutionLinkingWire relationship, used to target one wire when multiple wires exist between the same pair of components (Egeria PR #9156, multi-link). Optional -- omitted, Detach/Unlink removes all wires between the pair (server default behavior).
+
+
 ___

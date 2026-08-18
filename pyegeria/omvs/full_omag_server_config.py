@@ -182,7 +182,7 @@ class FullServerConfig(CoreServerConfig):
     ) -> None:
         """Sets the audit log destinations for a server
 
-        /open-metadata/admin-services/users/{userId}/servers/{serverName}/audit-log-destinations
+        /open-metadata/admin-services/servers/{serverName}/audit-log-destinations
 
         Parameters
         ----------
@@ -261,7 +261,7 @@ class FullServerConfig(CoreServerConfig):
     ) -> None:
         """Adds an audit log destination to a server.
 
-        /open-metadata/admin-services/users/{userId}/servers/{serverName}/audit-log-destinations/connection
+        /open-metadata/admin-services/servers/{serverName}/audit-log-destinations/connection
 
         Parameters
         ----------
@@ -879,19 +879,6 @@ class FullServerConfig(CoreServerConfig):
         if server_name is None:
             server_name = self.server_name
         url = f"{self.full_config_command_root}/servers/{server_name}/server-user-id?id={server_user_id}"
-        response = self.make_request("POST", url)
-        related_code = response.json().get("relatedHTTPCode")
-        if related_code != 200:
-            raise PyegeriaAPIException(response)
-        else:
-            return
-
-    def set_server_user_password(
-        self, server_user_pwd: str, server_name: str = None
-    ) -> None:
-        if server_name is None:
-            server_name = self.server_name
-        url = f"{self.full_config_command_root}/servers/{server_name}/server-user-password?password={server_user_pwd}"
         response = self.make_request("POST", url)
         related_code = response.json().get("relatedHTTPCode")
         if related_code != 200:

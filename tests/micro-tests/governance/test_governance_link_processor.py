@@ -55,6 +55,12 @@ class _FakeClient:
     async def _async_unlicense_element(self, license_guid: str, body: dict):
         self.calls.append(("unlicense", license_guid, body))
 
+    async def _async_link_governance_results(self, gov_metric_guid: str, data_asset_guid: str, body: dict):
+        self.calls.append(("link_governance_results", gov_metric_guid, data_asset_guid, body))
+
+    async def _async_detach_governance_results(self, gov_metric_guid: str, data_asset_guid: str, body: dict):
+        self.calls.append(("detach_governance_results", gov_metric_guid, data_asset_guid, body))
+
 
 @pytest.mark.asyncio
 async def test_link_governed_by_uses_referenceable_and_definition_guids():
@@ -404,5 +410,56 @@ async def test_unlink_license_uses_relationship_guid_when_provided():
     assert "Operation completed" in out
     assert client.calls[0][0] == "unlicense"
     assert client.calls[0][1] == "2dd3c85f-cc0b-4f08-8c33-2dfd64958caa"
+
+
+@pytest.mark.asyncio
+async def test_link_governance_results_uses_metric_and_data_asset_guids():
+    client = _FakeClient()
+    cmd = DrECommand(verb="Link", object_type="Governance Results", attributes={}, raw_block="# Link Governance Results")
+    p = GovernanceLinkProcessor(client=cast(Any, client), command=cmd, context={})
+    p.parsed_output = {
+        "attributes": {
+            "Governance Metric": {"guid": "metric-guid"},
+            "Data Asset": {"guid": "asset-guid"},
+        }
+    }
+
+    out = await p.apply_changes()
+
+    assert "Operation completed" in out
+    assert client.calls[0][0] == "link_governance_results"
+    assert client.calls[0][1] == "metric-guid"
+    assert client.calls[0][2] == "asset-guid"
+
+
+@pytest.mark.asyncio
+async def test_unlink_governance_results_routes_to_detach_method():
+    client = _FakeClient()
+    cmd = DrECommand(verb="Unlink", object_type="Governance Results", attributes={}, raw_block="# Unlink Governance Results")
+    p = GovernanceLinkProcessor(client=cast(Any, client), command=cmd, context={})
+    p.parsed_output = {
+        "attributes": {
+            "Governance Metric": {"guid": "metric-guid"},
+            "Data Asset": {"guid": "asset-guid"},
+        }
+    }
+
+    out = await p.apply_changes()
+
+    assert "Operation completed" in out
+    assert client.calls[0][0] == "detach_governance_results"
+    assert client.calls[0][1] == "metric-guid"
+    assert client.calls[0][2] == "asset-guid"
+
+
+@pytest.mark.asyncio
+async def test_link_governance_results_raises_on_unresolved_references():
+    client = _FakeClient()
+    cmd = DrECommand(verb="Link", object_type="Governance Results", attributes={}, raw_block="# Link Governance Results")
+    p = GovernanceLinkProcessor(client=cast(Any, client), command=cmd, context={})
+    p.parsed_output = {"attributes": {"Governance Metric": {}, "Data Asset": {"guid": "asset-guid"}}}
+
+    with pytest.raises(ValueError):
+        await p.apply_changes()
 
 
