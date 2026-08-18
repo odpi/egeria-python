@@ -3195,7 +3195,7 @@ class ServerClient(BaseServerClient):
             context = {"issue": "Invalid display name and body not provided"}
             raise PyegeriaInvalidParameterException(context=context)
 
-        url = f"{self.command_root}feedback-manager/notes/{note_guid}"
+        url = f"{self.command_root}feedback-manager/assets/{note_guid}/update"
         await self._async_update_element_body_request(url, ['Note'], body)
 
     @dynamic_catch

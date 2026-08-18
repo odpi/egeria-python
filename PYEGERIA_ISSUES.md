@@ -141,65 +141,6 @@ Egeria side lands, it's noted inline (also cross-referenced from the
 "Open pyegeria items" section below where the follow-on is substantial
 enough to track there too).
 
-### ISSUE-30: `updateNote` REST operation (`POST .../feedback-manager/notes/{noteGUID}`) returns 404 on a live server, despite matching the documented `.http` ground truth exactly
-
-**Status:** still open (Egeria Server), re-confirmed 2026-08-18 during a
-full sweep re-verifying every open issue against the current `qs-view-server`
-(prompted by a round of pyegeria-side bug fixes — see the recently-closed
-ISSUE-53/57/60 entries in the appendix below, found during the same sweep).
-Re-ran end-to-end via pyegeria: created a throwaway `DataStructure`,
-attached a `NoteLog` (`create_note_log`), created a `Note` on it
-(`create_note`) — all three succeeded — then `update_note` on the real note
-GUID still 404s with the identical shape
-(`.../feedback-manager/notes/{noteGUID}`). No change from the 2026-08-15
-re-check below.
-
-**Status:** still open (Egeria Server), re-confirmed 2026-08-15 against the
-current `qs-view-server` (post the environment restart noted in ISSUE-52) —
-not just a stale finding from the original redeploy. Re-ran the full
-repro end-to-end via pyegeria itself this time (not just raw `curl`):
-created a throwaway `DataStructure`, attached a `NoteLog`, created a `Note`
-on it — all three succeeded — then `_async_update_note` on the real note
-GUID still 404s with the identical shape (`CLIENT_ERROR_400`/HTTP 404 at
-`.../feedback-manager/notes/{noteGUID}`). Test elements cleaned up
-(cascade-deleting the anchor `DataStructure` also removed the attached
-`NoteLog`/`Note`, confirmed via a follow-up GUID lookup on all three).
-Nothing changed client-side — still not fixable in pyegeria; genuinely
-looks like an unregistered/unshipped endpoint on this server build.
-
-**Original status:** open (Egeria Server), found 2026-08-05 while live-verifying the
-ISSUE-32 `Note` type fix end-to-end (create worked; update did not).
-
-**Layer:** Egeria Server — not fixable in pyegeria. `_async_update_note`'s
-URL (`{command_root}feedback-manager/notes/{note_guid}`) was double-checked
-against `Egeria-api-feedback-manager.http`'s `@name updateNote` worked
-example and matches it exactly, method and body shape included; this isn't
-a pyegeria URL-construction bug.
-
-**What:** confirmed via both pyegeria and a raw `curl` (bypassing pyegeria
-entirely) against a freshly-created, real `Note` element on `qs-view-server`
-— both get a bare HTTP 404 with no Egeria FFDC error body, just a generic
-Spring "Not Found" response, meaning the operation doesn't appear to be
-routed/registered on this server at all:
-
-```bash
-curl -sk -X POST "https://localhost:9443/servers/qs-view-server/api/open-metadata/feedback-manager/notes/<real-note-guid>" \
-  -H "Authorization: Bearer $TOKEN" -H "Content-Type: application/json" \
-  -d '{"class":"UpdateElementRequestBody","mergeUpdate":true,"properties":{"class":"NoteProperties","typeName":"Note","displayName":"x"}}'
-# {"timestamp":"...","status":404,"error":"Not Found","path":"/servers/qs-view-server/api/open-metadata/feedback-manager/notes/<guid>"}
-```
-
-**Impact:** `update_note`/`_async_update_note` cannot be verified working
-end-to-end on this server today — create + fetch both work correctly
-(confirmed live, see ISSUE-32), but update is blocked. Not related to the
-`Note` type change itself (same 404 shape would occur regardless of
-`typeName`) — looks like a genuine gap in this endpoint's registration on
-the current server build.
-
-**Candidate fix:** none client-side. Worth confirming against a different/
-newer Egeria server build whether this is a temporary gap in the specific
-redeploy used for this session, or a real, currently-unreleased endpoint.
-
 ---
 
 ### ISSUE-52: `qs-nanny-daemon`/`qs-integration-daemon`'s own connectors generate sustained, heavy background write load against the shared repository — starves interactive requests, plausible cause of "frequent Postgres checkpoints"
@@ -888,6 +829,49 @@ accepted values individually risks wiring up a parameter some routes will
 split above was never resolved against a live server per-endpoint — if a
 given delete endpoint actually expects `cascadedDelete`, this fix's choice
 would need revisiting for that specific endpoint.
+
+---
+
+### ISSUE-30: `updateNote` REST operation returns 404 on a live server — misdiagnosed as an Egeria server gap for three separate re-checks; actually a stale URL in both pyegeria and the `.http` ground truth it was checked against
+
+**Layer:** ~~Egeria Server~~ **Pyegeria** — corrected. `_server_client.py`'s
+`_async_update_note` built `{command_root}feedback-manager/notes/{note_guid}`.
+Every prior re-check (2026-08-05, 2026-08-15, 2026-08-18) cross-checked this
+exact URL against `Egeria-api-feedback-manager.http`'s `@name updateNote`
+worked example and found it matched byte-for-byte — which is why this got
+classified as an Egeria server bug (unregistered/unshipped endpoint) rather
+than a pyegeria bug for three separate passes. The `.http` reference file
+itself was stale/wrong at the time, so "matches ground truth" gave false
+confidence.
+
+**Status:** fixed 2026-08-18 (Pyegeria — `pyegeria/core/_server_client.py`,
+`tests/micro-tests/test_update_note_url.py`). Fixed by dwolfson after
+refreshing the local `Egeria-api-feedback-manager.http` copy and noticing
+its `updateNote` worked example now shows a different URL:
+`feedback-manager/assets/{noteGUID}/update` (the same `assets/{guid}/update`
+shape the feedback-manager service uses elsewhere), not
+`feedback-manager/notes/{noteGUID}`. `_async_update_note`'s URL construction
+corrected to match.
+
+**Verified live** against `qs-view-server`: created a throwaway
+`DataStructure` → `NoteLog` → `Note` (as in every prior re-check), called
+`update_note(note_guid, display_name=..., description=...)` — succeeded
+(previously 404'd every time). Went further than a bare success check:
+fetched the note log's notes back via `get_notes_for_note_log` and
+confirmed both `displayName` and `description` actually persisted the new
+values, not just a 200 with no real effect. 2 new unit tests
+(`test_update_note_url.py`, mocked `_async_make_request`, no live server)
+lock in the corrected URL and body shape; full `pytest tests/micro-tests/`
+passes.
+
+**Lesson for future re-verifications:** "the client-side URL matches the
+`.http` ground truth exactly" is only as trustworthy as that ground-truth
+file itself — this file can drift out of date the same way pyegeria's own
+code can, and when both sides of a comparison share the same stale source,
+byte-for-byte agreement stops being meaningful evidence. Worth being more
+skeptical of a "confirmed matches ground truth, must be server-side" verdict
+when the `.http` file hasn't been independently re-verified against a
+current server/Swagger spec recently.
 
 ---
 
