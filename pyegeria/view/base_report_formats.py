@@ -1,10 +1,7 @@
 """
 SPDX-License-Identifier: Apache-2.0
 Copyright Contributors to the ODPi Egeria project.
-"""
-from pyegeria.core._exceptions import PyegeriaInvalidParameterException
 
-"""
 # Purpose
 This file manages output format sets.
 
@@ -81,11 +78,14 @@ This module may raise the following exceptions:
 """
 
 import os
+import re as _re
+from datetime import datetime, timezone
 from pathlib import Path
-from typing import List, Union
+from typing import List, Optional, Union
 
 from loguru import logger
 
+from pyegeria.core._exceptions import PyegeriaInvalidParameterException
 from pyegeria.view._output_format_models import (
     Attribute,
     Column,
@@ -2003,7 +2003,13 @@ base_report_specs = FormatSetDict({
     ),
     "Glossary-Terms": FormatSet(
         target_type="Term",
-        # aliases=["Glossary-Terms"],
+        # ISSUE-67: "Terms" added as an explicit alias -- test_output_format_sets_unit.py's
+        # test_select_terms_formats() (and any other caller expecting the bare, pre-rename
+        # name) was getting a silent None from select_report_spec("Terms", ...) with no error,
+        # only discoverable by checking the return value. The family-registry build step below
+        # (_add_alias) appends its own auto-derived "Glossary Terms" alias on top of this list,
+        # not in place of it, so both remain valid lookup names.
+        aliases=["Terms"],
         heading="Basic Glossary Term Attributes",
         description="Attributes that apply to all Basic Glossary Terms.",
         annotations={},
@@ -3101,9 +3107,6 @@ formats=[
 _initial_combined_specs = combine_format_set_dicts(base_report_specs, generated_format_sets)
 
 # Utilities for reorganizing specs by family and normalizing labels
-import re as _re
-
-
 def _slugify_label(label: str) -> str:
     """Turn a display label into a key by collapsing whitespace to '-'.
     Keeps existing hyphens, trims outer whitespace, and collapses multiple dashes.
@@ -3178,74 +3181,20 @@ for fam_name in sorted(family_report_specs.keys(), key=lambda s: s.lower()):
 report_specs = _report_specs_merged
 
 
-def select_report_spec(kind: str, output_type: str) -> dict | None:
-    """
-    Retrieve the appropriate output set configuration dictionary based on `kind` and `output_type`.
-
-    Intent of special output_type values:
-    - "ANY": Discovery-only. Resolve the FormatSet (including aliases), action, and metadata, but DO NOT
-      resolve a concrete format. Callers typically use this to check existence or to later pick a specific type
-      via get_report_spec_match(...).
-
-    :param kind: The kind of output set (e.g., "Referenceable", "Collections"). Aliases are supported.
-    :param output_type: The desired output format type (e.g., "DICT", "LIST", "REPORT"), or "ANY".
-    :return: The matched output set dictionary or None if no match is found.
-    """
-    # Normalize the output type to uppercase for consistency
-    output_type = output_type.upper()
-    output_struct: dict = {}
-
-    # Step 1: Check if `kind` exists in the `report_specs` dictionary
-    element = report_specs.get(kind)
-
-    # Step 2: If not found, attempt to match `kind` in aliases
-    if element is None:
-        for key, value in report_specs.items():
-            aliases = value.aliases
-            if kind in aliases:
-                element = value
-                break
-
-    # Step 3: If still not found, return None
-    if element is None:
-        msg = f"No matching column set found for kind='{kind}' and output type_name = '{output_type}'."
-        logger.error(msg)
-        return None
-    else:
-        # Convert FormatSet to dictionary for backward compatibility
-        output_struct["aliases"] = element.aliases
-        output_struct["heading"] = element.heading
-        output_struct["description"] = element.description
-        output_struct["annotations"] = element.annotations
-        # Include target_type for callers that need to know the intended target entity type
-        output_struct["target_type"] = element.target_type
-        if element.action:
-            # Convert ActionParameter to dictionary for backward compatibility
-            output_struct["action"] = element.action.model_dump()
-        if element.get_additional_props:
-            output_struct["get_additional_props"] = element.get_additional_props.dict()
-
-    # If this was just a validation that the format set could be found then the output type is ANY - so just return.
-    if output_type == "ANY":
-        return output_struct
-
-    # Step 4: Search for a matching format in the `formats` list
-    for format in element.formats:
-        if output_type in format.types:
-            # Convert Format to dictionary for backward compatibility
-            output_struct["formats"] = format.dict()
-            return output_struct
-
-    # Step 5: Handle the fallback case of "ALL"
-    for format in element.formats:
-        if "ALL" in format.types:
-            # Convert Format to dictionary for backward compatibility
-            output_struct["formats"] = format.dict()
-            return output_struct
-
-    # Step 6: If no match is found, return None
-    logger.error(f"No matching format found for kind='{kind}' with output type_name = '{output_type}'.")
-    return None
+# select_report_spec used to be defined here directly (~70 lines, iterating the
+# module-level `report_specs` dict). Removed 2026-08-18 -- it was fully shadowed
+# and unreachable, since the "Legacy names remain available" alias near the end
+# of this file (`select_report_spec = select_report_format`) silently overwrote
+# this name with the newer registry-based implementation (confirmed a strict
+# superset for every case this file's own test suite exercises: same alias-
+# matching + ANY/formats-lookup logic, plus a TABLE->DICT fallback and
+# `question_spec` this old body didn't have) -- ruff correctly flagged the
+# redefinition (F811). No behavior change for any caller; the name
+# `select_report_spec` still resolves to the same function it always actually
+# ran as. (Two pre-existing, unrelated test failures --
+# test_get_output_format_type_match, test_select_terms_formats -- were
+# double-checked against this change and confirmed to fail identically before
+# it too; not caused or masked by this cleanup.)
 
 
 def report_spec_list(*, show_family: bool = False, sort_by_family: bool = False, return_kind: str = "strings") \
@@ -3419,27 +3368,47 @@ def get_report_spec_match(format_set: Union[dict, FormatSet], output_format: str
                         return format_set_dict
         else:
             # Handle the case where format_set is a dictionary from select_report_spec with the "ANY" output type
-            # In this case, we need to look up the format set by name and get the formats
-            if "heading" in format_set_dict and "description" in format_set_dict:
-                # Try to find the format set by heading
-                for key, value in report_specs.items():
-                    if value.heading == format_set_dict["heading"] and value.description == format_set_dict[
-                        "description"]:
-                        # Found the format set, now find the matching format
-                        for format in value.formats:
-                            if output_format in format.types:
-                                format_set_dict["formats"] = format.dict()
-                                # Ensure target_type is included when reconstructing dict
-                                format_set_dict["target_type"] = value.target_type
-                                return format_set_dict
+            # In this case, we need to look up the format set by name and get the formats.
+            #
+            # ISSUE-67: prefer an exact lookup via "_report_spec_name" (the resolved registry
+            # key select_report_spec's ANY branch now stashes) over the old heading+description
+            # text match below -- that match is ambiguous whenever two or more FormatSets share
+            # identical heading/description (confirmed live: "Collections" and "BasicCollections"
+            # both use "Common Collection Information"/"Attributes generic to all Collections.",
+            # so the old lookup could silently resolve to the wrong one and return its formats
+            # instead -- e.g. "BasicCollections" only has an ALL-typed format, so a caller asking
+            # for TABLE on "Collections" got ALL's much narrower column set with no error).
+            # Falls back to the text match for any pre-"ANY"-fix dict that lacks the key (e.g. one
+            # loaded from a JSON file saved via save_report_specs() before this fix).
+            value = None
+            spec_name = format_set_dict.get("_report_spec_name")
+            if spec_name:
+                value = report_specs.get(spec_name)
 
-                        # Handle the fallback case of "ALL"
-                        for format in value.formats:
-                            if "ALL" in format.types:
-                                format_set_dict["formats"] = format.dict()
-                                # Ensure target_type is included when reconstructing dict
-                                format_set_dict["target_type"] = value.target_type
-                                return format_set_dict
+            if value is None and "heading" in format_set_dict and "description" in format_set_dict:
+                # Try to find the format set by heading (legacy fallback, ambiguous)
+                for key, candidate in report_specs.items():
+                    if candidate.heading == format_set_dict["heading"] and candidate.description == format_set_dict[
+                        "description"]:
+                        value = candidate
+                        break
+
+            if value is not None:
+                # Found the format set, now find the matching format
+                for format in value.formats:
+                    if output_format in format.types:
+                        format_set_dict["formats"] = format.dict()
+                        # Ensure target_type is included when reconstructing dict
+                        format_set_dict["target_type"] = value.target_type
+                        return format_set_dict
+
+                # Handle the fallback case of "ALL"
+                for format in value.formats:
+                    if "ALL" in format.types:
+                        format_set_dict["formats"] = format.dict()
+                        # Ensure target_type is included when reconstructing dict
+                        format_set_dict["target_type"] = value.target_type
+                        return format_set_dict
 
     # If no match is found, return the original format set
     return format_set_dict
@@ -3474,7 +3443,7 @@ def save_report_specs(file_path: str, format_set_names: List[str] = None) -> Non
             subset.save_to_json(file_path)
             logger.info(f"Selected format sets saved to {file_path}")
         else:
-            logger.warning(f"No valid format sets to save, file not created")
+            logger.warning("No valid format sets to save, file not created")
 
 
 def load_report_specs(file_path: str, merge: bool = True) -> None:
@@ -3582,9 +3551,6 @@ except Exception as e:
 # =============================
 # Report format dynamic registry and new API (backward-compatible)
 # =============================
-
-from datetime import datetime, timezone
-from typing import Optional
 
 # Runtime and config-loaded registries (do not mutate built-ins)
 _RUNTIME_REPORT_FORMATS = FormatSetDict()
@@ -4220,12 +4186,14 @@ def _select_from_registry(registry: FormatSetDict, kind: str, output_type: str) 
         raise PyegeriaInvalidParameterException(context={"reason": reason})
 
     output_type = output_type.upper()
+    resolved_key = kind if kind in registry else None
     element: Optional[FormatSet] = registry.get(kind)
     if element is None:
         # try aliases
-        for value in registry.values():
+        for key, value in registry.items():
             if kind in value.aliases:
                 element = value
+                resolved_key = key
                 break
     if element is None:
         logger.debug(f"No matching report format found for kind='{kind}' and output type_name = '{output_type}'.")
@@ -4238,6 +4206,14 @@ def _select_from_registry(registry: FormatSetDict, kind: str, output_type: str) 
         "question_spec": element.question_spec,
         "annotations": element.annotations,
         "target_type": element.target_type,
+        # Carries the resolved registry key through an "ANY" (discovery-only) result so
+        # get_report_spec_match() can look the FormatSet back up unambiguously by name
+        # instead of a fragile heading+description text match -- see ISSUE-67: two or
+        # more FormatSets can share identical heading/description (e.g. "Collections" and
+        # "BasicCollections" both use "Common Collection Information"/"Attributes generic
+        # to all Collections."), which made that reverse lookup silently pick the wrong
+        # one and return its (possibly much narrower) formats list instead.
+        "_report_spec_name": resolved_key,
     }
     if element.action:
         output_struct["action"] = element.action.dict()

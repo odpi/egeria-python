@@ -313,6 +313,26 @@ still-open Egeria server pagination-stability bug for this specific
 broad-type query, just not the mechanism this session initially
 misdiagnosed. Nothing fixable client-side.
 
+**Checked dwolfson's hypothesis that the duplicates might just be multiple
+versions of the same object (not a true dupe)** — ruled out definitively.
+Re-ran the corrected exhaustive scan and compared `versions.version`/
+`versions.updateTime` across every occurrence of every duplicated GUID
+(1,112 duplicated GUIDs found this run — close to, not identical to, the
+1,394 above; population drifts slightly between runs since this is a live
+shared server). **Every single occurrence of every duplicate has the
+identical version number and `updateTime`** — 0 of 1,112 duplicated GUIDs
+showed two different versions of the same element; all 1,112 were the
+exact same version appearing 2-3 times (`{2: 1092, 3: 20}` occurrence-count
+distribution). So this is not "the repository returned two historical
+versions of one element and we're not deduplicating" — it's the literal
+same element-state appearing more than once in the raw paginated response,
+which is consistent only with unstable result ordering shifting an
+element's position between page fetches (the same mechanism suspected
+since the original 2026-08-06 finding), not a versioning artifact.
+Duplicated types skew heavily toward `ValidMetadataValue` (659 of 1,112)
+and `SpecificationPropertyValue` (300) — both likely large, frequently-
+reordered collections, consistent with an ordering-instability theory.
+
 **Also found as a byproduct of this correction:** pyegeria's own
 `pyegeria/view/base_report_formats.py` (`load_egeria_report_specs()`) had
 exactly the `len(page) < page_size` anti-pattern in a real fetch-all loop
@@ -980,6 +1000,87 @@ unit tests (`test_design_pattern_usage.py`, pure function test against
 path, the unset-is-None case, and confirm `SolutionBlueprint` (which has
 no such field on its own real properties class) doesn't pick up a stray
 `usage` key. Full `pytest tests/micro-tests/` passes.
+
+---
+
+### ISSUE-67: `pyegeria/view/base_report_formats.py` had a dead, shadowed `select_report_spec` function plus a real ambiguous-lookup bug it was masking
+
+**Layer:** Pyegeria (`pyegeria/view/base_report_formats.py`).
+
+**Status:** fixed 2026-08-18 (Pyegeria —
+`pyegeria/view/base_report_formats.py`,
+`tests/micro-tests/test_report_spec_any_lookup.py`). Requested by
+dwolfson ("fix the reported issues in base_formats.py and related") after
+a `ruff check` surfaced 10 lint findings in this file — mostly cosmetic
+import-ordering (`E402`, caused by a second, unassigned string-literal
+"documentation" block sitting between the real module docstring and the
+actual imports — merged into one true docstring, imports consolidated),
+plus one unnecessary f-string. One finding was not cosmetic:
+
+**`F811`: `select_report_spec` was defined twice.** The real, ~70-line
+implementation at the top of the module's registry-building section was
+silently shadowed by `select_report_spec = select_report_format` near the
+bottom (a "Legacy names remain available (no change to behavior)"
+migration alias). **First attempt at fixing this by deleting the shadowed
+dead function caused a false alarm**: two pre-existing functional-test
+failures (`test_get_output_format_type_match`,
+`test_select_terms_formats`) appeared right after, but re-running them
+against the *unmodified* file confirmed they failed identically before the
+change too — the dead-function deletion itself was safe (confirmed:
+`select_report_format`'s registry-based logic is a strict superset of the
+old body's behavior — same alias-matching + ANY/formats-lookup logic, plus
+an extra TABLE→DICT fallback and `question_spec` the old body lacked).
+
+**But investigating those 2 "unrelated" failures found a real, separate
+bug they'd been masking:** `get_report_spec_match`'s handling of a
+`select_report_spec(kind, "ANY")` result does a reverse lookup by matching
+`heading`+`description` text against every entry in `report_specs` — which
+is ambiguous whenever two `FormatSet`s share identical heading/description.
+Confirmed live: `"Collections"` and `"BasicCollections"` both use
+`heading="Common Collection Information"`,
+`description="Attributes generic to all Collections."` — `"BasicCollections"`
+has only an `ALL`-typed format, `"Collections"` has `MERMAID`/`DICT`/`TABLE`/
+`REPORT`/`ALL`. Asking for `get_report_spec_match(select_report_spec("Collections",
+"ANY"), "TABLE")` silently resolved to `"BasicCollections"`'s narrow `ALL`
+format instead of `"Collections"`'s real `TABLE` one — no error, just the
+wrong (much narrower) column set returned. Separately, `test_select_terms_formats`
+failed because `select_report_spec("Terms", "LIST")` returned `None` — no
+alias `"Terms"` existed for the renamed `"Glossary-Terms"` FormatSet.
+
+**Fix:** `_select_from_registry` (the function `select_report_format`/
+`select_report_spec` now both actually run as) carries the *resolved
+registry key* through in the "ANY" output dict as `"_report_spec_name"`.
+`get_report_spec_match` now prefers an exact lookup via that key over the
+ambiguous text match, falling back to the old (still-ambiguous, but at
+least not broken) heading+description match only for a dict that lacks
+the key — e.g. one loaded from a JSON file `save_report_specs()` wrote
+before this fix. Added `"Terms"` as an explicit alias on the
+`"Glossary-Terms"` `FormatSet` (the family-registry build step appends its
+own auto-derived `"Glossary Terms"` alias on top, not in place of it, so
+both remain valid). Also deleted the now-confirmed-safe dead
+`select_report_spec` body, consolidated the file's imports (fixing all
+remaining `E402`s), and removed the unnecessary f-string prefix flagged
+by `F541`. `ruff check pyegeria/view/base_report_formats.py` now reports
+zero findings (was 10).
+
+**Verified:** both previously-failing tests
+(`test_get_output_format_type_match`, `test_select_terms_formats`) now
+pass. 5 new unit tests (`test_report_spec_any_lookup.py`) cover the
+resolved-name carry-through, confirm the documented ambiguous pair still
+exists in the registry (so this test would have caught the original bug,
+not just gone green for an unrelated reason), the correct-resolution path,
+the legacy-fallback path for a dict without the new key, and the `Terms`
+alias. Full `pytest tests/micro-tests/` passes, plus every functional test
+touching this module (`test_output_formats.py`,
+`test_output_format_sets_unit.py`, `test_gen_report_specs.py`,
+`test_format_set_executor_resolution.py`, `test_spec.py`).
+
+**Not exhaustively audited:** other `FormatSet`s may share identical
+heading/description text the same way `Collections`/`BasicCollections` do
+— not searched for beyond this one confirmed pair, since the fix
+(carrying the resolved key through) closes the whole bug class regardless
+of how many such pairs exist, rather than needing to find and fix each one
+individually.
 
 ---
 
