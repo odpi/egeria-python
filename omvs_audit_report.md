@@ -5,8 +5,8 @@ Subject: `pyegeria/omvs` (43 modules)
 
 | Result | Count |
 |---|---|
-| OK | 643 |
-| Mismatch (verb/path/body) | 16 |
+| OK | 646 |
+| Mismatch (verb/path/body) | 13 |
 | Missing | 288 |
 | Found in another module | 13 |
 | URL lint | 0 |
@@ -320,12 +320,6 @@ _Review only - cross-service overlap is often intentional._
 ### Service: glossary-manager
 
 - getTermRelationshipTypeNames: MISSING  (`GET /glossary-manager/glossaries/terms/relationships/type-names`)
-- clearTermAsAbstractConcept: MISMATCH `remove_is_abstract_concept`
-    - BODY sends DeleteClassificationRequestBody != DeleteElementRequestBody
-- clearTermAsActivity: MISMATCH `remove_activity_description`
-    - BODY sends DeleteClassificationRequestBody != DeleteRelationshipRequestBody
-- clearTermAsContext: MISMATCH `remove_is_context_definition`
-    - BODY sends DeleteClassificationRequestBody != DeleteRelationshipRequestBody
 
 ### Service: governance-officer
 
