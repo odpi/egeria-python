@@ -5423,7 +5423,7 @@ class CollectionManager(ServerClient):
         """
         url = (
             f"{self.platform_url}/servers/{self.view_server}/api/open-metadata/collection-manager/collections"
-            f"/agreements"
+            f"/agreements/"
             f"{agreement_guid}/agreement-items/{agreement_item_guid}/detach")
         await self._async_delete_relationship_request(url, body)
         logger.info(f"Detached agreement item {agreement_item_guid} from {agreement_guid}")

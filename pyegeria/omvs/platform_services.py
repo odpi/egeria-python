@@ -59,63 +59,11 @@ class Platform(BasePlatformClient):
             + "server-platform"
         )
 
-    def get_platform_origin(self) -> str:
-        """Get the version and origin of the platform software
-
-         /open-metadata/platform-services/server-platform/origin
-         Response from this call is a string not JSON..
-
-         Parameters
-         ----------
-
-         Returns
-         -------
-        String with the platform origin information.  Also throws exceptions if no viable server or endpoint errors
-
-        Raises
-        ------
-        PyegeriaInvalidParameterException
-          If the client passes incorrect parameters on the request — such as bad URLs or invalid values.
-        PyegeriaAPIException
-          Raised by the server when an issue arises in processing a valid request.
-        PyegeriaUnauthorizedException
-          The principal specified by the `user_id` does not have authorization for the requested action.
-        """
-
-        global response
-        calling_frame = inspect.currentframe().f_back
-        caller_method = inspect.getframeinfo(calling_frame).function
-        class_name = __class__.__name__
-
-        # url = f"{self.platform_url}/open-metadata/platform-services/server-platform/origin"
-        url = f"{self.platform_url}/api/about"
-
-        local_session = httpx.Client(verify=enable_ssl_check)
-        response = " "
-        try:
-            response = local_session.get(url)
-            if response.status_code != 200:
-                # Server returned non-200; raise API exception with response context
-                raise PyegeriaAPIException(response)
-            else:
-                return response.text
-        except PyegeriaException:
-            raise
-
-        except (
-            httpx.NetworkError,
-            httpx.ProtocolError,
-            httpx.HTTPStatusError,
-            httpx.TimeoutException,
-        ) as e:
-            msg = (
-                f"Client error in {caller_method} for {class_name} calling {url}: {str(e)}"
-            )
-            raise PyegeriaConnectionException(
-                context={"caller_method": caller_method, "class": class_name, "url": url},
-                additional_info={"message": msg},
-                e=e,
-            )
+    # get_platform_origin()/async_get_platform_origin() are inherited from
+    # BasePlatformClient. They already target
+    # /open-metadata/platform-services/server-platform/origin and pass
+    # is_json=False, which this endpoint requires -- it returns plain text, so
+    # parsing it as JSON raises PyegeriaInvalidParameterException.
 
     async def _async_activate_server_stored_config(
         self, server: Optional[str] = None, timeout: int = 60
@@ -205,7 +153,7 @@ class Platform(BasePlatformClient):
         if server is None:
             server = self.server_name
 
-        url = self.admin_command_root + "/servers/" + server + "/instance/configuration"
+        url = self.admin_command_root + "/servers/" + server + "/instance"
         await self._async_make_request("POST", url, config_body, timeout=timeout)
 
     def activate_server_supplied_config(
@@ -1092,9 +1040,12 @@ class Platform(BasePlatformClient):
         loop = asyncio.get_event_loop()
         return loop.run_until_complete(self._async_get_security_user_list(status, user_type))
 
-    async def _async_get_registered_services(self, service_category: str) -> list:
+    async def _async_get_registered_services(self, service_category: Optional[str] = None) -> list:
         """Retrieve the list of registered services for a category. Async version."""
-        url = f"{self.admin_command_root}/registered-services/{service_category}"
+        if service_category and service_category != "all-services":
+            url = f"{self.admin_command_root}/registered-services/{service_category}"
+        else:
+            url = f"{self.admin_command_root}/registered-services"
         response = await self._async_make_request("GET", url)
         return response.json().get("services")
 

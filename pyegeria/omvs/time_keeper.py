@@ -1156,7 +1156,7 @@ class TimeKeeper(ServerClient):
         ```
         """
         url = f"{self.platform_url}/servers/{self.view_server}/api/open-metadata/time-keeper/elements/{timeline_affected_element_guid}/context-events-describing-timeline-effects/{context_event_guid}/attach"
-        await self._async_new_relationship_request(url, ['ContextEventTimelineEffect'],body)
+        await self._async_new_relationship_request(url, ["ContextEventForTimelineEffectsProperties"], body)
 
     def link_context_event_timeline_effect(
         self,

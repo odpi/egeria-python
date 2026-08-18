@@ -2830,7 +2830,7 @@ class GovernanceOfficer(ServerClient):
         dict | list | str
             The governance action process.
         """
-        url = f"{self.platform_url}/servers/{self.view_server}/api/open-metadata/governance-officer/governance-action-processes/{guid}/retrieve"
+        url = f"{self.platform_url}/servers/{self.view_server}/api/open-metadata/governance-officer/governance-definitions/{guid}/retrieve"
         type = element_type if element_type else "GovernanceActionProcess"
         return await self._async_get_guid_request(
             url,
@@ -2992,7 +2992,7 @@ class GovernanceOfficer(ServerClient):
 
     @dynamic_catch
     async def _async_detach_design_from_implementation(self, design_desc_guid: str, implementation_guid: str,
-                                                       body: Optional[dict | DeleteElementRequestBody] = None) -> None:
+                                                       body: Optional[dict | DeleteRelationshipRequestBody] = None) -> None:
         """ Detach a governance definition from its implementation. Async Version.
 
         Parameters
@@ -3039,7 +3039,7 @@ class GovernanceOfficer(ServerClient):
 
     @dynamic_catch
     def detach_design_from_implementation(self, design_desc_guid: str, implementation_guid: str,
-                                          body: Optional[dict | DeleteElementRequestBody] = None) -> None:
+                                          body: Optional[dict | DeleteRelationshipRequestBody] = None) -> None:
         """ Detach a governance definition from its implementation. Request body is optional.
 
         Parameters

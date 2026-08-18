@@ -578,7 +578,7 @@ class ActorManager(ServerClient):
           "forDuplicateProcessing": false
         }
         """
-        url = (f"{self.command_root}/assets/{asset_guid}/it_profiles/{it_profile_guid}/detach")
+        url = (f"{self.command_root}/assets/{asset_guid}/it-profiles/{it_profile_guid}/detach")
 
         await self._async_delete_element_request(url, body)
         logger.debug(f"Detached asset {asset_guid} from it profile {it_profile_guid}")

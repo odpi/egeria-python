@@ -443,7 +443,7 @@ class SubjectArea(ServerClient):
         }
         ```
         """
-        url = f"{self.platform_url}/servers/{self.view_server}/api/open-metadata/subject-area/subject-areas/{parent_subject_area_guid}/subject-area-hierarchies/{nested_subject_area_guid}/attach"
+        url = f"{self.platform_url}/servers/{self.view_server}/api/open-metadata/subject-area/collections/{parent_subject_area_guid}/collection-hierarchies/{nested_subject_area_guid}/attach"
         await self._async_new_relationship_request(url, ["SubjectAreaHierarchyProperties"], body)
 
     def link_subject_area_hierarchy(
@@ -527,7 +527,7 @@ class SubjectArea(ServerClient):
         }
         ```
         """
-        url = f"{self.platform_url}/servers/{self.view_server}/api/open-metadata/subject-area/subject-areas/{parent_subject_area_guid}/subject-area-hierarchies/{nested_subject_area_guid}/detach"
+        url = f"{self.platform_url}/servers/{self.view_server}/api/open-metadata/subject-area/collections/{parent_subject_area_guid}/collection-hierarchies/{nested_subject_area_guid}/detach"
         await self._async_delete_relationship_request(url, body)
 
     def detach_subject_area_hierarchy(
