@@ -535,10 +535,10 @@ class ExternalReferences(ServerClient):
 
     @dynamic_catch
     async def _async_link_external_reference(self, element_guid: str, ext_ref_guid: str,
-                                             body: Optional[dict | NewRelationshipRequestBody] = None) -> None:
+                                             body: Optional[dict | NewRelationshipRequestBody] = None) -> Optional[str]:
         """ Attach an element to an external reference.
             Async version.
-    
+
         Parameters
         ----------
         element_guid: str
@@ -547,10 +547,14 @@ class ExternalReferences(ServerClient):
             The identifier of the external reference.
         body: dict | NewRelationshipRequestBody, optional, default = None
             A structure representing the details of the relationship.
-    
+
         Returns
         -------
-        Nothing
+        str | None
+            The GUID of the newly created ExternalReferenceLink relationship
+            (ExternalReferenceLink is MULTI_LINK -- see
+            pyegeria.core.relationship_multiplicity). None if the server
+            didn't return one.
     
         Raises
         ------
@@ -583,12 +587,13 @@ class ExternalReferences(ServerClient):
         """
 
         url = url = (f"{self.command_root}/elements/{element_guid}/external-references/{ext_ref_guid}/attach")
-        await self._async_new_relationship_request(url, "ExternalReferenceLinkProperties", body)
+        guid = await self._async_new_relationship_request(url, "ExternalReferenceLinkProperties", body)
         logger.info(f"Linking element {element_guid} to ext. ref.  {ext_ref_guid}")
+        return guid
 
     @dynamic_catch
     def link_external_reference(self, element_guid: str, ext_ref_guid: str,
-                                body: Optional[dict | NewRelationshipRequestBody] = None):
+                                body: Optional[dict | NewRelationshipRequestBody] = None) -> Optional[str]:
         """ Attach an element to an external reference.
     
             Parameters
@@ -633,7 +638,7 @@ class ExternalReferences(ServerClient):
             }
             """
         loop = asyncio.get_event_loop()
-        loop.run_until_complete(self._async_link_external_reference(element_guid, ext_ref_guid, body))
+        return loop.run_until_complete(self._async_link_external_reference(element_guid, ext_ref_guid, body))
 
     @dynamic_catch
     async def _async_detach_external_reference(self, element_guid: str, ext_ref_guid: str,
@@ -721,10 +726,10 @@ class ExternalReferences(ServerClient):
 
     @dynamic_catch
     async def _async_link_media_reference(self, element_guid: str, media_ref_guid: str,
-                                          body: Optional[dict | NewRelationshipRequestBody] = None) -> None:
+                                          body: Optional[dict | NewRelationshipRequestBody] = None) -> Optional[str]:
         """ Attach an element to a related media reference.
             Async version.
-    
+
         Parameters
         ----------
         element_guid: str
@@ -733,10 +738,14 @@ class ExternalReferences(ServerClient):
             The identifier of the external media reference.
         body: dict | NewRelationshipRequestBody, optional, default = None
             A structure representing the details of the relationship.
-    
+
         Returns
         -------
-        Nothing
+        str | None
+            The GUID of the newly created MediaReference relationship
+            (MediaReference is MULTI_LINK -- see
+            pyegeria.core.relationship_multiplicity). None if the server
+            didn't return one.
     
         Raises
         ------
@@ -770,12 +779,13 @@ class ExternalReferences(ServerClient):
 
         """
         url = f"{self.command_root}/elements/{element_guid}/media-references/{media_ref_guid}/attach"
-        await self._async_new_relationship_request(url, "MediaReferenceProperties", body)
+        guid = await self._async_new_relationship_request(url, "MediaReferenceProperties", body)
         logger.info(f"Linking element {element_guid} to media reference  {media_ref_guid}")
+        return guid
 
     @dynamic_catch
     def link_media_reference(self, element_guid: str, media_ref_guid: str,
-                             body: Optional[dict | NewRelationshipRequestBody] = None):
+                             body: Optional[dict | NewRelationshipRequestBody] = None) -> Optional[str]:
         """ Attach an element to an external media reference.
     
             Parameters
@@ -822,7 +832,7 @@ class ExternalReferences(ServerClient):
             }
             """
         loop = asyncio.get_event_loop()
-        loop.run_until_complete(self._async_link_media_reference(element_guid, media_ref_guid, body))
+        return loop.run_until_complete(self._async_link_media_reference(element_guid, media_ref_guid, body))
 
     @dynamic_catch
     async def _async_detach_media_reference(self, element_guid: str, media_ref_guid: str,
@@ -912,10 +922,10 @@ class ExternalReferences(ServerClient):
 
     @dynamic_catch
     async def _async_link_cited_document(self, element_guid: str, cited_doc_guid: str,
-                                         body: Optional[dict | NewRelationshipRequestBody] = None) -> None:
+                                         body: Optional[dict | NewRelationshipRequestBody] = None) -> Optional[str]:
         """ Attach an element to a cited document reference.
             Async version.
-    
+
         Parameters
         ----------
         element_guid: str
@@ -924,10 +934,14 @@ class ExternalReferences(ServerClient):
             The identifier of the external cited document reference.
         body: dict | NewRelationshipRequestBody, optional, default = None
             A structure representing the details of the relationship.
-    
+
         Returns
         -------
-        Nothing
+        str | None
+            The GUID of the newly created CitedDocumentLink relationship
+            (CitedDocumentLink is MULTI_LINK -- see
+            pyegeria.core.relationship_multiplicity). None if the server
+            didn't return one.
     
         Raises
         ------
@@ -957,12 +971,13 @@ class ExternalReferences(ServerClient):
         }
         """
         url = f"{self.command_root}/elements/{element_guid}/cited-document-references/{cited_doc_guid}/attach"
-        await self._async_new_relationship_request(url, "CitedDocumentLinkProperties", body)
+        guid = await self._async_new_relationship_request(url, "CitedDocumentLinkProperties", body)
         logger.info(f"Linking element {element_guid} to cited document  {cited_doc_guid}")
+        return guid
 
     @dynamic_catch
     def link_cited_document(self, element_guid: str, cited_doc_guid: str,
-                            body: Optional[dict | NewRelationshipRequestBody] = None):
+                            body: Optional[dict | NewRelationshipRequestBody] = None) -> Optional[str]:
         """ Attach an element to an external media reference.
     
             Parameters
@@ -1006,7 +1021,7 @@ class ExternalReferences(ServerClient):
              }
             """
         loop = asyncio.get_event_loop()
-        loop.run_until_complete(self._async_link_cited_document(element_guid, cited_doc_guid, body))
+        return loop.run_until_complete(self._async_link_cited_document(element_guid, cited_doc_guid, body))
 
     @dynamic_catch
     async def _async_detach_cited_document(self, element_guid: str, cited_doc_guid: str,

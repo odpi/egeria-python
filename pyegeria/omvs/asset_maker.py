@@ -1142,8 +1142,7 @@ class AssetMaker(ServerClient):
         }
         """
         url = f"{self.asset_command_root}/integration-connectors/{integration_connector_guid}/catalog-targets/{metadata_element_guid}"
-        await self._async_new_relationship_request(url, ["CatalogTargetProperties"], body)
-        return "Relationship created"  # The base method doesn't return a GUID for relationships
+        return await self._async_new_relationship_request(url, ["CatalogTargetProperties"], body)
 
     @dynamic_catch
     def add_catalog_target(
