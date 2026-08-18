@@ -5,8 +5,8 @@ Subject: `pyegeria/omvs` (43 modules)
 
 | Result | Count |
 |---|---|
-| OK | 612 |
-| Mismatch (verb/path/body) | 47 |
+| OK | 628 |
+| Mismatch (verb/path/body) | 31 |
 | Missing | 288 |
 | Found in another module | 13 |
 | URL lint | 0 |
@@ -62,6 +62,9 @@ _Review only - cross-service overlap is often intentional._
   - `action-author.py`: `_async_get_governance_action_process`
   - `governance-officer.py`: `_async_get_governance_definition_by_guid`
   - `governance-officer.py`: `_async_get_governance_action_process`
+- `POST /metadata-expert/metadata-elements/{}/history`
+  - `metadata-expert.py`: `_async_get_element_history`
+  - `metadata-expert.py`: `_async_get_metadata_element_history`
 - `POST /metadata-expert/related-elements`
   - `collection-manager.py`: `_async_link_saved_query_to_results_set`
   - `metadata-expert.py`: `_async_create_related_elements`
@@ -419,73 +422,10 @@ _Review only - cross-service overlap is often intentional._
 - updateRelatedElementsInStore: MISSING  (`POST /metadata-expert/related-elements/{}/update-properties`)
 - updateRelatedElementsEffectivityInStore: MISSING  (`POST /metadata-expert/related-elements/{}/update-effectivity`)
 - deleteRelatedElementsInStore: MISSING  (`POST /metadata-expert/related-elements/{}/delete`)
-- getMetadataElementByGUID: MISMATCH `get_metadata_element_by_guid`
-    - PATH
-      SDK: /{}/metadata-elements/{}
-      API: /metadata-expert/metadata-elements/{}
 - getAnchoredElementsGraph: MISSING  (`POST /metadata-expert/metadata-elements/{}/with-anchored-elements`)
-- getMetadataElementByUniqueName: MISMATCH `get_metadata_element_by_unique_name`
-    - PATH
-      SDK: /{}/metadata-elements/by-unique-name
-      API: /metadata-expert/metadata-elements/by-unique-name
-- getMetadataElementGUIDByUniqueName: MISMATCH `get_metadata_guid_by_unique_name`
-    - PATH
-      SDK: /{}/metadata-elements/guid-by-unique-name
-      API: /metadata-expert/metadata-elements/guid-by-unique-name
-    - BODY sends FilterRequestBody != UniqueNameRequestBody
-- getMetadataElementHistory: MISMATCH `get_metadata_element_history`
-    - BODY sends GetRequestBody|ResultsRequestBody != HistoryRequestBody
-- getClassificationHistory: MISMATCH `get_classification_history`
-    - PATH
-      SDK: /{}/metadata-elements/{}/classifications/{}/history
-      API: /metadata-expert/metadata-elements/{}/classifications/{}/history
-- findMetadataElementsWithString: MISMATCH `find_metadata_elements_with_string`
-    - PATH
-      SDK: /{}/metadata-elements/by-search-string
-      API: /metadata-expert/metadata-elements/by-search-string
-- findElementsForAnchor: MISMATCH `find_elements_for_anchor`
-    - PATH
-      SDK: /{}/metadata-elements/by-search-string/for-anchor/{}
-      API: /metadata-expert/metadata-elements/by-search-string/for-anchor/{}
-- findElementsInAnchorDomain: MISMATCH `find_elements_in_anchor_domain`
-    - PATH
-      SDK: /{}/metadata-elements/by-search-string/in-anchor-domain/{}
-      API: /metadata-expert/metadata-elements/by-search-string/in-anchor-domain/{}
-- findElementsInAnchorScope: MISMATCH `find_elements_in_anchor_scope`
-    - PATH
-      SDK: /{}/metadata-elements/by-search-string/in-anchor-scope/{}
-      API: /metadata-expert/metadata-elements/by-search-string/in-anchor-scope/{}
 - getAllRelatedMetadataElements: MISSING  (`POST /metadata-expert/related-elements/{}/any-type`)
-- getRelatedMetadataElements: MISMATCH `get_related_metadata_elements`
-    - PATH
-      SDK: /{}/related-elements/{}/type/{}
-      API: /metadata-expert/related-elements/{}/type/{}
-- getAllMetadataElementRelationships: MISMATCH `get_all_metadata_element_relationships`
-    - PATH
-      SDK: /{}/metadata-elements/{}/linked-by-any-type/to-elements/{}
-      API: /metadata-expert/metadata-elements/{}/linked-by-any-type/to-elements/{}
-- getMetadataElementRelationships: MISMATCH `get_metadata_element_relationships`
-    - PATH
-      SDK: /{}/metadata-elements/{}/linked-by-type/{}/to-elements/{}
-      API: /metadata-expert/metadata-elements/{}/linked-by-type/{}/to-elements/{}
-- findMetadataElements: MISMATCH `find_metadata_elements`
-    - PATH
-      SDK: /{}/metadata-elements/by-search-conditions
-      API: /metadata-expert/metadata-elements/by-search-conditions
-- countMetadataElements: MISMATCH `count_metadata_elements`
-    - PATH
-      SDK: /{}/metadata-elements/by-search-conditions/count
-      API: /metadata-expert/metadata-elements/by-search-conditions/count
 - findRelationshipsBetweenMetadataElements: MISSING  (`POST /metadata-expert/relationships/by-search-conditions`)
 - countRelationshipsBetweenMetadataElements: MISSING  (`POST /metadata-expert/relationships/by-search-conditions/count`)
-- getRelationshipByGUID: MISMATCH `get_relationship_by_guid`
-    - PATH
-      SDK: /{}/relationships/by-guid/{}
-      API: /metadata-expert/relationships/by-guid/{}
-- getRelationshipHistory: MISMATCH `get_relationship_history`
-    - PATH
-      SDK: /{}/relationships/{}/history
-      API: /metadata-expert/relationships/{}/history
 
 ### Service: my-profile
 

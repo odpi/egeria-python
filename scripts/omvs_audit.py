@@ -301,10 +301,16 @@ def _flatten(node: ast.AST, roots: dict[str, str]) -> str:
             if node.attr in roots:
                 return roots[node.attr]
         return "{%s}" % node.attr
-    # Unwrap URL-normalising wrappers, e.g. str(HttpUrl(f"...")).
     if isinstance(node, ast.Call):
         fname = (node.func.id if isinstance(node.func, ast.Name)
                  else getattr(node.func, "attr", None))
+        # A module-level helper that just returns the service root, e.g.
+        # url = f"{base_path(self, self.view_server)}/metadata-elements/{guid}".
+        # Its args (self, view_server) are irrelevant here - both already
+        # collapse to "" / "{}" - so look it up by name, not by call shape.
+        if fname in roots:
+            return roots[fname]
+        # Unwrap URL-normalising wrappers, e.g. str(HttpUrl(f"...")).
         if fname in URL_WRAPPERS and node.args:
             return _flatten(node.args[0], roots)
         # e.g. name.lower() - name the receiver so lint can classify it
@@ -350,6 +356,29 @@ def resolve_roots(tree: ast.AST) -> dict[str, str]:
     return roots
 
 
+def resolve_module_root_funcs(tree: ast.Module) -> dict[str, str]:
+    """Resolve module-level helper functions that just return the service root.
+
+    Several modules (metadata_expert, governance_officer, solution_architect)
+    define ``def base_path(client, view_server): return f"{client.platform_url}
+    /servers/{view_server}/api/open-metadata/<service>"`` and call it as
+    ``f"{base_path(self, self.view_server)}/..."``. Its own args are irrelevant
+    - only the literal path segments in its return value matter - so this
+    resolves by function name for lookup in ``_flatten``'s Call handling.
+    """
+    funcs: dict[str, str] = {}
+    for node in tree.body:
+        if not isinstance(node, ast.FunctionDef):
+            continue
+        returns = [n for n in ast.walk(node) if isinstance(n, ast.Return) and n.value is not None]
+        if len(returns) != 1:
+            continue
+        value = _flatten(returns[0].value, {})
+        if "/open-metadata/" in value:
+            funcs[node.name] = value
+    return funcs
+
+
 def parse_py_file(filepath: str, helper_verbs: dict[str, str],
                   helper_bodies: dict[str, str] | None = None) -> dict[str, PyMethod]:
     content = open(filepath, encoding="utf-8").read()
@@ -360,6 +389,7 @@ def parse_py_file(filepath: str, helper_verbs: dict[str, str],
         return {}
 
     roots = resolve_roots(tree)
+    roots.update(resolve_module_root_funcs(tree))
     methods: dict[str, PyMethod] = {}
     sync_names: list[str] = []
 
