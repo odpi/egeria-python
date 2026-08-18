@@ -5,9 +5,9 @@ Subject: `pyegeria/omvs` (44 modules)
 
 | Result | Count |
 |---|---|
-| OK | 688 |
+| OK | 694 |
 | Mismatch (verb/path/body) | 7 |
-| Missing | 63 |
+| Missing | 57 |
 | Renamed (implemented, verb+path matches under a different name) | 184 |
 | Found in another module | 18 |
 | URL lint | 0 |
@@ -196,15 +196,10 @@ _Review only - cross-service overlap is often intentional._
 ### Service: classification-explorer
 
 - getValidMetadataValues - severityLevel values: MISSING  (`GET /valid-metadata/get-valid-metadata-values/severityLevel`)
-- getImpactClassifiedElements: MISSING  (`POST /classification-explorer/elements/by-impact`)
 - getValidMetadataValues - confidenceLevel values: MISSING  (`GET /valid-metadata/get-valid-metadata-values/confidenceLevel`)
-- getConfidenceClassifiedElements: MISSING  (`POST /classification-explorer/elements/by-confidence`)
 - getValidMetadataValues - criticalityLevel values: MISSING  (`GET /valid-metadata/get-valid-metadata-values/criticalityLevel`)
-- getCriticalityClassifiedElements: MISSING  (`POST /classification-explorer/elements/by-criticality`)
 - getValidMetadataValues - confidentialityLevel values: MISSING  (`GET /valid-metadata/get-valid-metadata-values/confidentialityLevel`)
-- getConfidentialityClassifiedElements: MISSING  (`POST /classification-explorer/elements/by-confidentiality`)
 - getValidMetadataValues - retentionBasis values: MISSING  (`GET /valid-metadata/get-valid-metadata-values/retentionBasis`)
-- getRetentionClassifiedElements: MISSING  (`POST /classification-explorer/elements/by-retention`)
 - addSecurityTags: RENAMED -> `classification-explorer.py`:`_async_set_security_tags_classification`
 - clearSecurityTags: RENAMED -> `classification-explorer.py`:`_async_clear_security_tags_classification`
 - addAccountingCodes: RENAMED -> `classification-explorer.py`:`_async_set_accounting_codes_classification`
@@ -235,7 +230,6 @@ _Review only - cross-service overlap is often intentional._
 - getRootElementsByType: RENAMED -> `classification-explorer.py`:`_async_get_elements`
 - getRootElementsByPropertyValue: RENAMED -> `classification-explorer.py`:`_async_get_elements_by_property_value`, `feedback-manager.py`:`_async_get_elements_by_property_value`
 - findRootElementsByPropertyValue: RENAMED -> `classification-explorer.py`:`_async_find_elements_by_property_value`
-- getRootElementsByCategory: MISSING  (`POST /classification-explorer/elements/by-category`)
 - findRootAuthoredElements: RENAMED -> `classification-explorer.py`:`_async_find_authored_elements`
 - getRootAuthoredElementsByCategory: RENAMED -> `classification-explorer.py`:`_async_find_authored_elements_by_category`
 - getRootElementsByClassification: RENAMED -> `classification-explorer.py`:`_async_get_elements_by_classification`

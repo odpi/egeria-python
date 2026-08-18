@@ -91,6 +91,17 @@ NAME_OVERRIDES = {
     "link_peer_definitions": "link_peer_definition",
     "detach_peer_definitions": "detach_peer_definition",
     "get_actions_for_requester": "get_actions_for_requester",
+    # These 5 .http entries are separate worked examples of one generic SDK
+    # method (get_classified_elements_by(classification_name, ...)) whose URL
+    # embeds a runtime f-string segment (.../elements/by-{classification_name}).
+    # Static AST analysis can't resolve a variable to a literal path, so the
+    # reverse (verb, path) lookup can't find this match either - only a name
+    # override can.
+    "get_impact_classified_elements": "get_classified_elements_by",
+    "get_confidence_classified_elements": "get_classified_elements_by",
+    "get_criticality_classified_elements": "get_classified_elements_by",
+    "get_confidentiality_classified_elements": "get_classified_elements_by",
+    "get_retention_classified_elements": "get_classified_elements_by",
 }
 
 # Attributes holding a bare service marker that gets interpolated into a URL
@@ -153,6 +164,27 @@ def canon_path(path: str) -> str:
         if m:
             path = m.group(1)
     return "/" + path.strip("/")
+
+
+def paths_compatible(sdk_path: str, api_path: str) -> bool:
+    """True if two canonicalised paths match, allowing for a runtime-built
+    trailing segment on the SDK side.
+
+    A method like ``f".../elements/by-{classification_name}"`` renders its
+    final segment as the opaque placeholder ``by-{}`` (see ``_flatten``) since
+    a local variable's runtime value can't be resolved statically. That one
+    generic method legitimately serves several distinct ground-truth paths
+    that differ only in that final segment (``by-impact``, ``by-confidence``,
+    ...) - a byte match on the whole path is the wrong bar there. Only the
+    trailing segment is allowed to differ, and only when the SDK's version of
+    it is templated (contains ``{}``); every other segment must match exactly.
+    """
+    if sdk_path == api_path:
+        return True
+    sdk_parts, api_parts = sdk_path.rstrip("/").split("/"), api_path.rstrip("/").split("/")
+    if len(sdk_parts) != len(api_parts) or sdk_parts[:-1] != api_parts[:-1]:
+        return False
+    return "{}" in sdk_parts[-1]
 
 
 def lint_url(raw: str) -> list[str]:
@@ -628,7 +660,7 @@ def audit(service_filter: str | None, report_path: str, quiet: bool,
             issues = []
             if d.verb and d.verb != req.verb:
                 issues.append(f"VERB {d.verb} != {req.verb}")
-            if d.path and d.path != req.path:
+            if d.path and not paths_compatible(d.path, req.path):
                 issues.append(f"PATH\n      SDK: {d.path}\n      API: {req.path}")
             # Mismatch only when the documented class is not among those the
             # SDK path accepts (several helpers accept a union).
