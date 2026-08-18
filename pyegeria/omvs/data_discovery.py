@@ -19,6 +19,8 @@ from pyegeria.models import (
     FilterRequestBody,
     SearchStringRequestBody,
     GetRequestBody,
+    NewRelationshipRequestBody,
+    DeleteRelationshipRequestBody,
     ReferenceableProperties,
 )
 from pyegeria.view.output_formatter import (
@@ -873,3 +875,143 @@ class DataDiscovery(ServerClient):
                 **kwargs,
             )
         )
+
+    #
+    # Analysis Reports
+    #
+
+    @dynamic_catch
+    async def _async_create_analysis_report(self, body: dict | NewElementRequestBody) -> str:
+        """Create an analysis report. Async version."""
+        url = f"{self.platform_url}/servers/{self.view_server}/api/open-metadata/data-discovery/analysis-reports"
+        return await self._async_create_element_body_request(url, ["AnalysisReportProperties"], body)
+
+    def create_analysis_report(self, body: dict | NewElementRequestBody) -> str:
+        """Create an analysis report."""
+        loop = asyncio.get_event_loop()
+        return loop.run_until_complete(self._async_create_analysis_report(body))
+
+    @dynamic_catch
+    async def _async_update_analysis_report(self, report_guid: str, body: dict | UpdateElementRequestBody) -> None:
+        """Update an analysis report. Async version."""
+        url = f"{self.platform_url}/servers/{self.view_server}/api/open-metadata/data-discovery/analysis-reports/{report_guid}/update"
+        await self._async_update_element_body_request(url, ["AnalysisReportProperties"], body)
+
+    def update_analysis_report(self, report_guid: str, body: dict | UpdateElementRequestBody) -> None:
+        """Update an analysis report."""
+        loop = asyncio.get_event_loop()
+        loop.run_until_complete(self._async_update_analysis_report(report_guid, body))
+
+    @dynamic_catch
+    async def _async_delete_analysis_report(self, report_guid: str, body: Optional[dict | DeleteElementRequestBody] = None) -> None:
+        """Delete an analysis report. Async version."""
+        url = f"{self.platform_url}/servers/{self.view_server}/api/open-metadata/data-discovery/analysis-reports/{report_guid}/delete"
+        await self._async_delete_element_request(url, body)
+
+    def delete_analysis_report(self, report_guid: str, body: Optional[dict | DeleteElementRequestBody] = None) -> None:
+        """Delete an analysis report."""
+        loop = asyncio.get_event_loop()
+        loop.run_until_complete(self._async_delete_analysis_report(report_guid, body))
+
+    @dynamic_catch
+    async def _async_get_analysis_reports_by_name(self, name: str, start_from: int = 0, page_size: int = 100, **kwargs) -> list | str:
+        """Get analysis reports by name. Async version."""
+        url = f"{self.platform_url}/servers/{self.view_server}/api/open-metadata/data-discovery/analysis-reports/by-name"
+        return await self._async_get_name_request(url, _type="AnalysisReport", _gen_output=self._generate_annotation_output, name=name, start_from=start_from, page_size=page_size, **kwargs)
+
+    def get_analysis_reports_by_name(self, name: str, start_from: int = 0, page_size: int = 100, **kwargs) -> list | str:
+        """Get analysis reports by name."""
+        loop = asyncio.get_event_loop()
+        return loop.run_until_complete(self._async_get_analysis_reports_by_name(name, start_from, page_size, **kwargs))
+
+    @dynamic_catch
+    async def _async_find_analysis_reports(self, search_string: str = "*", start_from: int = 0, page_size: int = 100, **kwargs) -> list | str:
+        """Find analysis reports. Async version."""
+        url = f"{self.platform_url}/servers/{self.view_server}/api/open-metadata/data-discovery/analysis-reports/by-search-string"
+        return await self._async_find_request(url, _type="AnalysisReport", _gen_output=self._generate_annotation_output, search_string=search_string, start_from=start_from, page_size=page_size, **kwargs)
+
+    def find_analysis_reports(self, search_string: str = "*", start_from: int = 0, page_size: int = 100, **kwargs) -> list | str:
+        """Find analysis reports."""
+        loop = asyncio.get_event_loop()
+        return loop.run_until_complete(self._async_find_analysis_reports(search_string, start_from, page_size, **kwargs))
+
+    @dynamic_catch
+    async def _async_get_analysis_report_by_guid(self, guid: str, **kwargs) -> dict | str:
+        """Get analysis report by GUID. Async version."""
+        url = f"{self.platform_url}/servers/{self.view_server}/api/open-metadata/data-discovery/analysis-reports/{guid}/retrieve"
+        return await self._async_get_guid_request(url, _type="AnalysisReport", _gen_output=self._generate_annotation_output, **kwargs)
+
+    def get_analysis_report_by_guid(self, guid: str, **kwargs) -> dict | str:
+        """Get analysis report by GUID."""
+        loop = asyncio.get_event_loop()
+        return loop.run_until_complete(self._async_get_analysis_report_by_guid(guid, **kwargs))
+
+    #
+    # Linking
+    #
+
+    @dynamic_catch
+    async def _async_link_analysis_report_to_asset(self, analysis_report_guid: str, asset_guid: str, body: Optional[dict | NewRelationshipRequestBody] = None) -> None:
+        """Link an analysis report to an asset. Async version."""
+        url = f"{self.platform_url}/servers/{self.view_server}/api/open-metadata/data-discovery/analysis-reports/{analysis_report_guid}/assets/{asset_guid}/attach"
+        await self._async_new_relationship_request(url, body=body)
+
+    def link_analysis_report_to_asset(self, analysis_report_guid: str, asset_guid: str, body: Optional[dict | NewRelationshipRequestBody] = None) -> None:
+        """Link an analysis report to an asset."""
+        loop = asyncio.get_event_loop()
+        loop.run_until_complete(self._async_link_analysis_report_to_asset(analysis_report_guid, asset_guid, body))
+
+    @dynamic_catch
+    async def _async_detach_analysis_report_from_asset(self, analysis_report_guid: str, asset_guid: str, body: Optional[dict | DeleteRelationshipRequestBody] = None) -> None:
+        """Detach an analysis report from an asset. Async version."""
+        url = f"{self.platform_url}/servers/{self.view_server}/api/open-metadata/data-discovery/analysis-reports/{analysis_report_guid}/assets/{asset_guid}/detach"
+        await self._async_delete_relationship_request(url, body)
+
+    def detach_analysis_report_from_asset(self, analysis_report_guid: str, asset_guid: str, body: Optional[dict | DeleteRelationshipRequestBody] = None) -> None:
+        """Detach an analysis report from an asset."""
+        loop = asyncio.get_event_loop()
+        loop.run_until_complete(self._async_detach_analysis_report_from_asset(analysis_report_guid, asset_guid, body))
+
+    @dynamic_catch
+    async def _async_link_annotation_to_matched_element(self, annotation_guid: str, element_guid: str, body: Optional[dict | NewRelationshipRequestBody] = None) -> None:
+        """Link an annotation to a matched element. Async version."""
+        url = f"{self.platform_url}/servers/{self.view_server}/api/open-metadata/data-discovery/annotations/{annotation_guid}/matched-elements/{element_guid}/attach"
+        await self._async_new_relationship_request(url, ["MatchedElement"], body)
+
+    def link_annotation_to_matched_element(self, annotation_guid: str, element_guid: str, body: Optional[dict | NewRelationshipRequestBody] = None) -> None:
+        """Link an annotation to a matched element."""
+        loop = asyncio.get_event_loop()
+        loop.run_until_complete(self._async_link_annotation_to_matched_element(annotation_guid, element_guid, body))
+
+    @dynamic_catch
+    async def _async_detach_annotation_from_matched_element(self, annotation_guid: str, element_guid: str, body: Optional[dict | DeleteRelationshipRequestBody] = None) -> None:
+        """Detach an annotation from a matched element. Async version."""
+        url = f"{self.platform_url}/servers/{self.view_server}/api/open-metadata/data-discovery/annotations/{annotation_guid}/matched-elements/{element_guid}/detach"
+        await self._async_delete_relationship_request(url, body)
+
+    def detach_annotation_from_matched_element(self, annotation_guid: str, element_guid: str, body: Optional[dict | DeleteRelationshipRequestBody] = None) -> None:
+        """Detach an annotation from a matched element."""
+        loop = asyncio.get_event_loop()
+        loop.run_until_complete(self._async_detach_annotation_from_matched_element(annotation_guid, element_guid, body))
+
+    @dynamic_catch
+    async def _async_link_request_for_action_target(self, annotation_guid: str, element_guid: str, body: Optional[dict | NewRelationshipRequestBody] = None) -> None:
+        """Link a request for action target. Async version."""
+        url = f"{self.platform_url}/servers/{self.view_server}/api/open-metadata/data-discovery/annotations/{annotation_guid}/request-for-action-targets/{element_guid}/attach"
+        await self._async_new_relationship_request(url, ["RequestForActionProperties"], body)
+
+    def link_request_for_action_target(self, annotation_guid: str, element_guid: str, body: Optional[dict | NewRelationshipRequestBody] = None) -> None:
+        """Link a request for action target."""
+        loop = asyncio.get_event_loop()
+        loop.run_until_complete(self._async_link_request_for_action_target(annotation_guid, element_guid, body))
+
+    @dynamic_catch
+    async def _async_detach_request_for_action_target(self, annotation_guid: str, element_guid: str, body: Optional[dict | DeleteRelationshipRequestBody] = None) -> None:
+        """Detach a request for action target. Async version."""
+        url = f"{self.platform_url}/servers/{self.view_server}/api/open-metadata/data-discovery/annotations/{annotation_guid}/request-for-action-targets/{element_guid}/detach"
+        await self._async_delete_relationship_request(url, body)
+
+    def detach_request_for_action_target(self, annotation_guid: str, element_guid: str, body: Optional[dict | DeleteRelationshipRequestBody] = None) -> None:
+        """Detach a request for action target."""
+        loop = asyncio.get_event_loop()
+        loop.run_until_complete(self._async_detach_request_for_action_target(annotation_guid, element_guid, body))

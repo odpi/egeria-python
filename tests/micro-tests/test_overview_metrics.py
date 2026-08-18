@@ -612,3 +612,98 @@ def test_metric_trend_snapshot_failure_yields_none_not_raise():
         assert all(p["value"] is None for p in series)
     finally:
         del om_module._boom_for_test
+
+
+# ── count_elements_by_property ────────────────────────────────────────────
+
+def test_count_elements_by_property_uses_native_when_available():
+    mgr = _mgr(count_metadata_elements=MagicMock(return_value={"count": 2}))
+    n = om.count_elements_by_property(mgr, "DigitalProduct", "deploymentStatus", "ACTIVE")
+    assert n == 2
+    mgr.count_metadata_elements.assert_called_once()
+    body = mgr.count_metadata_elements.call_args[0][0]
+    assert body["metadataElementTypeName"] == "DigitalProduct"
+    assert body["limitResultsByStatus"] == ["ACTIVE"]
+    condition = body["searchProperties"]["conditions"][0]
+    assert condition["property"] == "deploymentStatus"
+    assert condition["operator"] == "EQ"
+    assert condition["value"]["primitiveValue"] == "ACTIVE"
+
+
+def test_count_elements_by_property_falls_back_when_no_native_method():
+    mgr = _mgr()
+    mgr.find_metadata_elements.return_value = [{}, {}, {}]
+    n = om.count_elements_by_property(mgr, "DigitalProduct", "deploymentStatus", "ACTIVE")
+    assert n == 3
+
+
+def test_count_elements_by_property_passes_as_of():
+    mgr = _mgr(count_metadata_elements=MagicMock(return_value={"count": 1}))
+    om.count_elements_by_property(mgr, "DigitalProduct", "deploymentStatus", "ACTIVE", as_of="2026-01-01T00:00:00+00:00")
+    body = mgr.count_metadata_elements.call_args[0][0]
+    assert body["asOfTime"] == "2026-01-01T00:00:00+00:00"
+
+
+# ── contextualised_coverage ────────────────────────────────────────────────
+
+def _implemented_by(end1_type, end2_type, end2_guid, super_types=None):
+    return {
+        "end1": {"guid": "sc-guid", "type": {"typeName": end1_type}},
+        "end2": {"guid": end2_guid, "type": {"typeName": end2_type, "superTypeNames": super_types or []}},
+    }
+
+
+def test_contextualised_coverage_counts_only_asset_subtype_ends():
+    mgr = _mgr(count_metadata_elements=MagicMock(return_value={"count": 384}))
+    ce = MagicMock()
+    ce.get_relationships.return_value = [
+        _implemented_by("SolutionComponent", "GovernanceActionType", "gat-1"),
+        _implemented_by("SolutionComponent", "IntegrationConnector", "asset-1", super_types=["Asset"]),
+        _implemented_by("SolutionComponent", "SoftwareServer", "asset-2", super_types=["Asset"]),
+    ]
+    result = om.contextualised_coverage(mgr, ce)
+    assert result["contextualisedCount"] == 2
+    assert result["assetTotal"] == 384
+    assert result["contextualisedPct"] == round(100.0 * 2 / 384, 1)
+
+
+def test_contextualised_coverage_dedupes_by_guid():
+    mgr = _mgr(count_metadata_elements=MagicMock(return_value={"count": 10}))
+    ce = MagicMock()
+    ce.get_relationships.return_value = [
+        _implemented_by("SolutionComponent", "SoftwareServer", "asset-1", super_types=["Asset"]),
+        _implemented_by("SolutionComponent", "SoftwareServer", "asset-1", super_types=["Asset"]),
+    ]
+    result = om.contextualised_coverage(mgr, ce)
+    assert result["contextualisedCount"] == 1
+
+
+def test_contextualised_coverage_matches_asset_typename_directly_too():
+    # end2's own typeName (not just its superTypeNames) can be "Asset".
+    mgr = _mgr(count_metadata_elements=MagicMock(return_value={"count": 5}))
+    ce = MagicMock()
+    ce.get_relationships.return_value = [
+        _implemented_by("SolutionComponent", "Asset", "asset-1"),
+    ]
+    result = om.contextualised_coverage(mgr, ce)
+    assert result["contextualisedCount"] == 1
+
+
+def test_contextualised_coverage_relationship_fetch_failure_yields_none_count():
+    mgr = _mgr(count_metadata_elements=MagicMock(return_value={"count": 384}))
+    ce = MagicMock()
+    ce.get_relationships.side_effect = RuntimeError("boom")
+    result = om.contextualised_coverage(mgr, ce)
+    assert result["contextualisedCount"] is None
+    assert result["assetTotal"] == 384
+    assert result["contextualisedPct"] is None
+
+
+def test_contextualised_coverage_zero_asset_total_yields_none_pct_not_zero_division():
+    mgr = _mgr(count_metadata_elements=MagicMock(return_value={"count": 0}))
+    ce = MagicMock()
+    ce.get_relationships.return_value = []
+    result = om.contextualised_coverage(mgr, ce)
+    assert result["contextualisedCount"] == 0
+    assert result["assetTotal"] is None
+    assert result["contextualisedPct"] is None

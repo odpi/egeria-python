@@ -143,8 +143,19 @@ When running Dr.Egeria, you specify a **directive** that determines how the file
 ### Automatic Command Rewriting (Upsert)
 
 Dr.Egeria implements "Upsert" logic to make metadata scripts more robust and idempotent:
-- **Create → Update**: If a `Create` command is issued but the element already exists (matched by Qualified Name), Dr.Egeria automatically rewrites the command to `Update`.
+- **Create → Update**: If a `Create` command is issued but the element already exists, Dr.Egeria automatically rewrites the command to `Update`. Existence is checked, in order: (1) an explicit `### GUID` attribute, if supplied — this always wins and is fetched directly, regardless of what Qualified Name/Display Name are also present; (2) Qualified Name (explicit or auto-derived from Display Name).
 - **Update → Create**: If an `Update` command is issued but the element does not exist and hasn't been "Planned" by a previous command, it is rewritten to `Create`.
+
+**Renaming an element's Qualified Name.** Because matching is normally by Qualified Name, re-running `Create <X>` with the *same* Display Name but a *new* Qualified Name — the natural way to try to "rename" an element via markdown — does **not** update the original element. Dr.Egeria has never seen that Qualified Name before, so it creates a second, distinct element instead. If it also finds an existing element sharing the same Display Name under a different Qualified Name, it warns you about the ambiguity (visible in both `--validate` and `--process` output) rather than guessing:
+
+```
+Found existing element with Display Name 'X' (GUID: <guid>) but under a
+different Qualified Name ('<old-qn>' vs. '<new-qn>'). Proceeding as Create
+-- if you meant to update/rename that element, re-run with '### GUID
+<guid>' to target it directly.
+```
+
+To actually rename the Qualified Name of an existing element, supply its `### GUID` on the same `Create` command along with the new `### Qualified Name` — the explicit GUID makes Dr.Egeria fetch and update that specific element in place instead of creating a duplicate.
 
 ### Planned Elements and Forward References
 
@@ -241,7 +252,8 @@ Dr.Egeria organizes its commands into "families," each corresponding to a specif
 ### Enrichment and Metadata Management
 
 - **Feedback**: Add comments, ratings, and informal tags to any Egeria element (e.g., `Add Comment`, `Attach Tag`). Also includes several `Person Action Base` commands (shared with Curation's `Create Meeting`/`Create ToDo` — see above): `Create Review`, implemented via `my_profile.create_review`; `Create Note`, which attaches an opinion/annotation about *any* target element (`Commented On Element`) via a dedicated `NoteLog`, typed as Egeria's real `Note` entity (a `Notification` subtype, added Egeria PR #9191, confirmed live 2026-08-04); and `Create Journal Entry`/`Create Activity Entry`/`Create Blog Entry`, three sibling commands for the calling user's own activity stream — private (`JournalEntry`), or public (`ActivityEntry`/`BlogEntry`) — implemented via `my_profile.journal_my_activity`/`log_my_activity`/`blog_my_activity` respectively. `Note`/`JournalEntry`/`ActivityEntry`/`BlogEntry` are all `Notification` subtypes attached through the same `NoteLog`/`AttachedNoteLogEntry` mechanism (see [egeria-project.org/concepts/notification](https://egeria-project.org/concepts/notification/)), differing only in target (any element vs. the user's own profile) and visibility.
-- **External Reference**: Link Egeria elements to external resources, media, or cited documents (e.g., `Create External Reference`, `Link Media Reference`).
+- **External Reference**: Link Egeria elements to external resources, media, or cited documents (e.g., `Create External Reference`, `Link Media Reference`, `Create External Standard`).
+- **Reference Data**: Attach valid values from a `ValidValueDefinition`/`ValidValueSet` to existing elements, and manage the type-system-level valid-metadata-value registry (e.g., `Link Element to Valid Values`, `Link Reference Value Assignment`, `Link Specification Property Assignment`, `Setup Valid Metadata Value`, `Set Consistent Metadata Values`). The `ValidValuesAssignment` relationship also has two contextual variants living in their natural families rather than here: `Link Question to Valid Values` (Glossary) and `Link Data Field to Valid Values` (Data Designer) — all three share one dispatcher-level processor (`ReferenceDataLinkProcessor` in `md_processing/v2/reference_data.py`).
 - **Views & Reports** (formerly **Report**): Run and author report specs (`FormatSet`s), and compose them — plus real Egeria `Report` assets and literal markdown text — into user-authored Dashboard Sheets:
   - `View Report`: Run a report spec ad hoc, supplying execution parameters (search string, output format, `Report Parameters` for a find-method spec's non-standard parameter, `Analytic Parameters` for an analytic-function spec's parameters, ...) at run time — no persistent element created.
   - `Create Report`: Persist a real Egeria `Report` asset that names a report spec and pins its own default execution parameters (including, for an analytic-function-backed spec, `Analytic Parameters`; or, for a report spec's action needing a parameter outside the standard find/search set — e.g. `collection_guid` for the `Collection Members` report — `Report Parameters` — see [`output-formats-and-report-specs.md`](output-formats-and-report-specs.md) for the find-method vs. analytic-function distinction), so it can be referenced by name and placed on a dashboard.

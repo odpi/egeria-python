@@ -342,6 +342,7 @@ class GovernanceLinkProcessor(AsyncBaseCommandProcessor):
             "Monitored Resource": (("Notification Type", "Monitoring Control"), "Monitored Resource"),
             "Regulation Certification Type": ("Regulation", "Certification Type"),
             "Regulator": ("Regulation", "Organization Reference"),
+            "Governance Results": ("Governance Metric", "Data Asset"),
         }
 
         endpoint_keys = endpoint_map.get(object_type)
@@ -514,6 +515,13 @@ class GovernanceLinkProcessor(AsyncBaseCommandProcessor):
                 })
                 await self.client._async_link_monitored_resource(left_guid, right_guid, body)
 
+            elif object_type == "Governance Results":
+                body = body_slimmer({
+                    "class": "NewRelationshipRequestBody",
+                    "properties": set_rel_prop_body(object_type, attributes)
+                })
+                await self.client._async_link_governance_results(left_guid, right_guid, body)
+
             logger.success(f"Linked Governance {object_type}")
             return f"\n\n# {verb} {object_type}\n\nOperation completed."
 
@@ -561,6 +569,9 @@ class GovernanceLinkProcessor(AsyncBaseCommandProcessor):
 
             elif object_type == "Monitored Resource":
                 await self.client._async_detach_monitored_resource(left_guid, right_guid, body)
+
+            elif object_type == "Governance Results":
+                await self.client._async_detach_governance_results(left_guid, right_guid, body)
 
             elif object_type in {"Certification", "License"}:
                 rel_guid = self._resolve_relationship_guid(object_type, attributes)

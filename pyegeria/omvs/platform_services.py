@@ -1034,6 +1034,105 @@ class Platform(BasePlatformClient):
             self._async_activate_platform(platform_name, hosted_server_names, timeout)
         )
 
+    async def _async_get_platform_organization(self) -> str:
+        """Get the name of the organization that owns this platform. Async version."""
+        url = f"{self.admin_command_root}/organization-name"
+        response = await self._async_make_request("GET", url)
+        return response.text
+
+    def get_platform_organization(self) -> str:
+        """Get the name of the organization that owns this platform."""
+        loop = asyncio.get_event_loop()
+        return loop.run_until_complete(self._async_get_platform_organization())
+
+    async def _async_get_security_connection(self) -> dict:
+        """Retrieve the Connection object used for platform security. Async version."""
+        url = f"{self.admin_command_root}/security/connection"
+        response = await self._async_make_request("GET", url)
+        return response.json().get("connection")
+
+    def get_security_connection(self) -> dict:
+        """Retrieve the Connection object used for platform security."""
+        loop = asyncio.get_event_loop()
+        return loop.run_until_complete(self._async_get_security_connection())
+
+    async def _async_set_security_connection(self, body: dict) -> None:
+        """Set up the connection for the platform security connector. Async version."""
+        url = f"{self.admin_command_root}/security/connection"
+        await self._async_make_request("POST", url, body)
+
+    def set_security_connection(self, body: dict) -> None:
+        """Set up the connection for the platform security connector."""
+        loop = asyncio.get_event_loop()
+        loop.run_until_complete(self._async_set_security_connection(body))
+
+    async def _async_delete_security_connection(self) -> None:
+        """Remove the currently configured platform security connection. Async version."""
+        url = f"{self.admin_command_root}/security/connection"
+        await self._async_make_request("DELETE", url)
+
+    def delete_security_connection(self) -> None:
+        """Remove the currently configured platform security connection."""
+        loop = asyncio.get_event_loop()
+        loop.run_until_complete(self._async_delete_security_connection())
+
+    async def _async_get_security_user_list(self, status: str = None, user_type: str = None) -> list:
+        """Get the list of users from the security connector. Async version."""
+        url = f"{self.admin_command_root}/security/user-list"
+        params = {}
+        if status:
+            params["userAccountStatus"] = status
+        if user_type:
+            params["userAccountType"] = user_type
+        response = await self._async_make_request("GET", url, params=params)
+        return response.json().get("userList")
+
+    def get_security_user_list(self, status: str = None, user_type: str = None) -> list:
+        """Get the list of users from the security connector."""
+        loop = asyncio.get_event_loop()
+        return loop.run_until_complete(self._async_get_security_user_list(status, user_type))
+
+    async def _async_get_registered_services(self, service_category: str) -> list:
+        """Retrieve the list of registered services for a category. Async version."""
+        url = f"{self.admin_command_root}/registered-services/{service_category}"
+        response = await self._async_make_request("GET", url)
+        return response.json().get("services")
+
+    def get_registered_access_services(self) -> list:
+        """Retrieve the list of Open Metadata Access Services (OMASs)."""
+        loop = asyncio.get_event_loop()
+        return loop.run_until_complete(self._async_get_registered_services("access-services"))
+
+    def get_registered_view_services(self) -> list:
+        """Retrieve the list of Open Metadata View Services (OMVSs)."""
+        loop = asyncio.get_event_loop()
+        return loop.run_until_complete(self._async_get_registered_services("view-services"))
+
+    def get_registered_engine_services(self) -> list:
+        """Retrieve the list of engine services."""
+        loop = asyncio.get_event_loop()
+        return loop.run_until_complete(self._async_get_registered_services("engine-services"))
+
+    def get_registered_governance_services(self) -> list:
+        """Retrieve the list of governance services."""
+        loop = asyncio.get_event_loop()
+        return loop.run_until_complete(self._async_get_registered_services("governance-services"))
+
+    def get_registered_common_services(self) -> list:
+        """Retrieve the list of common services."""
+        loop = asyncio.get_event_loop()
+        return loop.run_until_complete(self._async_get_registered_services("common-services"))
+
+    def get_registered_integration_services(self) -> list:
+        """Retrieve the list of integration services."""
+        loop = asyncio.get_event_loop()
+        return loop.run_until_complete(self._async_get_registered_services("integration-services"))
+
+    def get_registered_all_services(self) -> list:
+        """Retrieve the list of all registered services."""
+        loop = asyncio.get_event_loop()
+        return loop.run_until_complete(self._async_get_registered_services("all-services"))
+
 
 if __name__ == "__main__":
     print("Main-Platform Services")

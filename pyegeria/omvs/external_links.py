@@ -25,10 +25,12 @@ from pyegeria.view.output_formatter import (generate_output,
 from pyegeria.core.utils import dynamic_catch
 
 EXTERNAL_REFERENCE_PROPS = ["ExternalReferenceProperties", "ExternalDataSourceProperties",
-                            "ExternalModelSourceProperties",
+                            "ExternalModelSourceProperties", "ExternalSourceCodeProperties",
+                            "ExternalStandardProperties",
                             "RelatedMediaProperties", "CitedDocumentProperties"]
 
 EXTERNAL_REFERENCE_TYPES = ["ExternalReference", "ExternalDataSource", "ExternalModelSource",
+                            "ExternalSourceCode", "ExternalStandard",
                             "RelatedMedia", "CitedDocument"]
 
 EXTERNAL_ID_PROPS = ["ExternalIdProperties"]
@@ -2290,7 +2292,7 @@ class ExternalReferences(ServerClient):
                                                   page_size, output_format, report_spec, **kwargs))
 
     @dynamic_catch
-    async def _async_get_external_identifier_by_guid(self, guid: str,
+    async def _async_get_external_identifiers_by_guid(self, guid: str,
                                                      body: Optional[dict | GetRequestBody] = None,
                                                      output_format: str = "JSON",
                                                      report_spec: Optional[str | dict] = "ExternalIdentifier",
@@ -2341,7 +2343,7 @@ class ExternalReferences(ServerClient):
                                                             output_format=output_format, report_spec=report_spec, body=body, **kwargs)
 
     @dynamic_catch
-    def get_external_identifier_by_guid(self, guid: str,
+    def get_external_identifiers_by_guid(self, guid: str,
                                         body: Optional[dict | GetRequestBody] = None,
                                         output_format: str = "JSON",
                                         report_spec: Optional[str | dict] = "ExternalIdentifier",
@@ -2368,7 +2370,7 @@ class ExternalReferences(ServerClient):
         """
 
         return asyncio.get_event_loop().run_until_complete(
-            self._async_get_external_identifier_by_guid(guid, body, output_format, report_spec, **kwargs))
+            self._async_get_external_identifiers_by_guid(guid, body, output_format, report_spec, **kwargs))
 
     def _extract_external_identifier_properties(self, element: dict, columns_struct: dict) -> dict:
         """

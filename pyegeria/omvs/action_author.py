@@ -16,6 +16,8 @@ from pyegeria.models import (
     DeleteRelationshipRequestBody,
     UpdateRelationshipRequestBody,
     RelationshipBeanProperties,
+    FilterRequestBody,
+    GetRequestBody,
 )
 from pyegeria.core.utils import dynamic_catch
 
@@ -273,16 +275,20 @@ class ActionAuthor(ServerClient):
     async def _async_remove_first_action_process_step(
         self,
         process_guid: str,
+        first_process_step_guid: str,
     ) -> None:
-        url = f"{self.platform_url}/servers/{self.view_server}/api/open-metadata/action-author/governance-action-processes/{process_guid}/first-process-step/detach"
+        url = f"{self.platform_url}/servers/{self.view_server}/api/open-metadata/action-author/governance-action-processes/{process_guid}/first-process-step/{first_process_step_guid}/detach"
         await self._async_make_request("POST", url)
 
     def remove_first_action_process_step(
         self,
         process_guid: str,
+        first_process_step_guid: str,
     ) -> None:
         loop = asyncio.get_event_loop()
-        loop.run_until_complete(self._async_remove_first_action_process_step(process_guid))
+        loop.run_until_complete(
+            self._async_remove_first_action_process_step(process_guid, first_process_step_guid)
+        )
 
     @dynamic_catch
     async def _async_setup_next_action_process_step(
@@ -340,3 +346,147 @@ class ActionAuthor(ServerClient):
     ) -> None:
         loop = asyncio.get_event_loop()
         loop.run_until_complete(self._async_remove_next_action_process_step(relationship_guid))
+
+    @dynamic_catch
+    async def _async_get_governance_action_process(
+        self,
+        process_guid: str,
+        output_format: str = "JSON",
+        report_spec: str | dict = None,
+        body: dict | GetRequestBody | None = None,
+        **kwargs
+    ) -> dict | list | str:
+        """Retrieve the governance action process metadata element with the supplied unique identifier. Async version.
+
+        Parameters
+        ----------
+        process_guid : str
+            The unique identifier of the governance action process.
+        output_format : str, optional
+            The format of the output. Defaults to "JSON".
+        report_spec : str | dict, optional
+            The report specification. Defaults to None.
+        body : dict | GetRequestBody, optional
+            The request body. Defaults to None.
+
+        Returns
+        -------
+        dict | list | str
+            The governance action process.
+        """
+        url = f"{self.platform_url}/servers/{self.view_server}/api/open-metadata/action-author/governance-action-processes/{process_guid}/retrieve"
+        return await self._async_get_guid_request(
+            url,
+            "GovernanceActionProcess",
+            self._generate_referenceable_output,
+            output_format=output_format,
+            report_spec=report_spec,
+            body=body,
+            **kwargs
+        )
+
+    def get_governance_action_process(
+        self,
+        process_guid: str,
+        output_format: str = "JSON",
+        report_spec: str | dict = None,
+        body: dict | GetRequestBody | None = None,
+        **kwargs
+    ) -> dict | list | str:
+        """Retrieve the governance action process metadata element with the supplied unique identifier.
+
+        Parameters
+        ----------
+        process_guid : str
+            The unique identifier of the governance action process.
+        output_format : str, optional
+            The format of the output. Defaults to "JSON".
+        report_spec : str | dict, optional
+            The report specification. Defaults to None.
+        body : dict | GetRequestBody, optional
+            The request body. Defaults to None.
+
+        Returns
+        -------
+        dict | list | str
+            The governance action process.
+        """
+        loop = asyncio.get_event_loop()
+        return loop.run_until_complete(
+            self._async_get_governance_action_process(
+                process_guid, output_format, report_spec, body, **kwargs
+            )
+        )
+
+    @dynamic_catch
+    async def _async_get_governance_action_process_graph(
+        self,
+        process_guid: str,
+        output_format: str = "JSON",
+        report_spec: str | dict = None,
+        body: dict | FilterRequestBody | None = None,
+        **kwargs
+    ) -> dict | list | str:
+        """Retrieve the governance action process metadata element with the supplied unique identifier
+        along with the flow definition describing its implementation. Async version.
+
+        Parameters
+        ----------
+        process_guid : str
+            The unique identifier of the governance action process.
+        output_format : str, optional
+            The format of the output. Defaults to "JSON".
+        report_spec : str | dict, optional
+            The report specification. Defaults to None.
+        body : dict | FilterRequestBody, optional
+            The request body. Defaults to None.
+
+        Returns
+        -------
+        dict | list | str
+            The governance action process graph.
+        """
+        url = f"{self.platform_url}/servers/{self.view_server}/api/open-metadata/action-author/governance-action-processes/{process_guid}/graph"
+        return await self._async_get_guid_request(
+            url,
+            "GovernanceActionProcess",
+            self._generate_referenceable_output,
+            output_format=output_format,
+            report_spec=report_spec,
+            body=body,
+            **kwargs
+        )
+
+    def get_governance_action_process_graph(
+        self,
+        process_guid: str,
+        output_format: str = "JSON",
+        report_spec: str | dict = None,
+        body: dict | FilterRequestBody | None = None,
+        **kwargs
+    ) -> dict | list | str:
+        """Retrieve the governance action process metadata element with the supplied unique identifier
+        along with the flow definition describing its implementation.
+
+        Parameters
+        ----------
+        process_guid : str
+            The unique identifier of the governance action process.
+        output_format : str, optional
+            The format of the output. Defaults to "JSON".
+        report_spec : str | dict, optional
+            The report specification. Defaults to None.
+        body : dict | FilterRequestBody, optional
+            The request body. Defaults to None.
+
+        Returns
+        -------
+        dict | list | str
+            The governance action process graph.
+        """
+        loop = asyncio.get_event_loop()
+        return loop.run_until_complete(
+            self._async_get_governance_action_process_graph(
+                process_guid, output_format, report_spec, body, **kwargs
+            )
+        )

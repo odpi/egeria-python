@@ -10,7 +10,7 @@ from datetime import datetime
 from enum import Enum, StrEnum
 from typing import Literal, Annotated, Any, Optional, Dict
 
-from pydantic import BaseModel, Field, ConfigDict, root_validator, model_validator
+from pydantic import BaseModel, Field, ConfigDict, root_validator, model_validator, AliasChoices
 
 
 
@@ -292,10 +292,60 @@ class DeleteRequestBody(RequestBody):
 
 class DeleteElementRequestBody(RequestBody):
     class_: Annotated[Literal["DeleteElementRequestBody"], Field(alias="class")]
+    # Both fields were previously missing entirely -- PyegeriaModel's
+    # extra='ignore' meant a caller-supplied dict with "cascadeDelete"/
+    # "deleteMethod" validated successfully but silently dropped both values
+    # before serialization (confirmed directly via model_validate + dump,
+    # no live server needed: DataDesigner.delete_data_structure(guid,
+    # cascade_delete=True) -- and every other _async_delete_X wrapper that
+    # threads cascade_delete through _async_delete_element_request's
+    # no-body-provided path -- has never actually sent cascadeDelete in the
+    # outgoing request body). See PYEGERIA_ISSUES.md ISSUE-62.
+    #
+    # deleteMethod: confirmed via ground-truth .http reference files
+    # (Egeria-api-actor-manager.http and others) that real
+    # DeleteElementRequestBody bodies carry "deleteMethod" consistently --
+    # no spelling ambiguity found for this field.
+    delete_method: Optional[DeleteMethod] = None
+    # cascadeDelete: ground-truth .http files are genuinely split roughly
+    # 50/50 between "cascadeDelete" and "cascadedDelete" for this same class
+    # -- even within a single file (Egeria-api-actor-manager.http uses
+    # both). Not resolved here; "cascadeDelete" was chosen as the
+    # OUTGOING/serialized name because it's what this repo's own code has
+    # already been trying to send since before this fix
+    # (validate_delete_element_request's no-body-provided branch). Both
+    # spellings are accepted on input via validation_alias so a
+    # caller-supplied dict using either one still populates correctly.
+    # Flagged in PYEGERIA_ISSUES.md ISSUE-62 for live verification -- if a
+    # given delete endpoint actually expects "cascadedDelete" instead, this
+    # choice would need revisiting for that specific endpoint.
+    cascade_delete: Optional[bool] = Field(
+        default=None,
+        validation_alias=AliasChoices("cascadeDelete", "cascadedDelete"),
+        serialization_alias="cascadeDelete",
+    )
 
 
 class DeleteRelationshipRequestBody(RequestBody):
     class_: Annotated[Literal["DeleteRelationshipRequestBody"], Field(alias="class")]
+    # No deleteMethod field previously -- when omitted, the Egeria server's
+    # deleteRelationshipInStore operation applies its own default of
+    # LookForLineage, which that specific operation's own validation then
+    # rejects as invalid (confirmed live 2026-08-17 against a real DataFlow
+    # relationship -- OMAG-COMMON-400-032, "The value DeleteMethod{...
+    # LookForLineage...} passed on the deleteMethod parameter... is
+    # invalid"). LookForLineage's semantics ("if the ELEMENT has lineage
+    # relationships then archive; otherwise soft-delete") don't apply to
+    # deleting a relationship in the first place, so the server-side default
+    # is simply the wrong one for this operation -- callers need to be able
+    # to override it explicitly. delete_method left optional/None by default
+    # (not defaulted to SOFT_DELETE here) since that changes existing
+    # callers' behavior invisibly; explicit callers (e.g.
+    # LineageLinker.detach_lineage) should pass one of the values the
+    # server's relationship-delete path actually accepts (SoftDelete/Purge/
+    # Archive have been reported as generally valid; LookForLineage/Other
+    # are not for this operation).
+    delete_method: Optional[DeleteMethod] = None
 
 
 class DeleteClassificationRequestBody(RequestBody):

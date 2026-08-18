@@ -413,3 +413,86 @@ pass since they're documentation only (the actual behavior is determined by
 whatever the caller passes, not by the docstring), but worth a follow-up
 cleanup so future users don't fall into the same "no error, but silently
 did nothing" trap this session found for Confidentiality.
+
+---
+
+## 🟡 Medium Priority — `Initiate Engine Action` / `Cancel Engine Action` Dr.Egeria commands have no functional/scenario test coverage
+
+**Status:** open
+**Added:** 2026-08-17
+
+`Initiate Engine Action` and `Cancel Engine Action` (Action Author family,
+added `b17f71e`) currently have unit-level dispatcher-registration coverage
+only (`tests/micro-tests/test_action_author_processor_coverage.py`, confirms
+they route to `InitiateEngineActionProcessor`/`CancelEngineActionProcessor`)
+and a URL-shape regression test on the underlying
+`AutomatedCuration.initiate_engine_action` client method
+(`tests/micro-tests/test_automated_curation_engine_action.py`, mocked, no
+live server). Neither exercises the actual Dr.Egeria markdown pipeline for
+these two commands end-to-end.
+
+**Why not just add a live functional/scenario test the way `Create Embedded
+Process` and the Lineage Linker commands eventually should get:** unlike
+those, `Initiate Engine Action` has a real side effect — it kicks off
+whatever governance service the target governance engine is configured to
+run (arbitrary survey/curation/remediation logic, potentially against real
+catalogued resources), not just a metadata-element create/update. A test
+that runs unattended in CI or gets re-run casually against a shared dev
+server risks triggering something with real consequences (e.g. a
+survey/remediation connector configured with side effects, or simply engine
+actions piling up as clutter/audit noise on a shared server) — different
+risk profile from every other Dr.Egeria command test in this repo, which
+only ever create/update/delete metadata elements.
+
+**Needs a decision before adding live coverage:** run against an isolated,
+disposable Egeria instance/engine-host only (never the shared dev server);
+or pick a governance engine + request type known to be a safe no-op/dry-run
+for test purposes; or accept unit/mocked coverage as the permanent ceiling
+for these two commands and document why. `Cancel Engine Action` is lower
+risk (it should be safe to test against a guaranteed-already-completed or
+nonexistent engine-action GUID, exercising the error path) but was left
+out of live coverage alongside `Initiate` for now, pending the same
+decision.
+
+---
+
+## 🟢 Low Priority — stale pointer in `c631f0c`'s commit message: `test_overview_asof.py` doesn't exist
+
+**Status:** done (correction only, no code change needed)
+**Added:** 2026-08-17
+
+`c631f0c`'s commit message ("fix(overview-metrics): pageSize=5000 exceeds
+Egeria's new 1000 max") left a note for future readers: "`grep -rn
+"page_size=5000"` also hits egeria-workspaces-fs's insights_handler.py (one
+call site) and this repo's `test_overview_asof.py`". That file does not
+exist anywhere in this repo, and `grep -rn "page_size=5000"` across the
+whole tree now returns zero hits. Found while auditing test coverage
+2026-08-17 (see `test_globals_max_paging_size.py`) and confirmed the note is
+stale/inaccurate rather than pointing at a real remaining gap here — either
+already fixed/removed before this repo's history, or the filename was
+never accurate. Not rewriting the original commit message (already pushed);
+recording the correction here so nobody spends time hunting for a file that
+isn't there. The `egeria-workspaces-fs` half of that note is a different
+repo and out of scope for this file.
+
+---
+
+## 🔴 High Priority — Cross-family template scan found several Link/Attach spec defects that validation sweeps missed
+
+**Status:** open
+**Added:** 2026-07-06 (ported from PR #252, `docs/backlog-template-scan-findings`, closed as a stale duplicate 2026-08-17 — see below)
+
+A manual+agent-assisted scan of all `Create_*`/`Link_*`/`Attach_*` markdown templates across all 12 Dr.Egeria families (Action Author, Actor Manager, Collections, Data Designer, Digital Product Manager, External Reference, Feedback, Glossary, Governance Officer, Projects, Report, Solution Architect) — done while researching relationship-representation patterns for a chat-driven plan-editing feature — surfaced several template defects that existing `validate_compact_specs` / test sweeps apparently don't catch:
+
+- **`Link_Term-Term_Relationship`** (Glossary): has no Term1/Term2 (or equivalent) reference fields at all — only a `Relationship Type` enum. As specified, the command can't actually name which two terms to link.
+- **`Attach_Comment`** (Feedback): missing its target-element reference field entirely. Sibling commands `Attach_Like`, `Attach_Rating`, `Attach_Tag` all correctly carry theirs.
+- **`Link_Regulation_to_Regulator`** (Governance Officer): field names appear copy-pasted from `Link_Governed_By` — still labeled `Governance Definition`/`Referenceable` rather than Regulation/Regulator-specific names.
+- **`Link_Certification`** and **`Link_Regulation_Certification_Type`** (Governance Officer): field descriptions say "license type" where they should say "certification type" — looks like copy-paste from the parallel `Link_License` command.
+- **`Link_Data_Class_Composition`** (Data Designer): field descriptions carry text copy-pasted from the unrelated `DataValueDefinition` relationship.
+- Two related "naming trap" issues worth a lint rule rather than a one-off fix: `Create_Regulation.Regulators` (Governance Officer) is typed `Simple List` (free text) even though it reads like an embedded relationship declaration; `Link_Associated_Skill_Set.Actor Name` (Actor Manager) is typed `Simple` while every sibling Link command's actor-reference field is typed `Reference Name`.
+
+**Open question to resolve as part of this item:** these look like authoring/copy-paste artifacts rather than runtime logic bugs, so `validate_compact_specs` presumably isn't checking description-text content or field-name/type consistency against the command's own semantics — worth figuring out why the existing validation sweep didn't flag any of these, and whether a targeted lint (e.g., flag a Link/Attach command with zero `Reference Name`-typed fields, or flag description text mentioning an entity type absent from the command's own name/family) would have caught them, so this class of defect doesn't require another manual full-family read to find next time.
+
+**Fix:** correct each of the compact-spec attributes above via the Dr.Egeria Spec Editor's REST API (`dr_egeria_spec_editor` — see `CLAUDE.md`'s "Dr.Egeria Spec Editor" section; Tinderbox, this finding's original fix path, is retired as of 2026-08-05), then run `refresh_specs` + `validate_compact_specs`, then propagate via the usual `gen_md_cmd_templates` / `gen_dr_help` sync to egeria-workspaces and egeria-advisor.
+
+**Note on this entry's companion finding:** PR #252 also documented `Create Project`'s `Parent ID`/`Parent Relationship Type Name` being advanced-only inconsistently with other families' equivalent fields. That's superseded — see "`Parent ID`/`Parent Relationship Type Name` silently dropped on Update (fixed)" above (2026-08-02, `Status: done`), which fixed a related, more serious bug (values silently discarded on Update) and is the current source of truth; not re-added here.

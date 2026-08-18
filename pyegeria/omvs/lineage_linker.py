@@ -14,6 +14,8 @@ from pyegeria.core._server_client import ServerClient
 from pyegeria.models import (
     NewRelationshipRequestBody,
     RelationshipBeanProperties,
+    UpdateRelationshipRequestBody,
+    DeleteRelationshipRequestBody,
 )
 from pyegeria.core.utils import dynamic_catch
 
@@ -311,4 +313,188 @@ class LineageLinker(ServerClient):
         loop = asyncio.get_event_loop()
         return loop.run_until_complete(
             self._async_link_data_flow(element_one_guid, relationship_type_name, element_two_guid, body)
+        )
+
+    @dynamic_catch
+    async def _async_update_lineage(
+        self,
+        lineage_relationship_guid: str,
+        body: dict | UpdateRelationshipRequestBody,
+    ) -> None:
+        """Update the properties of an existing lineage relationship, identified by its own
+        relationship GUID (as returned by _async_link_lineage/_async_link_data_flow). Async version.
+
+        Parameters
+        ----------
+        lineage_relationship_guid : str
+            The unique identifier of the lineage relationship to update.
+        body : dict | UpdateRelationshipRequestBody
+            The new properties for the relationship. The properties "class" must match the
+            relationship's actual type (e.g. ControlFlowProperties, DataFlowProperties,
+            ProcessCallProperties, LineageMappingProperties, DataMappingProperties,
+            UltimateSourceProperties, UltimateDestinationProperties).
+
+        Returns
+        -------
+        None
+
+        Raises
+        ------
+        PyegeriaException
+            If there are issues in communications, message format, or Egeria errors.
+
+        Notes
+        -----
+        Sample JSON body (for LineageMapping):
+        ```json
+        {
+          "class" : "UpdateRelationshipRequestBody",
+          "properties": {
+            "class" : "LineageMappingProperties",
+            "iscQualifiedName": "add qualifiedName of information supply chain here",
+            "label": "add label here",
+            "description": "add description here"
+          },
+          "mergeUpdate": true
+        }
+        ```
+        """
+        url = f"{self.platform_url}/servers/{self.view_server}/api/open-metadata/lineage-linker/relationships/{lineage_relationship_guid}/update"
+        await self._async_update_relationship_request(url, None, body)
+
+    def update_lineage(
+        self,
+        lineage_relationship_guid: str,
+        body: dict | UpdateRelationshipRequestBody,
+    ) -> None:
+        """Update the properties of an existing lineage relationship, identified by its own
+        relationship GUID (as returned by link_lineage/link_data_flow).
+
+        Parameters
+        ----------
+        lineage_relationship_guid : str
+            The unique identifier of the lineage relationship to update.
+        body : dict | UpdateRelationshipRequestBody
+            The new properties for the relationship. The properties "class" must match the
+            relationship's actual type (e.g. ControlFlowProperties, DataFlowProperties,
+            ProcessCallProperties, LineageMappingProperties, DataMappingProperties,
+            UltimateSourceProperties, UltimateDestinationProperties).
+
+        Returns
+        -------
+        None
+
+        Raises
+        ------
+        PyegeriaException
+            If there are issues in communications, message format, or Egeria errors.
+
+        Notes
+        -----
+        Sample JSON body (for LineageMapping):
+        ```json
+        {
+          "class" : "UpdateRelationshipRequestBody",
+          "properties": {
+            "class" : "LineageMappingProperties",
+            "iscQualifiedName": "add qualifiedName of information supply chain here",
+            "label": "add label here",
+            "description": "add description here"
+          },
+          "mergeUpdate": true
+        }
+        ```
+        """
+        loop = asyncio.get_event_loop()
+        return loop.run_until_complete(self._async_update_lineage(lineage_relationship_guid, body))
+
+    @dynamic_catch
+    async def _async_detach_lineage(
+        self,
+        lineage_relationship_guid: str,
+        body: Optional[dict | DeleteRelationshipRequestBody] = None,
+        cascade_delete: bool = False,
+    ) -> None:
+        """Detach (delete) an existing lineage relationship, identified by its own relationship
+        GUID (as returned by _async_link_lineage/_async_link_data_flow). Async version.
+
+        Parameters
+        ----------
+        lineage_relationship_guid : str
+            The unique identifier of the lineage relationship to detach.
+        body : dict | DeleteRelationshipRequestBody, optional
+            A dict representing the details of the relationship to remove.
+        cascade_delete : bool, default = False
+            Cascade the deletion through related elements.
+
+        Returns
+        -------
+        None
+
+        Raises
+        ------
+        PyegeriaException
+            If there are issues in communications, message format, or Egeria errors.
+
+        Notes
+        -----
+        Sample JSON body:
+        ```json
+        {
+          "class": "DeleteRelationshipRequestBody",
+          "externalSourceGUID": "add guid here",
+          "externalSourceName": "add qualified name here",
+          "effectiveTime": "{{$isoTimestamp}}",
+          "forLineage": false,
+          "forDuplicateProcessing": false
+        }
+        ```
+        """
+        url = f"{self.platform_url}/servers/{self.view_server}/api/open-metadata/lineage-linker/relationships/{lineage_relationship_guid}/detach"
+        await self._async_delete_relationship_request(url, body, cascade_delete=cascade_delete)
+
+    def detach_lineage(
+        self,
+        lineage_relationship_guid: str,
+        body: Optional[dict | DeleteRelationshipRequestBody] = None,
+        cascade_delete: bool = False,
+    ) -> None:
+        """Detach (delete) an existing lineage relationship, identified by its own relationship
+        GUID (as returned by link_lineage/link_data_flow).
+
+        Parameters
+        ----------
+        lineage_relationship_guid : str
+            The unique identifier of the lineage relationship to detach.
+        body : dict | DeleteRelationshipRequestBody, optional
+            A dict representing the details of the relationship to remove.
+        cascade_delete : bool, default = False
+            Cascade the deletion through related elements.
+
+        Returns
+        -------
+        None
+
+        Raises
+        ------
+        PyegeriaException
+            If there are issues in communications, message format, or Egeria errors.
+
+        Notes
+        -----
+        Sample JSON body:
+        ```json
+        {
+          "class": "DeleteRelationshipRequestBody",
+          "externalSourceGUID": "add guid here",
+          "externalSourceName": "add qualified name here",
+          "effectiveTime": "{{$isoTimestamp}}",
+          "forLineage": false,
+          "forDuplicateProcessing": false
+        }
+        ```
+        """
+        loop = asyncio.get_event_loop()
+        return loop.run_until_complete(
+            self._async_detach_lineage(lineage_relationship_guid, body, cascade_delete=cascade_delete)
         )

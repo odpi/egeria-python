@@ -270,6 +270,53 @@ _DEMOS: Dict[str, FormatSet] = {
         ]},
         result_shape="dict (total, byType)",
     ),
+    "Analytic Demo - Count by Property": _demo(
+        heading="Count Elements by Property",
+        what="Counts active DigitalProduct elements with deploymentStatus=ACTIVE.",
+        analytic_function_name="count_elements_by_property",
+        demo_params={"type_name": "DigitalProduct", "property_name": "deploymentStatus", "property_value": "ACTIVE"},
+        result_shape="scalar (int)",
+    ),
+    "Analytic Demo - Contextualised Coverage": _demo(
+        heading="Usage Context Coverage",
+        what="Percent of Assets connected to a SolutionComponent via ImplementedBy -- a proxy for "
+             "'has some solution-design context', not the literal 'participates in an ISC/blueprint'.",
+        analytic_function_name="contextualised_coverage",
+        demo_params={},
+        result_shape="dict (contextualisedCount, assetTotal, contextualisedPct)",
+    ),
+    "Analytic Demo - Karma Leaderboard": _demo(
+        heading="Karma Leaderboard",
+        what="Top-N people by karma (ContributionRecord.karmaPoints, anchored via Anchors classification).",
+        analytic_function_name="karma_leaderboard",
+        demo_params={"top_n": 10},
+        result_shape="list[dict] (name, karmaPoints, anchorGuid, anchorType)",
+        chart_types=["BAR"],
+    ),
+    "Analytic Demo - Engagement Over Time": _demo(
+        heading="Engagement Over Time",
+        what="Weekly-bucketed feedback-event trend (comments/ratings/likes/tags/noteLogs), "
+             "zero-filled across the trailing window. Run with output_format SERIES for a chart.",
+        analytic_function_name="engagement_series",
+        demo_params={"weeks": 12},
+        result_shape="list[dict] (time series: {week, comments, ratings, likes, tags, noteLogs, total})",
+        chart_types=["SERIES"],
+    ),
+    "Analytic Demo - Orphan Glossary Terms": _demo(
+        heading="Orphan Glossary Terms",
+        what="Approved-but-unassigned glossary terms -- terms with no SemanticAssignment "
+             "relationship to anything. orphanCount = termTotal - referencedCount.",
+        analytic_function_name="orphan_glossary_terms",
+        demo_params={},
+        result_shape="dict (termTotal, referencedCount, orphanCount)",
+    ),
+    "Analytic Demo - Stale Assets": _demo(
+        heading="Stale Assets (No Update in 180 Days)",
+        what="Assets with no update in the last N days (default 180) -- candidates for archival review.",
+        analytic_function_name="stale_assets",
+        demo_params={"days": 180},
+        result_shape="dict (staleCount, assetTotal)",
+    ),
     "Analytic Demo - Metric Trend (Governance Coverage)": _demo(
         heading="Metric Trend: Governance Coverage Over Time",
         what="governed_coverage re-run at each snapshot, turning a point-in-time metric into a "

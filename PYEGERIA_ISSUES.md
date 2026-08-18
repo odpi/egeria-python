@@ -5,9 +5,19 @@ started 2026-06) and `PYEGERIA_GAPS.md` (exception/validation infrastructure
 gaps, started 2026-07-31) into one file, with every entry re-verified against
 the current codebase as of 2026-07-31 rather than trusting old status claims.
 Reorganized 2026-08-04 so **open issues are at the top** and fixed/not-a-bug
-entries live in the Appendix — read top-to-bottom for "what's still
-outstanding," jump to the Appendix only when you need the history of
-something already resolved.
+entries live in the Appendix. **Restructured again 2026-08-15**: the open
+section is now split by *who can fix it* rather than lumped together, since
+that's what determines the next action —
+1. **Open Egeria Server issues** first — nothing pyegeria can do about these
+   directly; they need an Egeria-side fix or deployment change.
+2. **Open pyegeria items** second — work that's actionable in this repo,
+   including SDK/Dr.Egeria gaps that are currently *blocked* on an Egeria
+   Server capability shipping first (each says explicitly what pyegeria
+   still needs to do once that lands, so it isn't lost when the Egeria fix
+   arrives).
+3. **Closed / not-a-bug entries** last, in the Appendix as before — read
+   top-to-bottom for "what's still outstanding," jump to the Appendix only
+   when you need the history of something already resolved.
 
 **Layer classification** — every entry is tagged with where the defect
 actually lives, since that determines who can fix it:
@@ -24,14 +34,29 @@ this repo, verified) · `wont-fix` (owner decided against it, reason noted) ·
 `n/a` (not a bug / nothing to fix here).
 
 **Numbering:** unified as `ISSUE-#`, sequential in the order each was found
-— stable across the 2026-08-04 reorg (an issue keeps its number regardless
-of which section it now sits in), so old references stay valid. Old
-references carried forward in parens for traceability (`PY-#` from the
-original issues doc, `GAP-#` from the gaps doc). Note: the original issues
-doc's header claimed compact status tracking also lived in `BACKLOG.md`
-under a "pyegeria Upstream Bugs" section using the same `PY-#` numbering —
-checked git history, that section never existed in `BACKLOG.md`. That
+— stable across every reorg (an issue keeps its number regardless of which
+section it now sits in), so old references stay valid. Old references
+carried forward in parens for traceability (`PY-#` from the original issues
+doc, `GAP-#` from the gaps doc). Note: the original issues doc's header
+claimed compact status tracking also lived in `BACKLOG.md` under a
+"pyegeria Upstream Bugs" section using the same `PY-#` numbering — checked
+git history, that section never existed in `BACKLOG.md`. That
 cross-reference was already stale; not carried forward here.
+
+**Renumbered 2026-08-15**: found three `ISSUE-#` collisions — each number
+had been independently reused for a genuinely different entry (`ISSUE-45`,
+`ISSUE-46`, `ISSUE-47`, each with two unrelated titles). Kept the original
+number on whichever entry came first by file position and renumbered the
+later duplicate: old `ISSUE-45` (`findMetadataElements` subtype filter,
+found 2026-08-05) → `ISSUE-53`; old `ISSUE-47` (`findMetadataElements`
+scoped to `Referenceable`, found 2026-08-06) → `ISSUE-54`; old `ISSUE-46`
+(exclude-type enhancement, found 2026-08-05) → `ISSUE-55`. A fourth
+collision surfaced the same day (`ISSUE-57` reused for an unrelated
+resolver report) and was renumbered to `ISSUE-58` before anything
+referenced it externally. A fifth entry (glossary-term sort-scope) had been
+accidentally merged into `ISSUE-55`'s body with no section divider during
+the original consolidation and was split out as `ISSUE-60`. No content
+changed in any of these splits, only header numbers/placement.
 
 Unless noted otherwise, repro commands assume a running Egeria view server
 reachable at `https://localhost:9443`, view server name `qs-view-server`,
@@ -72,11 +97,1226 @@ range, search this file for `(PY-#)` to find its new `ISSUE-#` home.
 
 # Open Issues
 
-## Pyegeria — fixable here
+## Open Egeria Server issues (not fixable in pyegeria)
+
+These need an Egeria Server-side fix, an upstream bug report, or a
+deployment/config change — nothing here can be resolved by editing this
+repo. Where an entry has a known pyegeria/Dr.Egeria follow-on once the
+Egeria side lands, it's noted inline (also cross-referenced from the
+"Open pyegeria items" section below where the follow-on is substantial
+enough to track there too).
+
+### ISSUE-30: `updateNote` REST operation (`POST .../feedback-manager/notes/{noteGUID}`) returns 404 on a live server, despite matching the documented `.http` ground truth exactly
+
+**Status:** still open (Egeria Server), re-confirmed 2026-08-15 against the
+current `qs-view-server` (post the environment restart noted in ISSUE-52) —
+not just a stale finding from the original redeploy. Re-ran the full
+repro end-to-end via pyegeria itself this time (not just raw `curl`):
+created a throwaway `DataStructure`, attached a `NoteLog`, created a `Note`
+on it — all three succeeded — then `_async_update_note` on the real note
+GUID still 404s with the identical shape (`CLIENT_ERROR_400`/HTTP 404 at
+`.../feedback-manager/notes/{noteGUID}`). Test elements cleaned up
+(cascade-deleting the anchor `DataStructure` also removed the attached
+`NoteLog`/`Note`, confirmed via a follow-up GUID lookup on all three).
+Nothing changed client-side — still not fixable in pyegeria; genuinely
+looks like an unregistered/unshipped endpoint on this server build.
+
+**Original status:** open (Egeria Server), found 2026-08-05 while live-verifying the
+ISSUE-32 `Note` type fix end-to-end (create worked; update did not).
+
+**Layer:** Egeria Server — not fixable in pyegeria. `_async_update_note`'s
+URL (`{command_root}feedback-manager/notes/{note_guid}`) was double-checked
+against `Egeria-api-feedback-manager.http`'s `@name updateNote` worked
+example and matches it exactly, method and body shape included; this isn't
+a pyegeria URL-construction bug.
+
+**What:** confirmed via both pyegeria and a raw `curl` (bypassing pyegeria
+entirely) against a freshly-created, real `Note` element on `qs-view-server`
+— both get a bare HTTP 404 with no Egeria FFDC error body, just a generic
+Spring "Not Found" response, meaning the operation doesn't appear to be
+routed/registered on this server at all:
+
+```bash
+curl -sk -X POST "https://localhost:9443/servers/qs-view-server/api/open-metadata/feedback-manager/notes/<real-note-guid>" \
+  -H "Authorization: Bearer $TOKEN" -H "Content-Type: application/json" \
+  -d '{"class":"UpdateElementRequestBody","mergeUpdate":true,"properties":{"class":"NoteProperties","typeName":"Note","displayName":"x"}}'
+# {"timestamp":"...","status":404,"error":"Not Found","path":"/servers/qs-view-server/api/open-metadata/feedback-manager/notes/<guid>"}
+```
+
+**Impact:** `update_note`/`_async_update_note` cannot be verified working
+end-to-end on this server today — create + fetch both work correctly
+(confirmed live, see ISSUE-32), but update is blocked. Not related to the
+`Note` type change itself (same 404 shape would occur regardless of
+`typeName`) — looks like a genuine gap in this endpoint's registration on
+the current server build.
+
+**Candidate fix:** none client-side. Worth confirming against a different/
+newer Egeria server build whether this is a temporary gap in the specific
+redeploy used for this session, or a real, currently-unreleased endpoint.
+
+---
+
+### ISSUE-57: `GovernanceResults` relationship rejects the exact end1/end2 GUID order the `.http` ground truth and pyegeria's URL both use
+
+**Status:** open, found 2026-08-15 as a byproduct of live-verifying the
+ISSUE-27 fix (`detach_governance_results`'s duplicate-argument bug).
+
+**Layer:** Egeria Server (type definition or the governance-officer view
+service's endpoint handler), not pyegeria — pyegeria's request exactly
+matches `Egeria-api-governance-officer.http`'s `linkGovernanceResults`
+worked example (URL, body, and `GovernanceResultsProperties` class all
+byte-for-byte identical), so there's nothing to fix on the client side.
+
+**What:** calling `GovernanceOfficer._async_link_governance_results(
+governance_metric_guid, data_asset_guid)` — which builds
+`POST .../governance-metrics/{governanceMetricGUID}/measurements/{dataAssetGUID}/attach`,
+matching the `.http` file exactly — fails with a 500:
+
+```
+OMRS-REPOSITORY-400-047 A addRelationship request has been made ... for a
+relationship that has one or more ends of the wrong or invalid type.
+Relationship type is GovernanceResults; entity proxy <dataAssetGUID> for
+end 1 is of type DataSet rather than GovernanceMetric and entity proxy
+<governanceMetricGUID> for end 2 is of type GovernanceMetric rather than Asset
+```
+
+The server assigned end1 to the *second* URL path GUID (the data asset) and
+end2 to the *first* (the governance metric) — the reverse of what the
+`GovernanceResults` relationship type (end1=GovernanceMetric, end2=Asset)
+and the URL's own naming (`governance-metrics/{...}/measurements/{...}`)
+both imply. Reproduced live against `qs-view-server`: created a throwaway
+`GovernanceMetric` + `DataSet` asset, confirmed the 500, cleaned up both
+elements afterward.
+
+**Candidate fix:** none on the pyegeria side — either the
+`governance-officer` view service's endpoint handler has end1/end2
+swapped internally, or the `GovernanceResults` relationship's own type
+definition has end1/end2 the other way round from what the URL segment
+order and `.http` documentation suggest. Needs investigation against the
+Egeria server/type-system source, not pyegeria.
+
+---
+
+### ISSUE-52: `qs-nanny-daemon`/`qs-integration-daemon`'s own connectors generate sustained, heavy background write load against the shared repository — starves interactive requests, plausible cause of "frequent Postgres checkpoints"
+
+**Update 2026-08-16, more specific root-cause evidence.** Recurred while
+retrying the `dr-egeria` help-Glossary `--process` step (see ISSUE-52's own
+earlier "cold-start crawl" postscript — this shows the earlier optimism was
+premature, it recurs under real batch load, not just right after a
+restart): `docker stats` showed `egeria-shared-postgres` at up to **650%
+CPU**, and connecting directly (`docker exec ... psql -U postgres -p 5442
+-d egeria`) found the real mechanism — **38 connections stuck `idle in
+transaction`** against the `egeria` database, all holding open the same
+query shape (`select distinct * from entity where (version_end_time is
+null) and (exists (select 1 from en...`). This is a connection/transaction
+pileup, not simple CPU starvation as originally framed — many connections
+opened a transaction, are waiting on something (`wait_event_type: Client`/
+`ClientRead`, i.e. waiting on their own client, not blocked by Postgres
+itself), and never committed/closed, so newer requests (including a plain
+`get_glossaries_by_name` lookup) queue behind them. CPU eased from 650% →
+340% → 298% over ~15 minutes while sitting at this same connection count,
+without by-name-search latency improving at all (stayed pinned at
+25-30s/timeout) — the two aren't tightly coupled, reinforcing that this is
+a connection-holding problem, not a raw compute-load problem. Whatever is
+opening these `entity`-table transactions and not releasing them (almost
+certainly the same `qs-nanny-daemon`/`qs-integration-daemon` connectors
+already suspected) is the actual thing to fix, not just "connector load"
+in the abstract.
+
+**Original status:** open (Egeria server / deployment config), found 2026-08-15 (Dan)
+investigating why a `dr_egeria --validate`/`--process` run against the
+`dr-egeria` help file (100+ commands) was taking 70+ minutes and timing out
+individual calls (see ISSUE-51), and independently reported by the user as
+"frequent checkpoints" observed in the Postgres console.
+
+**Layer:** Egeria Server (`egeria-quickstart` deployment's integration
+daemon connector configuration), not pyegeria — this is a deployment/config
+issue in the `egeria-shared-postgres`-backed local quickstart stack, not a
+pyegeria code defect.
+
+**What:** confirmed live, same session:
+- `egeria-shared-postgres` (the `pgvector/pgvector:pg17` container backing
+  `qs-view-server`'s repository, port 5442) is issuing time-based
+  checkpoints every 5 minutes (the Postgres default `checkpoint_timeout`)
+  with real, non-trivial WAL volume behind each one (~10-22 MB/checkpoint,
+  i.e. roughly 35-75 KB/s of sustained write throughput) continuously,
+  including in windows where no interactive Dr.Egeria/pyegeria work was
+  running — meaning the load is coming from something else running inside
+  the platform itself, not from client-side testing.
+- `docker logs quickstart-egeria-main` shows the source: `qs-nanny-daemon`'s
+  `JacquardDigitalProductLoom` integration connector logged a single
+  refresh cycle that took **4,370,395 ms (~73 minutes)** to complete
+  (`INTEGRATION-DAEMON-SERVICES-0043`). `qs-integration-daemon`'s
+  `OpenAPICataloguer` connector is continuously creating new `APIOperation`
+  catalog entities — confirmed 703 total in the container's full log
+  history, 36 of them in the last 30 minutes of a single ~2 hour window
+  sampled — each one a real metadata write, evidently crawling/re-crawling
+  the platform's own REST API surface (dozens of
+  `/open-metadata/access-services/open-metadata-store/...` and
+  `/open-metadata/conformance-suite/...` paths) rather than converging to a
+  steady state.
+- Directly reproduced the contention: a single, otherwise-simple
+  `client._async_get_element_by_guid_(guid)` call against `qs-view-server`,
+  issued from a fresh script with nothing else running client-side, hit the
+  30-second client timeout and raised `PyegeriaTimeoutException` —
+  confirming the server itself, not the client or network, is the
+  bottleneck.
+
+**Impact:** any pyegeria/Dr.Egeria workload that does more than a handful
+of sequential server calls (bulk `--process` runs, the help-file Glossary
+sync in particular) becomes unreliable — individual calls time out
+(`TIMEOUT_ERROR_408`) or the whole run takes an order of magnitude longer
+than expected — while these background connectors are active. This is very
+likely the direct cause of ISSUE-51's crash (the ClassificationExplorer
+call it depends on timed out under this exact load) and of the multi-hour
+`dr_egeria --validate` run in this same session.
+
+**Update 2026-08-15, same day:** user restarted the Egeria environment with
+the latest configuration. Post-restart, a `dr_egeria --process` run against
+the same 100+-command help file completed its first ~4 minutes with 0
+errors (vs. timing out repeatedly before), and `OpenAPICataloguer` created
+0 new `APIOperation` entities in a 10-minute post-restart sample (vs. 36 in
+30 minutes before) — consistent with the crawl having converged/settled
+after the restart rather than continuously re-cataloguing. Not yet
+confirmed whether this is a durable fix or the connectors will resume the
+same pattern once they hit their next scheduled refresh; worth re-checking
+`docker logs quickstart-egeria-main | grep JacquardDigitalProductLoom` after
+it's been up for a few hours.
+
+**Candidate next step (not yet done):** narrow which specific connector(s)
+are the dominant contributor — `JacquardDigitalProductLoom`'s single
+73-minute cycle and `OpenAPICataloguer`'s continuous entity creation are
+the two strongest leads — and either increase their refresh interval,
+narrow `OpenAPICataloguer`'s crawl scope (it may be re-cataloguing
+`localhost:9443`'s own REST surface on every refresh instead of once), or
+disable/reconfigure them in the `egeria-quickstart` compose config if
+they're not needed for this deployment's actual use case. This needs
+Egeria-server-side (or deployment-config-side) investigation — nothing here
+is fixable from pyegeria's side.
+
+**Update 2026-08-15, done (partial):** `quickstart-egeria-main` had been
+restarted again since the note above (container uptime ~1h at check time,
+vs. the earlier 8h+ uptime of sibling containers) — so this was actually a
+fresh post-restart observation window, not a stale one. Findings:
+- **`OpenAPICataloguer`'s behavior is better characterized as a one-time
+  cold-start catalog crawl that converges, not continuous unbounded
+  re-crawling** — the earlier framing was too pessimistic. Creation rate
+  measured in shrinking trailing windows since restart: 134 (50 min) → 86
+  (40 min) → 48 (30 min) → 26 (20 min) → 8 (10 min) → 6 (5 min) new
+  `APIOperation` entities — a clear deceleration, not a steady/repeating
+  rate. 201 total `APIOperation`s exist in the full container log history;
+  171 of them were created in just this last hour, meaning the connector
+  is doing its first post-restart crawl right now and tapering off, not
+  perpetually re-cataloguing the same ground.
+- **`JacquardDigitalProductLoom` logged zero refresh-cycle activity in this
+  1-hour post-restart window** — can't yet say whether its 73-minute cycle
+  is gone for good or just hasn't fired again yet (container too young to
+  rule out a recurrence on its next scheduled interval).
+- **Server responsiveness confirmed fast right now**: 3 sequential
+  `get_metadata_element_by_guid` calls against `qs-view-server` completed
+  in 0.19s/0.03s/0.02s — no timeouts, nothing close to the earlier
+  30-second `PyegeriaTimeoutException` symptom.
+- Could not directly inspect Postgres checkpoint stats this pass (`psql`
+  isn't installed as a client tool inside the `egeria-shared-postgres`
+  container in a way this session could reach it) — server-response timing
+  above stands in as an indirect but consistent signal instead.
+
+**Net assessment:** the acute symptom (timeouts, multi-hour bulk-processing
+runs) is not currently reproducing, and the mechanism now looks more like
+"cold-start crawl briefly saturates the server after every restart, then
+settles" than "sustained, unbounded background load." Still genuinely
+Egeria-server/deployment-config territory, not pyegeria-fixable — if this
+pattern recurs and is disruptive on every restart, the original candidate
+fixes (narrow `OpenAPICataloguer`'s crawl scope, stagger connector startup,
+or increase refresh intervals) remain the right next step, just lower
+urgency than originally assessed.
+
+---
+
+### ISSUE-53: `findMetadataElements`'s `metadataElementSubtypeNames` is silently ignored — restricting to specific subtypes has no effect on results
+
+**Status:** still open (Egeria server), re-confirmed 2026-08-15 against the
+current, restarted `qs-view-server` — not a stale finding. Re-ran with a
+raw body passed straight through `MetadataExpert.find_metadata_elements`
+(bypassing any pyegeria body-construction logic, equivalent to the original
+raw-`curl` repro): `metadataElementTypeName: "Referenceable"` with and
+without `metadataElementSubtypeNames: ["GlossaryTerm"]` returned the
+byte-identical type mix both times (`APIParameter`/`ConnectorActivityReport`/
+`ContributionRecord`, 50/50 results) — the subtype filter still has zero
+effect. Nothing changed client-side; still not fixable in pyegeria.
+
+**Original status:** open (Egeria server), found 2026-08-05 investigating whether
+Egeria Insights could express "elements that have a SemanticAssignment but
+are NOT type Notification" via an allow-list of subtypes (`Referenceable`
++ `metadataElementSubtypeNames: ["GlossaryTerm", "DataAsset"]`, per
+`Egeria-api-metadata-expert.http`'s worked "findMetadataElements (nested
+condition)" example, which documents this field alongside
+`metadataElementTypeName`).
+
+**Layer:** Egeria Server — not fixable in pyegeria. Confirmed via a raw
+`curl` bypassing pyegeria entirely (so this isn't a body-construction bug
+on the client side):
+
+```bash
+curl -sk -X POST ".../metadata-expert/metadata-elements/by-search-conditions" \
+  -H "Authorization: Bearer $TOKEN" -H "Content-Type: application/json" \
+  -d '{"class":"FindRequestBody","metadataElementTypeName":"Referenceable",
+       "metadataElementSubtypeNames":["GlossaryTerm"],
+       "limitResultsByStatus":["ACTIVE"],"graphQueryDepth":0,"startFrom":0,"pageSize":10}'
+# returns ContributionRecord/EngineAction/NotificationType — NOT GlossaryTerm
+```
+
+**What:** `metadataElementSubtypeNames` is accepted (no error, HTTP 200)
+but has **zero effect** on which elements come back — results are
+byte-identical to the same query with the field omitted entirely.
+Reproduced with two different base-type/subtype pairs to rule out a
+one-off: `Referenceable` + `["GlossaryTerm"]`, `Referenceable` +
+`["GlossaryTerm","DataAsset"]`, and `Asset` + `["DataAsset"]` — all three
+returned the same type mix (`ContributionRecord`/`EngineAction`/
+`Notification(Type)`) as the equivalent query with no subtype restriction
+at all.
+
+**Impact:** there is currently no way to narrow a `findMetadataElements`
+query to a specific allow-list of subtypes under a common base type — the
+only working filter is the single `metadataElementTypeName` (which
+includes ALL subtypes of that type, with no way to exclude any of them).
+This blocks the Egeria Insights use case that prompted the investigation:
+excluding noisy `Action` subtypes (`Notification`/`ToDo`/`Meeting`/
+`Review` — all real `Asset` subtypes, see ISSUE for the Explorer routing
+fix on 2026-08-05) from a broader `Asset`/`Referenceable` search without
+also losing every other subtype.
+
+**Candidate fix:** none client-side. Worth confirming against a newer
+Egeria server build whether this is a currently-unimplemented parameter
+(present in the request body schema/`.http` docs but never wired up
+server-side) versus a regression.
+
+---
+
+### ISSUE-54: `findMetadataElements` scoped to the universal base type `Referenceable` silently returns an incomplete, arbitrary subset instead of the true population
+
+**Status:** still open (Egeria server), re-confirmed 2026-08-15 against the
+current, restarted `qs-view-server` — magnitude has shifted (as with
+ISSUE-38/52's re-checks) but the core defect persists. Re-ran the same two
+independent cross-checks with a fully-paginated exhaustive scan
+(`page_size=200`, following pagination to exhaustion):
+- Direct exhaustive `metadataElementTypeName="GlossaryTerm"`: **532**
+  elements. Of the exhaustive `Referenceable` scan's 19,166 elements
+  (19,127 distinct GUIDs — see below), only **324** carry `typeName:
+  "GlossaryTerm"` — **61%** coverage (better than the original run's ~54%,
+  still clearly incomplete, not just a rounding gap).
+- Independent check against `SemanticAssignment` relationship participants
+  (`ClassificationExplorer.get_relationships`, unrelated API path): 414
+  distinct participant GUIDs; only **302 (73%)** appear anywhere in the
+  19,166-element `Referenceable` scan (up from the original run's 23/410 =
+  5.6%, but still missing more than a quarter of real, independently-known
+  participants).
+- **New observation this pass:** the exhaustive `Referenceable` scan itself
+  returned 19,166 total elements across pages but only 19,127 **distinct**
+  GUIDs — 39 duplicate entries showing up more than once across different
+  pages of the same paginated scan. Not previously noted; suggests server-side
+  result ordering/stability issues for this specific broad-type scan, which
+  would also explain why elements can be silently skipped between pages
+  (an element shifting position between page fetches, due to unstable
+  ordering, could cause both duplication *and* omission depending on which
+  way it moves) — a plausible mechanism for the core bug, not confirmed as
+  the actual root cause.
+
+Both cross-checks still clearly demonstrate the defect; nothing changed
+client-side to warrant re-testing pyegeria's own pagination logic (already
+ruled out in the original investigation — direct exhaustive scans of real
+types are complete and correct, only the broad-base-type scan is affected).
+
+**Original status:** open (Egeria server), found 2026-08-06 fixing egeria-workspaces-fs's
+relationship-only search (see ISSUE-45's same investigation thread —
+looking for a safe fallback type once `metadataElementTypeName="Asset"`
+was confirmed wrong for `SemanticAssignment`, and `metadataElementSubtypeNames`
+confirmed non-functional).
+
+**Layer:** Egeria Server — not fixable in pyegeria.
+
+**What:** an exhaustive, fully-paginated `find_metadata_elements` scoped to
+`metadataElementTypeName="Referenceable"` (the universal base type — every
+open-metadata entity is a `Referenceable`) returns a small, arbitrary
+subset instead of the true population, with no error, no truncation flag,
+and pagination genuinely terminating normally (`added == 0`/`len(page) <
+page_size` on the last page — the loop believes it's done). Confirmed live
+against `qs-view-server` by direct comparison:
+
+| Scope | Elements found |
+|---|---|
+| `metadataElementTypeName="Referenceable"` (exhaustive) | 3,999 total |
+| ...of which `typeName="GlossaryTerm"` | 241 |
+| ...of which `typeName="GovernanceActionProcess"` | 22 |
+| `metadataElementTypeName="GlossaryTerm"` (exhaustive, direct) | **450** |
+| `metadataElementTypeName="GovernanceActionProcess"` (exhaustive, direct) | **378** |
+
+Cross-checked against a real, independently-known population: fetching
+every participant GUID of the `SemanticAssignment` relationship type
+(`ClassificationExplorer.get_relationships`, a separate, unrelated API
+path, previously verified complete) gives 410 distinct GUIDs. Only 23 of
+those 410 appear anywhere in the 3,999-element `Referenceable` scan — 387
+real participants (94%) are simply absent from a scan of the type that is
+supposed to be their common ancestor and therefore cover all of them.
+
+**Impact:** `metadataElementTypeName="Referenceable"` cannot be used as a
+"safe, unscoped, find-everything" fallback the way its position at the
+root of the type hierarchy implies — a caller that scopes a search this
+broadly on purpose (not just as an accidental fallback) will silently miss
+the majority of real results, not just cap them at a boundary. Confirmed
+this is specific to the base-type-wide scan, not pagination itself —
+directly-typed exhaustive searches for the exact same real types
+(`GlossaryTerm`, `GovernanceActionProcess`) are complete and correct.
+
+**Candidate fix:** none client-side. `egeria-workspaces-fs`'s workaround
+(see its `EGERIA_INSIGHTS_QUERY_MODEL.md`/`insights_handler.py`, commit
+`015916d0`) is to never scope a search to `Referenceable` (or any other
+broad base type) as a "safe fallback" — when the real target type isn't
+known, derive the actual candidate types from other data (e.g. a
+relationship's real participants) and search each directly instead.
+
+---
+
+### ISSUE-38 (PY-18): `count_relationships_between_elements("Exception")` (276) disagrees with `ClassificationExplorer.get_relationships("Exception")` (55)
+
+**Status:** re-investigated 2026-08-15, narrowed and re-confirmed
+**Egeria server, not pyegeria-fixable** — this is a genuine, real bug, just
+smaller than originally measured (demo data has evidently changed since
+2026-07-24: `count` is now 58 and `get_relationships` is now 57, not
+276/55). Cross-checked against a **second, independent pyegeria list-based
+method** — `MetadataExpert.find_relationships_between_elements` (a
+different OMVS client, different endpoint,
+`.../relationships/by-search-conditions` rather than
+`ClassificationExplorer`'s `.../relationships/{type}`) — with the same
+`relationshipTypeName: "Exception"` filter: it also returns exactly 57,
+and its 57 relationship GUIDs are the **identical set** to
+`get_relationships`'s 57 (zero difference either direction). Two
+independently-implemented pyegeria code paths through two different
+endpoints agree exactly with each other; only the server's native
+`COUNT(*)` endpoint (`.../relationships/by-search-conditions/count`)
+disagrees, by exactly 1. Also re-confirmed the original "not the type
+filter" finding still holds with current data — re-ran `count` vs.
+`get_relationships` for `SemanticAssignment` (401=401), `License` (2=2),
+`Certification` (0=0), `AttachedRating` (0=0): all match; only `Exception`
+diverges. Also checked whether the count includes non-`ACTIVE`/soft-deleted
+relationships the list endpoints filter out — no: `limitResultsByStatus:
+["ACTIVE"]` and `["ACTIVE","DELETED"]` both still return 58 from `count`
+(no status-filter difference). Since both retrieval paths agree with each
+other and only the count differs, there's genuinely nothing to fix on the
+pyegeria side — this is squarely a server-side discrepancy between the
+native COUNT(*) query and the list-materialization logic for this one
+relationship type. No further pyegeria action needed; still needs
+Egeria-side investigation to say what specifically triggers it for
+`Exception`.
+
+**Original status:** open (Egeria server) — needs Egeria-side investigation. Found
+2026-07-24 while wiring the Egeria Overview dashboard to native counting
+(odpi/egeria#9168). Consolidated in from `egeria-workspaces-fs/
+PYEGERIA_ISSUES.md` 2026-08-05.
+
+**Summary:** the OMF metadata-expert native relationship count and the
+classification-explorer `get_relationships` return materially different
+totals for the `Exception` relationship type — and *only* that type, among
+those tested.
+
+**How to trigger:**
+```python
+from pyegeria import MetadataExpert, ClassificationExplorer
+me = MetadataExpert(view_server="qs-view-server", platform_url="https://localhost:9443",
+                    user_id="erinoverview", user_pwd="secret"); me.create_egeria_bearer_token()
+ce = ClassificationExplorer(view_server="qs-view-server", platform_url="https://localhost:9443",
+                    user_id="erinoverview", user_pwd="secret"); ce.create_egeria_bearer_token()
+
+me.count_relationships_between_elements({"class":"FindRelationshipRequestBody","relationshipTypeName":"Exception"})
+# -> 276
+len(ce.get_relationships(relationship_type="Exception", output_format="JSON", start_from=0, page_size=5000))
+# -> 55  (all 55 have exact typeName "Exception"; no effectivity dates)
+```
+
+**What it is NOT:**
+- Not the type filter — `count("SemanticAssignment")` = 397 =
+  `get_relationships` = 397; `License` 2 = 2; `Certification` 0 = 0;
+  `AttachedRating` 0 = 0. Every other tested type matches; only `Exception`
+  diverges.
+- Not status/effectivity — `count("Exception")` is 276 with
+  `limitResultsByStatus=[ACTIVE]`, with `effectiveTime=<now>`, and with
+  neither; the 55 `get_relationships` results carry no
+  `effectiveFromTime`/`effectiveToTime`.
+- `count(no relationshipTypeName)` = 31857 (all relationships), so 276 is
+  a genuine type-scoped subset, not "count ignores the filter".
+
+**Open question for Egeria:** what does the metadata-expert count include
+for `Exception` that the classification-explorer traversal excludes
+(subtypes counted under the supertype? relationships to non-visible/
+anchored/dangling ends? access/zone filtering that differs between the two
+OMVS)? Whichever is "true", the two APIs should agree for a given type —
+or the difference should be documented.
+
+**Impact / workaround:** egeria-workspaces-fs's Overview dashboard keeps
+**relationship** counts on `ClassificationExplorer.get_relationships` (so
+"Open Exceptions" stays consistent with the Audit app at 55) and uses
+native counting only for **element** counts.
+
+---
+
+### ISSUE-41 (PY-21): `find_glossary_terms(sequencing_order=..., include_only_classified_elements=...)` returns ZERO results when combined — each filter alone works fine
+
+**Status:** confirmed bug (Egeria server) — found 2026-07-28 debugging
+Egeria Explorer's Perspectives page showing Perspectives but no Questions.
+Related to ISSUE-40 below (same broken parameter, different — and more
+severe — failure mode: not just wrong order, but zero rows). Consolidated
+in from `egeria-workspaces-fs/PYEGERIA_ISSUES.md` 2026-08-05.
+
+**How to trigger** (`GlossaryManager.find_glossary_terms`, qs-view-server,
+33 `GlossaryTerm`s classified `Question`):
+```python
+# classification filter alone: 33 hits
+mgr.find_glossary_terms(search_string="*", starts_with=True, output_format="JSON",
+                        page_size=200, graph_query_depth=0,
+                        include_only_classified_elements=["Question"])
+
+# sequencing_order alone (no classification filter): 200 hits (unrelated terms, page_size ceiling)
+mgr.find_glossary_terms(search_string="*", starts_with=True, output_format="JSON",
+                        page_size=200, graph_query_depth=0,
+                        sequencing_order="PROPERTY_ASCENDING")
+
+# BOTH together: 0 hits
+mgr.find_glossary_terms(search_string="*", starts_with=True, output_format="JSON",
+                        page_size=200, graph_query_depth=0,
+                        sequencing_order="PROPERTY_ASCENDING",
+                        include_only_classified_elements=["Question"])
+# -> []  (or a "No elements found" string, depending on call shape)
+```
+Isolated further: `sequencing_order="PROPERTY_ASCENDING"` is the trigger —
+`sequencing_property` alone (no `sequencing_order`) does **not** break it
+(still 33 hits). It's specifically `sequencing_order` + a classification
+filter.
+
+**Expected:** the classification filter's 33 matches, sorted by the given
+sequencing property (or, per ISSUE-40, at least returned in server-internal
+order — but not silently emptied).
+
+**Actual:** zero rows, with no error — the query silently looks like
+"nothing matches" rather than failing loudly, which is what made this hard
+to spot (the egeria-workspaces-fs `/api/questions` endpoint returned
+`{"total": 0}` with a 200 status; only comparing against a live count of
+Question-classified terms in Egeria surfaced that this was wrong, not just
+an empty demo).
+
+**Impact / workaround:** egeria-workspaces-fs's `perspectives_handler.py`'s
+`get_questions()` used exactly this broken combination. Fixed by dropping
+`sequencing_order`/`sequencing_property` from the call — the endpoint
+already sorts client-side, so the server-side sequencing was redundant
+even before this bug was found. No other known callers currently combine
+`sequencing_order` with a classification filter, but worth checking
+`include_only_classified_elements`/`matchClassifications` callers
+generally if new zero-result reports show up elsewhere.
+
+---
+
+### ISSUE-60: `find_glossary_terms`'s `sequencing_order`/`sequencing_property` sorts only the fetched page, not the full result set — a "fetch one page, sort in JS" pattern silently drops alphabetically-early/late terms once the collection exceeds the page
+
+**Status:** re-verified 2026-08-15 — **open question #1 below is now
+answered, confirmed a real defect, not a design ambiguity.** Checked
+pyegeria's request shape against `Egeria-api-glossary-manager.http`'s
+`findGlossaryTerms` worked example first — byte-identical
+(`sequencingOrder`/`sequencingProperty` field names and
+`"PROPERTY_ASCENDING"` value form both match exactly), so this isn't a
+pyegeria body-construction bug. Then tested live against `qs-view-server`:
+`sequencing_property="displayName"` and `sequencing_property="qualifiedName"`
+both still return **server-internal order, not alphabetical**
+(`['Inventory', 'GHG offset', 'GHG Protocol...', 'Ratio indicator', ...]`
+— not A→Z under either property). Went further than the original repro:
+compared `None`/`PROPERTY_ASCENDING`/`PROPERTY_DESCENDING`/
+`CREATION_DATE_RECENT` against the same query — `None`, `DESCENDING`, and
+`CREATION_DATE_RECENT` all return the *identical* first-page term set,
+while `ASCENDING` returns a genuinely different subset — so the parameter
+isn't fully inert (it does influence which underlying scan/index strategy
+picks the first page), it just never resolves to an actual sorted-by-property
+order. **Answers open question #1: no, `sequencing_order`/`sequencing_property`
+is not reliably usable as a true server-side sort for this endpoint today**
+— any UI needing real alphabetical order must fetch-all-then-sort
+client-side, confirming the workaround already in use is necessary, not
+just cautious. Questions #2–4 (fetch-all vs. paged-UI strategy,
+`maxPageSize` ceiling, shared-helper consistency) remain genuine product
+decisions for the team/user, not resolved by this investigation and not
+attempted here — nothing client-side to fix regardless of how those are
+answered, since the underlying sort isn't reliable at the source.
+
+**Original status:** open — design discussion, not a confirmed bug. High-priority
+follow-up. Raised 2026-07-24 from a glossary-term aliases fix: aliased
+terms were missing from egeria-workspaces-fs's default listing because of
+how the portal loads and sorts lists. Consolidated in from
+`egeria-workspaces-fs/PYEGERIA_ISSUES.md` 2026-08-05. **Split out
+2026-08-15 from ISSUE-55** — this entry had been accidentally merged under
+that heading with no `---` divider during the original consolidation
+(unrelated topic: this is about sort scope, not exclude-type semantics);
+no content changed, just given its own number so it's no longer buried
+inside a different issue.
+
+**Observations** (repro, `find_glossary_terms`, qs-view-server, 388 terms):
+```python
+# start_from paging works -- each page is a different, non-overlapping slice:
+m.find_glossary_terms(search_string="*", start_from=0,  page_size=10, output_format="JSON")   # 10 terms
+m.find_glossary_terms(search_string="*", start_from=10, page_size=10, output_format="JSON")   # next 10, no overlap
+
+# BUT sequencing is not reflected in the result order:
+m.find_glossary_terms(search_string="*", page_size=10, output_format="JSON",
+                      sequencing_order="PROPERTY_ASCENDING", sequencing_property="displayName")
+# -> ['Rolling base year','Carbon Intensity','Megawatt Hour','Inventory','Shall', ...]  (server-internal order, not A->Z)
+```
+
+So a "load-all up to a page-size ceiling, then sort/filter in JS" pattern
+(used across several egeria-workspaces-fs apps) silently returns an
+*arbitrary* subset when a collection exceeds the ceiling: e.g. default
+`page_size=200` on 388 terms returns some 200, the endpoint re-sorts *those
+200* by `displayName`, and terms outside that slice (incl.
+alphabetically-early ones) simply never appear. (Note: `find_glossary_terms`
+paginates correctly here via `start_from`/`page_size` as method parameters
+— a different method from ISSUE-34's `find_metadata_elements`, whose
+pagination bug/fix was about a different endpoint's request shape
+entirely; this entry's own issue is about sequencing order, not
+duplication or missing pages.)
+
+**Open questions to decide (not asserting any of these is a defect):**
+1. Is `sequencing_order`/`sequencing_property` expected to order the
+   result here, or is that behavior config/connector-dependent?
+   (Determines whether true server-side paged UIs are even feasible, or
+   whether fetch-all-then-sort-in-JS remains the only reliable sort.)
+2. Preferred model: **bounded server-side fetch-all** (loop `start_from`
+   until the native `count_metadata_elements` total is reached or a
+   ceiling is hit, return a `truncated`/`total` flag) vs. a true paged UI.
+   Fetch-all keeps the existing instant client-side search; paged UI needs
+   #1 resolved first.
+3. **Page-size ceiling is bounded by the view server's configured
+   `maxPageSize`** (OMAG server config) — likely well below 5000. Any
+   fetch-all loop must chunk at ≤ that limit; the overall load ceiling is a
+   separate product decision. TBD.
+4. Apply the chosen strategy consistently via a shared helper across all
+   "load-all" endpoints, rather than per-handler.
+
+**Current mitigation:** none beyond raising `page_size`, which only lowers
+the odds (a single page is still unsorted, so it sorts an arbitrary
+slice). Tracked for a deliberate fix once the strategy + `maxPageSize` are
+agreed. See ISSUE-41 for the more severe related failure mode (combined
+with a classification filter, this doesn't just misorder — it silently
+returns zero rows).
+
+---
+
+## Open pyegeria items (including follow-ons blocked on an Egeria fix)
+
+Actionable in this repo. Some of these are fully blocked today — waiting
+on an Egeria Server capability that doesn't exist yet — but the pyegeria/
+Dr.Egeria-side work each will need once that capability ships is written
+into the entry now, so it isn't rediscovered from scratch later.
+
+### ISSUE-48: No OMVS wrapper exists for the `SchemaAttributeDefinition` relationship (physical `SchemaAttribute` ↔ logical `DataField`)
+
+**Status:** deferred 2026-08-15 — user's decision: wait until Egeria ships
+the actual REST endpoint for this relationship before building a pyegeria
+wrapper or Dr.Egeria command against it. Both options considered below
+remain valid candidates once that lands; no implementation work done here.
+
+**Original status:** open — SDK gap to validate with the team, not yet a confirmed
+bug. Raised 2026-08-07 while triaging a request to add three "missing"
+Dr.Egeria Data Designer commands (SemanticAssignment, DataClassAssignment,
+SchemaTypeImplementation). Two of the three turned out not to be gaps at
+all once checked against the real type system and existing compact specs:
+
+- **SemanticAssignment** (schema/field → glossary term) already exists —
+  `Link Semantic Assignment` / `Unlink Semantic Assignment` in the
+  **Curation** family (`commands_curation_compact.json`, `OM_TYPE:
+  SemanticAssignment`, wired to `ClassificationExplorer.
+  _async_setup_semantic_assignment` in `CurationLinkProcessor`). Its
+  `Target Element` is a generic GUID, so it already works against a data
+  field or schema attribute today.
+- **DataClassAssignment** on a physical schema attribute is also already
+  covered — and the type name itself is stale. The old `DataClassAssignment`
+  relationship was replaced in this Egeria version by
+  `DataValueAssignmentRelationship` (0540 —
+  `OpenMetadataTypesArchive1_2.java`), whose end 1 is `Referenceable` (any
+  element, including a schema attribute). Data Designer's existing `Assign
+  Data Value Specification` command (`OM_TYPE: DataValueAssignment`)
+  already covers this generically via its `Element Id` attribute.
+
+**The third one is a real gap, at the SDK level, not just the Dr.Egeria
+command-spec level.** "SchemaTypeImplementation" isn't a real type name in
+this Egeria version at all. The type that actually connects a physical
+`SchemaAttribute` to a logical `DataField` is `SchemaAttributeDefinition`
+(0580, `OpenMetadataTypesArchive5_3.java` —
+`getSchemaAttributeDefinitionRelationship()`), ends `derivedFromDataField`
+(on `DataField`, AT_MOST_ONE) / `equivalentSchemaAttribute` (on
+`SchemaAttribute`, AT_MOST_ONE). Confirmed via grep across `pyegeria/omvs/`
+and `pyegeria/http clients/*.http`: **no bespoke wrapper method exists**
+for setting up or clearing this relationship — no `_async_link_*`/
+`_async_setup_*` method, no `.http` worked example, in `data_designer.py`,
+`data_engineer.py`, or `classification_explorer.py`.
+
+**Options considered, not yet decided:**
+1. Add a bespoke wrapper (e.g.
+   `DataDesigner._async_link_schema_attribute_definition`/
+   `_async_detach_schema_attribute_definition`) mirroring
+   `_async_setup_semantic_assignment`'s shape, then wire a Dr.Egeria
+   `Link/Unlink Schema Attribute Definition` command to it. Most
+   consistent with how other bespoke-family relationships are handled, but
+   requires new SDK surface first.
+2. Skip the bespoke wrapper and drive it through the existing generic
+   `MetadataExpert._async_create_related_elements`/
+   `_async_delete_related_elements` (typeName-based) — the same mechanism
+   `CurationLinkProcessor` already uses for other Tier-2 gaps with no
+   dedicated method (`ResourceList`, `MoreInformation`). No new SDK method
+   needed, but less discoverable/typed than a bespoke wrapper.
+
+No command has been added to the compact JSON for this yet — deferred
+pending the team's input on which approach (or whether the relationship
+is even meant to be user-authorable via Dr.Egeria, vs. only ever
+system-derived from a physical→logical mapping tool).
+
+---
+
+### ISSUE-55: Desired enhancement — true "exclude type" / NOT semantics for `findMetadataElements`
+
+**Status:** open — desired enhancement, not a bug. Raised 2026-08-05
+alongside ISSUE-45, from the same Egeria Insights use case ("elements that
+have a SemanticAssignment relationship but are NOT type Notification").
+
+**What's missing:** `FindRequestBody` has no negation operator for type at
+all. `metadataElementTypeName` is a single positive inclusion filter
+(that type plus all its subtypes); `metadataElementSubtypeNames` is meant
+to narrow that to a specific allow-list of subtypes (see ISSUE-45 — doesn't
+currently work, but even fixed, an allow-list is still not the same thing
+as an exclude-list: excluding one noisy subtype out of a large,
+open-ended family — e.g. "any `Asset` except `Notification`" — would
+require enumerating every OTHER `Asset` subtype by hand, which is
+impractical and silently stale the moment a new subtype is added).
+`searchProperties`/element-property conditions can't reach `typeName`
+either, since it's a structural/type-system attribute, not a regular
+property in `propertyValueMap`.
+
+**Desired shape (not designed in detail — flagging the need):** a genuine
+exclude-list, e.g. `metadataElementExcludedSubtypeNames` (or a NOT/negation
+option on the existing field), so a caller can say "type X or narrower,
+except these specific subtypes" without enumerating the full positive
+allow-list. Needs real Egeria-side API design work — this entry exists to
+make sure the need doesn't get lost, not to prescribe the exact shape.
+
+**Interim workaround, planned for Egeria Insights (`egeria-workspaces-fs`,
+not pyegeria):** client-side post-filter, mirroring the pattern already
+used there for relationship-presence conditions (which also have no
+server-side equivalent) — fetch normally, then drop results whose
+`typeName`/`superTypeNames` match a caller-specified exclude set, with an
+honest note that the exclusion applies only to the fetched page (same
+`relationshipFilterNote`/`defaultedTypeNote` transparency convention that
+module already uses). Not yet built.
+
+---
+
+---
+
+# Quick reference: which OMVS client class for which purpose
+
+| Need | Class | Notes |
+|---|---|---|
+| Business reference data (country/currency codes) | `ReferenceDataManager` | Does **not** cover specification properties (ISSUE-19, docs-only) |
+| Valid metadata values for a property name | `ReferenceDataManager` or `MetadataExpert` | `get_valid_metadata_values` lives on shared `ServerClient` base; no `as_of_time` support — Egeria endpoint doesn't expose it (ISSUE-18) |
+| Specification properties (placeholders, guards, action targets, etc.) | `SpecificationProperties` | `get_specification_property_by_type` now works with either PascalCase or `SCREAMING_SNAKE_CASE` input (ISSUE-17, fixed 2026-08-15); `find_specification_property` with `graph_query_depth=0` also available (ISSUE-15); `get_specification_property_by_guid` works too, `NameError` fixed (ISSUE-28, fixed 2026-08-05, re-verified 2026-08-15) |
+| `DataGrain` / `DataClass` listing | `find_data_value_specifications` / `get_data_value_specifications_by_name("*")` | Both fixed (ISSUE-1, ISSUE-2) |
+| `DataSpec` (Collection subtype) | `CollectionManager.find_collections(metadata_element_type="DataSpec")` | |
+| `DataStructure` / `DataField` | `DataDesigner.find_data_structures` / `find_data_fields` | |
+| Solution blueprints/components (any pyegeria version) | `SolutionArchitect.find_solution_blueprints/components(search_string="*")` | Avoid `find_all_*` variants on old versions (ISSUE-11) |
+| Note logs (list) | `find_note_logs("*", graph_query_depth=0)` | ISSUE-15 |
+| Note logs (entries) | `get_notes_for_note_log(guid, page_size=100)` | ISSUE-3 — never pass `metadata_element_type_name="NoteLog"` |
+| Collection members | `get_collection_members(collection_guid)` | ISSUE-8 — now returns members of any type, not just the collection's own type |
+| Comparing results across two runs/environments that don't match | — | Check whether the same user's credentials were used in both — governance zone visibility can legitimately change results per-user (ISSUE-29) before assuming a pyegeria bug |
+| Multi-classification search (`matchClassifications`, 2+ conditions) | `MetadataExpert.find_metadata_elements` | Fixed in Egeria server (ISSUE-35) |
+| Paging a `find_metadata_elements` result | Set `"startFrom"`/`"pageSize"` **in the body dict** | Fixed (ISSUE-34) — these are NOT separate parameters on this method anymore; passing them as kwargs is silently a no-op. Same for `"graphQueryDepth"`. |
+| Relationships for a single element by guid | `MetadataExpert.get_all_related_elements(guid)` | **Not** `get_metadata_element_by_guid` — that call never returns relationships, by design (ISSUE-37, not a bug) |
+| Project parent/child hierarchy (any linked project, not just hierarchy) | `ProjectManager.get_linked_projects(guid)` | Fixed (ISSUE-42) — was silently returning "No elements found" regardless of real data |
+
+---
+
+
+---
+
+# Appendix: Closed / Not-a-bug entries
+
+## Fixed / Resolved
+
+### ISSUE-61: No Dr.Egeria command exists to attach a `GovernanceMetric` to its implementation (the `GovernanceResults` relationship) — the OMVS wrapper already exists, it's just never wired to a compact-spec command
+
+**Status:** fixed 2026-08-17 (Pyegeria/Dr.Egeria — Dan, via the Dr.Egeria
+Spec Editor's REST API). Added `Link Governance Results` (`OM_TYPE
+GovernanceResults`, bundle `Link Command Base`) to the `Governance Officer`
+family, with two new Reference Name-style attributes ("Governance Metric" →
+`GovernanceMetric`, "Data Asset" → `Asset`) matching the sibling "Governance
+Definition"/"Referenceable" pair on `Link Governed By`. `GovernanceLinkProcessor`
+(`md_processing/v2/governance.py`) already handles Link/Detach/Unlink/Remove
+variants from one spec entry via `build_command_variants` — no separate
+registration needed; wired via a new `endpoint_map` entry + one
+`apply_changes` branch per direction, calling
+`_async_link_governance_results`/`_async_detach_governance_results` with a
+body built via the existing generic `set_rel_prop_body()` (no bespoke body
+builder needed).
+
+Originally raised 2026-08-17 while designing how the Egeria Overview
+dashboard's ~25 `pyegeria.view.overview_metrics` functions could be
+described as real Egeria metadata rather than only Python docstrings — see
+`egeria-workspaces-fs`'s `OVERVIEW_NEXT_STEPS.md` for the full design
+reasoning (`GovernanceMetric` for the definition, `GovernanceResults` →
+`Report` for the implementation, no new relationship type needed since
+`Report` is already a `DataSet` subtype).
+
+**Verified live 2026-08-17** against the pilot `GovernanceMetric`/`Report`
+pair created during the original design investigation: `--validate` and
+`--process` both succeed; detached the pilot's original raw-API-created
+`GovernanceResults` relationship (hit the known
+`deleteRelationshipInStore`-rejects-its-own-default-`deleteMethod` bug —
+worked around with an explicit `{"deleteMethod": "SOFT_DELETE"}` body, same
+issue this repo's `DeleteRelationshipRequestBody.delete_method` field
+already exists to work around elsewhere) and re-created it via the new
+`Link Governance Results` command; `mgr.get_all_related_elements(<metric
+guid>)` confirms the relationship resolves correctly afterward.
+
+---
+
+### ISSUE-62: `DeleteElementRequestBody` had no `cascadeDelete`/`deleteMethod` fields — `extra='ignore'` silently discarded both, not just left them unsupported
+
+**Status:** fixed 2026-08-18 (Pyegeria — `pyegeria/models/models.py`,
+`tests/micro-tests/test_delete_element_request_body.py`).
+
+Raised by dwolfson noticing `_async_delete_element_request` and its
+Pydantic model didn't appear to support `deleteMethod`. Investigation found
+two gaps, not one:
+
+1. **`deleteMethod` missing entirely.** Ground truth (`.http` reference
+   files, e.g. `Egeria-api-actor-manager.http` lines 1452-1460, 2127-2135,
+   2409+) shows real `DeleteElementRequestBody` bodies legitimately
+   carrying `"deleteMethod": "LOOK_FOR_LINEAGE"`; the pydantic model had no
+   such field. Same bug class as ISSUE-61's mention of
+   `DeleteRelationshipRequestBody.delete_method` (added 2026-08-17 for
+   `OMAG-COMMON-400-032`) — that sibling class got the fix, this one never
+   did.
+2. **`cascadeDelete` was *also* silently dropped, and already
+   live-impacting.** `validate_delete_element_request`'s no-body-provided
+   path builds `{"class": "DeleteElementRequestBody", "cascadeDelete":
+   cascade_delete}` and validates it against the same model. Since the
+   model had neither field and `PyegeriaModel`'s `extra='ignore'`, both
+   values vanished before serialization — confirmed directly (no live
+   server needed):
+   ```python
+   >>> DeleteElementRequestBody.model_validate(
+   ...     {'class': 'DeleteElementRequestBody', 'cascadeDelete': True, 'deleteMethod': 'PURGE'}
+   ... ).model_dump_json(exclude_none=True)
+   {"forLineage": false, "forDuplicateProcessing": false, "class": "DeleteElementRequestBody"}
+   ```
+   This wasn't hypothetical: every `_async_delete_X` wrapper that threads
+   `cascade_delete` through `_async_delete_element_request` (e.g.
+   `DataDesigner.delete_data_structure(guid, cascade_delete=True)`,
+   exercised in `tests/scenario-tests/test_data_designer_scenarios.py`) has
+   been silently sending `cascade_delete` as unset every time, regardless
+   of caller intent — Egeria falls back to its own non-cascading default
+   instead.
+
+Checked the adjacent classes for the same gap: `DeleteClassificationRequestBody`
+and `OpenMetadataDeleteRequestBody` both correctly have neither field —
+matches their real ground-truth bodies, no bug there. The gap was isolated
+to `DeleteElementRequestBody`.
+
+**Fix (deliberately scoped — see "Possible future work" below for what was
+declined):** added both fields directly to `DeleteElementRequestBody`,
+mirroring `DeleteRelationshipRequestBody`'s existing fix pattern:
+- `delete_method: Optional[DeleteMethod] = None` — no spelling ambiguity
+  found in ground truth for this one, uses the model's normal
+  `alias_generator` (→ `deleteMethod`).
+- `cascade_delete: Optional[bool] = None` with
+  `validation_alias=AliasChoices("cascadeDelete", "cascadedDelete")` and
+  `serialization_alias="cascadeDelete"`. Ground-truth `.http` files are
+  genuinely split roughly 50/50 between `cascadeDelete` and
+  `cascadedDelete` for this same class — even within a single file
+  (`Egeria-api-actor-manager.http` uses both). Not resolved here;
+  `cascadeDelete` was chosen as the *outgoing* name because it's what this
+  repo's own code (`validate_delete_element_request`'s no-body-provided
+  branch) has already been trying to send since before this fix. Both
+  spellings are accepted on input so a caller-supplied dict using either
+  one still populates correctly.
+
+No changes needed to `_server_client.py` — `validate_delete_element_request`'s
+existing shape was already correct in intent, it was purely the missing
+model fields silently eating the values. Verified: 5 new unit tests
+(`test_delete_element_request_body.py`) covering both-spelling validation,
+canonical-name serialization, and the actual outgoing JSON body via a
+mocked `_async_make_request` on both the no-body-provided and
+caller-supplied-dict paths; full `pytest tests/micro-tests/` passes.
+
+**Possible future work (deliberately not done here):** `_async_delete_element_request`
+still has no first-class `delete_method` parameter (only `cascade_delete`)
+— a caller wanting to set it today must hand-build a body dict rather than
+pass a kwarg, asymmetric with how `cascade_delete` already works. Adding
+one would mean threading it through every `_async_delete_X`/`delete_X`
+wrapper across most OMVS modules that currently thread `cascade_delete`
+(dozens of call sites, each with its own docstring/"Full sample body"
+block) — declined for this pass because (a) it's convenience, not a
+correctness fix, the model fix alone already unblocks any caller that
+passes a body dict or a `DeleteElementRequestBody` instance directly, and
+(b) not every delete endpoint necessarily accepts every `DeleteMethod`
+value uniformly (`deleteRelationshipInStore` already rejects its own
+default `LookForLineage` — see ISSUE-61's live-verification note — so
+Egeria's validation isn't uniform across delete routes), and rolling a new
+kwarg out to dozens of wrappers without live-verifying each endpoint's
+accepted values individually risks wiring up a parameter some routes will
+400 on. Also still open: the `cascadeDelete`/`cascadedDelete` spelling
+split above was never resolved against a live server per-endpoint — if a
+given delete endpoint actually expects `cascadedDelete`, this fix's choice
+would need revisiting for that specific endpoint.
+
+---
+
+### ISSUE-59: `Create <X>` upsert commands (`upsert: true` in the compact spec) silently create a duplicate element, instead of updating in place, when the caller changes `### Qualified Name` to something the as-is lookup has never seen before — an explicit `### GUID` on the same command is also ignored for that lookup
+
+**Status:** fixed 2026-08-15 (Pyegeria/Dr.Egeria — `md_processing/v2/processors.py`).
+Applied both halves of the candidate fix:
+1. **`fetch_as_is()` now honors an explicit `### GUID`** — tries
+   `fetch_element(guid)` directly, before any qualified-name-derivation or
+   name-based lookup, so an author who supplies a GUID to target a specific
+   element (e.g. to rename its qualified name) is no longer silently
+   ignored.
+2. **The existing "same Display Name, different QN" guard (step 4a) now
+   surfaces a real warning** (`self._add_warning(...)`, visible in
+   `--process`/`--validate` output) instead of only a `logger.info()` line
+   nobody authoring markdown would ever see. The message names the
+   existing element's GUID and tells the caller to re-run with
+   `### GUID <guid>` if they meant to update/rename it — turning a silent
+   duplicate into a caught, actionable warning when no GUID is supplied.
+
+**Verified live**, exact repro from the original report: created a
+`Perspective` with only `### Display Name` (auto-derived QN). Re-running
+`Create Perspective` with the same Display Name and a new
+`### Qualified Name`, no GUID → now correctly creates a second element
+**and prints an explicit warning** naming the original GUID and how to
+target it (previously: fully silent). Re-running a third time with the
+same new QN plus `### GUID <original-guid>` → correctly rewrote to
+`Update Perspective`, `Found: Yes`, same original GUID returned (no third
+duplicate) — confirmed via direct fetch that the *original* element's
+`qualifiedName` property actually changed and its version incremented
+(1→2), not a new element. Test elements cleaned up. `pytest tests/ -m unit`
+passes.
+
+**Original status:** open.
+
+**Layer:** Pyegeria (`md_processing/v2/processors.py` — the `fetch_as_is`/
+`CommandRewriter` Create↔Update upsert-detection path; exact function not
+yet traced past the symptom).
+
+**Repro:** an existing `Perspective` named "Financial" already exists,
+created previously with no explicit qualified name (so it got
+Dr.Egeria's auto-generated `Coco Pharmaceuticals::Perspective::
+Financial::1.0`). Re-running `Create Perspective` for the same
+`### Display Name`, this time adding an explicit
+`### Qualified Name\nPerspective::Financial` (to give it a caller-chosen,
+portable qualified name instead — see ISSUE-58 above for why), was
+expected to update the existing element in place (`upsert: true`,
+matched by display name). Instead it silently created a **second**,
+distinct `Perspective` element sharing the display name "Financial" —
+confirmed via `get_element_by_guid()` on both GUIDs (the original and the
+new one) and via `get_guid_for_name("Financial")` immediately starting to
+raise `"Multiple elements found for supplied name!"` right after the
+re-run, where it had resolved cleanly before. The rendered output even
+prints `## Update Perspective` as its header, which reads as confirmation
+of an in-place update — that label is misleading here; it does not
+reflect what actually happened server-side.
+
+Also tried supplying `### GUID` (the bundle backing `Create Perspective`,
+`Referenceable` → `New-Element`, declares a `GUID` attribute) set to the
+existing element's real GUID, on the theory that an explicit GUID would
+let the as-is check target that specific element regardless of name/QN
+matching. Same result — a second, unrelated new GUID assigned, existing
+element untouched, `### GUID` had no observable effect on the outcome.
+
+**Impact:** any attempt to "rename" an existing element's qualified name
+via a `Create <X>` markdown command — the natural way to do it, since
+there is no separate `Update <X>` command family exposed to Dr.Egeria
+authors for most types — silently multiplies the element instead of
+correcting it, and only the *next* by-name lookup against that display
+name reveals anything went wrong (a `PyegeriaException`, not a validation
+error at authoring time). A caller who doesn't immediately re-query by
+name after the "successful" `Update` output has no signal that a
+duplicate was just created.
+
+**Workaround used:** deleted the accidental duplicates
+(`MetadataExpert.delete_metadata_element(guid)`) and instead used the
+type-specific dedicated update method directly against pyegeria
+(`ActorManager.update_perspective(perspective_guid, {"class":
+"UpdateElementRequestBody", "mergeUpdate": True, "properties": {"class":
+"PerspectiveProperties", "qualifiedName": "<new value>"}})`) — this
+targets the element purely by GUID with no name/QN-based as-is lookup
+involved at all, and correctly updated all 12 Perspectives in place
+(same GUID before/after, confirmed via direct read-back and via
+`get_guid_for_name()` on the new qualified name resolving to the
+unchanged GUID). Not a Dr.Egeria-markdown-level workaround — required
+dropping to raw pyegeria SDK calls.
+
+**Candidate fix:** when an explicit `### GUID` is present on a `Create`
+command whose spec has `upsert: true`, the as-is fetch should try that
+GUID directly (`fetch_element_by_guid`) before falling back to name-based
+matching — this is the more surprising half of the bug, since the
+attribute is declared and accepted without error, it just isn't used for
+what the author would reasonably expect. Separately, when no GUID is
+given but the as-is lookup by display name finds an existing element
+under a *different* qualified name than the one just supplied, that's a
+real ambiguity Dr.Egeria itself should surface to the caller (e.g. "found
+an existing element with this display name under a different qualified
+name — did you mean to update it? re-run with `### GUID <its-guid>` to
+confirm") rather than silently treating "new qualified name" as "new
+element."
+
+---
+
+### ISSUE-56: `ReferenceDataManager`'s 6 relationship-link methods all route through the element-body validator, not the relationship-body validator — every call built per the method's own documented sample body fails Pydantic validation
+
+**Re-verified 2026-08-15 (same day, third check — asked twice more after
+the original fix), no regression.** Created a fresh `ValidValueDefinition`
+pair and linked them via `_async_link_valid_value_member()` — succeeds
+(previously failed 100% of the time). Test elements cleaned up.
+
+**Status:** fixed 2026-08-15 (Pyegeria — `pyegeria/omvs/reference_data.py`).
+Applied the candidate fix as described (mechanical, same call shape):
+swapped `_async_create_element_body_request(url, [PropClassName], body)` →
+`_async_new_relationship_request(url, [PropClassName], body)` at all 7
+sites — the 6 listed below plus a 7th the original report flagged as
+"not individually re-checked" (`_async_link_consistent_valid_values`,
+which needed `None` instead of a properties-class list since that
+relationship has no properties of its own — same wrong helper, same fix).
+Verified live: created a real `ValidValueDefinition` pair and linked them
+via `link_valid_value_member()` with exactly the body shape shown in the
+Reproduced section below — succeeded (previously failed with
+`PyegeriaInvalidParameterException`). `pytest tests/ -m unit` passes.
+
+**Independently re-verified from the reporting side** (resource-explorer
+session, same day, after `uv lock --upgrade-package pyegeria` picked up
+6.0.18.1 from PyPI): confirmed via `inspect.getsource` that
+`_async_link_valid_value_member`/`_async_link_valid_values_assignment`/
+`_async_link_reference_value_assignment` now call
+`_async_new_relationship_request` instead of
+`_async_create_element_body_request`; ran the real blocked caller
+(`resource-explorer/scripts/create_measure_definitions.py`) against a live
+server — all 3 `ValidValueMember` links that previously failed 100% of the
+time now succeed, and a second run confirms idempotency (find-or-create
+skips existing elements, re-linking an already-linked member doesn't
+error). `resource-explorer/pyproject.toml`'s `pyegeria` constraint bumped
+to `>=6.0.18.1` accordingly.
+
+**Original status:** open, found 2026-08-15 (Dan/Claude, resource-explorer session)
+resuming `scripts/create_measure_definitions.py`'s `ValidValueMember` linking
+step (docs/survey-question-context-plan.md), which was blocked on this exact
+bug (`link_valid_value_definition()`) as of 2026-08-13 — expected it to be
+fixed now that `ValidValuesAssignment`/`ReferenceValueAssignment` linking
+methods exist (they didn't before), but re-verified live and the underlying
+bug is unchanged, just now present in 2 additional methods that didn't
+exist when it was first hit.
+
+**Layer:** Pyegeria (`pyegeria/omvs/reference_data.py`).
+
+**What:** `ReferenceDataManager` has (at least) 6 async relationship-link
+methods, each documented with a `"class": "NewRelationshipRequestBody"`
+sample body in its own docstring, but each calls
+`self._async_create_element_body_request(url, [PropClassName], body)`:
+
+- `_async_link_valid_value_member` (line 964) → `ValidValueMemberProperties`
+- `_async_link_valid_values_assignment` (line 1149) →
+  `ValidValuesAssignmentProperties`
+- `_async_link_reference_value_assignment` (line 1334) →
+  `ReferenceValueAssignmentProperties`
+- `_async_link_valid_values_implementation` (line 1521) →
+  `ValidValuesImplementationProperties`
+- `_async_link_valid_values_mapping` (line 2076) →
+  `ValidValuesMappingProperties`
+- (a 6th, ConsistentValidValues-shaped call — not individually re-checked
+  this session, flagged as likely affected by the same pattern; grep
+  `_async_create_element_body_request(url, \["` in this file to find any
+  others)
+
+`_async_create_element_body_request` (`pyegeria/core/_server_client.py:7134`)
+unconditionally calls `self.validate_new_element_request(body, prop)`
+(`_server_client.py:6045`), which validates a dict body against
+`TypeAdapter(NewElementRequestBody)` — a Pydantic model whose `class_` field
+is `Annotated[Literal["NewElementRequestBody"], ...]`
+(`pyegeria/models/models.py:418`). A `NewRelationshipRequestBody`-shaped
+dict (`class_: Literal["NewRelationshipRequestBody"]`,
+`pyegeria/models/models.py:277`) — exactly what each method's own docstring
+tells the caller to build — always fails that Literal check. The correct
+helper already exists and is unused by any of these 6 methods:
+`_async_new_relationship_request` (`_server_client.py:7188`), which calls
+`self.validate_new_relationship_request(body, prop)`
+(`_server_client.py:6090`) against `TypeAdapter(NewRelationshipRequestBody)`
+— the matching validator for the body shape these methods actually need.
+
+**Reproduced** (pure validation, no live server needed — confirmed the
+defect is in the client-side Pydantic check itself, not a server response):
+```python
+from pydantic import TypeAdapter
+from pyegeria.models.models import NewElementRequestBody
+
+body = {
+    "class": "NewRelationshipRequestBody",
+    "properties": {"class": "ValidValueMemberProperties",
+                    "isDefaultValue": False, "label": "test", "description": ""},
+}
+TypeAdapter(NewElementRequestBody).validate_python(body)
+# ValidationError: 1 validation error for NewElementRequestBody
+# class
+#   Input should be 'NewElementRequestBody' [type=literal_error, input_value='NewRelationshipRequestBody', ...]
+```
+`_validate_body` (`_server_client.py:6013`) re-raises any `ValidationError`
+as `PyegeriaInvalidParameterException` rather than degrading silently, so
+every one of these 6 methods raises that exception on any body built per
+its own documented sample — there is no way to call them successfully as
+documented today.
+
+**Impact:** `ReferenceDataManager.link_valid_value_definition()` (the only
+one of the 6 with a real caller in this session — `resource-explorer`'s
+`scripts/create_measure_definitions.py`) cannot link a `ValidValueMember`
+to its parent `ValidValueSet` at all — confirmed live 2026-08-13, the
+script's `ValidValueDefinition` elements are created successfully but every
+`link_valid_value_definition()` call fails, caught and reported by the
+script rather than crashing the run. The other 5 methods are unused by any
+downstream caller in this codebase yet (no live repro attempted for them),
+but the same Literal mismatch applies identically by inspection — same
+call pattern, same underlying helper.
+
+**Candidate fix:** swap
+`self._async_create_element_body_request(url, [PropClassName], body)` →
+`self._async_new_relationship_request(url, [PropClassName], body)` at each
+of the 6 (or more — re-grep) call sites. Mechanical, single-line-per-site
+change; `_async_new_relationship_request`'s signature
+(`url, prop, body`) already matches the existing call shape exactly, no
+other code needs to change. Not applied here — per this repo's own policy,
+egeria-python bugs are logged here and fixed only with explicit owner
+approval, not patched directly by an assisting session.
+
+---
+
+### ISSUE-51: `AsyncBaseCommandProcessor.fetch_element()`'s two fallback paths return incompatible shapes — the MetadataExpert fallback crashes downstream code that assumes ClassificationExplorer's envelope
+
+**Status:** fixed 2026-08-15 (Pyegeria — `md_processing/v2/processors.py`).
+Fix shape changed from the original candidate below after discussion: on a
+`PyegeriaTimeoutException` specifically, `fetch_element()` now retries the
+*same* ClassificationExplorer call (up to 2 attempts) instead of falling
+through to the shape-incompatible MetadataExpert path — a timeout means
+either the request was transient (retrying the same call is exactly as
+likely to succeed as switching endpoints) or the server is under sustained
+load (in which case a different endpoint is no more likely to help, and
+risks the exact shape-mismatch crash this issue describes). MetadataExpert
+remains the fallback for every *non*-timeout failure (not found,
+unsupported type, etc.), and as a last resort after timeout retries are
+exhausted. Verified: `pytest tests/ -m unit` passes; re-ran the same
+100+-command help file that originally triggered the crash against a
+freshly-restarted server with 0 errors in the first several minutes (vs.
+crashing on the very first command before). The underlying shape
+inconsistency between the two paths (described below) still exists — this
+fix avoids hitting it in the timeout case rather than resolving the shape
+mismatch itself; a genuine non-timeout MetadataExpert-fallback call could
+still hit it, so the original diagnosis is left below for reference.
+
+**Original status:** open, found 2026-08-15 (Dan) processing the regenerated
+`dr-egeria` help file (100+ `Create`/`Update Term` commands) against
+`qs-view-server` while the server was under heavy, unrelated background
+load (see ISSUE-52 — same session).
+
+**Layer:** Pyegeria (`md_processing/v2/processors.py`).
+
+**What:** `AsyncBaseCommandProcessor.fetch_element()` (`processors.py:1146`)
+tries ClassificationExplorer first (`self.client._async_get_element_by_guid_`),
+unwraps `res["element"]` if present, and returns that. If that call raises
+(caught silently, logged at `debug` only), it falls back to
+`self.client._async_get_metadata_element_by_guid(guid)` (MetadataExpert) and
+returns *that* result directly, with no unwrapping. Every caller of
+`fetch_as_is()`/`fetch_element()` downstream (e.g.
+`CollectionManagerProcessor.apply_changes()`) then does
+`self.as_is_element['elementHeader']['guid']` unconditionally, assuming both
+paths hand back the same `{"elementHeader": {...}, "properties"/"element"...}`
+envelope shape.
+
+**Reproduced:** processing `## Update Glossary` for the pre-existing
+`dr-egeria` glossary crashed with `KeyError: 'elementHeader'` —
+`self.as_is_element` at the point of the crash was
+`{'headerVersion': 0, 'status': 'ACTIVE', 'type': {..., 'typeName':
+'Glossary', ...}, ...}`, i.e. the *contents* of an `elementHeader` object,
+not a dict containing one — consistent with the ClassificationExplorer call
+timing out under load (confirmed independently: a standalone repro of
+`client._async_get_element_by_guid_(guid)` against the same server, same
+session, hit a hard 30s `PyegeriaTimeoutException` on this exact endpoint),
+falling through to the MetadataExpert path, whose
+`_async_get_metadata_element_by_guid` routes through
+`_async_get_guid_request(..., output_format="JSON")` — that helper's
+`output_format == "JSON"` branch returns `resp_json.get("element", ...)`
+raw, without the normalization/unwrapping ClassificationExplorer's own path
+already does elsewhere in the codebase, for at least this element type.
+
+**Impact:** any `Update`/upsert-style Dr.Egeria command whose primary
+element-lookup call fails or times out (not narrow to Glossary — any type
+routed through the shared base `fetch_element()`) crashes with an
+unhandled `KeyError` instead of retrying, warning, or falling back to
+`Create`, and aborts that one command while the rest of a batch continues
+(confirmed: the batch run kept going after this crash).
+
+**Candidate fix:** make the two fallback paths agree on shape before
+`fetch_element()` returns — either normalize the MetadataExpert path to
+always produce `{"elementHeader": ..., ...}` (checking what
+`_async_get_metadata_element_by_guid` actually returns for a few element
+types to confirm whether it's ever *already* wrapped, or always flat), or
+make the single downstream contract explicit and defensive
+(`self.as_is_element.get('elementHeader', self.as_is_element).get('guid')`
+as a minimal guard) so a shape mismatch degrades to "treat as not found"
+rather than crashing. Needs a live server that isn't under load (see
+ISSUE-52) to safely re-verify the exact MetadataExpert raw shape without
+every repro attempt itself timing out.
+
+---
 
 ### ISSUE-49: `MetadataExpert.get_metadata_element_relationships` (lookup a relationship by its two endpoint GUIDs) returns "No elements found" for a relationship confirmed to exist
 
-**Status:** open, found 2026-08-10 (Dan) building egeria-workspaces-fs's
+**Re-verified 2026-08-15 (same day, follow-up run), no regression.**
+Recreated the exact repro fresh (new `ResultsSet` + `SavedQuery` pair,
+real `SmartQuery` link) — `get_metadata_element_relationships(rs_guid,
+sq_guid, "SmartQuery", None)` correctly returns the real relationship
+(`relationshipGUID`, both ends populated) instead of "No elements found".
+Test elements cleaned up. `pytest tests/ -m unit` passes.
+
+**Status:** fixed 2026-08-15 (Pyegeria — `pyegeria/omvs/metadata_expert.py`).
+Root cause: the shared `process_related_element_list()` helper has two
+envelope shapes it can parse — a related-*element* envelope
+(`{"relatedElementList": {"elementList": [...]}}`) and a relationship-list
+envelope (`{"relationshipList": {"relationships": [...]}}`) — selected by
+its `relationship_list` parameter. Two bugs stacked: (1)
+`_async_get_metadata_element_relationships` (and its sibling
+`_async_get_all_metadata_element_relationships`) called the helper with
+the default `relationship_list=False`, so it looked for the wrong
+top-level key (`relatedElementList`, which doesn't exist in a relationship
+response) and returned the `NO_ELEMENTS_FOUND` sentinel immediately; (2)
+even with `relationship_list=True` set (as `_async_find_relationships_
+between_elements`, ISSUE-39's method, already did), the helper's inner
+lookup used the wrong key too — `elementList` instead of the real
+`relationships` key nested inside `relationshipList`. Confirmed live via
+raw response inspection: `POST .../linked-by-type/{type}/to-elements/{guid}`
+returns `{"relationshipList": {"relationships": [...]}}` — never
+`relatedElementList`/`elementList` at all.
+
+**Fixed both bugs**: `process_related_element_list()` now looks up
+`"relationships"` (not `"elementList"`) when `relationship_list=True`; the
+two relationship-endpoint call sites that weren't already passing
+`relationship_list=True` now do
+(`_async_get_metadata_element_relationships`,
+`_async_get_all_metadata_element_relationships`).
+
+**Verified live**: recreated the exact repro below (`ResultsSet` +
+`SavedQuery` + real `SmartQuery` link via
+`link_saved_query_to_results_set`) — `get_metadata_element_relationships`
+now returns the relationship with the matching GUID instead of "No
+elements found". Also fixed ISSUE-39 as a side effect (same root cause,
+same helper) — see that entry. `pytest tests/ -m unit` passes throughout.
+
+**Original status:** open, found 2026-08-10 (Dan) building egeria-workspaces-fs's
 migration of Egeria Insights' saved queries onto the real `SavedQuery`/
 `SmartQuery` types (`insights_handler.py`, Track C.1 of
 `EGERIA_INSIGHTS_QUERY_MODEL.md`).
@@ -151,7 +1391,40 @@ needs to detach the relationship already has its GUID in hand.
 
 ### ISSUE-23: `max_mermaid_node_count` defaults to 5 across every shared find/get request helper, silently truncating server-generated mermaid graphs
 
-**Status:** open at the pyegeria-default level (the user is raising the
+**Status:** fixed 2026-08-15 (Pyegeria). Raised every remaining
+`max_mermaid_node_count` default from 5 to 10, matching
+`_async_find_request`'s default (already 10 from an earlier pass):
+`_async_get_name_request`, `_async_get_guid_request`,
+`_async_get_request_body_request`, `_async_activity_status_search_request`,
+and the content-status/deployment-status search variants (all in
+`pyegeria/core/_server_client.py`), plus `AssetCatalog`'s three lineage-graph
+methods in `pyegeria/omvs/asset_catalog.py` (`_async_get_asset_lineage_graph_by_guid`,
+`get_asset_lineage_graph_by_guid`, `get_asset_lineage_mermaid_graph`, added
+as part of ISSUE-24 at 5, now raised to 10 for consistency). Verified live
+via request-body spies that the new default (10) actually reaches the wire
+for `_async_get_guid_request` and `_async_get_asset_lineage_graph_by_guid`.
+
+Also fixed the "third case" this issue flagged as a candidate follow-up:
+`get_solution_blueprint_by_guid`/`_async_get_solution_blueprint_by_guid`
+(`pyegeria/omvs/solution_architect.py`) built no body at all when the
+caller left `body=None`, so `graph_query_depth`/`max_mermaid_node_count`
+were genuinely dead parameters regardless of the shared default — same
+"dead parameter" shape ISSUE-26 already fixed for
+`get_info_supply_chain_by_guid`/`get_solution_role_by_guid`. Fixed the same
+way: build an `AnyTimeRequestBody` with `graphQueryDepth`/
+`maxMermaidNodeCount` populated when `body is None`, and added
+`max_mermaid_node_count` as an explicit parameter (was previously not even
+accepted). Verified live: a request-body spy confirmed caller-supplied
+`graph_query_depth=9`/`max_mermaid_node_count=77` now reach the wire, where
+previously neither did. `get_solution_component_by_guid` turned out **not**
+to share this bug — it already routes through the (now-also-fixed)
+`_async_get_guid_request` shared helper, so it correctly forwards both
+parameters; verified live the same way (`graph_query_depth=8`/
+`max_mermaid_node_count=66` both reached the wire) before ruling it out.
+
+`pytest tests/ -m unit -q` passes (exit 0) after all changes.
+
+**Original status:** open at the pyegeria-default level (the user is raising the
 shared default from 5 to 10 separately); worked around explicitly in
 egeria-workspaces-fs across all detail-view call sites that render a
 mermaid diagram — `isc_handler.py`, `mermaid_handler.py`,
@@ -240,7 +1513,29 @@ benefit from an actual fix to thread `graph_query_depth`/
 
 ### ISSUE-24: `AssetCatalog._async_get_asset_lineage_graph_by_guid` hardcodes `queryGraphDepth: 5` with no override parameter at all
 
-**Status:** open, found 2026-08-04 alongside ISSUE-23 while auditing
+**Status:** fixed 2026-08-15 (Pyegeria — `pyegeria/omvs/asset_catalog.py`).
+Turned out to be worse than "no override" — checked the real
+`AssetLineageGraphRequestBody` Java class (`-> QueryOptions -> GetOptions`)
+and the field pyegeria was sending, `"queryGraphDepth"`, **doesn't exist on
+the real body at all**; the actual field is `"graphQueryDepth"`. So the
+hardcoded `5` was always silently dropped by the server regardless — the
+server's own default (also 5, coincidentally) was what actually applied
+the whole time, even before this fix. Found the same problem one field
+over: `"relationshipTypes"` isn't real either — the actual field,
+`GetOptions.includeOnlyRelationships`, means that caller-supplied
+relationship-type filter has also never worked. Fixed both field names,
+added `graph_query_depth`/`max_mermaid_node_count` parameters (the real
+`GetOptions.maxMermaidNodeCount` field was never sent at all before) to
+all three call layers (`_async_get_asset_lineage_graph_by_guid`,
+`get_asset_lineage_graph_by_guid`, `get_asset_lineage_mermaid_graph`).
+
+**Verified live**: created a real throwaway asset, spied on the outgoing
+request body, and confirmed `graph_query_depth=7`/`max_mermaid_node_count=42`
+now actually appear in the POST body as `graphQueryDepth`/
+`maxMermaidNodeCount` and the server accepts the call successfully.
+`pytest tests/ -m unit` passes.
+
+**Original status:** open, found 2026-08-04 alongside ISSUE-23 while auditing
 `egeria-workspaces-fs/.../lineage_handler.py`'s mermaid-graph call sites.
 
 **Layer:** Pyegeria (`pyegeria/omvs/asset_catalog.py`).
@@ -275,7 +1570,78 @@ elsewhere in this file).
 
 ### ISSUE-27: ~50 more sync methods delegate to their async counterpart with an all-positional argument list — unaudited for the same scrambling bug as ISSUE-21/25
 
-**Status:** open, found 2026-08-04 as a byproduct of the ISSUE-25 sentinel
+**Status:** fixed 2026-08-15 (Pyegeria). Full audit via a script (not manual
+grepping): every multi-line all-positional `self._async_*(...)` delegation
+across `pyegeria/omvs/*.py` (62 sites, dominated by
+`classification_explorer.py`), plus every single-line all-positional call
+with 3+ bare-identifier args (285 more candidates), each cross-checked
+against its target async method's *actual* parameter order (careful to use
+the target's **last** definition in the file, matching Python's real
+same-name-method resolution — one earlier false lead came from a stale,
+fully-shadowed duplicate `_async_delete_solution_blueprint` definition still
+sitting in `solution_architect.py`, dead code but harmless since it's never
+reachable).
+
+Of ~350 candidate sites, found and fixed **4 real bugs**, all in
+`pyegeria/omvs/governance_officer.py` and `pyegeria/omvs/solution_architect.py`
+(the rest were either exact matches or "different local variable name, same
+value, same position" false positives — e.g. `add_term_to_folder(folder_guid,
+term_guid, body)` calling `_async_add_to_collection(folder_guid, term_guid,
+body)` against a target expecting `(collection_guid, element_guid, body)` —
+positionally correct, just domain-specific local names):
+
+1. **`solution_architect.py`: `delete_solution_role`** — sync wrapper's own
+   signature is `(guid, body=None, cascade_delete=False)` (correct order,
+   matching the async target), but it called
+   `self._async_delete_solution_role(guid, cascade_delete, body)` —
+   transposed, sending the boolean into the `body` slot and the body dict
+   into the `cascade_delete` slot. Fixed to
+   `self._async_delete_solution_role(guid, body, cascade_delete)`.
+
+2. **`governance_officer.py`: `add_regulator_to_regulation`** — called the
+   **wrong async method entirely**: `self._async_link_governance_results(...)`
+   (a copy-paste leftover — a completely different relationship, hitting
+   `governance-metrics/{gov_metric_guid}/measurements/{data_asset_guid}/attach`
+   with `GovernanceResultsProperties`) instead of the correct
+   `self._async_add_regulator_to_regulation(...)`. Fixed the call target.
+
+3. **`governance_officer.py`: `_async_add_regulator_to_regulation`/
+   `_async_detach_regulator_from_regulation`** — found while fixing #2: both
+   built the wrong URL (`.../{url_marker}/governance-officer/regulations/...`
+   — `self.url_marker` is itself `"governance-officer"`, so this duplicated
+   the segment; ground truth per `Egeria-api-governance-officer.http` is
+   `.../governance-officer/regulations/{regulationGUID}/regulators/organizations/{regulatorGUID}/attach`,
+   single segment) and the attach method also used the wrong properties
+   class (`"GovernanceResultsProperties"` instead of `"RegulatorProperties"`,
+   also confirmed against the `.http` file). Fixed both URLs and the
+   properties class.
+
+4. **`governance_officer.py`: `detach_governance_results`** — sync wrapper
+   passed `data_asset_guid` **twice**:
+   `self._async_detach_governance_results(gov_metric_guid, data_asset_guid,
+   data_asset_guid, body)` against a 3-parameter target
+   `(gov_metric_guid, data_asset_guid, body)` — the extra positional arg
+   landed in the `body` slot, and the real `body` argument was silently
+   dropped (extra arg beyond the target's parameter count). Fixed by
+   removing the duplicate.
+
+**Verified live** against `qs-view-server`: `delete_solution_role`'s fix
+confirmed via a request-body spy (cascade/body no longer transposed);
+`add_regulator_to_regulation`/`detach_regulator_from_regulation` verified
+fully end-to-end — created a throwaway `Regulation` + `Organization`,
+linked via the fixed method, confirmed via `.http`-matching URL/body,
+detached, cleaned up. `detach_governance_results`'s fix confirmed via a
+request-body spy showing the correct 2-argument call now reaches
+`_async_delete_relationship_request` cleanly.
+
+**Found as a byproduct, NOT part of this issue's scope, tracked separately:**
+attempting to live-verify `_async_link_governance_results` (unrelated,
+untouched method) surfaced a real server-side/endpoint-design bug — see
+ISSUE-57.
+
+`pytest tests/ -m unit -q` passes (exit 0).
+
+**Original status:** open, found 2026-08-04 as a byproduct of the ISSUE-25 sentinel
 audit.
 
 **Layer:** Pyegeria (`classification_explorer.py`, `runtime_manager.py`,
@@ -301,7 +1667,18 @@ here — flagged for a dedicated follow-up pass.
 
 ### ISSUE-31: `MetadataExpert.delete_metadata_element` crashes with `AttributeError: 'NoneType' object has no attribute 'model_dump'` when called with no explicit body
 
-**Status:** open, found 2026-08-04/05 while cleaning up throwaway test
+**Status:** fixed 2026-08-15 (Pyegeria — `pyegeria/core/_server_client.py`).
+`validate_open_metadata_delete_request` now builds a default
+`{"class": "OpenMetadataDeleteRequestBody"}` when `body` is `None`,
+matching `validate_delete_element_request`'s existing pattern, instead of
+returning `None` straight into `.model_dump()`. Verified live:
+`client.metadata_expert.delete_metadata_element(<guid>)` with no body now
+raises a clean `PyegeriaNotFoundException` for a nonexistent GUID instead
+of crashing with `AttributeError`. Fixes the wider blast radius too, since
+every other caller of the shared `_async_open_metadata_delete_body_request`
+helper goes through this same validator.
+
+**Original status:** open, found 2026-08-04/05 while cleaning up throwaway test
 elements created during the ISSUE-32 (`Note` type) live verification.
 
 **Layer:** Pyegeria (`pyegeria/core/_server_client.py`).
@@ -348,46 +1725,27 @@ suspect until the base helper itself is fixed.
 
 ---
 
-### ISSUE-30: `updateNote` REST operation (`POST .../feedback-manager/notes/{noteGUID}`) returns 404 on a live server, despite matching the documented `.http` ground truth exactly
-
-**Status:** open (Egeria Server), found 2026-08-05 while live-verifying the
-ISSUE-32 `Note` type fix end-to-end (create worked; update did not).
-
-**Layer:** Egeria Server — not fixable in pyegeria. `_async_update_note`'s
-URL (`{command_root}feedback-manager/notes/{note_guid}`) was double-checked
-against `Egeria-api-feedback-manager.http`'s `@name updateNote` worked
-example and matches it exactly, method and body shape included; this isn't
-a pyegeria URL-construction bug.
-
-**What:** confirmed via both pyegeria and a raw `curl` (bypassing pyegeria
-entirely) against a freshly-created, real `Note` element on `qs-view-server`
-— both get a bare HTTP 404 with no Egeria FFDC error body, just a generic
-Spring "Not Found" response, meaning the operation doesn't appear to be
-routed/registered on this server at all:
-
-```bash
-curl -sk -X POST "https://localhost:9443/servers/qs-view-server/api/open-metadata/feedback-manager/notes/<real-note-guid>" \
-  -H "Authorization: Bearer $TOKEN" -H "Content-Type: application/json" \
-  -d '{"class":"UpdateElementRequestBody","mergeUpdate":true,"properties":{"class":"NoteProperties","typeName":"Note","displayName":"x"}}'
-# {"timestamp":"...","status":404,"error":"Not Found","path":"/servers/qs-view-server/api/open-metadata/feedback-manager/notes/<guid>"}
-```
-
-**Impact:** `update_note`/`_async_update_note` cannot be verified working
-end-to-end on this server today — create + fetch both work correctly
-(confirmed live, see ISSUE-32), but update is blocked. Not related to the
-`Note` type change itself (same 404 shape would occur regardless of
-`typeName`) — looks like a genuine gap in this endpoint's registration on
-the current server build.
-
-**Candidate fix:** none client-side. Worth confirming against a different/
-newer Egeria server build whether this is a temporary gap in the specific
-redeploy used for this session, or a real, currently-unreleased endpoint.
-
----
-
 ### ISSUE-45: `tests/functional-tests/test_my_profile.py::test_create_my_todo` has no teardown — leaves a live ToDo behind on every run
 
-**Status:** open (test hygiene) — found 2026-08-05 while investigating
+**Re-verified 2026-08-15 (same day, follow-up run), no regression.**
+Re-ran the test directly (`PYEG_LIVE_EGERIA=1 pytest
+tests/functional-tests/test_my_profile.py::TestMyProfile::test_create_my_todo
+-v`) — passes, prints its own "Deleted test to-do <guid>" confirmation, and
+a direct `get_metadata_element_by_guid` on that exact GUID immediately
+afterward correctly raises `PyegeriaNotFoundException` — genuinely gone
+server-side, not just claimed by the test's own output.
+
+**Status:** fixed 2026-08-15 (test hygiene —
+`tests/functional-tests/test_my_profile.py`). Added a `finally` block that
+deletes the created `ToDo` via a `MetadataExpert` client
+(`delete_metadata_element(guid, body={"class":
+"OpenMetadataDeleteRequestBody"})`), matching the candidate fix below.
+Verified live: ran the test, confirmed the `ToDo` was created (real GUID
+returned), then confirmed via a direct `get_metadata_element_by_guid` call
+immediately after the test run that the same GUID is now soft-deleted
+(`OMRS-REPOSITORY-404-013`). `pytest tests/ -m unit` passes.
+
+**Original status:** open (test hygiene) — found 2026-08-05 while investigating
 ISSUE-44's follow-up. Running the test suite against the live
 `qs-view-server` created a real `ToDo` (`do-my-backup`, confirmed via
 `find_metadata_elements(metadataElementTypeName="ToDo")` immediately after a
@@ -538,11 +1896,46 @@ regression on ISSUE-44's three bugs.
 
 ---
 
-## Dr.Egeria / compact-spec design gap
-
 ### ISSUE-22: `Ownership`/`Impact`/`Confidence`/`Confidentiality`/`Criticality` classification `status` field expects an int enum, not the free-text value the Dr.Egeria "Status" attribute style implies
 
-**Status:** open, found 2026-08-03 during a live smoke test of `Classify
+**Status:** fixed 2026-08-15. `Ownership` was never actually affected — its
+`ClassificationSpec` uses its own explicit field map (`owner`/
+`ownerTypeName`/`ownerPropertyName`), not `_GOVERNANCE_SHARED_FIELDS`, so
+the issue title overstated its scope; `Retention` *is* affected (it also
+consumes `_GOVERNANCE_SHARED_FIELDS`) and is fixed by the same change as
+`Impact`/`Confidence`/`Confidentiality`/`Criticality`.
+
+Two separate bugs were involved:
+1. **Attribute-definition gap.** Between this issue being filed and now,
+   the compact-spec attribute had already been renamed `Status` →
+   `Governance Status` and migrated to `style: "Valid Value"` — but with no
+   explicit `property_name`, so it auto-derived to `governanceStatus` (a
+   property that doesn't exist), causing the live valid-metadata-value
+   lookup to silently return empty and fall through to a stale ALL-CAPS
+   fallback list, passing through an un-converted string. Fixed via the
+   Spec Editor API: `Governance Status` now has `property_name:
+   "statusIdentifier"` and `valid_values` = `["Discovered", "Proposed",
+   "Imported", "Validated", "Deprecated", "Obsolete", "Other"]`, matching
+   `GovernanceClassificationStatus`.
+2. **Wire-key mapping bug**, in `md_processing/v2/curation.py`:
+   `_GOVERNANCE_SHARED_FIELDS` mapped `"Governance Status"` to the outgoing
+   JSON key `"status"`, but the real field on `ImpactProperties`/
+   `ConfidenceProperties`/`ConfidentialityProperties`/`CriticalityProperties`/
+   `RetentionClassificationProperties` is `statusIdentifier` — `"status"` is
+   silently ignored by the server (confirmed live: sending `"status": 4`
+   left readback `statusIdentifier: "0"`; sending `"statusIdentifier": 4`
+   directly persisted correctly). Fixed: `_GOVERNANCE_SHARED_FIELDS =
+   {"Governance Status": "statusIdentifier", ...}`.
+
+Verified end-to-end through the real Dr.Egeria pipeline (not just manual
+body construction): `Create Data Structure` + `Classify Impact` with
+`Governance Status: Validated`, `Level Identifier: 2`, `Steward:
+test-steward` — both commands SUCCESS, and a direct element fetch afterward
+showed `statusIdentifier: 3` (the correct ordinal for `Validated`) alongside
+`severityLevel: 2` and `steward: "test-steward"`. Test element deleted
+afterward. `pytest tests/ -m unit -q` passes (exit 0).
+
+**Original status:** open, found 2026-08-03 during a live smoke test of `Classify
 Impact` (Curation family).
 
 **Layer:** Not strictly a pyegeria bug — a Dr.Egeria compact-spec design
@@ -575,120 +1968,34 @@ working correctly.
 
 ---
 
-## Egeria Server — not fixable in pyegeria
-
-### ISSUE-45: `findMetadataElements`'s `metadataElementSubtypeNames` is silently ignored — restricting to specific subtypes has no effect on results
-
-**Status:** open (Egeria server), found 2026-08-05 investigating whether
-Egeria Insights could express "elements that have a SemanticAssignment but
-are NOT type Notification" via an allow-list of subtypes (`Referenceable`
-+ `metadataElementSubtypeNames: ["GlossaryTerm", "DataAsset"]`, per
-`Egeria-api-metadata-expert.http`'s worked "findMetadataElements (nested
-condition)" example, which documents this field alongside
-`metadataElementTypeName`).
-
-**Layer:** Egeria Server — not fixable in pyegeria. Confirmed via a raw
-`curl` bypassing pyegeria entirely (so this isn't a body-construction bug
-on the client side):
-
-```bash
-curl -sk -X POST ".../metadata-expert/metadata-elements/by-search-conditions" \
-  -H "Authorization: Bearer $TOKEN" -H "Content-Type: application/json" \
-  -d '{"class":"FindRequestBody","metadataElementTypeName":"Referenceable",
-       "metadataElementSubtypeNames":["GlossaryTerm"],
-       "limitResultsByStatus":["ACTIVE"],"graphQueryDepth":0,"startFrom":0,"pageSize":10}'
-# returns ContributionRecord/EngineAction/NotificationType — NOT GlossaryTerm
-```
-
-**What:** `metadataElementSubtypeNames` is accepted (no error, HTTP 200)
-but has **zero effect** on which elements come back — results are
-byte-identical to the same query with the field omitted entirely.
-Reproduced with two different base-type/subtype pairs to rule out a
-one-off: `Referenceable` + `["GlossaryTerm"]`, `Referenceable` +
-`["GlossaryTerm","DataAsset"]`, and `Asset` + `["DataAsset"]` — all three
-returned the same type mix (`ContributionRecord`/`EngineAction`/
-`Notification(Type)`) as the equivalent query with no subtype restriction
-at all.
-
-**Impact:** there is currently no way to narrow a `findMetadataElements`
-query to a specific allow-list of subtypes under a common base type — the
-only working filter is the single `metadataElementTypeName` (which
-includes ALL subtypes of that type, with no way to exclude any of them).
-This blocks the Egeria Insights use case that prompted the investigation:
-excluding noisy `Action` subtypes (`Notification`/`ToDo`/`Meeting`/
-`Review` — all real `Asset` subtypes, see ISSUE for the Explorer routing
-fix on 2026-08-05) from a broader `Asset`/`Referenceable` search without
-also losing every other subtype.
-
-**Candidate fix:** none client-side. Worth confirming against a newer
-Egeria server build whether this is a currently-unimplemented parameter
-(present in the request body schema/`.http` docs but never wired up
-server-side) versus a regression.
-
----
-
-### ISSUE-47: `findMetadataElements` scoped to the universal base type `Referenceable` silently returns an incomplete, arbitrary subset instead of the true population
-
-**Status:** open (Egeria server), found 2026-08-06 fixing egeria-workspaces-fs's
-relationship-only search (see ISSUE-45's same investigation thread —
-looking for a safe fallback type once `metadataElementTypeName="Asset"`
-was confirmed wrong for `SemanticAssignment`, and `metadataElementSubtypeNames`
-confirmed non-functional).
-
-**Layer:** Egeria Server — not fixable in pyegeria.
-
-**What:** an exhaustive, fully-paginated `find_metadata_elements` scoped to
-`metadataElementTypeName="Referenceable"` (the universal base type — every
-open-metadata entity is a `Referenceable`) returns a small, arbitrary
-subset instead of the true population, with no error, no truncation flag,
-and pagination genuinely terminating normally (`added == 0`/`len(page) <
-page_size` on the last page — the loop believes it's done). Confirmed live
-against `qs-view-server` by direct comparison:
-
-| Scope | Elements found |
-|---|---|
-| `metadataElementTypeName="Referenceable"` (exhaustive) | 3,999 total |
-| ...of which `typeName="GlossaryTerm"` | 241 |
-| ...of which `typeName="GovernanceActionProcess"` | 22 |
-| `metadataElementTypeName="GlossaryTerm"` (exhaustive, direct) | **450** |
-| `metadataElementTypeName="GovernanceActionProcess"` (exhaustive, direct) | **378** |
-
-Cross-checked against a real, independently-known population: fetching
-every participant GUID of the `SemanticAssignment` relationship type
-(`ClassificationExplorer.get_relationships`, a separate, unrelated API
-path, previously verified complete) gives 410 distinct GUIDs. Only 23 of
-those 410 appear anywhere in the 3,999-element `Referenceable` scan — 387
-real participants (94%) are simply absent from a scan of the type that is
-supposed to be their common ancestor and therefore cover all of them.
-
-**Impact:** `metadataElementTypeName="Referenceable"` cannot be used as a
-"safe, unscoped, find-everything" fallback the way its position at the
-root of the type hierarchy implies — a caller that scopes a search this
-broadly on purpose (not just as an accidental fallback) will silently miss
-the majority of real results, not just cap them at a boundary. Confirmed
-this is specific to the base-type-wide scan, not pagination itself —
-directly-typed exhaustive searches for the exact same real types
-(`GlossaryTerm`, `GovernanceActionProcess`) are complete and correct.
-
-**Candidate fix:** none client-side. `egeria-workspaces-fs`'s workaround
-(see its `EGERIA_INSIGHTS_QUERY_MODEL.md`/`insights_handler.py`, commit
-`015916d0`) is to never scope a search to `Referenceable` (or any other
-broad base type) as a "safe fallback" — when the real target type isn't
-known, derive the actual candidate types from other data (e.g. a
-relationship's real participants) and search each directly instead.
-
----
-
 ### ISSUE-14 (PY-4): `update_comment` demands `qualifiedName` even with `mergeUpdate: true`
 
-**Status:** open (Egeria server) — workaround shipped in application code,
+**Status:** tracker was stale — re-checked 2026-08-15 and found the
+workaround has actually been **in pyegeria itself** since 2026-08-03
+(`92cde6a`), not "application code" as this entry previously said.
+`_async_update_comment` (`pyegeria/core/_server_client.py`) already
+auto-fetches the comment's current `qualifiedName` via
+`_async_get_comment_by_guid` whenever the caller's body doesn't supply one,
+and injects it before sending — the exact workaround this entry describes,
+just already shipped and never reflected here. **Verified live**: created a
+throwaway `DataStructure`, attached a comment via `add_comment_to_element`,
+then called `update_comment(comment_guid, comment="edited text")` with no
+`qualifiedName` in the body at all — succeeds cleanly (previously would
+have hit `OMAG-METADATA-400-004`). Cleaned up the test element afterward.
+Underlying server behavior (still demanding `qualifiedName` despite
+`mergeUpdate: true`) is unchanged and still worth an upstream Egeria report,
+but there is nothing left to do on the pyegeria side — every caller of
+`update_comment`/`_async_update_comment` already gets the workaround for
+free, no application-level workaround needed.
+
+**Original status:** open (Egeria server) — workaround shipped in application code,
 not a pyegeria fix. Passing `"mergeUpdate": true` should allow a partial
 update (only supplied fields required), but the server still demands
 `qualifiedName` regardless.
 
-**Workaround:** fetch the element first via `get_comment_by_guid`, extract
-`qualifiedName`, and always include it in the update body regardless of
-`mergeUpdate`.
+**Original workaround (superseded, no longer needed by callers):** fetch the
+element first via `get_comment_by_guid`, extract `qualifiedName`, and always
+include it in the update body regardless of `mergeUpdate`.
 
 ```python
 from pyegeria import EgeriaTech
@@ -703,7 +2010,45 @@ client.update_comment(comment_guid="<guid>", body={"commentText": "edited text"}
 
 ### ISSUE-17 (PY-13): `SpecificationProperties.get_specification_property_by_type` always returns 400
 
-**Status:** open (Egeria server), re-verified 2026-07-31 (live) — still
+**Status:** fixed 2026-08-15 (Pyegeria — `pyegeria/omvs/valid_metadata.py`).
+**The original diagnosis was wrong** — not a server-side enum-binding drift.
+Checked `Egeria-api-valid-metadata.http`'s `getSpecificationPropertyByType`
+worked example: it uses `specificationPropertyType=PRODUCED_GUARD` —
+`SCREAMING_SNAKE_CASE`, not the value shape the original repro tried
+(`"SpecificationPropertyType{placeholderProperty}"`, nor the raw
+PascalCase keys `get_specification_property_types()` returns, e.g.
+`"ProducedGuard"`). Tried `PRODUCED_GUARD` directly — **succeeded
+immediately**, no 400 at all. Root cause: `get_specification_property_types()`
+returns its `stringMap` verbatim from the server's own
+`specification-properties/type-names` endpoint, which genuinely uses
+PascalCase keys (`"ProducedGuard"`) — a different server endpoint using a
+different casing convention for the same enum than `by-type` expects. This
+is a real cross-endpoint inconsistency in the server, but the client-visible
+symptom ("every input 400s") was entirely avoidable: `get_specification_property_by_type`
+did zero conversion, so the single most natural, discoverable input for a
+caller (feeding it a key from `get_specification_property_types()`) always
+failed.
+
+**Fix:** `_async_get_specification_property_by_type` now auto-converts a
+PascalCase/camelCase input to `SCREAMING_SNAKE_CASE` before building the URL
+(a plain regex insert-underscore-before-each-capital + uppercase — no
+hardcoded type list, so it isn't tied to today's enum values); an
+already-`SCREAMING_SNAKE_CASE` value passes through untouched.
+
+**Verified live** against `qs-view-server`: all 12 real specification
+property types returned by `get_specification_property_types()`, fed
+straight into `get_specification_property_by_type()` unmodified, now
+resolve successfully (10 return real results, 2 correctly return "No
+elements found" — no data of that type, not an error); the already-correct
+`PRODUCED_GUARD` form still works unchanged. `pytest tests/ -m unit`
+passes.
+
+**Impact on the workaround downstream:** `find_specification_property("*",
+...)` + client-side filtering is no longer necessary to work around this
+specific method, though it may still be independently useful/faster for
+some callers.
+
+**Original status:** open (Egeria server), re-verified 2026-07-31 (live) — still
 reproduces exactly as described. Root cause is server-side: the OpenAPI
 schema declares `specificationPropertyType` as a required enum query param
 with values like `"SpecificationPropertyType{placeholderProperty}"`, but
@@ -712,7 +2057,7 @@ every form of that value (plain, enum-wrapped, percent-encoded) still 400s
 OpenAPI-declared enum. No pyegeria code change can fix a 400 the server
 returns for every input.
 
-**Workaround (shipped in application code):** use
+**Original workaround (superseded, no longer needed for this method):** use
 `find_specification_property("*", ...)` (by-search-string) instead, and
 filter client-side on `element["properties"]["identifier"]` (camelCase form
 of the type name).
@@ -724,14 +2069,40 @@ mgr = SpecificationProperties(view_server="qs-view-server", platform_url="https:
 mgr.create_egeria_bearer_token()
 types = mgr.get_specification_property_types()
 mgr.get_specification_property_by_type(list(types.keys())[0])
-# Still 400s for every input, confirmed 2026-07-31.
+# Now succeeds -- was previously 400ing for every input, confirmed 2026-07-31.
 ```
 
 ---
 
 ### ISSUE-43: Pagination location for `find_metadata_elements`'s endpoint — audit finding, plausible but not yet confirmed live
 
-**Status:** open (pyegeria, suspected) — found 2026-08-05 while auditing
+**Status:** fixed 2026-08-15 (Pyegeria — `pyegeria/omvs/runtime_manager.py`).
+Resolved the "not yet empirically confirmed" `_async_get_server_templates_by_dep_impl_type`
+finding via ground-truth comparison rather than waiting for 2+-page demo
+data (the blocker noted below, still unavailable): checked
+`Egeria-api-runtime-manager.http`'s `getServerTemplatesByDeployedImplementationType`
+worked example — a plain `POST .../software-servers/by-deployed-implementation-type`
+with **no query string at all**, pagination and the `Template` filter both
+carried entirely in the `FilterRequestBody` (`includeOnlyClassifiedElements:
+["Template"]`). The sibling, non-templates method in the same file
+(`_async_get_servers_by_dep_impl_type`) already builds the URL with no query
+string, confirming the correct pattern exists right next to the bug. Removed
+the spurious `?startFrom={..}&pageSize={..}&getTemplates=true` suffix
+entirely — none of those three query params exist on the real endpoint;
+pagination was already being built correctly into the body by the shared
+`_async_get_name_request` helper regardless (confirmed via a request-body
+spy, before and after: `startFrom`/`pageSize` land in the body either way,
+so the URL suffix was purely spurious/redundant, not silently required for
+anything to work).
+
+**Verified live:** the call now succeeds against `qs-view-server`
+(`get_server_templates_by_dep_impl_type("cots-application-server", ...)` →
+`No elements found`, same empty-but-successful result as before, for the
+reason already documented below — no `Template`-classified software servers
+of any tested type exist in this demo dataset, so a real 2+-page comparison
+still isn't possible here). `pytest tests/ -m unit` passes.
+
+**Original status:** open (pyegeria, suspected) — found 2026-08-05 while auditing
 for the same drift class as ISSUE-34 (see that entry's "design principle"
 paragraph — Egeria's pagination convention moved from URL query params to
 request-body fields for at least one endpoint a few months ago; worth
@@ -778,61 +2149,23 @@ guessing from the pattern match alone.
 
 ---
 
-### ISSUE-38 (PY-18): `count_relationships_between_elements("Exception")` (276) disagrees with `ClassificationExplorer.get_relationships("Exception")` (55)
-
-**Status:** open (Egeria server) — needs Egeria-side investigation. Found
-2026-07-24 while wiring the Egeria Overview dashboard to native counting
-(odpi/egeria#9168). Consolidated in from `egeria-workspaces-fs/
-PYEGERIA_ISSUES.md` 2026-08-05.
-
-**Summary:** the OMF metadata-expert native relationship count and the
-classification-explorer `get_relationships` return materially different
-totals for the `Exception` relationship type — and *only* that type, among
-those tested.
-
-**How to trigger:**
-```python
-from pyegeria import MetadataExpert, ClassificationExplorer
-me = MetadataExpert(view_server="qs-view-server", platform_url="https://localhost:9443",
-                    user_id="erinoverview", user_pwd="secret"); me.create_egeria_bearer_token()
-ce = ClassificationExplorer(view_server="qs-view-server", platform_url="https://localhost:9443",
-                    user_id="erinoverview", user_pwd="secret"); ce.create_egeria_bearer_token()
-
-me.count_relationships_between_elements({"class":"FindRelationshipRequestBody","relationshipTypeName":"Exception"})
-# -> 276
-len(ce.get_relationships(relationship_type="Exception", output_format="JSON", start_from=0, page_size=5000))
-# -> 55  (all 55 have exact typeName "Exception"; no effectivity dates)
-```
-
-**What it is NOT:**
-- Not the type filter — `count("SemanticAssignment")` = 397 =
-  `get_relationships` = 397; `License` 2 = 2; `Certification` 0 = 0;
-  `AttachedRating` 0 = 0. Every other tested type matches; only `Exception`
-  diverges.
-- Not status/effectivity — `count("Exception")` is 276 with
-  `limitResultsByStatus=[ACTIVE]`, with `effectiveTime=<now>`, and with
-  neither; the 55 `get_relationships` results carry no
-  `effectiveFromTime`/`effectiveToTime`.
-- `count(no relationshipTypeName)` = 31857 (all relationships), so 276 is
-  a genuine type-scoped subset, not "count ignores the filter".
-
-**Open question for Egeria:** what does the metadata-expert count include
-for `Exception` that the classification-explorer traversal excludes
-(subtypes counted under the supertype? relationships to non-visible/
-anchored/dangling ends? access/zone filtering that differs between the two
-OMVS)? Whichever is "true", the two APIs should agree for a given type —
-or the difference should be documented.
-
-**Impact / workaround:** egeria-workspaces-fs's Overview dashboard keeps
-**relationship** counts on `ClassificationExplorer.get_relationships` (so
-"Open Exceptions" stays consistent with the Audit app at 55) and uses
-native counting only for **element** counts.
-
----
-
 ### ISSUE-39 (PY-19): `MetadataExpert.find_relationships_between_elements(relationshipTypeName=…)` returns "No elements found" even when the matching count is non-zero
 
-**Status:** open (Egeria server) — found 2026-07-24 alongside ISSUE-38,
+**Status:** fixed 2026-08-15 (Pyegeria — `pyegeria/omvs/metadata_expert.py`).
+**Reclassified from Egeria Server to Pyegeria** — the original diagnosis
+was wrong; this was never a server-side gap. Same root cause as ISSUE-49
+(read that entry for the full mechanism): the shared
+`process_related_element_list()` helper's `relationship_list=True` branch
+looked for the relationships under `elementList` instead of the real key,
+`relationships`. `_async_find_relationships_between_elements` already
+correctly passed `relationship_list=True`, so this method only ever hit
+the second half of the bug — fixed by the same one-line change to the
+shared helper, no call-site change needed here. Verified live: re-ran
+`find_relationships_between_elements({"relationshipTypeName": "SmartQuery"})`
+against a real, freshly-created `SmartQuery` relationship — now returns it
+instead of "No elements found". `pytest tests/ -m unit` passes.
+
+**Original status:** open (Egeria server) — found 2026-07-24 alongside ISSUE-38,
 same environment. Consolidated in from `egeria-workspaces-fs/
 PYEGERIA_ISSUES.md` 2026-08-05.
 
@@ -864,66 +2197,20 @@ count.
 
 ---
 
-### ISSUE-41 (PY-21): `find_glossary_terms(sequencing_order=..., include_only_classified_elements=...)` returns ZERO results when combined — each filter alone works fine
-
-**Status:** confirmed bug (Egeria server) — found 2026-07-28 debugging
-Egeria Explorer's Perspectives page showing Perspectives but no Questions.
-Related to ISSUE-40 below (same broken parameter, different — and more
-severe — failure mode: not just wrong order, but zero rows). Consolidated
-in from `egeria-workspaces-fs/PYEGERIA_ISSUES.md` 2026-08-05.
-
-**How to trigger** (`GlossaryManager.find_glossary_terms`, qs-view-server,
-33 `GlossaryTerm`s classified `Question`):
-```python
-# classification filter alone: 33 hits
-mgr.find_glossary_terms(search_string="*", starts_with=True, output_format="JSON",
-                        page_size=200, graph_query_depth=0,
-                        include_only_classified_elements=["Question"])
-
-# sequencing_order alone (no classification filter): 200 hits (unrelated terms, page_size ceiling)
-mgr.find_glossary_terms(search_string="*", starts_with=True, output_format="JSON",
-                        page_size=200, graph_query_depth=0,
-                        sequencing_order="PROPERTY_ASCENDING")
-
-# BOTH together: 0 hits
-mgr.find_glossary_terms(search_string="*", starts_with=True, output_format="JSON",
-                        page_size=200, graph_query_depth=0,
-                        sequencing_order="PROPERTY_ASCENDING",
-                        include_only_classified_elements=["Question"])
-# -> []  (or a "No elements found" string, depending on call shape)
-```
-Isolated further: `sequencing_order="PROPERTY_ASCENDING"` is the trigger —
-`sequencing_property` alone (no `sequencing_order`) does **not** break it
-(still 33 hits). It's specifically `sequencing_order` + a classification
-filter.
-
-**Expected:** the classification filter's 33 matches, sorted by the given
-sequencing property (or, per ISSUE-40, at least returned in server-internal
-order — but not silently emptied).
-
-**Actual:** zero rows, with no error — the query silently looks like
-"nothing matches" rather than failing loudly, which is what made this hard
-to spot (the egeria-workspaces-fs `/api/questions` endpoint returned
-`{"total": 0}` with a 200 status; only comparing against a live count of
-Question-classified terms in Egeria surfaced that this was wrong, not just
-an empty demo).
-
-**Impact / workaround:** egeria-workspaces-fs's `perspectives_handler.py`'s
-`get_questions()` used exactly this broken combination. Fixed by dropping
-`sequencing_order`/`sequencing_property` from the call — the endpoint
-already sorts client-side, so the server-side sequencing was redundant
-even before this bug was found. No other known callers currently combine
-`sequencing_order` with a classification filter, but worth checking
-`include_only_classified_elements`/`matchClassifications` callers
-generally if new zero-result reports show up elsewhere.
-
----
-
-## Docs / class-organization sharp edges
-
 ### ISSUE-19 (PY-12): `ReferenceDataManager` has no specification-property or valid-metadata-value methods
 
-**Status:** open (docs/organization), re-verified 2026-07-31 — still true.
+**Status:** fixed — re-verified 2026-08-15, found already resolved (never
+marked closed here). `ReferenceDataManager`'s class docstring
+(`pyegeria/omvs/reference_data.py`) now has a `Note` section stating it
+does NOT cover Specification Properties and pointing callers at
+`SpecificationProperties`/`MetadataExpert` instead — exactly the
+"suggested improvement" below, already applied. Not clear which session
+added it since this entry was last touched; recommending a class-selection
+decision tree across `ReferenceDataManager`/`SpecificationProperties`/
+`ValidMetadataLists`/`ValidTypeLists`/`MetadataExpert` is still open as a
+nice-to-have, not a defect.
+
+**Originally filed as:** open (docs/organization), re-verified 2026-07-31 — still true.
 `ReferenceDataManager` inherits only from `ServerClient` (it's for
 *business* reference data — country codes, currency codes, etc.), not from
 `ValidMetadataManager`. `get_valid_metadata_values` happens to work on it
@@ -946,184 +2233,6 @@ decision tree for "which OMVS client class do I need" across
 `ValidTypeLists` / `MetadataExpert`, since several overlap in purpose.
 
 ---
-
-## Design discussions (not confirmed bugs — decisions needed)
-
-### ISSUE-48: No OMVS wrapper exists for the `SchemaAttributeDefinition` relationship (physical `SchemaAttribute` ↔ logical `DataField`)
-
-**Status:** open — SDK gap to validate with the team, not yet a confirmed
-bug. Raised 2026-08-07 while triaging a request to add three "missing"
-Dr.Egeria Data Designer commands (SemanticAssignment, DataClassAssignment,
-SchemaTypeImplementation). Two of the three turned out not to be gaps at
-all once checked against the real type system and existing compact specs:
-
-- **SemanticAssignment** (schema/field → glossary term) already exists —
-  `Link Semantic Assignment` / `Unlink Semantic Assignment` in the
-  **Curation** family (`commands_curation_compact.json`, `OM_TYPE:
-  SemanticAssignment`, wired to `ClassificationExplorer.
-  _async_setup_semantic_assignment` in `CurationLinkProcessor`). Its
-  `Target Element` is a generic GUID, so it already works against a data
-  field or schema attribute today.
-- **DataClassAssignment** on a physical schema attribute is also already
-  covered — and the type name itself is stale. The old `DataClassAssignment`
-  relationship was replaced in this Egeria version by
-  `DataValueAssignmentRelationship` (0540 —
-  `OpenMetadataTypesArchive1_2.java`), whose end 1 is `Referenceable` (any
-  element, including a schema attribute). Data Designer's existing `Assign
-  Data Value Specification` command (`OM_TYPE: DataValueAssignment`)
-  already covers this generically via its `Element Id` attribute.
-
-**The third one is a real gap, at the SDK level, not just the Dr.Egeria
-command-spec level.** "SchemaTypeImplementation" isn't a real type name in
-this Egeria version at all. The type that actually connects a physical
-`SchemaAttribute` to a logical `DataField` is `SchemaAttributeDefinition`
-(0580, `OpenMetadataTypesArchive5_3.java` —
-`getSchemaAttributeDefinitionRelationship()`), ends `derivedFromDataField`
-(on `DataField`, AT_MOST_ONE) / `equivalentSchemaAttribute` (on
-`SchemaAttribute`, AT_MOST_ONE). Confirmed via grep across `pyegeria/omvs/`
-and `pyegeria/http clients/*.http`: **no bespoke wrapper method exists**
-for setting up or clearing this relationship — no `_async_link_*`/
-`_async_setup_*` method, no `.http` worked example, in `data_designer.py`,
-`data_engineer.py`, or `classification_explorer.py`.
-
-**Options considered, not yet decided:**
-1. Add a bespoke wrapper (e.g.
-   `DataDesigner._async_link_schema_attribute_definition`/
-   `_async_detach_schema_attribute_definition`) mirroring
-   `_async_setup_semantic_assignment`'s shape, then wire a Dr.Egeria
-   `Link/Unlink Schema Attribute Definition` command to it. Most
-   consistent with how other bespoke-family relationships are handled, but
-   requires new SDK surface first.
-2. Skip the bespoke wrapper and drive it through the existing generic
-   `MetadataExpert._async_create_related_elements`/
-   `_async_delete_related_elements` (typeName-based) — the same mechanism
-   `CurationLinkProcessor` already uses for other Tier-2 gaps with no
-   dedicated method (`ResourceList`, `MoreInformation`). No new SDK method
-   needed, but less discoverable/typed than a bespoke wrapper.
-
-No command has been added to the compact JSON for this yet — deferred
-pending the team's input on which approach (or whether the relationship
-is even meant to be user-authorable via Dr.Egeria, vs. only ever
-system-derived from a physical→logical mapping tool).
-
----
-
-### ISSUE-46: Desired enhancement — true "exclude type" / NOT semantics for `findMetadataElements`
-
-**Status:** open — desired enhancement, not a bug. Raised 2026-08-05
-alongside ISSUE-45, from the same Egeria Insights use case ("elements that
-have a SemanticAssignment relationship but are NOT type Notification").
-
-**What's missing:** `FindRequestBody` has no negation operator for type at
-all. `metadataElementTypeName` is a single positive inclusion filter
-(that type plus all its subtypes); `metadataElementSubtypeNames` is meant
-to narrow that to a specific allow-list of subtypes (see ISSUE-45 — doesn't
-currently work, but even fixed, an allow-list is still not the same thing
-as an exclude-list: excluding one noisy subtype out of a large,
-open-ended family — e.g. "any `Asset` except `Notification`" — would
-require enumerating every OTHER `Asset` subtype by hand, which is
-impractical and silently stale the moment a new subtype is added).
-`searchProperties`/element-property conditions can't reach `typeName`
-either, since it's a structural/type-system attribute, not a regular
-property in `propertyValueMap`.
-
-**Desired shape (not designed in detail — flagging the need):** a genuine
-exclude-list, e.g. `metadataElementExcludedSubtypeNames` (or a NOT/negation
-option on the existing field), so a caller can say "type X or narrower,
-except these specific subtypes" without enumerating the full positive
-allow-list. Needs real Egeria-side API design work — this entry exists to
-make sure the need doesn't get lost, not to prescribe the exact shape.
-
-**Interim workaround, planned for Egeria Insights (`egeria-workspaces-fs`,
-not pyegeria):** client-side post-filter, mirroring the pattern already
-used there for relationship-presence conditions (which also have no
-server-side equivalent) — fetch normally, then drop results whose
-`typeName`/`superTypeNames` match a caller-specified exclude set, with an
-honest note that the exclusion applies only to the fetched page (same
-`relationshipFilterNote`/`defaultedTypeNote` transparency convention that
-module already uses). Not yet built.
-
-**Status:** open — design discussion, not a confirmed bug. High-priority
-follow-up. Raised 2026-07-24 from a glossary-term aliases fix: aliased
-terms were missing from egeria-workspaces-fs's default listing because of
-how the portal loads and sorts lists. Consolidated in from
-`egeria-workspaces-fs/PYEGERIA_ISSUES.md` 2026-08-05.
-
-**Observations** (repro, `find_glossary_terms`, qs-view-server, 388 terms):
-```python
-# start_from paging works -- each page is a different, non-overlapping slice:
-m.find_glossary_terms(search_string="*", start_from=0,  page_size=10, output_format="JSON")   # 10 terms
-m.find_glossary_terms(search_string="*", start_from=10, page_size=10, output_format="JSON")   # next 10, no overlap
-
-# BUT sequencing is not reflected in the result order:
-m.find_glossary_terms(search_string="*", page_size=10, output_format="JSON",
-                      sequencing_order="PROPERTY_ASCENDING", sequencing_property="displayName")
-# -> ['Rolling base year','Carbon Intensity','Megawatt Hour','Inventory','Shall', ...]  (server-internal order, not A->Z)
-```
-
-So a "load-all up to a page-size ceiling, then sort/filter in JS" pattern
-(used across several egeria-workspaces-fs apps) silently returns an
-*arbitrary* subset when a collection exceeds the ceiling: e.g. default
-`page_size=200` on 388 terms returns some 200, the endpoint re-sorts *those
-200* by `displayName`, and terms outside that slice (incl.
-alphabetically-early ones) simply never appear. (Note: `find_glossary_terms`
-paginates correctly here via `start_from`/`page_size` as method parameters
-— a different method from ISSUE-34's `find_metadata_elements`, whose
-pagination bug/fix was about a different endpoint's request shape
-entirely; this entry's own issue is about sequencing order, not
-duplication or missing pages.)
-
-**Open questions to decide (not asserting any of these is a defect):**
-1. Is `sequencing_order`/`sequencing_property` expected to order the
-   result here, or is that behavior config/connector-dependent?
-   (Determines whether true server-side paged UIs are even feasible, or
-   whether fetch-all-then-sort-in-JS remains the only reliable sort.)
-2. Preferred model: **bounded server-side fetch-all** (loop `start_from`
-   until the native `count_metadata_elements` total is reached or a
-   ceiling is hit, return a `truncated`/`total` flag) vs. a true paged UI.
-   Fetch-all keeps the existing instant client-side search; paged UI needs
-   #1 resolved first.
-3. **Page-size ceiling is bounded by the view server's configured
-   `maxPageSize`** (OMAG server config) — likely well below 5000. Any
-   fetch-all loop must chunk at ≤ that limit; the overall load ceiling is a
-   separate product decision. TBD.
-4. Apply the chosen strategy consistently via a shared helper across all
-   "load-all" endpoints, rather than per-handler.
-
-**Current mitigation:** none beyond raising `page_size`, which only lowers
-the odds (a single page is still unsorted, so it sorts an arbitrary
-slice). Tracked for a deliberate fix once the strategy + `maxPageSize` are
-agreed. See ISSUE-41 for the more severe related failure mode (combined
-with a classification filter, this doesn't just misorder — it silently
-returns zero rows).
-
----
-
-# Quick reference: which OMVS client class for which purpose
-
-| Need | Class | Notes |
-|---|---|---|
-| Business reference data (country/currency codes) | `ReferenceDataManager` | Does **not** cover specification properties (ISSUE-19, docs-only) |
-| Valid metadata values for a property name | `ReferenceDataManager` or `MetadataExpert` | `get_valid_metadata_values` lives on shared `ServerClient` base; no `as_of_time` support — Egeria endpoint doesn't expose it (ISSUE-18) |
-| Specification properties (placeholders, guards, action targets, etc.) | `SpecificationProperties` | Avoid `get_specification_property_by_type` (ISSUE-17, Egeria server bug); use `find_specification_property` with `graph_query_depth=0` (ISSUE-15); `get_specification_property_by_guid` currently broken outright (ISSUE-28) |
-| `DataGrain` / `DataClass` listing | `find_data_value_specifications` / `get_data_value_specifications_by_name("*")` | Both fixed (ISSUE-1, ISSUE-2) |
-| `DataSpec` (Collection subtype) | `CollectionManager.find_collections(metadata_element_type="DataSpec")` | |
-| `DataStructure` / `DataField` | `DataDesigner.find_data_structures` / `find_data_fields` | |
-| Solution blueprints/components (any pyegeria version) | `SolutionArchitect.find_solution_blueprints/components(search_string="*")` | Avoid `find_all_*` variants on old versions (ISSUE-11) |
-| Note logs (list) | `find_note_logs("*", graph_query_depth=0)` | ISSUE-15 |
-| Note logs (entries) | `get_notes_for_note_log(guid, page_size=100)` | ISSUE-3 — never pass `metadata_element_type_name="NoteLog"` |
-| Collection members | `get_collection_members(collection_guid)` | ISSUE-8 — now returns members of any type, not just the collection's own type |
-| Comparing results across two runs/environments that don't match | — | Check whether the same user's credentials were used in both — governance zone visibility can legitimately change results per-user (ISSUE-29) before assuming a pyegeria bug |
-| Multi-classification search (`matchClassifications`, 2+ conditions) | `MetadataExpert.find_metadata_elements` | Fixed in Egeria server (ISSUE-35) |
-| Paging a `find_metadata_elements` result | Set `"startFrom"`/`"pageSize"` **in the body dict** | Fixed (ISSUE-34) — these are NOT separate parameters on this method anymore; passing them as kwargs is silently a no-op. Same for `"graphQueryDepth"`. |
-| Relationships for a single element by guid | `MetadataExpert.get_all_related_elements(guid)` | **Not** `get_metadata_element_by_guid` — that call never returns relationships, by design (ISSUE-37, not a bug) |
-| Project parent/child hierarchy (any linked project, not just hierarchy) | `ProjectManager.get_linked_projects(guid)` | Fixed (ISSUE-42) — was silently returning "No elements found" regardless of real data |
-
----
-
-# Appendix: Closed / Not-a-bug entries
-
-## Fixed (Pyegeria)
 
 ### ISSUE-50: `base_report_formats.py`'s `Collections` FormatSet aliased the real Egeria type `ResultsSet` as `"ResultSet"` (missing the "s")
 
@@ -1632,6 +2741,17 @@ next release goes out.
 
 ### ISSUE-25: `graph_query_depth` silently dropped (or scrambled) by ~20 sync/async OMVS wrapper methods — the actual root cause behind ISSUE-23/24's symptoms
 
+**Re-verified 2026-08-15, no regression.** Spot-checked live against
+`qs-view-server`: `find_information_supply_chains("Onboarding",
+graph_query_depth=9)` (the exact original repro) correctly forwards
+`graphQueryDepth: 9` into the body (request-spy confirmed); the three
+previously-crashing scramble sites (`find_all_information_supply_chains`,
+`find_all_solution_blueprints`, `find_all_solution_components`) all run
+clean with no `TypeError`; `ClassificationExplorer.find_root_elements`'s
+field-scramble fix also holds (`graphQueryDepth: 7` lands correctly,
+`output_format`/`report_spec`/`timeout`/`body` no longer misrouted).
+`pytest tests/ -m unit` passes. Fix from 2026-08-04 below is intact.
+
 **Status:** fixed 2026-08-04 (Pyegeria — 8 files). Found while investigating a live
 repro: `SolutionArchitect.find_information_supply_chains("Onboarding")`
 returned a 3-node mermaid graph vs. 5 nodes for the equivalent raw REST call,
@@ -2028,6 +3148,13 @@ on every attempt now succeed and return the expected element.
 
 ### ISSUE-28: `get_specification_property_by_guid` raised a bare `NameError: name 'validate_guid' is not defined` — cannot be called at all
 
+**Re-verified 2026-08-15, no regression.** Bogus GUID now correctly raises
+`PyegeriaNotFoundException` (not `NameError`); a real round trip (find a
+specification property, fetch it by the returned GUID) succeeds and
+returns the correct `identifier` (`supportedAnalysisStep`). Also fixed a
+stale "currently broken outright" note pointing at this issue in the
+Quick-reference table further down this file.
+
 **Status:** fixed 2026-08-05 (Pyegeria — `pyegeria/omvs/valid_metadata.py`).
 
 **What:** `validate_guid` was referenced in
@@ -2310,14 +3437,117 @@ missed optimization.
 
 ---
 
-## Not a bug / n/a
-
 ### ISSUE-5 (PY-9): local `as_of_time` fixes not shipped to the deployed package
 
 **Status:** fixed / moot, re-verified 2026-07-31 — `get_linked_projects`,
 `get_collection_members`, and `get_data_field_by_guid` all accept
 `as_of_time` (directly or via `**kwargs`) in current source. This was a
 deployment-timing issue, not a code defect — see ISSUE-12, below.
+
+---
+
+## Not a bug / n/a
+
+### ISSUE-58: ~~Dr.Egeria's by-display-name element resolver has no type-scoping~~ — corrected: not a bug, a caller error (used a display name where a qualified name was needed, and used the wrong qualified-name string on the one retry)
+
+**Status:** n/a — not a bug. Corrected 2026-08-15, same day filed, by the
+same reporting session. (Originally misnumbered ISSUE-57 — collided with
+the pre-existing, unrelated `GovernanceResults` entry of that number;
+renumbered same-day before anything referenced it externally.)
+
+**What actually happened:** the original repro below is real (the
+"Multiple elements found" failure did occur, repeatedly), but the
+diagnosis was wrong twice over:
+1. The `Link Perspective to Question` compact-spec attribute
+   (`md_processing/data/compact_commands/commands_actor_manager_compact.json`)
+   literally documents `Perspective Name`'s `description` as **"Qualified
+   name of the Perspective"** — the field was never meant to take a bare
+   display name at all. `resolve_element_guid()`
+   (`md_processing/v2/processors.py`) confirms this: Pass 1 calls
+   `self.client.__async_get_guid__(qualified_name=name_or_guid,
+   display_name=name_or_guid, property_name="displayName",
+   tech_type=tech_type or None)` — it tries the input string as *both* an
+   exact qualified-name match and a display-name search in one call.
+   Passing a bare display name that happens to be non-unique
+   (`"Governance"`) hits the display-name branch and finds multiple
+   matches, exactly as designed for an ambiguous input — this is the
+   resolver behaving correctly given what it was handed, not a resolver
+   defect.
+2. The original repro's "the qualified name doesn't work either" claim
+   was itself wrong: the qualified name tried
+   (`Coco Pharmaceuticals::Term::Governance::1.0`) used the wrong type
+   segment — Questions (GlossaryTerms) really do get a `::Term::` segment,
+   but a `Perspective`-typed element's actual qualified name is
+   `Coco Pharmaceuticals::Perspective::Governance::1.0` (confirmed via
+   direct `get_element_by_guid()` read) — `::Term::` vs `::Perspective::`.
+   Retried with the correct string and it resolved cleanly on the first
+   try, no ambiguity error at all:
+   ```
+   ### Perspective Name
+   Coco Pharmaceuticals::Perspective::Governance::1.0
+   → "Successfully linked Perspective to Question relationship."
+   ```
+
+**Real root cause, on the consumer-repo side, not here:**
+`resource-explorer`'s `docs/dr-egeria/foundations.md` never gave its
+Perspective terms an explicit `### Qualified Name` at creation time, so
+they only had Dr.Egeria's auto-generated one — and every
+`Link Perspective to Question` command in that repo was passing the bare
+`### Display Name` instead of a qualified name, in violation of what the
+attribute actually expects. Fixed on that side: every Perspective now gets
+an explicit, unique `### Qualified Name` (`Perspective::<Name>`, not the
+auto-generated `Coco Pharmaceuticals::Perspective::<Name>::1.0` — kept
+portable rather than baking in this instance's default local
+qualifier/org name), and `Link Perspective to Question` commands reference
+Perspectives by that qualified name going forward. See
+`resource-explorer`'s `docs/dr-egeria/foundations.md` Perspectives section
+and `docs/survey-question-context-plan.md` for the full writeup.
+
+**No pyegeria/Dr.Egeria code change needed.** Kept as a closed entry
+(rather than deleted) since the original repro and the corrected
+diagnosis are both useful — the type-scoping idea in the old "candidate
+fix" below is still a reasonable resilience improvement (resolving
+`Perspective Name` should arguably fail loudly and immediately if handed a
+non-unique display name in a field documented as "qualified name", rather
+than the correct-but-easy-to-misread ambiguous-match error it already
+gives), but it's a nice-to-have, not a defect fix.
+
+<details>
+<summary>Original (incorrect) repro and diagnosis, kept for context</summary>
+
+**Repro:** in a live Egeria instance carrying the stock Coco
+Pharmaceuticals demo data alongside application-authored `GlossaryTerm`s,
+running `Link Perspective to Question` (`resource-explorer`'s
+`docs/dr-egeria/scouting-questions.md` pattern — see its `CLAUDE.md`-
+adjacent `docs/survey-question-context-plan.md`) with `Perspective Name`
+set to any of `Governance`, `Steward`, `Privacy`, `Community`, `Security`
+fails 100% of the time (confirmed across ~50+ independent attempts, 6
+separate batched Dr.Egeria `process` calls) with:
+```
+❌ Execution Blocked
+Referenced element 'Governance' for attribute 'Perspective Name' not found.
+```
+Direct `ClassificationExplorer.get_guid_for_name("Governance")` (no
+`type_name` filter) reproduces the underlying cause exactly:
+```
+PyegeriaException: CLIENT_ERROR_400 ... output=`Multiple elements found for supplied name!`
+```
+The other 7 names used in the same file (`Financial`, `Data Owner`,
+`Consumer`, `App/AI Builder`, `Data Expert`, `Architecture`, `Admin`)
+resolve cleanly every time — this is a real, 100%-reproducible collision
+for specific names, not transient indexing/resolution lag.
+
+**Workaround used at the time (superseded by the real fix above):** since
+the ambiguous elements' own GUIDs were already known from their original
+creation, every blocked `ScopedBy` link was completed by calling
+`ClassificationExplorer.add_scope_to_element(scoped_by_guid=
+<known_perspective_guid>, element_guid=<question_guid>, body=
+{"class": "NewRelationshipRequestBody", "properties": {"class":
+"ScopedByProperties"}})` directly — bypassing Dr.Egeria's name resolver
+entirely. Not needed going forward now that Perspectives carry explicit
+qualified names.
+
+</details>
 
 ---
 

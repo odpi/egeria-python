@@ -29,6 +29,8 @@ from typing import Any, Callable, Dict, List, Optional, Sequence, Tuple
 
 from loguru import logger
 
+from pyegeria.core._globals import max_paging_size
+
 __all__ = [
     "DEFAULT_CAP",
     "GOVERNANCE_CLASSIFICATIONS",
@@ -47,6 +49,11 @@ __all__ = [
     "people_counts",
     "feedback_summary",
     "usage_context_counts",
+    "contextualised_coverage",
+    "karma_leaderboard",
+    "engagement_series",
+    "orphan_glossary_terms",
+    "stale_assets",
     "growth_series",
     "metric_trend",
     "term_definition_completeness",
@@ -58,7 +65,14 @@ __all__ = [
 # Same ceiling used elsewhere in the Overview app (and the wider portal) --
 # Egeria's find API returns paged element lists with no total-count metadata,
 # so counts are capped here unless the server supports native counting.
-DEFAULT_CAP = 500
+# Derived from pyegeria's shared, env-configurable max_paging_size (EGERIA_MAX_
+# PAGE_SIZE / "Egeria Max Page Size") rather than an independent hardcoded
+# literal, so a future Egeria server-side page-size limit change (see
+# max_paging_size's own comment -- hit live 2026-08-17,
+# findRelationshipsBetweenMetadataElements rejected a hardcoded 5000 as
+# "greater than the allowable maximum of 1000") is a config edit, not another
+# hunt across every module with its own copy of this number.
+DEFAULT_CAP = max_paging_size
 
 # Governed-data classifications that count as "governed" (single-condition
 # tallies only -- some connectors' matchClassifications ANY/ALL silently
@@ -215,6 +229,51 @@ def count_elements(
     return _element_count(mgr, body, as_of)
 
 
+def count_elements_by_property(
+    mgr,
+    type_name: str,
+    property_name: str,
+    property_value: str,
+    as_of: Optional[str] = None,
+) -> int:
+    """
+    Count ACTIVE elements of a given type whose named string property equals
+    a given value -- e.g. counting DigitalProduct elements by deploymentStatus
+    (Overview dashboard's Data Products tile, OVERVIEW_NEXT_STEPS.md
+    "Remaining app wiring"). Same native-count-with-fallback seam as
+    count_elements, just with a searchProperties EQ condition instead of a
+    bare type filter -- one cheap native COUNT call per distinct value, no
+    element fetch, same cost class as the plain count.
+
+    Parameters
+    ----------
+    mgr : MetadataExpert (or compatible client)
+    type_name : the open-metadata type name to count
+    property_name : the element property to match (e.g. "deploymentStatus")
+    property_value : the exact string value to match
+    as_of : ISO-8601 asOfTime for a point-in-time count (None = now)
+
+    Returns
+    -------
+    int -- 0 on any failure (never raises)
+    """
+    body: Dict[str, Any] = {
+        "class": "FindRequestBody",
+        "metadataElementTypeName": type_name,
+        "limitResultsByStatus": ["ACTIVE"],
+        "searchProperties": {
+            "class": "SearchProperties",
+            "matchCriteria": "ALL",
+            "conditions": [{
+                "property": property_name,
+                "operator": "EQ",
+                "value": {"class": "PrimitiveTypePropertyValue", "typeName": "string", "primitiveValue": property_value},
+            }],
+        },
+    }
+    return _element_count(mgr, body, as_of)
+
+
 def count_relationships(ce, relationship_type: str, as_of: Optional[str] = None, expert=None) -> Optional[int]:
     """
     Count relationships of a type, optionally as of a past time.
@@ -256,7 +315,7 @@ def count_relationships(ce, relationship_type: str, as_of: Optional[str] = None,
         body = {"class": "ResultsRequestBody", "asOfTime": as_of} if as_of else None
         return len(_json_list(ce.get_relationships(
             relationship_type=relationship_type, output_format="JSON",
-            start_from=0, page_size=5000, body=body)))
+            start_from=0, page_size=DEFAULT_CAP, body=body)))
     except Exception as exc:  # noqa: BLE001
         logger.debug(f"overview_metrics count_relationships({relationship_type}) failed: {exc}")
         return None
@@ -340,10 +399,24 @@ def governed_coverage(mgr, as_of: Optional[str] = None) -> Dict[str, Any]:
     """
     Governance-classification-based coverage tally: how many elements carry
     at least one of `GOVERNANCE_CLASSIFICATIONS`, broken down by which
-    classification and by governance zone.
+    classification, by governance zone, and by a Fully/Partial 3-bucket split
+    (Ungoverned isn't returned here -- it's `assetTotal - fully - partial`,
+    computed the same way the frontend already derives its governed % using
+    `assetTotal` as denominator, see egeria-overview.html's `governedPctNum`).
+
+    The Fully/Partial split reuses the exact same `hits` list already
+    fetched for `byClassification`/`topZones` above -- no extra round trip.
+    "Partial (zone only)" = carries `ZoneMembership` and none of the other
+    (substantive) governance classifications; "Fully governed" = carries at
+    least one substantive classification (Confidentiality/Criticality/
+    Impact/Retention), with or without a zone. Same population-scope caveat
+    `governedCount` already carries: this query isn't restricted to Asset
+    type, so these are catalog-wide counts, not Asset-only -- an existing,
+    already-accepted proxy in this dashboard, not a new one introduced here.
 
     Returns {"governedCount": int, "byClassification": {name: count},
-    "topZones": [{"zone": name, "count": count}, ...8 max]}.
+    "topZones": [{"zone": name, "count": count}, ...8 max],
+    "fullyGoverned": int, "partialZoneOnly": int}.
     """
     body = {
         "class": "FindRequestBody",
@@ -357,14 +430,23 @@ def governed_coverage(mgr, as_of: Optional[str] = None) -> Dict[str, Any]:
         body["asOfTime"] = as_of
     hits = _find(mgr, body)
 
+    substantive = set(GOVERNANCE_CLASSIFICATIONS) - {"ZoneMembership"}
     by_classification: Dict[str, int] = {}
     zone_counts: Dict[str, int] = {}
+    fully_governed = 0
+    partial_zone_only = 0
     for el in hits:
-        for name in _classifications_of(el):
+        names = _classifications_of(el)
+        for name in names:
             by_classification[name] = by_classification.get(name, 0) + 1
         for z in _zone_names(el):
             if z:
                 zone_counts[z] = zone_counts.get(z, 0) + 1
+        governance_names = names & set(GOVERNANCE_CLASSIFICATIONS)
+        if governance_names & substantive:
+            fully_governed += 1
+        elif "ZoneMembership" in governance_names:
+            partial_zone_only += 1
     top_zones = sorted(zone_counts.items(), key=lambda kv: -kv[1])[:8]
 
     return {
@@ -372,6 +454,8 @@ def governed_coverage(mgr, as_of: Optional[str] = None) -> Dict[str, Any]:
         "governedCapped": len(hits) >= DEFAULT_CAP,
         "byClassification": by_classification,
         "topZones": [{"zone": z, "count": c} for z, c in top_zones],
+        "fullyGoverned": fully_governed,
+        "partialZoneOnly": partial_zone_only,
     }
 
 
@@ -552,6 +636,95 @@ def certifications_summary(ce, as_of: Optional[str] = None) -> Dict[str, Any]:
     return out
 
 
+def orphan_glossary_terms(mgr, ce, as_of: Optional[str] = None) -> Dict[str, Optional[int]]:
+    """
+    Approved-but-unassigned glossary terms -- the Attention Queue's "Orphan
+    glossary terms" row. A term with no `SemanticAssignment` relationship to
+    anything (asset, schema element, data field, ...) was authored but never
+    actually put to use grounding the catalog -- a stewardship gap distinct
+    from `semantic_grounding`'s own asset-side coverage % (that one asks "how
+    much of the catalog is grounded"; this one asks "how much of the
+    glossary is idle").
+
+    Same single-bounded-relationship-fetch shape as `contextualised_coverage`
+    (ImplementedBy) -- one `SemanticAssignment` fetch, filtered to the
+    GlossaryTerm-typed end, distinct-GUID count is the "referenced" set;
+    orphan = term total - referenced. Not scoped to "approved" status
+    specifically (Egeria's term status isn't filtered here) -- same
+    catalog-wide-not-sub-filtered tradeoff `governedCount` etc. already
+    carry, not a new one.
+
+    Returns {"termTotal": int|None, "referencedCount": int|None,
+    "orphanCount": int|None}. Any field is None on total failure for its own
+    step (never raises).
+    """
+    term_total = count_elements(mgr, "GlossaryTerm", as_of)
+
+    referenced_count = None
+    try:
+        rel_body = {"class": "ResultsRequestBody", "asOfTime": as_of} if as_of else None
+        rels = _json_list(ce.get_relationships(
+            relationship_type="SemanticAssignment", output_format="JSON",
+            start_from=0, page_size=max_paging_size, body=rel_body))
+        term_guids: set = set()
+        for r in rels:
+            for end_key in ("end1", "end2"):
+                end = (r.get(end_key) or {}) if isinstance(r, dict) else {}
+                end_type = end.get("type") or {}
+                type_names = {end_type.get("typeName")} | set(end_type.get("superTypeNames") or [])
+                if "GlossaryTerm" in type_names and end.get("guid"):
+                    term_guids.add(end["guid"])
+        referenced_count = len(term_guids)
+    except Exception as exc:  # noqa: BLE001
+        logger.debug(f"orphan_glossary_terms: SemanticAssignment query failed: {exc}")
+
+    orphan_count = None
+    if term_total is not None and referenced_count is not None:
+        orphan_count = max(term_total - referenced_count, 0)
+
+    return {"termTotal": term_total, "referencedCount": referenced_count, "orphanCount": orphan_count}
+
+
+def stale_assets(mgr, as_of: Optional[str] = None, days: int = 180) -> Dict[str, Optional[int]]:
+    """
+    Assets with no update in the last `days` -- the Attention Queue's "Stale
+    assets" row, candidates for archival review. One bounded `Asset` element
+    fetch (same cap as every other full-element scan in this module), each
+    element's own version metadata (`_update_time`, already used elsewhere
+    in this file) compared against the cutoff -- no relationship traversal.
+
+    `as_of` anchors both the query and the cutoff clock (an as-of-time
+    dashboard view should ask "stale as of that moment", not "stale as of
+    right now" -- consistent with `certifications_summary`'s own as_of
+    anchoring).
+
+    Returns {"staleCount": int|None, "assetTotal": int|None}. `staleCount`
+    is None on total failure; `assetTotal` reuses `count_elements` (native,
+    unaffected by this function's own element-fetch cap).
+    """
+    from datetime import datetime, timezone, timedelta
+
+    stale_count = None
+    try:
+        anchor = datetime.fromisoformat(as_of.replace("Z", "+00:00")) if as_of else datetime.now(timezone.utc)
+        if anchor.tzinfo is None:
+            anchor = anchor.replace(tzinfo=timezone.utc)
+        cutoff = anchor - timedelta(days=days)
+        body = {"class": "FindRequestBody", "metadataElementTypeName": "Asset", "limitResultsByStatus": ["ACTIVE"]}
+        if as_of:
+            body["asOfTime"] = as_of
+        elements = _find(mgr, body)
+        stale_count = 0
+        for el in elements:
+            updated = _update_time(el)
+            if updated is not None and updated < cutoff:
+                stale_count += 1
+    except Exception as exc:  # noqa: BLE001
+        logger.debug(f"stale_assets: query failed: {exc}")
+
+    return {"staleCount": stale_count, "assetTotal": count_elements(mgr, "Asset", as_of)}
+
+
 def semantic_grounding(mgr, ce, as_of: Optional[str] = None) -> Dict[str, Any]:
     """
     Semantic-grounding tally: `SemanticAssignment` relationships (term <->
@@ -679,7 +852,7 @@ def ai_ready_assets(mgr, ce, as_of: Optional[str] = None) -> Dict[str, Any]:
         rel_body = {"class": "ResultsRequestBody", "asOfTime": as_of} if as_of else None
         rels = _json_list(ce.get_relationships(
             relationship_type="DataFlow", output_format="JSON",
-            start_from=0, page_size=5000, body=rel_body))
+            start_from=0, page_size=DEFAULT_CAP, body=rel_body))
         for r in rels:
             for end_key in ("end1", "end2"):
                 end = (r.get(end_key) or {}) if isinstance(r, dict) else {}
@@ -800,7 +973,7 @@ def drl_readiness_gates(mgr, ce, as_of: Optional[str] = None, recency_days: int 
         rel_body = {"class": "ResultsRequestBody", "asOfTime": as_of} if as_of else None
         rels = _json_list(ce.get_relationships(
             relationship_type="DataFlow", output_format="JSON",
-            start_from=0, page_size=5000, body=rel_body))
+            start_from=0, page_size=DEFAULT_CAP, body=rel_body))
         for r in rels:
             for end_key in ("end1", "end2"):
                 g = ((r.get(end_key) or {}) if isinstance(r, dict) else {}).get("guid")
@@ -911,6 +1084,217 @@ def usage_context_counts(mgr, as_of: Optional[str] = None) -> Dict[str, int]:
         "informationSupplyChains": count_elements(mgr, "InformationSupplyChain", as_of),
         "blueprints": count_elements(mgr, "SolutionBlueprint", as_of),
     }
+
+
+def contextualised_coverage(mgr, ce, as_of: Optional[str] = None) -> Dict[str, Optional[int]]:
+    """
+    % of Assets that have been given business/solution-design context via a
+    SolutionComponent -- OVERVIEW_NEXT_STEPS.md's "Usage % contextualised",
+    stuck as a documented TODO since it looked like it needed a full
+    per-asset participation traversal (no native "count of elements reachable
+    from a relationship" API exists). It doesn't, once you go through the
+    right relationship instead of trying to walk every asset: `ImplementedBy`
+    (model 0737, Solution Implementation) links a SolutionComponent to its
+    concrete implementation -- end1 is always SolutionComponent, end2 is
+    whatever actually implements it. Confirmed live 2026-08-17: on this
+    dataset end2 is a real mix (109 GovernanceActionType, but 31 genuine
+    Asset-subtype elements -- IntegrationConnector/SoftwareServer/Topic/
+    SoftwareServerPlatform) -- so filtering end2 to Asset-subtype elements
+    and counting distinct GUIDs is a single bounded relationship fetch, not a
+    traversal. `ImplementationResource` (the sibling relationship) was also
+    checked live and found to connect only to GovernanceActionType in this
+    dataset -- not useful for this metric, not included here.
+
+    Honesty note (this is a proxy, not the literal metric): an asset
+    connected to a SolutionComponent via ImplementedBy has been given
+    *some* solution-design context, but confirming that specific
+    SolutionComponent is itself wired into an InformationSupplyChain or
+    SolutionBlueprint would need a second hop (SolutionComponent ->
+    composition relationship -> ISC/blueprint) this function doesn't take --
+    same "single relationship-count hop, not a full graph walk" tradeoff
+    every other proxy metric in this module already makes (e.g. `lineage`
+    counting DataFlow relationships rather than confirming each one sits on
+    a path Egeria would call "lineage" in the strict sense).
+
+    Capped at max_paging_size ImplementedBy relationships (matches every
+    other relationship fetch in this module) -- undercounts if a deployment
+    has more, same documented tradeoff as governed_coverage/
+    certifications_summary's own caps.
+
+    Returns {"contextualisedCount": int|None, "assetTotal": int|None,
+    "contextualisedPct": float|None}. Any field is None on total failure for
+    its own step (never raises).
+    """
+    contextualised_count = None
+    try:
+        rel_body = {"class": "ResultsRequestBody", "asOfTime": as_of} if as_of else None
+        rels = _json_list(ce.get_relationships(
+            relationship_type="ImplementedBy", output_format="JSON",
+            start_from=0, page_size=max_paging_size, body=rel_body))
+        asset_guids: set = set()
+        for r in rels:
+            for end_key in ("end1", "end2"):
+                end = (r.get(end_key) or {}) if isinstance(r, dict) else {}
+                end_type = end.get("type") or {}
+                type_names = {end_type.get("typeName")} | set(end_type.get("superTypeNames") or [])
+                if "Asset" in type_names and end.get("guid"):
+                    asset_guids.add(end["guid"])
+        contextualised_count = len(asset_guids)
+    except Exception as exc:  # noqa: BLE001
+        logger.debug(f"contextualised_coverage: ImplementedBy query failed: {exc}")
+
+    asset_total = count_elements(mgr, "Asset", as_of)
+
+    pct = None
+    if contextualised_count is not None and asset_total:
+        pct = round(100.0 * contextualised_count / asset_total, 1)
+
+    return {
+        "contextualisedCount": contextualised_count,
+        "assetTotal": asset_total or None,
+        "contextualisedPct": pct,
+    }
+
+
+def karma_leaderboard(mgr, as_of: Optional[str] = None, top_n: int = 10,
+                       anchor_types: Sequence[str] = ("Person",)) -> List[Dict[str, Any]]:
+    """
+    Top-N people by karma -- OVERVIEW_NEXT_STEPS.md's "leaderboard" (per-person
+    karma rollup), previously left None as "deferred", turned out not to need
+    a per-person loop: karma is a scalar `karmaPoints` property directly on
+    each `ContributionRecord` element (not something derived from counting
+    related things), and every ContributionRecord is *anchored* to its owning
+    actor (Person/ITProfile/ActorProfile) via the standard `Anchors`
+    classification -- so `anchorGUID`/`anchorTypeName` are already attached
+    to the element itself, no relationship traversal needed to know whose
+    karma it is.
+
+    One bounded `find_metadata_elements` call (capped at max_paging_size,
+    same discipline as every other fetch in this module) returns every
+    ContributionRecord with properties + classifications attached; this
+    filters to `anchor_types` (Person only by default -- pass e.g.
+    `("Person", "ITProfile")` to include automation/engine contributors too),
+    sorts by karmaPoints descending, and returns the top N. Display name is
+    derived by stripping the "Contribution record for " prefix off the
+    ContributionRecord's own displayName (set by
+    ContributionRecordHandler.addContributionRecordToElement()) rather than
+    an extra per-person fetch of the anchor element -- zero additional round
+    trips.
+
+    Returns a list of {"name": str, "karmaPoints": int, "anchorGuid": str,
+    "anchorType": str}, longest-karma first, length ≤ top_n. Empty list on
+    total failure (never raises).
+    """
+    try:
+        body: Dict[str, Any] = {"class": "FindRequestBody", "limitResultsByStatus": ["ACTIVE"],
+                                 "metadataElementTypeName": "ContributionRecord"}
+        if as_of:
+            body["asOfTime"] = as_of
+        records = _find(mgr, body)
+    except Exception as exc:  # noqa: BLE001
+        logger.debug(f"karma_leaderboard: find failed: {exc}")
+        return []
+
+    entries: List[Dict[str, Any]] = []
+    for el in records:
+        pvm = (el.get("elementProperties") or {}).get("propertyValueMap") or {}
+        karma_raw = (pvm.get("karmaPoints") or {}).get("primitiveValue")
+        try:
+            karma = int(karma_raw)
+        except (TypeError, ValueError):
+            continue
+
+        anchor_type = None
+        anchor_guid = None
+        for c in (el.get("classifications") or []):
+            if c.get("classificationName") != "Anchors":
+                continue
+            apvm = (c.get("classificationProperties") or {}).get("propertyValueMap") or {}
+            anchor_type = (apvm.get("anchorTypeName") or {}).get("primitiveValue")
+            anchor_guid = (apvm.get("anchorGUID") or {}).get("primitiveValue")
+            break
+        if anchor_type not in anchor_types:
+            continue
+
+        display_name = (pvm.get("displayName") or {}).get("primitiveValue") or ""
+        name = display_name[len("Contribution record for "):] if display_name.startswith(
+            "Contribution record for ") else (display_name or "(unnamed)")
+
+        entries.append({"name": name, "karmaPoints": karma, "anchorGuid": anchor_guid, "anchorType": anchor_type})
+
+    entries.sort(key=lambda e: e["karmaPoints"], reverse=True)
+    return entries[:top_n]
+
+
+_FEEDBACK_RELATIONSHIP_TYPES_FOR_SERIES = _FEEDBACK_RELATIONSHIP_TYPES
+
+
+def engagement_series(ce, as_of: Optional[str] = None, weeks: int = 12) -> List[Dict[str, Any]]:
+    """
+    Weekly feedback-event trend -- OVERVIEW_NEXT_STEPS.md's "engagementSeries",
+    previously left None as "deferred". Reuses the exact same
+    `get_relationships` calls `feedback_summary()` already makes for each of
+    the 5 feedback relationship types (AttachedRating/Comment/Like/Tag/
+    NoteLog) -- that function only keeps `len()`; this keeps the relationship
+    objects themselves and buckets each one's `relationshipHeader.versions.
+    createTime` into its ISO week. No new API surface, no per-element loop
+    beyond the same bounded relationship fetches already happening elsewhere.
+
+    Weeks with zero events for every type are included (zero-filled, not
+    omitted) across the trailing `weeks` window ending at the current week (or
+    `as_of`'s week, if given) -- a real zero is a real data point for a trend
+    line, not a gap to hide. Honesty note: with sparse demo data this can be
+    a near-flat line with one or two non-zero weeks -- that's the real
+    signal, not a rendering bug.
+
+    Returns a list of {"week": "2026-W33", "comments": int, "ratings": int,
+    "likes": int, "tags": int, "noteLogs": int, "total": int}, oldest week
+    first, length == `weeks`. Empty list on total failure (never raises).
+    """
+    from datetime import datetime, timedelta, timezone
+
+    try:
+        anchor = datetime.fromisoformat(as_of.replace("Z", "+00:00")) if as_of else datetime.now(timezone.utc)
+    except Exception:  # noqa: BLE001
+        anchor = datetime.now(timezone.utc)
+
+    def _week_key(dt: datetime) -> str:
+        iso = dt.isocalendar()
+        return f"{iso[0]}-W{iso[1]:02d}"
+
+    week_keys: List[str] = []
+    for i in range(weeks - 1, -1, -1):
+        week_keys.append(_week_key(anchor - timedelta(weeks=i)))
+
+    buckets: Dict[str, Dict[str, int]] = {wk: {"comments": 0, "ratings": 0, "likes": 0, "tags": 0, "noteLogs": 0}
+                                           for wk in week_keys}
+
+    for rel_type, field in _FEEDBACK_RELATIONSHIP_TYPES_FOR_SERIES:
+        try:
+            rel_body = {"class": "ResultsRequestBody", "asOfTime": as_of} if as_of else None
+            rels = _json_list(ce.get_relationships(
+                relationship_type=rel_type, output_format="JSON",
+                start_from=0, page_size=max_paging_size, body=rel_body))
+        except Exception as exc:  # noqa: BLE001
+            logger.debug(f"engagement_series: {rel_type} query failed: {exc}")
+            continue
+        for r in rels:
+            create_time = (((r.get("relationshipHeader") or {}).get("versions") or {}).get("createTime"))
+            if not create_time:
+                continue
+            try:
+                dt = datetime.fromisoformat(str(create_time).replace("Z", "+00:00"))
+            except Exception:  # noqa: BLE001
+                continue
+            wk = _week_key(dt)
+            if wk in buckets:
+                buckets[wk][field] += 1
+
+    series = []
+    for wk in week_keys:
+        b = buckets[wk]
+        series.append({"week": wk, **b, "total": sum(b.values())})
+    return series
 
 
 def growth_series(

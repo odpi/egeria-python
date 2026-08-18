@@ -398,6 +398,78 @@ class MyProfile(AssetMaker):
         return elements
 
     @dynamic_catch
+    async def _async_get_my_profile_by_get(
+            self, output_format: str = "JSON",
+            report_spec: str | dict = "My-User-MD", **kwargs
+    ) -> dict | str:
+        """Retrieve the profile details of the user associated with the token, using a simple GET request
+        with no request body (the GET overload of getMyProfile). Async version.
+
+        Parameters
+        ----------
+        output_format: str, default = "JSON"
+            - specifying the format of the response (JSON, DICT, REPORT, LIST, FORM, MERMAID).
+        report_spec: str | dict, optional, default = "My-User-MD"
+            - The desired output columns/field options.
+
+        Returns
+        -------
+        dict | str
+            A dictionary containing the profile details or formatted output.
+
+        Raises
+        ------
+        PyegeriaException
+            One of the pyegeria exceptions will be raised if there are issues in communications, message format, or
+            Egeria errors.
+        """
+        url = self.my_profile_command_root
+        response = await self._async_make_request("GET", url)
+        elements = response.json().get("element", NO_ELEMENTS_FOUND)
+        if isinstance(elements, dict):
+            self.my_profile_guid = elements.get("elementHeader", {}).get("guid")
+        else:
+            self.my_profile_guid = None
+            logger.info(NO_ELEMENTS_FOUND)
+            return NO_ELEMENTS_FOUND
+
+        if output_format.upper() != 'JSON':  # return a simplified markdown representation
+            logger.info(f"Found elements, output format: {output_format} and report_spec: {report_spec}")
+            return self._generate_my_profile_output(elements, "My", "MyProfile", output_format, report_spec)
+        return elements
+
+    @dynamic_catch
+    def get_my_profile_by_get(
+            self, output_format: str = "JSON",
+            report_spec: str | dict = "My-User-MD", **kwargs
+    ) -> dict | str:
+        """Retrieve the profile details of the user associated with the token, using a simple GET request
+        with no request body (the GET overload of getMyProfile).
+
+        Parameters
+        ----------
+        output_format: str, default = "JSON"
+            - specifying the format of the response (JSON, DICT, REPORT, LIST, FORM, MERMAID).
+        report_spec: str | dict, optional, default = "My-User-MD"
+            - The desired output columns/field options.
+
+        Returns
+        -------
+        dict | str
+            A dictionary containing the profile details or formatted output.
+
+        Raises
+        ------
+        PyegeriaException
+            One of the pyegeria exceptions will be raised if there are issues in communications, message format, or
+            Egeria errors.
+        """
+        loop = asyncio.get_event_loop()
+        return loop.run_until_complete(
+            self._async_get_my_profile_by_get(output_format, report_spec, **kwargs)
+        )
+
+    @dynamic_catch
     async def _async_get_my_entries(self) -> list[dict]:
         """Retrieve all activity entries (journal, blog, log) for the user. Async version.
 

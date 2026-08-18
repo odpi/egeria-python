@@ -445,6 +445,10 @@ def set_collection_manager_body(object_type: str, qualified_name: str, attribute
     if object_type in ["Security Group", "Security List", "Security Role", "SecurityGroup", "SecurityList", "SecurityRole"]:
         prop_bod['distinguishedName'] = attributes.get('Distinguished Name', {}).get('value', None)
 
+    # Handle Working Set
+    if "Working Set" in object_type:
+        prop_bod['disposition'] = attributes.get('Disposition', {}).get('value', None)
+
     return prop_bod
 
 
@@ -512,6 +516,11 @@ def set_solution_architect_body(object_type: str, qualified_name: str, attribute
             "benefits": attributes.get('Benefits', {}).get('value', None),
             "liabilities": attributes.get('Liabilities', {}).get('value', None),
         })
+
+    if object_type in ("Solution Role", "SolutionRole", "SolutionActorRole"):
+        role_domain_id = attributes.get('Role Domain Identifier', {}).get('value', 0)
+        resolved_domain = resolve_enum(GovernanceDomains, role_domain_id)
+        prop_bod["domainIdentifier"] = resolved_domain if resolved_domain is not None else role_domain_id
 
     return prop_bod
 

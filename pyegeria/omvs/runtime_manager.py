@@ -602,8 +602,8 @@ class RuntimeManager(ServerClient):
             organization_name=organization_name
         )
         url = (
-            f"{self.runtime_command_root}/omag-servers/"
-            f"{server_guid}/cohorts/{cohort_name}"
+            f"{self.runtime_command_root}/cohort-members/"
+            f"{server_guid}/cohorts/{cohort_name}/connect"
         )
         await self._async_make_request("POST", url, payload=body)
         return
@@ -677,10 +677,10 @@ class RuntimeManager(ServerClient):
             organization_name=organization_name
         )
         url = (
-            f"{self.runtime_command_root}/omag-servers/"
-            f"{server_guid}/cohorts/{cohort_name}"
+            f"{self.runtime_command_root}/cohort-members/"
+            f"{server_guid}/cohorts/{cohort_name}/disconnect"
         )
-        await self._async_make_request("DELETE", url, payload=body)
+        await self._async_make_request("POST", url, payload=body)
         return
 
     def disconnect_from_cohort(
@@ -752,7 +752,7 @@ class RuntimeManager(ServerClient):
             organization_name=organization_name
         )
         url = (
-            f"{self.runtime_command_root}/omag-servers/"
+            f"{self.runtime_command_root}/cohort-members/"
             f"{server_guid}/cohorts/{cohort_name}/unregister"
         )
         await self._async_make_request("POST", url, payload=body)
@@ -1295,7 +1295,7 @@ class RuntimeManager(ServerClient):
             organization_name=organization_name,
         )
         url = (
-            f"{self.runtime_command_root}/integration-daemons/{server_guid}/open-lineage-events/publish-event-string"
+            f"{self.runtime_command_root}/integration-daemons/{server_guid}/open-lineage-events/publish-event"
         )
 
         payload = body if body else ol_event
@@ -1343,6 +1343,124 @@ class RuntimeManager(ServerClient):
         loop = asyncio.get_event_loop()
         loop.run_until_complete(
             self._async_publish_open_lineage_event(ol_event, server_guid, display_name, qualified_name, organization_name, body)
+        )
+
+    async def _async_publish_open_lineage_event_string(
+        self,
+        ol_event_string: str,
+        server_guid: Optional[str] = None,
+        display_name: Optional[str] = None,
+        qualified_name: Optional[str] = None,
+        organization_name: Optional[str] = None,
+        body: Optional[dict] = None,
+    ) -> None:
+        """Send an Open Lineage event, supplied as a plain JSON string, to the integration daemon. It will pass it
+            on to the integration connectors that have registered a listener for open lineage events. Async version.
+
+            https://egeria-project.org/features/lineage-management/overview/#the-openlineage-standard
+
+        Parameters
+        ----------
+        server_guid : str, default = None
+            Identity of the server to act on. If not specified, qualified_name or server_name must be.
+        display_name: str, default = None
+            Name of server to act on. If not specified, server_guid or qualified_name must be.
+        qualified_name: str, default = None
+            Unique name of server to act on. If not specified, server_guid or server_name must be.
+        ol_event_string : str
+            The user specified Open Lineage event, as a JSON string.
+
+        body : dict, optional
+            Request body to pass directly to the API.
+
+        Returns
+        -------
+           None
+
+        Raises
+        ------
+        PyegeriaInvalidParameterException
+        PyegeriaAPIException
+        PyegeriaUnauthorizedException
+
+        Notes
+        -----
+        Sample body:
+        {
+          "class" : "StringRequestBody",
+          "string" : "add open lineage event JSON string here"
+        }
+
+        """
+        server_guid = self.__get_guid__(
+            server_guid,
+            display_name,
+            "resourceName",
+            qualified_name,
+            organization_name=organization_name,
+        )
+        url = (
+            f"{self.runtime_command_root}/integration-daemons/{server_guid}/open-lineage-events/publish-event-string"
+        )
+
+        payload = body if body else {
+            "class": "StringRequestBody",
+            "string": ol_event_string,
+        }
+        await self._async_make_request("POST", url, payload)
+
+    def publish_open_lineage_event_string(
+        self,
+        ol_event_string: str,
+        server_guid: Optional[str] = None,
+        display_name: Optional[str] = None,
+        qualified_name: Optional[str] = None,
+        organization_name: Optional[str] = None,
+        body: Optional[dict] = None,
+    ) -> None:
+        """Send an Open Lineage event, supplied as a plain JSON string, to the integration daemon. It will pass it
+            on to the integration connectors that have registered a listener for open lineage events.
+
+            https://egeria-project.org/features/lineage-management/overview/#the-openlineage-standard
+
+        Parameters
+        ----------
+        server_guid : str, default = None
+            Identity of the server to act on. If not specified, qualified_name or server_name must be.
+        display_name: str, default = None
+            Name of server to act on. If not specified, server_guid or qualified_name must be.
+        qualified_name: str, default = None
+            Unique name of server to act on. If not specified, server_guid or server_name must be.
+        ol_event_string : str
+            The user specified Open Lineage event, as a JSON string.
+
+        body : dict, optional
+            Request body to pass directly to the API.
+
+        Returns
+        -------
+           None
+
+        Raises
+        ------
+        PyegeriaInvalidParameterException
+        PyegeriaAPIException
+        PyegeriaUnauthorizedException
+
+        Notes
+        -----
+        Sample body:
+        {
+          "class" : "StringRequestBody",
+          "string" : "add open lineage event JSON string here"
+        }
+
+        """
+        loop = asyncio.get_event_loop()
+        loop.run_until_complete(
+            self._async_publish_open_lineage_event_string(
+                ol_event_string, server_guid, display_name, qualified_name, organization_name, body
+            )
         )
 
 
@@ -2609,10 +2727,7 @@ class RuntimeManager(ServerClient):
 
         """
 
-        url = (
-            f"{self.runtime_command_root}/software-servers/"
-            f"by-deployed-implementation-type?startFrom={start_from}&pageSize={page_size}&getTemplates=true"
-        )
+        url = f"{self.runtime_command_root}/software-servers/by-deployed-implementation-type"
 
         return await self._async_get_name_request(url, _type="OMAGServers",
                                                   _gen_output=self._generate_omag_server_output,

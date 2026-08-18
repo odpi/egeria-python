@@ -6230,13 +6230,14 @@ class ServerClient(BaseServerClient):
         return validated_body
 
     @dynamic_catch
-    def validate_open_metadata_delete_request(self, body: dict | OpenMetadataDeleteRequestBody) -> OpenMetadataDeleteRequestBody | None:
+    def validate_open_metadata_delete_request(self, body: Optional[dict | OpenMetadataDeleteRequestBody] = None) -> OpenMetadataDeleteRequestBody | None:
         if isinstance(body, OpenMetadataDeleteRequestBody):
             validated_body = body
         elif isinstance(body, dict):
             validated_body = self._validate_body(self._open_metadata_delete_request_adapter.validate_python, body)
-        else:
-            validated_body = None
+        else:  # handle case where body not provided
+            body = {"class": "OpenMetadataDeleteRequestBody"}
+            validated_body = self._validate_body(OpenMetadataDeleteRequestBody.model_validate, body)
         return validated_body
 
     @dynamic_catch
@@ -6473,7 +6474,7 @@ class ServerClient(BaseServerClient):
                                       start_from: int = 0, page_size: int = 0, output_format: str = "JSON",
                                       report_spec: Optional[str | dict] = None,
                                       body: Optional[dict | FilterRequestBody] = None,
-                                      max_mermaid_node_count=5, **kwargs) -> Any:
+                                      max_mermaid_node_count=10, **kwargs) -> Any:
 
         if isinstance(body, FilterRequestBody):
             validated_body = body
@@ -6521,7 +6522,7 @@ class ServerClient(BaseServerClient):
                                       skip_relationships: list[str] | None = None,
                                       graph_query_depth: int = 3,
                                       output_format: str = 'JSON', report_spec: Optional[str | dict] = None,
-                                      body: Optional[dict | GetRequestBody] = None, max_mermaid_node_count=5,
+                                      body: Optional[dict | GetRequestBody] = None, max_mermaid_node_count=10,
                                       **kwargs) -> Any:
 
         if isinstance(body, GetRequestBody):
@@ -6575,7 +6576,7 @@ class ServerClient(BaseServerClient):
                                               output_format: str = 'JSON',
                                               report_spec: Optional[str | dict] = None,
                                               body: Optional[dict | GetRequestBody] = None,
-                                              max_mermaid_node_count=5, graph_query_depth=5,
+                                              max_mermaid_node_count=10, graph_query_depth=5,
                                               **kwargs) -> Any:
         """Handles request; returns elements or formatted output
 
@@ -6632,7 +6633,7 @@ class ServerClient(BaseServerClient):
         skip_classified_elements: Optional[list[str]] = None,
         include_only_classified_elements: Optional[list[str]] = None,
         graph_query_depth: int = 3,
-        max_mermaid_node_count: int = 5,
+        max_mermaid_node_count: int = 10,
         governance_zone_filter: Optional[list[str]] = None,
         as_of_time: Optional[str] = None,
         effective_time: Optional[str] = None,
@@ -6804,7 +6805,7 @@ class ServerClient(BaseServerClient):
         skip_classified_elements: Optional[list[str]] = None,
         include_only_classified_elements: Optional[list[str]] = None,
         graph_query_depth: int = 3,
-        max_mermaid_node_count: int = 5,
+        max_mermaid_node_count: int = 10,
         governance_zone_filter: Optional[list[str]] = None,
         as_of_time: Optional[str] = None,
         effective_time: Optional[str] = None,
@@ -6930,7 +6931,7 @@ class ServerClient(BaseServerClient):
         skip_classified_elements: Optional[list[str]] = None,
         include_only_classified_elements: Optional[list[str]] = None,
         graph_query_depth: int = 3,
-        max_mermaid_node_count: int = 5,
+        max_mermaid_node_count: int = 10,
         governance_zone_filter: Optional[list[str]] = None,
         as_of_time: Optional[str] = None,
         effective_time: Optional[str] = None,
