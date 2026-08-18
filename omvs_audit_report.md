@@ -5,8 +5,8 @@ Subject: `pyegeria/omvs` (43 modules)
 
 | Result | Count |
 |---|---|
-| OK | 638 |
-| Mismatch (verb/path/body) | 21 |
+| OK | 642 |
+| Mismatch (verb/path/body) | 17 |
 | Missing | 288 |
 | Found in another module | 13 |
 | URL lint | 0 |
@@ -510,10 +510,6 @@ _Review only - cross-service overlap is often intentional._
 
 ### Service: solution-architect
 
-- getDesignPatternsByName: MISMATCH `get_design_patterns_by_name`
-    - PATH
-      SDK: /solution-architect/design-patterns/by-name/{}
-      API: /solution-architect/design-patterns/by-name
 - createInformationSupplyChain: MISSING  (`POST /solution-architect/information-supply-chains`)
 - createInformationSupplyChainFromTemplate: MISSING  (`POST /solution-architect/information-supply-chains/from-template`)
 - updateInformationSupplyChain: MISSING  (`POST /solution-architect/information-supply-chains/{}/update`)
@@ -534,10 +530,6 @@ _Review only - cross-service overlap is often intentional._
 - detachSolutionComponentActor: MISSING  (`POST /solution-architect/solution-roles/{}/solution-component-actors/{}/detach`)
 - findAllSolutionRoles - with full request body: MISSING  (`POST /solution-architect/solution-roles/by-search-string`)
 - findSolutionRoles - with full request body: MISSING  (`POST /solution-architect/solution-roles/by-search-string`)
-- getSolutionRolesByName: MISMATCH `get_solution_roles_by_name`
-    - PATH
-      SDK: /solution-architect/solution-roles/by-name{}
-      API: /solution-architect/solution-roles/by-name
 - getSolutionRolesByName - with full request body: MISSING  (`POST /solution-architect/solution-roles/by-name`)
 - getSolutionRoleByGUID - with request body: MISSING  (`POST /solution-architect/solution-roles/{}/retrieve`)
 - detachSubcomponent: MISSING  (`POST /solution-architect/solution-components/{}/subcomponents/{}/detach`)
@@ -548,16 +540,8 @@ _Review only - cross-service overlap is often intentional._
       API: /solution-architect/solution-components/wires/{}/detach
 - findAllSolutionComponents - with full request body: MISSING  (`POST /solution-architect/solution-components/by-search-string`)
 - findSolutionComponents - with full request body: MISSING  (`POST /solution-architect/solution-components/by-search-string`)
-- getSolutionComponentsByName: MISMATCH `get_solution_components_by_name`
-    - PATH
-      SDK: /solution-architect/solution-components/by-name{}
-      API: /solution-architect/solution-components/by-name
 - getSolutionComponentsByName - with full request body: MISSING  (`POST /solution-architect/solution-components/by-name`)
 - getSolutionComponentByGUID - with request body: MISSING  (`POST /solution-architect/solution-components/{}/retrieve`)
-- getSolutionComponentImplementations: MISMATCH `get_solution_component_implementations`
-    - PATH
-      SDK: /solution-architect/solution-components/{}/implementations{}
-      API: /solution-architect/solution-components/{}/implementations
 
 ### Service: subject-area
 

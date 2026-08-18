@@ -271,7 +271,7 @@ class SolutionArchitect(ServerClient):
                                          graph_query_depth: int = 3, output_format: str = "JSON", report_spec: str | dict = "Design-Pattern-DrE", **kwargs):
         if name is None and "filter_string" in kwargs:
             name = kwargs.pop("filter_string")
-        url = f"{self.solution_architect_command_root}/design-patterns/by-name/{name}"
+        url = f"{self.solution_architect_command_root}/design-patterns/by-name"
         params = {
             'graph_query_depth': graph_query_depth,
             'filter_string': name,
