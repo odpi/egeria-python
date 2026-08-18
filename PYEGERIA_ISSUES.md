@@ -366,6 +366,39 @@ than just asserting server-side instability:
   anti-pattern, surfacing here in Egeria's repository query — not a
   pyegeria bug, not a real repository-level duplicate GUID.
 
+**Theory tested directly, same day** — dwolfson's suggestion: force a
+deterministic sort by a genuinely unique property and see whether
+duplicates disappear. They did, confirming the theory outright, and the
+test surfaced a second, related defect in the process:
+
+| Sort | Duplicates | Completeness (distinct / true count) |
+|---|---|---|
+| None (baseline, this run) | 853 | 9,752 / 10,605 (92%) |
+| `sequencingProperty=GUID` | **1** (plausibly one live edit mid-scan, not a leftover tie) | not measured — session blocked mid-check by an unrelated concurrent edit breaking `pyegeria` imports (`pyegeria/omvs/feedback_manager.py`, not touched by this investigation) |
+| `sequencingProperty=qualifiedName` | **0** | 10,597 / 11,081 (95.6%) — still short |
+
+Sorting by `qualifiedName` fully eliminates duplication (confirms the
+theory) but the resulting scan is still incomplete — and *not* randomly:
+every element of the omission is concentrated in exactly two types,
+`ValidMetadataValue` (211 missing of 2,296) and `PersonRole` (63 missing of
+334), while every other type in the scan matched its native count exactly
+(`SpecificationPropertyValue`, `GovernanceActionProcessStep`,
+`GovernanceActionProcess`, `GlossaryTerm`, `NotificationType`,
+`SolutionComponent` all diff=0). Root cause of the omission: **every
+single element of both `ValidMetadataValue` and `PersonRole` has
+`qualifiedName = None`** — confirmed directly (2,296/2,296 and 323/323
+have a null `qualifiedName`, not just "some"). Sorting by `qualifiedName`
+ties every element of these two types together into one giant unresolved
+group at the null position — the *same* missing-tiebreaker defect as the
+duplication case, just manifesting as omission instead of duplication when
+the caller's own chosen `sequencingProperty` happens to be null for an
+entire type. This means `GUID` is the objectively safer workaround for
+anyone needing a reliable exhaustive scan today — it's the one property
+guaranteed non-null and unique for every element regardless of type, so it
+shouldn't hit either failure mode (consistent with its near-zero-duplicate
+result above; completeness under `GUID` sequencing not yet confirmed, see
+blocker note in the table).
+
 **Also found as a byproduct of this correction:** pyegeria's own
 `pyegeria/view/base_report_formats.py` (`load_egeria_report_specs()`) had
 exactly the `len(page) < page_size` anti-pattern in a real fetch-all loop
