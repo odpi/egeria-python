@@ -10,6 +10,9 @@ every ``_async_*`` method in ``pyegeria/omvs/*.py`` against them and reports:
   * PATH MISMATCH  - SDK builds a different URL path than the API
   * BODY MISMATCH  - SDK sends a different request-body class than the API
   * ELSEWHERE      - method exists, but in a different OMVS module
+  * RENAMED        - method exists in the right module and its verb+path
+                     match exactly, just under a name unrelated to the .http
+                     @name (no amount of snake_case guessing would find it)
   * LINT           - malformed URLs (``//``, missing separators) in the SDK
 
 Usage
@@ -521,6 +524,17 @@ def audit(service_filter: str | None, report_path: str, quiet: bool,
 
     flat = {m: (svc, d) for svc, ms in py_by_service.items() for m, d in ms.items()}
 
+    # Reverse index: (verb, path) -> [(svc, method_name), ...]. Name-based
+    # matching misses methods that exist and are correctly wired but whose
+    # snake_case name doesn't resemble the .http @name at all (e.g. ground
+    # truth's "addSecurityTags" implemented as set_security_tags_classification).
+    # This catches those before they're wrongly reported MISSING.
+    by_path: dict[tuple[str, str], list[tuple[str, str]]] = defaultdict(list)
+    for svc, ms in py_by_service.items():
+        for m, d in ms.items():
+            if d.verb and d.path:
+                by_path[(d.verb, d.path)].append((svc, m))
+
     counts = defaultdict(int)
     lines: list[str] = []
     defects = 0
@@ -585,9 +599,14 @@ def audit(service_filter: str | None, report_path: str, quiet: bool,
 
             if not match:
                 elsewhere = next((c for c in cands if c in flat), None)
+                by_path_hit = by_path.get((req.verb, req.path))
                 if elsewhere:
                     counts["elsewhere"] += 1
                     lines.append(f"- {name}: ELSEWHERE -> `{flat[elsewhere][0]}.py`")
+                elif by_path_hit:
+                    counts["renamed"] += 1
+                    hits = ", ".join(f"`{s}.py`:`{m}`" for s, m in by_path_hit)
+                    lines.append(f"- {name}: RENAMED -> {hits}")
                 else:
                     counts["missing"] += 1
                     lines.append(f"- {name}: MISSING  (`{req.verb} {req.path}`)")
@@ -630,6 +649,7 @@ def audit(service_filter: str | None, report_path: str, quiet: bool,
         f"| OK | {counts['ok']} |",
         f"| Mismatch (verb/path/body) | {counts['mismatch']} |",
         f"| Missing | {counts['missing']} |",
+        f"| Renamed (implemented, verb+path matches under a different name) | {counts['renamed']} |",
         f"| Found in another module | {counts['elsewhere']} |",
         f"| URL lint | {counts['lint']} |",
         "",
