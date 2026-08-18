@@ -99,6 +99,14 @@ URL_SEGMENT_RE = re.compile(r"[a-z0-9]+(?:-[a-z0-9]+)*")
 # Transparent wrappers around a URL expression, e.g. str(HttpUrl(f"...")).
 URL_WRAPPERS = {"str", "HttpUrl", "AnyUrl", "quote", "urljoin"}
 
+# Helpers that build a trailing "?key=value&..." query string (or "" when no
+# params are set) - safe to elide entirely for path comparison, since
+# canon_path already splits on "?". Appearing as f"{root}/foo{query_string(...)}"
+# with no resolvable value otherwise renders as an opaque "{expr}" glued
+# straight onto the path, producing false PATH mismatches
+# (solution_architect.py / collection_manager.py's query_string() helper).
+QUERY_STRING_FUNCS = {"query_string"}
+
 # Internal helpers that resolve a name/GUID before the real call. They issue
 # their own request, so they must not be mistaken for the method's own verb.
 LOOKUP_HELPER_RE = re.compile(r"get_guid__|__async_get_guid")
@@ -293,6 +301,8 @@ def _flatten(node: ast.AST, roots: dict[str, str]) -> str:
     if isinstance(node, ast.BinOp) and isinstance(node.op, ast.Add):
         return _flatten(node.left, roots) + _flatten(node.right, roots)
     if isinstance(node, ast.Name):
+        if node.id in roots:
+            return roots[node.id]
         return "{%s}" % node.id
     if isinstance(node, ast.Attribute):
         if isinstance(node.value, ast.Name) and node.value.id == "self":
@@ -301,10 +311,18 @@ def _flatten(node: ast.AST, roots: dict[str, str]) -> str:
             if node.attr in roots:
                 return roots[node.attr]
         return "{%s}" % node.attr
-    # Unwrap URL-normalising wrappers, e.g. str(HttpUrl(f"...")).
     if isinstance(node, ast.Call):
         fname = (node.func.id if isinstance(node.func, ast.Name)
                  else getattr(node.func, "attr", None))
+        # A module-level helper that just returns the service root, e.g.
+        # url = f"{base_path(self, self.view_server)}/metadata-elements/{guid}".
+        # Its args (self, view_server) are irrelevant here - both already
+        # collapse to "" / "{}" - so look it up by name, not by call shape.
+        if fname in roots:
+            return roots[fname]
+        if fname in QUERY_STRING_FUNCS:
+            return ""
+        # Unwrap URL-normalising wrappers, e.g. str(HttpUrl(f"...")).
         if fname in URL_WRAPPERS and node.args:
             return _flatten(node.args[0], roots)
         # e.g. name.lower() - name the receiver so lint can classify it
@@ -350,6 +368,29 @@ def resolve_roots(tree: ast.AST) -> dict[str, str]:
     return roots
 
 
+def resolve_module_root_funcs(tree: ast.Module) -> dict[str, str]:
+    """Resolve module-level helper functions that just return the service root.
+
+    Several modules (metadata_expert, governance_officer, solution_architect)
+    define ``def base_path(client, view_server): return f"{client.platform_url}
+    /servers/{view_server}/api/open-metadata/<service>"`` and call it as
+    ``f"{base_path(self, self.view_server)}/..."``. Its own args are irrelevant
+    - only the literal path segments in its return value matter - so this
+    resolves by function name for lookup in ``_flatten``'s Call handling.
+    """
+    funcs: dict[str, str] = {}
+    for node in tree.body:
+        if not isinstance(node, ast.FunctionDef):
+            continue
+        returns = [n for n in ast.walk(node) if isinstance(n, ast.Return) and n.value is not None]
+        if len(returns) != 1:
+            continue
+        value = _flatten(returns[0].value, {})
+        if "/open-metadata/" in value:
+            funcs[node.name] = value
+    return funcs
+
+
 def parse_py_file(filepath: str, helper_verbs: dict[str, str],
                   helper_bodies: dict[str, str] | None = None) -> dict[str, PyMethod]:
     content = open(filepath, encoding="utf-8").read()
@@ -360,6 +401,7 @@ def parse_py_file(filepath: str, helper_verbs: dict[str, str],
         return {}
 
     roots = resolve_roots(tree)
+    roots.update(resolve_module_root_funcs(tree))
     methods: dict[str, PyMethod] = {}
     sync_names: list[str] = []
 
@@ -384,11 +426,33 @@ def parse_py_file(filepath: str, helper_verbs: dict[str, str],
                 if names:
                     body_class = frozenset(names)
 
+        # Local variables assigned a URL prefix inside the method body, rather
+        # than in __init__ (resolve_roots only sees self.<attr> assignments
+        # there) - covers two shapes seen in the OMVS clients:
+        #   base = f"{self.platform_url}/servers/{...}/api/open-metadata/..."
+        #   possible_query_params = query_string([...])
+        # both later interpolated straight into the url f-string. Scoped to
+        # this function only.
+        fn_roots = dict(roots)
+        for node in ast.walk(fn):
+            if not (isinstance(node, ast.Assign) and len(node.targets) == 1
+                    and isinstance(node.targets[0], ast.Name)):
+                continue
+            target = node.targets[0].id
+            if isinstance(node.value, ast.Call):
+                callee = (node.value.func.id if isinstance(node.value.func, ast.Name) else None)
+                if callee in QUERY_STRING_FUNCS:
+                    fn_roots[target] = ""
+            else:
+                value = _flatten(node.value, fn_roots)
+                if "/open-metadata/" in value:
+                    fn_roots[target] = value
+
         for node in ast.walk(fn):
             # url = ...
             if (raw_url is None and isinstance(node, ast.Assign)
                     and any(isinstance(t, ast.Name) and t.id == "url" for t in node.targets)):
-                raw_url = _flatten(node.value, roots)
+                raw_url = _flatten(node.value, fn_roots)
                 lint = lint_url(raw_url)
                 path = canon_path(raw_url)
 

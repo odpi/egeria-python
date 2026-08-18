@@ -216,7 +216,7 @@ class DataDiscovery(ServerClient):
         ```
         """
         url = f"{self.platform_url}/servers/{self.view_server}/api/open-metadata/data-discovery/annotations/from-template"
-        return await self._async_create_element_body_request(url, "AnnotationProperties", body)
+        return await self._async_create_element_from_template(url, body)
 
     def create_annotation_from_template(self, body: dict | TemplateRequestBody) -> str:
         """Create an annotation from a template.

@@ -1834,7 +1834,7 @@ class GlossaryManager(CollectionManager):
 
     @dynamic_catch
     async def _async_remove_is_abstract_concept(
-            self, term_guid: str, body: Optional[dict | DeleteClassificationRequestBody] = None,
+            self, term_guid: str, body: Optional[dict | DeleteElementRequestBody] = None,
             ) -> None:
         """Remove the abstract concept designation from the glossary term. Async Version.
 
@@ -1876,12 +1876,12 @@ class GlossaryManager(CollectionManager):
             f"{self.platform_url}/servers/{self.view_server}/api/open-metadata/glossary-manager/glossaries/"
             f"terms/{term_guid}/is-abstract-concept/delete"
         )
-        await self._async_delete_classification_request(url, body)
+        await self._async_delete_element_request(url, body)
         logger.info(f"Removed AbstractConcept classification to {term_guid}")
 
     @dynamic_catch
     def remove_is_abstract_concept(
-            self, term_guid: str, body: Optional[dict | DeleteClassificationRequestBody] = None,
+            self, term_guid: str, body: Optional[dict | DeleteElementRequestBody] = None,
             ) -> None:
         """Remove the abstract concept designation from the glossary term.
 
@@ -2026,7 +2026,7 @@ class GlossaryManager(CollectionManager):
 
     @dynamic_catch
     async def _async_remove_is_context_definition(
-            self, term_guid: str, body: Optional[dict | DeleteClassificationRequestBody] = None,
+            self, term_guid: str, body: Optional[dict | DeleteRelationshipRequestBody] = None,
             ) -> None:
         """Remove the context definition designation from the glossary term. Async Version.
 
@@ -2067,12 +2067,12 @@ class GlossaryManager(CollectionManager):
             f"{self.platform_url}/servers/{self.view_server}/api/open-metadata/glossary-manager/glossaries/"
             f"terms/{term_guid}/is-context-definition/delete"
         )
-        await self._async_delete_classification_request(url, body)
+        await self._async_delete_relationship_request(url, body)
         logger.info(f"Removed ContextDefinition classification to {term_guid}")
 
     @dynamic_catch
     def remove_is_context_definition(
-            self, term_guid: str, body: Optional[dict | DeleteClassificationRequestBody] = None,
+            self, term_guid: str, body: Optional[dict | DeleteRelationshipRequestBody] = None,
             ) -> None:
         """Remove the context definition designation from the glossary term.
 
@@ -2407,7 +2407,7 @@ class GlossaryManager(CollectionManager):
 
     @dynamic_catch
     async def _async_remove_activity_description(
-            self, term_guid: str, body: Optional[dict | DeleteClassificationRequestBody] = None,
+            self, term_guid: str, body: Optional[dict | DeleteRelationshipRequestBody] = None,
             ) -> None:
         """Remove the activity designation from the glossary term. Async Version.
 
@@ -2449,12 +2449,12 @@ class GlossaryManager(CollectionManager):
             f"{self.platform_url}/servers/{self.view_server}/api/open-metadata/glossary-manager/glossaries/"
             f"terms/{term_guid}/is-activity/remove"
         )
-        await self._async_delete_classification_request(url, body)
+        await self._async_delete_relationship_request(url, body)
         logger.info(f"Removed ActivityDescription classification to {term_guid}")
 
     @dynamic_catch
     def remove_activity_description(
-            self, term_guid: str, body: Optional[dict | DeleteClassificationRequestBody] = None,
+            self, term_guid: str, body: Optional[dict | DeleteRelationshipRequestBody] = None,
             ) -> None:
         """Remove the activity designation from the glossary term.
 

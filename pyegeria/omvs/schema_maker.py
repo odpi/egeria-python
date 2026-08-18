@@ -20,6 +20,7 @@ from pyegeria.models import (
     SearchStringRequestBody,
     GetRequestBody,
     ReferenceableProperties,
+    MetadataSourceRequestBody,
 )
 from pyegeria.view.output_formatter import (
     populate_common_columns,
@@ -130,12 +131,12 @@ class SchemaMaker(ServerClient):
 
     @dynamic_catch
     async def _async_delete_schema_type(
-        self, schema_type_guid: str, body: dict | DeleteElementRequestBody
+        self, schema_type_guid: str, body: dict | MetadataSourceRequestBody
     ) -> None:
         url = f"{self.platform_url}/servers/{self.view_server}/api/open-metadata/schema-maker/schema-types/{schema_type_guid}/delete"
-        await self._async_delete_element_body_request(url, body)
+        await self._async_metadata_source_body_request(url, body)
 
-    def delete_schema_type(self, schema_type_guid: str, body: dict | DeleteElementRequestBody) -> None:
+    def delete_schema_type(self, schema_type_guid: str, body: dict | MetadataSourceRequestBody) -> None:
         loop = asyncio.get_event_loop()
         loop.run_until_complete(self._async_delete_schema_type(schema_type_guid, body))
 
@@ -165,13 +166,13 @@ class SchemaMaker(ServerClient):
 
     @dynamic_catch
     async def _async_delete_schema_attribute(
-        self, schema_attribute_guid: str, body: dict | DeleteElementRequestBody
+        self, schema_attribute_guid: str, body: dict | MetadataSourceRequestBody
     ) -> None:
         url = f"{self.platform_url}/servers/{self.view_server}/api/open-metadata/schema-maker/schema-attributes/{schema_attribute_guid}/delete"
-        await self._async_delete_element_body_request(url, body)
+        await self._async_metadata_source_body_request(url, body)
 
     def delete_schema_attribute(
-        self, schema_attribute_guid: str, body: dict | DeleteElementRequestBody
+        self, schema_attribute_guid: str, body: dict | MetadataSourceRequestBody
     ) -> None:
         loop = asyncio.get_event_loop()
         loop.run_until_complete(self._async_delete_schema_attribute(schema_attribute_guid, body))

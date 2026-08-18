@@ -376,14 +376,12 @@ class MyProfile(AssetMaker):
             Egeria errors.
         """
         url = self.my_profile_command_root
-        # response = await self._async_get_request_body_request(url=url, _type="Actor",
-        #                                                       _gen_output=self._generate_my_profile_output,
-        #                                                       output_format=output_format, report_spec=report_spec,
-        #                                                       body=body,**kwargs)
-        if body is None:
-            response = await self._async_make_request("POST", url)
-        else:
-            response = await self._async_make_request("POST", url, body_slimmer(body))
+        # Egeria-api-my-profile.http documents this endpoint as a plain GET
+        # with no request body -- it derives the profile from the bearer
+        # token, not from filter criteria. The `body`/GetRequestBody
+        # parameter is accepted for signature consistency with sibling
+        # methods but intentionally unused here.
+        response = await self._async_make_request("GET", url)
         elements = response.json().get("element", NO_ELEMENTS_FOUND)
         if isinstance(elements, dict):
             self.my_profile_guid = elements.get("elementHeader", {}).get("guid")
