@@ -522,6 +522,16 @@ def audit(service_filter: str | None, report_path: str, quiet: bool,
         svc = os.path.basename(pf).replace(".py", "").replace("_omvs", "").replace("_", "-")
         py_by_service[svc] = parse_py_file(pf, helper_verbs, helper_bodies)
 
+    # feedback-manager has no dedicated pyegeria/omvs/*.py module - Egeria's
+    # comment/tag/like/rating/note-log API is implemented once, directly on
+    # the shared ServerClient base class in _server_client.py, and inherited
+    # by every OMVS subclient rather than duplicated per-module. Merge those
+    # methods into the feedback-manager bucket so they're checked as that
+    # service's own coverage, not reported as an entire missing module.
+    if os.path.exists(SERVER_CLIENT):
+        shared = parse_py_file(SERVER_CLIENT, helper_verbs, helper_bodies)
+        py_by_service.setdefault("feedback-manager", {}).update(shared)
+
     flat = {m: (svc, d) for svc, ms in py_by_service.items() for m, d in ms.items()}
 
     # Reverse index: (verb, path) -> [(svc, method_name), ...]. Name-based

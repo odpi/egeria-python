@@ -1,15 +1,15 @@
 # OMVS Audit Report
 
 Ground truth: `pyegeria/http clients` (40 collections)
-Subject: `pyegeria/omvs` (43 modules)
+Subject: `pyegeria/omvs` (44 modules)
 
 | Result | Count |
 |---|---|
-| OK | 652 |
+| OK | 688 |
 | Mismatch (verb/path/body) | 7 |
-| Missing | 106 |
-| Renamed (implemented, verb+path matches under a different name) | 182 |
-| Found in another module | 13 |
+| Missing | 63 |
+| Renamed (implemented, verb+path matches under a different name) | 184 |
+| Found in another module | 18 |
 | URL lint | 0 |
 
 ## Duplicate endpoints (same verb + path)
@@ -19,12 +19,36 @@ _Review only - cross-service overlap is often intentional._
 - `GET /my-profile`
   - `my-profile.py`: `_async_get_my_profile`
   - `my-profile.py`: `_async_get_my_profile_by_get`
+- `GET /valid-metadata/get-valid-metadata-values/{}`
+  - `valid-metadata.py`: `_async_get_valid_metadata_values`
+  - `feedback-manager.py`: `_async_get_valid_metadata_values`
 - `POST /automated-curation/governance-action-types/initiate`
   - `automated-curation.py`: `_async_initiate_gov_action_type`
   - `automated-curation.py`: `_async_initiate_survey`
+- `POST /classification-explorer/elements/by-exact-property-value`
+  - `classification-explorer.py`: `_async_get_elements_by_property_value`
+  - `feedback-manager.py`: `_async_get_elements_by_property_value`
 - `POST /classification-explorer/elements/by-ownership`
   - `classification-explorer.py`: `_async_get_owners_elements`
   - `classification-explorer.py`: `_async_get_subject_area_members`
+- `POST /classification-explorer/elements/{}`
+  - `classification-explorer.py`: `_async_get_element_by_guid`
+  - `feedback-manager.py`: `_async_get_element_by_guid_`
+- `POST /classification-explorer/elements/{}/by-relationship/{}/with-exact-property-value`
+  - `classification-explorer.py`: `_async_get_related_elements_with_property_value`
+  - `feedback-manager.py`: `_async_get_related_elements_with_property_value`
+- `POST /classification-explorer/elements/{}/search-keywords`
+  - `classification-explorer.py`: `_async_add_search_keyword_to_element`
+  - `feedback-manager.py`: `_async_add_search_keyword_to_element`
+- `POST /classification-explorer/relationships/with-exact-property-value`
+  - `classification-explorer.py`: `_async_get_relationships_with_property_value`
+  - `feedback-manager.py`: `_async_get_relationships_with_property_value`
+- `POST /classification-explorer/search-keywords/{}/remove`
+  - `classification-explorer.py`: `_async_remove_search_keyword_from_element`
+  - `feedback-manager.py`: `_async_remove_search_keyword`
+- `POST /classification-explorer/search-keywords/{}/update`
+  - `classification-explorer.py`: `_async_update_search_keyword`
+  - `feedback-manager.py`: `_async_update_search_keyword`
 - `POST /collection-manager/collections`
   - `collection-manager.py`: `_async_create_collection`
   - `collection-manager.py`: `_async_create_data_spec_collection`
@@ -72,6 +96,9 @@ _Review only - cross-service overlap is often intentional._
 - `POST /metadata-expert/metadata-elements/{}/history`
   - `metadata-expert.py`: `_async_get_element_history`
   - `metadata-expert.py`: `_async_get_metadata_element_history`
+- `POST /metadata-expert/metadata-elements/{}/update-effectivity`
+  - `metadata-expert.py`: `_async_update_metadata_element_effectivity`
+  - `feedback-manager.py`: `_async_update_element_effectivity`
 - `POST /metadata-expert/related-elements`
   - `collection-manager.py`: `_async_link_saved_query_to_results_set`
   - `metadata-expert.py`: `_async_create_related_elements`
@@ -155,7 +182,7 @@ _Review only - cross-service overlap is often intentional._
 - getTechnologyTypeDetail: RENAMED -> `automated-curation.py`:`_async_get_tech_type_detail`
 - getTechnologyTypeHierarchy: RENAMED -> `automated-curation.py`:`_async_get_tech_type_hierarchy`
 - getTechnologyTypeTemplates: RENAMED -> `automated-curation.py`:`_async_get_technology_type_elements`
-- createElementFromTemplate: RENAMED -> `automated-curation.py`:`_async_create_elem_from_template`
+- createElementFromTemplate: ELSEWHERE -> `feedback-manager.py`
 - getElementFromTemplate: RENAMED -> `automated-curation.py`:`_async_create_elem_from_template`
 - createElementFromTemplate - Marquez endpoint: RENAMED -> `automated-curation.py`:`_async_create_elem_from_template`
 - initiateGovernanceActionType: RENAMED -> `automated-curation.py`:`_async_initiate_gov_action_type`, `automated-curation.py`:`_async_initiate_survey`
@@ -199,14 +226,14 @@ _Review only - cross-service overlap is often intentional._
 - removeScopeFromElement: RENAMED -> `classification-explorer.py`:`_async_clear_scope_from_element`
 - licenseElement: ELSEWHERE -> `governance-officer.py`
 - certifyElement: ELSEWHERE -> `governance-officer.py`
-- getSearchKeywordByGUID: MISSING  (`POST /classification-explorer/search-keywords/{}/retrieve`)
-- getSearchKeywordsByKeyword: MISSING  (`POST /classification-explorer/search-keywords/by-keyword`)
-- findSearchKeywords: MISSING  (`POST /classification-explorer/search-keywords/by-search-string`)
-- getRootElementByGUID: RENAMED -> `classification-explorer.py`:`_async_get_element_by_guid`
+- getSearchKeywordByGUID: ELSEWHERE -> `feedback-manager.py`
+- getSearchKeywordsByKeyword: RENAMED -> `feedback-manager.py`:`_async_get_search_keyword_by_keyword`
+- findSearchKeywords: ELSEWHERE -> `feedback-manager.py`
+- getRootElementByGUID: RENAMED -> `classification-explorer.py`:`_async_get_element_by_guid`, `feedback-manager.py`:`_async_get_element_by_guid_`
 - getRootElementByUniqueName: RENAMED -> `classification-explorer.py`:`_async_get_element_by_unique_name`
 - getMetadataElementGUIDByUniqueName: ELSEWHERE -> `metadata-expert.py`
 - getRootElementsByType: RENAMED -> `classification-explorer.py`:`_async_get_elements`
-- getRootElementsByPropertyValue: RENAMED -> `classification-explorer.py`:`_async_get_elements_by_property_value`
+- getRootElementsByPropertyValue: RENAMED -> `classification-explorer.py`:`_async_get_elements_by_property_value`, `feedback-manager.py`:`_async_get_elements_by_property_value`
 - findRootElementsByPropertyValue: RENAMED -> `classification-explorer.py`:`_async_find_elements_by_property_value`
 - getRootElementsByCategory: MISSING  (`POST /classification-explorer/elements/by-category`)
 - findRootAuthoredElements: RENAMED -> `classification-explorer.py`:`_async_find_authored_elements`
@@ -215,7 +242,7 @@ _Review only - cross-service overlap is often intentional._
 - getRootElementsByClassificationWithPropertyValue: RENAMED -> `classification-explorer.py`:`_async_get_elements_by_classification_with_property_value`
 - findRootElementsByClassificationWithPropertyValue: RENAMED -> `classification-explorer.py`:`_async_find_elements_by_classification_with_property_value`
 - getRelatedRootElements: RENAMED -> `classification-explorer.py`:`_async_get_related_elements`
-- getRelatedRootElementsWithPropertyValue: RENAMED -> `classification-explorer.py`:`_async_get_related_elements_with_property_value`
+- getRelatedRootElementsWithPropertyValue: RENAMED -> `classification-explorer.py`:`_async_get_related_elements_with_property_value`, `feedback-manager.py`:`_async_get_related_elements_with_property_value`
 - findRelatedRootElementsWithPropertyValue: RENAMED -> `classification-explorer.py`:`_async_find_related_elements_with_property_value`
 - getRelationshipByGUID: ELSEWHERE -> `metadata-expert.py`
 
@@ -276,44 +303,8 @@ _Review only - cross-service overlap is often intentional._
 
 ### Service: feedback-manager
 
-- addCommentToElement: MISSING  (`POST /feedback-manager/elements/{}/comments`)
-- updateComment: MISSING  (`POST /feedback-manager/comments/{}/update`)
-- setupAcceptedAnswer: MISSING  (`POST /feedback-manager/comments/questions/{}/answers/{}`)
-- clearAcceptedAnswer: MISSING  (`POST /feedback-manager/comments/questions/{}/answers/{}/remove`)
-- removeCommentFromElement: MISSING  (`POST /feedback-manager/comments/{}/remove`)
-- getCommentByGUID: MISSING  (`POST /feedback-manager/comments/{}/retrieve`)
-- getAttachedComments: MISSING  (`POST /feedback-manager/elements/{}/comments/retrieve`)
-- findComments: MISSING  (`POST /feedback-manager/comments/by-search-string`)
-- addLikeToElement: MISSING  (`POST /feedback-manager/elements/{}/likes`)
-- removeLikeFromElement: MISSING  (`POST /feedback-manager/elements/{}/likes/remove`)
-- getAttachedLikes: MISSING  (`POST /feedback-manager/elements/{}/likes/retrieve`)
-- addRatingToElement: MISSING  (`POST /feedback-manager/elements/{}/ratings`)
-- removeRatingFromElement: MISSING  (`POST /feedback-manager/elements/{}/ratings/remove`)
-- getAttachedRatings: MISSING  (`POST /feedback-manager/elements/{}/ratings/retrieve`)
-- createInformalTag: MISSING  (`POST /feedback-manager/tags`)
-- updateTagDescription: MISSING  (`POST /feedback-manager/tags/{}/update`)
-- deleteTag: MISSING  (`POST /feedback-manager/tags/{}/remove`)
-- getTag: MISSING  (`POST /feedback-manager/tags/{}/retrieve`)
-- getTagsByName: MISSING  (`POST /feedback-manager/tags/by-name`)
-- findTags: MISSING  (`POST /feedback-manager/tags/by-search-string`)
-- findMyTags: MISSING  (`POST /feedback-manager/tags/private/by-search-string`)
-- addTagToElement: MISSING  (`POST /feedback-manager/elements/{}/tags/{}`)
-- getElementsByTag: MISSING  (`POST /feedback-manager/elements/by-tag/{}/retrieve`)
-- getAttachedTags: MISSING  (`POST /feedback-manager/elements/{}/tags/retrieve`)
-- removeTagFromElement: MISSING  (`POST /feedback-manager/elements/{}/tags/{}/remove`)
-- createNoteLog: MISSING  (`POST /feedback-manager/elements/{}/note-logs`)
-- updateNoteLog: MISSING  (`POST /feedback-manager/note-logs/{}`)
-- removeNoteLog: MISSING  (`POST /feedback-manager/note-logs/{}/remove`)
-- findNoteLogs: MISSING  (`POST /feedback-manager/note-logs/by-search-string`)
-- getNoteLogsByName: MISSING  (`POST /feedback-manager/note-logs/by-name`)
-- getNoteLogsForElement: MISSING  (`POST /feedback-manager/elements/{}/note-logs/retrieve`)
-- getNoteLogByGUID: MISSING  (`POST /feedback-manager/note-logs/{}/retrieve`)
-- createNote: MISSING  (`POST /feedback-manager/assets`)
-- updateNote: MISSING  (`POST /feedback-manager/assets/{}/update`)
-- removeNote: MISSING  (`POST /feedback-manager/assets/{}/delete`)
-- findNotes: MISSING  (`POST /feedback-manager/assets/by-search-string`)
-- getNotesForNoteLog: MISSING  (`POST /feedback-manager/note-logs/{}/notes/retrieve`)
-- getNoteByGUID: MISSING  (`POST /feedback-manager/assets/{}/retrieve`)
+- getTag: RENAMED -> `feedback-manager.py`:`_async_get_tag_by_guid`
+- getNoteLogsForElement: RENAMED -> `feedback-manager.py`:`_async_get_attached_note_logs`
 
 ### Service: glossary-manager
 
@@ -364,7 +355,7 @@ _Review only - cross-service overlap is often intentional._
 
 - createMetadataElementInStore: RENAMED -> `metadata-expert.py`:`_async_create_metadata_element`
 - updateMetadataElementInStore: RENAMED -> `metadata-expert.py`:`_async_update_metadata_element_properties`
-- updateMetadataElementEffectivityInStore: RENAMED -> `metadata-expert.py`:`_async_update_metadata_element_effectivity`
+- updateMetadataElementEffectivityInStore: RENAMED -> `metadata-expert.py`:`_async_update_metadata_element_effectivity`, `feedback-manager.py`:`_async_update_element_effectivity`
 - deleteMetadataElementInStore: RENAMED -> `metadata-expert.py`:`_async_delete_metadata_element`
 - archiveMetadataElementInStore: RENAMED -> `metadata-expert.py`:`_async_archive_metadata_element`
 - reclassifyMetadataElementInStore: RENAMED -> `metadata-expert.py`:`_async_reclassify_metadata_element`
@@ -414,14 +405,14 @@ _Review only - cross-service overlap is often intentional._
 - getSolutionBlueprintsByName: ELSEWHERE -> `solution-architect.py`
 - getTechnologyTypeDetail: RENAMED -> `automated-curation.py`:`_async_get_tech_type_detail`
 - getTechnologyTypeTemplates: RENAMED -> `automated-curation.py`:`_async_get_technology_type_elements`
-- createElementFromTemplate: RENAMED -> `automated-curation.py`:`_async_create_elem_from_template`
+- createElementFromTemplate: ELSEWHERE -> `feedback-manager.py`
 - getGovernanceActionProcessesByName: MISSING  (`POST /product-catalog/governance-definitions/by-name`)
 - getGovernanceActionProcessGraph: ELSEWHERE -> `governance-officer.py`
 - initiateGovernanceActionProcess: RENAMED -> `automated-curation.py`:`_async_initiate_gov_action_process`
 - findSubscriptions: RENAMED -> `collection-manager.py`:`_async_find_collections`
 - Get My Profile: MISSING  (`POST /my-profile`)
 - getCommunitiesByName: ELSEWHERE -> `community-matters.py`
-- getNoteLogsByName: MISSING  (`POST /feedback-manager/note-logs/by-name`)
+- getNoteLogsByName: ELSEWHERE -> `feedback-manager.py`
 
 ### Service: product-manager
 
@@ -454,7 +445,7 @@ _Review only - cross-service overlap is often intentional._
 - restartConnectors: RENAMED -> `runtime-manager.py`:`_async_restart_connector`
 - refreshIntegrationGroupConfig: MISSING  (`GET /runtime-manager/integration-daemons/{}/integration-groups/{}/refresh-config`)
 - refreshConfig: MISSING  (`GET /runtime-manager/engine-hosts/{}/governance-engines/{}/refresh-config`)
-- addOpenMetadataArchiveFile: MISSING  (`POST /runtime-manager/omag-servers/{}/instance/load/open-metadata-archives/file`)
+- addOpenMetadataArchiveFile: RENAMED -> `feedback-manager.py`:`_async_add_archive_file`
 - addOpenMetadataArchiveContent: MISSING  (`POST /runtime-manager/omag-servers/{}/instance/load/open-metadata-archives/archive-content`)
 - createMetadataRepositoryCohort: MISSING  (`POST /runtime-manager/metadata-repository-cohorts`)
 - createMetadataRepositoryCohortFromTemplate: MISSING  (`POST /runtime-manager/metadata-repository-cohorts/from-template`)

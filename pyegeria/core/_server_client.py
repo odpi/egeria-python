@@ -2660,6 +2660,79 @@ class ServerClient(BaseServerClient):
         return response
 
     @dynamic_catch
+    async def _async_get_note_log_by_guid(
+            self,
+            guid: str,
+            graph_query_depth: int = 3,
+            output_format: str = "JSON",
+            report_spec: Optional[str | dict] = None,
+            body: Optional[dict | GetRequestBody] = None,
+            **kwargs
+    ) -> dict | str:
+        """
+        Return the requested note log. Async Version.
+
+        Parameters
+        ----------
+        guid: str
+            - unique identifier for the note log object.
+        body
+            - optional effective time
+
+        Returns
+        -------
+        note log properties
+
+        Raises
+        ------
+        PyegeriaException
+
+        """
+
+        url = f"{self.command_root}feedback-manager/note-logs/{guid}/retrieve"
+        response = await self._async_get_guid_request(url, _type="NoteLog",
+                                                      _gen_output=self._generate_feedback_output,
+                                                      graph_query_depth=graph_query_depth,
+                                                      output_format=output_format, report_spec=report_spec,
+                                                      body=body, **kwargs)
+
+        return response
+
+    @dynamic_catch
+    def get_note_log_by_guid(
+            self,
+            guid: str,
+            graph_query_depth: int = 3,
+            output_format: str = "JSON",
+            report_spec: Optional[str | dict] = None,
+            body: Optional[dict | GetRequestBody] = None,
+            **kwargs
+    ) -> dict | str:
+        """
+        Return the requested note log.
+
+        Parameters
+        ----------
+        guid: str
+            - unique identifier for the note log object.
+        body
+            - optional effective time
+
+        Returns
+        -------
+        note log properties
+
+        Raises
+        ------
+        PyegeriaException
+        """
+        loop = asyncio.get_event_loop()
+        response = loop.run_until_complete(
+            self._async_get_note_log_by_guid(guid, graph_query_depth, output_format, report_spec, body, **kwargs)
+        )
+        return response
+
+    @dynamic_catch
     async def _async_get_attached_note_logs(
             self,
             element_guid: str,
@@ -4555,7 +4628,7 @@ class ServerClient(BaseServerClient):
         ------
         PyegeriaException
         """
-        url = f"{self.command_root}feedback-manager/elements/by-tag/{tag_guid}"
+        url = f"{self.command_root}feedback-manager/elements/by-tag/{tag_guid}/retrieve"
         return await self._async_get_results_body_request(url, _type="Referenceable",
                                                          _gen_output=self._generate_feedback_output,
                                                          graph_query_depth=graph_query_depth,
@@ -7417,10 +7490,10 @@ class ServerClient(BaseServerClient):
             }
            """
 
-        url = f"{self.command_root}/metadata-elements/{guid}/update-effectivity"
+        url = f"{self.command_root}metadata-expert/metadata-elements/{guid}/update-effectivity"
         if body is None:
             body = {
-                "class": "UpdateEffectivityRequestBody",
+                "class": "UpdateEffectivityDatesRequestBody",
                 "effectiveTime": effectivity_time
             }
         logger.info(body)
