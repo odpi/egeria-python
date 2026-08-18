@@ -661,7 +661,7 @@ class TestExternalReferences:
             assert ext_id_guid is not None
 
             # 2. Get External Identifier by GUID
-            ext_id = p_client.get_external_identifier_by_guid(ext_id_guid)
+            ext_id = p_client.get_external_identifiers_by_guid(ext_id_guid)
             assert ext_id is not None
 
             # 3. Update External Identifier

@@ -67,6 +67,7 @@ class LocationArena(ServerClient):
         self.ref_location_command_base: str = (
             f"{self.platform_url}/servers/{self.view_server}/api/open-metadata/location-arena"
         )
+        self.command_root = self.ref_location_command_base
         self.url_marker = 'locations'
 
     @dynamic_catch
@@ -421,9 +422,9 @@ class LocationArena(ServerClient):
         Parameters
         ----------
         location1_guid: str
-            The unique identifier of the subscriber.
+            The unique identifier of the first location.
         location2_guid: str
-            The unique identifier of the subscription.
+            The unique identifier of the second location.
         body: dict | DeleteRelationshipRequestBody, optional, default = None
             A structure representing the details of the relationship.
     
@@ -453,9 +454,9 @@ class LocationArena(ServerClient):
           "forDuplicateProcessing": false
         }
         """
-        url = (f"{self.command_root}/elements/{location1_guid}/locations/{location2_guid}/detach")
+        url = (f"{self.command_root}/locations/{location1_guid}/adjacent-locations/{location2_guid}/detach")
 
-        await self._async_delete_element_request(url, body)
+        await self._async_delete_relationship_request(url, body)
         logger.info(f"Unlink {location1_guid} from location {location2_guid}")
 
     def detach_peer_locations(self, location1_guid: str, location2_guid: str,
@@ -465,9 +466,9 @@ class LocationArena(ServerClient):
         Parameters
         ----------
         location1_guid: str
-            The unique identifier of the subscriber.
+            The unique identifier of the first location.
         location2_guid: str
-            The unique identifier of the subscription.
+            The unique identifier of the second location.
         body: dict | DeleteRelationshipRequestBody, optional, default = None
             A structure representing the details of the relationship.
 
@@ -644,9 +645,9 @@ class LocationArena(ServerClient):
         }
         """
         url = (
-            f"{self.ref_location_command_base}/locations{location_guid}/nested-locations/{nested_location_guid}/detach")
+            f"{self.ref_location_command_base}/locations/{location_guid}/nested-locations/{nested_location_guid}/detach")
 
-        await self._async_delete_element_request(url, body)
+        await self._async_delete_relationship_request(url, body)
         logger.info(f"Detached location {location_guid} from nested location {nested_location_guid}")
 
     def detach_nested_location(self, location_guid: str, nested_location_guid: str,
@@ -740,7 +741,7 @@ class LocationArena(ServerClient):
 
         """
 
-        url = f"{self.ref_location_command_base}elements/{element_guid}/known-locations/{location_guid}/attach"
+        url = f"{self.ref_location_command_base}/elements/{element_guid}/known-locations/{location_guid}/attach"
         await self._async_new_relationship_request(url, ["KnownLocationProperties"], body)
         logger.info(f"Linking element {element_guid} to location {location_guid}")
 
@@ -835,9 +836,9 @@ class LocationArena(ServerClient):
           "forDuplicateProcessing": false
         }
         """
-        url = (f"{self.command_root}/location_arena/elements/{element_guid}/known-locations/{location_guid}/detach")
+        url = (f"{self.command_root}/elements/{element_guid}/known-locations/{location_guid}/detach")
 
-        await self._async_delete_element_request(url, body)
+        await self._async_delete_relationship_request(url, body)
         logger.info(f"Detached element {element_guid} from location {location_guid}")
 
     def detach_known_location(self, element_guid: str, location_guid: str,

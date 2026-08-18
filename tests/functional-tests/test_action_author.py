@@ -58,3 +58,33 @@ class TestActionAuthor:
             print("Skipping test due to connection error")
         finally:
             aa_client.close_session()
+
+    def test_get_governance_action_process(self):
+        """Test getting governance action process"""
+        aa_client = ActionAuthor(self.good_view_server_1, self.good_platform1_url, user_id=self.good_user_2)
+        try:
+            aa_client.create_egeria_bearer_token(self.good_user_2, USER_PWD)
+            try:
+                aa_client.get_governance_action_process("invalid_guid")
+            except (PyegeriaInvalidParameterException, PyegeriaNotFoundException, PyegeriaAPIException):
+                pass
+
+        except PyegeriaConnectionException:
+            print("Skipping test due to connection error")
+        finally:
+            aa_client.close_session()
+
+    def test_get_governance_action_process_graph(self):
+        """Test getting governance action process graph"""
+        aa_client = ActionAuthor(self.good_view_server_1, self.good_platform1_url, user_id=self.good_user_2)
+        try:
+            aa_client.create_egeria_bearer_token(self.good_user_2, USER_PWD)
+            try:
+                aa_client.get_governance_action_process_graph("invalid_guid")
+            except (PyegeriaInvalidParameterException, PyegeriaNotFoundException, PyegeriaAPIException):
+                pass
+
+        except PyegeriaConnectionException:
+            print("Skipping test due to connection error")
+        finally:
+            aa_client.close_session()

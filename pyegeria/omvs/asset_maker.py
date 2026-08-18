@@ -1651,7 +1651,7 @@ class AssetMaker(ServerClient):
           "class" : "DeleteRelationshipRequestBody"
         }
         """
-        url = f"{self.asset_command_root}/integration-connectors/{integration_connector_guid}/catalog-targets/{metadata_element_guid}/detach"
+        url = f"{self.asset_command_root}/integration-connectors/{integration_connector_guid}/catalog-targets/{metadata_element_guid}/delete"
         await self._async_delete_relationship_request(url, body)
 
     @dynamic_catch
@@ -4825,7 +4825,7 @@ class AssetMaker(ServerClient):
         )
 
     @dynamic_catch
-    async def _async_get_actions_for_requestor(
+    async def _async_get_actions_for_requester(
         self,
         metadata_element_guid: str,
         activity_status_list: list[str] = ["IN_PROGRESS"],
@@ -4841,7 +4841,7 @@ class AssetMaker(ServerClient):
         **kwargs
     ) -> list | dict | str:
         """
-        Retrieve the "Actions" that are chained off of a requestor's element. Async version.
+        Retrieve the "Actions" that are chained off of a requester's element. Async version.
 
         Parameters
         ----------
@@ -4857,7 +4857,7 @@ class AssetMaker(ServerClient):
         -------
         list | dict | str
         """
-        url = f"{self.asset_command_root}/elements/{metadata_element_guid}/requested/actions"
+        url = f"{self.asset_command_root}/actions/by-requester/{metadata_element_guid}"
         return await self._async_activity_status_request(
             url,
             _type="Action",
@@ -4876,7 +4876,7 @@ class AssetMaker(ServerClient):
         )
 
     @dynamic_catch
-    def get_actions_for_requestor(
+    def get_actions_for_requester(
         self,
         metadata_element_guid: str,
         activity_status_list: list[str] = ["IN_PROGRESS"],
@@ -4892,7 +4892,7 @@ class AssetMaker(ServerClient):
         **kwargs
     ) -> list | dict | str:
         """
-        Retrieve the "Actions" that are chained off of a requestor's element. Sync version.
+        Retrieve the "Actions" that are chained off of a requester's element. Sync version.
 
         Parameters
         ----------
@@ -4923,7 +4923,7 @@ class AssetMaker(ServerClient):
         """
         loop = asyncio.get_event_loop()
         return loop.run_until_complete(
-            self._async_get_actions_for_requestor(
+            self._async_get_actions_for_requester(
                 metadata_element_guid=metadata_element_guid,
                 activity_status_list=activity_status_list,
                 graph_query_depth=graph_query_depth,

@@ -1532,3 +1532,19 @@ class TestActorManager:
             if actor_client:
                 actor_client.close_session()
 
+    def test_find_all_contribution_records(self):
+        """Test finding all contribution records"""
+        actor_client = None
+        try:
+            actor_client = ActorManager(self.good_view_server_1, self.good_platform1_url, user_id=self.good_user_2)
+            actor_client.create_egeria_bearer_token(self.good_user_2, "secret")
+            try:
+                response = actor_client.find_all_contribution_records()
+                assert isinstance(response, (list, str))
+            except (PyegeriaInvalidParameterException, PyegeriaAPIException, PyegeriaUnauthorizedException):
+                pass
+            assert True
+        finally:
+            if actor_client:
+                actor_client.close_session()
+

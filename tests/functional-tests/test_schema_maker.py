@@ -66,3 +66,35 @@ class TestSchemaMaker:
             print("Skipping test due to connection error")
         finally:
             sm_client.close_session()
+
+    def test_create_schema_type_from_template(self):
+        """Test creating a schema type from template"""
+        sm_client = SchemaMaker(self.good_view_server_1, self.good_platform1_url, user_id=self.good_user_2)
+        try:
+            sm_client.create_egeria_bearer_token(self.good_user_2, USER_PWD)
+            body = {
+                "class": "TemplateRequestBody",
+                "templateGUID": "template_guid",
+            }
+            try:
+                sm_client.create_schema_type_from_template(body)
+            except (PyegeriaInvalidParameterException, PyegeriaNotFoundException, PyegeriaAPIException):
+                pass
+        except PyegeriaConnectionException:
+            pass
+        finally:
+            sm_client.close_session()
+
+    def test_find_schema_attributes(self):
+        """Test finding schema attributes"""
+        sm_client = SchemaMaker(self.good_view_server_1, self.good_platform1_url, user_id=self.good_user_2)
+        try:
+            sm_client.create_egeria_bearer_token(self.good_user_2, USER_PWD)
+            try:
+                sm_client.find_schema_attributes("*")
+            except (PyegeriaInvalidParameterException, PyegeriaNotFoundException, PyegeriaAPIException):
+                pass
+        except PyegeriaConnectionException:
+            pass
+        finally:
+            sm_client.close_session()

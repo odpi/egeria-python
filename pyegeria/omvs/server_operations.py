@@ -191,7 +191,7 @@ class ServerOps(Platform):
         """
         loop = asyncio.get_event_loop()
         loop.run_until_complete(
-            self._async_add_archive_file(archive_connection, server)
+            self._async_add_archive(archive_connection, server)
         )
 
     #
@@ -221,7 +221,7 @@ class ServerOps(Platform):
         if server is None:
             server = self.server_name
 
-        url = self.admin_command_root + "/servers/" + server + "/instance/status"
+        url = self.ops_command_root + "servers/" + server + "/instance/status"
 
         response = await self._async_make_request("GET", url)
         return response
@@ -229,7 +229,7 @@ class ServerOps(Platform):
     def get_active_server_status(self, server: str = None) -> dict:
         """
         Get the status for the specified server.
-        /open-metadata/admin-services/servers/{server}/instance/status
+        /open-metadata/server-operations/servers/{server}/instance/status
 
         Parameters
         ----------
@@ -256,7 +256,7 @@ class ServerOps(Platform):
         self, server: str = None
     ) -> Response:
         """
-        List all known active servers on the associated platform.
+        List all active services for the specified server.
 
         /open-metadata/server-operations/servers/{server}/services
 
@@ -278,7 +278,7 @@ class ServerOps(Platform):
 
     def get_active_service_list_for_server(self, server: str = None) -> Response:
         """
-        List all known active servers on the associated platform.
+        List all active services for the specified server.
 
         /open-metadata/server-operations/servers/{server}/services
 

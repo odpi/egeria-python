@@ -2685,7 +2685,7 @@ class GovernanceOfficer(ServerClient):
 
 
     @dynamic_catch
-    async def _async_get_governance_process_graph(self, guid: str, element_type: Optional[str] = None,
+    async def _async_get_governance_action_process_graph(self, guid: str, element_type: Optional[str] = None,
                                                        body: Optional[dict | FilterRequestBody] = None,
                                                        output_format: str = "JSON",
                                                        report_spec: dict = None, **kwargs) -> dict | str:
@@ -2747,7 +2747,7 @@ class GovernanceOfficer(ServerClient):
         return response
 
     @dynamic_catch
-    def get_governance_process_graph(self, guid: str, element_type: Optional[str] = None, body: dict = None,
+    def get_governance_action_process_graph(self, guid: str, element_type: Optional[str] = None, body: dict = None,
                                           output_format: str = "JSON",
                                           report_spec: dict = None, **kwargs) -> dict | str:
 
@@ -2795,10 +2795,88 @@ class GovernanceOfficer(ServerClient):
        """
 
         loop = asyncio.get_event_loop()
-        response = loop.run_until_complete(self._async_get_governance_process_graph(guid, element_type, body,
+        response = loop.run_until_complete(self._async_get_governance_action_process_graph(guid, element_type, body,
                                                                                          output_format,
                                                                                          report_spec, **kwargs))
         return response
+
+    @dynamic_catch
+    async def _async_get_governance_action_process(
+        self,
+        guid: str,
+        element_type: Optional[str] = None,
+        output_format: str = "JSON",
+        report_spec: str | dict = None,
+        body: dict | GetRequestBody | None = None,
+        **kwargs
+    ) -> dict | list | str:
+        """Retrieve the governance action process metadata element with the supplied unique identifier. Async version.
+
+        Parameters
+        ----------
+        guid : str
+            The unique identifier of the governance action process.
+        element_type : str, optional
+            The element type. Defaults to None.
+        output_format : str, optional
+            The format of the output. Defaults to "JSON".
+        report_spec : str | dict, optional
+            The report specification. Defaults to None.
+        body : dict | GetRequestBody, optional
+            The request body. Defaults to None.
+
+        Returns
+        -------
+        dict | list | str
+            The governance action process.
+        """
+        url = f"{self.platform_url}/servers/{self.view_server}/api/open-metadata/governance-officer/governance-action-processes/{guid}/retrieve"
+        type = element_type if element_type else "GovernanceActionProcess"
+        return await self._async_get_guid_request(
+            url,
+            type,
+            self._generate_governance_definition_output,
+            output_format=output_format,
+            report_spec=report_spec,
+            body=body,
+            **kwargs
+        )
+
+    def get_governance_action_process(
+        self,
+        guid: str,
+        element_type: Optional[str] = None,
+        output_format: str = "JSON",
+        report_spec: str | dict = None,
+        body: dict | GetRequestBody | None = None,
+        **kwargs
+    ) -> dict | list | str:
+        """Retrieve the governance action process metadata element with the supplied unique identifier.
+
+        Parameters
+        ----------
+        guid : str
+            The unique identifier of the governance action process.
+        element_type : str, optional
+            The element type. Defaults to None.
+        output_format : str, optional
+            The format of the output. Defaults to "JSON".
+        report_spec : str | dict, optional
+            The report specification. Defaults to None.
+        body : dict | GetRequestBody, optional
+            The request body. Defaults to None.
+
+        Returns
+        -------
+        dict | list | str
+            The governance action process.
+        """
+        loop = asyncio.get_event_loop()
+        return loop.run_until_complete(
+            self._async_get_governance_action_process(
+                guid, element_type, output_format, report_spec, body, **kwargs
+            )
+        )
 
     @dynamic_catch
     async def _async_link_design_to_implementation(self, design_desc_guid: str, implementation_guid: str,

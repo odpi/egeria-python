@@ -796,6 +796,32 @@ class TestPlatform:
         finally:
             p_client.close_session()
 
+    def test_get_platform_organization(self):
+        try:
+            p_client = Platform(self.good_server_1, self.good_platform1_url, self.good_user_1)
+            p_client.create_egeria_bearer_token()
+            try:
+                org = p_client.get_platform_organization()
+                assert org is not None
+            except (PyegeriaAPIException, PyegeriaUnauthorizedException):
+                pass
+        finally:
+            if 'p_client' in locals():
+                p_client.close_session()
+
+    def test_get_registered_services(self):
+        try:
+            p_client = Platform(self.good_server_1, self.good_platform1_url, self.good_user_1)
+            p_client.create_egeria_bearer_token()
+            try:
+                services = p_client.get_registered_access_services()
+                assert isinstance(services, list)
+            except (PyegeriaAPIException, PyegeriaUnauthorizedException):
+                pass
+        finally:
+            if 'p_client' in locals():
+                p_client.close_session()
+
     def test_platform_services(self):
         server = self.good_server_2
         url = "https://127.0.0.1:9443"

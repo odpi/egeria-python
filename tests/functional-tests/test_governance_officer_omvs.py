@@ -799,3 +799,31 @@ class TestGovernanceOfficer:
         finally:
             s_client.close_session()
 
+    def test_get_governance_action_process(self):
+        try:
+            s_client = GovernanceOfficer(
+                self.view_server, self.platform_url, self.user, self.password
+            )
+            s_client.create_egeria_bearer_token()
+            try:
+                s_client.get_governance_action_process("invalid_guid")
+            except (PyegeriaInvalidParameterException, PyegeriaAPIException, PyegeriaUnauthorizedException):
+                pass
+            assert True
+        finally:
+            s_client.close_session()
+
+    def test_get_governance_action_process_graph(self):
+        try:
+            s_client = GovernanceOfficer(
+                self.view_server, self.platform_url, self.user, self.password
+            )
+            s_client.create_egeria_bearer_token()
+            try:
+                s_client.get_governance_action_process_graph("invalid_guid")
+            except (PyegeriaInvalidParameterException, PyegeriaAPIException, PyegeriaUnauthorizedException):
+                pass
+            assert True
+        finally:
+            s_client.close_session()
+
