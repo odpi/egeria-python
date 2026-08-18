@@ -28,12 +28,12 @@ class UserIdentitiesScreen(ModalScreen):
         self.user_password = user_password
         self.karma_points = karma_points
         self.user_identities = user_identities
+        self.log(f"UserIdentitiesScreen initialized for user: {self.user_name}, Karma Points: {self.karma_points}")
+        self.log(f"User identity input: {self.user_identities}")
 
     def on_mount(self) -> None:
         self.title = "My_Egeria User Identities Screen"
         self.sub_title = f"User Identities for {self.user_name}, Karma Points: {self.karma_points}"
-        self.log(f"UserIdentitiesScreen mounted for user: {self.user_name}, Karma Points: {self.karma_points}")
-        self.log(f"User identity input: {self.user_identities}")
         try:
             self.user_identity_datatable = self.query_one("#user_identity_datatable", DataTable)
             self.user_identity_datatable.clear(columns=False)
