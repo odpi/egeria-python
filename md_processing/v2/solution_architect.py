@@ -368,6 +368,15 @@ class SupplyChainProcessor(AsyncBaseCommandProcessor):
         om_type = spec.get("OM_TYPE")
 
         prop_body = set_element_prop_body(om_type or "InformationSupplyChain", qualified_name, attributes)
+        # InformationSupplyChainProperties-specific fields set_element_prop_body doesn't know
+        # about (confirmed against Egeria-api-solution-architect.http's createInformationSupplyChain/
+        # updateInformationSupplyChain worked examples -- ISSUE-64: these two were previously never
+        # read from attributes at all, so Purposes/Scope validated and processed with SUCCESS but
+        # were silently never persisted). Note the real wire property is "dataProcessingPurposes",
+        # not "purposes" -- the compact spec's "Purposes" attribute has no property_name override,
+        # so this can't be picked up generically; must be set explicitly here.
+        prop_body["dataProcessingPurposes"] = attributes.get('Purposes', {}).get('value')
+        prop_body["scope"] = attributes.get('Scope', {}).get('value')
 
         in_sc_guids = set(attributes.get('In Information Supply Chain', {}).get('guid_list', []))
         nested_sc_guids = set(attributes.get('Nested Information Supply Chains', {}).get('guid_list', []))
@@ -762,7 +771,11 @@ class SolutionLinkProcessor(AsyncBaseCommandProcessor):
                     logger.success(f"Updated existing SolutionLinkingWire {wire_guid} (label={label!r})")
                     return f"\n\n# {verb} {object_type}\n\nUpdated wire {wire_guid} between {id1} and {id2}"
                 else:
-                    await self.client._async_link_solution_linking_wire(id1, id2, body)
+                    new_wire_guid = await self.client._async_link_solution_linking_wire(id1, id2, body)
+                    if new_wire_guid:
+                        self.parsed_output["guid"] = new_wire_guid
+                        logger.success(f"Created new SolutionLinkingWire {new_wire_guid} between {id1} and {id2}")
+                        return f"\n\n# {verb} {object_type}\n\nCreated wire {new_wire_guid} between {id1} and {id2}"
             elif om_type == "InformationSupplyChainLink":
                 await self.client._async_link_peer_info_supply_chains(id1, id2, body)
             elif om_type == "SolutionComposition":

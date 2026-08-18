@@ -3195,7 +3195,7 @@ class ServerClient(BaseServerClient):
             context = {"issue": "Invalid display name and body not provided"}
             raise PyegeriaInvalidParameterException(context=context)
 
-        url = f"{self.command_root}feedback-manager/notes/{note_guid}"
+        url = f"{self.command_root}feedback-manager/assets/{note_guid}/update"
         await self._async_update_element_body_request(url, ['Note'], body)
 
     @dynamic_catch
@@ -7186,12 +7186,32 @@ class ServerClient(BaseServerClient):
 
     @dynamic_catch
     async def _async_new_relationship_request(self, url: str, prop: Optional[list[str]] = None,
-                                              body: Optional[dict | NewRelationshipRequestBody] = None) -> None:
+                                              body: Optional[dict | NewRelationshipRequestBody] = None) -> Optional[str]:
+        """Create a new relationship. Async version.
+
+        Returns
+        -------
+        str | None
+            The GUID of the newly created relationship, if the server returned one
+            (confirmed live: Egeria's relationship-create endpoints return
+            {"class": "GUIDResponse", "guid": "..."}). Previously discarded entirely
+            here -- every _async_link_X wrapper built on this shared helper was
+            silently unable to report the new relationship's own identity, which
+            matters most for MULTI_LINK relationship types (see
+            ValidMetadataManager.get_all_relationship_defs()'s relationshipCategory
+            field) where a caller needs that GUID to target this specific instance
+            later via Update/Detach, since there can be more than one relationship
+            of the same type between the same pair of elements. Existing callers
+            that ignore the return value are unaffected -- this is purely additive.
+            None if the server response had no "guid" key (e.g. some relationship-
+            create endpoints may not return one) or no body was ultimately sent.
+        """
         validated_body = self.validate_new_relationship_request(body, prop)
         if validated_body:
             json_body = validated_body.model_dump_json(indent=2, exclude_none=True)
             logger.info(json_body)
-            await self._async_make_request("POST", url, json_body)
+            response = await self._async_make_request("POST", url, json_body)
+            return response.json().get("guid")
         else:
             if prop:
                 prop_class = prop[0] if isinstance(prop, list) else prop
@@ -7201,9 +7221,11 @@ class ServerClient(BaseServerClient):
                         "class": prop_class
                     }
                 }
-                await self._async_make_request("POST", url, body)
+                response = await self._async_make_request("POST", url, body)
+                return response.json().get("guid")
             else:
-                await self._async_make_request("POST", url)
+                response = await self._async_make_request("POST", url)
+                return response.json().get("guid")
 
     @dynamic_catch
     async def _async_new_classification_request(self, url: str, prop: Optional[list[str]] = None,

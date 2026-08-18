@@ -1475,7 +1475,7 @@ class ReferenceDataManager(ServerClient):
 
     @dynamic_catch
     async def _async_link_valid_value_implementation(
-            self, vv_def_guid: str, element_guid: str, body: Optional[dict | NewRelationshipRequestBody] = None) -> None:
+            self, vv_def_guid: str, element_guid: str, body: Optional[dict | NewRelationshipRequestBody] = None) -> Optional[str]:
         """ Link a valid value definition to an element that implements it. Async version.
 
         Parameters
@@ -1489,7 +1489,17 @@ class ReferenceDataManager(ServerClient):
 
         Returns
         ______
-        None
+        str | None
+            The GUID of the newly created ValidValuesImplementation
+            relationship (ValidValuesImplementation is MULTI_LINK -- see
+            pyegeria.core.relationship_multiplicity -- more than one may
+            exist between the same pair). None if the server didn't return
+            one. Note: unlike several other MULTI_LINK types, Egeria's own
+            REST API for this relationship (Egeria-api-reference-data.http)
+            only exposes pair-based attach/detach -- there is no
+            relationship-guid-targeted detach endpoint, so this GUID is
+            currently only useful for record-keeping, not for
+            _async_detach_valid_value_implementation.
 
         Raises
         ______
@@ -1518,12 +1528,13 @@ class ReferenceDataManager(ServerClient):
 
         """
         url = f"{self.ref_data_command_base}/valid-values/{vv_def_guid}/implementation/elements/{element_guid}/attach"
-        await self._async_new_relationship_request(url, ["ValidValuesImplementationProperties"], body)
+        guid = await self._async_new_relationship_request(url, ["ValidValuesImplementationProperties"], body)
         logger.info(f"Linked valid value definition {vv_def_guid} to implementation element {element_guid}")
+        return guid
 
     @dynamic_catch
     def link_valid_value_implementation(
-            self, vv_def_guid: str, element_guid: str, body: Optional[dict | NewRelationshipRequestBody] = None) -> None:
+            self, vv_def_guid: str, element_guid: str, body: Optional[dict | NewRelationshipRequestBody] = None) -> Optional[str]:
         """ Link a valid value definition to an element that implements it.
 
         Parameters
@@ -1566,7 +1577,7 @@ class ReferenceDataManager(ServerClient):
 
         """
         loop = asyncio.get_event_loop()
-        loop.run_until_complete(self._async_link_valid_value_implementation(vv_def_guid, element_guid, body))
+        return loop.run_until_complete(self._async_link_valid_value_implementation(vv_def_guid, element_guid, body))
 
     @dynamic_catch
     async def _async_detach_valid_value_implementation(

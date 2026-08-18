@@ -296,18 +296,23 @@ class ActionAuthor(ServerClient):
         process_step_guid: str,
         next_process_step_guid: str,
         body: dict | NewRelationshipRequestBody,
-    ) -> None:
+    ) -> Optional[str]:
+        """Returns the GUID of the newly created NextGovernanceActionProcessStep
+        relationship (NextGovernanceActionProcessStep is MULTI_LINK -- see
+        pyegeria.core.relationship_multiplicity -- and Update/Detach already
+        take relationship_guid, not the pair of step GUIDs). None if the
+        server didn't return one."""
         url = f"{self.platform_url}/servers/{self.view_server}/api/open-metadata/action-author/governance-action-process-steps/{process_step_guid}/next-process-steps/{next_process_step_guid}/attach"
-        await self._async_new_relationship_request(url, ["NextGovernanceActionProcessStepProperties"], body)
+        return await self._async_new_relationship_request(url, ["NextGovernanceActionProcessStepProperties"], body)
 
     def setup_next_action_process_step(
         self,
         process_step_guid: str,
         next_process_step_guid: str,
         body: dict | NewRelationshipRequestBody,
-    ) -> None:
+    ) -> Optional[str]:
         loop = asyncio.get_event_loop()
-        loop.run_until_complete(
+        return loop.run_until_complete(
             self._async_setup_next_action_process_step(
                 process_step_guid, next_process_step_guid, body
             )

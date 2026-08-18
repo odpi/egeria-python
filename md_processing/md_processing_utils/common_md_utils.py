@@ -515,6 +515,12 @@ def set_solution_architect_body(object_type: str, qualified_name: str, attribute
             "forces": attributes.get('Forces', {}).get('value', None),
             "benefits": attributes.get('Benefits', {}).get('value', None),
             "liabilities": attributes.get('Liabilities', {}).get('value', None),
+            # ISSUE-66: usage is a real DesignPatternProperties field (confirmed in
+            # Egeria-api-solution-architect.http's createDesignPattern/updateDesignPattern
+            # worked examples) that the "Design Pattern Base" bundle never declared, so it
+            # could never be set at all -- not even silently dropped, since --validate
+            # would reject an undeclared "### Usage" attribute outright.
+            "usage": attributes.get('Usage', {}).get('value', None),
         })
 
     if object_type in ("Solution Role", "SolutionRole", "SolutionActorRole"):
