@@ -28,10 +28,13 @@ pytest -m unit
 pytest -m integration
 
 # Live Egeria server required
-pytest tests/ --live-egeria
-# or
 PYEG_LIVE_EGERIA=1 pytest tests/
 ```
+
+Note: `--live-egeria` as a CLI flag is referenced in `tests/micro-tests/conftest_full.py`'s
+skip messages, but that file isn't the active `conftest.py` (a separate,
+minimal `tests/micro-tests/conftest.py` is) and no `addoption` for it is
+registered — the flag doesn't currently work; only the env var does.
 
 `asyncio_mode = auto` — async test functions need no event-loop boilerplate.
 
