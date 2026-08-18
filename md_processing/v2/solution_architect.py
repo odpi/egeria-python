@@ -771,7 +771,11 @@ class SolutionLinkProcessor(AsyncBaseCommandProcessor):
                     logger.success(f"Updated existing SolutionLinkingWire {wire_guid} (label={label!r})")
                     return f"\n\n# {verb} {object_type}\n\nUpdated wire {wire_guid} between {id1} and {id2}"
                 else:
-                    await self.client._async_link_solution_linking_wire(id1, id2, body)
+                    new_wire_guid = await self.client._async_link_solution_linking_wire(id1, id2, body)
+                    if new_wire_guid:
+                        self.parsed_output["guid"] = new_wire_guid
+                        logger.success(f"Created new SolutionLinkingWire {new_wire_guid} between {id1} and {id2}")
+                        return f"\n\n# {verb} {object_type}\n\nCreated wire {new_wire_guid} between {id1} and {id2}"
             elif om_type == "InformationSupplyChainLink":
                 await self.client._async_link_peer_info_supply_chains(id1, id2, body)
             elif om_type == "SolutionComposition":

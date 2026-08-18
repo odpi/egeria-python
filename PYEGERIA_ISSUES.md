@@ -1150,6 +1150,107 @@ individually.
 
 ---
 
+### ISSUE-68: Multi-link relationships — relationship GUID silently discarded on create, both in the SDK and in several Dr.Egeria processors
+
+**Layer:** Pyegeria (`pyegeria/core/_server_client.py`, several
+`pyegeria/omvs/*.py` files) + Dr.Egeria
+(`md_processing/v2/solution_architect.py`,
+`md_processing/v2/governance.py`).
+
+**Status:** fixed 2026-08-18 (two commits).
+
+**Raised by dwolfson**: "We need to do some updates to Dr.Egeria to
+support multi-link relationships... the action verbs and semantics of
+multi-link relationships are different and we need both additional
+attributes — like a relationship_guid when updating a multi-link
+relationship, and we need to display the relationship guid when we
+create a new relationship."
+
+**"Multi-link"** means more than one instance of a relationship type may
+exist between the same ordered pair of elements (e.g. `DataFlow`,
+`Certification`) — as opposed to the common case of at most one instance
+per pair. There is no literal boolean field for this in Egeria's type-def
+JSON; the real, live-queryable signal is `relationshipCategory` on
+`ValidMetadataManager.get_all_relationship_defs()`'s output
+(`MULTI_LINK`/`UNI_LINK`/`REVERSIBLE`) — confirmed live: 21 `MULTI_LINK`
+types, 169 `UNI_LINK`, 9 `REVERSIBLE`. For a `MULTI_LINK` type, a
+relationship's own GUID (not the pair of element GUIDs) is required to
+target one specific instance for Update/Detach.
+
+**Root cause:** `_async_new_relationship_request` (the shared helper
+behind most `_async_link_X` wrappers) discarded the GUID Egeria's
+relationship-create endpoints return
+(`{"class": "GUIDResponse", "guid": "..."}`), so every wrapper built on
+it was silently unable to report the new relationship's own identity —
+even in cases where the *same* OMVS file's Update/Detach methods already
+required that GUID as a parameter, meaning the only way to get it was a
+separate `find` call after the fact.
+
+**Fix, commit 1** (SDK foundation): `_async_new_relationship_request` now
+returns `Optional[str]` (the GUID), purely additive — existing callers
+that ignore the return value are unaffected.
+`_async_link_solution_linking_wire`/`link_solution_linking_wire`
+(`solution_architect.py`) now return it, and
+`SolutionLinkProcessor.apply_changes()`'s new-`SolutionLinkingWire`-create
+branch captures it into `parsed_output["guid"]` and shows "Created wire
+{guid} ..." instead of a generic message — mirroring the sibling
+"Updated wire {guid} ..." branch. New
+`pyegeria/core/relationship_multiplicity.py`:
+`async_is_multi_link()`/`async_get_relationship_category()`, backed by
+`get_all_relationship_defs()`, cached per server. Live-verified:
+`DataFlow=MULTI_LINK`, `SolutionLinkingWire=UNI_LINK`,
+`GovernedBy=UNI_LINK`, `Synonym=REVERSIBLE`.
+
+**Fix, commit 2** (audit of the remaining `MULTI_LINK` types): every
+`_async_link_X` wrapper for a type with an existing OMVS
+create-relationship method was checked against its own Update/Detach
+signature (GUID-based already, in every case checked) and fixed to
+return the GUID: `_async_link_agreement_actor`/`_async_link_agreement_item`
+(`collection_manager.py`), `_async_add_catalog_target`
+(`asset_maker.py` — was already documented as returning a GUID but had a
+`"Relationship created"` placeholder string), `_async_link_external_reference`/
+`_async_link_media_reference`/`_async_link_cited_document`
+(`external_links.py`), `_async_setup_next_action_process_step`
+(`action_author.py`), `_async_link_valid_value_implementation`
+(`reference_data.py` — noted exception: Egeria's own REST API for this
+one relationship has no relationship-guid-targeted detach endpoint at
+all, per `Egeria-api-reference-data.http`, so the GUID is currently only
+useful for record-keeping). `GovernanceLinkProcessor.apply_changes()`'s
+Certification/License/Agreement T&C create branches now capture and
+display the GUID the same way — its own Detach branch already raises
+`ValueError` without one.
+
+**Left unchanged:** `governance_officer.py`'s `_async_certify_element`/
+`_async_license_element` and `classification_explorer.py`'s
+`_async_add_certification_to_element`/`_async_add_license_to_element`
+already returned the GUID correctly (bypass the broken shared helper) —
+only the Dr.Egeria processor above them was discarding it.
+`lineage_linker.py`'s `_async_link_lineage`/`_async_link_data_flow`
+(covers `DataFlow`/`ControlFlow`/`ProcessCall`/`LineageMapping`/
+`UltimateSource`/`UltimateDestination`) and its Dr.Egeria processor
+already had fully correct GUID-based multi-link semantics end-to-end,
+confirmed via `git log` (`b17f71e`) — no change needed.
+`AssociatedSecurityList`/`DataLineageRelationship`/`NetworkGatewayLink`/
+`SupportedGovernanceService` have no OMVS wrapper implemented at all —
+nothing to fix.
+
+**Known discrepancy documented, not changed:** `SolutionLinkingWire` is
+`UNI_LINK` in the live type registry despite being treated as multi-link
+by existing Dr.Egeria code and comments (Egeria PR #9156). Per dwolfson's
+explicit direction, `relationshipCategory` is the source of truth going
+forward for new/updated detection logic; reconciling
+`SolutionLinkingWire`'s existing multi-link-shaped code against that is
+left as a follow-up, not addressed here.
+
+**Tests:** `test_relationship_multiplicity.py` (7 tests, the detection
+utility), `test_solution_linking_wire_multilink.py` (2 tests),
+`test_governance_link_multilink_guid.py` (2 tests) — all with fake
+clients, no live server required. Full `pytest tests/micro-tests/`
+green throughout. `relationship_multiplicity` also live-verified against
+a running server.
+
+---
+
 ### ISSUE-64: `Create Information Supply Chain`'s `Purposes`/`Scope` attributes were silently dropped — never read from `attributes` at all
 
 **Status:** fixed 2026-08-18 (Pyegeria/Dr.Egeria —

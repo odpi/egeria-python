@@ -4254,7 +4254,7 @@ class SolutionArchitect(ServerClient):
         loop.run_until_complete(self._async_detach_sub_component(parent_component_guid, member_component_guid, body))
 
     @dynamic_catch
-    async def _async_link_solution_linking_wire(self, component1_guid: str, component2_guid: str, body: dict | NewRelationshipRequestBody) -> None:
+    async def _async_link_solution_linking_wire(self, component1_guid: str, component2_guid: str, body: dict | NewRelationshipRequestBody) -> Optional[str]:
         """ Attach a solution component to a solution component as a peer in a solution. Async Version.
 
         Parameters
@@ -4269,7 +4269,12 @@ class SolutionArchitect(ServerClient):
 
         Returns
         -------
-        None
+        str | None
+            The GUID of the newly created SolutionLinkingWire relationship -- needed
+            to target this specific wire later via
+            _async_update_solution_linking_wire/_async_detach_solution_linking_wire_by_guid,
+            since SolutionLinkingWire allows more than one wire between the same
+            pair of components. None if the server didn't return one.
 
         Raises
         ------
@@ -4302,11 +4307,12 @@ class SolutionArchitect(ServerClient):
 
         url = (f"{self.platform_url}/servers/{self.view_server}/api/open-metadata/solution-architect/"
                f"solution-components/{component1_guid}/wired-to/{component2_guid}/attach")
-        await self._async_new_relationship_request(url, "SolutionLinkingWireProperties", body)
+        guid = await self._async_new_relationship_request(url, "SolutionLinkingWireProperties", body)
         logger.info(f"Linked Solution Linking wires between {component1_guid} -> {component2_guid}")
+        return guid
 
     @dynamic_catch
-    def link_solution_linking_wire(self, component1_guid: str, component2_guid: str, body: dict | NewRelationshipRequestBody) -> None:
+    def link_solution_linking_wire(self, component1_guid: str, component2_guid: str, body: dict | NewRelationshipRequestBody) -> Optional[str]:
         """ Attach a solution component to a solution component as a peer in a solution.
 
                 Parameters
@@ -4320,7 +4326,8 @@ class SolutionArchitect(ServerClient):
 
                 Returns
                 -------
-                None
+                str | None
+                    The GUID of the newly created SolutionLinkingWire relationship.
 
                 Raises
                 ------
@@ -4351,7 +4358,7 @@ class SolutionArchitect(ServerClient):
                 }
                 """
         loop = asyncio.get_event_loop()
-        loop.run_until_complete(self._async_link_solution_linking_wire(component1_guid, component2_guid, body))
+        return loop.run_until_complete(self._async_link_solution_linking_wire(component1_guid, component2_guid, body))
 
     @dynamic_catch
     async def _async_detach_solution_linking_wire(self, component1_guid: str, component2_guid: str,

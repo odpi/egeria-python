@@ -5031,7 +5031,7 @@ class CollectionManager(ServerClient):
 
     @dynamic_catch
     async def _async_link_agreement_actor(self, agreement_guid: str, actor_guid: str,
-                                          body: Optional[dict | NewRelationshipRequestBody] = None) -> None:
+                                          body: Optional[dict | NewRelationshipRequestBody] = None) -> Optional[str]:
         """ Attach an actor to an agreement.  The actor element may be an actor profile (person, team or IT profile);
             actor role (person role, team role or IT profile role); or user identity. Request body is optional.
             Request body is optional. Async version.
@@ -5047,7 +5047,14 @@ class CollectionManager(ServerClient):
 
         Returns
         -------
-        Nothing
+        str | None
+            The GUID of the newly created AgreementActor relationship
+            (AgreementActor is MULTI_LINK -- see
+            pyegeria.core.relationship_multiplicity -- more than one actor
+            relationship can exist between the same agreement/actor pair,
+            so this GUID is needed to target this specific instance later
+            via _async_detach_agreement_actor). None if the server didn't
+            return one.
 
         Raises
         ------
@@ -5082,11 +5089,12 @@ class CollectionManager(ServerClient):
             f"{self.platform_url}/servers/"
             f"{self.view_server}/api/open-metadata/collection-manager/collections/agreements/"
             f"{agreement_guid}/agreement-actors/{actor_guid}/attach")
-        await self._async_new_relationship_request(url, "AgreementActorProperties",body)
+        guid = await self._async_new_relationship_request(url, "AgreementActorProperties",body)
         logger.info(f"Attached digital product manager {agreement_guid} -> {actor_guid}")
+        return guid
 
 
-    def link_agreement_actor(self, agreement_guid: str, actor_guid: str, body: Optional[dict | NewRelationshipRequestBody] = None):
+    def link_agreement_actor(self, agreement_guid: str, actor_guid: str, body: Optional[dict | NewRelationshipRequestBody] = None) -> Optional[str]:
         """ Attach an actor to an agreement.  The actor element may be an actor profile (person, team or IT profile);
             actor role (person role, team role or IT profile role); or user identity. Request body is optional.
             Async version.
@@ -5134,7 +5142,7 @@ class CollectionManager(ServerClient):
 
           """
         loop = asyncio.get_event_loop()
-        loop.run_until_complete(
+        return loop.run_until_complete(
             self._async_link_agreement_actor(agreement_guid, actor_guid, body))
 
 
@@ -5237,7 +5245,7 @@ class CollectionManager(ServerClient):
 
     @dynamic_catch
     async def _async_link_agreement_item(self, agreement_guid: str, agreement_item_guid: str,
-                                         body: dict| NewRelationshipRequestBody = None) -> None:
+                                         body: dict| NewRelationshipRequestBody = None) -> Optional[str]:
         """ Attach an agreement to an element referenced in its definition. The agreement item element is of type
            'Referenceable' to allow the agreement to refer to many things. Request body is optional. Async version.
 
@@ -5252,7 +5260,11 @@ class CollectionManager(ServerClient):
 
         Returns
         -------
-        Nothing
+        str | None
+            The GUID of the newly created AgreementItem relationship
+            (AgreementItem is MULTI_LINK -- see
+            pyegeria.core.relationship_multiplicity). None if the server
+            didn't return one.
 
         Raises
         ------
@@ -5302,11 +5314,12 @@ class CollectionManager(ServerClient):
         url = (f"{self.platform_url}/servers/{self.view_server}/api/open-metadata/collection-manager/collections/"
                f"agreements/{agreement_guid}/agreement-items/{agreement_item_guid}/attach")
 
-        await self._async_new_relationship_request(url, "AgreementItemProperties", body)
+        guid = await self._async_new_relationship_request(url, "AgreementItemProperties", body)
         logger.info(f"Attached agreement item {agreement_item_guid} to {agreement_guid}")
+        return guid
 
 
-    def link_agreement_item(self, agreement_guid: str, agreement_item_guid: str, body: dict = None) -> None:
+    def link_agreement_item(self, agreement_guid: str, agreement_item_guid: str, body: dict = None) -> Optional[str]:
         """ Attach an agreement to an element referenced in its definition. The agreement item element is of type
                   'Referenceable' to allow the agreement to refer to many things. Request body is optional.
 
@@ -5366,7 +5379,7 @@ class CollectionManager(ServerClient):
 
                """
         loop = asyncio.get_event_loop()
-        loop.run_until_complete(self._async_link_agreement_item(agreement_guid, agreement_item_guid, body))
+        return loop.run_until_complete(self._async_link_agreement_item(agreement_guid, agreement_item_guid, body))
 
 
     @dynamic_catch
