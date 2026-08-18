@@ -5,8 +5,8 @@ Subject: `pyegeria/omvs` (43 modules)
 
 | Result | Count |
 |---|---|
-| OK | 632 |
-| Mismatch (verb/path/body) | 27 |
+| OK | 638 |
+| Mismatch (verb/path/body) | 21 |
 | Missing | 288 |
 | Found in another module | 13 |
 | URL lint | 0 |
@@ -181,10 +181,6 @@ _Review only - cross-service overlap is often intentional._
 - clearDigitalResourceOrigin: MISSING  (`POST /classification-explorer/elements/{}/digital-resource-origin/remove`)
 - setupPeerDuplicates: MISSING  (`POST /classification-explorer/related-elements/{}/peer-duplicate/{}/attach`)
 - clearSemanticAssignment: MISSING  (`POST /classification-explorer/elements/{}/semantic-assignment/terms/{}/detach`)
-- getSemanticAssignees: MISMATCH `get_semantic_assignees`
-    - PATH
-      SDK: /classification-explorer/glossaries/elements/by-semantic-assignment/{}
-      API: /classification-explorer/elements/by-semantic-assignment/{}
 - addGovernanceDefinitionToElement: MISSING  (`POST /classification-explorer/elements/{}/governed-by/definition/{}/attach`)
 - removeGovernanceDefinitionFromElement: MISSING  (`POST /classification-explorer/elements/{}/governed-by/definition/{}/detach`)
 - addGovernanceExpectations: MISSING  (`POST /classification-explorer/elements/{}/governance-expectations`)
@@ -194,29 +190,9 @@ _Review only - cross-service overlap is often intentional._
 - removeResourceListFromElement: MISSING  (`POST /classification-explorer/elements/{}/resource-list/{}/detach`)
 - addMoreInformationToElement: MISSING  (`POST /classification-explorer/elements/{}/more-information/{}/attach`)
 - removeMoreInformationFromElement: MISSING  (`POST /classification-explorer/elements/{}/more-information/{}/detach`)
-- getSourceElements: MISMATCH `get_source_elements`
-    - PATH
-      SDK: /classification-explorer/glossaries/elements/{}/source
-      API: /classification-explorer/elements/{}/source
-- getElementsSourcedFrom: MISMATCH `get_elements_sourced_from`
-    - PATH
-      SDK: /classification-explorer/glossaries/elements/{}/sourced-from
-      API: /classification-explorer/elements/{}/sourced-from
 - removeScopeFromElement: MISSING  (`POST /classification-explorer/elements/{}/scoped-by/{}/detach`)
 - licenseElement: ELSEWHERE -> `governance-officer.py`
-- getLicensedElements: MISMATCH `get_licensed_elements`
-    - PATH
-      SDK: /classification-explorer/glossaries/elements/licenses/{}
-      API: /classification-explorer/elements/licenses/{}
-- getLicenses: MISMATCH `get_licenses`
-    - PATH
-      SDK: /classification-explorer/glossaries/elements/{}/licenses
-      API: /classification-explorer/elements/{}/licenses
 - certifyElement: ELSEWHERE -> `governance-officer.py`
-- getCertifiedElements: MISMATCH `get_certified_elements`
-    - PATH
-      SDK: /classification-explorer/glossaries/elements/certifications/{}
-      API: /classification-explorer/elements/certifications/{}
 - getSearchKeywordByGUID: MISSING  (`POST /classification-explorer/search-keywords/{}/retrieve`)
 - getSearchKeywordsByKeyword: MISSING  (`POST /classification-explorer/search-keywords/by-keyword`)
 - findSearchKeywords: MISSING  (`POST /classification-explorer/search-keywords/by-search-string`)
