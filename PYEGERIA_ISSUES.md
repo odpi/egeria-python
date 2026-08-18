@@ -1232,7 +1232,8 @@ already had fully correct GUID-based multi-link semantics end-to-end,
 confirmed via `git log` (`b17f71e`) — no change needed.
 `AssociatedSecurityList`/`DataLineageRelationship`/`NetworkGatewayLink`/
 `SupportedGovernanceService` have no OMVS wrapper implemented at all —
-nothing to fix.
+nothing to fix in this commit (`SupportedGovernanceService` was added in
+a follow-up commit, see below).
 
 **Known discrepancy documented, not changed:** `SolutionLinkingWire` is
 `UNI_LINK` in the live type registry despite being treated as multi-link
@@ -1242,12 +1243,133 @@ forward for new/updated detection logic; reconciling
 `SolutionLinkingWire`'s existing multi-link-shaped code against that is
 left as a follow-up, not addressed here.
 
+**Follow-up, commit 3** (`asset_maker.py` — dwolfson asked whether the 4
+missing-wrapper types needed building): checked each of the 4 against a
+*live server's OpenAPI spec* (`/v3/api-docs`), not just this repo's
+cached `.http` files, since the `.http` files could themselves be stale.
+Result: 3 of the 4 (`AssociatedSecurityList`, `DataLineageRelationship`,
+`NetworkGatewayLink`) have **no dedicated REST endpoint anywhere** —
+`AssociatedSecurityListProperties` exists only as an orphaned OpenAPI
+schema referenced by zero paths, and the other two don't appear in the
+spec at all. Only the generic `MetadataExpert` endpoint could create
+them, which needs the verbose typed `ElementProperties`/`propertyValueMap`
+body shape (see the `pyegeria/models/models.py` gotcha at the top of this
+file) — a materially different, larger task than wrapping a real
+dedicated endpoint, so these 3 were left unbuilt rather than guessing at
+undocumented URLs or building against the awkward generic path
+speculatively. Separately, `AssociatedSecurityList` **does** have an
+orphaned Dr.Egeria compact command (`Link Associated List`, in
+`commands_governance_officer_compact.json`) that was never registered in
+`dr_egeria.py` — confirmed dead (`--process` would report "no processor
+registered"), left as-is since there's still no backing wrapper to
+register it against.
+
+The 4th, `SupportedGovernanceService`, **does** have real, dedicated,
+GUID-based-for-update/detach endpoints (`Egeria-api-asset-maker.http`'s
+own comment already documents it as multi-link: "the same governance
+engine may call the same governance service many times... The unique
+identifier of the new relationship is returned so it can be updated or
+removed later") — built the full wrapper:
+`_async_link_supported_governance_service`/`link_supported_governance_service`
+(returns the GUID), `_async_update_supported_governance_service`/
+`update_supported_governance_service`,
+`_async_detach_supported_governance_service`/
+`detach_supported_governance_service`. Live-verified routing against a
+running server (fake GUIDs correctly reach `createRelatedElementsInStore`
+and return 404s, not URL/shape errors). No Dr.Egeria compact command
+exists for this relationship type — out of scope for this commit, which
+is the OMVS wrapper only.
+
+**Follow-up on `ValidValuesImplementation`'s pair-only-API note above:**
+re-checked all remaining implemented `MULTI_LINK` types' Detach methods
+for GUID- vs pair-based targeting, and found 4 more with the same
+Egeria-side limitation as `ValidValuesImplementation` — no
+relationship-guid-targeted detach endpoint exists in Egeria's own REST
+API at all, confirmed against the `.http` ground truth for each:
+`MediaReference`, `ExternalReferenceLink`, `CitedDocumentLink` (all
+`Egeria-api-external-links.http`, pair-based `elements/{elementGUID}/
+media-references|external-references|cited-document-references/
+{refGUID}/detach` only) and `AgreementItem`
+(`Egeria-api-collection-manager.http` — its sibling `AgreementActor`
+*does* have a GUID-based
+`agreements/agreement-actors/{agreementActorRelationshipGUID}/detach`,
+but `AgreementItem` only has pair-based
+`agreements/{agreementGUID}/agreement-items/{agreementItemGUID}/detach`).
+For these 5 types total, the create-time GUID this issue's earlier fixes
+now surface is real and correctly returned, but there is currently no
+API to *use* it for a later Update/Detach — that gap can only be closed
+by Egeria adding the missing endpoints, not by anything in pyegeria.
+
+**Follow-up, Dr.Egeria `Update` commands added** (dwolfson: "do all the
+Dr.Egeria upgrades"): confirmed via `build_command_variants` that `Update`
+is never auto-generated for a Link-family command — `LINK_VERBS` is
+`(Link, Attach, Add, Detach, Unlink, Remove)`, no `Update`; the only
+family with a working `Update <relationship>` command before this was
+Lineage Linker, which hand-adds a separate compact-spec entry. Added the
+same pattern (new compact commands via the Spec Editor's REST API, one
+new bundle each reusing existing attributes, `refresh_specs` regeneration)
+for the 3 relationship types where the OMVS layer's Update is already
+GUID-based *and* a Dr.Egeria Link command already exists: `Update
+Certification`/`Update License` (`GovernanceLinkProcessor`, registered
+explicitly — the family loop otherwise routes any non-Link verb to
+`GovernanceProcessor`, the *element* processor, same override pattern as
+`Create Embedded Process` above), `Update Next Process Step`
+(`ActionProcessStepLinkProcessor`, auto-routed via the family loop's
+existing `om_type` special-case). **`Update Agreement Actor` was
+considered and dropped**: `AgreementActor`'s OMVS layer only has a
+GUID-based *detach*, not update — checked `Egeria-api-collection-
+manager.http` directly and Egeria has no `/agreement-actors/{guid}/
+update` endpoint at all, only `attach`/`{guid}/detach`. `CatalogTarget`
+is also GUID-based but has no Dr.Egeria command at all yet — net-new
+command family, treated as future work, not an "upgrade" to an existing
+one. Also fixed the pre-existing gap where `Link Next Process Step`
+discarded the GUID `_async_setup_next_action_process_step` now returns
+(same pattern as the other Link-branch fixes above) — it's displayed the
+same way the other newly-fixed create paths are.
+
+**Second bug found and fixed while verifying these live** (not part of
+the original request, but directly blocked it):
+`AsyncBaseCommandProcessor.execute()`'s step 5 — the shared Create↔Update
+upsert-transition logic every processor goes through — was **not gated
+by `supports_target_element_lookup()`**, unlike steps 1a/3/7 which are.
+A relationship-only processor (no target Referenceable element,
+`fetch_as_is()` always `None`, no `qualified_name`) fell through step 5's
+"doesn't exist anywhere" branch unconditionally and had its verb silently
+rewritten `Update` → `Create` — confirmed live via `--validate` on both
+the 3 new commands above *and*, independently, the **pre-existing**
+`Update Lineage Relationship` (shipped earlier, apparently never
+exercised through `--validate`/`--process` with a complete valid
+attribute set before now — with only a relationship GUID + label
+supplied it fails pre-flight validation first and never reaches this
+code path, which is exactly what happened the first time it was tried
+here too). Fixed in two parts: `current_qn` is now read unconditionally
+(it's referenced later in `execute()` regardless of the flag) but the
+existence/rewrite side effects are now wrapped in `if
+self.supports_target_element_lookup():`; and
+`GovernanceLinkProcessor`/`ActionProcessStepLinkProcessor`/
+`LineageLinkProcessor`/`UpdateLineageRelationshipProcessor` now override
+`supports_target_element_lookup()` to return `False`. **Not
+comprehensively audited**: every other relationship-only processor in the
+codebase (`SolutionLinkProcessor`, `CollectionLinkProcessor`,
+`CurationLinkProcessor`, `ActorManagerLinkProcessor`,
+`FeedbackLinkProcessor`, `TermRelationshipProcessor`,
+`ProjectLinkProcessor`, ...) has this same latent exposure, but none of
+them currently register an `Update`-verb command, so the bug is dormant
+for them today — flagged here as a structural risk for whoever adds the
+next relationship-`Update` command, not fixed preemptively.
+
 **Tests:** `test_relationship_multiplicity.py` (7 tests, the detection
 utility), `test_solution_linking_wire_multilink.py` (2 tests),
-`test_governance_link_multilink_guid.py` (2 tests) — all with fake
-clients, no live server required. Full `pytest tests/micro-tests/`
-green throughout. `relationship_multiplicity` also live-verified against
-a running server.
+`test_governance_link_multilink_guid.py` (2 tests),
+`test_supported_governance_service.py` (3 tests),
+`test_multilink_update_commands.py` (6 tests, the 3 new Update commands)
+— all with fake clients, no live server required. Full `pytest
+tests/micro-tests/` green throughout. `relationship_multiplicity`,
+`_async_link_supported_governance_service`, and all 3 new `Update`
+commands (plus the pre-existing `Update Lineage Relationship`, to
+confirm the shared-code fix) also live-verified via `--validate` against
+a running server — each now correctly keeps `verb=Update` through
+`execute()` instead of silently becoming `Create`.
 
 ---
 
