@@ -411,7 +411,7 @@ class TimeKeeper(ServerClient):
         ```
         """
         url = f"{self.platform_url}/servers/{self.view_server}/api/open-metadata/time-keeper/context-events/{context_event_guid}/delete"
-        await self._async_delete_element_body_request(url, body)
+        await self._async_delete_element_request(url, body)
 
     def delete_context_event(self, context_event_guid: str, body: dict | DeleteElementRequestBody) -> None:
         """Delete a context event.

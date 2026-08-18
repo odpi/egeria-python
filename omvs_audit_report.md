@@ -5,8 +5,8 @@ Subject: `pyegeria/omvs` (43 modules)
 
 | Result | Count |
 |---|---|
-| OK | 642 |
-| Mismatch (verb/path/body) | 17 |
+| OK | 643 |
+| Mismatch (verb/path/body) | 16 |
 | Missing | 288 |
 | Found in another module | 13 |
 | URL lint | 0 |
@@ -487,8 +487,6 @@ _Review only - cross-service overlap is often intentional._
 
 ### Service: schema-maker
 
-- deleteSchemaType: MISMATCH `delete_schema_type`
-    - BODY sends DeleteElementRequestBody != MetadataSourceRequestBody
 - updateSchemaAttribute: MISMATCH `update_schema_attribute`
     - PATH
       SDK: /schema-maker/schema-attributes/{}/update
@@ -497,7 +495,6 @@ _Review only - cross-service overlap is often intentional._
     - PATH
       SDK: /schema-maker/schema-attributes/{}/delete
       API: /schema-maker/schema-attributes/delete
-    - BODY sends DeleteElementRequestBody != MetadataSourceRequestBody
 - getSchemaAttributeByGUID: MISMATCH `get_schema_attribute_by_guid`
     - PATH
       SDK: /schema-maker/schema-attributes/{}/retrieve

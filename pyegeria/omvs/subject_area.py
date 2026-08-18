@@ -370,7 +370,7 @@ class SubjectArea(ServerClient):
         ```
         """
         url = f"{self.platform_url}/servers/{self.view_server}/api/open-metadata/subject-area/collections/{subject_area_guid}/delete"
-        await self._async_delete_element_body_request(url, body)
+        await self._async_delete_element_request(url, body)
 
     def delete_subject_area(self, subject_area_guid: str, body: dict | DeleteElementRequestBody) -> None:
         """Delete a subject area.
