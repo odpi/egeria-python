@@ -5,9 +5,9 @@ Subject: `pyegeria/omvs` (44 modules)
 
 | Result | Count |
 |---|---|
-| OK | 694 |
+| OK | 706 |
 | Mismatch (verb/path/body) | 7 |
-| Missing | 57 |
+| Missing | 45 |
 | Renamed (implemented, verb+path matches under a different name) | 184 |
 | Found in another module | 18 |
 | URL lint | 0 |
@@ -441,18 +441,6 @@ _Review only - cross-service overlap is often intentional._
 - refreshConfig: MISSING  (`GET /runtime-manager/engine-hosts/{}/governance-engines/{}/refresh-config`)
 - addOpenMetadataArchiveFile: RENAMED -> `feedback-manager.py`:`_async_add_archive_file`
 - addOpenMetadataArchiveContent: MISSING  (`POST /runtime-manager/omag-servers/{}/instance/load/open-metadata-archives/archive-content`)
-- createMetadataRepositoryCohort: MISSING  (`POST /runtime-manager/metadata-repository-cohorts`)
-- createMetadataRepositoryCohortFromTemplate: MISSING  (`POST /runtime-manager/metadata-repository-cohorts/from-template`)
-- updateMetadataRepositoryCohort: MISSING  (`POST /runtime-manager/metadata-repository-cohorts/{}/update`)
-- deleteMetadataRepositoryCohort: MISSING  (`POST /runtime-manager/metadata-repository-cohorts/{}/delete`)
-- getMetadataRepositoryCohortsByName: MISSING  (`POST /runtime-manager/metadata-repository-cohorts/by-name`)
-- findMetadataRepositoryCohorts: MISSING  (`POST /runtime-manager/metadata-repository-cohorts/by-search-string`)
-- getMetadataRepositoryCohortByGUID: MISSING  (`POST /runtime-manager/metadata-repository-cohorts/{}/retrieve`)
-- linkCohortMember: MISSING  (`POST /runtime-manager/metadata-repository-cohorts/{}/cohort-members/{}/attach`)
-- detachCohortMember: MISSING  (`POST /runtime-manager/metadata-repository-cohorts/{}/cohort-members/{}/detach`)
-- connectToCohortGet: MISSING  (`GET /runtime-manager/cohort-members/{}/cohorts/{}/connect`)
-- disconnectFromCohortGet: MISSING  (`GET /runtime-manager/cohort-members/{}/cohorts/{}/disconnect`)
-- unregisterFromCohortGet: MISSING  (`GET /runtime-manager/cohort-members/{}/cohorts/{}/unregister`)
 
 ### Service: schema-maker
 

@@ -20,7 +20,8 @@ from pyegeria.models import (
     SearchStringRequestBody, FilterRequestBody, GetRequestBody, NewElementRequestBody,
     TemplateRequestBody, UpdateElementRequestBody, NewRelationshipRequestBody,
     DeleteElementRequestBody, DeleteRelationshipRequestBody,
-    ArchiveRequestBody, NewOpenMetadataElementRequestBody, FindRequestBody
+    ArchiveRequestBody, NewOpenMetadataElementRequestBody, FindRequestBody,
+    MetadataSourceRequestBody,
 )
 from pyegeria.view.output_formatter import populate_columns_from_properties, \
     _extract_referenceable_properties, get_required_relationships
@@ -3042,6 +3043,669 @@ class RuntimeManager(ServerClient):
             report_spec=report_spec,
             **kwargs
         )
+
+    #
+    # Metadata Repository Cohorts
+    #
+
+    @dynamic_catch
+    async def _async_create_metadata_repository_cohort(self, body: Optional[dict | NewElementRequestBody] = None) -> str:
+        """Create a new metadata repository cohort. Async version.
+
+        Parameters
+        ----------
+        body : dict | NewElementRequestBody, optional
+            The properties for the cohort.
+
+        Returns
+        -------
+        str
+            The unique identifier of the newly created cohort.
+
+        Raises
+        ------
+        PyegeriaException
+            If there are issues in communications, message format, or Egeria errors.
+
+        Notes
+        -----
+        Sample JSON body:
+        ```json
+        {
+          "class" : "NewElementRequestBody",
+          "properties": {
+            "class" : "MetadataRepositoryCohortProperties",
+            "qualifiedName": "add unique name here",
+            "displayName": "add short name here",
+            "description": "add description here",
+            "category": "add category here",
+            "cohortTopics" : ["topicName"]
+          }
+        }
+        ```
+        """
+        url = f"{self.runtime_command_root}/metadata-repository-cohorts"
+        return await self._async_create_element_body_request(url, ["MetadataRepositoryCohortProperties"], body)
+
+    @dynamic_catch
+    def create_metadata_repository_cohort(self, body: Optional[dict | NewElementRequestBody] = None) -> str:
+        """Create a new metadata repository cohort.
+
+        Parameters
+        ----------
+        body : dict | NewElementRequestBody, optional
+            The properties for the cohort.
+
+        Returns
+        -------
+        str
+            The unique identifier of the newly created cohort.
+
+        Raises
+        ------
+        PyegeriaException
+            If there are issues in communications, message format, or Egeria errors.
+        """
+        return asyncio.get_event_loop().run_until_complete(self._async_create_metadata_repository_cohort(body))
+
+    @dynamic_catch
+    async def _async_create_metadata_repository_cohort_from_template(
+            self, body: Optional[dict | TemplateRequestBody] = None) -> str:
+        """Create a new metadata repository cohort from a template. Async version.
+
+        Parameters
+        ----------
+        body : dict | TemplateRequestBody, optional
+            The template details for the cohort.
+
+        Returns
+        -------
+        str
+            The unique identifier of the newly created cohort.
+
+        Raises
+        ------
+        PyegeriaException
+            If there are issues in communications, message format, or Egeria errors.
+        """
+        url = f"{self.runtime_command_root}/metadata-repository-cohorts/from-template"
+        return await self._async_create_element_from_template(url, body)
+
+    @dynamic_catch
+    def create_metadata_repository_cohort_from_template(
+            self, body: Optional[dict | TemplateRequestBody] = None) -> str:
+        """Create a new metadata repository cohort from a template.
+
+        Parameters
+        ----------
+        body : dict | TemplateRequestBody, optional
+            The template details for the cohort.
+
+        Returns
+        -------
+        str
+            The unique identifier of the newly created cohort.
+
+        Raises
+        ------
+        PyegeriaException
+            If there are issues in communications, message format, or Egeria errors.
+        """
+        return asyncio.get_event_loop().run_until_complete(
+            self._async_create_metadata_repository_cohort_from_template(body))
+
+    @dynamic_catch
+    async def _async_update_metadata_repository_cohort(self, cohort_guid: str,
+                                                        body: dict | UpdateElementRequestBody) -> None:
+        """Update a metadata repository cohort. Async version.
+
+        Parameters
+        ----------
+        cohort_guid: str
+            The guid of the cohort to update.
+        body: dict | UpdateElementRequestBody
+            A dict or UpdateElementRequestBody representing the updates to apply.
+
+        Returns
+        -------
+        None
+
+        Raises
+        ------
+        PyegeriaException
+            If there are issues in communications, message format, or Egeria errors.
+        """
+        url = f"{self.runtime_command_root}/metadata-repository-cohorts/{cohort_guid}/update"
+        await self._async_update_element_body_request(url, ["MetadataRepositoryCohortProperties"], body)
+
+    @dynamic_catch
+    def update_metadata_repository_cohort(self, cohort_guid: str, body: dict | UpdateElementRequestBody) -> None:
+        """Update a metadata repository cohort.
+
+        Parameters
+        ----------
+        cohort_guid: str
+            The guid of the cohort to update.
+        body: dict | UpdateElementRequestBody
+            A dict or UpdateElementRequestBody representing the updates to apply.
+
+        Returns
+        -------
+        None
+
+        Raises
+        ------
+        PyegeriaException
+            If there are issues in communications, message format, or Egeria errors.
+        """
+        loop = asyncio.get_event_loop()
+        loop.run_until_complete(self._async_update_metadata_repository_cohort(cohort_guid, body))
+
+    @dynamic_catch
+    async def _async_delete_metadata_repository_cohort(self, cohort_guid: str,
+                                                        body: Optional[dict | DeleteElementRequestBody] = None,
+                                                        cascade: bool = False) -> None:
+        """Delete a metadata repository cohort. Async version.
+
+        Parameters
+        ----------
+        cohort_guid : str
+            The GUID of the cohort to delete.
+        body : dict | DeleteElementRequestBody, optional
+            Request body for deletion.
+        cascade : bool, optional, default=False
+            If true, performs a cascade delete.
+
+        Returns
+        -------
+        None
+
+        Raises
+        ------
+        PyegeriaException
+            If there are issues in communications, message format, or Egeria errors.
+        """
+        url = f"{self.runtime_command_root}/metadata-repository-cohorts/{cohort_guid}/delete"
+        await self._async_delete_element_request(url, body, cascade)
+        logger.info(f"Deleted metadata repository cohort {cohort_guid} with cascade {cascade}")
+
+    @dynamic_catch
+    def delete_metadata_repository_cohort(self, cohort_guid: str,
+                                          body: Optional[dict | DeleteElementRequestBody] = None,
+                                          cascade: bool = False) -> None:
+        """Delete a metadata repository cohort.
+
+        Parameters
+        ----------
+        cohort_guid : str
+            The GUID of the cohort to delete.
+        body : dict | DeleteElementRequestBody, optional
+            Request body for deletion.
+        cascade : bool, optional, default=False
+            If true, performs a cascade delete.
+
+        Returns
+        -------
+        None
+
+        Raises
+        ------
+        PyegeriaException
+            If there are issues in communications, message format, or Egeria errors.
+        """
+        loop = asyncio.get_event_loop()
+        loop.run_until_complete(self._async_delete_metadata_repository_cohort(cohort_guid, body, cascade))
+
+    @dynamic_catch
+    async def _async_get_metadata_repository_cohorts_by_name(
+        self,
+        name: str = "*",
+        metadata_element_type_name: str | None = "MetadataRepositoryCohort",
+        metadata_element_subtypes: list[str] | None = None,
+        graph_query_depth: int = 3,
+        start_from: int = 0,
+        page_size: int = 0,
+        output_format: str = "JSON",
+        report_spec: Optional[str | dict] = None,
+        body: Optional[dict | FilterRequestBody] = None,
+        **kwargs,
+    ) -> list | str:
+        """Returns the list of metadata repository cohorts with a particular name. Async version.
+
+        Parameters
+        ----------
+        name: str, optional
+            name to use to find matching cohorts.
+        metadata_element_type_name : str, optional
+            The type of metadata element.
+        metadata_element_subtypes : list[str], optional
+            The list of subtypes to filter by.
+        graph_query_depth : int, optional
+            The query depth for relationships.
+        start_from: int, [default=0], optional
+            When multiple pages of results are available, the page number to start from.
+        page_size: int, [default=0]
+            The number of items to return in a single page.
+        output_format: str, default = "JSON"
+            - one of "DICT", "MERMAID" or "JSON"
+        report_spec: dict, optional
+            The desired output columns/fields to include.
+        body: dict, optional
+            Provides a full request body. If specified, the body supercedes other attributes.
+
+        Returns
+        -------
+        List | str
+        """
+        if name is None and body is None:
+            name = "*"
+        url = f"{self.runtime_command_root}/metadata-repository-cohorts/by-name"
+        params = {
+            "filter_string": name,
+            "metadata_element_type": metadata_element_type_name,
+            "metadata_element_subtypes": metadata_element_subtypes,
+            "graph_query_depth": graph_query_depth,
+            "start_from": start_from,
+            "page_size": page_size,
+            "output_format": output_format,
+            "report_spec": report_spec,
+            "body": body,
+        }
+        params.update(kwargs)
+        params = {k: v for k, v in params.items() if v is not None}
+
+        return await self._async_get_name_request(
+            url,
+            _type="Referenceable",
+            _gen_output=self._generate_referenceable_output,
+            **params,
+        )
+
+    @dynamic_catch
+    def get_metadata_repository_cohorts_by_name(
+        self,
+        name: str = "*",
+        metadata_element_type_name: str | None = "MetadataRepositoryCohort",
+        metadata_element_subtypes: list[str] | None = None,
+        graph_query_depth: int = 3,
+        start_from: int = 0,
+        page_size: int = 0,
+        output_format: str = "JSON",
+        report_spec: Optional[str | dict] = None,
+        body: Optional[dict | FilterRequestBody] = None,
+        **kwargs,
+    ) -> list | str:
+        """Returns the list of metadata repository cohorts with a particular name."""
+        loop = asyncio.get_event_loop()
+        return loop.run_until_complete(
+            self._async_get_metadata_repository_cohorts_by_name(
+                name, metadata_element_type_name, metadata_element_subtypes, graph_query_depth,
+                start_from, page_size, output_format, report_spec, body, **kwargs
+            )
+        )
+
+    @dynamic_catch
+    async def _async_find_metadata_repository_cohorts(
+        self,
+        search_string: str = "*",
+        starts_with: bool = True,
+        ends_with: bool = False,
+        ignore_case: bool = True,
+        metadata_element_type_name: str | None = "MetadataRepositoryCohort",
+        metadata_element_subtypes: list[str] | None = None,
+        graph_query_depth: int = 3,
+        start_from: int = 0,
+        page_size: int = 0,
+        output_format: str = "JSON",
+        report_spec: Optional[str | dict] = None,
+        body: Optional[dict | SearchStringRequestBody] = None,
+        **kwargs,
+    ) -> list | str:
+        """Retrieve the list of metadata repository cohorts that contain the search string. Async version.
+
+        Parameters
+        ----------
+        search_string: str
+            Search string to match against - None or '*' indicate match against all cohorts.
+        starts_with : bool, [default=True], optional
+            Starts with the supplied string.
+        ends_with : bool, [default=False], optional
+            Ends with the supplied string.
+        ignore_case : bool, [default=True], optional
+            Ignore case when searching.
+        metadata_element_type_name: str, optional
+            The type of metadata element to search for.
+        metadata_element_subtypes: list[str], optional
+            The subtypes of metadata element to search for.
+        graph_query_depth: int, [default=3], optional
+            The depth of the graph query.
+        start_from: int, [default=0], optional
+            When paged results are available, the starting index.
+        page_size: int, [default=0]
+            The number of items to return.
+        output_format: str, default = "JSON"
+            - one of "MD", "LIST", "FORM", "REPORT", "DICT", "MERMAID" or "JSON"
+        report_spec: str | dict, optional
+            The desired output columns/fields to include.
+        body: dict | SearchStringRequestBody, optional
+            If provided, the search parameters in the body will supercede other attributes.
+
+        Returns
+        -------
+        List | str
+        """
+        url = f"{self.runtime_command_root}/metadata-repository-cohorts/by-search-string"
+        params = {
+            "search_string": search_string,
+            "starts_with": starts_with,
+            "ends_with": ends_with,
+            "ignore_case": ignore_case,
+            "metadata_element_type": metadata_element_type_name,
+            "metadata_element_subtypes": metadata_element_subtypes,
+            "graph_query_depth": graph_query_depth,
+            "start_from": start_from,
+            "page_size": page_size,
+            "output_format": output_format,
+            "report_spec": report_spec,
+            "body": body,
+        }
+        params.update(kwargs)
+        params = {k: v for k, v in params.items() if v is not None or k == "search_string"}
+
+        return await self._async_find_request(
+            url,
+            _type="Referenceable",
+            _gen_output=self._generate_referenceable_output,
+            **params,
+        )
+
+    @dynamic_catch
+    def find_metadata_repository_cohorts(
+        self,
+        search_string: str = "*",
+        starts_with: bool = True,
+        ends_with: bool = False,
+        ignore_case: bool = True,
+        metadata_element_type_name: str | None = "MetadataRepositoryCohort",
+        metadata_element_subtypes: list[str] | None = None,
+        graph_query_depth: int = 3,
+        start_from: int = 0,
+        page_size: int = 0,
+        output_format: str = "JSON",
+        report_spec: Optional[str | dict] = None,
+        body: Optional[dict | SearchStringRequestBody] = None,
+        **kwargs,
+    ) -> list | str:
+        """Retrieve the list of metadata repository cohorts that contain the search string."""
+        loop = asyncio.get_event_loop()
+        return loop.run_until_complete(
+            self._async_find_metadata_repository_cohorts(
+                search_string, starts_with, ends_with, ignore_case, metadata_element_type_name,
+                metadata_element_subtypes, graph_query_depth, start_from, page_size, output_format,
+                report_spec, body, **kwargs
+            )
+        )
+
+    @dynamic_catch
+    async def _async_get_metadata_repository_cohort_by_guid(
+        self,
+        guid: str,
+        graph_query_depth: int = 3,
+        output_format: str = "JSON",
+        report_spec: Optional[str | dict] = None,
+        body: Optional[dict | GetRequestBody] = None,
+        **kwargs,
+    ) -> dict | str:
+        """Return the properties of a specific metadata repository cohort. Async version.
+
+        Parameters
+        ----------
+        guid: str
+            unique identifier of the cohort to retrieve.
+        graph_query_depth : int, optional
+            The query depth for relationships.
+        output_format: str, default = "JSON"
+            - one of "DICT", "MERMAID" or "JSON"
+        report_spec: str | dict, optional
+            The desired output columns/fields to include.
+        body: dict | GetRequestBody, optional
+            full request body.
+
+        Returns
+        -------
+        dict | str
+        """
+        url = f"{self.runtime_command_root}/metadata-repository-cohorts/{guid}/retrieve"
+        params = {
+            "graph_query_depth": graph_query_depth,
+            "output_format": output_format,
+            "report_spec": report_spec,
+            "body": body,
+        }
+        params.update(kwargs)
+        params = {k: v for k, v in params.items() if v is not None}
+
+        return await self._async_get_guid_request(
+            url,
+            _type="Referenceable",
+            _gen_output=self._generate_referenceable_output,
+            **params,
+        )
+
+    @dynamic_catch
+    def get_metadata_repository_cohort_by_guid(
+        self,
+        guid: str,
+        graph_query_depth: int = 3,
+        output_format: str = "JSON",
+        report_spec: Optional[str | dict] = None,
+        body: Optional[dict | GetRequestBody] = None,
+        **kwargs,
+    ) -> dict | str:
+        """Return the properties of a specific metadata repository cohort."""
+        loop = asyncio.get_event_loop()
+        return loop.run_until_complete(
+            self._async_get_metadata_repository_cohort_by_guid(
+                guid, graph_query_depth, output_format, report_spec, body, **kwargs
+            )
+        )
+
+    @dynamic_catch
+    async def _async_link_cohort_member(self, cohort_guid: str, cohort_member_guid: str,
+                                        body: Optional[dict | NewRelationshipRequestBody] = None) -> None:
+        """ Connect a cohort to one of its members. Async version.
+
+        Parameters
+        ----------
+        cohort_guid: str
+            The unique identifier of the cohort.
+        cohort_member_guid: str
+            The unique identifier of the cohort member.
+        body: dict | NewRelationshipRequestBody, optional, default = None
+            A structure representing the details of the relationship.
+
+        Returns
+        -------
+        Nothing
+
+        Raises
+        ------
+        PyegeriaException
+            If there are issues in communications, message format, or Egeria errors.
+
+        Notes
+        -----
+        Sample JSON body:
+        ```json
+        {
+          "class" : "NewRelationshipRequestBody",
+          "properties": {
+            "class": "MetadataCohortPeerProperties",
+            "registrationDate" : "add date here",
+            "effectiveFrom": "{{$isoTimestamp}}",
+            "effectiveTo": "{{$isoTimestamp}}"
+          },
+          "externalSourceGUID": "add guid here",
+          "externalSourceName": "add qualified name here",
+          "effectiveTime" : "{{$isoTimestamp}}",
+          "forLineage" : false,
+          "forDuplicateProcessing" : false
+        }
+        ```
+        """
+        url = f"{self.runtime_command_root}/metadata-repository-cohorts/{cohort_guid}/cohort-members/{cohort_member_guid}/attach"
+        await self._async_new_relationship_request(url, ["MetadataCohortPeerProperties"], body)
+        logger.info(f"Linked cohort member {cohort_member_guid} to cohort {cohort_guid}")
+
+    @dynamic_catch
+    def link_cohort_member(self, cohort_guid: str, cohort_member_guid: str,
+                           body: Optional[dict | NewRelationshipRequestBody] = None) -> None:
+        """ Connect a cohort to one of its members."""
+        loop = asyncio.get_event_loop()
+        loop.run_until_complete(self._async_link_cohort_member(cohort_guid, cohort_member_guid, body))
+
+    @dynamic_catch
+    async def _async_detach_cohort_member(self, cohort_guid: str, cohort_member_guid: str,
+                                          body: Optional[dict | MetadataSourceRequestBody] = None) -> None:
+        """ Detach a cohort member from a cohort. Async version.
+
+        Parameters
+        ----------
+        cohort_guid: str
+            The unique identifier of the cohort.
+        cohort_member_guid: str
+            The unique identifier of the cohort member.
+        body: dict | MetadataSourceRequestBody, optional, default = None
+            A structure representing the details of the request.
+
+        Returns
+        -------
+        Nothing
+
+        Raises
+        ------
+        PyegeriaException
+            If there are issues in communications, message format, or Egeria errors.
+
+        Notes
+        -----
+        Sample JSON body:
+        ```json
+        {
+          "class" : "MetadataSourceRequestBody",
+          "externalSourceGUID": "add guid here",
+          "externalSourceName": "add qualified name here",
+          "effectiveTime" : "{{$isoTimestamp}}",
+          "forLineage" : false,
+          "forDuplicateProcessing" : false
+        }
+        ```
+        """
+        url = f"{self.runtime_command_root}/metadata-repository-cohorts/{cohort_guid}/cohort-members/{cohort_member_guid}/detach"
+        await self._async_metadata_source_body_request(url, body)
+        logger.info(f"Detached cohort member {cohort_member_guid} from cohort {cohort_guid}")
+
+    @dynamic_catch
+    def detach_cohort_member(self, cohort_guid: str, cohort_member_guid: str,
+                             body: Optional[dict | MetadataSourceRequestBody] = None) -> None:
+        """ Detach a cohort member from a cohort."""
+        loop = asyncio.get_event_loop()
+        loop.run_until_complete(self._async_detach_cohort_member(cohort_guid, cohort_member_guid, body))
+
+    # connect_to_cohort/disconnect_from_cohort/unregister_from_cohort (POST,
+    # above) already cover connectToCohort/disconnectFromCohort/
+    # unregisterFromCohort. Egeria-api-runtime-manager.http separately
+    # documents a GET-verb variant of each of the same three operations
+    # (identical description and URL, verb only) - the *Get methods below.
+
+    @dynamic_catch
+    async def _async_connect_to_cohort_get(self, server_guid: str, cohort_name: str) -> None:
+        """ Register this server's metadata collection with the other servers in the cohort (GET variant).
+            Async version.
+
+        Parameters
+        ----------
+        server_guid: str
+            The unique identifier of the server (cohort member) connecting.
+        cohort_name: str
+            The name of the cohort to connect to.
+
+        Returns
+        -------
+        Nothing
+
+        Raises
+        ------
+        PyegeriaException
+            If there are issues in communications, message format, or Egeria errors.
+        """
+        url = f"{self.runtime_command_root}/cohort-members/{server_guid}/cohorts/{cohort_name}/connect"
+        await self._async_make_request("GET", url)
+
+    @dynamic_catch
+    def connect_to_cohort_get(self, server_guid: str, cohort_name: str) -> None:
+        """ Register this server's metadata collection with the other servers in the cohort (GET variant)."""
+        loop = asyncio.get_event_loop()
+        loop.run_until_complete(self._async_connect_to_cohort_get(server_guid, cohort_name))
+
+    @dynamic_catch
+    async def _async_disconnect_from_cohort_get(self, server_guid: str, cohort_name: str) -> None:
+        """ Disconnect communications from a specific cohort (GET variant). Async version.
+
+        Parameters
+        ----------
+        server_guid: str
+            The unique identifier of the server (cohort member) disconnecting.
+        cohort_name: str
+            The name of the cohort to disconnect from.
+
+        Returns
+        -------
+        Nothing
+
+        Raises
+        ------
+        PyegeriaException
+            If there are issues in communications, message format, or Egeria errors.
+        """
+        url = f"{self.runtime_command_root}/cohort-members/{server_guid}/cohorts/{cohort_name}/disconnect"
+        await self._async_make_request("GET", url)
+
+    @dynamic_catch
+    def disconnect_from_cohort_get(self, server_guid: str, cohort_name: str) -> None:
+        """ Disconnect communications from a specific cohort (GET variant)."""
+        loop = asyncio.get_event_loop()
+        loop.run_until_complete(self._async_disconnect_from_cohort_get(server_guid, cohort_name))
+
+    @dynamic_catch
+    async def _async_unregister_from_cohort_get(self, server_guid: str, cohort_name: str) -> None:
+        """ Unregister from a specific cohort and disconnect from cohort communications (GET variant).
+            Async version.
+
+        Parameters
+        ----------
+        server_guid: str
+            The unique identifier of the server (cohort member) unregistering.
+        cohort_name: str
+            The name of the cohort to unregister from.
+
+        Returns
+        -------
+        Nothing
+
+        Raises
+        ------
+        PyegeriaException
+            If there are issues in communications, message format, or Egeria errors.
+        """
+        url = f"{self.runtime_command_root}/cohort-members/{server_guid}/cohorts/{cohort_name}/unregister"
+        await self._async_make_request("GET", url)
+
+    @dynamic_catch
+    def unregister_from_cohort_get(self, server_guid: str, cohort_name: str) -> None:
+        """ Unregister from a specific cohort and disconnect from cohort communications (GET variant)."""
+        loop = asyncio.get_event_loop()
+        loop.run_until_complete(self._async_unregister_from_cohort_get(server_guid, cohort_name))
 
 
 if __name__ == "__main__":
