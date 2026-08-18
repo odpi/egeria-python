@@ -4852,7 +4852,7 @@ class DataDesigner(ServerClient):
 
         """
 
-        url = (f"{self.ref_data_designer_command_base}/certification-stypes/{certification_type_guid}"
+        url = (f"{self.ref_data_designer_command_base}/certification-types/{certification_type_guid}"
                f"/data-structure-definition/{data_structure_guid}/detach")
 
         await self._async_delete_relationship_request(url, body, cascade_delete)

@@ -5941,7 +5941,7 @@ class SolutionArchitect(ServerClient):
         """
 
         url = (f"{self.platform_url}/servers/{self.view_server}/api/open-metadata/solution-architect/"
-               f"solution-components/{role_guid}/solution-component-actors/{component_guid}/detach")
+               f"solution-roles/{role_guid}/solution-component-actors/{component_guid}/detach")
 
         await self._async_delete_relationship_request(url, body)
         logger.info(

@@ -5,10 +5,10 @@ Subject: `pyegeria/omvs` (44 modules)
 
 | Result | Count |
 |---|---|
-| OK | 708 |
+| OK | 709 |
 | Mismatch (verb/path/body) | 7 |
-| Missing | 36 |
-| Renamed (implemented, verb+path matches under a different name) | 191 |
+| Missing | 32 |
+| Renamed (implemented, verb+path matches under a different name) | 194 |
 | Found in another module | 18 |
 | URL lint | 0 |
 
@@ -284,7 +284,7 @@ _Review only - cross-service overlap is often intentional._
 - findDataValueSpecifications - with full request body: RENAMED -> `data-designer.py`:`_async_find_data_value_specifications`
 - linkDataValueSpecificationDefinition: RENAMED -> `data-designer.py`:`_async_link_data_class_definition`
 - detachDataValueSpecificationDefinition: RENAMED -> `data-designer.py`:`_async_detach_data_class_definition`
-- detachCertificationTypeToDataStructure: MISSING  (`POST /data-designer/certification-types/{}/data-structure-definition/{}/detach`)
+- detachCertificationTypeToDataStructure: RENAMED -> `data-designer.py`:`_async_detach_certification_type_from_data_structure`
 
 ### Service: data-discovery
 
@@ -383,7 +383,6 @@ _Review only - cross-service overlap is often intentional._
 
 ### Service: platform-services
 
-- Get OMAG Server Platform Origin: MISSING  (`GET /platform-services/server-platform/origin`)
 - Get Active User List: RENAMED -> `platform-services.py`:`_async_get_security_user_list`
 - Get Contractor User List: RENAMED -> `platform-services.py`:`_async_get_security_user_list`
 - Get all known servers: RENAMED -> `platform-services.py`:`_async_get_known_servers`
@@ -422,7 +421,7 @@ _Review only - cross-service overlap is often intentional._
 
 - createClassifiedProject: RENAMED -> `project-manager.py`:`_async_create_project`
 - createCampaign: RENAMED -> `project-manager.py`:`_async_create_project`
-- createTaskForProject: MISSING  (`POST /project-manager/projects/{}/task`)
+- createTaskForProject: RENAMED -> `project-manager.py`:`_async_create_project_task`
 - setupProjectDependency: RENAMED -> `project-manager.py`:`_async_set_project_dependency`
 - setupProjectHierarchy: RENAMED -> `project-manager.py`:`_async_set_project_hierarchy`
 
@@ -485,7 +484,7 @@ _Review only - cross-service overlap is often intentional._
 - getSolutionBlueprintsByName - with full request body: RENAMED -> `solution-architect.py`:`_async_get_solution_blueprints_by_name`
 - getSolutionBlueprintByGUID - with request body: RENAMED -> `solution-architect.py`:`_async_get_solution_blueprint_by_guid`
 - linkSolutionComponentActor: RENAMED -> `solution-architect.py`:`_async_link_component_to_actor`
-- detachSolutionComponentActor: MISSING  (`POST /solution-architect/solution-roles/{}/solution-component-actors/{}/detach`)
+- detachSolutionComponentActor: RENAMED -> `solution-architect.py`:`_async_detach_component_actor`
 - findAllSolutionRoles - with full request body: RENAMED -> `solution-architect.py`:`_async_find_solution_roles`
 - findSolutionRoles - with full request body: RENAMED -> `solution-architect.py`:`_async_find_solution_roles`
 - getSolutionRolesByName - with full request body: RENAMED -> `solution-architect.py`:`_async_get_solution_roles_by_name`

@@ -41,6 +41,7 @@ from dataclasses import dataclass, field
 HTTP_DIR = "pyegeria/http clients"
 OMVS_DIR = "pyegeria/omvs"
 SERVER_CLIENT = "pyegeria/core/_server_client.py"
+BASE_PLATFORM_CLIENT = "pyegeria/core/_base_platform_client.py"
 
 # Services documented in .http files that intentionally have no OMVS client.
 SKIP_SERVICES = {"data-officer", "devops-pipeline", "multi-language"}
@@ -579,6 +580,13 @@ def audit(service_filter: str | None, report_path: str, quiet: bool,
     if os.path.exists(SERVER_CLIENT):
         shared = parse_py_file(SERVER_CLIENT, helper_verbs, helper_bodies)
         py_by_service.setdefault("feedback-manager", {}).update(shared)
+
+    # Same blind spot, different base class: get_platform_origin lives only
+    # on BasePlatformClient (_base_platform_client.py), inherited by
+    # platform_services.py's Platform class - not defined there itself.
+    if os.path.exists(BASE_PLATFORM_CLIENT):
+        shared_platform = parse_py_file(BASE_PLATFORM_CLIENT, helper_verbs, helper_bodies)
+        py_by_service.setdefault("platform-services", {}).update(shared_platform)
 
     flat = {m: (svc, d) for svc, ms in py_by_service.items() for m, d in ms.items()}
 
