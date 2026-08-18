@@ -961,7 +961,7 @@ class ClassificationExplorer(ServerClient):
 
         """
 
-        url = (f"{self.classification_command_root}/glossaries/elements/by-semantic-assignment/{term_guid}")
+        url = (f"{self.classification_command_root}/elements/by-semantic-assignment/{term_guid}")
 
         response = await self._async_make_request("POST", url, body_slimmer(body), timeout=default_timeout, **kwargs)
         elements = response.json().get("elements", None)
@@ -1362,7 +1362,7 @@ class ClassificationExplorer(ServerClient):
 
         """
 
-        url = (f"{self.classification_command_root}/glossaries/elements/{element_guid}/source")
+        url = (f"{self.classification_command_root}/elements/{element_guid}/source")
 
         response = await self._async_get_results_body_request(url, "Referenceable", self._generate_referenceable_output,
                                                               start_from=start_from, page_size=page_size,
@@ -1496,7 +1496,7 @@ class ClassificationExplorer(ServerClient):
 
         """
 
-        url = (f"{self.classification_command_root}/glossaries/elements/{element_guid}/sourced-from")
+        url = (f"{self.classification_command_root}/elements/{element_guid}/sourced-from")
 
         response = await self._async_get_results_body_request(url, "Referenceable", self._generate_referenceable_output,
                                                               start_from=start_from, page_size=page_size,
@@ -1888,7 +1888,7 @@ class ClassificationExplorer(ServerClient):
 
         """
 
-        url = (f"{self.classification_command_root}/glossaries/elements/licenses/{license_type_guid}")
+        url = (f"{self.classification_command_root}/elements/licenses/{license_type_guid}")
 
         response = await self._async_get_results_body_request(url, "Referenceable", self._generate_referenceable_output,
                                                               start_from=start_from, page_size=page_size,
@@ -2017,7 +2017,7 @@ class ClassificationExplorer(ServerClient):
 
         """
 
-        url = (f"{self.classification_command_root}/glossaries/elements/{element_guid}/licenses")
+        url = (f"{self.classification_command_root}/elements/{element_guid}/licenses")
 
         response = await self._async_get_results_body_request(url, "Referenceable", self._generate_referenceable_output,
                                                               start_from=start_from, page_size=page_size,
@@ -2146,7 +2146,7 @@ class ClassificationExplorer(ServerClient):
 
         """
 
-        url = (f"{self.classification_command_root}/glossaries/elements/certifications/{certification_type_guid}")
+        url = (f"{self.classification_command_root}/elements/certifications/{certification_type_guid}")
 
         response = await self._async_get_results_body_request(url, "Referenceable", self._generate_referenceable_output,
                                                               start_from=start_from, page_size=page_size,
@@ -11108,7 +11108,7 @@ class ClassificationExplorer(ServerClient):
                 "effectiveTime": effective_time
             }
 
-        await self._async_delete_relationship_request(url, body)
+        await self._async_delete_classification_request(url, body)
 
     def clear_known_duplicate_classification(
             self,
@@ -11591,7 +11591,7 @@ class ClassificationExplorer(ServerClient):
                 "effectiveTime": effective_time
             }
 
-        await self._async_delete_relationship_request(url, body)
+        await self._async_delete_classification_request(url, body)
 
     def clear_consolidated_duplicate_classification(
             self,
@@ -12423,6 +12423,8 @@ class ClassificationExplorer(ServerClient):
         {
           "class" : "FindRequestBody",
           "metadataElementTypeName": "ValidValueDefinition",
+          "metadataElementSubtypeNames": [],
+          "skipSubtypes": false,
           "searchProperties": {
             "class" : "SearchProperties",
             "conditions": [ {

@@ -73,5 +73,4 @@ class CreateSubscriptionRequestScreen(ModalScreen):
             self.response.append(self.display_name)
         if self.status and self.status != None and self.status != "":
             self.response.append(f"Status: {self.status}")
-        self.dismiss(self.response)
         return self.response

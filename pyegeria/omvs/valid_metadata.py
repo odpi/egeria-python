@@ -2689,7 +2689,7 @@ class ValidMetadataManager(ServerClient):
         """
         url = (f"{self.platform_url}/servers/{self.view_server}/api/open-metadata/valid-metadata/"
                f"elements/{element_guid}/specification-properties/{vv_def_guid}/attach")
-        await self._async_create_element_body_request(url, ["SpecificationPropertyAssignmentProperties"], body)
+        await self._async_new_relationship_request(url, ["SpecificationPropertyAssignmentProperties"], body)
         logger.info(f"Linked specification property {vv_def_guid} to element {element_guid}")
 
     @dynamic_catch

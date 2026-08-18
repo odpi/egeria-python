@@ -891,7 +891,7 @@ class MetadataExpert(ServerClient):
         name: Optional[str] = None,
         property_name: str = "qualifiedName",
         as_of_time: Optional[str] = None,
-        body: Optional[dict | FilterRequestBody] = None,
+        body: Optional[dict] = None,  # sends "class": "UniqueNameRequestBody" (no pyegeria.models class backs this yet)
         **kwargs
     ) -> str:
         """
@@ -964,7 +964,7 @@ class MetadataExpert(ServerClient):
         name: Optional[str] = None,
         property_name: str = "qualifiedName",
         as_of_time: Optional[str] = None,
-        body: Optional[dict | FilterRequestBody] = None,
+        body: Optional[dict] = None,  # sends "class": "UniqueNameRequestBody" (no pyegeria.models class backs this yet)
         **kwargs
     ) -> str:
         """
@@ -1555,7 +1555,18 @@ class MetadataExpert(ServerClient):
         body: Optional[dict] = None,
         **kwargs,
     ) -> list | str:
-        """Retrieve the history of a metadata element. Async version."""
+        """Retrieve the history of a metadata element. Async version.
+
+        Notes
+        -----
+        Sends a raw "HistoryRequestBody" dict via _async_make_request rather
+        than through _async_get_guid_request: that helper validates against
+        GetRequestBody, whose "class" field is a Literal["GetRequestBody"] --
+        passing "HistoryRequestBody" through it raised a pydantic
+        ValidationError on every call (no HistoryRequestBody model exists in
+        pyegeria.models yet). Mirrors _async_get_classification_history, the
+        sibling endpoint in this file that already does this correctly.
+        """
         if body is None:
             body = {
                 "class": "HistoryRequestBody",
@@ -1563,9 +1574,17 @@ class MetadataExpert(ServerClient):
                 "oldestFirst": oldest_first,
             }
         url = f"{self.command_root}/metadata-elements/{metadata_element_guid}/history"
-        return await self._async_get_guid_request(
-            url, _type="MetadataElement", _gen_output=self._generate_referenceable_output, body=body, **kwargs
+
+        response: Response = await self._async_make_request(
+            "POST", url, body_slimmer(body),
         )
+
+        elements = response.json().get("elements", NO_ELEMENTS_FOUND)
+        if type(elements) is str:
+            logger.info(NO_ELEMENTS_FOUND)
+            return NO_ELEMENTS_FOUND
+
+        return elements
 
     @dynamic_catch
     def get_metadata_element_history(
@@ -3211,6 +3230,7 @@ class MetadataExpert(ServerClient):
                   "class" : "FindRequestBody",
                   "metadataElementTypeName": "add typeName here",
                   "metadataElementSubtypeNames": [],
+                  "skipSubtypes": false,
                   "searchProperties": {
                      "class" : "SearchProperties",
                      "conditions": [ {
@@ -3320,6 +3340,7 @@ class MetadataExpert(ServerClient):
                   "class" : "FindRequestBody",
                   "metadataElementTypeName": "add typeName here",
                   "metadataElementSubtypeNames": [],
+                  "skipSubtypes": false,
                   "searchProperties": {
                      "class" : "SearchProperties",
                      "conditions": [ {
@@ -3520,6 +3541,7 @@ class MetadataExpert(ServerClient):
                 {
                   "class" : "FindRelationshipRequestBody",
                   "relationshipTypeName": "add typeName here",
+                  "relationshipSubtypeNames": [],
                   "searchProperties": {
                      "class" : "SearchProperties",
                      "conditions": [ {
@@ -3615,6 +3637,7 @@ class MetadataExpert(ServerClient):
                 {
                   "class" : "FindRelationshipRequestBody",
                   "relationshipTypeName": "add typeName here",
+                  "relationshipSubtypeNames": [],
                   "searchProperties": {
                      "class" : "SearchProperties",
                      "conditions": [ {
@@ -3700,6 +3723,7 @@ class MetadataExpert(ServerClient):
                 {
                   "class" : "FindRelationshipRequestBody",
                   "relationshipTypeName": "add typeName here",
+                  "relationshipSubtypeNames": [],
                   "limitResultsByStatus" : ["ACTIVE"],
                   "asOfTime" : "{{$isoTimestamp}}"
                 }

@@ -721,43 +721,6 @@ system-derived from a physical→logical mapping tool).
 
 ---
 
-### ISSUE-55: Desired enhancement — true "exclude type" / NOT semantics for `findMetadataElements`
-
-**Status:** open — desired enhancement, not a bug. Raised 2026-08-05
-alongside ISSUE-45, from the same Egeria Insights use case ("elements that
-have a SemanticAssignment relationship but are NOT type Notification").
-
-**What's missing:** `FindRequestBody` has no negation operator for type at
-all. `metadataElementTypeName` is a single positive inclusion filter
-(that type plus all its subtypes); `metadataElementSubtypeNames` is meant
-to narrow that to a specific allow-list of subtypes (see ISSUE-45 — doesn't
-currently work, but even fixed, an allow-list is still not the same thing
-as an exclude-list: excluding one noisy subtype out of a large,
-open-ended family — e.g. "any `Asset` except `Notification`" — would
-require enumerating every OTHER `Asset` subtype by hand, which is
-impractical and silently stale the moment a new subtype is added).
-`searchProperties`/element-property conditions can't reach `typeName`
-either, since it's a structural/type-system attribute, not a regular
-property in `propertyValueMap`.
-
-**Desired shape (not designed in detail — flagging the need):** a genuine
-exclude-list, e.g. `metadataElementExcludedSubtypeNames` (or a NOT/negation
-option on the existing field), so a caller can say "type X or narrower,
-except these specific subtypes" without enumerating the full positive
-allow-list. Needs real Egeria-side API design work — this entry exists to
-make sure the need doesn't get lost, not to prescribe the exact shape.
-
-**Interim workaround, planned for Egeria Insights (`egeria-workspaces-fs`,
-not pyegeria):** client-side post-filter, mirroring the pattern already
-used there for relationship-presence conditions (which also have no
-server-side equivalent) — fetch normally, then drop results whose
-`typeName`/`superTypeNames` match a caller-specified exclude set, with an
-honest note that the exclusion applies only to the fetched page (same
-`relationshipFilterNote`/`defaultedTypeNote` transparency convention that
-module already uses). Not yet built.
-
----
-
 ---
 
 # Quick reference: which OMVS client class for which purpose
@@ -788,6 +751,94 @@ module already uses). Not yet built.
 # Appendix: Closed / Not-a-bug entries
 
 ## Fixed / Resolved
+
+### ISSUE-55: Desired enhancement — true "exclude type" / NOT semantics for `findMetadataElements`
+
+**Status:** fixed 2026-08-18 — Egeria shipped it. Raised 2026-08-05
+alongside ISSUE-45/ISSUE-53, from the same Egeria Insights use case
+("elements that have a SemanticAssignment relationship but are NOT type
+Notification"), flagged then as needing real Egeria-side API design work
+with no shape prescribed. dwolfson found the implementation:
+[odpi/egeria#9215](https://github.com/odpi/egeria/pull/9215).
+
+**What Egeria shipped:** a new `skipSubtypes` boolean on `QueryOptions`
+(server-side). When `true`, `metadataElementSubtypeNames` is treated as
+the list of subtypes to *exclude* from the results instead of the only
+subtypes to *include* (the pre-existing default,
+`skipSubtypes=false`/absent) — exactly the "NOT semantics" this issue
+asked for, without needing a second field or new operator.
+`metadataElementSubtypeNames` itself also moved off `GetOptions` onto
+`QueryOptions` in the same PR (it never did anything on a plain get-by-guid
+style request; now it's only ever relevant to find/search bodies, matching
+how it actually behaves). Relationship-side got the equivalent treatment:
+`FindRelationshipRequestBody.relationshipSubtypeGUIDs` was renamed to
+`relationshipSubtypeNames` (GUID-based → type-name-based, matching the
+element side) with the same `skipSubtypes` exclude-semantics threaded
+through the relationship find/count handlers — though (see "Not done"
+below) `FindRelationshipRequestBody` itself has no `skipSubtypes` field on
+the wire, unlike the element side.
+
+**pyegeria fix:** `FindRequestBody` (`pyegeria/models/models.py`) — the
+model backing the *validated* find-elements path (e.g.
+`ClassificationExplorer._async_find_root_elements`, anything going through
+`FindRequestBody.model_validate()`/the `TypeAdapter` in
+`_server_client.py`) — had no `skip_subtypes` field, so a caller setting
+`"skipSubtypes": true` there would have been silently dropped by
+`PyegeriaModel`'s `extra='ignore'`, same bug class as ISSUE-62/63. Added
+`skip_subtypes: bool | None = Field(None, alias="skipSubtypes")`.
+`MetadataExpert._async_find_metadata_elements` needed no code change — it
+sends its body dict as-is with no validation, so `"skipSubtypes": true`
+already worked there even before this fix (confirmed live, both paths).
+Also left a comment on `GetRequestBody.metadata_element_subtype_names`
+noting it's now vestigial server-side (kept, not removed — the server
+ignores unknown/inapplicable fields rather than rejecting them, so no live
+breakage either way). Updated sample-body docstrings in
+`metadata_expert.py` (`find_metadata_elements`/`find_relationships_between_elements`/
+`count_relationships_between_elements`) and `classification_explorer.py`
+(`find_root_elements`) to show `skipSubtypes`/`relationshipSubtypeNames`
+for discoverability.
+
+**Not done:** no `FindRelationshipRequestBody` typed model exists in
+pyegeria at all (every relationship-find call site builds a raw dict) —
+checked the real server-side class directly
+(`frameworkservices/omf/rest/FindRelationshipRequestBody.java`): it
+extends the older `commonservices.ffdc.rest.ResultsRequestBody`, not
+`QueryOptions`, so `skipSubtypes` is genuinely **not** an accepted field
+on relationship-find/count request bodies today, only on element-find —
+confirmed by reading the class, not assumed. If Egeria adds it there
+later, the fix is the same shape (a typed model + the field), but there's
+nothing to add on the pyegeria side until the server does.
+
+**Dr.Egeria:** no command-level change — checked `find_constraints`
+(`md_processing/v2/processors.py`), Dr.Egeria's only existing
+subtype-related mechanism, and it's a different, narrower thing (a single
+include-type used to disambiguate a name-based element lookup during
+processing, not a `FindRequestBody`-style batch search with an
+include/exclude subtype list). No compact command currently exposes
+element-search subtype filtering to a markdown author at all, so there's
+no existing user-facing surface for `skip_subtypes` to plug into yet. The
+natural future consumer is `pyegeria/view/overview_metrics.py`'s analytic
+functions (several already build `FindRequestBody`s) if a metric ever
+needs "count everything except X" — not built speculatively here.
+
+**Verified live** against a running server, both request paths:
+- Raw-dict pass-through (`MetadataExpert._async_find_metadata_elements`):
+  `metadataElementSubtypeNames: ["GlossaryTerm"], skipSubtypes: true` on
+  `Referenceable` returned zero `GlossaryTerm` elements in the sample
+  (types seen: `ConnectorActivityReport`, `GovernanceZone`).
+  Cross-checked the include-list side too (ISSUE-53's own fix, still
+  holding): restricting to `["GlossaryTerm"]` without `skipSubtypes`
+  correctly returned only `GlossaryTerm`.
+- Validated `FindRequestBody` path
+  (`ClassificationExplorer._async_find_root_elements`): identical
+  `skipSubtypes: true` behavior after the model fix — confirmed the field
+  actually reaches the server through Pydantic validation, not just the
+  raw-dict shortcut.
+
+**Tests:** `test_find_request_body_skip_subtypes.py` (4 tests, model-level,
+no live server needed).
+
+---
 
 ### ISSUE-61: No Dr.Egeria command exists to attach a `GovernanceMetric` to its implementation (the `GovernanceResults` relationship) — the OMVS wrapper already exists, it's just never wired to a compact-spec command
 
@@ -1501,9 +1552,10 @@ base-type/subtype pairs and re-confirmed again 2026-08-15 against a
 restarted `qs-view-server`. Blocked the Egeria Insights use case that
 prompted the investigation (excluding noisy `Notification`/`ToDo`/
 `Meeting`/`Review` `Asset` subtypes from a broader search) — that use case
-is now unblocked as a byproduct of this fix, though see ISSUE-55 (still
-open) for the separate, still-unmet need for true exclude/NOT semantics
-rather than just a working allow-list.
+is now unblocked as a byproduct of this fix. See ISSUE-55 (now also
+fixed, 2026-08-18) for the true exclude/NOT semantics (`skipSubtypes`)
+that arrived shortly after this fix, in the same Egeria PR that reworked
+this code path.
 
 ---
 

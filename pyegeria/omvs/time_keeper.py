@@ -259,7 +259,7 @@ class TimeKeeper(ServerClient):
         ```
         """
         url = f"{self.platform_url}/servers/{self.view_server}/api/open-metadata/time-keeper/context-events/from-template"
-        return await self._async_create_element_body_request(url, "ContextEventProperties", body)
+        return await self._async_create_element_from_template(url, body)
 
     def create_context_event_from_template(self, body: dict | TemplateRequestBody) -> str:
         """Create a context event from a template.
@@ -411,7 +411,7 @@ class TimeKeeper(ServerClient):
         ```
         """
         url = f"{self.platform_url}/servers/{self.view_server}/api/open-metadata/time-keeper/context-events/{context_event_guid}/delete"
-        await self._async_delete_element_body_request(url, body)
+        await self._async_delete_element_request(url, body)
 
     def delete_context_event(self, context_event_guid: str, body: dict | DeleteElementRequestBody) -> None:
         """Delete a context event.

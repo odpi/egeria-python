@@ -201,7 +201,7 @@ class LocationArena(ServerClient):
         """
         url = f"{self.ref_location_command_base}/locations/from-template"
 
-        return await self._async_create_element_from_template("POST", url, body)
+        return await self._async_create_element_from_template(url, body)
 
     @dynamic_catch
     def create_location_from_template(self, body: Optional[dict | TemplateRequestBody] = None) -> str:

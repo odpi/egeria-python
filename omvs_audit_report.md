@@ -5,8 +5,8 @@ Subject: `pyegeria/omvs` (43 modules)
 
 | Result | Count |
 |---|---|
-| OK | 603 |
-| Mismatch (verb/path/body) | 56 |
+| OK | 652 |
+| Mismatch (verb/path/body) | 7 |
 | Missing | 288 |
 | Found in another module | 13 |
 | URL lint | 0 |
@@ -15,6 +15,9 @@ Subject: `pyegeria/omvs` (43 modules)
 
 _Review only - cross-service overlap is often intentional._
 
+- `GET /my-profile`
+  - `my-profile.py`: `_async_get_my_profile`
+  - `my-profile.py`: `_async_get_my_profile_by_get`
 - `POST /automated-curation/governance-action-types/initiate`
   - `automated-curation.py`: `_async_initiate_gov_action_type`
   - `automated-curation.py`: `_async_initiate_survey`
@@ -62,6 +65,12 @@ _Review only - cross-service overlap is often intentional._
   - `action-author.py`: `_async_get_governance_action_process`
   - `governance-officer.py`: `_async_get_governance_definition_by_guid`
   - `governance-officer.py`: `_async_get_governance_action_process`
+- `POST /lineage-linker/from-elements/{}/via/{}/to-elements/{}/attach`
+  - `lineage-linker.py`: `_async_link_lineage`
+  - `lineage-linker.py`: `_async_link_data_flow`
+- `POST /metadata-expert/metadata-elements/{}/history`
+  - `metadata-expert.py`: `_async_get_element_history`
+  - `metadata-expert.py`: `_async_get_metadata_element_history`
 - `POST /metadata-expert/related-elements`
   - `collection-manager.py`: `_async_link_saved_query_to_results_set`
   - `metadata-expert.py`: `_async_create_related_elements`
@@ -108,15 +117,11 @@ _Review only - cross-service overlap is often intentional._
 
 ### Service: actor-manager
 
-- detachAssetFromProfile: MISMATCH `detach_asset_from_profile`
-    - BODY sends DeleteElementRequestBody != DeleteRelationshipRequestBody
 - find All ContributionRecords: MISSING  (`POST /actor-manager/contribution-records/by-search-string`)
 - updateActorRole: MISMATCH `update_actor_role`
     - PATH
       SDK: /actor-manager/actor-roles/{}/update
       API: /actor-manager/actor-roles/update
-- detachPersonRoleFromProfile: MISMATCH `detach_person_role_from_profile`
-    - BODY sends DeleteElementRequestBody != DeleteRelationshipRequestBody
 - Detach a team role from a team profile.: MISSING  (`POST /actor-manager/actor-roles/{}/team-role-appointments/{}/detach`)
 - linkITProfileRoleToProfile: MISSING  (`POST /actor-manager/actor-roles/{}/it-profile-role-appointments/{}/attach`)
 - detachITProfileRoleFromProfile: MISSING  (`POST /actor-manager/actor-roles/{}/it-profile-role-appointments/{}/detach`)
@@ -124,27 +129,12 @@ _Review only - cross-service overlap is often intentional._
     - PATH
       SDK: /actor-manager/actor-roles/{}/delete
       API: /actor-manager/actor-roles/delete
-    - BODY sends DeleteElementRequestBody != DeleteRelationshipRequestBody
 - getActorRoleByGUID: MISMATCH `get_actor_role_by_guid`
     - PATH
       SDK: /actor-manager/actor-roles/{}/retrieve
       API: /actor-manager/actor-roles/{}/retrieve"}
 - detachProfileIdentity: MISSING  (`POST /actor-manager/user-identities/{}/profile-identity/{}/detach`)
-- addSecurityGroupMembership: MISMATCH `add_security_group_membership`
-    - PATH
-      SDK: /actor-manager/user-identities/{}/security-group-membership/classify
-      API: /actor-manager/user-identities/{}/security-group-memberships/classify
-- updateSecurityGroupMembership: MISMATCH `update_security_group_membership`
-    - PATH
-      SDK: /actor-manager/user-identities/{}/security-group-membership/reclassify
-      API: /actor-manager/user-identities/{}/security-group-memberships/reclassify
 - removeAllSecurityGroupMembership: MISSING  (`POST /actor-manager/user-identities/{}/security-group-memberships/declassify`)
-- createContactDetailsFromTemplate: MISMATCH `create_contact_details_from_template`
-    - BODY sends NewElementRequestBody != TemplateRequestBody
-- createPerspectiveFromTemplate: MISMATCH `create_perspective_from_template`
-    - BODY sends NewElementRequestBody != TemplateRequestBody
-- createSkillFromTemplate: MISMATCH `create_skill_from_template`
-    - BODY sends NewElementRequestBody != TemplateRequestBody
 
 ### Service: asset-catalog
 
@@ -194,16 +184,8 @@ _Review only - cross-service overlap is often intentional._
 - addOwnership: MISSING  (`POST /classification-explorer/elements/{}/ownership`)
 - clearOwnership: MISSING  (`POST /classification-explorer/elements/{}/ownership/remove`)
 - clearDigitalResourceOrigin: MISSING  (`POST /classification-explorer/elements/{}/digital-resource-origin/remove`)
-- clearKnownDuplicateClassification: MISMATCH `clear_known_duplicate_classification`
-    - BODY sends DeleteRelationshipRequestBody != DeleteClassificationRequestBody
 - setupPeerDuplicates: MISSING  (`POST /classification-explorer/related-elements/{}/peer-duplicate/{}/attach`)
-- clearConsolidatedDuplicateClassification: MISMATCH `clear_consolidated_duplicate_classification`
-    - BODY sends DeleteRelationshipRequestBody != DeleteClassificationRequestBody
 - clearSemanticAssignment: MISSING  (`POST /classification-explorer/elements/{}/semantic-assignment/terms/{}/detach`)
-- getSemanticAssignees: MISMATCH `get_semantic_assignees`
-    - PATH
-      SDK: /classification-explorer/glossaries/elements/by-semantic-assignment/{}
-      API: /classification-explorer/elements/by-semantic-assignment/{}
 - addGovernanceDefinitionToElement: MISSING  (`POST /classification-explorer/elements/{}/governed-by/definition/{}/attach`)
 - removeGovernanceDefinitionFromElement: MISSING  (`POST /classification-explorer/elements/{}/governed-by/definition/{}/detach`)
 - addGovernanceExpectations: MISSING  (`POST /classification-explorer/elements/{}/governance-expectations`)
@@ -213,29 +195,9 @@ _Review only - cross-service overlap is often intentional._
 - removeResourceListFromElement: MISSING  (`POST /classification-explorer/elements/{}/resource-list/{}/detach`)
 - addMoreInformationToElement: MISSING  (`POST /classification-explorer/elements/{}/more-information/{}/attach`)
 - removeMoreInformationFromElement: MISSING  (`POST /classification-explorer/elements/{}/more-information/{}/detach`)
-- getSourceElements: MISMATCH `get_source_elements`
-    - PATH
-      SDK: /classification-explorer/glossaries/elements/{}/source
-      API: /classification-explorer/elements/{}/source
-- getElementsSourcedFrom: MISMATCH `get_elements_sourced_from`
-    - PATH
-      SDK: /classification-explorer/glossaries/elements/{}/sourced-from
-      API: /classification-explorer/elements/{}/sourced-from
 - removeScopeFromElement: MISSING  (`POST /classification-explorer/elements/{}/scoped-by/{}/detach`)
 - licenseElement: ELSEWHERE -> `governance-officer.py`
-- getLicensedElements: MISMATCH `get_licensed_elements`
-    - PATH
-      SDK: /classification-explorer/glossaries/elements/licenses/{}
-      API: /classification-explorer/elements/licenses/{}
-- getLicenses: MISMATCH `get_licenses`
-    - PATH
-      SDK: /classification-explorer/glossaries/elements/{}/licenses
-      API: /classification-explorer/elements/{}/licenses
 - certifyElement: ELSEWHERE -> `governance-officer.py`
-- getCertifiedElements: MISMATCH `get_certified_elements`
-    - PATH
-      SDK: /classification-explorer/glossaries/elements/certifications/{}
-      API: /classification-explorer/elements/certifications/{}
 - getSearchKeywordByGUID: MISSING  (`POST /classification-explorer/search-keywords/{}/retrieve`)
 - getSearchKeywordsByKeyword: MISSING  (`POST /classification-explorer/search-keywords/by-keyword`)
 - findSearchKeywords: MISSING  (`POST /classification-explorer/search-keywords/by-search-string`)
@@ -266,10 +228,6 @@ _Review only - cross-service overlap is often intentional._
 - attachSmartQuery: MISSING  (`POST /collection-manager/collections/results-sets/{}/smart-query/{}/attach`)
 - detachSmartQuery: MISSING  (`POST /collection-manager/collections/results-sets/{}/smart-query/{}/detach`)
 - attachAssociatedSkillSet: MISSING  (`POST /collection-manager/actors/{}/associated-skill-sets/{}/attach`)
-- detachAssociatedSkillSet: MISMATCH `detach_associated_skill_set`
-    - PATH
-      SDK: /{}/actors/{}/associated-skill-sets/{}/detach
-      API: /collection-manager/actors/{}/associated-skill-sets/{}/detach
 - updateCollectionMembership: MISSING  (`POST /collection-manager/collections/{}/members/{}/update`)
 
 ### Service: community-matters
@@ -291,10 +249,6 @@ _Review only - cross-service overlap is often intentional._
 - getDataFieldsByName - with full request body: MISSING  (`POST /data-designer/data-fields/by-name`)
 - getDataFieldByGUID - with request body: MISSING  (`POST /data-designer/data-fields/{}/retrieve`)
 - createDataValueSpecificationFromTemplate: MISSING  (`POST /data-designer/data-value-specifications/from-template`)
-- detachSpecializedDataValueSpecification: MISMATCH `detach_specialized_data_value_specification`
-    - PATH
-      SDK: /data-designer/data-value-specifications/{}/specialized-data-value-specification-definition/{}/detach
-      API: /data-designer/data-value-specifications/{}/specialized-data-value-specifications/{}/detach
 - assignDataValueSpecification: MISSING  (`POST /data-designer/elements/{}/data-value-specifications/{}/attach`)
 - detachDataValueSpecificationAssignment: MISSING  (`POST /data-designer/elements/{}/data-value-specifications/{}/detach`)
 - findAllDataClasses: MISSING  (`POST /data-designer/data-value-specifications/by-search-string`)
@@ -306,8 +260,6 @@ _Review only - cross-service overlap is often intentional._
 
 ### Service: data-discovery
 
-- createAnnotationFromTemplate: MISMATCH `create_annotation_from_template`
-    - BODY sends NewElementRequestBody != TemplateRequestBody
 
 ### Service: data-engineer
 
@@ -365,12 +317,6 @@ _Review only - cross-service overlap is often intentional._
 ### Service: glossary-manager
 
 - getTermRelationshipTypeNames: MISSING  (`GET /glossary-manager/glossaries/terms/relationships/type-names`)
-- clearTermAsAbstractConcept: MISMATCH `remove_is_abstract_concept`
-    - BODY sends DeleteClassificationRequestBody != DeleteElementRequestBody
-- clearTermAsActivity: MISMATCH `remove_activity_description`
-    - BODY sends DeleteClassificationRequestBody != DeleteRelationshipRequestBody
-- clearTermAsContext: MISMATCH `remove_is_context_definition`
-    - BODY sends DeleteClassificationRequestBody != DeleteRelationshipRequestBody
 
 ### Service: governance-officer
 
@@ -397,8 +343,6 @@ _Review only - cross-service overlap is often intentional._
 - findGovernanceActionProcesses: MISSING  (`POST /governance-officer/governance-action-processes/by-search-string`)
 - getAllGovernanceActionProcesses: MISSING  (`POST /governance-officer/governance-definitions/by-search-string`)
 - getGovernanceActionProcessesByName: MISSING  (`POST /governance-officer/governance-definitions/by-name`)
-- getGovernanceActionProcessGraph: MISMATCH `get_governance_action_process_graph`
-    - BODY sends GetRequestBody != ResultsRequestBody
 - addGovernanceDefinitionToElement: MISSING  (`POST /governance-officer/elements/{}/governed-by/definition/{}/attach`)
 - removeGovernanceDefinitionFromElement: MISSING  (`POST /governance-officer/elements/{}/governed-by/definition/{}/detach`)
 - linkApprovedPurpose: MISSING  (`POST /governance-officer/elements/{}/approved-purposes/{}/attach`)
@@ -410,10 +354,6 @@ _Review only - cross-service overlap is often intentional._
 
 ### Service: lineage-linker
 
-- linkLineage: MISMATCH `link_lineage`
-    - PATH
-      SDK: /lineage-linker/elements/{}/{}/{}/attach
-      API: /lineage-linker/from-elements/{}/via/{}/to-elements/{}/attach
 
 ### Service: location-arena
 
@@ -433,78 +373,13 @@ _Review only - cross-service overlap is often intentional._
 - updateRelatedElementsInStore: MISSING  (`POST /metadata-expert/related-elements/{}/update-properties`)
 - updateRelatedElementsEffectivityInStore: MISSING  (`POST /metadata-expert/related-elements/{}/update-effectivity`)
 - deleteRelatedElementsInStore: MISSING  (`POST /metadata-expert/related-elements/{}/delete`)
-- getMetadataElementByGUID: MISMATCH `get_metadata_element_by_guid`
-    - PATH
-      SDK: /{}/metadata-elements/{}
-      API: /metadata-expert/metadata-elements/{}
 - getAnchoredElementsGraph: MISSING  (`POST /metadata-expert/metadata-elements/{}/with-anchored-elements`)
-- getMetadataElementByUniqueName: MISMATCH `get_metadata_element_by_unique_name`
-    - PATH
-      SDK: /{}/metadata-elements/by-unique-name
-      API: /metadata-expert/metadata-elements/by-unique-name
-- getMetadataElementGUIDByUniqueName: MISMATCH `get_metadata_guid_by_unique_name`
-    - PATH
-      SDK: /{}/metadata-elements/guid-by-unique-name
-      API: /metadata-expert/metadata-elements/guid-by-unique-name
-    - BODY sends FilterRequestBody != UniqueNameRequestBody
-- getMetadataElementHistory: MISMATCH `get_metadata_element_history`
-    - BODY sends GetRequestBody != HistoryRequestBody
-- getClassificationHistory: MISMATCH `get_classification_history`
-    - PATH
-      SDK: /{}/metadata-elements/{}/classifications/{}/history
-      API: /metadata-expert/metadata-elements/{}/classifications/{}/history
-- findMetadataElementsWithString: MISMATCH `find_metadata_elements_with_string`
-    - PATH
-      SDK: /{}/metadata-elements/by-search-string
-      API: /metadata-expert/metadata-elements/by-search-string
-- findElementsForAnchor: MISMATCH `find_elements_for_anchor`
-    - PATH
-      SDK: /{}/metadata-elements/by-search-string/for-anchor/{}
-      API: /metadata-expert/metadata-elements/by-search-string/for-anchor/{}
-- findElementsInAnchorDomain: MISMATCH `find_elements_in_anchor_domain`
-    - PATH
-      SDK: /{}/metadata-elements/by-search-string/in-anchor-domain/{}
-      API: /metadata-expert/metadata-elements/by-search-string/in-anchor-domain/{}
-- findElementsInAnchorScope: MISMATCH `find_elements_in_anchor_scope`
-    - PATH
-      SDK: /{}/metadata-elements/by-search-string/in-anchor-scope/{}
-      API: /metadata-expert/metadata-elements/by-search-string/in-anchor-scope/{}
 - getAllRelatedMetadataElements: MISSING  (`POST /metadata-expert/related-elements/{}/any-type`)
-- getRelatedMetadataElements: MISMATCH `get_related_metadata_elements`
-    - PATH
-      SDK: /{}/related-elements/{}/type/{}
-      API: /metadata-expert/related-elements/{}/type/{}
-- getAllMetadataElementRelationships: MISMATCH `get_all_metadata_element_relationships`
-    - PATH
-      SDK: /{}/metadata-elements/{}/linked-by-any-type/to-elements/{}
-      API: /metadata-expert/metadata-elements/{}/linked-by-any-type/to-elements/{}
-- getMetadataElementRelationships: MISMATCH `get_metadata_element_relationships`
-    - PATH
-      SDK: /{}/metadata-elements/{}/linked-by-type/{}/to-elements/{}
-      API: /metadata-expert/metadata-elements/{}/linked-by-type/{}/to-elements/{}
-- findMetadataElements: MISMATCH `find_metadata_elements`
-    - PATH
-      SDK: /{}/metadata-elements/by-search-conditions
-      API: /metadata-expert/metadata-elements/by-search-conditions
-- countMetadataElements: MISMATCH `count_metadata_elements`
-    - PATH
-      SDK: /{}/metadata-elements/by-search-conditions/count
-      API: /metadata-expert/metadata-elements/by-search-conditions/count
 - findRelationshipsBetweenMetadataElements: MISSING  (`POST /metadata-expert/relationships/by-search-conditions`)
 - countRelationshipsBetweenMetadataElements: MISSING  (`POST /metadata-expert/relationships/by-search-conditions/count`)
-- getRelationshipByGUID: MISMATCH `get_relationship_by_guid`
-    - PATH
-      SDK: /{}/relationships/by-guid/{}
-      API: /metadata-expert/relationships/by-guid/{}
-- getRelationshipHistory: MISMATCH `get_relationship_history`
-    - PATH
-      SDK: /{}/relationships/{}/history
-      API: /metadata-expert/relationships/{}/history
 
 ### Service: my-profile
 
-- getMyProfile: MISMATCH `get_my_profile`
-    - VERB POST != GET
 - Get My Profile: MISSING  (`POST /my-profile`)
 - Add My Profile: MISSING  (`POST /my-profile/new`)
 
@@ -556,8 +431,6 @@ _Review only - cross-service overlap is often intentional._
 - createClassifiedProject: MISSING  (`POST /project-manager/projects`)
 - createCampaign: MISSING  (`POST /project-manager/projects`)
 - createTaskForProject: MISSING  (`POST /project-manager/projects/{}/task`)
-- clearProjectClassification: MISMATCH `clear_project_classification`
-    - BODY sends NewClassificationRequestBody != DeleteClassificationRequestBody
 - setupProjectDependency: MISSING  (`POST /project-manager/projects/{}/project-dependencies/{}/attach`)
 - setupProjectHierarchy: MISSING  (`POST /project-manager/projects/{}/project-hierarchies/{}/attach`)
 
@@ -597,8 +470,6 @@ _Review only - cross-service overlap is often intentional._
 
 ### Service: schema-maker
 
-- deleteSchemaType: MISMATCH `delete_schema_type`
-    - BODY sends DeleteElementRequestBody != MetadataSourceRequestBody
 - updateSchemaAttribute: MISMATCH `update_schema_attribute`
     - PATH
       SDK: /schema-maker/schema-attributes/{}/update
@@ -607,7 +478,6 @@ _Review only - cross-service overlap is often intentional._
     - PATH
       SDK: /schema-maker/schema-attributes/{}/delete
       API: /schema-maker/schema-attributes/delete
-    - BODY sends DeleteElementRequestBody != MetadataSourceRequestBody
 - getSchemaAttributeByGUID: MISMATCH `get_schema_attribute_by_guid`
     - PATH
       SDK: /schema-maker/schema-attributes/{}/retrieve
@@ -620,10 +490,6 @@ _Review only - cross-service overlap is often intentional._
 
 ### Service: solution-architect
 
-- getDesignPatternsByName: MISMATCH `get_design_patterns_by_name`
-    - PATH
-      SDK: /solution-architect/design-patterns/by-name/{}
-      API: /solution-architect/design-patterns/by-name
 - createInformationSupplyChain: MISSING  (`POST /solution-architect/information-supply-chains`)
 - createInformationSupplyChainFromTemplate: MISSING  (`POST /solution-architect/information-supply-chains/from-template`)
 - updateInformationSupplyChain: MISSING  (`POST /solution-architect/information-supply-chains/{}/update`)
@@ -644,10 +510,6 @@ _Review only - cross-service overlap is often intentional._
 - detachSolutionComponentActor: MISSING  (`POST /solution-architect/solution-roles/{}/solution-component-actors/{}/detach`)
 - findAllSolutionRoles - with full request body: MISSING  (`POST /solution-architect/solution-roles/by-search-string`)
 - findSolutionRoles - with full request body: MISSING  (`POST /solution-architect/solution-roles/by-search-string`)
-- getSolutionRolesByName: MISMATCH `get_solution_roles_by_name`
-    - PATH
-      SDK: /solution-architect/solution-roles/by-name{}
-      API: /solution-architect/solution-roles/by-name
 - getSolutionRolesByName - with full request body: MISSING  (`POST /solution-architect/solution-roles/by-name`)
 - getSolutionRoleByGUID - with request body: MISSING  (`POST /solution-architect/solution-roles/{}/retrieve`)
 - detachSubcomponent: MISSING  (`POST /solution-architect/solution-components/{}/subcomponents/{}/detach`)
@@ -658,21 +520,11 @@ _Review only - cross-service overlap is often intentional._
       API: /solution-architect/solution-components/wires/{}/detach
 - findAllSolutionComponents - with full request body: MISSING  (`POST /solution-architect/solution-components/by-search-string`)
 - findSolutionComponents - with full request body: MISSING  (`POST /solution-architect/solution-components/by-search-string`)
-- getSolutionComponentsByName: MISMATCH `get_solution_components_by_name`
-    - PATH
-      SDK: /solution-architect/solution-components/by-name{}
-      API: /solution-architect/solution-components/by-name
 - getSolutionComponentsByName - with full request body: MISSING  (`POST /solution-architect/solution-components/by-name`)
 - getSolutionComponentByGUID - with request body: MISSING  (`POST /solution-architect/solution-components/{}/retrieve`)
-- getSolutionComponentImplementations: MISMATCH `get_solution_component_implementations`
-    - PATH
-      SDK: /solution-architect/solution-components/{}/implementations{}
-      API: /solution-architect/solution-components/{}/implementations
 
 ### Service: subject-area
 
-- createSubjectAreaFromTemplate: MISMATCH `create_subject_area_from_template`
-    - BODY sends NewElementRequestBody != TemplateRequestBody
 - linkSubjectAreas: MISSING  (`POST /subject-area/collections/{}/collection-hierarchies/{}/attach`)
 - detachSubjectAreas: MISSING  (`POST /subject-area/collections/{}/collection-hierarchies/{}/detach`)
 - findAllSubjectAreas: MISSING  (`POST /subject-area/collectionss/by-search-string`)
@@ -686,8 +538,6 @@ _Review only - cross-service overlap is often intentional._
 
 ### Service: time-keeper
 
-- createContextEventFromTemplate: MISMATCH `create_context_event_from_template`
-    - BODY sends NewElementRequestBody != TemplateRequestBody
 
 ### Service: valid-metadata
 
@@ -701,5 +551,3 @@ _Review only - cross-service overlap is often intentional._
 - getAttributeTypes: MISSING  (`GET /valid-metadata/open-metadata-types/attribute-defs`)
 - getTypeDefByName: MISSING  (`GET /valid-metadata/open-metadata-types/name/{}`)
 - setUpSpecificationProperty: MISSING  (`POST /valid-metadata/elements/{}/specification-properties`)
-- linkSpecificationProperty: MISMATCH `link_specification_property`
-    - BODY sends NewElementRequestBody != NewRelationshipRequestBody
