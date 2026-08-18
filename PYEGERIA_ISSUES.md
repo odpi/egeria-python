@@ -940,6 +940,49 @@ matching the report's own verification snippets; full
 
 ---
 
+### ISSUE-66: `Create Design Pattern` had no `Usage` attribute at all
+
+**Layer:** Pyegeria/Dr.Egeria (`md_processing/data/compact_commands/commands_solution_architect_compact.json`, `md_processing/md_processing_utils/common_md_utils.py`).
+
+**Status:** fixed 2026-08-18 (Pyegeria/Dr.Egeria — compact spec via the
+Dr.Egeria Spec Editor's REST API, `common_md_utils.py`,
+`tests/micro-tests/test_design_pattern_usage.py`). Reported by dwolfson.
+
+**What was missing:** `usage` is a real `DesignPatternProperties` field —
+confirmed in `Egeria-api-solution-architect.http`'s
+`createDesignPattern`/`updateDesignPattern` worked examples, right
+alongside `context`/`problemStatement`/`solutionDescription`/etc., which
+`Create Design Pattern` already supported. But the "Design Pattern Base"
+bundle's `own_attributes` never declared a `Usage` attribute at all, and
+`set_solution_architect_body()`'s `DesignPattern` branch (the function that
+builds the outgoing properties for both Create and Update) never included
+`usage` in what it constructs. Unlike most gaps in this tracker, this
+wasn't even a silent-drop: a `### Usage` block in a Dr.Egeria markdown file
+would have failed `--validate` outright as an undeclared attribute — the
+property was simply unreachable from Dr.Egeria, not misrouted once
+supplied.
+
+**Fix:** added `Usage` to the "Design Pattern Base" bundle's
+`own_attributes` via the Spec Editor API (reusing the existing shared
+`Usage` attribute definition already used elsewhere in this same family —
+no new attribute definition needed, `style: Simple`). Added
+`"usage": attributes.get('Usage', {}).get('value', None)` to
+`set_solution_architect_body()`'s `DesignPattern` branch, alongside its
+sibling fields. `refresh_specs` regenerated both basic/advanced
+`Create_Design_Pattern.md` templates correctly;
+`validate_compact_specs` still reports 0 errors (same 26 pre-existing
+warnings, none new).
+
+**Verified live** against `qs-view-server`: created a real `DesignPattern`
+with `Usage` set, fetched it back — `usage` persisted correctly. 3 new
+unit tests (`test_design_pattern_usage.py`, pure function test against
+`set_solution_architect_body`, no live server needed) cover the happy
+path, the unset-is-None case, and confirm `SolutionBlueprint` (which has
+no such field on its own real properties class) doesn't pick up a stray
+`usage` key. Full `pytest tests/micro-tests/` passes.
+
+---
+
 ### ISSUE-64: `Create Information Supply Chain`'s `Purposes`/`Scope` attributes were silently dropped — never read from `attributes` at all
 
 **Status:** fixed 2026-08-18 (Pyegeria/Dr.Egeria —
