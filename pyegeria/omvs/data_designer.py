@@ -404,6 +404,58 @@ class DataDesigner(ServerClient):
         return loop.run_until_complete(self._async_create_data_value_specification(body))
 
     @dynamic_catch
+    async def _async_create_data_value_specification_from_template(
+            self, body: Optional[dict | TemplateRequestBody] = None) -> str:
+        """
+        Create a new metadata element to represent a data value specification using an existing metadata
+        element as a template. The template defines additional classifications and relationships that should
+        be added to the new element. Async version.
+
+        Parameters
+        ----------
+        body : dict | TemplateRequestBody, optional
+            The template details for the data value specification.
+
+        Returns
+        -------
+        str
+            The unique identifier of the newly created data value specification.
+
+        Raises
+        ------
+        PyegeriaException
+            If there are issues in communications, message format, or Egeria errors.
+        """
+        url = f"{self.ref_data_designer_command_base}/data-value-specifications/from-template"
+        return await self._async_create_element_from_template(url, body)
+
+    @dynamic_catch
+    def create_data_value_specification_from_template(
+            self, body: Optional[dict | TemplateRequestBody] = None) -> str:
+        """
+        Create a new metadata element to represent a data value specification using an existing metadata
+        element as a template. The template defines additional classifications and relationships that should
+        be added to the new element.
+
+        Parameters
+        ----------
+        body : dict | TemplateRequestBody, optional
+            The template details for the data value specification.
+
+        Returns
+        -------
+        str
+            The unique identifier of the newly created data value specification.
+
+        Raises
+        ------
+        PyegeriaException
+            If there are issues in communications, message format, or Egeria errors.
+        """
+        loop = asyncio.get_event_loop()
+        return loop.run_until_complete(self._async_create_data_value_specification_from_template(body))
+
+    @dynamic_catch
     async def _async_create_data_grain(self, body: dict | NewElementRequestBody) -> str:
         """
         Create a new data grain. Async version.
@@ -5279,6 +5331,23 @@ class DataDesigner(ServerClient):
         """
         loop = asyncio.get_event_loop()
         loop.run_until_complete(self._async_link_data_value_assignment(element_guid, spec_guid, body))
+
+    @dynamic_catch
+    async def _async_detach_data_value_assignment(self, element_guid: str, spec_guid: str, body: dict = None) -> None:
+        """
+        Detach a Data Value Specification from an element (DataValueAssignment relationship). Async version.
+        """
+        url = f"{self.ref_data_designer_command_base}/elements/{element_guid}/data-value-specifications/{spec_guid}/detach"
+        await self._async_delete_relationship_request(url, body)
+        logger.info(f"Data Value Specification {spec_guid} unassigned from element {element_guid}.")
+
+    @dynamic_catch
+    def detach_data_value_assignment(self, element_guid: str, spec_guid: str, body: dict = None) -> None:
+        """
+        Detach a Data Value Specification from an element (DataValueAssignment relationship). Sync version.
+        """
+        loop = asyncio.get_event_loop()
+        loop.run_until_complete(self._async_detach_data_value_assignment(element_guid, spec_guid, body))
 
     @dynamic_catch
     async def _async_update_data_field(self, data_field_guid: str, body: dict | UpdateElementRequestBody) -> None:

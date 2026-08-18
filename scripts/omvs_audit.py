@@ -103,6 +103,15 @@ NAME_OVERRIDES = {
     "get_criticality_classified_elements": "get_classified_elements_by",
     "get_confidentiality_classified_elements": "get_classified_elements_by",
     "get_retention_classified_elements": "get_classified_elements_by",
+    # "Query a connector" (Egeria-platform-services.http) bakes a real,
+    # literal Java class name straight into the URL instead of a
+    # {{javaClassName}} placeholder - the only .http entry seen doing this.
+    # The reverse (verb, path) lookup does exact matching, so an SDK path
+    # ending in the templated "{}" this method actually needs can never equal
+    # a literal example value; only a name override (which routes through the
+    # direct-match branch, where paths_compatible allows a templated trailing
+    # segment) can find it.
+    "query_a_connector": "get_connector_type",
 }
 
 # Attributes holding a bare service marker that gets interpolated into a URL

@@ -65,6 +65,51 @@ class Platform(BasePlatformClient):
     # is_json=False, which this endpoint requires -- it returns plain text, so
     # parsing it as JSON raises PyegeriaInvalidParameterException.
 
+    async def _async_get_connector_type(self, java_class_name: str) -> dict | str:
+        """Retrieve the list of services that have been requested inside of a specific server running on this
+            OMAG Server Platform. Async version.
+
+        Parameters
+        ----------
+        java_class_name : str
+            Fully-qualified Java class name of the connector provider.
+
+        Returns
+        -------
+        dict | str
+            The connector type properties.
+
+        Raises
+        ------
+        PyegeriaException
+            If there are issues in communications, message format, or Egeria errors.
+        """
+        url = f"{self.admin_command_root}/connector-types/{java_class_name}"
+        response = await self._async_make_request("GET", url)
+        return response.json()
+
+    def get_connector_type(self, java_class_name: str) -> dict | str:
+        """Retrieve the list of services that have been requested inside of a specific server running on this
+            OMAG Server Platform.
+
+        Parameters
+        ----------
+        java_class_name : str
+            Fully-qualified Java class name of the connector provider.
+
+        Returns
+        -------
+        dict | str
+            The connector type properties.
+
+        Raises
+        ------
+        PyegeriaException
+            If there are issues in communications, message format, or Egeria errors.
+        """
+        loop = asyncio.get_event_loop()
+        return loop.run_until_complete(self._async_get_connector_type(java_class_name))
+
     async def _async_activate_server_stored_config(
         self, server: Optional[str] = None, timeout: int = 60
     ) -> None:
@@ -607,6 +652,59 @@ class Platform(BasePlatformClient):
         """
         loop = asyncio.get_event_loop()
         loop.run_until_complete(self._async_shutdown_server(server))
+
+    async def _async_shutdown_and_unregister_server(self, server: str = None) -> None:
+        """Unregister a server from its cohorts and remove its configuration. Async version.
+
+        Distinct from shutdown_server: shutdown_server stops the server (DELETE .../instance) but leaves its
+        configuration and cohort registration in place; this operation additionally unregisters the server
+        from its cohorts and removes its configuration entirely.
+
+        Parameters
+        ----------
+        server : Use the server if specified. If None, use the default server associated with the Platform object.
+
+        Returns
+        -------
+        None
+
+        Raises
+        ------
+        PyegeriaInvalidParameterException
+          If the client passes incorrect parameters on the request - such as bad URLs or invalid values
+        PyegeriaAPIException
+          Raised by the server when an issue arises in processing a valid request
+        NotAuthorizedException
+          The principle specified by the user_id does not have authorization for the requested action
+        """
+        if server is None:
+            server = self.server_name
+
+        url = self.admin_command_root + "/servers/" + server
+        await self._async_make_request("DELETE", url)
+
+    def shutdown_and_unregister_server(self, server: str = None) -> None:
+        """Unregister a server from its cohorts and remove its configuration.
+
+        Parameters
+        ----------
+        server : Use the server if specified. If None, use the default server associated with the Platform object.
+
+        Returns
+        -------
+        None
+
+        Raises
+        ------
+        PyegeriaInvalidParameterException
+          If the client passes incorrect parameters on the request - such as bad URLs or invalid values
+        PyegeriaAPIException
+          Raised by the server when an issue arises in processing a valid request
+        NotAuthorizedException
+          The principle specified by the user_id does not have authorization for the requested action
+        """
+        loop = asyncio.get_event_loop()
+        loop.run_until_complete(self._async_shutdown_and_unregister_server(server))
 
     async def _async_shutdown_unregister_servers(self) -> None:
         """

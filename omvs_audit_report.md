@@ -5,10 +5,10 @@ Subject: `pyegeria/omvs` (44 modules)
 
 | Result | Count |
 |---|---|
-| OK | 709 |
+| OK | 726 |
 | Mismatch (verb/path/body) | 7 |
-| Missing | 32 |
-| Renamed (implemented, verb+path matches under a different name) | 194 |
+| Missing | 13 |
+| Renamed (implemented, verb+path matches under a different name) | 196 |
 | Found in another module | 18 |
 | URL lint | 0 |
 
@@ -178,9 +178,6 @@ _Review only - cross-service overlap is often intentional._
 - unDeployITAsset: RENAMED -> `asset-maker.py`:`_async_undeploy_it_asset`
 - linkSoftwareCapability: RENAMED -> `asset-maker.py`:`_async_link_software_capability_to_asset`
 - detachSoftwareCapability: RENAMED -> `asset-maker.py`:`_async_detach_software_capability_from_asset`
-- linkSupportedGovernanceService: MISSING  (`POST /asset-maker/governance-engines/{}/supported-governance-services/{}/attach`)
-- updateSupportedGovernanceService: MISSING  (`POST /asset-maker/supported-governance-services/{}/update`)
-- detachSupportedGovernanceService: MISSING  (`POST /asset-maker/supported-governance-services/{}/detach`)
 
 ### Service: automated-curation
 
@@ -193,11 +190,6 @@ _Review only - cross-service overlap is often intentional._
 - createElementFromTemplate - Marquez endpoint: RENAMED -> `automated-curation.py`:`_async_create_elem_from_template`
 - initiateGovernanceActionType: RENAMED -> `automated-curation.py`:`_async_initiate_gov_action_type`, `automated-curation.py`:`_async_initiate_survey`
 - initiateGovernanceActionProcess: RENAMED -> `automated-curation.py`:`_async_initiate_gov_action_process`
-- updateEngineActionStatus: MISSING  (`POST /automated-curation/engine-actions/{}/status/update`)
-- claimEngineAction: MISSING  (`POST /automated-curation/engine-actions/{}/claim`)
-- getActiveClaimedEngineActions: MISSING  (`GET /automated-curation/governance-engines/{}/engine-actions/active-claimed`)
-- updateActionTargetStatus: MISSING  (`POST /automated-curation/engine-actions/action-targets/update`)
-- recordCompletionStatus: MISSING  (`POST /automated-curation/engine-actions/{}/completion-status`)
 
 ### Service: classification-explorer
 
@@ -252,9 +244,6 @@ _Review only - cross-service overlap is often intentional._
 - createDataSharingAgreementCollection: RENAMED -> `collection-manager.py`:`_async_create_collection`, `collection-manager.py`:`_async_create_data_spec_collection`, `collection-manager.py`:`_async_create_report_type_collection`, `collection-manager.py`:`_async_create_question_spec_folder`, `collection-manager.py`:`_async_create_security_list`, `collection-manager.py`:`_async_create_data_dictionary_collection`, `collection-manager.py`:`_async_create_skill_set_collection`, `collection-manager.py`:`_async_create_reference_list_collection`, `collection-manager.py`:`_async_create_digital_product`, `collection-manager.py`:`_async_create_digital_product_catalog`, `collection-manager.py`:`_async_create_agreement`, `collection-manager.py`:`_async_create_digital_subscription`
 - updateAgreementStatus: RENAMED -> `collection-manager.py`:`_async_update_collection`, `collection-manager.py`:`_async_update_digital_product`, `collection-manager.py`:`_async_update_agreement`, `collection-manager.py`:`_async_update_digital_subscription`
 - updateDigitalSubscriptionStatus: RENAMED -> `collection-manager.py`:`_async_update_collection`, `collection-manager.py`:`_async_update_digital_product`, `collection-manager.py`:`_async_update_agreement`, `collection-manager.py`:`_async_update_digital_subscription`
-- detachDataDescription: MISSING  (`POST /collection-manager/metadata-elements/{}/data-descriptions/{}/detach`)
-- attachSmartQuery: MISSING  (`POST /collection-manager/collections/results-sets/{}/smart-query/{}/attach`)
-- detachSmartQuery: MISSING  (`POST /collection-manager/collections/results-sets/{}/smart-query/{}/detach`)
 - attachAssociatedSkillSet: RENAMED -> `collection-manager.py`:`_async_link_associated_skill_set`
 - updateCollectionMembership: RENAMED -> `collection-manager.py`:`_async_update_collection_membership_prop`
 
@@ -276,9 +265,8 @@ _Review only - cross-service overlap is often intentional._
 - findDataFields - with full request body: RENAMED -> `data-designer.py`:`_async_find_data_fields`
 - getDataFieldsByName - with full request body: RENAMED -> `data-designer.py`:`_async_get_data_fields_by_name`
 - getDataFieldByGUID - with request body: RENAMED -> `data-designer.py`:`_async_get_data_field_by_guid`
-- createDataValueSpecificationFromTemplate: MISSING  (`POST /data-designer/data-value-specifications/from-template`)
 - assignDataValueSpecification: RENAMED -> `data-designer.py`:`_async_link_data_value_assignment`
-- detachDataValueSpecificationAssignment: MISSING  (`POST /data-designer/elements/{}/data-value-specifications/{}/detach`)
+- detachDataValueSpecificationAssignment: RENAMED -> `data-designer.py`:`_async_detach_data_value_assignment`
 - findAllDataClasses: RENAMED -> `data-designer.py`:`_async_find_data_value_specifications`
 - findAllDataGrains: RENAMED -> `data-designer.py`:`_async_find_data_value_specifications`
 - findDataValueSpecifications - with full request body: RENAMED -> `data-designer.py`:`_async_find_data_value_specifications`
@@ -332,13 +320,10 @@ _Review only - cross-service overlap is often intentional._
 - findGovernanceActionTypes: RENAMED -> `governance-officer.py`:`_async_find_governance_definitions`
 - getGovernanceActionTypesByName: RENAMED -> `governance-officer.py`:`_async_get_governance_definitions_by_name`
 - getGovernanceActionTypeByGUID: RENAMED -> `action-author.py`:`_async_get_governance_action_process`, `governance-officer.py`:`_async_get_governance_definition_by_guid`, `governance-officer.py`:`_async_get_governance_action_process`
-- findGovernanceActionProcesses: MISSING  (`POST /governance-officer/governance-action-processes/by-search-string`)
 - getAllGovernanceActionProcesses: RENAMED -> `governance-officer.py`:`_async_find_governance_definitions`
 - getGovernanceActionProcessesByName: RENAMED -> `governance-officer.py`:`_async_get_governance_definitions_by_name`
 - addGovernanceDefinitionToElement: RENAMED -> `governance-officer.py`:`_async_attach_governed_by_definition`
 - removeGovernanceDefinitionFromElement: RENAMED -> `governance-officer.py`:`_async_detach_governed_by_definition`
-- linkApprovedPurpose: MISSING  (`POST /governance-officer/elements/{}/approved-purposes/{}/attach`)
-- detachApprovedPurpose: MISSING  (`POST /governance-officer/elements/{}/approved-purposes/{}/detach`)
 - updateLicense: ELSEWHERE -> `classification-explorer.py`
 - unlicenseElement: ELSEWHERE -> `classification-explorer.py`
 - updateCertification: ELSEWHERE -> `classification-explorer.py`
@@ -387,8 +372,7 @@ _Review only - cross-service overlap is often intentional._
 - Get Contractor User List: RENAMED -> `platform-services.py`:`_async_get_security_user_list`
 - Get all known servers: RENAMED -> `platform-services.py`:`_async_get_known_servers`
 - Query the status of a specific server: ELSEWHERE -> `server-operations.py`
-- Query a connector: MISSING  (`GET /platform-services/server-platform/connector-types/org.odpi.openmetadata.metadatasecurity.accessconnector.OpenMetadataAccessSecurityProvider`)
-- Shutdown and unregister server from cohorts: MISSING  (`DELETE /platform-services/server-platform/servers/{}`)
+- Shutdown and unregister server from cohorts: RENAMED -> `platform-services.py`:`_async_shutdown_and_unregister_server`
 - Shutdown all active servers: RENAMED -> `platform-services.py`:`_async_shutdown_all_servers`
 - Shutdown and unregister all active servers: RENAMED -> `platform-services.py`:`_async_shutdown_unregister_servers`
 - Shutdown server platform: RENAMED -> `platform-services.py`:`_async_shutdown_platform`
@@ -525,6 +509,5 @@ _Review only - cross-service overlap is often intentional._
 - getEntityDefs: RENAMED -> `valid-metadata.py`:`_async_get_all_entity_defs`
 - getRelationshipDefs: RENAMED -> `valid-metadata.py`:`_async_get_all_relationship_defs`
 - getClassificationDefs: RENAMED -> `valid-metadata.py`:`_async_get_all_classification_defs`
-- getAttributeTypes: MISSING  (`GET /valid-metadata/open-metadata-types/attribute-defs`)
 - getTypeDefByName: RENAMED -> `valid-metadata.py`:`_async_get_typedef_by_name`
 - setUpSpecificationProperty: RENAMED -> `valid-metadata.py`:`_async_setup_specification_property`

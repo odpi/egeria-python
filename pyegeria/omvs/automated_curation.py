@@ -2353,6 +2353,280 @@ class AutomatedCuration(ServerClient):
         loop.run_until_complete(self._async_cancel_engine_action(engine_action_guid))
         return
 
+    async def _async_claim_engine_action(self, engine_action_guid: str) -> None:
+        """Request that execution of an engine action is allocated to the caller. Async version.
+
+        Parameters
+        ----------
+        engine_action_guid : str
+            The GUID of the engine action to claim.
+
+        Returns
+        -------
+        None
+
+        Raises
+        ------
+        PyegeriaException
+
+        Notes
+        -----
+        For more information see: https://egeria-project.org/concepts/engine-action
+        """
+        validate_guid(engine_action_guid)
+        url = f"{self.ref_curation_command_base}/engine-actions/{engine_action_guid}/claim"
+        await self._async_make_request("POST", url)
+
+    def claim_engine_action(self, engine_action_guid: str) -> None:
+        """Request that execution of an engine action is allocated to the caller."""
+        loop = asyncio.get_event_loop()
+        loop.run_until_complete(self._async_claim_engine_action(engine_action_guid))
+        return
+
+    async def _async_update_engine_action_status(self, engine_action_guid: str, status: str,
+                                                  body: Optional[dict] = None) -> None:
+        """Update the status of the engine action - providing the caller is permitted. Async version.
+
+        Parameters
+        ----------
+        engine_action_guid : str
+            The GUID of the engine action to update.
+        status : str
+            One of "Requested", "Approved", "Waiting", "Activating", "In Progress", "Paused",
+            "For Information", "Completed", "Invalid", "Ignored", "Failed", "Cancelled", "Abandoned" or "Other".
+        body : dict, optional
+            Request body to pass directly to the API - overrides `status` if supplied.
+
+        Returns
+        -------
+        None
+
+        Raises
+        ------
+        PyegeriaException
+
+        Notes
+        -----
+        Sample JSON body:
+        ```json
+        {
+          "class" : "EngineActionStatusRequestBody",
+          "status" : "IN_PROGRESS"
+        }
+        ```
+        For more information see: https://egeria-project.org/concepts/engine-action
+        """
+        validate_guid(engine_action_guid)
+        url = f"{self.ref_curation_command_base}/engine-actions/{engine_action_guid}/status/update"
+        payload = body if body is not None else {"class": "EngineActionStatusRequestBody", "status": status}
+        await self._async_make_request("POST", url, payload)
+
+    def update_engine_action_status(self, engine_action_guid: str, status: str,
+                                    body: Optional[dict] = None) -> None:
+        """Update the status of the engine action - providing the caller is permitted."""
+        loop = asyncio.get_event_loop()
+        loop.run_until_complete(self._async_update_engine_action_status(engine_action_guid, status, body))
+        return
+
+    async def _async_update_action_target_status(
+            self, action_target_guid: str, status: str,
+            start_date: Optional[str] = None, completion_date: Optional[str] = None,
+            completion_message: Optional[str] = None, body: Optional[dict] = None) -> None:
+        """Update the status of a specific action target. Async version.
+
+        By default, these values are derived from the values for the governance action service. However, if
+        the governance action service has to process many target elements, then setting the status on each
+        individual target will show the progress of the governance action service.
+
+        Parameters
+        ----------
+        action_target_guid : str
+            The GUID of the action target to update.
+        status : str
+            The new status for the action target.
+        start_date : str, optional
+            The date processing of this target started.
+        completion_date : str, optional
+            The date processing of this target completed.
+        completion_message : str, optional
+            A message describing the outcome of processing this target.
+        body : dict, optional
+            Request body to pass directly to the API - overrides the other parameters if supplied.
+
+        Returns
+        -------
+        None
+
+        Raises
+        ------
+        PyegeriaException
+
+        Notes
+        -----
+        Sample JSON body:
+        ```json
+        {
+          "class" : "ActionTargetStatusRequestBody",
+          "actionTargetGUID" : "add guid here",
+          "status" : "COMPLETED",
+          "startDate" : "{{$isoTimestamp}}",
+          "completionDate" : "{{$isoTimestamp}}",
+          "completionMessage" : "add completion message here"
+        }
+        ```
+        For more information see: https://egeria-project.org/concepts/engine-action
+        """
+        validate_guid(action_target_guid)
+        url = f"{self.ref_curation_command_base}/engine-actions/action-targets/update"
+        payload = body if body is not None else {
+            "class": "ActionTargetStatusRequestBody",
+            "actionTargetGUID": action_target_guid,
+            "status": status,
+            "startDate": start_date,
+            "completionDate": completion_date,
+            "completionMessage": completion_message,
+        }
+        await self._async_make_request("POST", url, body_slimmer(payload))
+
+    def update_action_target_status(
+            self, action_target_guid: str, status: str,
+            start_date: Optional[str] = None, completion_date: Optional[str] = None,
+            completion_message: Optional[str] = None, body: Optional[dict] = None) -> None:
+        """Update the status of a specific action target."""
+        loop = asyncio.get_event_loop()
+        loop.run_until_complete(
+            self._async_update_action_target_status(
+                action_target_guid, status, start_date, completion_date, completion_message, body
+            )
+        )
+        return
+
+    async def _async_record_completion_status(
+            self, engine_action_guid: str, status: str,
+            request_parameters: Optional[dict] = None, output_guards: Optional[list[str]] = None,
+            new_action_targets: Optional[list[dict]] = None, completion_message: Optional[str] = None,
+            body: Optional[dict] = None) -> None:
+        """Declare that all the processing for the governance action service is finished and the status of the
+            work. Async version.
+
+        Parameters
+        ----------
+        engine_action_guid : str
+            The GUID of the engine action to record completion for.
+        status : str
+            One of "Actioned", "Invalid", "Failed" or "Other".
+        request_parameters : dict, optional
+            Additional request parameters.
+        output_guards : list[str], optional
+            Guards output by this governance action service, driving the next steps in a process.
+        new_action_targets : list[dict], optional
+            Additional action targets to add, each a dict with "actionTargetName"/"actionTargetGUID".
+        completion_message : str, optional
+            A message describing the completion outcome.
+        body : dict, optional
+            Request body to pass directly to the API - overrides the other parameters if supplied.
+
+        Returns
+        -------
+        None
+
+        Raises
+        ------
+        PyegeriaException
+
+        Notes
+        -----
+        Sample JSON body:
+        ```json
+        {
+          "class" : "CompletionStatusRequestBody",
+          "status" : "ACTIONED",
+          "requestParameters" : {
+            "propertyName1" : "propertyValue1",
+            "propertyName2" : "propertyValue2"
+          },
+          "outputGuards" : [ "add guard here" ],
+          "newActionTargets" : [
+            {
+              "actionTargetName" : "add action target name here",
+              "actionTargetGUID" : "add guid here"
+            }
+          ],
+          "completionMessage" : "add completion message here"
+        }
+        ```
+        For more information see: https://egeria-project.org/concepts/engine-action
+        """
+        validate_guid(engine_action_guid)
+        url = f"{self.ref_curation_command_base}/engine-actions/{engine_action_guid}/completion-status"
+        payload = body if body is not None else {
+            "class": "CompletionStatusRequestBody",
+            "status": status,
+            "requestParameters": request_parameters,
+            "outputGuards": output_guards,
+            "newActionTargets": new_action_targets,
+            "completionMessage": completion_message,
+        }
+        await self._async_make_request("POST", url, body_slimmer(payload))
+
+    def record_completion_status(
+            self, engine_action_guid: str, status: str,
+            request_parameters: Optional[dict] = None, output_guards: Optional[list[str]] = None,
+            new_action_targets: Optional[list[dict]] = None, completion_message: Optional[str] = None,
+            body: Optional[dict] = None) -> None:
+        """Declare that all the processing for the governance action service is finished and the status of
+            the work."""
+        loop = asyncio.get_event_loop()
+        loop.run_until_complete(
+            self._async_record_completion_status(
+                engine_action_guid, status, request_parameters, output_guards, new_action_targets,
+                completion_message, body
+            )
+        )
+        return
+
+    async def _async_get_active_claimed_engine_actions(
+            self, governance_engine_guid: str, start_from: int = 0, page_size: int = 0) -> list | str:
+        """Retrieve the engine actions that are still in process and that have been claimed by this caller's
+            userId. This call is used when the caller restarts. Async version.
+
+        Parameters
+        ----------
+        governance_engine_guid : str
+            The GUID of the governance engine to retrieve claimed engine actions for.
+        start_from : int, default 0
+            The index from which to start fetching.
+        page_size : int, default 0
+            The maximum number to fetch in a single request.
+
+        Returns
+        -------
+        list | str
+            A list of dictionaries representing the retrieved engine actions, or a message if none found.
+
+        Raises
+        ------
+        PyegeriaException
+
+        Notes
+        -----
+        For more information see: https://egeria-project.org/concepts/engine-action
+        """
+        validate_guid(governance_engine_guid)
+        url = f"{self.ref_curation_command_base}/governance-engines/{governance_engine_guid}/engine-actions/active-claimed"
+        response = await self._async_make_request("GET", url, params={"startFrom": start_from, "pageSize": page_size})
+        elements = response.json().get("elements", NO_ELEMENTS_FOUND)
+        return elements
+
+    def get_active_claimed_engine_actions(
+            self, governance_engine_guid: str, start_from: int = 0, page_size: int = 0) -> list | str:
+        """Retrieve the engine actions that are still in process and that have been claimed by this caller's
+            userId. This call is used when the caller restarts."""
+        loop = asyncio.get_event_loop()
+        return loop.run_until_complete(
+            self._async_get_active_claimed_engine_actions(governance_engine_guid, start_from, page_size)
+        )
+
     async def _async_get_engine_actions(
             self,
             start_from: int = 0,
