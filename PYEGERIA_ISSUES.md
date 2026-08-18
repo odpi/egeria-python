@@ -687,6 +687,45 @@ module already uses). Not yet built.
 
 ---
 
+### ISSUE-62: `Create Information Supply Chain`'s `Purposes` attribute is silently dropped — not persisted to the element at all
+
+**Status:** open — found 2026-08-18 building `gen_governance_metrics.py`
+(egeria-workspaces-fs, `OVERVIEW_GOVERNANCE_METRICS.dr-egeria.md`) while
+representing a metric's conceptual data-flow as an
+`InformationSupplyChain`. `commands_solution_architect_compact.json`'s
+`ISC Base` bundle declares `Purposes` (and `Scope`/`Integration Style`/
+`Estimated Volumetrics`/`In Information Supply Chain`/`Nested Information
+Supply Chains`) as valid `Create Information Supply Chain` attributes —
+`--validate` and `--process` both report `SUCCESS` with no warning when
+`### Purposes` is set — but fetching the created element back shows only
+the base `Collection Base`/`Referenceable` properties
+(`versionIdentifier`/`displayName`/`qualifiedName`/`contentStatus`); no
+`purposes` key appears anywhere in `elementProperties.propertyValueMap`,
+not even empty. Confirmed live: created 17 ISCs each with a real
+multi-sentence `Purposes` value, none of them persisted it.
+
+**Not yet root-caused** — could be the ISC processor
+(`md_processing/v2/solution_architect.py` or wherever `InformationSupplyChain`
+creation is handled) never reading `Purposes` out of `attributes` at all
+(same class of gap as the `dr-egeria-command-sync` skill's own documented
+"spec says an attribute exists, processor never reads it" hazard — see
+`Sub-Projects`/`ProjectProcessor` in that skill's Step 3), or the value
+being silently rejected by a type mismatch (the attribute name's plural
+suggests the real property may be a `List<String>`, not the plain string
+markdown block a Dr.Egeria command attribute normally carries — untested).
+`Scope`/`Integration Style`/etc. not independently verified as also
+dropped, but likely share the same root cause given they're declared in
+the same bundle.
+
+**Workaround in place:** `gen_governance_metrics.py` uses the standard
+`Description` attribute (`Referenceable`'s own field, confirmed reliably
+persisted) instead of `Purposes` for the same content — functionally fine
+for that use case, but `Purposes`/`Scope` remain unusable for any caller
+that specifically wants ISC's own semantic fields rather than a generic
+description.
+
+---
+
 ---
 
 # Quick reference: which OMVS client class for which purpose
