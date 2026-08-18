@@ -363,6 +363,18 @@ def setup_dispatcher(client: EgeriaTech) -> V2Dispatcher:
     # Governance (spec-driven to keep coverage aligned with compact commands)
     register_governance_processors(reg)
 
+    # "Update Certification"/"Update License" -- register_governance_processors()'s
+    # family loop routes by the base command's own verb (Link/Attach/Add ->
+    # GovernanceLinkProcessor, everything else -> GovernanceProcessor, the
+    # governance-*definition*-element processor), so these two Update-a-
+    # relationship commands would otherwise be silently misrouted there.
+    # Override explicitly, same pattern as "Create Embedded Process"/
+    # "Initiate Engine Action" above overriding their own family's generic
+    # walker (ISSUE-68: Certification/License are MULTI_LINK, need their own
+    # relationship GUID to target one instance for update).
+    reg("Update Certification", GovernanceLinkProcessor)
+    reg("Update License", GovernanceLinkProcessor)
+
     # Lineage Linker -- one generic Link/Update/Unlink command triple covering
     # all seven Lineage Linker OMVS relationship types (DataFlow, ControlFlow,
     # ProcessCall, LineageMapping, DataMapping, UltimateSource,

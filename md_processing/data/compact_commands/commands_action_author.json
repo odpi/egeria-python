@@ -3188,6 +3188,29 @@
       "bundle": "Cancel Engine Action Base",
       "custom_attributes": [],
       "Journal Entry": ""
+    },
+    "Update Next Process Step": {
+      "display_name": "next_process_step",
+      "qn_prefix": "",
+      "alternate_names": [],
+      "family": "Action Author",
+      "description": "Update the properties of an existing NextGovernanceActionProcessStep relationship, identified by its own relationship GUID (as returned by Link Next Process Step).",
+      "verb": "Update",
+      "upsert": false,
+      "attach": false,
+      "level": "Advanced",
+      "find_method": "",
+      "find_constraints": "",
+      "extra_find": "",
+      "extra_constraints": "",
+      "OM_TYPE": "NextGovernanceActionProcessStep",
+      "bundle": "Link Command Base",
+      "custom_attributes": [
+        "GUID",
+        "Mandatory Guard",
+        "Guard"
+      ],
+      "Journal Entry": ""
     }
   }
 }
