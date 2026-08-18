@@ -426,18 +426,27 @@ def parse_py_file(filepath: str, helper_verbs: dict[str, str],
                 if names:
                     body_class = frozenset(names)
 
-        # Local variables assigned from a query_string(...)-style helper
-        # earlier in the method, e.g. `possible_query_params = query_string(...)`
-        # then interpolated as f"{url}{possible_query_params}". Scoped to this
-        # function only - resolve_roots only sees self.<attr> assignments.
+        # Local variables assigned a URL prefix inside the method body, rather
+        # than in __init__ (resolve_roots only sees self.<attr> assignments
+        # there) - covers two shapes seen in the OMVS clients:
+        #   base = f"{self.platform_url}/servers/{...}/api/open-metadata/..."
+        #   possible_query_params = query_string([...])
+        # both later interpolated straight into the url f-string. Scoped to
+        # this function only.
         fn_roots = dict(roots)
         for node in ast.walk(fn):
-            if (isinstance(node, ast.Assign) and len(node.targets) == 1
-                    and isinstance(node.targets[0], ast.Name)
-                    and isinstance(node.value, ast.Call)):
+            if not (isinstance(node, ast.Assign) and len(node.targets) == 1
+                    and isinstance(node.targets[0], ast.Name)):
+                continue
+            target = node.targets[0].id
+            if isinstance(node.value, ast.Call):
                 callee = (node.value.func.id if isinstance(node.value.func, ast.Name) else None)
                 if callee in QUERY_STRING_FUNCS:
-                    fn_roots[node.targets[0].id] = ""
+                    fn_roots[target] = ""
+            else:
+                value = _flatten(node.value, fn_roots)
+                if "/open-metadata/" in value:
+                    fn_roots[target] = value
 
         for node in ast.walk(fn):
             # url = ...

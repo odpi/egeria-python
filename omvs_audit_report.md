@@ -5,8 +5,8 @@ Subject: `pyegeria/omvs` (43 modules)
 
 | Result | Count |
 |---|---|
-| OK | 646 |
-| Mismatch (verb/path/body) | 13 |
+| OK | 652 |
+| Mismatch (verb/path/body) | 7 |
 | Missing | 288 |
 | Found in another module | 13 |
 | URL lint | 0 |
@@ -15,6 +15,9 @@ Subject: `pyegeria/omvs` (43 modules)
 
 _Review only - cross-service overlap is often intentional._
 
+- `GET /my-profile`
+  - `my-profile.py`: `_async_get_my_profile`
+  - `my-profile.py`: `_async_get_my_profile_by_get`
 - `POST /automated-curation/governance-action-types/initiate`
   - `automated-curation.py`: `_async_initiate_gov_action_type`
   - `automated-curation.py`: `_async_initiate_survey`
@@ -62,6 +65,9 @@ _Review only - cross-service overlap is often intentional._
   - `action-author.py`: `_async_get_governance_action_process`
   - `governance-officer.py`: `_async_get_governance_definition_by_guid`
   - `governance-officer.py`: `_async_get_governance_action_process`
+- `POST /lineage-linker/from-elements/{}/via/{}/to-elements/{}/attach`
+  - `lineage-linker.py`: `_async_link_lineage`
+  - `lineage-linker.py`: `_async_link_data_flow`
 - `POST /metadata-expert/metadata-elements/{}/history`
   - `metadata-expert.py`: `_async_get_element_history`
   - `metadata-expert.py`: `_async_get_metadata_element_history`
@@ -123,7 +129,6 @@ _Review only - cross-service overlap is often intentional._
     - PATH
       SDK: /actor-manager/actor-roles/{}/delete
       API: /actor-manager/actor-roles/delete
-    - BODY sends DeleteElementRequestBody != DeleteRelationshipRequestBody
 - getActorRoleByGUID: MISMATCH `get_actor_role_by_guid`
     - PATH
       SDK: /actor-manager/actor-roles/{}/retrieve
@@ -223,10 +228,6 @@ _Review only - cross-service overlap is often intentional._
 - attachSmartQuery: MISSING  (`POST /collection-manager/collections/results-sets/{}/smart-query/{}/attach`)
 - detachSmartQuery: MISSING  (`POST /collection-manager/collections/results-sets/{}/smart-query/{}/detach`)
 - attachAssociatedSkillSet: MISSING  (`POST /collection-manager/actors/{}/associated-skill-sets/{}/attach`)
-- detachAssociatedSkillSet: MISMATCH `detach_associated_skill_set`
-    - PATH
-      SDK: /{}/actors/{}/associated-skill-sets/{}/detach
-      API: /collection-manager/actors/{}/associated-skill-sets/{}/detach
 - updateCollectionMembership: MISSING  (`POST /collection-manager/collections/{}/members/{}/update`)
 
 ### Service: community-matters
@@ -248,10 +249,6 @@ _Review only - cross-service overlap is often intentional._
 - getDataFieldsByName - with full request body: MISSING  (`POST /data-designer/data-fields/by-name`)
 - getDataFieldByGUID - with request body: MISSING  (`POST /data-designer/data-fields/{}/retrieve`)
 - createDataValueSpecificationFromTemplate: MISSING  (`POST /data-designer/data-value-specifications/from-template`)
-- detachSpecializedDataValueSpecification: MISMATCH `detach_specialized_data_value_specification`
-    - PATH
-      SDK: /data-designer/data-value-specifications/{}/specialized-data-value-specification-definition/{}/detach
-      API: /data-designer/data-value-specifications/{}/specialized-data-value-specifications/{}/detach
 - assignDataValueSpecification: MISSING  (`POST /data-designer/elements/{}/data-value-specifications/{}/attach`)
 - detachDataValueSpecificationAssignment: MISSING  (`POST /data-designer/elements/{}/data-value-specifications/{}/detach`)
 - findAllDataClasses: MISSING  (`POST /data-designer/data-value-specifications/by-search-string`)
@@ -357,10 +354,6 @@ _Review only - cross-service overlap is often intentional._
 
 ### Service: lineage-linker
 
-- linkLineage: MISMATCH `link_lineage`
-    - PATH
-      SDK: /lineage-linker/elements/{}/{}/{}/attach
-      API: /lineage-linker/from-elements/{}/via/{}/to-elements/{}/attach
 
 ### Service: location-arena
 
@@ -387,8 +380,6 @@ _Review only - cross-service overlap is often intentional._
 
 ### Service: my-profile
 
-- getMyProfile: MISMATCH `get_my_profile`
-    - VERB POST != GET
 - Get My Profile: MISSING  (`POST /my-profile`)
 - Add My Profile: MISSING  (`POST /my-profile/new`)
 
@@ -440,8 +431,6 @@ _Review only - cross-service overlap is often intentional._
 - createClassifiedProject: MISSING  (`POST /project-manager/projects`)
 - createCampaign: MISSING  (`POST /project-manager/projects`)
 - createTaskForProject: MISSING  (`POST /project-manager/projects/{}/task`)
-- clearProjectClassification: MISMATCH `clear_project_classification`
-    - BODY sends NewClassificationRequestBody != DeleteClassificationRequestBody
 - setupProjectDependency: MISSING  (`POST /project-manager/projects/{}/project-dependencies/{}/attach`)
 - setupProjectHierarchy: MISSING  (`POST /project-manager/projects/{}/project-hierarchies/{}/attach`)
 
@@ -562,5 +551,3 @@ _Review only - cross-service overlap is often intentional._
 - getAttributeTypes: MISSING  (`GET /valid-metadata/open-metadata-types/attribute-defs`)
 - getTypeDefByName: MISSING  (`GET /valid-metadata/open-metadata-types/name/{}`)
 - setUpSpecificationProperty: MISSING  (`POST /valid-metadata/elements/{}/specification-properties`)
-- linkSpecificationProperty: MISMATCH `link_specification_property`
-    - BODY sends NewElementRequestBody != NewRelationshipRequestBody

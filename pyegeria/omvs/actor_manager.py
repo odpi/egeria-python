@@ -2188,7 +2188,7 @@ class ActorManager(ServerClient):
 
     @dynamic_catch
     async def _async_delete_actor_role(self, actor_role_guid: str,
-                                       body: Optional[dict | DeleteElementRequestBody] = None,
+                                       body: Optional[dict | DeleteRelationshipRequestBody] = None,
                                        cascade: bool = False) -> None:
         """ Delete an actor role. Async Version.
 
@@ -2231,11 +2231,11 @@ class ActorManager(ServerClient):
         """
         url = f"{self.command_root}/actor-roles/{actor_role_guid}/delete"
 
-        await self._async_delete_element_request(url, body, cascade)
+        await self._async_delete_relationship_request(url, body, cascade)
         logger.debug(f"Deleted actor role {actor_role_guid} with cascade {cascade}")
 
     @dynamic_catch
-    def delete_actor_role(self, actor_role_guid: str, body: Optional[dict | DeleteElementRequestBody] = None,
+    def delete_actor_role(self, actor_role_guid: str, body: Optional[dict | DeleteRelationshipRequestBody] = None,
                           cascade: bool = False) -> None:
         """ Delete an actor role. Async Version.
 
