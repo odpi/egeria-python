@@ -368,6 +368,15 @@ class SupplyChainProcessor(AsyncBaseCommandProcessor):
         om_type = spec.get("OM_TYPE")
 
         prop_body = set_element_prop_body(om_type or "InformationSupplyChain", qualified_name, attributes)
+        # InformationSupplyChainProperties-specific fields set_element_prop_body doesn't know
+        # about (confirmed against Egeria-api-solution-architect.http's createInformationSupplyChain/
+        # updateInformationSupplyChain worked examples -- ISSUE-63: these two were previously never
+        # read from attributes at all, so Purposes/Scope validated and processed with SUCCESS but
+        # were silently never persisted). Note the real wire property is "dataProcessingPurposes",
+        # not "purposes" -- the compact spec's "Purposes" attribute has no property_name override,
+        # so this can't be picked up generically; must be set explicitly here.
+        prop_body["dataProcessingPurposes"] = attributes.get('Purposes', {}).get('value')
+        prop_body["scope"] = attributes.get('Scope', {}).get('value')
 
         in_sc_guids = set(attributes.get('In Information Supply Chain', {}).get('guid_list', []))
         nested_sc_guids = set(attributes.get('Nested Information Supply Chains', {}).get('guid_list', []))

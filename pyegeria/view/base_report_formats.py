@@ -4029,6 +4029,16 @@ def load_egeria_report_specs(
 
     # Paginate through all collections with "ReportType" in their qualified name.
     # Use page_size=1000 (the platform maximum) to fetch all in as few calls as possible.
+    # Do NOT stop on `len(page) < _page_size` -- per Egeria's own paging contract
+    # (https://egeria-project.org/guides/developer/finding-metadata/overview/#paging),
+    # a short-but-nonempty page does not mean "last page": server-side filtering can
+    # legitimately shorten an individual page without ending the result set, and the
+    # documented termination signal is a genuinely empty/null result, not a short one.
+    # Confirmed live (2026-08-18, ISSUE-54 investigation) that a `Referenceable`-scoped
+    # find_metadata_elements page can come back well short of pageSize while thousands
+    # of further elements are still reachable at a later startFrom. Always advance by
+    # _page_size regardless of how many came back; the `if not page` check above is the
+    # only correct stop condition.
     _page_size = 1000
     _start = 0
     report_types: list = []
@@ -4047,8 +4057,6 @@ def load_egeria_report_specs(
                 r for r in page
                 if "ReportType::" in r.get("properties", {}).get("qualifiedName", "")
             )
-            if len(page) < _page_size:
-                break
             _start += _page_size
     except Exception as e:
         logger.warning(f"load_egeria_report_specs: could not query Egeria — skipping: {e}")

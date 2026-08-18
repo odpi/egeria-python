@@ -111,6 +111,23 @@ still reproducing as described, with fresh dated notes where the symptom's
 exact shape shifted (see ISSUE-54 in particular — dramatically different
 scale, same underlying incompleteness defect).
 
+**Follow-up same day, 2026-08-18**, at dwolfson's request: double-checked
+ISSUE-41 (still reproduces, now confirmed via a traced request body so it's
+definitively not a pyegeria body-construction issue) and re-checked
+ISSUE-54 — which the first re-check that day had actually **misdiagnosed**.
+dwolfson caught it and pointed at Egeria's own paging documentation
+(https://egeria-project.org/guides/developer/finding-metadata/overview/#paging),
+which states a short-but-nonempty page does not mean "last page" — only a
+genuinely empty page does. Re-running ISSUE-54's scan with the *correct*
+stop condition still finds a real defect (duplicate GUIDs across pages,
+~17% of the true population still missing) — just a different mechanism
+than the "short page = false last-page signal" first suspected. This same
+paging-anti-pattern check also found and fixed a real bug in pyegeria's own
+`load_egeria_report_specs()`. Also fixed **ISSUE-63** (`Create Information
+Supply Chain`'s `Purposes`/`Scope` silently dropped — renumbered from a
+same-day `ISSUE-62` collision with the `DeleteElementRequestBody` entry
+above) after root-causing it live. See each entry for full detail.
+
 ---
 
 # Open Issues
@@ -323,28 +340,47 @@ urgency than originally assessed.
 
 ### ISSUE-54: `findMetadataElements` scoped to the universal base type `Referenceable` silently returns an incomplete, arbitrary subset instead of the true population
 
-**Status:** still open (Egeria server), re-confirmed 2026-08-18 — **symptom
-shape has changed substantially, worth flagging even though the core
-defect (incomplete population) persists.** A bounded paginated scan
-(`page_size=500`, 1 page, `metadataElementTypeName="Referenceable"`, no
-subtype filter) now terminates after only **494** total elements (`len(page)
-< page_size` on the very first page) — dramatically fewer than the previous
-exhaustive run's 19,166, and with **zero duplicate GUIDs** in that page
-(previously 39 duplicates were observed across a 19,166-element scan,
-suspected as a contributing mechanism). Of those 494, only **146** carry
-`typeName: "GlossaryTerm"` — compared against a known true population of
-**357** `GlossaryTerm` elements (confirmed via
-`MetadataExpert.count_metadata_elements`, and independently via
-`metadataElementSubtypeNames: ["GlossaryTerm"]` — see ISSUE-53's fix below,
-now returns the same 357) — so still only **41%** coverage. Whatever
-changed server-side between 2026-08-15 and now (plausibly related to
-whatever fixed ISSUE-53/57/60) reduced the *scale* of the broad-scan defect
-(far fewer total elements returned, no more duplicates) without actually
-fixing the *completeness* problem — a `Referenceable`-scoped scan still
-silently omits the large majority of real elements. Not re-run as a full
-19k-element exhaustive scan this pass (bounded check only, for time); worth
-a full exhaustive re-run to characterize the new failure shape properly
-before considering this closed.
+**Status:** still open (Egeria server) — **NOT fixed, re-confirmed
+2026-08-18, and this pass corrects a misdiagnosis made earlier the same
+day.** First re-check (prompted by dwolfson asking to double-check after
+ISSUE-53/57/60) found `pageSize=500`/`startFrom=0` on a `Referenceable`
+scan returning only 494 elements, and mistook that short page for the bug
+itself (reasoning: "a naive `len(page) < page_size` pagination loop halts
+here"). **dwolfson caught this and pointed at Egeria's own paging docs**
+(https://egeria-project.org/guides/developer/finding-metadata/overview/#paging),
+which explicitly document that a short-but-nonempty page does **not** mean
+"last page" — server-side filtering can legitimately shorten an individual
+page without ending the result set, and the only correct termination
+signal is a genuinely **empty** page. `len(page) < page_size` is a
+documented anti-pattern, not evidence of an Egeria bug — re-running the
+scan correctly (always advance `startFrom` by the full `pageSize`,
+regardless of how many came back, stop only on `not page`) confirms this:
+`startFrom=500` (not `startFrom=494`) picks up cleanly with no gap.
+
+**The real remaining defect, once paginated correctly:** exhaustively
+scanning `Referenceable` with the *correct* stop condition (23 pages,
+`pageSize=500`, advancing by 500 unconditionally) fetched **10,548**
+elements total against a true native-count population of **11,019** — but
+those 10,548 contained **1,394 duplicate GUIDs**, leaving only **9,154
+distinct** elements, still **~17% short** of the true 11,019. `GlossaryTerm`
+coverage in this corrected scan: **243/357 (68%)** — much better than the
+27% the flawed short-page-as-stop-signal method found, but still
+genuinely incomplete. So the original 2026-08-06 hypothesis (unstable
+server-side result ordering across pages causing both duplication *and*
+omission) remains the best-supported explanation — this is a real,
+still-open Egeria server pagination-stability bug for this specific
+broad-type query, just not the mechanism this session initially
+misdiagnosed. Nothing fixable client-side.
+
+**Also found as a byproduct of this correction:** pyegeria's own
+`pyegeria/view/base_report_formats.py` (`load_egeria_report_specs()`) had
+exactly the `len(page) < page_size` anti-pattern in a real fetch-all loop
+(`find_collections` for `ReportType` collections) — fixed 2026-08-18 to
+advance unconditionally and stop only on an empty page, per the now-clear
+Egeria paging contract. Worth grepping the rest of this codebase (and any
+sibling repo — `egeria-workspaces-fs`, `egeria-advisor`/`trellis`) for the
+same pattern (`len(page) <` / `< page_size` / `< _page_size`); not
+exhaustively audited beyond this one hit in this pass.
 
 **Status:** still open (Egeria server), re-confirmed 2026-08-15 against the
 current, restarted `qs-view-server` — magnitude has shifted (as with
@@ -517,14 +553,22 @@ native counting only for **element** counts.
 
 ### ISSUE-41 (PY-21): `find_glossary_terms(sequencing_order=..., include_only_classified_elements=...)` returns ZERO results when combined — each filter alone works fine
 
-**Status:** re-confirmed 2026-08-18 — core defect persists even though
-ISSUE-60 (sequencing order itself) is now fixed: `include_only_classified_elements=["Question"]`
-alone now returns 2 hits (data has changed since the original 33 —
-unrelated to the bug); combined with `sequencing_order="PROPERTY_ASCENDING"`
-still returns 0. Worth noting for whoever investigates next: since
-ISSUE-60's underlying sequencing defect is now fixed server-side, this
-entry's trigger condition may have shifted — worth a fresh root-cause dig
-rather than assuming the original mechanism still applies unchanged.
+**Status:** double-checked again 2026-08-18 (per dwolfson's explicit
+request) — core defect persists, and this pass rules out a client-side
+cause definitively by capturing the actual outgoing request body via a
+traced `_async_make_request`: `include_only_classified_elements=["Question"]`
+alone sends a well-formed body (`includeOnlyClassifiedElements: ["Question"]`,
+no `sequencingOrder` key) and returns **2 hits** (data has changed since the
+original 33 — unrelated to the bug). Adding *only* `sequencing_order=
+"PROPERTY_ASCENDING"` to that exact same body (confirmed via the trace —
+every other field byte-identical) drops the result to **0**. Also tried
+adding `sequencing_property="displayName"` on top — still 0. Since ISSUE-60
+(sequencing order itself) is now fixed server-side, this entry's trigger
+condition may have shifted from what it was originally — worth a fresh
+root-cause dig rather than assuming the original mechanism still applies
+unchanged — but the *symptom* (combining `sequencing_order` with a
+classification filter zeroes the result) is unambiguously still present,
+confirmed via real request/response, not just method-level return values.
 
 **Status:** confirmed bug (Egeria server) — found 2026-07-28 debugging
 Egeria Explorer's Perspectives page showing Perspectives but no Questions.
@@ -687,45 +731,6 @@ module already uses). Not yet built.
 
 ---
 
-### ISSUE-62: `Create Information Supply Chain`'s `Purposes` attribute is silently dropped — not persisted to the element at all
-
-**Status:** open — found 2026-08-18 building `gen_governance_metrics.py`
-(egeria-workspaces-fs, `OVERVIEW_GOVERNANCE_METRICS.dr-egeria.md`) while
-representing a metric's conceptual data-flow as an
-`InformationSupplyChain`. `commands_solution_architect_compact.json`'s
-`ISC Base` bundle declares `Purposes` (and `Scope`/`Integration Style`/
-`Estimated Volumetrics`/`In Information Supply Chain`/`Nested Information
-Supply Chains`) as valid `Create Information Supply Chain` attributes —
-`--validate` and `--process` both report `SUCCESS` with no warning when
-`### Purposes` is set — but fetching the created element back shows only
-the base `Collection Base`/`Referenceable` properties
-(`versionIdentifier`/`displayName`/`qualifiedName`/`contentStatus`); no
-`purposes` key appears anywhere in `elementProperties.propertyValueMap`,
-not even empty. Confirmed live: created 17 ISCs each with a real
-multi-sentence `Purposes` value, none of them persisted it.
-
-**Not yet root-caused** — could be the ISC processor
-(`md_processing/v2/solution_architect.py` or wherever `InformationSupplyChain`
-creation is handled) never reading `Purposes` out of `attributes` at all
-(same class of gap as the `dr-egeria-command-sync` skill's own documented
-"spec says an attribute exists, processor never reads it" hazard — see
-`Sub-Projects`/`ProjectProcessor` in that skill's Step 3), or the value
-being silently rejected by a type mismatch (the attribute name's plural
-suggests the real property may be a `List<String>`, not the plain string
-markdown block a Dr.Egeria command attribute normally carries — untested).
-`Scope`/`Integration Style`/etc. not independently verified as also
-dropped, but likely share the same root cause given they're declared in
-the same bundle.
-
-**Workaround in place:** `gen_governance_metrics.py` uses the standard
-`Description` attribute (`Referenceable`'s own field, confirmed reliably
-persisted) instead of `Purposes` for the same content — functionally fine
-for that use case, but `Purposes`/`Scope` remain unusable for any caller
-that specifically wants ISC's own semantic fields rather than a generic
-description.
-
----
-
 ---
 
 # Quick reference: which OMVS client class for which purpose
@@ -883,6 +888,76 @@ accepted values individually risks wiring up a parameter some routes will
 split above was never resolved against a live server per-endpoint — if a
 given delete endpoint actually expects `cascadedDelete`, this fix's choice
 would need revisiting for that specific endpoint.
+
+---
+
+### ISSUE-63: `Create Information Supply Chain`'s `Purposes`/`Scope` attributes were silently dropped — never read from `attributes` at all
+
+**Status:** fixed 2026-08-18 (Pyegeria/Dr.Egeria —
+`md_processing/v2/solution_architect.py`,
+`tests/micro-tests/test_supply_chain_processor.py`). **Renumbered from a
+collision**: originally logged as `ISSUE-62` by dwolfson, colliding with
+this file's own `ISSUE-62` (`DeleteElementRequestBody`, above) added the
+same day — kept the original number on the entry already cross-referenced
+in code/test comments, renumbered this newer duplicate to `ISSUE-63` per
+this file's established collision convention (see the "Renumbered
+2026-08-15" note near the top).
+
+**Originally found** 2026-08-18 building `gen_governance_metrics.py`
+(egeria-workspaces-fs, `OVERVIEW_GOVERNANCE_METRICS.dr-egeria.md`) while
+representing a metric's conceptual data-flow as an `InformationSupplyChain`.
+`--validate`/`--process` both reported `SUCCESS` with `### Purposes` set,
+but the created element never persisted it — created 17 ISCs with a real
+`Purposes` value, none retained it.
+
+**Root cause, found and fixed:** `SupplyChainProcessor.apply_changes()`
+(`md_processing/v2/solution_architect.py`) built the create/update
+properties body purely from `set_element_prop_body()` — the generic
+`Referenceable`-level builder, which has no knowledge of
+`InformationSupplyChainProperties`-specific fields — and never added
+`Purposes`/`Scope` on top, unlike sibling domain processors (e.g.
+`set_collection_manager_body` adding Digital-Product-specific fields).
+So `--validate`/`--process` reporting `SUCCESS` was accurate for what the
+processor actually did (create the element with valid base properties);
+`Purposes`/`Scope` were just never included in the outgoing body at all.
+
+**Also found while root-causing:** the real Egeria wire property is
+**`dataProcessingPurposes`**, not `purposes` (confirmed against
+`Egeria-api-solution-architect.http`'s `createInformationSupplyChain`/
+`updateInformationSupplyChain` worked examples) — the compact spec's
+`Purposes` attribute has no `property_name` override pointing at this, so
+even a naive "just pass `attributes` through" fix would have sent the
+wrong key. `Scope` matches its attribute name exactly.
+
+**Fix:** `SupplyChainProcessor.apply_changes()` now explicitly sets
+`prop_body["dataProcessingPurposes"]` (from `Purposes`, a `Simple List`
+style attribute — value is already a Python list) and `prop_body["scope"]`
+(from `Scope`) on both the Create and Update paths, right after the
+generic `set_element_prop_body()` call. Verified live: created a real ISC
+with both fields set, fetched it back — `dataProcessingPurposes` and
+`scope` both persisted correctly. 3 new unit tests
+(`test_supply_chain_processor.py`) cover Create, Update, and the
+None-when-unset case via a fake client capturing the outgoing body; full
+`pytest tests/micro-tests/` passes.
+
+**Not resolved, flagged for a follow-up investigation:** `Integration
+Style` and `Estimated Volumetrics` are also declared in the `ISC Base`
+bundle for `Create Information Supply Chain`, per the same original report
+suspecting they "likely share the same root cause." Checked ground truth
+for both — **zero hits** for `integrationStyle`/`estimatedVolumetrics`
+anywhere in `Egeria-api-solution-architect.http` (or any other `.http`
+file), unlike `dataProcessingPurposes`/`scope` which are directly confirmed
+in the worked examples above. The only `integrationStyle` usage anywhere
+in this codebase is `SolutionLinkingWireProperties.integrationStyle` — a
+**relationship** property (0735, `SolutionLinkingWire`), not an
+`InformationSupplyChain` **element** property. This strongly suggests
+`Integration Style`/`Estimated Volumetrics` are misattributed to the wrong
+bundle in the compact spec (a relationship-level field incorrectly offered
+as a create-time element attribute), rather than sharing ISSUE-63's
+"processor never reads it" mechanism — but this is not confirmed against
+the real `InformationSupplyChainProperties` Java class, only against what
+ground truth `.http` examples happen to show. Worth a dedicated look
+before assuming either explanation.
 
 ---
 
