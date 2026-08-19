@@ -768,88 +768,6 @@ on an Egeria Server capability that doesn't exist yet — but the pyegeria/
 Dr.Egeria-side work each will need once that capability ships is written
 into the entry now, so it isn't rediscovered from scratch later.
 
-### ISSUE-48: No OMVS wrapper exists for the `SchemaAttributeDefinition` relationship (physical `SchemaAttribute` ↔ logical `DataField`)
-
-**Status:** deferred 2026-08-15 — user's decision: wait until Egeria ships
-the actual REST endpoint for this relationship before building a pyegeria
-wrapper or Dr.Egeria command against it. Both options considered below
-remain valid candidates once that lands; no implementation work done here.
-
-**Re-checked 2026-08-19, still deferred, still valid — but Option 2 now
-confirmed to actually work.** Fetched the live server's full `/v3/api-docs`
-OpenAPI spec (1.77 MB, successfully retrieved) and grepped both the URL
-paths and the schema component names for `SchemaAttributeDefinition`:
-**zero hits in either.** No bespoke REST endpoint has shipped — the wait
-condition from 2026-08-15 hasn't been met, so the deferral stands as-is.
-Separately, live-tested Option 2 (the generic
-`MetadataExpert`/`NewRelatedElementsRequestBody` path,
-`typeName: "SchemaAttributeDefinition"`) end-to-end against a real
-`DataField`/`SchemaAttribute` pair — **it works today**: created the
-relationship (`GUIDResponse` with a real guid), then cleaned it up via
-`_async_delete_related_elements`. Previously this was listed as a
-considered-but-untested option; now confirmed viable, so if the team
-wants to unblock a Dr.Egeria command without waiting further, Option 2 is
-ready to use as-is — no new pyegeria SDK surface required, same
-mechanism `CurationLinkProcessor` already uses for `ResourceList`/
-`MoreInformation`.
-
-**Original status:** open — SDK gap to validate with the team, not yet a confirmed
-bug. Raised 2026-08-07 while triaging a request to add three "missing"
-Dr.Egeria Data Designer commands (SemanticAssignment, DataClassAssignment,
-SchemaTypeImplementation). Two of the three turned out not to be gaps at
-all once checked against the real type system and existing compact specs:
-
-- **SemanticAssignment** (schema/field → glossary term) already exists —
-  `Link Semantic Assignment` / `Unlink Semantic Assignment` in the
-  **Curation** family (`commands_curation_compact.json`, `OM_TYPE:
-  SemanticAssignment`, wired to `ClassificationExplorer.
-  _async_setup_semantic_assignment` in `CurationLinkProcessor`). Its
-  `Target Element` is a generic GUID, so it already works against a data
-  field or schema attribute today.
-- **DataClassAssignment** on a physical schema attribute is also already
-  covered — and the type name itself is stale. The old `DataClassAssignment`
-  relationship was replaced in this Egeria version by
-  `DataValueAssignmentRelationship` (0540 —
-  `OpenMetadataTypesArchive1_2.java`), whose end 1 is `Referenceable` (any
-  element, including a schema attribute). Data Designer's existing `Assign
-  Data Value Specification` command (`OM_TYPE: DataValueAssignment`)
-  already covers this generically via its `Element Id` attribute.
-
-**The third one is a real gap, at the SDK level, not just the Dr.Egeria
-command-spec level.** "SchemaTypeImplementation" isn't a real type name in
-this Egeria version at all. The type that actually connects a physical
-`SchemaAttribute` to a logical `DataField` is `SchemaAttributeDefinition`
-(0580, `OpenMetadataTypesArchive5_3.java` —
-`getSchemaAttributeDefinitionRelationship()`), ends `derivedFromDataField`
-(on `DataField`, AT_MOST_ONE) / `equivalentSchemaAttribute` (on
-`SchemaAttribute`, AT_MOST_ONE). Confirmed via grep across `pyegeria/omvs/`
-and `pyegeria/http clients/*.http`: **no bespoke wrapper method exists**
-for setting up or clearing this relationship — no `_async_link_*`/
-`_async_setup_*` method, no `.http` worked example, in `data_designer.py`,
-`data_engineer.py`, or `classification_explorer.py`.
-
-**Options considered, not yet decided:**
-1. Add a bespoke wrapper (e.g.
-   `DataDesigner._async_link_schema_attribute_definition`/
-   `_async_detach_schema_attribute_definition`) mirroring
-   `_async_setup_semantic_assignment`'s shape, then wire a Dr.Egeria
-   `Link/Unlink Schema Attribute Definition` command to it. Most
-   consistent with how other bespoke-family relationships are handled, but
-   requires new SDK surface first.
-2. Skip the bespoke wrapper and drive it through the existing generic
-   `MetadataExpert._async_create_related_elements`/
-   `_async_delete_related_elements` (typeName-based) — the same mechanism
-   `CurationLinkProcessor` already uses for other Tier-2 gaps with no
-   dedicated method (`ResourceList`, `MoreInformation`). No new SDK method
-   needed, but less discoverable/typed than a bespoke wrapper.
-
-No command has been added to the compact JSON for this yet — deferred
-pending the team's input on which approach (or whether the relationship
-is even meant to be user-authorable via Dr.Egeria, vs. only ever
-system-derived from a physical→logical mapping tool).
-
----
-
 ---
 
 # Quick reference: which OMVS client class for which purpose
@@ -880,6 +798,65 @@ system-derived from a physical→logical mapping tool).
 # Appendix: Closed / Not-a-bug entries
 
 ## Fixed / Resolved
+
+### ISSUE-48: No OMVS wrapper exists for the `SchemaAttributeDefinition` relationship (physical `SchemaAttribute` ↔ logical `DataField`)
+
+**Status:** implemented 2026-08-19 via Option 2 (the generic
+`MetadataExpert` relationship mechanism) — deferred 2026-08-15, re-checked
+2026-08-19 (still no bespoke Egeria endpoint, confirmed against the full
+`/v3/api-docs` spec; Option 2 confirmed viable live), then built the same
+day per the user's go-ahead.
+
+**What shipped:** a new Dr.Egeria command family, `Link/Detach Schema
+Attribute Definition` (`Data Designer` family,
+`commands_data_designer.json`, new `Schema Attribute` attribute alongside
+the existing `Data Field`), backed by a new
+`LinkSchemaAttributeDefinitionProcessor`
+(`md_processing/v2/data_designer.py`):
+- **Link/Attach/Add:** calls
+  `MetadataExpert._async_create_related_elements` with a
+  `NewRelatedElementsRequestBody` (`typeName: SchemaAttributeDefinition`),
+  captures the returned relationship GUID into
+  `parsed_output["guid"]`, and displays it in the result markdown.
+- **Detach/Unlink/Remove:** looks the relationship up by its element pair
+  via `_async_find_relationships_between_elements`
+  (`end1EntityGUIDs`/`end2EntityGUIDs`) rather than requiring a separate
+  GUID attribute — safe because `SchemaAttributeDefinition`'s
+  `relationshipCategory` is `UNI_LINK` with `AT_MOST_ONE` cardinality on
+  both ends (confirmed live via
+  `ValidMetadataManager.get_all_relationship_defs()`), so there's no
+  multi-instance ambiguity to resolve. Then deletes via
+  `_async_delete_related_elements(relationship_guid, ...)`.
+- `supports_target_element_lookup()` overridden to `False` (relationship-
+  only processor — see ISSUE-68's `AsyncBaseCommandProcessor` upsert-
+  rewrite-bug fix for why this matters; avoids the same latent Update-verb
+  hazard flagged there for any future relationship processor).
+
+**No new pyegeria SDK surface required** — `_async_create_related_elements`/
+`_async_find_relationships_between_elements`/`_async_delete_related_elements`
+all already existed on `MetadataExpert`.
+
+**Verified live**, full round trip against a real `DataField`/
+`SchemaAttribute` pair: `Link Schema Attribute Definition` via
+`--process` created the relationship and displayed its GUID; a direct
+`_async_find_relationships_between_elements` query confirmed it existed;
+`Detach Schema Attribute Definition` via `--process` removed it; the same
+query afterward returned "No elements found", confirming clean deletion.
+
+**Tests:** `test_link_schema_attribute_definition.py` (5 tests, fake
+client, no live server needed).
+
+**Explicitly temporary, per the user's own framing** ("implement Option 2
+... and we'll replace it once the new endpoint is available") — re-check
+this issue's own "still deferred" 2026-08-19 OpenAPI-spec check
+periodically; once Egeria ships a bespoke `SchemaAttributeDefinition`
+endpoint, migrate `LinkSchemaAttributeDefinitionProcessor` to a dedicated
+`DataDesigner._async_link_schema_attribute_definition`/
+`_async_detach_schema_attribute_definition` wrapper (Option 1) instead —
+same compact-spec command, same attributes, just a different
+implementation underneath.
+
+---
 
 ### ISSUE-55: Desired enhancement — true "exclude type" / NOT semantics for `findMetadataElements`
 
