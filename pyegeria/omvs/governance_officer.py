@@ -2301,6 +2301,196 @@ class GovernanceOfficer(ServerClient):
         )
 
     @dynamic_catch
+    async def _async_find_governance_action_processes(
+        self,
+        search_string: str = "*",
+        body: Optional[dict | SearchStringRequestBody] = None,
+        starts_with: bool = True,
+        ends_with: bool = False,
+        ignore_case: bool = False,
+        start_from: int = 0,
+        page_size: int = 100,
+        graph_query_depth: int = 3, output_format: str = "JSON",
+        report_spec: str | dict = None,
+        **kwargs
+    ) -> list | str:
+        """ Retrieve the list of governance action process metadata elements that contain the search string.
+            Async Version.
+
+        Parameters
+        ----------
+        search_string: str
+            Search string to match against - None or '*' indicate match against all governance action processes.
+        starts_with : bool, [default=True], optional
+            Starts with the supplied string.
+        ends_with : bool, [default=False], optional
+            Ends with the supplied string
+        ignore_case : bool, [default=False], optional
+            Ignore case when searching
+        start_from: int, [default=0], optional
+            When multiple pages of results are available, the page number to start from.
+        page_size: int, [default=100]
+            The number of items to return in a single page.
+        graph_query_depth: int, [default=3], optional
+            The depth of the graph query.
+        output_format: str, default = "JSON"
+            - one of "MD", "LIST", "FORM", "REPORT", "DICT", "MERMAID" or "JSON"
+        report_spec: str | dict , optional, default = None
+            - The desired output columns/fields to include.
+        body: dict | SearchStringRequestBody, optional, default = None
+            - if provided, the search parameters in the body will supercede other attributes, such as "search_string"
+
+        Returns
+        -------
+        List | str
+
+        Raises
+        ------
+        PyegeriaException
+            If there are issues in communications, message format, or Egeria errors.
+        """
+        url = (
+            f"{self.platform_url}/servers/{self.view_server}/api/open-metadata/"
+            f"{self.url_marker}/governance-action-processes/"
+            f"by-search-string")
+
+        params = {
+            'graph_query_depth': graph_query_depth,
+            'search_string': search_string,
+            'body': body,
+            'starts_with': starts_with,
+            'ends_with': ends_with,
+            'ignore_case': ignore_case,
+            'start_from': start_from,
+            'page_size': page_size,
+            'output_format': output_format,
+            'report_spec': report_spec
+        }
+        params.update(kwargs)
+        params = {k: v for k, v in params.items() if v is not None or k == 'search_string'}
+
+        response = await self._async_find_request(url, _type="GovernanceActionProcess",
+                                                  _gen_output=self._generate_governance_definition_output, **params)
+
+        return response
+
+    @dynamic_catch
+    def find_governance_action_processes(
+        self,
+        search_string: str = "*",
+        body: Optional[dict | SearchStringRequestBody] = None,
+        starts_with: bool = True,
+        ends_with: bool = False,
+        ignore_case: bool = False,
+        start_from: int = 0,
+        page_size: int = 100,
+        graph_query_depth: int = 3, output_format: str = "JSON",
+        report_spec: str | dict = None,
+        **kwargs
+    ) -> list | str:
+        """ Retrieve the list of governance action process metadata elements that contain the search string."""
+        loop = asyncio.get_event_loop()
+        return loop.run_until_complete(
+            self._async_find_governance_action_processes(
+                search_string=search_string,
+                body=body,
+                starts_with=starts_with,
+                ends_with=ends_with,
+                ignore_case=ignore_case,
+                start_from=start_from,
+                page_size=page_size,
+                graph_query_depth=graph_query_depth,
+                output_format=output_format,
+                report_spec=report_spec,
+                **kwargs
+            )
+        )
+
+    @dynamic_catch
+    async def _async_link_approved_purpose(self, element_guid: str, data_processing_purpose_guid: str,
+                                           body: Optional[dict | NewRelationshipRequestBody] = None) -> None:
+        """ Attach an element to an approved purpose. Async version.
+
+        Parameters
+        ----------
+        element_guid: str
+            The unique identifier of the element.
+        data_processing_purpose_guid: str
+            The unique identifier of the approved (data processing) purpose.
+        body: dict | NewRelationshipRequestBody, optional, default = None
+            A structure representing the details of the relationship.
+
+        Returns
+        -------
+        Nothing
+
+        Raises
+        ------
+        PyegeriaException
+            If there are issues in communications, message format, or Egeria errors.
+
+        Notes
+        -----
+        JSON Structure looks like:
+        {
+          "class" : "NewRelationshipRequestBody",
+          "externalSourceGUID": "add guid here",
+          "externalSourceName": "add qualified name here",
+          "effectiveTime" : "{{$isoTimestamp}}",
+          "forLineage" : false,
+          "forDuplicateProcessing" : false,
+          "properties": {
+            "class": "ApprovedPurposeProperties"
+          }
+        }
+        """
+        url = (f"{self.platform_url}/servers/{self.view_server}/api/open-metadata/{self.url_marker}/elements/"
+               f"{element_guid}/approved-purposes/{data_processing_purpose_guid}/attach")
+        await self._async_new_relationship_request(url, ["ApprovedPurposeProperties"], body)
+        logger.info(f"Linked approved purpose {data_processing_purpose_guid} to element {element_guid}")
+
+    @dynamic_catch
+    def link_approved_purpose(self, element_guid: str, data_processing_purpose_guid: str,
+                              body: Optional[dict | NewRelationshipRequestBody] = None) -> None:
+        """ Attach an element to an approved purpose."""
+        loop = asyncio.get_event_loop()
+        loop.run_until_complete(self._async_link_approved_purpose(element_guid, data_processing_purpose_guid, body))
+
+    @dynamic_catch
+    async def _async_detach_approved_purpose(self, element_guid: str, data_processing_purpose_guid: str,
+                                             body: Optional[dict | DeleteRelationshipRequestBody] = None) -> None:
+        """ Detach an element from an approved purpose. Async version.
+
+        Parameters
+        ----------
+        element_guid: str
+            The unique identifier of the element.
+        data_processing_purpose_guid: str
+            The unique identifier of the approved (data processing) purpose.
+        body: dict | DeleteRelationshipRequestBody, optional, default = None
+            A structure representing the details of the relationship.
+
+        Returns
+        -------
+        Nothing
+
+        Raises
+        ------
+        PyegeriaException
+            If there are issues in communications, message format, or Egeria errors.
+        """
+        url = (f"{self.platform_url}/servers/{self.view_server}/api/open-metadata/{self.url_marker}/elements/"
+               f"{element_guid}/approved-purposes/{data_processing_purpose_guid}/detach")
+        await self._async_delete_relationship_request(url, body)
+        logger.info(f"Detached approved purpose {data_processing_purpose_guid} from element {element_guid}")
+
+    @dynamic_catch
+    def detach_approved_purpose(self, element_guid: str, data_processing_purpose_guid: str,
+                                body: Optional[dict | DeleteRelationshipRequestBody] = None) -> None:
+        """ Detach an element from an approved purpose."""
+        loop = asyncio.get_event_loop()
+        loop.run_until_complete(self._async_detach_approved_purpose(element_guid, data_processing_purpose_guid, body))
+
     @dynamic_catch
     async def _async_get_governance_definitions_by_name(self, name: Optional[str] = None,
                                                         classification_names: Optional[list[str]] = None,

@@ -500,6 +500,126 @@ class ClassificationExplorer(ServerClient):
         return response
 
     @dynamic_catch
+    async def _async_get_root_elements_by_category(
+            self,
+            category: str,
+            body: Optional[dict | FilterRequestBody] = None,
+            output_format: str = "JSON",
+            report_spec: dict | str = None,
+            **kwargs
+    ) -> list | str:
+        """
+        Retrieve elements by a value found in the category property. The value must match exactly. Async version.
+
+        https://egeria-project.org/types/
+
+        Parameters
+        ----------
+        category: str
+            The category value to retrieve elements for. Must match exactly.
+        body: dict | FilterRequestBody
+            Details of the query.
+        output_format: str, default = "JSON"
+            Type of output to return.
+        report_spec: dict | str, default = None
+            Output format set to use. If None, the default output format set is used.
+        Returns
+        -------
+        [dict] | str
+            Returns a string if no elements found and a list of dict of elements with the results.
+
+        Raises
+        ------
+        PyegeriaException
+
+        Notes
+        -----
+        Sample body:
+
+        {
+            "class": "FilterRequestBody",
+            "filter": "Add category here",
+            "startFrom": 0,
+            "pageSize": 10,
+            "asOfTime": "{{$isoTimestamp}}",
+            "effectiveTime": "{{$isoTimestamp}}",
+            "forLineage": false,
+            "forDuplicateProcessing": false
+        }
+
+        """
+
+        url = (f"{self.classification_command_root}/elements/by-category")
+
+        response = await self._async_get_name_request(
+            url=url,
+            _type="Referenceable",
+            _gen_output=self._generate_referenceable_output,
+            filter_string=category,
+            output_format=output_format,
+            report_spec=report_spec,
+            body=body,
+            **kwargs
+        )
+        return response
+
+    @dynamic_catch
+    def get_root_elements_by_category(
+            self,
+            category: str,
+            body: Optional[dict | FilterRequestBody] = None,
+            output_format: str = "JSON",
+            report_spec: dict | str = None,
+            **kwargs
+    ) -> list | str:
+        """
+        Retrieve elements by a value found in the category property. The value must match exactly.
+
+        https://egeria-project.org/types/
+
+        Parameters
+        ----------
+        category: str
+            The category value to retrieve elements for. Must match exactly.
+        body: dict | FilterRequestBody
+            Details of the query.
+        output_format: str, default = "JSON"
+            Type of output to return.
+        report_spec: dict | str, default = None
+            Output format set to use. If None, the default output format set is used.
+        Returns
+        -------
+        [dict] | str
+            Returns a string if no elements found and a list of dict of elements with the results.
+
+        Raises
+        ------
+        PyegeriaException
+
+        Notes
+        -----
+        Sample body:
+
+        {
+            "class": "FilterRequestBody",
+            "filter": "Add category here",
+            "startFrom": 0,
+            "pageSize": 10,
+            "asOfTime": "{{$isoTimestamp}}",
+            "effectiveTime": "{{$isoTimestamp}}",
+            "forLineage": false,
+            "forDuplicateProcessing": false
+        }
+
+        """
+
+        loop = asyncio.get_event_loop()
+        response = loop.run_until_complete(
+            self._async_get_root_elements_by_category(category, body, output_format, report_spec, **kwargs)
+        )
+        return response
+
+    @dynamic_catch
     async def _async_get_subject_area_members(
             self,
             subject_area: str,

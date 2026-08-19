@@ -79,7 +79,9 @@ class BlueprintProcessor(AsyncBaseCommandProcessor):
             guid = self.extract_guid_or_raise(raw_guid, "Create Solution Blueprint")
             if guid:
                 self.parsed_output["guid"] = guid
-                sync_res = await self._sync_components(guid, comp_guids, replace_all=True)
+                # known_new=True: this GUID was just created, so it cannot have
+                # any existing component memberships yet -- skip the as-is fetch.
+                sync_res = await self._sync_components(guid, comp_guids, replace_all=True, known_new=True)
                 if sync_res.get("added") or sync_res.get("removed"):
                     self.add_related_result("Components Sync", message=f"Added {len(sync_res['added'])}, Removed {len(sync_res['removed'])}")
                 if sync_res.get("errors"):
@@ -99,13 +101,16 @@ class BlueprintProcessor(AsyncBaseCommandProcessor):
 
         return self.command.raw_block
 
-    async def _sync_components(self, guid: str, to_be_guids: Set[str], replace_all: bool) -> Dict[str, Any]:
-        bp_element = await self.client._async_get_solution_blueprint_by_guid(guid)
-        as_is = {
-            m['relatedElement']['elementHeader']['guid']
-            for m in bp_element.get('collectionMembers', [])
-            if m.get('relatedElement', {}).get('elementHeader', {}).get('type', {}).get('typeName') == 'SolutionComponent'
-        }
+    async def _sync_components(self, guid: str, to_be_guids: Set[str], replace_all: bool, known_new: bool = False) -> Dict[str, Any]:
+        if known_new:
+            as_is: Set[str] = set()
+        else:
+            bp_element = await self.client._async_get_solution_blueprint_by_guid(guid)
+            as_is = {
+                m['relatedElement']['elementHeader']['guid']
+                for m in bp_element.get('collectionMembers', [])
+                if m.get('relatedElement', {}).get('elementHeader', {}).get('type', {}).get('typeName') == 'SolutionComponent'
+            }
 
         async def add_fn(comp_guid):
             body = {"class": "NewRelationshipRequestBody", "properties": {"class": "CollectionMembershipProperties", "membershipRationale": "linked by Dr.Egeria v2"}}
@@ -215,7 +220,9 @@ class ComponentProcessor(AsyncBaseCommandProcessor):
             guid = self.extract_guid_or_raise(raw_guid, "Create Solution Component")
             if guid:
                 self.parsed_output["guid"] = guid
-                sync_res = await self._sync_all_rels(guid, supply_chain_guids, parent_comp_guids, actor_guids, blueprint_guids, keywords, replace_all=True, sc_sub_guids=sub_comp_guids)
+                # known_new=True: this GUID was just created, so it cannot have
+                # any existing relationships yet -- skip the as-is fetch.
+                sync_res = await self._sync_all_rels(guid, supply_chain_guids, parent_comp_guids, actor_guids, blueprint_guids, keywords, replace_all=True, sc_sub_guids=sub_comp_guids, known_new=True)
                 if sync_res.get("errors"):
                     self.add_related_result("Relationships Sync", status="failure", message="; ".join(sync_res["errors"][:5]))
                 elif sync_res.get("added") or sync_res.get("removed"):
@@ -235,8 +242,10 @@ class ComponentProcessor(AsyncBaseCommandProcessor):
 
         return self.command.raw_block
 
-    async def _sync_all_rels(self, guid: str, sc_guids: Set[str], parent_guids: Set[str], actor_guids: Set[str], bp_guids: Set[str], keywords: Set[str], replace_all: bool, sc_sub_guids: Set[str] = frozenset()) -> Dict[str, Any]:
-        rel_els = await self._get_component_related_elements(guid)
+    async def _sync_all_rels(self, guid: str, sc_guids: Set[str], parent_guids: Set[str], actor_guids: Set[str], bp_guids: Set[str], keywords: Set[str],
+                              replace_all: bool, sc_sub_guids: Set[str] = frozenset(), known_new: bool = False) -> Dict[str, Any]:
+        """known_new=True skips the as-is fetch below -- a brand-new component cannot have any existing relationships yet."""
+        rel_els = {} if known_new else await self._get_component_related_elements(guid)
         combined_results = {"added": [], "removed": [], "errors": []}
         
         # 1. Supply Chains
@@ -416,7 +425,9 @@ class SupplyChainProcessor(AsyncBaseCommandProcessor):
             guid = self.extract_guid_or_raise(raw_guid, "Create Information Supply Chain")
             if guid:
                 self.parsed_output["guid"] = guid
-                sync_res = await self._sync_rels(guid, in_sc_guids, nested_sc_guids, replace_all=True)
+                # known_new=True: this GUID was just created, so it cannot have
+                # any existing relationships yet -- skip the as-is fetch.
+                sync_res = await self._sync_rels(guid, in_sc_guids, nested_sc_guids, replace_all=True, known_new=True)
                 if any(sync_res.values()):
                     self.add_related_result("Relationships Sync", message=f"Initial relationships (Success: {len(sync_res['added']) + len(sync_res['removed'])}, Errors: {len(sync_res['errors'])})")
 
@@ -434,8 +445,9 @@ class SupplyChainProcessor(AsyncBaseCommandProcessor):
 
         return self.command.raw_block
 
-    async def _sync_rels(self, guid: str, parent_guids: Set[str], nested_guids: Set[str], replace_all: bool) -> Dict[str, Any]:
-        rel_els = await self._get_supply_chain_rel_elements(guid)
+    async def _sync_rels(self, guid: str, parent_guids: Set[str], nested_guids: Set[str], replace_all: bool, known_new: bool = False) -> Dict[str, Any]:
+        """known_new=True skips the as-is fetch below -- a brand-new supply chain cannot have any existing relationships yet."""
+        rel_els = {} if known_new else await self._get_supply_chain_rel_elements(guid)
         combined_results = {"added": [], "removed": [], "errors": []}
         
         # 1. Parents (this ISC is a member of the parent ISC's collection)

@@ -3731,8 +3731,9 @@
       "display_name": "Assign Data Value Specification",
       "qn_prefix": "",
       "alternate_names": [
-        "Link Data Value Specification",
-        "Attach Data Value Specification to Element"
+        "Attach Data Value Specification to Element",
+        "Attach Data Value Specification",
+        "Link Data Value Specification"
       ],
       "family": "Data Designer",
       "description": "Link a data value specification, DataClass, DataGrain,  to a referenceable element providing a definition.",
@@ -3854,6 +3855,30 @@
       "OM_TYPE": "ValidValuesAssignment",
       "bundle": "Data Field Valid Values Base",
       "custom_attributes": [],
+      "Journal Entry": ""
+    },
+    "Detach Data Value Specification from Element": {
+      "display_name": "Data Value Specification from Element",
+      "qn_prefix": "",
+      "alternate_names": [
+        "Unassign Data Value Specification from Element"
+      ],
+      "family": "Data Designer",
+      "description": "Remove the DataValueAssignment relationship between a data value specification and a referenceable element.",
+      "verb": "Detach",
+      "upsert": false,
+      "attach": false,
+      "level": "Basic",
+      "find_method": "",
+      "find_constraints": "",
+      "extra_find": "",
+      "extra_constraints": "",
+      "OM_TYPE": "DataValueAssignment",
+      "bundle": "Data Value Assignment Base",
+      "custom_attributes": [
+        "Data Value Specification",
+        "Element Id"
+      ],
       "Journal Entry": ""
     }
   }

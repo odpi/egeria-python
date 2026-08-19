@@ -2396,6 +2396,10 @@
         "Additional Properties",
         "Resource Use"
       ]
+    },
+    "Data Description Base": {
+      "inherits": "Link Command Base",
+      "own_attributes": []
     }
   },
   "commands": {
@@ -2924,6 +2928,55 @@
       "OM_TYPE": "SoftwareArchive",
       "bundle": "Collection Base",
       "custom_attributes": [],
+      "Journal Entry": ""
+    },
+    "Link Data Description": {
+      "display_name": "Collection->Data Description",
+      "qn_prefix": "",
+      "alternate_names": [
+        "Attach Data Description",
+        "Link Data Description to Element"
+      ],
+      "family": "Collections",
+      "description": "Attach a data description collection to an element (DataDescription relationship).",
+      "verb": "Link",
+      "upsert": false,
+      "attach": true,
+      "level": "Basic",
+      "find_method": "",
+      "find_constraints": "",
+      "extra_find": "",
+      "extra_constraints": "",
+      "OM_TYPE": "DataDescription",
+      "bundle": "Data Description Base",
+      "custom_attributes": [
+        "Collection Id",
+        "Element Id"
+      ],
+      "Journal Entry": ""
+    },
+    "Detach Data Description": {
+      "display_name": "Data Description",
+      "qn_prefix": "",
+      "alternate_names": [
+        "Detach Data Description from Element"
+      ],
+      "family": "Collections",
+      "description": "Detach a data description collection from an element (DataDescription relationship).",
+      "verb": "Detach",
+      "upsert": false,
+      "attach": false,
+      "level": "Basic",
+      "find_method": "",
+      "find_constraints": "",
+      "extra_find": "",
+      "extra_constraints": "",
+      "OM_TYPE": "DataDescription",
+      "bundle": "Data Description Base",
+      "custom_attributes": [
+        "Collection Id",
+        "Element Id"
+      ],
       "Journal Entry": ""
     }
   }

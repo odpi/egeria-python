@@ -203,8 +203,10 @@ class TermProcessor(AsyncBaseCommandProcessor):
             guid = self.extract_guid_or_raise(raw_guid, "Create Glossary Term")
             if guid:
                 self.parsed_output["guid"] = guid
-                # For Create, we always want to ensure it's in all listed collections
-                await self._sync_term_memberships(guid, to_be_collection_guids, replace_all=True)
+                # For Create, we always want to ensure it's in all listed collections.
+                # known_new=True: this GUID was just created, so it cannot have any
+                # existing CollectionMembership relationships -- skip the as-is fetch.
+                await self._sync_term_memberships(guid, to_be_collection_guids, replace_all=True, known_new=True)
 
                 if journal_entry:
                     try:
@@ -220,26 +222,45 @@ class TermProcessor(AsyncBaseCommandProcessor):
 
         return self.command.raw_block
 
-    async def _sync_term_memberships(self, term_guid: str, to_be_guids: List[str], replace_all: bool):
-        """Standardized helper for term collection sync."""
-        current_collections = await self.client._async_get_related_elements(
-            term_guid, relationship_type="CollectionMembership", start_at_end=2
-        )
-        as_is_guids = {c['elementHeader']['guid'] for c in current_collections} if current_collections and not isinstance(current_collections, str) else set()
-        
-        # Build map of GUID to name for current collections for better feedback
-        guid_to_name = {}
-        if current_collections and not isinstance(current_collections, str):
-            for c in current_collections:
-                guid = c['elementHeader']['guid']
-                name = c.get('properties', {}).get('displayName') or c.get('properties', {}).get('qualifiedName') or guid
-                guid_to_name[guid] = name
-                
+    async def _sync_term_memberships(self, term_guid: str, to_be_guids: List[str], replace_all: bool,
+                                      known_new: bool = False):
+        """
+        Standardized helper for term collection sync.
+
+        known_new=True (pass this for a just-created term) skips the
+        "what does this element currently have" relationship fetch entirely
+        -- a brand-new term cannot have any existing CollectionMembership
+        relationships, so there is nothing to fetch. Otherwise the fetch is
+        made lazily (only actually issued if sync_members determines it's
+        needed -- e.g. not when replace_all=False with an empty to_be_guids)
+        via _async_get_related_elements against the classification-explorer
+        by-relationship/CollectionMembership endpoint, which is the single
+        most expensive call in this whole sync path on a loaded server.
+        """
+        guid_to_name: Dict[str, str] = {}
+
+        if known_new:
+            as_is_source: set = set()
+        else:
+            async def fetch_as_is() -> set:
+                current_collections = await self.client._async_get_related_elements(
+                    term_guid, relationship_type="CollectionMembership", start_at_end=2
+                )
+                if not current_collections or isinstance(current_collections, str):
+                    return set()
+                for c in current_collections:
+                    g = c['elementHeader']['guid']
+                    name = c.get('properties', {}).get('displayName') or c.get('properties', {}).get('qualifiedName') or g
+                    guid_to_name[g] = name
+                return {c['elementHeader']['guid'] for c in current_collections}
+
+            as_is_source = fetch_as_is
+
         to_be_set = set(to_be_guids)
-        
+
         async def add_fn(collection_guid):
             await self.client._async_add_to_collection(collection_guid, term_guid)
-            
+
         async def remove_fn(collection_guid):
             body = {
                 "class": "DeleteRelationshipRequestBody",
@@ -247,8 +268,8 @@ class TermProcessor(AsyncBaseCommandProcessor):
                 "forDuplicateProcessing": False
             }
             await self.client._async_remove_from_collection(collection_guid, term_guid, body=body)
-            
-        sync_res = await self.sync_members(as_is_guids, to_be_set, add_fn, remove_fn, replace_all)
+
+        sync_res = await self.sync_members(as_is_source, to_be_set, add_fn, remove_fn, replace_all)
         
         if sync_res.get("added") or sync_res.get("removed"):
             added_names = []
@@ -292,11 +313,18 @@ class TermProcessor(AsyncBaseCommandProcessor):
             merge_update = False
             
         guid = self.parsed_output.get("guid") or (self.as_is_element['elementHeader']['guid'] if getattr(self, 'as_is_element', None) else None)
-        
+
         as_is_guids = set()
         guid_to_name = {}
-        
-        if guid and not guid.startswith("(Planned:"):
+        to_be_set = set(to_be_guids)
+        replace_all = not merge_update
+
+        # Same expensive CollectionMembership relationship query as
+        # _sync_term_memberships -- this is the dry-run preview path, so
+        # skip it under the identical condition: add-only (replace_all=False)
+        # with nothing to add means the result can't change regardless of
+        # current state.
+        if guid and not guid.startswith("(Planned:") and (replace_all or to_be_set):
             try:
                 current_collections = await self.client._async_get_related_elements(
                     guid, relationship_type="CollectionMembership", start_at_end=2
@@ -309,10 +337,7 @@ class TermProcessor(AsyncBaseCommandProcessor):
                         guid_to_name[c_guid] = name
             except Exception:
                 pass
-                
-        to_be_set = set(to_be_guids)
-        replace_all = not merge_update
-        
+
         to_add_guids = to_be_set - as_is_guids
         to_remove_guids = (as_is_guids - to_be_set) if replace_all else set()
         unchanged_guids = as_is_guids.intersection(to_be_set)

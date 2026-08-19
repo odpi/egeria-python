@@ -1,14 +1,15 @@
 # OMVS Audit Report
 
 Ground truth: `pyegeria/http clients` (40 collections)
-Subject: `pyegeria/omvs` (43 modules)
+Subject: `pyegeria/omvs` (44 modules)
 
 | Result | Count |
 |---|---|
-| OK | 652 |
+| OK | 726 |
 | Mismatch (verb/path/body) | 7 |
-| Missing | 288 |
-| Found in another module | 13 |
+| Missing | 13 |
+| Renamed (implemented, verb+path matches under a different name) | 196 |
+| Found in another module | 18 |
 | URL lint | 0 |
 
 ## Duplicate endpoints (same verb + path)
@@ -18,12 +19,39 @@ _Review only - cross-service overlap is often intentional._
 - `GET /my-profile`
   - `my-profile.py`: `_async_get_my_profile`
   - `my-profile.py`: `_async_get_my_profile_by_get`
+- `GET /runtime-manager/engine-hosts/{}/governance-engines/refresh-config`
+  - `runtime-manager.py`: `_async_refresh_gov_eng_config`
+  - `runtime-manager.py`: `_async_refresh_gov_engine`
+- `GET /valid-metadata/get-valid-metadata-values/{}`
+  - `valid-metadata.py`: `_async_get_valid_metadata_values`
+  - `feedback-manager.py`: `_async_get_valid_metadata_values`
 - `POST /automated-curation/governance-action-types/initiate`
   - `automated-curation.py`: `_async_initiate_gov_action_type`
   - `automated-curation.py`: `_async_initiate_survey`
+- `POST /classification-explorer/elements/by-exact-property-value`
+  - `classification-explorer.py`: `_async_get_elements_by_property_value`
+  - `feedback-manager.py`: `_async_get_elements_by_property_value`
 - `POST /classification-explorer/elements/by-ownership`
   - `classification-explorer.py`: `_async_get_owners_elements`
   - `classification-explorer.py`: `_async_get_subject_area_members`
+- `POST /classification-explorer/elements/{}`
+  - `classification-explorer.py`: `_async_get_element_by_guid`
+  - `feedback-manager.py`: `_async_get_element_by_guid_`
+- `POST /classification-explorer/elements/{}/by-relationship/{}/with-exact-property-value`
+  - `classification-explorer.py`: `_async_get_related_elements_with_property_value`
+  - `feedback-manager.py`: `_async_get_related_elements_with_property_value`
+- `POST /classification-explorer/elements/{}/search-keywords`
+  - `classification-explorer.py`: `_async_add_search_keyword_to_element`
+  - `feedback-manager.py`: `_async_add_search_keyword_to_element`
+- `POST /classification-explorer/relationships/with-exact-property-value`
+  - `classification-explorer.py`: `_async_get_relationships_with_property_value`
+  - `feedback-manager.py`: `_async_get_relationships_with_property_value`
+- `POST /classification-explorer/search-keywords/{}/remove`
+  - `classification-explorer.py`: `_async_remove_search_keyword_from_element`
+  - `feedback-manager.py`: `_async_remove_search_keyword`
+- `POST /classification-explorer/search-keywords/{}/update`
+  - `classification-explorer.py`: `_async_update_search_keyword`
+  - `feedback-manager.py`: `_async_update_search_keyword`
 - `POST /collection-manager/collections`
   - `collection-manager.py`: `_async_create_collection`
   - `collection-manager.py`: `_async_create_data_spec_collection`
@@ -71,6 +99,9 @@ _Review only - cross-service overlap is often intentional._
 - `POST /metadata-expert/metadata-elements/{}/history`
   - `metadata-expert.py`: `_async_get_element_history`
   - `metadata-expert.py`: `_async_get_metadata_element_history`
+- `POST /metadata-expert/metadata-elements/{}/update-effectivity`
+  - `metadata-expert.py`: `_async_update_metadata_element_effectivity`
+  - `feedback-manager.py`: `_async_update_element_effectivity`
 - `POST /metadata-expert/related-elements`
   - `collection-manager.py`: `_async_link_saved_query_to_results_set`
   - `metadata-expert.py`: `_async_create_related_elements`
@@ -98,6 +129,9 @@ _Review only - cross-service overlap is often intentional._
 - `POST /product-manager/collections/{}/update`
   - `product-manager.py`: `_async_update_digital_product`
   - `product-manager.py`: `_async_update_digital_product_catalog`
+- `POST /runtime-manager/omag-servers/{}/instance/load/open-metadata-archives/file`
+  - `runtime-manager.py`: `_async_add_archive_file`
+  - `feedback-manager.py`: `_async_add_archive_file`
 - `POST /runtime-manager/platforms/by-deployed-implementation-type`
   - `runtime-manager.py`: `_async_get_platforms_by_type`
   - `runtime-manager.py`: `_async_get_platform_templates_by_type`
@@ -117,14 +151,14 @@ _Review only - cross-service overlap is often intentional._
 
 ### Service: actor-manager
 
-- find All ContributionRecords: MISSING  (`POST /actor-manager/contribution-records/by-search-string`)
+- find All ContributionRecords: RENAMED -> `actor-manager.py`:`_async_find_contribution_records`
 - updateActorRole: MISMATCH `update_actor_role`
     - PATH
       SDK: /actor-manager/actor-roles/{}/update
       API: /actor-manager/actor-roles/update
-- Detach a team role from a team profile.: MISSING  (`POST /actor-manager/actor-roles/{}/team-role-appointments/{}/detach`)
-- linkITProfileRoleToProfile: MISSING  (`POST /actor-manager/actor-roles/{}/it-profile-role-appointments/{}/attach`)
-- detachITProfileRoleFromProfile: MISSING  (`POST /actor-manager/actor-roles/{}/it-profile-role-appointments/{}/detach`)
+- Detach a team role from a team profile.: RENAMED -> `actor-manager.py`:`_async_detach_team_role_from_profile`
+- linkITProfileRoleToProfile: RENAMED -> `actor-manager.py`:`_async_link_it_profile_role_to_it_profile`
+- detachITProfileRoleFromProfile: RENAMED -> `actor-manager.py`:`_async_detach_it_profile_role_from_it_profile`
 - deleteActorRole: MISMATCH `delete_actor_role`
     - PATH
       SDK: /actor-manager/actor-roles/{}/delete
@@ -133,102 +167,85 @@ _Review only - cross-service overlap is often intentional._
     - PATH
       SDK: /actor-manager/actor-roles/{}/retrieve
       API: /actor-manager/actor-roles/{}/retrieve"}
-- detachProfileIdentity: MISSING  (`POST /actor-manager/user-identities/{}/profile-identity/{}/detach`)
-- removeAllSecurityGroupMembership: MISSING  (`POST /actor-manager/user-identities/{}/security-group-memberships/declassify`)
+- detachProfileIdentity: RENAMED -> `actor-manager.py`:`_async_detach_identity_from_profile`
+- removeAllSecurityGroupMembership: RENAMED -> `actor-manager.py`:`_async_remove_all_security_group_memberships`
 
 ### Service: asset-catalog
 
 
 ### Service: asset-maker
 
-- unDeployITAsset: MISSING  (`POST /asset-maker/assets/{}/deployed-on/{}/detach`)
-- linkSoftwareCapability: MISSING  (`POST /asset-maker/assets/{}/supported-software-capabilities/{}/attach`)
-- detachSoftwareCapability: MISSING  (`POST /asset-maker/assets/{}/supported-software-capabilities/{}/detach`)
-- linkSupportedGovernanceService: MISSING  (`POST /asset-maker/governance-engines/{}/supported-governance-services/{}/attach`)
-- updateSupportedGovernanceService: MISSING  (`POST /asset-maker/supported-governance-services/{}/update`)
-- detachSupportedGovernanceService: MISSING  (`POST /asset-maker/supported-governance-services/{}/detach`)
+- unDeployITAsset: RENAMED -> `asset-maker.py`:`_async_undeploy_it_asset`
+- linkSoftwareCapability: RENAMED -> `asset-maker.py`:`_async_link_software_capability_to_asset`
+- detachSoftwareCapability: RENAMED -> `asset-maker.py`:`_async_detach_software_capability_from_asset`
 
 ### Service: automated-curation
 
-- getTechnologyTypesForOpenMetadataType: MISSING  (`POST /automated-curation/open-metadata-types/{}/technology-types`)
-- getTechnologyTypeDetail: MISSING  (`POST /automated-curation/technology-types/by-name`)
-- getTechnologyTypeHierarchy: MISSING  (`POST /automated-curation/technology-types/hierarchy`)
-- getTechnologyTypeTemplates: MISSING  (`POST /automated-curation/technology-types/elements`)
-- createElementFromTemplate: MISSING  (`POST /automated-curation/catalog-templates/new-element`)
-- getElementFromTemplate: MISSING  (`POST /automated-curation/catalog-templates/new-element`)
-- createElementFromTemplate - Marquez endpoint: MISSING  (`POST /automated-curation/catalog-templates/new-element`)
-- initiateGovernanceActionType: MISSING  (`POST /automated-curation/governance-action-types/initiate`)
-- initiateGovernanceActionProcess: MISSING  (`POST /automated-curation/governance-action-processes/initiate`)
-- updateEngineActionStatus: MISSING  (`POST /automated-curation/engine-actions/{}/status/update`)
-- claimEngineAction: MISSING  (`POST /automated-curation/engine-actions/{}/claim`)
-- getActiveClaimedEngineActions: MISSING  (`GET /automated-curation/governance-engines/{}/engine-actions/active-claimed`)
-- updateActionTargetStatus: MISSING  (`POST /automated-curation/engine-actions/action-targets/update`)
-- recordCompletionStatus: MISSING  (`POST /automated-curation/engine-actions/{}/completion-status`)
+- getTechnologyTypesForOpenMetadataType: RENAMED -> `automated-curation.py`:`_async_get_tech_types_for_open_metadata_type`
+- getTechnologyTypeDetail: RENAMED -> `automated-curation.py`:`_async_get_tech_type_detail`
+- getTechnologyTypeHierarchy: RENAMED -> `automated-curation.py`:`_async_get_tech_type_hierarchy`
+- getTechnologyTypeTemplates: RENAMED -> `automated-curation.py`:`_async_get_technology_type_elements`
+- createElementFromTemplate: ELSEWHERE -> `feedback-manager.py`
+- getElementFromTemplate: RENAMED -> `automated-curation.py`:`_async_create_elem_from_template`
+- createElementFromTemplate - Marquez endpoint: RENAMED -> `automated-curation.py`:`_async_create_elem_from_template`
+- initiateGovernanceActionType: RENAMED -> `automated-curation.py`:`_async_initiate_gov_action_type`, `automated-curation.py`:`_async_initiate_survey`
+- initiateGovernanceActionProcess: RENAMED -> `automated-curation.py`:`_async_initiate_gov_action_process`
 
 ### Service: classification-explorer
 
 - getValidMetadataValues - severityLevel values: MISSING  (`GET /valid-metadata/get-valid-metadata-values/severityLevel`)
-- getImpactClassifiedElements: MISSING  (`POST /classification-explorer/elements/by-impact`)
 - getValidMetadataValues - confidenceLevel values: MISSING  (`GET /valid-metadata/get-valid-metadata-values/confidenceLevel`)
-- getConfidenceClassifiedElements: MISSING  (`POST /classification-explorer/elements/by-confidence`)
 - getValidMetadataValues - criticalityLevel values: MISSING  (`GET /valid-metadata/get-valid-metadata-values/criticalityLevel`)
-- getCriticalityClassifiedElements: MISSING  (`POST /classification-explorer/elements/by-criticality`)
 - getValidMetadataValues - confidentialityLevel values: MISSING  (`GET /valid-metadata/get-valid-metadata-values/confidentialityLevel`)
-- getConfidentialityClassifiedElements: MISSING  (`POST /classification-explorer/elements/by-confidentiality`)
 - getValidMetadataValues - retentionBasis values: MISSING  (`GET /valid-metadata/get-valid-metadata-values/retentionBasis`)
-- getRetentionClassifiedElements: MISSING  (`POST /classification-explorer/elements/by-retention`)
-- addSecurityTags: MISSING  (`POST /classification-explorer/elements/{}/security-tags`)
-- clearSecurityTags: MISSING  (`POST /classification-explorer/elements/{}/security-tags/remove`)
-- addAccountingCodes: MISSING  (`POST /classification-explorer/elements/{}/accounting-codes`)
-- clearAccountingCodes: MISSING  (`POST /classification-explorer/elements/{}/accounting-codes/remove`)
-- addOwnership: MISSING  (`POST /classification-explorer/elements/{}/ownership`)
-- clearOwnership: MISSING  (`POST /classification-explorer/elements/{}/ownership/remove`)
-- clearDigitalResourceOrigin: MISSING  (`POST /classification-explorer/elements/{}/digital-resource-origin/remove`)
-- setupPeerDuplicates: MISSING  (`POST /classification-explorer/related-elements/{}/peer-duplicate/{}/attach`)
-- clearSemanticAssignment: MISSING  (`POST /classification-explorer/elements/{}/semantic-assignment/terms/{}/detach`)
-- addGovernanceDefinitionToElement: MISSING  (`POST /classification-explorer/elements/{}/governed-by/definition/{}/attach`)
-- removeGovernanceDefinitionFromElement: MISSING  (`POST /classification-explorer/elements/{}/governed-by/definition/{}/detach`)
-- addGovernanceExpectations: MISSING  (`POST /classification-explorer/elements/{}/governance-expectations`)
-- updateGovernanceExpectations: MISSING  (`POST /classification-explorer/elements/{}/governance-expectations/update`)
-- clearGovernanceExpectations: MISSING  (`POST /classification-explorer/elements/{}/governance-expectations/remove`)
-- addResourceListToElement: MISSING  (`POST /classification-explorer/elements/{}/resource-list/{}/attach`)
-- removeResourceListFromElement: MISSING  (`POST /classification-explorer/elements/{}/resource-list/{}/detach`)
-- addMoreInformationToElement: MISSING  (`POST /classification-explorer/elements/{}/more-information/{}/attach`)
-- removeMoreInformationFromElement: MISSING  (`POST /classification-explorer/elements/{}/more-information/{}/detach`)
-- removeScopeFromElement: MISSING  (`POST /classification-explorer/elements/{}/scoped-by/{}/detach`)
+- addSecurityTags: RENAMED -> `classification-explorer.py`:`_async_set_security_tags_classification`
+- clearSecurityTags: RENAMED -> `classification-explorer.py`:`_async_clear_security_tags_classification`
+- addAccountingCodes: RENAMED -> `classification-explorer.py`:`_async_set_accounting_codes_classification`
+- clearAccountingCodes: RENAMED -> `classification-explorer.py`:`_async_clear_accounting_codes_classification`
+- addOwnership: RENAMED -> `classification-explorer.py`:`_async_add_ownership_to_element`
+- clearOwnership: RENAMED -> `classification-explorer.py`:`_async_clear_ownership_from_element`
+- clearDigitalResourceOrigin: RENAMED -> `classification-explorer.py`:`_async_clear_digital_resource_origin_from_element`
+- setupPeerDuplicates: RENAMED -> `classification-explorer.py`:`_async_link_elements_as_peer_duplicates`
+- clearSemanticAssignment: RENAMED -> `classification-explorer.py`:`_async_clear_semantic_assignment_classification`
+- addGovernanceDefinitionToElement: RENAMED -> `classification-explorer.py`:`_async_add_gov_definition_to_element`
+- removeGovernanceDefinitionFromElement: RENAMED -> `classification-explorer.py`:`_async_remove_gov_definition_from_element`
+- addGovernanceExpectations: RENAMED -> `classification-explorer.py`:`_async_set_governance_expectation`
+- updateGovernanceExpectations: RENAMED -> `classification-explorer.py`:`_async_update_governance_expectation`
+- clearGovernanceExpectations: RENAMED -> `classification-explorer.py`:`_async_clear_governance_expectation`
+- addResourceListToElement: RENAMED -> `classification-explorer.py`:`_async_add_resource_to_element`
+- removeResourceListFromElement: RENAMED -> `classification-explorer.py`:`_async_remove_resource_from_element`
+- addMoreInformationToElement: RENAMED -> `classification-explorer.py`:`_async_add_more_information`
+- removeMoreInformationFromElement: RENAMED -> `classification-explorer.py`:`_async_remove_more_information`
+- removeScopeFromElement: RENAMED -> `classification-explorer.py`:`_async_clear_scope_from_element`
 - licenseElement: ELSEWHERE -> `governance-officer.py`
 - certifyElement: ELSEWHERE -> `governance-officer.py`
-- getSearchKeywordByGUID: MISSING  (`POST /classification-explorer/search-keywords/{}/retrieve`)
-- getSearchKeywordsByKeyword: MISSING  (`POST /classification-explorer/search-keywords/by-keyword`)
-- findSearchKeywords: MISSING  (`POST /classification-explorer/search-keywords/by-search-string`)
-- getRootElementByGUID: MISSING  (`POST /classification-explorer/elements/{}`)
-- getRootElementByUniqueName: MISSING  (`POST /classification-explorer/elements/by-unique-name`)
+- getSearchKeywordByGUID: ELSEWHERE -> `feedback-manager.py`
+- getSearchKeywordsByKeyword: RENAMED -> `feedback-manager.py`:`_async_get_search_keyword_by_keyword`
+- findSearchKeywords: ELSEWHERE -> `feedback-manager.py`
+- getRootElementByGUID: RENAMED -> `classification-explorer.py`:`_async_get_element_by_guid`, `feedback-manager.py`:`_async_get_element_by_guid_`
+- getRootElementByUniqueName: RENAMED -> `classification-explorer.py`:`_async_get_element_by_unique_name`
 - getMetadataElementGUIDByUniqueName: ELSEWHERE -> `metadata-expert.py`
-- getRootElementsByType: MISSING  (`POST /classification-explorer/elements/by-type`)
-- getRootElementsByPropertyValue: MISSING  (`POST /classification-explorer/elements/by-exact-property-value`)
-- findRootElementsByPropertyValue: MISSING  (`POST /classification-explorer/elements/by-property-value-search`)
-- getRootElementsByCategory: MISSING  (`POST /classification-explorer/elements/by-category`)
-- findRootAuthoredElements: MISSING  (`POST /classification-explorer/authored-elements/by-search-string`)
-- getRootAuthoredElementsByCategory: MISSING  (`POST /classification-explorer/authored-elements/by-category`)
-- getRootElementsByClassification: MISSING  (`POST /classification-explorer/elements/by-classification/{}`)
-- getRootElementsByClassificationWithPropertyValue: MISSING  (`POST /classification-explorer/elements/by-classification/{}/with-exact-property-value`)
-- findRootElementsByClassificationWithPropertyValue: MISSING  (`POST /classification-explorer/elements/by-classification/{}/with-property-value-search`)
-- getRelatedRootElements: MISSING  (`POST /classification-explorer/elements/{}/by-relationship`)
-- getRelatedRootElementsWithPropertyValue: MISSING  (`POST /classification-explorer/elements/{}/by-relationship/{}/with-exact-property-value`)
-- findRelatedRootElementsWithPropertyValue: MISSING  (`POST /classification-explorer/elements/{}/by-relationship/{}/with-property-value-search`)
+- getRootElementsByType: RENAMED -> `classification-explorer.py`:`_async_get_elements`
+- getRootElementsByPropertyValue: RENAMED -> `classification-explorer.py`:`_async_get_elements_by_property_value`, `feedback-manager.py`:`_async_get_elements_by_property_value`
+- findRootElementsByPropertyValue: RENAMED -> `classification-explorer.py`:`_async_find_elements_by_property_value`
+- findRootAuthoredElements: RENAMED -> `classification-explorer.py`:`_async_find_authored_elements`
+- getRootAuthoredElementsByCategory: RENAMED -> `classification-explorer.py`:`_async_find_authored_elements_by_category`
+- getRootElementsByClassification: RENAMED -> `classification-explorer.py`:`_async_get_elements_by_classification`
+- getRootElementsByClassificationWithPropertyValue: RENAMED -> `classification-explorer.py`:`_async_get_elements_by_classification_with_property_value`
+- findRootElementsByClassificationWithPropertyValue: RENAMED -> `classification-explorer.py`:`_async_find_elements_by_classification_with_property_value`
+- getRelatedRootElements: RENAMED -> `classification-explorer.py`:`_async_get_related_elements`
+- getRelatedRootElementsWithPropertyValue: RENAMED -> `classification-explorer.py`:`_async_get_related_elements_with_property_value`, `feedback-manager.py`:`_async_get_related_elements_with_property_value`
+- findRelatedRootElementsWithPropertyValue: RENAMED -> `classification-explorer.py`:`_async_find_related_elements_with_property_value`
 - getRelationshipByGUID: ELSEWHERE -> `metadata-expert.py`
 
 ### Service: collection-manager
 
 - createGlossary: ELSEWHERE -> `glossary-manager.py`
-- createDataSharingAgreementCollection: MISSING  (`POST /collection-manager/collections`)
-- updateAgreementStatus: MISSING  (`POST /collection-manager/collections/{}/update`)
-- updateDigitalSubscriptionStatus: MISSING  (`POST /collection-manager/collections/{}/update`)
-- detachDataDescription: MISSING  (`POST /collection-manager/metadata-elements/{}/data-descriptions/{}/detach`)
-- attachSmartQuery: MISSING  (`POST /collection-manager/collections/results-sets/{}/smart-query/{}/attach`)
-- detachSmartQuery: MISSING  (`POST /collection-manager/collections/results-sets/{}/smart-query/{}/detach`)
-- attachAssociatedSkillSet: MISSING  (`POST /collection-manager/actors/{}/associated-skill-sets/{}/attach`)
-- updateCollectionMembership: MISSING  (`POST /collection-manager/collections/{}/members/{}/update`)
+- createDataSharingAgreementCollection: RENAMED -> `collection-manager.py`:`_async_create_collection`, `collection-manager.py`:`_async_create_data_spec_collection`, `collection-manager.py`:`_async_create_report_type_collection`, `collection-manager.py`:`_async_create_question_spec_folder`, `collection-manager.py`:`_async_create_security_list`, `collection-manager.py`:`_async_create_data_dictionary_collection`, `collection-manager.py`:`_async_create_skill_set_collection`, `collection-manager.py`:`_async_create_reference_list_collection`, `collection-manager.py`:`_async_create_digital_product`, `collection-manager.py`:`_async_create_digital_product_catalog`, `collection-manager.py`:`_async_create_agreement`, `collection-manager.py`:`_async_create_digital_subscription`
+- updateAgreementStatus: RENAMED -> `collection-manager.py`:`_async_update_collection`, `collection-manager.py`:`_async_update_digital_product`, `collection-manager.py`:`_async_update_agreement`, `collection-manager.py`:`_async_update_digital_subscription`
+- updateDigitalSubscriptionStatus: RENAMED -> `collection-manager.py`:`_async_update_collection`, `collection-manager.py`:`_async_update_digital_product`, `collection-manager.py`:`_async_update_agreement`, `collection-manager.py`:`_async_update_digital_subscription`
+- attachAssociatedSkillSet: RENAMED -> `collection-manager.py`:`_async_link_associated_skill_set`
+- updateCollectionMembership: RENAMED -> `collection-manager.py`:`_async_update_collection_membership_prop`
 
 ### Service: community-matters
 
@@ -238,115 +255,75 @@ _Review only - cross-service overlap is often intentional._
 
 ### Service: data-designer
 
-- findAllDataStructures - with full request body: MISSING  (`POST /data-designer/data-structures/by-search-string`)
-- findDataStructures - with full request body: MISSING  (`POST /data-designer/data-structures/by-search-string`)
-- getDataStructuresByName - with full request body: MISSING  (`POST /data-designer/data-structures/by-name`)
-- getDataStructureByGUID - with request body: MISSING  (`POST /data-designer/data-structures/{}/retrieve`)
-- linkNestedDataFields: MISSING  (`POST /data-designer/data-fields/{}/nested-data-fields/{}/attach`)
-- detachNestedDataFields: MISSING  (`POST /data-designer/data-fields/{}/nested-data-fields/{}/detach`)
-- findAllDataFields - with full request body: MISSING  (`POST /data-designer/data-fields/by-search-string`)
-- findDataFields - with full request body: MISSING  (`POST /data-designer/data-fields/by-search-string`)
-- getDataFieldsByName - with full request body: MISSING  (`POST /data-designer/data-fields/by-name`)
-- getDataFieldByGUID - with request body: MISSING  (`POST /data-designer/data-fields/{}/retrieve`)
-- createDataValueSpecificationFromTemplate: MISSING  (`POST /data-designer/data-value-specifications/from-template`)
-- assignDataValueSpecification: MISSING  (`POST /data-designer/elements/{}/data-value-specifications/{}/attach`)
-- detachDataValueSpecificationAssignment: MISSING  (`POST /data-designer/elements/{}/data-value-specifications/{}/detach`)
-- findAllDataClasses: MISSING  (`POST /data-designer/data-value-specifications/by-search-string`)
-- findAllDataGrains: MISSING  (`POST /data-designer/data-value-specifications/by-search-string`)
-- findDataValueSpecifications - with full request body: MISSING  (`POST /data-designer/data-value-specifications/by-search-string`)
-- linkDataValueSpecificationDefinition: MISSING  (`POST /data-designer/data-definitions/{}/data-value-specification-definition/{}/attach`)
-- detachDataValueSpecificationDefinition: MISSING  (`POST /data-designer/data-definitions/{}/data-value-specification-definition/{}/detach`)
-- detachCertificationTypeToDataStructure: MISSING  (`POST /data-designer/certification-types/{}/data-structure-definition/{}/detach`)
+- findAllDataStructures - with full request body: RENAMED -> `data-designer.py`:`_async_find_data_structures`
+- findDataStructures - with full request body: RENAMED -> `data-designer.py`:`_async_find_data_structures`
+- getDataStructuresByName - with full request body: RENAMED -> `data-designer.py`:`_async_get_data_structures_by_name`
+- getDataStructureByGUID - with request body: RENAMED -> `data-designer.py`:`_async_get_data_structure_by_guid`
+- linkNestedDataFields: RENAMED -> `data-designer.py`:`_async_link_nested_data_field`
+- detachNestedDataFields: RENAMED -> `data-designer.py`:`_async_detach_nested_data_field`
+- findAllDataFields - with full request body: RENAMED -> `data-designer.py`:`_async_find_data_fields`
+- findDataFields - with full request body: RENAMED -> `data-designer.py`:`_async_find_data_fields`
+- getDataFieldsByName - with full request body: RENAMED -> `data-designer.py`:`_async_get_data_fields_by_name`
+- getDataFieldByGUID - with request body: RENAMED -> `data-designer.py`:`_async_get_data_field_by_guid`
+- assignDataValueSpecification: RENAMED -> `data-designer.py`:`_async_link_data_value_assignment`
+- detachDataValueSpecificationAssignment: RENAMED -> `data-designer.py`:`_async_detach_data_value_assignment`
+- findAllDataClasses: RENAMED -> `data-designer.py`:`_async_find_data_value_specifications`
+- findAllDataGrains: RENAMED -> `data-designer.py`:`_async_find_data_value_specifications`
+- findDataValueSpecifications - with full request body: RENAMED -> `data-designer.py`:`_async_find_data_value_specifications`
+- linkDataValueSpecificationDefinition: RENAMED -> `data-designer.py`:`_async_link_data_class_definition`
+- detachDataValueSpecificationDefinition: RENAMED -> `data-designer.py`:`_async_detach_data_class_definition`
+- detachCertificationTypeToDataStructure: RENAMED -> `data-designer.py`:`_async_detach_certification_type_from_data_structure`
 
 ### Service: data-discovery
 
 
 ### Service: data-engineer
 
-- getTabularDataSetReport: MISSING  (`GET /data-engineer/tabular-data-sets/{}/report`)
+- getTabularDataSetReport: RENAMED -> `data-engineer.py`:`_async_get_tabular_data_set`
 
 ### Service: digital-business
 
 
 ### Service: external-links
 
-- linkCitedDocumentReference: MISSING  (`POST /external-links/elements/{}/cited-document-references/{}/attach`)
-- detachCitedDocumentReference: MISSING  (`POST /external-links/elements/{}/cited-document-references/{}/detach`)
+- linkCitedDocumentReference: RENAMED -> `external-links.py`:`_async_link_cited_document`
+- detachCitedDocumentReference: RENAMED -> `external-links.py`:`_async_detach_cited_document`
 
 ### Service: feedback-manager
 
-- addCommentToElement: MISSING  (`POST /feedback-manager/elements/{}/comments`)
-- updateComment: MISSING  (`POST /feedback-manager/comments/{}/update`)
-- setupAcceptedAnswer: MISSING  (`POST /feedback-manager/comments/questions/{}/answers/{}`)
-- clearAcceptedAnswer: MISSING  (`POST /feedback-manager/comments/questions/{}/answers/{}/remove`)
-- removeCommentFromElement: MISSING  (`POST /feedback-manager/comments/{}/remove`)
-- getCommentByGUID: MISSING  (`POST /feedback-manager/comments/{}/retrieve`)
-- getAttachedComments: MISSING  (`POST /feedback-manager/elements/{}/comments/retrieve`)
-- findComments: MISSING  (`POST /feedback-manager/comments/by-search-string`)
-- addLikeToElement: MISSING  (`POST /feedback-manager/elements/{}/likes`)
-- removeLikeFromElement: MISSING  (`POST /feedback-manager/elements/{}/likes/remove`)
-- getAttachedLikes: MISSING  (`POST /feedback-manager/elements/{}/likes/retrieve`)
-- addRatingToElement: MISSING  (`POST /feedback-manager/elements/{}/ratings`)
-- removeRatingFromElement: MISSING  (`POST /feedback-manager/elements/{}/ratings/remove`)
-- getAttachedRatings: MISSING  (`POST /feedback-manager/elements/{}/ratings/retrieve`)
-- createInformalTag: MISSING  (`POST /feedback-manager/tags`)
-- updateTagDescription: MISSING  (`POST /feedback-manager/tags/{}/update`)
-- deleteTag: MISSING  (`POST /feedback-manager/tags/{}/remove`)
-- getTag: MISSING  (`POST /feedback-manager/tags/{}/retrieve`)
-- getTagsByName: MISSING  (`POST /feedback-manager/tags/by-name`)
-- findTags: MISSING  (`POST /feedback-manager/tags/by-search-string`)
-- findMyTags: MISSING  (`POST /feedback-manager/tags/private/by-search-string`)
-- addTagToElement: MISSING  (`POST /feedback-manager/elements/{}/tags/{}`)
-- getElementsByTag: MISSING  (`POST /feedback-manager/elements/by-tag/{}/retrieve`)
-- getAttachedTags: MISSING  (`POST /feedback-manager/elements/{}/tags/retrieve`)
-- removeTagFromElement: MISSING  (`POST /feedback-manager/elements/{}/tags/{}/remove`)
-- createNoteLog: MISSING  (`POST /feedback-manager/elements/{}/note-logs`)
-- updateNoteLog: MISSING  (`POST /feedback-manager/note-logs/{}`)
-- removeNoteLog: MISSING  (`POST /feedback-manager/note-logs/{}/remove`)
-- findNoteLogs: MISSING  (`POST /feedback-manager/note-logs/by-search-string`)
-- getNoteLogsByName: MISSING  (`POST /feedback-manager/note-logs/by-name`)
-- getNoteLogsForElement: MISSING  (`POST /feedback-manager/elements/{}/note-logs/retrieve`)
-- getNoteLogByGUID: MISSING  (`POST /feedback-manager/note-logs/{}/retrieve`)
-- createNote: MISSING  (`POST /feedback-manager/assets`)
-- updateNote: MISSING  (`POST /feedback-manager/assets/{}/update`)
-- removeNote: MISSING  (`POST /feedback-manager/assets/{}/delete`)
-- findNotes: MISSING  (`POST /feedback-manager/assets/by-search-string`)
-- getNotesForNoteLog: MISSING  (`POST /feedback-manager/note-logs/{}/notes/retrieve`)
-- getNoteByGUID: MISSING  (`POST /feedback-manager/assets/{}/retrieve`)
+- getTag: RENAMED -> `feedback-manager.py`:`_async_get_tag_by_guid`
+- getNoteLogsForElement: RENAMED -> `feedback-manager.py`:`_async_get_attached_note_logs`
 
 ### Service: glossary-manager
 
-- getTermRelationshipTypeNames: MISSING  (`GET /glossary-manager/glossaries/terms/relationships/type-names`)
+- getTermRelationshipTypeNames: RENAMED -> `glossary-manager.py`:`_async_get_term_relationship_types`
 
 ### Service: governance-officer
 
 - getValidMetadataValues - domainIdentifier values: MISSING  (`GET /valid-metadata/get-valid-metadata-values/domainIdentifier`)
-- createRegulation: MISSING  (`POST /governance-officer/governance-definitions`)
-- removeRegulatorFromRegulation: MISSING  (`POST /governance-officer/regulations/{}/regulators/organizations/{}/detach`)
-- createGovernanceControl: MISSING  (`POST /governance-officer/governance-definitions`)
-- createSecurityAccessControl: MISSING  (`POST /governance-officer/governance-definitions`)
-- createNamingStandardRule: MISSING  (`POST /governance-officer/governance-definitions`)
-- createCertificationType: MISSING  (`POST /governance-officer/governance-definitions`)
-- createLicenseType: MISSING  (`POST /governance-officer/governance-definitions`)
-- updateGovernanceDefinitionStatus: MISSING  (`POST /governance-officer/governance-definitions/{}/update`)
-- attachSupportingDefinition: MISSING  (`POST /governance-officer/governance-definitions/{}/supporting-definitions/{}/{}/attach`)
-- detachSupportingDefinition: MISSING  (`POST /governance-officer/governance-definitions/{}/supporting-definitions/{}/{}/detach`)
-- findAllGovernanceDefinitions: MISSING  (`POST /governance-officer/governance-definitions/by-search-string`)
-- findAllGovernanceDefinitions - with full request body: MISSING  (`POST /governance-officer/governance-definitions/by-search-string`)
-- findGovernanceDefinitions - with full request body: MISSING  (`POST /governance-officer/governance-definitions/by-search-string`)
-- getGovernanceDefinitionsByName - with full request body: MISSING  (`POST /governance-officer/governance-definitions/by-name`)
-- getGovernanceDefinitionByGUID - with request body: MISSING  (`POST /governance-officer/governance-definitions/{}/retrieve`)
-- getAllGovernanceActionTypes: MISSING  (`POST /governance-officer/governance-definitions/by-search-string`)
-- findGovernanceActionTypes: MISSING  (`POST /governance-officer/governance-definitions/by-search-string`)
-- getGovernanceActionTypesByName: MISSING  (`POST /governance-officer/governance-definitions/by-name`)
-- getGovernanceActionTypeByGUID: MISSING  (`POST /governance-officer/governance-definitions/{}/retrieve`)
-- findGovernanceActionProcesses: MISSING  (`POST /governance-officer/governance-action-processes/by-search-string`)
-- getAllGovernanceActionProcesses: MISSING  (`POST /governance-officer/governance-definitions/by-search-string`)
-- getGovernanceActionProcessesByName: MISSING  (`POST /governance-officer/governance-definitions/by-name`)
-- addGovernanceDefinitionToElement: MISSING  (`POST /governance-officer/elements/{}/governed-by/definition/{}/attach`)
-- removeGovernanceDefinitionFromElement: MISSING  (`POST /governance-officer/elements/{}/governed-by/definition/{}/detach`)
-- linkApprovedPurpose: MISSING  (`POST /governance-officer/elements/{}/approved-purposes/{}/attach`)
-- detachApprovedPurpose: MISSING  (`POST /governance-officer/elements/{}/approved-purposes/{}/detach`)
+- createRegulation: RENAMED -> `governance-officer.py`:`_async_create_governance_definition`, `governance-officer.py`:`_async_create_data_lens`
+- removeRegulatorFromRegulation: RENAMED -> `governance-officer.py`:`_async_detach_regulator_from_regulation`
+- createGovernanceControl: RENAMED -> `governance-officer.py`:`_async_create_governance_definition`, `governance-officer.py`:`_async_create_data_lens`
+- createSecurityAccessControl: RENAMED -> `governance-officer.py`:`_async_create_governance_definition`, `governance-officer.py`:`_async_create_data_lens`
+- createNamingStandardRule: RENAMED -> `governance-officer.py`:`_async_create_governance_definition`, `governance-officer.py`:`_async_create_data_lens`
+- createCertificationType: RENAMED -> `governance-officer.py`:`_async_create_governance_definition`, `governance-officer.py`:`_async_create_data_lens`
+- createLicenseType: RENAMED -> `governance-officer.py`:`_async_create_governance_definition`, `governance-officer.py`:`_async_create_data_lens`
+- updateGovernanceDefinitionStatus: RENAMED -> `governance-officer.py`:`_async_update_governance_definition`
+- attachSupportingDefinition: RENAMED -> `governance-officer.py`:`_async_attach_supporting_definitions`
+- detachSupportingDefinition: RENAMED -> `governance-officer.py`:`_async_detach_supporting_definitions`
+- findAllGovernanceDefinitions: RENAMED -> `governance-officer.py`:`_async_find_governance_definitions`
+- findAllGovernanceDefinitions - with full request body: RENAMED -> `governance-officer.py`:`_async_find_governance_definitions`
+- findGovernanceDefinitions - with full request body: RENAMED -> `governance-officer.py`:`_async_find_governance_definitions`
+- getGovernanceDefinitionsByName - with full request body: RENAMED -> `governance-officer.py`:`_async_get_governance_definitions_by_name`
+- getGovernanceDefinitionByGUID - with request body: RENAMED -> `action-author.py`:`_async_get_governance_action_process`, `governance-officer.py`:`_async_get_governance_definition_by_guid`, `governance-officer.py`:`_async_get_governance_action_process`
+- getAllGovernanceActionTypes: RENAMED -> `governance-officer.py`:`_async_find_governance_definitions`
+- findGovernanceActionTypes: RENAMED -> `governance-officer.py`:`_async_find_governance_definitions`
+- getGovernanceActionTypesByName: RENAMED -> `governance-officer.py`:`_async_get_governance_definitions_by_name`
+- getGovernanceActionTypeByGUID: RENAMED -> `action-author.py`:`_async_get_governance_action_process`, `governance-officer.py`:`_async_get_governance_definition_by_guid`, `governance-officer.py`:`_async_get_governance_action_process`
+- getAllGovernanceActionProcesses: RENAMED -> `governance-officer.py`:`_async_find_governance_definitions`
+- getGovernanceActionProcessesByName: RENAMED -> `governance-officer.py`:`_async_get_governance_definitions_by_name`
+- addGovernanceDefinitionToElement: RENAMED -> `governance-officer.py`:`_async_attach_governed_by_definition`
+- removeGovernanceDefinitionFromElement: RENAMED -> `governance-officer.py`:`_async_detach_governed_by_definition`
 - updateLicense: ELSEWHERE -> `classification-explorer.py`
 - unlicenseElement: ELSEWHERE -> `classification-explorer.py`
 - updateCertification: ELSEWHERE -> `classification-explorer.py`
@@ -357,31 +334,31 @@ _Review only - cross-service overlap is often intentional._
 
 ### Service: location-arena
 
-- linkPeerLocation: MISSING  (`POST /location-arena/locations/{}/adjacent-locations/{}/attach`)
+- linkPeerLocation: RENAMED -> `location-arena.py`:`_async_link_peer_locations`
 
 ### Service: metadata-expert
 
-- createMetadataElementInStore: MISSING  (`POST /metadata-expert/metadata-elements`)
-- updateMetadataElementInStore: MISSING  (`POST /metadata-expert/metadata-elements/{}/update-properties`)
-- updateMetadataElementEffectivityInStore: MISSING  (`POST /metadata-expert/metadata-elements/{}/update-effectivity`)
-- deleteMetadataElementInStore: MISSING  (`POST /metadata-expert/metadata-elements/{}/delete`)
-- archiveMetadataElementInStore: MISSING  (`POST /metadata-expert/metadata-elements/{}/archive`)
-- reclassifyMetadataElementInStore: MISSING  (`POST /metadata-expert/metadata-elements/{}/classifications/{}/update-properties`)
-- updateClassificationEffectivityInStore: MISSING  (`POST /metadata-expert/metadata-elements/{}/classifications/{}/update-effectivity`)
-- declassifyMetadataElementInStore: MISSING  (`POST /metadata-expert/metadata-elements/{}/classifications/{}/delete`)
-- createRelatedElementsInStore: MISSING  (`POST /metadata-expert/related-elements`)
-- updateRelatedElementsInStore: MISSING  (`POST /metadata-expert/related-elements/{}/update-properties`)
-- updateRelatedElementsEffectivityInStore: MISSING  (`POST /metadata-expert/related-elements/{}/update-effectivity`)
-- deleteRelatedElementsInStore: MISSING  (`POST /metadata-expert/related-elements/{}/delete`)
-- getAnchoredElementsGraph: MISSING  (`POST /metadata-expert/metadata-elements/{}/with-anchored-elements`)
-- getAllRelatedMetadataElements: MISSING  (`POST /metadata-expert/related-elements/{}/any-type`)
-- findRelationshipsBetweenMetadataElements: MISSING  (`POST /metadata-expert/relationships/by-search-conditions`)
-- countRelationshipsBetweenMetadataElements: MISSING  (`POST /metadata-expert/relationships/by-search-conditions/count`)
+- createMetadataElementInStore: RENAMED -> `metadata-expert.py`:`_async_create_metadata_element`
+- updateMetadataElementInStore: RENAMED -> `metadata-expert.py`:`_async_update_metadata_element_properties`
+- updateMetadataElementEffectivityInStore: RENAMED -> `metadata-expert.py`:`_async_update_metadata_element_effectivity`, `feedback-manager.py`:`_async_update_element_effectivity`
+- deleteMetadataElementInStore: RENAMED -> `metadata-expert.py`:`_async_delete_metadata_element`
+- archiveMetadataElementInStore: RENAMED -> `metadata-expert.py`:`_async_archive_metadata_element`
+- reclassifyMetadataElementInStore: RENAMED -> `metadata-expert.py`:`_async_reclassify_metadata_element`
+- updateClassificationEffectivityInStore: RENAMED -> `metadata-expert.py`:`_async_update_classification_effectivity`
+- declassifyMetadataElementInStore: RENAMED -> `metadata-expert.py`:`_async_declassify_metadata_element`
+- createRelatedElementsInStore: RENAMED -> `collection-manager.py`:`_async_link_saved_query_to_results_set`, `metadata-expert.py`:`_async_create_related_elements`
+- updateRelatedElementsInStore: RENAMED -> `metadata-expert.py`:`_async_update_related_elements_properties`
+- updateRelatedElementsEffectivityInStore: RENAMED -> `metadata-expert.py`:`_async_update_related_elements_effectivity`
+- deleteRelatedElementsInStore: RENAMED -> `collection-manager.py`:`_async_detach_saved_query_from_results_set`, `metadata-expert.py`:`_async_delete_related_elements`
+- getAnchoredElementsGraph: RENAMED -> `metadata-expert.py`:`_async_get_anchored_element_graph`
+- getAllRelatedMetadataElements: RENAMED -> `metadata-expert.py`:`_async_get_all_related_elements`
+- findRelationshipsBetweenMetadataElements: RENAMED -> `metadata-expert.py`:`_async_find_relationships_between_elements`
+- countRelationshipsBetweenMetadataElements: RENAMED -> `metadata-expert.py`:`_async_count_relationships_between_elements`
 
 ### Service: my-profile
 
 - Get My Profile: MISSING  (`POST /my-profile`)
-- Add My Profile: MISSING  (`POST /my-profile/new`)
+- Add My Profile: RENAMED -> `my-profile.py`:`_async_add_my_profile`
 
 ### Service: notification-manager
 
@@ -391,16 +368,14 @@ _Review only - cross-service overlap is often intentional._
 
 ### Service: platform-services
 
-- Get OMAG Server Platform Origin: MISSING  (`GET /platform-services/server-platform/origin`)
-- Get Active User List: MISSING  (`GET /platform-services/server-platform/security/user-list`)
-- Get Contractor User List: MISSING  (`GET /platform-services/server-platform/security/user-list`)
-- Get all known servers: MISSING  (`GET /platform-services/server-platform/servers`)
+- Get Active User List: RENAMED -> `platform-services.py`:`_async_get_security_user_list`
+- Get Contractor User List: RENAMED -> `platform-services.py`:`_async_get_security_user_list`
+- Get all known servers: RENAMED -> `platform-services.py`:`_async_get_known_servers`
 - Query the status of a specific server: ELSEWHERE -> `server-operations.py`
-- Query a connector: MISSING  (`GET /platform-services/server-platform/connector-types/org.odpi.openmetadata.metadatasecurity.accessconnector.OpenMetadataAccessSecurityProvider`)
-- Shutdown and unregister server from cohorts: MISSING  (`DELETE /platform-services/server-platform/servers/{}`)
-- Shutdown all active servers: MISSING  (`DELETE /platform-services/server-platform/servers/instance`)
-- Shutdown and unregister all active servers: MISSING  (`DELETE /platform-services/server-platform/servers`)
-- Shutdown server platform: MISSING  (`DELETE /platform-services/server-platform/instance`)
+- Shutdown and unregister server from cohorts: RENAMED -> `platform-services.py`:`_async_shutdown_and_unregister_server`
+- Shutdown all active servers: RENAMED -> `platform-services.py`:`_async_shutdown_all_servers`
+- Shutdown and unregister all active servers: RENAMED -> `platform-services.py`:`_async_shutdown_unregister_servers`
+- Shutdown server platform: RENAMED -> `platform-services.py`:`_async_shutdown_platform`
 
 ### Service: privacy-officer
 
@@ -411,62 +386,48 @@ _Review only - cross-service overlap is often intentional._
 - find the open metadata product catalog: MISSING  (`POST /product-catalog/collections/by-search-string`)
 - find the valid metadata value list digital product: MISSING  (`POST /product-catalog/collections/by-search-string`)
 - getSolutionBlueprintsByName: ELSEWHERE -> `solution-architect.py`
-- getTechnologyTypeDetail: MISSING  (`POST /automated-curation/technology-types/by-name`)
-- getTechnologyTypeTemplates: MISSING  (`POST /automated-curation/technology-types/elements`)
-- createElementFromTemplate: MISSING  (`POST /automated-curation/catalog-templates/new-element`)
+- getTechnologyTypeDetail: RENAMED -> `automated-curation.py`:`_async_get_tech_type_detail`
+- getTechnologyTypeTemplates: RENAMED -> `automated-curation.py`:`_async_get_technology_type_elements`
+- createElementFromTemplate: ELSEWHERE -> `feedback-manager.py`
 - getGovernanceActionProcessesByName: MISSING  (`POST /product-catalog/governance-definitions/by-name`)
 - getGovernanceActionProcessGraph: ELSEWHERE -> `governance-officer.py`
-- initiateGovernanceActionProcess: MISSING  (`POST /automated-curation/governance-action-processes/initiate`)
-- findSubscriptions: MISSING  (`POST /collection-manager/collections/by-search-string`)
+- initiateGovernanceActionProcess: RENAMED -> `automated-curation.py`:`_async_initiate_gov_action_process`
+- findSubscriptions: RENAMED -> `collection-manager.py`:`_async_find_collections`
 - Get My Profile: MISSING  (`POST /my-profile`)
 - getCommunitiesByName: ELSEWHERE -> `community-matters.py`
-- getNoteLogsByName: MISSING  (`POST /feedback-manager/note-logs/by-name`)
+- getNoteLogsByName: ELSEWHERE -> `feedback-manager.py`
 
 ### Service: product-manager
 
-- updateDigitalProductStatus: MISSING  (`POST /product-manager/collections/{}/update`)
+- updateDigitalProductStatus: RENAMED -> `product-manager.py`:`_async_update_digital_product`, `product-manager.py`:`_async_update_digital_product_catalog`
 
 ### Service: project-manager
 
-- createClassifiedProject: MISSING  (`POST /project-manager/projects`)
-- createCampaign: MISSING  (`POST /project-manager/projects`)
-- createTaskForProject: MISSING  (`POST /project-manager/projects/{}/task`)
-- setupProjectDependency: MISSING  (`POST /project-manager/projects/{}/project-dependencies/{}/attach`)
-- setupProjectHierarchy: MISSING  (`POST /project-manager/projects/{}/project-hierarchies/{}/attach`)
+- createClassifiedProject: RENAMED -> `project-manager.py`:`_async_create_project`
+- createCampaign: RENAMED -> `project-manager.py`:`_async_create_project`
+- createTaskForProject: RENAMED -> `project-manager.py`:`_async_create_project_task`
+- setupProjectDependency: RENAMED -> `project-manager.py`:`_async_set_project_dependency`
+- setupProjectHierarchy: RENAMED -> `project-manager.py`:`_async_set_project_hierarchy`
 
 ### Service: reference-data
 
 
 ### Service: runtime-manager
 
-- getPlatformsByDeployedImplementationType: MISSING  (`POST /runtime-manager/platforms/by-deployed-implementation-type`)
-- getPlatformTemplatesByDeployedImplementationType: MISSING  (`POST /runtime-manager/platforms/by-deployed-implementation-type`)
-- Get Connector Type: MISSING  (`GET /runtime-manager/platforms/{}/connector-types/{}`)
-- getElementsByCategory: MISSING  (`POST /runtime-manager/elements/by-category`)
-- getOMAGServerReport: MISSING  (`GET /runtime-manager/omag-servers/{}/instance/report`)
-- activateWithStoredConfig: MISSING  (`POST /runtime-manager/omag-servers/{}/instance`)
-- getConfigurationProperties: MISSING  (`GET /runtime-manager/integration-daemons/{}/integration-connectors/{}/configuration-properties`)
-- updateConfigurationProperties: MISSING  (`POST /runtime-manager/integration-daemons/{}/integration-connectors/configuration-properties`)
-- updateEndpointNetworkAddress: MISSING  (`POST /runtime-manager/integration-daemons/{}/integration-connectors/{}/endpoint-network-address`)
-- updateConnectorConnection: MISSING  (`POST /runtime-manager/integration-daemons/{}/integration-connectors/{}/connection`)
-- refreshConnectors: MISSING  (`POST /runtime-manager/integration-daemons/{}/integration-connectors/refresh`)
-- restartConnectors: MISSING  (`POST /runtime-manager/integration-daemons/{}/integration-connectors/restart`)
-- refreshIntegrationGroupConfig: MISSING  (`GET /runtime-manager/integration-daemons/{}/integration-groups/{}/refresh-config`)
-- refreshConfig: MISSING  (`GET /runtime-manager/engine-hosts/{}/governance-engines/{}/refresh-config`)
-- addOpenMetadataArchiveFile: MISSING  (`POST /runtime-manager/omag-servers/{}/instance/load/open-metadata-archives/file`)
-- addOpenMetadataArchiveContent: MISSING  (`POST /runtime-manager/omag-servers/{}/instance/load/open-metadata-archives/archive-content`)
-- createMetadataRepositoryCohort: MISSING  (`POST /runtime-manager/metadata-repository-cohorts`)
-- createMetadataRepositoryCohortFromTemplate: MISSING  (`POST /runtime-manager/metadata-repository-cohorts/from-template`)
-- updateMetadataRepositoryCohort: MISSING  (`POST /runtime-manager/metadata-repository-cohorts/{}/update`)
-- deleteMetadataRepositoryCohort: MISSING  (`POST /runtime-manager/metadata-repository-cohorts/{}/delete`)
-- getMetadataRepositoryCohortsByName: MISSING  (`POST /runtime-manager/metadata-repository-cohorts/by-name`)
-- findMetadataRepositoryCohorts: MISSING  (`POST /runtime-manager/metadata-repository-cohorts/by-search-string`)
-- getMetadataRepositoryCohortByGUID: MISSING  (`POST /runtime-manager/metadata-repository-cohorts/{}/retrieve`)
-- linkCohortMember: MISSING  (`POST /runtime-manager/metadata-repository-cohorts/{}/cohort-members/{}/attach`)
-- detachCohortMember: MISSING  (`POST /runtime-manager/metadata-repository-cohorts/{}/cohort-members/{}/detach`)
-- connectToCohortGet: MISSING  (`GET /runtime-manager/cohort-members/{}/cohorts/{}/connect`)
-- disconnectFromCohortGet: MISSING  (`GET /runtime-manager/cohort-members/{}/cohorts/{}/disconnect`)
-- unregisterFromCohortGet: MISSING  (`GET /runtime-manager/cohort-members/{}/cohorts/{}/unregister`)
+- getPlatformsByDeployedImplementationType: RENAMED -> `runtime-manager.py`:`_async_get_platforms_by_type`, `runtime-manager.py`:`_async_get_platform_templates_by_type`
+- getPlatformTemplatesByDeployedImplementationType: RENAMED -> `runtime-manager.py`:`_async_get_platforms_by_type`, `runtime-manager.py`:`_async_get_platform_templates_by_type`
+- Get Connector Type: RENAMED -> `runtime-manager.py`:`_async_get_connector_type`
+- getOMAGServerReport: RENAMED -> `runtime-manager.py`:`_async_get_server_report`
+- activateWithStoredConfig: RENAMED -> `runtime-manager.py`:`_async_activate_server_with_stored_config`
+- getConfigurationProperties: RENAMED -> `runtime-manager.py`:`_async_get_integration_connector_config_properties`
+- updateConfigurationProperties: RENAMED -> `runtime-manager.py`:`_async_update_connector_configuration`
+- updateEndpointNetworkAddress: RENAMED -> `runtime-manager.py`:`_async_update_endpoint_address`
+- refreshConnectors: RENAMED -> `runtime-manager.py`:`_async_refresh_integration_connector`
+- restartConnectors: RENAMED -> `runtime-manager.py`:`_async_restart_connector`
+- refreshIntegrationGroupConfig: RENAMED -> `runtime-manager.py`:`_async_refresh_integ_group_config`
+- refreshConfig: RENAMED -> `runtime-manager.py`:`_async_refresh_gov_eng_config`, `runtime-manager.py`:`_async_refresh_gov_engine`
+- addOpenMetadataArchiveFile: RENAMED -> `runtime-manager.py`:`_async_add_archive_file`, `feedback-manager.py`:`_async_add_archive_file`
+- addOpenMetadataArchiveContent: RENAMED -> `runtime-manager.py`:`_async_add_archive_content`
 
 ### Service: schema-maker
 
@@ -485,53 +446,53 @@ _Review only - cross-service overlap is often intentional._
 
 ### Service: security-officer
 
-- find Security Roles: MISSING  (`POST /security-officer/collections/by-search-string`)
-- find Security Groups: MISSING  (`POST /security-officer/collections/by-search-string`)
+- find Security Roles: RENAMED -> `security-officer.py`:`_async_find_security_roles`, `security-officer.py`:`_async_find_security_groups`
+- find Security Groups: RENAMED -> `security-officer.py`:`_async_find_security_roles`, `security-officer.py`:`_async_find_security_groups`
 
 ### Service: solution-architect
 
-- createInformationSupplyChain: MISSING  (`POST /solution-architect/information-supply-chains`)
-- createInformationSupplyChainFromTemplate: MISSING  (`POST /solution-architect/information-supply-chains/from-template`)
-- updateInformationSupplyChain: MISSING  (`POST /solution-architect/information-supply-chains/{}/update`)
-- linkPeersInInformationSupplyChain: MISSING  (`POST /solution-architect/information-supply-chains/{}/peer-links/{}/attach`)
-- unlinkPeerInformationSupplyChains: MISSING  (`POST /solution-architect/information-supply-chains/{}/peer-links/{}/detach`)
-- deleteInformationSupplyChain: MISSING  (`POST /solution-architect/information-supply-chains/{}/delete`)
-- findAllInformationSupplyChains - with full request body: MISSING  (`POST /solution-architect/information-supply-chains/by-search-string`)
-- findInformationSupplyChains - with full request body: MISSING  (`POST /solution-architect/information-supply-chains/by-search-string`)
-- getInformationSupplyChainsByName: MISSING  (`POST /solution-architect/information-supply-chains/by-name`)
-- getInformationSupplyChainsByName - with full request body: MISSING  (`POST /solution-architect/information-supply-chains/by-name`)
-- getInformationSupplyChainByGUID: MISSING  (`POST /solution-architect/information-supply-chains/{}/retrieve`)
-- getInformationSupplyChainByGUID - with request body: MISSING  (`POST /solution-architect/information-supply-chains/{}/retrieve`)
-- findAllSolutionBlueprints - with full request body: MISSING  (`POST /solution-architect/solution-blueprints/by-search-string`)
-- findSolutionBlueprints - with full request body: MISSING  (`POST /solution-architect/solution-blueprints/by-search-string`)
-- getSolutionBlueprintsByName - with full request body: MISSING  (`POST /solution-architect/solution-blueprints/by-name`)
-- getSolutionBlueprintByGUID - with request body: MISSING  (`POST /solution-architect/solution-blueprints/{}/retrieve`)
-- linkSolutionComponentActor: MISSING  (`POST /solution-architect/solution-roles/{}/solution-component-actors/{}/attach`)
-- detachSolutionComponentActor: MISSING  (`POST /solution-architect/solution-roles/{}/solution-component-actors/{}/detach`)
-- findAllSolutionRoles - with full request body: MISSING  (`POST /solution-architect/solution-roles/by-search-string`)
-- findSolutionRoles - with full request body: MISSING  (`POST /solution-architect/solution-roles/by-search-string`)
-- getSolutionRolesByName - with full request body: MISSING  (`POST /solution-architect/solution-roles/by-name`)
-- getSolutionRoleByGUID - with request body: MISSING  (`POST /solution-architect/solution-roles/{}/retrieve`)
-- detachSubcomponent: MISSING  (`POST /solution-architect/solution-components/{}/subcomponents/{}/detach`)
-- detachAllSolutionLinkingWire: MISSING  (`POST /solution-architect/solution-components/{}/wired-to/{}/detach`)
+- createInformationSupplyChain: RENAMED -> `solution-architect.py`:`_async_create_info_supply_chain`
+- createInformationSupplyChainFromTemplate: RENAMED -> `solution-architect.py`:`_async_create_info_supply_chain_from_template`
+- updateInformationSupplyChain: RENAMED -> `solution-architect.py`:`_async_update_info_supply_chain`
+- linkPeersInInformationSupplyChain: RENAMED -> `solution-architect.py`:`_async_link_peer_info_supply_chains`
+- unlinkPeerInformationSupplyChains: RENAMED -> `solution-architect.py`:`_async_unlink_peer_info_supply_chains`
+- deleteInformationSupplyChain: RENAMED -> `solution-architect.py`:`_async_delete_info_supply_chain`
+- findAllInformationSupplyChains - with full request body: RENAMED -> `solution-architect.py`:`_async_find_information_supply_chains`
+- findInformationSupplyChains - with full request body: RENAMED -> `solution-architect.py`:`_async_find_information_supply_chains`
+- getInformationSupplyChainsByName: RENAMED -> `solution-architect.py`:`_async_get_info_supply_chain_by_name`
+- getInformationSupplyChainsByName - with full request body: RENAMED -> `solution-architect.py`:`_async_get_info_supply_chain_by_name`
+- getInformationSupplyChainByGUID: RENAMED -> `solution-architect.py`:`_async_get_info_supply_chain_by_guid`
+- getInformationSupplyChainByGUID - with request body: RENAMED -> `solution-architect.py`:`_async_get_info_supply_chain_by_guid`
+- findAllSolutionBlueprints - with full request body: RENAMED -> `solution-architect.py`:`_async_find_solution_blueprints`
+- findSolutionBlueprints - with full request body: RENAMED -> `solution-architect.py`:`_async_find_solution_blueprints`
+- getSolutionBlueprintsByName - with full request body: RENAMED -> `solution-architect.py`:`_async_get_solution_blueprints_by_name`
+- getSolutionBlueprintByGUID - with request body: RENAMED -> `solution-architect.py`:`_async_get_solution_blueprint_by_guid`
+- linkSolutionComponentActor: RENAMED -> `solution-architect.py`:`_async_link_component_to_actor`
+- detachSolutionComponentActor: RENAMED -> `solution-architect.py`:`_async_detach_component_actor`
+- findAllSolutionRoles - with full request body: RENAMED -> `solution-architect.py`:`_async_find_solution_roles`
+- findSolutionRoles - with full request body: RENAMED -> `solution-architect.py`:`_async_find_solution_roles`
+- getSolutionRolesByName - with full request body: RENAMED -> `solution-architect.py`:`_async_get_solution_roles_by_name`
+- getSolutionRoleByGUID - with request body: RENAMED -> `solution-architect.py`:`_async_get_solution_role_by_guid`
+- detachSubcomponent: RENAMED -> `solution-architect.py`:`_async_detach_sub_component`
+- detachAllSolutionLinkingWire: RENAMED -> `solution-architect.py`:`_async_detach_solution_linking_wire`
 - detachSolutionLinkingWire: MISMATCH `detach_solution_linking_wire`
     - PATH
       SDK: /solution-architect/solution-components/{}/wired-to/{}/detach
       API: /solution-architect/solution-components/wires/{}/detach
-- findAllSolutionComponents - with full request body: MISSING  (`POST /solution-architect/solution-components/by-search-string`)
-- findSolutionComponents - with full request body: MISSING  (`POST /solution-architect/solution-components/by-search-string`)
-- getSolutionComponentsByName - with full request body: MISSING  (`POST /solution-architect/solution-components/by-name`)
-- getSolutionComponentByGUID - with request body: MISSING  (`POST /solution-architect/solution-components/{}/retrieve`)
+- findAllSolutionComponents - with full request body: RENAMED -> `solution-architect.py`:`_async_find_solution_components`
+- findSolutionComponents - with full request body: RENAMED -> `solution-architect.py`:`_async_find_solution_components`
+- getSolutionComponentsByName - with full request body: RENAMED -> `solution-architect.py`:`_async_get_solution_components_by_name`
+- getSolutionComponentByGUID - with request body: RENAMED -> `solution-architect.py`:`_async_get_solution_component_by_guid`
 
 ### Service: subject-area
 
-- linkSubjectAreas: MISSING  (`POST /subject-area/collections/{}/collection-hierarchies/{}/attach`)
-- detachSubjectAreas: MISSING  (`POST /subject-area/collections/{}/collection-hierarchies/{}/detach`)
+- linkSubjectAreas: RENAMED -> `subject-area.py`:`_async_link_subject_area_hierarchy`
+- detachSubjectAreas: RENAMED -> `subject-area.py`:`_async_detach_subject_area_hierarchy`
 - findAllSubjectAreas: MISSING  (`POST /subject-area/collectionss/by-search-string`)
-- findAllSubjectAreas - with full request body: MISSING  (`POST /subject-area/collections/by-search-string`)
-- findSubjectAreas - with full request body: MISSING  (`POST /subject-area/collections/by-search-string`)
-- getSubjectAreasByName - with full request body: MISSING  (`POST /subject-area/collections/by-name`)
-- getSubjectAreaByGUID - with request body: MISSING  (`POST /subject-area/collections/{}/retrieve`)
+- findAllSubjectAreas - with full request body: RENAMED -> `subject-area.py`:`_async_find_subject_areas`
+- findSubjectAreas - with full request body: RENAMED -> `subject-area.py`:`_async_find_subject_areas`
+- getSubjectAreasByName - with full request body: RENAMED -> `subject-area.py`:`_async_get_subject_areas_by_name`
+- getSubjectAreaByGUID - with request body: RENAMED -> `subject-area.py`:`_async_get_subject_area_by_guid`
 
 ### Service: template-manager
 
@@ -541,13 +502,12 @@ _Review only - cross-service overlap is often intentional._
 
 ### Service: valid-metadata
 
-- setUpValidMetadataValue: MISSING  (`POST /valid-metadata/setup-value/{}`)
-- setUpValidMetadataMapName: MISSING  (`POST /valid-metadata/setup-map-name/{}`)
-- setUpValidMetadataMapValue: MISSING  (`POST /valid-metadata/setup-map-value/{}/{}`)
-- getAllTypes: MISSING  (`GET /valid-metadata/open-metadata-types`)
-- getEntityDefs: MISSING  (`GET /valid-metadata/open-metadata-types/entity-defs`)
-- getRelationshipDefs: MISSING  (`GET /valid-metadata/open-metadata-types/relationship-defs`)
-- getClassificationDefs: MISSING  (`GET /valid-metadata/open-metadata-types/classification-defs`)
-- getAttributeTypes: MISSING  (`GET /valid-metadata/open-metadata-types/attribute-defs`)
-- getTypeDefByName: MISSING  (`GET /valid-metadata/open-metadata-types/name/{}`)
-- setUpSpecificationProperty: MISSING  (`POST /valid-metadata/elements/{}/specification-properties`)
+- setUpValidMetadataValue: RENAMED -> `valid-metadata.py`:`_async_setup_valid_metadata_value`
+- setUpValidMetadataMapName: RENAMED -> `valid-metadata.py`:`_async_setup_valid_metadata_map_name`
+- setUpValidMetadataMapValue: RENAMED -> `valid-metadata.py`:`_async_setup_valid_metadata_map_value`
+- getAllTypes: RENAMED -> `valid-metadata.py`:`_async_get_all_entity_types`
+- getEntityDefs: RENAMED -> `valid-metadata.py`:`_async_get_all_entity_defs`
+- getRelationshipDefs: RENAMED -> `valid-metadata.py`:`_async_get_all_relationship_defs`
+- getClassificationDefs: RENAMED -> `valid-metadata.py`:`_async_get_all_classification_defs`
+- getTypeDefByName: RENAMED -> `valid-metadata.py`:`_async_get_typedef_by_name`
+- setUpSpecificationProperty: RENAMED -> `valid-metadata.py`:`_async_setup_specification_property`

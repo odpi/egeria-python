@@ -332,6 +332,16 @@ def setup_dispatcher(client: EgeriaTech) -> V2Dispatcher:
     reg("Link Data Value Composition", LinkDataValueCompositionProcessor)
     reg("Link Data Class Composition", LinkDataClassCompositionProcessor)
     reg("Link Certification Type to Data Structure", LinkCertificationTypeToStructureProcessor)
+    # "Assign Data Value Specification" (verb Attach/Link/Add) and "Detach
+    # Data Value Specification from Element" (verb Detach/Unlink/Remove) both
+    # route to the same AssignDataValueSpecificationProcessor, which branches
+    # on self.command.verb -- see its docstring. They can't be separate
+    # processor classes: the "to Element"/"from Element" noun pair both
+    # expand, via LINK_VERBS, to the identical set of six verb phrasings
+    # (register_processor -> build_command_variants), so whichever reg() call
+    # ran last would silently claim both keys regardless of which processor
+    # class was intended for which verb.
+    reg("Detach Data Value Specification from Element", AssignDataValueSpecificationProcessor)
     reg("Assign Data Value Specification", AssignDataValueSpecificationProcessor)
 
     # Solution Architect (spec-driven to keep coverage aligned with compact commands)
@@ -359,6 +369,7 @@ def setup_dispatcher(client: EgeriaTech) -> V2Dispatcher:
     reg("Link Product-Product", CollectionLinkProcessor)
     reg("Attach Collection to Resource", CollectionLinkProcessor)
     reg("Link Digital Subscriber", CollectionLinkProcessor)
+    reg("Link Data Description", CollectionLinkProcessor)
 
     # Governance (spec-driven to keep coverage aligned with compact commands)
     register_governance_processors(reg)

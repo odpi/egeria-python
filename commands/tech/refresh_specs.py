@@ -61,15 +61,17 @@ def main():
             cmd_templates.extend(["--family", args.family])
         run_command(cmd_templates, f"Markdown Command Templates Generation ({usage_level})")
 
-    # 2. Generate Dr. Egeria Help (per usage level)
-    for usage_level in usage_levels:
-        cmd_help = [
-            python_exec,
-            "-m", "commands.tech.generate_dr_help"
-        ]
-        if usage_level == "Advanced":
-            cmd_help.append("--advanced")
-        run_command(cmd_help, f"Dr. Egeria Help Generation ({usage_level})")
+    # 2. Generate Dr. Egeria Help -- one combined pass covering every command
+    # and attribute regardless of usage level (see generate_dr_help.py's
+    # create_help_terms docstring). No longer looped per usage_level: that
+    # used to produce two separate help files loaded into the same glossary
+    # sequentially, with the second silently overwriting the first's content
+    # and no way to tell which version a term reflected.
+    cmd_help = [
+        python_exec,
+        "-m", "commands.tech.generate_dr_help"
+    ]
+    run_command(cmd_help, "Dr. Egeria Help Generation")
 
     # 3. Generate Report Specifications
     cmd_reports = [
