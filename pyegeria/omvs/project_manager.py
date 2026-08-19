@@ -2339,7 +2339,7 @@ class ProjectManager(ServerClient):
             }
 
         url = f"{self.project_command_base}/{project_guid}/task"
-        response = await self._async_new_element_request(url, body)
+        response = await self._async_create_element_body_request(url, ["ProjectProperties"], body)
         logger.info(f"Created task for project {project_guid}")
         return response
 

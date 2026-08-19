@@ -9,8 +9,9 @@ from md_processing.v2.processors import AsyncBaseCommandProcessor
 from md_processing.v2.utils import parse_key_value
 from md_processing.md_processing_utils.md_processing_constants import get_command_spec
 from md_processing.md_processing_utils.common_md_utils import (
-    set_element_prop_body, set_create_body, set_update_body, 
+    set_element_prop_body, set_create_body, set_update_body,
     set_rel_request_body, set_rel_prop_body, set_data_field_body,
+    set_delete_rel_request_body,
     update_element_dictionary, async_add_note_in_dr_e
 )
 from pyegeria.core.utils import body_slimmer
@@ -254,7 +255,9 @@ class DataStructureProcessor(AsyncBaseCommandProcessor):
             guid = self.extract_guid_or_raise(raw_guid, "Create Data Structure")
             if guid:
                 self.parsed_output["guid"] = guid
-                await self._sync_memberships(guid, to_be_guids, replace_all=True)
+                # known_new=True: this GUID was just created, so it cannot have
+                # any existing memberships yet -- skip the as-is fetch.
+                await self._sync_memberships(guid, to_be_guids, replace_all=True, known_new=True)
 
                 if journal_entry:
                     try:
@@ -270,13 +273,17 @@ class DataStructureProcessor(AsyncBaseCommandProcessor):
 
         return self.command.raw_block
 
-    async def _sync_memberships(self, guid: str, to_be_guids: set, replace_all: bool):
-        # Fetch current memberships
-        # This wrapper logic should be async
-        memberships = await self._extract_memberships_async(
-            self.client.data_designer._async_get_data_structure_by_guid, guid)
-        as_is = set(memberships.get("DictList", [])) | set(memberships.get("SpecList", []))
-        
+    async def _sync_memberships(self, guid: str, to_be_guids: set, replace_all: bool, known_new: bool = False):
+        # Fetch current memberships (skipped entirely for a just-created
+        # element via known_new -- it cannot have any memberships yet).
+        if known_new:
+            as_is: set = set()
+        else:
+            memberships = await self._extract_memberships_async(
+                self.client.data_designer._async_get_data_structure_by_guid, guid)
+            as_is = set(memberships.get("DictList", [])) | set(memberships.get("SpecList", []))
+
+
         async def add_fn(coll_guid):
             await self.client.collection_manager._async_add_to_collection(coll_guid, guid)
 
@@ -356,7 +363,9 @@ class DataFieldProcessor(AsyncBaseCommandProcessor):
             guid = self.extract_guid_or_raise(raw_guid, "Create Data Field")
             if guid:
                 self.parsed_output["guid"] = guid
-                await self._sync_all_rels(guid, data_struct_guids, parent_field_guids, term_guids, data_class_guid, data_dict_guids, replace_all=True)
+                # known_new=True: this GUID was just created, so it cannot have
+                # any existing relationships yet -- skip the as-is fetches.
+                await self._sync_all_rels(guid, data_struct_guids, parent_field_guids, term_guids, data_class_guid, data_dict_guids, replace_all=True, known_new=True)
 
                 if journal_entry:
                     try:
@@ -372,14 +381,24 @@ class DataFieldProcessor(AsyncBaseCommandProcessor):
 
         return self.command.raw_block
 
-    async def _sync_all_rels(self, guid: str, ds_guids: set, parent_guids: set, term_guids: set, dc_guid: str, dict_guids: set, replace_all: bool):
-        """Unified relationship sync for Data Field."""
-        # This is a complex sync involving multiple relationship types
-        rel_els = await self.client.data_designer._async_get_data_field_rel_elements(guid)
+    async def _sync_all_rels(self, guid: str, ds_guids: set, parent_guids: set, term_guids: set, dc_guid: str, dict_guids: set,
+                              replace_all: bool, known_new: bool = False):
+        """
+        Unified relationship sync for Data Field.
+
+        known_new=True (pass this for a just-created field) skips both
+        as-is fetches below entirely -- a brand-new field cannot have any
+        existing relationships of any of these types yet.
+        """
+        if known_new:
+            rel_els: Dict[str, Any] = {}
+        else:
+            # This is a complex sync involving multiple relationship types
+            rel_els = await self.client.data_designer._async_get_data_field_rel_elements(guid)
 
         # 1. Data Structures
         as_is_ds = set(rel_els.get("data_structure_guids", []))
-        sync_res = await self.sync_members(as_is_ds, ds_guids, 
+        sync_res = await self.sync_members(as_is_ds, ds_guids,
                                lambda ds: self.client.data_designer._async_link_member_data_field(ds, guid, None),
                                lambda ds: self.client.data_designer._async_detach_member_data_field(ds, guid, None),
                                replace_all)
@@ -387,7 +406,7 @@ class DataFieldProcessor(AsyncBaseCommandProcessor):
             self.add_related_result("Data Structures Sync", message=f"Added {len(sync_res['added'])}, Removed {len(sync_res['removed'])}")
         if sync_res.get("errors"):
             self.add_related_result("Data Structures Sync", status="failure", message="; ".join(sync_res["errors"]))
-        
+
         # 2. Parent Fields
         as_is_parents = set(rel_els.get("parent_guids", []))
         sync_res = await self.sync_members(as_is_parents, parent_guids,
@@ -398,7 +417,7 @@ class DataFieldProcessor(AsyncBaseCommandProcessor):
             self.add_related_result("Parent Fields Sync", message=f"Added {len(sync_res['added'])}, Removed {len(sync_res['removed'])}")
         if sync_res.get("errors"):
             self.add_related_result("Parent Fields Sync", status="failure", message="; ".join(sync_res["errors"]))
-        
+
         # 3. Terms (Semantic Definitions)
         as_is_terms = set(rel_els.get("assigned_meanings_guids", []))
         sync_res = await self.sync_members(as_is_terms, term_guids,
@@ -409,7 +428,7 @@ class DataFieldProcessor(AsyncBaseCommandProcessor):
             self.add_related_result("Semantic Definitions Sync", message=f"Added {len(sync_res['added'])}, Removed {len(sync_res['removed'])}")
         if sync_res.get("errors"):
             self.add_related_result("Semantic Definitions Sync", status="failure", message="; ".join(sync_res["errors"]))
-                               
+
         # 4. Data Class
         as_is_dc = set(rel_els.get("data_class_guids", []))
         to_be_dc = {dc_guid} if dc_guid else set()
@@ -423,9 +442,12 @@ class DataFieldProcessor(AsyncBaseCommandProcessor):
             self.add_related_result("Data Class Sync", status="failure", message="; ".join(sync_res["errors"]))
 
         # 5. Data Dictionaries (Collections)
-        memberships = await self._extract_memberships_async(
-            self.client.data_designer._async_get_data_field_by_guid, guid)
-        as_is_dicts = set(memberships.get("DictList", []))
+        if known_new:
+            as_is_dicts = set()
+        else:
+            memberships = await self._extract_memberships_async(
+                self.client.data_designer._async_get_data_field_by_guid, guid)
+            as_is_dicts = set(memberships.get("DictList", []))
         sync_res = await self.sync_members(as_is_dicts, dict_guids,
                                lambda d: self.client.collection_manager._async_add_to_collection(d, guid),
                                lambda d: self.client.collection_manager._async_remove_from_collection(d, guid),
@@ -526,7 +548,9 @@ class DataClassProcessor(AsyncBaseCommandProcessor):
             guid = self.extract_guid_or_raise(raw_guid, "Create Data Class")
             if guid:
                 self.parsed_output["guid"] = guid
-                await self._sync_all_rels(guid, containing_dc_guids, term_guids, specializes_dc_guids, data_dict_guids, replace_all=True)
+                # known_new=True: this GUID was just created, so it cannot have
+                # any existing relationships yet -- skip the as-is fetches.
+                await self._sync_all_rels(guid, containing_dc_guids, term_guids, specializes_dc_guids, data_dict_guids, replace_all=True, known_new=True)
 
                 if journal_entry:
                     try:
@@ -542,9 +566,12 @@ class DataClassProcessor(AsyncBaseCommandProcessor):
 
         return self.command.raw_block
 
-    async def _sync_all_rels(self, guid: str, cont_guids: set, term_guids: set, spec_guids: set, dict_guids: set, replace_all: bool):
-        rel_els = await self.client.data_designer._async_get_data_class_rel_elements(guid) or {}
-        
+    async def _sync_all_rels(self, guid: str, cont_guids: set, term_guids: set, spec_guids: set, dict_guids: set,
+                              replace_all: bool, known_new: bool = False):
+        """known_new=True skips both as-is fetches below (see DataFieldProcessor._sync_all_rels)."""
+        rel_els = {} if known_new else (await self.client.data_designer._async_get_data_class_rel_elements(guid) or {})
+
+
         # 1. Containing Classes
         as_is_cont = set(rel_els.get("nested_data_class_guids", []))
         sync_res = await self.sync_members(as_is_cont, cont_guids,
@@ -579,9 +606,12 @@ class DataClassProcessor(AsyncBaseCommandProcessor):
             self.add_related_result("Specializes Classes Sync", status="failure", message="; ".join(sync_res["errors"]))
 
         # 4. Data Dictionaries
-        memberships = await self._extract_memberships_async(
-            self.client.data_designer._async_get_data_class_by_guid, guid)
-        as_is_dicts = set(memberships.get("DictList", []))
+        if known_new:
+            as_is_dicts: set = set()
+        else:
+            memberships = await self._extract_memberships_async(
+                self.client.data_designer._async_get_data_class_by_guid, guid)
+            as_is_dicts = set(memberships.get("DictList", []))
         sync_res = await self.sync_members(as_is_dicts, dict_guids,
                                lambda d: self.client.collection_manager._async_add_to_collection(d, guid),
                                lambda d: self.client.collection_manager._async_remove_from_collection(d, guid),
@@ -852,6 +882,8 @@ class LinkDataClassCompositionProcessor(AsyncBaseCommandProcessor):
         return None
 
 
+
+
 class LinkCertificationTypeToStructureProcessor(AsyncBaseCommandProcessor):
     """
     Processor for Link Certification Type to Data Structure commands.
@@ -892,16 +924,45 @@ class LinkCertificationTypeToStructureProcessor(AsyncBaseCommandProcessor):
 
 class AssignDataValueSpecificationProcessor(AsyncBaseCommandProcessor):
     """
-    Processor for Assign/Attach Data Value Specification to Element commands.
+    Processor for Assign/Attach Data Value Specification to Element commands,
+    and (verb-branched, see apply_changes) Detach Data Value Specification
+    from Element -- the two share this one processor because the "to
+    Element"/"from Element" noun-phrase pair both expand, via LINK_VERBS, to
+    the identical set of six verb phrasings (register_processor ->
+    build_command_variants), so a separate detach-only processor class would
+    only ever handle whichever of the two reg() calls happened to register
+    last -- a silent collision, not a routing choice. Branching on verb here
+    instead makes the outcome independent of registration order.
     """
     def get_command_spec(self) -> Dict[str, Any]:
         # Use the full normalized command (verb + object_type) for spec lookup
         return get_command_spec(f"{self.command.verb} {self.command.object_type}")
 
+    async def fetch_as_is(self) -> Optional[Dict[str, Any]]:
+        if self.command.verb in ("Detach", "Unlink", "Remove"):
+            return None
+        return await super().fetch_as_is()
+
     async def apply_changes(self) -> str:
         attributes = self.parsed_output["attributes"]
         spec_guid = attributes.get('Data Value Specification', {}).get('guid')
         elem_guid = attributes.get('Element Id', {}).get('guid')
+
+        if self.command.verb in ("Detach", "Unlink", "Remove"):
+            if not spec_guid or not elem_guid:
+                logger.error("Both Data Value Specification and Element Id are required")
+                return self.command.raw_block
+            try:
+                body = set_delete_rel_request_body("DataValueAssignment", attributes)
+                await self.client.data_designer._async_detach_data_value_assignment(
+                    elem_guid, spec_guid, body_slimmer(body)
+                )
+                logger.success(f"Detached Data Value Specification {spec_guid} from element {elem_guid}")
+                return f"\n\n## {self.command.verb} {self.command.object_type}\n\nOperation completed."
+            except Exception as e:
+                logger.error(f"Error detaching data value specification: {e}")
+                return self.command.raw_block
+
         description = attributes.get('Description', {}).get('value')
 
         if not spec_guid or not elem_guid:

@@ -1,9 +1,9 @@
 ___
 
-## Assign Data Value Specification
-> Link a data value specification, DataClass, DataGrain,  to a referenceable element providing a definition.
+## Detach Data Value Specification from Element
+> Remove the DataValueAssignment relationship between a data value specification and a referenceable element.
 >
->	**Alternative Names**: Attach Data Value Specification to Element; Attach Data Value Specification; Link Data Value Specification
+>	**Alternative Names**: Unassign Data Value Specification from Element
 
 ### Data Value Specification
 >	**Input Required**: True

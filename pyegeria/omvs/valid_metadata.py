@@ -2064,6 +2064,79 @@ class ValidMetadataManager(ServerClient):
                                                                                report_spec=report_spec))
         return resp
 
+    async def _async_get_attribute_types(self,
+                                         category: Optional[str] = None,
+                                         output_format: str = "JSON",
+                                         report_spec: dict | str | None = None) -> dict | list | str:
+        """Returns all the AttributeTypeDefs used in the open metadata types. Async version.
+
+        Parameters
+        ----------
+        category: str, optional
+            One of "ENUM", "PRIMITIVE", "COLLECTION", or None for all categories.
+        output_format: str, default = "JSON"
+            Type of output to return. For example: "JSON", "DICT", "MD", "MD_TABLE", etc.
+        report_spec: dict | str | None
+            Output format set to use. If None, the default output format set is used.
+
+        Returns
+        -------
+        List | str
+
+            A list of all attribute type definitions.
+
+        Raises
+        ------
+
+        PyegeriaException
+
+        """
+
+        url = f"{self.platform_url}/servers/{self.view_server}{self.valid_m_command_base}/open-metadata-types/attribute-defs"
+        if category:
+            url += f"?category={category}"
+
+        resp = await self._async_make_request("GET", url)
+        elements = self._extract_typedef_list(resp.json())
+        if elements == NO_ELEMENTS_FOUND or elements is None or elements == []:
+            return NO_ELEMENTS_FOUND
+        if output_format != "JSON":
+            return self._generate_entity_output(elements, None, "TypeDef", output_format, report_spec)
+        return elements
+
+    def get_attribute_types(self,
+                            category: Optional[str] = None,
+                            output_format: str = "JSON",
+                            report_spec: dict | str | None = None) -> dict | list | str:
+        """Returns all the AttributeTypeDefs used in the open metadata types.
+
+        Parameters
+        ----------
+        category: str, optional
+            One of "ENUM", "PRIMITIVE", "COLLECTION", or None for all categories.
+        output_format: str, default = "JSON"
+            Type of output to return. For example: "JSON", "DICT", "MD", "MD_TABLE", etc.
+        report_spec: dict | str | None
+            Output format set to use. If None, the default output format set is used.
+
+        Returns
+        -------
+        List | str
+
+            A list of all attribute type definitions.
+
+        Raises
+        ------
+
+        PyegeriaException
+
+        """
+        loop = asyncio.get_event_loop()
+        resp = loop.run_until_complete(self._async_get_attribute_types(category=category,
+                                                                        output_format=output_format,
+                                                                        report_spec=report_spec))
+        return resp
+
     #
     # Get valid ...
     #

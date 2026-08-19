@@ -10,6 +10,9 @@ every ``_async_*`` method in ``pyegeria/omvs/*.py`` against them and reports:
   * PATH MISMATCH  - SDK builds a different URL path than the API
   * BODY MISMATCH  - SDK sends a different request-body class than the API
   * ELSEWHERE      - method exists, but in a different OMVS module
+  * RENAMED        - method exists in the right module and its verb+path
+                     match exactly, just under a name unrelated to the .http
+                     @name (no amount of snake_case guessing would find it)
   * LINT           - malformed URLs (``//``, missing separators) in the SDK
 
 Usage
@@ -38,6 +41,7 @@ from dataclasses import dataclass, field
 HTTP_DIR = "pyegeria/http clients"
 OMVS_DIR = "pyegeria/omvs"
 SERVER_CLIENT = "pyegeria/core/_server_client.py"
+BASE_PLATFORM_CLIENT = "pyegeria/core/_base_platform_client.py"
 
 # Services documented in .http files that intentionally have no OMVS client.
 SKIP_SERVICES = {"data-officer", "devops-pipeline", "multi-language"}
@@ -88,6 +92,26 @@ NAME_OVERRIDES = {
     "link_peer_definitions": "link_peer_definition",
     "detach_peer_definitions": "detach_peer_definition",
     "get_actions_for_requester": "get_actions_for_requester",
+    # These 5 .http entries are separate worked examples of one generic SDK
+    # method (get_classified_elements_by(classification_name, ...)) whose URL
+    # embeds a runtime f-string segment (.../elements/by-{classification_name}).
+    # Static AST analysis can't resolve a variable to a literal path, so the
+    # reverse (verb, path) lookup can't find this match either - only a name
+    # override can.
+    "get_impact_classified_elements": "get_classified_elements_by",
+    "get_confidence_classified_elements": "get_classified_elements_by",
+    "get_criticality_classified_elements": "get_classified_elements_by",
+    "get_confidentiality_classified_elements": "get_classified_elements_by",
+    "get_retention_classified_elements": "get_classified_elements_by",
+    # "Query a connector" (Egeria-platform-services.http) bakes a real,
+    # literal Java class name straight into the URL instead of a
+    # {{javaClassName}} placeholder - the only .http entry seen doing this.
+    # The reverse (verb, path) lookup does exact matching, so an SDK path
+    # ending in the templated "{}" this method actually needs can never equal
+    # a literal example value; only a name override (which routes through the
+    # direct-match branch, where paths_compatible allows a templated trailing
+    # segment) can find it.
+    "query_a_connector": "get_connector_type",
 }
 
 # Attributes holding a bare service marker that gets interpolated into a URL
@@ -150,6 +174,27 @@ def canon_path(path: str) -> str:
         if m:
             path = m.group(1)
     return "/" + path.strip("/")
+
+
+def paths_compatible(sdk_path: str, api_path: str) -> bool:
+    """True if two canonicalised paths match, allowing for a runtime-built
+    trailing segment on the SDK side.
+
+    A method like ``f".../elements/by-{classification_name}"`` renders its
+    final segment as the opaque placeholder ``by-{}`` (see ``_flatten``) since
+    a local variable's runtime value can't be resolved statically. That one
+    generic method legitimately serves several distinct ground-truth paths
+    that differ only in that final segment (``by-impact``, ``by-confidence``,
+    ...) - a byte match on the whole path is the wrong bar there. Only the
+    trailing segment is allowed to differ, and only when the SDK's version of
+    it is templated (contains ``{}``); every other segment must match exactly.
+    """
+    if sdk_path == api_path:
+        return True
+    sdk_parts, api_parts = sdk_path.rstrip("/").split("/"), api_path.rstrip("/").split("/")
+    if len(sdk_parts) != len(api_parts) or sdk_parts[:-1] != api_parts[:-1]:
+        return False
+    return "{}" in sdk_parts[-1]
 
 
 def lint_url(raw: str) -> list[str]:
@@ -282,6 +327,14 @@ class PyMethod:
     raw_url: str | None
     body_class: frozenset[str] | None
     lint: list[str] = field(default_factory=list)
+    # Every "url = ..." assignment seen in the method, canonicalised. Most
+    # methods have exactly one, so this always contains `path`. A method with
+    # if/else branches building a different URL per branch (e.g.
+    # RuntimeManager._async_refresh_gov_engine, one branch per whether an
+    # engine name was supplied) has more than one - ground truth may document
+    # either branch under the same or a different @name, and `path` alone
+    # (whichever assignment the walk sees first) isn't enough to match both.
+    all_paths: list[str] = field(default_factory=list)
 
 
 def _flatten(node: ast.AST, roots: dict[str, str]) -> str:
@@ -448,13 +501,20 @@ def parse_py_file(filepath: str, helper_verbs: dict[str, str],
                 if "/open-metadata/" in value:
                     fn_roots[target] = value
 
+        all_paths: list[str] = []
         for node in ast.walk(fn):
-            # url = ...
-            if (raw_url is None and isinstance(node, ast.Assign)
+            # url = ... - collect every assignment (if/else branches each get
+            # their own), not just the first one seen.
+            if (isinstance(node, ast.Assign)
                     and any(isinstance(t, ast.Name) and t.id == "url" for t in node.targets)):
-                raw_url = _flatten(node.value, fn_roots)
-                lint = lint_url(raw_url)
-                path = canon_path(raw_url)
+                branch_raw = _flatten(node.value, fn_roots)
+                branch_path = canon_path(branch_raw)
+                if raw_url is None:
+                    raw_url = branch_raw
+                    lint = lint_url(branch_raw)
+                    path = branch_path
+                if branch_path not in all_paths:
+                    all_paths.append(branch_path)
 
             # verb: a direct _async_make_request wins over any helper, because
             # some methods first call a GUID-resolution helper (which issues its
@@ -476,6 +536,7 @@ def parse_py_file(filepath: str, helper_verbs: dict[str, str],
         methods[fn.name] = PyMethod(
             name=fn.name, verb=direct_verb or helper_verb, path=path,
             raw_url=raw_url, body_class=helper_body or body_class, lint=lint,
+            all_paths=all_paths,
         )
 
     for sm in sync_names:
@@ -519,7 +580,38 @@ def audit(service_filter: str | None, report_path: str, quiet: bool,
         svc = os.path.basename(pf).replace(".py", "").replace("_omvs", "").replace("_", "-")
         py_by_service[svc] = parse_py_file(pf, helper_verbs, helper_bodies)
 
+    # feedback-manager has no dedicated pyegeria/omvs/*.py module - Egeria's
+    # comment/tag/like/rating/note-log API is implemented once, directly on
+    # the shared ServerClient base class in _server_client.py, and inherited
+    # by every OMVS subclient rather than duplicated per-module. Merge those
+    # methods into the feedback-manager bucket so they're checked as that
+    # service's own coverage, not reported as an entire missing module.
+    if os.path.exists(SERVER_CLIENT):
+        shared = parse_py_file(SERVER_CLIENT, helper_verbs, helper_bodies)
+        py_by_service.setdefault("feedback-manager", {}).update(shared)
+
+    # Same blind spot, different base class: get_platform_origin lives only
+    # on BasePlatformClient (_base_platform_client.py), inherited by
+    # platform_services.py's Platform class - not defined there itself.
+    if os.path.exists(BASE_PLATFORM_CLIENT):
+        shared_platform = parse_py_file(BASE_PLATFORM_CLIENT, helper_verbs, helper_bodies)
+        py_by_service.setdefault("platform-services", {}).update(shared_platform)
+
     flat = {m: (svc, d) for svc, ms in py_by_service.items() for m, d in ms.items()}
+
+    # Reverse index: (verb, path) -> [(svc, method_name), ...]. Name-based
+    # matching misses methods that exist and are correctly wired but whose
+    # snake_case name doesn't resemble the .http @name at all (e.g. ground
+    # truth's "addSecurityTags" implemented as set_security_tags_classification).
+    # This catches those before they're wrongly reported MISSING.
+    by_path: dict[tuple[str, str], list[tuple[str, str]]] = defaultdict(list)
+    for svc, ms in py_by_service.items():
+        for m, d in ms.items():
+            if not d.verb:
+                continue
+            for p in (d.all_paths or ([d.path] if d.path else [])):
+                if (svc, m) not in by_path[(d.verb, p)]:
+                    by_path[(d.verb, p)].append((svc, m))
 
     counts = defaultdict(int)
     lines: list[str] = []
@@ -585,9 +677,14 @@ def audit(service_filter: str | None, report_path: str, quiet: bool,
 
             if not match:
                 elsewhere = next((c for c in cands if c in flat), None)
+                by_path_hit = by_path.get((req.verb, req.path))
                 if elsewhere:
                     counts["elsewhere"] += 1
                     lines.append(f"- {name}: ELSEWHERE -> `{flat[elsewhere][0]}.py`")
+                elif by_path_hit:
+                    counts["renamed"] += 1
+                    hits = ", ".join(f"`{s}.py`:`{m}`" for s, m in by_path_hit)
+                    lines.append(f"- {name}: RENAMED -> {hits}")
                 else:
                     counts["missing"] += 1
                     lines.append(f"- {name}: MISSING  (`{req.verb} {req.path}`)")
@@ -599,7 +696,8 @@ def audit(service_filter: str | None, report_path: str, quiet: bool,
             issues = []
             if d.verb and d.verb != req.verb:
                 issues.append(f"VERB {d.verb} != {req.verb}")
-            if d.path and d.path != req.path:
+            candidate_paths = d.all_paths or ([d.path] if d.path else [])
+            if candidate_paths and not any(paths_compatible(p, req.path) for p in candidate_paths):
                 issues.append(f"PATH\n      SDK: {d.path}\n      API: {req.path}")
             # Mismatch only when the documented class is not among those the
             # SDK path accepts (several helpers accept a union).
@@ -630,6 +728,7 @@ def audit(service_filter: str | None, report_path: str, quiet: bool,
         f"| OK | {counts['ok']} |",
         f"| Mismatch (verb/path/body) | {counts['mismatch']} |",
         f"| Missing | {counts['missing']} |",
+        f"| Renamed (implemented, verb+path matches under a different name) | {counts['renamed']} |",
         f"| Found in another module | {counts['elsewhere']} |",
         f"| URL lint | {counts['lint']} |",
         "",
