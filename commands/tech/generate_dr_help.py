@@ -63,10 +63,17 @@ def yes_no(input: str)->str:
         return "No"
 
 @logger.catch
-def _extract_help_fields(command: dict, client: Optional[ServerClient] = None, advanced: bool = False):
+def _extract_help_fields(command: dict, client: Optional[ServerClient] = None):
     """
     Build a list of attribute dictionaries for a given command spec.
     This prepares the data rows used to render the help table.
+
+    Always includes every attribute regardless of its own usage level (Basic/
+    Domain/Common/Advanced/Invisible), tagging each row with a 'Level' column
+    instead of dropping rows at generation time. This is what lets one
+    combined glossary term hold the full table -- dr_egeria_command_help.py
+    filters displayed rows by Level at query time instead of a separate
+    generation pass per level having to produce a separate term/glossary.
     """
 
     command_spec = get_command_spec(command)
@@ -93,9 +100,6 @@ def _extract_help_fields(command: dict, client: Optional[ServerClient] = None, a
                 continue
             key, value = list(attribute.items())[0]
 
-        if not advanced and value.get('level', 'Basic') != "Basic":
-            continue
-            
         attribute_name = key
         input_required = yes_no(value.get('input_required', "No"))
 
@@ -136,6 +140,7 @@ def _extract_help_fields(command: dict, client: Optional[ServerClient] = None, a
             'Notes': notes,
             'Unique Values': unique,
             'Valid Values': valid_values,
+            'Level': value.get('level', 'Basic'),
         })
 
     return term_entry
@@ -163,6 +168,20 @@ def _extract_help_function(element: dict, columns_struct: dict) -> dict:
     return col_data
 
 def create_help_terms(client: Optional[ServerClient] = None, advanced: bool = False):
+    """
+    Generates one combined help glossary covering every command and every
+    attribute, regardless of usage level -- Basic/Domain/Common/Advanced no
+    longer produce separate generation passes (and separate glossary loads).
+    Every attribute row carries its own 'Level' column, and every term
+    carries the owning command's level in its Additional Properties
+    (commandLevel). dr_egeria_command_help.py filters both at query time
+    instead of this generating two files that get loaded into the same
+    glossary sequentially (the second silently overwriting the first's
+    'usage' content, with no way to tell which version a term reflected).
+
+    The `advanced` parameter is accepted for CLI backward compatibility but
+    no longer changes generation content -- everything is always included.
+    """
     term_entry:str = ""
     glossary_name = "dr-egeria"
     glossary_qn = "Glossary::dr-egeria"
@@ -174,7 +193,8 @@ def create_help_terms(client: Optional[ServerClient] = None, advanced: bool = Fa
                {'name': 'Default Value', 'key': 'Default Value'},
                {'name': 'Notes', 'key': 'Notes'},
                {'name': 'Unique Values', 'key': 'Unique Values'},
-               {'name': 'Valid Values', 'key': 'Valid Values'}]
+               {'name': 'Valid Values', 'key': 'Valid Values'},
+               {'name': 'Level', 'key': 'Level'}]
     columns_struct = {"target_type": "Term", "formats": {
                                           "types": "ALL",
                                         "attributes": columns}
@@ -199,10 +219,9 @@ def create_help_terms(client: Optional[ServerClient] = None, advanced: bool = Fa
     for command, values in commands.items():
         if command == "exported":
             continue
-        if not advanced and commands[command].get("level","Basic") not in ["Basic"]:
-            continue
         command_description = commands[command].get("description","")
         command_verb = commands[command].get("verb","")
+        command_level = commands[command].get("level", "Basic")
         family = commands[command].get("family", "General")
         family_qn = f"CollectionFolder::dr-egeria:{family.lower().replace(' ', '-')}"
 
@@ -211,9 +230,13 @@ def create_help_terms(client: Optional[ServerClient] = None, advanced: bool = Fa
         term_entry+= f"### Description\n\n{command_description}\n\n"
         term_entry+= f"### Glossary Name\n\n{glossary_qn}\n\n"
         term_entry+= f"### Folders\n\n{family_qn}\n\n"
+        # commandLevel tags the whole term (Basic/Advanced) so
+        # dr_egeria_command_help.py can filter which commands show up in a
+        # Basic-only listing, on top of the per-row 'Level' column in Usage
+        # below filtering which attribute rows show up within a shown term.
+        term_entry+= f'### Additional Properties\n\n{{"commandLevel": "{command_level}"}}\n\n'
 
-
-        du = _extract_help_fields(command, client=client, advanced=advanced)
+        du = _extract_help_fields(command, client=client)
         output = generate_entity_md_table(du, "", "", _extract_help_function, columns_struct, None, "help" )
 
         term_entry+= f"### Usage\n\n{output}\n\n___\n\n"
@@ -237,7 +260,10 @@ def main():
     parser.add_argument("--url", default=env.egeria_view_server_url, help="Egeria platform URL")
     parser.add_argument("--userid", default=user_profile.user_name, help="Egeria user ID")
     parser.add_argument("--pass", dest="user_pass", default=user_profile.user_pwd, help="Egeria user password")
-    parser.add_argument("--advanced", action="store_true", help="Include advanced attributes and commands")
+    parser.add_argument("--advanced", action="store_true",
+                         help="Deprecated, no-op: generation always includes every command/attribute now, "
+                              "tagged with a Level column/commandLevel property for query-time filtering "
+                              "in dr_egeria_command_help.py instead of a separate generation pass.")
 
     args = parser.parse_args()
     

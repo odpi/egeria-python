@@ -339,7 +339,15 @@ class CollectionLinkProcessor(AsyncBaseCommandProcessor):
                     "effectiveTo": attributes.get('Effective To', {}).get('value')
                 }
                 await self.client._async_attach_collection(guid_res, guid_coll, body)
-                
+
+            elif "Data Description" in object_type:
+                guid_coll = attributes.get('Collection Id', {}).get('guid')
+                guid_el = attributes.get('Element Id', {}).get('guid')
+                body['properties'] = {
+                    "class": "DataDescriptionProperties",
+                }
+                await self.client._async_attach_data_description(guid_el, guid_coll, body)
+
             elif "Subscriber" in object_type:
                 guid_sub = attributes.get('Subscriber Id', {}).get('guid')
                 guid_sn = attributes.get('Subscription Id', {}).get('guid')
@@ -393,6 +401,8 @@ class CollectionLinkProcessor(AsyncBaseCommandProcessor):
                 await self.client._async_detach_digital_product_dependency(attributes.get('Digital Product 1', {}).get('guid'), attributes.get('Digital Product 2', {}).get('guid'), body)
             elif "Attach Collection" in object_type or "Resource List" in object_type:
                 await self.client._async_detach_collection(attributes.get('Resource Id', {}).get('guid'), attributes.get('Collection Id', {}).get('guid'), body)
+            elif "Data Description" in object_type:
+                await self.client._async_detach_data_description(attributes.get('Element Id', {}).get('guid'), attributes.get('Collection Id', {}).get('guid'), body)
             elif "Subscriber" in object_type:
                 await self.client._async_detach_subscriber(attributes.get('Subscriber Id', {}).get('guid'), attributes.get('Subscription Id', {}).get('guid'), body)
                 

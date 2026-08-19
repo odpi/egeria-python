@@ -6248,6 +6248,129 @@ class CollectionManager(ServerClient):
         loop.run_until_complete(self._async_attach_data_description(element_guid, collection_guid, body))
 
     @dynamic_catch
+    async def _async_detach_data_description(self, element_guid: str, collection_guid: str,
+                                              body: Optional[dict | DeleteRelationshipRequestBody] = None):
+        """Detach a data description collection from an element (DataDescription relationship). Async version.
+
+        Parameters
+        ----------
+        element_guid: str
+            The unique identifier of the described element.
+        collection_guid: str
+            The identifier of the data description collection being detached.
+        body: dict | DeleteRelationshipRequestBody, optional, default = None
+            A structure representing the details of the relationship.
+        """
+        url = (
+            f"{self.platform_url}/servers/"
+            f"{self.view_server}/api/open-metadata/collection-manager/metadata-elements/"
+            f"{element_guid}/data-descriptions/{collection_guid}/detach")
+        await self._async_delete_relationship_request(url, body)
+        logger.info(f"Detached data description {collection_guid} from element {element_guid}")
+
+    @dynamic_catch
+    def detach_data_description(self, element_guid: str, collection_guid: str,
+                                body: Optional[dict | DeleteRelationshipRequestBody] = None):
+        """Detach a data description collection from an element (DataDescription relationship)."""
+        loop = asyncio.get_event_loop()
+        loop.run_until_complete(self._async_detach_data_description(element_guid, collection_guid, body))
+
+    @dynamic_catch
+    async def _async_attach_smart_query(self, results_set_guid: str, saved_query_guid: str,
+                                        body: Optional[dict | NewRelationshipRequestBody] = None) -> None:
+        """Connect a SavedQuery to a ResultsSet via the collection-manager-native SmartQuery attach endpoint.
+            Async version.
+
+        This is the dedicated collection-manager endpoint for the SmartQuery relationship (0725 Smart
+        Collections); link_saved_query_to_results_set covers the same relationship via the generic
+        metadata-expert/related-elements endpoint -- Egeria documents both.
+
+        Parameters
+        ----------
+        results_set_guid: str
+            GUID of the ResultsSet.
+        saved_query_guid: str
+            GUID of the SavedQuery.
+        body: dict | NewRelationshipRequestBody, optional, default = None
+            A structure representing the details of the relationship.
+
+        Returns
+        -------
+        None
+
+        Raises
+        ------
+        PyegeriaException
+            If there are issues in communications, message format, or Egeria errors.
+
+        Notes
+        -----
+        Sample body:
+        {
+          "class" : "NewRelationshipRequestBody",
+          "externalSourceGUID": "add guid here",
+          "externalSourceName": "add qualified name here",
+          "effectiveTime" : "{{$isoTimestamp}}",
+          "forLineage" : false,
+          "forDuplicateProcessing" : false,
+          "properties": {
+            "class": "SmartQueryProperties"
+          }
+        }
+        """
+        url = (
+            f"{self.platform_url}/servers/"
+            f"{self.view_server}/api/open-metadata/collection-manager/collections/results-sets/"
+            f"{results_set_guid}/smart-query/{saved_query_guid}/attach")
+        await self._async_new_relationship_request(url, ["SmartQueryProperties"], body)
+        logger.info(f"Attached SmartQuery {saved_query_guid} to results set {results_set_guid}")
+
+    @dynamic_catch
+    def attach_smart_query(self, results_set_guid: str, saved_query_guid: str,
+                           body: Optional[dict | NewRelationshipRequestBody] = None) -> None:
+        """Connect a SavedQuery to a ResultsSet via the collection-manager-native SmartQuery attach endpoint."""
+        loop = asyncio.get_event_loop()
+        loop.run_until_complete(self._async_attach_smart_query(results_set_guid, saved_query_guid, body))
+
+    @dynamic_catch
+    async def _async_detach_smart_query(self, results_set_guid: str, saved_query_guid: str,
+                                        body: Optional[dict | DeleteRelationshipRequestBody] = None) -> None:
+        """Disconnect a SavedQuery from a ResultsSet via the collection-manager-native SmartQuery detach
+            endpoint. Async version.
+
+        Parameters
+        ----------
+        results_set_guid: str
+            GUID of the ResultsSet.
+        saved_query_guid: str
+            GUID of the SavedQuery.
+        body: dict | DeleteRelationshipRequestBody, optional, default = None
+            A structure representing the details of the relationship.
+
+        Returns
+        -------
+        None
+
+        Raises
+        ------
+        PyegeriaException
+            If there are issues in communications, message format, or Egeria errors.
+        """
+        url = (
+            f"{self.platform_url}/servers/"
+            f"{self.view_server}/api/open-metadata/collection-manager/collections/results-sets/"
+            f"{results_set_guid}/smart-query/{saved_query_guid}/detach")
+        await self._async_delete_relationship_request(url, body)
+        logger.info(f"Detached SmartQuery {saved_query_guid} from results set {results_set_guid}")
+
+    @dynamic_catch
+    def detach_smart_query(self, results_set_guid: str, saved_query_guid: str,
+                           body: Optional[dict | DeleteRelationshipRequestBody] = None) -> None:
+        """Disconnect a SavedQuery from a ResultsSet via the collection-manager-native SmartQuery detach endpoint."""
+        loop = asyncio.get_event_loop()
+        loop.run_until_complete(self._async_detach_smart_query(results_set_guid, saved_query_guid, body))
+
+    @dynamic_catch
     def attach_collection(self, parent_guid: str, collection_guid: str,
                           body: Optional[dict | NewRelationshipRequestBody] = None):
         """ Connect an existing collection to an element using the ResourceList relationship (0019).
