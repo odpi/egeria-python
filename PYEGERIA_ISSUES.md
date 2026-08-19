@@ -175,6 +175,47 @@ term = await gm._async_get_term_by_guid(new_guid)
 props["description"]  # -> "What''s the owner''s policy?"   -- DOUBLED
 ```
 
+**Reproduced again with zero pyegeria/Python code in the loop at all** —
+plain `curl`, using `Egeria-api-glossary-manager.http`'s own
+`createGlossaryTerm`/`getGlossaryTermByGUID` requests as the template
+(same URLs, same body shape), to rule out any possibility this was an
+httpx/Pydantic serialization artifact rather than a genuine server round
+trip:
+
+```bash
+TOKEN=$(curl -sk -X POST https://localhost:9443/api/token \
+  -H "Content-Type: application/json" \
+  -d '{"userId":"erinoverview","password":"secret"}')
+
+curl -sk -X POST \
+  https://localhost:9443/servers/qs-view-server/api/open-metadata/glossary-manager/glossaries/terms \
+  -H "Authorization: Bearer $TOKEN" -H "Content-Type: application/json" \
+  -d '{
+    "class": "NewElementRequestBody",
+    "isOwnAnchor": true,
+    "properties": {
+      "class": "GlossaryTermProperties",
+      "displayName": "Native Curl Apostrophe Test QRS456",
+      "qualifiedName": "Coco Pharmaceuticals::Term::Native-Curl-Apostrophe-Test-QRS456::1.0",
+      "description": "What'\''s the owner'\''s policy?",
+      "contentStatus": "ACTIVE",
+      "versionIdentifier": "1.0"
+    },
+    "parentAtEnd1": true
+  }'
+# -> {"class":"GUIDResponse", ..., "guid":"494d35d8-..."}
+
+curl -sk -X POST \
+  https://localhost:9443/servers/qs-view-server/api/open-metadata/glossary-manager/glossaries/terms/494d35d8-a939-47dc-9504-a984117d2b76 \
+  -H "Authorization: Bearer $TOKEN" -H "Content-Type: application/json" \
+  -d '{"class":"GetRequestBody","forLineage":false,"forDuplicateProcessing":false}'
+# -> "description": "What''s the owner''s policy?"   -- DOUBLED, same as via pyegeria
+```
+
+Identical result via raw `curl` as via pyegeria — this is conclusive:
+the doubling happens inside Egeria itself, full stop, with no dependency
+on any client library. (Both test terms cleaned up after confirming.)
+
 So the corruption happens strictly **between the server receiving a
 correct single-apostrophe payload and what it persists/returns** — inside
 Egeria itself (most likely the active repository connector's handling of
