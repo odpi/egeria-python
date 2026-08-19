@@ -13,14 +13,20 @@ a genuine list under the plural "elements" key. Before this fix, that third
 shape was never checked, so get_linked_projects always returned
 NO_ELEMENTS_FOUND even when the server's raw response body had real data.
 """
-from unittest.mock import MagicMock
+from unittest.mock import MagicMock, patch
 
 from pyegeria.omvs.project_manager import ProjectManager
 
 
 def _client():
-    return ProjectManager(view_server="vs", platform_url="https://localhost:9443",
-                           user_id="u", user_pwd="p")
+    # BaseServerClient.__init__ does its own live connectivity probe
+    # (check_connection()) before any mock can be installed, so
+    # check_connection is patched out for the duration of client
+    # construction -- otherwise this file would silently depend on a
+    # reachable Egeria platform despite living in tests/micro-tests/.
+    with patch("pyegeria.core._base_server_client.BaseServerClient.check_connection", return_value=""):
+        return ProjectManager(view_server="vs", platform_url="https://localhost:9443",
+                               user_id="u", user_pwd="p")
 
 
 def _mock_request(payload):
