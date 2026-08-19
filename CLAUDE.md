@@ -52,6 +52,11 @@ dr_egeria <file> --process
 dr_egeria <file> --process --debug         # prints every Egeria API call + body
 dr_egeria <file> --process --summary-only  # suppress per-command analysis
 
+# Dr. Egeria — process every markdown file in a folder, one CLI call
+dr_egeria_folder <folder>                       # default: validate, every *.md in the folder
+dr_egeria_folder <folder> --process             # real writes; continues past per-file failures, reports all
+dr_egeria_folder <folder> --results-file out.txt  # also write the full per-file report to a file
+
 # Regenerate report specs after adding/changing compact command JSON
 refresh_specs                           # both Basic + Advanced (default)
 refresh_specs --usage-level Basic       # restrict to a single usage level
@@ -83,6 +88,36 @@ Scope: create/edit/delete attributes, bundles, and commands within an
 compact-JSON file from a template. Every attribute/bundle/command
 reference in the UI is a picker over real names (never free text), so it's
 not possible to create a dangling reference from the editor.
+
+### Dr.Egeria Folder Batch Runner
+
+`commands/cat/dr_egeria_folder.py` — runs every Dr.Egeria markdown file in a
+folder through `process_md_file_v2` with one shared `EgeriaTech` client (one
+bearer token for the whole run, not one process per file). Ordering and
+manifest semantics were agreed 2026-08-19 with the equivalent folder-batch
+runner in `egeria-workspaces-fs` (`bootstrap_batches.py`, documented there in
+`PORTAL_STARTUP.md`) so "run all commands in a folder" means the same thing
+in both repos:
+
+- An optional `_batch.json` manifest (`{"files": ["a.md", "b.md", ...]}`) at
+  the folder root gives the explicit order for those files; any other `*.md`
+  file not listed is appended after, alphabetically. No manifest → pure
+  alphabetical. A manifest entry naming a file that no longer exists on disk
+  is silently dropped, not an error.
+- Only `*.md` files are processed; `_batch.json` itself is always excluded.
+- Continues through every file regardless of earlier failures and reports a
+  full per-file summary at the end (exit code 1 if anything failed) — an
+  interactive CLI invocation is the "someone explicitly triggered this and
+  wants full visibility" case. (The peer's own unattended auto-heal path
+  makes the opposite, stop-on-first-failure, choice for its own use case —
+  not implemented here.)
+- Every file is expected to be upsert-safe, so the command is safe to re-run
+  against the same folder repeatedly — no staleness tracking, only
+  presence/absence, matching the peer implementation's own assumption.
+
+One deliberate difference from the peer: this command defaults to
+`--validate` (matching this repo's single-file `dr_egeria` CLI's own
+default), not straight to process — pass `--process` for real writes.
 
 **This is Claude's edit path, not just a human UI, and Tinderbox is
 retired.** Confirmed 2026-08-05: when Claude needs to change a compact

@@ -93,6 +93,7 @@ dependencies = [
 
     dr_egeria = "commands.cat.dr_egeria:process_markdown_file"
     dr_egeria_md = "commands.cat.dr_egeria:process_markdown_file"
+    dr_egeria_folder = "commands.cat.dr_egeria_folder:dr_egeria_folder"
     dr_egeria_jupyter = "commands.cat.dr_egeria_jupyter:process_jupyter_notebook"
     dr_egeria_help = "commands.cat.dr_egeria_command_help:main"
 
