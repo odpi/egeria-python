@@ -1613,6 +1613,212 @@ class AssetMaker(ServerClient):
         )
 
     @dynamic_catch
+    async def _async_link_supported_governance_service(
+        self,
+        governance_engine_guid: str,
+        governance_service_guid: str,
+        body: dict | NewRelationshipRequestBody | None = None,
+    ) -> Optional[str]:
+        """Register a governance service with a governance engine. Async version.
+
+        SupportedGovernanceService is MULTI_LINK (see
+        pyegeria.core.relationship_multiplicity, and confirmed by
+        Egeria-api-asset-maker.http's own comment: "the same governance
+        engine may call the same governance service many times, each with a
+        different request type") -- the returned GUID is needed to target
+        this specific registration later via
+        _async_update_supported_governance_service /
+        _async_detach_supported_governance_service.
+
+        Parameters
+        ----------
+        governance_engine_guid: str
+            Unique identifier of the governance engine.
+        governance_service_guid: str
+            Unique identifier of the governance service being registered.
+        body: dict | NewRelationshipRequestBody, optional
+            Properties for the SupportedGovernanceService relationship (requestType,
+            serviceRequestType, requestParameters, generateConnectorActivityReports,
+            deleteMethod).
+
+        Returns
+        -------
+        str | None
+            The GUID of the newly created SupportedGovernanceService relationship.
+            None if the server didn't return one.
+
+        Raises
+        ------
+        PyegeriaException
+            One of the pyegeria exceptions will be raised if there are issues in communications, message format, or
+            Egeria errors.
+
+        Notes
+        -----
+        See: https://egeria-project.org/concepts/governance-engine
+
+        Sample body:
+        {
+          "class" : "NewRelationshipRequestBody",
+          "externalSourceGUID": "add guid here",
+          "externalSourceName": "add qualified name here",
+          "effectiveTime" : "{{$isoTimestamp}}",
+          "forLineage" : false,
+          "forDuplicateProcessing" : false,
+          "properties": {
+            "class": "SupportedGovernanceServiceProperties",
+            "requestType": "add request type here",
+            "serviceRequestType": "add service request type here",
+            "requestParameters": {
+              "propertyName1" : "propertyValue1",
+              "propertyName2" : "propertyValue2"
+            },
+            "generateConnectorActivityReports": true,
+            "deleteMethod": "LOOK_FOR_LINEAGE",
+            "effectiveFrom": "{{$isoTimestamp}}",
+            "effectiveTo": "{{$isoTimestamp}}"
+          }
+        }
+        """
+        url = f"{self.asset_command_root}/governance-engines/{governance_engine_guid}/supported-governance-services/{governance_service_guid}/attach"
+        return await self._async_new_relationship_request(url, ["SupportedGovernanceServiceProperties"], body)
+
+    @dynamic_catch
+    def link_supported_governance_service(
+        self,
+        governance_engine_guid: str,
+        governance_service_guid: str,
+        body: dict | NewRelationshipRequestBody | None = None,
+    ) -> Optional[str]:
+        """Register a governance service with a governance engine.
+
+        See _async_link_supported_governance_service for parameter and return details.
+        """
+        loop = asyncio.get_event_loop()
+        return loop.run_until_complete(
+            self._async_link_supported_governance_service(
+                governance_engine_guid, governance_service_guid, body
+            )
+        )
+
+    @dynamic_catch
+    async def _async_update_supported_governance_service(
+        self,
+        relationship_guid: str,
+        body: dict | UpdateRelationshipRequestBody | None = None,
+    ) -> None:
+        """Update the properties of a SupportedGovernanceService relationship. Async version.
+
+        Parameters
+        ----------
+        relationship_guid: str
+            Unique identifier of the SupportedGovernanceService relationship (as
+            returned by _async_link_supported_governance_service).
+        body: dict | UpdateRelationshipRequestBody, optional
+            Updated properties for the relationship.
+
+        Returns
+        -------
+        None
+
+        Raises
+        ------
+        PyegeriaException
+            One of the pyegeria exceptions will be raised if there are issues in communications, message format, or
+            Egeria errors.
+
+        Notes
+        -----
+        See: https://egeria-project.org/concepts/governance-engine
+
+        Sample body:
+        {
+          "class" : "UpdateRelationshipRequestBody",
+          "properties" : {
+            "class": "SupportedGovernanceServiceProperties",
+            "requestType": "add request type here",
+            "serviceRequestType": "add service request type here",
+            "requestParameters": {
+              "propertyName1" : "propertyValue1",
+              "propertyName2" : "propertyValue2"
+            },
+            "generateConnectorActivityReports": true,
+            "deleteMethod": "LOOK_FOR_LINEAGE"
+          },
+          "mergeUpdate": true,
+          "externalSourceGUID": "add guid here",
+          "externalSourceName": "add qualified name here",
+          "effectiveTime" : "{{$isoTimestamp}}",
+          "forLineage" : false,
+          "forDuplicateProcessing" : false
+        }
+        """
+        url = f"{self.asset_command_root}/supported-governance-services/{relationship_guid}/update"
+        await self._async_update_relationship_request(url, ["SupportedGovernanceServiceProperties"], body)
+
+    @dynamic_catch
+    def update_supported_governance_service(
+        self,
+        relationship_guid: str,
+        body: dict | UpdateRelationshipRequestBody | None = None,
+    ) -> None:
+        """Update the properties of a SupportedGovernanceService relationship.
+
+        See _async_update_supported_governance_service for parameter details.
+        """
+        loop = asyncio.get_event_loop()
+        loop.run_until_complete(
+            self._async_update_supported_governance_service(relationship_guid, body)
+        )
+
+    @dynamic_catch
+    async def _async_detach_supported_governance_service(
+        self,
+        relationship_guid: str,
+        body: dict | DeleteRelationshipRequestBody | None = None,
+    ) -> None:
+        """Remove a SupportedGovernanceService relationship. Async version.
+
+        Parameters
+        ----------
+        relationship_guid: str
+            Unique identifier of the SupportedGovernanceService relationship to remove.
+        body: dict | DeleteRelationshipRequestBody, optional
+            Additional parameters for the delete operation.
+
+        Returns
+        -------
+        None
+
+        Raises
+        ------
+        PyegeriaException
+            One of the pyegeria exceptions will be raised if there are issues in communications, message format, or
+            Egeria errors.
+
+        Notes
+        -----
+        See: https://egeria-project.org/concepts/governance-engine
+        """
+        url = f"{self.asset_command_root}/supported-governance-services/{relationship_guid}/detach"
+        await self._async_delete_relationship_request(url, body)
+
+    @dynamic_catch
+    def detach_supported_governance_service(
+        self,
+        relationship_guid: str,
+        body: dict | DeleteRelationshipRequestBody | None = None,
+    ) -> None:
+        """Remove a SupportedGovernanceService relationship.
+
+        See _async_detach_supported_governance_service for parameter details.
+        """
+        loop = asyncio.get_event_loop()
+        loop.run_until_complete(
+            self._async_detach_supported_governance_service(relationship_guid, body)
+        )
+
+    @dynamic_catch
     async def _async_detach_catalog_target(
         self,
         integration_connector_guid: str,

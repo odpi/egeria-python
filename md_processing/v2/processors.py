@@ -543,38 +543,56 @@ class AsyncBaseCommandProcessor(ABC):
                         self._add_warning(msg)
 
         # 5. Determine element existence and handle Upsert (Create <-> Update) transitions
+        #
+        # Gated on supports_target_element_lookup(): a relationship-only
+        # processor (GovernanceLinkProcessor, ActionProcessStepLinkProcessor,
+        # LineageLinkProcessor/UpdateLineageRelationshipProcessor, ...) has no
+        # target Referenceable element to track existence/qualified-name for,
+        # so as_is_element is always None and current_qn is always empty --
+        # which, left ungated, made every branch below fall into "doesn't
+        # exist anywhere" and silently rewrite verb="Update" to verb="Create"
+        # for ANY relationship processor with an Update command (confirmed
+        # live, ISSUE-68 follow-up: broke the new "Update Certification"/
+        # "Update License"/"Update Next Process Step" commands as well as the
+        # pre-existing "Update Lineage Relationship", which had apparently
+        # never been exercised through --validate/--process with a full
+        # valid attribute set before).
+        # current_qn is read unconditionally (referenced further down in this
+        # method regardless of supports_target_element_lookup()); only the
+        # existence/rewrite side effects below are gated.
         current_qn = self.parsed_output.get("qualified_name")
-        planned = self.context.get("planned_elements")
-        
-        # Check if it was already planned by a previous command in the same file
-        is_already_planned = False
-        if isinstance(planned, set) and current_qn:
-            is_already_planned = current_qn in planned
+        if self.supports_target_element_lookup():
+            planned = self.context.get("planned_elements")
 
-        if self.as_is_element:
-            # Transition Create -> Update if it already exists in Egeria
-            if self.command.verb in ["Create", "Define", "Register", "Add", "Upsert"]:
-                logger.info(f"Rewriting '{self.command.verb} {self.command.object_type}' to 'Update' as it already exists.")
-                self.command.verb = "Update"
-            
-            self.parsed_output["exists"] = True
-            header = self.as_is_element.get('elementHeader', {})
-            self.parsed_output["guid"] = header.get('guid')
-        elif not is_already_planned:
-            # Transition Update -> Create if it doesn't exist anywhere
-            if self.command.verb in ["Update", "Modify", "Upsert"]:
-                logger.info(f"Rewriting '{self.command.verb} {self.command.object_type}' to 'Create' as it does not exist.")
-                self.command.verb = "Create"
-            self.parsed_output["exists"] = False
-        else:
-            # Found in planned_elements (planned by previous command)
-            self.parsed_output["exists"] = True
-            self.parsed_output["is_planned"] = True
-            # Note: Step 7 will resolve the (Planned: ...) GUID
+            # Check if it was already planned by a previous command in the same file
+            is_already_planned = False
+            if isinstance(planned, set) and current_qn:
+                is_already_planned = current_qn in planned
 
-        # Record this element in the shared 'planned_elements' set for subsequent commands
-        if isinstance(planned, set) and current_qn and self.command.verb in ["Create", "Define", "Register", "Add", "Update", "Modify", "Upsert"]:
-            planned.add(current_qn)
+            if self.as_is_element:
+                # Transition Create -> Update if it already exists in Egeria
+                if self.command.verb in ["Create", "Define", "Register", "Add", "Upsert"]:
+                    logger.info(f"Rewriting '{self.command.verb} {self.command.object_type}' to 'Update' as it already exists.")
+                    self.command.verb = "Update"
+
+                self.parsed_output["exists"] = True
+                header = self.as_is_element.get('elementHeader', {})
+                self.parsed_output["guid"] = header.get('guid')
+            elif not is_already_planned:
+                # Transition Update -> Create if it doesn't exist anywhere
+                if self.command.verb in ["Update", "Modify", "Upsert"]:
+                    logger.info(f"Rewriting '{self.command.verb} {self.command.object_type}' to 'Create' as it does not exist.")
+                    self.command.verb = "Create"
+                self.parsed_output["exists"] = False
+            else:
+                # Found in planned_elements (planned by previous command)
+                self.parsed_output["exists"] = True
+                self.parsed_output["is_planned"] = True
+                # Note: Step 7 will resolve the (Planned: ...) GUID
+
+            # Record this element in the shared 'planned_elements' set for subsequent commands
+            if isinstance(planned, set) and current_qn and self.command.verb in ["Create", "Define", "Register", "Add", "Update", "Modify", "Upsert"]:
+                planned.add(current_qn)
 
         # 6. Dry-run validation (optional/future)
 

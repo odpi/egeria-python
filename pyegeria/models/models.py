@@ -602,6 +602,14 @@ class NewRelatedElementsRequestBody(RequestBody):
 class GetRequestBody(RequestBody):
     class_: Annotated[Literal["GetRequestBody"], Field(alias="class")]
     metadata_element_type_name: str | None = None
+    # ISSUE-55 note: Egeria PR #9215 moved metadataElementSubtypeNames off the
+    # server-side GetOptions class (this model's real counterpart) onto
+    # QueryOptions instead -- it has no effect on a plain get-by-guid style
+    # request anymore. Left here rather than removed since the server
+    # ignores unknown/inapplicable body fields rather than rejecting them
+    # (no live breakage either way), but don't rely on it for a GetRequestBody
+    # call; see FindRequestBody.metadata_element_subtype_names/skip_subtypes
+    # for the fields that are actually honored.
     metadata_element_subtype_names: list[str] | None = None
     skip_relationships: list[str] | None = None
     include_only_relationships: list[str] | None = None
@@ -648,6 +656,22 @@ class FindRequestBody(ResultsRequestBody):
     metadata_element_subtype_names: list[str] | None = Field(
         None, alias="metadataElementSubtypeNames"
     )
+    # ISSUE-55: Egeria PR #9215 (odpi/egeria) added exclude-list semantics for
+    # metadata_element_subtype_names -- when skip_subtypes is true, the listed
+    # subtypes are excluded from the results instead of being the only
+    # subtypes included (the pre-existing default, skip_subtypes=False/absent).
+    # Lives on QueryOptions server-side (the class this model's field set is
+    # otherwise mirroring); without this field, any caller going through the
+    # validated `FindRequestBody.model_validate(...)`/TypeAdapter path (e.g.
+    # classification_explorer.py's _async_find_root_elements) would have it
+    # silently dropped by PyegeriaModel's extra='ignore', same bug class as
+    # ISSUE-62/63. Callers using the raw-dict pass-through path (e.g.
+    # MetadataExpert._async_find_metadata_elements, which sends the body
+    # as-is with no validation) could already set "skipSubtypes": true
+    # without this field existing -- confirmed live, both before and after
+    # this field was added -- but it's needed here for the validated path
+    # and so the typed model matches the real wire contract.
+    skip_subtypes: bool | None = Field(None, alias="skipSubtypes")
     search_properties: dict | None = Field(None, alias="searchProperties")
     match_classifications: dict | None = Field(None, alias="matchClassifications")
     as_of_time: datetime | None = Field(None, alias="asOfTime")

@@ -108,6 +108,12 @@ class LineageLinkProcessor(AsyncBaseCommandProcessor):
     established pattern rather than inventing a new one.
     """
 
+    def supports_target_element_lookup(self) -> bool:
+        # Relationship-only processor -- see
+        # GovernanceLinkProcessor.supports_target_element_lookup (ISSUE-68
+        # follow-up) for why this override matters.
+        return False
+
     async def fetch_as_is(self) -> Optional[Dict[str, Any]]:
         return None
 
@@ -160,6 +166,20 @@ class LineageLinkProcessor(AsyncBaseCommandProcessor):
 
 class UpdateLineageRelationshipProcessor(AsyncBaseCommandProcessor):
     """Processor for Update Lineage Relationship."""
+
+    def supports_target_element_lookup(self) -> bool:
+        # Relationship-only processor. Without this override,
+        # AsyncBaseCommandProcessor.execute()'s step-5 Create<->Update
+        # upsert-transition logic (as_is_element always None here + no
+        # qualified_name to plan against) silently rewrites every "Update
+        # Lineage Relationship" command to "Create Lineage Relationship"
+        # instead of calling apply_changes() with verb="Update" -- confirmed
+        # live (ISSUE-68 follow-up): with all required attributes present,
+        # command.verb ends execute() as "Create", not "Update". Pre-existing
+        # bug, not introduced by this change; just never exercised before
+        # since no prior test ran this command with a full valid attribute
+        # set through --validate/--process.
+        return False
 
     async def fetch_as_is(self) -> Optional[Dict[str, Any]]:
         return None

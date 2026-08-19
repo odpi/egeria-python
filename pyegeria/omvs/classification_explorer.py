@@ -12543,6 +12543,8 @@ class ClassificationExplorer(ServerClient):
         {
           "class" : "FindRequestBody",
           "metadataElementTypeName": "ValidValueDefinition",
+          "metadataElementSubtypeNames": [],
+          "skipSubtypes": false,
           "searchProperties": {
             "class" : "SearchProperties",
             "conditions": [ {
