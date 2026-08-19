@@ -143,6 +143,76 @@ enough to track there too).
 
 ---
 
+### ISSUE-69: Egeria's repository (server-side) doubles every apostrophe on persist (`what's` -> `what''s`) — corrupts displayName/qualifiedName, making affected elements unfindable by their real name
+
+**Layer:** Egeria Server / repository connector — **not pyegeria, not
+Dr.Egeria**. Originally logged (2026-08-19) as a Dr.Egeria write-path bug
+with a theory pointing at a nonexistent "SQLite-backed spec/journal
+store" in `md_processing/v2/` — re-investigated 2026-08-19 by tracing the
+*actual outgoing HTTP request body* (not just Dr.Egeria's own echoed
+attribute table) and the theory doesn't hold: there is no sqlite3 usage
+anywhere in `md_processing/`/`pyegeria/` (`grep -rn "sqlite3"` — zero
+hits), and the wire payload itself is provably clean.
+
+**Status: still open, root cause now correctly located.**
+
+**Re-traced live, instrumenting `_async_make_request` directly** (not
+just Dr.Egeria's parser echo, which the original report already showed
+was clean) to capture the exact JSON string sent over the wire for a
+`Create Glossary Term` with `Description` = `What's the owner's policy?`:
+
+```
+[POST] .../glossary-manager/glossaries/terms
+PAYLOAD: ...,"description": "What's the owner's policy?","category": null...
+```
+
+Single apostrophes, correctly JSON-encoded, exactly as authored — **the
+outgoing request from pyegeria/Dr.Egeria is clean.** Immediately reading
+the same element back by GUID after creation:
+
+```python
+term = await gm._async_get_term_by_guid(new_guid)
+props["description"]  # -> "What''s the owner''s policy?"   -- DOUBLED
+```
+
+So the corruption happens strictly **between the server receiving a
+correct single-apostrophe payload and what it persists/returns** — inside
+Egeria itself (most likely the active repository connector's handling of
+string properties, e.g. a SQL string-literal escape (`'` → `''`, the
+standard SQL-92 way to escape a quote inside a literal) applied even
+though the actual write should be going through a parameterized
+query/placeholder that needs no manual escaping — but not confirmed to
+that level of detail; flagging the mechanism as a plausible lead for
+whoever picks this up server-side, not asserting it).
+
+**Everything from the original report still holds and is folded in
+here** (re-verified, not re-run): scope is every string property, not
+just names (description/usage/summary/displayName/qualifiedName all
+affected in the original 500-term scan); harmful specifically on
+`displayName`/`qualifiedName` since those are lookup keys
+(`get_guid_for_name` misses on the true value, hits on the doubled one);
+doesn't compound across re-runs (escaping applied consistently to both
+the upsert lookup key and the stored value, so it's internally
+self-consistent within Dr.Egeria's own round-trip — which is likely why
+it went unnoticed for so long); breaks Resource Explorer's display-name
+resolution for the 2 affected Questions out of 41, and is an active
+hazard for RE's Dr.Egeria bootstrap self-heal (an apostrophe-containing
+canary is permanently unresolvable, re-running its batch on every check —
+duplicate-link damage risk for non-idempotent commands like `Link
+First/Next Process Step`).
+
+**Repro:** `Create Glossary Term` with `Display Name` = `What's the
+owner's policy?` via `dr_egeria --process`; confirm the outgoing payload
+is clean by tracing `_async_make_request`, then read the created element
+back by GUID — the returned `displayName`/`description` have every `'`
+doubled. No pyegeria/Dr.Egeria code path touches the value in between.
+
+**Nothing to fix here in this repo** — pyegeria sends the correct string;
+Egeria's repository persists/returns a corrupted one. Track this against
+the Egeria server, not this repo.
+
+---
+
 ### ISSUE-52: `qs-nanny-daemon`/`qs-integration-daemon`'s own connectors generate sustained, heavy background write load against the shared repository — starves interactive requests, plausible cause of "frequent Postgres checkpoints"
 
 **Update 2026-08-16, more specific root-cause evidence.** Recurred while
@@ -1421,53 +1491,6 @@ commands (plus the pre-existing `Update Lineage Relationship`, to
 confirm the shared-code fix) also live-verified via `--validate` against
 a running server — each now correctly keeps `verb=Update` through
 `execute()` instead of silently becoming `Create`.
-
----
-
-### ISSUE-69: Dr.Egeria doubles every apostrophe on the write path (`what's` -> `what''s`) — corrupts displayName/qualifiedName, making affected elements unfindable by their real name
-
-**Layer:** Dr.Egeria command processing (`md_processing/`), write path only. NOT the markdown parser and NOT the source content — both verified clean, see the table below.
-
-**Status: present in 6.0.18.4** (found 2026-08-19 against a live qs-view-server).
-
-**Symptom:** a `Create Glossary Term` whose Display Name contains an apostrophe is created successfully, but every string property is persisted with each `'` doubled to `''`. The element then cannot be found by its true name — silently fatal for anything joining on name rather than GUID.
-
-**Localised to the write path — input is clean at every earlier stage:**
-
-| stage | value | clean? |
-|---|---|---|
-| source CSV (`resource_questions.csv`) | `Based on what's already known, ...` | yes (0 doubled in file) |
-| generated markdown (`scouting-questions.md`) | `Based on what's already known, ...` | yes (0 doubled in file) |
-| `dr_egeria --validate` echo (parser output, no write) | `what's already known` | yes (13 single, 0 doubled) |
-| **stored in Egeria after `--process`** | `Based on what''s already known, ...` | **NO — doubled** |
-
-The parser reads the value correctly; corruption is introduced between parse and persist.
-
-**Confirmed persisted, not a read-time formatting artifact.** This mattered, since `find_glossary_terms(output_format="JSON")` could in principle have been escaping on output. Looking up the *doubled* form succeeds and the *correct* form fails, via `ClassificationExplorer.get_guid_for_name` — a different read path from the one that surfaced it:
-```python
-get_guid_for_name("Based on what's already known, ...",  property_name=["displayName"])   # -> miss
-get_guid_for_name("Based on what''s already known, ...", property_name=["displayName"])   # -> HIT 01d5bfd4
-```
-
-**Scope — every string property, not just names.** Across all 500 terms in the live glossary, every property containing an apostrophe is doubled, without exception:
-
-| property | values containing `'` | doubled |
-|---|---|---|
-| description | 22 | 22 |
-| usage | 17 | 17 |
-| summary | 14 | 14 |
-| displayName | 2 | 2 |
-| qualifiedName | 2 | 2 |
-
-It is only *harmful* on `displayName`/`qualifiedName`, which are lookup keys; elsewhere it is cosmetic-but-wrong (renders as `what''s` in any UI showing descriptions).
-
-**Does not compound across re-runs.** Scanning apostrophe run-lengths across all term properties finds 107 runs of exactly 2 and zero runs of 1, 3 or 4 — after the document had been processed several times. So the escaping is applied consistently to both the upsert lookup key and the stored value: internally self-consistent (upsert still matches, no duplicate terms, corruption never worsens) but wrong for every external consumer. That self-consistency is likely why it went unnoticed — nothing inside Dr.Egeria's own round-trip ever sees it.
-
-**Impact seen in Resource Explorer:** RE resolves cataloged Questions to GUIDs by display name, then follows `ScopedBy` to find the Survey Definitions answering them. The 2 apostrophe-containing questions of 41 never resolve and contribute nothing. It is also an active hazard for RE's new Dr.Egeria bootstrap self-heal: a batch canary keyed on an apostrophe-containing display name is permanently unresolvable, marking that batch missing forever and re-running it on every check — which for non-idempotent documents (`Link First/Next Process Step`) means repeated duplicate-link damage. RE works around it by requiring apostrophe-free canaries, a constraint no caller should need to know.
-
-**Suggested investigation:** the corruption is applied uniformly to all string properties, reading like a single central escaping/quoting helper applied to attribute values before the request body is built (SQL-style `'` -> `''`, i.e. an escape intended for a query context that is persisted rather than unescaped). `md_processing/v2/` maintains a SQLite-backed spec/journal store (`dispatcher.py`, `processors.py` and siblings call `execute(`), the most likely place for a value to acquire SQL escaping and be carried into the Egeria request rather than unescaped on the way out. Not pinned to an exact line — flagged, not fixed, per this repo's convention.
-
-**Repro:** author a `Create Glossary Term` with `Display Name` = `What's the owner's policy?`, run `dr_egeria --process`, then look it up by that exact display name — misses, while the `''`-doubled form hits.
 
 ### ISSUE-64: `Create Information Supply Chain`'s `Purposes`/`Scope` attributes were silently dropped — never read from `attributes` at all
 
