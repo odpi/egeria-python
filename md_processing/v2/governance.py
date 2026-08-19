@@ -522,11 +522,34 @@ class GovernanceLinkProcessor(AsyncBaseCommandProcessor):
                 await self.client._async_link_monitored_resource(left_guid, right_guid, body)
 
             elif object_type == "Governance Results":
-                body = body_slimmer({
-                    "class": "NewRelationshipRequestBody",
-                    "properties": set_rel_prop_body(object_type, attributes)
-                })
-                await self.client._async_link_governance_results(left_guid, right_guid, body)
+                # Look up existing GovernanceResults relationships from left_guid
+                # (the governance metric) before linking -- _async_link_governance_results
+                # has no dedupe of its own, so re-running a doc containing this
+                # command against an already-linked pair silently duplicated the
+                # relationship every time (reported 2026-08-19 via egeria-workspaces-fs,
+                # PORTAL_STARTUP.md's OVERVIEW_GOVERNANCE_METRICS.dr-egeria.md hit this
+                # live). Best-effort: on lookup failure, fall through to the old
+                # unconditional-link behavior rather than blocking the command.
+                already_linked = False
+                try:
+                    existing = await self.client._async_get_related_elements(
+                        left_guid, relationship_type="GovernanceResults", start_at_end=1
+                    )
+                    if existing and not isinstance(existing, str):
+                        already_linked = any(
+                            e.get('elementHeader', {}).get('guid') == right_guid for e in existing
+                        )
+                except Exception as e:
+                    logger.warning(f"Could not check for existing Governance Results relationship: {e}")
+
+                if already_linked:
+                    logger.info(f"Governance Results relationship between {left_guid} and {right_guid} already exists -- skipping duplicate link.")
+                else:
+                    body = body_slimmer({
+                        "class": "NewRelationshipRequestBody",
+                        "properties": set_rel_prop_body(object_type, attributes)
+                    })
+                    await self.client._async_link_governance_results(left_guid, right_guid, body)
 
             logger.success(f"Linked Governance {object_type}")
             if new_rel_guid:
