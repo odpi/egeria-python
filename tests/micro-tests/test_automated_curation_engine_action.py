@@ -9,14 +9,20 @@ regression test for a real bug fixed in b17f71e -- the URL was missing the requi
 actual @PostMapping route: .../governance-engines/{governanceEngineName}/engine-actions/
 initiate), so the method was unusable before the fix.
 """
-from unittest.mock import MagicMock
+from unittest.mock import MagicMock, patch
 
 from pyegeria.omvs.automated_curation import AutomatedCuration
 
 
 def _client():
-    return AutomatedCuration(view_server="vs", platform_url="https://localhost:9443",
-                              user_id="u", user_pwd="p")
+    # BaseServerClient.__init__ does its own live connectivity probe
+    # (check_connection()) before any mock can be installed, so
+    # check_connection is patched out for the duration of client
+    # construction -- otherwise this file would silently depend on a
+    # reachable Egeria platform despite living in tests/micro-tests/.
+    with patch("pyegeria.core._base_server_client.BaseServerClient.check_connection", return_value=""):
+        return AutomatedCuration(view_server="vs", platform_url="https://localhost:9443",
+                                  user_id="u", user_pwd="p")
 
 
 def _mock_request(capture, payload):

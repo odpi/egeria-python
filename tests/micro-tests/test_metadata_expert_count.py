@@ -7,14 +7,20 @@ count_relationships_between_elements (Egeria native instance counting, PR odpi/e
 No live server: `_async_make_request` is mocked to return a CountResponse. Verifies
 the endpoint URL, POST method, body slimming, asOfTime pass-through, and count parsing.
 """
-from unittest.mock import MagicMock
+from unittest.mock import MagicMock, patch
 
 from pyegeria.omvs.metadata_expert import MetadataExpert
 
 
 def _client():
-    return MetadataExpert(view_server="vs", platform_url="https://localhost:9443",
-                          user_id="u", user_pwd="p")
+    # BaseServerClient.__init__ does its own live connectivity probe
+    # (check_connection()) before any mock can be installed, so
+    # check_connection is patched out for the duration of client
+    # construction -- otherwise this file would silently depend on a
+    # reachable Egeria platform despite living in tests/micro-tests/.
+    with patch("pyegeria.core._base_server_client.BaseServerClient.check_connection", return_value=""):
+        return MetadataExpert(view_server="vs", platform_url="https://localhost:9443",
+                              user_id="u", user_pwd="p")
 
 
 def _mock_request(capture, count_payload):
