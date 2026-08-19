@@ -315,6 +315,7 @@ def setup_dispatcher(client: EgeriaTech) -> V2Dispatcher:
         DataValueSpecificationProcessor, DataClassProcessor, DataStructureProcessor, DataFieldProcessor, DataGrainProcessor,
         LinkDataFieldProcessor, LinkFieldToStructureProcessor, LinkDataValueDefinitionProcessor, LinkDataValueCompositionProcessor,
         LinkDataClassCompositionProcessor, LinkCertificationTypeToStructureProcessor,
+        LinkSchemaAttributeDefinitionProcessor,
         AssignDataValueSpecificationProcessor
     )
 
@@ -332,6 +333,7 @@ def setup_dispatcher(client: EgeriaTech) -> V2Dispatcher:
     reg("Link Data Value Composition", LinkDataValueCompositionProcessor)
     reg("Link Data Class Composition", LinkDataClassCompositionProcessor)
     reg("Link Certification Type to Data Structure", LinkCertificationTypeToStructureProcessor)
+    reg("Link Schema Attribute Definition", LinkSchemaAttributeDefinitionProcessor)
     # "Assign Data Value Specification" (verb Attach/Link/Add) and "Detach
     # Data Value Specification from Element" (verb Detach/Unlink/Remove) both
     # route to the same AssignDataValueSpecificationProcessor, which branches
