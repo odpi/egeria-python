@@ -14,9 +14,17 @@ jobs:
       - name: Install uv
         uses: astral-sh/setup-uv@v3
       - name: Set up Python
-        run: uv python install
+        # Pinned explicitly: a bare `uv python install` grabs whatever's
+        # newest at run time. Confirmed 2026-08-19: it silently picked up
+        # 3.14.7 for the v6.1.0 release run and 37 tests/micro-tests/my_profile
+        # (Textual TUI) tests failed with `assert task is not None` inside
+        # textual/rlock.py -- Textual's RLock breaks under 3.14. The full
+        # suite passes clean on 3.13.7 (this repo's actual dev/verification
+        # version), so pin to 3.13 until Textual's 3.14 compatibility is
+        # confirmed separately.
+        run: uv python install 3.13
       - name: Install dependencies
-        run: uv sync --all-extras --dev
+        run: uv sync --all-extras --dev -p 3.13
       - name: Run unit tests
         # tests/ -m "not live_egeria" (previous scope) was a no-op filter: no
         # test anywhere is marked "live_egeria" (that name is only a fixture
