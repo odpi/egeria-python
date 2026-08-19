@@ -922,6 +922,110 @@ class LinkCertificationTypeToStructureProcessor(AsyncBaseCommandProcessor):
         return None
 
 
+class LinkSchemaAttributeDefinitionProcessor(AsyncBaseCommandProcessor):
+    """
+    Processor for Link/Detach Schema Attribute Definition commands.
+
+    PYEGERIA_ISSUES.md ISSUE-48: no bespoke Egeria REST endpoint exists yet
+    for the SchemaAttributeDefinition relationship (DataField <->
+    SchemaAttribute) -- confirmed live via the server's full /v3/api-docs
+    OpenAPI spec, zero hits for this type in either the URL paths or the
+    schema components. This processor uses Option 2 from that issue: the
+    generic MetadataExpert relationship mechanism
+    (_async_create_related_elements/_async_delete_related_elements,
+    typeName-based) rather than a dedicated wrapper method. Replace this
+    with a bespoke DataDesigner._async_link_schema_attribute_definition/
+    _async_detach_schema_attribute_definition (Option 1) once Egeria ships
+    a real endpoint -- re-check ISSUE-48 before assuming it hasn't.
+
+    SchemaAttributeDefinition's relationshipCategory is UNI_LINK (at most
+    one instance between a given pair -- confirmed live via
+    ValidMetadataManager.get_all_relationship_defs(), both ends are
+    AT_MOST_ONE cardinality), so Detach can safely look the relationship
+    up by its element pair via _async_find_relationships_between_elements
+    rather than requiring a separate GUID attribute -- there's no
+    multi-instance ambiguity to resolve.
+    """
+
+    def get_command_spec(self) -> Dict[str, Any]:
+        return get_command_spec(f"{self.command.verb} Schema Attribute Definition")
+
+    def supports_target_element_lookup(self) -> bool:
+        # Relationship-only processor -- see GovernanceLinkProcessor's
+        # identical override (md_processing/v2/governance.py) for why this
+        # matters: without it, AsyncBaseCommandProcessor.execute()'s
+        # Create<->Update upsert-transition logic can silently rewrite the
+        # verb (ISSUE-68 follow-up).
+        return False
+
+    async def fetch_as_is(self) -> Optional[Dict[str, Any]]:
+        return None
+
+    async def _find_relationship_guid(self, data_field_guid: str, schema_attribute_guid: str) -> Optional[str]:
+        result = await self.client.metadata_expert._async_find_relationships_between_elements({
+            "class": "FindRelationshipRequestBody",
+            "relationshipTypeName": "SchemaAttributeDefinition",
+            "end1EntityGUIDs": [data_field_guid],
+            "end2EntityGUIDs": [schema_attribute_guid],
+        })
+        # _async_find_relationships_between_elements returns the raw
+        # {"relationships": [...], "mermaidGraph": ...} envelope (not a bare
+        # list) whenever a match is found -- see
+        # metadata_expert.process_related_element_list()'s final `return
+        # elements` (the outer envelope dict, not the unwrapped list it
+        # just validated non-empty).
+        if not isinstance(result, dict):
+            return None
+        relationships = result.get("relationships") or []
+        for rel in relationships:
+            if isinstance(rel, dict) and rel.get("relationshipGUID"):
+                return rel["relationshipGUID"]
+        return None
+
+    async def apply_changes(self) -> str:
+        verb = self.command.verb
+        object_type = getattr(self, 'canonical_object_type', self.command.object_type)
+        attributes = self.parsed_output["attributes"]
+
+        data_field_guid = attributes.get('Data Field', {}).get('guid')
+        schema_attribute_guid = attributes.get('Schema Attribute', {}).get('guid')
+        if not (data_field_guid and schema_attribute_guid):
+            missing = []
+            if not data_field_guid: missing.append("'Data Field'")
+            if not schema_attribute_guid: missing.append("'Schema Attribute'")
+            raise ValueError(f"Cannot {verb.lower()} Schema Attribute Definition: resolution failed for {', '.join(missing)}")
+
+        if verb in ["Link", "Attach", "Add"]:
+            body = {
+                "class": "NewRelatedElementsRequestBody",
+                "typeName": "SchemaAttributeDefinition",
+                "metadataElement1GUID": data_field_guid,
+                "metadataElement2GUID": schema_attribute_guid,
+                "properties": {"class": "SchemaAttributeDefinitionProperties"},
+            }
+            new_rel_guid = await self.client.metadata_expert._async_create_related_elements(body)
+            logger.success(f"Linked Data Field {data_field_guid} to Schema Attribute {schema_attribute_guid}")
+            if new_rel_guid:
+                self.parsed_output["guid"] = new_rel_guid
+                return f"\n\n## {verb} {object_type}\n\nLinked {data_field_guid} to {schema_attribute_guid}. Relationship GUID: {new_rel_guid}"
+            return f"\n\n## {verb} {object_type}\n\nLinked {data_field_guid} to {schema_attribute_guid}"
+
+        elif verb in ["Detach", "Unlink", "Remove"]:
+            relationship_guid = await self._find_relationship_guid(data_field_guid, schema_attribute_guid)
+            if not relationship_guid:
+                raise ValueError(
+                    f"Cannot {verb.lower()} Schema Attribute Definition: no existing relationship found "
+                    f"between {data_field_guid} and {schema_attribute_guid}."
+                )
+            await self.client.metadata_expert._async_delete_related_elements(
+                relationship_guid, {"class": "DeleteRelationshipRequestBody"}
+            )
+            logger.success(f"Detached Schema Attribute Definition {relationship_guid}")
+            return f"\n\n## {verb} {object_type}\n\nDetached relationship {relationship_guid} between {data_field_guid} and {schema_attribute_guid}"
+
+        return self.command.raw_block
+
+
 class AssignDataValueSpecificationProcessor(AsyncBaseCommandProcessor):
     """
     Processor for Assign/Attach Data Value Specification to Element commands,

@@ -3264,6 +3264,25 @@
       "max_cardinality": 1,
       "level": "Domain",
       "Journal Entry": ""
+    },
+    "Schema Attribute": {
+      "variable_name": "schema_attribute",
+      "inUpdate": true,
+      "attr_labels": "",
+      "examples": "",
+      "default_value": "",
+      "valid_values": [],
+      "existing_element": "SchemaAttribute",
+      "description": "A physical schema attribute (e.g. a TabularColumn). Preferably a qualified name.",
+      "generated": false,
+      "style": "Reference Name",
+      "user_specified": true,
+      "unique": false,
+      "input_required": true,
+      "min_cardinality": 1,
+      "max_cardinality": 1,
+      "level": "Domain",
+      "Journal Entry": ""
     }
   },
   "bundles": {
@@ -3878,6 +3897,28 @@
       "custom_attributes": [
         "Data Value Specification",
         "Element Id"
+      ],
+      "Journal Entry": ""
+    },
+    "Link Schema Attribute Definition": {
+      "display_name": "schema_attribute_definition",
+      "qn_prefix": "",
+      "alternate_names": [],
+      "family": "Data Designer",
+      "description": "Link a logical Data Field to the physical Schema Attribute that implements it (e.g. a TabularColumn), or the reverse lookup. Implemented via the generic MetadataExpert relationship mechanism (typeName: SchemaAttributeDefinition) -- no bespoke Egeria REST endpoint exists for this relationship yet (PYEGERIA_ISSUES.md ISSUE-48); will be migrated to a dedicated wrapper once Egeria ships one.",
+      "verb": "Link",
+      "upsert": false,
+      "attach": true,
+      "level": "Basic",
+      "find_method": "",
+      "find_constraints": "",
+      "extra_find": "",
+      "extra_constraints": "",
+      "OM_TYPE": "SchemaAttributeDefinition",
+      "bundle": "Link Command Base",
+      "custom_attributes": [
+        "Data Field",
+        "Schema Attribute"
       ],
       "Journal Entry": ""
     }
