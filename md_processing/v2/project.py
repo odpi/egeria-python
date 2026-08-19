@@ -135,7 +135,9 @@ class ProjectProcessor(AsyncBaseCommandProcessor):
             if guid:
                 self.parsed_output["guid"] = guid
 
-                sync_res = await self._sync_sub_projects(guid, sub_project_guids, replace_all=True)
+                # known_new=True: this GUID was just created, so it cannot have
+                # any existing sub-project relationships yet -- skip the as-is fetch.
+                sync_res = await self._sync_sub_projects(guid, sub_project_guids, replace_all=True, known_new=True)
                 if sync_res.get("added") or sync_res.get("removed"):
                     self.add_related_result("Sub-Projects Sync", message=f"Added {len(sync_res['added'])}, Removed {len(sync_res['removed'])}")
                 if sync_res.get("errors"):
@@ -155,25 +157,32 @@ class ProjectProcessor(AsyncBaseCommandProcessor):
 
         return self.command.raw_block
 
-    async def _sync_sub_projects(self, guid: str, to_be_guids: Set[str], replace_all: bool) -> Dict[str, Any]:
-        """Sync the ProjectHierarchy children declared via the embedded 'Sub-Projects' attribute."""
+    async def _sync_sub_projects(self, guid: str, to_be_guids: Set[str], replace_all: bool, known_new: bool = False) -> Dict[str, Any]:
+        """
+        Sync the ProjectHierarchy children declared via the embedded 'Sub-Projects' attribute.
+
+        known_new=True (pass this for a just-created project) skips the as-is
+        fetch entirely -- a brand-new project cannot have any existing
+        ProjectHierarchy relationships yet.
+        """
         as_is: set = set()
-        try:
-            project_element = await self.client._async_get_project_by_guid(guid)
-            managed_projects = project_element.get("managedProjects", []) if isinstance(project_element, dict) else []
-            for entry in managed_projects:
-                try:
-                    relationship = entry["relationshipHeader"]["type"]["typeName"]
-                except (KeyError, TypeError):
-                    continue
-                if relationship != "ProjectHierarchy":
-                    continue
-                try:
-                    as_is.add(entry["relatedElement"]["elementHeader"]["guid"])
-                except (KeyError, TypeError):
-                    continue
-        except PyegeriaException as e:
-            logger.error(f"Failed to fetch existing sub-projects for {guid}: {e}")
+        if not known_new:
+            try:
+                project_element = await self.client._async_get_project_by_guid(guid)
+                managed_projects = project_element.get("managedProjects", []) if isinstance(project_element, dict) else []
+                for entry in managed_projects:
+                    try:
+                        relationship = entry["relationshipHeader"]["type"]["typeName"]
+                    except (KeyError, TypeError):
+                        continue
+                    if relationship != "ProjectHierarchy":
+                        continue
+                    try:
+                        as_is.add(entry["relatedElement"]["elementHeader"]["guid"])
+                    except (KeyError, TypeError):
+                        continue
+            except PyegeriaException as e:
+                logger.error(f"Failed to fetch existing sub-projects for {guid}: {e}")
 
         async def add_fn(sub_guid):
             body = {"class": "NewRelationshipRequestBody", "properties": {"class": "ProjectHierarchyProperties"}}

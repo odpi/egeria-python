@@ -6,7 +6,7 @@ import asyncio
 import json
 import re
 from abc import ABC, abstractmethod
-from typing import Any, Dict, List, Optional
+from typing import Any, Awaitable, Callable, Dict, List, Optional, Union
 from loguru import logger
 
 from pyegeria import EgeriaTech, PyegeriaException, PyegeriaTimeoutException, NO_ELEMENTS_FOUND, print_basic_exception
@@ -1610,18 +1610,36 @@ class AsyncBaseCommandProcessor(ABC):
         report.append("\n---")
         return "\n".join(report)
 
-    async def sync_members(self, 
-                           as_is_guids: set, 
-                           to_be_guids: set, 
-                           add_coro, 
+    async def sync_members(self,
+                           as_is_guids: Union[set, Callable[[], Awaitable[set]]],
+                           to_be_guids: set,
+                           add_coro,
                            remove_coro,
                            replace_all: bool = True) -> Dict[str, List[str]]:
         """
         Generic async relationship synchronization logic.
         Handles set comparison (As-Is vs To-Be) and executes provided coroutines.
-        
+
         If replace_all is False, it only performs additions.
+
+        `as_is_guids` may be a plain set (already fetched -- unchanged
+        behavior) or a zero-arg async callable that fetches it lazily. The
+        lazy form lets a caller skip an expensive "what does this element
+        currently have" relationship query entirely in the one case where
+        its result can never change the outcome: replace_all=False
+        (add-only) with an empty to_be_guids -- there is nothing to add
+        regardless of current state, so the fetch is skipped below before
+        the callable is ever invoked. Separately, a caller whose element is
+        known to be brand new (verb == "Create") should pass an empty set
+        directly rather than a fetcher at all -- a just-created element
+        cannot have any existing relationships, so there's nothing to fetch.
         """
+        if not replace_all and not to_be_guids:
+            return {"added": [], "removed": [], "errors": []}
+
+        if callable(as_is_guids):
+            as_is_guids = await as_is_guids()
+
         to_add = to_be_guids - as_is_guids
         to_remove = (as_is_guids - to_be_guids) if replace_all else set()
         
