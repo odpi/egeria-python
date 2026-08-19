@@ -177,7 +177,6 @@ dmypy.json
 /pyegeria/http clients/
 /outbox/
 /.ai-sandbox/
-/tests/micro-tests/test_sync_members.py
 /convert_defaults.py
 /sample-data/egeria-outbox/
 /.ai/
