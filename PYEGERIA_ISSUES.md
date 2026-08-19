@@ -664,6 +664,24 @@ the actual REST endpoint for this relationship before building a pyegeria
 wrapper or Dr.Egeria command against it. Both options considered below
 remain valid candidates once that lands; no implementation work done here.
 
+**Re-checked 2026-08-19, still deferred, still valid — but Option 2 now
+confirmed to actually work.** Fetched the live server's full `/v3/api-docs`
+OpenAPI spec (1.77 MB, successfully retrieved) and grepped both the URL
+paths and the schema component names for `SchemaAttributeDefinition`:
+**zero hits in either.** No bespoke REST endpoint has shipped — the wait
+condition from 2026-08-15 hasn't been met, so the deferral stands as-is.
+Separately, live-tested Option 2 (the generic
+`MetadataExpert`/`NewRelatedElementsRequestBody` path,
+`typeName: "SchemaAttributeDefinition"`) end-to-end against a real
+`DataField`/`SchemaAttribute` pair — **it works today**: created the
+relationship (`GUIDResponse` with a real guid), then cleaned it up via
+`_async_delete_related_elements`. Previously this was listed as a
+considered-but-untested option; now confirmed viable, so if the team
+wants to unblock a Dr.Egeria command without waiting further, Option 2 is
+ready to use as-is — no new pyegeria SDK surface required, same
+mechanism `CurationLinkProcessor` already uses for `ResourceList`/
+`MoreInformation`.
+
 **Original status:** open — SDK gap to validate with the team, not yet a confirmed
 bug. Raised 2026-08-07 while triaging a request to add three "missing"
 Dr.Egeria Data Designer commands (SemanticAssignment, DataClassAssignment,
