@@ -1287,8 +1287,8 @@ class ProjectManager(ServerClient):
           "parentRelationshipTypeName" : "open metadata type name",
           "parentAtEnd1": True,
           "initialClassifications" : {
-                "Folder" : {
-                  "class": "FolderProperties"
+                "PersonalProject" : {
+                  "class": "PersonalProjectProperties"
                 }
               },
           "properties": {
