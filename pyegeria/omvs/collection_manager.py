@@ -7358,5 +7358,70 @@ class CollectionManager(ServerClient):
         )
 
 
+    #
+    # Additional relationship/classification maintenance - added to close
+    # the gap found by scripts/omvs_audit.py against the collection-manager
+    # .http ground truth (2026-08-21).
+    #
+
+    @dynamic_catch
+    async def _async_update_agreement_item(self, agreement_item_relationship_guid: str,
+                                            body: Optional[dict | UpdateRelationshipRequestBody] = None) -> None:
+        """Update the properties of an AgreementItem relationship, identified by its own relationship GUID. Async version."""
+        url = f"{self.platform_url}/servers/{self.view_server}/api/open-metadata/collection-manager/agreement-items/{agreement_item_relationship_guid}/update"
+        await self._async_update_relationship_request(url, ["AgreementItemProperties"], body)
+
+    @dynamic_catch
+    def update_agreement_item(self, agreement_item_relationship_guid: str,
+                              body: Optional[dict | UpdateRelationshipRequestBody] = None) -> None:
+        """Update the properties of an AgreementItem relationship, identified by its own relationship GUID."""
+        loop = asyncio.get_event_loop()
+        loop.run_until_complete(self._async_update_agreement_item(agreement_item_relationship_guid, body))
+
+    @dynamic_catch
+    async def _async_detach_agreement_item_by_id(self, agreement_item_relationship_guid: str,
+                                                  body: Optional[dict | DeleteRelationshipRequestBody] = None) -> None:
+        """Detach one specific AgreementItem relationship, identified by its own relationship GUID. Async version."""
+        url = f"{self.platform_url}/servers/{self.view_server}/api/open-metadata/collection-manager/agreement-items/{agreement_item_relationship_guid}/detach"
+        await self._async_delete_relationship_request(url, body)
+
+    @dynamic_catch
+    def detach_agreement_item_by_id(self, agreement_item_relationship_guid: str,
+                                    body: Optional[dict | DeleteRelationshipRequestBody] = None) -> None:
+        """Detach one specific AgreementItem relationship, identified by its own relationship GUID."""
+        loop = asyncio.get_event_loop()
+        loop.run_until_complete(self._async_detach_agreement_item_by_id(agreement_item_relationship_guid, body))
+
+    @dynamic_catch
+    async def _async_set_collection_kind(self, collection_guid: str,
+                                         body: Optional[dict | NewClassificationRequestBody] = None) -> None:
+        """Classify a collection with its collection kind. Async version."""
+        url = f"{self.platform_url}/servers/{self.view_server}/api/open-metadata/collection-manager/collections/{collection_guid}/collection-kind"
+        if body is None:
+            body = {"class": "NewClassificationRequestBody", "properties": {"class": "CollectionKindProperties"}}
+        await self._async_new_classification_request(url, ["CollectionKindProperties"], body)
+
+    @dynamic_catch
+    def set_collection_kind(self, collection_guid: str,
+                            body: Optional[dict | NewClassificationRequestBody] = None) -> None:
+        """Classify a collection with its collection kind."""
+        loop = asyncio.get_event_loop()
+        loop.run_until_complete(self._async_set_collection_kind(collection_guid, body))
+
+    @dynamic_catch
+    async def _async_clear_collection_kind(self, collection_guid: str,
+                                           body: Optional[dict | DeleteClassificationRequestBody] = None) -> None:
+        """Remove the CollectionKind classification from a collection. Async version."""
+        url = f"{self.platform_url}/servers/{self.view_server}/api/open-metadata/collection-manager/collections/{collection_guid}/collection-kind/remove"
+        await self._async_delete_classification_request(url, body)
+
+    @dynamic_catch
+    def clear_collection_kind(self, collection_guid: str,
+                              body: Optional[dict | DeleteClassificationRequestBody] = None) -> None:
+        """Remove the CollectionKind classification from a collection."""
+        loop = asyncio.get_event_loop()
+        loop.run_until_complete(self._async_clear_collection_kind(collection_guid, body))
+
+
 if __name__ == "__main__":
     print("Main-Collection Manager")
