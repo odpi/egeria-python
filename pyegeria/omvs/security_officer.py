@@ -17,6 +17,8 @@ from pyegeria.models import (
     UserAccountRequestBody,
     NewRelationshipRequestBody,
     DeleteRelationshipRequestBody,
+    NewClassificationRequestBody,
+    DeleteClassificationRequestBody,
     SearchStringRequestBody,
 )
 from pyegeria.core.utils import dynamic_catch
@@ -628,3 +630,154 @@ class SecurityOfficer(ServerClient):
                 **kwargs,
             )
         )
+
+    #
+    # Relationship and classification maintenance - added to close the gap
+    # found by scripts/omvs_audit.py against the security-officer .http
+    # ground truth (2026-08-21).
+    #
+
+    @dynamic_catch
+    async def _async_link_resource_permissions(self, secrets_collection_guid: str, security_access_control_guid: str,
+                                                body: Optional[dict | NewRelationshipRequestBody] = None) -> None:
+        """Attach a security access control to a secrets collection it grants permission for (ResourcePermissions relationship). Async version."""
+        url = f"{self.security_officer_base_url}/secrets-collections/{secrets_collection_guid}/resource-permissions/{security_access_control_guid}/attach"
+        await self._async_new_relationship_request(url, ["ResourcePermissionsProperties"], body)
+
+    @dynamic_catch
+    def link_resource_permissions(self, secrets_collection_guid: str, security_access_control_guid: str,
+                                  body: Optional[dict | NewRelationshipRequestBody] = None) -> None:
+        """Attach a security access control to a secrets collection it grants permission for (ResourcePermissions relationship)."""
+        loop = asyncio.get_event_loop()
+        loop.run_until_complete(self._async_link_resource_permissions(secrets_collection_guid, security_access_control_guid, body))
+
+    @dynamic_catch
+    async def _async_detach_resource_permissions(self, secrets_collection_guid: str, security_access_control_guid: str,
+                                                  body: Optional[dict | DeleteRelationshipRequestBody] = None) -> None:
+        """Detach a security access control from a secrets collection. Async version."""
+        url = f"{self.security_officer_base_url}/secrets-collections/{secrets_collection_guid}/resource-permissions/{security_access_control_guid}/detach"
+        await self._async_delete_relationship_request(url, body)
+
+    @dynamic_catch
+    def detach_resource_permissions(self, secrets_collection_guid: str, security_access_control_guid: str,
+                                    body: Optional[dict | DeleteRelationshipRequestBody] = None) -> None:
+        """Detach a security access control from a secrets collection."""
+        loop = asyncio.get_event_loop()
+        loop.run_until_complete(self._async_detach_resource_permissions(secrets_collection_guid, security_access_control_guid, body))
+
+    @dynamic_catch
+    async def _async_link_secrets_collection_security_list(self, secrets_collection_guid: str, security_list_guid: str,
+                                                            body: Optional[dict | NewRelationshipRequestBody] = None) -> None:
+        """Attach a security list to a secrets collection it governs (SecretsCollectionSecurityList relationship). Async version."""
+        url = f"{self.security_officer_base_url}/secrets-collections/{secrets_collection_guid}/security-lists/{security_list_guid}/attach"
+        await self._async_new_relationship_request(url, ["SecretsCollectionSecurityListProperties"], body)
+
+    @dynamic_catch
+    def link_secrets_collection_security_list(self, secrets_collection_guid: str, security_list_guid: str,
+                                               body: Optional[dict | NewRelationshipRequestBody] = None) -> None:
+        """Attach a security list to a secrets collection it governs (SecretsCollectionSecurityList relationship)."""
+        loop = asyncio.get_event_loop()
+        loop.run_until_complete(self._async_link_secrets_collection_security_list(secrets_collection_guid, security_list_guid, body))
+
+    @dynamic_catch
+    async def _async_detach_secrets_collection_security_list(self, secrets_collection_guid: str, security_list_guid: str,
+                                                              body: Optional[dict | DeleteRelationshipRequestBody] = None) -> None:
+        """Detach a security list from a secrets collection. Async version."""
+        url = f"{self.security_officer_base_url}/secrets-collections/{secrets_collection_guid}/security-lists/{security_list_guid}/detach"
+        await self._async_delete_relationship_request(url, body)
+
+    @dynamic_catch
+    def detach_secrets_collection_security_list(self, secrets_collection_guid: str, security_list_guid: str,
+                                                 body: Optional[dict | DeleteRelationshipRequestBody] = None) -> None:
+        """Detach a security list from a secrets collection."""
+        loop = asyncio.get_event_loop()
+        loop.run_until_complete(self._async_detach_secrets_collection_security_list(secrets_collection_guid, security_list_guid, body))
+
+    @dynamic_catch
+    async def _async_link_user_account(self, secrets_collection_guid: str, user_identity_guid: str,
+                                       body: Optional[dict | NewRelationshipRequestBody] = None) -> None:
+        """Attach a user identity to a secrets collection holding its account secrets (UserAccount relationship). Async version."""
+        url = f"{self.security_officer_base_url}/secrets-collections/{secrets_collection_guid}/user-accounts/{user_identity_guid}/attach"
+        await self._async_new_relationship_request(url, ["UserAccountProperties"], body)
+
+    @dynamic_catch
+    def link_user_account(self, secrets_collection_guid: str, user_identity_guid: str,
+                          body: Optional[dict | NewRelationshipRequestBody] = None) -> None:
+        """Attach a user identity to a secrets collection holding its account secrets (UserAccount relationship)."""
+        loop = asyncio.get_event_loop()
+        loop.run_until_complete(self._async_link_user_account(secrets_collection_guid, user_identity_guid, body))
+
+    @dynamic_catch
+    async def _async_detach_user_account(self, secrets_collection_guid: str, user_identity_guid: str,
+                                         body: Optional[dict | DeleteRelationshipRequestBody] = None) -> None:
+        """Detach a user identity from a secrets collection. Async version."""
+        url = f"{self.security_officer_base_url}/secrets-collections/{secrets_collection_guid}/user-accounts/{user_identity_guid}/detach"
+        await self._async_delete_relationship_request(url, body)
+
+    @dynamic_catch
+    def detach_user_account(self, secrets_collection_guid: str, user_identity_guid: str,
+                            body: Optional[dict | DeleteRelationshipRequestBody] = None) -> None:
+        """Detach a user identity from a secrets collection."""
+        loop = asyncio.get_event_loop()
+        loop.run_until_complete(self._async_detach_user_account(secrets_collection_guid, user_identity_guid, body))
+
+    @dynamic_catch
+    async def _async_set_user_account_profile(self, secrets_collection_guid: str,
+                                              body: Optional[dict | NewClassificationRequestBody] = None) -> None:
+        """Classify a secrets collection with its user account profile statistics. Async version."""
+        url = f"{self.security_officer_base_url}/secrets-collections/{secrets_collection_guid}/user-account-profile"
+        if body is None:
+            body = {"class": "NewClassificationRequestBody", "properties": {"class": "UserAccountProfileProperties"}}
+        await self._async_new_classification_request(url, ["UserAccountProfileProperties"], body)
+
+    @dynamic_catch
+    def set_user_account_profile(self, secrets_collection_guid: str,
+                                 body: Optional[dict | NewClassificationRequestBody] = None) -> None:
+        """Classify a secrets collection with its user account profile statistics."""
+        loop = asyncio.get_event_loop()
+        loop.run_until_complete(self._async_set_user_account_profile(secrets_collection_guid, body))
+
+    @dynamic_catch
+    async def _async_clear_user_account_profile(self, secrets_collection_guid: str,
+                                                body: Optional[dict | DeleteClassificationRequestBody] = None) -> None:
+        """Remove the UserAccountProfile classification from a secrets collection. Async version."""
+        url = f"{self.security_officer_base_url}/secrets-collections/{secrets_collection_guid}/user-account-profile/remove"
+        await self._async_delete_classification_request(url, body)
+
+    @dynamic_catch
+    def clear_user_account_profile(self, secrets_collection_guid: str,
+                                   body: Optional[dict | DeleteClassificationRequestBody] = None) -> None:
+        """Remove the UserAccountProfile classification from a secrets collection."""
+        loop = asyncio.get_event_loop()
+        loop.run_until_complete(self._async_clear_user_account_profile(secrets_collection_guid, body))
+
+    @dynamic_catch
+    async def _async_set_zone_membership_profile(self, governance_zone_guid: str,
+                                                  body: Optional[dict | NewClassificationRequestBody] = None) -> None:
+        """Classify a governance zone with its zone membership profile (e.g. allowed security groups). Async version."""
+        url = f"{self.security_officer_base_url}/governance-zones/{governance_zone_guid}/zone-membership-profile"
+        if body is None:
+            body = {"class": "NewClassificationRequestBody", "properties": {"class": "ZoneMembershipProfileProperties"}}
+        await self._async_new_classification_request(url, ["ZoneMembershipProfileProperties"], body)
+
+    @dynamic_catch
+    def set_zone_membership_profile(self, governance_zone_guid: str,
+                                    body: Optional[dict | NewClassificationRequestBody] = None) -> None:
+        """Classify a governance zone with its zone membership profile (e.g. allowed security groups)."""
+        loop = asyncio.get_event_loop()
+        loop.run_until_complete(self._async_set_zone_membership_profile(governance_zone_guid, body))
+
+    @dynamic_catch
+    async def _async_clear_zone_membership_profile(self, governance_zone_guid: str,
+                                                    body: Optional[dict | DeleteClassificationRequestBody] = None) -> None:
+        """Remove the ZoneMembershipProfile classification from a governance zone. Async version."""
+        url = f"{self.security_officer_base_url}/governance-zones/{governance_zone_guid}/zone-membership-profile/remove"
+        await self._async_delete_classification_request(url, body)
+
+    @dynamic_catch
+    def clear_zone_membership_profile(self, governance_zone_guid: str,
+                                      body: Optional[dict | DeleteClassificationRequestBody] = None) -> None:
+        """Remove the ZoneMembershipProfile classification from a governance zone."""
+        loop = asyncio.get_event_loop()
+        loop.run_until_complete(self._async_clear_zone_membership_profile(governance_zone_guid, body))
+
