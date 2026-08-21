@@ -14,13 +14,18 @@
 > later always carry a user-specified Qualified Name" convention used
 > throughout this test folder.
 >
-> Intentionally NOT covered (known, documented gaps -- see
+> Intentionally NOT covered (known, documented gap -- see
 > docs/dr_egeria_manual.md's Curation section):
->   - Classify/Declassify Class Word, Modifier, Policy Management Point --
->     real Egeria classification types, but no backing pyegeria SDK method
->     exists yet, so these are not registered with the dispatcher.
 >   - Update/Detach Search Keyword -- need the SearchKeyword entity's own
 >     GUID, which this command's attribute set has no way to reference.
+>
+> No classification in this family remains genuinely unimplemented as of
+> 2026-08-21 -- Class Word/Modifier/Prime Word (2026-08-09), and Policy
+> Management Point plus 9 sibling governance-point classifications, 6
+> classification-explorer markers, ProjectKind, CollectionKind, and a Data
+> Sharing Agreement retrofit pair (2026-08-21), are all now registered.
+> None of the 2026-08-21 additions have dedicated regression coverage in
+> this file yet -- add cases here if you're touching that area.
 >
 > `--process` cleanup: this file creates two Data Dictionaries, one Glossary,
 > one Glossary Term, one Meeting, one ToDo, and one Review as persistent

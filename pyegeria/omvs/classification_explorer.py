@@ -13408,9 +13408,18 @@ class ClassificationExplorer(ServerClient):
 
     @dynamic_catch
     async def _async_set_element_as_metamodel_instance(self, element_guid: str,
-                                                        metamodel_element_guid: str,
-                                                        body: Optional[dict | NewClassificationRequestBody] = None) -> None:
-        """Classify an element as an instance in a metamodel, referencing the metamodel element it instantiates. Async version."""
+                                                        body: Optional[dict | NewClassificationRequestBody] = None,
+                                                        metamodel_element_guid: Optional[str] = None) -> None:
+        """Classify an element as an instance in a metamodel, referencing the metamodel element it instantiates. Async version.
+
+        `body` is the 2nd positional parameter (matching every other set_*
+        classification method's `(element_guid, body)` shape, e.g. for
+        CurationClassifyProcessor's generic 2-arg classification dispatch).
+        `metamodel_element_guid` is optional and only used to build a
+        default `body` when one isn't supplied; a caller passing a
+        fully-built `body` should set `metamodelElementGUID` directly in
+        `body["properties"]` instead.
+        """
         url = f"{self.classification_command_root}/elements/{element_guid}/metamodel-instance"
         if body is None:
             body = {"class": "NewClassificationRequestBody",
@@ -13419,11 +13428,12 @@ class ClassificationExplorer(ServerClient):
         logger.info(f"Added MetamodelInstance classification to {element_guid}")
 
     @dynamic_catch
-    def set_element_as_metamodel_instance(self, element_guid: str, metamodel_element_guid: str,
-                                          body: Optional[dict | NewClassificationRequestBody] = None) -> None:
+    def set_element_as_metamodel_instance(self, element_guid: str,
+                                          body: Optional[dict | NewClassificationRequestBody] = None,
+                                          metamodel_element_guid: Optional[str] = None) -> None:
         """Classify an element as an instance in a metamodel, referencing the metamodel element it instantiates."""
         loop = asyncio.get_event_loop()
-        loop.run_until_complete(self._async_set_element_as_metamodel_instance(element_guid, metamodel_element_guid, body))
+        loop.run_until_complete(self._async_set_element_as_metamodel_instance(element_guid, body, metamodel_element_guid))
 
     @dynamic_catch
     async def _async_clear_element_as_metamodel_instance(self, element_guid: str,

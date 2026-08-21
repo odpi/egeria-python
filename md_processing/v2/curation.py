@@ -8,7 +8,13 @@ CurationClassifyProcessor -- Classify/Reclassify/Update/Declassify commands
 for: Impact, Confidence, Confidentiality, Criticality, Retention, Ownership,
 Digital Resource Origin, Zone Membership, Data Scope, Governance
 Expectations, Governance Measurements, Security Tags, Known Duplicate,
-Consolidated Duplicate, Class Word, Modifier, Prime Word.
+Consolidated Duplicate, Class Word, Modifier, Prime Word, the 10 governance-
+point classifications (0435: Control/Verification/Enforcement/Execution/
+Policy Administration/Policy Decision/Policy Enforcement/Policy Information/
+Policy Management/Policy Retrieval Point), 6 metamodel/classification-
+explorer markers (0463: Incomplete, ObjectIdentifier, ReferenceData,
+MobileResource, InstanceMetadata, MetamodelInstance), and ProjectKind (0130)/
+CollectionKind (0021).
 
 CurationLinkProcessor -- Link/Unlink/Attach/Detach relationship commands
 for: Semantic Assignment, Semantic Definition, Scoped By, Peer Duplicate,
@@ -19,14 +25,18 @@ ClassWord/Modifier/PrimeWord (0438 naming standards classifications) were
 added 2026-08-09 once Egeria PR #9166 shipped the backing REST endpoints
 (glossary-manager's is-class-word/is-modifier/is-prime-word) -- see the new
 set/clear method pairs in pyegeria/omvs/glossary_manager.py. They route
-through GlossaryManager, not ClassificationExplorer (the module docstring
-here previously said "no backing pyegeria method exists" for these three --
-no longer true for these; still true for Policy Management Point, which
-has no matching Egeria PR yet and stays parse-only.
+through GlossaryManager, not ClassificationExplorer.
 
-NOT implemented (no backing pyegeria method exists): Classify/Declassify
-Policy Management Point. This command parses but is not registered with
-the dispatcher, so it stays parse-only, same as Create Note.
+The 10 governance-point classifications, the 6 classification-explorer
+markers, and ProjectKind/CollectionKind were added 2026-08-21 once an
+omvs_audit.py gap-closure pass shipped their backing REST endpoints
+(governance_officer.py, classification_explorer.py, project_manager.py,
+collection_manager.py respectively) -- confirmed against a live 6.2-SNAPSHOT
+server's /v3/api-docs. Policy Management Point's command already existed in
+the compact spec (parse-only, no backing method, per the module docstring's
+previous note here) -- this is what unblocks it; the other 9 governance
+points are new commands added alongside it. No classification in this
+family remains genuinely unimplemented as of this pass.
 
 PARTIALLY implemented: Update/Detach Search Keyword need the previously
 -created SearchKeyword entity's own GUID, which the current compact-JSON
@@ -148,6 +158,66 @@ CLASSIFICATION_METHODS: Dict[str, ClassificationSpec] = {
         "_async_set_is_modifier", "_async_clear_is_modifier", "ModifierProperties"),
     "PrimeWord": ClassificationSpec(
         "_async_set_is_prime_word", "_async_clear_is_prime_word", "PrimeWordProperties"),
+    # 0435 governance-point classifications -- routed through GovernanceOfficer
+    # (not ClassificationExplorer, see CURATION_CLASSIFICATION_CLIENTS below).
+    # Added 2026-08-21 once GovernanceOfficer._async_set_*_point/_async_clear_*_point
+    # shipped (verified against a live 6.2-SNAPSHOT server). PolicyManagementPoint's
+    # command already existed in the compact spec (parse-only, no backing method) --
+    # this is what unblocks it; the other 9 are new commands added alongside it.
+    "ControlPoint": ClassificationSpec(
+        "_async_set_control_point", "_async_clear_control_point", "ControlPointProperties"),
+    "VerificationPoint": ClassificationSpec(
+        "_async_set_verification_point", "_async_clear_verification_point", "VerificationPointProperties"),
+    "EnforcementPoint": ClassificationSpec(
+        "_async_set_enforcement_point", "_async_clear_enforcement_point", "EnforcementPointProperties"),
+    "ExecutionPoint": ClassificationSpec(
+        "_async_set_execution_point", "_async_clear_execution_point", "ExecutionPointProperties"),
+    "PolicyAdministrationPoint": ClassificationSpec(
+        "_async_set_policy_administration_point", "_async_clear_policy_administration_point", "PolicyAdministrationPointProperties"),
+    "PolicyDecisionPoint": ClassificationSpec(
+        "_async_set_policy_decision_point", "_async_clear_policy_decision_point", "PolicyDecisionPointProperties"),
+    "PolicyEnforcementPoint": ClassificationSpec(
+        "_async_set_policy_enforcement_point", "_async_clear_policy_enforcement_point", "PolicyEnforcementPointProperties"),
+    "PolicyInformationPoint": ClassificationSpec(
+        "_async_set_policy_information_point", "_async_clear_policy_information_point", "PolicyInformationPointProperties"),
+    "PolicyManagementPoint": ClassificationSpec(
+        "_async_set_policy_management_point", "_async_clear_policy_management_point", "PolicyManagementPointProperties"),
+    "PolicyRetrievalPoint": ClassificationSpec(
+        "_async_set_policy_retrieval_point", "_async_clear_policy_retrieval_point", "PolicyRetrievalPointProperties"),
+    # 0463 metamodel/classification-explorer marker classifications, added 2026-08-21
+    # once ClassificationExplorer._async_set_element_as_*/_async_clear_element_as_*
+    # shipped (verified against a live 6.2-SNAPSHOT server). Routed through the
+    # default classification_manager client -- no CURATION_CLASSIFICATION_CLIENTS
+    # entry needed.
+    "Incomplete": ClassificationSpec(
+        "_async_set_element_as_incomplete", "_async_clear_element_as_incomplete", "IncompleteProperties"),
+    "ObjectIdentifier": ClassificationSpec(
+        "_async_set_element_as_object_identifier", "_async_clear_element_as_object_identifier", "ObjectIdentifierProperties"),
+    "ReferenceData": ClassificationSpec(
+        "_async_set_element_as_reference_data", "_async_clear_element_as_reference_data", "ReferenceDataProperties"),
+    "MobileResource": ClassificationSpec(
+        "_async_set_element_as_mobile_resource", "_async_clear_element_as_mobile_resource", "MobileResourceProperties"),
+    "InstanceMetadata": ClassificationSpec(
+        "_async_set_element_as_instance_metadata", "_async_clear_element_as_instance_metadata", "InstanceMetadataProperties",
+        fields={"Instance Metadata Type Name": "instanceMetadataTypeName", "Description": "description"}),
+    "MetamodelInstance": ClassificationSpec(
+        "_async_set_element_as_metamodel_instance", "_async_clear_element_as_metamodel_instance", "MetamodelInstanceProperties",
+        fields={"Metamodel Element": "metamodelElementGUID"}),
+    # ProjectKind (0130) and CollectionKind (0021) -- pure marker classifications,
+    # routed through ProjectManager/CollectionManager respectively (see
+    # CURATION_CLASSIFICATION_CLIENTS below).
+    "ProjectKind": ClassificationSpec(
+        "_async_set_project_kind", "_async_clear_project_kind", "ProjectKindProperties"),
+    "CollectionKind": ClassificationSpec(
+        "_async_set_collection_kind", "_async_clear_collection_kind", "CollectionKindProperties"),
+    # DataSharingAgreement retrofit -- "Create Data Sharing Agreement" (Digital
+    # Products family, CollectionManagerProcessor) already sets this classification
+    # at creation time via initialClassifications; this pair is for classifying/
+    # declassifying an Agreement that already exists, routed through DigitalBusiness
+    # (see CURATION_CLASSIFICATION_CLIENTS below).
+    "DataSharingAgreement": ClassificationSpec(
+        "_async_set_agreement_as_data_sharing_agreement", "_async_clear_agreement_as_data_sharing_agreement",
+        "DataSharingAgreementProperties"),
 }
 
 # OM_TYPEs in CLASSIFICATION_METHODS whose set/clear methods live on a client other than
@@ -156,6 +226,19 @@ CURATION_CLASSIFICATION_CLIENTS = {
     "ClassWord": "glossary_manager",
     "Modifier": "glossary_manager",
     "PrimeWord": "glossary_manager",
+    "ControlPoint": "governance_officer",
+    "VerificationPoint": "governance_officer",
+    "EnforcementPoint": "governance_officer",
+    "ExecutionPoint": "governance_officer",
+    "PolicyAdministrationPoint": "governance_officer",
+    "PolicyDecisionPoint": "governance_officer",
+    "PolicyEnforcementPoint": "governance_officer",
+    "PolicyInformationPoint": "governance_officer",
+    "PolicyManagementPoint": "governance_officer",
+    "PolicyRetrievalPoint": "governance_officer",
+    "ProjectKind": "project_manager",
+    "CollectionKind": "collection_manager",
+    "DataSharingAgreement": "digital_business",
 }
 
 

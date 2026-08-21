@@ -108,7 +108,8 @@ for element in SIMPLE_BASE_COLLECTIONS:
 
 COLLECTIONS_LIST = []
 
-PROJECT_SUBTYPES = ["Project", "Campaign", "Task", "Study Project", "Personal Project"]
+PROJECT_SUBTYPES = ["Project", "Campaign", "Task", "Study Project", "Personal Project",
+                    "Experiment", "Glossary Project", "Governance Project"]
 PROJECT_COMMANDS = []
 for proj_type in PROJECT_SUBTYPES:
     PROJECT_COMMANDS.append(f"Create {proj_type}")

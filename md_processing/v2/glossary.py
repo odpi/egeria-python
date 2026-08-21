@@ -361,6 +361,7 @@ class GlossaryClassifyProcessor(AsyncBaseCommandProcessor):
 
     Supported commands (extend by adding entries to the dispatch table below):
       - Classify Term as Question  /  Declassify Term as Question
+      - Classify Term as Element Supplement  /  Declassify Term as Element Supplement
     """
 
     async def fetch_as_is(self) -> Optional[Dict[str, Any]]:
@@ -378,6 +379,11 @@ class GlossaryClassifyProcessor(AsyncBaseCommandProcessor):
                 self.client._async_set_term_as_question,
                 self.client._async_clear_term_as_question,
                 "QuestionProperties",
+            ),
+            "Term as Element Supplement": (
+                self.client._async_set_term_as_element_supplement,
+                self.client._async_clear_term_as_element_supplement,
+                "ElementSupplementProperties",
             ),
         }
 
@@ -548,3 +554,60 @@ class TermRelationshipProcessor(AsyncBaseCommandProcessor):
             self.parsed_output['valid'] = False
             self.parsed_output['reason'] = str(e)
             return self.command.raw_block
+
+
+class TermAsContextProcessor(AsyncBaseCommandProcessor):
+    """
+    Processor for Link/Detach Term as Context commands (UsedInContext
+    relationship between a GlossaryTerm and the Referenceable it provides
+    usage context for). Was defined in the compact spec but had no
+    processor at all -- registered here now that GlossaryManager has
+    _async_link_used_in_context/_async_detach_used_in_context
+    (added 2026-08-21, verified against a live 6.2-SNAPSHOT server).
+    """
+
+    def get_command_spec(self) -> Dict[str, Any]:
+        return get_command_spec(f"{self.command.verb} Term as Context")
+
+    def supports_target_element_lookup(self) -> bool:
+        # Relationship-only processor -- see GovernanceLinkProcessor's
+        # identical override (md_processing/v2/governance.py) for why this
+        # matters: without it, AsyncBaseCommandProcessor.execute()'s
+        # Create<->Update upsert-transition logic can silently rewrite the
+        # verb (ISSUE-68 follow-up).
+        return False
+
+    async def fetch_as_is(self) -> Optional[Dict[str, Any]]:
+        return None
+
+    async def apply_changes(self) -> str:
+        verb = self.command.verb
+        attributes = self.parsed_output["attributes"]
+        term_guid = attributes.get('Term 1', {}).get('guid')
+        element_guid = attributes.get('Element Id', {}).get('guid')
+        if not (term_guid and element_guid):
+            missing = []
+            if not term_guid: missing.append("'Term 1'")
+            if not element_guid: missing.append("'Element Id'")
+            raise ValueError(f"Cannot {verb.lower()} Term as Context: resolution failed for {', '.join(missing)}")
+
+        if verb in ["Link", "Attach", "Add"]:
+            props = {"class": "UsedInContextProperties"}
+            for attr_name, prop_name in {
+                "Description": "description", "Expression": "expression", "Confidence": "confidence",
+                "Steward": "steward", "Source": "source", "Term Relationship Status": "termRelationshipStatus",
+            }.items():
+                val = attributes.get(attr_name, {}).get('value')
+                if val is not None:
+                    props[prop_name] = val
+            body = {"class": "NewRelationshipRequestBody", "properties": props}
+            await self.client.glossary_manager._async_link_used_in_context(term_guid, element_guid, body)
+            logger.success(f"Linked Term {term_guid} as context for {element_guid}")
+            return f"\n\n## {verb} Term as Context\n\nLinked term {term_guid} as context for {element_guid}"
+
+        elif verb in ["Detach", "Unlink", "Remove"]:
+            await self.client.glossary_manager._async_detach_used_in_context(term_guid, element_guid)
+            logger.success(f"Detached UsedInContext between {term_guid} and {element_guid}")
+            return f"\n\n## {verb} Term as Context\n\nDetached the UsedInContext relationship between {term_guid} and {element_guid}"
+
+        return self.command.raw_block

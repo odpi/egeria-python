@@ -717,16 +717,31 @@ class LinkDataFieldProcessor(AsyncBaseCommandProcessor):
             return self.command.raw_block
 
         try:
+            # This command models the LinkedDataField relationship (a peer
+            # "related field" link, e.g. ForeignKey/DerivedFrom) - not
+            # NestedDataField (parent-child containment), which is a
+            # different relationship with its own "Link Data Field to Data
+            # Structure"-style command. Previously called
+            # _async_link_nested_data_field with a bolted-on
+            # "linkRelationshipTypeName" property that NestedDataFieldProperties
+            # doesn't define, silently mismatching this command's own name/
+            # OM_TYPE (LinkedDataField). Fixed 2026-08-21 now that
+            # DataDesigner has a bespoke _async_link_linked_data_field
+            # method (see .http ground truth: LinkedDataFieldProperties'
+            # real field is "relationshipTypeName", not
+            # "linkRelationshipTypeName").
             body = {
                 "class": "NewRelationshipRequestBody",
                 "properties": {
-                    "class": "NestedDataFieldProperties"
+                    "class": "LinkedDataFieldProperties"
                 }
             }
             if rel_type:
-                body['properties']['linkRelationshipTypeName'] = rel_type
+                body['properties']['relationshipTypeName'] = rel_type
+            if description:
+                body['properties']['description'] = description
 
-            await self.client.data_designer._async_link_nested_data_field(field1_guid, field2_guid, body)
+            await self.client.data_designer._async_link_linked_data_field(field1_guid, field2_guid, body)
             logger.success(f"Linked Data Fields with relationship type '{rel_type or 'default'}'")
             return "Link created successfully"
         except Exception as e:
@@ -926,25 +941,19 @@ class LinkSchemaAttributeDefinitionProcessor(AsyncBaseCommandProcessor):
     """
     Processor for Link/Detach Schema Attribute Definition commands.
 
-    PYEGERIA_ISSUES.md ISSUE-48: no bespoke Egeria REST endpoint exists yet
-    for the SchemaAttributeDefinition relationship (DataField <->
-    SchemaAttribute) -- confirmed live via the server's full /v3/api-docs
-    OpenAPI spec, zero hits for this type in either the URL paths or the
-    schema components. This processor uses Option 2 from that issue: the
-    generic MetadataExpert relationship mechanism
-    (_async_create_related_elements/_async_delete_related_elements,
-    typeName-based) rather than a dedicated wrapper method. Replace this
-    with a bespoke DataDesigner._async_link_schema_attribute_definition/
-    _async_detach_schema_attribute_definition (Option 1) once Egeria ships
-    a real endpoint -- re-check ISSUE-48 before assuming it hasn't.
+    PYEGERIA_ISSUES.md ISSUE-48 previously blocked this on a bespoke Egeria
+    REST endpoint for the SchemaAttributeDefinition relationship (DataField
+    <-> SchemaAttribute) not existing -- confirmed live via the server's
+    full /v3/api-docs OpenAPI spec at the time, zero hits for this type.
+    That's no longer true: DataDesigner._async_link_schema_attribute_definition/
+    _async_detach_schema_attribute_definition (added 2026-08-21, verified
+    against a live 6.2-SNAPSHOT server's /v3/api-docs) now wrap the real
+    endpoint directly. Migrated off the generic MetadataExpert relationship
+    mechanism (Option 2 from ISSUE-48) to the bespoke wrapper (Option 1).
 
-    SchemaAttributeDefinition's relationshipCategory is UNI_LINK (at most
-    one instance between a given pair -- confirmed live via
-    ValidMetadataManager.get_all_relationship_defs(), both ends are
-    AT_MOST_ONE cardinality), so Detach can safely look the relationship
-    up by its element pair via _async_find_relationships_between_elements
-    rather than requiring a separate GUID attribute -- there's no
-    multi-instance ambiguity to resolve.
+    Detach no longer needs a relationship-GUID lookup first -- the bespoke
+    method takes the (data_field_guid, schema_attribute_guid) pair directly,
+    the same shape every other link/detach pair in this codebase uses.
     """
 
     def get_command_spec(self) -> Dict[str, Any]:
@@ -959,27 +968,6 @@ class LinkSchemaAttributeDefinitionProcessor(AsyncBaseCommandProcessor):
         return False
 
     async def fetch_as_is(self) -> Optional[Dict[str, Any]]:
-        return None
-
-    async def _find_relationship_guid(self, data_field_guid: str, schema_attribute_guid: str) -> Optional[str]:
-        result = await self.client.metadata_expert._async_find_relationships_between_elements({
-            "class": "FindRelationshipRequestBody",
-            "relationshipTypeName": "SchemaAttributeDefinition",
-            "end1EntityGUIDs": [data_field_guid],
-            "end2EntityGUIDs": [schema_attribute_guid],
-        })
-        # _async_find_relationships_between_elements returns the raw
-        # {"relationships": [...], "mermaidGraph": ...} envelope (not a bare
-        # list) whenever a match is found -- see
-        # metadata_expert.process_related_element_list()'s final `return
-        # elements` (the outer envelope dict, not the unwrapped list it
-        # just validated non-empty).
-        if not isinstance(result, dict):
-            return None
-        relationships = result.get("relationships") or []
-        for rel in relationships:
-            if isinstance(rel, dict) and rel.get("relationshipGUID"):
-                return rel["relationshipGUID"]
         return None
 
     async def apply_changes(self) -> str:
@@ -997,31 +985,19 @@ class LinkSchemaAttributeDefinitionProcessor(AsyncBaseCommandProcessor):
 
         if verb in ["Link", "Attach", "Add"]:
             body = {
-                "class": "NewRelatedElementsRequestBody",
-                "typeName": "SchemaAttributeDefinition",
-                "metadataElement1GUID": data_field_guid,
-                "metadataElement2GUID": schema_attribute_guid,
+                "class": "NewRelationshipRequestBody",
                 "properties": {"class": "SchemaAttributeDefinitionProperties"},
             }
-            new_rel_guid = await self.client.metadata_expert._async_create_related_elements(body)
+            await self.client.data_designer._async_link_schema_attribute_definition(
+                data_field_guid, schema_attribute_guid, body)
             logger.success(f"Linked Data Field {data_field_guid} to Schema Attribute {schema_attribute_guid}")
-            if new_rel_guid:
-                self.parsed_output["guid"] = new_rel_guid
-                return f"\n\n## {verb} {object_type}\n\nLinked {data_field_guid} to {schema_attribute_guid}. Relationship GUID: {new_rel_guid}"
             return f"\n\n## {verb} {object_type}\n\nLinked {data_field_guid} to {schema_attribute_guid}"
 
         elif verb in ["Detach", "Unlink", "Remove"]:
-            relationship_guid = await self._find_relationship_guid(data_field_guid, schema_attribute_guid)
-            if not relationship_guid:
-                raise ValueError(
-                    f"Cannot {verb.lower()} Schema Attribute Definition: no existing relationship found "
-                    f"between {data_field_guid} and {schema_attribute_guid}."
-                )
-            await self.client.metadata_expert._async_delete_related_elements(
-                relationship_guid, {"class": "DeleteRelationshipRequestBody"}
-            )
-            logger.success(f"Detached Schema Attribute Definition {relationship_guid}")
-            return f"\n\n## {verb} {object_type}\n\nDetached relationship {relationship_guid} between {data_field_guid} and {schema_attribute_guid}"
+            await self.client.data_designer._async_detach_schema_attribute_definition(
+                data_field_guid, schema_attribute_guid)
+            logger.success(f"Detached Schema Attribute Definition between {data_field_guid} and {schema_attribute_guid}")
+            return f"\n\n## {verb} {object_type}\n\nDetached the SchemaAttributeDefinition relationship between {data_field_guid} and {schema_attribute_guid}"
 
         return self.command.raw_block
 
