@@ -4939,5 +4939,112 @@ class DataDesigner(ServerClient):
         loop = asyncio.get_event_loop()
         loop.run_until_complete(self._async_update_data_value_specification(guid, body))
 
+    #
+    # Additional relationship maintenance - added to close the gap found by
+    # scripts/omvs_audit.py against the data-designer .http ground truth
+    # (2026-08-21). Same shape as _async_link_nested_data_field /
+    # _async_detach_nested_data_field already in this file.
+    #
+
+    @dynamic_catch
+    async def _async_link_linked_data_field(self, data_field_one_guid: str, data_field_two_guid: str,
+                                            body: Optional[dict | NewRelationshipRequestBody] = None) -> None:
+        """Attach two related data fields (LinkedDataField relationship). Async version."""
+        url = f"{self.ref_data_designer_command_base}/data-fields/{data_field_one_guid}/linked-data-fields/{data_field_two_guid}/attach"
+        await self._async_new_relationship_request(url, ["LinkedDataFieldProperties"], body)
+        logger.info(f"Data field {data_field_two_guid} linked to data field {data_field_one_guid}.")
+
+    @dynamic_catch
+    def link_linked_data_field(self, data_field_one_guid: str, data_field_two_guid: str,
+                               body: Optional[dict | NewRelationshipRequestBody] = None) -> None:
+        """Attach two related data fields (LinkedDataField relationship)."""
+        loop = asyncio.get_event_loop()
+        loop.run_until_complete(self._async_link_linked_data_field(data_field_one_guid, data_field_two_guid, body))
+
+    @dynamic_catch
+    async def _async_detach_linked_data_field(self, data_field_one_guid: str, data_field_two_guid: str,
+                                              body: Optional[dict | DeleteRelationshipRequestBody] = None,
+                                              cascade_delete: bool = False) -> None:
+        """Detach two related data fields. Async version."""
+        url = f"{self.ref_data_designer_command_base}/data-fields/{data_field_one_guid}/linked-data-fields/{data_field_two_guid}/detach"
+        await self._async_delete_relationship_request(url, body, cascade_delete)
+        logger.info(f"Data field {data_field_two_guid} detached from data field {data_field_one_guid}.")
+
+    @dynamic_catch
+    def detach_linked_data_field(self, data_field_one_guid: str, data_field_two_guid: str,
+                                 body: Optional[dict | DeleteRelationshipRequestBody] = None,
+                                 cascade_delete: bool = False) -> None:
+        """Detach two related data fields."""
+        loop = asyncio.get_event_loop()
+        loop.run_until_complete(self._async_detach_linked_data_field(
+            data_field_one_guid, data_field_two_guid, body, cascade_delete))
+
+    @dynamic_catch
+    async def _async_link_schema_attribute_definition(self, data_field_guid: str, schema_attribute_guid: str,
+                                                       body: Optional[dict | NewRelationshipRequestBody] = None) -> None:
+        """Attach a data field to the schema attribute that defines it (SchemaAttributeDefinition relationship). Async version."""
+        url = f"{self.ref_data_designer_command_base}/data-fields/{data_field_guid}/schema-attribute-definitions/{schema_attribute_guid}/attach"
+        await self._async_new_relationship_request(url, ["SchemaAttributeDefinitionProperties"], body)
+        logger.info(f"Schema attribute {schema_attribute_guid} linked to data field {data_field_guid}.")
+
+    @dynamic_catch
+    def link_schema_attribute_definition(self, data_field_guid: str, schema_attribute_guid: str,
+                                         body: Optional[dict | NewRelationshipRequestBody] = None) -> None:
+        """Attach a data field to the schema attribute that defines it (SchemaAttributeDefinition relationship)."""
+        loop = asyncio.get_event_loop()
+        loop.run_until_complete(self._async_link_schema_attribute_definition(data_field_guid, schema_attribute_guid, body))
+
+    @dynamic_catch
+    async def _async_detach_schema_attribute_definition(self, data_field_guid: str, schema_attribute_guid: str,
+                                                         body: Optional[dict | DeleteRelationshipRequestBody] = None,
+                                                         cascade_delete: bool = False) -> None:
+        """Detach a data field from the schema attribute that defines it. Async version."""
+        url = f"{self.ref_data_designer_command_base}/data-fields/{data_field_guid}/schema-attribute-definitions/{schema_attribute_guid}/detach"
+        await self._async_delete_relationship_request(url, body, cascade_delete)
+        logger.info(f"Schema attribute {schema_attribute_guid} detached from data field {data_field_guid}.")
+
+    @dynamic_catch
+    def detach_schema_attribute_definition(self, data_field_guid: str, schema_attribute_guid: str,
+                                           body: Optional[dict | DeleteRelationshipRequestBody] = None,
+                                           cascade_delete: bool = False) -> None:
+        """Detach a data field from the schema attribute that defines it."""
+        loop = asyncio.get_event_loop()
+        loop.run_until_complete(self._async_detach_schema_attribute_definition(
+            data_field_guid, schema_attribute_guid, body, cascade_delete))
+
+    @dynamic_catch
+    async def _async_link_schema_type_definition(self, data_structure_guid: str, schema_type_guid: str,
+                                                  body: Optional[dict | NewRelationshipRequestBody] = None) -> None:
+        """Attach a data structure to the schema type that defines it (SchemaTypeDefinition relationship). Async version."""
+        url = f"{self.ref_data_designer_command_base}/data-structures/{data_structure_guid}/schema-type-definitions/{schema_type_guid}/attach"
+        await self._async_new_relationship_request(url, ["SchemaTypeDefinitionProperties"], body)
+        logger.info(f"Schema type {schema_type_guid} linked to data structure {data_structure_guid}.")
+
+    @dynamic_catch
+    def link_schema_type_definition(self, data_structure_guid: str, schema_type_guid: str,
+                                    body: Optional[dict | NewRelationshipRequestBody] = None) -> None:
+        """Attach a data structure to the schema type that defines it (SchemaTypeDefinition relationship)."""
+        loop = asyncio.get_event_loop()
+        loop.run_until_complete(self._async_link_schema_type_definition(data_structure_guid, schema_type_guid, body))
+
+    @dynamic_catch
+    async def _async_detach_schema_type_definition(self, data_structure_guid: str, schema_type_guid: str,
+                                                    body: Optional[dict | DeleteRelationshipRequestBody] = None,
+                                                    cascade_delete: bool = False) -> None:
+        """Detach a data structure from the schema type that defines it. Async version."""
+        url = f"{self.ref_data_designer_command_base}/data-structures/{data_structure_guid}/schema-type-definitions/{schema_type_guid}/detach"
+        await self._async_delete_relationship_request(url, body, cascade_delete)
+        logger.info(f"Schema type {schema_type_guid} detached from data structure {data_structure_guid}.")
+
+    @dynamic_catch
+    def detach_schema_type_definition(self, data_structure_guid: str, schema_type_guid: str,
+                                      body: Optional[dict | DeleteRelationshipRequestBody] = None,
+                                      cascade_delete: bool = False) -> None:
+        """Detach a data structure from the schema type that defines it."""
+        loop = asyncio.get_event_loop()
+        loop.run_until_complete(self._async_detach_schema_type_definition(
+            data_structure_guid, schema_type_guid, body, cascade_delete))
+
+
 if __name__ == "__main__":
     print("Data Designer")

@@ -24,6 +24,8 @@ from pyegeria.models import (
     NewRelationshipRequestBody,
     UpdateRelationshipRequestBody,
     DeleteRelationshipRequestBody,
+    NewClassificationRequestBody,
+    DeleteClassificationRequestBody,
     ContentStatusSearchString,
     ContentStatusFilterRequestBody,
     ActivityStatusSearchString,
@@ -6816,3 +6818,678 @@ class AssetMaker(ServerClient):
             report_spec=report_spec,
             **kwargs
         )
+
+    #
+    # Relationship and classification maintenance - added to close the gap
+    # found by scripts/omvs_audit.py against the asset-maker .http ground
+    # truth (2026-08-21). Every pair follows the same shape as
+    # _async_link_software_capability_to_asset / _async_detach_software_capability_from_asset.
+    #
+
+    @dynamic_catch
+    async def _async_link_api_endpoint(self, deployed_api_guid: str, endpoint_guid: str,
+                                       body: dict | NewRelationshipRequestBody | None = None) -> None:
+        """Attach a network endpoint to a deployed API (APIEndpoint relationship). Async version."""
+        url = f"{self.asset_command_root}/deployed-apis/{deployed_api_guid}/api-endpoints/{endpoint_guid}/attach"
+        await self._async_new_relationship_request(url, ["APIEndpointProperties"], body)
+
+    @dynamic_catch
+    def link_api_endpoint(self, deployed_api_guid: str, endpoint_guid: str,
+                          body: dict | NewRelationshipRequestBody | None = None) -> None:
+        """Attach a network endpoint to a deployed API (APIEndpoint relationship)."""
+        loop = asyncio.get_event_loop()
+        loop.run_until_complete(self._async_link_api_endpoint(deployed_api_guid, endpoint_guid, body))
+
+    @dynamic_catch
+    async def _async_detach_api_endpoint(self, deployed_api_guid: str, endpoint_guid: str,
+                                         body: dict | DeleteRelationshipRequestBody | None = None) -> None:
+        """Detach a network endpoint from a deployed API. Async version."""
+        url = f"{self.asset_command_root}/deployed-apis/{deployed_api_guid}/api-endpoints/{endpoint_guid}/detach"
+        await self._async_delete_relationship_request(url, body)
+
+    @dynamic_catch
+    def detach_api_endpoint(self, deployed_api_guid: str, endpoint_guid: str,
+                            body: dict | DeleteRelationshipRequestBody | None = None) -> None:
+        """Detach a network endpoint from a deployed API."""
+        loop = asyncio.get_event_loop()
+        loop.run_until_complete(self._async_detach_api_endpoint(deployed_api_guid, endpoint_guid, body))
+
+    @dynamic_catch
+    async def _async_link_process_hierarchy(self, parent_process_guid: str, child_process_guid: str,
+                                            body: dict | NewRelationshipRequestBody | None = None) -> None:
+        """Attach a child process to its parent process (ProcessHierarchy relationship). Async version."""
+        url = f"{self.asset_command_root}/processes/{parent_process_guid}/process-hierarchies/{child_process_guid}/attach"
+        await self._async_new_relationship_request(url, ["ProcessHierarchyProperties"], body)
+
+    @dynamic_catch
+    def link_process_hierarchy(self, parent_process_guid: str, child_process_guid: str,
+                               body: dict | NewRelationshipRequestBody | None = None) -> None:
+        """Attach a child process to its parent process (ProcessHierarchy relationship)."""
+        loop = asyncio.get_event_loop()
+        loop.run_until_complete(self._async_link_process_hierarchy(parent_process_guid, child_process_guid, body))
+
+    @dynamic_catch
+    async def _async_detach_process_hierarchy(self, parent_process_guid: str, child_process_guid: str,
+                                              body: dict | DeleteRelationshipRequestBody | None = None) -> None:
+        """Detach a child process from its parent process. Async version."""
+        url = f"{self.asset_command_root}/processes/{parent_process_guid}/process-hierarchies/{child_process_guid}/detach"
+        await self._async_delete_relationship_request(url, body)
+
+    @dynamic_catch
+    def detach_process_hierarchy(self, parent_process_guid: str, child_process_guid: str,
+                                 body: dict | DeleteRelationshipRequestBody | None = None) -> None:
+        """Detach a child process from its parent process."""
+        loop = asyncio.get_event_loop()
+        loop.run_until_complete(self._async_detach_process_hierarchy(parent_process_guid, child_process_guid, body))
+
+    @dynamic_catch
+    async def _async_link_nested_files(self, folder_guid: str, file_guid: str,
+                                       body: dict | NewRelationshipRequestBody | None = None) -> None:
+        """Attach a file to the folder that contains it (NestedFile relationship). Async version."""
+        url = f"{self.asset_command_root}/file-folders/{folder_guid}/nested-files/{file_guid}/attach"
+        await self._async_new_relationship_request(url, ["NestedFileProperties"], body)
+
+    @dynamic_catch
+    def link_nested_files(self, folder_guid: str, file_guid: str,
+                          body: dict | NewRelationshipRequestBody | None = None) -> None:
+        """Attach a file to the folder that contains it (NestedFile relationship)."""
+        loop = asyncio.get_event_loop()
+        loop.run_until_complete(self._async_link_nested_files(folder_guid, file_guid, body))
+
+    @dynamic_catch
+    async def _async_detach_nested_file(self, folder_guid: str, file_guid: str,
+                                        body: dict | DeleteRelationshipRequestBody | None = None) -> None:
+        """Detach a file from the folder that contains it. Async version."""
+        url = f"{self.asset_command_root}/file-folders/{folder_guid}/nested-files/{file_guid}/detach"
+        await self._async_delete_relationship_request(url, body)
+
+    @dynamic_catch
+    def detach_nested_file(self, folder_guid: str, file_guid: str,
+                           body: dict | DeleteRelationshipRequestBody | None = None) -> None:
+        """Detach a file from the folder that contains it."""
+        loop = asyncio.get_event_loop()
+        loop.run_until_complete(self._async_detach_nested_file(folder_guid, file_guid, body))
+
+    @dynamic_catch
+    async def _async_link_linked_files(self, folder_guid: str, file_guid: str,
+                                       body: dict | NewRelationshipRequestBody | None = None) -> None:
+        """Attach a file referenced by (but not contained in) a folder (LinkedFile relationship). Async version."""
+        url = f"{self.asset_command_root}/file-folders/{folder_guid}/linked-files/{file_guid}/attach"
+        await self._async_new_relationship_request(url, ["LinkedFileProperties"], body)
+
+    @dynamic_catch
+    def link_linked_files(self, folder_guid: str, file_guid: str,
+                          body: dict | NewRelationshipRequestBody | None = None) -> None:
+        """Attach a file referenced by (but not contained in) a folder (LinkedFile relationship)."""
+        loop = asyncio.get_event_loop()
+        loop.run_until_complete(self._async_link_linked_files(folder_guid, file_guid, body))
+
+    @dynamic_catch
+    async def _async_detach_linked_file(self, folder_guid: str, file_guid: str,
+                                        body: dict | DeleteRelationshipRequestBody | None = None) -> None:
+        """Detach a referenced file from a folder. Async version."""
+        url = f"{self.asset_command_root}/file-folders/{folder_guid}/linked-files/{file_guid}/detach"
+        await self._async_delete_relationship_request(url, body)
+
+    @dynamic_catch
+    def detach_linked_file(self, folder_guid: str, file_guid: str,
+                           body: dict | DeleteRelationshipRequestBody | None = None) -> None:
+        """Detach a referenced file from a folder."""
+        loop = asyncio.get_event_loop()
+        loop.run_until_complete(self._async_detach_linked_file(folder_guid, file_guid, body))
+
+    @dynamic_catch
+    async def _async_link_folder_hierarchy(self, parent_folder_guid: str, child_folder_guid: str,
+                                           body: dict | NewRelationshipRequestBody | None = None) -> None:
+        """Attach a child folder to its parent folder (FolderHierarchy relationship). Async version."""
+        url = f"{self.asset_command_root}/file-folders/{parent_folder_guid}/folder-hierarchies/{child_folder_guid}/attach"
+        await self._async_new_relationship_request(url, ["FolderHierarchyProperties"], body)
+
+    @dynamic_catch
+    def link_folder_hierarchy(self, parent_folder_guid: str, child_folder_guid: str,
+                              body: dict | NewRelationshipRequestBody | None = None) -> None:
+        """Attach a child folder to its parent folder (FolderHierarchy relationship)."""
+        loop = asyncio.get_event_loop()
+        loop.run_until_complete(self._async_link_folder_hierarchy(parent_folder_guid, child_folder_guid, body))
+
+    @dynamic_catch
+    async def _async_detach_folder_hierarchy(self, parent_folder_guid: str, child_folder_guid: str,
+                                             body: dict | DeleteRelationshipRequestBody | None = None) -> None:
+        """Detach a child folder from its parent folder. Async version."""
+        url = f"{self.asset_command_root}/file-folders/{parent_folder_guid}/folder-hierarchies/{child_folder_guid}/detach"
+        await self._async_delete_relationship_request(url, body)
+
+    @dynamic_catch
+    def detach_folder_hierarchy(self, parent_folder_guid: str, child_folder_guid: str,
+                                body: dict | DeleteRelationshipRequestBody | None = None) -> None:
+        """Detach a child folder from its parent folder."""
+        loop = asyncio.get_event_loop()
+        loop.run_until_complete(self._async_detach_folder_hierarchy(parent_folder_guid, child_folder_guid, body))
+
+    @dynamic_catch
+    async def _async_link_impacted_resource(self, resource_guid: str, incident_report_guid: str,
+                                            body: dict | NewRelationshipRequestBody | None = None) -> None:
+        """Attach a resource to an incident report that affects it (ImpactedResource relationship). Async version."""
+        url = f"{self.asset_command_root}/resources/{resource_guid}/impacted-resources/{incident_report_guid}/attach"
+        await self._async_new_relationship_request(url, ["ImpactedResourceProperties"], body)
+
+    @dynamic_catch
+    def link_impacted_resource(self, resource_guid: str, incident_report_guid: str,
+                               body: dict | NewRelationshipRequestBody | None = None) -> None:
+        """Attach a resource to an incident report that affects it (ImpactedResource relationship)."""
+        loop = asyncio.get_event_loop()
+        loop.run_until_complete(self._async_link_impacted_resource(resource_guid, incident_report_guid, body))
+
+    @dynamic_catch
+    async def _async_detach_impacted_resource(self, resource_guid: str, incident_report_guid: str,
+                                              body: dict | DeleteRelationshipRequestBody | None = None) -> None:
+        """Detach a resource from an incident report. Async version."""
+        url = f"{self.asset_command_root}/resources/{resource_guid}/impacted-resources/{incident_report_guid}/detach"
+        await self._async_delete_relationship_request(url, body)
+
+    @dynamic_catch
+    def detach_impacted_resource(self, resource_guid: str, incident_report_guid: str,
+                                 body: dict | DeleteRelationshipRequestBody | None = None) -> None:
+        """Detach a resource from an incident report."""
+        loop = asyncio.get_event_loop()
+        loop.run_until_complete(self._async_detach_impacted_resource(resource_guid, incident_report_guid, body))
+
+    @dynamic_catch
+    async def _async_link_archive_contents(self, archive_file_guid: str, collection_guid: str,
+                                           body: dict | NewRelationshipRequestBody | None = None) -> None:
+        """Attach a collection as the contents of an archive file (ArchiveContents relationship). Async version."""
+        url = f"{self.asset_command_root}/archive-files/{archive_file_guid}/archive-contents/{collection_guid}/attach"
+        await self._async_new_relationship_request(url, ["ArchiveContentsProperties"], body)
+
+    @dynamic_catch
+    def link_archive_contents(self, archive_file_guid: str, collection_guid: str,
+                              body: dict | NewRelationshipRequestBody | None = None) -> None:
+        """Attach a collection as the contents of an archive file (ArchiveContents relationship)."""
+        loop = asyncio.get_event_loop()
+        loop.run_until_complete(self._async_link_archive_contents(archive_file_guid, collection_guid, body))
+
+    @dynamic_catch
+    async def _async_detach_archive_contents(self, archive_file_guid: str, collection_guid: str,
+                                             body: dict | DeleteRelationshipRequestBody | None = None) -> None:
+        """Detach a collection from an archive file. Async version."""
+        url = f"{self.asset_command_root}/archive-files/{archive_file_guid}/archive-contents/{collection_guid}/detach"
+        await self._async_delete_relationship_request(url, body)
+
+    @dynamic_catch
+    def detach_archive_contents(self, archive_file_guid: str, collection_guid: str,
+                                body: dict | DeleteRelationshipRequestBody | None = None) -> None:
+        """Detach a collection from an archive file."""
+        loop = asyncio.get_event_loop()
+        loop.run_until_complete(self._async_detach_archive_contents(archive_file_guid, collection_guid, body))
+
+    @dynamic_catch
+    async def _async_link_associated_log(self, element_guid: str, log_asset_guid: str,
+                                         body: dict | NewRelationshipRequestBody | None = None) -> None:
+        """Attach a log file asset to the element it logs activity for (AssociatedLog relationship). Async version."""
+        url = f"{self.asset_command_root}/elements/{element_guid}/associated-logs/{log_asset_guid}/attach"
+        await self._async_new_relationship_request(url, ["AssociatedLogProperties"], body)
+
+    @dynamic_catch
+    def link_associated_log(self, element_guid: str, log_asset_guid: str,
+                            body: dict | NewRelationshipRequestBody | None = None) -> None:
+        """Attach a log file asset to the element it logs activity for (AssociatedLog relationship)."""
+        loop = asyncio.get_event_loop()
+        loop.run_until_complete(self._async_link_associated_log(element_guid, log_asset_guid, body))
+
+    @dynamic_catch
+    async def _async_detach_associated_log(self, element_guid: str, log_asset_guid: str,
+                                           body: dict | DeleteRelationshipRequestBody | None = None) -> None:
+        """Detach a log file asset from the element it logs activity for. Async version."""
+        url = f"{self.asset_command_root}/elements/{element_guid}/associated-logs/{log_asset_guid}/detach"
+        await self._async_delete_relationship_request(url, body)
+
+    @dynamic_catch
+    def detach_associated_log(self, element_guid: str, log_asset_guid: str,
+                              body: dict | DeleteRelationshipRequestBody | None = None) -> None:
+        """Detach a log file asset from the element it logs activity for."""
+        loop = asyncio.get_event_loop()
+        loop.run_until_complete(self._async_detach_associated_log(element_guid, log_asset_guid, body))
+
+    @dynamic_catch
+    async def _async_link_linked_media(self, media_file_guid: str, linked_media_file_guid: str,
+                                       body: dict | NewRelationshipRequestBody | None = None) -> None:
+        """Attach a related media file to another media file (LinkedMedia relationship). Async version."""
+        url = f"{self.asset_command_root}/media-files/{media_file_guid}/linked-media/{linked_media_file_guid}/attach"
+        await self._async_new_relationship_request(url, ["LinkedMediaProperties"], body)
+
+    @dynamic_catch
+    def link_linked_media(self, media_file_guid: str, linked_media_file_guid: str,
+                          body: dict | NewRelationshipRequestBody | None = None) -> None:
+        """Attach a related media file to another media file (LinkedMedia relationship)."""
+        loop = asyncio.get_event_loop()
+        loop.run_until_complete(self._async_link_linked_media(media_file_guid, linked_media_file_guid, body))
+
+    @dynamic_catch
+    async def _async_detach_linked_media(self, media_file_guid: str, linked_media_file_guid: str,
+                                         body: dict | DeleteRelationshipRequestBody | None = None) -> None:
+        """Detach a related media file from another media file. Async version."""
+        url = f"{self.asset_command_root}/media-files/{media_file_guid}/linked-media/{linked_media_file_guid}/detach"
+        await self._async_delete_relationship_request(url, body)
+
+    @dynamic_catch
+    def detach_linked_media(self, media_file_guid: str, linked_media_file_guid: str,
+                            body: dict | DeleteRelationshipRequestBody | None = None) -> None:
+        """Detach a related media file from another media file."""
+        loop = asyncio.get_event_loop()
+        loop.run_until_complete(self._async_detach_linked_media(media_file_guid, linked_media_file_guid, body))
+
+    @dynamic_catch
+    async def _async_link_process_port(self, process_guid: str, port_guid: str,
+                                       body: dict | NewRelationshipRequestBody | None = None) -> None:
+        """Attach a port to the process it belongs to (ProcessPort relationship). Async version."""
+        url = f"{self.asset_command_root}/processes/{process_guid}/ports/{port_guid}/attach"
+        await self._async_new_relationship_request(url, ["ProcessPortProperties"], body)
+
+    @dynamic_catch
+    def link_process_port(self, process_guid: str, port_guid: str,
+                          body: dict | NewRelationshipRequestBody | None = None) -> None:
+        """Attach a port to the process it belongs to (ProcessPort relationship)."""
+        loop = asyncio.get_event_loop()
+        loop.run_until_complete(self._async_link_process_port(process_guid, port_guid, body))
+
+    @dynamic_catch
+    async def _async_detach_process_port(self, process_guid: str, port_guid: str,
+                                         body: dict | DeleteRelationshipRequestBody | None = None) -> None:
+        """Detach a port from the process it belongs to. Async version."""
+        url = f"{self.asset_command_root}/processes/{process_guid}/ports/{port_guid}/detach"
+        await self._async_delete_relationship_request(url, body)
+
+    @dynamic_catch
+    def detach_process_port(self, process_guid: str, port_guid: str,
+                            body: dict | DeleteRelationshipRequestBody | None = None) -> None:
+        """Detach a port from the process it belongs to."""
+        loop = asyncio.get_event_loop()
+        loop.run_until_complete(self._async_detach_process_port(process_guid, port_guid, body))
+
+    @dynamic_catch
+    async def _async_link_sample_data(self, element_guid: str, sample_data_guid: str,
+                                      body: dict | NewRelationshipRequestBody | None = None) -> None:
+        """Attach a data resource as sample data for an element (SampleData relationship). Async version."""
+        url = f"{self.asset_command_root}/elements/{element_guid}/sample-data/{sample_data_guid}/attach"
+        await self._async_new_relationship_request(url, ["SampleDataProperties"], body)
+
+    @dynamic_catch
+    def link_sample_data(self, element_guid: str, sample_data_guid: str,
+                         body: dict | NewRelationshipRequestBody | None = None) -> None:
+        """Attach a data resource as sample data for an element (SampleData relationship)."""
+        loop = asyncio.get_event_loop()
+        loop.run_until_complete(self._async_link_sample_data(element_guid, sample_data_guid, body))
+
+    @dynamic_catch
+    async def _async_detach_sample_data(self, element_guid: str, sample_data_guid: str,
+                                        body: dict | DeleteRelationshipRequestBody | None = None) -> None:
+        """Detach a sample data resource from an element. Async version."""
+        url = f"{self.asset_command_root}/elements/{element_guid}/sample-data/{sample_data_guid}/detach"
+        await self._async_delete_relationship_request(url, body)
+
+    @dynamic_catch
+    def detach_sample_data(self, element_guid: str, sample_data_guid: str,
+                           body: dict | DeleteRelationshipRequestBody | None = None) -> None:
+        """Detach a sample data resource from an element."""
+        loop = asyncio.get_event_loop()
+        loop.run_until_complete(self._async_detach_sample_data(element_guid, sample_data_guid, body))
+
+    @dynamic_catch
+    async def _async_link_port_delegation(self, delegating_from_port_guid: str, delegating_to_port_guid: str,
+                                          body: dict | NewRelationshipRequestBody | None = None) -> None:
+        """Attach a port to the port it delegates to (PortDelegation relationship). Async version."""
+        url = f"{self.asset_command_root}/ports/{delegating_from_port_guid}/port-delegations/{delegating_to_port_guid}/attach"
+        await self._async_new_relationship_request(url, ["PortDelegationProperties"], body)
+
+    @dynamic_catch
+    def link_port_delegation(self, delegating_from_port_guid: str, delegating_to_port_guid: str,
+                             body: dict | NewRelationshipRequestBody | None = None) -> None:
+        """Attach a port to the port it delegates to (PortDelegation relationship)."""
+        loop = asyncio.get_event_loop()
+        loop.run_until_complete(self._async_link_port_delegation(delegating_from_port_guid, delegating_to_port_guid, body))
+
+    @dynamic_catch
+    async def _async_detach_port_delegation(self, delegating_from_port_guid: str, delegating_to_port_guid: str,
+                                            body: dict | DeleteRelationshipRequestBody | None = None) -> None:
+        """Detach a port from the port it delegates to. Async version."""
+        url = f"{self.asset_command_root}/ports/{delegating_from_port_guid}/port-delegations/{delegating_to_port_guid}/detach"
+        await self._async_delete_relationship_request(url, body)
+
+    @dynamic_catch
+    def detach_port_delegation(self, delegating_from_port_guid: str, delegating_to_port_guid: str,
+                               body: dict | DeleteRelationshipRequestBody | None = None) -> None:
+        """Detach a port from the port it delegates to."""
+        loop = asyncio.get_event_loop()
+        loop.run_until_complete(self._async_detach_port_delegation(delegating_from_port_guid, delegating_to_port_guid, body))
+
+    @dynamic_catch
+    async def _async_link_registered_integration_connector(self, integration_group_guid: str, integration_connector_guid: str,
+                                                            body: dict | NewRelationshipRequestBody | None = None) -> None:
+        """Register an integration connector with an integration group (RegisteredIntegrationConnector relationship). Async version."""
+        url = (f"{self.asset_command_root}/integration-groups/{integration_group_guid}"
+               f"/registered-integration-connectors/{integration_connector_guid}/attach")
+        await self._async_new_relationship_request(url, ["RegisteredIntegrationConnectorProperties"], body)
+
+    @dynamic_catch
+    def link_registered_integration_connector(self, integration_group_guid: str, integration_connector_guid: str,
+                                               body: dict | NewRelationshipRequestBody | None = None) -> None:
+        """Register an integration connector with an integration group (RegisteredIntegrationConnector relationship)."""
+        loop = asyncio.get_event_loop()
+        loop.run_until_complete(self._async_link_registered_integration_connector(
+            integration_group_guid, integration_connector_guid, body))
+
+    @dynamic_catch
+    async def _async_detach_registered_integration_connector(self, integration_group_guid: str, integration_connector_guid: str,
+                                                              body: dict | DeleteRelationshipRequestBody | None = None) -> None:
+        """Deregister an integration connector from an integration group. Async version."""
+        url = (f"{self.asset_command_root}/integration-groups/{integration_group_guid}"
+               f"/registered-integration-connectors/{integration_connector_guid}/detach")
+        await self._async_delete_relationship_request(url, body)
+
+    @dynamic_catch
+    def detach_registered_integration_connector(self, integration_group_guid: str, integration_connector_guid: str,
+                                                 body: dict | DeleteRelationshipRequestBody | None = None) -> None:
+        """Deregister an integration connector from an integration group."""
+        loop = asyncio.get_event_loop()
+        loop.run_until_complete(self._async_detach_registered_integration_connector(
+            integration_group_guid, integration_connector_guid, body))
+
+    @dynamic_catch
+    async def _async_set_asset_as_audit_log(self, asset_guid: str,
+                                            body: dict | NewClassificationRequestBody | None = None) -> None:
+        """Classify an asset as holding audit log content. Async version."""
+        url = f"{self.asset_command_root}/assets/{asset_guid}/audit-log"
+        if body is None:
+            body = {"class": "NewClassificationRequestBody", "properties": {"class": "AuditLogProperties"}}
+        await self._async_new_classification_request(url, ["AuditLogProperties"], body)
+
+    @dynamic_catch
+    def set_asset_as_audit_log(self, asset_guid: str,
+                               body: dict | NewClassificationRequestBody | None = None) -> None:
+        """Classify an asset as holding audit log content."""
+        loop = asyncio.get_event_loop()
+        loop.run_until_complete(self._async_set_asset_as_audit_log(asset_guid, body))
+
+    @dynamic_catch
+    async def _async_clear_asset_as_audit_log(self, asset_guid: str,
+                                              body: dict | DeleteClassificationRequestBody | None = None) -> None:
+        """Remove the AuditLog classification from an asset. Async version."""
+        url = f"{self.asset_command_root}/assets/{asset_guid}/audit-log/remove"
+        await self._async_delete_classification_request(url, body)
+
+    @dynamic_catch
+    def clear_asset_as_audit_log(self, asset_guid: str,
+                                 body: dict | DeleteClassificationRequestBody | None = None) -> None:
+        """Remove the AuditLog classification from an asset."""
+        loop = asyncio.get_event_loop()
+        loop.run_until_complete(self._async_clear_asset_as_audit_log(asset_guid, body))
+
+    @dynamic_catch
+    async def _async_set_asset_as_lineage_log(self, asset_guid: str,
+                                              body: dict | NewClassificationRequestBody | None = None) -> None:
+        """Classify an asset as holding lineage log content. Async version."""
+        url = f"{self.asset_command_root}/assets/{asset_guid}/lineage-log"
+        if body is None:
+            body = {"class": "NewClassificationRequestBody", "properties": {"class": "LineageLogProperties"}}
+        await self._async_new_classification_request(url, ["LineageLogProperties"], body)
+
+    @dynamic_catch
+    def set_asset_as_lineage_log(self, asset_guid: str,
+                                 body: dict | NewClassificationRequestBody | None = None) -> None:
+        """Classify an asset as holding lineage log content."""
+        loop = asyncio.get_event_loop()
+        loop.run_until_complete(self._async_set_asset_as_lineage_log(asset_guid, body))
+
+    @dynamic_catch
+    async def _async_clear_asset_as_lineage_log(self, asset_guid: str,
+                                                body: dict | DeleteClassificationRequestBody | None = None) -> None:
+        """Remove the LineageLog classification from an asset. Async version."""
+        url = f"{self.asset_command_root}/assets/{asset_guid}/lineage-log/remove"
+        await self._async_delete_classification_request(url, body)
+
+    @dynamic_catch
+    def clear_asset_as_lineage_log(self, asset_guid: str,
+                                   body: dict | DeleteClassificationRequestBody | None = None) -> None:
+        """Remove the LineageLog classification from an asset."""
+        loop = asyncio.get_event_loop()
+        loop.run_until_complete(self._async_clear_asset_as_lineage_log(asset_guid, body))
+
+    @dynamic_catch
+    async def _async_set_asset_as_metering_log(self, asset_guid: str,
+                                               body: dict | NewClassificationRequestBody | None = None) -> None:
+        """Classify an asset as holding metering log content. Async version."""
+        url = f"{self.asset_command_root}/assets/{asset_guid}/metering-log"
+        if body is None:
+            body = {"class": "NewClassificationRequestBody", "properties": {"class": "MeteringLogProperties"}}
+        await self._async_new_classification_request(url, ["MeteringLogProperties"], body)
+
+    @dynamic_catch
+    def set_asset_as_metering_log(self, asset_guid: str,
+                                  body: dict | NewClassificationRequestBody | None = None) -> None:
+        """Classify an asset as holding metering log content."""
+        loop = asyncio.get_event_loop()
+        loop.run_until_complete(self._async_set_asset_as_metering_log(asset_guid, body))
+
+    @dynamic_catch
+    async def _async_clear_asset_as_metering_log(self, asset_guid: str,
+                                                 body: dict | DeleteClassificationRequestBody | None = None) -> None:
+        """Remove the MeteringLog classification from an asset. Async version."""
+        url = f"{self.asset_command_root}/assets/{asset_guid}/metering-log/remove"
+        await self._async_delete_classification_request(url, body)
+
+    @dynamic_catch
+    def clear_asset_as_metering_log(self, asset_guid: str,
+                                    body: dict | DeleteClassificationRequestBody | None = None) -> None:
+        """Remove the MeteringLog classification from an asset."""
+        loop = asyncio.get_event_loop()
+        loop.run_until_complete(self._async_clear_asset_as_metering_log(asset_guid, body))
+
+    @dynamic_catch
+    async def _async_set_asset_as_security_log(self, asset_guid: str,
+                                               body: dict | NewClassificationRequestBody | None = None) -> None:
+        """Classify an asset as holding security log content. Async version."""
+        url = f"{self.asset_command_root}/assets/{asset_guid}/security-log"
+        if body is None:
+            body = {"class": "NewClassificationRequestBody", "properties": {"class": "SecurityLogProperties"}}
+        await self._async_new_classification_request(url, ["SecurityLogProperties"], body)
+
+    @dynamic_catch
+    def set_asset_as_security_log(self, asset_guid: str,
+                                  body: dict | NewClassificationRequestBody | None = None) -> None:
+        """Classify an asset as holding security log content."""
+        loop = asyncio.get_event_loop()
+        loop.run_until_complete(self._async_set_asset_as_security_log(asset_guid, body))
+
+    @dynamic_catch
+    async def _async_clear_asset_as_security_log(self, asset_guid: str,
+                                                 body: dict | DeleteClassificationRequestBody | None = None) -> None:
+        """Remove the SecurityLog classification from an asset. Async version."""
+        url = f"{self.asset_command_root}/assets/{asset_guid}/security-log/remove"
+        await self._async_delete_classification_request(url, body)
+
+    @dynamic_catch
+    def clear_asset_as_security_log(self, asset_guid: str,
+                                    body: dict | DeleteClassificationRequestBody | None = None) -> None:
+        """Remove the SecurityLog classification from an asset."""
+        loop = asyncio.get_event_loop()
+        loop.run_until_complete(self._async_clear_asset_as_security_log(asset_guid, body))
+
+    @dynamic_catch
+    async def _async_set_asset_as_exception_backlog(self, asset_guid: str,
+                                                     body: dict | NewClassificationRequestBody | None = None) -> None:
+        """Classify an asset as holding exception backlog content. Async version."""
+        url = f"{self.asset_command_root}/assets/{asset_guid}/exception-backlog"
+        if body is None:
+            body = {"class": "NewClassificationRequestBody", "properties": {"class": "ExceptionBacklogProperties"}}
+        await self._async_new_classification_request(url, ["ExceptionBacklogProperties"], body)
+
+    @dynamic_catch
+    def set_asset_as_exception_backlog(self, asset_guid: str,
+                                       body: dict | NewClassificationRequestBody | None = None) -> None:
+        """Classify an asset as holding exception backlog content."""
+        loop = asyncio.get_event_loop()
+        loop.run_until_complete(self._async_set_asset_as_exception_backlog(asset_guid, body))
+
+    @dynamic_catch
+    async def _async_clear_asset_as_exception_backlog(self, asset_guid: str,
+                                                       body: dict | DeleteClassificationRequestBody | None = None) -> None:
+        """Remove the ExceptionBacklog classification from an asset. Async version."""
+        url = f"{self.asset_command_root}/assets/{asset_guid}/exception-backlog/remove"
+        await self._async_delete_classification_request(url, body)
+
+    @dynamic_catch
+    def clear_asset_as_exception_backlog(self, asset_guid: str,
+                                         body: dict | DeleteClassificationRequestBody | None = None) -> None:
+        """Remove the ExceptionBacklog classification from an asset."""
+        loop = asyncio.get_event_loop()
+        loop.run_until_complete(self._async_clear_asset_as_exception_backlog(asset_guid, body))
+
+    @dynamic_catch
+    async def _async_set_asset_as_log_analysis(self, asset_guid: str,
+                                               body: dict | NewClassificationRequestBody | None = None) -> None:
+        """Classify an asset as performing log analysis. Async version."""
+        url = f"{self.asset_command_root}/assets/{asset_guid}/log-analysis"
+        if body is None:
+            body = {"class": "NewClassificationRequestBody", "properties": {"class": "LogAnalysisProperties"}}
+        await self._async_new_classification_request(url, ["LogAnalysisProperties"], body)
+
+    @dynamic_catch
+    def set_asset_as_log_analysis(self, asset_guid: str,
+                                  body: dict | NewClassificationRequestBody | None = None) -> None:
+        """Classify an asset as performing log analysis."""
+        loop = asyncio.get_event_loop()
+        loop.run_until_complete(self._async_set_asset_as_log_analysis(asset_guid, body))
+
+    @dynamic_catch
+    async def _async_clear_asset_as_log_analysis(self, asset_guid: str,
+                                                 body: dict | DeleteClassificationRequestBody | None = None) -> None:
+        """Remove the LogAnalysis classification from an asset. Async version."""
+        url = f"{self.asset_command_root}/assets/{asset_guid}/log-analysis/remove"
+        await self._async_delete_classification_request(url, body)
+
+    @dynamic_catch
+    def clear_asset_as_log_analysis(self, asset_guid: str,
+                                    body: dict | DeleteClassificationRequestBody | None = None) -> None:
+        """Remove the LogAnalysis classification from an asset."""
+        loop = asyncio.get_event_loop()
+        loop.run_until_complete(self._async_clear_asset_as_log_analysis(asset_guid, body))
+
+    @dynamic_catch
+    async def _async_set_api_as_listener_interface(self, deployed_api_guid: str,
+                                                    body: dict | NewClassificationRequestBody | None = None) -> None:
+        """Classify a deployed API as a listener interface. Async version."""
+        url = f"{self.asset_command_root}/deployed-apis/{deployed_api_guid}/listener-interface"
+        if body is None:
+            body = {"class": "NewClassificationRequestBody", "properties": {"class": "ListenerInterfaceProperties"}}
+        await self._async_new_classification_request(url, ["ListenerInterfaceProperties"], body)
+
+    @dynamic_catch
+    def set_api_as_listener_interface(self, deployed_api_guid: str,
+                                      body: dict | NewClassificationRequestBody | None = None) -> None:
+        """Classify a deployed API as a listener interface."""
+        loop = asyncio.get_event_loop()
+        loop.run_until_complete(self._async_set_api_as_listener_interface(deployed_api_guid, body))
+
+    @dynamic_catch
+    async def _async_clear_api_as_listener_interface(self, deployed_api_guid: str,
+                                                      body: dict | DeleteClassificationRequestBody | None = None) -> None:
+        """Remove the ListenerInterface classification from a deployed API. Async version."""
+        url = f"{self.asset_command_root}/deployed-apis/{deployed_api_guid}/listener-interface/remove"
+        await self._async_delete_classification_request(url, body)
+
+    @dynamic_catch
+    def clear_api_as_listener_interface(self, deployed_api_guid: str,
+                                        body: dict | DeleteClassificationRequestBody | None = None) -> None:
+        """Remove the ListenerInterface classification from a deployed API."""
+        loop = asyncio.get_event_loop()
+        loop.run_until_complete(self._async_clear_api_as_listener_interface(deployed_api_guid, body))
+
+    @dynamic_catch
+    async def _async_set_api_as_publisher_interface(self, deployed_api_guid: str,
+                                                     body: dict | NewClassificationRequestBody | None = None) -> None:
+        """Classify a deployed API as a publisher interface. Async version."""
+        url = f"{self.asset_command_root}/deployed-apis/{deployed_api_guid}/publisher-interface"
+        if body is None:
+            body = {"class": "NewClassificationRequestBody", "properties": {"class": "PublisherInterfaceProperties"}}
+        await self._async_new_classification_request(url, ["PublisherInterfaceProperties"], body)
+
+    @dynamic_catch
+    def set_api_as_publisher_interface(self, deployed_api_guid: str,
+                                       body: dict | NewClassificationRequestBody | None = None) -> None:
+        """Classify a deployed API as a publisher interface."""
+        loop = asyncio.get_event_loop()
+        loop.run_until_complete(self._async_set_api_as_publisher_interface(deployed_api_guid, body))
+
+    @dynamic_catch
+    async def _async_clear_api_as_publisher_interface(self, deployed_api_guid: str,
+                                                       body: dict | DeleteClassificationRequestBody | None = None) -> None:
+        """Remove the PublisherInterface classification from a deployed API. Async version."""
+        url = f"{self.asset_command_root}/deployed-apis/{deployed_api_guid}/publisher-interface/remove"
+        await self._async_delete_classification_request(url, body)
+
+    @dynamic_catch
+    def clear_api_as_publisher_interface(self, deployed_api_guid: str,
+                                         body: dict | DeleteClassificationRequestBody | None = None) -> None:
+        """Remove the PublisherInterface classification from a deployed API."""
+        loop = asyncio.get_event_loop()
+        loop.run_until_complete(self._async_clear_api_as_publisher_interface(deployed_api_guid, body))
+
+    @dynamic_catch
+    async def _async_set_api_as_request_response_interface(self, deployed_api_guid: str,
+                                                            body: dict | NewClassificationRequestBody | None = None) -> None:
+        """Classify a deployed API as a request-response interface. Async version."""
+        url = f"{self.asset_command_root}/deployed-apis/{deployed_api_guid}/request-response-interface"
+        if body is None:
+            body = {"class": "NewClassificationRequestBody", "properties": {"class": "RequestResponseInterfaceProperties"}}
+        await self._async_new_classification_request(url, ["RequestResponseInterfaceProperties"], body)
+
+    @dynamic_catch
+    def set_api_as_request_response_interface(self, deployed_api_guid: str,
+                                               body: dict | NewClassificationRequestBody | None = None) -> None:
+        """Classify a deployed API as a request-response interface."""
+        loop = asyncio.get_event_loop()
+        loop.run_until_complete(self._async_set_api_as_request_response_interface(deployed_api_guid, body))
+
+    @dynamic_catch
+    async def _async_clear_api_as_request_response_interface(self, deployed_api_guid: str,
+                                                              body: dict | DeleteClassificationRequestBody | None = None) -> None:
+        """Remove the RequestResponseInterface classification from a deployed API. Async version."""
+        url = f"{self.asset_command_root}/deployed-apis/{deployed_api_guid}/request-response-interface/remove"
+        await self._async_delete_classification_request(url, body)
+
+    @dynamic_catch
+    def clear_api_as_request_response_interface(self, deployed_api_guid: str,
+                                                 body: dict | DeleteClassificationRequestBody | None = None) -> None:
+        """Remove the RequestResponseInterface classification from a deployed API."""
+        loop = asyncio.get_event_loop()
+        loop.run_until_complete(self._async_clear_api_as_request_response_interface(deployed_api_guid, body))
+
+    @dynamic_catch
+    async def _async_set_data_asset_encoding(self, data_asset_guid: str,
+                                             body: dict | NewClassificationRequestBody | None = None) -> None:
+        """Classify a data asset with its encoding details. Async version."""
+        url = f"{self.asset_command_root}/data-assets/{data_asset_guid}/encoding"
+        if body is None:
+            body = {"class": "NewClassificationRequestBody", "properties": {"class": "DataAssetEncodingProperties"}}
+        await self._async_new_classification_request(url, ["DataAssetEncodingProperties"], body)
+
+    @dynamic_catch
+    def set_data_asset_encoding(self, data_asset_guid: str,
+                                body: dict | NewClassificationRequestBody | None = None) -> None:
+        """Classify a data asset with its encoding details."""
+        loop = asyncio.get_event_loop()
+        loop.run_until_complete(self._async_set_data_asset_encoding(data_asset_guid, body))
+
+    @dynamic_catch
+    async def _async_clear_data_asset_encoding(self, data_asset_guid: str,
+                                               body: dict | DeleteClassificationRequestBody | None = None) -> None:
+        """Remove the DataAssetEncoding classification from a data asset. Async version."""
+        url = f"{self.asset_command_root}/data-assets/{data_asset_guid}/encoding/remove"
+        await self._async_delete_classification_request(url, body)
+
+    @dynamic_catch
+    def clear_data_asset_encoding(self, data_asset_guid: str,
+                                  body: dict | DeleteClassificationRequestBody | None = None) -> None:
+        """Remove the DataAssetEncoding classification from a data asset."""
+        loop = asyncio.get_event_loop()
+        loop.run_until_complete(self._async_clear_data_asset_encoding(data_asset_guid, body))

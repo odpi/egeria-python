@@ -1038,3 +1038,37 @@ class SubjectArea(ServerClient):
                 **kwargs,
             )
         )
+
+    #
+    # Additional relationship maintenance - added to close the gap found by
+    # scripts/omvs_audit.py against the subject-area .http ground truth
+    # (2026-08-21).
+    #
+
+    @dynamic_catch
+    async def _async_link_subject_areas(self, parent_subject_area_guid: str, nested_subject_area_guid: str,
+                                        body: Optional[dict | NewRelationshipRequestBody] = None) -> None:
+        """Attach a nested subject area to its parent subject area (SubjectAreaHierarchy relationship). Async version."""
+        url = f"{self.platform_url}/servers/{self.view_server}/api/open-metadata/subject-area/subject-areas/{parent_subject_area_guid}/subject-area-hierarchies/{nested_subject_area_guid}/attach"
+        await self._async_new_relationship_request(url, ["SubjectAreaHierarchyProperties"], body)
+
+    @dynamic_catch
+    def link_subject_areas(self, parent_subject_area_guid: str, nested_subject_area_guid: str,
+                           body: Optional[dict | NewRelationshipRequestBody] = None) -> None:
+        """Attach a nested subject area to its parent subject area (SubjectAreaHierarchy relationship)."""
+        loop = asyncio.get_event_loop()
+        loop.run_until_complete(self._async_link_subject_areas(parent_subject_area_guid, nested_subject_area_guid, body))
+
+    @dynamic_catch
+    async def _async_detach_subject_areas(self, parent_subject_area_guid: str, nested_subject_area_guid: str,
+                                          body: Optional[dict | DeleteRelationshipRequestBody] = None) -> None:
+        """Detach a nested subject area from its parent subject area. Async version."""
+        url = f"{self.platform_url}/servers/{self.view_server}/api/open-metadata/subject-area/subject-areas/{parent_subject_area_guid}/subject-area-hierarchies/{nested_subject_area_guid}/detach"
+        await self._async_delete_relationship_request(url, body)
+
+    @dynamic_catch
+    def detach_subject_areas(self, parent_subject_area_guid: str, nested_subject_area_guid: str,
+                             body: Optional[dict | DeleteRelationshipRequestBody] = None) -> None:
+        """Detach a nested subject area from its parent subject area."""
+        loop = asyncio.get_event_loop()
+        loop.run_until_complete(self._async_detach_subject_areas(parent_subject_area_guid, nested_subject_area_guid, body))

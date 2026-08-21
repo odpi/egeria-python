@@ -2868,6 +2868,10 @@
         "Term 1",
         "Valid Value Set"
       ]
+    },
+    "Detach Term as Context Base": {
+      "inherits": null,
+      "own_attributes": []
     }
   },
   "commands": {
@@ -3100,6 +3104,72 @@
       "OM_TYPE": "ValidValuesAssignment",
       "bundle": "Question Valid Values Base",
       "custom_attributes": [],
+      "Journal Entry": ""
+    },
+    "Detach Term as Context": {
+      "display_name": "Term as Context",
+      "qn_prefix": "",
+      "alternate_names": [
+        "Detach Used in Context"
+      ],
+      "family": "Glossary",
+      "description": "Removes the UsedInContext relationship between a glossary term and the referenceable it provides context for.",
+      "verb": "Detach",
+      "upsert": false,
+      "attach": false,
+      "level": "Basic",
+      "find_method": "",
+      "find_constraints": "",
+      "extra_find": "",
+      "extra_constraints": "",
+      "OM_TYPE": "UsedInContext",
+      "bundle": "Detach Term as Context Base",
+      "custom_attributes": [
+        "Term 1",
+        "Element Id"
+      ],
+      "Journal Entry": ""
+    },
+    "Classify Term as Element Supplement": {
+      "display_name": "Set Term as Element Supplement",
+      "qn_prefix": "",
+      "alternate_names": [],
+      "family": "Glossary",
+      "description": "Classify a glossary term as a supplement (additional description) for another element.",
+      "verb": "Classify",
+      "upsert": true,
+      "attach": false,
+      "level": "Basic",
+      "find_method": "",
+      "find_constraints": "",
+      "extra_find": "",
+      "extra_constraints": "",
+      "OM_TYPE": "GlossaryTerm",
+      "bundle": "Request Base",
+      "custom_attributes": [
+        "Term Name"
+      ],
+      "Journal Entry": ""
+    },
+    "Declassify Term as Element Supplement": {
+      "display_name": "Unset Term as Element Supplement",
+      "qn_prefix": "",
+      "alternate_names": [],
+      "family": "Glossary",
+      "description": "Remove the ElementSupplement classification from a glossary term.",
+      "verb": "Declassify",
+      "upsert": true,
+      "attach": false,
+      "level": "Basic",
+      "find_method": "",
+      "find_constraints": "",
+      "extra_find": "",
+      "extra_constraints": "",
+      "OM_TYPE": "GlossaryTerm",
+      "bundle": "Request Base",
+      "custom_attributes": [
+        "Term Name"
+      ],
       "Journal Entry": ""
     }
   }
