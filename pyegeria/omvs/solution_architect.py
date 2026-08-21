@@ -6521,5 +6521,382 @@ class SolutionArchitect(ServerClient):
 
 
 
+    #
+    # Concept Model Element CRUD + relationships, and Solution Component
+    # Port / Port Delegation relationships - added to close the gap found
+    # by scripts/omvs_audit.py against the solution-architect .http ground
+    # truth (2026-08-21). This is new API surface (a Concept Model feature
+    # area), not incremental gap-filling on an existing family - modeled
+    # closely on the existing design-pattern CRUD family in this same file,
+    # since ConceptModelElement is a similar self-referencing element type.
+    # No report spec is registered for ConceptModelElement yet, so output
+    # generation uses the same generic _generate_formatted_output /
+    # populate_common_columns pattern SchemaMaker uses for its own
+    # not-yet-speced types, rather than a dedicated extractor.
+    #
+
+    def _generate_concept_model_element_output(self, elements: dict | list[dict],
+                                                search_string: Optional[str] = None,
+                                                element_type_name: Optional[str] = None,
+                                                output_format: str = "DICT",
+                                                report_spec: dict | str | None = None, **kwargs) -> str | list[dict]:
+        return self._generate_formatted_output(
+            elements=elements, query_string=search_string,
+            entity_type=element_type_name or "ConceptModelElement",
+            output_format=output_format,
+            extract_properties_func=populate_common_columns,
+            report_spec=report_spec, **kwargs,
+        )
+
+    @dynamic_catch
+    async def _async_create_concept_model_element(self, body: dict | NewElementRequestBody) -> str:
+        """Create a new concept model element (e.g. a ConceptBead). Async version."""
+        url = f"{self.solution_architect_command_root}/concept-model-elements"
+        return await self._async_create_element_body_request(url, ["ConceptModelElementProperties"], body)
+
+    @dynamic_catch
+    def create_concept_model_element(self, body: dict | NewElementRequestBody) -> str:
+        """Create a new concept model element (e.g. a ConceptBead)."""
+        loop = asyncio.get_event_loop()
+        return loop.run_until_complete(self._async_create_concept_model_element(body))
+
+    @dynamic_catch
+    async def _async_create_concept_model_element_from_template(self, body: dict | TemplateRequestBody) -> str:
+        """Create a new concept model element from a template. Async version."""
+        url = f"{self.solution_architect_command_root}/concept-model-elements/from-template"
+        return await self._async_create_element_from_template(url, body)
+
+    @dynamic_catch
+    def create_concept_model_element_from_template(self, body: dict | TemplateRequestBody) -> str:
+        """Create a new concept model element from a template."""
+        loop = asyncio.get_event_loop()
+        return loop.run_until_complete(self._async_create_concept_model_element_from_template(body))
+
+    @dynamic_catch
+    async def _async_update_concept_model_element(self, guid: str, body: dict | UpdateElementRequestBody) -> None:
+        """Update the properties of a concept model element. Async version."""
+        validate_guid(guid)
+        url = f"{self.solution_architect_command_root}/concept-model-elements/{guid}/update"
+        await self._async_update_element_body_request(url, ["ConceptModelElementProperties"], body)
+
+    @dynamic_catch
+    def update_concept_model_element(self, guid: str, body: dict | UpdateElementRequestBody) -> None:
+        """Update the properties of a concept model element."""
+        loop = asyncio.get_event_loop()
+        loop.run_until_complete(self._async_update_concept_model_element(guid, body))
+
+    @dynamic_catch
+    async def _async_delete_concept_model_element(self, guid: str, body: Optional[dict | DeleteElementRequestBody] = None,
+                                                   cascade_delete: bool = False) -> None:
+        """Delete a concept model element. Async version."""
+        validate_guid(guid)
+        url = f"{self.solution_architect_command_root}/concept-model-elements/{guid}/delete"
+        await self._async_delete_element_request(url, body, cascade_delete)
+
+    @dynamic_catch
+    def delete_concept_model_element(self, guid: str, body: Optional[dict | DeleteElementRequestBody] = None,
+                                     cascade_delete: bool = False) -> None:
+        """Delete a concept model element."""
+        loop = asyncio.get_event_loop()
+        loop.run_until_complete(self._async_delete_concept_model_element(guid, body, cascade_delete))
+
+    @dynamic_catch
+    async def _async_find_concept_model_elements(self, search_string: str = "*",
+                                                  body: Optional[dict | SearchStringRequestBody] = None,
+                                                  starts_with: bool = True, ends_with: bool = False, ignore_case: bool = False,
+                                                  start_from: int = 0, page_size: int = 100,
+                                                  output_format: str = "JSON", report_spec: str | dict | None = None,
+                                                  **kwargs) -> list | str:
+        """Find concept model elements matching a search string. Async version."""
+        url = f"{self.solution_architect_command_root}/concept-model-elements/by-search-string"
+        return await self._async_find_request(
+            url, _type="ConceptModelElement", _gen_output=self._generate_concept_model_element_output,
+            search_string=search_string, body=body, starts_with=starts_with, ends_with=ends_with,
+            ignore_case=ignore_case, start_from=start_from, page_size=page_size,
+            output_format=output_format, report_spec=report_spec, **kwargs)
+
+    @dynamic_catch
+    def find_concept_model_elements(self, search_string: str = "*",
+                                    body: Optional[dict | SearchStringRequestBody] = None,
+                                    starts_with: bool = True, ends_with: bool = False, ignore_case: bool = False,
+                                    start_from: int = 0, page_size: int = 100,
+                                    output_format: str = "JSON", report_spec: str | dict | None = None,
+                                    **kwargs) -> list | str:
+        """Find concept model elements matching a search string."""
+        loop = asyncio.get_event_loop()
+        return loop.run_until_complete(self._async_find_concept_model_elements(
+            search_string, body, starts_with, ends_with, ignore_case, start_from, page_size,
+            output_format, report_spec, **kwargs))
+
+    @dynamic_catch
+    async def _async_get_concept_model_elements_by_name(self, name: str,
+                                                         body: Optional[dict | SearchStringRequestBody] = None,
+                                                         start_from: int = 0, page_size: int = max_paging_size,
+                                                         output_format: str = "JSON", report_spec: str | dict | None = None,
+                                                         **kwargs) -> list | str:
+        """Return the concept model elements with a specific name. Async version."""
+        url = f"{self.solution_architect_command_root}/concept-model-elements/by-name"
+        return await self._async_get_name_request(
+            url, _type="ConceptModelElement", _gen_output=self._generate_concept_model_element_output,
+            filter_string=name, body=body, start_from=start_from, page_size=page_size,
+            output_format=output_format, report_spec=report_spec, **kwargs)
+
+    @dynamic_catch
+    def get_concept_model_elements_by_name(self, name: str,
+                                           body: Optional[dict | SearchStringRequestBody] = None,
+                                           start_from: int = 0, page_size: int = max_paging_size,
+                                           output_format: str = "JSON", report_spec: str | dict | None = None,
+                                           **kwargs) -> list | str:
+        """Return the concept model elements with a specific name."""
+        loop = asyncio.get_event_loop()
+        return loop.run_until_complete(self._async_get_concept_model_elements_by_name(
+            name, body, start_from, page_size, output_format, report_spec, **kwargs))
+
+    @dynamic_catch
+    async def _async_get_concept_model_element_by_guid(self, guid: str, body: Optional[dict | GetRequestBody] = None,
+                                                        output_format: str = "JSON", report_spec: str | dict | None = None,
+                                                        **kwargs) -> dict | str:
+        """Return the properties of a specific concept model element. Async version."""
+        validate_guid(guid)
+        url = f"{self.solution_architect_command_root}/concept-model-elements/{guid}/retrieve"
+        return await self._async_get_guid_request(
+            url, _type="ConceptModelElement", _gen_output=self._generate_concept_model_element_output,
+            body=body, output_format=output_format, report_spec=report_spec, **kwargs)
+
+    @dynamic_catch
+    def get_concept_model_element_by_guid(self, guid: str, body: Optional[dict | GetRequestBody] = None,
+                                          output_format: str = "JSON", report_spec: str | dict | None = None,
+                                          **kwargs) -> dict | str:
+        """Return the properties of a specific concept model element."""
+        loop = asyncio.get_event_loop()
+        return loop.run_until_complete(self._async_get_concept_model_element_by_guid(
+            guid, body, output_format, report_spec, **kwargs))
+
+    @dynamic_catch
+    async def _async_link_concept_design(self, element_guid: str, concept_model_guid: str,
+                                         body: Optional[dict | NewRelationshipRequestBody] = None) -> None:
+        """Attach an element to the concept model element that designs it (ConceptDesign relationship). Async version."""
+        url = f"{self.solution_architect_command_root}/elements/{element_guid}/concept-designs/{concept_model_guid}/attach"
+        await self._async_new_relationship_request(url, ["ConceptDesignProperties"], body)
+
+    @dynamic_catch
+    def link_concept_design(self, element_guid: str, concept_model_guid: str,
+                            body: Optional[dict | NewRelationshipRequestBody] = None) -> None:
+        """Attach an element to the concept model element that designs it (ConceptDesign relationship)."""
+        loop = asyncio.get_event_loop()
+        loop.run_until_complete(self._async_link_concept_design(element_guid, concept_model_guid, body))
+
+    @dynamic_catch
+    async def _async_detach_concept_design(self, element_guid: str, concept_model_guid: str,
+                                           body: Optional[dict | DeleteRelationshipRequestBody] = None) -> None:
+        """Detach an element from a concept model element. Async version."""
+        url = f"{self.solution_architect_command_root}/elements/{element_guid}/concept-designs/{concept_model_guid}/detach"
+        await self._async_delete_relationship_request(url, body)
+
+    @dynamic_catch
+    def detach_concept_design(self, element_guid: str, concept_model_guid: str,
+                              body: Optional[dict | DeleteRelationshipRequestBody] = None) -> None:
+        """Detach an element from a concept model element."""
+        loop = asyncio.get_event_loop()
+        loop.run_until_complete(self._async_detach_concept_design(element_guid, concept_model_guid, body))
+
+    @dynamic_catch
+    async def _async_link_concept_bead_relationship_end(self, concept_bead_relationship_guid: str, concept_bead_guid: str,
+                                                         body: Optional[dict | NewRelationshipRequestBody] = None) -> None:
+        """Attach a concept bead as one end of a concept bead relationship (ConceptBeadRelationshipEnd relationship). Async version."""
+        url = f"{self.solution_architect_command_root}/concept-bead-relationships/{concept_bead_relationship_guid}/relationship-ends/{concept_bead_guid}/attach"
+        await self._async_new_relationship_request(url, ["ConceptBeadRelationshipEndProperties"], body)
+
+    @dynamic_catch
+    def link_concept_bead_relationship_end(self, concept_bead_relationship_guid: str, concept_bead_guid: str,
+                                           body: Optional[dict | NewRelationshipRequestBody] = None) -> None:
+        """Attach a concept bead as one end of a concept bead relationship (ConceptBeadRelationshipEnd relationship)."""
+        loop = asyncio.get_event_loop()
+        loop.run_until_complete(self._async_link_concept_bead_relationship_end(concept_bead_relationship_guid, concept_bead_guid, body))
+
+    @dynamic_catch
+    async def _async_detach_concept_bead_relationship_end(self, concept_bead_relationship_guid: str, concept_bead_guid: str,
+                                                           body: Optional[dict | DeleteRelationshipRequestBody] = None) -> None:
+        """Detach a concept bead from a concept bead relationship. Async version."""
+        url = f"{self.solution_architect_command_root}/concept-bead-relationships/{concept_bead_relationship_guid}/relationship-ends/{concept_bead_guid}/detach"
+        await self._async_delete_relationship_request(url, body)
+
+    @dynamic_catch
+    def detach_concept_bead_relationship_end(self, concept_bead_relationship_guid: str, concept_bead_guid: str,
+                                             body: Optional[dict | DeleteRelationshipRequestBody] = None) -> None:
+        """Detach a concept bead from a concept bead relationship."""
+        loop = asyncio.get_event_loop()
+        loop.run_until_complete(self._async_detach_concept_bead_relationship_end(concept_bead_relationship_guid, concept_bead_guid, body))
+
+    @dynamic_catch
+    async def _async_link_typed_by_concept_bead(self, concept_bead_attribute_guid: str, concept_bead_guid: str,
+                                                body: Optional[dict | NewRelationshipRequestBody] = None) -> None:
+        """Attach a concept bead attribute to the concept bead that types it (TypedByConceptBead relationship). Async version."""
+        url = f"{self.solution_architect_command_root}/concept-bead-attributes/{concept_bead_attribute_guid}/typed-by/{concept_bead_guid}/attach"
+        await self._async_new_relationship_request(url, ["TypedByConceptBeadProperties"], body)
+
+    @dynamic_catch
+    def link_typed_by_concept_bead(self, concept_bead_attribute_guid: str, concept_bead_guid: str,
+                                   body: Optional[dict | NewRelationshipRequestBody] = None) -> None:
+        """Attach a concept bead attribute to the concept bead that types it (TypedByConceptBead relationship)."""
+        loop = asyncio.get_event_loop()
+        loop.run_until_complete(self._async_link_typed_by_concept_bead(concept_bead_attribute_guid, concept_bead_guid, body))
+
+    @dynamic_catch
+    async def _async_detach_typed_by_concept_bead(self, concept_bead_attribute_guid: str, concept_bead_guid: str,
+                                                   body: Optional[dict | DeleteRelationshipRequestBody] = None) -> None:
+        """Detach a concept bead attribute from the concept bead that types it. Async version."""
+        url = f"{self.solution_architect_command_root}/concept-bead-attributes/{concept_bead_attribute_guid}/typed-by/{concept_bead_guid}/detach"
+        await self._async_delete_relationship_request(url, body)
+
+    @dynamic_catch
+    def detach_typed_by_concept_bead(self, concept_bead_attribute_guid: str, concept_bead_guid: str,
+                                     body: Optional[dict | DeleteRelationshipRequestBody] = None) -> None:
+        """Detach a concept bead attribute from the concept bead that types it."""
+        loop = asyncio.get_event_loop()
+        loop.run_until_complete(self._async_detach_typed_by_concept_bead(concept_bead_attribute_guid, concept_bead_guid, body))
+
+    @dynamic_catch
+    async def _async_link_is_a_concept_bead(self, concept_bead_guid: str, general_concept_bead_guid: str,
+                                            body: Optional[dict | NewRelationshipRequestBody] = None) -> None:
+        """Attach a concept bead to the more general concept bead it is a kind of (IsAConceptBead relationship). Async version."""
+        url = f"{self.solution_architect_command_root}/concept-beads/{concept_bead_guid}/is-a/{general_concept_bead_guid}/attach"
+        await self._async_new_relationship_request(url, ["IsAConceptBeadProperties"], body)
+
+    @dynamic_catch
+    def link_is_a_concept_bead(self, concept_bead_guid: str, general_concept_bead_guid: str,
+                               body: Optional[dict | NewRelationshipRequestBody] = None) -> None:
+        """Attach a concept bead to the more general concept bead it is a kind of (IsAConceptBead relationship)."""
+        loop = asyncio.get_event_loop()
+        loop.run_until_complete(self._async_link_is_a_concept_bead(concept_bead_guid, general_concept_bead_guid, body))
+
+    @dynamic_catch
+    async def _async_detach_is_a_concept_bead(self, concept_bead_guid: str, general_concept_bead_guid: str,
+                                              body: Optional[dict | DeleteRelationshipRequestBody] = None) -> None:
+        """Detach a concept bead from a more general concept bead. Async version."""
+        url = f"{self.solution_architect_command_root}/concept-beads/{concept_bead_guid}/is-a/{general_concept_bead_guid}/detach"
+        await self._async_delete_relationship_request(url, body)
+
+    @dynamic_catch
+    def detach_is_a_concept_bead(self, concept_bead_guid: str, general_concept_bead_guid: str,
+                                 body: Optional[dict | DeleteRelationshipRequestBody] = None) -> None:
+        """Detach a concept bead from a more general concept bead."""
+        loop = asyncio.get_event_loop()
+        loop.run_until_complete(self._async_detach_is_a_concept_bead(concept_bead_guid, general_concept_bead_guid, body))
+
+    @dynamic_catch
+    async def _async_link_concept_bead_attribute_link(self, concept_bead_guid: str, concept_bead_attribute_guid: str,
+                                                       body: Optional[dict | NewRelationshipRequestBody] = None) -> None:
+        """Attach an attribute to the concept bead it belongs to (ConceptBeadAttributeLink relationship). Async version."""
+        url = f"{self.solution_architect_command_root}/concept-beads/{concept_bead_guid}/attribute-links/{concept_bead_attribute_guid}/attach"
+        await self._async_new_relationship_request(url, ["ConceptBeadAttributeLinkProperties"], body)
+
+    @dynamic_catch
+    def link_concept_bead_attribute_link(self, concept_bead_guid: str, concept_bead_attribute_guid: str,
+                                         body: Optional[dict | NewRelationshipRequestBody] = None) -> None:
+        """Attach an attribute to the concept bead it belongs to (ConceptBeadAttributeLink relationship)."""
+        loop = asyncio.get_event_loop()
+        loop.run_until_complete(self._async_link_concept_bead_attribute_link(concept_bead_guid, concept_bead_attribute_guid, body))
+
+    @dynamic_catch
+    async def _async_detach_concept_bead_attribute_link(self, concept_bead_guid: str, concept_bead_attribute_guid: str,
+                                                         body: Optional[dict | DeleteRelationshipRequestBody] = None) -> None:
+        """Detach an attribute from the concept bead it belongs to. Async version."""
+        url = f"{self.solution_architect_command_root}/concept-beads/{concept_bead_guid}/attribute-links/{concept_bead_attribute_guid}/detach"
+        await self._async_delete_relationship_request(url, body)
+
+    @dynamic_catch
+    def detach_concept_bead_attribute_link(self, concept_bead_guid: str, concept_bead_attribute_guid: str,
+                                           body: Optional[dict | DeleteRelationshipRequestBody] = None) -> None:
+        """Detach an attribute from the concept bead it belongs to."""
+        loop = asyncio.get_event_loop()
+        loop.run_until_complete(self._async_detach_concept_bead_attribute_link(concept_bead_guid, concept_bead_attribute_guid, body))
+
+    @dynamic_catch
+    async def _async_link_concept_bead_extension(self, concept_bead_guid: str, extension_concept_bead_guid: str,
+                                                 body: Optional[dict | NewRelationshipRequestBody] = None) -> None:
+        """Attach a concept bead to another concept bead that extends it (ConceptBeadExtension relationship). Async version."""
+        url = f"{self.solution_architect_command_root}/concept-beads/{concept_bead_guid}/extensions/{extension_concept_bead_guid}/attach"
+        await self._async_new_relationship_request(url, ["ConceptBeadExtensionProperties"], body)
+
+    @dynamic_catch
+    def link_concept_bead_extension(self, concept_bead_guid: str, extension_concept_bead_guid: str,
+                                    body: Optional[dict | NewRelationshipRequestBody] = None) -> None:
+        """Attach a concept bead to another concept bead that extends it (ConceptBeadExtension relationship)."""
+        loop = asyncio.get_event_loop()
+        loop.run_until_complete(self._async_link_concept_bead_extension(concept_bead_guid, extension_concept_bead_guid, body))
+
+    @dynamic_catch
+    async def _async_detach_concept_bead_extension(self, concept_bead_guid: str, extension_concept_bead_guid: str,
+                                                    body: Optional[dict | DeleteRelationshipRequestBody] = None) -> None:
+        """Detach a concept bead extension. Async version."""
+        url = f"{self.solution_architect_command_root}/concept-beads/{concept_bead_guid}/extensions/{extension_concept_bead_guid}/detach"
+        await self._async_delete_relationship_request(url, body)
+
+    @dynamic_catch
+    def detach_concept_bead_extension(self, concept_bead_guid: str, extension_concept_bead_guid: str,
+                                      body: Optional[dict | DeleteRelationshipRequestBody] = None) -> None:
+        """Detach a concept bead extension."""
+        loop = asyncio.get_event_loop()
+        loop.run_until_complete(self._async_detach_concept_bead_extension(concept_bead_guid, extension_concept_bead_guid, body))
+
+    @dynamic_catch
+    async def _async_link_solution_component_port(self, solution_component_guid: str, solution_port_guid: str,
+                                                   body: Optional[dict | NewRelationshipRequestBody] = None) -> None:
+        """Attach a solution port to the solution component it belongs to (SolutionComponentPort relationship). Async version."""
+        url = f"{self.solution_architect_command_root}/solution-components/{solution_component_guid}/solution-ports/{solution_port_guid}/attach"
+        await self._async_new_relationship_request(url, ["SolutionComponentPortProperties"], body)
+
+    @dynamic_catch
+    def link_solution_component_port(self, solution_component_guid: str, solution_port_guid: str,
+                                     body: Optional[dict | NewRelationshipRequestBody] = None) -> None:
+        """Attach a solution port to the solution component it belongs to (SolutionComponentPort relationship)."""
+        loop = asyncio.get_event_loop()
+        loop.run_until_complete(self._async_link_solution_component_port(solution_component_guid, solution_port_guid, body))
+
+    @dynamic_catch
+    async def _async_detach_solution_component_port(self, solution_component_guid: str, solution_port_guid: str,
+                                                     body: Optional[dict | DeleteRelationshipRequestBody] = None) -> None:
+        """Detach a solution port from a solution component. Async version."""
+        url = f"{self.solution_architect_command_root}/solution-components/{solution_component_guid}/solution-ports/{solution_port_guid}/detach"
+        await self._async_delete_relationship_request(url, body)
+
+    @dynamic_catch
+    def detach_solution_component_port(self, solution_component_guid: str, solution_port_guid: str,
+                                       body: Optional[dict | DeleteRelationshipRequestBody] = None) -> None:
+        """Detach a solution port from a solution component."""
+        loop = asyncio.get_event_loop()
+        loop.run_until_complete(self._async_detach_solution_component_port(solution_component_guid, solution_port_guid, body))
+
+    @dynamic_catch
+    async def _async_link_solution_port_delegation(self, aligns_to_port_guid: str, delegation_port_guid: str,
+                                                    body: Optional[dict | NewRelationshipRequestBody] = None) -> None:
+        """Attach a solution port to the port it delegates to (PortDelegation relationship). Async version."""
+        url = f"{self.solution_architect_command_root}/solution-ports/{aligns_to_port_guid}/port-delegations/{delegation_port_guid}/attach"
+        await self._async_new_relationship_request(url, ["SolutionPortDelegationProperties"], body)
+
+    @dynamic_catch
+    def link_solution_port_delegation(self, aligns_to_port_guid: str, delegation_port_guid: str,
+                                      body: Optional[dict | NewRelationshipRequestBody] = None) -> None:
+        """Attach a solution port to the port it delegates to (PortDelegation relationship)."""
+        loop = asyncio.get_event_loop()
+        loop.run_until_complete(self._async_link_solution_port_delegation(aligns_to_port_guid, delegation_port_guid, body))
+
+    @dynamic_catch
+    async def _async_detach_solution_port_delegation(self, aligns_to_port_guid: str, delegation_port_guid: str,
+                                                      body: Optional[dict | DeleteRelationshipRequestBody] = None) -> None:
+        """Detach a solution port delegation. Async version."""
+        url = f"{self.solution_architect_command_root}/solution-ports/{aligns_to_port_guid}/port-delegations/{delegation_port_guid}/detach"
+        await self._async_delete_relationship_request(url, body)
+
+    @dynamic_catch
+    def detach_solution_port_delegation(self, aligns_to_port_guid: str, delegation_port_guid: str,
+                                        body: Optional[dict | DeleteRelationshipRequestBody] = None) -> None:
+        """Detach a solution port delegation."""
+        loop = asyncio.get_event_loop()
+        loop.run_until_complete(self._async_detach_solution_port_delegation(aligns_to_port_guid, delegation_port_guid, body))
+
+
+
 if __name__ == "__main__":
     print("Main-Metadata Explorer")
