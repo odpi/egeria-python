@@ -775,6 +775,19 @@ def audit(service_filter: str | None, report_path: str, quiet: bool,
             if not match:
                 elsewhere = next((c for c in cands if c in flat), None)
                 by_path_hit = by_path.get((req.verb, req.path))
+                if not by_path_hit:
+                    # Fall back to a trailing-wildcard match: several .http
+                    # entries are worked examples of one generic SDK method
+                    # whose final path segment is a runtime value (e.g.
+                    # get-valid-metadata-values/{severityLevel} vs the SDK's
+                    # own get-valid-metadata-values/{property_name}) - a byte
+                    # match on the whole path is the wrong bar here, same
+                    # reasoning as paths_compatible() for the direct-match
+                    # branch above.
+                    for (v, p), hits in by_path.items():
+                        if v == req.verb and trailing_wildcard_match(p, req.path):
+                            by_path_hit = hits
+                            break
                 if elsewhere:
                     counts["elsewhere"] += 1
                     lines.append(f"- {name}: ELSEWHERE -> `{flat[elsewhere][0]}.py`{live_tag}")
