@@ -6550,9 +6550,19 @@ class SolutionArchitect(ServerClient):
 
     @dynamic_catch
     async def _async_create_concept_model_element(self, body: dict | NewElementRequestBody) -> str:
-        """Create a new concept model element (e.g. a ConceptBead). Async version."""
+        """Create a new concept model element (e.g. a ConceptBead). Async version.
+
+        Accepts either the abstract "ConceptModelElementProperties" class with
+        a "typeName" property selecting the concrete subtype (the shape the
+        .http ground truth documents), or one of the concrete subtype class
+        names directly (ConceptBeadProperties/ConceptBeadAttributeProperties/
+        ConceptBeadRelationshipProperties) - Egeria's Jackson polymorphism
+        accepts either per ConceptModelElementProperties.java's @JsonSubTypes.
+        """
         url = f"{self.solution_architect_command_root}/concept-model-elements"
-        return await self._async_create_element_body_request(url, ["ConceptModelElementProperties"], body)
+        return await self._async_create_element_body_request(
+            url, ["ConceptModelElementProperties", "ConceptBeadProperties",
+                  "ConceptBeadAttributeProperties", "ConceptBeadRelationshipProperties"], body)
 
     @dynamic_catch
     def create_concept_model_element(self, body: dict | NewElementRequestBody) -> str:
@@ -6577,7 +6587,9 @@ class SolutionArchitect(ServerClient):
         """Update the properties of a concept model element. Async version."""
         validate_guid(guid)
         url = f"{self.solution_architect_command_root}/concept-model-elements/{guid}/update"
-        await self._async_update_element_body_request(url, ["ConceptModelElementProperties"], body)
+        await self._async_update_element_body_request(
+            url, ["ConceptModelElementProperties", "ConceptBeadProperties",
+                  "ConceptBeadAttributeProperties", "ConceptBeadRelationshipProperties"], body)
 
     @dynamic_catch
     def update_concept_model_element(self, guid: str, body: dict | UpdateElementRequestBody) -> None:

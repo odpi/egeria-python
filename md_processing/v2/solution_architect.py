@@ -526,6 +526,8 @@ class SolutionArchitectProcessor(AsyncBaseCommandProcessor):
                 return await self.client._async_get_solution_role_by_guid(guid)
             elif om_type == "DesignPattern":
                 return await self.client._async_get_design_pattern_by_guid(guid)
+            elif om_type in ("ConceptBead", "ConceptBeadAttribute", "ConceptBeadRelationship"):
+                return await self.client._async_get_concept_model_element_by_guid(guid)
             return None
         except PyegeriaException:
             return None
@@ -559,6 +561,8 @@ class SolutionArchitectProcessor(AsyncBaseCommandProcessor):
                 await self.client._async_update_solution_role(guid, body)
             elif om_type == "DesignPattern":
                 await self.client._async_update_design_pattern(guid, body)
+            elif om_type in ("ConceptBead", "ConceptBeadAttribute", "ConceptBeadRelationship"):
+                await self.client._async_update_concept_model_element(guid, body)
 
             self.parsed_output["guid"] = guid
             
@@ -585,6 +589,8 @@ class SolutionArchitectProcessor(AsyncBaseCommandProcessor):
                 raw_guid = await self.client._async_create_solution_role(body)
             elif om_type == "DesignPattern":
                 raw_guid = await self.client._async_create_design_pattern(body)
+            elif om_type in ("ConceptBead", "ConceptBeadAttribute", "ConceptBeadRelationship"):
+                raw_guid = await self.client._async_create_concept_model_element(body)
 
             guid = self.extract_guid_or_raise(raw_guid, f"Create {om_type}")
             if guid:
@@ -808,6 +814,22 @@ class SolutionLinkProcessor(AsyncBaseCommandProcessor):
                  await self.client._async_link_specialized_design_patterns(id1, id2, body)
             elif om_type == "RelatedDesignPattern":
                  await self.client._async_link_related_design_patterns(id1, id2, body)
+            elif om_type == "ConceptDesign":
+                 await self.client._async_link_concept_design(id1, id2, body)
+            elif om_type == "ConceptBeadRelationshipEnd":
+                 await self.client._async_link_concept_bead_relationship_end(id1, id2, body)
+            elif om_type == "TypedByConceptBead":
+                 await self.client._async_link_typed_by_concept_bead(id1, id2, body)
+            elif om_type == "IsAConceptBead":
+                 await self.client._async_link_is_a_concept_bead(id1, id2, body)
+            elif om_type == "ConceptBeadAttributeLink":
+                 await self.client._async_link_concept_bead_attribute_link(id1, id2, body)
+            elif om_type == "ConceptBeadExtension":
+                 await self.client._async_link_concept_bead_extension(id1, id2, body)
+            elif om_type == "SolutionComponentPort":
+                 await self.client._async_link_solution_component_port(id1, id2, body)
+            elif om_type == "SolutionPortDelegation":
+                 await self.client._async_link_solution_port_delegation(id1, id2, body)
             else:
                  logger.warning(f"OM_TYPE {om_type} not yet supported in SolutionLinkProcessor")
                  return self.command.raw_block
@@ -841,6 +863,22 @@ class SolutionLinkProcessor(AsyncBaseCommandProcessor):
                 await self.client._async_detach_specialized_design_patterns(id1, id2, body)
             elif om_type == "RelatedDesignPattern":
                 await self.client._async_detach_related_design_patterns(id1, id2, body)
+            elif om_type == "ConceptDesign":
+                await self.client._async_detach_concept_design(id1, id2, body)
+            elif om_type == "ConceptBeadRelationshipEnd":
+                await self.client._async_detach_concept_bead_relationship_end(id1, id2, body)
+            elif om_type == "TypedByConceptBead":
+                await self.client._async_detach_typed_by_concept_bead(id1, id2, body)
+            elif om_type == "IsAConceptBead":
+                await self.client._async_detach_is_a_concept_bead(id1, id2, body)
+            elif om_type == "ConceptBeadAttributeLink":
+                await self.client._async_detach_concept_bead_attribute_link(id1, id2, body)
+            elif om_type == "ConceptBeadExtension":
+                await self.client._async_detach_concept_bead_extension(id1, id2, body)
+            elif om_type == "SolutionComponentPort":
+                await self.client._async_detach_solution_component_port(id1, id2, body)
+            elif om_type == "SolutionPortDelegation":
+                await self.client._async_detach_solution_port_delegation(id1, id2, body)
             else:
                 logger.warning(f"OM_TYPE {om_type} not yet supported in SolutionLinkProcessor for detach")
                 return self.command.raw_block
