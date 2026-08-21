@@ -2823,6 +2823,25 @@
       "max_cardinality": 1,
       "level": "Advanced",
       "Journal Entry": ""
+    },
+    "Search Keyword GUID": {
+      "variable_name": "search_keyword_guid",
+      "inUpdate": true,
+      "attr_labels": "",
+      "examples": "",
+      "default_value": "",
+      "valid_values": [],
+      "existing_element": "SearchKeyword",
+      "description": "The unique identifier of the SearchKeyword entity itself (0012), as opposed to the element it is attached to. Required for Update/Detach; not used for Attach (which creates a new keyword).",
+      "generated": false,
+      "style": "Reference Name",
+      "user_specified": true,
+      "unique": false,
+      "input_required": false,
+      "min_cardinality": 0,
+      "max_cardinality": 1,
+      "level": "Domain",
+      "Journal Entry": ""
     }
   },
   "bundles": {
@@ -3268,6 +3287,20 @@
       "own_attributes": [
         "Target Element",
         "Additional Properties"
+      ]
+    },
+    "Search Keyword GUID Base": {
+      "inherits": "Link Command Base",
+      "own_attributes": [
+        "Search Keyword GUID",
+        "Keyword",
+        "Keyword Description"
+      ]
+    },
+    "Detach Search Keyword Base": {
+      "inherits": "Link Command Base",
+      "own_attributes": [
+        "Search Keyword GUID"
       ]
     }
   },
@@ -4170,7 +4203,7 @@
       "qn_prefix": "SearchKeywordLink",
       "alternate_names": [],
       "family": "Curation",
-      "description": "Update a search keyword already attached to an element (0012 SearchKeyword).",
+      "description": "Update a search keyword already attached to an element (0012 SearchKeyword), identified by the keyword entitys own GUID.",
       "verb": "Update",
       "upsert": false,
       "attach": false,
@@ -4180,7 +4213,7 @@
       "extra_find": "",
       "extra_constraints": "",
       "OM_TYPE": "SearchKeywordLink",
-      "bundle": "Search Keyword Link Base",
+      "bundle": "Search Keyword GUID Base",
       "custom_attributes": [],
       "Journal Entry": ""
     },
@@ -4189,7 +4222,7 @@
       "qn_prefix": "SearchKeywordLink",
       "alternate_names": [],
       "family": "Curation",
-      "description": "Remove a search keyword from an element (0012 SearchKeyword).",
+      "description": "Remove a search keyword (0012 SearchKeyword), identified by the keyword entitys own GUID. Deletes the keyword entity itself, not just its link to an element.",
       "verb": "Detach",
       "upsert": false,
       "attach": false,
@@ -4199,7 +4232,7 @@
       "extra_find": "",
       "extra_constraints": "",
       "OM_TYPE": "SearchKeywordLink",
-      "bundle": "Search Keyword Link Base",
+      "bundle": "Detach Search Keyword Base",
       "custom_attributes": [],
       "Journal Entry": ""
     },

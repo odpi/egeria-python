@@ -88,7 +88,8 @@ COLLECTION_SUBTYPES = [
     "Agreement", "Digital Subscription", "Data Sharing Agreement", "Data Dictionary", "Data Spec",
     "Glossary", "Security Group", "Security List", "Security Role",
     "Skill Set", "Reference List", "Report Type", "Question Spec", "Working Set",
-    "Event Set", "Context Event Collection", "IT Subsystem", "Naming Standard Rule Set", "Software Archive"
+    "Event Set", "Context Event Collection", "IT Subsystem", "Naming Standard Rule Set", "Software Archive",
+    "Concept Model",
 ]
 
 SIMPLE_BASE_COLLECTIONS: set = set(COLLECTION_SUBTYPES) | {

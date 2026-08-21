@@ -3900,6 +3900,25 @@
         "Delegation Port"
       ],
       "Journal Entry": ""
+    },
+    "Create Concept Model": {
+      "display_name": "Concept Model",
+      "qn_prefix": "ConceptModel",
+      "alternate_names": [],
+      "family": "Solution Architect",
+      "description": "Create a Concept Model - a collection of concept model elements (concept beads, attributes, relationships) that describes the concepts for a design or implementation (0571). Required before Link Concept Design can attach an element to it. Created via the generic collection-manager creation path (Collection Manager auto-routing, COLLECTION_SUBTYPES) since no dedicated solution-architect REST endpoint exists for this container type yet.",
+      "verb": "Create",
+      "upsert": true,
+      "attach": false,
+      "level": "Basic",
+      "find_method": "CollectionManager.find_collections",
+      "find_constraints": "{\"metadata_element_type\": \"ConceptModel\"}",
+      "extra_find": "",
+      "extra_constraints": "",
+      "OM_TYPE": "ConceptModel",
+      "bundle": "Collection Base",
+      "custom_attributes": [],
+      "Journal Entry": ""
     }
   }
 }

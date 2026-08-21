@@ -18,8 +18,10 @@ CollectionKind (0021).
 
 CurationLinkProcessor -- Link/Unlink/Attach/Detach relationship commands
 for: Semantic Assignment, Semantic Definition, Scoped By, Peer Duplicate,
-Consolidated Duplicate Link, Resource List, and the create-side of Search
-Keyword.
+Consolidated Duplicate Link, Resource List, and Search Keyword (Attach
+creates a new keyword and links it in one call; Update/Detach act on the
+SearchKeyword entity's own GUID via a "Search Keyword GUID" attribute,
+added 2026-08-21 -- previously a known gap, see below).
 
 ClassWord/Modifier/PrimeWord (0438 naming standards classifications) were
 added 2026-08-09 once Egeria PR #9166 shipped the backing REST endpoints
@@ -38,12 +40,16 @@ previous note here) -- this is what unblocks it; the other 9 governance
 points are new commands added alongside it. No classification in this
 family remains genuinely unimplemented as of this pass.
 
-PARTIALLY implemented: Update/Detach Search Keyword need the previously
--created SearchKeyword entity's own GUID, which the current compact-JSON
-attribute set for this command has no way to reference (only "Target
-Element", "Keyword", "Keyword Description" are captured -- there's no
-"Search Keyword GUID" attribute). Only "Attach Search Keyword" (create +
-attach in one call) is wired here; Update/Detach are a known follow-up.
+Update/Detach Search Keyword were "PARTIALLY implemented" as of the note
+previously here: they need the previously-created SearchKeyword entity's
+own GUID, which the compact-JSON attribute set for this command had no way
+to reference. Fixed 2026-08-21 by adding a "Search Keyword GUID" attribute
+to the shared "Search Keyword Link Base" bundle (present but optional/
+unused on Attach, since that command creates a new keyword rather than
+referencing an existing one) and wiring
+_async_update_search_keyword/_async_remove_search_keyword_from_element
+(both take only the keyword's own GUID, not the Target Element it's
+attached to -- confirmed in classification_explorer.py).
 """
 from dataclasses import dataclass, field as dc_field
 from typing import Any, Dict, Optional
@@ -415,13 +421,36 @@ class CurationLinkProcessor(AsyncBaseCommandProcessor):
                 logger.success(f"Attached search keyword to {target_guid}")
                 return f"\n\n## {verb} {object_type}\n\nAttached search keyword '{_v(attributes, 'Keyword')}' to {target_guid}."
             else:
-                # Update/Detach need the SearchKeyword entity's own GUID, which this command's
-                # attribute set has no way to reference. Known gap -- see module docstring.
-                raise PyegeriaException(
-                    f"'{verb} Search Keyword' is not yet implemented: the compact-JSON spec for this "
-                    f"command has no 'Search Keyword GUID' attribute to identify which keyword entity "
-                    f"to {verb.lower()}. Only 'Attach Search Keyword' (create+attach) is wired."
-                )
+                # Update/Detach act on the SearchKeyword entity's own GUID, not the Target
+                # Element - _async_update_search_keyword/_async_remove_search_keyword_from_element
+                # both take only the keyword's own GUID (confirmed in classification_explorer.py;
+                # "from_element" in the remove method's name is misleading - it deletes the keyword
+                # entity itself, not just its link). Previously blocked on the compact spec having
+                # no way to reference that GUID - "Search Keyword GUID" fixes that (2026-08-21).
+                keyword_guid = _guid(attributes, "Search Keyword GUID")
+                if not keyword_guid:
+                    raise PyegeriaException(
+                        f"Cannot {verb.lower()} Search Keyword: 'Search Keyword GUID' did not resolve "
+                        f"to a GUID. This must be the SearchKeyword entity's own identifier (not the "
+                        f"Target Element it's attached to)."
+                    )
+                if verb == "Update":
+                    props = {"class": "SearchKeywordProperties"}
+                    keyword = _v(attributes, "Keyword")
+                    description = _v(attributes, "Keyword Description")
+                    if keyword is not None:
+                        props["displayName"] = keyword
+                    if description is not None:
+                        props["description"] = description
+                    body = {"class": "UpdateElementRequestBody", "mergeUpdate": True, "properties": props,
+                            **_audit_fields(attributes)}
+                    await client._async_update_search_keyword(keyword_guid, body)
+                    logger.success(f"Updated search keyword {keyword_guid}")
+                    return f"\n\n## {verb} {object_type}\n\nUpdated search keyword {keyword_guid}."
+                else:
+                    await client._async_remove_search_keyword_from_element(keyword_guid)
+                    logger.success(f"Removed search keyword {keyword_guid}")
+                    return f"\n\n## {verb} {object_type}\n\nRemoved search keyword {keyword_guid}."
 
         else:
             raise PyegeriaException(f"Unsupported Curation link OM_TYPE: '{om_type}' ({object_type})")
