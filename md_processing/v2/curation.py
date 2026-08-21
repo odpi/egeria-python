@@ -8,32 +8,48 @@ CurationClassifyProcessor -- Classify/Reclassify/Update/Declassify commands
 for: Impact, Confidence, Confidentiality, Criticality, Retention, Ownership,
 Digital Resource Origin, Zone Membership, Data Scope, Governance
 Expectations, Governance Measurements, Security Tags, Known Duplicate,
-Consolidated Duplicate, Class Word, Modifier, Prime Word.
+Consolidated Duplicate, Class Word, Modifier, Prime Word, the 10 governance-
+point classifications (0435: Control/Verification/Enforcement/Execution/
+Policy Administration/Policy Decision/Policy Enforcement/Policy Information/
+Policy Management/Policy Retrieval Point), 6 metamodel/classification-
+explorer markers (0463: Incomplete, ObjectIdentifier, ReferenceData,
+MobileResource, InstanceMetadata, MetamodelInstance), and ProjectKind (0130)/
+CollectionKind (0021).
 
 CurationLinkProcessor -- Link/Unlink/Attach/Detach relationship commands
 for: Semantic Assignment, Semantic Definition, Scoped By, Peer Duplicate,
-Consolidated Duplicate Link, Resource List, and the create-side of Search
-Keyword.
+Consolidated Duplicate Link, Resource List, and Search Keyword (Attach
+creates a new keyword and links it in one call; Update/Detach act on the
+SearchKeyword entity's own GUID via a "Search Keyword GUID" attribute,
+added 2026-08-21 -- previously a known gap, see below).
 
 ClassWord/Modifier/PrimeWord (0438 naming standards classifications) were
 added 2026-08-09 once Egeria PR #9166 shipped the backing REST endpoints
 (glossary-manager's is-class-word/is-modifier/is-prime-word) -- see the new
 set/clear method pairs in pyegeria/omvs/glossary_manager.py. They route
-through GlossaryManager, not ClassificationExplorer (the module docstring
-here previously said "no backing pyegeria method exists" for these three --
-no longer true for these; still true for Policy Management Point, which
-has no matching Egeria PR yet and stays parse-only.
+through GlossaryManager, not ClassificationExplorer.
 
-NOT implemented (no backing pyegeria method exists): Classify/Declassify
-Policy Management Point. This command parses but is not registered with
-the dispatcher, so it stays parse-only, same as Create Note.
+The 10 governance-point classifications, the 6 classification-explorer
+markers, and ProjectKind/CollectionKind were added 2026-08-21 once an
+omvs_audit.py gap-closure pass shipped their backing REST endpoints
+(governance_officer.py, classification_explorer.py, project_manager.py,
+collection_manager.py respectively) -- confirmed against a live 6.2-SNAPSHOT
+server's /v3/api-docs. Policy Management Point's command already existed in
+the compact spec (parse-only, no backing method, per the module docstring's
+previous note here) -- this is what unblocks it; the other 9 governance
+points are new commands added alongside it. No classification in this
+family remains genuinely unimplemented as of this pass.
 
-PARTIALLY implemented: Update/Detach Search Keyword need the previously
--created SearchKeyword entity's own GUID, which the current compact-JSON
-attribute set for this command has no way to reference (only "Target
-Element", "Keyword", "Keyword Description" are captured -- there's no
-"Search Keyword GUID" attribute). Only "Attach Search Keyword" (create +
-attach in one call) is wired here; Update/Detach are a known follow-up.
+Update/Detach Search Keyword were "PARTIALLY implemented" as of the note
+previously here: they need the previously-created SearchKeyword entity's
+own GUID, which the compact-JSON attribute set for this command had no way
+to reference. Fixed 2026-08-21 by adding a "Search Keyword GUID" attribute
+to the shared "Search Keyword Link Base" bundle (present but optional/
+unused on Attach, since that command creates a new keyword rather than
+referencing an existing one) and wiring
+_async_update_search_keyword/_async_remove_search_keyword_from_element
+(both take only the keyword's own GUID, not the Target Element it's
+attached to -- confirmed in classification_explorer.py).
 """
 from dataclasses import dataclass, field as dc_field
 from typing import Any, Dict, Optional
@@ -148,6 +164,66 @@ CLASSIFICATION_METHODS: Dict[str, ClassificationSpec] = {
         "_async_set_is_modifier", "_async_clear_is_modifier", "ModifierProperties"),
     "PrimeWord": ClassificationSpec(
         "_async_set_is_prime_word", "_async_clear_is_prime_word", "PrimeWordProperties"),
+    # 0435 governance-point classifications -- routed through GovernanceOfficer
+    # (not ClassificationExplorer, see CURATION_CLASSIFICATION_CLIENTS below).
+    # Added 2026-08-21 once GovernanceOfficer._async_set_*_point/_async_clear_*_point
+    # shipped (verified against a live 6.2-SNAPSHOT server). PolicyManagementPoint's
+    # command already existed in the compact spec (parse-only, no backing method) --
+    # this is what unblocks it; the other 9 are new commands added alongside it.
+    "ControlPoint": ClassificationSpec(
+        "_async_set_control_point", "_async_clear_control_point", "ControlPointProperties"),
+    "VerificationPoint": ClassificationSpec(
+        "_async_set_verification_point", "_async_clear_verification_point", "VerificationPointProperties"),
+    "EnforcementPoint": ClassificationSpec(
+        "_async_set_enforcement_point", "_async_clear_enforcement_point", "EnforcementPointProperties"),
+    "ExecutionPoint": ClassificationSpec(
+        "_async_set_execution_point", "_async_clear_execution_point", "ExecutionPointProperties"),
+    "PolicyAdministrationPoint": ClassificationSpec(
+        "_async_set_policy_administration_point", "_async_clear_policy_administration_point", "PolicyAdministrationPointProperties"),
+    "PolicyDecisionPoint": ClassificationSpec(
+        "_async_set_policy_decision_point", "_async_clear_policy_decision_point", "PolicyDecisionPointProperties"),
+    "PolicyEnforcementPoint": ClassificationSpec(
+        "_async_set_policy_enforcement_point", "_async_clear_policy_enforcement_point", "PolicyEnforcementPointProperties"),
+    "PolicyInformationPoint": ClassificationSpec(
+        "_async_set_policy_information_point", "_async_clear_policy_information_point", "PolicyInformationPointProperties"),
+    "PolicyManagementPoint": ClassificationSpec(
+        "_async_set_policy_management_point", "_async_clear_policy_management_point", "PolicyManagementPointProperties"),
+    "PolicyRetrievalPoint": ClassificationSpec(
+        "_async_set_policy_retrieval_point", "_async_clear_policy_retrieval_point", "PolicyRetrievalPointProperties"),
+    # 0463 metamodel/classification-explorer marker classifications, added 2026-08-21
+    # once ClassificationExplorer._async_set_element_as_*/_async_clear_element_as_*
+    # shipped (verified against a live 6.2-SNAPSHOT server). Routed through the
+    # default classification_manager client -- no CURATION_CLASSIFICATION_CLIENTS
+    # entry needed.
+    "Incomplete": ClassificationSpec(
+        "_async_set_element_as_incomplete", "_async_clear_element_as_incomplete", "IncompleteProperties"),
+    "ObjectIdentifier": ClassificationSpec(
+        "_async_set_element_as_object_identifier", "_async_clear_element_as_object_identifier", "ObjectIdentifierProperties"),
+    "ReferenceData": ClassificationSpec(
+        "_async_set_element_as_reference_data", "_async_clear_element_as_reference_data", "ReferenceDataProperties"),
+    "MobileResource": ClassificationSpec(
+        "_async_set_element_as_mobile_resource", "_async_clear_element_as_mobile_resource", "MobileResourceProperties"),
+    "InstanceMetadata": ClassificationSpec(
+        "_async_set_element_as_instance_metadata", "_async_clear_element_as_instance_metadata", "InstanceMetadataProperties",
+        fields={"Instance Metadata Type Name": "instanceMetadataTypeName", "Description": "description"}),
+    "MetamodelInstance": ClassificationSpec(
+        "_async_set_element_as_metamodel_instance", "_async_clear_element_as_metamodel_instance", "MetamodelInstanceProperties",
+        fields={"Metamodel Element": "metamodelElementGUID"}),
+    # ProjectKind (0130) and CollectionKind (0021) -- pure marker classifications,
+    # routed through ProjectManager/CollectionManager respectively (see
+    # CURATION_CLASSIFICATION_CLIENTS below).
+    "ProjectKind": ClassificationSpec(
+        "_async_set_project_kind", "_async_clear_project_kind", "ProjectKindProperties"),
+    "CollectionKind": ClassificationSpec(
+        "_async_set_collection_kind", "_async_clear_collection_kind", "CollectionKindProperties"),
+    # DataSharingAgreement retrofit -- "Create Data Sharing Agreement" (Digital
+    # Products family, CollectionManagerProcessor) already sets this classification
+    # at creation time via initialClassifications; this pair is for classifying/
+    # declassifying an Agreement that already exists, routed through DigitalBusiness
+    # (see CURATION_CLASSIFICATION_CLIENTS below).
+    "DataSharingAgreement": ClassificationSpec(
+        "_async_set_agreement_as_data_sharing_agreement", "_async_clear_agreement_as_data_sharing_agreement",
+        "DataSharingAgreementProperties"),
 }
 
 # OM_TYPEs in CLASSIFICATION_METHODS whose set/clear methods live on a client other than
@@ -156,6 +232,19 @@ CURATION_CLASSIFICATION_CLIENTS = {
     "ClassWord": "glossary_manager",
     "Modifier": "glossary_manager",
     "PrimeWord": "glossary_manager",
+    "ControlPoint": "governance_officer",
+    "VerificationPoint": "governance_officer",
+    "EnforcementPoint": "governance_officer",
+    "ExecutionPoint": "governance_officer",
+    "PolicyAdministrationPoint": "governance_officer",
+    "PolicyDecisionPoint": "governance_officer",
+    "PolicyEnforcementPoint": "governance_officer",
+    "PolicyInformationPoint": "governance_officer",
+    "PolicyManagementPoint": "governance_officer",
+    "PolicyRetrievalPoint": "governance_officer",
+    "ProjectKind": "project_manager",
+    "CollectionKind": "collection_manager",
+    "DataSharingAgreement": "digital_business",
 }
 
 
@@ -178,6 +267,22 @@ def _build_classification_properties(spec: ClassificationSpec, attributes: dict)
 
 class CurationClassifyProcessor(AsyncBaseCommandProcessor):
     """Standalone Classify/Reclassify/Update/Declassify commands (Curation family)."""
+
+    def supports_target_element_lookup(self) -> bool:
+        # Same fix as CurationLinkProcessor, same root cause (ISSUE-68 pattern):
+        # fetch_as_is() always returns None here, so without this override the
+        # base class's Create<->Update upsert-transition logic silently rewrote
+        # every "Update X" command (Data Scope, Governance Expectations,
+        # Governance Measurements -- the three CLASSIFICATION_METHODS entries
+        # with an update_method) to "Create X" before apply_changes() ever saw
+        # verb="Update". That made `use_update = verb == "Update" and
+        # class_spec.update_method` always False, so these commands silently
+        # called the set_method (re-apply as new) instead of update_method --
+        # not necessarily an error, likely idempotent-looking success, but not
+        # what "Update" was supposed to do. Found and fixed 2026-08-21 while
+        # investigating the identical bug in CurationLinkProcessor's new
+        # "Update Search Keyword" command; pre-existing and unrelated to that.
+        return False
 
     async def fetch_as_is(self) -> Optional[Dict[str, Any]]:
         return None
@@ -225,6 +330,18 @@ class CurationClassifyProcessor(AsyncBaseCommandProcessor):
 
 class CurationLinkProcessor(AsyncBaseCommandProcessor):
     """Link/Unlink/Attach/Detach relationship commands (Curation family)."""
+
+    def supports_target_element_lookup(self) -> bool:
+        # Relationship-only processor -- see GovernanceLinkProcessor's identical
+        # override (md_processing/v2/governance.py) for why this matters: without
+        # it, AsyncBaseCommandProcessor.execute()'s Create<->Update upsert-transition
+        # logic silently rewrites the verb (ISSUE-68 follow-up). Latent here until
+        # 2026-08-21's "Update Search Keyword" -- every other command this processor
+        # handles uses Link/Unlink/Attach/Detach, never Update, so the bug (fetch_as_is()
+        # always returning None -> "not found" -> Update rewritten to Create -> wrong
+        # branch executed, e.g. Update Search Keyword silently deleting the keyword
+        # instead of updating it) had nothing to trigger it before.
+        return False
 
     async def fetch_as_is(self) -> Optional[Dict[str, Any]]:
         return None
@@ -332,13 +449,36 @@ class CurationLinkProcessor(AsyncBaseCommandProcessor):
                 logger.success(f"Attached search keyword to {target_guid}")
                 return f"\n\n## {verb} {object_type}\n\nAttached search keyword '{_v(attributes, 'Keyword')}' to {target_guid}."
             else:
-                # Update/Detach need the SearchKeyword entity's own GUID, which this command's
-                # attribute set has no way to reference. Known gap -- see module docstring.
-                raise PyegeriaException(
-                    f"'{verb} Search Keyword' is not yet implemented: the compact-JSON spec for this "
-                    f"command has no 'Search Keyword GUID' attribute to identify which keyword entity "
-                    f"to {verb.lower()}. Only 'Attach Search Keyword' (create+attach) is wired."
-                )
+                # Update/Detach act on the SearchKeyword entity's own GUID, not the Target
+                # Element - _async_update_search_keyword/_async_remove_search_keyword_from_element
+                # both take only the keyword's own GUID (confirmed in classification_explorer.py;
+                # "from_element" in the remove method's name is misleading - it deletes the keyword
+                # entity itself, not just its link). Previously blocked on the compact spec having
+                # no way to reference that GUID - "Search Keyword GUID" fixes that (2026-08-21).
+                keyword_guid = _guid(attributes, "Search Keyword GUID")
+                if not keyword_guid:
+                    raise PyegeriaException(
+                        f"Cannot {verb.lower()} Search Keyword: 'Search Keyword GUID' did not resolve "
+                        f"to a GUID. This must be the SearchKeyword entity's own identifier (not the "
+                        f"Target Element it's attached to)."
+                    )
+                if verb == "Update":
+                    props = {"class": "SearchKeywordProperties"}
+                    keyword = _v(attributes, "Keyword")
+                    description = _v(attributes, "Keyword Description")
+                    if keyword is not None:
+                        props["displayName"] = keyword
+                    if description is not None:
+                        props["description"] = description
+                    body = {"class": "UpdateElementRequestBody", "mergeUpdate": True, "properties": props,
+                            **_audit_fields(attributes)}
+                    await client._async_update_search_keyword(keyword_guid, body)
+                    logger.success(f"Updated search keyword {keyword_guid}")
+                    return f"\n\n## {verb} {object_type}\n\nUpdated search keyword {keyword_guid}."
+                else:
+                    await client._async_remove_search_keyword_from_element(keyword_guid)
+                    logger.success(f"Removed search keyword {keyword_guid}")
+                    return f"\n\n## {verb} {object_type}\n\nRemoved search keyword {keyword_guid}."
 
         else:
             raise PyegeriaException(f"Unsupported Curation link OM_TYPE: '{om_type}' ({object_type})")

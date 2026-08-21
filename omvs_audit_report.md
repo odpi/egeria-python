@@ -5,12 +5,14 @@ Subject: `pyegeria/omvs` (44 modules)
 
 | Result | Count |
 |---|---|
-| OK | 726 |
-| Mismatch (verb/path/body) | 7 |
-| Missing | 13 |
-| Renamed (implemented, verb+path matches under a different name) | 196 |
+| OK | 940 |
+| Mismatch (verb/path/body) | 3 |
+| Missing | 5 |
+| Renamed (implemented, verb+path matches under a different name) | 202 |
 | Found in another module | 18 |
 | URL lint | 0 |
+| Live-verified against https://localhost:9443 | 1162 |
+| Live-stale (not found on running server) | 6 |
 
 ## Duplicate endpoints (same verb + path)
 
@@ -152,18 +154,10 @@ _Review only - cross-service overlap is often intentional._
 ### Service: actor-manager
 
 - find All ContributionRecords: RENAMED -> `actor-manager.py`:`_async_find_contribution_records`
-- updateActorRole: MISMATCH `update_actor_role`
-    - PATH
-      SDK: /actor-manager/actor-roles/{}/update
-      API: /actor-manager/actor-roles/update
 - Detach a team role from a team profile.: RENAMED -> `actor-manager.py`:`_async_detach_team_role_from_profile`
 - linkITProfileRoleToProfile: RENAMED -> `actor-manager.py`:`_async_link_it_profile_role_to_it_profile`
 - detachITProfileRoleFromProfile: RENAMED -> `actor-manager.py`:`_async_detach_it_profile_role_from_it_profile`
-- deleteActorRole: MISMATCH `delete_actor_role`
-    - PATH
-      SDK: /actor-manager/actor-roles/{}/delete
-      API: /actor-manager/actor-roles/delete
-- getActorRoleByGUID: MISMATCH `get_actor_role_by_guid`
+- getActorRoleByGUID: MISMATCH `get_actor_role_by_guid`  **[LIVE: not found on running server]**
     - PATH
       SDK: /actor-manager/actor-roles/{}/retrieve
       API: /actor-manager/actor-roles/{}/retrieve"}
@@ -193,11 +187,11 @@ _Review only - cross-service overlap is often intentional._
 
 ### Service: classification-explorer
 
-- getValidMetadataValues - severityLevel values: MISSING  (`GET /valid-metadata/get-valid-metadata-values/severityLevel`)
-- getValidMetadataValues - confidenceLevel values: MISSING  (`GET /valid-metadata/get-valid-metadata-values/confidenceLevel`)
-- getValidMetadataValues - criticalityLevel values: MISSING  (`GET /valid-metadata/get-valid-metadata-values/criticalityLevel`)
-- getValidMetadataValues - confidentialityLevel values: MISSING  (`GET /valid-metadata/get-valid-metadata-values/confidentialityLevel`)
-- getValidMetadataValues - retentionBasis values: MISSING  (`GET /valid-metadata/get-valid-metadata-values/retentionBasis`)
+- getValidMetadataValues - severityLevel values: RENAMED -> `valid-metadata.py`:`_async_get_valid_metadata_values`, `feedback-manager.py`:`_async_get_valid_metadata_values`
+- getValidMetadataValues - confidenceLevel values: RENAMED -> `valid-metadata.py`:`_async_get_valid_metadata_values`, `feedback-manager.py`:`_async_get_valid_metadata_values`
+- getValidMetadataValues - criticalityLevel values: RENAMED -> `valid-metadata.py`:`_async_get_valid_metadata_values`, `feedback-manager.py`:`_async_get_valid_metadata_values`
+- getValidMetadataValues - confidentialityLevel values: RENAMED -> `valid-metadata.py`:`_async_get_valid_metadata_values`, `feedback-manager.py`:`_async_get_valid_metadata_values`
+- getValidMetadataValues - retentionBasis values: RENAMED -> `valid-metadata.py`:`_async_get_valid_metadata_values`, `feedback-manager.py`:`_async_get_valid_metadata_values`
 - addSecurityTags: RENAMED -> `classification-explorer.py`:`_async_set_security_tags_classification`
 - clearSecurityTags: RENAMED -> `classification-explorer.py`:`_async_clear_security_tags_classification`
 - addAccountingCodes: RENAMED -> `classification-explorer.py`:`_async_set_accounting_codes_classification`
@@ -252,6 +246,7 @@ _Review only - cross-service overlap is often intentional._
 
 ### Service: connection-maker
 
+- detachEndpointFromITAsset: OK  **[LIVE: not found on running server]**
 
 ### Service: data-designer
 
@@ -300,7 +295,7 @@ _Review only - cross-service overlap is often intentional._
 
 ### Service: governance-officer
 
-- getValidMetadataValues - domainIdentifier values: MISSING  (`GET /valid-metadata/get-valid-metadata-values/domainIdentifier`)
+- getValidMetadataValues - domainIdentifier values: RENAMED -> `valid-metadata.py`:`_async_get_valid_metadata_values`, `feedback-manager.py`:`_async_get_valid_metadata_values`
 - createRegulation: RENAMED -> `governance-officer.py`:`_async_create_governance_definition`, `governance-officer.py`:`_async_create_data_lens`
 - removeRegulatorFromRegulation: RENAMED -> `governance-officer.py`:`_async_detach_regulator_from_regulation`
 - createGovernanceControl: RENAMED -> `governance-officer.py`:`_async_create_governance_definition`, `governance-officer.py`:`_async_create_data_lens`
@@ -320,6 +315,7 @@ _Review only - cross-service overlap is often intentional._
 - findGovernanceActionTypes: RENAMED -> `governance-officer.py`:`_async_find_governance_definitions`
 - getGovernanceActionTypesByName: RENAMED -> `governance-officer.py`:`_async_get_governance_definitions_by_name`
 - getGovernanceActionTypeByGUID: RENAMED -> `action-author.py`:`_async_get_governance_action_process`, `governance-officer.py`:`_async_get_governance_definition_by_guid`, `governance-officer.py`:`_async_get_governance_action_process`
+- findGovernanceActionProcesses: OK  **[LIVE: not found on running server]**
 - getAllGovernanceActionProcesses: RENAMED -> `governance-officer.py`:`_async_find_governance_definitions`
 - getGovernanceActionProcessesByName: RENAMED -> `governance-officer.py`:`_async_get_governance_definitions_by_name`
 - addGovernanceDefinitionToElement: RENAMED -> `governance-officer.py`:`_async_attach_governed_by_definition`
@@ -357,7 +353,7 @@ _Review only - cross-service overlap is often intentional._
 
 ### Service: my-profile
 
-- Get My Profile: MISSING  (`POST /my-profile`)
+- Get My Profile: RENAMED -> `my-profile.py`:`_async_get_my_profile_by_post`
 - Add My Profile: RENAMED -> `my-profile.py`:`_async_add_my_profile`
 
 ### Service: notification-manager
@@ -368,6 +364,7 @@ _Review only - cross-service overlap is often intentional._
 
 ### Service: platform-services
 
+- Get OMAG Server Platform Organization: OK  **[LIVE: not found on running server]**
 - Get Active User List: RENAMED -> `platform-services.py`:`_async_get_security_user_list`
 - Get Contractor User List: RENAMED -> `platform-services.py`:`_async_get_security_user_list`
 - Get all known servers: RENAMED -> `platform-services.py`:`_async_get_known_servers`
@@ -393,7 +390,7 @@ _Review only - cross-service overlap is often intentional._
 - getGovernanceActionProcessGraph: ELSEWHERE -> `governance-officer.py`
 - initiateGovernanceActionProcess: RENAMED -> `automated-curation.py`:`_async_initiate_gov_action_process`
 - findSubscriptions: RENAMED -> `collection-manager.py`:`_async_find_collections`
-- Get My Profile: MISSING  (`POST /my-profile`)
+- Get My Profile: RENAMED -> `my-profile.py`:`_async_get_my_profile_by_post`
 - getCommunitiesByName: ELSEWHERE -> `community-matters.py`
 - getNoteLogsByName: ELSEWHERE -> `feedback-manager.py`
 
@@ -405,7 +402,7 @@ _Review only - cross-service overlap is often intentional._
 
 - createClassifiedProject: RENAMED -> `project-manager.py`:`_async_create_project`
 - createCampaign: RENAMED -> `project-manager.py`:`_async_create_project`
-- createTaskForProject: RENAMED -> `project-manager.py`:`_async_create_project_task`
+- createTaskForProject: RENAMED -> `project-manager.py`:`_async_set_project_as_task`
 - setupProjectDependency: RENAMED -> `project-manager.py`:`_async_set_project_dependency`
 - setupProjectHierarchy: RENAMED -> `project-manager.py`:`_async_set_project_hierarchy`
 
@@ -431,15 +428,7 @@ _Review only - cross-service overlap is often intentional._
 
 ### Service: schema-maker
 
-- updateSchemaAttribute: MISMATCH `update_schema_attribute`
-    - PATH
-      SDK: /schema-maker/schema-attributes/{}/update
-      API: /schema-maker/schema-attributes/update
-- deleteSchemaAttribute: MISMATCH `delete_schema_attribute`
-    - PATH
-      SDK: /schema-maker/schema-attributes/{}/delete
-      API: /schema-maker/schema-attributes/delete
-- getSchemaAttributeByGUID: MISMATCH `get_schema_attribute_by_guid`
+- getSchemaAttributeByGUID: MISMATCH `get_schema_attribute_by_guid`  **[LIVE: not found on running server]**
     - PATH
       SDK: /schema-maker/schema-attributes/{}/retrieve
       API: /schema-maker/schema-attributes/{}/retrieve"}
@@ -486,9 +475,7 @@ _Review only - cross-service overlap is often intentional._
 
 ### Service: subject-area
 
-- linkSubjectAreas: RENAMED -> `subject-area.py`:`_async_link_subject_area_hierarchy`
-- detachSubjectAreas: RENAMED -> `subject-area.py`:`_async_detach_subject_area_hierarchy`
-- findAllSubjectAreas: MISSING  (`POST /subject-area/collectionss/by-search-string`)
+- findAllSubjectAreas: MISSING  (`POST /subject-area/collectionss/by-search-string`)  **[LIVE: not found on running server]**
 - findAllSubjectAreas - with full request body: RENAMED -> `subject-area.py`:`_async_find_subject_areas`
 - findSubjectAreas - with full request body: RENAMED -> `subject-area.py`:`_async_find_subject_areas`
 - getSubjectAreasByName - with full request body: RENAMED -> `subject-area.py`:`_async_get_subject_areas_by_name`

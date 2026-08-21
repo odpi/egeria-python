@@ -23,6 +23,8 @@ from pyegeria.models import (
     FilterRequestBody,
     SearchStringRequestBody,
     GetRequestBody,
+    NewRelationshipRequestBody,
+    DeleteRelationshipRequestBody,
 )
 from pyegeria.core.utils import dynamic_catch
 
@@ -466,3 +468,37 @@ class CommunityMatters(ServerClient):
                 **kwargs,
             )
         )
+
+    #
+    # Additional relationship maintenance - added to close the gap found by
+    # scripts/omvs_audit.py against the community-matters .http ground
+    # truth (2026-08-21).
+    #
+
+    @dynamic_catch
+    async def _async_link_crowd_sourcing_contribution(self, element_guid: str, contributor_guid: str,
+                                                       body: Optional[dict | NewRelationshipRequestBody] = None) -> None:
+        """Attach a contributor to an element they crowd-sourced content for (CrowdSourcingContribution relationship). Async version."""
+        url = f"{self.community_command_base}/elements/{element_guid}/crowd-sourcing-contributions/{contributor_guid}/attach"
+        await self._async_new_relationship_request(url, ["CrowdSourcingContributionProperties"], body)
+
+    @dynamic_catch
+    def link_crowd_sourcing_contribution(self, element_guid: str, contributor_guid: str,
+                                         body: Optional[dict | NewRelationshipRequestBody] = None) -> None:
+        """Attach a contributor to an element they crowd-sourced content for (CrowdSourcingContribution relationship)."""
+        loop = asyncio.get_event_loop()
+        loop.run_until_complete(self._async_link_crowd_sourcing_contribution(element_guid, contributor_guid, body))
+
+    @dynamic_catch
+    async def _async_detach_crowd_sourcing_contribution(self, element_guid: str, contributor_guid: str,
+                                                         body: Optional[dict | DeleteRelationshipRequestBody] = None) -> None:
+        """Detach a contributor from an element. Async version."""
+        url = f"{self.community_command_base}/elements/{element_guid}/crowd-sourcing-contributions/{contributor_guid}/detach"
+        await self._async_delete_relationship_request(url, body)
+
+    @dynamic_catch
+    def detach_crowd_sourcing_contribution(self, element_guid: str, contributor_guid: str,
+                                           body: Optional[dict | DeleteRelationshipRequestBody] = None) -> None:
+        """Detach a contributor from an element."""
+        loop = asyncio.get_event_loop()
+        loop.run_until_complete(self._async_detach_crowd_sourcing_contribution(element_guid, contributor_guid, body))

@@ -1150,3 +1150,38 @@ class DigitalBusiness(CollectionManager):
         """
         loop = asyncio.get_event_loop()
         loop.run_until_complete(self._async_clear_business_significance(element_guid, body))
+    #
+    # Additional classification maintenance - added to close the gap found
+    # by scripts/omvs_audit.py against the digital-business .http ground
+    # truth (2026-08-21).
+    #
+
+    @dynamic_catch
+    async def _async_set_agreement_as_data_sharing_agreement(self, agreement_guid: str,
+                                                              body: Optional[dict | NewClassificationRequestBody] = None) -> None:
+        """Classify an agreement as a data sharing agreement. Async version."""
+        url = f"{self.platform_url}/servers/{self.view_server}/api/open-metadata/digital-business/agreements/{agreement_guid}/data-sharing-agreement"
+        if body is None:
+            body = {"class": "NewClassificationRequestBody", "properties": {"class": "DataSharingAgreementProperties"}}
+        await self._async_new_classification_request(url, ["DataSharingAgreementProperties"], body)
+
+    @dynamic_catch
+    def set_agreement_as_data_sharing_agreement(self, agreement_guid: str,
+                                                body: Optional[dict | NewClassificationRequestBody] = None) -> None:
+        """Classify an agreement as a data sharing agreement."""
+        loop = asyncio.get_event_loop()
+        loop.run_until_complete(self._async_set_agreement_as_data_sharing_agreement(agreement_guid, body))
+
+    @dynamic_catch
+    async def _async_clear_agreement_as_data_sharing_agreement(self, agreement_guid: str,
+                                                                body: Optional[dict | DeleteClassificationRequestBody] = None) -> None:
+        """Remove the DataSharingAgreement classification from an agreement. Async version."""
+        url = f"{self.platform_url}/servers/{self.view_server}/api/open-metadata/digital-business/agreements/{agreement_guid}/data-sharing-agreement/remove"
+        await self._async_delete_classification_request(url, body)
+
+    @dynamic_catch
+    def clear_agreement_as_data_sharing_agreement(self, agreement_guid: str,
+                                                   body: Optional[dict | DeleteClassificationRequestBody] = None) -> None:
+        """Remove the DataSharingAgreement classification from an agreement."""
+        loop = asyncio.get_event_loop()
+        loop.run_until_complete(self._async_clear_agreement_as_data_sharing_agreement(agreement_guid, body))
