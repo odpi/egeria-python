@@ -13241,5 +13241,205 @@ class ClassificationExplorer(ServerClient):
         )
 
 
+    #
+    # Element-level classification maintenance - added to close the gap
+    # found by scripts/omvs_audit.py against the classification-explorer
+    # .http ground truth (2026-08-21). Same shape as
+    # _async_add_ownership_to_element / _async_clear_ownership_from_element.
+    #
+
+    @dynamic_catch
+    async def _async_set_element_as_incomplete(self, element_guid: str,
+                                                body: Optional[dict | NewClassificationRequestBody] = None) -> None:
+        """Classify an element as incomplete (still being assembled). Async version."""
+        url = f"{self.classification_command_root}/elements/{element_guid}/incomplete"
+        if body is None:
+            body = {"class": "NewClassificationRequestBody", "properties": {"class": "IncompleteProperties"}}
+        await self._async_new_classification_request(url, prop=["IncompleteProperties"], body=body)
+        logger.info(f"Added Incomplete classification to {element_guid}")
+
+    @dynamic_catch
+    def set_element_as_incomplete(self, element_guid: str,
+                                  body: Optional[dict | NewClassificationRequestBody] = None) -> None:
+        """Classify an element as incomplete (still being assembled)."""
+        loop = asyncio.get_event_loop()
+        loop.run_until_complete(self._async_set_element_as_incomplete(element_guid, body))
+
+    @dynamic_catch
+    async def _async_clear_element_as_incomplete(self, element_guid: str,
+                                                  body: Optional[dict | DeleteClassificationRequestBody] = None) -> None:
+        """Remove the Incomplete classification from an element. Async version."""
+        url = f"{self.classification_command_root}/elements/{element_guid}/incomplete/remove"
+        await self._async_delete_classification_request(url, body)
+        logger.info(f"Removed Incomplete classification from {element_guid}")
+
+    @dynamic_catch
+    def clear_element_as_incomplete(self, element_guid: str,
+                                    body: Optional[dict | DeleteClassificationRequestBody] = None) -> None:
+        """Remove the Incomplete classification from an element."""
+        loop = asyncio.get_event_loop()
+        loop.run_until_complete(self._async_clear_element_as_incomplete(element_guid, body))
+
+    @dynamic_catch
+    async def _async_set_element_as_object_identifier(self, element_guid: str,
+                                                       body: Optional[dict | NewClassificationRequestBody] = None) -> None:
+        """Classify an element as an object identifier. Async version."""
+        url = f"{self.classification_command_root}/elements/{element_guid}/object-identifier"
+        if body is None:
+            body = {"class": "NewClassificationRequestBody", "properties": {"class": "ObjectIdentifierProperties"}}
+        await self._async_new_classification_request(url, prop=["ObjectIdentifierProperties"], body=body)
+        logger.info(f"Added ObjectIdentifier classification to {element_guid}")
+
+    @dynamic_catch
+    def set_element_as_object_identifier(self, element_guid: str,
+                                         body: Optional[dict | NewClassificationRequestBody] = None) -> None:
+        """Classify an element as an object identifier."""
+        loop = asyncio.get_event_loop()
+        loop.run_until_complete(self._async_set_element_as_object_identifier(element_guid, body))
+
+    @dynamic_catch
+    async def _async_clear_element_as_object_identifier(self, element_guid: str,
+                                                         body: Optional[dict | DeleteClassificationRequestBody] = None) -> None:
+        """Remove the ObjectIdentifier classification from an element. Async version."""
+        url = f"{self.classification_command_root}/elements/{element_guid}/object-identifier/remove"
+        await self._async_delete_classification_request(url, body)
+        logger.info(f"Removed ObjectIdentifier classification from {element_guid}")
+
+    @dynamic_catch
+    def clear_element_as_object_identifier(self, element_guid: str,
+                                           body: Optional[dict | DeleteClassificationRequestBody] = None) -> None:
+        """Remove the ObjectIdentifier classification from an element."""
+        loop = asyncio.get_event_loop()
+        loop.run_until_complete(self._async_clear_element_as_object_identifier(element_guid, body))
+
+    @dynamic_catch
+    async def _async_set_element_as_reference_data(self, element_guid: str,
+                                                    body: Optional[dict | NewClassificationRequestBody] = None) -> None:
+        """Classify an element as reference data. Async version."""
+        url = f"{self.classification_command_root}/elements/{element_guid}/reference-data"
+        if body is None:
+            body = {"class": "NewClassificationRequestBody", "properties": {"class": "ReferenceDataProperties"}}
+        await self._async_new_classification_request(url, prop=["ReferenceDataProperties"], body=body)
+        logger.info(f"Added ReferenceData classification to {element_guid}")
+
+    @dynamic_catch
+    def set_element_as_reference_data(self, element_guid: str,
+                                      body: Optional[dict | NewClassificationRequestBody] = None) -> None:
+        """Classify an element as reference data."""
+        loop = asyncio.get_event_loop()
+        loop.run_until_complete(self._async_set_element_as_reference_data(element_guid, body))
+
+    @dynamic_catch
+    async def _async_clear_element_as_reference_data(self, element_guid: str,
+                                                      body: Optional[dict | DeleteClassificationRequestBody] = None) -> None:
+        """Remove the ReferenceData classification from an element. Async version."""
+        url = f"{self.classification_command_root}/elements/{element_guid}/reference-data/remove"
+        await self._async_delete_classification_request(url, body)
+        logger.info(f"Removed ReferenceData classification from {element_guid}")
+
+    @dynamic_catch
+    def clear_element_as_reference_data(self, element_guid: str,
+                                        body: Optional[dict | DeleteClassificationRequestBody] = None) -> None:
+        """Remove the ReferenceData classification from an element."""
+        loop = asyncio.get_event_loop()
+        loop.run_until_complete(self._async_clear_element_as_reference_data(element_guid, body))
+
+    @dynamic_catch
+    async def _async_set_element_as_mobile_resource(self, element_guid: str,
+                                                     body: Optional[dict | NewClassificationRequestBody] = None) -> None:
+        """Classify an element as a mobile resource. Async version."""
+        url = f"{self.classification_command_root}/elements/{element_guid}/mobile-resource"
+        if body is None:
+            body = {"class": "NewClassificationRequestBody", "properties": {"class": "MobileResourceProperties"}}
+        await self._async_new_classification_request(url, prop=["MobileResourceProperties"], body=body)
+        logger.info(f"Added MobileResource classification to {element_guid}")
+
+    @dynamic_catch
+    def set_element_as_mobile_resource(self, element_guid: str,
+                                       body: Optional[dict | NewClassificationRequestBody] = None) -> None:
+        """Classify an element as a mobile resource."""
+        loop = asyncio.get_event_loop()
+        loop.run_until_complete(self._async_set_element_as_mobile_resource(element_guid, body))
+
+    @dynamic_catch
+    async def _async_clear_element_as_mobile_resource(self, element_guid: str,
+                                                       body: Optional[dict | DeleteClassificationRequestBody] = None) -> None:
+        """Remove the MobileResource classification from an element. Async version."""
+        url = f"{self.classification_command_root}/elements/{element_guid}/mobile-resource/remove"
+        await self._async_delete_classification_request(url, body)
+        logger.info(f"Removed MobileResource classification from {element_guid}")
+
+    @dynamic_catch
+    def clear_element_as_mobile_resource(self, element_guid: str,
+                                         body: Optional[dict | DeleteClassificationRequestBody] = None) -> None:
+        """Remove the MobileResource classification from an element."""
+        loop = asyncio.get_event_loop()
+        loop.run_until_complete(self._async_clear_element_as_mobile_resource(element_guid, body))
+
+    @dynamic_catch
+    async def _async_set_element_as_instance_metadata(self, element_guid: str,
+                                                       body: Optional[dict | NewClassificationRequestBody] = None) -> None:
+        """Classify an element as instance metadata. Async version."""
+        url = f"{self.classification_command_root}/elements/{element_guid}/instance-metadata"
+        await self._async_new_classification_request(url, prop=["InstanceMetadataProperties"], body=body)
+        logger.info(f"Added InstanceMetadata classification to {element_guid}")
+
+    @dynamic_catch
+    def set_element_as_instance_metadata(self, element_guid: str,
+                                         body: dict | NewClassificationRequestBody) -> None:
+        """Classify an element as instance metadata."""
+        loop = asyncio.get_event_loop()
+        loop.run_until_complete(self._async_set_element_as_instance_metadata(element_guid, body))
+
+    @dynamic_catch
+    async def _async_clear_element_as_instance_metadata(self, element_guid: str,
+                                                         body: Optional[dict | DeleteClassificationRequestBody] = None) -> None:
+        """Remove the InstanceMetadata classification from an element. Async version."""
+        url = f"{self.classification_command_root}/elements/{element_guid}/instance-metadata/remove"
+        await self._async_delete_classification_request(url, body)
+        logger.info(f"Removed InstanceMetadata classification from {element_guid}")
+
+    @dynamic_catch
+    def clear_element_as_instance_metadata(self, element_guid: str,
+                                           body: Optional[dict | DeleteClassificationRequestBody] = None) -> None:
+        """Remove the InstanceMetadata classification from an element."""
+        loop = asyncio.get_event_loop()
+        loop.run_until_complete(self._async_clear_element_as_instance_metadata(element_guid, body))
+
+    @dynamic_catch
+    async def _async_set_element_as_metamodel_instance(self, element_guid: str,
+                                                        metamodel_element_guid: str,
+                                                        body: Optional[dict | NewClassificationRequestBody] = None) -> None:
+        """Classify an element as an instance in a metamodel, referencing the metamodel element it instantiates. Async version."""
+        url = f"{self.classification_command_root}/elements/{element_guid}/metamodel-instance"
+        if body is None:
+            body = {"class": "NewClassificationRequestBody",
+                    "properties": {"class": "MetamodelInstanceProperties", "metamodelElementGUID": metamodel_element_guid}}
+        await self._async_new_classification_request(url, prop=["MetamodelInstanceProperties"], body=body)
+        logger.info(f"Added MetamodelInstance classification to {element_guid}")
+
+    @dynamic_catch
+    def set_element_as_metamodel_instance(self, element_guid: str, metamodel_element_guid: str,
+                                          body: Optional[dict | NewClassificationRequestBody] = None) -> None:
+        """Classify an element as an instance in a metamodel, referencing the metamodel element it instantiates."""
+        loop = asyncio.get_event_loop()
+        loop.run_until_complete(self._async_set_element_as_metamodel_instance(element_guid, metamodel_element_guid, body))
+
+    @dynamic_catch
+    async def _async_clear_element_as_metamodel_instance(self, element_guid: str,
+                                                          body: Optional[dict | DeleteClassificationRequestBody] = None) -> None:
+        """Remove the MetamodelInstance classification from an element. Async version."""
+        url = f"{self.classification_command_root}/elements/{element_guid}/metamodel-instance/remove"
+        await self._async_delete_classification_request(url, body)
+        logger.info(f"Removed MetamodelInstance classification from {element_guid}")
+
+    @dynamic_catch
+    def clear_element_as_metamodel_instance(self, element_guid: str,
+                                            body: Optional[dict | DeleteClassificationRequestBody] = None) -> None:
+        """Remove the MetamodelInstance classification from an element."""
+        loop = asyncio.get_event_loop()
+        loop.run_until_complete(self._async_clear_element_as_metamodel_instance(element_guid, body))
+
+
 if __name__ == "__main__":
     print("Main-Classification Manager")
