@@ -268,6 +268,22 @@ def _build_classification_properties(spec: ClassificationSpec, attributes: dict)
 class CurationClassifyProcessor(AsyncBaseCommandProcessor):
     """Standalone Classify/Reclassify/Update/Declassify commands (Curation family)."""
 
+    def supports_target_element_lookup(self) -> bool:
+        # Same fix as CurationLinkProcessor, same root cause (ISSUE-68 pattern):
+        # fetch_as_is() always returns None here, so without this override the
+        # base class's Create<->Update upsert-transition logic silently rewrote
+        # every "Update X" command (Data Scope, Governance Expectations,
+        # Governance Measurements -- the three CLASSIFICATION_METHODS entries
+        # with an update_method) to "Create X" before apply_changes() ever saw
+        # verb="Update". That made `use_update = verb == "Update" and
+        # class_spec.update_method` always False, so these commands silently
+        # called the set_method (re-apply as new) instead of update_method --
+        # not necessarily an error, likely idempotent-looking success, but not
+        # what "Update" was supposed to do. Found and fixed 2026-08-21 while
+        # investigating the identical bug in CurationLinkProcessor's new
+        # "Update Search Keyword" command; pre-existing and unrelated to that.
+        return False
+
     async def fetch_as_is(self) -> Optional[Dict[str, Any]]:
         return None
 
@@ -314,6 +330,18 @@ class CurationClassifyProcessor(AsyncBaseCommandProcessor):
 
 class CurationLinkProcessor(AsyncBaseCommandProcessor):
     """Link/Unlink/Attach/Detach relationship commands (Curation family)."""
+
+    def supports_target_element_lookup(self) -> bool:
+        # Relationship-only processor -- see GovernanceLinkProcessor's identical
+        # override (md_processing/v2/governance.py) for why this matters: without
+        # it, AsyncBaseCommandProcessor.execute()'s Create<->Update upsert-transition
+        # logic silently rewrites the verb (ISSUE-68 follow-up). Latent here until
+        # 2026-08-21's "Update Search Keyword" -- every other command this processor
+        # handles uses Link/Unlink/Attach/Detach, never Update, so the bug (fetch_as_is()
+        # always returning None -> "not found" -> Update rewritten to Create -> wrong
+        # branch executed, e.g. Update Search Keyword silently deleting the keyword
+        # instead of updating it) had nothing to trigger it before.
+        return False
 
     async def fetch_as_is(self) -> Optional[Dict[str, Any]]:
         return None
