@@ -445,12 +445,14 @@ class MyProfileApp(App):
                 str(a.get("title", "")),
                 str(a.get("time", "")),
                 str(a.get("text", "")),
+            )
+
         for td in self.todos if isinstance(self.todos, list) else []:
             self.todos_table.add_row(
                 str(td.get("Name", "")),
                 str(td.get("Activity Status", "")),
                 str(td.get("Description", "")),
-                str(td.get("GUID", td.get("guid", "")))
+                str(td.get("GUID", "")),
             )
 
         for t in self.teams if isinstance(self.teams, list) else []:
