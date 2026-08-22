@@ -325,7 +325,7 @@ class ActionAuthor(ServerClient):
         body: dict | UpdateRelationshipRequestBody,
     ) -> None:
         url = f"{self.platform_url}/servers/{self.view_server}/api/open-metadata/action-author/governance-action-process-steps/next-process-steps/{relationship_guid}/update"
-        await self._async_update_relationship_body_request(url, body)
+        await self._async_update_relationship_request(url, ["NextGovernanceActionProcessStepProperties"], body)
 
     def update_next_action_process_step(
         self,

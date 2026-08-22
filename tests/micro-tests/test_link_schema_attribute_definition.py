@@ -1,14 +1,18 @@
 # SPDX-License-Identifier: Apache-2.0
 # Copyright Contributors to the ODPi Egeria project.
 """
-ISSUE-48 (PYEGERIA_ISSUES.md): new "Link/Detach Schema Attribute Definition"
-Dr.Egeria command, implemented via Option 2 -- the generic MetadataExpert
-relationship mechanism (_async_create_related_elements/
-_async_delete_related_elements, typeName-based) rather than a dedicated
-wrapper method, since no bespoke Egeria REST endpoint exists yet for the
-SchemaAttributeDefinition relationship (confirmed live against the server's
-full OpenAPI spec). Replace LinkSchemaAttributeDefinitionProcessor's
-implementation with a bespoke DataDesigner wrapper once Egeria ships one.
+ISSUE-48 (PYEGERIA_ISSUES.md): "Link/Detach Schema Attribute Definition"
+originally shipped via Option 2 -- the generic MetadataExpert relationship
+mechanism -- as a stopgap while no bespoke Egeria REST endpoint existed for
+the SchemaAttributeDefinition relationship. That's no longer true:
+DataDesigner._async_link_schema_attribute_definition/
+_async_detach_schema_attribute_definition (added 2026-08-21, verified
+against a live 6.2-SNAPSHOT server's /v3/api-docs) now wrap the real
+endpoint directly, and LinkSchemaAttributeDefinitionProcessor was migrated
+to call them (Option 1) -- see md_processing/v2/data_designer.py's
+LinkSchemaAttributeDefinitionProcessor docstring. This test exercises that
+current call path; it previously stubbed the retired MetadataExpert path
+and went stale when the processor migrated off it.
 
 No live server needed: a fake client captures the outgoing calls.
 """
@@ -21,29 +25,24 @@ from md_processing.v2.data_designer import LinkSchemaAttributeDefinitionProcesso
 
 DATA_FIELD_GUID = "aaaaaaaa-0000-0000-0000-000000000001"
 SCHEMA_ATTRIBUTE_GUID = "bbbbbbbb-0000-0000-0000-000000000002"
-REL_GUID = "cccccccc-0000-0000-0000-000000000003"
 
 
-class _FakeMetadataExpert:
-    def __init__(self, existing_relationships=None):
-        self.create_calls = []
-        self.delete_calls = []
-        self._existing = existing_relationships if existing_relationships is not None else "No elements found"
+class _FakeDataDesigner:
+    def __init__(self):
+        self.link_calls = []
+        self.detach_calls = []
 
-    async def _async_create_related_elements(self, body):
-        self.create_calls.append(body)
-        return REL_GUID
+    async def _async_link_schema_attribute_definition(self, data_field_guid, schema_attribute_guid, body=None):
+        self.link_calls.append((data_field_guid, schema_attribute_guid, body))
 
-    async def _async_find_relationships_between_elements(self, body):
-        return self._existing
-
-    async def _async_delete_related_elements(self, relationship_guid, body):
-        self.delete_calls.append((relationship_guid, body))
+    async def _async_detach_schema_attribute_definition(self, data_field_guid, schema_attribute_guid,
+                                                         body=None, cascade_delete=False):
+        self.detach_calls.append((data_field_guid, schema_attribute_guid, body, cascade_delete))
 
 
 class _FakeClient:
-    def __init__(self, existing_relationships=None):
-        self.metadata_expert = _FakeMetadataExpert(existing_relationships)
+    def __init__(self):
+        self.data_designer = _FakeDataDesigner()
 
 
 def _command(verb: str) -> DrECommand:
@@ -59,7 +58,7 @@ def _attributes():
 
 
 @pytest.mark.asyncio
-async def test_link_creates_generic_related_elements_and_displays_guid():
+async def test_link_calls_data_designer_with_correct_guids_and_body():
     client = _FakeClient()
     p = LinkSchemaAttributeDefinitionProcessor(client=cast(Any, client), command=_command("Link"), context={})
     p.get_command_spec = lambda: {"OM_TYPE": "SchemaAttributeDefinition"}
@@ -67,13 +66,13 @@ async def test_link_creates_generic_related_elements_and_displays_guid():
 
     result = await p.apply_changes()
 
-    assert len(client.metadata_expert.create_calls) == 1
-    body = client.metadata_expert.create_calls[0]
-    assert body["typeName"] == "SchemaAttributeDefinition"
-    assert body["metadataElement1GUID"] == DATA_FIELD_GUID
-    assert body["metadataElement2GUID"] == SCHEMA_ATTRIBUTE_GUID
-    assert p.parsed_output["guid"] == REL_GUID
-    assert REL_GUID in result
+    assert len(client.data_designer.link_calls) == 1
+    data_field_guid, schema_attribute_guid, body = client.data_designer.link_calls[0]
+    assert data_field_guid == DATA_FIELD_GUID
+    assert schema_attribute_guid == SCHEMA_ATTRIBUTE_GUID
+    assert body["class"] == "NewRelationshipRequestBody"
+    assert body["properties"]["class"] == "SchemaAttributeDefinitionProperties"
+    assert DATA_FIELD_GUID in result and SCHEMA_ATTRIBUTE_GUID in result
 
 
 @pytest.mark.asyncio
@@ -86,34 +85,33 @@ async def test_link_without_both_guids_raises():
     with pytest.raises(ValueError, match="Schema Attribute"):
         await p.apply_changes()
 
+    assert client.data_designer.link_calls == []
+
 
 @pytest.mark.asyncio
-async def test_detach_looks_up_relationship_guid_by_element_pair_then_deletes():
-    existing = {
-        "relationships": [
-            {"relationshipGUID": REL_GUID, "elementGUIDAtEnd1": DATA_FIELD_GUID, "elementGUIDAtEnd2": SCHEMA_ATTRIBUTE_GUID},
-        ]
-    }
-    client = _FakeClient(existing_relationships=existing)
+async def test_detach_calls_data_designer_directly_with_no_relationship_lookup():
+    client = _FakeClient()
     p = LinkSchemaAttributeDefinitionProcessor(client=cast(Any, client), command=_command("Detach"), context={})
     p.get_command_spec = lambda: {"OM_TYPE": "SchemaAttributeDefinition"}
     p.parsed_output = {"qualified_name": None, "attributes": _attributes()}
 
     result = await p.apply_changes()
 
-    assert client.metadata_expert.delete_calls == [(REL_GUID, {"class": "DeleteRelationshipRequestBody"})]
-    assert REL_GUID in result
+    assert client.data_designer.detach_calls == [(DATA_FIELD_GUID, SCHEMA_ATTRIBUTE_GUID, None, False)]
+    assert DATA_FIELD_GUID in result and SCHEMA_ATTRIBUTE_GUID in result
 
 
 @pytest.mark.asyncio
-async def test_detach_with_no_existing_relationship_raises():
-    client = _FakeClient(existing_relationships="No elements found")
+async def test_detach_without_both_guids_raises():
+    client = _FakeClient()
     p = LinkSchemaAttributeDefinitionProcessor(client=cast(Any, client), command=_command("Detach"), context={})
     p.get_command_spec = lambda: {"OM_TYPE": "SchemaAttributeDefinition"}
-    p.parsed_output = {"qualified_name": None, "attributes": _attributes()}
+    p.parsed_output = {"qualified_name": None, "attributes": {"Schema Attribute": {"guid": SCHEMA_ATTRIBUTE_GUID}}}
 
-    with pytest.raises(ValueError, match="no existing relationship found"):
+    with pytest.raises(ValueError, match="Data Field"):
         await p.apply_changes()
+
+    assert client.data_designer.detach_calls == []
 
 
 def test_supports_target_element_lookup_is_false():
