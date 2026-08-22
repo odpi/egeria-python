@@ -5,7 +5,7 @@
    This file provides a set of report specification related functions for my_egeria.
 
 """
-import pwd
+
 from textual.app import ComposeResult
 from textual.containers import ScrollableContainer
 from textual.screen import Screen
@@ -18,8 +18,11 @@ class MainScreen(Screen):
 
     BINDINGS = [
         ("q", "app.quit", "Quit"),
-        ("ctrl+e", "edit_table", "Edit Selected Table"),
-        ("ctrl+s", "show_comments", "Show Comments for Selected Table"),
+        ("ctrl+e", "edit_selected_table", "Edit Selected Table"),
+        ("ctrl+a", "add_note", "Add Note to Selected Item"),
+        ("ctrl+s", "show_notes", "Show Notes for Selected Item"),
+        ("ctrl+t", "show_team", "Show Team Members for Selected Role"),
+        ("r", "app.refresh", "Refresh")
     ]
 
     CSS_PATH = "my_profile.tcss"
@@ -93,26 +96,36 @@ class MainScreen(Screen):
 
         yield Footer(id="main_footer")
 
-    def on_data_table_row_highlighted(self, event: DataTable.RowHighlighted):
-        """ Collect row and table when the user highlights a row in a table """
-        self.selected_row = event.row_key
-        self.selected_table = event.data_table.id
+    def action_show_team(self):
+        self.log(f"action_show_team, row_key: {self.row_key}, table: {self.table}")
+        if self.row_key and self.table == "roles_table":
+            self.app.show_team(self.row_key)
+        else:
+            self.notify(f"Team Members can only be displayed by selecting a role in the Roles table first")
 
     def on_data_table_row_selected(self, event: DataTable.RowSelected):
-        """ Collect row and table when the user selects a row in a table """
-        self.selected_row = event.row_key
-        self.selected_table = event.data_table.id
+        self.log(f"{event}, event.row_key: {event.row_key}, table: {event.data_table}")
+        self.row_key = event.row_key
+        self.table = event.data_table
 
-    async def action_edit_table(self):
-        """ Edit the selected table """
-        if self.selected_table and self.selected_row:
-            await self.app.edit_tables(self.selected_table, self.selected_row)
+    def action_edit_selected_table(self):
+        self.log(f"action_edit_selected_table, row_key: {self.row_key}, table: {self.table}")
+        if self.table:
+            self.app.action_edit_selected_table(self.table)
         else:
-            self.notify("Please select a row and table to edit.", timeout=5, severity="warning")
+            self.notify(f"Please select a table first")
 
-    async def action_show_comments(self):
-        """ Show comments for the selected table """
-        if self.selected_table and self.selected_row:
-            self.app.show_comments(self.selected_table, self.selected_row)
+    def action_add_note(self):
+        self.log(f"action_add_note, row_key: {self.row_key}, table: {self.table}")
+        if self.row_key and self.table:
+            self.app.action_add_note(self.row_key, self.table)
         else:
-            self.notify("Please select a row and table to show comments.", timeout=5, severity="warning")
+            self.notify(f"Please select a table and row first")
+
+    def action_show_notes(self):
+        self.log(f"action_show_notes, row_key: {self.row_key}, table: {self.table}")
+        if self.row_key and self.table:
+            self.app.action_show_notes(self.row_key, self.table)
+        else:
+            self.notify(f"Please select a table and row first")
+

@@ -11,6 +11,8 @@ from textual.containers import ScrollableContainer
 from textual.screen import ModalScreen
 from textual.widgets import Header, Footer, Static, DataTable
 
+from pyegeria import Egeria
+
 
 class MyTeam(ModalScreen):
     """ Display a list of team Members for a Team Leader """
@@ -43,9 +45,8 @@ class MyTeam(ModalScreen):
                 self.team_table.add_column("Role")
                 self.team_table.add_column("GUID")
                 self.team_table.border_title = f"{self.leader_name}: My Team "
-                self.team_table.border = True
                 self.team_table.zebra_stripes = True
-                self.team_table.cursor = "row"
+                self.team_table.cursor_type = "row"
                 for member in self.my_team:
                     self.team_table.add_row(member[0], member[1], member[2])
         else:
@@ -70,3 +71,4 @@ class MyTeam(ModalScreen):
     def action_back(self) -> None:
         self.dismiss(
             "201")
+
