@@ -671,6 +671,22 @@ def update_gov_body_for_type(object_type: str, body: dict, attributes: dict) -> 
 
         return body
 
+    elif gov_def_name in {"GovernanceActionType", "GovernanceActionProcessStep"}:
+        # ISSUE-71: neither type had a branch here, so every attribute added by
+        # their compact-spec bundles -- Implementation Description (inherited
+        # from Governance Control Base), Produced Guards and Wait Time
+        # (Governance Action Type Base), and Ignore Multiple Triggers
+        # (Governance Action Process Step Base, GovernanceActionProcessStep
+        # only) -- was silently dropped: they fell through to the generic
+        # "no dedicated mapping" fallback below, which only preserves base
+        # Referenceable/GovernanceDefinition fields.
+        body['implementationDescription'] = attributes.get('Implementation Description', {}).get('value', None)
+        body['producedGuards'] = attributes.get('Produced Guards', {}).get('value', [])
+        body['waitTime'] = attributes.get('Wait Time', {}).get('value', None)
+        if gov_def_name == "GovernanceActionProcessStep":
+            body['ignoreMultipleTriggers'] = attributes.get('Ignore Multiple Triggers', {}).get('value', None)
+        return body
+
     # Preserve base governance fields for subtypes without dedicated custom mappings.
     return body
 
