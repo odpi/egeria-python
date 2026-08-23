@@ -23,7 +23,7 @@ class TechnologyTypeOptionsScreen(ModalScreen):
                 # ("ctl+s", "Select", "tech_type_option_select")
                 ]
 
-    CSS_PATH = "my_profile.tcss"
+    CSS_PATH = "../My_Profile/my_profile.tcss"
 
     def __init__(self, tech_type_guid: str,
                        tech_type_name: str,

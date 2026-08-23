@@ -33,7 +33,7 @@ class EditProfileScreen(ModalScreen[int]):
                 ("ctrl+t", "Edit_teams", "Edit teams"),
                 ]
 
-    CSS_PATH = "my_profile.tcss"
+    CSS_PATH = "../My_Profile/my_profile.tcss"
 
     def __init__(self, user,
                         password,
