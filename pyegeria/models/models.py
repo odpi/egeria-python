@@ -600,7 +600,19 @@ class NewRelatedElementsRequestBody(RequestBody):
 
 
 class GetRequestBody(RequestBody):
-    class_: Annotated[Literal["GetRequestBody"], Field(alias="class")]
+    # ISSUE-298: not a Literal. Egeria has no dedicated Pydantic model for
+    # every legitimate subclass of this body shape -- callers (including
+    # this SDK's own docstrings, e.g. SolutionArchitect.get_solution_
+    # component_by_guid's "AnyTimeRequestBody", ProjectManager.
+    # get_linked_projects's "RelationshipRequestBody") send the real Egeria-
+    # side polymorphism tag for a dict-shaped body that's otherwise
+    # identical to this model. Locking "class" to the literal
+    # "GetRequestBody" rejected every one of those before the request ever
+    # reached the server. Nothing downstream branches on the exact string,
+    # so a plain str preserves the "class must be present" requirement
+    # without blocking legitimate subclass names pyegeria hasn't (and can't
+    # exhaustively) modeled.
+    class_: Annotated[str, Field(alias="class")]
     metadata_element_type_name: str | None = None
     # ISSUE-55 note: Egeria PR #9215 moved metadataElementSubtypeNames off the
     # server-side GetOptions class (this model's real counterpart) onto
@@ -622,7 +634,8 @@ class GetRequestBody(RequestBody):
     relationships_page_size: int = 0
 
 class ResultsRequestBody(GetRequestBody):
-    class_: Annotated[Literal["ResultsRequestBody"], Field(alias="class")]
+    # ISSUE-298: same reasoning as GetRequestBody.class_ above.
+    class_: Annotated[str, Field(alias="class")]
     anchor_guid: str | None = None
     anchor_domain_name: str | None = None
     anchor_scope_guid: str | None = None
