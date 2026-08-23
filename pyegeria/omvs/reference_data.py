@@ -15,7 +15,8 @@ from pyegeria.core._server_client import ServerClient
 from pyegeria.view.base_report_formats import get_report_spec_match
 from pyegeria.models import (SearchStringRequestBody, FilterRequestBody, GetRequestBody, NewElementRequestBody,
                              TemplateRequestBody, UpdateElementRequestBody,
-                             NewRelationshipRequestBody, DeleteElementRequestBody, DeleteRelationshipRequestBody)
+                             NewRelationshipRequestBody, DeleteElementRequestBody, DeleteRelationshipRequestBody,
+                             UpdateRelationshipRequestBody)
 from pyegeria.view.output_formatter import populate_common_columns
 from pyegeria.core.utils import dynamic_catch
 from loguru import logger
@@ -2316,6 +2317,41 @@ class ReferenceDataManager(ServerClient):
         loop.run_until_complete(self._async_delete_valid_value_definition(vv_def_guid, cascade_delete, body))
 
 
+
+
+    #
+    # Additional relationship maintenance - added to close the gap found by
+    # scripts/omvs_audit.py against the reference-data .http ground truth
+    # (2026-08-21).
+    #
+
+    @dynamic_catch
+    async def _async_update_valid_value_implementation(self, valid_values_implementation_relationship_guid: str,
+                                                        body: Optional[dict | UpdateRelationshipRequestBody] = None) -> None:
+        """Update the properties of a ValidValuesImplementation relationship, identified by its own relationship GUID. Async version."""
+        url = f"{self.ref_data_command_base}/valid-value-implementations/{valid_values_implementation_relationship_guid}/update"
+        await self._async_update_relationship_request(url, ["ValidValuesImplementationProperties"], body)
+
+    @dynamic_catch
+    def update_valid_value_implementation(self, valid_values_implementation_relationship_guid: str,
+                                          body: Optional[dict | UpdateRelationshipRequestBody] = None) -> None:
+        """Update the properties of a ValidValuesImplementation relationship, identified by its own relationship GUID."""
+        loop = asyncio.get_event_loop()
+        loop.run_until_complete(self._async_update_valid_value_implementation(valid_values_implementation_relationship_guid, body))
+
+    @dynamic_catch
+    async def _async_detach_valid_value_implementation_by_id(self, valid_values_implementation_relationship_guid: str,
+                                                              body: Optional[dict | DeleteRelationshipRequestBody] = None) -> None:
+        """Detach one specific ValidValuesImplementation relationship, identified by its own relationship GUID. Async version."""
+        url = f"{self.ref_data_command_base}/valid-value-implementations/{valid_values_implementation_relationship_guid}/detach"
+        await self._async_delete_relationship_request(url, body)
+
+    @dynamic_catch
+    def detach_valid_value_implementation_by_id(self, valid_values_implementation_relationship_guid: str,
+                                                 body: Optional[dict | DeleteRelationshipRequestBody] = None) -> None:
+        """Detach one specific ValidValuesImplementation relationship, identified by its own relationship GUID."""
+        loop = asyncio.get_event_loop()
+        loop.run_until_complete(self._async_detach_valid_value_implementation_by_id(valid_values_implementation_relationship_guid, body))
 
 
 if __name__ == "__main__":

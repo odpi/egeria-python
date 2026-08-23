@@ -761,6 +761,150 @@ generally if new zero-result reports show up elsewhere.
 
 ---
 
+### ISSUE-70: `ActionAuthor.update_next_action_process_step()` always raises `AttributeError` — calls a method that does not exist
+
+**Status:** fixed 2026-08-21 (Pyegeria — `pyegeria/omvs/action_author.py`,
+`tests/micro-tests/test_update_next_action_process_step.py`). Routed through
+the real shared helper, `_async_update_relationship_request(url,
+["NextGovernanceActionProcessStepProperties"], body)`, matching every other
+relationship-update call site in the package (e.g. `asset_maker.py`'s
+`_async_update_catalog_target`) rather than the nonexistent
+`_async_update_relationship_body_request`.
+
+**Layer:** pyegeria. Single call site, straightforward fix.
+
+`_async_update_next_action_process_step` (pyegeria/omvs/action_author.py:328)
+awaits `self._async_update_relationship_body_request(url, body)`. No method of
+that name exists anywhere in the package — `grep -rn` returns exactly one hit,
+the call itself. The method on the shared base is
+`_async_update_relationship_request` (pyegeria/core/_server_client.py:7289).
+
+So the public `update_next_action_process_step()` can never succeed; it raises
+before issuing any request:
+
+```
+AttributeError: 'ActionAuthor' object has no attribute
+'_async_update_relationship_body_request'. Did you mean:
+'_async_update_relationship_request'?
+```
+
+**Found:** 2026-08-21, trying to change the `guard` on an existing
+`NextGovernanceActionProcessStep` relationship from Resource Explorer.
+
+**Verified as version-current:** pyegeria 6.0.18.4 as installed in the trellis
+venv.
+
+**Repro:**
+```python
+from pyegeria.omvs.action_author import ActionAuthor
+aa = ActionAuthor(view_server, platform_url, user_id, user_pwd)
+aa.create_egeria_bearer_token(user_id, user_pwd)
+aa.update_next_action_process_step(relationship_guid, {
+    "class": "UpdateRelationshipRequestBody",
+    "properties": {"class": "NextGovernanceActionProcessStepProperties",
+                   "guard": "some-guard", "mandatoryGuard": False}})
+```
+
+**Likely fix:** rename the call to `_async_update_relationship_request`, matching
+`_async_setup_next_action_process_step` immediately above it, which correctly
+uses `_async_new_relationship_request(url, ["NextGovernanceActionProcessStepProperties"], body)`
+— note that one also passes the properties-class list, which the update path
+probably needs too. Worth checking the signature of
+`_async_update_relationship_request` rather than assuming the argument shape.
+
+**Not blocking RE today.** Guards can already be authored through Dr.Egeria's
+`Link Next Process Step` command (its `custom_attributes` include `Guard` and
+`Mandatory Guard`), which is how RE writes them now — every link RE has authored
+carries `guard: "Any"`, confirmed by reading a live definition back. This only
+blocks *amending* an existing link's guard in place via the client, which is a
+tidier path than re-authoring a whole document and re-running the reconciler.
+
+---
+
+### ISSUE-71: Dr.Egeria silently drops `Produced Guards` — the value never reaches the element, and processing still reports SUCCESS
+
+**Status:** fixed 2026-08-21 (Dr.Egeria —
+`md_processing/md_processing_utils/common_md_utils.py`,
+`tests/micro-tests/governance/test_governance_action_type_properties.py`).
+Root cause was broader than the "Simple List" theory this entry started
+with: `update_gov_body_for_type()` had **no branch at all** for
+`GovernanceActionType`/`GovernanceActionProcessStep` — neither type is in
+`GENERAL_GOVERNANCE_DEFINITIONS` or `GOVERNANCE_CONTROLS` — so every
+attribute their compact-spec bundles add (Implementation Description,
+Produced Guards, Wait Time, and, for Process Step only, Ignore Multiple
+Triggers) fell through to the generic "no dedicated mapping" fallback,
+which only preserves base Referenceable/GovernanceDefinition fields. That
+also means the live probe's own read of `waitTime = '0'` as "persisted"
+was almost certainly a coincidental match against the server's default,
+not a genuine round-trip — the value was never in the outgoing body either.
+Added a dedicated branch mapping all four fields; the other `Simple List`
+attributes checked elsewhere in this file were unaffected, since the actual
+defect was per-type dispatch, not list handling.
+
+**Layer:** Dr.Egeria (`md_processing`) parse/build path, not the server.
+
+`Produced Guards` is declared in `commands_action_author.json` as a
+`Simple List` attribute ("List of guards that this action type produces"),
+inherited via the `Governance Action Type Base` bundle, so it applies to both
+`Create Governance Action Type` and `Create Governance Action Process Step`.
+Supplying it has no effect: the element is created with every other attribute and
+no `producedGuards`.
+
+**Silent.** Processing reports SUCCESS, and Dr.Egeria's own outbox echo renders
+the attribute as `None` — indistinguishable from an attribute that was never
+supplied.
+
+**Verified live 2026-08-21** against this deployment, both commands, same result:
+
+| document said | echoed in outbox | stored on the element |
+|---|---|---|
+| `### Produced Guards`<br>`recovered, partial, no_signal, unverified, regression` | `None` | *(absent)* |
+| `### Wait Time`<br>`0` | `0` | `waitTime = '0'` |
+
+`Wait Time` (Simple Int) and `Ignore Multiple Triggers` (Bool) on the same
+element both persisted, so this is specific to the attribute, not to the command
+or the document.
+
+**Repro** — process this and read the element back:
+```markdown
+## Create Governance Action Type
+
+### Display Name
+Probe Guards On Action Type
+
+### Qualified Name
+GovActionType::ProbeOutcomeVocab::probe
+
+### Produced Guards
+recovered, partial, no_signal, unverified, regression
+```
+```python
+me.get_metadata_element_by_unique_name("GovActionType::ProbeOutcomeVocab::probe")
+# elementProperties.propertiesAsStrings has no producedGuards
+```
+The comma-separated form is the one used by this repo's own working test document
+(`tests/dr-egeria-command-tests/dr_test_action_author.md`, `SUCCESS, FAILURE`), so
+it is the documented spelling rather than a guess.
+
+**Two probe elements were left in the qs-metadata-store by this investigation**,
+both named for deletion:
+`GovActionProcessStep::ProbeOutcomeVocab::probe` and
+`GovActionType::ProbeOutcomeVocab::probe`. Neither is linked into any process.
+
+**Why it matters beyond the attribute.** `producedGuards` is how a step declares
+the outcomes it can complete with — the catalog-side half of the outcome
+vocabulary Resource Explorer adopted on 2026-08-21
+(`resource_explorer/step_outcome.py`). Until this works, that vocabulary can be
+recorded on results locally but cannot be *declared* in Egeria, so nothing else
+can discover what a step is capable of producing. Not urgent — RE routes on
+nothing today — but it blocks the specification-in-Egeria direction.
+
+**Worth checking whether other `Simple List` attributes are affected**, since the
+failure looks like list-style handling rather than anything about guards. This
+probe only exercised `Produced Guards`.
+
+---
+
 ## Open pyegeria items (including follow-ons blocked on an Egeria fix)
 
 Actionable in this repo. Some of these are fully blocked today — waiting

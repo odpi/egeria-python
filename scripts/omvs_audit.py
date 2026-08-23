@@ -18,6 +18,14 @@ every ``_async_*`` method in ``pyegeria/omvs/*.py`` against them and reports:
 Usage
 -----
     python scripts/omvs_audit.py [--report PATH] [--service NAME] [--quiet]
+                                  [--live [URL]] [--live-verify-tls]
+
+``--live`` additionally cross-checks every .http request against a running
+platform's live OpenAPI doc (GET {URL}/v3/api-docs) - the ultimate ground
+truth for whether the .http collections themselves are stale, independent of
+whether the SDK matches them. Defaults to $PYEGERIA_PLATFORM_URL or
+https://localhost:9443. Best-effort: an unreachable platform just skips live
+verification rather than failing the run.
 
 Exit status is 1 when any confirmed defect (verb/path/body mismatch or lint)
 is found, so this can gate CI.
@@ -32,9 +40,13 @@ from __future__ import annotations
 import argparse
 import ast
 import glob
+import json
 import os
 import re
+import ssl
 import sys
+import urllib.error
+import urllib.request
 from collections import defaultdict
 from dataclasses import dataclass, field
 
@@ -195,6 +207,75 @@ def paths_compatible(sdk_path: str, api_path: str) -> bool:
     if len(sdk_parts) != len(api_parts) or sdk_parts[:-1] != api_parts[:-1]:
         return False
     return "{}" in sdk_parts[-1]
+
+
+def trailing_wildcard_match(p1: str, p2: str) -> bool:
+    """True if two canonicalised paths match segment-for-segment, allowing the
+    final segment to differ when either side's final segment is a bare ``{}``
+    template. Covers Egeria's springdoc-documented generic endpoints whose
+    last path element is a genuine runtime parameter (e.g.
+    ``get-valid-metadata-values/{propertyName}`` matching ...``/severityLevel``,
+    ...``/confidenceLevel``, one concrete value per registered valid-value set).
+    """
+    parts1, parts2 = p1.rstrip("/").split("/"), p2.rstrip("/").split("/")
+    if len(parts1) != len(parts2) or parts1[:-1] != parts2[:-1]:
+        return False
+    return parts1[-1] == parts2[-1] or "{}" in (parts1[-1], parts2[-1])
+
+
+def fetch_live_index(live_url: str, insecure: bool, timeout: float = 10.0
+                      ) -> tuple[set[tuple[str, str]], set[tuple[str, str]]] | None:
+    """Fetch and index a running Egeria platform's live OpenAPI doc.
+
+    Returns ``(literal, generic)`` where ``literal`` is every (VERB, path) pair
+    exactly as documented, and ``generic`` is the subset registered under
+    Egeria's shared ``{urlMarker}`` handler classes (one Spring controller
+    serving many differently-named OMVS services - e.g. every collection-based
+    service shares one ``/{urlMarker}/collections/...`` handler), reindexed
+    with the ``{urlMarker}`` segment stripped so it can be matched against
+    *any* service's literal first path segment, per each service's own view
+    of the endpoint. Returns None (never raises) if the server can't be
+    reached - live verification is best-effort, not a hard requirement to run
+    the audit.
+    """
+    url = live_url.rstrip("/") + "/v3/api-docs"
+    ctx = ssl._create_unverified_context() if insecure else None
+    try:
+        with urllib.request.urlopen(url, timeout=timeout, context=ctx) as resp:
+            spec = json.loads(resp.read())
+    except (urllib.error.URLError, TimeoutError, ValueError, OSError) as exc:
+        print(f"  ! --live: could not reach {url}: {exc}", file=sys.stderr)
+        return None
+
+    literal: set[tuple[str, str]] = set()
+    generic: set[tuple[str, str]] = set()
+    for path, methods in spec.get("paths", {}).items():
+        p = canon_path(path)
+        for verb in methods:
+            literal.add((verb.upper(), p))
+            if p.startswith("/{}/"):
+                generic.add((verb.upper(), p[len("/{}"):]))
+    return literal, generic
+
+
+def live_matches(verb: str, path: str, literal: set[tuple[str, str]],
+                  generic: set[tuple[str, str]]) -> bool:
+    """True if a (verb, canon_path) .http request is present on a live server,
+    either under its own literal service segment or under a generic
+    ``{urlMarker}`` handler shared with other services."""
+    if (verb, path) in literal:
+        return True
+    m = re.match(r"/[a-z0-9-]+(/.*)$", path)
+    suffix = m.group(1) if m else None
+    if suffix and (verb, suffix) in generic:
+        return True
+    for v, gp in generic:
+        if v == verb and suffix and trailing_wildcard_match(suffix, gp):
+            return True
+    for v, lp in literal:
+        if v == verb and trailing_wildcard_match(path, lp):
+            return True
+    return False
 
 
 def lint_url(raw: str) -> list[str]:
@@ -550,7 +631,8 @@ def parse_py_file(filepath: str, helper_verbs: dict[str, str],
 # --------------------------------------------------------------------------
 
 def audit(service_filter: str | None, report_path: str, quiet: bool,
-          http_dir: str = HTTP_DIR) -> int:
+          http_dir: str = HTTP_DIR, live_url: str | None = None,
+          live_insecure: bool = True) -> int:
     if not os.path.isdir(http_dir):
         sys.exit(
             f"ERROR: '{http_dir}' not found.\n"
@@ -565,6 +647,11 @@ def audit(service_filter: str | None, report_path: str, quiet: bool,
         http_files.append(extra)
     if not http_files:
         sys.exit(f"ERROR: no .http collections found under '{http_dir}'.")
+
+    live_index = fetch_live_index(live_url, live_insecure) if live_url else None
+    if live_url and live_index is None:
+        print("  ! --live requested but unreachable; continuing without live "
+              "verification", file=sys.stderr)
 
     helper_verbs = discover_helper_verbs(SERVER_CLIENT)
     helper_bodies = discover_helper_bodies(SERVER_CLIENT)
@@ -662,6 +749,16 @@ def audit(service_filter: str | None, report_path: str, quiet: bool,
         for name, req in requests.items():
             if name == "Token":
                 continue
+
+            live_tag = ""
+            if live_index is not None:
+                literal, generic = live_index
+                if live_matches(req.verb, req.path, literal, generic):
+                    counts["live_ok"] += 1
+                else:
+                    counts["live_stale"] += 1
+                    live_tag = "  **[LIVE: not found on running server]**"
+
             snake = to_snake(name)
             cands = [snake, f"_async_{snake}"]
             for prefix in ("glossary_", "asset_", "location_", "project_",
@@ -678,16 +775,29 @@ def audit(service_filter: str | None, report_path: str, quiet: bool,
             if not match:
                 elsewhere = next((c for c in cands if c in flat), None)
                 by_path_hit = by_path.get((req.verb, req.path))
+                if not by_path_hit:
+                    # Fall back to a trailing-wildcard match: several .http
+                    # entries are worked examples of one generic SDK method
+                    # whose final path segment is a runtime value (e.g.
+                    # get-valid-metadata-values/{severityLevel} vs the SDK's
+                    # own get-valid-metadata-values/{property_name}) - a byte
+                    # match on the whole path is the wrong bar here, same
+                    # reasoning as paths_compatible() for the direct-match
+                    # branch above.
+                    for (v, p), hits in by_path.items():
+                        if v == req.verb and trailing_wildcard_match(p, req.path):
+                            by_path_hit = hits
+                            break
                 if elsewhere:
                     counts["elsewhere"] += 1
-                    lines.append(f"- {name}: ELSEWHERE -> `{flat[elsewhere][0]}.py`")
+                    lines.append(f"- {name}: ELSEWHERE -> `{flat[elsewhere][0]}.py`{live_tag}")
                 elif by_path_hit:
                     counts["renamed"] += 1
                     hits = ", ".join(f"`{s}.py`:`{m}`" for s, m in by_path_hit)
-                    lines.append(f"- {name}: RENAMED -> {hits}")
+                    lines.append(f"- {name}: RENAMED -> {hits}{live_tag}")
                 else:
                     counts["missing"] += 1
-                    lines.append(f"- {name}: MISSING  (`{req.verb} {req.path}`)")
+                    lines.append(f"- {name}: MISSING  (`{req.verb} {req.path}`){live_tag}")
                 continue
 
             check = match if match.startswith("_async_") else f"_async_{match}"
@@ -710,12 +820,12 @@ def audit(service_filter: str | None, report_path: str, quiet: bool,
             if issues:
                 counts["mismatch"] += 1
                 defects += 1
-                lines.append(f"- {name}: MISMATCH `{match}`")
+                lines.append(f"- {name}: MISMATCH `{match}`{live_tag}")
                 lines += [f"    - {i}" for i in issues]
             else:
                 counts["ok"] += 1
-                if not quiet:
-                    lines.append(f"- {name}: OK")
+                if not quiet or live_tag:
+                    lines.append(f"- {name}: OK{live_tag}")
 
     header = [
         "# OMVS Audit Report",
@@ -731,8 +841,13 @@ def audit(service_filter: str | None, report_path: str, quiet: bool,
         f"| Renamed (implemented, verb+path matches under a different name) | {counts['renamed']} |",
         f"| Found in another module | {counts['elsewhere']} |",
         f"| URL lint | {counts['lint']} |",
-        "",
     ]
+    if live_index is not None:
+        header += [
+            f"| Live-verified against {live_url} | {counts['live_ok']} |",
+            f"| Live-stale (not found on running server) | {counts['live_stale']} |",
+        ]
+    header.append("")
 
     with open(report_path, "w", encoding="utf-8") as f:
         f.write("\n".join(header + lines) + "\n")
@@ -741,6 +856,8 @@ def audit(service_filter: str | None, report_path: str, quiet: bool,
     print(f"  OK={counts['ok']} mismatch={counts['mismatch']} "
           f"missing={counts['missing']} elsewhere={counts['elsewhere']} "
           f"lint={counts['lint']}")
+    if live_index is not None:
+        print(f"  live_ok={counts['live_ok']} live_stale={counts['live_stale']}")
     return 1 if defects else 0
 
 
@@ -756,8 +873,24 @@ def main() -> int:
         help="path to the .http ground-truth collections (gitignored; "
              "defaults to $PYEGERIA_HTTP_DIR or the in-repo location)",
     )
+    ap.add_argument(
+        "--live",
+        nargs="?", const=os.environ.get("PYEGERIA_PLATFORM_URL", "https://localhost:9443"),
+        default=None, metavar="URL",
+        help="also cross-check every .http request against a running "
+             "platform's live OpenAPI doc (GET {URL}/v3/api-docs), accounting "
+             "for Egeria's generic {urlMarker}-shared endpoints. Defaults to "
+             "$PYEGERIA_PLATFORM_URL or https://localhost:9443 if given with "
+             "no value. Best-effort: unreachable just skips live verification.",
+    )
+    ap.add_argument(
+        "--live-verify-tls", action="store_true",
+        help="verify TLS when fetching --live (default: off, for self-signed "
+             "local dev platforms)",
+    )
     args = ap.parse_args()
-    return audit(args.service, args.report, args.quiet, args.http_dir)
+    return audit(args.service, args.report, args.quiet, args.http_dir,
+                 live_url=args.live, live_insecure=not args.live_verify_tls)
 
 
 if __name__ == "__main__":

@@ -30,7 +30,8 @@ from pyegeria.models import (GetRequestBody, SearchStringRequestBody, FilterRequ
                              ReferenceableProperties, TemplateRequestBody,
                              UpdateElementRequestBody, NewRelationshipRequestBody,
                              DeleteElementRequestBody, DeleteRelationshipRequestBody,
-                             UpdateRelationshipRequestBody, ResultsRequestBody)
+                             UpdateRelationshipRequestBody, ResultsRequestBody,
+                             NewClassificationRequestBody, DeleteClassificationRequestBody)
 from pyegeria.core.utils import dynamic_catch
 
 GOV_DEF_PROPERTIES_LIST = ["GovernanceDefinitionProperties", "GovernanceStrategyProperties", "RegulationProperties",
@@ -3846,6 +3847,413 @@ class GovernanceOfficer(ServerClient):
         loop = asyncio.get_event_loop()
         loop.run_until_complete(self._async_detach_regulator_from_regulation(regulation_guid, regulator_guid, body))
 
+
+
+
+    #
+    # Governance point classification maintenance and Exception/
+    # RegulationCertificationType relationships - added to close the gap
+    # found by scripts/omvs_audit.py against the governance-officer .http
+    # ground truth (2026-08-21). Classification pairs follow the same shape
+    # as SchemaMaker._async_add_primary_key_classification; relationship
+    # pairs follow _async_attach_governed_by_definition /
+    # _async_detach_governed_by_definition already in this file.
+    #
+
+    @dynamic_catch
+    async def _async_link_exception(self, element_guid: str, exception_type_guid: str,
+                                     body: Optional[dict | NewRelationshipRequestBody] = None) -> None:
+        """Attach an exception to the element it was raised against (Exception relationship). Async version."""
+        url = f"{self.platform_url}/servers/{self.view_server}/api/open-metadata/{self.url_marker}/elements/{element_guid}/exceptions/{exception_type_guid}/attach"
+        await self._async_new_relationship_request(url, ["ExceptionProperties"], body)
+        logger.info(f"Exception {exception_type_guid} linked to element {element_guid}.")
+
+    @dynamic_catch
+    def link_exception(self, element_guid: str, exception_type_guid: str,
+                       body: Optional[dict | NewRelationshipRequestBody] = None) -> None:
+        """Attach an exception to the element it was raised against (Exception relationship)."""
+        loop = asyncio.get_event_loop()
+        loop.run_until_complete(self._async_link_exception(element_guid, exception_type_guid, body))
+
+    @dynamic_catch
+    async def _async_update_exception(self, exception_guid: str,
+                                       body: Optional[dict | UpdateRelationshipRequestBody] = None) -> None:
+        """Update the properties of an Exception relationship. Async version."""
+        url = f"{self.platform_url}/servers/{self.view_server}/api/open-metadata/{self.url_marker}/exceptions/{exception_guid}/update"
+        await self._async_update_relationship_request(url, ["ExceptionProperties"], body)
+        logger.info(f"Updated Exception relationship {exception_guid}.")
+
+    @dynamic_catch
+    def update_exception(self, exception_guid: str,
+                         body: Optional[dict | UpdateRelationshipRequestBody] = None) -> None:
+        """Update the properties of an Exception relationship."""
+        loop = asyncio.get_event_loop()
+        loop.run_until_complete(self._async_update_exception(exception_guid, body))
+
+    @dynamic_catch
+    async def _async_detach_exception(self, exception_guid: str,
+                                       body: Optional[dict | DeleteRelationshipRequestBody] = None) -> None:
+        """Detach (delete) an Exception relationship. Async version."""
+        url = f"{self.platform_url}/servers/{self.view_server}/api/open-metadata/{self.url_marker}/exceptions/{exception_guid}/detach"
+        await self._async_delete_relationship_request(url, body)
+        logger.info(f"Detached Exception relationship {exception_guid}.")
+
+    @dynamic_catch
+    def detach_exception(self, exception_guid: str,
+                         body: Optional[dict | DeleteRelationshipRequestBody] = None) -> None:
+        """Detach (delete) an Exception relationship."""
+        loop = asyncio.get_event_loop()
+        loop.run_until_complete(self._async_detach_exception(exception_guid, body))
+
+    @dynamic_catch
+    async def _async_link_regulation_certification_type(self, regulation_guid: str, certification_type_guid: str,
+                                                          body: Optional[dict | NewRelationshipRequestBody] = None) -> None:
+        """Attach a certification type that demonstrates compliance with a regulation (RegulationCertificationType relationship). Async version."""
+        url = f"{self.platform_url}/servers/{self.view_server}/api/open-metadata/{self.url_marker}/regulations/{regulation_guid}/regulation-certification-types/{certification_type_guid}/attach"
+        await self._async_new_relationship_request(url, ["RegulationCertificationTypeProperties"], body)
+        logger.info(f"Certification type {certification_type_guid} linked to regulation {regulation_guid}.")
+
+    @dynamic_catch
+    def link_regulation_certification_type(self, regulation_guid: str, certification_type_guid: str,
+                                            body: Optional[dict | NewRelationshipRequestBody] = None) -> None:
+        """Attach a certification type that demonstrates compliance with a regulation (RegulationCertificationType relationship)."""
+        loop = asyncio.get_event_loop()
+        loop.run_until_complete(self._async_link_regulation_certification_type(regulation_guid, certification_type_guid, body))
+
+    @dynamic_catch
+    async def _async_detach_regulation_certification_type(self, regulation_guid: str, certification_type_guid: str,
+                                                            body: Optional[dict | DeleteRelationshipRequestBody] = None) -> None:
+        """Detach a certification type from a regulation. Async version."""
+        url = f"{self.platform_url}/servers/{self.view_server}/api/open-metadata/{self.url_marker}/regulations/{regulation_guid}/regulation-certification-types/{certification_type_guid}/detach"
+        await self._async_delete_relationship_request(url, body)
+        logger.info(f"Certification type {certification_type_guid} detached from regulation {regulation_guid}.")
+
+    @dynamic_catch
+    def detach_regulation_certification_type(self, regulation_guid: str, certification_type_guid: str,
+                                              body: Optional[dict | DeleteRelationshipRequestBody] = None) -> None:
+        """Detach a certification type from a regulation."""
+        loop = asyncio.get_event_loop()
+        loop.run_until_complete(self._async_detach_regulation_certification_type(regulation_guid, certification_type_guid, body))
+
+    @dynamic_catch
+    async def _async_set_control_point(self, element_guid: str,
+                                 body: Optional[dict | NewClassificationRequestBody] = None) -> None:
+        """Classify an element as a ControlPoint. Async version."""
+        url = f"{self.platform_url}/servers/{self.view_server}/api/open-metadata/{self.url_marker}/elements/{element_guid}/control-point"
+        if body is None:
+            body = {"class": "NewClassificationRequestBody", "properties": {"class": "ControlPointProperties"}}
+        await self._async_new_classification_request(url, ["ControlPointProperties"], body)
+        logger.info(f"Added ControlPoint classification to {element_guid}")
+
+    @dynamic_catch
+    def set_control_point(self, element_guid: str,
+                    body: Optional[dict | NewClassificationRequestBody] = None) -> None:
+        """Classify an element as a ControlPoint."""
+        loop = asyncio.get_event_loop()
+        loop.run_until_complete(self._async_set_control_point(element_guid, body))
+
+    @dynamic_catch
+    async def _async_clear_control_point(self, element_guid: str,
+                                   body: Optional[dict | DeleteClassificationRequestBody] = None) -> None:
+        """Remove the ControlPoint classification from an element. Async version."""
+        url = f"{self.platform_url}/servers/{self.view_server}/api/open-metadata/{self.url_marker}/elements/{element_guid}/control-point/remove"
+        await self._async_delete_classification_request(url, body)
+        logger.info(f"Removed ControlPoint classification from {element_guid}")
+
+    @dynamic_catch
+    def clear_control_point(self, element_guid: str,
+                      body: Optional[dict | DeleteClassificationRequestBody] = None) -> None:
+        """Remove the ControlPoint classification from an element."""
+        loop = asyncio.get_event_loop()
+        loop.run_until_complete(self._async_clear_control_point(element_guid, body))
+
+    @dynamic_catch
+    async def _async_set_verification_point(self, element_guid: str,
+                                 body: Optional[dict | NewClassificationRequestBody] = None) -> None:
+        """Classify an element as a VerificationPoint. Async version."""
+        url = f"{self.platform_url}/servers/{self.view_server}/api/open-metadata/{self.url_marker}/elements/{element_guid}/verification-point"
+        if body is None:
+            body = {"class": "NewClassificationRequestBody", "properties": {"class": "VerificationPointProperties"}}
+        await self._async_new_classification_request(url, ["VerificationPointProperties"], body)
+        logger.info(f"Added VerificationPoint classification to {element_guid}")
+
+    @dynamic_catch
+    def set_verification_point(self, element_guid: str,
+                    body: Optional[dict | NewClassificationRequestBody] = None) -> None:
+        """Classify an element as a VerificationPoint."""
+        loop = asyncio.get_event_loop()
+        loop.run_until_complete(self._async_set_verification_point(element_guid, body))
+
+    @dynamic_catch
+    async def _async_clear_verification_point(self, element_guid: str,
+                                   body: Optional[dict | DeleteClassificationRequestBody] = None) -> None:
+        """Remove the VerificationPoint classification from an element. Async version."""
+        url = f"{self.platform_url}/servers/{self.view_server}/api/open-metadata/{self.url_marker}/elements/{element_guid}/verification-point/remove"
+        await self._async_delete_classification_request(url, body)
+        logger.info(f"Removed VerificationPoint classification from {element_guid}")
+
+    @dynamic_catch
+    def clear_verification_point(self, element_guid: str,
+                      body: Optional[dict | DeleteClassificationRequestBody] = None) -> None:
+        """Remove the VerificationPoint classification from an element."""
+        loop = asyncio.get_event_loop()
+        loop.run_until_complete(self._async_clear_verification_point(element_guid, body))
+
+    @dynamic_catch
+    async def _async_set_enforcement_point(self, element_guid: str,
+                                 body: Optional[dict | NewClassificationRequestBody] = None) -> None:
+        """Classify an element as a EnforcementPoint. Async version."""
+        url = f"{self.platform_url}/servers/{self.view_server}/api/open-metadata/{self.url_marker}/elements/{element_guid}/enforcement-point"
+        if body is None:
+            body = {"class": "NewClassificationRequestBody", "properties": {"class": "EnforcementPointProperties"}}
+        await self._async_new_classification_request(url, ["EnforcementPointProperties"], body)
+        logger.info(f"Added EnforcementPoint classification to {element_guid}")
+
+    @dynamic_catch
+    def set_enforcement_point(self, element_guid: str,
+                    body: Optional[dict | NewClassificationRequestBody] = None) -> None:
+        """Classify an element as a EnforcementPoint."""
+        loop = asyncio.get_event_loop()
+        loop.run_until_complete(self._async_set_enforcement_point(element_guid, body))
+
+    @dynamic_catch
+    async def _async_clear_enforcement_point(self, element_guid: str,
+                                   body: Optional[dict | DeleteClassificationRequestBody] = None) -> None:
+        """Remove the EnforcementPoint classification from an element. Async version."""
+        url = f"{self.platform_url}/servers/{self.view_server}/api/open-metadata/{self.url_marker}/elements/{element_guid}/enforcement-point/remove"
+        await self._async_delete_classification_request(url, body)
+        logger.info(f"Removed EnforcementPoint classification from {element_guid}")
+
+    @dynamic_catch
+    def clear_enforcement_point(self, element_guid: str,
+                      body: Optional[dict | DeleteClassificationRequestBody] = None) -> None:
+        """Remove the EnforcementPoint classification from an element."""
+        loop = asyncio.get_event_loop()
+        loop.run_until_complete(self._async_clear_enforcement_point(element_guid, body))
+
+    @dynamic_catch
+    async def _async_set_execution_point(self, element_guid: str,
+                                 body: Optional[dict | NewClassificationRequestBody] = None) -> None:
+        """Classify an element as a ExecutionPoint. Async version."""
+        url = f"{self.platform_url}/servers/{self.view_server}/api/open-metadata/{self.url_marker}/elements/{element_guid}/execution-point"
+        if body is None:
+            body = {"class": "NewClassificationRequestBody", "properties": {"class": "ExecutionPointProperties"}}
+        await self._async_new_classification_request(url, ["ExecutionPointProperties"], body)
+        logger.info(f"Added ExecutionPoint classification to {element_guid}")
+
+    @dynamic_catch
+    def set_execution_point(self, element_guid: str,
+                    body: Optional[dict | NewClassificationRequestBody] = None) -> None:
+        """Classify an element as a ExecutionPoint."""
+        loop = asyncio.get_event_loop()
+        loop.run_until_complete(self._async_set_execution_point(element_guid, body))
+
+    @dynamic_catch
+    async def _async_clear_execution_point(self, element_guid: str,
+                                   body: Optional[dict | DeleteClassificationRequestBody] = None) -> None:
+        """Remove the ExecutionPoint classification from an element. Async version."""
+        url = f"{self.platform_url}/servers/{self.view_server}/api/open-metadata/{self.url_marker}/elements/{element_guid}/execution-point/remove"
+        await self._async_delete_classification_request(url, body)
+        logger.info(f"Removed ExecutionPoint classification from {element_guid}")
+
+    @dynamic_catch
+    def clear_execution_point(self, element_guid: str,
+                      body: Optional[dict | DeleteClassificationRequestBody] = None) -> None:
+        """Remove the ExecutionPoint classification from an element."""
+        loop = asyncio.get_event_loop()
+        loop.run_until_complete(self._async_clear_execution_point(element_guid, body))
+
+    @dynamic_catch
+    async def _async_set_policy_administration_point(self, element_guid: str,
+                                 body: Optional[dict | NewClassificationRequestBody] = None) -> None:
+        """Classify an element as a PolicyAdministrationPoint. Async version."""
+        url = f"{self.platform_url}/servers/{self.view_server}/api/open-metadata/{self.url_marker}/elements/{element_guid}/policy-administration-point"
+        if body is None:
+            body = {"class": "NewClassificationRequestBody", "properties": {"class": "PolicyAdministrationPointProperties"}}
+        await self._async_new_classification_request(url, ["PolicyAdministrationPointProperties"], body)
+        logger.info(f"Added PolicyAdministrationPoint classification to {element_guid}")
+
+    @dynamic_catch
+    def set_policy_administration_point(self, element_guid: str,
+                    body: Optional[dict | NewClassificationRequestBody] = None) -> None:
+        """Classify an element as a PolicyAdministrationPoint."""
+        loop = asyncio.get_event_loop()
+        loop.run_until_complete(self._async_set_policy_administration_point(element_guid, body))
+
+    @dynamic_catch
+    async def _async_clear_policy_administration_point(self, element_guid: str,
+                                   body: Optional[dict | DeleteClassificationRequestBody] = None) -> None:
+        """Remove the PolicyAdministrationPoint classification from an element. Async version."""
+        url = f"{self.platform_url}/servers/{self.view_server}/api/open-metadata/{self.url_marker}/elements/{element_guid}/policy-administration-point/remove"
+        await self._async_delete_classification_request(url, body)
+        logger.info(f"Removed PolicyAdministrationPoint classification from {element_guid}")
+
+    @dynamic_catch
+    def clear_policy_administration_point(self, element_guid: str,
+                      body: Optional[dict | DeleteClassificationRequestBody] = None) -> None:
+        """Remove the PolicyAdministrationPoint classification from an element."""
+        loop = asyncio.get_event_loop()
+        loop.run_until_complete(self._async_clear_policy_administration_point(element_guid, body))
+
+    @dynamic_catch
+    async def _async_set_policy_decision_point(self, element_guid: str,
+                                 body: Optional[dict | NewClassificationRequestBody] = None) -> None:
+        """Classify an element as a PolicyDecisionPoint. Async version."""
+        url = f"{self.platform_url}/servers/{self.view_server}/api/open-metadata/{self.url_marker}/elements/{element_guid}/policy-decision-point"
+        if body is None:
+            body = {"class": "NewClassificationRequestBody", "properties": {"class": "PolicyDecisionPointProperties"}}
+        await self._async_new_classification_request(url, ["PolicyDecisionPointProperties"], body)
+        logger.info(f"Added PolicyDecisionPoint classification to {element_guid}")
+
+    @dynamic_catch
+    def set_policy_decision_point(self, element_guid: str,
+                    body: Optional[dict | NewClassificationRequestBody] = None) -> None:
+        """Classify an element as a PolicyDecisionPoint."""
+        loop = asyncio.get_event_loop()
+        loop.run_until_complete(self._async_set_policy_decision_point(element_guid, body))
+
+    @dynamic_catch
+    async def _async_clear_policy_decision_point(self, element_guid: str,
+                                   body: Optional[dict | DeleteClassificationRequestBody] = None) -> None:
+        """Remove the PolicyDecisionPoint classification from an element. Async version."""
+        url = f"{self.platform_url}/servers/{self.view_server}/api/open-metadata/{self.url_marker}/elements/{element_guid}/policy-decision-point/remove"
+        await self._async_delete_classification_request(url, body)
+        logger.info(f"Removed PolicyDecisionPoint classification from {element_guid}")
+
+    @dynamic_catch
+    def clear_policy_decision_point(self, element_guid: str,
+                      body: Optional[dict | DeleteClassificationRequestBody] = None) -> None:
+        """Remove the PolicyDecisionPoint classification from an element."""
+        loop = asyncio.get_event_loop()
+        loop.run_until_complete(self._async_clear_policy_decision_point(element_guid, body))
+
+    @dynamic_catch
+    async def _async_set_policy_enforcement_point(self, element_guid: str,
+                                 body: Optional[dict | NewClassificationRequestBody] = None) -> None:
+        """Classify an element as a PolicyEnforcementPoint. Async version."""
+        url = f"{self.platform_url}/servers/{self.view_server}/api/open-metadata/{self.url_marker}/elements/{element_guid}/policy-enforcement-point"
+        if body is None:
+            body = {"class": "NewClassificationRequestBody", "properties": {"class": "PolicyEnforcementPointProperties"}}
+        await self._async_new_classification_request(url, ["PolicyEnforcementPointProperties"], body)
+        logger.info(f"Added PolicyEnforcementPoint classification to {element_guid}")
+
+    @dynamic_catch
+    def set_policy_enforcement_point(self, element_guid: str,
+                    body: Optional[dict | NewClassificationRequestBody] = None) -> None:
+        """Classify an element as a PolicyEnforcementPoint."""
+        loop = asyncio.get_event_loop()
+        loop.run_until_complete(self._async_set_policy_enforcement_point(element_guid, body))
+
+    @dynamic_catch
+    async def _async_clear_policy_enforcement_point(self, element_guid: str,
+                                   body: Optional[dict | DeleteClassificationRequestBody] = None) -> None:
+        """Remove the PolicyEnforcementPoint classification from an element. Async version."""
+        url = f"{self.platform_url}/servers/{self.view_server}/api/open-metadata/{self.url_marker}/elements/{element_guid}/policy-enforcement-point/remove"
+        await self._async_delete_classification_request(url, body)
+        logger.info(f"Removed PolicyEnforcementPoint classification from {element_guid}")
+
+    @dynamic_catch
+    def clear_policy_enforcement_point(self, element_guid: str,
+                      body: Optional[dict | DeleteClassificationRequestBody] = None) -> None:
+        """Remove the PolicyEnforcementPoint classification from an element."""
+        loop = asyncio.get_event_loop()
+        loop.run_until_complete(self._async_clear_policy_enforcement_point(element_guid, body))
+
+    @dynamic_catch
+    async def _async_set_policy_information_point(self, element_guid: str,
+                                 body: Optional[dict | NewClassificationRequestBody] = None) -> None:
+        """Classify an element as a PolicyInformationPoint. Async version."""
+        url = f"{self.platform_url}/servers/{self.view_server}/api/open-metadata/{self.url_marker}/elements/{element_guid}/policy-information-point"
+        if body is None:
+            body = {"class": "NewClassificationRequestBody", "properties": {"class": "PolicyInformationPointProperties"}}
+        await self._async_new_classification_request(url, ["PolicyInformationPointProperties"], body)
+        logger.info(f"Added PolicyInformationPoint classification to {element_guid}")
+
+    @dynamic_catch
+    def set_policy_information_point(self, element_guid: str,
+                    body: Optional[dict | NewClassificationRequestBody] = None) -> None:
+        """Classify an element as a PolicyInformationPoint."""
+        loop = asyncio.get_event_loop()
+        loop.run_until_complete(self._async_set_policy_information_point(element_guid, body))
+
+    @dynamic_catch
+    async def _async_clear_policy_information_point(self, element_guid: str,
+                                   body: Optional[dict | DeleteClassificationRequestBody] = None) -> None:
+        """Remove the PolicyInformationPoint classification from an element. Async version."""
+        url = f"{self.platform_url}/servers/{self.view_server}/api/open-metadata/{self.url_marker}/elements/{element_guid}/policy-information-point/remove"
+        await self._async_delete_classification_request(url, body)
+        logger.info(f"Removed PolicyInformationPoint classification from {element_guid}")
+
+    @dynamic_catch
+    def clear_policy_information_point(self, element_guid: str,
+                      body: Optional[dict | DeleteClassificationRequestBody] = None) -> None:
+        """Remove the PolicyInformationPoint classification from an element."""
+        loop = asyncio.get_event_loop()
+        loop.run_until_complete(self._async_clear_policy_information_point(element_guid, body))
+
+    @dynamic_catch
+    async def _async_set_policy_management_point(self, element_guid: str,
+                                 body: Optional[dict | NewClassificationRequestBody] = None) -> None:
+        """Classify an element as a PolicyManagementPoint. Async version."""
+        url = f"{self.platform_url}/servers/{self.view_server}/api/open-metadata/{self.url_marker}/elements/{element_guid}/policy-management-point"
+        if body is None:
+            body = {"class": "NewClassificationRequestBody", "properties": {"class": "PolicyManagementPointProperties"}}
+        await self._async_new_classification_request(url, ["PolicyManagementPointProperties"], body)
+        logger.info(f"Added PolicyManagementPoint classification to {element_guid}")
+
+    @dynamic_catch
+    def set_policy_management_point(self, element_guid: str,
+                    body: Optional[dict | NewClassificationRequestBody] = None) -> None:
+        """Classify an element as a PolicyManagementPoint."""
+        loop = asyncio.get_event_loop()
+        loop.run_until_complete(self._async_set_policy_management_point(element_guid, body))
+
+    @dynamic_catch
+    async def _async_clear_policy_management_point(self, element_guid: str,
+                                   body: Optional[dict | DeleteClassificationRequestBody] = None) -> None:
+        """Remove the PolicyManagementPoint classification from an element. Async version."""
+        url = f"{self.platform_url}/servers/{self.view_server}/api/open-metadata/{self.url_marker}/elements/{element_guid}/policy-management-point/remove"
+        await self._async_delete_classification_request(url, body)
+        logger.info(f"Removed PolicyManagementPoint classification from {element_guid}")
+
+    @dynamic_catch
+    def clear_policy_management_point(self, element_guid: str,
+                      body: Optional[dict | DeleteClassificationRequestBody] = None) -> None:
+        """Remove the PolicyManagementPoint classification from an element."""
+        loop = asyncio.get_event_loop()
+        loop.run_until_complete(self._async_clear_policy_management_point(element_guid, body))
+
+    @dynamic_catch
+    async def _async_set_policy_retrieval_point(self, element_guid: str,
+                                 body: Optional[dict | NewClassificationRequestBody] = None) -> None:
+        """Classify an element as a PolicyRetrievalPoint. Async version."""
+        url = f"{self.platform_url}/servers/{self.view_server}/api/open-metadata/{self.url_marker}/elements/{element_guid}/policy-retrieval-point"
+        if body is None:
+            body = {"class": "NewClassificationRequestBody", "properties": {"class": "PolicyRetrievalPointProperties"}}
+        await self._async_new_classification_request(url, ["PolicyRetrievalPointProperties"], body)
+        logger.info(f"Added PolicyRetrievalPoint classification to {element_guid}")
+
+    @dynamic_catch
+    def set_policy_retrieval_point(self, element_guid: str,
+                    body: Optional[dict | NewClassificationRequestBody] = None) -> None:
+        """Classify an element as a PolicyRetrievalPoint."""
+        loop = asyncio.get_event_loop()
+        loop.run_until_complete(self._async_set_policy_retrieval_point(element_guid, body))
+
+    @dynamic_catch
+    async def _async_clear_policy_retrieval_point(self, element_guid: str,
+                                   body: Optional[dict | DeleteClassificationRequestBody] = None) -> None:
+        """Remove the PolicyRetrievalPoint classification from an element. Async version."""
+        url = f"{self.platform_url}/servers/{self.view_server}/api/open-metadata/{self.url_marker}/elements/{element_guid}/policy-retrieval-point/remove"
+        await self._async_delete_classification_request(url, body)
+        logger.info(f"Removed PolicyRetrievalPoint classification from {element_guid}")
+
+    @dynamic_catch
+    def clear_policy_retrieval_point(self, element_guid: str,
+                      body: Optional[dict | DeleteClassificationRequestBody] = None) -> None:
+        """Remove the PolicyRetrievalPoint classification from an element."""
+        loop = asyncio.get_event_loop()
+        loop.run_until_complete(self._async_clear_policy_retrieval_point(element_guid, body))
 
 
 if __name__ == "__main__":

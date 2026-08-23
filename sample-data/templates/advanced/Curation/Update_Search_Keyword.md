@@ -1,15 +1,7 @@
 ___
 
 ## Update Search Keyword
-> Update a search keyword already attached to an element (0012 SearchKeyword).
-
-### Target Element
->	**Input Required**: True
-
->	**Attribute Type**: Reference Name
-
->	**Description**: Qualified name of the existing element being classified or linked.
-
+> Update a search keyword already attached to an element (0012 SearchKeyword), identified by the keyword entitys own GUID.
 
 ### Keyword
 >	**Input Required**: True
@@ -27,6 +19,14 @@ ___
 >	**Description**: A label used to identify or categorise a relationship link.
 
 >	**Alternative Labels**: Wire Label
+
+
+### Search Keyword GUID
+>	**Input Required**: False
+
+>	**Attribute Type**: Reference Name
+
+>	**Description**: The unique identifier of the SearchKeyword entity itself (0012), as opposed to the element it is attached to. Required for Update/Detach; not used for Attach (which creates a new keyword).
 
 
 ### Keyword Description

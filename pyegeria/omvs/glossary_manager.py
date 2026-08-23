@@ -4051,5 +4051,77 @@ class GlossaryManager(CollectionManager):
         loop.run_until_complete(self._async_clear_is_class_word(term_guid, body))
 
 
+    #
+    # Additional relationship/classification maintenance - added to close
+    # the gap found by scripts/omvs_audit.py against the glossary-manager
+    # .http ground truth (2026-08-21). Note the .http ground truth documents
+    # these two under /glossary-terms/... rather than the /glossaries/terms/...
+    # segment used by the existing term methods in this file - kept as
+    # documented rather than assumed to be the same root.
+    #
+
+    @dynamic_catch
+    async def _async_link_used_in_context(self, glossary_term_guid: str, context_element_guid: str,
+                                          body: Optional[dict | NewRelationshipRequestBody] = None) -> None:
+        """Attach a glossary term to the element that provides its usage context (UsedInContext relationship). Async version."""
+        url = f"{self.platform_url}/servers/{self.view_server}/api/open-metadata/glossary-manager/glossary-terms/{glossary_term_guid}/used-in-contexts/{context_element_guid}/attach"
+        await self._async_new_relationship_request(url, ["UsedInContextProperties"], body)
+        logger.info(f"Context element {context_element_guid} linked to glossary term {glossary_term_guid}.")
+
+    @dynamic_catch
+    def link_used_in_context(self, glossary_term_guid: str, context_element_guid: str,
+                             body: Optional[dict | NewRelationshipRequestBody] = None) -> None:
+        """Attach a glossary term to the element that provides its usage context (UsedInContext relationship)."""
+        loop = asyncio.get_event_loop()
+        loop.run_until_complete(self._async_link_used_in_context(glossary_term_guid, context_element_guid, body))
+
+    @dynamic_catch
+    async def _async_detach_used_in_context(self, glossary_term_guid: str, context_element_guid: str,
+                                            body: Optional[dict | DeleteRelationshipRequestBody] = None) -> None:
+        """Detach a glossary term from its usage context element. Async version."""
+        url = f"{self.platform_url}/servers/{self.view_server}/api/open-metadata/glossary-manager/glossary-terms/{glossary_term_guid}/used-in-contexts/{context_element_guid}/detach"
+        await self._async_delete_relationship_request(url, body)
+        logger.info(f"Context element {context_element_guid} detached from glossary term {glossary_term_guid}.")
+
+    @dynamic_catch
+    def detach_used_in_context(self, glossary_term_guid: str, context_element_guid: str,
+                               body: Optional[dict | DeleteRelationshipRequestBody] = None) -> None:
+        """Detach a glossary term from its usage context element."""
+        loop = asyncio.get_event_loop()
+        loop.run_until_complete(self._async_detach_used_in_context(glossary_term_guid, context_element_guid, body))
+
+    @dynamic_catch
+    async def _async_set_term_as_element_supplement(self, glossary_term_guid: str,
+                                                     body: Optional[dict | NewClassificationRequestBody] = None) -> None:
+        """Classify a glossary term as a supplement (additional description) for another element. Async version."""
+        url = f"{self.platform_url}/servers/{self.view_server}/api/open-metadata/glossary-manager/glossary-terms/{glossary_term_guid}/element-supplement"
+        if body is None:
+            body = {"class": "NewClassificationRequestBody", "properties": {"class": "ElementSupplementProperties"}}
+        await self._async_new_classification_request(url, ["ElementSupplementProperties"], body)
+        logger.info(f"Added ElementSupplement classification to {glossary_term_guid}")
+
+    @dynamic_catch
+    def set_term_as_element_supplement(self, glossary_term_guid: str,
+                                       body: Optional[dict | NewClassificationRequestBody] = None) -> None:
+        """Classify a glossary term as a supplement (additional description) for another element."""
+        loop = asyncio.get_event_loop()
+        loop.run_until_complete(self._async_set_term_as_element_supplement(glossary_term_guid, body))
+
+    @dynamic_catch
+    async def _async_clear_term_as_element_supplement(self, glossary_term_guid: str,
+                                                       body: Optional[dict | DeleteClassificationRequestBody] = None) -> None:
+        """Remove the ElementSupplement classification from a glossary term. Async version."""
+        url = f"{self.platform_url}/servers/{self.view_server}/api/open-metadata/glossary-manager/glossary-terms/{glossary_term_guid}/element-supplement/remove"
+        await self._async_delete_classification_request(url, body)
+        logger.info(f"Removed ElementSupplement classification from {glossary_term_guid}")
+
+    @dynamic_catch
+    def clear_term_as_element_supplement(self, glossary_term_guid: str,
+                                         body: Optional[dict | DeleteClassificationRequestBody] = None) -> None:
+        """Remove the ElementSupplement classification from a glossary term."""
+        loop = asyncio.get_event_loop()
+        loop.run_until_complete(self._async_clear_term_as_element_supplement(glossary_term_guid, body))
+
+
 if __name__ == "__main__":
     print("Main-Glossary Manager")
