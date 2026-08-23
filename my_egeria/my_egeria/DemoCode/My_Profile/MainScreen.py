@@ -35,20 +35,52 @@ class MainScreen(Screen):
         self.selected_table = None
         self.selected_row = None
 
+        self.associatioons_table: DataTable = DataTable(id="associations_table")
+        self.associatioons_table.zebra_stripes = True
+        self.associatioons_table.cursor_type = "row"
+
+        self.projects_table: DataTable = DataTable(id="projects_table")
+        self.projects_table.zebra_stripes = True
+        self.projects_table.cursor_type = "row"
+
+        self.communities_table: DataTable = DataTable(id="communities_table")
+        self.communities_table.zebra_stripes = True
+        self.communities_table.cursor_type = "row"
+
+        self.roles_table: DataTable = DataTable(id="roles_table")
+        self.roles_table.zebra_stripes = True
+        self.roles_table.cursor_type = "row"
+
+        self.teams_table: DataTable = DataTable(id="teams_table")
+        self.teams_table.zebra_stripes = True
+        self.teams_table.cursor_type = "row"
+
+        self.blogs_table: DataTable = DataTable(id="blogs_table")
+        self.blogs_table.zebra_stripes = True
+        self.blogs_table.cursor_type = "row"
+
+        self.journal_table: DataTable = DataTable(id="journal_table")
+        self.journal_table.zebra_stripes = True
+        self.journal_table.cursor_type = "row"
+
+        self.todos_table: DataTable = DataTable(id="todos_table")
+        self.todos_table.zebra_stripes = True
+        self.todos_table.cursor_type = "row"
+
     def compose(self) -> ComposeResult:
         # place widgets into grid on screen, note sequence determines position!
         yield Header(show_clock=True, id="main_header")
 
         yield ScrollableContainer(
-            Static("Projects"),
-            DataTable(id="projects_table"),
-            id="main_projects_container"
+            Static("My Associations"),
+            DataTable(id="associations_table"),
+            id="main_associations_container"
         )
 
         yield ScrollableContainer(
-            Static("Communities"),
-            DataTable(id="communities_table"),
-            id="main_communities_container"
+            Static("My Collections"),
+            DataTable(id="my_collections_table"),
+            id="main_my_collections_container"
         )
 
         yield ScrollableContainer(
