@@ -905,6 +905,53 @@ probe only exercised `Produced Guards`.
 
 ---
 
+### ISSUE-72: `GetRequestBody`/`ResultsRequestBody`'s `class` field was a hardcoded `Literal` matching only the base model's own name — rejected every real subclass tag, including ones this SDK's own docstrings tell callers to use
+
+**Status:** fixed 2026-08-23 (Pyegeria — `pyegeria/models/models.py`,
+`tests/micro-tests/test_get_request_body_class_literal.py`). Reported
+upstream as [GitHub issue #298](https://github.com/odpi/egeria-python/issues/298)
+by the egeria-workspaces session, found live via `PyegeriaWebHandler` after
+upgrading to pyegeria 6.1.1.
+
+**Layer:** pyegeria. Single root cause, widely reached.
+
+`ServerClient._async_get_guid_request`'s (and
+`_async_get_request_body_request`'s, `_async_get_results_body_request`'s)
+dict-body branch always validated against
+`TypeAdapter(GetRequestBody)`/`TypeAdapter(ResultsRequestBody)`, and both
+models' `class_` field was `Literal["GetRequestBody"]` /
+`Literal["ResultsRequestBody"]` — an exact match against the *base* model's
+own name. Any caller-supplied dict naming a real Egeria polymorphism
+subclass — structurally identical, different `class` tag — was rejected
+client-side before the request ever reached the server. Two live hits:
+
+1. `SolutionArchitect.get_solution_component_by_guid`/
+   `get_solution_blueprint_by_guid` — the method's own docstring documents
+   `"class": "AnyTimeRequestBody"`, which doesn't exist as its own Pydantic
+   model, so following the docstring produced a `PyegeriaInvalidParameterException`
+   / user-facing 500.
+2. `ProjectManager.get_linked_projects` — same failure with `"class":
+   "RelationshipRequestBody"`. Worse in practice: callers wrapping this in
+   a reasonable try/except ("does this project have children" is often
+   best-effort) got a silent empty list instead of a visible error.
+
+Since nothing downstream branches on the exact string in `class_` (these
+two base models are never dispatched through a discriminated union —
+`TypeAdapter(GetRequestBody)` is a single-type adapter), the fix loosens
+`class_` on both models from `Literal[...]` to plain `str`: the field
+still must be present, but any real subclass tag now round-trips through
+unchanged in `model_dump_json`, matching the ~90 call sites across the SDK
+that pass a `dict | GetRequestBody` body through this shared helper family.
+
+**Not changing** the other ~60 `Literal`-tagged `class_` fields elsewhere
+in `models.py` — those model narrower, single-purpose Properties/RequestBody
+shapes where the literal genuinely pins down which typed model applies;
+this defect was specific to `GetRequestBody`/`ResultsRequestBody` being
+generic "workhorse" bodies reused, by Egeria's own design, under many
+different polymorphism tags.
+
+---
+
 ## Open pyegeria items (including follow-ons blocked on an Egeria fix)
 
 Actionable in this repo. Some of these are fully blocked today — waiting
