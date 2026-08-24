@@ -952,6 +952,98 @@ different polymorphism tags.
 
 ---
 
+### ISSUE-73: `AgreementActor`/`AgreementItem`/`DigitalProductDependency` — create-time relationship GUID discarded, Detach had no way to target a specific instance (ISSUE-68 follow-up)
+
+**Status:** fixed 2026-08-24 (Pyegeria — `pyegeria/omvs/product_manager.py`;
+Dr.Egeria — `md_processing/v2/collection_manager_processor.py`,
+`md_processing/data/compact_commands/commands_digital_products_compact.json`;
+tests — `tests/micro-tests/test_collection_link_multilink_guid.py`).
+
+**Layer:** Pyegeria + Dr.Egeria (`CollectionLinkProcessor`).
+
+All three of `AgreementActor`, `AgreementItem`, `DigitalProductDependency`
+are `MULTI_LINK` (confirmed live, see `pyegeria.core.relationship_multiplicity`
+— 25 `MULTI_LINK` types today, up from 21 when ISSUE-68 was written;
+`SolutionLinkingWire` has since flipped `UNI_LINK` → `MULTI_LINK` live,
+resolving that entry's "known discrepancy" note). ISSUE-68's own audit
+fixed the SDK layer to return the new relationship's GUID for two of these
+three (`_async_link_agreement_actor`/`_async_link_agreement_item`), but
+`CollectionLinkProcessor.apply_changes()` — the Dr.Egeria processor above
+them — never consumed it: `Link Agreement Item`/`Link Agreement Actor`/
+`Link Product Dependency` all discarded the return value, leaving the user
+with no way to reference a specific relationship instance for a later
+Detach. `_async_link_digital_product_dependency` itself was worse — its
+signature was still `-> None`, silently discarding the GUID
+`_async_new_relationship_request` (its own underlying helper) already
+returned, even though every sibling `_async_link_*` fixed under ISSUE-68
+used the same helper correctly.
+
+On Detach, `AgreementItem`/`DigitalProductDependency` went straight to a
+pair-based detach call with no fallback at all — ambiguous (server-defined
+behavior, not controllable client-side) if two instances existed between
+the same pair. `AgreementActor` had a partial mitigation
+(`_async_resolve_agreement_actor_relationship_guid`, a first-match lookup
+by element pair) but that's still wrong when 2+ `AgreementActor`
+relationships genuinely share the same (agreement, actor) pair (e.g.
+different `actorRole` values). Separately, GUID-targeted detach methods
+(`_async_detach_agreement_item_by_id`, `_async_detach_digital_product_dependency_by_id`)
+already existed in the SDK — added by PR #294 (2026-08-21, three days
+*after* ISSUE-68's audit) — but nothing wired `CollectionLinkProcessor` to
+use them; the OMVS gap-closure work that added them was scoped as pure SDK
+audit, with no accompanying check of existing Dr.Egeria processors.
+
+**Fix:**
+- `_async_link_digital_product_dependency`/`link_digital_product_dependency`
+  (`product_manager.py`) now return the relationship GUID, matching the
+  ISSUE-68 pattern for its siblings.
+- `CollectionLinkProcessor`'s `Link Agreement Item`/`Link Agreement Actor`/
+  `Link Product Dependency` branches capture the returned GUID(s) into
+  `parsed_output["guid"]` and display them in the result markdown under a
+  "Relationship GUID(s)" heading.
+- Added a `GUID` attribute (already a shared attribute definition elsewhere
+  in the compact spec) to the `Agreement Actor`/`Agreement Item`/`Digital
+  Product Dependency` bundles via the Spec Editor's REST API, so it's
+  available on both Link and (auto-generated) Detach variants of these
+  three commands.
+- Detach now checks for an explicit `GUID` attribute first: if present,
+  `AgreementItem`/`DigitalProductDependency` route to their `_by_id`
+  detach methods and `AgreementActor` calls `_async_detach_agreement_actor`
+  directly with it (skipping the resolver). If absent, all three fall back
+  to the previous pair-based/resolver behavior unchanged — backward
+  compatible with markdown written before this attribute existed, and
+  still correct for the common single-instance-per-pair case.
+
+**Tests:** `test_collection_link_multilink_guid.py` (7 tests, fake client,
+no live server required) — covers GUID capture/display on all three Link
+branches and both the explicit-GUID and fallback paths on Detach for all
+three. Full `pytest tests/micro-tests/` green throughout.
+
+**Caught while auditing this exact area for a comprehensive multi-link
+inventory** (dwolfson: "inventory the relationships we currently support
+in Dr.Egeria to see which are multi-link... verify that we have the
+appropriate Dr.Egeria commands implemented and process them in the correct
+manner") — not a fresh regression, but a gap that opened silently between
+ISSUE-68's SDK-layer fix and this session, illustrating why "new SDK method
+added" and "existing processor updated to use it" need to be checked
+together, not assumed to travel as one change.
+
+**One untriaged `MULTI_LINK` type found by that same inventory, not yet
+looked at:** the live count is now 25 `MULTI_LINK` types (up from 21 when
+ISSUE-68 was written). `DataLineageRelationship` was already in ISSUE-68's
+"no OMVS wrapper implemented" list and its commit-3 follow-up explicitly
+checked it against a live server's `/v3/api-docs` (result: no real REST
+endpoint exists, per that entry above). `Exception`, by contrast, is a
+type from Egeria's 6.1 open-metadata-types archive that ISSUE-68 never
+considered at all (predates that entry's audit) — it has no pyegeria OMVS
+wrapper and has **not** been checked against a live server to confirm
+whether a real REST endpoint exists. (`CatalogTarget` was already covered
+by ISSUE-68's audit; `SolutionLinkingWire` is the flip noted above, not a
+new type.) `Exception` is left untriaged here rather than guessed at —
+same standing rule as everywhere else in this file, no pyegeria fix
+without checking real ground truth first.
+
+---
+
 ## Open pyegeria items (including follow-ons blocked on an Egeria fix)
 
 Actionable in this repo. Some of these are fully blocked today — waiting
@@ -1590,6 +1682,14 @@ explicit direction, `relationshipCategory` is the source of truth going
 forward for new/updated detection logic; reconciling
 `SolutionLinkingWire`'s existing multi-link-shaped code against that is
 left as a follow-up, not addressed here.
+
+**Update 2026-08-24:** re-queried the live server while auditing the full
+multi-link inventory (see ISSUE-73) — `SolutionLinkingWire` is now
+`MULTI_LINK` (25 `MULTI_LINK` types total, up from 21 above). The buggy 6.1
+Egeria patch that should have set this (referenced above) was corrected in
+a later patch server-side; Dr.Egeria's existing multi-link-shaped code for
+`SolutionLinkingWire` is therefore now consistent with the live server
+again, with no client-side change needed. This discrepancy is resolved.
 
 **Follow-up, commit 3** (`asset_maker.py` — dwolfson asked whether the 4
 missing-wrapper types needed building): checked each of the 4 against a
