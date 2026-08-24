@@ -5,11 +5,11 @@
    This file provides a screen for a user to add a comment to a community for my_egeria.
 
 """
-
+from textual import on
 from textual.app import ComposeResult
-from textual.containers import ScrollableContainer
+from textual.containers import ScrollableContainer, Horizontal
 from textual.screen import ModalScreen
-from textual.widgets import Header, Static, TextArea, Footer
+from textual.widgets import Header, Static, TextArea, Footer, Input, DataTable, Switch, Button
 from pyegeria import Egeria
 
 class AddCommentScreen(ModalScreen):
@@ -105,41 +105,97 @@ class AddProjectScreen(ModalScreen):
     """ Add a project as an element the user is connected to """
 
     BINDINGS = [
-        ("s", "save_project", "Save Project"),
+        ("q", "quit", "Quit Edit Project"),
         ("c", "cancel", "Cancel")
-    ]
+        ]
 
     CSS_PATH = "my_profile.tcss"
 
     def __init__(self, project_GUID):
         super().__init__()
         self.project_GUID = project_GUID
+        main_screen = self.app.get_screen("main")
+        self.project_table = main_screen.query_one("#project_table", DataTable())
+        self.project_table.cursor_type = "row"
+        self.project_table.zebra_stripes = True
+        self.project_type = ""
+        self.project_name = ""
+        self.project_description = ""
+        self.project_id = ""
+        self.result = 0
 
     def on_mount(self):
         self.title = "Egeria - My Profile"
-        self.subtitle = "Add Comment to a Community"
+        self.subtitle = "Add Project to Egeria"
 
     def compose(self) -> ComposeResult:
         """This method composes the UI for the AddProjectScreen."""
         yield Header(show_clock=True)
+        yield DataTable(id="self.project_table")
         yield ScrollableContainer(
-
+            Static(f"[b]Please complete input fields before selecting Add Project[/b]"),
+            Static(f"Project Type - Campaign, StudyProject, Task, PersonalProject or Project."),
+            Input(placeholder="Enter Project Type", id="project_type_input"),
+            Input(placeholder="Enter Project Name (Display Name)", id="project_name_input"),
+            Input(placeholder="Enter Project Description", id="project_description_input"),
+            Input(placeholder="Enter a short business id for project", id="project_id_input"),
+            Static(f"Do you wish to link this project to your profile? [b]Default is True (link the project)[/b]"),
+            Switch(value=True, id="link_project_switch"),
             id="association_input_container"
-        )
+            )
+        yield Horizontal(
+            Button(label="Add Project", id="add_project_button", variant="primary"),
+            Button(label="Delete Project", id="delete_project_button", variant="error"),
+            id="project_buttons_container"
+            )
         yield Footer()
 
-    def action_save_project(self):
+    @on(Input.Changed)
+    def handle_input_change(self, event: Input.Changed):
+        if event.control.id == "project_type_input":
+            self.project_type = event.value
+        elif event.control.id == "project_name_input":
+            self.project_name = event.value
+        elif event.control.id == "project_description_input":
+            self.project_description = event.value
+        elif event.control.id == "project_id_input":
+            self.project_id = event.value
 
-        # comment = self.query_one("#community_comment-textarea", TextArea)
-        # if comment:
-        #     user_comment = comment.text
-        #     self.log(f"User comment: {user_comment}")
-        #     self.dismiss([self.community_GUID, user_comment])
-        # else:
-        #     container =self.query_one("#comment_textarea_container", ScrollableContainer)
-        #     container.mount(Static(f"[@b aquamarine]Please enter a comment prior to selecting Save Comment[/]"))
-        #     container.refresh()
-        pass
+    @on(DataTable.RowHighlighted)
+    def handle_row_hovered(self, event: DataTable.RowHighlighted):
+        self.table_row = event.row_key
+
+    @on(DataTable.RowSelected)
+    def handle_row_selected(self, event: DataTable.RowSelected):
+        self.table_row = event.row_key
+
+    @on(Button.Pressed, id="add_project_button")
+    def handle_add_project(self):
+        if not self.project_type or not self.project_name:
+            self.notify("At least Project Type and Project Name are required", timeout=12, severity="error")
+        else:
+            self.result =self.app.add_project(self.project_type, self.project_name, self.project_description, self.project_id)
+        if self.result == 200:
+            self.notify("Project added successfully", timeout=15, severity="information")
+
+        else:
+            self.notify("Project addition to Egeria failed", timeout=20, severity="error")
+
+        self.query_one("project_type_input", Input).clear()
+        self.query_one("project_name_input", Input).clear()
+        self.query_one("project_description_input", Input).clear()
+        self.query_one("project_id_input", Input).clear()
+        self.project_table.refresh()
+
+    @on(Button.Pressed, id="delete_project_button")
+    def handle_delete_project(self):
+        if not self.table_row:
+            self.notify("Please select a project to delete before you press the delete button", timeout=12, severity="error")
+        else:
+            self.app.delete_project(self.table_row)
+
+    def action_quit(self):
+        self.dismiss(200)
 
     def action_cancel(self):
         self.dismiss(200)

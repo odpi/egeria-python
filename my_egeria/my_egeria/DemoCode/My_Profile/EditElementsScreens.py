@@ -430,7 +430,7 @@ class EditJournalScreen(ModalScreen):
             self.journal_container.refresh(layout=True)
 
 
-class EditProfileScreen(ModalScreen[int]):
+class EditProfileScreen(ModalScreen):
     """Modal screen to create a new user profile in Egeria.
 
     Dismisses with:
@@ -976,3 +976,17 @@ class EditTodosScreen(ModalScreen):
         else:
             self.todos_container.mount(Static("Please select a row to delete prior to using the hot key!"))
             self.todos_container.refresh(layout=True)
+
+
+class EditAssociationsScreen(ModalScreen):
+    """Edit the users associations """
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        pass
+
+
+class EditActivityScreen(ModalScreen):
+    """Edit the users activity """
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        pass

@@ -56,8 +56,14 @@ from EditElementsScreens import (EditIdentitiesScreen,
                                  EditTeamsScreen,
                                  EditCommunitiesScreen,
                                  EditRolesScreen,
-                                 EditProfileScreen)
-
+                                 EditProfileScreen,
+                                 EditIdentitiesScreen,
+                                 EditAssociationsScreen,
+                                 EditProjectsScreen,
+                                 EditBlogsScreen,
+                                 EditActivityScreen,
+                                 EditJournalScreen,
+                                 EditTodosScreen,)
 
 class MyProfileApp(App):
     """My Profile App.
@@ -80,6 +86,8 @@ class MyProfileApp(App):
         "edit_communities": EditCommunitiesScreen,
         "add_comment": AddCommentScreen,
         "show_comment": ShowCommentScreen,
+        "edit_associations": EditAssociationsScreen,
+        "edit_activity": EditActivityScreen,
         "edit_identities": EditIdentitiesScreen,
         "edit_roles": EditRolesScreen,
         "edit_teams": EditTeamsScreen,
@@ -629,43 +637,6 @@ class MyProfileApp(App):
                                                        domain.get("Type Name", ""),
                                                        domain.get("GUID", ""))
                     continue
-
-            # Data Specifications removed from the display, code is working but being replaced by Root Collections table
-            # data_specification_table: DataTable = DataTable(id="data_specification_table")
-            # data_specification_table.add_columns("Display Name", "Description", "Qualified Name")
-            # data_specification_table.cursor_type = "row"
-            # data_specification_table.zebra_stripes = True
-            # try:
-            #     self.data_specification_data = exec_report_spec(format_set_name="Data-Specifications",
-            #                                                      output_format="DICT",
-            #                                                      params = {"search_string": "*"},
-            #                                                      view_server=self.view_server,
-            #                                                      view_url=self.platform_url,
-            #                                                      user=self.user_name,
-            #                                                      user_pass=self.user_password)
-            # except PyegeriaException as e:
-            #     self.log(f"Error retrieving data specification details: {e!s}")
-            #     self.exit(423)
-            #     return (423)
-            #
-            # if isinstance(self.data_specification_data, dict):
-            #     self.data_specification_data_extract = self.data_specification_data.get("data")
-            # elif isinstance(self.data_specification_data, list):
-            #     self.data_specification_data_extract = self.data_specification_data
-            # else:
-            #     self.data_specification_data_extract = self.data_specification_data.get("Data-Specifications") or []
-            #
-            # if self.data_specification_data_extract == [] or self.data_specification_data_extract == {} or self.data_specification_data_extract == None:
-            #     self.log(f"No data specifications found for user {self.user_name}")
-            #     data_specification_table.add_row("No data specifications found", "No data returned from Egeria", "")
-            # else:
-            #     self.log(f"Found {self.data_specification_data_extract} data specifications for user {self.user_name}")
-            #
-            #     for spec in self.data_specification_data_extract:
-            #         data_specification_table.add_row(spec.get("Display Name", ""),
-            #                                       spec.get("Description", ""),
-            #                                       spec.get("Qualified Name", ""))
-            #         continue
 
             # Root Collections
 
@@ -1963,7 +1934,7 @@ class MyProfileApp(App):
         # Return all other types unchanged (ints, floats, strings, None)
         return data
 
-    def user_identities_callback(self):
+    def edit_user_identity_callback(self):
         """ Callback routine for the user identities screen
             the user has requested to exit the screen and so will will
             push the main screen again"""
@@ -2071,8 +2042,30 @@ class MyProfileApp(App):
             self.log(f"Unexpected return type from EditProfileScreen: {type(return_c)}")
             self.push_screen("main")
 
-    def edit_selected_table(self):
-        pass
+    def edit_selected_table(self, table_name):
+        """Edit selected table based on the provided table name."""
+        self.selected_table = table_name
+        if self.selected_table == "associations_table":
+            self.push_screen(EditAssociationsScreen(), callback=self.edit_associations_callback)
+        elif self.selected_table == "projects_table":
+            self.push_screen(EditProjectsScreen(), callback=self.edit_projects_callback)
+        elif self.selected_table == "communities_table":
+            self.push_screen(EditCommunitiesScreen(), callback=self.edit_communities_callback)
+        elif self.selected_table == "roles_table":
+            self.push_screen(EditRolesScreen(), callback=self.edit_roles_callback)
+        elif self.selected_table == "blog_table":
+            self.push_screen(EditBlogsScreen(), callback=self.edit_blog_callback)
+        elif self.selected_table == "activity_table":
+            self.push_screen(EditActivityScreen(), callback=self.edit_activity_callback)
+        elif self.selected_table == "journals_table":
+            self.push_screen(EditJournalScreen(), callback=self.edit_journals_callback)
+        elif self.selected_table == "user_identity_table":
+            self.push_screen(EditIdentitiesScreen(), callback=self.edit_user_identity_callback)
+        elif self.selected_table == "teams_table":
+            self.push_screen(EditTeamsScreen(), callback=self.edit_teams_callback)
+        elif self.selected_table == "todos_table":
+            self.push_screen(EditTodosScreen(), callback=self.edit_todos_callback
+                             )
 
     def add_note(self):
         pass
@@ -2159,6 +2152,162 @@ class MyProfileApp(App):
             eclient.close_session()
         return(del_comm_rc)
 
+    def edit_associations_callback(self):
+        """Callback for editing associations"""
+        pass
+
+    def edit_projects_callback(self):
+        """Callback for editing projects"""
+        pass
+
+    def edit_blog_callback(self):
+        """Callback for editing blog"""
+        pass
+
+    def edit_activity_callback(self):
+        """Callback for editing activity"""
+        pass
+
+    def edit_journals_callback(self):
+        """Callback for editing associations"""
+        pass
+
+    def edit_user_identity_callback(self):
+        """Callback for editing user identity"""
+        pass
+
+    def add_comment(self):
+        """ Adding a comment """
+        pass
+
+    def add_UserIdentity(self):
+        """ Adding a user identity """
+        pass
+
+    def AddJournalEntry(self):
+        """ Adding a journal entry """
+        pass
+
+    def add_team(self):
+        """ Adding a team """
+        pass
+
+    def add_blog_entry(self):
+        """ Adding a blog entry """
+        pass
+
+    def add_todos(self):
+        """ Adding a todo """
+        pass
+
+    def add_community(self):
+        """ Adding a community """
+        pass
+
+    def add_project(self, project_type, project_name, project_description, project_id) -> int:
+        """ Adding a project """
+        self.project_type = project_type
+        self.project_name = project_name
+        self.project_description = project_description
+        self.project_id = project_id
+
+        # Create a new project
+        body_create_project = {
+            "class": "NewElementRequestBody",
+            "properties": {
+                "classificationName": self.project_type,
+                # Project type - Campaign, StudyProject, Task, PersonalProject or Project.
+                "displayName": self.project_name,  # Display name of the project.
+                "description": self.project_description,  # Description of the project. Defaults to None
+                "identifier": self.project_id  # Business identifier for the project. Defaults to None
+            }
+        }
+
+        eclient=Egeria(self.user_name,
+                       self.user_password,
+                       self.view_server,
+                       self.platform_url)
+
+        token = eclient.create_egeria_bearer_token()
+        try:
+            guid = eclient.create_project(
+                anchor_guid=None,  # Optional - The identity of the anchor element for the project.
+                parent_guid=None,  # Optional - The identity of the parent element for the project.
+                parent_relationship_type_name="Project",
+                # Optional - Type of relationship to the parent element. Defaults to None
+                parent_at_end1=False,  # Optional - True if the parent is at end 1 of the relationship. Defaults to False
+                # display_name="",  # Display name of the project. Defaults to None.
+                # description="My new project",  # Description of the project. Defaults to None.
+                # classification_name="Project",
+                # identifier=None,  # Business identifier for the project. Defaults to None
+                is_own_anchor=False,
+                status=None,  # Project status. Defaults to None
+                phase=None,  # Project phase. Defaults to None
+                health=None,  # Project health. Defaults to None
+                start_date=None,  # Start date of the project. Defaults to None.
+                planned_end_date=None,  # Planned completion date of the project. Defaults to None.
+                body=body_create_project  # A dict representing the details of the project to create.
+            )
+            self.action_refresh()
+            return_code = 200
+        except PyegeriaException as e:
+            print_basic_exception(e)
+            return_code = 400
+        finally:
+            eclient.close_session()
+            return(return_code)
+
+    def delete_project(self, table_row):
+        """ Deleting a project """
+        self.row_to_delete = table_row
+        row_data = self.projects_table.get_row(self.row_to_delete)
+        self.project_qualified_name = row_data[2]
+        eclient = Egeria(
+            self.user_name,
+            self.user_password,
+            self.view_server,
+            self.platform_url
+            )
+        eclient.create_egeria_bearer_token()
+        # get the projects guid using its qualified name
+        try:
+            # 1. Retrieve the element by its unique qualified name
+            asset_element = eclient.get_asset_by_name(qualified_name=self.project_qualified_name)
+            # 2. Extract the GUID from the returned object wrapper
+            if asset_element and hasattr(asset_element, 'element_header'):
+                self.element_guid = asset_element.element_header.GUID
+                self.log(f"The GUID for {self.project_qualified_name} is: {self.element_guid}")
+            else:
+                # Alternate fallbacks depend on the specific Pyegeria object dictionary type
+                self.element_guid = asset_element.get('GUID') or asset_element.get('elementHeader', {}).get('GUID')
+                self.log(f"The GUID for {self.project_qualified_name} is: {self.element_guid}")
+        except PyegeriaException as e:
+            self.log(f"Error retrieving project GUID: {e}")
+            print_basic_exception(e)
+            return(401)
+        finally:
+            eclient.close_session()
+        #now we have the GUID we can use it to delete the project
+        try:
+            body = {
+                "class": "DeleteClassificationRequestBody",
+                "externalSourceGUID": self.element_guid,
+                "externalSourceName": self.project_qualified_name,
+                "effectiveTime": "{{$isoTimestamp}}",
+                "forLineage": False,
+                "forDuplicateProcessing": False
+            }
+            eclient.clear_project_classification( body=body)
+            self.action_refresh()
+        except PyegeriaException as e:
+            print_basic_exception(e)
+        finally:
+            # --- Clean up ---
+            eclient.close_session()
+
+    def add_role(self):
+        """ Adding a role """
+        pass
 
 if __name__ == "__main__":
     app = MyProfileApp()
