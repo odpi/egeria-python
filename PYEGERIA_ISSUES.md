@@ -1027,6 +1027,21 @@ ISSUE-68's SDK-layer fix and this session, illustrating why "new SDK method
 added" and "existing processor updated to use it" need to be checked
 together, not assumed to travel as one change.
 
+**One untriaged `MULTI_LINK` type found by that same inventory, not yet
+looked at:** the live count is now 25 `MULTI_LINK` types (up from 21 when
+ISSUE-68 was written). `DataLineageRelationship` was already in ISSUE-68's
+"no OMVS wrapper implemented" list and its commit-3 follow-up explicitly
+checked it against a live server's `/v3/api-docs` (result: no real REST
+endpoint exists, per that entry above). `Exception`, by contrast, is a
+type from Egeria's 6.1 open-metadata-types archive that ISSUE-68 never
+considered at all (predates that entry's audit) — it has no pyegeria OMVS
+wrapper and has **not** been checked against a live server to confirm
+whether a real REST endpoint exists. (`CatalogTarget` was already covered
+by ISSUE-68's audit; `SolutionLinkingWire` is the flip noted above, not a
+new type.) `Exception` is left untriaged here rather than guessed at —
+same standing rule as everywhere else in this file, no pyegeria fix
+without checking real ground truth first.
+
 ---
 
 ## Open pyegeria items (including follow-ons blocked on an Egeria fix)
