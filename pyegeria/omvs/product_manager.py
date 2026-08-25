@@ -788,7 +788,7 @@ class ProductManager(CollectionManager):
         consumer_product_guid: str,
         consumed_product_guid: str,
         body: Optional[dict | NewRelationshipRequestBody] = None,
-    ) -> None:
+    ) -> Optional[str]:
         """Link two dependent digital products. Async version.
 
         Parameters
@@ -802,7 +802,14 @@ class ProductManager(CollectionManager):
 
         Returns
         -------
-        None
+        str | None
+            The GUID of the newly created DigitalProductDependency relationship
+            (DigitalProductDependency is MULTI_LINK -- see
+            pyegeria.core.relationship_multiplicity -- more than one dependency
+            relationship can exist between the same product pair, so this GUID
+            is needed to target this specific instance later via
+            _async_detach_digital_product_dependency_by_id). None if the server
+            didn't return one.
 
         Raises
         ------
@@ -827,15 +834,16 @@ class ProductManager(CollectionManager):
             f"{self.product_manager_command_root}/digital-products/"
             f"{consumer_product_guid}/product-dependencies/{consumed_product_guid}/attach"
         )
-        await self._async_new_relationship_request(url, ["DigitalProductDependencyProperties"], body)
+        guid = await self._async_new_relationship_request(url, ["DigitalProductDependencyProperties"], body)
         logger.info(f"Linked {consumed_product_guid} -> {consumer_product_guid}")
+        return guid
 
     def link_digital_product_dependency(
         self,
         consumer_product_guid: str,
         consumed_product_guid: str,
         body: Optional[dict | NewRelationshipRequestBody] = None,
-    ) -> None:
+    ) -> Optional[str]:
         """Link two dependent digital products.
 
         Parameters
@@ -849,7 +857,9 @@ class ProductManager(CollectionManager):
 
         Returns
         -------
-        None
+        str | None
+            The GUID of the newly created DigitalProductDependency relationship.
+            None if the server didn't return one.
 
         Raises
         ------
@@ -871,7 +881,7 @@ class ProductManager(CollectionManager):
         ```
         """
         loop = asyncio.get_event_loop()
-        loop.run_until_complete(
+        return loop.run_until_complete(
             self._async_link_digital_product_dependency(
                 consumer_product_guid, consumed_product_guid, body
             )

@@ -109,6 +109,7 @@ from commands.tech.get_tech_details import tech_details_viewer
 from commands.tech.get_tech_type_template import template_viewer
 from commands.tech.list_all_om_type_elements import list_elements
 from commands.tech.list_all_om_type_elements_x import list_elements_x
+from commands.tech.list_element_register import element_register
 from commands.tech.list_all_related_elements import list_related_elements
 from commands.tech.list_anchored_elements import display_anchored_elements
 from commands.tech.list_asset_types import display_asset_types
@@ -940,6 +941,35 @@ def get_element_info(ctx, om_type):
     """Display a table of elements of an Open Metadata Type"""
     c = ctx.obj
     display_elements(om_type, c.view_server, c.view_server_url, c.userid, c.password, c.jupyter, c.width)
+
+
+@show_elements.command("register")
+@click.pass_context
+@click.option("--om_type", default="Referenceable", help="Open Metadata Type to browse (subtypes included)")
+@click.option("--search", default=None, help="Filter by display name or qualified name substring")
+@click.option("--classification", default=None, help="Filter to elements carrying this classification")
+@click.option("--page-size", type=int, default=100, help="Page size used when paging through results")
+def show_element_register(ctx, om_type, search, classification, page_size):
+    """Display every element of a type family, grouped by its real subtype, with classification badges
+
+    A general-purpose register view: point it at any Open Metadata Type
+    (e.g. "GovernanceDefinition", "Referenceable", "Project",
+    "SolutionComponent") and it groups whatever comes back by each
+    element's own type -- not just governance definitions.
+    """
+    c = ctx.obj
+    element_register(
+        om_type,
+        c.view_server,
+        c.view_server_url,
+        c.userid,
+        c.password,
+        search=search,
+        classification=classification,
+        page_size=page_size,
+        jupyter=c.jupyter,
+        width=c.width,
+    )
 
 
 @show_supply_chains.command("supply-chains")

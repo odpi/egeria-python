@@ -119,4 +119,14 @@ ___
 >	| example_key | example_value |
 
 
+### GUID
+>	**Input Required**: False
+
+>	**Attribute Type**: GUID
+
+>	**Description**: A unique identifier - typically of an element in this context.
+
+>	**Alternative Labels**: guid; Guid
+
+
 ___
