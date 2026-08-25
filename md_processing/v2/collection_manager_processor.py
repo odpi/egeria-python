@@ -248,9 +248,10 @@ class CollectionLinkProcessor(AsyncBaseCommandProcessor):
         verb = self.command.verb
         object_type = self.canonical_object_type
         attributes = self.parsed_output["attributes"]
-        
+
         self.last_body = body = set_rel_request_body(object_type, attributes)
-        
+        new_rel_guids: list[str] = []
+
         if verb in ["Link", "Attach", "Add"]:
             if "Agreement Item" in object_type or "Agreement to Item" in object_type:
                 guid1 = attributes.get('Agreement Name', {}).get('guid')
@@ -269,13 +270,21 @@ class CollectionLinkProcessor(AsyncBaseCommandProcessor):
                     "effectiveFrom": attributes.get("Effective From", {}).get("value"),
                     "effectiveTo": attributes.get("Effective To", {}).get("value")
                 }
-                await self.client._async_link_agreement_item(guid1, guid2, body)
-                
+                # AgreementItem is MULTI_LINK (see pyegeria.core.relationship_multiplicity)
+                # -- more than one item relationship can exist between the same
+                # agreement/item pair, so the created relationship's own GUID is
+                # captured and surfaced here; it's the only reliable way to target
+                # this specific instance later via a "GUID" attribute on Detach.
+                rel_guid = await self.client._async_link_agreement_item(guid1, guid2, body)
+                if rel_guid:
+                    self.parsed_output["guid"] = rel_guid
+                    new_rel_guids.append(rel_guid)
+
             elif "Agreement Actor" in object_type or "Agreement to Actor" in object_type:
                 guid_ag = attributes.get('Agreement Name', {}).get('guid')
                 actor_data = attributes.get('Actors', {})
                 actor_guids = actor_data.get('guid_list') or ([actor_data.get('guid')] if actor_data.get('guid') else [])
-                
+
                 body['properties'] = {
                     "class": "AgreementActorProperties",
                     "typeName": "AgreementActor",
@@ -289,10 +298,15 @@ class CollectionLinkProcessor(AsyncBaseCommandProcessor):
                     "effectiveFrom": attributes.get("Effective From", {}).get("value"),
                     "effectiveTo": attributes.get("Effective To", {}).get("value")
                 }
+                # AgreementActor is MULTI_LINK -- same reasoning as AgreementItem above.
                 for guid_ac in actor_guids:
                     if guid_ac:
-                        await self.client._async_link_agreement_actor(guid_ag, guid_ac, body)
-                
+                        rel_guid = await self.client._async_link_agreement_actor(guid_ag, guid_ac, body)
+                        if rel_guid:
+                            new_rel_guids.append(rel_guid)
+                if len(new_rel_guids) == 1:
+                    self.parsed_output["guid"] = new_rel_guids[0]
+
             elif "Collection Member" in object_type or "Member to Collection" in object_type:
                 guid_coll = attributes.get('Collection Id', {}).get('guid')
                 guid_el = attributes.get('Element Id', {}).get('guid')
@@ -323,8 +337,13 @@ class CollectionLinkProcessor(AsyncBaseCommandProcessor):
                     "effectiveFrom": attributes.get('Effective From', {}).get('value'),
                     "effectiveTo": attributes.get('Effective To', {}).get('value')
                 }
-                await self.client._async_link_digital_product_dependency(guid1, guid2, body)
-                
+                # DigitalProductDependency is MULTI_LINK -- same reasoning as
+                # AgreementItem above.
+                rel_guid = await self.client._async_link_digital_product_dependency(guid1, guid2, body)
+                if rel_guid:
+                    self.parsed_output["guid"] = rel_guid
+                    new_rel_guids.append(rel_guid)
+
             elif "Attach Collection" in object_type:
                 guid_coll = attributes.get('Collection Id', {}).get('guid')
                 guid_res = attributes.get('Resource Id', {}).get('guid')
@@ -361,9 +380,18 @@ class CollectionLinkProcessor(AsyncBaseCommandProcessor):
                 await self.client._async_link_subscriber(guid_sub, guid_sn, body)
 
             logger.success(f"Linked {object_type}")
-            
+
             # Format the output with attributes for better feedback
             header = f"\n\n## {verb} {object_type}\n\nOperation completed.\n\n"
+            if new_rel_guids:
+                # These object types are MULTI_LINK (see
+                # pyegeria.core.relationship_multiplicity) -- more than one
+                # instance can exist between the same pair of elements, so
+                # the relationship's own GUID (not just the element pair) is
+                # required to target this specific instance later via a
+                # "GUID" attribute on Detach.
+                label = "Relationship GUID" if len(new_rel_guids) == 1 else "Relationship GUIDs"
+                header += f"### {label}\n" + "\n".join(f"- `{g}`" for g in new_rel_guids) + "\n\n"
             if "Member to Collection" in object_type or "Collection Member" in object_type:
                 header += "### Associated Elements\n"
                 header += f"- **Collection Id**: `{attributes.get('Collection Id', {}).get('value')}`\n"
@@ -381,24 +409,43 @@ class CollectionLinkProcessor(AsyncBaseCommandProcessor):
 
         elif verb in ["Detach", "Unlink", "Remove"]:
             self.last_body = body = set_delete_rel_request_body(object_type, attributes)
+            # Explicit relationship GUID, if the user supplied one (as returned
+            # by the original Link command) -- required to disambiguate when
+            # more than one relationship instance exists between the same
+            # pair of elements (AgreementItem/AgreementActor/
+            # DigitalProductDependency are all MULTI_LINK; see
+            # pyegeria.core.relationship_multiplicity). Falls back to the
+            # pair-based lookup below when not supplied, for backward
+            # compatibility with markdown written before this attribute
+            # existed and for the common single-instance case.
+            explicit_rel_guid = (attributes.get("GUID") or {}).get("guid") or (attributes.get("GUID") or {}).get("value")
             if "Agreement Item" in object_type or "Agreement to Item" in object_type:
-                await self.client._async_detach_agreement_item(attributes.get('Agreement Name', {}).get('guid'), attributes.get('Item Name', {}).get('guid'), body)
+                if explicit_rel_guid:
+                    await self.client._async_detach_agreement_item_by_id(explicit_rel_guid, body)
+                else:
+                    await self.client._async_detach_agreement_item(attributes.get('Agreement Name', {}).get('guid'), attributes.get('Item Name', {}).get('guid'), body)
             elif "Agreement Actor" in object_type or "Agreement to Actor" in object_type:
                 guid_ag = attributes.get('Agreement Name', {}).get('guid')
                 actor_data = attributes.get('Actors', {})
                 actor_guids = actor_data.get('guid_list') or ([actor_data.get('guid')] if actor_data.get('guid') else [])
-                for guid_ac in actor_guids:
-                    if guid_ac:
-                        rel_guid = await self._async_resolve_agreement_actor_relationship_guid(guid_ag, guid_ac)
-                        if rel_guid:
-                            await self.client._async_detach_agreement_actor(rel_guid, body)
-                        else:
-                            logger.warning(
-                                f"No AgreementActor relationship found between agreement {guid_ag} and actor {guid_ac} - skipping detach")
+                if explicit_rel_guid:
+                    await self.client._async_detach_agreement_actor(explicit_rel_guid, body)
+                else:
+                    for guid_ac in actor_guids:
+                        if guid_ac:
+                            rel_guid = await self._async_resolve_agreement_actor_relationship_guid(guid_ag, guid_ac)
+                            if rel_guid:
+                                await self.client._async_detach_agreement_actor(rel_guid, body)
+                            else:
+                                logger.warning(
+                                    f"No AgreementActor relationship found between agreement {guid_ag} and actor {guid_ac} - skipping detach")
             elif "Collection Membership" in object_type or "Collection Member" in object_type:
                 await self.client._async_remove_from_collection(attributes.get('Collection Id', {}).get('guid'), attributes.get('Element Id', {}).get('guid'), body)
             elif "Product Dependency" in object_type:
-                await self.client._async_detach_digital_product_dependency(attributes.get('Digital Product 1', {}).get('guid'), attributes.get('Digital Product 2', {}).get('guid'), body)
+                if explicit_rel_guid:
+                    await self.client._async_detach_digital_product_dependency_by_id(explicit_rel_guid, body)
+                else:
+                    await self.client._async_detach_digital_product_dependency(attributes.get('Digital Product 1', {}).get('guid'), attributes.get('Digital Product 2', {}).get('guid'), body)
             elif "Attach Collection" in object_type or "Resource List" in object_type:
                 await self.client._async_detach_collection(attributes.get('Resource Id', {}).get('guid'), attributes.get('Collection Id', {}).get('guid'), body)
             elif "Data Description" in object_type:
