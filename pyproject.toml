@@ -3,7 +3,7 @@
 
 [project]
 name = "pyegeria"
-version = "6.1.1"
+version = "6.1.2"
 license = 'Apache-2.0'
 license-files = ["LICENSE"]
 authors = [{name = "Dan Wolfson", email = "dan.wolfson@pdr-associates.com"},]
@@ -163,6 +163,7 @@ dependencies = [
     list_tech_templates = "commands.tech.list_tech_templates:main"
     get_element_info = "commands.tech.get_element_info:main"
     list_elements = "commands.tech.list_all_om_type_elements:main"
+    show_register = "commands.tech.list_element_register:main"
     list_elements_x = "commands.tech.list_all_om_type_elements_x:main"
     list_elements_by_classification_by_prop_value = "commands.tech.list_elements_by_classification_by_property_value:main"
     list_elements_by_prop_value = "commands.tech.list_elements_by_property_value:main"
