@@ -380,7 +380,6 @@ def set_element_prop_body(object_type: str, qualified_name: str, attributes: dic
         "class": prop_name + "Properties",
         "typeName": prop_name,
         "displayName": attributes.get('Display Name', {}).get('value', None),
-        "name": attributes.get('Display Name', {}).get('value', None) if ("Project" in object_type or "Campaign" in object_type or "Task" in object_type or "StudyProject" in object_type) else None,
         "qualifiedName" : qualified_name,
         "description": attributes.get('Description', {}).get('value', None),
         "category": attributes.get('Category', {}).get('value', None),
