@@ -1100,6 +1100,65 @@ green throughout.
 
 ---
 
+### ISSUE-75: `ExternalReferenceLink`/`MediaReference`/`CitedDocumentLink` — same create-time relationship GUID discarded, Detach had no way to target a specific instance (ISSUE-73 follow-up)
+
+**Status:** fixed 2026-08-25 (Dr.Egeria — `md_processing/v2/feedback.py`,
+`md_processing/data/compact_commands/commands_external_references_compact.json`;
+tests — `tests/micro-tests/test_feedback_link_multilink_guid.py`).
+
+**Layer:** Dr.Egeria (`FeedbackLinkProcessor`).
+
+Same root cause and shape as ISSUE-73, found by extending that audit's
+"two detach overloads" check across every `MULTI_LINK` type with a Dr.Egeria
+command: `ExternalReferenceLink`, `MediaReference`, and `CitedDocumentLink`
+are all `MULTI_LINK`. ISSUE-68's own audit already fixed
+`_async_link_external_reference`/`_async_link_media_reference`/
+`_async_link_cited_document` to return the new relationship's GUID, but
+`FeedbackLinkProcessor.apply_changes()` — the Dr.Egeria processor above
+them — discarded it for all three, same as `CollectionLinkProcessor` did
+before ISSUE-73. On Detach, all three went straight to a pair-based call
+(`_async_detach_external_reference`/`_async_detach_media_reference`/
+`_async_detach_cited_document`) which, per Egeria's own multi-link API
+pattern (see the egeria.git docs work on `site/docs/concepts/
+uni-multi-link.md`), removes *every* matching relationship between the
+pair rather than one specific instance — even though GUID-targeted
+`_by_id` detach methods (`_async_detach_external_reference_by_id`,
+`_async_detach_media_reference_by_id`,
+`_async_detach_cited_document_reference_by_id`) already existed, added by
+the same PR #294 that added ISSUE-73's `_by_id` methods.
+
+**Fix:** identical shape to ISSUE-73 — `FeedbackLinkProcessor`'s three
+Link branches capture the returned GUID into `parsed_output["guid"]` and
+the shared final return now shows it under a "Relationship GUID" heading
+when set. Added a `GUID` attribute to the `External Reference Link`/
+`Media Reference Link`/`Cited Document Link` compact-spec bundles via the
+Spec Editor's REST API. Detach now checks for an explicit `GUID` attribute
+first, routing to the `_by_id` method when present; falls back to the
+previous pair-based call when absent (backward compatible, correct for
+the common single-instance-per-pair case).
+
+**Tests:** `test_feedback_link_multilink_guid.py` (7 tests, fake client,
+no live server required) — GUID capture/display on all three Link
+branches, explicit-GUID and pair-based-fallback paths on Detach for all
+three. Full `pytest tests/micro-tests/` green.
+
+**Caught while checking the "second detach overload" gotcha** described in
+new egeria.git documentation (`site/docs/concepts/uni-multi-link.md`) —
+that doc names the exact failure mode this and ISSUE-73 both guard
+against: repeatedly calling `attach`/Link on a multi-link relationship
+silently accumulates duplicate relationships (no error), most visible on
+a schedule (e.g. an integration connector's `refresh()`), and a
+subsequent Detach hits the "removes every matching relationship" ambiguity
+instead of targeting one. Checked every remaining `MULTI_LINK` type
+against this pattern while investigating: `AgreementActor`/`Certification`/
+`License`/`NextGovernanceActionProcessStep` never had a pair-based
+overload to begin with (GUID-only by construction); `SolutionLinkingWire`'s
+processor already prefers its GUID-based detach correctly;
+`ValidValuesImplementation` has the same `_by_id` gap but no Dr.Egeria
+command exists yet to fix (nothing to wire).
+
+---
+
 ## Open pyegeria items (including follow-ons blocked on an Egeria fix)
 
 Actionable in this repo. Some of these are fully blocked today — waiting
