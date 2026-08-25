@@ -1044,6 +1044,62 @@ without checking real ground truth first.
 
 ---
 
+### ISSUE-74: `ProjectManager`'s `ProjectProperties` body-builders sent `name` instead of `displayName` — rename/create silently sets nothing
+
+**Status:** fixed 2026-08-25 (Pyegeria — `pyegeria/omvs/project_manager.py`;
+tests — `tests/micro-tests/test_project_manager_display_name.py`).
+
+**Layer:** Pyegeria (`ProjectManager`). Reported by another concurrent
+session doing Resource Explorer investigation work (found live via
+`qs-view-server`, reproduced against `_async_update_project`), initially
+filed as "ISSUE-73" — renumbered here since that number was already taken
+by the merged multi-link fix above (this file's established collision
+convention: keep the number on whichever entry's number is harder to
+change at the point of collision). That original report only tested
+`_async_update_project` and asserted `_async_create_project`'s convenience
+path "works" for comparison; on inspection, `_async_create_project`'s own
+default-body construction has the identical `"name"` mistake (confirmed
+against the real behavior — its success in the original report's Resource
+Explorer workaround came from callers passing an explicit `body=` with
+`displayName`, the same workaround used for update, not from the
+convenience path actually being correct). So the real scope is three call
+sites, not one.
+
+`ProjectProperties`'s real field is `displayName` (confirmed against
+`Egeria-api-project-manager.http`, the ground truth — every worked example
+uses `"displayName"`, never `"name"`). Three of `project_manager.py`'s own
+default-body builders used `"name"` instead:
+`_async_create_project`, `_async_update_project`, and
+`_async_create_project_task`. Two docstring sample bodies had the same
+wrong key baked in.
+
+**Why this is worse than a plain failure:** for `_async_update_project`,
+the body is a plain `dict` and `_async_update_element_body_request`'s
+dict-branch does no Pydantic validation at all (`body_slimmer(body)` only)
+— the wrong key goes out over the wire completely unchecked, Egeria's
+deserializer just doesn't recognize it, and the call returns normally with
+no exception. A caller renaming a project via the convenience parameter
+ends up with the local record and the catalog permanently disagreeing
+about the same element, with nothing anywhere indicating a problem. For
+`_async_create_project`/`_async_create_project_task`, the body does go
+through Pydantic validation (`validate_new_element_request`), but the
+practical effect is the same: the display name is silently never set.
+
+**Fix:** all three `"name": display_name` sites (plus the two docstring
+copies) changed to `"displayName": display_name`. Checked every other
+OMVS file for the same substitution (`grep` for the literal pattern) —
+this was isolated to `project_manager.py`; no other module has it.
+
+**Tests:** `test_project_manager_display_name.py` (3 tests, one per call
+site) — patches `_async_make_request` to capture the JSON body that would
+have been sent and asserts `displayName` carries the right value with no
+stray `name` key. Verified each test genuinely catches the regression
+(temporarily reverted the fix, confirmed all three fail with the exact
+"unchanged" symptom, then restored it). Full `pytest tests/micro-tests/`
+green throughout.
+
+---
+
 ## Open pyegeria items (including follow-ons blocked on an Egeria fix)
 
 Actionable in this repo. Some of these are fully blocked today — waiting
