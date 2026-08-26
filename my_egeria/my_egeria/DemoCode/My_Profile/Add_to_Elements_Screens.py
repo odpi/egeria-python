@@ -214,6 +214,11 @@ class AddCommunityScreen(ModalScreen):
     def __init__(self, community_GUID):
         super().__init__()
         self.community_GUID = community_GUID
+        main_screen = self.app.get_screen("main")
+        self.community_table = main_screen.query_one("#community_table", DataTable())
+        self.community_table.cursor_type = "row"
+        self.community_table.zebra_stripes = True
+        self.community_row_selected = ""
 
     def on_mount(self):
         self.title = "Egeria - My Profile"
@@ -222,26 +227,96 @@ class AddCommunityScreen(ModalScreen):
     def compose(self) -> ComposeResult:
         """This method composes the UI for the AddCommunityScreen."""
         yield Header(show_clock=True)
+        yield ScrollableContainer (
+            DataTable(id="community_table")
+            )
         yield ScrollableContainer(
-
+            Static(f"Please complete all input fields before selecting the Add Community button"),
+            Static("Community Name"),
+            Input(id="community_name-input"),
+            Static("Community Description"),
+            Input(id="community_description-input"),
+            Horizontal (
+                Button("Add Community", id="add_community_button", variant="primary")
+                ),
             id="association_input_container"
-        )
+            )
+        yield Static(f"Please select a community before you select one of the action buttons")
+        Horizontal (
+            Button("Remove from my Profile", id="remove_community_link_button", variant="warning"),
+            Button("Delete Community", id="delete_community_button", variant="error")
+            )
         yield Footer()
 
-    def action_save_community(self):
+    @on(DataTable.RowSelected, "#community_table")
+    def action_select_community(self, event: DataTable.RowSelected):
+        """ Once thew user has selected a community in the table,
+        this routine retrieves the community identity from the table row
+        and then call a delete community routine in  the app to delete it from egeria """
+        self.log(f"Row: {event} selected by user")
+        self.community_row_selected = event.row_key
 
-        # comment = self.query_one("#community_comment-textarea", TextArea)
-        # if comment:
-        #     user_comment = comment.text
-        #     self.log(f"User comment: {user_comment}")
-        #     self.dismiss([self.community_GUID, user_comment])
-        # else:
-        #     container =self.query_one("#comment_textarea_container", ScrollableContainer)
-        #     container.mount(Static(f"[@b aquamarine]Please enter a comment prior to selecting Save Comment[/]"))
-        #     container.refresh()
-        pass
+    @on(DataTable.RowHighlighted)
+    def action_highlight_community(self, event: DataTable.RowHighlighted):
+        """ Once thew user has selected a community in the table,
+        this routine retrieves the community identity from the table row
+        and then call a delete community routine in  the app to delete it from egeria """
+        self.log(f"Row: {event} highlighted by user")
+        self.community_row_selected = event.row_key
+
+    @on(Button.Pressed, "#add_community_button")
+    def action_add_community(self, event: Button.Pressed):
+        """ Once user input is complete, use that to create a new community in Egeria
+        This function calls back to an add community function in the app """
+        self.log(f"Button: {event} selected by user")
+        self.community_name = self.query_one("#community_name_input", Input)
+        self.community_description = self.query_one("#community_description_input", Input)
+        if self.community_name and self.community_description:
+            return_code = self.app.add_community(self.community_name.value, self.community_description.value)
+            if return_code == 200:
+                self.notify(f"Community {self.community_name.value} created in Egeria", timeout=15, severity="information")
+            else:
+                self.notify(f"Failed to create community in Egeria, error in log")
+                self.dismiss(return_code)
+        else:
+            self.notify(f"please complete input before selecting Add Community", timeout=12, severity="warning")
+
+
+@on(Button.Pressed, "#remove_community_link_button")
+def remove_community(self, event: Button.Pressed):
+    """ Once thew user has selected a community in the table,
+    this routine retrieves the community identity from the table row
+    and then call a remove link to the user_profile routine in  the app to delete it from egeria """
+    self.log(f"Button: {event} selected by user")
+    if self.community_row_selected:
+        return_code = self.app.remove_link_to_community(self.community_row_selected)
+        if return_code == 200:
+            self.notify(f"Community {self.community_name.value} Link removed from Profile", timeout=15, severity="information")
+        else:
+            self.notify(f"Failed to remove community link from profile, error in log")
+        self.dismiss(return_code)
+    else:
+        self.notify(f"please select a community (table row) before selecting Remove Community", timeout=12,
+                    severity="warning")
+
+    @on(Button.Pressed, "#delete_community_button")
+    def delete_community(self, event: Button.Pressed):
+        """ Once thew user has selected a community in the table,
+        this routine retrieves the community identity from the table row
+        and then call a delete community routine in  the app to delete it from egeria """
+        self.log(f"Button: {event} selected by user")
+        if self.community_row_selected:
+            return_code = self.app.delete_community(self.community_row_selected)
+            if return_code == 200:
+                self.notify(f"Community {self.community_name.value} deleted in Egeria", timeout=15, severity="information")
+            else:
+                self.notify(f"Failed to delete community in Egeria, error in log")
+            self.dismiss(return_code)
+        else:
+            self.notify(f"please select a community (table row) before selecting Delete Community", timeout=12, severity="warning")
 
     def action_cancel(self):
+        self.log(f"Cancel hot key selected by user")
         self.dismiss(200)
 
 
@@ -346,32 +421,92 @@ class AddBlogEntryScreen(ModalScreen):
     def __init__(self, actor_profile_GUID):
         super().__init__()
         self.actor_profile_GUID = actor_profile_GUID
+        self.blog_selected = None
+        self.blog_entry_selected = None
+        self.blog_table = self.app.query_one("#blog_table")
+        self.blog_table.id="blog_table"
+        self.blog_table.cursor_type="row"
+        self.blog_table.zebra_stripes=True
 
     def on_mount(self):
         self.title = "Egeria - My Profile"
-        self.subtitle = "Add Blog Entry to an actor profile"
+        self.subtitle = "Blog and Blog Entry Processing"
 
     def compose(self) -> ComposeResult:
         """This method composes the UI for the AddBlogEntryScreen."""
         yield Header(show_clock=True)
+        yield DataTable(id="blog_table")
+        yield DataTable(id="blog_entry_table")
         yield ScrollableContainer(
-
+            Static(f"Please complete input fields before selecting the Add Blog button", id="blog_static_1"),
+            Static("Please select a blog before selecting display blog entries", id="blog_static_2"),
+            Static("Please select a blog before selecting delete blog", id="blog_static_3"),
+            Static("Please select a blog entry before selecting delete blog entry", id="blog_static_4"),
+            Input(placeholder="Enter blog entry title", id="blog_entry_title"),
+            TextArea(id="blog_entry_text"),
+            Horizontal(
+                Button("Add Blog", variant="primary", id="add_blog_button"),
+                Button("Add Blog Entry", variant="primary", id="add_blog_entry_button"),
+                Button("Display Blog Entries", variant="primary", id="display_blog_entries_button"),
+                id="blog_button_container"
+            ),
             id="blog_entry_input_container"
         )
+        yield Button("Delete Blog", variant="error", id="delete_blog_button")
         yield Footer()
 
-    def action_save_blog_entry(self):
+    @on(DataTable.RowHighlighted, "#blog_table")
+    def action_highlighted_blog(self, event: DataTable.RowHighlighted):
+        """ Highlight a blog"""
+        self.blog_selected = event.row_key
+        self.log(f"Blog Row Highlighted: {self.blog_selected}")
 
-        # comment = self.query_one("#community_comment-textarea", TextArea)
-        # if comment:
-        #     user_comment = comment.text
-        #     self.log(f"User comment: {user_comment}")
-        #     self.dismiss([self.community_GUID, user_comment])
-        # else:
-        #     container =self.query_one("#comment_textarea_container", ScrollableContainer)
-        #     container.mount(Static(f"[@b aquamarine]Please enter a comment prior to selecting Save Comment[/]"))
-        #     container.refresh()
-        pass
+    @on(DataTable.RowSelected, "#blog_table")
+    def action_selected_blog(self, event: DataTable.RowSelected):
+        """Select a blog to delete"""
+        self.blog_selected = event.row_key
+        self.log(f"Blog Row Selected: {self.blog_selected}")
+
+    @on(DataTable.RowHighlighted, "#blog_entry_table")
+    def action_highlighted_blog_entry(self, event: DataTable.RowHighlighted):
+        """ Highlight a blog entry to delete"""
+        self.blog_entry_selected = event.row_key
+        self.log(f"Blog Entry Row Highlighted: {self.blog_entry_selected}")
+
+    @on(DataTable.RowSelected, "#blog_entry_table")
+    def action_selected_blog_entry(self, event: DataTable.RowSelected):
+        """Select a blog entry to delete"""
+        self.blog_selected = event.row_key
+        self.log(f"Blog Entry Row Selected: {self.blog_selected}")
+
+    @on(Button.Pressed, "#add_blog_entry_button")
+    def action_add_blog_entry(self):
+        """ Verify that the input is complete and then call the
+        add blog function in the app """
+        self.blog_entry_title = self.query_one("#blog_entry_title")
+        self.blog_entry_text = self.query_one("#blog_entry_text")
+        if self.blog_entry_title and self.blog_entry_text:
+            return_code = self.app.add_blog_entry(self.blog_entry_title, self.blog_entry_text)
+            if return_code == 200:
+                self.log(f"Blog entry added {self.blog_entry_title}")
+                self.notify(f"Blog entry added {self.blog_entry_title}")
+            else:
+                self.log(f"Blog entry not added {self.blog_entry_title}, return code {return_code}")
+                self.notify(f"Blog entry not added {self.blog_entry_title}, return code {return_code}")
+
+    @on(Button.Pressed, "#delete_blog_button")
+    def action_delete_blog(self):
+        """Delete a blog, user must select the entry to delete"""
+        if self.blog_selected:
+            return_code = self.app.delete_blog(self.blog_selected)
+            if return_code == 200:
+                self.log(f"Blog entry deleted {self.blog_selected}")
+                self.notify(f"Blog entry deleted {self.blog_selected}")
+            else:
+                self.log(f"Blog entry not deleted {self.blog_selected}, return code {return_code}")
+                self.notify(f"Blog entry not deleted {self.blog_selected}, return code {return_code}")
+
+    @on()
 
     def action_cancel(self):
         self.dismiss(200)

@@ -305,6 +305,7 @@ class MyProfileApp(App):
         self.communities_table = main_screen.query_one("#communities_table", DataTable)
         self.roles_table = main_screen.query_one("#roles_table", DataTable)
         self.blog_table = main_screen.query_one("#blog_table", DataTable)
+        self.blog_entry_table = (DataTable(id="blog_entry_table"))
         self.activity_table = main_screen.query_one("#activity_table", DataTable)
         self.journal_table = main_screen.query_one("#journal_table", DataTable)
         # self.actions_table = main_screen.query_one("#actions_table", DataTable)
@@ -340,6 +341,11 @@ class MyProfileApp(App):
         self.blog_table.add_columns("Blog Title", "Date", "Description")
         self.blog_table.zebra_stripes = True
         self.blog_table.cursor_type = "row"
+
+        self.blog_entry_table.clear(columns=True)
+        self.blog_entry_table.add_columns("Blog Entry Title", "Date", "Description")
+        self.blog_entry_table.zebra_stripes = True
+        self.blog_entry_table.cursor_type = "row"
 
         self.activity_table.clear(columns=True)
         self.activity_table.add_columns("Activity Name", "Date", "Description")
@@ -2073,14 +2079,19 @@ class MyProfileApp(App):
     def show_notes(self):
         pass
 
-    def delete_community(self, row_data) -> int:
+    def delete_community(self, row_key) -> int:
         """ Delete Community Record from Egeria
             Successful deletion returns - 200
             Unsuccessful deletion returns - 400 """
 
-        self.log(f"Delete Community Record from Egeria", {"row_data": row_data})
-        self.row_data = row_data
-        self_row_guid = row_data[3]
+        self.log(f"Delete Community Record from Egeria", {"row_key": row_key})
+        self.row_key= row_key
+        main_screen = self.get_screen("main")
+        del_community_table = main_screen.query_one("#community_table", DataTable)
+        del_community_data = del_community_table.get_row(self.row_key)
+        self.log(f"Delete Community Record from Egeria", {"del_community_data": del_community_data})
+        self_row_guid = del_community_data[3]
+        self.log(f"Delete Community Record from Egeria", {"self_row_guid": self_row_guid})
         eclient = Egeria(
             view_server=self.view_server,
             platform_url=self.platform_url,
@@ -2092,10 +2103,12 @@ class MyProfileApp(App):
             # --- API call (show at minimum the required params; document optional ones) ---
             body = {
                 "class": "DeleteCommunityRequestBody",
-                "communityGuid": self.row_guid
-            }
-            eclient.delete_metadata_element(body)
-            self.log(f"Community record deleted successfully: {self_row_guid}")
+                "properties": {
+                    "communityGuid": self.row_guid
+                    }
+                }
+            response = eclient.delete_metadata_element(body)
+            self.log(f"Community record deleted successfully: {self_row_guid}, {response}")
             del_comm_rc = 200
         except PyegeriaException as e:
             print_basic_exception(e)
@@ -2105,14 +2118,20 @@ class MyProfileApp(App):
             eclient.close_session()
         return(del_comm_rc)
 
-    def remove_link_to_community(self, row_data) -> int:
+    def remove_link_to_community(self, row_key) -> int:
         """ Delete link to Community from the Actor Profile
             Successful deletion returns - 200
             Unsuccessful deletion returns - 400 """
 
-        self.log(f"Remove link to Community from Egeria", {"row_data": row_data})
-        self.row_data = row_data
-        self_row_guid = row_data[3]
+        self.log(f"Remove link to Community from Egeria", {row_key})
+        self.row_key = row_key
+        main_screen = self.get_screen("main")
+        rem_community_table = main_screen.query_one("#community_table", DataTable)
+        rem_community_data = rem_community_table.get_row(self.row_key)
+        self.log(f"Remove Community Link from Profile", {"rem_community_data": rem_community_data})
+        self_row_guid = rem_community_data[3]
+        self.log(f"Remove Community Link from Profile", {"self_row_guid": self_row_guid})
+
         eclient = Egeria(
             view_server=self.view_server,
             platform_url=self.platform_url,
@@ -2136,17 +2155,43 @@ class MyProfileApp(App):
                 }
             }
             #have to call egeria for the guid of the link to remove
-            link_to_community_guid = "link to community GUID"  # replace with actual value
+            # Fetch all relationships linked to the Community
+            relationships = eclient.get_relationships_for_entity(
+                userId=self.user_name,
+                entityGUID=self.row_guid,
+                relationshipTypeGUID=None,  # Leave None to fetch all types, or pass the specific type GUID if known
+                fromRelationshipElement=0,
+                pageSize=50
+            )
+
+            link_guid = ""
+
+            for rel in relationships:
+                # Check if the relationship points to Actor Profile GUID
+                # Egeria relationships store the endpoints in entityOneProxy and entityTwoProxy
+                entity_one_guid = rel.get('entityOneProxy', {}).get('GUID')
+                entity_two_guid = rel.get('entityTwoProxy', {}).get('GUID')
+                if entity_one_guid == self.user_GUID or entity_two_guid == self.user_GUID:
+                    # The unique identifier for the relationship/link itself
+                    link_guid = rel.get('GUID')
+                    break
+
+            if not link_guid:
+                self.log("No relationship found between this Community and Actor Profile.")
+                return(400)
+
+            link_to_community_guid = link_guid
 
             eclient.remove_actor_profile_link(
                 body=body,
                 link_type="CommunityLink",
                 guid=link_to_community_guid
             )
-
+            del_comm_rc = 200
+            self.communities_table.refresh()
         except PyegeriaException as e:
             print_basic_exception(e)
-            self.log(f"Error deleting community record: {self.row_guid}, error: {e}")
+            self.log(f"Error removing community link: error: {e}")
             del_comm_rc = 400
         finally:
             eclient.close_session()
@@ -2192,17 +2237,123 @@ class MyProfileApp(App):
         """ Adding a team """
         pass
 
-    def add_blog_entry(self):
+    def add_blog_entry(self, title, text):
         """ Adding a blog entry """
-        pass
+        self.title = title
+        self.text = text
+
+        eclient = Egeria(self.user_name,
+                         self.user_password,
+                         self.view_server,
+                         self.platform_url)
+
+        token = eclient.create_egeria_bearer_token(self.user_name, self.user_password)
+
+        try:
+            text = self.text
+            display_name = self.title
+            body = {
+                'class': 'NewAttachmentRequestBody',
+                'properties': {
+                    'class': 'NotificationProperties',
+                    'typeName': 'Notification',
+                    'qualifiedName': eclient.make_feedback_qn('Blog', self.user_name, display_name),
+                    'displayName': display_name,
+                    'description': text
+                }
+            }
+            response = eclient.blog_my_activity(
+                text=text,  # The content of the blog post.
+                display_name=display_name,  # A short name for this activity (e.g. "My Blog Post").
+                body=body  # An optional dictionary or NewAttachmentRequestBody containing additional properties
+                # to be associated with the notification.
+            )
+        except PyegeriaException as e:
+            print_basic_exception(e)
+        finally:
+            eclient.close_session()
+
+    def delete_blog_entry(self, table_row):
+        """ Deleting a project """
+        self.row_to_delete = table_row
+        row_data = self.blog_entry_table.get_row(self.row_to_delete)
+        self.project_qualified_name = row_data[2]
+        eclient = Egeria(
+            self.user_name,
+            self.user_password,
+            self.view_server,
+            self.platform_url
+            )
+        eclient.create_egeria_bearer_token()
+        # get the projects guid using its qualified name
+        try:
+            # 1. Retrieve the element by its unique qualified name
+            asset_element = eclient.get_asset_by_name(qualified_name=self.project_qualified_name)
+            # 2. Extract the GUID from the returned object wrapper
+            if asset_element and hasattr(asset_element, 'element_header'):
+                self.element_guid = asset_element.element_header.GUID
+                self.log(f"The GUID for {self.project_qualified_name} is: {self.element_guid}")
+            else:
+                # Alternate fallbacks depend on the specific Pyegeria object dictionary type
+                self.element_guid = asset_element.get('GUID') or asset_element.get('elementHeader', {}).get('GUID')
+                self.log(f"The GUID for {self.project_qualified_name} is: {self.element_guid}")
+        except PyegeriaException as e:
+            self.log(f"Error retrieving project GUID: {e}")
+            print_basic_exception(e)
+            return(401)
+        finally:
+            eclient.close_session()
+        #now we have the GUID we can use it to delete the project
+        try:
+            body = {
+                "class": "DeleteClassificationRequestBody",
+                "externalSourceGUID": self.element_guid,
+                "externalSourceName": self.project_qualified_name,
+                "effectiveTime": "{{$isoTimestamp}}",
+                "forLineage": False,
+                "forDuplicateProcessing": False
+            }
+            eclient.clear_project_classification( body=body)
+            self.action_refresh()
+        except PyegeriaException as e:
+            print_basic_exception(e)
+        finally:
+            # --- Clean up ---
+            eclient.close_session()
 
     def add_todos(self):
         """ Adding a todo """
         pass
 
-    def add_community(self):
+    def add_community(self, display_name, description):
         """ Adding a community """
-        pass
+        eclient = Egeria(self.user_name,
+                         self.user_password,
+                         self.view_server,
+                         self.platform_url)
+        eclient.create_egeria_bearer_token(self.user_name, self.user_password)
+        try:
+            # --- API call (show at minimum the required params; document optional ones) ---
+            body = {
+                "class": "NewCommunityRequestBody",
+                "properties": {
+                    "typeName": "Community",  # the actual Egeria type
+                    "qualifiedName": eclient.__create_qualified_name__("Community", display_name),
+                    "displayName": display_name,
+                    "description": description,
+                    "domainIdentifier": 0,  # 0 = all domains
+                }
+            }
+            community_guid = eclient.create_community(body)
+            self.notify(f"Created Community: {community_guid}")
+            return_code = 200
+        except PyegeriaException as e:
+            print_basic_exception(e)
+            self.notify(f"Failed to create community, error: {e}")
+            return_code = 400
+        finally:
+            eclient.close_session()
+            return return_code
 
     def add_project(self, project_type, project_name, project_description, project_id) -> int:
         """ Adding a project """
