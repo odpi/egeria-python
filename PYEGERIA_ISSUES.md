@@ -1100,6 +1100,87 @@ green throughout.
 
 ---
 
+### ISSUE-76: `TermRelationshipProcessor` offered obsolete/fictional term-relationship types, and swallowed the resulting server failure as a false "success"
+
+**Status:** fixed 2026-08-26 (Dr.Egeria — `md_processing/v2/glossary.py`,
+`md_processing/data/compact_commands/commands_glossary_compact.json`;
+tests — `tests/micro-tests/test_term_relationship_processor.py`).
+
+**Layer:** Dr.Egeria (`TermRelationshipProcessor`, `TermAsContextProcessor`).
+
+**Reported by dwolfson** (user-forwarded field report): `dr_egeria --directive
+process` on a real glossary file produced repeated `SERVER_ERROR_500`s —
+`OMAG-COMMON-400-018 The type name TermISATYPEOFRelationship ... is not
+recognized` (also seen for `TermHASARelationship`, `TermTYPEDBYRelationship`)
+— and, worse, **the run's final summary reported success anyway** if left
+to complete, with no visible sign anything had failed except scrollback the
+user had to notice and read.
+
+**Bug 1 — obsolete/fictional type names.** `TermRelationshipProcessor`'s
+`rel_mapping` mapped `HASA`/`HAS A` → `TermHASARelationship`, `TYPED BY` →
+`TermTYPEDBYRelationship`, and `TYPE OF` → `TermISATYPEOFRelationship`.
+None of these three target names has ever existed as a real Egeria
+relationship type — confirmed against a live server's
+`get_all_relationship_defs()` (only `Synonym`, `PreferredTerm`, `Antonym`,
+`ReplacementTerm`, `RelatedTerm`, `ISARelationship` are real
+`GlossaryTerm`<->`GlossaryTerm` relationship types) and against every
+`open-metadata-types` archive version in odpi/egeria's own source history
+(no hit for any of the three names, ever). The compact spec's
+`Relationship Type` enum made this worse by also offering `Translation`
+and `ValidValue` as selectable values — real Egeria type names exist under
+similar spellings (`TranslationLink`, several `ValidValue*` relationships)
+but none of them connects two `GlossaryTerm`s, so both would also have
+failed the same way.
+
+**Bug 2 — the false "success" (the more serious one).**
+`TermRelationshipProcessor.apply_changes()` caught `PyegeriaException`
+internally, logged an error, set `self.parsed_output['valid'] = False`,
+and returned `self.command.raw_block` — which *looks* like a correct
+error-handling path, but isn't: `AsyncBaseCommandProcessor.execute()` only
+checks `parsed_output['valid']` in its pre-flight validation step (step 2),
+which runs *before* `apply_changes()` (step 7) is ever called. By the time
+`apply_changes()` discovers the failure, that check has already passed.
+Catching the exception inside `apply_changes()` meant it never reached
+`execute()`'s own `try/except PyegeriaException` (which does correctly set
+`"status": "failure"`), so `execute()` fell through to its normal
+success-path return unconditionally. Checked every other
+`except PyegeriaException` in `md_processing/v2/*.py` for the same
+pattern — this was the only one; everywhere else is either the dispatcher's
+own correct top-level catch or a benign best-effort read (`fetch_element`/
+optional-fallback lookups) that doesn't guard a write operation.
+
+**Fix:**
+- `rel_mapping` now only maps `ISA`/`IS A` → `ISARelationship` (the one
+  real alias). A new `REAL_TERM_RELATIONSHIP_TYPES` set is checked before
+  any request is built; an unrecognized value raises a clear `ValueError`
+  naming the real options, instead of reaching the server and 400ing.
+- The internal `try/except PyegeriaException` around the actual link/unlink
+  calls is removed entirely — the exception now propagates to `execute()`,
+  which correctly reports `"status": "failure"` in the batch summary.
+- Compact spec's `Relationship Type` enum trimmed to the 6 real values
+  (`RelatedTerm`, `Synonym`, `Antonym`, `PreferredTerm`, `ReplacementTerm`,
+  `ISA`/`ISARelationship`) via the Spec Editor's REST API; `refresh_specs`
+  regenerated the affected templates.
+- **Found while fixing this**: `Link Term as Context` (`UsedInContext`, a
+  *fixed* relationship type — not user-selectable) was incorrectly sharing
+  the same `Term-Term Link Base` bundle as `Link Term-Term Relationship`,
+  which meant it inherited a **required** `Relationship Type` attribute
+  that `TermAsContextProcessor.apply_changes()` never reads at all — users
+  were forced to supply a value for a field that does nothing. Gave it its
+  own `Term as Context Base` bundle containing only the attributes the
+  processor actually reads (`Confidence`/`Expression`/`Source`/`Steward`/
+  `Term Relationship Status`, all confirmed genuinely used); `Term 1`/
+  `Element Id` stay as the command's own `custom_attributes`, unchanged.
+
+**Tests:** `test_term_relationship_processor.py` (5 tests, fake client, no
+live server required) — a real type still links successfully, `ISA` maps
+correctly, an obsolete type raises `ValueError` before ever reaching the
+client, and a genuine `PyegeriaException` from the client propagates out
+of `apply_changes()` rather than being swallowed. Full `pytest
+tests/micro-tests/` green.
+
+---
+
 ## Open pyegeria items (including follow-ons blocked on an Egeria fix)
 
 Actionable in this repo. Some of these are fully blocked today — waiting
