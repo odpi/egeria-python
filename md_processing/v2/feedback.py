@@ -335,10 +335,19 @@ class FeedbackLinkProcessor(AsyncBaseCommandProcessor):
             
         elif "External Reference" in object_type:
             # Spec uses 'Referenceable Element' and 'External Reference', but we support legacy 'Element Name'
-            elem_guid = (attributes.get('Referenceable Element', {}).get('guid') or 
-                         attributes.get('Element Name', {}).get('guid') or 
+            elem_guid = (attributes.get('Referenceable Element', {}).get('guid') or
+                         attributes.get('Element Name', {}).get('guid') or
                          attributes.get('Element Id', {}).get('guid'))
             ref_guid = attributes.get('External Reference', {}).get('guid')
+            # ExternalReferenceLink is MULTI_LINK (see
+            # pyegeria.core.relationship_multiplicity) -- more than one
+            # relationship can exist between the same pair of elements, so
+            # the relationship's own GUID is captured/displayed on Link and
+            # preferred (via an explicit "GUID" attribute) on Detach, routed
+            # to the GUID-targeted _by_id detach method; falls back to the
+            # previous pair-based call, which removes every matching
+            # relationship rather than one specific instance, when omitted.
+            explicit_rel_guid = (attributes.get("GUID") or {}).get("guid") or (attributes.get("GUID") or {}).get("value")
             if verb in ["Link", "Attach", "Add"]:
                 body = set_rel_request_body_for_type("ExternalReferenceLink", attributes)
                 props = set_rel_prop_body("ExternalReferenceLink", attributes)
@@ -346,21 +355,28 @@ class FeedbackLinkProcessor(AsyncBaseCommandProcessor):
                                       attributes.get('Reference ID', {}).get('value') or \
                                       props.get('label')
                 body['properties'] = props
-                await self.client._async_link_external_reference(elem_guid, ref_guid, body=body_slimmer(body))
+                rel_guid = await self.client._async_link_external_reference(elem_guid, ref_guid, body=body_slimmer(body))
+                if rel_guid:
+                    self.parsed_output["guid"] = rel_guid
             else:
                 body = set_delete_rel_request_body(object_type, attributes)
-                await self.client._async_detach_external_reference(elem_guid, ref_guid, body)
+                if explicit_rel_guid:
+                    await self.client._async_detach_external_reference_by_id(explicit_rel_guid, body)
+                else:
+                    await self.client._async_detach_external_reference(elem_guid, ref_guid, body)
             logger.success(f"Updated External Reference link")
-            
+
         elif "Media Reference" in object_type:
             # Spec uses 'Referenceable Element' and 'Media Reference', but we support legacy 'Element Name'
-            elem_guid = (attributes.get('Referenceable Element', {}).get('guid') or 
-                         attributes.get('Element Name', {}).get('guid') or 
+            elem_guid = (attributes.get('Referenceable Element', {}).get('guid') or
+                         attributes.get('Element Name', {}).get('guid') or
                          attributes.get('Element Id', {}).get('guid'))
             ref_guid = (attributes.get('Media Reference', {}) or attributes.get('Media Reference Link', {})).get('guid')
             if not ref_guid:
                 ref_guid = (attributes.get('Media') or {}).get('guid')
-            
+            # MediaReference is MULTI_LINK -- same reasoning as ExternalReferenceLink above.
+            explicit_rel_guid = (attributes.get("GUID") or {}).get("guid") or (attributes.get("GUID") or {}).get("value")
+
             if verb in ["Link", "Attach", "Add"]:
                 body = set_rel_request_body_for_type("MediaReferenceLink", attributes)
                 props = set_rel_prop_body("MediaReference", attributes)
@@ -370,19 +386,26 @@ class FeedbackLinkProcessor(AsyncBaseCommandProcessor):
                     "mediaUsageOtherId": attributes.get('Media Usage Other Id', {}).get('value'),
                 })
                 body['properties'] = props
-                await self.client._async_link_media_reference(elem_guid, ref_guid, body=body_slimmer(body))
+                rel_guid = await self.client._async_link_media_reference(elem_guid, ref_guid, body=body_slimmer(body))
+                if rel_guid:
+                    self.parsed_output["guid"] = rel_guid
             else:
                 body = set_delete_rel_request_body(object_type, attributes)
-                await self.client._async_detach_media_reference(elem_guid, ref_guid, body)
+                if explicit_rel_guid:
+                    await self.client._async_detach_media_reference_by_id(explicit_rel_guid, body)
+                else:
+                    await self.client._async_detach_media_reference(elem_guid, ref_guid, body)
             logger.success(f"Updated Media Reference link")
-            
+
         elif "Cited Document" in object_type:
             # Spec uses 'Referenceable Element' and 'Cited Document', but we support legacy 'Element Name'
-            elem_guid = (attributes.get('Referenceable Element', {}).get('guid') or 
-                         attributes.get('Element Name', {}).get('guid') or 
+            elem_guid = (attributes.get('Referenceable Element', {}).get('guid') or
+                         attributes.get('Element Name', {}).get('guid') or
                          attributes.get('Element Id', {}).get('guid'))
             ref_guid = attributes.get('Cited Document', {}).get('guid')
-            
+            # CitedDocumentLink is MULTI_LINK -- same reasoning as ExternalReferenceLink above.
+            explicit_rel_guid = (attributes.get("GUID") or {}).get("guid") or (attributes.get("GUID") or {}).get("value")
+
             if verb in ["Link", "Attach", "Add"]:
                 body = set_rel_request_body_for_type("CitedDocumentLink", attributes)
                 props = set_rel_prop_body("CitedDocumentLink", attributes)
@@ -391,10 +414,15 @@ class FeedbackLinkProcessor(AsyncBaseCommandProcessor):
                     "pages": attributes.get('Pages', {}).get('value'),
                 })
                 body['properties'] = props
-                await self.client._async_link_cited_document(elem_guid, ref_guid, body=body_slimmer(body))
+                rel_guid = await self.client._async_link_cited_document(elem_guid, ref_guid, body=body_slimmer(body))
+                if rel_guid:
+                    self.parsed_output["guid"] = rel_guid
             else:
                 body = set_delete_rel_request_body(object_type, attributes)
-                await self.client._async_detach_cited_document(elem_guid, ref_guid, body)
+                if explicit_rel_guid:
+                    await self.client._async_detach_cited_document_reference_by_id(explicit_rel_guid, body)
+                else:
+                    await self.client._async_detach_cited_document(elem_guid, ref_guid, body)
             logger.success(f"Updated Cited Document link")
 
         elif "Comment" in object_type or "Accepted Answer" in object_type:
@@ -470,4 +498,7 @@ class FeedbackLinkProcessor(AsyncBaseCommandProcessor):
                 await self.client._async_remove_like_from_element(elem_guid)
             logger.success(f"Updated Like attachment")
 
+        rel_guid = self.parsed_output.get("guid")
+        if rel_guid:
+            return f"\n\n# {verb} {object_type}\n\nOperation completed.\n\n### Relationship GUID\n- `{rel_guid}`\n"
         return f"\n\n# {verb} {object_type}\n\nOperation completed."

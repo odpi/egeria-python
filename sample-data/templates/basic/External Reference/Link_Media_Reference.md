@@ -49,4 +49,14 @@ ___
 >	**Description**: An id associated with the media usage when not using a standard valid value.
 
 
+### GUID
+>	**Input Required**: False
+
+>	**Attribute Type**: GUID
+
+>	**Description**: A unique identifier - typically of an element in this context.
+
+>	**Alternative Labels**: guid; Guid
+
+
 ___
