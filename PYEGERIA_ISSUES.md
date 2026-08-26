@@ -143,132 +143,6 @@ enough to track there too).
 
 ---
 
-### ISSUE-69: Egeria's repository (server-side) doubles every apostrophe on persist (`what's` -> `what''s`) — corrupts displayName/qualifiedName, making affected elements unfindable by their real name
-
-**Layer:** Egeria Server / repository connector — **not pyegeria, not
-Dr.Egeria**. Originally logged (2026-08-19) as a Dr.Egeria write-path bug
-with a theory pointing at a nonexistent "SQLite-backed spec/journal
-store" in `md_processing/v2/` — re-investigated 2026-08-19 by tracing the
-*actual outgoing HTTP request body* (not just Dr.Egeria's own echoed
-attribute table) and the theory doesn't hold: there is no sqlite3 usage
-anywhere in `md_processing/`/`pyegeria/` (`grep -rn "sqlite3"` — zero
-hits), and the wire payload itself is provably clean.
-
-**Update 2026-08-26: re-verified, no longer reproduces.** Re-ran the exact
-repro (`_async_create_glossary_term` with an apostrophe in `displayName`,
-`qualifiedName`, and `description`, immediate read-back by GUID) against
-the currently-running server (`6.2-SNAPSHOT`, platform build timestamp
-`2026-08-24T18:27:04Z` per `/api/about` — a newer build than whatever was
-running on 2026-08-19). All three properties round-tripped byte-for-byte
-correct, single apostrophes, no doubling. Ran twice independently, both
-clean; test terms deleted after confirming. This looks like a server-side
-fix landed via a platform redeploy between 2026-08-19 and now, not a
-pyegeria/Dr.Egeria change (nothing in this repo touched the write path in
-between). **Leaving this entry in place rather than moving it to Fixed/
-Resolved** — it's a SNAPSHOT build, not a pinned release, so treat as
-"currently not reproducing" rather than "permanently fixed" until it's
-been stable across a real release cut. Re-check if it resurfaces.
-
-**Status (as originally logged, kept for history): was open, root cause was correctly located as follows.**
-
-**Re-traced live, instrumenting `_async_make_request` directly** (not
-just Dr.Egeria's parser echo, which the original report already showed
-was clean) to capture the exact JSON string sent over the wire for a
-`Create Glossary Term` with `Description` = `What's the owner's policy?`:
-
-```
-[POST] .../glossary-manager/glossaries/terms
-PAYLOAD: ...,"description": "What's the owner's policy?","category": null...
-```
-
-Single apostrophes, correctly JSON-encoded, exactly as authored — **the
-outgoing request from pyegeria/Dr.Egeria is clean.** Immediately reading
-the same element back by GUID after creation:
-
-```python
-term = await gm._async_get_term_by_guid(new_guid)
-props["description"]  # -> "What''s the owner''s policy?"   -- DOUBLED
-```
-
-**Reproduced again with zero pyegeria/Python code in the loop at all** —
-plain `curl`, using `Egeria-api-glossary-manager.http`'s own
-`createGlossaryTerm`/`getGlossaryTermByGUID` requests as the template
-(same URLs, same body shape), to rule out any possibility this was an
-httpx/Pydantic serialization artifact rather than a genuine server round
-trip:
-
-```bash
-TOKEN=$(curl -sk -X POST https://localhost:9443/api/token \
-  -H "Content-Type: application/json" \
-  -d '{"userId":"erinoverview","password":"secret"}')
-
-curl -sk -X POST \
-  https://localhost:9443/servers/qs-view-server/api/open-metadata/glossary-manager/glossaries/terms \
-  -H "Authorization: Bearer $TOKEN" -H "Content-Type: application/json" \
-  -d '{
-    "class": "NewElementRequestBody",
-    "isOwnAnchor": true,
-    "properties": {
-      "class": "GlossaryTermProperties",
-      "displayName": "Native Curl Apostrophe Test QRS456",
-      "qualifiedName": "Coco Pharmaceuticals::Term::Native-Curl-Apostrophe-Test-QRS456::1.0",
-      "description": "What'\''s the owner'\''s policy?",
-      "contentStatus": "ACTIVE",
-      "versionIdentifier": "1.0"
-    },
-    "parentAtEnd1": true
-  }'
-# -> {"class":"GUIDResponse", ..., "guid":"494d35d8-..."}
-
-curl -sk -X POST \
-  https://localhost:9443/servers/qs-view-server/api/open-metadata/glossary-manager/glossaries/terms/494d35d8-a939-47dc-9504-a984117d2b76 \
-  -H "Authorization: Bearer $TOKEN" -H "Content-Type: application/json" \
-  -d '{"class":"GetRequestBody","forLineage":false,"forDuplicateProcessing":false}'
-# -> "description": "What''s the owner''s policy?"   -- DOUBLED, same as via pyegeria
-```
-
-Identical result via raw `curl` as via pyegeria — this is conclusive:
-the doubling happens inside Egeria itself, full stop, with no dependency
-on any client library. (Both test terms cleaned up after confirming.)
-
-So the corruption happens strictly **between the server receiving a
-correct single-apostrophe payload and what it persists/returns** — inside
-Egeria itself (most likely the active repository connector's handling of
-string properties, e.g. a SQL string-literal escape (`'` → `''`, the
-standard SQL-92 way to escape a quote inside a literal) applied even
-though the actual write should be going through a parameterized
-query/placeholder that needs no manual escaping — but not confirmed to
-that level of detail; flagging the mechanism as a plausible lead for
-whoever picks this up server-side, not asserting it).
-
-**Everything from the original report still holds and is folded in
-here** (re-verified, not re-run): scope is every string property, not
-just names (description/usage/summary/displayName/qualifiedName all
-affected in the original 500-term scan); harmful specifically on
-`displayName`/`qualifiedName` since those are lookup keys
-(`get_guid_for_name` misses on the true value, hits on the doubled one);
-doesn't compound across re-runs (escaping applied consistently to both
-the upsert lookup key and the stored value, so it's internally
-self-consistent within Dr.Egeria's own round-trip — which is likely why
-it went unnoticed for so long); breaks Resource Explorer's display-name
-resolution for the 2 affected Questions out of 41, and is an active
-hazard for RE's Dr.Egeria bootstrap self-heal (an apostrophe-containing
-canary is permanently unresolvable, re-running its batch on every check —
-duplicate-link damage risk for non-idempotent commands like `Link
-First/Next Process Step`).
-
-**Repro:** `Create Glossary Term` with `Display Name` = `What's the
-owner's policy?` via `dr_egeria --process`; confirm the outgoing payload
-is clean by tracing `_async_make_request`, then read the created element
-back by GUID — the returned `displayName`/`description` have every `'`
-doubled. No pyegeria/Dr.Egeria code path touches the value in between.
-
-**Nothing to fix here in this repo** — pyegeria sends the correct string;
-Egeria's repository persists/returns a corrupted one. Track this against
-the Egeria server, not this repo.
-
----
-
 ### ISSUE-52: `qs-nanny-daemon`/`qs-integration-daemon`'s own connectors generate sustained, heavy background write load against the shared repository — starves interactive requests, plausible cause of "frequent Postgres checkpoints"
 
 **Update 2026-08-16, more specific root-cause evidence.** Recurred while
@@ -727,6 +601,16 @@ native counting only for **element** counts.
 
 ### ISSUE-41 (PY-21): `find_glossary_terms(sequencing_order=..., include_only_classified_elements=...)` returns ZERO results when combined — each filter alone works fine
 
+**Update 2026-08-26: re-confirmed again, unchanged.** Re-ran the exact
+repro against the current server build (`6.2-SNAPSHOT`, platform
+timestamp `2026-08-24T18:27:04Z` — the same build that turned out to have
+resolved ISSUE-69, checked in the same pass on the chance this one had
+also moved). It hadn't: `include_only_classified_elements=["Question"]`
+alone returns 43 hits (count has drifted from the 33 in earlier checks —
+unrelated to the bug, just live data), `sequencing_order=
+"PROPERTY_ASCENDING"` alone returns 200 (page-size ceiling), and combining
+both still returns exactly **0**. Same symptom as every prior check.
+
 **Status:** double-checked again 2026-08-18 (per dwolfson's explicit
 request) — core defect persists, and this pass rules out a client-side
 cause definitively by capturing the actual outgoing request body via a
@@ -834,6 +718,131 @@ into the entry now, so it isn't rediscovered from scratch later.
 # Appendix: Closed / Not-a-bug entries
 
 ## Fixed / Resolved
+
+### ISSUE-69: Egeria's repository (server-side) doubles every apostrophe on persist (`what's` -> `what''s`) — corrupts displayName/qualifiedName, making affected elements unfindable by their real name
+
+**Layer:** Egeria Server / repository connector — **not pyegeria, not
+Dr.Egeria**. Originally logged (2026-08-19) as a Dr.Egeria write-path bug
+with a theory pointing at a nonexistent "SQLite-backed spec/journal
+store" in `md_processing/v2/` — re-investigated 2026-08-19 by tracing the
+*actual outgoing HTTP request body* (not just Dr.Egeria's own echoed
+attribute table) and the theory doesn't hold: there is no sqlite3 usage
+anywhere in `md_processing/`/`pyegeria/` (`grep -rn "sqlite3"` — zero
+hits), and the wire payload itself is provably clean.
+
+**Status: RESOLVED 2026-08-26 (server-side).** Re-ran the exact repro
+(`_async_create_glossary_term` with an apostrophe in `displayName`,
+`qualifiedName`, and `description`, immediate read-back by GUID) against
+the currently-running server (`6.2-SNAPSHOT`, platform build timestamp
+`2026-08-24T18:27:04Z` per `/api/about` — a newer build than whatever was
+running on 2026-08-19). All three properties round-tripped byte-for-byte
+correct, single apostrophes, no doubling. Ran twice independently, both
+clean; test terms deleted after confirming. This looks like a server-side
+fix landed via a platform redeploy between 2026-08-19 and now, not a
+pyegeria/Dr.Egeria change (nothing in this repo touched the write path in
+between). Moved here from "Open Egeria Server issues" on that basis — one
+caveat worth keeping in mind: this is a SNAPSHOT build, not a pinned
+release, so re-check if it ever resurfaces on a later build.
+
+**Status (as originally logged, kept for history): was open, root cause was correctly located as follows.**
+
+**Re-traced live, instrumenting `_async_make_request` directly** (not
+just Dr.Egeria's parser echo, which the original report already showed
+was clean) to capture the exact JSON string sent over the wire for a
+`Create Glossary Term` with `Description` = `What's the owner's policy?`:
+
+```
+[POST] .../glossary-manager/glossaries/terms
+PAYLOAD: ...,"description": "What's the owner's policy?","category": null...
+```
+
+Single apostrophes, correctly JSON-encoded, exactly as authored — **the
+outgoing request from pyegeria/Dr.Egeria is clean.** Immediately reading
+the same element back by GUID after creation:
+
+```python
+term = await gm._async_get_term_by_guid(new_guid)
+props["description"]  # -> "What''s the owner''s policy?"   -- DOUBLED
+```
+
+**Reproduced again with zero pyegeria/Python code in the loop at all** —
+plain `curl`, using `Egeria-api-glossary-manager.http`'s own
+`createGlossaryTerm`/`getGlossaryTermByGUID` requests as the template
+(same URLs, same body shape), to rule out any possibility this was an
+httpx/Pydantic serialization artifact rather than a genuine server round
+trip:
+
+```bash
+TOKEN=$(curl -sk -X POST https://localhost:9443/api/token \
+  -H "Content-Type: application/json" \
+  -d '{"userId":"erinoverview","password":"secret"}')
+
+curl -sk -X POST \
+  https://localhost:9443/servers/qs-view-server/api/open-metadata/glossary-manager/glossaries/terms \
+  -H "Authorization: Bearer $TOKEN" -H "Content-Type: application/json" \
+  -d '{
+    "class": "NewElementRequestBody",
+    "isOwnAnchor": true,
+    "properties": {
+      "class": "GlossaryTermProperties",
+      "displayName": "Native Curl Apostrophe Test QRS456",
+      "qualifiedName": "Coco Pharmaceuticals::Term::Native-Curl-Apostrophe-Test-QRS456::1.0",
+      "description": "What'\''s the owner'\''s policy?",
+      "contentStatus": "ACTIVE",
+      "versionIdentifier": "1.0"
+    },
+    "parentAtEnd1": true
+  }'
+# -> {"class":"GUIDResponse", ..., "guid":"494d35d8-..."}
+
+curl -sk -X POST \
+  https://localhost:9443/servers/qs-view-server/api/open-metadata/glossary-manager/glossaries/terms/494d35d8-a939-47dc-9504-a984117d2b76 \
+  -H "Authorization: Bearer $TOKEN" -H "Content-Type: application/json" \
+  -d '{"class":"GetRequestBody","forLineage":false,"forDuplicateProcessing":false}'
+# -> "description": "What''s the owner''s policy?"   -- DOUBLED, same as via pyegeria
+```
+
+Identical result via raw `curl` as via pyegeria — this is conclusive:
+the doubling happens inside Egeria itself, full stop, with no dependency
+on any client library. (Both test terms cleaned up after confirming.)
+
+So the corruption happens strictly **between the server receiving a
+correct single-apostrophe payload and what it persists/returns** — inside
+Egeria itself (most likely the active repository connector's handling of
+string properties, e.g. a SQL string-literal escape (`'` → `''`, the
+standard SQL-92 way to escape a quote inside a literal) applied even
+though the actual write should be going through a parameterized
+query/placeholder that needs no manual escaping — but not confirmed to
+that level of detail; flagging the mechanism as a plausible lead for
+whoever picks this up server-side, not asserting it).
+
+**Everything from the original report still holds and is folded in
+here** (re-verified, not re-run): scope is every string property, not
+just names (description/usage/summary/displayName/qualifiedName all
+affected in the original 500-term scan); harmful specifically on
+`displayName`/`qualifiedName` since those are lookup keys
+(`get_guid_for_name` misses on the true value, hits on the doubled one);
+doesn't compound across re-runs (escaping applied consistently to both
+the upsert lookup key and the stored value, so it's internally
+self-consistent within Dr.Egeria's own round-trip — which is likely why
+it went unnoticed for so long); breaks Resource Explorer's display-name
+resolution for the 2 affected Questions out of 41, and is an active
+hazard for RE's Dr.Egeria bootstrap self-heal (an apostrophe-containing
+canary is permanently unresolvable, re-running its batch on every check —
+duplicate-link damage risk for non-idempotent commands like `Link
+First/Next Process Step`).
+
+**Repro:** `Create Glossary Term` with `Display Name` = `What's the
+owner's policy?` via `dr_egeria --process`; confirm the outgoing payload
+is clean by tracing `_async_make_request`, then read the created element
+back by GUID — the returned `displayName`/`description` have every `'`
+doubled. No pyegeria/Dr.Egeria code path touches the value in between.
+
+**Nothing to fix here in this repo** — pyegeria sends the correct string;
+Egeria's repository persists/returns a corrupted one. Track this against
+the Egeria server, not this repo.
+
+---
 
 ### ISSUE-70: `ActionAuthor.update_next_action_process_step()` always raises `AttributeError` — calls a method that does not exist
 
