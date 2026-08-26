@@ -39,6 +39,16 @@ ___
 >	**Description**: An identifier of the cited document in the link context.
 
 
+### GUID
+>	**Input Required**: False
+
+>	**Attribute Type**: GUID
+
+>	**Description**: A unique identifier - typically of an element in this context.
+
+>	**Alternative Labels**: guid; Guid
+
+
 ### Effective Time
 >	**Input Required**: False
 
