@@ -2523,18 +2523,11 @@
         "Antonym",
         "PreferredTerm",
         "ReplacementTerm",
-        "Translation",
         "ISA",
-        "ValidValue",
-        "ISARelationship",
-        "TermHASARelationship",
-        "TYPED BY",
-        "TermTYPEDBYRelationship",
-        "TYPE OF",
-        "TermISATYPEOFRelationship"
+        "ISARelationship"
       ],
       "existing_element": "",
-      "description": "The type of relationship connecting the two terms. E.g. Synonym, Antonym, PreferredTerm, ReplacedByTerm, TranslationOf, etc.",
+      "description": "The type of relationship connecting the two terms. E.g. Synonym, Antonym, PreferredTerm, ReplacementTerm, ISA.",
       "generated": false,
       "style": "Enum",
       "user_specified": true,
@@ -2543,7 +2536,7 @@
       "min_cardinality": 1,
       "max_cardinality": 1,
       "level": "Domain",
-      "Journal Entry": "The type of semantic relationship between two glossary terms. Enum values (from 0350-Related-Terms UML): RelatedTerm, Synonym, Antonym, PreferredTerm, ReplacementTerm, Translation, IsA, ValidValue."
+      "Journal Entry": "The type of semantic relationship between two glossary terms. Confirmed live against get_all_relationship_defs() (2026-08-26, ISSUE-76): these are the only real GlossaryTerm<->GlossaryTerm relationship types Egeria currently defines. Dropped Translation/ValidValue (real Egeria types exist under those names, e.g. TranslationLink, but neither is a GlossaryTerm<->GlossaryTerm relationship) and TermHASARelationship/TYPED BY/TermTYPEDBYRelationship/TYPE OF/TermISATYPEOFRelationship (never real types in any Egeria version -- confirmed against every open-metadata-types archive)."
     },
     "Term 1": {
       "variable_name": "term_1",
@@ -2872,6 +2865,16 @@
     "Detach Term as Context Base": {
       "inherits": null,
       "own_attributes": []
+    },
+    "Term as Context Base": {
+      "inherits": null,
+      "own_attributes": [
+        "Confidence",
+        "Expression",
+        "Source",
+        "Steward",
+        "Term Relationship Status"
+      ]
     }
   },
   "commands": {
@@ -3015,12 +3018,12 @@
       "extra_find": "",
       "extra_constraints": "",
       "OM_TYPE": "UsedInContext",
-      "bundle": "Term-Term Link Base",
+      "bundle": "Term as Context Base",
       "custom_attributes": [
         "Term 1",
         "Element Id"
       ],
-      "Journal Entry": ""
+      "Journal Entry": "ISSUE-76: was incorrectly sharing the Term-Term Relationship bundle, which pulled in a required but completely unused Relationship Type attribute (TermAsContextProcessor never reads it -- UsedInContext is a fixed relationship type, not user-selectable). Repointed to a dedicated bundle with only the attributes the processor actually reads."
     },
     "Link Term-Term Relationship": {
       "display_name": "Term-Term Relationship",
