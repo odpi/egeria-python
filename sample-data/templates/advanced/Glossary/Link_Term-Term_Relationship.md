@@ -10,9 +10,9 @@ ___
 
 >	**Attribute Type**: Enum
 
->	**Description**: The type of relationship connecting the two terms. E.g. Synonym, Antonym, PreferredTerm, ReplacedByTerm, TranslationOf, etc.
+>	**Description**: The type of relationship connecting the two terms. E.g. Synonym, Antonym, PreferredTerm, ReplacementTerm, ISA.
 
->	**Valid Values**: RelatedTerm,Synonym,Antonym,PreferredTerm,ReplacementTerm,Translation,ISA,ValidValue,ISARelationship,TermHASARelationship,TYPED BY,TermTYPEDBYRelationship,TYPE OF,TermISATYPEOFRelationship
+>	**Valid Values**: RelatedTerm,Synonym,Antonym,PreferredTerm,ReplacementTerm,ISA,ISARelationship
 
 
 ### Term 1

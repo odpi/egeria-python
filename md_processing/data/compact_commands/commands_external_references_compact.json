@@ -2976,7 +2976,8 @@
       "inherits": "Link Command Base",
       "own_attributes": [
         "Element Name",
-        "External Reference"
+        "External Reference",
+        "GUID"
       ]
     },
     "Media Reference Link": {
@@ -2986,7 +2987,8 @@
         "Media Id",
         "Media Reference",
         "Media Usage",
-        "Media Usage Other Id"
+        "Media Usage Other Id",
+        "GUID"
       ]
     },
     "Cited Document Link": {
@@ -2995,7 +2997,8 @@
         "Cited Document",
         "Element Name",
         "Pages",
-        "Reference Id"
+        "Reference Id",
+        "GUID"
       ]
     }
   },
