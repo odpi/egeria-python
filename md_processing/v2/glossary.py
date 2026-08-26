@@ -173,10 +173,11 @@ class TermProcessor(AsyncBaseCommandProcessor):
             self.parsed_output["guid"] = guid
             if status:
                 await self.client._async_update_glossary_term_status(guid, status)
-            
+
             # Sync memberships: if merge_update is True, we only add (replace_all=False)
             # If merge_update is False, we synchronize (replace_all=True)
             await self._sync_term_memberships(guid, to_be_collection_guids, not merge_update)
+            await self._sync_term_naming_classifications(guid, attributes)
             
             if journal_entry:
                 try:
@@ -207,6 +208,7 @@ class TermProcessor(AsyncBaseCommandProcessor):
                 # known_new=True: this GUID was just created, so it cannot have any
                 # existing CollectionMembership relationships -- skip the as-is fetch.
                 await self._sync_term_memberships(guid, to_be_collection_guids, replace_all=True, known_new=True)
+                await self._sync_term_naming_classifications(guid, attributes)
 
                 if journal_entry:
                     try:
@@ -475,6 +477,7 @@ class QuestionProcessor(AsyncBaseCommandProcessor):
 
         if guid:
             self.parsed_output["guid"] = guid
+            await self._sync_term_naming_classifications(guid, attributes)
 
             if journal_entry:
                 try:

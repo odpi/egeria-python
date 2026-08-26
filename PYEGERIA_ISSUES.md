@@ -1240,6 +1240,95 @@ tests/micro-tests/` green.
 
 ---
 
+### ISSUE-77: 5 classification attributes on the shared `Referenceable` bundle, and `Anchor Scope IDs`/`Make Anchor` on the shared `Link Command Base` bundle, were parsed and validated but never applied
+
+**Status:** fixed 2026-08-26 (Dr.Egeria — `md_processing/v2/processors.py`,
+`md_processing/v2/glossary.py`, `md_processing/md_processing_utils/common_md_utils.py`,
+`md_processing/data/compact_commands/*.json`; tests —
+`tests/micro-tests/test_referenceable_classification_sync.py`,
+`tests/micro-tests/test_link_body_anchor_fields.py`).
+
+**Layer:** Dr.Egeria. Found by `scripts/dr_egeria_audit.py`'s DEAD_ATTRIBUTE
+check (see the tool's own PR, #307) — its ~1162 raw hits collapsed to ~30
+distinct attribute names once bundle-inheritance duplication is accounted
+for; this entry covers the 7 dominant ones, dwolfson's explicit priority.
+
+**`Security Tags` / `Policy Management Point`** — both real, generic
+classifications (`SecurityTagsProperties`/`PolicyManagementPointProperties`,
+confirmed against `Egeria-api-classification-explorer.http`/
+`Egeria-api-governance-officer.http` — both endpoints are
+`elements/{guid}/...`, valid for any `Referenceable`) already had a fully
+working standalone `Classify X as Security Tags`/`Classify X as Policy
+Management Point` command (`CurationClassifyProcessor`,
+`CLASSIFICATION_METHODS` in `md_processing/v2/curation.py`) — but the
+*embedded* copy of these same attributes on the `Referenceable` bundle
+(inherited by nearly every `Create` command) was never synced after
+create/update, unlike its 5 siblings
+(`Confidence`/`Confidentiality`/`Criticality`/`Impact`/`Retention
+Classification`, handled by the pre-existing `_sync_governance_classifications`).
+Fixed by adding a new `AsyncBaseCommandProcessor._sync_referenceable_classifications()`,
+called alongside `_sync_governance_classifications` for every Create/Update,
+reusing the same `CLASSIFICATION_METHODS`/`CURATION_CLASSIFICATION_CLIENTS`
+spec the standalone commands already use (deferred import from
+`curation.py` to avoid the circular import — `curation.py` imports
+`AsyncBaseCommandProcessor` from `processors.py`).
+
+**`Class Word` / `Modifier` / `Prime Word` Classification — a different,
+more serious shape of the same bug, since simply reusing the pattern above
+would have introduced a *new* live failure.** Their real endpoints
+(`_async_set_is_class_word` etc., `pyegeria/omvs/glossary_manager.py`) are
+`/glossaries/terms/{term_guid}/is-class-word` — **GlossaryTerm-only**, not
+generic — confirmed against the actual URL. The embedded attributes were
+on the same universal `Referenceable` bundle as `Security Tags` above,
+inherited by ~100 unrelated Create commands (`Create Governance Action
+Process`, `Create Digital Product`, ...). Syncing these generically for
+every Create/Update guid would 400 against the term-only endpoint for
+every non-term element. Per dwolfson's explicit direction: **removed from
+the shared `Referenceable` bundle in all 11 families that had it** (only
+`Create Glossary Term`/`Create Question` legitimately need them — both
+inherit the term-specific `Glossary Term Base` bundle in
+`commands_glossary_compact.json`, which now carries the 3 attributes
+instead). Wired into a new `AsyncBaseCommandProcessor._sync_term_naming_classifications()`,
+called only from `TermProcessor`/`QuestionProcessor`
+(`md_processing/v2/glossary.py`) where the guid is known to be a real term
+— never from the generic Create/Update sync path.
+
+(`commands_curation_compact.json`/`commands_report_compact.json` also
+define a `Referenceable` bundle, but neither has any command that actually
+uses it — confirmed dead/orphaned in both, pre-existing and unrelated to
+this fix, left as-is.)
+
+**`Anchor Scope IDs` / `Make Anchor`** — a naming trap: there are *two*
+separate "anchor scope" attributes in the compact spec. `Anchor Scope ID`
+(singular) lives on the `New-Element` bundle (Create commands) and was
+already correctly wired to `anchorScopeGUID` on `NewElementRequestBody`.
+`Anchor Scope IDs` (plural, `Reference Name List` style) is a *different*
+attribute living on `Link Command Base` (relationship-establishing
+commands) alongside `Make Anchor` — neither was ever included in
+`set_rel_request_body()`'s outer `NewRelationshipRequestBody`, confirmed
+missing against `Egeria-api-lineage-linker.http`, which shows both
+`anchorScopeGUIDs` (plural list) and `makeAnchor` as real top-level fields
+on that body. Fixed by adding both to `set_rel_request_body()`.
+
+**Deliberately not fixed here — flagged, not guessed at:**
+- **`Request ID`** — parsed and validated everywhere via the shared
+  `Request Base` bundle, but no generic `requestId` field exists anywhere
+  in the real Egeria REST API (searched the entire `.http` ground truth:
+  one match, in an unrelated user-management endpoint). The only real
+  "request ID" concept in this codebase is `self.context["request_id"]`,
+  an internally auto-generated `uuid.uuid4()` in
+  `AsyncBaseCommandProcessor.__init__` that nothing else currently reads.
+  Per dwolfson (a rare/Advanced-level corner case): an explicit
+  `Request ID` value now overrides the auto-generated one for that
+  command's execution, added in `execute()` right after parsing — minimal,
+  since there's no real consumer to fully wire yet.
+
+**Tests:** `test_referenceable_classification_sync.py` (6 tests) and
+`test_link_body_anchor_fields.py` (2 tests), fake client, no live server
+required. Full `pytest tests/micro-tests/` green throughout.
+
+---
+
 ## Open pyegeria items (including follow-ons blocked on an Egeria fix)
 
 Actionable in this repo. Some of these are fully blocked today — waiting

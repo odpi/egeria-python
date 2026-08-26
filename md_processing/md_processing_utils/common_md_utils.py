@@ -703,6 +703,14 @@ def set_rel_request_body(object_type: str, attributes: dict)->dict:
       "effectiveTime": attributes.get('Effective Time', {}).get('value', None),
       "forLineage": attributes.get('For Lineage', {}).get('value', False),
       "forDuplicateProcessing": attributes.get('For Duplicate Processing', {}).get('value', False),
+      # ISSUE-77: "Make Anchor"/"Anchor Scope IDs" live on the "Link Command
+      # Base" bundle (relationship-establishing commands) but were parsed and
+      # validated without ever being sent -- confirmed against
+      # Egeria-api-lineage-linker.http (NewRelationshipRequestBody sample
+      # body): both are real top-level fields here, not on the create-element
+      # body (that's the separate, already-wired singular "Anchor Scope ID").
+      "makeAnchor": attributes.get('Make Anchor', {}).get('value', None),
+      "anchorScopeGUIDs": attributes.get('Anchor Scope IDs', {}).get('guid_list', None),
       "properties": "",
     }
 

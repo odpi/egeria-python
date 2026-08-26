@@ -2772,7 +2772,6 @@
       "own_attributes": [
         "Additional Properties",
         "Category",
-        "Class Word Classification",
         "Confidence Classification",
         "Confidentiality Classification",
         "Criticality Classification",
@@ -2782,9 +2781,7 @@
         "Identifier",
         "Impact Classification",
         "Legal",
-        "Modifier Classification",
         "Policy Management Point",
-        "Prime Word Classification",
         "Qualified Name",
         "Retention Classification",
         "Security Tags",
@@ -2830,6 +2827,7 @@
       "own_attributes": [
         "Abbreviation",
         "Aliases",
+        "Class Word Classification",
         "Context Description",
         "Context Scope",
         "Example",
@@ -2839,6 +2837,8 @@
         "Is Activity Description",
         "Is Context",
         "Is Data Value",
+        "Modifier Classification",
+        "Prime Word Classification",
         "Summary",
         "Term Activity Type",
         "Usage"
