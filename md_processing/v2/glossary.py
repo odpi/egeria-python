@@ -173,10 +173,11 @@ class TermProcessor(AsyncBaseCommandProcessor):
             self.parsed_output["guid"] = guid
             if status:
                 await self.client._async_update_glossary_term_status(guid, status)
-            
+
             # Sync memberships: if merge_update is True, we only add (replace_all=False)
             # If merge_update is False, we synchronize (replace_all=True)
             await self._sync_term_memberships(guid, to_be_collection_guids, not merge_update)
+            await self._sync_term_naming_classifications(guid, attributes)
             
             if journal_entry:
                 try:
@@ -207,6 +208,7 @@ class TermProcessor(AsyncBaseCommandProcessor):
                 # known_new=True: this GUID was just created, so it cannot have any
                 # existing CollectionMembership relationships -- skip the as-is fetch.
                 await self._sync_term_memberships(guid, to_be_collection_guids, replace_all=True, known_new=True)
+                await self._sync_term_naming_classifications(guid, attributes)
 
                 if journal_entry:
                     try:
@@ -475,6 +477,7 @@ class QuestionProcessor(AsyncBaseCommandProcessor):
 
         if guid:
             self.parsed_output["guid"] = guid
+            await self._sync_term_naming_classifications(guid, attributes)
 
             if journal_entry:
                 try:
@@ -515,45 +518,73 @@ class TermRelationshipProcessor(AsyncBaseCommandProcessor):
             # Fallback for old templates
             relationship = attributes.get('Relationship', {}).get('value', None)
 
-        # Standardize common relationship names
+        # Standardize common relationship names. ISA/IS A are the only
+        # friendly aliases with a real Egeria type behind them
+        # (ISARelationship) -- HASA/TYPED BY/TYPE OF used to map to
+        # "TermHASARelationship"/"TermTYPEDBYRelationship"/
+        # "TermISATYPEOFRelationship", none of which have ever existed as
+        # real Egeria relationship types (confirmed against a live server's
+        # get_all_relationship_defs() and against every open-metadata-types
+        # archive version in odpi/egeria's own history -- these names were
+        # never real). Removed rather than mapped to anything, since there
+        # is no real replacement to map them to.
         rel_mapping = {
             "ISA": "ISARelationship",
             "IS A": "ISARelationship",
-            "HASA": "TermHASARelationship",
-            "HAS A": "TermHASARelationship",
-            "TYPED BY": "TermTYPEDBYRelationship",
-            "TYPE OF": "TermISATYPEOFRelationship",
         }
         if relationship and relationship.upper() in rel_mapping:
             relationship = rel_mapping[relationship.upper()]
-        
+
+        # Confirmed live (get_all_relationship_defs(), GlossaryTerm<->GlossaryTerm
+        # relationships) -- these 6 are the only real term-to-term relationship
+        # types Egeria currently defines. Validated here, before the request
+        # ever reaches the server, so an obsolete/typo'd value gets one clear
+        # error naming the real options instead of a raw 400 dump -- and so a
+        # bad value can never look like a false "success" (see the removed
+        # try/except below).
+        REAL_TERM_RELATIONSHIP_TYPES = {
+            "Synonym", "PreferredTerm", "Antonym", "ReplacementTerm",
+            "RelatedTerm", "ISARelationship",
+        }
+
         if not (term1_guid and term2_guid and relationship):
             msg = f"TermRelationshipProcessor: Missing required identifiers (Term 1 GUID: {bool(term1_guid)}, Term 2 GUID: {bool(term2_guid)}, Relationship: {bool(relationship)})"
             logger.error(msg)
             self.parsed_output['valid'] = False
             self.parsed_output['reason'] = msg
             return self.command.raw_block
-            
+
+        if relationship not in REAL_TERM_RELATIONSHIP_TYPES:
+            raise ValueError(
+                f"Unknown term relationship type '{relationship}'. Valid types are: "
+                f"{', '.join(sorted(REAL_TERM_RELATIONSHIP_TYPES))} (or the friendly alias 'ISA'/'IS A' for ISARelationship)."
+            )
+
         logger.info(f"TermRelationshipProcessor: Linking '{term1_qname}' to '{term2_qname}' via '{relationship}'")
-        
-        try:
-            if self.command.verb in ["Unlink", "Detach", "Remove"]:
-                await self.client._async_remove_relationship_between_terms(term1_guid, term2_guid, relationship)
-                logger.success(f"Unlinked terms via {relationship}")
-            else:
-                await self.client._async_add_relationship_between_terms(term1_guid, term2_guid, relationship)
-                logger.success(f"Linked terms via {relationship}")
-            
-            # Standard v2 relationship output
-            return (f"\n\n## {self.command.verb} Term-Term Relationship\n\n"
-                    f"### Term 1 Name:\n\n{term1_qname}\n\n"
-                    f"### Term 2 Name:\n\n{term2_qname}\n\n"
-                    f"### Term Relationship:\n\n{relationship}")
-        except PyegeriaException as e:
-            logger.error(f"Failed to link terms: {e}")
-            self.parsed_output['valid'] = False
-            self.parsed_output['reason'] = str(e)
-            return self.command.raw_block
+
+        # No try/except here (deliberately, see ISSUE-76): a PyegeriaException
+        # from the calls below must propagate to AsyncBaseCommandProcessor.
+        # execute()'s own try/except, which is what actually reports
+        # "status": "failure" for this command in the batch summary. Catching
+        # it here and returning self.command.raw_block used to look like a
+        # correct error path (parsed_output['valid'] set, error logged) but
+        # execute() only checks parsed_output['valid'] in its pre-flight
+        # validation step -- which runs *before* apply_changes() -- so a
+        # failure discovered here was silently reported as
+        # "status": "success" in the final batch summary, with the only sign
+        # of trouble being a logged ERROR line the caller may not be watching.
+        if self.command.verb in ["Unlink", "Detach", "Remove"]:
+            await self.client._async_remove_relationship_between_terms(term1_guid, term2_guid, relationship)
+            logger.success(f"Unlinked terms via {relationship}")
+        else:
+            await self.client._async_add_relationship_between_terms(term1_guid, term2_guid, relationship)
+            logger.success(f"Linked terms via {relationship}")
+
+        # Standard v2 relationship output
+        return (f"\n\n## {self.command.verb} Term-Term Relationship\n\n"
+                f"### Term 1 Name:\n\n{term1_qname}\n\n"
+                f"### Term 2 Name:\n\n{term2_qname}\n\n"
+                f"### Term Relationship:\n\n{relationship}")
 
 
 class TermAsContextProcessor(AsyncBaseCommandProcessor):
