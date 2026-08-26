@@ -5,6 +5,7 @@ Copyright Contributors to the ODPi Egeria project.
 
 import inspect
 import json
+import re
 from json import JSONDecodeError
 
 import validators
@@ -16,10 +17,35 @@ This package contains internally used validators.
 
 """
 
+# user_id and server_name are both interpolated directly into URL path segments
+# in several places (e.g. pyegeria/omvs/server_operations.py's
+# ".../users/{self.user_id}/status") without URL-encoding, so a value containing
+# a control character or a URL-path-structural character (/, ?, #, backslash,
+# whitespace) would otherwise only surface as an opaque httpx.InvalidURL /
+# generic PyegeriaUnknownException deep inside a later request. Reject those
+# characters at construction time instead, where the error is immediately
+# traceable to the bad input.
+_URL_UNSAFE_CHARS_RE = re.compile(r'[\x00-\x1f\x7f/?#\\\s]')
+
+
+def _validate_url_path_safe(value: str, param_name: str) -> None:
+    match = _URL_UNSAFE_CHARS_RE.search(value)
+    if match:
+        context: dict = {}
+        context['calling_frame'] = inspect.currentframe().f_back.f_back
+        context['caller_method'] = inspect.currentframe().f_back.f_back.f_code.co_name
+        additional_info = {
+            "reason": f"Invalid {param_name} - contains a character unsafe for use in a URL path "
+                      f"({match.group()!r})",
+            param_name: value,
+        }
+        raise PyegeriaInvalidParameterException(None, context, additional_info)
+
 
 def validate_user_id(user_id: str) -> bool:
     """
-    Validate that the provided user id is neither null nor empty.
+    Validate that the provided user id is neither null nor empty, and contains no
+    characters that are unsafe once interpolated into a URL path.
 
     Parameters
     ----------
@@ -27,12 +53,12 @@ def validate_user_id(user_id: str) -> bool:
 
     Returns
     -------
-    bool: True if valid, If invalid input, a PyegeriaAuthenticationException is raised.
+    bool: True if valid, If invalid input, a PyegeriaInvalidParameterException is raised.
 
     Raises
     ------
-    PyegeriaAuthenticationException
-        If the provided user id is null or empty
+    PyegeriaInvalidParameterException
+        If the provided user id is null, empty, or contains URL-unsafe characters
     """
     if (user_id is None) or len(user_id) == 0:
         context: dict = {}
@@ -43,13 +69,14 @@ def validate_user_id(user_id: str) -> bool:
             "userid": user_id,
             }
         raise PyegeriaInvalidParameterException(None,context, additional_info)
-    else:
-        return True
+    _validate_url_path_safe(user_id, "user_id")
+    return True
 
 
 def validate_server_name(server_name: str) -> bool:
     """
-    Validate that the provided server name is neither null nor empty.
+    Validate that the provided server name is neither null nor empty, and contains
+    no characters that are unsafe once interpolated into a URL path.
 
     Parameters
     ----------
@@ -62,7 +89,7 @@ def validate_server_name(server_name: str) -> bool:
     Raises
     ------
     PyegeriaInvalidParameterException
-        If the provided server name is null or empty
+        If the provided server name is null, empty, or contains URL-unsafe characters
 
     """
 
@@ -74,8 +101,8 @@ def validate_server_name(server_name: str) -> bool:
             "reason": "Invalid server name - its empty", "input_parameters": f"server_name={server_name}",
             }
         raise PyegeriaInvalidParameterException(None, context, additional_info)
-    else:
-        return True
+    _validate_url_path_safe(server_name, "server_name")
+    return True
 
 
 def validate_guid(guid: str) -> bool:

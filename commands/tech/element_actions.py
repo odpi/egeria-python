@@ -57,7 +57,13 @@ def delete_element(cascade, server, url, userid, password, timeout, element_guid
     m_client = EgeriaTech(server, url, user_id=userid, user_pwd=password)
     token = m_client.create_egeria_bearer_token()
     try:
-        m_client.delete_metadata_element_in_store(element_guid, cascade = cascade)
+        # delete_metadata_element_in_store never existed - the real method is
+        # delete_metadata_element(metadata_element_guid, body). There is also
+        # no "cascade" field on OpenMetadataDeleteRequestBody (checked
+        # pyegeria/models/models.py) - this endpoint has no cascade-delete
+        # concept, so --cascade is accepted for CLI compatibility but no
+        # longer forwarded to a nonexistent parameter.
+        m_client.delete_metadata_element(element_guid, body={"class": "OpenMetadataDeleteRequestBody"})
 
         click.echo(f"Deleted element: {element_guid}")
 

@@ -14,8 +14,78 @@ from textual.css.query import NoMatches
 from textual.screen import ModalScreen
 from textual.widgets import Header, Footer, DataTable, Static, Placeholder, Input, Button
 
-from pyegeria import Egeria, PyegeriaException, load_app_config
+from pyegeria import PyegeriaException, Egeria, load_app_config
 
+
+class EditAssociationsScreen(ModalScreen):
+    """ Screen called during editing of a users profile to allow editing of the communities and projects
+        they belong too."""
+
+    BINDINGS = [
+        ("e", "exit_screen", "Exit"),
+    ]
+
+    def __init__(self, columns=None, rows_with_keys=None, *args, **kwargs):
+        super().__init__(*args, **kwargs, id="edit_associations_screen")
+        self.columns = columns or []
+        self.rows_with_keys = rows_with_keys or []
+
+    def compose(self) -> ComposeResult:
+        yield Header(show_clock=True)
+        yield Static("Edit Communities", classes="span-3", id="edit_communities_title")
+        yield Static(" Please note you may only delete one row at a time!", classes="span-3")
+        yield ScrollableContainer(
+            DataTable(id="my_communities_table"),
+            Horizontal(
+                Button("Remove", id="remove_community", variant="error"),
+                Button("Edit Values for selected row", id="edit_community", variant="warning"),
+                ),
+            id="edit_communities_container")
+        yield ScrollableContainer(
+            DataTable(id="my_projects_table"),
+            Horizontal(
+                Button("Remove", id="remove_project",variant="error"),
+                Button("Edit Values for selected row", id="edit_project", variant="warning"),
+                ),
+            id="edit_projects_container")
+        yield Horizontal(
+            Button("Exit", id="exit_screen", variant="primary"),
+            id="bottom_buttons_container")
+        yield Footer()
+
+    async def on_mount(self):
+        self.log("Edit communities screen mounted")
+        self.title = "Egeria - my_profile"
+        self.sub_title = "Edit Communities"
+
+    @on(DataTable.RowSelected, "#communities_table")
+    def row_selected(self, event: DataTable.RowSelected):
+        """ When the user selects a row in the data table store the row key"""
+        self.row_key = event.row_key
+
+    @on(DataTable.RowSelected, "#projects_table")
+    def row_selected(self, event: DataTable.RowSelected):
+        """ When the user selects a row in the data table store the row key"""
+        self.row_key = event.row_key
+
+    def action_exit_screen(self):
+        """ The user has requested to exit the screen, return the current table data """
+        self.dismiss(200)
+
+    def action_remove_community(self):
+        """ The user has selected the delete row option """
+        self.log(f"Delete row selected, row key: {self.row_key}")
+        # If there is a row selected, delete it and clear the row key variable
+        if self.row_key:
+            self.my_communities_table.remove_row(self.row_key)
+            self.my_communities_table.refresh()
+            # self.communities_container.refresh(layout=True)
+            self.row_key = None
+        # If there is no row key in the variable, inform the user by mounting a message into the container
+        # and wait for any further actions.
+        else:
+            self.communities_container.mount(Static("Please select a row to delete prior to using the hot key!"))
+            self.communities_container.refresh(layout=True)
 
 class EditBlogsScreen(ModalScreen):
     """ Screen called during editing of a users profile to allow editing of the blogs
@@ -26,12 +96,12 @@ class EditBlogsScreen(ModalScreen):
         ("d", "delete_row", "Delete Row")
     ]
 
-    def __init__(self, columns, rows_with_keys, *args, **kwargs):
-        super().__init__(*args, **kwargs)
+    def __init__(self, columns=None, rows_with_keys=None, *args, **kwargs):
+        super().__init__(*args, **kwargs, id="edit_blogs_screen")
         self.my_blogs_table: DataTable = DataTable(id="blogs_destination")
         self.row_key = None
-        self.columns = columns
-        self.rows_with_keys = rows_with_keys
+        self.columns = columns or []
+        self.rows_with_keys = rows_with_keys or []
         self.blogs_container: ScrollableContainer
 
     def compose(self) -> ComposeResult:
@@ -95,36 +165,27 @@ class EditBlogsScreen(ModalScreen):
             self.blogs_container.mount(Static("Please select a row to delete prior to using the hot key!"))
             self.blogs_container.refresh(layout=True)
 
-
 class EditCommunitiesScreen(ModalScreen):
     """ Screen called during editing of a users profile to allow editing of the communities
         they belong too."""
 
     BINDINGS = [
         ("escape", "exit_screen", "Exit"),
-        ("ctrl+c", "add_community", "Add Community"),
-        ("ctrl+r", "remove_link_to_community", "Remove Link to Community"),
-        ("ctrl+e", "delete_community", "Delete Community"),
-        ("ctrl+m", "add_comment", "Add Comment"),
-        ("ctrl+o", "show_comments", "Show Comments"),
-        ("ctrl+s", "show_team_members", "Show Team")
+        ("d", "delete_row", "Delete Row")
     ]
 
-    def __init__(self, columns, rows_with_keys, *args, **kwargs):
-        super().__init__(*args, **kwargs)
+    def __init__(self, columns=None, rows_with_keys=None, *args, **kwargs):
+        super().__init__(*args, **kwargs, id="edit_communities_screen")
         self.my_communities_table: DataTable = DataTable(id="communities_destination")
         self.row_key = None
-        self.columns = columns
-        self.rows_with_keys = rows_with_keys
+        self.columns = columns or []
+        self.rows_with_keys = rows_with_keys or []
         self.communities_container: ScrollableContainer
-        self.new_name = ""
-        self.new_description = ""
-        self.new_mission = ""
 
     def compose(self) -> ComposeResult:
         yield Header(show_clock=True)
         yield Static("Edit Communities", classes="span-3", id="edit_communities_title")
-        yield Static(" Please note you may only add or delete one row at a time!", classes="span-3")
+        yield Static(" Please note you may only delete one row at a time!", classes="span-3")
         yield ScrollableContainer(id="edit_communities_container")
         yield Footer()
 
@@ -135,7 +196,6 @@ class EditCommunitiesScreen(ModalScreen):
         # Populate DataTable
         self.my_communities_table.clear(columns=True)
         self.my_communities_table.add_columns(*self.columns)
-        self.my_communities_table.cursor_type="row"
         for key_str, cell_values in self.rows_with_keys:
             self.my_communities_table.add_row(*cell_values, key=key_str)
 
@@ -168,109 +228,20 @@ class EditCommunitiesScreen(ModalScreen):
             rows_with_keys.append((row_key.value, self.my_communities_table.get_row(row_key)))
         self.dismiss(rows_with_keys)
 
-    def action_delete_community(self):
+    def action_delete_row(self):
         """ The user has selected the delete row option """
-        self.log(f"Delete community selected, row key: {self.row_key}")
+        self.log(f"Delete row selected, row key: {self.row_key}")
         # If there is a row selected, delete it and clear the row key variable
         if self.row_key:
-            self.row_content = self.my_communities_table.get_row(self.row_key)
-            # Delete the Community from Egeria, change this to call a function in the app.
-            self.log(f"Deleting community with content: {self.row_content}")
-            del_comm_rc = self.app.delete_community(self.row_content)
-            if del_comm_rc == 200:
-                self.my_communities_table.remove_row(self.row_key)
-                self.my_communities_table.refresh()
-                self.communities_container.refresh(layout=True)
-            else:
-                self.communities_container.mount(Static("Failed to delete community, please try again!"))
-                self.communities_container.refresh(layout=True)
-            self.row_key = None
-        # If there is no row key in the variable, inform the user by notifying the user
-        # and waiting for any further actions.
-        else:
-            self.notify("Please select a row to delete prior to using the hot key!")
+            self.my_communities_table.remove_row(self.row_key)
+            self.my_communities_table.refresh()
             self.communities_container.refresh(layout=True)
-        return
-
-    def action_add_community(self):
-        """ The user has selected the add community option """
-        self.log("Add community selected")
-        container = self.query_one("#edit_communities_container", ScrollableContainer)
-        container.mount(
-            Input("Name", id="new_community_name"),
-            Input("Description", id="new_community_description"),
-            Input("Mission", id="new_community_mission"),
-            Button("Add community", id="add_community_button")
-        )
-        container.refresh()
-        new_name = self.query_one("#new_community_name", Input).focus=True
-       # self.communities_container.mount(Static("Add community functionality not yet implemented!"))
-        # self.communities_container.refresh(layout=True)
-
-    def action_remove_link_to_community(self):
-        """ The user has selected the remove link to community option """
-        self.log(f"Remove link to community selected: {self.row_key}")
-
-        # If there is a row selected, remove the link to the actor profile and
-        # delete it from the DataTable and clear the row key variable
-        if self.row_key:
-            self.row_content = self.my_communities_table.get_row(self.row_key)
-            # Remove the link to the Community from the actor profile,
-            # to do this call a function in the app.
-            self.log(f"Deleting link to community with content: {self.row_content}")
-            rem_comm_rc = self.app.remove_link_to_community(self.row_content)
-            if rem_comm_rc == 200:
-                self.my_communities_table.remove_row(self.row_key)
-                self.my_communities_table.refresh()
-                self.communities_container.refresh(layout=True)
-            else:
-                self.communities_container.mount(Static("Failed to delete link to community, please try again!"))
-                self.communities_container.refresh(layout=True)
             self.row_key = None
-        # If there is no row key in the variable, inform the user by notifying the user
-        # and waiting for any further actions.
+        # If there is no row key in the variable, inform the user by mounting a message into the container
+        # and wait for any further actions.
         else:
-            self.notify("Please select a row to remove the link to prior to using the hot key!")
+            self.communities_container.mount(Static("Please select a row to delete prior to using the hot key!"))
             self.communities_container.refresh(layout=True)
-        return
-
-    def action_show_team_members(self):
-        """ The user has selected the show team members option """
-        self.log("Show team members selected")
-        self.app.show_team(self.row_key)
-
-    @on(Input.Changed, "#new_community_name")
-    def on_input_changed(self, event: Input.Changed):
-        self.log("Input changed")
-        self.new_name = event.value
-
-    @on(Input.Changed, "#new_community_description")
-    def on_input_changed(self, event: Input.Changed):
-        self.log("Input changed")
-        self.new_description = event.value
-
-    @on(Input.Changed, "#new_community_mission")
-    def on_input_changed(self, event: Input.Changed):
-        self.log("Input changed")
-        if event.control.id == "new_community_mission":
-            self.new_mission = event.value
-        elif event.control.id == "new_community_description":
-            self.new_description = event.value
-        elif event.control.id == "new_community_name":
-            self.new_name = event.value
-
-    @on(Button.Pressed, "#add_community_button")
-    def on_button_pressed(self, event: Button.Pressed):
-        self.log("Button pressed")
-        self.add_community()
-
-    def add_community(self):
-        if self.new_name and self.new_description and self.new_mission:
-            self.dismiss(["add", self.new_name, self.new_description, self.new_mission])
-        else:
-            self.log("Missing required fields")
-            self.notify("Missing required fields, please complete all input before adding", timeout=5, severity="warning")
-
 
 class EditIdentitiesScreen(ModalScreen):
     """ Screen called during editing of a users profile to allow editing of the identities
@@ -281,12 +252,12 @@ class EditIdentitiesScreen(ModalScreen):
         ("d", "delete_row", "Delete Row")
     ]
 
-    def __init__(self, columns, rows_with_keys, *args, **kwargs):
-        super().__init__(*args, **kwargs)
+    def __init__(self, columns=None, rows_with_keys=None, *args, **kwargs):
+        super().__init__(*args, **kwargs, id="edit_identities_screen")
         self.my_identities_table: DataTable = DataTable(id="identities_destination")
         self.row_key = None
-        self.columns = columns
-        self.rows_with_keys = rows_with_keys
+        self.columns = columns or []
+        self.rows_with_keys = rows_with_keys or []
         self.identities_container: ScrollableContainer
 
     def compose(self) -> ComposeResult:
@@ -350,7 +321,6 @@ class EditIdentitiesScreen(ModalScreen):
             self.identities_container.mount(Static("Please select a row to delete prior to using the hot key!"))
             self.identities_container.refresh(layout=True)
 
-
 class EditJournalScreen(ModalScreen):
     """ Screen called during editing of a users profile to allow editing of the journal
         they belong too."""
@@ -360,12 +330,12 @@ class EditJournalScreen(ModalScreen):
         ("d", "delete_row", "Delete Row")
     ]
 
-    def __init__(self, columns, rows_with_keys, *args, **kwargs):
-        super().__init__(*args, **kwargs)
+    def __init__(self, columns=None, rows_with_keys=None, *args, **kwargs):
+        super().__init__(*args, **kwargs, id="edit_journal_screen")
         self.my_journal_table: DataTable = DataTable(id="journal_destination")
         self.row_key = None
-        self.columns = columns
-        self.rows_with_keys = rows_with_keys
+        self.columns = columns or []
+        self.rows_with_keys = rows_with_keys or []
         self.journal_container: ScrollableContainer
 
     def compose(self) -> ComposeResult:
@@ -429,8 +399,7 @@ class EditJournalScreen(ModalScreen):
             self.journal_container.mount(Static("Please select a row to delete prior to using the hot key!"))
             self.journal_container.refresh(layout=True)
 
-
-class EditProfileScreen(ModalScreen):
+class EditProfileScreen(ModalScreen[Any]):
     """Modal screen to create a new user profile in Egeria.
 
     Dismisses with:
@@ -455,9 +424,8 @@ class EditProfileScreen(ModalScreen):
                         user_profile,
                         user_GUID
                  ):
-        super().__init__()
+        super().__init__(id="edit_profile_screen")
         load_app_config()
-        # config_logging()
         self.user_name = user
         self.user_password = password
         self.view_server = view_server
@@ -656,12 +624,12 @@ class EditProjectsScreen(ModalScreen):
         ("d", "delete_row", "Delete Row")
     ]
 
-    def __init__(self, columns, rows_with_keys, *args, **kwargs):
-        super().__init__(*args, **kwargs)
+    def __init__(self, columns=None, rows_with_keys=None, *args, **kwargs):
+        super().__init__(*args, **kwargs, id="edit_projects_screen")
         self.my_projects_table: DataTable = DataTable(id="projects_destination")
         self.row_key = None
-        self.columns = columns
-        self.rows_with_keys = rows_with_keys
+        self.columns = columns or []
+        self.rows_with_keys = rows_with_keys or []
         self.projects_container: ScrollableContainer
 
     def compose(self) -> ComposeResult:
@@ -725,23 +693,21 @@ class EditProjectsScreen(ModalScreen):
             self.projects_container.mount(Static("Please select a row to delete prior to using the hot key!"))
             self.projects_container.refresh(layout=True)
 
-
 class EditRolesScreen(ModalScreen):
     """ Screen called during editing of a users profile to allow editing of the roles
         they belong too."""
 
     BINDINGS = [
         ("escape", "exit_screen", "Exit"),
-        ("ctrl+a", "add_role", "Add Role"),
-        ("ctrl+d", "delete_role", "Delete Role"),
+        ("d", "delete_row", "Delete Row")
     ]
 
-    def __init__(self, columns, rows_with_keys, *args, **kwargs):
-        super().__init__(*args, **kwargs)
+    def __init__(self, columns=None, rows_with_keys=None, *args, **kwargs):
+        super().__init__(*args, **kwargs, id="edit_roles_screen")
         self.my_roles_table: DataTable = DataTable(id="roles_destination")
         self.row_key = None
-        self.columns = columns
-        self.rows_with_keys = rows_with_keys
+        self.columns = columns or []
+        self.rows_with_keys = rows_with_keys or []
         self.roles_container: ScrollableContainer
 
     def compose(self) -> ComposeResult:
@@ -790,7 +756,7 @@ class EditRolesScreen(ModalScreen):
             rows_with_keys.append((row_key.value, self.my_roles_table.get_row(row_key)))
         self.dismiss(rows_with_keys)
 
-    def action_delete_role(self):
+    def action_delete_row(self):
         """ The user has selected the delete row option """
         self.log(f"Delete row selected, row key: {self.row_key}")
         # If there is a row selected, delete it and clear the row key variable
@@ -805,29 +771,21 @@ class EditRolesScreen(ModalScreen):
             self.roles_container.mount(Static("Please select a row to delete prior to using the hot key!"))
             self.roles_container.refresh(layout=True)
 
-    def action_add_role(self):
-        """ The user has selected the add role option """
-        self.log("Add role selected")
-        self.roles_container.mount(Static("Add role functionality not yet implemented!"))
-        self.roles_container.refresh(layout=True)
-
-
 class EditTeamsScreen(ModalScreen):
     """ Screen called during editing of a users profile to allow editing of the teams
         they belong too."""
 
     BINDINGS = [
         ("escape", "exit_screen", "Exit"),
-        ("ctrl+t", "add_team", "Add Team"),
-        ("ctrl+r", "delete_team", "Delete Team")
+        ("d", "delete_row", "Delete Row")
     ]
 
-    def __init__(self, columns, rows_with_keys, *args, **kwargs):
-        super().__init__(*args, **kwargs)
+    def __init__(self, columns=None, rows_with_keys=None, *args, **kwargs):
+        super().__init__(*args, **kwargs, id="edit_teams_screen")
         self.my_teams_table: DataTable = DataTable(id="teams_destination")
         self.row_key = None
-        self.columns = columns
-        self.rows_with_keys = rows_with_keys
+        self.columns = columns or []
+        self.rows_with_keys = rows_with_keys or []
         self.teams_container: ScrollableContainer
 
     def compose(self) -> ComposeResult:
@@ -844,7 +802,6 @@ class EditTeamsScreen(ModalScreen):
         # Polulate DataTable
         self.my_teams_table.clear(columns=True)
         self.my_teams_table.add_columns(*self.columns)
-        self.my_teams_table.cursor_type="row"
         for key_str, cell_values in self.rows_with_keys:
             self.my_teams_table.add_row(*cell_values, key=key_str)
         try:
@@ -868,7 +825,6 @@ class EditTeamsScreen(ModalScreen):
     def row_selected(self, event: DataTable.RowSelected):
         """ When the user selects a row in the data table store the row key"""
         self.row_key = event.row_key
-        self.table = event.data_table
 
     def action_exit_screen(self):
         """ The user has requested to exit the screen, return the current table data """
@@ -877,7 +833,7 @@ class EditTeamsScreen(ModalScreen):
             rows_with_keys.append((row_key.value, self.my_teams_table.get_row(row_key)))
         self.dismiss(rows_with_keys)
 
-    def action_delete_team(self):
+    def action_delete_row(self):
         """ The user has selected the delete row option """
         self.log(f"Delete row selected, row key: {self.row_key}")
         # If there is a row selected, delete it and clear the row key variable
@@ -892,13 +848,6 @@ class EditTeamsScreen(ModalScreen):
             self.teams_container.mount(Static("Please select a row to delete prior to using the hot key!"))
             self.teams_container.refresh(layout=True)
 
-    def action_add_team(self):
-        """ The user has selected the add team option """
-        self.log("Add team selected")
-        self.teams_container.mount(Static("Add team functionality not yet implemented!"))
-        self.teams_container.refresh(layout=True)
-
-
 class EditTodosScreen(ModalScreen):
     """ Screen called during editing of a users profile to allow editing of the todos
         they belong too."""
@@ -908,12 +857,12 @@ class EditTodosScreen(ModalScreen):
         ("d", "delete_row", "Delete Row")
     ]
 
-    def __init__(self, columns, rows_with_keys, *args, **kwargs):
-        super().__init__(*args, **kwargs)
+    def __init__(self, columns=None, rows_with_keys=None, *args, **kwargs):
+        super().__init__(*args, **kwargs, id="edit_todos_screen")
         self.my_todos_table: DataTable = DataTable(id="todos_destination")
         self.row_key = None
-        self.columns = columns
-        self.rows_with_keys = rows_with_keys
+        self.columns = columns or []
+        self.rows_with_keys = rows_with_keys or []
         self.todos_container: ScrollableContainer
 
     def compose(self) -> ComposeResult:
@@ -977,16 +926,3 @@ class EditTodosScreen(ModalScreen):
             self.todos_container.mount(Static("Please select a row to delete prior to using the hot key!"))
             self.todos_container.refresh(layout=True)
 
-
-class EditAssociationsScreen(ModalScreen):
-    """Edit the users associations """
-    def __init__(self, *args, **kwargs):
-        super().__init__(*args, **kwargs)
-        pass
-
-
-class EditActivityScreen(ModalScreen):
-    """Edit the users activity """
-    def __init__(self, *args, **kwargs):
-        super().__init__(*args, **kwargs)
-        pass

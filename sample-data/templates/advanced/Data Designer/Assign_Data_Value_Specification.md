@@ -3,7 +3,7 @@ ___
 ## Assign Data Value Specification
 > Link a data value specification, DataClass, DataGrain,  to a referenceable element providing a definition.
 >
->	**Alternative Names**: Link Data Value Specification; Attach Data Value Specification to Element
+>	**Alternative Names**: Attach Data Value Specification to Element; Attach Data Value Specification; Link Data Value Specification
 
 ### Data Value Specification
 >	**Input Required**: True

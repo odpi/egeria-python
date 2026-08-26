@@ -348,7 +348,7 @@ ___
 ### Zone Membership
 >	**Input Required**: False
 
->	**Attribute Type**: Simple
+>	**Attribute Type**: Simple List
 
 >	**Description**: Zones scope visibility of elements to different users.
 
@@ -363,16 +363,6 @@ ___
 >	| Parameter Name | Parameter Value |
 >	|---|---|
 >	| example_key | example_value |
-
-
-### Class Word Classification
->	**Input Required**: False
-
->	**Attribute Type**: Bool
-
->	**Description**: Classification from 0438. Applied to Referenceable. Marker classification (no attributes) indicating the element is a class word in a naming standard.
-
->	**Default Value**: False
 
 
 ### Confidence Classification
@@ -425,16 +415,6 @@ ___
 >	**Valid Values**: UNCLASSIFIED,LOW,MEDIUM,HIGH,OTHER
 
 
-### Modifier Classification
->	**Input Required**: False
-
->	**Attribute Type**: Bool
-
->	**Description**: Classification from 0438. Applied to Referenceable. Marker classification (no attributes) indicating the element is a modifier in a naming standard.
-
->	**Default Value**: False
-
-
 ### Policy Management Point
 >	**Input Required**: False
 
@@ -445,16 +425,6 @@ ___
 >	| Parameter Name | Parameter Value |
 >	|---|---|
 >	| example_key | example_value |
-
-
-### Prime Word Classification
->	**Input Required**: False
-
->	**Attribute Type**: Bool
-
->	**Description**: Classification from 0438. Applied to Referenceable. Marker classification (no attributes) indicating the element is a prime word in a naming standard.
-
->	**Default Value**: False
 
 
 ### Retention Classification
@@ -481,6 +451,16 @@ ___
 >	**Attribute Type**: Simple
 
 >	**Description**: A user defined content status = only valid if content status is OTHER.
+
+
+### Class Word Classification
+>	**Input Required**: False
+
+>	**Attribute Type**: Bool
+
+>	**Description**: Classification from 0438. Applied to Referenceable. Marker classification (no attributes) indicating the element is a class word in a naming standard.
+
+>	**Default Value**: False
 
 
 ### Context Description
@@ -535,6 +515,26 @@ ___
 >	**Attribute Type**: Bool
 
 >	**Description**: Classify the glossary term to indicate that it describes a data valuet.
+
+>	**Default Value**: False
+
+
+### Modifier Classification
+>	**Input Required**: False
+
+>	**Attribute Type**: Bool
+
+>	**Description**: Classification from 0438. Applied to Referenceable. Marker classification (no attributes) indicating the element is a modifier in a naming standard.
+
+>	**Default Value**: False
+
+
+### Prime Word Classification
+>	**Input Required**: False
+
+>	**Attribute Type**: Bool
+
+>	**Description**: Classification from 0438. Applied to Referenceable. Marker classification (no attributes) indicating the element is a prime word in a naming standard.
 
 >	**Default Value**: False
 

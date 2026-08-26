@@ -25,6 +25,12 @@ class ActionProcessStepLinkProcessor(AsyncBaseCommandProcessor):
     Link Next Process Step (NextGovernanceActionProcessStep).
     """
 
+    def supports_target_element_lookup(self) -> bool:
+        # Relationship-only processor -- see GovernanceLinkProcessor's
+        # identical override for why this is required, not optional, once a
+        # processor gains an "Update" command (ISSUE-68 follow-up).
+        return False
+
     async def fetch_as_is(self) -> Optional[Dict[str, Any]]:
         return None
 
@@ -89,6 +95,32 @@ class ActionProcessStepLinkProcessor(AsyncBaseCommandProcessor):
                 logger.success(f"Removed first-process-step link from {process_guid}")
                 return f"\n\n## {verb} {object_type}\n\nRemoved first-process-step link from {process_guid}"
 
+        elif verb == "Update":
+            # NextGovernanceActionProcessStep is MULTI_LINK (see
+            # pyegeria.core.relationship_multiplicity) -- more than one may
+            # exist between the same pair of steps, so updating one requires
+            # its own relationship GUID, not the pair of step GUIDs the Link/
+            # Detach branches below use. Handled first, before the pair
+            # resolution below, since "Update Next Process Step" doesn't
+            # carry 'Governance Action Process Step'/'Next Governance Action
+            # Process Step' attributes at all -- just GUID/Guard/Mandatory Guard.
+            relationship_guid = self._resolve_relationship_guid(object_type, attributes)
+            if not relationship_guid:
+                raise ValueError("Cannot update Next Process Step link: no relationship GUID resolved. Provide 'GUID' (as returned by the original Link Next Process Step).")
+            body = {
+                "class": "UpdateRelationshipRequestBody",
+                "mergeUpdate": True,
+                "properties": {
+                    "class": "NextGovernanceActionProcessStepProperties",
+                    "guard": attributes.get('Guard', {}).get('value'),
+                    "mandatoryGuard": attributes.get('Mandatory Guard', {}).get('value'),
+                },
+            }
+            self.last_body = body = body_slimmer(body)
+            await self.client._async_update_next_action_process_step(relationship_guid, body)
+            logger.success(f"Updated next-process-step link {relationship_guid}")
+            return f"\n\n## {verb} {object_type}\n\nUpdated next-process-step link {relationship_guid}"
+
         else:
             step_guid = attributes.get('Governance Action Process Step', {}).get('guid')
             next_step_guid = attributes.get('Next Governance Action Process Step', {}).get('guid')
@@ -106,8 +138,11 @@ class ActionProcessStepLinkProcessor(AsyncBaseCommandProcessor):
                     "mandatoryGuard": attributes.get('Mandatory Guard', {}).get('value', False),
                 }
                 self.last_body = body = body_slimmer(body)
-                await self.client._async_setup_next_action_process_step(step_guid, next_step_guid, body)
+                new_rel_guid = await self.client._async_setup_next_action_process_step(step_guid, next_step_guid, body)
                 logger.success(f"Linked {next_step_guid} as next process step after {step_guid}")
+                if new_rel_guid:
+                    self.parsed_output["guid"] = new_rel_guid
+                    return f"\n\n## {verb} {object_type}\n\nLinked {next_step_guid} as next process step after {step_guid}. Relationship GUID: {new_rel_guid}"
                 return f"\n\n## {verb} {object_type}\n\nLinked {next_step_guid} as next process step after {step_guid}"
 
             elif verb in ["Detach", "Unlink", "Remove"]:

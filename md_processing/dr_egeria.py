@@ -2,6 +2,13 @@ from md_processing.md_processing_utils.md_processing_constants import load_comma
 
 # Ensure compact command specs are loaded before any v2 processing
 load_commands()
+
+# Analytic Function Demo report specs (pyegeria.view.analytic_demo_specs) --
+# and any other extra report-spec source -- are auto-loaded by
+# get_report_registry() itself (CONFIG tier, driven by
+# settings.Environment.pyegeria_report_spec_modules / config.json's "Pyegeria
+# Report Spec Modules") the first time anything calls it. No explicit
+# registration call needed here anymore.
 """
 This is an ongoing experiment in parsing and playing with Dr.Egeria docs
 """
@@ -24,7 +31,7 @@ from md_processing.md_processing_utils.common_md_utils import set_attribute_log_
 from md_processing.md_processing_utils.md_processing_constants import PROJECT_SUBTYPES, COLLECTION_SUBTYPES
 from md_processing.v2 import (
     UniversalExtractor, V2Dispatcher, AsyncBaseCommandProcessor,
-    TermProcessor, TermRelationshipProcessor, GlossaryClassifyProcessor, QuestionProcessor,
+    TermProcessor, TermRelationshipProcessor, GlossaryClassifyProcessor, QuestionProcessor, TermAsContextProcessor,
     DataCollectionProcessor, DataStructureProcessor, DataFieldProcessor, DataClassProcessor,
     BlueprintProcessor, ComponentProcessor, SupplyChainProcessor, SolutionLinkProcessor,
     SolutionArchitectProcessor,
@@ -33,7 +40,14 @@ from md_processing.v2 import (
     GovernanceProcessor, GovernanceLinkProcessor, GovernanceContextProcessor,
     FeedbackProcessor, TagProcessor, ExternalReferenceProcessor, FeedbackLinkProcessor,
     ViewProcessor, ActorManagerProcessor, ActorManagerLinkProcessor,
-    ActionProcessStepLinkProcessor, ActionExecutorTargetLinkProcessor
+    ActionProcessStepLinkProcessor, ActionExecutorTargetLinkProcessor,
+    CreateDashboardSheetProcessor, LinkReportToDashboardSheetProcessor,
+    AddTextOnDashboardSheetProcessor, ReportProcessor,
+    SavedQueryProcessor, SmartQueryLinkProcessor,
+    CurationClassifyProcessor, CurationLinkProcessor, CLASSIFICATION_METHODS,
+    ReferenceDataLinkProcessor, ValidMetadataValueProcessor,
+    EmbeddedProcessProcessor, InitiateEngineActionProcessor, CancelEngineActionProcessor,
+    LineageLinkProcessor, UpdateLineageRelationshipProcessor,
 )
 
 from pyegeria import settings, EgeriaTech, PyegeriaException, print_basic_exception, print_validation_error
@@ -187,6 +201,59 @@ def register_governance_processors(register_processor: Callable[[str, Type[Async
     # Context retrieval is not in compact command specs; keep explicit registration.
     register_processor("View Governance Definition Context", GovernanceContextProcessor)
 
+    # Embedded Process / Engine Action (Action Author family) -- these three
+    # commands need bespoke processors (AssetMaker generic-asset create for
+    # EmbeddedProcess; AutomatedCuration.initiate_engine_action/
+    # cancel_engine_action for the other two), not the family's default
+    # GovernanceProcessor/GovernanceLinkProcessor path above, so re-register
+    # them explicitly here -- same pattern as "Create Report"/"Update Report"
+    # overriding their own family's generic walker further down.
+    register_processor("Create Embedded Process", EmbeddedProcessProcessor)
+    register_processor("Initiate Engine Action", InitiateEngineActionProcessor)
+    register_processor("Cancel Engine Action", CancelEngineActionProcessor)
+
+
+# OM_TYPEs handled by CurationLinkProcessor.apply_changes(); anything in the
+# Curation family whose OM_TYPE is in neither this set nor CLASSIFICATION_METHODS
+# (Class Word / Modifier / Policy Management Point) is left unregistered on
+# purpose -- no backing pyegeria method exists, so it stays parse-only.
+CURATION_LINK_OM_TYPES = {
+    "ScopedBy", "SemanticAssignment", "SemanticDefinition", "PeerDuplicateLink",
+    "ConsolidatedDuplicateLink", "ResourceList", "MoreInformation", "SearchKeywordLink",
+}
+
+
+def register_curation_processors(register_processor: Callable[[str, Type[AsyncBaseCommandProcessor]], None]) -> None:
+    """Register Curation family processors from compact command specs."""
+    from md_processing.md_processing_utils.md_processing_constants import (
+        COMMAND_DEFINITIONS,
+        build_command_variants,
+        load_commands,
+    )
+
+    load_commands()
+    specs = COMMAND_DEFINITIONS.get("Command Specifications", {})
+
+    for base_name, spec in specs.items():
+        if not isinstance(spec, dict):
+            continue
+        if spec.get("family") != "Curation":
+            continue
+
+        om_type = spec.get("OM_TYPE")
+        if om_type in CLASSIFICATION_METHODS:
+            processor_cls = CurationClassifyProcessor
+        elif om_type in CURATION_LINK_OM_TYPES:
+            processor_cls = CurationLinkProcessor
+        else:
+            # Tier 3 -- no backing pyegeria method (Class Word/Modifier/Policy
+            # Management Point) or unrecognized OM_TYPE. Leave parse-only.
+            continue
+
+        variants = build_command_variants(base_name, spec)
+        for variant in variants:
+            register_processor(variant, processor_cls)
+
 
 def normalize_command_key(key: str) -> str:
     """Collapse whitespace and strip for consistent command matching."""
@@ -238,8 +305,12 @@ def setup_dispatcher(client: EgeriaTech) -> V2Dispatcher:
     reg("Unlink Term-Term Relationship", TermRelationshipProcessor)
     reg("Remove Term-Term Relationship", TermRelationshipProcessor)
     reg("Detach Term-Term Relationship", TermRelationshipProcessor)
+    reg("Link Term as Context", TermAsContextProcessor)
+    reg("Detach Term as Context", TermAsContextProcessor)
     reg("Classify Term as Question", GlossaryClassifyProcessor)
     reg("Declassify Term as Question", GlossaryClassifyProcessor)
+    reg("Classify Term as Element Supplement", GlossaryClassifyProcessor)
+    reg("Declassify Term as Element Supplement", GlossaryClassifyProcessor)
     reg("Create Question", QuestionProcessor)
     reg("Link Perspective to Question", ActorManagerLinkProcessor)
 
@@ -247,7 +318,8 @@ def setup_dispatcher(client: EgeriaTech) -> V2Dispatcher:
     from md_processing.v2.data_designer import (
         DataValueSpecificationProcessor, DataClassProcessor, DataStructureProcessor, DataFieldProcessor, DataGrainProcessor,
         LinkDataFieldProcessor, LinkFieldToStructureProcessor, LinkDataValueDefinitionProcessor, LinkDataValueCompositionProcessor,
-        LinkDataClassCompositionProcessor, LinkCertificationTypeToStructureProcessor, AttachDataDescriptionProcessor,
+        LinkDataClassCompositionProcessor, LinkCertificationTypeToStructureProcessor,
+        LinkSchemaAttributeDefinitionProcessor,
         AssignDataValueSpecificationProcessor
     )
 
@@ -265,7 +337,17 @@ def setup_dispatcher(client: EgeriaTech) -> V2Dispatcher:
     reg("Link Data Value Composition", LinkDataValueCompositionProcessor)
     reg("Link Data Class Composition", LinkDataClassCompositionProcessor)
     reg("Link Certification Type to Data Structure", LinkCertificationTypeToStructureProcessor)
-    reg("Attach Data Description to Element", AttachDataDescriptionProcessor)
+    reg("Link Schema Attribute Definition", LinkSchemaAttributeDefinitionProcessor)
+    # "Assign Data Value Specification" (verb Attach/Link/Add) and "Detach
+    # Data Value Specification from Element" (verb Detach/Unlink/Remove) both
+    # route to the same AssignDataValueSpecificationProcessor, which branches
+    # on self.command.verb -- see its docstring. They can't be separate
+    # processor classes: the "to Element"/"from Element" noun pair both
+    # expand, via LINK_VERBS, to the identical set of six verb phrasings
+    # (register_processor -> build_command_variants), so whichever reg() call
+    # ran last would silently claim both keys regardless of which processor
+    # class was intended for which verb.
+    reg("Detach Data Value Specification from Element", AssignDataValueSpecificationProcessor)
     reg("Assign Data Value Specification", AssignDataValueSpecificationProcessor)
 
     # Solution Architect (spec-driven to keep coverage aligned with compact commands)
@@ -293,19 +375,70 @@ def setup_dispatcher(client: EgeriaTech) -> V2Dispatcher:
     reg("Link Product-Product", CollectionLinkProcessor)
     reg("Attach Collection to Resource", CollectionLinkProcessor)
     reg("Link Digital Subscriber", CollectionLinkProcessor)
+    reg("Link Data Description", CollectionLinkProcessor)
 
     # Governance (spec-driven to keep coverage aligned with compact commands)
     register_governance_processors(reg)
+
+    # "Update Certification"/"Update License" -- register_governance_processors()'s
+    # family loop routes by the base command's own verb (Link/Attach/Add ->
+    # GovernanceLinkProcessor, everything else -> GovernanceProcessor, the
+    # governance-*definition*-element processor), so these two Update-a-
+    # relationship commands would otherwise be silently misrouted there.
+    # Override explicitly, same pattern as "Create Embedded Process"/
+    # "Initiate Engine Action" above overriding their own family's generic
+    # walker (ISSUE-68: Certification/License are MULTI_LINK, need their own
+    # relationship GUID to target one instance for update).
+    reg("Update Certification", GovernanceLinkProcessor)
+    reg("Update License", GovernanceLinkProcessor)
+
+    # Lineage Linker -- one generic Link/Update/Unlink command triple covering
+    # all seven Lineage Linker OMVS relationship types (DataFlow, ControlFlow,
+    # ProcessCall, LineageMapping, DataMapping, UltimateSource,
+    # UltimateDestination) via a "Relationship Type" selector attribute,
+    # rather than a separate command pair per type.
+    reg("Link Lineage Relationship", LineageLinkProcessor)
+    reg("Unlink Lineage Relationship", LineageLinkProcessor)
+    reg("Update Lineage Relationship", UpdateLineageRelationshipProcessor)
+
     # Actor Manager (spec-driven to keep coverage aligned with compact commands)
+    # NOTE: "Create ToDo" is family "Actor Manager" in its compact spec, so it's
+    # already auto-registered here (verb "Create" -> ActorManagerProcessor) --
+    # no explicit reg() call needed.
     register_actor_manager_processors(reg)
+
+    # Curation (classifications + relationships on existing Referenceable elements)
+    register_curation_processors(reg)
+
+    # Person actions living in other families (Person Action Base bundle)
+    reg("Create Meeting", ProjectProcessor)
+    reg("Create Review", FeedbackProcessor)
 
     # Reporting / View
     reg("View Report", ViewProcessor)
+    reg("Create Report", ReportProcessor)
+    reg("Update Report", ReportProcessor)
+    reg("Create Saved Query", SavedQueryProcessor)
+    reg("Update Saved Query", SavedQueryProcessor)
+    reg("Link Saved Query to Results Set", SmartQueryLinkProcessor)
+
+    # Dashboard Sheets (local pyegeria-only records, not Egeria elements yet --
+    # see OVERVIEW_REPORTING_MODEL.md SS10 for the planned Collection-subtype migration)
+    reg("Create Dashboard Sheet", CreateDashboardSheetProcessor)
+    reg("Link Report to Dashboard Sheet", LinkReportToDashboardSheetProcessor)
+    reg("Add Text on Dashboard Sheet", AddTextOnDashboardSheetProcessor)
 
     # Feedback / Tags / External References
     reg("Add Comment", FeedbackProcessor)
     reg("Update Comment", FeedbackProcessor)
+    reg("Create Note", FeedbackProcessor)
+    # Person's own activity stream (My Journal Base bundle) - JournalEntry/
+    # ActivityEntry/BlogEntry are all Notification subtypes, same NoteLog
+    # mechanism as Note, distinguished by visibility (see egeria-project.org/
+    # concepts/notification/: journal=private, blog/activity=public).
     reg("Create Journal Entry", FeedbackProcessor)
+    reg("Create Activity Entry", FeedbackProcessor)
+    reg("Create Blog Entry", FeedbackProcessor)
     reg("Create Informal Tag", TagProcessor)
     reg("Update Informal Tag", TagProcessor)
     reg("Add Informal Tag", FeedbackLinkProcessor)
@@ -331,6 +464,31 @@ def setup_dispatcher(client: EgeriaTech) -> V2Dispatcher:
     reg("Update External Model Source", ExternalReferenceProcessor)
     reg("Create External Source Code", ExternalReferenceProcessor)
     reg("Update External Source Code", ExternalReferenceProcessor)
+    reg("Create External Standard", ExternalReferenceProcessor)
+    reg("Update External Standard", ExternalReferenceProcessor)
+
+    # Valid Values / Reference Data relationships (ValidValuesAssignment,
+    # ReferenceValueAssignment, SpecificationPropertyAssignment) -- one
+    # OM_TYPE-dispatched processor shared across the families that expose a
+    # Link/Detach command for them.
+    reg("Link Question to Valid Values", ReferenceDataLinkProcessor)
+    reg("Detach Question from Valid Values", ReferenceDataLinkProcessor)
+    reg("Link Data Field to Valid Values", ReferenceDataLinkProcessor)
+    reg("Detach Data Field from Valid Values", ReferenceDataLinkProcessor)
+    reg("Link Element to Valid Values", ReferenceDataLinkProcessor)
+    reg("Detach Element from Valid Values", ReferenceDataLinkProcessor)
+    reg("Link Reference Value Assignment", ReferenceDataLinkProcessor)
+    reg("Detach Reference Value Assignment", ReferenceDataLinkProcessor)
+    reg("Link Specification Property Assignment", ReferenceDataLinkProcessor)
+    reg("Detach Specification Property Assignment", ReferenceDataLinkProcessor)
+
+    reg("Setup Valid Metadata Value", ValidMetadataValueProcessor)
+    reg("Clear Valid Metadata Value", ValidMetadataValueProcessor)
+    reg("Setup Valid Metadata Map Name", ValidMetadataValueProcessor)
+    reg("Clear Valid Metadata Map Name", ValidMetadataValueProcessor)
+    reg("Setup Valid Metadata Map Value", ValidMetadataValueProcessor)
+    reg("Clear Valid Metadata Map Value", ValidMetadataValueProcessor)
+    reg("Set Consistent Metadata Values", ValidMetadataValueProcessor)
     reg("Attach Comment", FeedbackLinkProcessor)
     reg("Detach Comment", FeedbackLinkProcessor)
     reg("Attach Rating", FeedbackLinkProcessor)
@@ -420,7 +578,31 @@ async def process_md_file_v2(input_file: str, output_folder: str, directive: str
     else:
         full_file_path = os.path.abspath(os.path.expanduser(os.path.join(EGERIA_ROOT_PATH, EGERIA_INBOX_PATH, input_file)))
 
-    logger.info(f"v2: Processing Markdown File: {full_file_path}")
+    logger.info(f"v2: Processing Markdown path: {full_file_path}")
+
+    if os.path.isdir(full_file_path):
+        console.print(f"[cyan]v2: Processing Markdown Directory: {full_file_path}[/cyan]")
+        md_files = [f for f in os.listdir(full_file_path) if f.endswith('.md') and f.lower() != 'readme.md']
+        md_files.sort()
+        if not md_files:
+            console.print(f"[yellow]No .md files found in directory: {full_file_path}[/yellow]")
+            return
+
+        for md_file in md_files:
+            await process_md_file_v2(
+                input_file=os.path.join(full_file_path, md_file),
+                output_folder=output_folder,
+                directive=directive,
+                client=client,
+                parse_summary=parse_summary,
+                attribute_logs=attribute_logs,
+                usage_level=usage_level,
+                summary_only=summary_only,
+                debug=debug
+            )
+        console.print(f"\n[bold green]v2: Processing complete for directory '{input_file}'[/bold green]")
+        return
+
     console.print(f"[cyan]v2: Processing Markdown File: {full_file_path}[/cyan]")
 
     if directive == "process":

@@ -120,12 +120,20 @@ def _is_mermaid_attribute(attribute_name: str | None = None, attribute_key: str 
     return attribute_title in MERMAID_GRAPH_TITLES + ["Mermaid Graph", "Mermaid"]
 
 
+_VEGA_KEY_SUFFIXES = ("BarGraph", "PieGraph", "VegaGraph", "LineGraph", "AreaGraph", "ScatterGraph", "FunnelGraph")
+_VEGA_TITLE_SUFFIXES = ("Bar Graph", "Pie Graph", "Vega Graph", "Line Graph", "Area Graph", "Scatter Graph", "Funnel Graph")
+
+
 def _is_vega_attribute(attribute_name: str | None = None, attribute_key: str | None = None) -> bool:
-    """Return True when a selected report attribute should be rendered as a Vega-Lite graph."""
+    """Return True when a selected report attribute should be rendered as a Vega-Lite graph.
+
+    Deliberately an explicit suffix allowlist rather than a blanket "endswith
+    Graph" check — Mermaid's own attribute keys (e.g. organizationTreeMermaidGraph)
+    also end in "Graph", and a blanket check would misroute those into the
+    vega-lite fence instead of the mermaid one (see _is_mermaid_attribute)."""
     key = attribute_key or ""
     name = attribute_name or ""
-    return key.endswith("BarGraph") or key.endswith("PieGraph") or key.endswith("VegaGraph") or \
-           name.endswith("Bar Graph") or name.endswith("Pie Graph") or name.endswith("Vega Graph")
+    return key.endswith(_VEGA_KEY_SUFFIXES) or name.endswith(_VEGA_TITLE_SUFFIXES)
 
 
 def _get_report_spec_attributes(columns_struct: Optional[dict]) -> list[dict]:
@@ -1179,7 +1187,12 @@ def generate_entity_md(elements: List[Dict],
                                 include_preamble=False,
                             )
                             elements_md += "\n"
-            if wk := returned_struct.get("annotations", {}).get("wikilinks", None):
+            # wikilinks are Obsidian-style backlinks meant for human-readable
+            # markdown documents (REPORT/MD/FORM) only - TABLE/DICT callers
+            # don't route through this branch of generate_output at all
+            # (see the DICT/TABLE dispatch above), but guard explicitly here
+            # too since this function can in principle be called directly.
+            if output_format in ('REPORT', 'MD', 'FORM') and (wk := returned_struct.get("annotations", {}).get("wikilinks", None)):
                 elements_md += ", ".join(wk)
         elif base_columns:
             # If we have columns but extractor didn't return struct, use legacy props lookup
@@ -1194,7 +1207,7 @@ def generate_entity_md(elements: List[Dict],
                 if column.get('format'):
                     value = format_for_markdown_table(value, guid or props.get('GUID'))
                 elements_md += make_md_attribute(name, value, output_format, attribute_key=key)
-            if wk := columns_struct.get("annotations", {}).get("wikilinks", None):
+            if output_format in ('REPORT', 'MD', 'FORM') and (wk := columns_struct.get("annotations", {}).get("wikilinks", None)):
                 elements_md += ", ".join(wk)
         else:
             # Legacy path without columns: dump all props
@@ -2265,8 +2278,7 @@ def generate_output(elements: Union[Dict, List[Dict]],
         )
         return markdown_to_html(report_output)
 
-    # elif output_format in ['DICT', 'TABLE']:
-    if output_format == 'DICT':
+    if output_format in ('DICT', 'TABLE'):
         return generate_entity_dict(elements, extract_properties_func, get_additional_props_func, columns_struct=columns_struct, output_format=output_format)
     elif output_format == 'LIST':
         return generate_entity_md_table(elements, search_string, entity_type, extract_properties_func, columns_struct, get_additional_props_func, output_format=output_format)

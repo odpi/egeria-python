@@ -58,6 +58,12 @@ def display_guid(
             width=width, force_terminal=not jupyter, style="bold white on black"
         )
         r = c._get_element_by_guid_(guid)
+        if isinstance(r, str):
+            # _get_element_by_guid_ returns a plain string (e.g. "No elements found")
+            # rather than raising when the GUID doesn't resolve to anything.
+            console.print(f"\n ===> Looks like the GUID isn't known...\n")
+            c.close_session()
+            return
         el = r["elementHeader"]
         p = r["properties"]
 

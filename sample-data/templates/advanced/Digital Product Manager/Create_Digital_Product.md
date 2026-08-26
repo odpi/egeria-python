@@ -364,7 +364,7 @@ ___
 ### Zone Membership
 >	**Input Required**: False
 
->	**Attribute Type**: Simple
+>	**Attribute Type**: Simple List
 
 >	**Description**: Zones scope visibility of elements to different users.
 
@@ -379,16 +379,6 @@ ___
 >	| Parameter Name | Parameter Value |
 >	|---|---|
 >	| example_key | example_value |
-
-
-### Class Word Classification
->	**Input Required**: False
-
->	**Attribute Type**: Bool
-
->	**Description**: Classification from 0438. Applied to Referenceable. Marker classification (no attributes) indicating the element is a class word in a naming standard.
-
->	**Default Value**: False
 
 
 ### Confidence Classification
@@ -441,16 +431,6 @@ ___
 >	**Valid Values**: UNCLASSIFIED,LOW,MEDIUM,HIGH,OTHER
 
 
-### Modifier Classification
->	**Input Required**: False
-
->	**Attribute Type**: Bool
-
->	**Description**: Classification from 0438. Applied to Referenceable. Marker classification (no attributes) indicating the element is a modifier in a naming standard.
-
->	**Default Value**: False
-
-
 ### Policy Management Point
 >	**Input Required**: False
 
@@ -461,16 +441,6 @@ ___
 >	| Parameter Name | Parameter Value |
 >	|---|---|
 >	| example_key | example_value |
-
-
-### Prime Word Classification
->	**Input Required**: False
-
->	**Attribute Type**: Bool
-
->	**Description**: Classification from 0438. Applied to Referenceable. Marker classification (no attributes) indicating the element is a prime word in a naming standard.
-
->	**Default Value**: False
 
 
 ### Retention Classification

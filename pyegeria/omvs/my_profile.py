@@ -11,7 +11,7 @@ import time
 from loguru import logger
 from typing import Any, Optional
 
-from pyegeria import NO_ELEMENTS_FOUND
+from pyegeria import NO_ELEMENTS_FOUND, PyegeriaInvalidParameterException
 from pyegeria.omvs.asset_maker import AssetMaker
 from pyegeria.core._validators import validate_name
 from pyegeria.core.utils import dynamic_catch, body_slimmer
@@ -376,14 +376,12 @@ class MyProfile(AssetMaker):
             Egeria errors.
         """
         url = self.my_profile_command_root
-        # response = await self._async_get_request_body_request(url=url, _type="Actor",
-        #                                                       _gen_output=self._generate_my_profile_output,
-        #                                                       output_format=output_format, report_spec=report_spec,
-        #                                                       body=body,**kwargs)
-        if body is None:
-            response = await self._async_make_request("POST", url)
-        else:
-            response = await self._async_make_request("POST", url, body_slimmer(body))
+        # Egeria-api-my-profile.http documents this endpoint as a plain GET
+        # with no request body -- it derives the profile from the bearer
+        # token, not from filter criteria. The `body`/GetRequestBody
+        # parameter is accepted for signature consistency with sibling
+        # methods but intentionally unused here.
+        response = await self._async_make_request("GET", url)
         elements = response.json().get("element", NO_ELEMENTS_FOUND)
         if isinstance(elements, dict):
             self.my_profile_guid = elements.get("elementHeader", {}).get("guid")
@@ -396,6 +394,78 @@ class MyProfile(AssetMaker):
             logger.info(f"Found elements, output format: {output_format} and report_spec: {report_spec}")
             return self._generate_my_profile_output(elements, "My", "MyProfile", output_format, report_spec)
         return elements
+
+    @dynamic_catch
+    async def _async_get_my_profile_by_get(
+            self, output_format: str = "JSON",
+            report_spec: str | dict = "My-User-MD", **kwargs
+    ) -> dict | str:
+        """Retrieve the profile details of the user associated with the token, using a simple GET request
+        with no request body (the GET overload of getMyProfile). Async version.
+
+        Parameters
+        ----------
+        output_format: str, default = "JSON"
+            - specifying the format of the response (JSON, DICT, REPORT, LIST, FORM, MERMAID).
+        report_spec: str | dict, optional, default = "My-User-MD"
+            - The desired output columns/field options.
+
+        Returns
+        -------
+        dict | str
+            A dictionary containing the profile details or formatted output.
+
+        Raises
+        ------
+        PyegeriaException
+            One of the pyegeria exceptions will be raised if there are issues in communications, message format, or
+            Egeria errors.
+        """
+        url = self.my_profile_command_root
+        response = await self._async_make_request("GET", url)
+        elements = response.json().get("element", NO_ELEMENTS_FOUND)
+        if isinstance(elements, dict):
+            self.my_profile_guid = elements.get("elementHeader", {}).get("guid")
+        else:
+            self.my_profile_guid = None
+            logger.info(NO_ELEMENTS_FOUND)
+            return NO_ELEMENTS_FOUND
+
+        if output_format.upper() != 'JSON':  # return a simplified markdown representation
+            logger.info(f"Found elements, output format: {output_format} and report_spec: {report_spec}")
+            return self._generate_my_profile_output(elements, "My", "MyProfile", output_format, report_spec)
+        return elements
+
+    @dynamic_catch
+    def get_my_profile_by_get(
+            self, output_format: str = "JSON",
+            report_spec: str | dict = "My-User-MD", **kwargs
+    ) -> dict | str:
+        """Retrieve the profile details of the user associated with the token, using a simple GET request
+        with no request body (the GET overload of getMyProfile).
+
+        Parameters
+        ----------
+        output_format: str, default = "JSON"
+            - specifying the format of the response (JSON, DICT, REPORT, LIST, FORM, MERMAID).
+        report_spec: str | dict, optional, default = "My-User-MD"
+            - The desired output columns/field options.
+
+        Returns
+        -------
+        dict | str
+            A dictionary containing the profile details or formatted output.
+
+        Raises
+        ------
+        PyegeriaException
+            One of the pyegeria exceptions will be raised if there are issues in communications, message format, or
+            Egeria errors.
+        """
+        loop = asyncio.get_event_loop()
+        return loop.run_until_complete(
+            self._async_get_my_profile_by_get(output_format, report_spec, **kwargs)
+        )
 
     @dynamic_catch
     async def _async_get_my_entries(self) -> list[dict]:
@@ -811,11 +881,29 @@ class MyProfile(AssetMaker):
     ) -> list | str:
         """Get assigned actions for the user profile. Async version."""
         url = f"{self.my_profile_command_root}/assigned-actions?includeUserIds=true&includeRoles=true"
+        # metadata_element_type/metadata_element_subtypes are intentionally NOT
+        # forwarded into the request body here. The real ActivityStatusRequestBody/
+        # GetRequestBody field names are metadata_element_type_name/
+        # metadata_element_subtype_names - the previous kwarg names used below
+        # (metadata_element_type, and "metadtata_element_subtypes" with a typo)
+        # matched neither the field name nor its camelCase alias, so pydantic's
+        # extra='ignore' silently dropped both filters on every call. Fixing the
+        # names to the real fields uncovered a second, deeper problem: this
+        # endpoint's own worked example (Egeria-api-my-profile.http) never
+        # includes these fields at all, and passing them (correctly named)
+        # produces a live 400 - e.g. metadata_element_type_name="Action" +
+        # metadata_element_subtype_names=["ToDo"] fails server-side with
+        # "OMAG-COMMON-400-019 ... type name ToDo ... is not a sub-type of
+        # UserIdentity", meaning the endpoint applies these fields against the
+        # *assigned actor's* type, not the action's type, despite them living on
+        # the shared GetRequestBody base. Since the endpoint's contract doesn't
+        # document or need them, and there is no server-side way to safely pass
+        # them, they are currently inert here - kept only for signature/call-site
+        # compatibility with get_my_to_dos/get_my_sponsored_actions. See
+        # ISSUE-44 in PYEGERIA_ISSUES.md.
         return await self._async_activity_status_request(
             url,
             _type="Action",
-            metadata_element_type=metadata_element_type,
-            metadtata_element_subtypes=metadata_element_subtypes,
             _gen_output=self._generate_referenceable_output,
             activity_status_list=activity_status_list,
             start_from=start_from,
@@ -992,21 +1080,34 @@ class MyProfile(AssetMaker):
 
     @dynamic_catch
     async def _async_log_my_activity(self, text: str = None, display_name: str = None,
-                                     body: Optional[dict | NewAttachmentRequestBody] = None) -> str:
-        """Add a notification to the user's activity log. Async version."""
+                                     body: Optional[dict | NewAttachmentRequestBody] = None,
+                                     qualified_name: Optional[str] = None) -> str:
+        """Add a notification to the user's activity log. Async version.
+
+        Parameters
+        ----------
+        qualified_name : Optional[str], optional
+            Use this exact qualified name instead of auto-generating one via
+            make_feedback_qn(). See _async_create_my_todo's docstring for why
+            this matters - a caller (e.g. Dr.Egeria's dispatcher) that already
+            computed its own qualified name needs the stored element to match
+            it exactly.
+        """
         if body is None:
             if text is None:
                 context = {"issue": "Invalid text and body not provided"}
                 raise PyegeriaInvalidParameterException(context=context)
             if display_name is None:
                 display_name = f"Log-{int(time.time())}"
+            if qualified_name is None:
+                qualified_name = self.make_feedback_qn("Log", self.user_id, display_name)
 
             body = {
                 "class": "NewAttachmentRequestBody",
                 "properties": {
                     "class": "NotificationProperties",
                     "typeName": "Notification",
-                    "qualifiedName": self.make_feedback_qn("Log", self.user_id, display_name),
+                    "qualifiedName": qualified_name,
                     "displayName": display_name,
                     "description": text,
                 }
@@ -1022,28 +1123,40 @@ class MyProfile(AssetMaker):
 
     @dynamic_catch
     def log_my_activity(self, text: str = None, display_name: str = None,
-                        body: Optional[dict | NewAttachmentRequestBody] = None) -> str:
+                        body: Optional[dict | NewAttachmentRequestBody] = None,
+                        qualified_name: Optional[str] = None) -> str:
         """Add a notification to the user's activity log."""
         loop = asyncio.get_event_loop()
-        return loop.run_until_complete(self._async_log_my_activity(text, display_name, body))
+        return loop.run_until_complete(self._async_log_my_activity(text, display_name, body, qualified_name))
 
     @dynamic_catch
     async def _async_journal_my_activity(self, text: str = None, display_name: str = None,
-                                         body: Optional[dict | NewAttachmentRequestBody] = None) -> str:
-        """Add a notification to the user's journal. Async version."""
+                                         body: Optional[dict | NewAttachmentRequestBody] = None,
+                                         qualified_name: Optional[str] = None) -> str:
+        """Add a notification to the user's journal. Async version.
+
+        Parameters
+        ----------
+        qualified_name : Optional[str], optional
+            Use this exact qualified name instead of auto-generating one via
+            make_feedback_qn(). See _async_create_my_todo's docstring for why
+            this matters.
+        """
         if body is None:
             if text is None:
                 context = {"issue": "Invalid text and body not provided"}
                 raise PyegeriaInvalidParameterException(context=context)
             if display_name is None:
                 display_name = f"Journal-{int(time.time())}"
+            if qualified_name is None:
+                qualified_name = self.make_feedback_qn("Journal", self.user_id, display_name)
 
             body = {
                 "class": "NewAttachmentRequestBody",
                 "properties": {
-                    "class": "NotificationProperties",
-                    "typeName": "Notification",
-                    "qualifiedName": self.make_feedback_qn("Journal", self.user_id, display_name),
+                    "class": "JournalEntryProperties",
+                    "typeName": "JournalEntry",
+                    "qualifiedName": qualified_name,
                     "displayName": display_name,
                     "description": text,
                 }
@@ -1055,34 +1168,46 @@ class MyProfile(AssetMaker):
             }
 
         url = f"{self.my_profile_command_root}/journal-my-activity"
-        return await self._async_create_attachment_body_request(url, ["NotificationProperties"], body)
+        return await self._async_create_attachment_body_request(url, ["JournalEntryProperties"], body)
 
     @dynamic_catch
     def journal_my_activity(self, text: str = None, display_name: str = None,
-                            body: Optional[dict | NewAttachmentRequestBody] = None) -> str:
+                            body: Optional[dict | NewAttachmentRequestBody] = None,
+                            qualified_name: Optional[str] = None) -> str:
         """Add a notification to the user's journal."""
         loop = asyncio.get_event_loop()
-        return loop.run_until_complete(self._async_journal_my_activity(text, display_name, body))
+        return loop.run_until_complete(self._async_journal_my_activity(text, display_name, body, qualified_name))
 
     @dynamic_catch
     async def _async_blog_my_activity(self, text: str = None, display_name: str = None,
-                                      body: Optional[dict | NewAttachmentRequestBody] = None) -> str:
-        """Add a notification to the user's blog. Async version."""
+                                      body: Optional[dict | NewAttachmentRequestBody] = None,
+                                      qualified_name: Optional[str] = None) -> str:
+        """Add a notification to the user's blog. Async version.
+
+        Parameters
+        ----------
+        qualified_name : Optional[str], optional
+            Use this exact qualified name instead of auto-generating one via
+            make_feedback_qn(). See _async_create_my_todo's docstring for why
+            this matters.
+        """
         if body is None:
             if text is None:
                 context = {"issue": "Invalid text and body not provided"}
                 raise PyegeriaInvalidParameterException(context=context)
             if display_name is None:
                 display_name = f"Blog-{int(time.time())}"
+            if qualified_name is None:
+                qualified_name = self.make_feedback_qn("Blog", self.user_id, display_name)
 
             body = {
                 "class": "NewAttachmentRequestBody",
                 "properties": {
-                    "class": "NotificationProperties",
-                    "typeName": "Notification",
-                    "qualifiedName": self.make_feedback_qn("Blog", self.user_id, display_name),
+                    "class": "BlogEntryProperties",
+                    "typeName": "BlogEntry",
+                    "qualifiedName": qualified_name,
                     "displayName": display_name,
-                    "description": text,
+                    "description": text
                 }
             }
         elif body is not None and isinstance(body, dict) and body.get("class") != "NewAttachmentRequestBody":
@@ -1092,21 +1217,23 @@ class MyProfile(AssetMaker):
             }
 
         url = f"{self.my_profile_command_root}/blog-my-activity"
-        return await self._async_create_attachment_body_request(url, ["NotificationProperties"], body)
+        return await self._async_create_attachment_body_request(url, ["BlogEntryProperties"], body)
 
     @dynamic_catch
     def blog_my_activity(self, text: str = None, display_name: str = None,
-                         body: Optional[dict | NewAttachmentRequestBody] = None) -> str:
+                         body: Optional[dict | NewAttachmentRequestBody] = None,
+                         qualified_name: Optional[str] = None) -> str:
         """Add a notification to the user's blog."""
         loop = asyncio.get_event_loop()
-        return loop.run_until_complete(self._async_blog_my_activity(text, display_name, body))
+        return loop.run_until_complete(self._async_blog_my_activity(text, display_name, body, qualified_name))
 
     #
     # Lifecycle
     #
 
     async def _async_create_my_todo(self, todo_name: str, activity_status: str = "REQUESTED",
-                                    description:Optional[str]=None, situation: Optional[str]=None,priority:Optional[int]=0) -> str:
+                                    description:Optional[str]=None, situation: Optional[str]=None,priority:Optional[int]=0,
+                                    qualified_name: Optional[str] = None) -> str:
         """Create a person action (Meeting, ToDo, Notification, Review). Async version.
 
         Parameters
@@ -1121,6 +1248,14 @@ class MyProfile(AssetMaker):
             The situation of the action, by default None
         priority : Optional[int], optional
             The priority of the action, by default 0
+        qualified_name : Optional[str], optional
+            Use this exact qualified name instead of auto-generating one. A
+            caller that already computed its own qualified name (e.g.
+            Dr.Egeria's dispatcher) needs the stored element to match it
+            exactly - otherwise anything that looks the element up by that
+            name afterward (search, a later Update/Link command, a human
+            checking Egeria Explorer) won't find it, since the auto-generated
+            name is unpredictable (random timestamp suffix).
         Returns
         -------
         GUID
@@ -1148,7 +1283,8 @@ class MyProfile(AssetMaker):
             }
         }
         """
-        qualified_name = self.__create_qualified_name__("Todo", todo_name)+f"-{int(time.time())}"
+        if qualified_name is None:
+            qualified_name = self.__create_qualified_name__("Todo", todo_name)+f"-{int(time.time())}"
         if not self.my_profile_guid:
             me = self.get_my_profile()
             self.my_profile_guid = me['elementHeader']["guid"]
@@ -1164,15 +1300,24 @@ class MyProfile(AssetMaker):
                 "situation": situation,
                 "priority": priority,
                 "activityStatus": activity_status,
-                "originatorGUID": self.my_profile_guid,
-                "assignToActorGUID": self.my_profile_guid
-            }
+            },
+            # originatorGUID/assignToActorGUID are fields of ActionRequestBody
+            # itself (siblings of "properties" - see AssetMaker._async_create_action's
+            # own docstring/worked example), NOT of ToDoProperties. Previously
+            # these were nested inside "properties" here, where ToDoProperties'
+            # extra='ignore' silently dropped them - the request always
+            # succeeded, but no AssignmentScope relationship was ever created,
+            # so the new ToDo never showed up in get_my_to_dos()/
+            # get_my_assigned_actions(). Confirmed live 2026-08-05.
+            "originatorGUID": self.my_profile_guid,
+            "assignToActorGUID": self.my_profile_guid,
         }
         response = await super()._async_create_action(body)
         return response
 
     def create_my_todo(self, todo_name: str, activity_status: str = "REQUESTED",
-                    description:Optional[str]=None, situation: Optional[str]=None,priority:Optional[int]=0) -> str:
+                    description:Optional[str]=None, situation: Optional[str]=None,priority:Optional[int]=0,
+                    qualified_name: Optional[str] = None) -> str:
         """Create a person action (Meeting, ToDo, Notification, Review). Async version.
 
         Parameters
@@ -1216,7 +1361,190 @@ class MyProfile(AssetMaker):
         """
         loop = asyncio.get_event_loop()
         response = loop.run_until_complete(self._async_create_my_todo(todo_name, activity_status,
-                                                                      description, situation, priority))
+                                                                      description, situation, priority,
+                                                                      qualified_name))
+        return response
+
+    async def _async_create_meeting(self, meeting_name: str, activity_status: str = "REQUESTED",
+                                    description:Optional[str]=None, situation: Optional[str]=None,priority:Optional[int]=0,
+                                    qualified_name: Optional[str] = None) -> str:
+        """Create a Meeting person action. Async version.
+
+        Parameters
+        ----------
+        meeting_name : str
+            The name of the meeting to be created.
+        activity_status : str, optional
+            The status of the action, by default "REQUESTED"
+        description : Optional[str], optional
+            The description of the action, by default None
+        situation : Optional[str], optional
+            The situation of the action, by default None
+        priority : Optional[int], optional
+            The priority of the action, by default 0
+        qualified_name : Optional[str], optional
+            Use this exact qualified name instead of auto-generating one -
+            see _async_create_my_todo's docstring for why this matters.
+        Returns
+        -------
+        GUID
+            GUID of the person action
+
+        Raises
+        ------
+        PyegeriaException
+        ValidationError
+
+        """
+        if qualified_name is None:
+            qualified_name = self.__create_qualified_name__("Meeting", meeting_name)+f"-{int(time.time())}"
+        if not self.my_profile_guid:
+            me = self.get_my_profile()
+            self.my_profile_guid = me['elementHeader']["guid"]
+
+        body = {
+            "class": "ActionRequestBody",
+            "isOwnAnchor": True,
+            "properties": {
+                "class": "MeetingProperties",
+                "qualifiedName": qualified_name,
+                "displayName": meeting_name,
+                "description": description,
+                "situation": situation,
+                "priority": priority,
+                "activityStatus": activity_status,
+            },
+            # See _async_create_my_todo's comment - these belong at the
+            # ActionRequestBody level, not inside "properties".
+            "originatorGUID": self.my_profile_guid,
+            "assignToActorGUID": self.my_profile_guid,
+        }
+        response = await super()._async_create_action(body)
+        return response
+
+    def create_meeting(self, meeting_name: str, activity_status: str = "REQUESTED",
+                    description:Optional[str]=None, situation: Optional[str]=None,priority:Optional[int]=0,
+                    qualified_name: Optional[str] = None) -> str:
+        """Create a Meeting person action.
+
+        Parameters
+        ----------
+        meeting_name : str
+            The name of the meeting to be created.
+        activity_status : str, optional
+            The status of the action, by default "REQUESTED"
+        description : Optional[str], optional
+            The description of the action, by default None
+        situation : Optional[str], optional
+            The situation of the action, by default None
+        priority : Optional[int], optional
+            The priority of the action, by default 0
+        Returns
+        -------
+        GUID
+            GUID of the person action
+
+        Raises
+        ------
+        PyegeriaException
+        ValidationError
+
+        """
+        loop = asyncio.get_event_loop()
+        response = loop.run_until_complete(self._async_create_meeting(meeting_name, activity_status,
+                                                                      description, situation, priority,
+                                                                      qualified_name))
+        return response
+
+    async def _async_create_review(self, review_name: str, activity_status: str = "REQUESTED",
+                                    description:Optional[str]=None, situation: Optional[str]=None,priority:Optional[int]=0,
+                                    qualified_name: Optional[str] = None) -> str:
+        """Create a Review person action. Async version.
+
+        Parameters
+        ----------
+        review_name : str
+            The name of the review to be created.
+        activity_status : str, optional
+            The status of the action, by default "REQUESTED"
+        description : Optional[str], optional
+            The description of the action, by default None
+        situation : Optional[str], optional
+            The situation of the action, by default None
+        priority : Optional[int], optional
+            The priority of the action, by default 0
+        qualified_name : Optional[str], optional
+            Use this exact qualified name instead of auto-generating one -
+            see _async_create_my_todo's docstring for why this matters.
+        Returns
+        -------
+        GUID
+            GUID of the person action
+
+        Raises
+        ------
+        PyegeriaException
+        ValidationError
+
+        """
+        if qualified_name is None:
+            qualified_name = self.__create_qualified_name__("Review", review_name)+f"-{int(time.time())}"
+        if not self.my_profile_guid:
+            me = self.get_my_profile()
+            self.my_profile_guid = me['elementHeader']["guid"]
+
+        body = {
+            "class": "ActionRequestBody",
+            "isOwnAnchor": True,
+            "properties": {
+                "class": "ReviewProperties",
+                "qualifiedName": qualified_name,
+                "displayName": review_name,
+                "description": description,
+                "situation": situation,
+                "priority": priority,
+                "activityStatus": activity_status,
+            },
+            # See _async_create_my_todo's comment - these belong at the
+            # ActionRequestBody level, not inside "properties".
+            "originatorGUID": self.my_profile_guid,
+            "assignToActorGUID": self.my_profile_guid,
+        }
+        response = await super()._async_create_action(body)
+        return response
+
+    def create_review(self, review_name: str, activity_status: str = "REQUESTED",
+                    description:Optional[str]=None, situation: Optional[str]=None,priority:Optional[int]=0,
+                    qualified_name: Optional[str] = None) -> str:
+        """Create a Review person action.
+
+        Parameters
+        ----------
+        review_name : str
+            The name of the review to be created.
+        activity_status : str, optional
+            The status of the action, by default "REQUESTED"
+        description : Optional[str], optional
+            The description of the action, by default None
+        situation : Optional[str], optional
+            The situation of the action, by default None
+        priority : Optional[int], optional
+            The priority of the action, by default 0
+        Returns
+        -------
+        GUID
+            GUID of the person action
+
+        Raises
+        ------
+        PyegeriaException
+        ValidationError
+
+        """
+        loop = asyncio.get_event_loop()
+        response = loop.run_until_complete(self._async_create_review(review_name, activity_status,
+                                                                      description, situation, priority,
+                                                                      qualified_name))
         return response
 
 
@@ -1274,6 +1602,61 @@ class MyProfile(AssetMaker):
 
 
 
+
+
+    @dynamic_catch
+    async def _async_get_my_profile_by_post(
+            self, body: dict | GetRequestBody | None = None, output_format: str = "JSON",
+            report_spec: str | dict = "My-User-MD", **kwargs
+    ) -> dict | str:
+        """Retrieve the profile details of the user associated with the token, using a POST request that
+        accepts an optional body to restrict/format the result (the POST overload of getMyProfile - distinct
+        from the plain-GET overload used by _async_get_my_profile). Async version.
+
+        Parameters
+        ----------
+        body: dict | GetRequestBody | None
+            - optional properties to restrict the search by and control how the results are formatted.
+        output_format: str, default = "JSON"
+            - specifying the format of the response (JSON, DICT, REPORT, LIST, FORM, MERMAID).
+        report_spec: str | dict, optional, default = "My-User-MD"
+            - The desired output columns/field options.
+
+        Returns
+        -------
+        dict | str
+            A dictionary containing the profile details or formatted output.
+
+        Raises
+        ------
+        PyegeriaException
+            One of the pyegeria exceptions will be raised if there are issues in communications, message format, or
+            Egeria errors.
+        """
+        url = self.my_profile_command_root
+        response = (await self._async_make_request("POST", url, body) if body
+                    else await self._async_make_request("POST", url))
+        elements = response.json().get("element", NO_ELEMENTS_FOUND)
+        if isinstance(elements, dict):
+            self.my_profile_guid = elements.get("elementHeader", {}).get("guid")
+        else:
+            self.my_profile_guid = None
+            logger.info(NO_ELEMENTS_FOUND)
+            return NO_ELEMENTS_FOUND
+
+        if output_format.upper() != 'JSON':
+            return self._generate_my_profile_output(elements, "My", "MyProfile", output_format, report_spec)
+        return elements
+
+    @dynamic_catch
+    def get_my_profile_by_post(
+            self, body: dict | GetRequestBody | None = None, output_format: str = "JSON",
+            report_spec: str | dict = "My-User-MD", **kwargs
+    ) -> dict | str:
+        """Retrieve the profile details of the user associated with the token, using a POST request that
+        accepts an optional body to restrict/format the result."""
+        loop = asyncio.get_event_loop()
+        return loop.run_until_complete(self._async_get_my_profile_by_post(body, output_format, report_spec, **kwargs))
 
 
 if __name__ == "__main__":

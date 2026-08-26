@@ -15,7 +15,8 @@ from pyegeria.models import (NewOpenMetadataElementRequestBody, TemplateRequestB
                              ArchiveRequestBody, NewClassificationRequestBody,
                              NewRelatedElementsRequestBody, SearchStringRequestBody,
                              FilterRequestBody, GetRequestBody, ResultsRequestBody,
-                             SearchStringRequestBody as SearchStringBody, DeleteElementRequestBody)
+                             SearchStringRequestBody as SearchStringBody, DeleteElementRequestBody,
+                             DeleteRelationshipRequestBody)
 from pyegeria.core.utils import body_slimmer, dynamic_catch
 from pyegeria.core._server_client import ServerClient, max_paging_size
 from pyegeria.core._globals import default_timeout, NO_ELEMENTS_FOUND
@@ -53,7 +54,14 @@ def process_related_element_list(
     if mermaid_only:
         return elements.get("mermaidGraph", "No mermaid graph found")
 
-    el_list = elements.get("elementList", NO_ELEMENTS_FOUND)
+    # ISSUE-39/ISSUE-49: a relationship-list envelope (OpenMetadataRelationshipListResponse)
+    # nests its results under "relationships", not "elementList" -- confirmed live against
+    # a real SmartQuery relationship (both .../linked-by-type/... and
+    # .../relationships/by-search-conditions return {"relationshipList": {"relationships": [...]}}).
+    # "elementList" is the related-*element* envelope's key (relatedElementList branch above),
+    # not the relationship-list envelope's.
+    list_key = "relationships" if relationship_list else "elementList"
+    el_list = elements.get(list_key, NO_ELEMENTS_FOUND)
     if isinstance(el_list, str):
         return el_list
 
@@ -129,6 +137,7 @@ class MetadataExpert(ServerClient):
         loop = asyncio.get_event_loop()
         return loop.run_until_complete(self._async_create_metadata_element(body))
 
+
     @dynamic_catch
     async def _async_create_metadata_element_from_template(self, body: Optional[dict | TemplateRequestBody] = None) -> str:
         """
@@ -188,6 +197,7 @@ class MetadataExpert(ServerClient):
         """
         loop = asyncio.get_event_loop()
         return loop.run_until_complete(self._async_create_metadata_element_from_template(body))
+
 
     @dynamic_catch
     async def _async_update_metadata_element_properties(self, metadata_element_guid: str, body: Optional[dict | UpdatePropertiesRequestBody] = None) -> None:
@@ -343,7 +353,8 @@ class MetadataExpert(ServerClient):
         return loop.run_until_complete(self._async_update_metadata_element_effectivity(metadata_element_guid, body))
 
     @dynamic_catch
-    async def _async_delete_metadata_element(self, metadata_element_guid: str, body: Optional[dict | OpenMetadataDeleteRequestBody] = None) -> None:
+    async def _async_delete_metadata_element(self, metadata_element_guid: str, body: Optional[dict | DeleteElementRequestBody] = None,
+                                             cascade_delete: bool = False) -> None:
         """
         Delete a specific metadata element. Async version.
 
@@ -351,31 +362,46 @@ class MetadataExpert(ServerClient):
         ----------
         metadata_element_guid : str
             Unique identifier of the metadata element to delete.
-        body : dict | OpenMetadataDeleteRequestBody, optional
+        body : dict | DeleteElementRequestBody, optional
             Deletion details.
+        cascade_delete : bool, optional
+            If True, cascade-deletes anchored/dependent elements. Ignored if body is provided.
 
         Notes
         -----
+        ISSUE-63 (PYEGERIA_ISSUES.md): previously routed through
+        OpenMetadataDeleteRequestBody/_async_open_metadata_delete_body_request, which has no
+        deleteMethod field -- a caller-supplied deleteMethod validated successfully and was
+        silently dropped before the request ever reached the server (PyegeriaModel's
+        extra='ignore'), so this method could never succeed against a stock server whenever
+        Egeria's own default deleteMethod (LookForLineage) was rejected by the endpoint's own
+        validation. Now routes through DeleteElementRequestBody/_async_delete_element_request,
+        matching every other _async_delete_X wrapper and _async_archive_metadata_element right
+        above (which already used DeleteElementRequestBody).
+
         Sample JSON body:
         {
-          "class" : "OpenMetadataDeleteRequestBody",
+          "class" : "DeleteElementRequestBody",
           "externalSourceGUID" :  "",
           "externalSourceName" : "",
+          "cascadeDelete" : false,
+          "deleteMethod" : "SOFT_DELETE",
           "forLineage" : false,
           "forDuplicateProcessing" : false,
           "effectiveTime" : "2024-01-01T00:00:00.000+00:00"
         }
         """
         url = f"{self.command_root}/metadata-elements/{metadata_element_guid}/delete"
-        await self._async_open_metadata_delete_body_request(url, body)
+        await self._async_delete_element_request(url, body, cascade_delete)
 
     @dynamic_catch
-    def delete_metadata_element(self, metadata_element_guid: str, body: Optional[dict | OpenMetadataDeleteRequestBody] = None) -> None:
+    def delete_metadata_element(self, metadata_element_guid: str, body: Optional[dict | DeleteElementRequestBody] = None,
+                                cascade_delete: bool = False) -> None:
         """
         Delete a specific metadata element.
         """
         loop = asyncio.get_event_loop()
-        return loop.run_until_complete(self._async_delete_metadata_element(metadata_element_guid, body))
+        return loop.run_until_complete(self._async_delete_metadata_element(metadata_element_guid, body, cascade_delete))
 
     @dynamic_catch
     async def _async_archive_metadata_element(self, metadata_element_guid: str, body: Optional[dict | DeleteElementRequestBody] = None) -> None:
@@ -596,12 +622,23 @@ class MetadataExpert(ServerClient):
     @dynamic_catch
     async def _async_create_related_elements(self, body: Optional[dict | NewRelatedElementsRequestBody] = None) -> str:
         """
-        Create a relationship between two metadata elements. Async version.
+        Create a relationship between two metadata elements, of any Egeria relationship type by name -
+        the generic mechanism behind Dr.Egeria's AsyncBaseCommandProcessor._sync_parent_relationship()
+        (md_processing/v2/processors.py), which uses this to apply `Parent ID`/`Parent Relationship Type
+        Name` on Update commands (Create gets it for free via NewElementRequestBody's own parentGUID/
+        parentRelationshipTypeName shortcut fields; there's no Update-time equivalent of that shortcut,
+        so this generic call is what fills the gap). Async version.
 
         Parameters
         ----------
         body : dict | NewRelatedElementsRequestBody, optional
-            The details of the relationship to create.
+            The details of the relationship to create - see NewRelatedElementsRequestBody
+            (pyegeria/models/models.py): type_name, metadata_element_1_guid, metadata_element_2_guid,
+            properties. Field names/aliases match the real Java DTO
+            (frameworkservices/omf/rest/NewRelatedElementsRequestBody.java) - typeName,
+            metadataElement1GUID, metadataElement2GUID - not "relationshipTypeName"/"end1GUID"/
+            "end2GUID", which don't exist on that class at all (a real bug, fixed 2026-08-02:
+            the server previously silently ignored those wrong names rather than erroring).
 
         Returns
         -------
@@ -610,15 +647,21 @@ class MetadataExpert(ServerClient):
 
         Notes
         -----
-        Sample JSON body:
+        Sample JSON body - e.g. establishing a ProjectHierarchy relationship between two projects:
         {
           "class" : "NewRelatedElementsRequestBody",
-          "externalSourceGUID" :  "",
-          "externalSourceName" : "",
+          "typeName": "ProjectHierarchy",
+          "metadataElement1GUID": "<parent project GUID>",
+          "metadataElement2GUID": "<child project GUID>",
           "forLineage" : false,
-          "forDuplicateProcessing" : false,
-          "effectiveTime" : "2024-01-01T00:00:00.000+00:00"
+          "forDuplicateProcessing" : false
         }
+
+        Use element_guid, "any-type", and _async_get_all_related_elements() first to check whether an
+        equivalent relationship already exists before calling this, if idempotency matters for your use
+        case - that call returns a dict (`{"elementList": [...], ...}`, NOT a list) with a different,
+        lower-level per-entry shape (`type.typeName`/`relationshipGUID`/`element.elementGUID`) than
+        domain-specific calls like ProjectManager._async_get_project_by_guid()'s `managedProjects` field.
         """
         url = f"{self.command_root}/related-elements"
         return await self._async_create_related_elements_body_request(url, body)
@@ -704,7 +747,7 @@ class MetadataExpert(ServerClient):
         return loop.run_until_complete(self._async_update_related_elements_effectivity(relationship_guid, body))
 
     @dynamic_catch
-    async def _async_delete_related_elements(self, relationship_guid: str, body: Optional[dict | OpenMetadataDeleteRequestBody] = None) -> None:
+    async def _async_delete_related_elements(self, relationship_guid: str, body: Optional[dict | DeleteRelationshipRequestBody] = None) -> None:
         """
         Delete a relationship between two metadata elements. Async version.
 
@@ -712,6 +755,69 @@ class MetadataExpert(ServerClient):
         ----------
         relationship_guid : str
             Unique identifier of the relationship to delete.
+        body : dict | DeleteRelationshipRequestBody, optional
+            Deletion details.
+
+        Notes
+        -----
+        ISSUE-63 (PYEGERIA_ISSUES.md): previously routed through
+        OpenMetadataDeleteRequestBody/_async_open_metadata_delete_body_request, which has no
+        deleteMethod field -- a caller-supplied deleteMethod validated successfully and was
+        silently dropped before the request ever reached the server (PyegeriaModel's
+        extra='ignore'). Since deleteRelationshipInStore rejects its own default deleteMethod
+        (LookForLineage) with OMAG-COMMON-400-032, this method could never succeed against a
+        stock server at all -- no way existed to override it. Now routes through
+        DeleteRelationshipRequestBody/_async_delete_relationship_request (which does declare
+        delete_method), matching the ~15 other OMVS modules already migrated to this pattern
+        for their own relationship-delete call sites.
+
+        Sample JSON body:
+        {
+          "class" : "DeleteRelationshipRequestBody",
+          "externalSourceGUID" :  "",
+          "externalSourceName" : "",
+          "deleteMethod" : "SOFT_DELETE",
+          "forLineage" : false,
+          "forDuplicateProcessing" : false,
+          "effectiveTime" : "2024-01-01T00:00:00.000+00:00"
+        }
+        """
+        url = f"{self.command_root}/related-elements/{relationship_guid}/delete"
+        await self._async_delete_relationship_request(url, body)
+
+    @dynamic_catch
+    def delete_related_elements(self, relationship_guid: str, body: Optional[dict | DeleteRelationshipRequestBody] = None) -> None:
+        """
+        Delete a relationship between two metadata elements.
+        """
+        loop = asyncio.get_event_loop()
+        return loop.run_until_complete(self._async_delete_related_elements(relationship_guid, body))
+
+    @dynamic_catch
+    async def _async_detach_related_elements_in_store(
+        self,
+        metadata_element_1_guid: str,
+        relationship_type_name: str,
+        metadata_element_2_guid: str,
+        body: Optional[dict | OpenMetadataDeleteRequestBody] = None,
+    ) -> None:
+        """
+        Delete ALL relationships of the given type between two specific metadata elements. Async version.
+
+        Unlike _async_delete_related_elements (which targets one specific relationship by its own
+        relationship GUID), this targets a relationship type name between a specific pair of elements -
+        useful when the caller does not already have the individual relationship GUID(s) in hand (e.g.
+        after _async_create_related_elements, or when several instances of the same relationship type
+        may exist between the pair and all should be removed).
+
+        Parameters
+        ----------
+        metadata_element_1_guid : str
+            Unique identifier of the metadata element at end 1.
+        relationship_type_name : str
+            Name of the relationship type to detach (e.g. "ProjectHierarchy").
+        metadata_element_2_guid : str
+            Unique identifier of the metadata element at end 2.
         body : dict | OpenMetadataDeleteRequestBody, optional
             Deletion details.
 
@@ -727,16 +833,54 @@ class MetadataExpert(ServerClient):
           "effectiveTime" : "2024-01-01T00:00:00.000+00:00"
         }
         """
-        url = f"{self.command_root}/related-elements/{relationship_guid}/delete"
+        url = (f"{self.command_root}/related-elements/{metadata_element_1_guid}/{relationship_type_name}/"
+               f"{metadata_element_2_guid}/detach-all")
         await self._async_open_metadata_delete_body_request(url, body)
 
     @dynamic_catch
-    def delete_related_elements(self, relationship_guid: str, body: Optional[dict | OpenMetadataDeleteRequestBody] = None) -> None:
+    def detach_related_elements_in_store(
+        self,
+        metadata_element_1_guid: str,
+        relationship_type_name: str,
+        metadata_element_2_guid: str,
+        body: Optional[dict | OpenMetadataDeleteRequestBody] = None,
+    ) -> None:
         """
-        Delete a relationship between two metadata elements.
+        Delete ALL relationships of the given type between two specific metadata elements.
+
+        Unlike delete_related_elements (which targets one specific relationship by its own
+        relationship GUID), this targets a relationship type name between a specific pair of elements -
+        useful when the caller does not already have the individual relationship GUID(s) in hand.
+
+        Parameters
+        ----------
+        metadata_element_1_guid : str
+            Unique identifier of the metadata element at end 1.
+        relationship_type_name : str
+            Name of the relationship type to detach (e.g. "ProjectHierarchy").
+        metadata_element_2_guid : str
+            Unique identifier of the metadata element at end 2.
+        body : dict | OpenMetadataDeleteRequestBody, optional
+            Deletion details.
+
+        Notes
+        -----
+        Sample JSON body:
+        {
+          "class" : "OpenMetadataDeleteRequestBody",
+          "externalSourceGUID" :  "",
+          "externalSourceName" : "",
+          "forLineage" : false,
+          "forDuplicateProcessing" : false,
+          "effectiveTime" : "2024-01-01T00:00:00.000+00:00"
+        }
         """
         loop = asyncio.get_event_loop()
-        return loop.run_until_complete(self._async_delete_related_elements(relationship_guid, body))
+        return loop.run_until_complete(
+            self._async_detach_related_elements_in_store(
+                metadata_element_1_guid, relationship_type_name, metadata_element_2_guid, body
+            )
+        )
 
 
     # --- Explorer Methods ---
@@ -747,7 +891,7 @@ class MetadataExpert(ServerClient):
         name: Optional[str] = None,
         property_name: str = "qualifiedName",
         as_of_time: Optional[str] = None,
-        body: Optional[dict | FilterRequestBody] = None,
+        body: Optional[dict] = None,  # sends "class": "UniqueNameRequestBody" (no pyegeria.models class backs this yet)
         **kwargs
     ) -> str:
         """
@@ -820,13 +964,13 @@ class MetadataExpert(ServerClient):
         name: Optional[str] = None,
         property_name: str = "qualifiedName",
         as_of_time: Optional[str] = None,
-        body: Optional[dict | FilterRequestBody] = None,
-        **kwargs,
+        body: Optional[dict] = None,  # sends "class": "UniqueNameRequestBody" (no pyegeria.models class backs this yet)
+        **kwargs
     ) -> str:
         """
             Retrieve the metadata element GUID using its unique name (typically the qualified name, but it is possible to
             specify a different property name in the request body as long as it is unique).
-            If multiple matching instances are found, an exception is thrown. Async version.
+            If multiple matching instances are found, an exception is thrown.
 
             Parameters
             ----------
@@ -1401,6 +1545,61 @@ class MetadataExpert(ServerClient):
             )
         )
         return response
+
+    @dynamic_catch
+    async def _async_get_metadata_element_history(
+        self,
+        metadata_element_guid: str,
+        effective_time: Optional[str] = None,
+        oldest_first: bool = False,
+        body: Optional[dict] = None,
+        **kwargs,
+    ) -> list | str:
+        """Retrieve the history of a metadata element. Async version.
+
+        Notes
+        -----
+        Sends a raw "HistoryRequestBody" dict via _async_make_request rather
+        than through _async_get_guid_request: that helper validates against
+        GetRequestBody, whose "class" field is a Literal["GetRequestBody"] --
+        passing "HistoryRequestBody" through it raised a pydantic
+        ValidationError on every call (no HistoryRequestBody model exists in
+        pyegeria.models yet). Mirrors _async_get_classification_history, the
+        sibling endpoint in this file that already does this correctly.
+        """
+        if body is None:
+            body = {
+                "class": "HistoryRequestBody",
+                "effectiveTime": effective_time,
+                "oldestFirst": oldest_first,
+            }
+        url = f"{self.command_root}/metadata-elements/{metadata_element_guid}/history"
+
+        response: Response = await self._async_make_request(
+            "POST", url, body_slimmer(body),
+        )
+
+        elements = response.json().get("elements", NO_ELEMENTS_FOUND)
+        if type(elements) is str:
+            logger.info(NO_ELEMENTS_FOUND)
+            return NO_ELEMENTS_FOUND
+
+        return elements
+
+    @dynamic_catch
+    def get_metadata_element_history(
+        self,
+        metadata_element_guid: str,
+        effective_time: Optional[str] = None,
+        oldest_first: bool = False,
+        body: Optional[dict] = None,
+        **kwargs,
+    ) -> list | str:
+        """Retrieve the history of a metadata element."""
+        loop = asyncio.get_event_loop()
+        return loop.run_until_complete(
+            self._async_get_metadata_element_history(metadata_element_guid, effective_time, oldest_first, body, **kwargs)
+        )
 
     @dynamic_catch
     async def _async_get_classification_history(
@@ -2702,7 +2901,7 @@ class MetadataExpert(ServerClient):
             "POST", url, body_slimmer(body), timeout=timeout
         )
 
-        return process_related_element_list(response, mermaid_only)
+        return process_related_element_list(response, mermaid_only, relationship_list=True)
 
     def get_all_metadata_element_relationships(
         self,
@@ -2876,7 +3075,7 @@ class MetadataExpert(ServerClient):
             "POST", url, body_slimmer(body), timeout=timeout
         )
 
-        return process_related_element_list(response, mermaid_only)
+        return process_related_element_list(response, mermaid_only, relationship_list=True)
 
     def get_metadata_element_relationships(
         self,
@@ -2973,14 +3172,7 @@ class MetadataExpert(ServerClient):
     async def _async_find_metadata_elements(
         self,
         body: dict,
-        graph_query_depth: int = 3,
-        output_format: str = "JSON",
-        for_lineage: bool = None,
-        for_duplicate_processing: bool = None,
-        start_from: int = 0,
-        page_size: int = max_paging_size,
         timeout: int = default_timeout,
-        **kwargs,
     ) -> list | str:
         """Return a list of metadata elements that match the supplied criteria.
         The results can be returned over many pages. Async version.
@@ -2988,15 +3180,32 @@ class MetadataExpert(ServerClient):
         Parameters
         ----------
         body: dict
-            - A structure containing the search criteria. (example below)
-        for_lineage: bool, default is set by server
-            - determines if elements classified as Memento should be returned - normally false
-        for_duplicate_processing: bool, default is set by server
-            - Normally false. Set true when the caller is part of a deduplication function
-        start_from: int, default = 0
-            - index of the list to start from (0 for start).
-        page_size
-            - maximum number of elements to return.
+            - A structure containing the search criteria (example below). Sent
+              exactly as provided - the caller is fully responsible for the
+              ENTIRE body, including "graphQueryDepth", "startFrom",
+              "pageSize", "forLineage", "forDuplicateProcessing", or any
+              other field this endpoint accepts; nothing is merged or
+              injected into it, and no other parameter here does anything to
+              it. (ISSUE-34, PYEGERIA_ISSUES.md: startFrom/pageSize used to be
+              accepted as separate parameters here and appended to the URL as
+              query params -- that was Egeria's OLDER convention for this
+              endpoint and stopped working once Egeria moved pagination for
+              metadata-elements/by-search-conditions into the request body.
+              Confirmed live: identical startFrom/pageSize as URL query
+              params returns the same full, unpaginated result set every
+              call; the same values as BODY fields ("startFrom": 0,
+              "pageSize": 5 / "startFrom": 5, "pageSize": 5) return two
+              genuinely distinct, non-overlapping pages of exactly 5 each.
+              Removed the separate parameters entirely rather than moving the
+              injection target once more -- a second channel for the same
+              information is exactly what went stale here; the caller
+              already owns the body and is better positioned to track
+              Egeria's current contract for a given endpoint than pyegeria's
+              own hardcoded assumption is. `output_format`/`for_lineage`/
+              `for_duplicate_processing`/`**kwargs` were removed the same way
+              2026-08-05 -- none of them were ever referenced anywhere in this
+              method's body; declaring them implied a control that never
+              existed.)
         timeout: int, default = default_timeout
             - http request timeout for this request
 
@@ -3021,6 +3230,7 @@ class MetadataExpert(ServerClient):
                   "class" : "FindRequestBody",
                   "metadataElementTypeName": "add typeName here",
                   "metadataElementSubtypeNames": [],
+                  "skipSubtypes": false,
                   "searchProperties": {
                      "class" : "SearchProperties",
                      "conditions": [ {
@@ -3071,10 +3281,13 @@ class MetadataExpert(ServerClient):
         """
 
 
-        url = (
-            f"{base_path(self, self.view_server)}/metadata-elements/by-search-conditions"
-        )
+        url = f"{base_path(self, self.view_server)}/metadata-elements/by-search-conditions"
 
+        # body is sent exactly as the caller provided it - no merging, no
+        # injected defaults (e.g. graphQueryDepth, startFrom, pageSize). The
+        # caller owns the full payload for this endpoint -- see this
+        # method's own docstring / ISSUE-34 for why pyegeria no longer tries
+        # to guess where pagination belongs for this endpoint.
         response: Response = await self._async_make_request(
             "POST", url, body_slimmer(body), timeout=timeout
         )
@@ -3088,14 +3301,7 @@ class MetadataExpert(ServerClient):
     def find_metadata_elements(
         self,
         body: dict,
-        graph_query_depth: int = 3,
-        output_format: str = "JSON",
-        for_lineage: bool = None,
-        for_duplicate_processing: bool = None,
-        start_from: int = 0,
-        page_size: int = max_paging_size,
         timeout: int = default_timeout,
-        **kwargs,
     ) -> list | str:
         """
         Retrieve the relationships linking the supplied elements.
@@ -3103,15 +3309,13 @@ class MetadataExpert(ServerClient):
         Parameters
         ----------
         body: dict
-            - A structure containing the search criteria. (example below)
-        for_lineage: bool, default is set by server
-            - determines if elements classified as Memento should be returned - normally false
-        for_duplicate_processing: bool, default is set by server
-            - Normally false. Set true when the caller is part of a deduplication function
-        start_from: int, default = 0
-            - index of the list to start from (0 for start).
-        page_size
-            - maximum number of elements to return.
+            - A structure containing the search criteria (example below). Sent
+              exactly as provided - the caller is fully responsible for the
+              ENTIRE body, including "graphQueryDepth", "startFrom",
+              "pageSize", "forLineage", "forDuplicateProcessing", or any
+              other field this endpoint accepts (ISSUE-34, PYEGERIA_ISSUES.md
+              -- see _async_find_metadata_elements's docstring for the full
+              story on why these aren't separate parameters here).
         timeout: int, default = default_timeout
             - http request timeout for this request
 
@@ -3136,6 +3340,7 @@ class MetadataExpert(ServerClient):
                   "class" : "FindRequestBody",
                   "metadataElementTypeName": "add typeName here",
                   "metadataElementSubtypeNames": [],
+                  "skipSubtypes": false,
                   "searchProperties": {
                      "class" : "SearchProperties",
                      "conditions": [ {
@@ -3187,19 +3392,99 @@ class MetadataExpert(ServerClient):
         """
         loop = asyncio.get_event_loop()
         response = loop.run_until_complete(
-            self._async_find_metadata_elements(
-                body,
-                graph_query_depth=graph_query_depth,
-                output_format=output_format,
-                for_lineage=for_lineage,
-                for_duplicate_processing=for_duplicate_processing,
-                start_from=start_from,
-                page_size=page_size,
-                timeout=timeout,
-                **kwargs,
-            )
+            self._async_find_metadata_elements(body, timeout=timeout)
         )
         return response
+
+    async def _async_count_metadata_elements(
+        self,
+        body: dict,
+        timeout: int = default_timeout,
+        **kwargs,
+    ) -> int:
+        """Return the number of metadata elements that match the supplied criteria.
+
+        Same search semantics as `find_metadata_elements()` but returns just the
+        count — the server answers with a native `SELECT COUNT(*)` rather than
+        materializing the result set, so it is far cheaper (esp. for as-of queries).
+        Async version.
+
+        Parameters
+        ----------
+        body: dict
+            - A `FindRequestBody` search structure (see `find_metadata_elements`).
+        timeout: int, default = default_timeout
+            - http request timeout for this request
+
+        Returns
+        -------
+        int
+            The number of matching metadata elements.
+
+        Raises
+        ------
+        PyegeriaInvalidParameterException
+            one of the parameters is null or invalid or
+        PyegeriaAPIException
+            There is a problem issuing the request to the metadata repository or
+        PyegeriaUnauthorizedException
+            the requesting user is not authorized to issue this request.
+
+        Notes
+        -----
+            Sample body — identical to `find_metadata_elements`:
+                {
+                  "class" : "FindRequestBody",
+                  "metadataElementTypeName": "add typeName here",
+                  "limitResultsByStatus" : ["ACTIVE"],
+                  "asOfTime" : "{{$isoTimestamp}}"
+                }
+        """
+        url = (
+            f"{base_path(self, self.view_server)}/metadata-elements/by-search-conditions/count"
+        )
+        response: Response = await self._async_make_request(
+            "POST", url, body_slimmer(body), timeout=timeout
+        )
+        return response.json().get("count", 0)
+
+    def count_metadata_elements(
+        self,
+        body: dict,
+        timeout: int = default_timeout,
+        **kwargs,
+    ) -> int:
+        """Return the number of metadata elements that match the supplied criteria.
+
+        Same search semantics as `find_metadata_elements()` but returns just the
+        count — the server answers with a native `SELECT COUNT(*)` rather than
+        materializing the result set, so it is far cheaper (esp. for as-of queries).
+
+        Parameters
+        ----------
+        body: dict
+            - A `FindRequestBody` search structure (see `find_metadata_elements`).
+        timeout: int, default = default_timeout
+            - http request timeout for this request
+
+        Returns
+        -------
+        int
+            The number of matching metadata elements.
+
+        Raises
+        ------
+        PyegeriaInvalidParameterException
+            one of the parameters is null or invalid or
+        PyegeriaAPIException
+            There is a problem issuing the request to the metadata repository or
+        PyegeriaUnauthorizedException
+            the requesting user is not authorized to issue this request.
+        """
+        loop = asyncio.get_event_loop()
+        return loop.run_until_complete(
+            self._async_count_metadata_elements(body, timeout=timeout, **kwargs)
+        )
 
     async def _async_find_relationships_between_elements(
         self,
@@ -3256,6 +3541,7 @@ class MetadataExpert(ServerClient):
                 {
                   "class" : "FindRelationshipRequestBody",
                   "relationshipTypeName": "add typeName here",
+                  "relationshipSubtypeNames": [],
                   "searchProperties": {
                      "class" : "SearchProperties",
                      "conditions": [ {
@@ -3351,6 +3637,7 @@ class MetadataExpert(ServerClient):
                 {
                   "class" : "FindRelationshipRequestBody",
                   "relationshipTypeName": "add typeName here",
+                  "relationshipSubtypeNames": [],
                   "searchProperties": {
                      "class" : "SearchProperties",
                      "conditions": [ {
@@ -3395,6 +3682,98 @@ class MetadataExpert(ServerClient):
             )
         )
         return response
+
+    async def _async_count_relationships_between_elements(
+        self,
+        body: dict,
+        timeout: int = default_timeout,
+        **kwargs,
+    ) -> int:
+        """Return the number of relationships that match the requested conditions.
+
+        Same search semantics as `find_relationships_between_elements()` but returns
+        just the count — the server answers with a native `SELECT COUNT(*)` rather
+        than materializing the result set. Async version.
+
+        Parameters
+        ----------
+        body: dict
+            - A `FindRelationshipRequestBody` search structure
+              (see `find_relationships_between_elements`).
+        timeout: int, default = default_timeout
+            - http request timeout for this request
+
+        Returns
+        -------
+        int
+            The number of matching relationships.
+
+        Raises
+        ------
+        PyegeriaInvalidParameterException
+            one of the parameters is null or invalid or
+        PyegeriaAPIException
+            There is a problem issuing the request to the metadata repository or
+        PyegeriaUnauthorizedException
+            the requesting user is not authorized to issue this request.
+
+        Notes
+        -----
+            Sample body — identical to `find_relationships_between_elements`:
+                {
+                  "class" : "FindRelationshipRequestBody",
+                  "relationshipTypeName": "add typeName here",
+                  "relationshipSubtypeNames": [],
+                  "limitResultsByStatus" : ["ACTIVE"],
+                  "asOfTime" : "{{$isoTimestamp}}"
+                }
+        """
+        url = (
+            f"{base_path(self, self.view_server)}/relationships/by-search-conditions/count"
+        )
+        response: Response = await self._async_make_request(
+            "POST", url, body_slimmer(body), timeout=timeout
+        )
+        return response.json().get("count", 0)
+
+    def count_relationships_between_elements(
+        self,
+        body: dict,
+        timeout: int = default_timeout,
+        **kwargs,
+    ) -> int:
+        """Return the number of relationships that match the requested conditions.
+
+        Same search semantics as `find_relationships_between_elements()` but returns
+        just the count — the server answers with a native `SELECT COUNT(*)` rather
+        than materializing the result set.
+
+        Parameters
+        ----------
+        body: dict
+            - A `FindRelationshipRequestBody` search structure
+              (see `find_relationships_between_elements`).
+        timeout: int, default = default_timeout
+            - http request timeout for this request
+
+        Returns
+        -------
+        int
+            The number of matching relationships.
+
+        Raises
+        ------
+        PyegeriaInvalidParameterException
+            one of the parameters is null or invalid or
+        PyegeriaAPIException
+            There is a problem issuing the request to the metadata repository or
+        PyegeriaUnauthorizedException
+            the requesting user is not authorized to issue this request.
+        """
+        loop = asyncio.get_event_loop()
+        return loop.run_until_complete(
+            self._async_count_relationships_between_elements(body, timeout=timeout, **kwargs)
+        )
 
     async def _async_get_relationship_by_guid(
         self,
@@ -3664,3 +4043,29 @@ class MetadataExpert(ServerClient):
         return response
 
 
+
+    @dynamic_catch
+    async def _async_get_match_criteria_list(self) -> list:
+        """Retrieve the list of valid match criteria. Async version."""
+        url = f"{self.command_root}/metadata-search/match-criteria-values"
+        response = await self._async_make_request("GET", url)
+        return response.json().get("list")
+
+    @dynamic_catch
+    def get_match_criteria_list(self) -> list:
+        """Retrieve the list of valid match criteria."""
+        loop = asyncio.get_event_loop()
+        return loop.run_until_complete(self._async_get_match_criteria_list())
+
+    @dynamic_catch
+    async def _async_get_property_comparison_operator_list(self) -> list:
+        """Retrieve the list of valid property comparison operators. Async version."""
+        url = f"{self.command_root}/metadata-search/property-comparison-operator-values"
+        response = await self._async_make_request("GET", url)
+        return response.json().get("list")
+
+    @dynamic_catch
+    def get_property_comparison_operator_list(self) -> list:
+        """Retrieve the list of valid property comparison operators."""
+        loop = asyncio.get_event_loop()
+        return loop.run_until_complete(self._async_get_property_comparison_operator_list())

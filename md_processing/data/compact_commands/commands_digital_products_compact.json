@@ -1,6 +1,6 @@
 {
   "family": "Digital Products",
-  "exported": "Jul 6, 2026 at 1:00:20 PM",
+  "exported": "Jul 27, 2026 at 8:27:06\u202fAM",
   "attribute_definitions": {
     "Activity Status": {
       "variable_name": "activity_status",
@@ -145,7 +145,7 @@
       "unique": false,
       "input_required": false,
       "min_cardinality": 0,
-      "max_cardinality": 1,
+      "max_cardinality": -1,
       "level": "Common",
       "Journal Entry": ""
     },
@@ -811,7 +811,7 @@
       "variable_name": "file_path",
       "inUpdate": true,
       "attr_labels": "File Path Name",
-      "examples": "\/home\/mumble.csv",
+      "examples": "/home/mumble.csv",
       "default_value": "",
       "valid_values": [],
       "existing_element": "",
@@ -900,6 +900,25 @@
       "min_cardinality": 0,
       "max_cardinality": 1,
       "level": "Common",
+      "Journal Entry": ""
+    },
+    "Frequency": {
+      "variable_name": "frequency",
+      "inUpdate": true,
+      "attr_labels": "",
+      "examples": "",
+      "default_value": "",
+      "valid_values": [],
+      "existing_element": "",
+      "description": "A frequency of interaction.",
+      "generated": false,
+      "style": "Simple",
+      "user_specified": true,
+      "unique": false,
+      "input_required": false,
+      "min_cardinality": 0,
+      "max_cardinality": 1,
+      "level": "Basic",
       "Journal Entry": ""
     },
     "Glossary Term": {
@@ -1087,7 +1106,7 @@
       "default_value": "",
       "valid_values": [],
       "existing_element": "",
-      "description": "Copyright and\/or license information for the element or associated resource.",
+      "description": "Copyright and/or license information for the element or associated resource.",
       "generated": false,
       "style": "Simple",
       "user_specified": true,
@@ -1459,6 +1478,25 @@
       "level": "Common",
       "Journal Entry": ""
     },
+    "Protocol": {
+      "variable_name": "protocol",
+      "inUpdate": true,
+      "attr_labels": "",
+      "examples": "",
+      "default_value": "",
+      "valid_values": [],
+      "existing_element": "",
+      "description": "Name of the protocol used for interaction.",
+      "generated": false,
+      "style": "Simple",
+      "user_specified": true,
+      "unique": false,
+      "input_required": false,
+      "min_cardinality": 0,
+      "max_cardinality": 1,
+      "level": "Common",
+      "Journal Entry": ""
+    },
     "Purpose": {
       "variable_name": "purpose",
       "inUpdate": true,
@@ -1467,7 +1505,7 @@
       "default_value": "",
       "valid_values": [],
       "existing_element": "",
-      "description": "The purpose of this collection — a short description of why it exists or what it is used for.",
+      "description": "The purpose of this collection \u2014 a short description of why it exists or what it is used for.",
       "generated": false,
       "style": "Simple",
       "user_specified": true,
@@ -2044,7 +2082,7 @@
       "default_value": "",
       "valid_values": [],
       "existing_element": "",
-      "description": "The usage guidance for this element — how it is intended to be used in context.",
+      "description": "The usage guidance for this element \u2014 how it is intended to be used in context.",
       "generated": false,
       "style": "Simple",
       "user_specified": true,
@@ -2160,7 +2198,7 @@
       "existing_element": "",
       "description": "Zones scope visibility of elements to different users.",
       "generated": false,
-      "style": "Simple",
+      "style": "Simple List",
       "user_specified": true,
       "unique": false,
       "input_required": false,
@@ -2595,7 +2633,7 @@
       "default_value": "",
       "valid_values": [],
       "existing_element": "",
-      "description": "Level of support provided with the subscription (e.g., community, business hours, 24\/7).",
+      "description": "Level of support provided with the subscription (e.g., community, business hours, 24/7).",
       "generated": false,
       "style": "Simple",
       "user_specified": true,
@@ -2707,7 +2745,6 @@
       "own_attributes": [
         "Additional Properties",
         "Category",
-        "Class Word Classification",
         "Confidence Classification",
         "Confidentiality Classification",
         "Criticality Classification",
@@ -2717,9 +2754,7 @@
         "Identifier",
         "Impact Classification",
         "Legal",
-        "Modifier Classification",
         "Policy Management Point",
-        "Prime Word Classification",
         "Qualified Name",
         "Retention Classification",
         "Security Tags",
@@ -2787,13 +2822,15 @@
         "Item Name",
         "Obligations",
         "Restrictions",
-        "Usage Measurements"
+        "Usage Measurements",
+        "GUID"
       ]
     },
     "Agreement Actor": {
       "inherits": "Link Command Base",
       "own_attributes": [
-        "Actor Name"
+        "Actor Name",
+        "GUID"
       ]
     },
     "Digital Subscriber": {
@@ -2808,7 +2845,8 @@
       "own_attributes": [
         "Dependency Description",
         "Digital Product 1",
-        "Digital Product 2"
+        "Digital Product 2",
+        "GUID"
       ]
     }
   },

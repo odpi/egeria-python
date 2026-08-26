@@ -24,16 +24,17 @@ As the number of widgets has grown, they have been organized by role into differ
 
 The command line interfaces (CLIs) can be invoked with:
 
-hey_egeria - provides access to all commands
-hey_egeria_cat - access for commands used by catalog users
-hey_egeria_my - access to personal information commands for all users
-hey_egeria_ops - access to operations commands
-hey_egeria_tech - access to commands for technical users
+hey_egeria - provides access to all commands, organized into `cat`/`my`/`tech` subcommand groups (`hey_egeria cat ...`, `hey_egeria my ...`, `hey_egeria tech ...`)
+hey_egeria_ops - access to operations commands (separate entry point)
+
+(The separate `hey_egeria_cat`/`hey_egeria_my`/`hey_egeria_tech` entry
+points documented in older versions of this file no longer exist — those
+command groups are now subcommands of the single `hey_egeria` CLI.)
 
 Each of these CLIs have a textual user interface (TUI) that provides a forms based approach
 to utilizing each command. You invoke the TUI by adding `tui` to the cli command. For instance:
 
-`hey_egeria_cat tui`
+`hey_egeria tui`
 
 To execute a command from the TUI type ctrl-R.
 

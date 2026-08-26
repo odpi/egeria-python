@@ -18,13 +18,13 @@ ___
 ### Domain Identifier
 >	**Input Required**: False
 
->	**Attribute Type**: Enum
+>	**Attribute Type**: Valid Value
 
->	**Description**: String representing the governance domain. All domains is ALL
+>	**Description**: The governance domain, looked up from the domainIdentifier valid value set (deployments may extend this set without rebuilding Egeria). All domains is "All Domains". Accepts either the current display name or a preferred-value integer; old-style ALL_CAPS enum names (e.g. IT_INFRASTRUCTURE) are still accepted for backward compatibility.
 
->	**Valid Values**: ALL,DATA,PRIVACY,SECURITY,IT_INFRASTRUCTURE,SOFTWARE_DEVELOPMENT,CORPORATE,ASSET_MANAGEMENT,OTHER
+>	**Valid Values**: All Domains,Data,Privacy,Security,IT Infrastructure,Software Development,Corporate,Asset Management,Other
 
->	**Default Value**: ALL
+>	**Default Value**: All Domains
 
 
 ### Implications
@@ -352,7 +352,7 @@ ___
 ### Zone Membership
 >	**Input Required**: False
 
->	**Attribute Type**: Simple
+>	**Attribute Type**: Simple List
 
 >	**Description**: Zones scope visibility of elements to different users.
 
@@ -367,16 +367,6 @@ ___
 >	| Parameter Name | Parameter Value |
 >	|---|---|
 >	| example_key | example_value |
-
-
-### Class Word Classification
->	**Input Required**: False
-
->	**Attribute Type**: Bool
-
->	**Description**: Classification from 0438. Applied to Referenceable. Marker classification (no attributes) indicating the element is a class word in a naming standard.
-
->	**Default Value**: False
 
 
 ### Confidence Classification
@@ -429,16 +419,6 @@ ___
 >	**Valid Values**: UNCLASSIFIED,LOW,MEDIUM,HIGH,OTHER
 
 
-### Modifier Classification
->	**Input Required**: False
-
->	**Attribute Type**: Bool
-
->	**Description**: Classification from 0438. Applied to Referenceable. Marker classification (no attributes) indicating the element is a modifier in a naming standard.
-
->	**Default Value**: False
-
-
 ### Policy Management Point
 >	**Input Required**: False
 
@@ -449,16 +429,6 @@ ___
 >	| Parameter Name | Parameter Value |
 >	|---|---|
 >	| example_key | example_value |
-
-
-### Prime Word Classification
->	**Input Required**: False
-
->	**Attribute Type**: Bool
-
->	**Description**: Classification from 0438. Applied to Referenceable. Marker classification (no attributes) indicating the element is a prime word in a naming standard.
-
->	**Default Value**: False
 
 
 ### Retention Classification

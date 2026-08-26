@@ -6,10 +6,10 @@ import asyncio
 import json
 import re
 from abc import ABC, abstractmethod
-from typing import Any, Dict, List, Optional
+from typing import Any, Awaitable, Callable, Dict, List, Optional, Union
 from loguru import logger
 
-from pyegeria import EgeriaTech, PyegeriaException, NO_ELEMENTS_FOUND, print_basic_exception
+from pyegeria import EgeriaTech, PyegeriaException, PyegeriaTimeoutException, NO_ELEMENTS_FOUND, print_basic_exception
 from pyegeria.core.utils import make_format_set_name_from_type
 from pyegeria.view.base_report_formats import select_report_spec
 from pyegeria.view.output_formatter import generate_output, format_for_markdown_table, populate_columns_from_properties
@@ -181,6 +181,355 @@ class AsyncBaseCommandProcessor(ABC):
             "label": label, "guid": guid, "status": status, "message": message
         })
 
+    # Egeria's "0422 Governed Data Classifications" - Confidentiality/Confidence/
+    # Criticality/Retention/Impact. Maps Dr.Egeria attribute name -> (classification
+    # short name used in classification_manager's _async_set_X_classification/
+    # _async_clear_X_classification method names, the Properties "class" value, the
+    # real Java property field for the enum level, and the enum-string -> int map).
+    #
+    # The "real Java property field" column matters: both pyegeria's own docstrings
+    # and the compact spec's attribute descriptions document this uniformly (and
+    # wrongly) as "levelIdentifier" (Retention: "basisIdentifier", Impact:
+    # "severityIdentifier") - confirmed live against qs-view-server that calling
+    # set_X_classification with that documented name returns no error but silently
+    # fails to attach the classification at all. The field names below are the real
+    # ones (cross-checked against each XProperties.java class in egeria core and
+    # confirmed live via a direct classify + fetch round-trip).
+    _GOVERNANCE_CLASSIFICATION_MAP = {
+        "Confidentiality Classification": (
+            "confidentiality", "ConfidentialityProperties", "confidentialityLevel",
+            {"UNCLASSIFIED": 0, "INTERNAL": 1, "CONFIDENTIAL": 2, "SENSITIVE": 3, "RESTRICTED": 4, "OTHER": 99},
+        ),
+        "Confidence Classification": (
+            "confidence", "ConfidenceProperties", "confidenceLevel",
+            {"UNCLASSIFIED": 0, "AD_HOC": 1, "TRANSACTIONAL": 2, "AUTHORITATIVE": 3, "DERIVED": 4, "OBSOLETE": 5, "OTHER": 99},
+        ),
+        "Criticality Classification": (
+            "criticality", "CriticalityProperties", "criticalityLevel",
+            {"UNCLASSIFIED": 0, "MARGINAL": 1, "IMPORTANT": 2, "CRITICAL": 3, "CATASTROPHIC": 4, "OTHER": 99},
+        ),
+        "Retention Classification": (
+            # "RetentionClassificationProperties" (the server's registered Jackson
+            # subtype ID for this classification - confirmed live via its own
+            # InvalidTypeIdException error listing all valid ids) is the correct
+            # class name to send, despite the real Java properties class's own
+            # simple name being "RetentionProperties" - do not "fix" this to
+            # "RetentionProperties", that's the wrong direction (confirmed live
+            # 2026-08-03: sending "RetentionProperties" gets rejected by Jackson
+            # outright as an unrecognized subtype id).
+            #
+            # Previously blocked server-side (see BACKLOG.md history) by
+            # OMRS-REPOSITORY-400-028 ("a property called statusIdentifier ...
+            # is not supported for this type") even though this code never sent
+            # that field - an Egeria server-side ClassificationDef registration
+            # gap, not a pyegeria issue. Confirmed fixed server-side 2026-08-03:
+            # live round-trip (Create Project with Retention Classification:
+            # PROJECT_LIFETIME through the real Dr.Egeria pipeline) now persists
+            # correctly, server-populated statusIdentifier default included.
+            "retention", "RetentionClassificationProperties", "retentionBasis",
+            {"UNCLASSIFIED": 0, "TEMPORARY": 1, "PROJECT_LIFETIME": 2, "TEAM_LIFETIME": 3, "CONTRACT_LIFETIME": 4, "REGULATED_LIFETIME": 5, "TIMEBOXED_LIFETIME": 6, "OTHER": 99},
+        ),
+        "Impact Classification": (
+            "impact", "ImpactProperties", "severityLevel",
+            {"UNCLASSIFIED": 0, "LOW": 1, "MEDIUM": 2, "HIGH": 3, "OTHER": 99},
+        ),
+    }
+
+    _GOVERNANCE_STATUS_MAP = {
+        "PROPOSED": 0,
+        "VALIDATED": 1,
+        "DEPRECATED": 2,
+        "OBSOLETE": 3,
+        "OTHER": 99
+    }
+
+    async def _sync_governance_classifications(self, guid: str, attributes: Dict[str, Any]) -> None:
+        """
+        Apply Confidentiality/Confidence/Criticality/Retention/Impact classifications
+        when the corresponding Dr.Egeria attribute is present. These can legitimately
+        change over an element's lifetime (unlike Anchors), so this runs for both
+        Create and Update, the same as _sync_zone_membership - and like zone
+        membership, Egeria's classification handler reclassifies in place, so
+        calling set_X_classification again with a new value is a safe update, not a
+        duplicate-classification error (confirmed live).
+        """
+        status_attr = attributes.get("Status", {})
+        status_value = status_attr.get("value")
+        status_ordinal = None
+        if status_value:
+            status_ordinal = self._GOVERNANCE_STATUS_MAP.get(str(status_value).strip().upper())
+
+        for attr_name, (short_name, prop_class, field_name, enum_map) in self._GOVERNANCE_CLASSIFICATION_MAP.items():
+            attr_data = attributes.get(attr_name, {})
+            if "value" not in attr_data:
+                continue
+            value = attr_data.get("value")
+            set_method = getattr(self.client.classification_manager, f"_async_set_{short_name}_classification")
+            clear_method = getattr(self.client.classification_manager, f"_async_clear_{short_name}_classification")
+            try:
+                if not value:
+                    await clear_method(guid)
+                    self.add_related_result(attr_name, guid=guid, message="Cleared")
+                    continue
+                level = enum_map.get(str(value).strip().upper())
+                if level is None:
+                    logger.warning(f"Unrecognized value '{value}' for '{attr_name}'; skipping classification sync.")
+                    continue
+
+                properties = {"class": prop_class, field_name: level}
+                if status_ordinal is not None:
+                    properties["statusIdentifier"] = status_ordinal
+
+                body = {"class": "NewClassificationRequestBody", "properties": properties}
+                await set_method(guid, body)
+                self.add_related_result(attr_name, guid=guid, message=f"Set to {value}")
+            except PyegeriaException as e:
+                logger.error(f"Error syncing {attr_name} for {guid}: {e}")
+                self.add_related_result(attr_name, guid=guid, status="failure", message=str(e))
+
+    # Dr.Egeria attribute name -> CLASSIFICATION_METHODS key (md_processing.v2.curation).
+    # Both of these live on the shared "Referenceable" bundle inherited by nearly
+    # every Create command, alongside the 5 handled by _sync_governance_classifications
+    # above -- but were never wired to anything (confirmed dead by
+    # scripts/dr_egeria_audit.py's DEAD_ATTRIBUTE check, PYEGERIA_ISSUES.md ISSUE-77).
+    # Both already have a fully-working standalone "Classify X as ..." command
+    # (CurationClassifyProcessor) using the same CLASSIFICATION_METHODS spec reused
+    # here, and -- unlike ClassWord/Modifier/PrimeWord (see
+    # _sync_term_naming_classifications below) -- both real Egeria endpoints are
+    # genuinely generic (`elements/{guid}/...`), so it's correct to apply them for
+    # any Referenceable, not just a specific element type.
+    _REFERENCEABLE_CLASSIFICATION_MAP = {
+        "Security Tags": "SecurityTags",
+        "Policy Management Point": "PolicyManagementPoint",
+    }
+
+    async def _sync_referenceable_classifications(self, guid: str, attributes: Dict[str, Any]) -> None:
+        """
+        Apply the Security Tags / Policy Management Point classifications when
+        the corresponding embedded Dr.Egeria attribute is present. See the
+        docstring on _REFERENCEABLE_CLASSIFICATION_MAP above for why these two
+        (and not the other 3 dead classification attributes on the same
+        bundle) are handled generically here.
+        """
+        # Deferred import: curation.py imports AsyncBaseCommandProcessor from
+        # this module, so importing curation.py's symbols at module load time
+        # here would be circular. Safe as a call-time import -- both modules
+        # are fully loaded by the time any command actually executes.
+        from md_processing.v2.curation import CLASSIFICATION_METHODS, CURATION_CLASSIFICATION_CLIENTS
+
+        for attr_name, om_type in self._REFERENCEABLE_CLASSIFICATION_MAP.items():
+            attr_data = attributes.get(attr_name, {})
+            if "value" not in attr_data:
+                continue
+            value = attr_data.get("value")
+
+            spec = CLASSIFICATION_METHODS[om_type]
+            client_attr = CURATION_CLASSIFICATION_CLIENTS.get(om_type)
+            client = getattr(self.client, client_attr) if client_attr else self.client.classification_manager
+            set_method = getattr(client, spec.set_method)
+            clear_method = getattr(client, spec.clear_method)
+
+            try:
+                if not value:
+                    await clear_method(guid)
+                    self.add_related_result(attr_name, guid=guid, message="Cleared")
+                    continue
+
+                if om_type == "PolicyManagementPoint":
+                    # Dictionary-style attribute {point_type, name, description} ->
+                    # PolicyManagementPointProperties {pointType, label, description}
+                    # (confirmed against Egeria-api-governance-officer.http).
+                    if not isinstance(value, dict):
+                        logger.warning(f"'{attr_name}' expects a dictionary value; skipping classification sync.")
+                        continue
+                    properties = {"class": spec.props_class}
+                    if value.get("point_type"):
+                        properties["pointType"] = value["point_type"]
+                    if value.get("name"):
+                        properties["label"] = value["name"]
+                    if value.get("description"):
+                        properties["description"] = value["description"]
+                else:
+                    # Security Tags: Simple-List-style attribute -> SecurityTagsProperties.securityLabels
+                    # (confirmed against Egeria-api-classification-explorer.http).
+                    labels = value if isinstance(value, list) else [value]
+                    properties = {"class": spec.props_class, "securityLabels": labels}
+
+                body = {"class": "NewClassificationRequestBody", "properties": properties}
+                await set_method(guid, body)
+                self.add_related_result(attr_name, guid=guid, message="Set")
+            except PyegeriaException as e:
+                logger.error(f"Error syncing {attr_name} for {guid}: {e}")
+                self.add_related_result(attr_name, guid=guid, status="failure", message=str(e))
+
+    # Dr.Egeria attribute name -> CLASSIFICATION_METHODS key. ClassWord/Modifier/
+    # PrimeWord's real Egeria endpoints (glossary-manager's is-class-word/
+    # is-modifier/is-prime-word) are GlossaryTerm-only
+    # (`/glossaries/terms/{term_guid}/is-class-word`, confirmed against
+    # pyegeria/omvs/glossary_manager.py) -- unlike Security Tags/Policy
+    # Management Point above, these must NOT be synced generically for every
+    # Create command's guid, or a non-term element's guid would 400 against a
+    # term-only URL. Per dwolfson's direction (PYEGERIA_ISSUES.md ISSUE-77):
+    # removed from the shared "Referenceable" bundle everywhere except the
+    # term-specific "Glossary Term Base" bundle, and only ever called from
+    # TermProcessor/QuestionProcessor (md_processing.v2.glossary) where the
+    # guid is known to be a real GlossaryTerm.
+    _TERM_NAMING_CLASSIFICATION_MAP = {
+        "Class Word Classification": "ClassWord",
+        "Modifier Classification": "Modifier",
+        "Prime Word Classification": "PrimeWord",
+    }
+
+    async def _sync_term_naming_classifications(self, term_guid: str, attributes: Dict[str, Any]) -> None:
+        """Apply the Class Word / Modifier / Prime Word naming-standard marker
+        classifications when the corresponding embedded Dr.Egeria attribute is
+        present. Only call this with a GUID known to be a GlossaryTerm -- see
+        the docstring on _TERM_NAMING_CLASSIFICATION_MAP above."""
+        from md_processing.v2.curation import CLASSIFICATION_METHODS, CURATION_CLASSIFICATION_CLIENTS
+
+        for attr_name, om_type in self._TERM_NAMING_CLASSIFICATION_MAP.items():
+            attr_data = attributes.get(attr_name, {})
+            if "value" not in attr_data:
+                continue
+            value = attr_data.get("value")
+
+            spec = CLASSIFICATION_METHODS[om_type]
+            client_attr = CURATION_CLASSIFICATION_CLIENTS.get(om_type)
+            client = getattr(self.client, client_attr) if client_attr else self.client.classification_manager
+            set_method = getattr(client, spec.set_method)
+            clear_method = getattr(client, spec.clear_method)
+
+            try:
+                if not value:
+                    await clear_method(term_guid)
+                    self.add_related_result(attr_name, guid=term_guid, message="Cleared")
+                    continue
+                body = {"class": "NewClassificationRequestBody", "properties": {"class": spec.props_class}}
+                await set_method(term_guid, body)
+                self.add_related_result(attr_name, guid=term_guid, message="Set")
+            except PyegeriaException as e:
+                logger.error(f"Error syncing {attr_name} for {term_guid}: {e}")
+                self.add_related_result(attr_name, guid=term_guid, status="failure", message=str(e))
+
+    async def _sync_zone_membership(self, guid: str, attributes: Dict[str, Any]) -> None:
+        """
+        Apply the "Zone Membership" attribute (a ZoneMembershipProperties classification,
+        not a plain Referenceable property) to the element just created/updated.
+
+        Egeria's classification handler reclassifies in place, so a single
+        add_zone_membership call is safe for both create and update; an empty/cleared
+        list removes the classification instead.
+        """
+        zone_attr = attributes.get("Zone Membership", {})
+        if "value" not in zone_attr:
+            return
+        zones = zone_attr.get("value")
+        try:
+            if zones:
+                body = {
+                    "class": "NewClassificationRequestBody",
+                    "properties": {"class": "ZoneMembershipProperties", "zoneMembership": zones},
+                }
+                await self.client._async_add_zone_membership(guid, body)
+                self.add_related_result("Zone Membership", guid=guid, message=f"Set to {zones}")
+            else:
+                await self.client._async_clear_zone_membership(
+                    guid, {"class": "DeleteClassificationRequestBody"}
+                )
+                self.add_related_result("Zone Membership", guid=guid, message="Cleared")
+        except PyegeriaException as e:
+            logger.error(f"Error syncing Zone Membership for {guid}: {e}")
+            self.add_related_result("Zone Membership", guid=guid, status="failure", message=str(e))
+
+    async def _sync_parent_relationship(self, guid: str, attributes: Dict[str, Any]) -> None:
+        """
+        Establish the relationship declared by 'Parent ID' + 'Parent Relationship
+        Type Name' (+ optional 'Parent Relationship Attributes'/'Parent at End1')
+        on the element just created/updated.
+
+        Egeria's create-time NewElementRequestBody bundles "create the element"
+        and "link it to this one named parent relationship" into a single call -
+        there is no Update-time equivalent of that shortcut (UpdateElementRequestBody
+        has no anchor/parent fields at all), so on Update this relationship was
+        previously silently dropped. This applies the same effect explicitly via
+        the generic MetadataExpert relationship calls (any Egeria relationship
+        type, not just ones with a dedicated OMVS wrapper), for both Create and
+        Update - idempotent, so calling it after a Create (where the shortcut
+        already established it) is a safe no-op.
+
+        Anchor ID / Anchor Scope ID are NOT handled here - Egeria implements
+        anchoring as a classification, not a relationship, so this mechanism
+        doesn't apply to them.
+        """
+        parent_guid = attributes.get("Parent ID", {}).get("guid")
+        if not parent_guid or str(parent_guid).startswith("(Planned:"):
+            return
+
+        rel_type = (
+            attributes.get("Parent Relationship Type Name", {}).get("value")
+            or attributes.get("Parent Relationship Type", {}).get("value")
+        )
+        if not rel_type:
+            return
+
+        rel_props = (
+            attributes.get("Parent Relationship Attributes", {}).get("value")
+            or attributes.get("Parent Relationship Properties", {}).get("value")
+        )
+        parent_at_end1 = attributes.get("Parent at End1", {}).get("value", True)
+        end_1_guid, end_2_guid = (parent_guid, guid) if parent_at_end1 else (guid, parent_guid)
+
+        try:
+            existing = await self.client.metadata_expert._async_get_all_related_elements(guid)
+            current_parent_guid = None
+            current_relationship_guid = None
+            # _async_get_all_related_elements returns a dict, not a list -
+            # {"startingElement": {...}, "elementList": [...], "mermaidGraph": ...} -
+            # and each elementList entry is the low-level MetadataExpert shape
+            # (type.typeName / relationshipGUID / element.elementGUID), NOT the
+            # friendlier relationshipHeader/relatedElement shape returned by
+            # domain-specific get-by-guid calls like ProjectManager's (confirmed
+            # by inspecting a live response - the two are genuinely different).
+            element_list = existing.get("elementList", []) if isinstance(existing, dict) else []
+            for rel in element_list:
+                try:
+                    if rel["type"]["typeName"] != rel_type:
+                        continue
+                    related_guid = rel["element"]["elementGUID"]
+                except (KeyError, TypeError):
+                    continue
+                current_parent_guid = related_guid
+                current_relationship_guid = rel.get("relationshipGUID")
+                if related_guid == parent_guid:
+                    break
+
+            if current_parent_guid == parent_guid:
+                return  # Already correct - idempotent no-op.
+
+            if current_parent_guid and current_relationship_guid:
+                # Re-parenting: remove the stale relationship of this type first.
+                # An explicit body is required here - passing none crashes with
+                # AttributeError inside pyegeria's _async_open_metadata_delete_body_request
+                # (its validator returns None for a None body, then unconditionally
+                # calls .model_dump() on that None).
+                await self.client.metadata_expert._async_delete_related_elements(
+                    current_relationship_guid, {"class": "OpenMetadataDeleteRequestBody"}
+                )
+
+            body = {
+                "class": "NewRelatedElementsRequestBody",
+                "type_name": rel_type,
+                "metadata_element_1_guid": end_1_guid,
+                "metadata_element_2_guid": end_2_guid,
+            }
+            if isinstance(rel_props, dict):
+                body["properties"] = rel_props
+            await self.client.metadata_expert._async_create_related_elements(body)
+            self.add_related_result("Parent Relationship", guid=parent_guid, message=f"Linked via {rel_type}")
+        except PyegeriaException as e:
+            logger.error(f"Error syncing parent relationship for {guid}: {e}")
+            self.add_related_result("Parent Relationship", guid=guid, status="failure", message=str(e))
+
     async def execute(self) -> Dict[str, Any]:
         """
         Orchestrate the command execution flow.
@@ -192,6 +541,19 @@ class AsyncBaseCommandProcessor(ABC):
         spec = self.get_command_spec()
         self.parsed_output = await self.parser.parse()
         attributes = self.parsed_output.get("attributes", {})
+
+        # ISSUE-77: the "Request ID" attribute (present on nearly every command
+        # via the shared "Request Base" bundle) was parsed and validated but
+        # never actually used anywhere -- self.context["request_id"] is always
+        # the __init__-time auto-generated uuid4(), regardless of what a user
+        # typed here. A rare/Advanced-level corner case (per dwolfson), so this
+        # is deliberately minimal: an explicit value overrides the
+        # auto-generated one for this command's own execution, rather than
+        # building out a full user-facing request-id feature nothing consumes
+        # yet.
+        explicit_request_id = attributes.get("Request ID", {}).get("value")
+        if explicit_request_id:
+            self.context["request_id"] = explicit_request_id
 
         # Extract Display Name if present
         if self.is_report_view_command():
@@ -292,8 +654,19 @@ class AsyncBaseCommandProcessor(ABC):
                             ele_qn = ele_props.get("qualifiedName")
                             my_qn = self.parsed_output.get("qualified_name")
                             if ele_qn and my_qn and ele_qn != my_qn:
-                                msg = f"Found element with Display Name '{display_name}' (GUID: {existing_guid}) but different QN ('{ele_qn}'). Skipping Update transition."
+                                # ISSUE-59: this is a real, silent-duplication risk, not just an
+                                # informational log line -- proceeding as Create here will mint a
+                                # second element sharing this Display Name. Surface it to the
+                                # caller so it's visible in the rendered --process/--validate
+                                # output, not only in the debug log.
+                                msg = (
+                                    f"Found existing element with Display Name '{display_name}' (GUID: "
+                                    f"{existing_guid}) but under a different Qualified Name ('{ele_qn}' vs. "
+                                    f"'{my_qn}'). Proceeding as Create -- if you meant to update/rename that "
+                                    f"element, re-run with '### GUID {existing_guid}' to target it directly."
+                                )
                                 logger.info(msg)
+                                self._add_warning(msg)
                             else:
                                 self.as_is_element = element
                                 logger.info(f"Element with Display Name '{display_name}' found in Egeria (GUID: {existing_guid}). Transitioning to Update.")
@@ -307,38 +680,56 @@ class AsyncBaseCommandProcessor(ABC):
                         self._add_warning(msg)
 
         # 5. Determine element existence and handle Upsert (Create <-> Update) transitions
+        #
+        # Gated on supports_target_element_lookup(): a relationship-only
+        # processor (GovernanceLinkProcessor, ActionProcessStepLinkProcessor,
+        # LineageLinkProcessor/UpdateLineageRelationshipProcessor, ...) has no
+        # target Referenceable element to track existence/qualified-name for,
+        # so as_is_element is always None and current_qn is always empty --
+        # which, left ungated, made every branch below fall into "doesn't
+        # exist anywhere" and silently rewrite verb="Update" to verb="Create"
+        # for ANY relationship processor with an Update command (confirmed
+        # live, ISSUE-68 follow-up: broke the new "Update Certification"/
+        # "Update License"/"Update Next Process Step" commands as well as the
+        # pre-existing "Update Lineage Relationship", which had apparently
+        # never been exercised through --validate/--process with a full
+        # valid attribute set before).
+        # current_qn is read unconditionally (referenced further down in this
+        # method regardless of supports_target_element_lookup()); only the
+        # existence/rewrite side effects below are gated.
         current_qn = self.parsed_output.get("qualified_name")
-        planned = self.context.get("planned_elements")
-        
-        # Check if it was already planned by a previous command in the same file
-        is_already_planned = False
-        if isinstance(planned, set) and current_qn:
-            is_already_planned = current_qn in planned
+        if self.supports_target_element_lookup():
+            planned = self.context.get("planned_elements")
 
-        if self.as_is_element:
-            # Transition Create -> Update if it already exists in Egeria
-            if self.command.verb in ["Create", "Define", "Register", "Add", "Upsert"]:
-                logger.info(f"Rewriting '{self.command.verb} {self.command.object_type}' to 'Update' as it already exists.")
-                self.command.verb = "Update"
-            
-            self.parsed_output["exists"] = True
-            header = self.as_is_element.get('elementHeader', {})
-            self.parsed_output["guid"] = header.get('guid')
-        elif not is_already_planned:
-            # Transition Update -> Create if it doesn't exist anywhere
-            if self.command.verb in ["Update", "Modify", "Upsert"]:
-                logger.info(f"Rewriting '{self.command.verb} {self.command.object_type}' to 'Create' as it does not exist.")
-                self.command.verb = "Create"
-            self.parsed_output["exists"] = False
-        else:
-            # Found in planned_elements (planned by previous command)
-            self.parsed_output["exists"] = True
-            self.parsed_output["is_planned"] = True
-            # Note: Step 7 will resolve the (Planned: ...) GUID
+            # Check if it was already planned by a previous command in the same file
+            is_already_planned = False
+            if isinstance(planned, set) and current_qn:
+                is_already_planned = current_qn in planned
 
-        # Record this element in the shared 'planned_elements' set for subsequent commands
-        if isinstance(planned, set) and current_qn and self.command.verb in ["Create", "Define", "Register", "Add", "Update", "Modify", "Upsert"]:
-            planned.add(current_qn)
+            if self.as_is_element:
+                # Transition Create -> Update if it already exists in Egeria
+                if self.command.verb in ["Create", "Define", "Register", "Add", "Upsert"]:
+                    logger.info(f"Rewriting '{self.command.verb} {self.command.object_type}' to 'Update' as it already exists.")
+                    self.command.verb = "Update"
+
+                self.parsed_output["exists"] = True
+                header = self.as_is_element.get('elementHeader', {})
+                self.parsed_output["guid"] = header.get('guid')
+            elif not is_already_planned:
+                # Transition Update -> Create if it doesn't exist anywhere
+                if self.command.verb in ["Update", "Modify", "Upsert"]:
+                    logger.info(f"Rewriting '{self.command.verb} {self.command.object_type}' to 'Create' as it does not exist.")
+                    self.command.verb = "Create"
+                self.parsed_output["exists"] = False
+            else:
+                # Found in planned_elements (planned by previous command)
+                self.parsed_output["exists"] = True
+                self.parsed_output["is_planned"] = True
+                # Note: Step 7 will resolve the (Planned: ...) GUID
+
+            # Record this element in the shared 'planned_elements' set for subsequent commands
+            if isinstance(planned, set) and current_qn and self.command.verb in ["Create", "Define", "Register", "Add", "Update", "Modify", "Upsert"]:
+                planned.add(current_qn)
 
         # 6. Dry-run validation (optional/future)
 
@@ -379,26 +770,65 @@ class AsyncBaseCommandProcessor(ABC):
                     ) or (
                         spec_existing != "" and spec_style in ["Simple", "Simple List", "List", "NameList"]
                     ) or (
-                        any(k in attr_name for k in ["Id", "GUID", "Name", "Reference"]) 
+                        any(k in attr_name for k in ["Id", "GUID", "Name", "Reference"])
                         and attr_name not in non_ref_names
-                        and spec_style not in ["Simple", "Enum", "Valid Value", "ValidValue", "Dictionary", "KeyValue", "Enumeration", "Integer", "Boolean"]
+                        # "Simple"/"Simple List"/"List"/"NameList" without an explicit
+                        # `existing_element` type (already handled above) are plain data,
+                        # not element references, regardless of what the attribute name
+                        # contains - e.g. "Match Property Names" (Simple List) is a list
+                        # of arbitrary property-name strings, not a list of Egeria
+                        # elements to resolve. Without this exclusion, the substring
+                        # heuristic on "Name" wrongly flagged it as a reference
+                        # candidate, and every one of its plain string values then
+                        # failed resolution.
+                        and spec_style not in ["Simple", "Simple List", "List", "NameList", "Enum", "Valid Value", "ValidValue", "Dictionary", "KeyValue", "Enumeration", "Integer", "Boolean", "Simple Int", "Simple Float", "Bool"]
                     )
 
                 # More precise check: if it's already got a GUID or guid_list, don't re-resolve.
                 # If it's a value but no GUID/guid_list, and it's a candidate, try to resolve.
                 val = attr_data.get("value")
+                batch_targets = self.context.get("batch_target_qns", set())
                 if val and not attr_data.get("guid") and not attr_data.get("guid_list") and is_ref_candidate:
                     if isinstance(val, list):
                         guid_list = []
+                        failed_items = []
                         for item in val:
                             guid = await self.resolve_element_guid(item, tech_type=sanitized_spec_existing)
                             if guid:
                                 guid_list.append(guid)
+                            else:
+                                failed_items.append(item)
                         if guid_list:
                             attr_data["guid_list"] = guid_list
                             attr_data["exists"] = len(guid_list) == len(val)
                             if any(g.startswith("(Planned:") for g in guid_list):
                                 attr_data["is_planned"] = True
+                        if failed_items:
+                            # A failed item may just be a forward reference - a name that
+                            # belongs to a command elsewhere in this batch that simply
+                            # hasn't run yet. Only hard-fail on names that aren't
+                            # recognized as a legitimate batch target at all; defer the
+                            # command (retried in a later dispatch_batch round) for the rest.
+                            genuinely_failed = [item for item in failed_items if item not in batch_targets]
+                            if genuinely_failed:
+                                # Mirror the single-value branch below: an unresolvable list item must
+                                # not be silently dropped - previously, a wholly- or partially-unresolvable
+                                # list (e.g. a "Reference Name List" attribute like Sub-Projects referencing
+                                # an element listed later in the same file) produced no error at all, so
+                                # the attribute appeared to succeed while quietly doing nothing.
+                                attr_data["exists"] = False
+                                attr_data["valid"] = False  # Treat as invalid to block execution
+                                msg = f"Referenced element(s) {genuinely_failed} for attribute '{attr_name}' not found."
+                                if attr_data.get("errors") is None: attr_data["errors"] = []
+                                attr_data["errors"].append(msg)
+                                logger.error(msg)
+                                if "errors" not in self.parsed_output:
+                                    self.parsed_output["errors"] = []
+                                self.parsed_output["errors"].append(msg)
+                            else:
+                                attr_data["exists"] = False
+                                attr_data["batch_deferred"] = True
+                                self.parsed_output["deferred"] = True
                     else:
                         # Try to resolve GUID from cache or Egeria
                         guid = await self.resolve_element_guid(val, tech_type=sanitized_spec_existing)
@@ -408,6 +838,12 @@ class AsyncBaseCommandProcessor(ABC):
                             attr_data["exists"] = True
                             if guid.startswith("(Planned:"):
                                 attr_data["is_planned"] = True
+                        elif val in batch_targets:
+                            # Forward reference: this name belongs to a command later in
+                            # the same batch that hasn't run yet. Defer instead of failing.
+                            attr_data["exists"] = False
+                            attr_data["batch_deferred"] = True
+                            self.parsed_output["deferred"] = True
                         else:
                             # If it's a candidate ref and we couldn't resolve it, mark as not found
                             attr_data["exists"] = False
@@ -481,10 +917,21 @@ class AsyncBaseCommandProcessor(ABC):
                 if status == "success"
                 else "; ".join(errors)
             )
+            deferred = bool(self.parsed_output.get("deferred"))
+            if status == "success" and deferred:
+                # A forward reference (names an element defined later in this
+                # same batch) can't be confirmed during a single static preview
+                # pass - validate mode never actually creates anything, so
+                # there's nothing for it to resolve against yet. Not a real
+                # problem (that's why status stays "success"), but say so
+                # plainly rather than letting this look identical to a fully
+                # resolved reference.
+                message += " | Note: forward reference(s) not yet creatable in this preview - will resolve during --process"
             return {
                 "output": analysis,
                 "analysis": analysis,
                 "status": status,
+                "deferred": deferred,
                 "message": message,
                 "verb": self.command.verb,
                 "object_type": self.canonical_object_type,
@@ -535,6 +982,20 @@ class AsyncBaseCommandProcessor(ABC):
                         attr_data["guid"] = real_guid
                         attr_data["is_planned"] = False
                     else:
+                        if not self.context.get("final_round"):
+                            # Still might resolve in a later dispatch_batch round -
+                            # defer rather than declaring permanent failure.
+                            self.parsed_output["deferred"] = True
+                            return {
+                                "output": self.command.raw_block,
+                                "analysis": analysis,
+                                "status": "deferred",
+                                "deferred": True,
+                                "message": f"Deferred: waiting on prerequisite element '{val}'",
+                                "verb": self.command.verb,
+                                "object_type": self.canonical_object_type,
+                                "markdown_object_type": self.markdown_object_type
+                            }
                         msg = f"Prerequisite element '{val}' was not successfully created or found."
                         logger.error(msg)
                         return {
@@ -564,6 +1025,18 @@ class AsyncBaseCommandProcessor(ABC):
                                 new_list.append(g)
                         
                         if failed_names:
+                            if not self.context.get("final_round"):
+                                self.parsed_output["deferred"] = True
+                                return {
+                                    "output": self.command.raw_block,
+                                    "analysis": analysis,
+                                    "status": "deferred",
+                                    "deferred": True,
+                                    "message": f"Deferred: waiting on prerequisite element(s) {failed_names}",
+                                    "verb": self.command.verb,
+                                    "object_type": self.canonical_object_type,
+                                    "markdown_object_type": self.markdown_object_type
+                                }
                             msg = f"Prerequisite elements {failed_names} were not successfully created or found."
                             logger.error(msg)
                             return {
@@ -578,6 +1051,28 @@ class AsyncBaseCommandProcessor(ABC):
                         else:
                             attr_data["guid_list"] = new_list
                             attr_data["is_planned"] = False
+
+        # A "standalone" command (its entire purpose IS a relationship - e.g.
+        # Link Project Hierarchy, Link Term-Term Relationship - discriminated by
+        # having no qualified_name of its own, since derive_qualified_name()
+        # returns "" for attach-only commands) has nothing to create on its own.
+        # If one of its references is still only a forward-reference-in-waiting,
+        # skip apply_changes() entirely and retry the whole command next round,
+        # rather than running it now with a still-unresolved reference.
+        if self.parsed_output.get("deferred") and not current_qn and not self.context.get("final_round"):
+            return {
+                "output": self.command.raw_block,
+                "analysis": analysis,
+                "status": "deferred",
+                "deferred": True,
+                "message": "Deferred: waiting on forward reference(s) to resolve",
+                "verb": self.command.verb,
+                "object_type": self.canonical_object_type,
+                "markdown_object_type": self.markdown_object_type,
+                "display_name": self.parsed_output.get("display_name"),
+                "qualified_name": self.parsed_output.get("qualified_name"),
+                "found": self.parsed_output.get("exists", False)
+            }
 
         try:
             if self.context.get("debug"):
@@ -633,10 +1128,27 @@ class AsyncBaseCommandProcessor(ABC):
                 d_name = self.parsed_output.get("display_name") or qn
                 update_element_dictionary(qn, {"guid": guid, "display_name": d_name})
 
-        message = f"Executed {self.command.verb} {self.command.object_type}" + (f" (GUID: {guid})" if guid else "")
+            if guid and self.command.verb in ["Create", "Define", "Register", "Add", "Update", "Modify", "Upsert"]:
+                await self._sync_zone_membership(guid, attributes)
+                await self._sync_parent_relationship(guid, attributes)
+                await self._sync_governance_classifications(guid, attributes)
+                await self._sync_referenceable_classifications(guid, attributes)
+
+        deferred = bool(self.parsed_output.get("deferred")) and not self.context.get("final_round")
+
+        if deferred and output == self.command.raw_block:
+            # Nothing was actually applied yet (a standalone-flavor command's own
+            # duplicate resolution deferred without going through apply_changes()'s
+            # normal output) - say so plainly rather than claiming "Executed".
+            message = f"Deferred {self.command.verb} {self.command.object_type}: waiting on forward reference(s) to resolve"
+        else:
+            message = f"Executed {self.command.verb} {self.command.object_type}" + (f" (GUID: {guid})" if guid else "")
+            if deferred:
+                message += " | Pending: reference(s) still awaiting later resolution"
+
         if self.related_results:
             rel_parts = [
-                f"{r['label']}" + (f" (GUID: {r['guid']})" if r.get('guid') else "") + 
+                f"{r['label']}" + (f" (GUID: {r['guid']})" if r.get('guid') else "") +
                 (f" - {r['status'].upper()}" if r.get('status') != "success" else "")
                 for r in self.related_results
             ]
@@ -646,6 +1158,7 @@ class AsyncBaseCommandProcessor(ABC):
             "output": output,
             "analysis": analysis,
             "status": "success",
+            "deferred": deferred,
             "message": message,
             "verb": self.command.verb,
             "object_type": self.canonical_object_type,
@@ -797,27 +1310,43 @@ class AsyncBaseCommandProcessor(ABC):
             logger.error(f"Error generating markdown: {e}")
             return self.command.raw_block
 
-    async def fetch_element(self, guid: str) -> Optional[Dict[str, Any]]:
+    async def fetch_element(self, guid: str, _max_timeout_retries: int = 2) -> Optional[Dict[str, Any]]:
         """
-        Fetch the details of an element by GUID. 
+        Fetch the details of an element by GUID.
         Subclasses should override if MetadataExpert/Explorer is unavailable or if a specific OMAS method is needed.
+
+        On a timeout, retries the *same* ClassificationExplorer call rather than falling
+        through to the MetadataExpert fallback (ISSUE-51/52): a timeout means either the
+        request was transient (a retry of the same call is exactly as likely to succeed as
+        any other call would be) or the server is under sustained load (in which case a
+        different endpoint is no more likely to succeed, and MetadataExpert's raw response
+        isn't guaranteed to have the same shape as ClassificationExplorer's -- switching
+        endpoints on a timeout traded a clean failure for a downstream KeyError crash).
+        MetadataExpert stays the fallback for everything that *isn't* a timeout (not found,
+        unsupported type, etc.), where switching endpoints is actually likely to help.
         """
-        try:
-            # First try ClassificationExplorer (most standard and lightweight)
-            logger.debug(f"fetch_element('{guid}') using client {self.client}")
-            res = await getattr(self.client, "_async_get_element_by_guid_")(guid)
-            logger.debug(f"fetch_element returned {res is not None}")
-            if res and isinstance(res, dict):
-                # The structure from classification-explorer comes under "element" usually
-                if "element" in res:
-                    return res["element"]
+        for attempt in range(_max_timeout_retries):
+            try:
+                # First try ClassificationExplorer (most standard and lightweight)
+                logger.debug(f"fetch_element('{guid}') using client {self.client} (attempt {attempt + 1})")
+                res = await getattr(self.client, "_async_get_element_by_guid_")(guid)
+                logger.debug(f"fetch_element returned {res is not None}")
+                if res and isinstance(res, dict):
+                    # The structure from classification-explorer comes under "element" usually
+                    if "element" in res:
+                        return res["element"]
+                    return res
                 return res
-            return res
-        except Exception as e:
-            logger.debug(f"ClassificationExplorer fetch failed: {e}")
+            except PyegeriaTimeoutException as e:
+                logger.debug(f"ClassificationExplorer fetch timed out (attempt {attempt + 1}/{_max_timeout_retries}): {e}")
+                continue
+            except Exception as e:
+                logger.debug(f"ClassificationExplorer fetch failed: {e}")
+                break
 
         try:
-            # Fallback to MetadataExpert (more detailed properties)
+            # Fallback to MetadataExpert (more detailed properties) -- only reached for a
+            # non-timeout failure, or after exhausting timeout retries above.
             # Reordered subclients in EgeriaTech ensure this hits metadata-expert first
             res = await self.client._async_get_metadata_element_by_guid(guid)
             if res and isinstance(res, dict):
@@ -981,14 +1510,36 @@ class AsyncBaseCommandProcessor(ABC):
 
     async def fetch_as_is(self) -> Optional[Dict[str, Any]]:
         """
-        Standardized lookup for the target element. 
+        Standardized lookup for the target element.
         Checks the cache first.
         """
         if not self.supports_target_element_lookup():
             return None
 
+        # ISSUE-59: an explicit '### GUID' attribute on the command should target
+        # that specific element directly, regardless of what qualified_name/display
+        # name happen to resolve to -- this is the whole point of supplying one (e.g.
+        # "rename" a qualified name via Create <X>, which otherwise has no other way
+        # to say "this is the same element, just update it"). Try it first, before
+        # any name/QN-based lookup, so it isn't silently ignored.
+        explicit_guid = self.parsed_output.get("attributes", {}).get("GUID", {}).get("value")
+        if explicit_guid and isinstance(explicit_guid, str) and explicit_guid.strip():
+            try:
+                element = await self.fetch_element(explicit_guid.strip())
+                if element:
+                    logger.debug(f"fetch_as_is: Element found via explicit GUID '{explicit_guid}'")
+                    return element
+                else:
+                    msg = f"Warning: explicit GUID '{explicit_guid}' was supplied but no element was found for it."
+                    logger.warning(msg)
+                    self._add_warning(msg)
+            except Exception as e:
+                msg = f"Warning: explicit GUID '{explicit_guid}' was supplied but could not be fetched: {e}"
+                logger.warning(msg)
+                self._add_warning(msg)
+
         qn = self.parsed_output.get("qualified_name")
-        
+
         # If QN is missing but Display Name is present, try deriving it
         if not qn:
             qn = self.derive_qualified_name()
@@ -1215,18 +1766,36 @@ class AsyncBaseCommandProcessor(ABC):
         report.append("\n---")
         return "\n".join(report)
 
-    async def sync_members(self, 
-                           as_is_guids: set, 
-                           to_be_guids: set, 
-                           add_coro, 
+    async def sync_members(self,
+                           as_is_guids: Union[set, Callable[[], Awaitable[set]]],
+                           to_be_guids: set,
+                           add_coro,
                            remove_coro,
                            replace_all: bool = True) -> Dict[str, List[str]]:
         """
         Generic async relationship synchronization logic.
         Handles set comparison (As-Is vs To-Be) and executes provided coroutines.
-        
+
         If replace_all is False, it only performs additions.
+
+        `as_is_guids` may be a plain set (already fetched -- unchanged
+        behavior) or a zero-arg async callable that fetches it lazily. The
+        lazy form lets a caller skip an expensive "what does this element
+        currently have" relationship query entirely in the one case where
+        its result can never change the outcome: replace_all=False
+        (add-only) with an empty to_be_guids -- there is nothing to add
+        regardless of current state, so the fetch is skipped below before
+        the callable is ever invoked. Separately, a caller whose element is
+        known to be brand new (verb == "Create") should pass an empty set
+        directly rather than a fetcher at all -- a just-created element
+        cannot have any existing relationships, so there's nothing to fetch.
         """
+        if not replace_all and not to_be_guids:
+            return {"added": [], "removed": [], "errors": []}
+
+        if callable(as_is_guids):
+            as_is_guids = await as_is_guids()
+
         to_add = to_be_guids - as_is_guids
         to_remove = (as_is_guids - to_be_guids) if replace_all else set()
         

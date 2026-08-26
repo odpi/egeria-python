@@ -25,10 +25,12 @@ from pyegeria.view.output_formatter import (generate_output,
 from pyegeria.core.utils import dynamic_catch
 
 EXTERNAL_REFERENCE_PROPS = ["ExternalReferenceProperties", "ExternalDataSourceProperties",
-                            "ExternalModelSourceProperties",
+                            "ExternalModelSourceProperties", "ExternalSourceCodeProperties",
+                            "ExternalStandardProperties",
                             "RelatedMediaProperties", "CitedDocumentProperties"]
 
 EXTERNAL_REFERENCE_TYPES = ["ExternalReference", "ExternalDataSource", "ExternalModelSource",
+                            "ExternalSourceCode", "ExternalStandard",
                             "RelatedMedia", "CitedDocument"]
 
 EXTERNAL_ID_PROPS = ["ExternalIdProperties"]
@@ -533,10 +535,10 @@ class ExternalReferences(ServerClient):
 
     @dynamic_catch
     async def _async_link_external_reference(self, element_guid: str, ext_ref_guid: str,
-                                             body: Optional[dict | NewRelationshipRequestBody] = None) -> None:
+                                             body: Optional[dict | NewRelationshipRequestBody] = None) -> Optional[str]:
         """ Attach an element to an external reference.
             Async version.
-    
+
         Parameters
         ----------
         element_guid: str
@@ -545,10 +547,14 @@ class ExternalReferences(ServerClient):
             The identifier of the external reference.
         body: dict | NewRelationshipRequestBody, optional, default = None
             A structure representing the details of the relationship.
-    
+
         Returns
         -------
-        Nothing
+        str | None
+            The GUID of the newly created ExternalReferenceLink relationship
+            (ExternalReferenceLink is MULTI_LINK -- see
+            pyegeria.core.relationship_multiplicity). None if the server
+            didn't return one.
     
         Raises
         ------
@@ -581,12 +587,13 @@ class ExternalReferences(ServerClient):
         """
 
         url = url = (f"{self.command_root}/elements/{element_guid}/external-references/{ext_ref_guid}/attach")
-        await self._async_new_relationship_request(url, "ExternalReferenceLinkProperties", body)
+        guid = await self._async_new_relationship_request(url, "ExternalReferenceLinkProperties", body)
         logger.info(f"Linking element {element_guid} to ext. ref.  {ext_ref_guid}")
+        return guid
 
     @dynamic_catch
     def link_external_reference(self, element_guid: str, ext_ref_guid: str,
-                                body: Optional[dict | NewRelationshipRequestBody] = None):
+                                body: Optional[dict | NewRelationshipRequestBody] = None) -> Optional[str]:
         """ Attach an element to an external reference.
     
             Parameters
@@ -631,7 +638,7 @@ class ExternalReferences(ServerClient):
             }
             """
         loop = asyncio.get_event_loop()
-        loop.run_until_complete(self._async_link_external_reference(element_guid, ext_ref_guid, body))
+        return loop.run_until_complete(self._async_link_external_reference(element_guid, ext_ref_guid, body))
 
     @dynamic_catch
     async def _async_detach_external_reference(self, element_guid: str, ext_ref_guid: str,
@@ -719,10 +726,10 @@ class ExternalReferences(ServerClient):
 
     @dynamic_catch
     async def _async_link_media_reference(self, element_guid: str, media_ref_guid: str,
-                                          body: Optional[dict | NewRelationshipRequestBody] = None) -> None:
+                                          body: Optional[dict | NewRelationshipRequestBody] = None) -> Optional[str]:
         """ Attach an element to a related media reference.
             Async version.
-    
+
         Parameters
         ----------
         element_guid: str
@@ -731,10 +738,14 @@ class ExternalReferences(ServerClient):
             The identifier of the external media reference.
         body: dict | NewRelationshipRequestBody, optional, default = None
             A structure representing the details of the relationship.
-    
+
         Returns
         -------
-        Nothing
+        str | None
+            The GUID of the newly created MediaReference relationship
+            (MediaReference is MULTI_LINK -- see
+            pyegeria.core.relationship_multiplicity). None if the server
+            didn't return one.
     
         Raises
         ------
@@ -768,12 +779,13 @@ class ExternalReferences(ServerClient):
 
         """
         url = f"{self.command_root}/elements/{element_guid}/media-references/{media_ref_guid}/attach"
-        await self._async_new_relationship_request(url, "MediaReferenceProperties", body)
+        guid = await self._async_new_relationship_request(url, "MediaReferenceProperties", body)
         logger.info(f"Linking element {element_guid} to media reference  {media_ref_guid}")
+        return guid
 
     @dynamic_catch
     def link_media_reference(self, element_guid: str, media_ref_guid: str,
-                             body: Optional[dict | NewRelationshipRequestBody] = None):
+                             body: Optional[dict | NewRelationshipRequestBody] = None) -> Optional[str]:
         """ Attach an element to an external media reference.
     
             Parameters
@@ -820,7 +832,7 @@ class ExternalReferences(ServerClient):
             }
             """
         loop = asyncio.get_event_loop()
-        loop.run_until_complete(self._async_link_media_reference(element_guid, media_ref_guid, body))
+        return loop.run_until_complete(self._async_link_media_reference(element_guid, media_ref_guid, body))
 
     @dynamic_catch
     async def _async_detach_media_reference(self, element_guid: str, media_ref_guid: str,
@@ -910,10 +922,10 @@ class ExternalReferences(ServerClient):
 
     @dynamic_catch
     async def _async_link_cited_document(self, element_guid: str, cited_doc_guid: str,
-                                         body: Optional[dict | NewRelationshipRequestBody] = None) -> None:
+                                         body: Optional[dict | NewRelationshipRequestBody] = None) -> Optional[str]:
         """ Attach an element to a cited document reference.
             Async version.
-    
+
         Parameters
         ----------
         element_guid: str
@@ -922,10 +934,14 @@ class ExternalReferences(ServerClient):
             The identifier of the external cited document reference.
         body: dict | NewRelationshipRequestBody, optional, default = None
             A structure representing the details of the relationship.
-    
+
         Returns
         -------
-        Nothing
+        str | None
+            The GUID of the newly created CitedDocumentLink relationship
+            (CitedDocumentLink is MULTI_LINK -- see
+            pyegeria.core.relationship_multiplicity). None if the server
+            didn't return one.
     
         Raises
         ------
@@ -955,12 +971,13 @@ class ExternalReferences(ServerClient):
         }
         """
         url = f"{self.command_root}/elements/{element_guid}/cited-document-references/{cited_doc_guid}/attach"
-        await self._async_new_relationship_request(url, "CitedDocumentLinkProperties", body)
+        guid = await self._async_new_relationship_request(url, "CitedDocumentLinkProperties", body)
         logger.info(f"Linking element {element_guid} to cited document  {cited_doc_guid}")
+        return guid
 
     @dynamic_catch
     def link_cited_document(self, element_guid: str, cited_doc_guid: str,
-                            body: Optional[dict | NewRelationshipRequestBody] = None):
+                            body: Optional[dict | NewRelationshipRequestBody] = None) -> Optional[str]:
         """ Attach an element to an external media reference.
     
             Parameters
@@ -1004,7 +1021,7 @@ class ExternalReferences(ServerClient):
              }
             """
         loop = asyncio.get_event_loop()
-        loop.run_until_complete(self._async_link_cited_document(element_guid, cited_doc_guid, body))
+        return loop.run_until_complete(self._async_link_cited_document(element_guid, cited_doc_guid, body))
 
     @dynamic_catch
     async def _async_detach_cited_document(self, element_guid: str, cited_doc_guid: str,
@@ -2290,7 +2307,7 @@ class ExternalReferences(ServerClient):
                                                   page_size, output_format, report_spec, **kwargs))
 
     @dynamic_catch
-    async def _async_get_external_identifier_by_guid(self, guid: str,
+    async def _async_get_external_identifiers_by_guid(self, guid: str,
                                                      body: Optional[dict | GetRequestBody] = None,
                                                      output_format: str = "JSON",
                                                      report_spec: Optional[str | dict] = "ExternalIdentifier",
@@ -2341,7 +2358,7 @@ class ExternalReferences(ServerClient):
                                                             output_format=output_format, report_spec=report_spec, body=body, **kwargs)
 
     @dynamic_catch
-    def get_external_identifier_by_guid(self, guid: str,
+    def get_external_identifiers_by_guid(self, guid: str,
                                         body: Optional[dict | GetRequestBody] = None,
                                         output_format: str = "JSON",
                                         report_spec: Optional[str | dict] = "ExternalIdentifier",
@@ -2368,7 +2385,7 @@ class ExternalReferences(ServerClient):
         """
 
         return asyncio.get_event_loop().run_until_complete(
-            self._async_get_external_identifier_by_guid(guid, body, output_format, report_spec, **kwargs))
+            self._async_get_external_identifiers_by_guid(guid, body, output_format, report_spec, **kwargs))
 
     def _extract_external_identifier_properties(self, element: dict, columns_struct: dict) -> dict:
         """
@@ -2423,6 +2440,137 @@ class ExternalReferences(ServerClient):
             **kwargs
         )
 
+
+    #
+    # Additional relationship maintenance - added to close the gap found by
+    # scripts/omvs_audit.py against the external-links .http ground truth
+    # (2026-08-21). Same shape as _async_link_cited_document /
+    # _async_detach_cited_document already in this file. The update/detach
+    # methods below operate directly on a relationship's own GUID rather
+    # than a pair of element GUIDs - the precision variant needed when more
+    # than one relationship of the same type can exist between the same
+    # pair of elements (MULTI_LINK relationship types).
+    #
+
+    @dynamic_catch
+    async def _async_link_external_id_to_element(self, element_guid: str, external_id_guid: str,
+                                                  body: Optional[dict | NewRelationshipRequestBody] = None) -> None:
+        """Attach an external identifier to the element it identifies (ExternalIdLink relationship). Async version."""
+        url = f"{self.command_root}/elements/{element_guid}/external-ids/{external_id_guid}/attach"
+        await self._async_new_relationship_request(url, ["ExternalIdLinkProperties"], body)
+        logger.info(f"External id {external_id_guid} linked to element {element_guid}.")
+
+    @dynamic_catch
+    def link_external_id_to_element(self, element_guid: str, external_id_guid: str,
+                                    body: Optional[dict | NewRelationshipRequestBody] = None) -> None:
+        """Attach an external identifier to the element it identifies (ExternalIdLink relationship)."""
+        loop = asyncio.get_event_loop()
+        loop.run_until_complete(self._async_link_external_id_to_element(element_guid, external_id_guid, body))
+
+    @dynamic_catch
+    async def _async_detach_external_id_from_element(self, element_guid: str, external_id_guid: str,
+                                                      body: Optional[dict | DeleteRelationshipRequestBody] = None) -> None:
+        """Detach an external identifier from an element. Async version."""
+        url = f"{self.command_root}/elements/{element_guid}/external-ids/{external_id_guid}/detach"
+        await self._async_delete_relationship_request(url, body)
+        logger.info(f"External id {external_id_guid} detached from element {element_guid}.")
+
+    @dynamic_catch
+    def detach_external_id_from_element(self, element_guid: str, external_id_guid: str,
+                                        body: Optional[dict | DeleteRelationshipRequestBody] = None) -> None:
+        """Detach an external identifier from an element."""
+        loop = asyncio.get_event_loop()
+        loop.run_until_complete(self._async_detach_external_id_from_element(element_guid, external_id_guid, body))
+
+    @dynamic_catch
+    async def _async_update_cited_document_reference(self, cited_document_link_relationship_guid: str,
+                                                      body: Optional[dict | UpdateRelationshipRequestBody] = None) -> None:
+        """Update the properties of a CitedDocumentLink relationship, identified by its own relationship GUID. Async version."""
+        url = f"{self.command_root}/cited-document-references/{cited_document_link_relationship_guid}/update"
+        await self._async_update_relationship_request(url, ["CitedDocumentLinkProperties"], body)
+        logger.info(f"Updated CitedDocumentLink relationship {cited_document_link_relationship_guid}.")
+
+    @dynamic_catch
+    def update_cited_document_reference(self, cited_document_link_relationship_guid: str,
+                                        body: Optional[dict | UpdateRelationshipRequestBody] = None) -> None:
+        """Update the properties of a CitedDocumentLink relationship, identified by its own relationship GUID."""
+        loop = asyncio.get_event_loop()
+        loop.run_until_complete(self._async_update_cited_document_reference(cited_document_link_relationship_guid, body))
+
+    @dynamic_catch
+    async def _async_detach_cited_document_reference_by_id(self, cited_document_link_relationship_guid: str,
+                                                            body: Optional[dict | DeleteRelationshipRequestBody] = None) -> None:
+        """Detach one specific CitedDocumentLink relationship, identified by its own relationship GUID. Async version."""
+        url = f"{self.command_root}/cited-document-references/{cited_document_link_relationship_guid}/detach"
+        await self._async_delete_relationship_request(url, body)
+        logger.info(f"Detached CitedDocumentLink relationship {cited_document_link_relationship_guid}.")
+
+    @dynamic_catch
+    def detach_cited_document_reference_by_id(self, cited_document_link_relationship_guid: str,
+                                              body: Optional[dict | DeleteRelationshipRequestBody] = None) -> None:
+        """Detach one specific CitedDocumentLink relationship, identified by its own relationship GUID."""
+        loop = asyncio.get_event_loop()
+        loop.run_until_complete(self._async_detach_cited_document_reference_by_id(cited_document_link_relationship_guid, body))
+
+    @dynamic_catch
+    async def _async_update_external_reference_link(self, external_reference_link_relationship_guid: str,
+                                                     body: Optional[dict | UpdateRelationshipRequestBody] = None) -> None:
+        """Update the properties of an ExternalReferenceLink relationship, identified by its own relationship GUID. Async version."""
+        url = f"{self.command_root}/external-reference-links/{external_reference_link_relationship_guid}/update"
+        await self._async_update_relationship_request(url, ["ExternalReferenceLinkProperties"], body)
+        logger.info(f"Updated ExternalReferenceLink relationship {external_reference_link_relationship_guid}.")
+
+    @dynamic_catch
+    def update_external_reference_link(self, external_reference_link_relationship_guid: str,
+                                       body: Optional[dict | UpdateRelationshipRequestBody] = None) -> None:
+        """Update the properties of an ExternalReferenceLink relationship, identified by its own relationship GUID."""
+        loop = asyncio.get_event_loop()
+        loop.run_until_complete(self._async_update_external_reference_link(external_reference_link_relationship_guid, body))
+
+    @dynamic_catch
+    async def _async_detach_external_reference_by_id(self, external_reference_link_relationship_guid: str,
+                                                      body: Optional[dict | DeleteRelationshipRequestBody] = None) -> None:
+        """Detach one specific ExternalReferenceLink relationship, identified by its own relationship GUID. Async version."""
+        url = f"{self.command_root}/external-reference-links/{external_reference_link_relationship_guid}/detach"
+        await self._async_delete_relationship_request(url, body)
+        logger.info(f"Detached ExternalReferenceLink relationship {external_reference_link_relationship_guid}.")
+
+    @dynamic_catch
+    def detach_external_reference_by_id(self, external_reference_link_relationship_guid: str,
+                                        body: Optional[dict | DeleteRelationshipRequestBody] = None) -> None:
+        """Detach one specific ExternalReferenceLink relationship, identified by its own relationship GUID."""
+        loop = asyncio.get_event_loop()
+        loop.run_until_complete(self._async_detach_external_reference_by_id(external_reference_link_relationship_guid, body))
+
+    @dynamic_catch
+    async def _async_update_media_reference(self, media_reference_relationship_guid: str,
+                                            body: Optional[dict | UpdateRelationshipRequestBody] = None) -> None:
+        """Update the properties of a MediaReference relationship, identified by its own relationship GUID. Async version."""
+        url = f"{self.command_root}/media-reference-links/{media_reference_relationship_guid}/update"
+        await self._async_update_relationship_request(url, ["MediaReferenceProperties"], body)
+        logger.info(f"Updated MediaReference relationship {media_reference_relationship_guid}.")
+
+    @dynamic_catch
+    def update_media_reference(self, media_reference_relationship_guid: str,
+                               body: Optional[dict | UpdateRelationshipRequestBody] = None) -> None:
+        """Update the properties of a MediaReference relationship, identified by its own relationship GUID."""
+        loop = asyncio.get_event_loop()
+        loop.run_until_complete(self._async_update_media_reference(media_reference_relationship_guid, body))
+
+    @dynamic_catch
+    async def _async_detach_media_reference_by_id(self, media_reference_relationship_guid: str,
+                                                   body: Optional[dict | DeleteRelationshipRequestBody] = None) -> None:
+        """Detach one specific MediaReference relationship, identified by its own relationship GUID. Async version."""
+        url = f"{self.command_root}/media-reference-links/{media_reference_relationship_guid}/detach"
+        await self._async_delete_relationship_request(url, body)
+        logger.info(f"Detached MediaReference relationship {media_reference_relationship_guid}.")
+
+    @dynamic_catch
+    def detach_media_reference_by_id(self, media_reference_relationship_guid: str,
+                                     body: Optional[dict | DeleteRelationshipRequestBody] = None) -> None:
+        """Detach one specific MediaReference relationship, identified by its own relationship GUID."""
+        loop = asyncio.get_event_loop()
+        loop.run_until_complete(self._async_detach_media_reference_by_id(media_reference_relationship_guid, body))
 
 from typing import Union, Dict, List, Optional
 

@@ -93,6 +93,41 @@ Attributes can also be defined using lists or tables for better readability:
 | Start From | 0 |
 ```
 
+### Dictionary-Style Attributes
+
+Some attributes (`style: Dictionary` in the command spec — e.g. `Analytic
+Parameters`, `Report Parameters`, `Additional Properties`) hold arbitrary
+name-value pairs rather than a single value. Three equivalent forms are
+accepted, parsed the same way as the List/Table styles above:
+
+**Simple block** (one `key: value` per line, no bullets — the most common
+form in practice):
+```markdown
+### Analytic Parameters
+window: 90d
+points: 12
+```
+
+**List style**:
+```markdown
+### Analytic Parameters
+- window: 90d
+- points: 12
+```
+
+**Table style**:
+```markdown
+### Analytic Parameters
+| Key | Value |
+| --- | --- |
+| window | 90d |
+| points | 12 |
+```
+
+See [Create Report's two Dictionary attributes, worked examples](#create-reports-two-dictionary-attributes-worked-examples)
+below for two complete worked examples (`Analytic Parameters` and `Report
+Parameters`) in context.
+
 ---
 
 ## Core Concepts
@@ -108,12 +143,44 @@ When running Dr.Egeria, you specify a **directive** that determines how the file
 ### Automatic Command Rewriting (Upsert)
 
 Dr.Egeria implements "Upsert" logic to make metadata scripts more robust and idempotent:
-- **Create → Update**: If a `Create` command is issued but the element already exists (matched by Qualified Name), Dr.Egeria automatically rewrites the command to `Update`.
+- **Create → Update**: If a `Create` command is issued but the element already exists, Dr.Egeria automatically rewrites the command to `Update`. Existence is checked, in order: (1) an explicit `### GUID` attribute, if supplied — this always wins and is fetched directly, regardless of what Qualified Name/Display Name are also present; (2) Qualified Name (explicit or auto-derived from Display Name).
 - **Update → Create**: If an `Update` command is issued but the element does not exist and hasn't been "Planned" by a previous command, it is rewritten to `Create`.
 
-### Planned Elements
+**Renaming an element's Qualified Name.** Because matching is normally by Qualified Name, re-running `Create <X>` with the *same* Display Name but a *new* Qualified Name — the natural way to try to "rename" an element via markdown — does **not** update the original element. Dr.Egeria has never seen that Qualified Name before, so it creates a second, distinct element instead. If it also finds an existing element sharing the same Display Name under a different Qualified Name, it warns you about the ambiguity (visible in both `--validate` and `--process` output) rather than guessing:
 
-Dr.Egeria supports inter-command dependencies within a single file. If a command creates a new element (e.g., a Glossary), subsequent commands in the same file (e.g., creating a Term in that Glossary) can resolve the new element's GUID even before the first command is fully committed to Egeria. These are tracked as "Planned" elements.
+```
+Found existing element with Display Name 'X' (GUID: <guid>) but under a
+different Qualified Name ('<old-qn>' vs. '<new-qn>'). Proceeding as Create
+-- if you meant to update/rename that element, re-run with '### GUID
+<guid>' to target it directly.
+```
+
+To actually rename the Qualified Name of an existing element, supply its `### GUID` on the same `Create` command along with the new `### Qualified Name` — the explicit GUID makes Dr.Egeria fetch and update that specific element in place instead of creating a duplicate.
+
+### Planned Elements and Forward References
+
+Dr.Egeria supports inter-command dependencies within a single file — a command can reference an element that another command in the same file is also creating, in **either order**:
+
+- **Backward reference** (the referenced element is defined by an *earlier* command): resolves immediately via the "Planned" mechanism, as it always has.
+- **Forward reference** (the referenced element is defined by a *later* command, e.g. a parent project listing sub-projects that come afterward in the file): Dr.Egeria pre-scans the whole batch before running anything, recognizes the name as a legitimate target, and defers the referencing command until the target actually exists — retrying automatically over one or more passes. You do not need to reorder your file.
+
+```markdown
+## Create Project
+### Display Name
+Sales Forecast Program
+### Sub-Projects
+Q1 Delivery
+
+___
+
+## Create Project
+### Display Name
+Q1 Delivery
+```
+
+`Q1 Delivery` is only defined *after* `Sales Forecast Program` references it — this now works correctly, creating a real `ProjectHierarchy` relationship once `Q1 Delivery` exists. A reference to a name that isn't defined *anywhere* in the file (a genuine typo or missing block) still fails immediately with a clear `Referenced element(s) [...] not found` error — deferral only applies to names Dr.Egeria recognizes as a real target elsewhere in the same batch.
+
+In `--validate` mode, a command with a still-pending forward reference is reported with a note (`| Note: forward reference(s) not yet creatable in this preview - will resolve during --process`) rather than an unqualified success, since validation never actually creates anything for the reference to resolve against.
 
 ### Reference Resolution
 
@@ -122,6 +189,42 @@ Dr.Egeria attempts to resolve element references (like a parent Glossary for a T
 2. **Reference Name**: A structured name in the format `Type::QualifiedName` (e.g., `Glossary::PDR::SalesGlossary`). This is the preferred way to refer to elements in Link commands.
 3. **Qualified Name**: The unique string path for the element.
 4. **Display Name**: The human-readable name (ambiguous matches will result in warnings/errors).
+
+### Parent Relationships and Governance Classifications on `Update`
+
+Several "advanced" attributes available on every Create/Update command are baked into `Create` as a shortcut — Egeria's create endpoint bundles "create the element" and "establish this one relationship/classification" into a single call. Whether the same attribute also works on `Update` depends on which one:
+
+- **`Parent ID` + `Parent Relationship Type Name`** (+ `Parent Relationship Attributes`/`Parent at End1`) — works on both `Create` and `Update`. Changing `Parent ID` on an `Update` re-parents the element (removes the old relationship, creates the new one); repeating the same `Update` is a safe no-op.
+
+  ```markdown
+  ## Update Project
+  ### Display Name
+  Q1 Delivery
+  ### Qualified Name
+  Q1 Delivery::1.0
+  ### Parent ID
+  Sales Forecast Program
+  ### Parent Relationship Type Name
+  ProjectHierarchy
+  ```
+
+- **`Confidentiality Classification` / `Confidence Classification` / `Criticality Classification` / `Impact Classification`** — work on both `Create` and `Update`; changing the value on an `Update` re-classifies the element.
+
+  ```markdown
+  ## Update Project
+  ### Display Name
+  Sensitive Analysis
+  ### Qualified Name
+  Sensitive Analysis::1.0
+  ### Confidentiality Classification
+  RESTRICTED
+  ```
+
+  Valid values follow Egeria's `0422 Governed Data Classifications` model, e.g. Confidentiality: `UNCLASSIFIED`, `INTERNAL`, `CONFIDENTIAL`, `SENSITIVE`, `RESTRICTED`, `OTHER`. Use `gen_dr_help`/`dr_egeria_help` to see the valid values for each classification attribute on a specific command.
+
+  **`Retention Classification` does not currently work** on either verb, due to an Egeria server-side issue unrelated to Dr.Egeria (see `BACKLOG.md`) — it fails cleanly as a per-item error rather than silently doing nothing.
+
+- **`Anchor ID` / `Anchor Scope ID`** — **Create-time only, by design.** Anchoring in Egeria is create-time-only plumbing; there is no supported way to change an element's anchor after creation. Setting these on an `Update` command has no effect.
 
 ---
 
@@ -137,13 +240,113 @@ Dr.Egeria organizes its commands into "families," each corresponding to a specif
 - **Project**: Manage projects and their dependencies or hierarchies (e.g., `Create Project`, `Link Project Dependency`).
 - **Collection Manager**: Manage various collections of elements, including Folders, Products, and Agreements (e.g., `Create Collection Folder`, `Create Digital Product`).
 - **Solution Architect**: Manage solution blueprints, components, information supply chains, and design patterns (e.g., `Create Design Pattern`, `Link Nested Design Patterns`, `Link Specialized Design Patterns`, `Link Related Design Patterns`).
+  - **Concept Models** (0571, added 2026-08-21): `Create Concept Bead`, `Create Concept Bead Attribute`, `Create Concept Bead Relationship`, and 8 relationship commands — `Link Concept Design`, `Link Concept Bead Relationship End`, `Link Typed By Concept Bead`, `Link Is A Concept Bead`, `Link Concept Bead Attribute Link`, `Link Concept Bead Extension`, `Link Solution Component Port`, `Link Solution Port Delegation` (`Detach`/`Unlink`/`Remove` variants auto-derived from each `Link` command). Routed through the existing generic `SolutionArchitectProcessor`/`SolutionLinkProcessor` (new `om_type` branches, no new processor classes needed) — auto-registered via `register_solution_architect_processors()`'s family-driven loop, same as every other Solution Architect command.
+  - `Create Concept Model` (added 2026-08-21) creates the `ConceptModel` container `Link Concept Design` attaches elements to. No dedicated `/solution-architect/concept-models` REST endpoint exists yet, so this routes through the generic `Collection Manager` creation path instead — added `"Concept Model"` to `COLLECTION_SUBTYPES` (`md_processing_constants.py`), which per this repo's own convention is the entire wiring step (auto-routes to `CollectionManagerProcessor`'s existing generic-collection-subtype fallback, no bespoke pyegeria method needed). Live-verified end to end against a running 6.2-SNAPSHOT server: `Create Concept Model` → `Create Concept Bead` → `Link Concept Design`, with the `ConceptDesign` relationship confirmed present via direct fetch afterward.
 - **Governance Officer**: Manage governance definitions, policies, and responsibilities.
 - **Action Author**: Define governance action process flows — reusable single-step action types and multi-step processes — and wire them to the engines and elements that execute them, without writing code (e.g., `Create Governance Action Process`, `Create Governance Action Process Step`, `Link First Process Step`, `Link Next Process Step`, `Link Action to Action Executor`, `Link Action to Target`).
+- **Curation**: Apply classifications and relationships to *existing* Referenceable elements after the fact — this family creates no elements of its own, it curates ones created elsewhere. Every command names a `Target Element` (Reference Name) and either a classification level/status or a second element to relate to.
+  - **Classifications** (`Classify`/`Reclassify`/`Declassify`, or `Classify`/`Update`/`Declassify` for the three multi-value ones): Impact, Confidence, Confidentiality, Criticality, Retention, Ownership, Digital Resource Origin, Zone Membership, Security Tags, Data Scope, Governance Expectations, Governance Measurements, Known Duplicate, Consolidated Duplicate, and the 0438 naming-standards markers Class Word, Modifier, Prime Word (added 2026-08-09 once Egeria PR #9166 shipped the backing `glossary-manager` endpoints — routed through `GlossaryManager`, not `ClassificationExplorer`, unlike every other classification here). Also, added 2026-08-21 once an `omvs_audit.py` gap-closure pass shipped their backing REST endpoints (all confirmed against a live 6.2-SNAPSHOT server): the 10 governance-point classifications (0435: Control/Verification/Enforcement/Execution Point, Policy Administration/Decision/Enforcement/Information/Management/Retrieval Point — routed through `GovernanceOfficer`), 6 metamodel markers (0463: Incomplete, ObjectIdentifier, ReferenceData, MobileResource, InstanceMetadata, MetamodelInstance — routed through `ClassificationExplorer`), ProjectKind (routed through `ProjectManager`), CollectionKind (routed through `CollectionManager`), and a Data Sharing Agreement retrofit pair for classifying/declassifying an already-existing Agreement (routed through `DigitalBusiness` — `Create Data Sharing Agreement`, Digital Products family, already sets this at creation time via `initialClassifications`).
+  - **Relationships** (`Link`/`Unlink`, or `Attach`/`Update`/`Detach` for Search Keyword): Search Keyword, Semantic Assignment, Semantic Definition, Link Element To Scope (`ScopedBy`), Link Resource To Element (`ResourceList`), Link More Information, Peer Duplicate, Consolidated Duplicate Link.
+  - No classification in this family remains genuinely unimplemented as of 2026-08-21 — Policy Management Point (previously blocked on a missing pyegeria SDK method) is now registered along with the 9 sibling governance-point classifications above.
+  - `Update Search Keyword`/`Detach Search Keyword` (fixed 2026-08-21) act on the `SearchKeyword` entity's own GUID via a new `Search Keyword GUID` attribute (`_async_update_search_keyword`/`_async_remove_search_keyword_from_element` both take only that GUID, not the `Target Element` the keyword is attached to — the `remove` method deletes the keyword entity itself despite its name). `Attach Search Keyword` (create + attach in one call) keeps its own `Target Element`-based bundle unchanged; `Update`/`Detach` each got their own dedicated bundle rather than sharing `Attach`'s, since `Target Element`/`Keyword` are separately mandatory attributes that don't apply to identifying an existing keyword by GUID. Live-verified end to end against a running 6.2-SNAPSHOT server, including a real bug this caught: `CurationLinkProcessor`/`CurationClassifyProcessor` never overrode `supports_target_element_lookup()`, so the base class's Create↔Update upsert-transition logic silently rewrote every `Update X` command in this family (including the pre-existing `Update Data Scope`/`Update Governance Expectations`/`Update Governance Measurements`) to `Create X` before it reached the processor's own verb-branching logic — for Search Keyword this meant `Update` silently deleted the entity instead of updating it. Both processors now override that method; see the commit fixing it for the full live-verification trail.
+  - Two related commands live in *other* families' compact specs (via the shared `Person Action Base` bundle), routed to those families' own processors rather than `CurationClassifyProcessor`/`CurationLinkProcessor`: `Create Meeting` (Project family, via `my_profile.create_meeting`) and `Create ToDo` (Actor Manager family, via `my_profile.create_my_todo`). `Create Review` (Feedback family, via `my_profile.create_review`) and `Create Note` are also `Person Action Base` commands but documented under **Feedback** below, since that's their family.
 
 ### Enrichment and Metadata Management
 
-- **Feedback**: Add comments, ratings, and informal tags to any Egeria element (e.g., `Add Comment`, `Attach Tag`).
-- **External Reference**: Link Egeria elements to external resources, media, or cited documents (e.g., `Create External Reference`, `Link Media Reference`).
+- **Feedback**: Add comments, ratings, and informal tags to any Egeria element (e.g., `Add Comment`, `Attach Tag`). Also includes several `Person Action Base` commands (shared with Curation's `Create Meeting`/`Create ToDo` — see above): `Create Review`, implemented via `my_profile.create_review`; `Create Note`, which attaches an opinion/annotation about *any* target element (`Commented On Element`) via a dedicated `NoteLog`, typed as Egeria's real `Note` entity (a `Notification` subtype, added Egeria PR #9191, confirmed live 2026-08-04); and `Create Journal Entry`/`Create Activity Entry`/`Create Blog Entry`, three sibling commands for the calling user's own activity stream — private (`JournalEntry`), or public (`ActivityEntry`/`BlogEntry`) — implemented via `my_profile.journal_my_activity`/`log_my_activity`/`blog_my_activity` respectively. `Note`/`JournalEntry`/`ActivityEntry`/`BlogEntry` are all `Notification` subtypes attached through the same `NoteLog`/`AttachedNoteLogEntry` mechanism (see [egeria-project.org/concepts/notification](https://egeria-project.org/concepts/notification/)), differing only in target (any element vs. the user's own profile) and visibility.
+- **External Reference**: Link Egeria elements to external resources, media, or cited documents (e.g., `Create External Reference`, `Link Media Reference`, `Create External Standard`).
+- **Reference Data**: Attach valid values from a `ValidValueDefinition`/`ValidValueSet` to existing elements, and manage the type-system-level valid-metadata-value registry (e.g., `Link Element to Valid Values`, `Link Reference Value Assignment`, `Link Specification Property Assignment`, `Setup Valid Metadata Value`, `Set Consistent Metadata Values`). The `ValidValuesAssignment` relationship also has two contextual variants living in their natural families rather than here: `Link Question to Valid Values` (Glossary) and `Link Data Field to Valid Values` (Data Designer) — all three share one dispatcher-level processor (`ReferenceDataLinkProcessor` in `md_processing/v2/reference_data.py`).
+- **Views & Reports** (formerly **Report**): Run and author report specs (`FormatSet`s), and compose them — plus real Egeria `Report` assets and literal markdown text — into user-authored Dashboard Sheets:
+  - `View Report`: Run a report spec ad hoc, supplying execution parameters (search string, output format, `Report Parameters` for a find-method spec's non-standard parameter, `Analytic Parameters` for an analytic-function spec's parameters, ...) at run time — no persistent element created.
+  - `Create Report`: Persist a real Egeria `Report` asset that names a report spec and pins its own default execution parameters (including, for an analytic-function-backed spec, `Analytic Parameters`; or, for a report spec's action needing a parameter outside the standard find/search set — e.g. `collection_guid` for the `Collection Members` report — `Report Parameters` — see [`output-formats-and-report-specs.md`](output-formats-and-report-specs.md) for the find-method vs. analytic-function distinction), so it can be referenced by name and placed on a dashboard.
+  - `Create Dashboard Sheet`: Create a named, ordered, nestable Dashboard Sheet — a local pyegeria-managed layout record (not yet an Egeria element; see `pyegeria/view/_output_dashboard_sheet_models.py`).
+  - `Link Report to Dashboard Sheet`: Place a `Report` (by name) onto a Dashboard Sheet as an ordered Placement, with layout hints (`Placement Span`/`Placement Emphasis`), optional viewer-role tagging (`Placement Perspectives`), and an optional drill-down target (`Placement Detail Spec`).
+  - `Add Text on Dashboard Sheet`: Place literal markdown text (a section header, explanation, or caption) onto a Dashboard Sheet as an ordered Placement, alongside Report placements — no Egeria element involved; also supports `Placement Perspectives` for viewer-role tagging.
+
+#### `Create Report`'s two Dictionary attributes, worked examples
+
+`Create Report` (and `View Report`, for an ad-hoc run) has two Dictionary-style
+attributes for supplying parameters beyond the standard 22 find/search
+attributes — which one to use depends on what kind of report spec you're
+targeting (see [`output-formats-and-report-specs.md`](output-formats-and-report-specs.md)
+for the full find-method vs. analytic-function distinction):
+
+- **`Analytic Parameters`** — for a report spec backed by an **analytic
+  function** (a Python routine returning an already-aggregated
+  count/breakdown/series, not a live Egeria query). These are **defaults**,
+  not fixed pins — a caller, or a later `Update Report`, can still override
+  the same keys. Values can be plain strings (`type_name: Project`), but
+  also numbers, booleans, or JSON lists/dicts typed literally (`points: 12`,
+  `type_map: [["Projects", "Project"], ["Terms", "GlossaryTerm"]]`) — each
+  value is decoded back to its real type before the analytic function runs,
+  so a list-typed parameter like `type_map` reaches the function as an
+  actual list, not a string. (Fixed 2026-08-01 — before this, every value
+  was stored as a literal string, so any non-scalar parameter broke the
+  analytic function outright; see `PYEGERIA_ISSUES.md` ISSUE-20.)
+- **`Report Parameters`** — for a report spec backed by a **find method**
+  (a live Egeria query) whose action needs a parameter that isn't part of
+  the standard find/search vocabulary — most commonly a GUID identifying
+  which element the report is scoped to. Unlike `Analytic Parameters`,
+  keys here must match the target report spec's `required_params`/
+  `optional_params` exactly (snake_case) — there's no aliasing.
+
+  > **Implementation note** (only matters if you're debugging a Dashboard
+  > Sheet placement, not for authoring): what you type is always plain
+  > snake_case, matching `required_params` exactly (e.g. `collection_guid`)
+  > — `Create Report` converts keys to camelCase internally when persisting
+  > them into the Report's `additionalProperties`, to match the storage
+  > convention every other execution parameter already uses there, and
+  > converts back before the report actually runs. If a placement ever
+  > reports a `Report Parameters` key as unexpectedly "missing" despite it
+  > being set, this snake↔camel round trip (`_snake_to_camel()` in
+  > `md_processing/v2/report.py`, `camelKey()`/`snakeKey()` in
+  > egeria-workspaces-fs's `local-dashboards.html`) is the first place to
+  > check.
+
+**Example 1 — `Analytic Parameters`**, against `Analytic Demo - Catalog
+Growth Trend` (an analytic-function-backed spec — `Output Format: SERIES`
+renders it as a Vega-Lite line chart):
+
+```markdown
+## Create Report
+
+### Display Name
+Terms Growth (90 Days)
+
+### Report Spec
+Analytic Demo - Catalog Growth Trend
+
+### Output Format
+SERIES
+
+### Analytic Parameters
+window: 90d
+points: 12
+```
+
+**Example 2 — `Report Parameters`**, against `Collection Members` (a
+find-method-backed spec whose action requires `collection_guid` — without
+it, the report has no way to know which collection to list members of):
+
+```markdown
+## Create Report
+
+### Display Name
+Local Dashboards Tasks
+
+### Report Spec
+Collection Members
+
+### Output Format
+TABLE
+
+### Report Parameters
+collection_guid: 0affb580-fa81-4d00-9438-b26faf11845d
+```
+
+Both attributes accept any of the three Dictionary forms described in
+[Attributes](#attributes) above (simple block, list, or table) — the
+`key: value` block shown here is just the most common in practice.
 
 ---
 

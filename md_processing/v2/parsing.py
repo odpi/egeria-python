@@ -306,6 +306,26 @@ class AttributeFirstParser:
             if not v:
                 return v
 
+            # Some properties migrated from a hardcoded Egeria enum to a live
+            # Valid Metadata Value set (e.g. GovernanceDomain -> the domainIdentifier
+            # valid value list, so deployments can extend it without rebuilding
+            # Egeria). Old-style enum names (ALL_CAPS_WITH_UNDERSCORES) still need
+            # to resolve -- and since the enum's ordinals equal the new set's
+            # preferredValue for every value it originally defined, resolving via
+            # the old enum directly is more robust than trying to reconstruct the
+            # new display-name text algorithmically (e.g. "ALL" -> "All Domains"
+            # isn't a mechanical transform). Only new-style names and any
+            # deployment-added custom values fall through to the live lookup below.
+            legacy_enum_type = details.get("legacy_enum_type")
+            if legacy_enum_type:
+                enum_obj = getattr(pyeg_globals, legacy_enum_type, None)
+                if enum_obj is None:
+                    enum_obj = getattr(md_constants, legacy_enum_type, None)
+                if enum_obj is not None and isinstance(enum_obj, type) and issubclass(enum_obj, pyeg_globals.Enum):
+                    legacy_resolved = pyeg_globals.resolve_enum(enum_obj, v)
+                    if legacy_resolved is not None:
+                        return legacy_resolved
+
             if self.client:
                 # Resolve property name (e.g., "Resource Use" -> "resourceUse")
                 prop_name = details.get("property_name") or details.get("name")

@@ -14,7 +14,8 @@ from pyegeria.view.base_report_formats import get_report_spec_match
 from pyegeria.view.base_report_formats import select_report_spec
 from pyegeria.models import (SearchStringRequestBody, FilterRequestBody, GetRequestBody, NewElementRequestBody,
                              TemplateRequestBody, UpdateElementRequestBody,
-                             NewRelationshipRequestBody, DeleteElementRequestBody, DeleteRelationshipRequestBody)
+                             NewRelationshipRequestBody, DeleteElementRequestBody, DeleteRelationshipRequestBody,
+                             NewClassificationRequestBody, DeleteClassificationRequestBody)
 from pyegeria.view.output_formatter import populate_columns_from_properties, \
     _extract_referenceable_properties, get_required_relationships
 from pyegeria.core.utils import dynamic_catch
@@ -67,6 +68,7 @@ class LocationArena(ServerClient):
         self.ref_location_command_base: str = (
             f"{self.platform_url}/servers/{self.view_server}/api/open-metadata/location-arena"
         )
+        self.command_root = self.ref_location_command_base
         self.url_marker = 'locations'
 
     @dynamic_catch
@@ -200,7 +202,7 @@ class LocationArena(ServerClient):
         """
         url = f"{self.ref_location_command_base}/locations/from-template"
 
-        return await self._async_create_element_from_template("POST", url, body)
+        return await self._async_create_element_from_template(url, body)
 
     @dynamic_catch
     def create_location_from_template(self, body: Optional[dict | TemplateRequestBody] = None) -> str:
@@ -421,9 +423,9 @@ class LocationArena(ServerClient):
         Parameters
         ----------
         location1_guid: str
-            The unique identifier of the subscriber.
+            The unique identifier of the first location.
         location2_guid: str
-            The unique identifier of the subscription.
+            The unique identifier of the second location.
         body: dict | DeleteRelationshipRequestBody, optional, default = None
             A structure representing the details of the relationship.
     
@@ -453,9 +455,9 @@ class LocationArena(ServerClient):
           "forDuplicateProcessing": false
         }
         """
-        url = (f"{self.command_root}/elements/{location1_guid}/locations/{location2_guid}/detach")
+        url = (f"{self.command_root}/locations/{location1_guid}/adjacent-locations/{location2_guid}/detach")
 
-        await self._async_delete_element_request(url, body)
+        await self._async_delete_relationship_request(url, body)
         logger.info(f"Unlink {location1_guid} from location {location2_guid}")
 
     def detach_peer_locations(self, location1_guid: str, location2_guid: str,
@@ -465,9 +467,9 @@ class LocationArena(ServerClient):
         Parameters
         ----------
         location1_guid: str
-            The unique identifier of the subscriber.
+            The unique identifier of the first location.
         location2_guid: str
-            The unique identifier of the subscription.
+            The unique identifier of the second location.
         body: dict | DeleteRelationshipRequestBody, optional, default = None
             A structure representing the details of the relationship.
 
@@ -644,9 +646,9 @@ class LocationArena(ServerClient):
         }
         """
         url = (
-            f"{self.ref_location_command_base}/locations{location_guid}/nested-locations/{nested_location_guid}/detach")
+            f"{self.ref_location_command_base}/locations/{location_guid}/nested-locations/{nested_location_guid}/detach")
 
-        await self._async_delete_element_request(url, body)
+        await self._async_delete_relationship_request(url, body)
         logger.info(f"Detached location {location_guid} from nested location {nested_location_guid}")
 
     def detach_nested_location(self, location_guid: str, nested_location_guid: str,
@@ -740,7 +742,7 @@ class LocationArena(ServerClient):
 
         """
 
-        url = f"{self.ref_location_command_base}elements/{element_guid}/known-locations/{location_guid}/attach"
+        url = f"{self.ref_location_command_base}/elements/{element_guid}/known-locations/{location_guid}/attach"
         await self._async_new_relationship_request(url, ["KnownLocationProperties"], body)
         logger.info(f"Linking element {element_guid} to location {location_guid}")
 
@@ -835,9 +837,9 @@ class LocationArena(ServerClient):
           "forDuplicateProcessing": false
         }
         """
-        url = (f"{self.command_root}/location_arena/elements/{element_guid}/known-locations/{location_guid}/detach")
+        url = (f"{self.command_root}/elements/{element_guid}/known-locations/{location_guid}/detach")
 
-        await self._async_delete_element_request(url, body)
+        await self._async_delete_relationship_request(url, body)
         logger.info(f"Detached element {element_guid} from location {location_guid}")
 
     def detach_known_location(self, element_guid: str, location_guid: str,
@@ -1483,3 +1485,105 @@ class LocationArena(ServerClient):
             extract_properties_func=self._extract_location_properties,
             **kwargs,
         )
+
+    #
+    # Location classification maintenance - added to close the gap found by
+    # scripts/omvs_audit.py against the location-arena .http ground truth
+    # (2026-08-21).
+    #
+
+    @dynamic_catch
+    async def _async_set_location_as_fixed_location(self, location_guid: str,
+                                                     body: Optional[dict | NewClassificationRequestBody] = None) -> None:
+        """Classify a location as a fixed physical location. Async version."""
+        url = f"{self.command_root}/locations/{location_guid}/fixed-location"
+        if body is None:
+            body = {"class": "NewClassificationRequestBody", "properties": {"class": "FixedLocationProperties"}}
+        await self._async_new_classification_request(url, ["FixedLocationProperties"], body)
+        logger.info(f"Added FixedLocation classification to {location_guid}")
+
+    @dynamic_catch
+    def set_location_as_fixed_location(self, location_guid: str,
+                                       body: Optional[dict | NewClassificationRequestBody] = None) -> None:
+        """Classify a location as a fixed physical location."""
+        loop = asyncio.get_event_loop()
+        loop.run_until_complete(self._async_set_location_as_fixed_location(location_guid, body))
+
+    @dynamic_catch
+    async def _async_clear_location_as_fixed_location(self, location_guid: str,
+                                                       body: Optional[dict | DeleteClassificationRequestBody] = None) -> None:
+        """Remove the FixedLocation classification from a location. Async version."""
+        url = f"{self.command_root}/locations/{location_guid}/fixed-location/remove"
+        await self._async_delete_classification_request(url, body)
+        logger.info(f"Removed FixedLocation classification from {location_guid}")
+
+    @dynamic_catch
+    def clear_location_as_fixed_location(self, location_guid: str,
+                                         body: Optional[dict | DeleteClassificationRequestBody] = None) -> None:
+        """Remove the FixedLocation classification from a location."""
+        loop = asyncio.get_event_loop()
+        loop.run_until_complete(self._async_clear_location_as_fixed_location(location_guid, body))
+
+    @dynamic_catch
+    async def _async_set_location_as_cyber_location(self, location_guid: str,
+                                                     body: Optional[dict | NewClassificationRequestBody] = None) -> None:
+        """Classify a location as a cyber (network) location. Async version."""
+        url = f"{self.command_root}/locations/{location_guid}/cyber-location"
+        if body is None:
+            body = {"class": "NewClassificationRequestBody", "properties": {"class": "CyberLocationProperties"}}
+        await self._async_new_classification_request(url, ["CyberLocationProperties"], body)
+        logger.info(f"Added CyberLocation classification to {location_guid}")
+
+    @dynamic_catch
+    def set_location_as_cyber_location(self, location_guid: str,
+                                       body: Optional[dict | NewClassificationRequestBody] = None) -> None:
+        """Classify a location as a cyber (network) location."""
+        loop = asyncio.get_event_loop()
+        loop.run_until_complete(self._async_set_location_as_cyber_location(location_guid, body))
+
+    @dynamic_catch
+    async def _async_clear_location_as_cyber_location(self, location_guid: str,
+                                                       body: Optional[dict | DeleteClassificationRequestBody] = None) -> None:
+        """Remove the CyberLocation classification from a location. Async version."""
+        url = f"{self.command_root}/locations/{location_guid}/cyber-location/remove"
+        await self._async_delete_classification_request(url, body)
+        logger.info(f"Removed CyberLocation classification from {location_guid}")
+
+    @dynamic_catch
+    def clear_location_as_cyber_location(self, location_guid: str,
+                                         body: Optional[dict | DeleteClassificationRequestBody] = None) -> None:
+        """Remove the CyberLocation classification from a location."""
+        loop = asyncio.get_event_loop()
+        loop.run_until_complete(self._async_clear_location_as_cyber_location(location_guid, body))
+
+    @dynamic_catch
+    async def _async_set_location_as_secure_location(self, location_guid: str,
+                                                      body: Optional[dict | NewClassificationRequestBody] = None) -> None:
+        """Classify a location as a secure location. Async version."""
+        url = f"{self.command_root}/locations/{location_guid}/secure-location"
+        if body is None:
+            body = {"class": "NewClassificationRequestBody", "properties": {"class": "SecureLocationProperties"}}
+        await self._async_new_classification_request(url, ["SecureLocationProperties"], body)
+        logger.info(f"Added SecureLocation classification to {location_guid}")
+
+    @dynamic_catch
+    def set_location_as_secure_location(self, location_guid: str,
+                                        body: Optional[dict | NewClassificationRequestBody] = None) -> None:
+        """Classify a location as a secure location."""
+        loop = asyncio.get_event_loop()
+        loop.run_until_complete(self._async_set_location_as_secure_location(location_guid, body))
+
+    @dynamic_catch
+    async def _async_clear_location_as_secure_location(self, location_guid: str,
+                                                        body: Optional[dict | DeleteClassificationRequestBody] = None) -> None:
+        """Remove the SecureLocation classification from a location. Async version."""
+        url = f"{self.command_root}/locations/{location_guid}/secure-location/remove"
+        await self._async_delete_classification_request(url, body)
+        logger.info(f"Removed SecureLocation classification from {location_guid}")
+
+    @dynamic_catch
+    def clear_location_as_secure_location(self, location_guid: str,
+                                          body: Optional[dict | DeleteClassificationRequestBody] = None) -> None:
+        """Remove the SecureLocation classification from a location."""
+        loop = asyncio.get_event_loop()
+        loop.run_until_complete(self._async_clear_location_as_secure_location(location_guid, body))

@@ -3,20 +3,20 @@ ___
 ## Link Project Dependency
 > Links or unlinks a project and a project it depends on via the ProjectDependency relationship.
 
-### Child Project
+### Dependent Project
 >	**Input Required**: True
 
 >	**Attribute Type**: Reference Name
 
->	**Description**: The name of the child project.
+>	**Description**: The name of the dependent project.
 
 
-### Parent Project
+### Depends on Project
 >	**Input Required**: True
 
 >	**Attribute Type**: Reference Name
 
->	**Description**: The name of the parent project.
+>	**Description**: The name of the project other projects depend on.
 
 
 ### Label

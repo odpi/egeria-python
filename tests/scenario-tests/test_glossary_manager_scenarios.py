@@ -331,6 +331,140 @@ class GlossaryScenarioTester:
                 error=str(e),
             )
 
+    def scenario_term_aliases_persistence(self) -> TestResult:
+        """
+        Scenario: Term aliases persistence
+        - Create a glossary
+        - Create a term with an "aliases" property (plain dict, matching how
+          Dr. Egeria's TermProcessor builds the body - not the GlossaryTermProperties
+          model, which doesn't declare an "aliases" field)
+        - Retrieve the term and verify aliases round-trip correctly
+        - Update the term's aliases and verify the update persists
+        - Clean up
+        """
+        scenario_name = "Term Aliases Persistence"
+        start_time = time.perf_counter()
+
+        try:
+            timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
+            glossary_name = f"Aliases_Glossary_{timestamp}"
+
+            # Step 1: Create glossary
+            console.print(f"\n[cyan]Creating glossary: {glossary_name}[/cyan]")
+            response = self.client.create_glossary(
+                glossary_name,
+                "Glossary for aliases persistence testing",
+                "English",
+                "Testing aliases round-trip"
+            )
+            glossary_guid = response.get("guid") if isinstance(response, dict) else response
+            self.created_glossaries.append(glossary_guid)
+            console.print(f"[green]✓[/green] Created glossary: {glossary_guid}")
+
+            # Step 2: Create a term with aliases
+            term_name = f"Pipeline_Coverage_{timestamp}"
+            qualified_name = f"GlossaryTerm:{glossary_name}:{term_name}"
+            expected_aliases = ["Pipeline Coverage", "Coverage Ratio", "Pipeline-to-Quota Ratio"]
+
+            console.print(f"\n[cyan]Creating term with aliases: {term_name}[/cyan]")
+            prop_body = {
+                "class": "GlossaryTermProperties",
+                "displayName": term_name,
+                "description": "A test term with aliases",
+                "qualifiedName": qualified_name,
+                "summary": "a quick summary",
+                "aliases": expected_aliases,
+            }
+            body = NewElementRequestBody(
+                class_="NewElementRequestBody",
+                parent_guid=glossary_guid,
+                is_own_anchor=True,
+                anchor_scope_guid=glossary_guid,
+                parent_relationship_type_name="CollectionMembership",
+                parent_at_end_1=True,
+                properties=prop_body,
+            )
+            term_guid = self.client.create_glossary_term(body)
+            self.created_terms.append(term_guid)
+            console.print(f"[green]✓[/green] Created term: {term_guid}")
+
+            # Step 3: Retrieve the term and verify aliases persisted
+            console.print(f"\n[cyan]Retrieving term to verify aliases: {term_guid}[/cyan]")
+            retrieved = self.client.get_term_by_guid(term_guid, output_format="JSON")
+            retrieved_props = retrieved.get("properties", {}) if isinstance(retrieved, dict) else {}
+            retrieved_aliases = retrieved_props.get("aliases")
+            assert retrieved_aliases == expected_aliases, (
+                f"Expected aliases {expected_aliases} on create, got {retrieved_aliases}"
+            )
+            console.print(f"[green]✓[/green] Aliases persisted correctly on create: {retrieved_aliases}")
+
+            # Step 4: Update the term's aliases and verify the update persists
+            updated_aliases = expected_aliases + ["Quota Coverage"]
+            console.print(f"\n[cyan]Updating term aliases: {term_guid}[/cyan]")
+            update_body = {
+                "class": "UpdateElementRequestBody",
+                "properties": {
+                    "class": "GlossaryTermProperties",
+                    "aliases": updated_aliases,
+                },
+            }
+            self.client.update_glossary_term(term_guid, update_body)
+
+            retrieved = self.client.get_term_by_guid(term_guid, output_format="JSON")
+            retrieved_props = retrieved.get("properties", {}) if isinstance(retrieved, dict) else {}
+            retrieved_aliases = retrieved_props.get("aliases")
+            assert retrieved_aliases == updated_aliases, (
+                f"Expected aliases {updated_aliases} after update, got {retrieved_aliases}"
+            )
+            console.print(f"[green]✓[/green] Aliases persisted correctly on update: {retrieved_aliases}")
+
+            # Step 5: Clean up
+            console.print(f"\n[cyan]Deleting term: {term_guid}[/cyan]")
+            self.client.delete_term(term_guid)
+            self.created_terms.remove(term_guid)
+
+            console.print(f"\n[cyan]Deleting glossary: {glossary_guid}[/cyan]")
+            self.client.delete_glossary(glossary_guid, cascade=True)
+            self.created_glossaries.remove(glossary_guid)
+            console.print(f"[green]✓[/green] Cleaned up")
+
+            duration = time.perf_counter() - start_time
+            return TestResult(
+                scenario_name=scenario_name,
+                passed=True,
+                duration=duration,
+                message="Aliases persisted correctly on both create and update",
+            )
+
+        except PyegeriaTimeoutException as e:
+            duration = time.perf_counter() - start_time
+            console.print(f"[yellow]Timeout in {scenario_name}; continuing.[/yellow]")
+            return TestResult(
+                scenario_name=scenario_name,
+                passed=False,
+                skipped=True,
+                duration=duration,
+                message=f"Timeout: {e}",
+            )
+        except PyegeriaException as e:
+            duration = time.perf_counter() - start_time
+            print_basic_exception(e)
+            return TestResult(
+                scenario_name=scenario_name,
+                passed=False,
+                duration=duration,
+                error=str(e),
+            )
+        except Exception as e:
+            duration = time.perf_counter() - start_time
+            console.print(f"[red]Unexpected error:[/red] {str(e)}")
+            return TestResult(
+                scenario_name=scenario_name,
+                passed=False,
+                duration=duration,
+                error=str(e),
+            )
+
     def scenario_glossary_search_and_retrieval(self) -> TestResult:
         """
         Scenario: Glossary search and retrieval
@@ -805,6 +939,7 @@ class GlossaryScenarioTester:
             scenarios = [
                 self.scenario_complete_glossary_lifecycle,
                 self.scenario_glossary_term_management,
+                self.scenario_term_aliases_persistence,
                 self.scenario_glossary_search_and_retrieval,
                 self.scenario_term_copy_and_relationships,
                 self.scenario_glossary_classifications,

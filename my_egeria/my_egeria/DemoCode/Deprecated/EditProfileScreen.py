@@ -18,7 +18,7 @@ from textual.screen import ModalScreen
 from textual.widgets import Header, Static, Input, Button, Footer
 
 
-class EditProfileScreen(ModalScreen[int]):
+class EditProfileScreen(ModalScreen[Any]):
     """Modal screen to create a new user profile in Egeria.
 
     Dismisses with:

@@ -15,7 +15,7 @@ from pyegeria import print_basic_exception
 from pyegeria.core._server_client import ServerClient
 from pyegeria.core._exceptions import (
      PyegeriaException, PyegeriaConnectionException,  PyegeriaInvalidParameterException,
-     PyegeriaClientException, )
+     PyegeriaClientException, PyegeriaUnauthorizedException, )
 
 
 @pytest.fixture()
@@ -56,7 +56,11 @@ class TestClient:
                 "https://127.0.0.1:9443/open-metadata/admin-services/users/meow/servers/active-metadata-store",
                 "meow",
                 401,
-                pytest.raises(PyegeriaClientException),
+                # Previously a generic PyegeriaClientException; a bare 401 is now
+                # raised as the more specific PyegeriaUnauthorizedException (which
+                # subclasses PyegeriaAPIException, so existing
+                # `except PyegeriaAPIException` handlers still catch it).
+                pytest.raises(PyegeriaUnauthorizedException),
             ),
             (
                 "https://cray.local:9443/open-metadata/admin-services/users/woof/servers/active-metadata-store",

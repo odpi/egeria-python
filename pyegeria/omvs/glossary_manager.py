@@ -15,7 +15,7 @@ from typing import List, Annotated, Literal, Optional
 from loguru import logger
 from pydantic import Field
 
-from pyegeria.core._exceptions import PyegeriaInvalidParameterException
+from pyegeria.core._exceptions import PyegeriaInvalidParameterException, PyegeriaException
 from pyegeria.core._globals import NO_GUID_RETURNED
 from pyegeria.core._validators import validate_guid
 from pyegeria.omvs.collection_manager import CollectionManager
@@ -42,6 +42,7 @@ class GlossaryTermProperties(ReferenceableProperties):
     examples: str = None
     usage: str = None
     user_defined_status: str = None
+    aliases: list[str] | None = None
     publishVersionIdentifier: str = None
     contextDescription: str = None
     contextScope: str = None
@@ -1177,21 +1178,20 @@ class GlossaryManager(CollectionManager):
         else:
             qualified_name = self.__create_qualified_name__("Term", new_display_name)
             body = {
-                "class" : "TemplateRequestBody",
-                "templateGUID": glossary_term_guid,
-                "parentGuid": glossary_guid,
-                "parentAtEnd1": True,
-
-                "replacementProperties": {
+                "class": "TemplateRequestBody",
+                "template_guid": glossary_term_guid,
+                "parent_guid": glossary_guid,
+                "parent_relationship_type_name": "CollectionMembership",
+                "parent_at_end_1": True,
+                "replacement_properties": {
                     "class": "GlossaryTermProperties",
-                        "qualifiedName": qualified_name,
-                        "displayName":  new_display_name,
-                        "status": term_status,
-                        "versionIdentifier": version_id
-                    },
-                }
+                    "qualifiedName": qualified_name,
+                    "displayName": new_display_name,
+                    "status": term_status,
+                    "versionIdentifier": version_id,
+                },
+            }
             validated_body = self._template_request_adapter.validate_python(body)
-            validated_body._templateGUID = glossary_term_guid
         v_body = body_slimmer(validated_body.model_dump(exclude_none=True, by_alias=True))
         logger.info(v_body)
 
@@ -1735,22 +1735,17 @@ class GlossaryManager(CollectionManager):
     #
 
     @dynamic_catch
-    async def _async_add_is_abstract_concepts(
+    async def _async_add_is_abstract_concept(
             self, term_guid: str, body: Optional[dict | NewClassificationRequestBody] = None,
             ) -> None:
-        """Add a relationship between terms. Async Version.
+        """Classify the glossary term to indicate that it describes an abstract concept. Async Version.
 
         Parameters
         ----------
-        term1_guid : str
-            Unique identifier of the first glossary term in relationship.
-        term2_guid : str
-            Unique identifier of the second glossary term in relationship.
-        relationship_type: str
-            Type of relationship to add.
-        body: dict, optional, default = None
-            Further optional details for the relationship.
-
+        term_guid : str
+            Unique identifier of the glossary term to update.
+        body : dict | NewClassificationRequestBody, optional
+            Properties to help with the mapping of the elements in the external asset manager and open metadata.
 
         Returns
         -------
@@ -1773,12 +1768,7 @@ class GlossaryManager(CollectionManager):
              "class" : "NewClassificationRequestBody",
              "effectiveTime" : {{@isoTimestamp}},
              "properties" : {
-                "class" : "GlossaryTermRelationship",
-
-                "effectiveFrom" : "{{@isoTimestamp}}",
-                "effectiveTo" : "{{@isoTimestamp}}",
-                "extendedProperties" : {
-                }
+                "class" : "AbstractConceptProperties"
              }
         }
         """
@@ -1803,18 +1793,14 @@ class GlossaryManager(CollectionManager):
     def add_is_abstract_concept(
             self, term_guid: str,  body: Optional[dict | NewClassificationRequestBody] = None,
             ) -> None:
-        """Add a relationship between terms.
+        """Classify the glossary term to indicate that it describes an abstract concept.
 
         Parameters
         ----------
-        term1_guid : str
-            Unique identifier of the first glossary term in relationship.
-        term2_guid : str
-            Unique identifier of the second glossary term in relationship.
-        relationship_type: str
-            Type of relationship to add. A list of relationship types can be found using get_term_relationship_types().
-        body: dict, optional, default = None
-            Further optional details for the relationship.
+        term_guid : str
+            Unique identifier of the glossary term to update.
+        body : dict | NewClassificationRequestBody, optional
+            Properties to help with the mapping of the elements in the external asset manager and open metadata.
 
         Returns
         -------
@@ -1834,44 +1820,30 @@ class GlossaryManager(CollectionManager):
         Body is currently required but can be empty except for class. Basic structure is:
 
         {
-         "class" : "NewRelationshipRequestBody",
+         "class" : "NewClassificationRequestBody",
          "effectiveTime" : {{@isoTimestamp}},
          "properties" : {
-            "class" : "GlossaryTermRelationship",
-            "expression" : "",
-            "confidence"  : 0,
-            "description" : "",
-            "status"   : "",
-            "steward"  : "",
-            "source" : "",
-            "effectiveFrom" : "{{@isoTimestamp}}",
-            "effectiveTo" : "{{@isoTimestamp}}",
-            "extendedProperties" : {
-            }
+            "class" : "AbstractConceptProperties"
          }
         }
         """
         loop = asyncio.get_event_loop()
         loop.run_until_complete(
-            self._async_add_is_abstract_concepts(term_guid, body)
+            self._async_add_is_abstract_concept(term_guid, body)
             )
 
     @dynamic_catch
-    async def _async_remove_is_abstract_concepts(
-            self, term_guid: str, body: Optional[dict | DeleteClassificationRequestBody] = None,
+    async def _async_remove_is_abstract_concept(
+            self, term_guid: str, body: Optional[dict | DeleteElementRequestBody] = None,
             ) -> None:
-        """Add a relationship between terms. Async Version.
+        """Remove the abstract concept designation from the glossary term. Async Version.
 
         Parameters
         ----------
-        term1_guid : str
-            Unique identifier of the first glossary term in relationship.
-        term2_guid : str
-            Unique identifier of the second glossary term in relationship.
-        relationship_type: str
-            Type of relationship to add.
-        body: dict, optional, default = None
-            Further optional details for the relationship.
+        term_guid : str
+            Unique identifier of the glossary term to update.
+        body : dict | DeleteClassificationRequestBody, optional
+            Properties to help with the mapping of the elements in the external asset manager and open metadata.
 
 
         Returns
@@ -1892,42 +1864,33 @@ class GlossaryManager(CollectionManager):
         Body is currently required but can be empty except for class. Basic structure is:
 
             {
-             "class" : "NewClassificationRequestBody",
+             "class" : "DeleteClassificationRequestBody",
              "effectiveTime" : {{@isoTimestamp}},
              "properties" : {
-                "class" : "GlossaryTermRelationship",
-
-                "effectiveFrom" : "{{@isoTimestamp}}",
-                "effectiveTo" : "{{@isoTimestamp}}",
-                "extendedProperties" : {
-                }
+                "class" : "AbstractConceptProperties"
              }
         }
         """
 
         url = (
             f"{self.platform_url}/servers/{self.view_server}/api/open-metadata/glossary-manager/glossaries/"
-            f"terms/{term_guid}/is-abstract-concept/remove"
+            f"terms/{term_guid}/is-abstract-concept/delete"
         )
-        await self._async_delete_classification_request(url, body)
+        await self._async_delete_element_request(url, body)
         logger.info(f"Removed AbstractConcept classification to {term_guid}")
 
     @dynamic_catch
     def remove_is_abstract_concept(
-            self, term_guid: str, body: Optional[dict | DeleteClassificationRequestBody] = None,
+            self, term_guid: str, body: Optional[dict | DeleteElementRequestBody] = None,
             ) -> None:
-        """Add a relationship between terms.
+        """Remove the abstract concept designation from the glossary term.
 
         Parameters
         ----------
-        term1_guid : str
-            Unique identifier of the first glossary term in relationship.
-        term2_guid : str
-            Unique identifier of the second glossary term in relationship.
-        relationship_type: str
-            Type of relationship to add. A list of relationship types can be found using get_term_relationship_types().
-        body: dict, optional, default = None
-            Further optional details for the relationship.
+        term_guid : str
+            Unique identifier of the glossary term to update.
+        body : dict | DeleteClassificationRequestBody, optional
+            Properties to help with the mapping of the elements in the external asset manager and open metadata.
 
         Returns
         -------
@@ -1947,45 +1910,30 @@ class GlossaryManager(CollectionManager):
         Body is currently required but can be empty except for class. Basic structure is:
 
         {
-         "class" : "NewRelationshipRequestBody",
+         "class" : "DeleteClassificationRequestBody",
          "effectiveTime" : {{@isoTimestamp}},
          "properties" : {
-            "class" : "GlossaryTermRelationship",
-            "expression" : "",
-            "confidence"  : 0,
-            "description" : "",
-            "status"   : "",
-            "steward"  : "",
-            "source" : "",
-            "effectiveFrom" : "{{@isoTimestamp}}",
-            "effectiveTo" : "{{@isoTimestamp}}",
-            "extendedProperties" : {
-            }
+            "class" : "AbstractConceptProperties"
          }
         }
         """
         loop = asyncio.get_event_loop()
         loop.run_until_complete(
-            self._async_remove_is_abstract_concepts(term_guid, body)
+            self._async_remove_is_abstract_concept(term_guid, body)
             )
 
     @dynamic_catch
     async def _async_add_is_context_definition(
             self, term_guid: str, body: Optional[dict | NewClassificationRequestBody] = None,
             ) -> None:
-        """Add a relationship between terms. Async Version.
+        """Classify the glossary term to indicate that it describes a context. Async Version.
 
         Parameters
         ----------
-        term1_guid : str
-            Unique identifier of the first glossary term in relationship.
-        term2_guid : str
-            Unique identifier of the second glossary term in relationship.
-        relationship_type: str
-            Type of relationship to add.
-        body: dict, optional, default = None
-            Further optional details for the relationship.
-
+        term_guid : str
+            Unique identifier of the glossary term to update.
+        body : dict | NewClassificationRequestBody, optional
+            More details of the context.
 
         Returns
         -------
@@ -2008,12 +1956,9 @@ class GlossaryManager(CollectionManager):
              "class" : "NewClassificationRequestBody",
              "effectiveTime" : {{@isoTimestamp}},
              "properties" : {
-                "class" : "GlossaryTermRelationship",
-
-                "effectiveFrom" : "{{@isoTimestamp}}",
-                "effectiveTo" : "{{@isoTimestamp}}",
-                "extendedProperties" : {
-                }
+                "class" : "ContextDefinitionProperties",
+                "description" : "Add value here",
+                "scope" : "Add value here"
              }
         }
         """
@@ -2032,24 +1977,20 @@ class GlossaryManager(CollectionManager):
                 }
 
         await self._async_new_classification_request(url, "ContextDefinitionProperties", body)
-        logger.info(f"Added AbstractConcept classification to {term_guid}")
+        logger.info(f"Added ContextDefinition classification to {term_guid}")
 
     @dynamic_catch
     def add_is_context_definition(
             self, term_guid: str,  body: Optional[dict | NewClassificationRequestBody] = None,
             ) -> None:
-        """Add a relationship between terms.
+        """Classify the glossary term to indicate that it describes a context.
 
         Parameters
         ----------
-        term1_guid : str
-            Unique identifier of the first glossary term in relationship.
-        term2_guid : str
-            Unique identifier of the second glossary term in relationship.
-        relationship_type: str
-            Type of relationship to add. A list of relationship types can be found using get_term_relationship_types().
-        body: dict, optional, default = None
-            Further optional details for the relationship.
+        term_guid : str
+            Unique identifier of the glossary term to update.
+        body : dict | NewClassificationRequestBody, optional
+            More details of the context.
 
         Returns
         -------
@@ -2069,20 +2010,12 @@ class GlossaryManager(CollectionManager):
         Body is currently required but can be empty except for class. Basic structure is:
 
         {
-         "class" : "NewRelationshipRequestBody",
+         "class" : "NewClassificationRequestBody",
          "effectiveTime" : {{@isoTimestamp}},
          "properties" : {
-            "class" : "GlossaryTermRelationship",
-            "expression" : "",
-            "confidence"  : 0,
-            "description" : "",
-            "status"   : "",
-            "steward"  : "",
-            "source" : "",
-            "effectiveFrom" : "{{@isoTimestamp}}",
-            "effectiveTo" : "{{@isoTimestamp}}",
-            "extendedProperties" : {
-            }
+            "class" : "ContextDefinitionProperties",
+            "description" : "Add value here",
+            "scope" : "Add value here"
          }
         }
         """
@@ -2093,21 +2026,16 @@ class GlossaryManager(CollectionManager):
 
     @dynamic_catch
     async def _async_remove_is_context_definition(
-            self, term_guid: str, body: Optional[dict | DeleteClassificationRequestBody] = None,
+            self, term_guid: str, body: Optional[dict | DeleteRelationshipRequestBody] = None,
             ) -> None:
-        """Add a relationship between terms. Async Version.
+        """Remove the context definition designation from the glossary term. Async Version.
 
         Parameters
         ----------
-        term1_guid : str
-            Unique identifier of the first glossary term in relationship.
-        term2_guid : str
-            Unique identifier of the second glossary term in relationship.
-        relationship_type: str
-            Type of relationship to add.
-        body: dict, optional, default = None
-            Further optional details for the relationship.
-
+        term_guid : str
+            Unique identifier of the glossary term to update.
+        body : dict | DeleteClassificationRequestBody, optional
+            Properties to help with the mapping of the elements in the external asset manager and open metadata.
 
         Returns
         -------
@@ -2127,42 +2055,33 @@ class GlossaryManager(CollectionManager):
         Body is currently required but can be empty except for class. Basic structure is:
 
             {
-             "class" : "NewClassificationRequestBody",
+             "class" : "DeleteClassificationRequestBody",
              "effectiveTime" : {{@isoTimestamp}},
              "properties" : {
-                "class" : "GlossaryTermRelationship",
-
-                "effectiveFrom" : "{{@isoTimestamp}}",
-                "effectiveTo" : "{{@isoTimestamp}}",
-                "extendedProperties" : {
-                }
+                "class" : "ContextDefinitionProperties"
              }
         }
         """
 
         url = (
             f"{self.platform_url}/servers/{self.view_server}/api/open-metadata/glossary-manager/glossaries/"
-            f"terms/{term_guid}/is-context-definition/remove"
+            f"terms/{term_guid}/is-context-definition/delete"
         )
-        await self._async_delete_classification_request(url, body)
+        await self._async_delete_relationship_request(url, body)
         logger.info(f"Removed ContextDefinition classification to {term_guid}")
 
     @dynamic_catch
     def remove_is_context_definition(
-            self, term_guid: str, body: Optional[dict | DeleteClassificationRequestBody] = None,
+            self, term_guid: str, body: Optional[dict | DeleteRelationshipRequestBody] = None,
             ) -> None:
-        """Add a relationship between terms.
+        """Remove the context definition designation from the glossary term.
 
         Parameters
         ----------
-        term1_guid : str
-            Unique identifier of the first glossary term in relationship.
-        term2_guid : str
-            Unique identifier of the second glossary term in relationship.
-        relationship_type: str
-            Type of relationship to add. A list of relationship types can be found using get_term_relationship_types().
-        body: dict, optional, default = None
-            Further optional details for the relationship.
+        term_guid : str
+            Unique identifier of the glossary term to update.
+        body : dict | DeleteClassificationRequestBody, optional
+            Properties to help with the mapping of the elements in the external asset manager and open metadata.
 
         Returns
         -------
@@ -2182,20 +2101,10 @@ class GlossaryManager(CollectionManager):
         Body is currently required but can be empty except for class. Basic structure is:
 
         {
-         "class" : "NewRelationshipRequestBody",
+         "class" : "DeleteClassificationRequestBody",
          "effectiveTime" : {{@isoTimestamp}},
          "properties" : {
-            "class" : "GlossaryTermRelationship",
-            "expression" : "",
-            "confidence"  : 0,
-            "description" : "",
-            "status"   : "",
-            "steward"  : "",
-            "source" : "",
-            "effectiveFrom" : "{{@isoTimestamp}}",
-            "effectiveTo" : "{{@isoTimestamp}}",
-            "extendedProperties" : {
-            }
+            "class" : "ContextDefinitionProperties"
          }
         }
         """
@@ -2208,19 +2117,14 @@ class GlossaryManager(CollectionManager):
     async def _async_add_is_data_value(
             self, term_guid: str, body: Optional[dict | NewClassificationRequestBody] = None,
             ) -> None:
-        """Add a relationship between terms. Async Version.
+        """Classify the glossary term to indicate that it describes a data value. Async Version.
 
         Parameters
         ----------
-        term1_guid : str
-            Unique identifier of the first glossary term in relationship.
-        term2_guid : str
-            Unique identifier of the second glossary term in relationship.
-        relationship_type: str
-            Type of relationship to add.
-        body: dict, optional, default = None
-            Further optional details for the relationship.
-
+        term_guid : str
+            Unique identifier of the glossary term to update.
+        body : dict | NewClassificationRequestBody, optional
+            Properties to help with the mapping of the elements in the external asset manager and open metadata.
 
         Returns
         -------
@@ -2243,12 +2147,7 @@ class GlossaryManager(CollectionManager):
              "class" : "NewClassificationRequestBody",
              "effectiveTime" : {{@isoTimestamp}},
              "properties" : {
-                "class" : "GlossaryTermRelationship",
-
-                "effectiveFrom" : "{{@isoTimestamp}}",
-                "effectiveTo" : "{{@isoTimestamp}}",
-                "extendedProperties" : {
-                }
+                "class" : "DataValueProperties"
              }
         }
         """
@@ -2273,18 +2172,14 @@ class GlossaryManager(CollectionManager):
     def add_is_data_value(
             self, term_guid: str,  body: Optional[dict | NewClassificationRequestBody] = None,
             ) -> None:
-        """Add a relationship between terms.
+        """Classify the glossary term to indicate that it describes a data value.
 
         Parameters
         ----------
-        term1_guid : str
-            Unique identifier of the first glossary term in relationship.
-        term2_guid : str
-            Unique identifier of the second glossary term in relationship.
-        relationship_type: str
-            Type of relationship to add. A list of relationship types can be found using get_term_relationship_types().
-        body: dict, optional, default = None
-            Further optional details for the relationship.
+        term_guid : str
+            Unique identifier of the glossary term to update.
+        body : dict | NewClassificationRequestBody, optional
+            Properties to help with the mapping of the elements in the external asset manager and open metadata.
 
         Returns
         -------
@@ -2304,20 +2199,10 @@ class GlossaryManager(CollectionManager):
         Body is currently required but can be empty except for class. Basic structure is:
 
         {
-         "class" : "NewRelationshipRequestBody",
+         "class" : "NewClassificationRequestBody",
          "effectiveTime" : {{@isoTimestamp}},
          "properties" : {
-            "class" : "GlossaryTermRelationship",
-            "expression" : "",
-            "confidence"  : 0,
-            "description" : "",
-            "status"   : "",
-            "steward"  : "",
-            "source" : "",
-            "effectiveFrom" : "{{@isoTimestamp}}",
-            "effectiveTo" : "{{@isoTimestamp}}",
-            "extendedProperties" : {
-            }
+            "class" : "DataValueProperties"
          }
         }
         """
@@ -2330,18 +2215,14 @@ class GlossaryManager(CollectionManager):
     async def _async_remove_is_data_value(
             self, term_guid: str, body: Optional[dict | DeleteClassificationRequestBody] = None,
             ) -> None:
-        """Add a relationship between terms. Async Version.
+        """Remove the data value designation from the glossary term. Async Version.
 
         Parameters
         ----------
-        term1_guid : str
-            Unique identifier of the first glossary term in relationship.
-        term2_guid : str
-            Unique identifier of the second glossary term in relationship.
-        relationship_type: str
-            Type of relationship to add.
-        body: dict, optional, default = None
-            Further optional details for the relationship.
+        term_guid : str
+            Unique identifier of the glossary term to update.
+        body : dict | DeleteClassificationRequestBody, optional
+            Properties to help with the mapping of the elements in the external asset manager and open metadata.
 
 
         Returns
@@ -2362,15 +2243,10 @@ class GlossaryManager(CollectionManager):
         Body is currently required but can be empty except for class. Basic structure is:
 
             {
-             "class" : "NewClassificationRequestBody",
+             "class" : "DeleteClassificationRequestBody",
              "effectiveTime" : {{@isoTimestamp}},
              "properties" : {
-                "class" : "GlossaryTermRelationship",
-
-                "effectiveFrom" : "{{@isoTimestamp}}",
-                "effectiveTo" : "{{@isoTimestamp}}",
-                "extendedProperties" : {
-                }
+                "class" : "DataValueProperties"
              }
         }
         """
@@ -2386,18 +2262,14 @@ class GlossaryManager(CollectionManager):
     def remove_is_data_value(
             self, term_guid: str, body: Optional[dict | DeleteClassificationRequestBody] = None,
             ) -> None:
-        """Add a relationship between terms.
+        """Remove the data value designation from the glossary term.
 
         Parameters
         ----------
-        term1_guid : str
-            Unique identifier of the first glossary term in relationship.
-        term2_guid : str
-            Unique identifier of the second glossary term in relationship.
-        relationship_type: str
-            Type of relationship to add. A list of relationship types can be found using get_term_relationship_types().
-        body: dict, optional, default = None
-            Further optional details for the relationship.
+        term_guid : str
+            Unique identifier of the glossary term to update.
+        body : dict | DeleteClassificationRequestBody, optional
+            Properties to help with the mapping of the elements in the external asset manager and open metadata.
 
         Returns
         -------
@@ -2417,20 +2289,10 @@ class GlossaryManager(CollectionManager):
         Body is currently required but can be empty except for class. Basic structure is:
 
         {
-         "class" : "NewRelationshipRequestBody",
+         "class" : "DeleteClassificationRequestBody",
          "effectiveTime" : {{@isoTimestamp}},
          "properties" : {
-            "class" : "GlossaryTermRelationship",
-            "expression" : "",
-            "confidence"  : 0,
-            "description" : "",
-            "status"   : "",
-            "steward"  : "",
-            "source" : "",
-            "effectiveFrom" : "{{@isoTimestamp}}",
-            "effectiveTo" : "{{@isoTimestamp}}",
-            "extendedProperties" : {
-            }
+            "class" : "DataValueProperties"
          }
         }
         """
@@ -2443,19 +2305,16 @@ class GlossaryManager(CollectionManager):
     async def _async_add_activity_description(
             self, term_guid: str, activity_type: int = None, body: Optional[dict | NewClassificationRequestBody] = None,
             ) -> None:
-        """Add a relationship between terms. Async Version.
+        """Classify the glossary term to indicate that it describes an activity. Async Version.
 
         Parameters
         ----------
-        term1_guid : str
-            Unique identifier of the first glossary term in relationship.
-        term2_guid : str
-            Unique identifier of the second glossary term in relationship.
-        relationship_type: str
-            Type of relationship to add.
-        body: dict, optional, default = None
-            Further optional details for the relationship.
-
+        term_guid : str
+            Unique identifier of the glossary term to update.
+        activity_type : int, optional
+            Type of activity.
+        body : dict | NewClassificationRequestBody, optional
+            Type of activity and correlators.
 
         Returns
         -------
@@ -2478,12 +2337,8 @@ class GlossaryManager(CollectionManager):
              "class" : "NewClassificationRequestBody",
              "effectiveTime" : {{@isoTimestamp}},
              "properties" : {
-                "class" : "GlossaryTermRelationship",
-
-                "effectiveFrom" : "{{@isoTimestamp}}",
-                "effectiveTo" : "{{@isoTimestamp}}",
-                "extendedProperties" : {
-                }
+                "class" : "ActivityDescriptionProperties",
+                "activityType" : "ACTION"
              }
         }
         """
@@ -2493,7 +2348,7 @@ class GlossaryManager(CollectionManager):
                 "class": "NewClassificationRequestBody",
                 "properties": {
                     "class": "ActivityDescriptionProperties",
-                    "type": activity_type,
+                    "activityType": activity_type,
                     }
                 }
 
@@ -2502,24 +2357,22 @@ class GlossaryManager(CollectionManager):
             f"terms/{term_guid}/is-activity"
         )
         await self._async_new_classification_request(url, "ActivityDescriptionProperties", body)
-        logger.info(f"Added DataValue classification to {term_guid}")
+        logger.info(f"Added ActivityDescription classification to {term_guid}")
 
     @dynamic_catch
     def add_activity_description(
             self, term_guid: str,  activity_type: int = None, body: Optional[dict | NewClassificationRequestBody] = None,
             ) -> None:
-        """Add a relationship between terms.
+        """Classify the glossary term to indicate that it describes an activity.
 
         Parameters
         ----------
-        term1_guid : str
-            Unique identifier of the first glossary term in relationship.
-        term2_guid : str
-            Unique identifier of the second glossary term in relationship.
-        relationship_type: str
-            Type of relationship to add. A list of relationship types can be found using get_term_relationship_types().
-        body: dict, optional, default = None
-            Further optional details for the relationship.
+        term_guid : str
+            Unique identifier of the glossary term to update.
+        activity_type : int, optional
+            Type of activity.
+        body : dict | NewClassificationRequestBody, optional
+            Type of activity and correlators.
 
         Returns
         -------
@@ -2539,20 +2392,11 @@ class GlossaryManager(CollectionManager):
         Body is currently required but can be empty except for class. Basic structure is:
 
         {
-         "class" : "NewRelationshipRequestBody",
+         "class" : "NewClassificationRequestBody",
          "effectiveTime" : {{@isoTimestamp}},
          "properties" : {
-            "class" : "GlossaryTermRelationship",
-            "expression" : "",
-            "confidence"  : 0,
-            "description" : "",
-            "status"   : "",
-            "steward"  : "",
-            "source" : "",
-            "effectiveFrom" : "{{@isoTimestamp}}",
-            "effectiveTo" : "{{@isoTimestamp}}",
-            "extendedProperties" : {
-            }
+            "class" : "ActivityDescriptionProperties",
+            "activityType" : "ACTION"
          }
         }
         """
@@ -2563,20 +2407,16 @@ class GlossaryManager(CollectionManager):
 
     @dynamic_catch
     async def _async_remove_activity_description(
-            self, term_guid: str, body: Optional[dict | DeleteClassificationRequestBody] = None,
+            self, term_guid: str, body: Optional[dict | DeleteRelationshipRequestBody] = None,
             ) -> None:
-        """Add a relationship between terms. Async Version.
+        """Remove the activity designation from the glossary term. Async Version.
 
         Parameters
         ----------
-        term1_guid : str
-            Unique identifier of the first glossary term in relationship.
-        term2_guid : str
-            Unique identifier of the second glossary term in relationship.
-        relationship_type: str
-            Type of relationship to add.
-        body: dict, optional, default = None
-            Further optional details for the relationship.
+        term_guid : str
+            Unique identifier of the glossary term to update.
+        body : dict | DeleteClassificationRequestBody, optional
+            Properties to help with the mapping of the elements in the external asset manager and open metadata.
 
 
         Returns
@@ -2597,15 +2437,10 @@ class GlossaryManager(CollectionManager):
         Body is currently required but can be empty except for class. Basic structure is:
 
             {
-             "class" : "NewClassificationRequestBody",
+             "class" : "DeleteClassificationRequestBody",
              "effectiveTime" : {{@isoTimestamp}},
              "properties" : {
-                "class" : "GlossaryTermRelationship",
-
-                "effectiveFrom" : "{{@isoTimestamp}}",
-                "effectiveTo" : "{{@isoTimestamp}}",
-                "extendedProperties" : {
-                }
+                "class" : "ActivityDescriptionProperties"
              }
         }
         """
@@ -2614,25 +2449,21 @@ class GlossaryManager(CollectionManager):
             f"{self.platform_url}/servers/{self.view_server}/api/open-metadata/glossary-manager/glossaries/"
             f"terms/{term_guid}/is-activity/remove"
         )
-        await self._async_delete_classification_request(url, body)
+        await self._async_delete_relationship_request(url, body)
         logger.info(f"Removed ActivityDescription classification to {term_guid}")
 
     @dynamic_catch
     def remove_activity_description(
-            self, term_guid: str, body: Optional[dict | DeleteClassificationRequestBody] = None,
+            self, term_guid: str, body: Optional[dict | DeleteRelationshipRequestBody] = None,
             ) -> None:
-        """Add a relationship between terms.
+        """Remove the activity designation from the glossary term.
 
         Parameters
         ----------
-        term1_guid : str
-            Unique identifier of the first glossary term in relationship.
-        term2_guid : str
-            Unique identifier of the second glossary term in relationship.
-        relationship_type: str
-            Type of relationship to add. A list of relationship types can be found using get_term_relationship_types().
-        body: dict, optional, default = None
-            Further optional details for the relationship.
+        term_guid : str
+            Unique identifier of the glossary term to update.
+        body : dict | DeleteClassificationRequestBody, optional
+            Properties to help with the mapping of the elements in the external asset manager and open metadata.
 
         Returns
         -------
@@ -2652,20 +2483,10 @@ class GlossaryManager(CollectionManager):
         Body is currently required but can be empty except for class. Basic structure is:
 
         {
-         "class" : "NewRelationshipRequestBody",
+         "class" : "DeleteClassificationRequestBody",
          "effectiveTime" : {{@isoTimestamp}},
          "properties" : {
-            "class" : "GlossaryTermRelationship",
-            "expression" : "",
-            "confidence"  : 0,
-            "description" : "",
-            "status"   : "",
-            "steward"  : "",
-            "source" : "",
-            "effectiveFrom" : "{{@isoTimestamp}}",
-            "effectiveTo" : "{{@isoTimestamp}}",
-            "extendedProperties" : {
-            }
+            "class" : "ActivityDescriptionProperties"
          }
         }
         """
@@ -4048,6 +3869,258 @@ class GlossaryManager(CollectionManager):
         """
         loop = asyncio.get_event_loop()
         return loop.run_until_complete(self._async_get_glossary_for_term(term_guid))
+
+    #
+    # Naming standards classifications (0438) -- Egeria PR #9166. Simple marker
+    # classifications (no properties beyond the classification's own type name)
+    # applied to a glossary term. Dr.Egeria wiring: md_processing/v2/curation.py's
+    # CLASSIFICATION_METHODS "ClassWord"/"Modifier"/"PrimeWord" entries.
+    #
+
+    @dynamic_catch
+    async def _async_set_is_prime_word(self, term_guid: str,
+                                       body: Optional[dict | NewClassificationRequestBody] = None) -> None:
+        """Classify a glossary term as a prime word in a naming standard. Async version.
+
+        Parameters
+        ----------
+        term_guid: str
+            Unique identifier of the glossary term.
+        body: dict | NewClassificationRequestBody, optional
+            No custom properties -- PrimeWordProperties carries only its own type name.
+
+        Returns
+        -------
+        None
+
+        Notes
+        -----
+        Sample body:
+        {
+          "class" : "NewClassificationRequestBody",
+          "properties": {"class": "PrimeWordProperties"}
+        }
+        """
+        url = f"{self.glossary_command_root}/glossaries/terms/{term_guid}/is-prime-word"
+        # _async_new_classification_request POSTs with no body at all when body=None
+        # (unlike _async_new_relationship_request, which builds a default properties
+        # body itself) -- always pass an explicit body, same workaround as ISSUE-31.
+        body = body or {"class": "NewClassificationRequestBody", "properties": {"class": "PrimeWordProperties"}}
+        await self._async_new_classification_request(url, ["PrimeWordProperties"], body)
+        logger.info(f"Classified term {term_guid} as a prime word")
+
+    @dynamic_catch
+    def set_is_prime_word(self, term_guid: str,
+                          body: Optional[dict | NewClassificationRequestBody] = None) -> None:
+        """Classify a glossary term as a prime word in a naming standard."""
+        loop = asyncio.get_event_loop()
+        loop.run_until_complete(self._async_set_is_prime_word(term_guid, body))
+
+    @dynamic_catch
+    async def _async_clear_is_prime_word(self, term_guid: str,
+                                         body: Optional[dict | DeleteClassificationRequestBody] = None) -> None:
+        """Remove the prime word designation from a glossary term. Async version.
+
+        Parameters
+        ----------
+        term_guid: str
+            Unique identifier of the glossary term.
+        body: dict | DeleteClassificationRequestBody, optional
+
+        Returns
+        -------
+        None
+        """
+        url = f"{self.glossary_command_root}/glossaries/terms/{term_guid}/is-prime-word/delete"
+        await self._async_delete_classification_request(url, body)
+        logger.info(f"Removed prime word classification from term {term_guid}")
+
+    @dynamic_catch
+    def clear_is_prime_word(self, term_guid: str,
+                            body: Optional[dict | DeleteClassificationRequestBody] = None) -> None:
+        """Remove the prime word designation from a glossary term."""
+        loop = asyncio.get_event_loop()
+        loop.run_until_complete(self._async_clear_is_prime_word(term_guid, body))
+
+    @dynamic_catch
+    async def _async_set_is_modifier(self, term_guid: str,
+                                     body: Optional[dict | NewClassificationRequestBody] = None) -> None:
+        """Classify a glossary term as a modifier in a naming standard. Async version.
+
+        Parameters
+        ----------
+        term_guid: str
+            Unique identifier of the glossary term.
+        body: dict | NewClassificationRequestBody, optional
+            No custom properties -- ModifierProperties carries only its own type name.
+
+        Returns
+        -------
+        None
+        """
+        url = f"{self.glossary_command_root}/glossaries/terms/{term_guid}/is-modifier"
+        body = body or {"class": "NewClassificationRequestBody", "properties": {"class": "ModifierProperties"}}
+        await self._async_new_classification_request(url, ["ModifierProperties"], body)
+        logger.info(f"Classified term {term_guid} as a modifier")
+
+    @dynamic_catch
+    def set_is_modifier(self, term_guid: str,
+                        body: Optional[dict | NewClassificationRequestBody] = None) -> None:
+        """Classify a glossary term as a modifier in a naming standard."""
+        loop = asyncio.get_event_loop()
+        loop.run_until_complete(self._async_set_is_modifier(term_guid, body))
+
+    @dynamic_catch
+    async def _async_clear_is_modifier(self, term_guid: str,
+                                       body: Optional[dict | DeleteClassificationRequestBody] = None) -> None:
+        """Remove the modifier designation from a glossary term. Async version.
+
+        Parameters
+        ----------
+        term_guid: str
+            Unique identifier of the glossary term.
+        body: dict | DeleteClassificationRequestBody, optional
+
+        Returns
+        -------
+        None
+        """
+        url = f"{self.glossary_command_root}/glossaries/terms/{term_guid}/is-modifier/delete"
+        await self._async_delete_classification_request(url, body)
+        logger.info(f"Removed modifier classification from term {term_guid}")
+
+    @dynamic_catch
+    def clear_is_modifier(self, term_guid: str,
+                          body: Optional[dict | DeleteClassificationRequestBody] = None) -> None:
+        """Remove the modifier designation from a glossary term."""
+        loop = asyncio.get_event_loop()
+        loop.run_until_complete(self._async_clear_is_modifier(term_guid, body))
+
+    @dynamic_catch
+    async def _async_set_is_class_word(self, term_guid: str,
+                                       body: Optional[dict | NewClassificationRequestBody] = None) -> None:
+        """Classify a glossary term as a class word in a naming standard. Async version.
+
+        Parameters
+        ----------
+        term_guid: str
+            Unique identifier of the glossary term.
+        body: dict | NewClassificationRequestBody, optional
+            No custom properties -- ClassWordProperties carries only its own type name.
+
+        Returns
+        -------
+        None
+        """
+        url = f"{self.glossary_command_root}/glossaries/terms/{term_guid}/is-class-word"
+        body = body or {"class": "NewClassificationRequestBody", "properties": {"class": "ClassWordProperties"}}
+        await self._async_new_classification_request(url, ["ClassWordProperties"], body)
+        logger.info(f"Classified term {term_guid} as a class word")
+
+    @dynamic_catch
+    def set_is_class_word(self, term_guid: str,
+                          body: Optional[dict | NewClassificationRequestBody] = None) -> None:
+        """Classify a glossary term as a class word in a naming standard."""
+        loop = asyncio.get_event_loop()
+        loop.run_until_complete(self._async_set_is_class_word(term_guid, body))
+
+    @dynamic_catch
+    async def _async_clear_is_class_word(self, term_guid: str,
+                                         body: Optional[dict | DeleteClassificationRequestBody] = None) -> None:
+        """Remove the class word designation from a glossary term. Async version.
+
+        Parameters
+        ----------
+        term_guid: str
+            Unique identifier of the glossary term.
+        body: dict | DeleteClassificationRequestBody, optional
+
+        Returns
+        -------
+        None
+        """
+        url = f"{self.glossary_command_root}/glossaries/terms/{term_guid}/is-class-word/delete"
+        await self._async_delete_classification_request(url, body)
+        logger.info(f"Removed class word classification from term {term_guid}")
+
+    @dynamic_catch
+    def clear_is_class_word(self, term_guid: str,
+                            body: Optional[dict | DeleteClassificationRequestBody] = None) -> None:
+        """Remove the class word designation from a glossary term."""
+        loop = asyncio.get_event_loop()
+        loop.run_until_complete(self._async_clear_is_class_word(term_guid, body))
+
+
+    #
+    # Additional relationship/classification maintenance - added to close
+    # the gap found by scripts/omvs_audit.py against the glossary-manager
+    # .http ground truth (2026-08-21). Note the .http ground truth documents
+    # these two under /glossary-terms/... rather than the /glossaries/terms/...
+    # segment used by the existing term methods in this file - kept as
+    # documented rather than assumed to be the same root.
+    #
+
+    @dynamic_catch
+    async def _async_link_used_in_context(self, glossary_term_guid: str, context_element_guid: str,
+                                          body: Optional[dict | NewRelationshipRequestBody] = None) -> None:
+        """Attach a glossary term to the element that provides its usage context (UsedInContext relationship). Async version."""
+        url = f"{self.platform_url}/servers/{self.view_server}/api/open-metadata/glossary-manager/glossary-terms/{glossary_term_guid}/used-in-contexts/{context_element_guid}/attach"
+        await self._async_new_relationship_request(url, ["UsedInContextProperties"], body)
+        logger.info(f"Context element {context_element_guid} linked to glossary term {glossary_term_guid}.")
+
+    @dynamic_catch
+    def link_used_in_context(self, glossary_term_guid: str, context_element_guid: str,
+                             body: Optional[dict | NewRelationshipRequestBody] = None) -> None:
+        """Attach a glossary term to the element that provides its usage context (UsedInContext relationship)."""
+        loop = asyncio.get_event_loop()
+        loop.run_until_complete(self._async_link_used_in_context(glossary_term_guid, context_element_guid, body))
+
+    @dynamic_catch
+    async def _async_detach_used_in_context(self, glossary_term_guid: str, context_element_guid: str,
+                                            body: Optional[dict | DeleteRelationshipRequestBody] = None) -> None:
+        """Detach a glossary term from its usage context element. Async version."""
+        url = f"{self.platform_url}/servers/{self.view_server}/api/open-metadata/glossary-manager/glossary-terms/{glossary_term_guid}/used-in-contexts/{context_element_guid}/detach"
+        await self._async_delete_relationship_request(url, body)
+        logger.info(f"Context element {context_element_guid} detached from glossary term {glossary_term_guid}.")
+
+    @dynamic_catch
+    def detach_used_in_context(self, glossary_term_guid: str, context_element_guid: str,
+                               body: Optional[dict | DeleteRelationshipRequestBody] = None) -> None:
+        """Detach a glossary term from its usage context element."""
+        loop = asyncio.get_event_loop()
+        loop.run_until_complete(self._async_detach_used_in_context(glossary_term_guid, context_element_guid, body))
+
+    @dynamic_catch
+    async def _async_set_term_as_element_supplement(self, glossary_term_guid: str,
+                                                     body: Optional[dict | NewClassificationRequestBody] = None) -> None:
+        """Classify a glossary term as a supplement (additional description) for another element. Async version."""
+        url = f"{self.platform_url}/servers/{self.view_server}/api/open-metadata/glossary-manager/glossary-terms/{glossary_term_guid}/element-supplement"
+        if body is None:
+            body = {"class": "NewClassificationRequestBody", "properties": {"class": "ElementSupplementProperties"}}
+        await self._async_new_classification_request(url, ["ElementSupplementProperties"], body)
+        logger.info(f"Added ElementSupplement classification to {glossary_term_guid}")
+
+    @dynamic_catch
+    def set_term_as_element_supplement(self, glossary_term_guid: str,
+                                       body: Optional[dict | NewClassificationRequestBody] = None) -> None:
+        """Classify a glossary term as a supplement (additional description) for another element."""
+        loop = asyncio.get_event_loop()
+        loop.run_until_complete(self._async_set_term_as_element_supplement(glossary_term_guid, body))
+
+    @dynamic_catch
+    async def _async_clear_term_as_element_supplement(self, glossary_term_guid: str,
+                                                       body: Optional[dict | DeleteClassificationRequestBody] = None) -> None:
+        """Remove the ElementSupplement classification from a glossary term. Async version."""
+        url = f"{self.platform_url}/servers/{self.view_server}/api/open-metadata/glossary-manager/glossary-terms/{glossary_term_guid}/element-supplement/remove"
+        await self._async_delete_classification_request(url, body)
+        logger.info(f"Removed ElementSupplement classification from {glossary_term_guid}")
+
+    @dynamic_catch
+    def clear_term_as_element_supplement(self, glossary_term_guid: str,
+                                         body: Optional[dict | DeleteClassificationRequestBody] = None) -> None:
+        """Remove the ElementSupplement classification from a glossary term."""
+        loop = asyncio.get_event_loop()
+        loop.run_until_complete(self._async_clear_term_as_element_supplement(glossary_term_guid, body))
 
 
 if __name__ == "__main__":

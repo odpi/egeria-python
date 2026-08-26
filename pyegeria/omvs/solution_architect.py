@@ -24,7 +24,8 @@ from pyegeria.models import NewElementRequestBody, TemplateRequestBody, UpdateEl
     AuthoredReferenceableProperties, SolutionBlueprintProperties, \
     NestedDesignPatternProperties, SpecializedDesignPatternProperties, \
     RelatedDesignPatternProperties, SolutionDesignProperties, \
-    SolutionComponentActorProperties, SolutionLinkingWireProperties, GetRequestBody
+    SolutionComponentActorProperties, SolutionLinkingWireProperties, GetRequestBody, \
+    UpdateRelationshipRequestBody
 from pyegeria.view.output_formatter import extract_mermaid_only, \
     populate_common_columns
 from pyegeria.core.utils import body_slimmer, dynamic_catch
@@ -132,7 +133,8 @@ class SolutionArchitect(ServerClient):
 
     def create_design_pattern(self, body: dict | NewElementRequestBody):
         """Create a design pattern."""
-        return asyncio.run(self._async_create_design_pattern(body))
+        loop = asyncio.get_event_loop()
+        return loop.run_until_complete(self._async_create_design_pattern(body))
 
     async def _async_create_design_pattern_from_template(self, body: dict | TemplateRequestBody):
         url = f"{self.solution_architect_command_root}/design-patterns/from-template"
@@ -141,7 +143,8 @@ class SolutionArchitect(ServerClient):
 
     def create_design_pattern_from_template(self, body: dict | TemplateRequestBody):
         """Create a design pattern from template."""
-        return asyncio.run(self._async_create_design_pattern_from_template(body))
+        loop = asyncio.get_event_loop()
+        return loop.run_until_complete(self._async_create_design_pattern_from_template(body))
 
     async def _async_update_design_pattern(self, guid: str, body: dict | UpdateElementRequestBody):
         validate_guid(guid)
@@ -150,7 +153,8 @@ class SolutionArchitect(ServerClient):
 
     def update_design_pattern(self, guid: str, body: dict | UpdateElementRequestBody):
         """Update a design pattern."""
-        return asyncio.run(self._async_update_design_pattern(guid, body))
+        loop = asyncio.get_event_loop()
+        return loop.run_until_complete(self._async_update_design_pattern(guid, body))
 
     async def _async_link_nested_design_patterns(self, parent_guid: str, child_guid: str, body: Optional[dict | NewRelationshipRequestBody] = None):
         validate_guid(parent_guid)
@@ -160,7 +164,8 @@ class SolutionArchitect(ServerClient):
 
     def link_nested_design_patterns(self, parent_guid: str, child_guid: str, body: Optional[dict | NewRelationshipRequestBody] = None):
         """Link nested design patterns."""
-        return asyncio.run(self._async_link_nested_design_patterns(parent_guid, child_guid, body))
+        loop = asyncio.get_event_loop()
+        return loop.run_until_complete(self._async_link_nested_design_patterns(parent_guid, child_guid, body))
 
     async def _async_detach_nested_design_patterns(self, parent_guid: str, child_guid: str, body: Optional[dict | DeleteRelationshipRequestBody] = None):
         validate_guid(parent_guid)
@@ -170,7 +175,8 @@ class SolutionArchitect(ServerClient):
 
     def detach_nested_design_patterns(self, parent_guid: str, child_guid: str, body: Optional[dict | DeleteRelationshipRequestBody] = None):
         """Detach nested design patterns."""
-        return asyncio.run(self._async_detach_nested_design_patterns(parent_guid, child_guid, body))
+        loop = asyncio.get_event_loop()
+        return loop.run_until_complete(self._async_detach_nested_design_patterns(parent_guid, child_guid, body))
 
     async def _async_link_specialized_design_patterns(self, general_guid: str, special_guid: str, body: Optional[dict | NewRelationshipRequestBody] = None):
         validate_guid(general_guid)
@@ -180,7 +186,8 @@ class SolutionArchitect(ServerClient):
 
     def link_specialized_design_patterns(self, general_guid: str, special_guid: str, body: Optional[dict | NewRelationshipRequestBody] = None):
         """Link specialized design patterns."""
-        return asyncio.run(self._async_link_specialized_design_patterns(general_guid, special_guid, body))
+        loop = asyncio.get_event_loop()
+        return loop.run_until_complete(self._async_link_specialized_design_patterns(general_guid, special_guid, body))
 
     async def _async_detach_specialized_design_patterns(self, general_guid: str, special_guid: str, body: Optional[dict | DeleteRelationshipRequestBody] = None):
         validate_guid(general_guid)
@@ -190,7 +197,8 @@ class SolutionArchitect(ServerClient):
 
     def detach_specialized_design_patterns(self, general_guid: str, special_guid: str, body: Optional[dict | DeleteRelationshipRequestBody] = None):
         """Detach specialized design patterns."""
-        return asyncio.run(self._async_detach_specialized_design_patterns(general_guid, special_guid, body))
+        loop = asyncio.get_event_loop()
+        return loop.run_until_complete(self._async_detach_specialized_design_patterns(general_guid, special_guid, body))
 
     async def _async_link_related_design_patterns(self, guid1: str, guid2: str, body: Optional[dict | NewRelationshipRequestBody] = None):
         validate_guid(guid1)
@@ -200,7 +208,8 @@ class SolutionArchitect(ServerClient):
 
     def link_related_design_patterns(self, guid1: str, guid2: str, body: Optional[dict | NewRelationshipRequestBody] = None):
         """Link related design patterns."""
-        return asyncio.run(self._async_link_related_design_patterns(guid1, guid2, body))
+        loop = asyncio.get_event_loop()
+        return loop.run_until_complete(self._async_link_related_design_patterns(guid1, guid2, body))
 
     async def _async_detach_related_design_patterns(self, guid1: str, guid2: str, body: Optional[dict | DeleteRelationshipRequestBody] = None):
         validate_guid(guid1)
@@ -210,7 +219,8 @@ class SolutionArchitect(ServerClient):
 
     def detach_related_design_patterns(self, guid1: str, guid2: str, body: Optional[dict | DeleteRelationshipRequestBody] = None):
         """Detach related design patterns."""
-        return asyncio.run(self._async_detach_related_design_patterns(guid1, guid2, body))
+        loop = asyncio.get_event_loop()
+        return loop.run_until_complete(self._async_detach_related_design_patterns(guid1, guid2, body))
 
     async def _async_delete_design_pattern(self, guid: str, body: Optional[dict | DeleteElementRequestBody] = None):
         validate_guid(guid)
@@ -219,7 +229,8 @@ class SolutionArchitect(ServerClient):
 
     def delete_design_pattern(self, guid: str, body: Optional[dict | DeleteElementRequestBody] = None):
         """Delete a design pattern."""
-        return asyncio.run(self._async_delete_design_pattern(guid, body))
+        loop = asyncio.get_event_loop()
+        return loop.run_until_complete(self._async_delete_design_pattern(guid, body))
 
     async def _async_find_design_patterns(self, search_string: str = "*", body: Optional[dict | SearchStringRequestBody] = None,
                                   starts_with: bool = True, ends_with: bool = False, ignore_case: bool = False,
@@ -249,7 +260,8 @@ class SolutionArchitect(ServerClient):
                            start_from: int = 0, page_size: int = 100, graph_query_depth: int = 3, output_format: str = "JSON",
                            report_spec: str | dict = "Design-Pattern-DrE", **kwargs):
         """Find design patterns."""
-        return asyncio.run(self._async_find_design_patterns(search_string, body, starts_with, ends_with,
+        loop = asyncio.get_event_loop()
+        return loop.run_until_complete(self._async_find_design_patterns(search_string, body, starts_with, ends_with,
                                                          ignore_case, start_from, page_size,
                                                          graph_query_depth,
                                                          output_format, report_spec, **kwargs))
@@ -259,7 +271,7 @@ class SolutionArchitect(ServerClient):
                                          graph_query_depth: int = 3, output_format: str = "JSON", report_spec: str | dict = "Design-Pattern-DrE", **kwargs):
         if name is None and "filter_string" in kwargs:
             name = kwargs.pop("filter_string")
-        url = f"{self.solution_architect_command_root}/design-patterns/by-name/{name}"
+        url = f"{self.solution_architect_command_root}/design-patterns/by-name"
         params = {
             'graph_query_depth': graph_query_depth,
             'filter_string': name,
@@ -278,7 +290,8 @@ class SolutionArchitect(ServerClient):
                                   start_from: int = 0, page_size: int = max_paging_size,
                                   graph_query_depth: int = 3, output_format: str = "JSON", report_spec: str | dict = "Design-Pattern-DrE", **kwargs):
         """Get design patterns by name."""
-        return asyncio.run(self._async_get_design_patterns_by_name(name=name, body=body, start_from=start_from, page_size=page_size,
+        loop = asyncio.get_event_loop()
+        return loop.run_until_complete(self._async_get_design_patterns_by_name(name=name, body=body, start_from=start_from, page_size=page_size,
                                                                 graph_query_depth=graph_query_depth,
                                                                 output_format=output_format, report_spec=report_spec, **kwargs))
 
@@ -302,7 +315,8 @@ class SolutionArchitect(ServerClient):
     def get_design_pattern_by_guid(self, guid: str = None, body: Optional[dict | GetRequestBody] = None,
                                  graph_query_depth: int = 3, output_format: str = "JSON", report_spec: str | dict = "Design-Pattern-DrE", **kwargs):
         """Get a design pattern by GUID."""
-        return asyncio.run(self._async_get_design_pattern_by_guid(guid=guid, body=body, graph_query_depth=graph_query_depth, output_format=output_format, report_spec=report_spec, **kwargs))
+        loop = asyncio.get_event_loop()
+        return loop.run_until_complete(self._async_get_design_pattern_by_guid(guid=guid, body=body, graph_query_depth=graph_query_depth, output_format=output_format, report_spec=report_spec, **kwargs))
 
     async def _async_update_solution_blueprint_status(self, guid: str, body: dict | UpdateElementRequestBody):
         validate_guid(guid)
@@ -311,7 +325,8 @@ class SolutionArchitect(ServerClient):
 
     def update_solution_blueprint_status(self, guid: str, body: dict | UpdateElementRequestBody):
         """Update the status of a solution blueprint."""
-        return asyncio.run(self._async_update_solution_blueprint_status(guid, body))
+        loop = asyncio.get_event_loop()
+        return loop.run_until_complete(self._async_update_solution_blueprint_status(guid, body))
 
 
     def _get_supply_chain_rel_elements_dict(self, el_struct: dict)-> dict | str:
@@ -1667,25 +1682,39 @@ class SolutionArchitect(ServerClient):
 
         """
 
-        return self.find_information_supply_chains("*", add_implementation,
-                                                   starts_with, ends_with, ignore_case,
-                                                   anchor_domain,
-                                                   metadata_element_type,
-                                                   metadata_element_subtypes,
-                                                   skip_relationships,
-                                                   include_only_relationships,
-                                                   skip_classified_elements,
-                                                   include_only_classified_elements,
-                                                   graph_query_depth,
-                                                   governance_zone_filter,
-                                                   as_of_time, effective_time,
-                                                   relationship_page_size,
-                                                   limit_results_by_status,
-                                                   sequencing_order,
-                                                   sequencing_property,
-                                                   output_format, report_spec,
-                                                   start_from, page_size,
-                                                   property_names, body, **kwargs)
+        # NOTE: must be called with keyword arguments only. find_information_supply_chains'
+        # own positional parameter order does not match this method's — a previous
+        # all-positional call here silently mismatched almost every argument (and, once this
+        # method also grew a `body` parameter, overflowed to a TypeError on every call).
+        return self.find_information_supply_chains(
+            search_string="*",
+            add_implementation=add_implementation,
+            body=body,
+            starts_with=starts_with,
+            ends_with=ends_with,
+            ignore_case=ignore_case,
+            anchor_domain=anchor_domain,
+            metadata_element_type=metadata_element_type,
+            metadata_element_subtypes=metadata_element_subtypes,
+            skip_relationships=skip_relationships,
+            include_only_relationships=include_only_relationships,
+            skip_classified_elements=skip_classified_elements,
+            include_only_classified_elements=include_only_classified_elements,
+            graph_query_depth=graph_query_depth,
+            governance_zone_filter=governance_zone_filter,
+            as_of_time=as_of_time,
+            effective_time=effective_time,
+            relationship_page_size=relationship_page_size,
+            limit_results_by_status=limit_results_by_status,
+            sequencing_order=sequencing_order,
+            sequencing_property=sequencing_property,
+            output_format=output_format,
+            report_spec=report_spec,
+            start_from=start_from,
+            page_size=page_size,
+            property_names=property_names,
+            **kwargs
+        )
 
     async def _async_find_information_supply_chains(
         self,
@@ -1795,7 +1824,8 @@ class SolutionArchitect(ServerClient):
 
         """
 
-        url = f"{self.solution_architect_command_root}/information-supply-chains/by-search-string?addImplementation={add_implementation}"
+        add_impl = str(add_implementation).lower()
+        url = f"{self.solution_architect_command_root}/information-supply-chains/by-search-string?addImplementation={add_impl}"
         
         # Merge explicit parameters with kwargs
         params = {
@@ -1938,6 +1968,7 @@ class SolutionArchitect(ServerClient):
                 ignore_case=ignore_case,
                 start_from=start_from,
                 page_size=page_size,
+                graph_query_depth=graph_query_depth,
                 output_format=output_format,
                 report_spec=report_spec,
                 **kwargs
@@ -2088,7 +2119,8 @@ class SolutionArchitect(ServerClient):
         return response
 
     async def _async_get_info_supply_chain_by_guid(self, guid: str = None, body: dict = None, add_implementation: bool = True,
-                                                   graph_query_depth: int = 3, output_format: str = "JSON", report_spec: str | dict = None, **kwargs) -> dict | str:
+                                                   graph_query_depth: int = 3, max_mermaid_node_count: int = 10,
+                                                   output_format: str = "JSON", report_spec: str | dict = None, **kwargs) -> dict | str:
         """Return the properties of a specific information supply chain. Async Version.
 
             Parameters
@@ -2140,7 +2172,17 @@ class SolutionArchitect(ServerClient):
                f"information-supply-chains/{guid}/retrieve?addImplementation={add_impl}")
 
         if body is None:
-            response = await self._async_make_request("POST", url, **kwargs)
+            # graph_query_depth/max_mermaid_node_count were previously dead here -
+            # this endpoint's own **kwargs parameter was never used at all, and no
+            # body means _async_make_request got nothing (or stray kwargs it
+            # doesn't accept). Build an AnyTimeRequestBody so callers can actually
+            # control the mermaid graph (see PYEGERIA_ISSUES.md ISSUE-26/23).
+            body = {
+                "class": "AnyTimeRequestBody",
+                "graphQueryDepth": graph_query_depth,
+                "maxMermaidNodeCount": max_mermaid_node_count,
+            }
+            response = await self._async_make_request("POST", url, body_slimmer(body))
         else:
             response = await self._async_make_request("POST", url, body_slimmer(body), **kwargs)
         element = response.json().get("element", NO_ELEMENTS_FOUND)
@@ -2204,6 +2246,7 @@ class SolutionArchitect(ServerClient):
     #
     #  Blueprints
     #
+
 
     @dynamic_catch
     async def _async_create_solution_blueprint(self, body: dict | NewElementRequestBody) -> str:
@@ -2713,94 +2756,6 @@ class SolutionArchitect(ServerClient):
 
 
     @dynamic_catch
-    async def _async_delete_solution_blueprint(self, guid: str, body: dict | DeleteElementRequestBody, cascade: bool = False) -> None:
-        """ Delete a solution blueprint. Async Version.
-         Parameters
-           ----------
-           guid: str
-               guid of the information supply chain to delete.
-           body: dict, optional
-               A dictionary containing parameters of the deletion.
-           cascade: bool, optional
-               If true, the child objects will also be deleted.
-
-           Returns
-           -------
-           None
-
-           Raises
-           ------
-           PyegeriaInvalidParameterException
-               one of the parameters is null or invalid or
-           PyegeriaAPIException
-               There is a problem adding the element properties to the metadata repository or
-           PyegeriaUnauthorizedException
-               the requesting user is not authorized to issue this request.
-
-           Notes
-           ----
-
-           Body structure:
-            {
-              "class": "DeleteElementRequestBody",
-              "externalSourceGUID": "add guid here",
-              "externalSourceName": "add qualified name here",
-              "effectiveTime": {{isotime}},
-              "forLineage": false,
-              "forDuplicateProcessing": false
-            }
-           """
-
-        url = (f"{self.platform_url}/servers/{self.view_server}/api/open-metadata/solution-architect/"
-               f"information-supply-chains/{guid}/delete")
-
-        await self._async_delete_element_request(url, body, cascade_delete=cascade)
-        logger.info(f"Deleted Info Supply Chain  {guid} with cascade {cascade}")
-
-    @dynamic_catch
-    def delete_solution_blueprint(self, guid: str, body: Optional[dict | DeleteElementRequestBody] = None,
-                                 cascade: bool = False) -> None:
-        """ Delete an Solution Blueprint.
-
-            Parameters
-            ----------
-            guid: str
-                guid of the information supply chain to delete.
-            body: dict | DeleteElementRequestBody, optional
-                A dictionary containing parameters of the deletion.
-           cascade: bool, optional
-               If true, the child objects will also be deleted.
-            Returns
-            -------
-            None
-
-            Raises
-            ------
-            PyegeriaInvalidParameterException
-                one of the parameters is null or invalid or
-            PyegeriaAPIException
-                There is a problem adding the element properties to the metadata repository or
-            PyegeriaUnauthorizedException
-                the requesting user is not authorized to issue this request.
-
-            Notes
-            ----
-
-            Body structure:
-            {
-              "class": "DeleteElementRequestBody",
-              "externalSourceGUID": "add guid here",
-              "externalSourceName": "add qualified name here",
-              "effectiveTime": {{isotime}},
-              "forLineage": false,
-              "forDuplicateProcessing": false
-            }
-            """
-        loop = asyncio.get_event_loop()
-        loop.run_until_complete(self._async_delete_info_supply_chain(guid, body, cascade))
-
-
-    @dynamic_catch
     async def _async_link_solution_design(self, blueprint_guid: str, element_guid: str,
                                               body: dict | NewRelationshipRequestBody) -> None:
         """ Connect a solution blueprint to a referenceable element. Async Version.
@@ -3291,13 +3246,30 @@ class SolutionArchitect(ServerClient):
         """Retrieve a list of all solution blueprint elements
         https://egeria-project.org/concepts/solution-blueprint
         """
-        return self.find_solution_blueprints("*", classification_names, metadata_element_subtypes,
-                                              starts_with, ends_with, ignore_case, start_from,
-                                              page_size, output_format, report_spec, body, **kwargs)
+        # NOTE: must be called with keyword arguments only. find_solution_blueprints' own
+        # positional parameter order does not match this method's — a previous all-positional
+        # call here silently mismatched every argument after search_string and, once this
+        # method also grew a `body` parameter, overflowed to a TypeError on every call.
+        return self.find_solution_blueprints(
+            search_string="*",
+            body=body,
+            starts_with=starts_with,
+            ends_with=ends_with,
+            ignore_case=ignore_case,
+            start_from=start_from,
+            page_size=page_size,
+            graph_query_depth=graph_query_depth,
+            output_format=output_format,
+            report_spec=report_spec,
+            metadata_element_subtypes=metadata_element_subtypes,
+            skip_classified_elements=classification_names,
+            **kwargs
+        )
 
 
     async def _async_get_solution_blueprint_by_guid(self, guid: str = None, body: dict = None,
-                                                    graph_query_depth: int = 3, output_format: str = "JSON",
+                                                    graph_query_depth: int = 3, max_mermaid_node_count: int = 10,
+                                                    output_format: str = "JSON",
                                                     report_spec: str| Dict = "Solution-Blueprint", **kwargs) -> dict | str:
         """Return the properties of a specific solution blueprint. Async Version.
 
@@ -3349,7 +3321,17 @@ class SolutionArchitect(ServerClient):
                f"solution-blueprints/{guid}/retrieve")
 
         if body is None:
-            response = await self._async_make_request("POST", url, **kwargs)
+            # graph_query_depth/max_mermaid_node_count were previously dead here -
+            # this endpoint's own **kwargs parameter was never used at all, and no
+            # body means _async_make_request got nothing (or stray kwargs it
+            # doesn't accept). Build an AnyTimeRequestBody so callers can actually
+            # control the mermaid graph (see PYEGERIA_ISSUES.md ISSUE-23/26).
+            body = {
+                "class": "AnyTimeRequestBody",
+                "graphQueryDepth": graph_query_depth,
+                "maxMermaidNodeCount": max_mermaid_node_count,
+            }
+            response = await self._async_make_request("POST", url, body_slimmer(body))
         else:
             response = await self._async_make_request("POST", url, body_slimmer(body), **kwargs)
         element = response.json().get("element", NO_ELEMENTS_FOUND)
@@ -3360,7 +3342,8 @@ class SolutionArchitect(ServerClient):
                                                            output_format, report_spec=report_spec)
         return response.json().get("element", NO_ELEMENTS_FOUND)
 
-    def get_solution_blueprint_by_guid(self, guid: str = None, body: dict = None, graph_query_depth: int = 3, output_format: str = "JSON",
+    def get_solution_blueprint_by_guid(self, guid: str = None, body: dict = None, graph_query_depth: int = 3,
+                                       max_mermaid_node_count: int = 10, output_format: str = "JSON",
                                        report_spec: str| Dict = "Solution-Blueprint", **kwargs) -> dict | str:
         """ Return the properties of a specific solution blueprint.
 
@@ -3408,6 +3391,7 @@ class SolutionArchitect(ServerClient):
         loop = asyncio.get_event_loop()
         response = loop.run_until_complete(self._async_get_solution_blueprint_by_guid(guid=guid, body=body,
                                                                                       graph_query_depth=graph_query_depth,
+                                                                                      max_mermaid_node_count=max_mermaid_node_count,
                                                                                       output_format=output_format, report_spec=report_spec, **kwargs))
         return response
 
@@ -4182,7 +4166,7 @@ class SolutionArchitect(ServerClient):
         loop.run_until_complete(self._async_detach_sub_component(parent_component_guid, member_component_guid, body))
 
     @dynamic_catch
-    async def _async_link_solution_linking_wire(self, component1_guid: str, component2_guid: str, body: dict | NewRelationshipRequestBody) -> None:
+    async def _async_link_solution_linking_wire(self, component1_guid: str, component2_guid: str, body: dict | NewRelationshipRequestBody) -> Optional[str]:
         """ Attach a solution component to a solution component as a peer in a solution. Async Version.
 
         Parameters
@@ -4197,7 +4181,12 @@ class SolutionArchitect(ServerClient):
 
         Returns
         -------
-        None
+        str | None
+            The GUID of the newly created SolutionLinkingWire relationship -- needed
+            to target this specific wire later via
+            _async_update_solution_linking_wire/_async_detach_solution_linking_wire_by_guid,
+            since SolutionLinkingWire allows more than one wire between the same
+            pair of components. None if the server didn't return one.
 
         Raises
         ------
@@ -4230,11 +4219,12 @@ class SolutionArchitect(ServerClient):
 
         url = (f"{self.platform_url}/servers/{self.view_server}/api/open-metadata/solution-architect/"
                f"solution-components/{component1_guid}/wired-to/{component2_guid}/attach")
-        await self._async_new_relationship_request(url, "SolutionLinkingWireProperties", body)
+        guid = await self._async_new_relationship_request(url, "SolutionLinkingWireProperties", body)
         logger.info(f"Linked Solution Linking wires between {component1_guid} -> {component2_guid}")
+        return guid
 
     @dynamic_catch
-    def link_solution_linking_wire(self, component1_guid: str, component2_guid: str, body: dict | NewRelationshipRequestBody) -> None:
+    def link_solution_linking_wire(self, component1_guid: str, component2_guid: str, body: dict | NewRelationshipRequestBody) -> Optional[str]:
         """ Attach a solution component to a solution component as a peer in a solution.
 
                 Parameters
@@ -4248,7 +4238,8 @@ class SolutionArchitect(ServerClient):
 
                 Returns
                 -------
-                None
+                str | None
+                    The GUID of the newly created SolutionLinkingWire relationship.
 
                 Raises
                 ------
@@ -4279,13 +4270,23 @@ class SolutionArchitect(ServerClient):
                 }
                 """
         loop = asyncio.get_event_loop()
-        loop.run_until_complete(self._async_link_solution_linking_wire(component1_guid, component2_guid, body))
+        return loop.run_until_complete(self._async_link_solution_linking_wire(component1_guid, component2_guid, body))
 
     @dynamic_catch
     async def _async_detach_solution_linking_wire(self, component1_guid: str, component2_guid: str,
                                                   body: Optional[dict | DeleteRelationshipRequestBody] = None) -> None:
-        """ Detach a solution component from a peer solution component.
+        """ Detach a solution component from a peer solution component -- detaches
+            ALL SolutionLinkingWire relationships between this pair, not just one.
             Async Version.
+
+        Since Egeria PR #9156 (SolutionLinkingWire made a multi-link relationship --
+        multiple wires with distinct labels/purposes can now exist between the same
+        two components), this pair-based endpoint's semantics changed from "detach
+        the one wire" to "detach every wire between these two components." To target
+        one specific wire, look it up via
+        MetadataExpert._async_find_relationships_between_elements(relationshipTypeName=
+        "SolutionLinkingWire", ...) to get its relationship GUID, then use
+        _async_detach_solution_linking_wire_by_guid() instead.
 
         Parameters
         ----------
@@ -4375,6 +4376,118 @@ class SolutionArchitect(ServerClient):
         """
         loop = asyncio.get_event_loop()
         loop.run_until_complete(self._async_detach_solution_linking_wire(component1_guid, component2_guid, body))
+
+    #
+    # GUID-based SolutionLinkingWire update/detach (Egeria PR #9156, multi-link) --
+    # target one specific wire by its own relationship GUID, needed now that
+    # multiple wires can exist between the same pair of components. Look the GUID
+    # up via MetadataExpert._async_find_relationships_between_elements(
+    # relationshipTypeName="SolutionLinkingWire", ...) first.
+    #
+
+    @dynamic_catch
+    async def _async_update_solution_linking_wire(self, relationship_guid: str,
+                                                   body: dict | UpdateRelationshipRequestBody) -> None:
+        """ Update the properties of one specific SolutionLinkingWire relationship,
+        identified by its own relationship GUID. Async version.
+
+        Parameters
+        ----------
+        relationship_guid: str
+            GUID of the SolutionLinkingWire relationship to update.
+        body: dict | UpdateRelationshipRequestBody
+            The new properties for the relationship.
+
+        Returns
+        -------
+        None
+
+        Raises
+        ------
+        PyegeriaInvalidParameterException
+            one of the parameters is null or invalid or
+        PyegeriaAPIException
+            There is a problem adding the element properties to the metadata repository or
+        PyegeriaUnauthorizedException
+            the requesting user is not authorized to issue this request.
+
+        Notes
+        ----
+
+        Body structure:
+        {
+          "class" : "UpdateRelationshipRequestBody",
+          "properties": {
+             "class": "SolutionLinkingWireProperties",
+             "label": "",
+             "description": "",
+             "informationSupplyChainSegmentGUIDs": []
+          },
+          "mergeUpdate": true
+        }
+        """
+        url = (f"{self.platform_url}/servers/{self.view_server}/api/open-metadata/solution-architect/"
+               f"relationships/{relationship_guid}/update")
+        await self._async_update_relationship_request(url, ["SolutionLinkingWireProperties"], body)
+        logger.info(f"Updated solution linking wire {relationship_guid}")
+
+    @dynamic_catch
+    def update_solution_linking_wire(self, relationship_guid: str,
+                                     body: dict | UpdateRelationshipRequestBody) -> None:
+        """ Update the properties of one specific SolutionLinkingWire relationship,
+        identified by its own relationship GUID."""
+        loop = asyncio.get_event_loop()
+        loop.run_until_complete(self._async_update_solution_linking_wire(relationship_guid, body))
+
+    @dynamic_catch
+    async def _async_detach_solution_linking_wire_by_guid(self, relationship_guid: str,
+                                                           body: Optional[dict | DeleteRelationshipRequestBody] = None) -> None:
+        """ Detach one specific SolutionLinkingWire relationship, identified by its
+        own relationship GUID (as opposed to _async_detach_solution_linking_wire,
+        which detaches every wire between a pair of components). Async version.
+
+        Parameters
+        ----------
+        relationship_guid: str
+            GUID of the SolutionLinkingWire relationship to detach.
+        body: dict | DeleteRelationshipRequestBody, optional
+            The body describing the request.
+
+        Returns
+        -------
+        None
+
+        Raises
+        ------
+        PyegeriaInvalidParameterException
+            one of the parameters is null or invalid or
+        PyegeriaAPIException
+            There is a problem adding the element properties to the metadata repository or
+        PyegeriaUnauthorizedException
+            the requesting user is not authorized to issue this request.
+
+        Notes
+        ----
+
+        Body structure:
+        {
+          "class" : "DeleteRelationshipRequestBody",
+          "forLineage" : false,
+          "forDuplicateProcessing" : false
+        }
+        """
+        url = (f"{self.platform_url}/servers/{self.view_server}/api/open-metadata/solution-architect/"
+               f"solution-components/wires/{relationship_guid}/detach")
+        await self._async_delete_relationship_request(url, body)
+        logger.info(f"Detached solution linking wire {relationship_guid}")
+
+    @dynamic_catch
+    def detach_solution_linking_wire_by_guid(self, relationship_guid: str,
+                                             body: Optional[dict | DeleteRelationshipRequestBody] = None) -> None:
+        """ Detach one specific SolutionLinkingWire relationship, identified by its
+        own relationship GUID."""
+        loop = asyncio.get_event_loop()
+        loop.run_until_complete(self._async_detach_solution_linking_wire_by_guid(relationship_guid, body))
 
     @dynamic_catch
     async def _async_delete_solution_component(self, solution_component_guid: str, cascade_delete: bool = False,
@@ -4690,7 +4803,24 @@ class SolutionArchitect(ServerClient):
         """Retrieve a list of all solution component elements
         https://egeria-project.org/concepts/solution-components
         """
-        return self.find_solution_components("*", classification_names, metadata_element_subtypes, starts_with, ends_with, ignore_case, start_from, page_size, output_format, report_spec, body, **kwargs)
+        # NOTE: must be called with keyword arguments only — see find_all_solution_blueprints
+        # for why an all-positional call here is unsafe (parameter orders don't match, and it
+        # overflows to a TypeError on every call once `body` is included positionally).
+        return self.find_solution_components(
+            search_string="*",
+            body=body,
+            starts_with=starts_with,
+            ends_with=ends_with,
+            ignore_case=ignore_case,
+            start_from=start_from,
+            page_size=page_size,
+            graph_query_depth=graph_query_depth,
+            output_format=output_format,
+            report_spec=report_spec,
+            metadata_element_subtypes=metadata_element_subtypes,
+            skip_classified_elements=classification_names,
+            **kwargs
+        )
 
 
     async def _async_get_solution_components_by_name(self, name: Optional[str] = None, body: dict = None, start_from: int = 0,
@@ -5723,7 +5853,7 @@ class SolutionArchitect(ServerClient):
         """
 
         url = (f"{self.platform_url}/servers/{self.view_server}/api/open-metadata/solution-architect/"
-               f"solution-components/{role_guid}/solution-component-actors/{component_guid}/detach")
+               f"solution-roles/{role_guid}/solution-component-actors/{component_guid}/detach")
 
         await self._async_delete_relationship_request(url, body)
         logger.info(
@@ -5858,7 +5988,8 @@ class SolutionArchitect(ServerClient):
             }
             """
         loop = asyncio.get_event_loop()
-        loop.run_until_complete(self._async_delete_solution_role(guid, cascade_delete, body))
+        loop.run_until_complete(self._async_delete_solution_role(guid, body, cascade_delete))
+
 
     async def _async_find_solution_roles(
         self,
@@ -6134,6 +6265,7 @@ class SolutionArchitect(ServerClient):
             ignore_case=ignore_case,
             start_from=start_from,
             page_size=page_size,
+            graph_query_depth=graph_query_depth,
             output_format=output_format,
             report_spec=report_spec,
             skip_classified_elements=classification_names,
@@ -6275,7 +6407,8 @@ class SolutionArchitect(ServerClient):
 
 
     async def _async_get_solution_role_by_guid(self, guid: str = None, body: dict = None,
-                                               graph_query_depth: int = 3, output_format: str = "JSON", report_spec: str | dict = None, **kwargs) -> dict | str:
+                                               graph_query_depth: int = 3, max_mermaid_node_count: int = 10,
+                                               output_format: str = "JSON", report_spec: str | dict = None, **kwargs) -> dict | str:
         """ Return the properties of a specific solution role. Async Version.
 
             Parameters
@@ -6323,7 +6456,15 @@ class SolutionArchitect(ServerClient):
                f"solution-roles/{guid}/retrieve")
 
         if body is None:
-            response = await self._async_make_request("POST", url, **kwargs)
+            # Same dead-parameter shape as _async_get_info_supply_chain_by_guid
+            # (PYEGERIA_ISSUES.md ISSUE-26) - build an AnyTimeRequestBody so
+            # graph_query_depth/max_mermaid_node_count actually reach the server.
+            body = {
+                "class": "AnyTimeRequestBody",
+                "graphQueryDepth": graph_query_depth,
+                "maxMermaidNodeCount": max_mermaid_node_count,
+            }
+            response = await self._async_make_request("POST", url, body_slimmer(body))
         else:
             response = await self._async_make_request("POST", url, body_slimmer(body), **kwargs)
         element = response.json().get("element", NO_ELEMENTS_FOUND)
@@ -6377,6 +6518,395 @@ class SolutionArchitect(ServerClient):
         loop = asyncio.get_event_loop()
         response = loop.run_until_complete(self._async_get_solution_role_by_guid(guid=guid, body=body, graph_query_depth=graph_query_depth, output_format=output_format, report_spec=report_spec, **kwargs))
         return response
+
+
+
+    #
+    # Concept Model Element CRUD + relationships, and Solution Component
+    # Port / Port Delegation relationships - added to close the gap found
+    # by scripts/omvs_audit.py against the solution-architect .http ground
+    # truth (2026-08-21). This is new API surface (a Concept Model feature
+    # area), not incremental gap-filling on an existing family - modeled
+    # closely on the existing design-pattern CRUD family in this same file,
+    # since ConceptModelElement is a similar self-referencing element type.
+    # No report spec is registered for ConceptModelElement yet, so output
+    # generation uses the same generic _generate_formatted_output /
+    # populate_common_columns pattern SchemaMaker uses for its own
+    # not-yet-speced types, rather than a dedicated extractor.
+    #
+
+    def _generate_concept_model_element_output(self, elements: dict | list[dict],
+                                                search_string: Optional[str] = None,
+                                                element_type_name: Optional[str] = None,
+                                                output_format: str = "DICT",
+                                                report_spec: dict | str | None = None, **kwargs) -> str | list[dict]:
+        return self._generate_formatted_output(
+            elements=elements, query_string=search_string,
+            entity_type=element_type_name or "ConceptModelElement",
+            output_format=output_format,
+            extract_properties_func=populate_common_columns,
+            report_spec=report_spec, **kwargs,
+        )
+
+    @dynamic_catch
+    async def _async_create_concept_model_element(self, body: dict | NewElementRequestBody) -> str:
+        """Create a new concept model element (e.g. a ConceptBead). Async version.
+
+        Accepts either the abstract "ConceptModelElementProperties" class with
+        a "typeName" property selecting the concrete subtype (the shape the
+        .http ground truth documents), or one of the concrete subtype class
+        names directly (ConceptBeadProperties/ConceptBeadAttributeProperties/
+        ConceptBeadRelationshipProperties) - Egeria's Jackson polymorphism
+        accepts either per ConceptModelElementProperties.java's @JsonSubTypes.
+        """
+        url = f"{self.solution_architect_command_root}/concept-model-elements"
+        return await self._async_create_element_body_request(
+            url, ["ConceptModelElementProperties", "ConceptBeadProperties",
+                  "ConceptBeadAttributeProperties", "ConceptBeadRelationshipProperties"], body)
+
+    @dynamic_catch
+    def create_concept_model_element(self, body: dict | NewElementRequestBody) -> str:
+        """Create a new concept model element (e.g. a ConceptBead)."""
+        loop = asyncio.get_event_loop()
+        return loop.run_until_complete(self._async_create_concept_model_element(body))
+
+    @dynamic_catch
+    async def _async_create_concept_model_element_from_template(self, body: dict | TemplateRequestBody) -> str:
+        """Create a new concept model element from a template. Async version."""
+        url = f"{self.solution_architect_command_root}/concept-model-elements/from-template"
+        return await self._async_create_element_from_template(url, body)
+
+    @dynamic_catch
+    def create_concept_model_element_from_template(self, body: dict | TemplateRequestBody) -> str:
+        """Create a new concept model element from a template."""
+        loop = asyncio.get_event_loop()
+        return loop.run_until_complete(self._async_create_concept_model_element_from_template(body))
+
+    @dynamic_catch
+    async def _async_update_concept_model_element(self, guid: str, body: dict | UpdateElementRequestBody) -> None:
+        """Update the properties of a concept model element. Async version."""
+        validate_guid(guid)
+        url = f"{self.solution_architect_command_root}/concept-model-elements/{guid}/update"
+        await self._async_update_element_body_request(
+            url, ["ConceptModelElementProperties", "ConceptBeadProperties",
+                  "ConceptBeadAttributeProperties", "ConceptBeadRelationshipProperties"], body)
+
+    @dynamic_catch
+    def update_concept_model_element(self, guid: str, body: dict | UpdateElementRequestBody) -> None:
+        """Update the properties of a concept model element."""
+        loop = asyncio.get_event_loop()
+        loop.run_until_complete(self._async_update_concept_model_element(guid, body))
+
+    @dynamic_catch
+    async def _async_delete_concept_model_element(self, guid: str, body: Optional[dict | DeleteElementRequestBody] = None,
+                                                   cascade_delete: bool = False) -> None:
+        """Delete a concept model element. Async version."""
+        validate_guid(guid)
+        url = f"{self.solution_architect_command_root}/concept-model-elements/{guid}/delete"
+        await self._async_delete_element_request(url, body, cascade_delete)
+
+    @dynamic_catch
+    def delete_concept_model_element(self, guid: str, body: Optional[dict | DeleteElementRequestBody] = None,
+                                     cascade_delete: bool = False) -> None:
+        """Delete a concept model element."""
+        loop = asyncio.get_event_loop()
+        loop.run_until_complete(self._async_delete_concept_model_element(guid, body, cascade_delete))
+
+    @dynamic_catch
+    async def _async_find_concept_model_elements(self, search_string: str = "*",
+                                                  body: Optional[dict | SearchStringRequestBody] = None,
+                                                  starts_with: bool = True, ends_with: bool = False, ignore_case: bool = False,
+                                                  start_from: int = 0, page_size: int = 100,
+                                                  output_format: str = "JSON", report_spec: str | dict | None = None,
+                                                  **kwargs) -> list | str:
+        """Find concept model elements matching a search string. Async version."""
+        url = f"{self.solution_architect_command_root}/concept-model-elements/by-search-string"
+        return await self._async_find_request(
+            url, _type="ConceptModelElement", _gen_output=self._generate_concept_model_element_output,
+            search_string=search_string, body=body, starts_with=starts_with, ends_with=ends_with,
+            ignore_case=ignore_case, start_from=start_from, page_size=page_size,
+            output_format=output_format, report_spec=report_spec, **kwargs)
+
+    @dynamic_catch
+    def find_concept_model_elements(self, search_string: str = "*",
+                                    body: Optional[dict | SearchStringRequestBody] = None,
+                                    starts_with: bool = True, ends_with: bool = False, ignore_case: bool = False,
+                                    start_from: int = 0, page_size: int = 100,
+                                    output_format: str = "JSON", report_spec: str | dict | None = None,
+                                    **kwargs) -> list | str:
+        """Find concept model elements matching a search string."""
+        loop = asyncio.get_event_loop()
+        return loop.run_until_complete(self._async_find_concept_model_elements(
+            search_string, body, starts_with, ends_with, ignore_case, start_from, page_size,
+            output_format, report_spec, **kwargs))
+
+    @dynamic_catch
+    async def _async_get_concept_model_elements_by_name(self, name: str,
+                                                         body: Optional[dict | SearchStringRequestBody] = None,
+                                                         start_from: int = 0, page_size: int = max_paging_size,
+                                                         output_format: str = "JSON", report_spec: str | dict | None = None,
+                                                         **kwargs) -> list | str:
+        """Return the concept model elements with a specific name. Async version."""
+        url = f"{self.solution_architect_command_root}/concept-model-elements/by-name"
+        return await self._async_get_name_request(
+            url, _type="ConceptModelElement", _gen_output=self._generate_concept_model_element_output,
+            filter_string=name, body=body, start_from=start_from, page_size=page_size,
+            output_format=output_format, report_spec=report_spec, **kwargs)
+
+    @dynamic_catch
+    def get_concept_model_elements_by_name(self, name: str,
+                                           body: Optional[dict | SearchStringRequestBody] = None,
+                                           start_from: int = 0, page_size: int = max_paging_size,
+                                           output_format: str = "JSON", report_spec: str | dict | None = None,
+                                           **kwargs) -> list | str:
+        """Return the concept model elements with a specific name."""
+        loop = asyncio.get_event_loop()
+        return loop.run_until_complete(self._async_get_concept_model_elements_by_name(
+            name, body, start_from, page_size, output_format, report_spec, **kwargs))
+
+    @dynamic_catch
+    async def _async_get_concept_model_element_by_guid(self, guid: str, body: Optional[dict | GetRequestBody] = None,
+                                                        output_format: str = "JSON", report_spec: str | dict | None = None,
+                                                        **kwargs) -> dict | str:
+        """Return the properties of a specific concept model element. Async version."""
+        validate_guid(guid)
+        url = f"{self.solution_architect_command_root}/concept-model-elements/{guid}/retrieve"
+        return await self._async_get_guid_request(
+            url, _type="ConceptModelElement", _gen_output=self._generate_concept_model_element_output,
+            body=body, output_format=output_format, report_spec=report_spec, **kwargs)
+
+    @dynamic_catch
+    def get_concept_model_element_by_guid(self, guid: str, body: Optional[dict | GetRequestBody] = None,
+                                          output_format: str = "JSON", report_spec: str | dict | None = None,
+                                          **kwargs) -> dict | str:
+        """Return the properties of a specific concept model element."""
+        loop = asyncio.get_event_loop()
+        return loop.run_until_complete(self._async_get_concept_model_element_by_guid(
+            guid, body, output_format, report_spec, **kwargs))
+
+    @dynamic_catch
+    async def _async_link_concept_design(self, element_guid: str, concept_model_guid: str,
+                                         body: Optional[dict | NewRelationshipRequestBody] = None) -> None:
+        """Attach an element to the concept model element that designs it (ConceptDesign relationship). Async version."""
+        url = f"{self.solution_architect_command_root}/elements/{element_guid}/concept-designs/{concept_model_guid}/attach"
+        await self._async_new_relationship_request(url, ["ConceptDesignProperties"], body)
+
+    @dynamic_catch
+    def link_concept_design(self, element_guid: str, concept_model_guid: str,
+                            body: Optional[dict | NewRelationshipRequestBody] = None) -> None:
+        """Attach an element to the concept model element that designs it (ConceptDesign relationship)."""
+        loop = asyncio.get_event_loop()
+        loop.run_until_complete(self._async_link_concept_design(element_guid, concept_model_guid, body))
+
+    @dynamic_catch
+    async def _async_detach_concept_design(self, element_guid: str, concept_model_guid: str,
+                                           body: Optional[dict | DeleteRelationshipRequestBody] = None) -> None:
+        """Detach an element from a concept model element. Async version."""
+        url = f"{self.solution_architect_command_root}/elements/{element_guid}/concept-designs/{concept_model_guid}/detach"
+        await self._async_delete_relationship_request(url, body)
+
+    @dynamic_catch
+    def detach_concept_design(self, element_guid: str, concept_model_guid: str,
+                              body: Optional[dict | DeleteRelationshipRequestBody] = None) -> None:
+        """Detach an element from a concept model element."""
+        loop = asyncio.get_event_loop()
+        loop.run_until_complete(self._async_detach_concept_design(element_guid, concept_model_guid, body))
+
+    @dynamic_catch
+    async def _async_link_concept_bead_relationship_end(self, concept_bead_relationship_guid: str, concept_bead_guid: str,
+                                                         body: Optional[dict | NewRelationshipRequestBody] = None) -> None:
+        """Attach a concept bead as one end of a concept bead relationship (ConceptBeadRelationshipEnd relationship). Async version."""
+        url = f"{self.solution_architect_command_root}/concept-bead-relationships/{concept_bead_relationship_guid}/relationship-ends/{concept_bead_guid}/attach"
+        await self._async_new_relationship_request(url, ["ConceptBeadRelationshipEndProperties"], body)
+
+    @dynamic_catch
+    def link_concept_bead_relationship_end(self, concept_bead_relationship_guid: str, concept_bead_guid: str,
+                                           body: Optional[dict | NewRelationshipRequestBody] = None) -> None:
+        """Attach a concept bead as one end of a concept bead relationship (ConceptBeadRelationshipEnd relationship)."""
+        loop = asyncio.get_event_loop()
+        loop.run_until_complete(self._async_link_concept_bead_relationship_end(concept_bead_relationship_guid, concept_bead_guid, body))
+
+    @dynamic_catch
+    async def _async_detach_concept_bead_relationship_end(self, concept_bead_relationship_guid: str, concept_bead_guid: str,
+                                                           body: Optional[dict | DeleteRelationshipRequestBody] = None) -> None:
+        """Detach a concept bead from a concept bead relationship. Async version."""
+        url = f"{self.solution_architect_command_root}/concept-bead-relationships/{concept_bead_relationship_guid}/relationship-ends/{concept_bead_guid}/detach"
+        await self._async_delete_relationship_request(url, body)
+
+    @dynamic_catch
+    def detach_concept_bead_relationship_end(self, concept_bead_relationship_guid: str, concept_bead_guid: str,
+                                             body: Optional[dict | DeleteRelationshipRequestBody] = None) -> None:
+        """Detach a concept bead from a concept bead relationship."""
+        loop = asyncio.get_event_loop()
+        loop.run_until_complete(self._async_detach_concept_bead_relationship_end(concept_bead_relationship_guid, concept_bead_guid, body))
+
+    @dynamic_catch
+    async def _async_link_typed_by_concept_bead(self, concept_bead_attribute_guid: str, concept_bead_guid: str,
+                                                body: Optional[dict | NewRelationshipRequestBody] = None) -> None:
+        """Attach a concept bead attribute to the concept bead that types it (TypedByConceptBead relationship). Async version."""
+        url = f"{self.solution_architect_command_root}/concept-bead-attributes/{concept_bead_attribute_guid}/typed-by/{concept_bead_guid}/attach"
+        await self._async_new_relationship_request(url, ["TypedByConceptBeadProperties"], body)
+
+    @dynamic_catch
+    def link_typed_by_concept_bead(self, concept_bead_attribute_guid: str, concept_bead_guid: str,
+                                   body: Optional[dict | NewRelationshipRequestBody] = None) -> None:
+        """Attach a concept bead attribute to the concept bead that types it (TypedByConceptBead relationship)."""
+        loop = asyncio.get_event_loop()
+        loop.run_until_complete(self._async_link_typed_by_concept_bead(concept_bead_attribute_guid, concept_bead_guid, body))
+
+    @dynamic_catch
+    async def _async_detach_typed_by_concept_bead(self, concept_bead_attribute_guid: str, concept_bead_guid: str,
+                                                   body: Optional[dict | DeleteRelationshipRequestBody] = None) -> None:
+        """Detach a concept bead attribute from the concept bead that types it. Async version."""
+        url = f"{self.solution_architect_command_root}/concept-bead-attributes/{concept_bead_attribute_guid}/typed-by/{concept_bead_guid}/detach"
+        await self._async_delete_relationship_request(url, body)
+
+    @dynamic_catch
+    def detach_typed_by_concept_bead(self, concept_bead_attribute_guid: str, concept_bead_guid: str,
+                                     body: Optional[dict | DeleteRelationshipRequestBody] = None) -> None:
+        """Detach a concept bead attribute from the concept bead that types it."""
+        loop = asyncio.get_event_loop()
+        loop.run_until_complete(self._async_detach_typed_by_concept_bead(concept_bead_attribute_guid, concept_bead_guid, body))
+
+    @dynamic_catch
+    async def _async_link_is_a_concept_bead(self, concept_bead_guid: str, general_concept_bead_guid: str,
+                                            body: Optional[dict | NewRelationshipRequestBody] = None) -> None:
+        """Attach a concept bead to the more general concept bead it is a kind of (IsAConceptBead relationship). Async version."""
+        url = f"{self.solution_architect_command_root}/concept-beads/{concept_bead_guid}/is-a/{general_concept_bead_guid}/attach"
+        await self._async_new_relationship_request(url, ["IsAConceptBeadProperties"], body)
+
+    @dynamic_catch
+    def link_is_a_concept_bead(self, concept_bead_guid: str, general_concept_bead_guid: str,
+                               body: Optional[dict | NewRelationshipRequestBody] = None) -> None:
+        """Attach a concept bead to the more general concept bead it is a kind of (IsAConceptBead relationship)."""
+        loop = asyncio.get_event_loop()
+        loop.run_until_complete(self._async_link_is_a_concept_bead(concept_bead_guid, general_concept_bead_guid, body))
+
+    @dynamic_catch
+    async def _async_detach_is_a_concept_bead(self, concept_bead_guid: str, general_concept_bead_guid: str,
+                                              body: Optional[dict | DeleteRelationshipRequestBody] = None) -> None:
+        """Detach a concept bead from a more general concept bead. Async version."""
+        url = f"{self.solution_architect_command_root}/concept-beads/{concept_bead_guid}/is-a/{general_concept_bead_guid}/detach"
+        await self._async_delete_relationship_request(url, body)
+
+    @dynamic_catch
+    def detach_is_a_concept_bead(self, concept_bead_guid: str, general_concept_bead_guid: str,
+                                 body: Optional[dict | DeleteRelationshipRequestBody] = None) -> None:
+        """Detach a concept bead from a more general concept bead."""
+        loop = asyncio.get_event_loop()
+        loop.run_until_complete(self._async_detach_is_a_concept_bead(concept_bead_guid, general_concept_bead_guid, body))
+
+    @dynamic_catch
+    async def _async_link_concept_bead_attribute_link(self, concept_bead_guid: str, concept_bead_attribute_guid: str,
+                                                       body: Optional[dict | NewRelationshipRequestBody] = None) -> None:
+        """Attach an attribute to the concept bead it belongs to (ConceptBeadAttributeLink relationship). Async version."""
+        url = f"{self.solution_architect_command_root}/concept-beads/{concept_bead_guid}/attribute-links/{concept_bead_attribute_guid}/attach"
+        await self._async_new_relationship_request(url, ["ConceptBeadAttributeLinkProperties"], body)
+
+    @dynamic_catch
+    def link_concept_bead_attribute_link(self, concept_bead_guid: str, concept_bead_attribute_guid: str,
+                                         body: Optional[dict | NewRelationshipRequestBody] = None) -> None:
+        """Attach an attribute to the concept bead it belongs to (ConceptBeadAttributeLink relationship)."""
+        loop = asyncio.get_event_loop()
+        loop.run_until_complete(self._async_link_concept_bead_attribute_link(concept_bead_guid, concept_bead_attribute_guid, body))
+
+    @dynamic_catch
+    async def _async_detach_concept_bead_attribute_link(self, concept_bead_guid: str, concept_bead_attribute_guid: str,
+                                                         body: Optional[dict | DeleteRelationshipRequestBody] = None) -> None:
+        """Detach an attribute from the concept bead it belongs to. Async version."""
+        url = f"{self.solution_architect_command_root}/concept-beads/{concept_bead_guid}/attribute-links/{concept_bead_attribute_guid}/detach"
+        await self._async_delete_relationship_request(url, body)
+
+    @dynamic_catch
+    def detach_concept_bead_attribute_link(self, concept_bead_guid: str, concept_bead_attribute_guid: str,
+                                           body: Optional[dict | DeleteRelationshipRequestBody] = None) -> None:
+        """Detach an attribute from the concept bead it belongs to."""
+        loop = asyncio.get_event_loop()
+        loop.run_until_complete(self._async_detach_concept_bead_attribute_link(concept_bead_guid, concept_bead_attribute_guid, body))
+
+    @dynamic_catch
+    async def _async_link_concept_bead_extension(self, concept_bead_guid: str, extension_concept_bead_guid: str,
+                                                 body: Optional[dict | NewRelationshipRequestBody] = None) -> None:
+        """Attach a concept bead to another concept bead that extends it (ConceptBeadExtension relationship). Async version."""
+        url = f"{self.solution_architect_command_root}/concept-beads/{concept_bead_guid}/extensions/{extension_concept_bead_guid}/attach"
+        await self._async_new_relationship_request(url, ["ConceptBeadExtensionProperties"], body)
+
+    @dynamic_catch
+    def link_concept_bead_extension(self, concept_bead_guid: str, extension_concept_bead_guid: str,
+                                    body: Optional[dict | NewRelationshipRequestBody] = None) -> None:
+        """Attach a concept bead to another concept bead that extends it (ConceptBeadExtension relationship)."""
+        loop = asyncio.get_event_loop()
+        loop.run_until_complete(self._async_link_concept_bead_extension(concept_bead_guid, extension_concept_bead_guid, body))
+
+    @dynamic_catch
+    async def _async_detach_concept_bead_extension(self, concept_bead_guid: str, extension_concept_bead_guid: str,
+                                                    body: Optional[dict | DeleteRelationshipRequestBody] = None) -> None:
+        """Detach a concept bead extension. Async version."""
+        url = f"{self.solution_architect_command_root}/concept-beads/{concept_bead_guid}/extensions/{extension_concept_bead_guid}/detach"
+        await self._async_delete_relationship_request(url, body)
+
+    @dynamic_catch
+    def detach_concept_bead_extension(self, concept_bead_guid: str, extension_concept_bead_guid: str,
+                                      body: Optional[dict | DeleteRelationshipRequestBody] = None) -> None:
+        """Detach a concept bead extension."""
+        loop = asyncio.get_event_loop()
+        loop.run_until_complete(self._async_detach_concept_bead_extension(concept_bead_guid, extension_concept_bead_guid, body))
+
+    @dynamic_catch
+    async def _async_link_solution_component_port(self, solution_component_guid: str, solution_port_guid: str,
+                                                   body: Optional[dict | NewRelationshipRequestBody] = None) -> None:
+        """Attach a solution port to the solution component it belongs to (SolutionComponentPort relationship). Async version."""
+        url = f"{self.solution_architect_command_root}/solution-components/{solution_component_guid}/solution-ports/{solution_port_guid}/attach"
+        await self._async_new_relationship_request(url, ["SolutionComponentPortProperties"], body)
+
+    @dynamic_catch
+    def link_solution_component_port(self, solution_component_guid: str, solution_port_guid: str,
+                                     body: Optional[dict | NewRelationshipRequestBody] = None) -> None:
+        """Attach a solution port to the solution component it belongs to (SolutionComponentPort relationship)."""
+        loop = asyncio.get_event_loop()
+        loop.run_until_complete(self._async_link_solution_component_port(solution_component_guid, solution_port_guid, body))
+
+    @dynamic_catch
+    async def _async_detach_solution_component_port(self, solution_component_guid: str, solution_port_guid: str,
+                                                     body: Optional[dict | DeleteRelationshipRequestBody] = None) -> None:
+        """Detach a solution port from a solution component. Async version."""
+        url = f"{self.solution_architect_command_root}/solution-components/{solution_component_guid}/solution-ports/{solution_port_guid}/detach"
+        await self._async_delete_relationship_request(url, body)
+
+    @dynamic_catch
+    def detach_solution_component_port(self, solution_component_guid: str, solution_port_guid: str,
+                                       body: Optional[dict | DeleteRelationshipRequestBody] = None) -> None:
+        """Detach a solution port from a solution component."""
+        loop = asyncio.get_event_loop()
+        loop.run_until_complete(self._async_detach_solution_component_port(solution_component_guid, solution_port_guid, body))
+
+    @dynamic_catch
+    async def _async_link_solution_port_delegation(self, aligns_to_port_guid: str, delegation_port_guid: str,
+                                                    body: Optional[dict | NewRelationshipRequestBody] = None) -> None:
+        """Attach a solution port to the port it delegates to (PortDelegation relationship). Async version."""
+        url = f"{self.solution_architect_command_root}/solution-ports/{aligns_to_port_guid}/port-delegations/{delegation_port_guid}/attach"
+        await self._async_new_relationship_request(url, ["SolutionPortDelegationProperties"], body)
+
+    @dynamic_catch
+    def link_solution_port_delegation(self, aligns_to_port_guid: str, delegation_port_guid: str,
+                                      body: Optional[dict | NewRelationshipRequestBody] = None) -> None:
+        """Attach a solution port to the port it delegates to (PortDelegation relationship)."""
+        loop = asyncio.get_event_loop()
+        loop.run_until_complete(self._async_link_solution_port_delegation(aligns_to_port_guid, delegation_port_guid, body))
+
+    @dynamic_catch
+    async def _async_detach_solution_port_delegation(self, aligns_to_port_guid: str, delegation_port_guid: str,
+                                                      body: Optional[dict | DeleteRelationshipRequestBody] = None) -> None:
+        """Detach a solution port delegation. Async version."""
+        url = f"{self.solution_architect_command_root}/solution-ports/{aligns_to_port_guid}/port-delegations/{delegation_port_guid}/detach"
+        await self._async_delete_relationship_request(url, body)
+
+    @dynamic_catch
+    def detach_solution_port_delegation(self, aligns_to_port_guid: str, delegation_port_guid: str,
+                                        body: Optional[dict | DeleteRelationshipRequestBody] = None) -> None:
+        """Detach a solution port delegation."""
+        loop = asyncio.get_event_loop()
+        loop.run_until_complete(self._async_detach_solution_port_delegation(aligns_to_port_guid, delegation_port_guid, body))
 
 
 

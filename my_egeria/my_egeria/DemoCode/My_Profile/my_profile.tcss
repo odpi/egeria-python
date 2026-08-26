@@ -24,6 +24,14 @@ Screen {
     grid-gutter: 1;
 }
 
+#edit_associations_screen {
+    layout: grid;
+    grid-size: 2;
+    grid-columns: 1fr 1fr;
+    grid-gutter: 1;
+    border: round white;
+}
+
 #main_header {
     column-span: 3;
     height: 3;
@@ -71,7 +79,7 @@ ModalScreen > Header, ModalScreen > Footer {
 #main_communities_container,
 #main_roles_container,
 #main_teams_container,
-#main_actions_container,
+#main_activities_container,
 #main_identities_container,
 #other_function_container,
 #other_function_list {
@@ -79,13 +87,32 @@ ModalScreen > Header, ModalScreen > Footer {
     height: 100%;
 }
 
-#edit_roles_container, #edit_communities_container, #edit_identities_container, #edit_teams_container, #status_container, #user_identities_container, #main_identities_container {
+#edit_roles_container,
+#edit_communities_container,
+#edit_identities_container,
+#edit_teams_container,
+#status_container,
+#user_identities_container,
+#main_identities_container {
     column-span: 3;
     width: 100%;
     height: 100%;
 }
 
-#technology_types_table, #business_domain_table, #communities_table, #data_dictionary_table, #data_specification_table, #digital_product_catalog_table, #glossary_table, #projects_table, #roles_table, #teams_table, #actions_table, #user_identity_table, #user_identity_datatable, #status_table, #root_collection_table {
+#technology_types_table,
+#business_domain_table,
+#communities_table,
+#data_dictionary_table,
+#data_specification_table,
+#digital_product_catalog_table,
+#glossary_table,
+#projects_table,
+#roles_table,
+#teams_table,
+#user_identity_table,
+#user_identity_datatable,
+#status_table,
+#root_collection_table {
     width: 100%;
     height: 100%;
 }
@@ -118,6 +145,13 @@ DataTable > .datatable--cursor, OptionList > .option-list--cursor {
 #edit_profile_form Horizontal {
     height: auto;
     width: 100%;
+}
+
+#blogs_table,
+#journal_table,
+#todos_table {
+    width: 100%;
+    height: 1fr;
 }
 
 #edit_profile_form Horizontal Static {

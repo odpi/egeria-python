@@ -1,6 +1,6 @@
 {
   "family": "Data Designer",
-  "exported": "Jul 6, 2026 at 12:59:11 PM",
+  "exported": "Jul 27, 2026 at 8:26:43\u202fAM",
   "attribute_definitions": {
     "Activity Status": {
       "variable_name": "activity_status",
@@ -145,7 +145,7 @@
       "unique": false,
       "input_required": false,
       "min_cardinality": 0,
-      "max_cardinality": 1,
+      "max_cardinality": -1,
       "level": "Common",
       "Journal Entry": ""
     },
@@ -811,7 +811,7 @@
       "variable_name": "file_path",
       "inUpdate": true,
       "attr_labels": "File Path Name",
-      "examples": "\/home\/mumble.csv",
+      "examples": "/home/mumble.csv",
       "default_value": "",
       "valid_values": [],
       "existing_element": "",
@@ -900,6 +900,25 @@
       "min_cardinality": 0,
       "max_cardinality": 1,
       "level": "Common",
+      "Journal Entry": ""
+    },
+    "Frequency": {
+      "variable_name": "frequency",
+      "inUpdate": true,
+      "attr_labels": "",
+      "examples": "",
+      "default_value": "",
+      "valid_values": [],
+      "existing_element": "",
+      "description": "A frequency of interaction.",
+      "generated": false,
+      "style": "Simple",
+      "user_specified": true,
+      "unique": false,
+      "input_required": false,
+      "min_cardinality": 0,
+      "max_cardinality": 1,
+      "level": "Basic",
       "Journal Entry": ""
     },
     "Glossary Term": {
@@ -1087,7 +1106,7 @@
       "default_value": "",
       "valid_values": [],
       "existing_element": "",
-      "description": "Copyright and\/or license information for the element or associated resource.",
+      "description": "Copyright and/or license information for the element or associated resource.",
       "generated": false,
       "style": "Simple",
       "user_specified": true,
@@ -1459,6 +1478,25 @@
       "level": "Common",
       "Journal Entry": ""
     },
+    "Protocol": {
+      "variable_name": "protocol",
+      "inUpdate": true,
+      "attr_labels": "",
+      "examples": "",
+      "default_value": "",
+      "valid_values": [],
+      "existing_element": "",
+      "description": "Name of the protocol used for interaction.",
+      "generated": false,
+      "style": "Simple",
+      "user_specified": true,
+      "unique": false,
+      "input_required": false,
+      "min_cardinality": 0,
+      "max_cardinality": 1,
+      "level": "Common",
+      "Journal Entry": ""
+    },
     "Purpose": {
       "variable_name": "purpose",
       "inUpdate": true,
@@ -1467,7 +1505,7 @@
       "default_value": "",
       "valid_values": [],
       "existing_element": "",
-      "description": "The purpose of this collection — a short description of why it exists or what it is used for.",
+      "description": "The purpose of this collection \u2014 a short description of why it exists or what it is used for.",
       "generated": false,
       "style": "Simple",
       "user_specified": true,
@@ -2044,7 +2082,7 @@
       "default_value": "",
       "valid_values": [],
       "existing_element": "",
-      "description": "The usage guidance for this element — how it is intended to be used in context.",
+      "description": "The usage guidance for this element \u2014 how it is intended to be used in context.",
       "generated": false,
       "style": "Simple",
       "user_specified": true,
@@ -2160,7 +2198,7 @@
       "existing_element": "",
       "description": "Zones scope visibility of elements to different users.",
       "generated": false,
-      "style": "Simple",
+      "style": "Simple List",
       "user_specified": true,
       "unique": false,
       "input_required": false,
@@ -2513,7 +2551,7 @@
       "default_value": "",
       "valid_values": [],
       "existing_element": "",
-      "description": "The basis on which the granularity is defined (e.g. time period, geographic region, customer segment). UML type: string — no enum defined in Egeria open types.",
+      "description": "The basis on which the granularity is defined (e.g. time period, geographic region, customer segment). UML type: string \u2014 no enum defined in Egeria open types.",
       "generated": false,
       "style": "Simple",
       "user_specified": true,
@@ -2864,7 +2902,7 @@
       "min_cardinality": 0,
       "max_cardinality": 1,
       "level": "Domain",
-      "Journal Entry": "Alternative name patterns for the element — often expressed as regular expressions."
+      "Journal Entry": "Alternative name patterns for the element \u2014 often expressed as regular expressions."
     },
     "Minimum Cardinality": {
       "variable_name": "minimum_cardinality",
@@ -2921,7 +2959,7 @@
       "min_cardinality": 0,
       "max_cardinality": 1,
       "level": "Domain",
-      "Journal Entry": "Alternative name patterns for the element — often expressed as regular expressions."
+      "Journal Entry": "Alternative name patterns for the element \u2014 often expressed as regular expressions."
     },
     "Namespace Path": {
       "variable_name": "namespace_path",
@@ -3207,6 +3245,44 @@
       "max_cardinality": 1,
       "level": "Domain",
       "Journal Entry": ""
+    },
+    "Valid Value Set": {
+      "variable_name": "valid_value_set",
+      "inUpdate": false,
+      "attr_labels": "Valid Value Definition",
+      "examples": "",
+      "default_value": "",
+      "valid_values": [],
+      "existing_element": "ValidValueDefinition",
+      "description": "The valid value set/definition that defines the allowed values for this element (ValidValuesAssignment relationship).",
+      "generated": false,
+      "style": "Reference Name",
+      "user_specified": true,
+      "unique": false,
+      "input_required": true,
+      "min_cardinality": 1,
+      "max_cardinality": 1,
+      "level": "Domain",
+      "Journal Entry": ""
+    },
+    "Schema Attribute": {
+      "variable_name": "schema_attribute",
+      "inUpdate": true,
+      "attr_labels": "",
+      "examples": "",
+      "default_value": "",
+      "valid_values": [],
+      "existing_element": "SchemaAttribute",
+      "description": "A physical schema attribute (e.g. a TabularColumn). Preferably a qualified name.",
+      "generated": false,
+      "style": "Reference Name",
+      "user_specified": true,
+      "unique": false,
+      "input_required": true,
+      "min_cardinality": 1,
+      "max_cardinality": 1,
+      "level": "Domain",
+      "Journal Entry": ""
     }
   },
   "bundles": {
@@ -3290,7 +3366,6 @@
       "own_attributes": [
         "Additional Properties",
         "Category",
-        "Class Word Classification",
         "Confidence Classification",
         "Confidentiality Classification",
         "Criticality Classification",
@@ -3300,9 +3375,7 @@
         "Identifier",
         "Impact Classification",
         "Legal",
-        "Modifier Classification",
         "Policy Management Point",
-        "Prime Word Classification",
         "Qualified Name",
         "Retention Classification",
         "Security Tags",
@@ -3426,6 +3499,13 @@
         "Linked Data Field 1",
         "Linked Data Field 2"
       ]
+    },
+    "Data Field Valid Values Base": {
+      "inherits": "Request Base",
+      "own_attributes": [
+        "Linked Data Field 1",
+        "Valid Value Set"
+      ]
     }
   },
   "commands": {
@@ -3436,7 +3516,7 @@
         "Data Dict"
       ],
       "family": "Data Designer",
-      "description": "Creates or updates a data dictionary — an organized collection of defined data fields serving as a knowledge base of preferred data definitions. Implemented as a Collection with the DataDictionary classification.",
+      "description": "Creates or updates a data dictionary \u2014 an organized collection of defined data fields serving as a knowledge base of preferred data definitions. Implemented as a Collection with the DataDictionary classification.",
       "verb": "Create",
       "upsert": true,
       "attach": false,
@@ -3450,30 +3530,6 @@
       "custom_attributes": [],
       "Journal Entry": ""
     },
-    "Attach Data Description to Element": {
-      "display_name": "Data Description->Element",
-      "qn_prefix": "",
-      "alternate_names": [
-        "Attach Data Description->Element"
-      ],
-      "family": "Data Designer",
-      "description": "Connect an existing data describing collection to an element using the DataDescription relationship (0580).\n",
-      "verb": "Link",
-      "upsert": false,
-      "attach": true,
-      "level": "Basic",
-      "find_method": "",
-      "find_constraints": "",
-      "extra_find": "",
-      "extra_constraints": "",
-      "OM_TYPE": "DataDescription",
-      "bundle": "Link Command Base",
-      "custom_attributes": [
-        "Collection Id",
-        "Element Id"
-      ],
-      "Journal Entry": ""
-    },
     "Create Data Spec": {
       "display_name": "Data Spec",
       "qn_prefix": "DataSpec",
@@ -3481,7 +3537,7 @@
         "Data Specification"
       ],
       "family": "Data Designer",
-      "description": "Creates or updates a data specification — a collection describing the data requirements for a project or initiative. Its members are typically data structures. Implemented as a Collection with the DataSpec classification.",
+      "description": "Creates or updates a data specification \u2014 a collection describing the data requirements for a project or initiative. Its members are typically data structures. Implemented as a Collection with the DataSpec classification.",
       "verb": "Create",
       "upsert": true,
       "attach": false,
@@ -3523,7 +3579,7 @@
       "qn_prefix": "DataStructure",
       "alternate_names": [],
       "family": "Data Designer",
-      "description": "Creates or updates a data structure — a collection of data fields that defines the structure for a data source.",
+      "description": "Creates or updates a data structure \u2014 a collection of data fields that defines the structure for a data source.",
       "verb": "Create",
       "upsert": true,
       "attach": false,
@@ -3545,7 +3601,7 @@
       "qn_prefix": "DataField",
       "alternate_names": [],
       "family": "Data Designer",
-      "description": "Creates or updates a data field — a named, typed element within a data structure. Supports nesting via In Data Field and data class assignment.",
+      "description": "Creates or updates a data field \u2014 a named, typed element within a data structure. Supports nesting via In Data Field and data class assignment.",
       "verb": "Create",
       "upsert": true,
       "attach": false,
@@ -3583,7 +3639,7 @@
       "qn_prefix": "DataClass",
       "alternate_names": [],
       "family": "Data Designer",
-      "description": "Creates or updates a data class — a description of the values that may be stored in data fields. Supports composition via Containing Data Class and specialization via Specializes Data Class. Can be used to configure quality validators and data field classifiers.",
+      "description": "Creates or updates a data class \u2014 a description of the values that may be stored in data fields. Supports composition via Containing Data Class and specialization via Specializes Data Class. Can be used to configure quality validators and data field classifiers.",
       "verb": "Create",
       "upsert": true,
       "attach": false,
@@ -3621,7 +3677,7 @@
       "qn_prefix": "DataGrain",
       "alternate_names": [],
       "family": "Data Designer",
-      "description": "Creates or updates a data grain — a defined granularity of data that can be associated with a data field or data lens.",
+      "description": "Creates or updates a data grain \u2014 a defined granularity of data that can be associated with a data field or data lens.",
       "verb": "Create",
       "upsert": true,
       "attach": false,
@@ -3691,8 +3747,9 @@
       "display_name": "Assign Data Value Specification",
       "qn_prefix": "",
       "alternate_names": [
-        "Link Data Value Specification",
-        "Attach Data Value Specification to Element"
+        "Attach Data Value Specification to Element",
+        "Attach Data Value Specification",
+        "Link Data Value Specification"
       ],
       "family": "Data Designer",
       "description": "Link a data value specification, DataClass, DataGrain,  to a referenceable element providing a definition.",
@@ -3775,6 +3832,90 @@
       "custom_attributes": [
         "Data Structure",
         "Certification Type"
+      ],
+      "Journal Entry": ""
+    },
+    "Link Data Field to Valid Values": {
+      "display_name": "Data Field to Valid Values",
+      "qn_prefix": "",
+      "alternate_names": [],
+      "family": "Data Designer",
+      "description": "Link a Data Field to the ValidValueSet defining its allowed values (ValidValuesAssignment relationship).",
+      "verb": "Link",
+      "upsert": false,
+      "attach": false,
+      "level": "Basic",
+      "find_method": "",
+      "find_constraints": "",
+      "extra_find": "",
+      "extra_constraints": "",
+      "OM_TYPE": "ValidValuesAssignment",
+      "bundle": "Data Field Valid Values Base",
+      "custom_attributes": [],
+      "Journal Entry": ""
+    },
+    "Detach Data Field from Valid Values": {
+      "display_name": "Data Field from Valid Values",
+      "qn_prefix": "",
+      "alternate_names": [],
+      "family": "Data Designer",
+      "description": "Remove the ValidValuesAssignment relationship between a Data Field and its ValidValueSet.",
+      "verb": "Detach",
+      "upsert": false,
+      "attach": false,
+      "level": "Basic",
+      "find_method": "",
+      "find_constraints": "",
+      "extra_find": "",
+      "extra_constraints": "",
+      "OM_TYPE": "ValidValuesAssignment",
+      "bundle": "Data Field Valid Values Base",
+      "custom_attributes": [],
+      "Journal Entry": ""
+    },
+    "Detach Data Value Specification from Element": {
+      "display_name": "Data Value Specification from Element",
+      "qn_prefix": "",
+      "alternate_names": [
+        "Unassign Data Value Specification from Element"
+      ],
+      "family": "Data Designer",
+      "description": "Remove the DataValueAssignment relationship between a data value specification and a referenceable element.",
+      "verb": "Detach",
+      "upsert": false,
+      "attach": false,
+      "level": "Basic",
+      "find_method": "",
+      "find_constraints": "",
+      "extra_find": "",
+      "extra_constraints": "",
+      "OM_TYPE": "DataValueAssignment",
+      "bundle": "Data Value Assignment Base",
+      "custom_attributes": [
+        "Data Value Specification",
+        "Element Id"
+      ],
+      "Journal Entry": ""
+    },
+    "Link Schema Attribute Definition": {
+      "display_name": "schema_attribute_definition",
+      "qn_prefix": "",
+      "alternate_names": [],
+      "family": "Data Designer",
+      "description": "Link a logical Data Field to the physical Schema Attribute that implements it (e.g. a TabularColumn), or the reverse lookup. Implemented via the generic MetadataExpert relationship mechanism (typeName: SchemaAttributeDefinition) -- no bespoke Egeria REST endpoint exists for this relationship yet (PYEGERIA_ISSUES.md ISSUE-48); will be migrated to a dedicated wrapper once Egeria ships one.",
+      "verb": "Link",
+      "upsert": false,
+      "attach": true,
+      "level": "Basic",
+      "find_method": "",
+      "find_constraints": "",
+      "extra_find": "",
+      "extra_constraints": "",
+      "OM_TYPE": "SchemaAttributeDefinition",
+      "bundle": "Link Command Base",
+      "custom_attributes": [
+        "Data Field",
+        "Schema Attribute"
       ],
       "Journal Entry": ""
     }

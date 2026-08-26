@@ -173,10 +173,11 @@ class TermProcessor(AsyncBaseCommandProcessor):
             self.parsed_output["guid"] = guid
             if status:
                 await self.client._async_update_glossary_term_status(guid, status)
-            
+
             # Sync memberships: if merge_update is True, we only add (replace_all=False)
             # If merge_update is False, we synchronize (replace_all=True)
             await self._sync_term_memberships(guid, to_be_collection_guids, not merge_update)
+            await self._sync_term_naming_classifications(guid, attributes)
             
             if journal_entry:
                 try:
@@ -203,8 +204,11 @@ class TermProcessor(AsyncBaseCommandProcessor):
             guid = self.extract_guid_or_raise(raw_guid, "Create Glossary Term")
             if guid:
                 self.parsed_output["guid"] = guid
-                # For Create, we always want to ensure it's in all listed collections
-                await self._sync_term_memberships(guid, to_be_collection_guids, replace_all=True)
+                # For Create, we always want to ensure it's in all listed collections.
+                # known_new=True: this GUID was just created, so it cannot have any
+                # existing CollectionMembership relationships -- skip the as-is fetch.
+                await self._sync_term_memberships(guid, to_be_collection_guids, replace_all=True, known_new=True)
+                await self._sync_term_naming_classifications(guid, attributes)
 
                 if journal_entry:
                     try:
@@ -220,26 +224,45 @@ class TermProcessor(AsyncBaseCommandProcessor):
 
         return self.command.raw_block
 
-    async def _sync_term_memberships(self, term_guid: str, to_be_guids: List[str], replace_all: bool):
-        """Standardized helper for term collection sync."""
-        current_collections = await self.client._async_get_related_elements(
-            term_guid, relationship_type="CollectionMembership", start_at_end=2
-        )
-        as_is_guids = {c['elementHeader']['guid'] for c in current_collections} if current_collections and not isinstance(current_collections, str) else set()
-        
-        # Build map of GUID to name for current collections for better feedback
-        guid_to_name = {}
-        if current_collections and not isinstance(current_collections, str):
-            for c in current_collections:
-                guid = c['elementHeader']['guid']
-                name = c.get('properties', {}).get('displayName') or c.get('properties', {}).get('qualifiedName') or guid
-                guid_to_name[guid] = name
-                
+    async def _sync_term_memberships(self, term_guid: str, to_be_guids: List[str], replace_all: bool,
+                                      known_new: bool = False):
+        """
+        Standardized helper for term collection sync.
+
+        known_new=True (pass this for a just-created term) skips the
+        "what does this element currently have" relationship fetch entirely
+        -- a brand-new term cannot have any existing CollectionMembership
+        relationships, so there is nothing to fetch. Otherwise the fetch is
+        made lazily (only actually issued if sync_members determines it's
+        needed -- e.g. not when replace_all=False with an empty to_be_guids)
+        via _async_get_related_elements against the classification-explorer
+        by-relationship/CollectionMembership endpoint, which is the single
+        most expensive call in this whole sync path on a loaded server.
+        """
+        guid_to_name: Dict[str, str] = {}
+
+        if known_new:
+            as_is_source: set = set()
+        else:
+            async def fetch_as_is() -> set:
+                current_collections = await self.client._async_get_related_elements(
+                    term_guid, relationship_type="CollectionMembership", start_at_end=2
+                )
+                if not current_collections or isinstance(current_collections, str):
+                    return set()
+                for c in current_collections:
+                    g = c['elementHeader']['guid']
+                    name = c.get('properties', {}).get('displayName') or c.get('properties', {}).get('qualifiedName') or g
+                    guid_to_name[g] = name
+                return {c['elementHeader']['guid'] for c in current_collections}
+
+            as_is_source = fetch_as_is
+
         to_be_set = set(to_be_guids)
-        
+
         async def add_fn(collection_guid):
             await self.client._async_add_to_collection(collection_guid, term_guid)
-            
+
         async def remove_fn(collection_guid):
             body = {
                 "class": "DeleteRelationshipRequestBody",
@@ -247,8 +270,8 @@ class TermProcessor(AsyncBaseCommandProcessor):
                 "forDuplicateProcessing": False
             }
             await self.client._async_remove_from_collection(collection_guid, term_guid, body=body)
-            
-        sync_res = await self.sync_members(as_is_guids, to_be_set, add_fn, remove_fn, replace_all)
+
+        sync_res = await self.sync_members(as_is_source, to_be_set, add_fn, remove_fn, replace_all)
         
         if sync_res.get("added") or sync_res.get("removed"):
             added_names = []
@@ -292,11 +315,18 @@ class TermProcessor(AsyncBaseCommandProcessor):
             merge_update = False
             
         guid = self.parsed_output.get("guid") or (self.as_is_element['elementHeader']['guid'] if getattr(self, 'as_is_element', None) else None)
-        
+
         as_is_guids = set()
         guid_to_name = {}
-        
-        if guid and not guid.startswith("(Planned:"):
+        to_be_set = set(to_be_guids)
+        replace_all = not merge_update
+
+        # Same expensive CollectionMembership relationship query as
+        # _sync_term_memberships -- this is the dry-run preview path, so
+        # skip it under the identical condition: add-only (replace_all=False)
+        # with nothing to add means the result can't change regardless of
+        # current state.
+        if guid and not guid.startswith("(Planned:") and (replace_all or to_be_set):
             try:
                 current_collections = await self.client._async_get_related_elements(
                     guid, relationship_type="CollectionMembership", start_at_end=2
@@ -309,10 +339,7 @@ class TermProcessor(AsyncBaseCommandProcessor):
                         guid_to_name[c_guid] = name
             except Exception:
                 pass
-                
-        to_be_set = set(to_be_guids)
-        replace_all = not merge_update
-        
+
         to_add_guids = to_be_set - as_is_guids
         to_remove_guids = (as_is_guids - to_be_set) if replace_all else set()
         unchanged_guids = as_is_guids.intersection(to_be_set)
@@ -336,6 +363,7 @@ class GlossaryClassifyProcessor(AsyncBaseCommandProcessor):
 
     Supported commands (extend by adding entries to the dispatch table below):
       - Classify Term as Question  /  Declassify Term as Question
+      - Classify Term as Element Supplement  /  Declassify Term as Element Supplement
     """
 
     async def fetch_as_is(self) -> Optional[Dict[str, Any]]:
@@ -346,12 +374,18 @@ class GlossaryClassifyProcessor(AsyncBaseCommandProcessor):
         command_name = f"{verb} {self.command.object_type}"
         attributes = self.parsed_output.get("attributes", {})
 
-        # --- dispatch table: command noun → (apply_coro, remove_coro) ---
+        # --- dispatch table: command noun → (apply_coro, remove_coro, properties "class" name) ---
         # Each coro accepts (guid, body). Add new classification commands here.
         dispatch = {
             "Term as Question": (
                 self.client._async_set_term_as_question,
                 self.client._async_clear_term_as_question,
+                "QuestionProperties",
+            ),
+            "Term as Element Supplement": (
+                self.client._async_set_term_as_element_supplement,
+                self.client._async_clear_term_as_element_supplement,
+                "ElementSupplementProperties",
             ),
         }
 
@@ -360,7 +394,7 @@ class GlossaryClassifyProcessor(AsyncBaseCommandProcessor):
         if noun not in dispatch:
             raise PyegeriaException(f"GlossaryClassifyProcessor: unsupported command '{command_name}'")
 
-        apply_coro, remove_coro = dispatch[noun]
+        apply_coro, remove_coro, props_class = dispatch[noun]
 
         # Resolve entity GUID — "Term Name" for term classifications
         term_name_attr = attributes.get("Term Name", {})
@@ -371,22 +405,33 @@ class GlossaryClassifyProcessor(AsyncBaseCommandProcessor):
             logger.error(f"GlossaryClassifyProcessor: no GUID resolved for '{entity_label}' in '{command_name}'")
             return self.command.raw_block
 
-        body = {
-            "class": "ClassificationRequestBody",
+        # NOTE: "class" must match what each pyegeria method's own request-body
+        # validator expects -- NewClassificationRequestBody for set, DeleteClassificationRequestBody
+        # for clear. A single shared "ClassificationRequestBody" body (the previous
+        # bug here) matches neither: pydantic's Literal check on "class" rejects it
+        # before any HTTP call is made, surfacing as "Request body failed validation".
+        apply_body = {
+            "class": "NewClassificationRequestBody",
+            "properties": {"class": props_class},
+            "forLineage": False,
+            "forDuplicateProcessing": False,
+        }
+        remove_body = {
+            "class": "DeleteClassificationRequestBody",
             "forLineage": False,
             "forDuplicateProcessing": False,
         }
 
         if verb in APPLY_CLASSIFICATION_VERBS:
-            await apply_coro(entity_guid, body)
+            await apply_coro(entity_guid, apply_body)
             logger.success(f"Classified '{entity_label}' via '{command_name}'")
         elif verb in REMOVE_CLASSIFICATION_VERBS:
-            await remove_coro(entity_guid, body)
+            await remove_coro(entity_guid, remove_body)
             logger.success(f"Removed classification '{noun}' from '{entity_label}'")
         elif verb in UPDATE_CLASSIFICATION_VERBS:
             # Reclassify: remove then re-apply (default; override per noun if needed)
-            await remove_coro(entity_guid, body)
-            await apply_coro(entity_guid, body)
+            await remove_coro(entity_guid, remove_body)
+            await apply_coro(entity_guid, apply_body)
             logger.success(f"Reclassified '{entity_label}' via '{command_name}'")
         else:
             raise PyegeriaException(f"GlossaryClassifyProcessor: unrecognised verb '{verb}'")
@@ -432,6 +477,7 @@ class QuestionProcessor(AsyncBaseCommandProcessor):
 
         if guid:
             self.parsed_output["guid"] = guid
+            await self._sync_term_naming_classifications(guid, attributes)
 
             if journal_entry:
                 try:
@@ -472,42 +518,127 @@ class TermRelationshipProcessor(AsyncBaseCommandProcessor):
             # Fallback for old templates
             relationship = attributes.get('Relationship', {}).get('value', None)
 
-        # Standardize common relationship names
+        # Standardize common relationship names. ISA/IS A are the only
+        # friendly aliases with a real Egeria type behind them
+        # (ISARelationship) -- HASA/TYPED BY/TYPE OF used to map to
+        # "TermHASARelationship"/"TermTYPEDBYRelationship"/
+        # "TermISATYPEOFRelationship", none of which have ever existed as
+        # real Egeria relationship types (confirmed against a live server's
+        # get_all_relationship_defs() and against every open-metadata-types
+        # archive version in odpi/egeria's own history -- these names were
+        # never real). Removed rather than mapped to anything, since there
+        # is no real replacement to map them to.
         rel_mapping = {
             "ISA": "ISARelationship",
             "IS A": "ISARelationship",
-            "HASA": "TermHASARelationship",
-            "HAS A": "TermHASARelationship",
-            "TYPED BY": "TermTYPEDBYRelationship",
-            "TYPE OF": "TermISATYPEOFRelationship",
         }
         if relationship and relationship.upper() in rel_mapping:
             relationship = rel_mapping[relationship.upper()]
-        
+
+        # Confirmed live (get_all_relationship_defs(), GlossaryTerm<->GlossaryTerm
+        # relationships) -- these 6 are the only real term-to-term relationship
+        # types Egeria currently defines. Validated here, before the request
+        # ever reaches the server, so an obsolete/typo'd value gets one clear
+        # error naming the real options instead of a raw 400 dump -- and so a
+        # bad value can never look like a false "success" (see the removed
+        # try/except below).
+        REAL_TERM_RELATIONSHIP_TYPES = {
+            "Synonym", "PreferredTerm", "Antonym", "ReplacementTerm",
+            "RelatedTerm", "ISARelationship",
+        }
+
         if not (term1_guid and term2_guid and relationship):
             msg = f"TermRelationshipProcessor: Missing required identifiers (Term 1 GUID: {bool(term1_guid)}, Term 2 GUID: {bool(term2_guid)}, Relationship: {bool(relationship)})"
             logger.error(msg)
             self.parsed_output['valid'] = False
             self.parsed_output['reason'] = msg
             return self.command.raw_block
-            
+
+        if relationship not in REAL_TERM_RELATIONSHIP_TYPES:
+            raise ValueError(
+                f"Unknown term relationship type '{relationship}'. Valid types are: "
+                f"{', '.join(sorted(REAL_TERM_RELATIONSHIP_TYPES))} (or the friendly alias 'ISA'/'IS A' for ISARelationship)."
+            )
+
         logger.info(f"TermRelationshipProcessor: Linking '{term1_qname}' to '{term2_qname}' via '{relationship}'")
-        
-        try:
-            if self.command.verb in ["Unlink", "Detach", "Remove"]:
-                await self.client._async_remove_relationship_between_terms(term1_guid, term2_guid, relationship)
-                logger.success(f"Unlinked terms via {relationship}")
-            else:
-                await self.client._async_add_relationship_between_terms(term1_guid, term2_guid, relationship)
-                logger.success(f"Linked terms via {relationship}")
-            
-            # Standard v2 relationship output
-            return (f"\n\n## {self.command.verb} Term-Term Relationship\n\n"
-                    f"### Term 1 Name:\n\n{term1_qname}\n\n"
-                    f"### Term 2 Name:\n\n{term2_qname}\n\n"
-                    f"### Term Relationship:\n\n{relationship}")
-        except PyegeriaException as e:
-            logger.error(f"Failed to link terms: {e}")
-            self.parsed_output['valid'] = False
-            self.parsed_output['reason'] = str(e)
-            return self.command.raw_block
+
+        # No try/except here (deliberately, see ISSUE-76): a PyegeriaException
+        # from the calls below must propagate to AsyncBaseCommandProcessor.
+        # execute()'s own try/except, which is what actually reports
+        # "status": "failure" for this command in the batch summary. Catching
+        # it here and returning self.command.raw_block used to look like a
+        # correct error path (parsed_output['valid'] set, error logged) but
+        # execute() only checks parsed_output['valid'] in its pre-flight
+        # validation step -- which runs *before* apply_changes() -- so a
+        # failure discovered here was silently reported as
+        # "status": "success" in the final batch summary, with the only sign
+        # of trouble being a logged ERROR line the caller may not be watching.
+        if self.command.verb in ["Unlink", "Detach", "Remove"]:
+            await self.client._async_remove_relationship_between_terms(term1_guid, term2_guid, relationship)
+            logger.success(f"Unlinked terms via {relationship}")
+        else:
+            await self.client._async_add_relationship_between_terms(term1_guid, term2_guid, relationship)
+            logger.success(f"Linked terms via {relationship}")
+
+        # Standard v2 relationship output
+        return (f"\n\n## {self.command.verb} Term-Term Relationship\n\n"
+                f"### Term 1 Name:\n\n{term1_qname}\n\n"
+                f"### Term 2 Name:\n\n{term2_qname}\n\n"
+                f"### Term Relationship:\n\n{relationship}")
+
+
+class TermAsContextProcessor(AsyncBaseCommandProcessor):
+    """
+    Processor for Link/Detach Term as Context commands (UsedInContext
+    relationship between a GlossaryTerm and the Referenceable it provides
+    usage context for). Was defined in the compact spec but had no
+    processor at all -- registered here now that GlossaryManager has
+    _async_link_used_in_context/_async_detach_used_in_context
+    (added 2026-08-21, verified against a live 6.2-SNAPSHOT server).
+    """
+
+    def get_command_spec(self) -> Dict[str, Any]:
+        return get_command_spec(f"{self.command.verb} Term as Context")
+
+    def supports_target_element_lookup(self) -> bool:
+        # Relationship-only processor -- see GovernanceLinkProcessor's
+        # identical override (md_processing/v2/governance.py) for why this
+        # matters: without it, AsyncBaseCommandProcessor.execute()'s
+        # Create<->Update upsert-transition logic can silently rewrite the
+        # verb (ISSUE-68 follow-up).
+        return False
+
+    async def fetch_as_is(self) -> Optional[Dict[str, Any]]:
+        return None
+
+    async def apply_changes(self) -> str:
+        verb = self.command.verb
+        attributes = self.parsed_output["attributes"]
+        term_guid = attributes.get('Term 1', {}).get('guid')
+        element_guid = attributes.get('Element Id', {}).get('guid')
+        if not (term_guid and element_guid):
+            missing = []
+            if not term_guid: missing.append("'Term 1'")
+            if not element_guid: missing.append("'Element Id'")
+            raise ValueError(f"Cannot {verb.lower()} Term as Context: resolution failed for {', '.join(missing)}")
+
+        if verb in ["Link", "Attach", "Add"]:
+            props = {"class": "UsedInContextProperties"}
+            for attr_name, prop_name in {
+                "Description": "description", "Expression": "expression", "Confidence": "confidence",
+                "Steward": "steward", "Source": "source", "Term Relationship Status": "termRelationshipStatus",
+            }.items():
+                val = attributes.get(attr_name, {}).get('value')
+                if val is not None:
+                    props[prop_name] = val
+            body = {"class": "NewRelationshipRequestBody", "properties": props}
+            await self.client.glossary_manager._async_link_used_in_context(term_guid, element_guid, body)
+            logger.success(f"Linked Term {term_guid} as context for {element_guid}")
+            return f"\n\n## {verb} Term as Context\n\nLinked term {term_guid} as context for {element_guid}"
+
+        elif verb in ["Detach", "Unlink", "Remove"]:
+            await self.client.glossary_manager._async_detach_used_in_context(term_guid, element_guid)
+            logger.success(f"Detached UsedInContext between {term_guid} and {element_guid}")
+            return f"\n\n## {verb} Term as Context\n\nDetached the UsedInContext relationship between {term_guid} and {element_guid}"
+
+        return self.command.raw_block

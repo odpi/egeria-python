@@ -45,7 +45,7 @@ class TestAutomatedCuration:
     bad_user_1 = "eviledna"
     bad_user_2 = ""
 
-    good_server_1 = "simple-metadata-store"
+    good_server_1 = "qs-metadata-store"
     good_server_2 = "laz_kv"
     good_server_3 = "active-metadata-store"
     good_server_4 = "integration-daemon"
@@ -364,7 +364,7 @@ class TestAutomatedCuration:
     def test_create_uc_server_element_from_template(self):
         try:
             a_client = AutomatedCuration(
-                self.good_view_server_1,
+                self.good_view_server_2,
                 self.good_platform1_url,
                 user_id=self.good_user_2,
                 user_pwd="secret",
@@ -373,7 +373,7 @@ class TestAutomatedCuration:
 
             start_time = time.perf_counter()
             response = a_client.create_uc_server_element_from_template(
-                "laz3", "http://host.docker.internal", "8080", "my test uc", "0.1"
+                "uc-unity-coco", "http://host.docker.internal", "8087", "uc-unity-coco", "0.1"
             )
             duration = time.perf_counter() - start_time
             print(f"\n\tDuration was {duration} seconds")
@@ -1217,6 +1217,53 @@ class TestAutomatedCuration:
         finally:
             a_client.close_session()
 
+    def test_initiate_file_directory_create_and_survey(self):
+        try:
+            a_client = AutomatedCuration(
+                self.good_view_server_2,
+                self.good_platform1_url,
+                user_id=self.good_user_2,
+                user_pwd="secret",
+            )
+            token = a_client.create_egeria_bearer_token()
+
+            request_parameters = {
+                "fileSystemName": None,
+                "directoryPathName": "/Templates",
+                "directoryAddress": "/Templates",
+                "directoryName": "Templates",
+                "versionIdentifier": "1.0",
+                "description": "Templates directory.",
+                "waitForDirectory": True,
+            }
+
+            start_time = time.perf_counter()
+            response = a_client.initiate_gov_action_process(
+                "FileDirectory:CreateAndSurveyGovernanceActionProcess",
+                request_parameters=request_parameters,
+            )
+            duration = time.perf_counter() - start_time
+            print(f"\n\tDuration was {duration} seconds")
+            if type(response) is dict:
+                out = "\n\n" + json.dumps(response, indent=4)
+                count = len(response)
+                console.log(f"Found {count} elements")
+                print_json(out)
+            elif type(response) is str:
+                console.log("\n\n" + response)
+            assert True
+
+        except (
+            PyegeriaException
+        ) as e:
+            print_basic_exception(e)
+            assert False, "Invalid request"
+        except Exception as e:
+            print_basic_exception(e)
+            assert False, "Invalid request"
+        finally:
+            a_client.close_session()
+
     def test_initiate_postgres_database_survey(self):
         try:
             a_client = AutomatedCuration(
@@ -1267,9 +1314,9 @@ class TestAutomatedCuration:
 
             start_time = time.perf_counter()
             # file_folder_guid = "58ef1911-1e85-43cc-a6cb-a8990112e591"
-            file_folder_guid = "7c28d5cb-c745-4663-bdaa-19c0bf962ecf"
+            file_folder_guid = "27613035-6a88-4789-aa0d-92adf9efdaf8"
             response = a_client.initiate_file_folder_survey(
-                file_folder_guid, "FileSurvey:survey-all-folders-and-files"
+                file_folder_guid, "FileSurvey::survey-all-folders-and-files"
             )
             duration = time.perf_counter() - start_time
             print(f"\n\tDuration was {duration} seconds")
@@ -1296,7 +1343,7 @@ class TestAutomatedCuration:
     def test_initiate_file_survey(self):
         try:
             a_client = AutomatedCuration(
-                self.good_view_server_1,
+                self.good_view_server_2,
                 self.good_platform1_url,
                 user_id=self.good_user_2,
                 user_pwd="secret",
@@ -1327,6 +1374,8 @@ class TestAutomatedCuration:
 
         finally:
             a_client.close_session()
+
+
 
     def test_initiate_uc_server_survey(self):
         try:

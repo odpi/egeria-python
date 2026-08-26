@@ -1,17 +1,22 @@
 # Report Family — Happy Path Tests
 # Sales Forecast Theme
 
-> This document tests the Dr.Egeria Report command under normal conditions.
+> This document tests the Dr.Egeria Report family under normal conditions.
 > All commands are expected to succeed when processed.
 >
 > Run with PROCESS (or VALIDATE to confirm parsing before execution).
 >
-> The Report command is fundamentally different from all other Dr.Egeria families:
->   - Verb is View — not Create/Update/Link
->   - No GUID slot, no Qualified Name, no verb swap on output
->   - No element is created or modified in Egeria
->   - Output is report data returned from the Egeria repository
->   - Report Spec is the only required attribute — it names the FormatSet to run
+> Two commands, two very different behaviors:
+>   - View Report (RP-* tests below): ad-hoc, execute-only
+>       - No GUID slot, no Qualified Name, no verb swap on output
+>       - No element is created or modified in Egeria
+>       - Output is report data returned from the Egeria repository
+>       - Report Spec is the only required attribute — it names the FormatSet to run
+>   - Create Report (CR-* tests below): persists a real Egeria `Report` asset
+>       - Has a GUID and Qualified Name; upserts (rerun with the same Display
+>         Name transitions to Update Report automatically)
+>       - Report Spec + execution params land in the Report's additionalProperties
+>       - Display Name is required in addition to Report Spec
 >
 > Output Format valid values:
 >   LIST, FORM, REPORT, MERMAID, DICT, MD, TABLE, JSON
@@ -515,6 +520,130 @@ GlossaryTerm
 
 ### Start From
 0
+
+___
+
+___
+
+# Create Report — Happy Path Tests
+
+> Tests the Dr.Egeria Create Report command — persists a real Egeria `Report`
+> asset (DataSet -> Asset -> Referenceable) carrying a Report Spec reference
+> plus optional default execution parameters, so a Dashboard Sheet placement
+> can reference a concrete, parameterized instance instead of a bare Report
+> Spec (see egeria-workspaces-fs BACKLOG.md NEXT-14).
+>
+> Unlike View Report: Create Report DOES create/update an element (has a
+> GUID, a Qualified Name, and upserts -- rerunning with the same Display
+> Name transitions to Update Report automatically).
+>
+> Short-term design: every attribute below Display Name/Description lands in
+> the Report element's `additionalProperties` dict (no dedicated
+> `ReportDefinition` subtype yet). `Report Spec` is the only required
+> attribute beyond Display Name.
+
+___
+
+# CR-01: Create Report — minimal, Display Name + Report Spec only
+
+> All other attributes take their defaults (Search String *, Starts With
+> True, etc. -- same defaults View Report uses).
+> Expected: a new Report element is created; GUID and Qualified Name appear
+> in the output.
+
+## Create Report
+
+### Display Name
+Sales Forecast Pipeline Report
+
+### Report Spec
+Collections
+
+___
+
+# CR-02: Create Report — explicit Output Format and Search String
+
+> Sets the two most commonly overridden execution defaults.
+> Expected: `additionalProperties` on the created Report contains
+> `outputFormat: TABLE` and `searchString: Sales Forecast`.
+
+## Create Report
+
+### Display Name
+Sales Forecast Collections Table
+
+### Description
+Table view of Sales Forecast collections, for placement on a dashboard.
+
+### Report Spec
+Collections
+
+### Output Format
+TABLE
+
+### Search String
+Sales Forecast
+
+___
+
+# CR-03: Create Report — Advanced filters combined
+
+> Exercises several Advanced-level execution parameters together, mirroring
+> RP-23's combined-attributes style but on a persisted Report rather than an
+> ad-hoc View.
+
+## Create Report
+
+### Display Name
+Sales Forecast Products Governed View
+
+### Report Spec
+Digital-Products
+
+### Output Format
+LIST
+
+### Search String
+Sales Forecast
+
+### Metadata Element Type Name
+DigitalProduct
+
+### Page Size
+25
+
+### Governance Zone Filter
+SalesAnalytics
+
+___
+
+# CR-04: Create Report — re-run CR-01 with a changed Description
+
+> Same Display Name as CR-01, with Report Spec unchanged and a new
+> Description. Expected: the base class's Create<->Update upsert transition
+> fires -- output shows "Update Report", same GUID as CR-01, not a second
+> element.
+
+## Create Report
+
+### Display Name
+Sales Forecast Pipeline Report
+
+### Description
+Now includes a description that wasn't present on the first run.
+
+### Report Spec
+Collections
+
+___
+
+> End of Create Report happy path tests.
+>
+> Expected outcomes for all CR tests:
+>   CR-01 : New Report element created; GUID + Qualified Name present in output
+>   CR-02 : additionalProperties contains outputFormat=TABLE, searchString="Sales Forecast"
+>   CR-03 : additionalProperties contains all combined filter params
+>   CR-04 : Transitions to Update Report; same GUID as CR-01, description updated
 
 ___
 

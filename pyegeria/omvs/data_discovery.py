@@ -17,8 +17,11 @@ from pyegeria.models import (
     UpdateElementRequestBody,
     TemplateRequestBody,
     FilterRequestBody,
+    ResultsRequestBody,
     SearchStringRequestBody,
     GetRequestBody,
+    NewRelationshipRequestBody,
+    DeleteRelationshipRequestBody,
     ReferenceableProperties,
 )
 from pyegeria.view.output_formatter import (
@@ -213,7 +216,7 @@ class DataDiscovery(ServerClient):
         ```
         """
         url = f"{self.platform_url}/servers/{self.view_server}/api/open-metadata/data-discovery/annotations/from-template"
-        return await self._async_create_element_body_request(url, "AnnotationProperties", body)
+        return await self._async_create_element_from_template(url, body)
 
     def create_annotation_from_template(self, body: dict | TemplateRequestBody) -> str:
         """Create an annotation from a template.
@@ -330,6 +333,479 @@ class DataDiscovery(ServerClient):
         """
         loop = asyncio.get_event_loop()
         loop.run_until_complete(self._async_update_annotation(annotation_guid, body))
+
+    async def _async_attach_annotation_to_report(
+        self,
+        survey_report_guid: str,
+        annotation_guid: str,
+        body: dict | NewRelationshipRequestBody,
+    ) -> None:
+        """Link an annotation to its survey report. Async version.
+
+        Parameters
+        ----------
+        survey_report_guid : str
+            The unique identifier of the survey report.
+        annotation_guid : str
+            The unique identifier of the annotation.
+        body : dict | NewRelationshipRequestBody
+            The properties for the relationship.
+
+        Returns
+        -------
+        None
+        """
+        url = f"{self.platform_url}/servers/{self.view_server}/api/open-metadata/data-discovery/survey-reports/{survey_report_guid}/new-annotations/{annotation_guid}/attach"
+        await self._async_new_relationship_request(url, ["SurveyReportAnnotationRelationship"], body)
+
+    def attach_annotation_to_report(
+        self,
+        survey_report_guid: str,
+        annotation_guid: str,
+        body: dict | NewRelationshipRequestBody,
+    ) -> None:
+        """Link an annotation to its survey report.
+
+        Parameters
+        ----------
+        survey_report_guid : str
+            The unique identifier of the survey report.
+        annotation_guid : str
+            The unique identifier of the annotation.
+        body : dict | NewRelationshipRequestBody
+            The properties for the relationship.
+
+        Returns
+        -------
+        None
+        """
+        loop = asyncio.get_event_loop()
+        loop.run_until_complete(
+            self._async_attach_annotation_to_report(survey_report_guid, annotation_guid, body)
+        )
+
+    async def _async_detach_annotation_from_report(
+        self,
+        survey_report_guid: str,
+        annotation_guid: str,
+        body: dict | DeleteRelationshipRequestBody,
+    ) -> None:
+        """Detach an annotation from its survey report. Async version.
+
+        Parameters
+        ----------
+        survey_report_guid : str
+            The unique identifier of the survey report.
+        annotation_guid : str
+            The unique identifier of the annotation.
+        body : dict | DeleteRelationshipRequestBody
+            The properties for the relationship deletion.
+
+        Returns
+        -------
+        None
+        """
+        url = f"{self.platform_url}/servers/{self.view_server}/api/open-metadata/data-discovery/survey-reports/{survey_report_guid}/new-annotations/{annotation_guid}/detach"
+        await self._async_delete_relationship_request(url, body)
+
+    def detach_annotation_from_report(
+        self,
+        survey_report_guid: str,
+        annotation_guid: str,
+        body: dict | DeleteRelationshipRequestBody,
+    ) -> None:
+        """Detach an annotation from its survey report.
+
+        Parameters
+        ----------
+        survey_report_guid : str
+            The unique identifier of the survey report.
+        annotation_guid : str
+            The unique identifier of the annotation.
+        body : dict | DeleteRelationshipRequestBody
+            The properties for the relationship deletion.
+
+        Returns
+        -------
+        None
+        """
+        loop = asyncio.get_event_loop()
+        loop.run_until_complete(
+            self._async_detach_annotation_from_report(survey_report_guid, annotation_guid, body)
+        )
+
+    async def _async_link_annotation_to_described_element(
+        self,
+        annotation_guid: str,
+        element_guid: str,
+        body: dict | NewRelationshipRequestBody,
+    ) -> None:
+        """Link an annotation to the element it describes. Async version.
+
+        Parameters
+        ----------
+        annotation_guid : str
+            The unique identifier of the annotation.
+        element_guid : str
+            The unique identifier of the described element.
+        body : dict | NewRelationshipRequestBody
+            The properties for the relationship.
+
+        Returns
+        -------
+        None
+        """
+        url = f"{self.platform_url}/servers/{self.view_server}/api/open-metadata/data-discovery/elements/{element_guid}/associated-annotations/{annotation_guid}/attach"
+        await self._async_new_relationship_request(url, ["AnnotationDescribedElementRelationship"], body)
+
+    def link_annotation_to_described_element(
+        self,
+        annotation_guid: str,
+        element_guid: str,
+        body: dict | NewRelationshipRequestBody,
+    ) -> None:
+        """Link an annotation to the element it describes.
+
+        Parameters
+        ----------
+        annotation_guid : str
+            The unique identifier of the annotation.
+        element_guid : str
+            The unique identifier of the described element.
+        body : dict | NewRelationshipRequestBody
+            The properties for the relationship.
+
+        Returns
+        -------
+        None
+        """
+        loop = asyncio.get_event_loop()
+        loop.run_until_complete(
+            self._async_link_annotation_to_described_element(annotation_guid, element_guid, body)
+        )
+
+    @dynamic_catch
+    async def _async_detach_annotation_from_described_element(
+        self,
+        annotation_guid: str,
+        element_guid: str,
+        body: dict | DeleteRelationshipRequestBody,
+    ) -> None:
+        """Detach an annotation from the element it describes. Async version."""
+        url = f"{self.platform_url}/servers/{self.view_server}/api/open-metadata/data-discovery/elements/{element_guid}/associated-annotations/{annotation_guid}/detach"
+        await self._async_delete_relationship_request(url, body)
+
+    def detach_annotation_from_described_element(
+        self,
+        annotation_guid: str,
+        element_guid: str,
+        body: dict | DeleteRelationshipRequestBody,
+    ) -> None:
+        """Detach an annotation from the element it describes."""
+        loop = asyncio.get_event_loop()
+        loop.run_until_complete(
+            self._async_detach_annotation_from_described_element(annotation_guid, element_guid, body)
+        )
+
+    async def _async_link_annotation_to_its_predecessor(
+        self,
+        annotation_guid: str,
+        predecessor_guid: str,
+        body: dict | NewRelationshipRequestBody,
+    ) -> None:
+        """Link an annotation to its predecessor. Async version.
+
+        Parameters
+        ----------
+        annotation_guid : str
+            The unique identifier of the annotation.
+        predecessor_guid : str
+            The unique identifier of the predecessor annotation.
+        body : dict | NewRelationshipRequestBody
+            The properties for the relationship.
+
+        Returns
+        -------
+        None
+        """
+        url = f"{self.platform_url}/servers/{self.view_server}/api/open-metadata/data-discovery/annotations/{predecessor_guid}/later-annotations/{annotation_guid}/attach"
+        await self._async_new_relationship_request(url, ["AnnotationPredecessorRelationship"], body)
+
+    def link_annotation_to_its_predecessor(
+        self,
+        annotation_guid: str,
+        predecessor_guid: str,
+        body: dict | NewRelationshipRequestBody,
+    ) -> None:
+        """Link an annotation to its predecessor.
+
+        Parameters
+        ----------
+        annotation_guid : str
+            The unique identifier of the annotation.
+        predecessor_guid : str
+            The unique identifier of the predecessor annotation.
+        body : dict | NewRelationshipRequestBody
+            The properties for the relationship.
+
+        Returns
+        -------
+        None
+        """
+        loop = asyncio.get_event_loop()
+        loop.run_until_complete(
+            self._async_link_annotation_to_its_predecessor(annotation_guid, predecessor_guid, body)
+        )
+
+    async def _async_detach_annotation_from_its_predecessor(
+        self,
+        annotation_guid: str,
+        predecessor_guid: str,
+        body: dict | DeleteRelationshipRequestBody,
+    ) -> None:
+        """Detach an annotation from its predecessor. Async version.
+
+        Parameters
+        ----------
+        annotation_guid : str
+            The unique identifier of the annotation.
+        predecessor_guid : str
+            The unique identifier of the predecessor annotation.
+        body : dict | DeleteRelationshipRequestBody
+            The properties for the relationship deletion.
+
+        Returns
+        -------
+        None
+        """
+        url = f"{self.platform_url}/servers/{self.view_server}/api/open-metadata/data-discovery/annotations/{predecessor_guid}/later-annotations/{annotation_guid}/detach"
+        await self._async_delete_relationship_request(url, body)
+
+    def detach_annotation_from_its_predecessor(
+        self,
+        annotation_guid: str,
+        predecessor_guid: str,
+        body: dict | DeleteRelationshipRequestBody,
+    ) -> None:
+        """Detach an annotation from its predecessor.
+
+        Parameters
+        ----------
+        annotation_guid : str
+            The unique identifier of the annotation.
+        predecessor_guid : str
+            The unique identifier of the predecessor annotation.
+        body : dict | DeleteRelationshipRequestBody
+            The properties for the relationship deletion.
+
+        Returns
+        -------
+        None
+        """
+        loop = asyncio.get_event_loop()
+        loop.run_until_complete(
+            self._async_detach_annotation_from_its_predecessor(annotation_guid, predecessor_guid, body)
+        )
+
+    async def _async_link_resource_profile_data(
+        self,
+        annotation_guid: str,
+        element_guid: str,
+        body: dict | NewRelationshipRequestBody,
+    ) -> None:
+        """Link resource profile data to an annotation. Async version.
+
+        Parameters
+        ----------
+        annotation_guid : str
+            The unique identifier of the annotation.
+        element_guid : str
+            The unique identifier of the resource profile data element.
+        body : dict | NewRelationshipRequestBody
+            The properties for the relationship.
+
+        Returns
+        -------
+        None
+        """
+        url = f"{self.platform_url}/servers/{self.view_server}/api/open-metadata/data-discovery/annotations/{annotation_guid}/resource-profile-data-assets/{element_guid}/attach"
+        await self._async_new_relationship_request(url, ["ResourceProfileDataRelationship"], body)
+
+    def link_resource_profile_data(
+        self,
+        annotation_guid: str,
+        element_guid: str,
+        body: dict | NewRelationshipRequestBody,
+    ) -> None:
+        """Link resource profile data to an annotation.
+
+        Parameters
+        ----------
+        annotation_guid : str
+            The unique identifier of the annotation.
+        element_guid : str
+            The unique identifier of the resource profile data element.
+        body : dict | NewRelationshipRequestBody
+            The properties for the relationship.
+
+        Returns
+        -------
+        None
+        """
+        loop = asyncio.get_event_loop()
+        loop.run_until_complete(
+            self._async_link_resource_profile_data(annotation_guid, element_guid, body)
+        )
+
+    async def _async_detach_resource_profile_data(
+        self,
+        annotation_guid: str,
+        element_guid: str,
+        body: dict | DeleteRelationshipRequestBody,
+    ) -> None:
+        """Detach resource profile data from an annotation. Async version.
+
+        Parameters
+        ----------
+        annotation_guid : str
+            The unique identifier of the annotation.
+        element_guid : str
+            The unique identifier of the resource profile data element.
+        body : dict | DeleteRelationshipRequestBody
+            The properties for the relationship deletion.
+
+        Returns
+        -------
+        None
+        """
+        url = f"{self.platform_url}/servers/{self.view_server}/api/open-metadata/data-discovery/annotations/{annotation_guid}/resource-profile-data-assets/{element_guid}/detach"
+        await self._async_delete_relationship_request(url, body)
+
+    def detach_resource_profile_data(
+        self,
+        annotation_guid: str,
+        element_guid: str,
+        body: dict | DeleteRelationshipRequestBody,
+    ) -> None:
+        """Detach resource profile data from an annotation.
+
+        Parameters
+        ----------
+        annotation_guid : str
+            The unique identifier of the annotation.
+        element_guid : str
+            The unique identifier of the resource profile data element.
+        body : dict | DeleteRelationshipRequestBody
+            The properties for the relationship deletion.
+
+        Returns
+        -------
+        None
+        """
+        loop = asyncio.get_event_loop()
+        loop.run_until_complete(
+            self._async_detach_resource_profile_data(annotation_guid, element_guid, body)
+        )
+
+    async def _async_link_annotation_match(
+        self,
+        annotation_guid: str,
+        element_guid: str,
+        body: dict | NewRelationshipRequestBody,
+    ) -> None:
+        """Link an annotation match. Async version.
+
+        Parameters
+        ----------
+        annotation_guid : str
+            The unique identifier of the annotation.
+        element_guid : str
+            The unique identifier of the matched element.
+        body : dict | NewRelationshipRequestBody
+            The properties for the relationship.
+
+        Returns
+        -------
+        None
+        """
+        url = f"{self.platform_url}/servers/{self.view_server}/api/open-metadata/data-discovery/annotations/{annotation_guid}/matched-elements/{element_guid}/attach"
+        await self._async_new_relationship_request(url, ["AnnotationMatchRelationship"], body)
+
+    def link_annotation_match(
+        self,
+        annotation_guid: str,
+        element_guid: str,
+        body: dict | NewRelationshipRequestBody,
+    ) -> None:
+        """Link an annotation match.
+
+        Parameters
+        ----------
+        annotation_guid : str
+            The unique identifier of the annotation.
+        element_guid : str
+            The unique identifier of the matched element.
+        body : dict | NewRelationshipRequestBody
+            The properties for the relationship.
+
+        Returns
+        -------
+        None
+        """
+        loop = asyncio.get_event_loop()
+        loop.run_until_complete(
+            self._async_link_annotation_match(annotation_guid, element_guid, body)
+        )
+
+    async def _async_detach_annotation_match(
+        self,
+        annotation_guid: str,
+        element_guid: str,
+        body: dict | DeleteRelationshipRequestBody,
+    ) -> None:
+        """Detach an annotation match. Async version.
+
+        Parameters
+        ----------
+        annotation_guid : str
+            The unique identifier of the annotation.
+        element_guid : str
+            The unique identifier of the matched element.
+        body : dict | DeleteRelationshipRequestBody
+            The properties for the relationship deletion.
+
+        Returns
+        -------
+        None
+        """
+        url = f"{self.platform_url}/servers/{self.view_server}/api/open-metadata/data-discovery/annotations/{annotation_guid}/matched-elements/{element_guid}/detach"
+        await self._async_delete_relationship_request(url, body)
+
+    def detach_annotation_match(
+        self,
+        annotation_guid: str,
+        element_guid: str,
+        body: dict | DeleteRelationshipRequestBody,
+    ) -> None:
+        """Detach an annotation match.
+
+        Parameters
+        ----------
+        annotation_guid : str
+            The unique identifier of the annotation.
+        element_guid : str
+            The unique identifier of the matched element.
+        body : dict | DeleteRelationshipRequestBody
+            The properties for the relationship deletion.
+
+        Returns
+        -------
+        None
+        """
+        loop = asyncio.get_event_loop()
+        loop.run_until_complete(
+            self._async_detach_annotation_match(annotation_guid, element_guid, body)
+        )
 
     @dynamic_catch
     async def _async_delete_annotation(
@@ -531,9 +1007,344 @@ class DataDiscovery(ServerClient):
                 body=body,
                 start_from=start_from,
                 page_size=page_size,
+                graph_query_depth=graph_query_depth,
                 output_format=output_format,
                 report_spec=report_spec,
                 **kwargs,
+            )
+        )
+
+    @dynamic_catch
+    async def _async_get_annotations_by_analysis_step(
+        self,
+        analysis_step: str,
+        body: Optional[dict | FilterRequestBody] = None,
+        start_from: int = 0,
+        page_size: int = 0,
+        output_format: str = "JSON",
+        report_spec: str | dict = "Annotations",
+        **kwargs,
+    ) -> str | list[dict]:
+        """Get annotations by analysis step. Async version.
+
+        Notes
+        -----
+        Sample JSON body:
+        ```json
+        {
+          "class" : "FilterRequestBody",
+          "filter" : "AnalysisStepName",
+          "startFrom": 0,
+          "pageSize": 10
+        }
+        ```
+        """
+        url = f"{self.platform_url}/servers/{self.view_server}/api/open-metadata/data-discovery/annotations/by-analysis-step"
+        return await self._async_get_name_request(
+            url,
+            _type="Annotation",
+            _gen_output=self._generate_annotation_output,
+            filter_string=analysis_step,
+            start_from=start_from,
+            page_size=page_size,
+            output_format=output_format,
+            report_spec=report_spec,
+            body=body,
+            **kwargs,
+        )
+
+    def get_annotations_by_analysis_step(
+        self,
+        analysis_step: str,
+        body: Optional[dict | FilterRequestBody] = None,
+        start_from: int = 0,
+        page_size: int = 0,
+        output_format: str = "JSON",
+        report_spec: str | dict = "Annotations",
+        **kwargs,
+    ) -> str | list[dict]:
+        """Get annotations by analysis step."""
+        loop = asyncio.get_event_loop()
+        return loop.run_until_complete(
+            self._async_get_annotations_by_analysis_step(
+                analysis_step, body, start_from, page_size, output_format, report_spec, **kwargs
+            )
+        )
+
+    @dynamic_catch
+    async def _async_get_annotations_by_annotation_type(
+        self,
+        annotation_type: str,
+        body: Optional[dict | FilterRequestBody] = None,
+        start_from: int = 0,
+        page_size: int = 0,
+        output_format: str = "JSON",
+        report_spec: str | dict = "Annotations",
+        **kwargs,
+    ) -> str | list[dict]:
+        """Get annotations by annotation type. Async version.
+
+        Notes
+        -----
+        Sample JSON body:
+        ```json
+        {
+          "class" : "FilterRequestBody",
+          "filter" : "AnnotationTypeName",
+          "startFrom": 0,
+          "pageSize": 10
+        }
+        ```
+        """
+        url = f"{self.platform_url}/servers/{self.view_server}/api/open-metadata/data-discovery/annotations/by-annotation-type"
+        return await self._async_get_name_request(
+            url,
+            _type="Annotation",
+            _gen_output=self._generate_annotation_output,
+            filter_string=annotation_type,
+            start_from=start_from,
+            page_size=page_size,
+            output_format=output_format,
+            report_spec=report_spec,
+            body=body,
+            **kwargs,
+        )
+
+    def get_annotations_by_annotation_type(
+        self,
+        annotation_type: str,
+        body: Optional[dict | FilterRequestBody] = None,
+        start_from: int = 0,
+        page_size: int = 0,
+        output_format: str = "JSON",
+        report_spec: str | dict = "Annotations",
+        **kwargs,
+    ) -> str | list[dict]:
+        """Get annotations by annotation type."""
+        loop = asyncio.get_event_loop()
+        return loop.run_until_complete(
+            self._async_get_annotations_by_annotation_type(
+                annotation_type, body, start_from, page_size, output_format, report_spec, **kwargs
+            )
+        )
+
+    @dynamic_catch
+    async def _async_get_annotations_for_element(
+        self,
+        element_guid: str,
+        body: Optional[dict | ResultsRequestBody] = None,
+        start_from: int = 0,
+        page_size: int = 0,
+        output_format: str = "JSON",
+        report_spec: str | dict = "Annotations",
+        **kwargs,
+    ) -> str | list[dict]:
+        """Get the annotations associated with an element. Async version.
+
+        Notes
+        -----
+        Sample JSON body:
+        ```json
+        {
+          "class" : "ResultsRequestBody",
+          "startFrom": 0,
+          "pageSize": 10
+        }
+        ```
+        """
+        url = f"{self.platform_url}/servers/{self.view_server}/api/open-metadata/data-discovery/elements/{element_guid}/associated-annotations"
+        return await self._async_get_results_body_request(
+            url,
+            _type="Annotation",
+            _gen_output=self._generate_annotation_output,
+            start_from=start_from,
+            page_size=page_size,
+            output_format=output_format,
+            report_spec=report_spec,
+            body=body,
+            **kwargs,
+        )
+
+    def get_annotations_for_element(
+        self,
+        element_guid: str,
+        body: Optional[dict | ResultsRequestBody] = None,
+        start_from: int = 0,
+        page_size: int = 0,
+        output_format: str = "JSON",
+        report_spec: str | dict = "Annotations",
+        **kwargs,
+    ) -> str | list[dict]:
+        """Get the annotations associated with an element."""
+        loop = asyncio.get_event_loop()
+        return loop.run_until_complete(
+            self._async_get_annotations_for_element(
+                element_guid, body, start_from, page_size, output_format, report_spec, **kwargs
+            )
+        )
+
+    @dynamic_catch
+    async def _async_get_new_annotations(
+        self,
+        survey_report_guid: str,
+        body: Optional[dict | ResultsRequestBody] = None,
+        start_from: int = 0,
+        page_size: int = 0,
+        output_format: str = "JSON",
+        report_spec: str | dict = "Annotations",
+        **kwargs,
+    ) -> str | list[dict]:
+        """Get the new annotations for a survey report. Async version.
+
+        Notes
+        -----
+        Sample JSON body:
+        ```json
+        {
+          "class" : "ResultsRequestBody",
+          "startFrom": 0,
+          "pageSize": 10
+        }
+        ```
+        """
+        url = f"{self.platform_url}/servers/{self.view_server}/api/open-metadata/data-discovery/survey-reports/{survey_report_guid}/new-annotations"
+        return await self._async_get_results_body_request(
+            url,
+            _type="Annotation",
+            _gen_output=self._generate_annotation_output,
+            start_from=start_from,
+            page_size=page_size,
+            output_format=output_format,
+            report_spec=report_spec,
+            body=body,
+            **kwargs,
+        )
+
+    def get_new_annotations(
+        self,
+        survey_report_guid: str,
+        body: Optional[dict | ResultsRequestBody] = None,
+        start_from: int = 0,
+        page_size: int = 0,
+        output_format: str = "JSON",
+        report_spec: str | dict = "Annotations",
+        **kwargs,
+    ) -> str | list[dict]:
+        """Get the new annotations for a survey report."""
+        loop = asyncio.get_event_loop()
+        return loop.run_until_complete(
+            self._async_get_new_annotations(
+                survey_report_guid, body, start_from, page_size, output_format, report_spec, **kwargs
+            )
+        )
+
+    @dynamic_catch
+    async def _async_get_annotation_extensions(
+        self,
+        annotation_guid: str,
+        body: Optional[dict | ResultsRequestBody] = None,
+        start_from: int = 0,
+        page_size: int = 0,
+        output_format: str = "JSON",
+        report_spec: str | dict = "Annotations",
+        **kwargs,
+    ) -> str | list[dict]:
+        """Get the annotations that extend an annotation. Async version.
+
+        Notes
+        -----
+        Sample JSON body:
+        ```json
+        {
+          "class" : "ResultsRequestBody",
+          "startFrom": 0,
+          "pageSize": 10
+        }
+        ```
+        """
+        url = f"{self.platform_url}/servers/{self.view_server}/api/open-metadata/data-discovery/annotations/{annotation_guid}/annotation-extensions"
+        return await self._async_get_results_body_request(
+            url,
+            _type="Annotation",
+            _gen_output=self._generate_annotation_output,
+            start_from=start_from,
+            page_size=page_size,
+            output_format=output_format,
+            report_spec=report_spec,
+            body=body,
+            **kwargs,
+        )
+
+    def get_annotation_extensions(
+        self,
+        annotation_guid: str,
+        body: Optional[dict | ResultsRequestBody] = None,
+        start_from: int = 0,
+        page_size: int = 0,
+        output_format: str = "JSON",
+        report_spec: str | dict = "Annotations",
+        **kwargs,
+    ) -> str | list[dict]:
+        """Get the annotations that extend an annotation."""
+        loop = asyncio.get_event_loop()
+        return loop.run_until_complete(
+            self._async_get_annotation_extensions(
+                annotation_guid, body, start_from, page_size, output_format, report_spec, **kwargs
+            )
+        )
+
+    @dynamic_catch
+    async def _async_get_previous_annotations(
+        self,
+        annotation_guid: str,
+        body: Optional[dict | ResultsRequestBody] = None,
+        start_from: int = 0,
+        page_size: int = 0,
+        output_format: str = "JSON",
+        report_spec: str | dict = "Annotations",
+        **kwargs,
+    ) -> str | list[dict]:
+        """Get the annotations that precede an annotation. Async version.
+
+        Notes
+        -----
+        Sample JSON body:
+        ```json
+        {
+          "class" : "ResultsRequestBody",
+          "startFrom": 0,
+          "pageSize": 10
+        }
+        ```
+        """
+        url = f"{self.platform_url}/servers/{self.view_server}/api/open-metadata/data-discovery/annotations/{annotation_guid}/previous-annotations"
+        return await self._async_get_results_body_request(
+            url,
+            _type="Annotation",
+            _gen_output=self._generate_annotation_output,
+            start_from=start_from,
+            page_size=page_size,
+            output_format=output_format,
+            report_spec=report_spec,
+            body=body,
+            **kwargs,
+        )
+
+    def get_previous_annotations(
+        self,
+        annotation_guid: str,
+        body: Optional[dict | ResultsRequestBody] = None,
+        start_from: int = 0,
+        page_size: int = 0,
+        output_format: str = "JSON",
+        report_spec: str | dict = "Annotations",
+        **kwargs,
+    ) -> str | list[dict]:
+        """Get the annotations that precede an annotation."""
+        loop = asyncio.get_event_loop()
+        return loop.run_until_complete(
+            self._async_get_previous_annotations(
+                annotation_guid, body, start_from, page_size, output_format, report_spec, **kwargs
             )
         )
 
@@ -866,8 +1677,128 @@ class DataDiscovery(ServerClient):
                 guid=guid,
                 element_type=element_type,
                 body=body,
+                graph_query_depth=graph_query_depth,
                 output_format=output_format,
                 report_spec=report_spec,
                 **kwargs,
             )
         )
+
+    #
+    # Analysis Reports
+    #
+
+    @dynamic_catch
+    async def _async_create_analysis_report(self, body: dict | NewElementRequestBody) -> str:
+        """Create an analysis report. Async version."""
+        url = f"{self.platform_url}/servers/{self.view_server}/api/open-metadata/data-discovery/analysis-reports"
+        return await self._async_create_element_body_request(url, ["AnalysisReportProperties"], body)
+
+    def create_analysis_report(self, body: dict | NewElementRequestBody) -> str:
+        """Create an analysis report."""
+        loop = asyncio.get_event_loop()
+        return loop.run_until_complete(self._async_create_analysis_report(body))
+
+    @dynamic_catch
+    async def _async_update_analysis_report(self, report_guid: str, body: dict | UpdateElementRequestBody) -> None:
+        """Update an analysis report. Async version."""
+        url = f"{self.platform_url}/servers/{self.view_server}/api/open-metadata/data-discovery/analysis-reports/{report_guid}/update"
+        await self._async_update_element_body_request(url, ["AnalysisReportProperties"], body)
+
+    def update_analysis_report(self, report_guid: str, body: dict | UpdateElementRequestBody) -> None:
+        """Update an analysis report."""
+        loop = asyncio.get_event_loop()
+        loop.run_until_complete(self._async_update_analysis_report(report_guid, body))
+
+    @dynamic_catch
+    async def _async_delete_analysis_report(self, report_guid: str, body: Optional[dict | DeleteElementRequestBody] = None) -> None:
+        """Delete an analysis report. Async version."""
+        url = f"{self.platform_url}/servers/{self.view_server}/api/open-metadata/data-discovery/analysis-reports/{report_guid}/delete"
+        await self._async_delete_element_request(url, body)
+
+    def delete_analysis_report(self, report_guid: str, body: Optional[dict | DeleteElementRequestBody] = None) -> None:
+        """Delete an analysis report."""
+        loop = asyncio.get_event_loop()
+        loop.run_until_complete(self._async_delete_analysis_report(report_guid, body))
+
+    @dynamic_catch
+    async def _async_get_analysis_reports_by_name(self, name: str, start_from: int = 0, page_size: int = 100, **kwargs) -> list | str:
+        """Get analysis reports by name. Async version."""
+        url = f"{self.platform_url}/servers/{self.view_server}/api/open-metadata/data-discovery/analysis-reports/by-name"
+        return await self._async_get_name_request(url, _type="AnalysisReport", _gen_output=self._generate_annotation_output, name=name, start_from=start_from, page_size=page_size, **kwargs)
+
+    def get_analysis_reports_by_name(self, name: str, start_from: int = 0, page_size: int = 100, **kwargs) -> list | str:
+        """Get analysis reports by name."""
+        loop = asyncio.get_event_loop()
+        return loop.run_until_complete(self._async_get_analysis_reports_by_name(name, start_from, page_size, **kwargs))
+
+    @dynamic_catch
+    async def _async_find_analysis_reports(self, search_string: str = "*", start_from: int = 0, page_size: int = 100, **kwargs) -> list | str:
+        """Find analysis reports. Async version."""
+        url = f"{self.platform_url}/servers/{self.view_server}/api/open-metadata/data-discovery/analysis-reports/by-search-string"
+        return await self._async_find_request(url, _type="AnalysisReport", _gen_output=self._generate_annotation_output, search_string=search_string, start_from=start_from, page_size=page_size, **kwargs)
+
+    def find_analysis_reports(self, search_string: str = "*", start_from: int = 0, page_size: int = 100, **kwargs) -> list | str:
+        """Find analysis reports."""
+        loop = asyncio.get_event_loop()
+        return loop.run_until_complete(self._async_find_analysis_reports(search_string, start_from, page_size, **kwargs))
+
+    @dynamic_catch
+    async def _async_get_analysis_report_by_guid(self, guid: str, **kwargs) -> dict | str:
+        """Get analysis report by GUID. Async version."""
+        url = f"{self.platform_url}/servers/{self.view_server}/api/open-metadata/data-discovery/analysis-reports/{guid}/retrieve"
+        return await self._async_get_guid_request(url, _type="AnalysisReport", _gen_output=self._generate_annotation_output, **kwargs)
+
+    def get_analysis_report_by_guid(self, guid: str, **kwargs) -> dict | str:
+        """Get analysis report by GUID."""
+        loop = asyncio.get_event_loop()
+        return loop.run_until_complete(self._async_get_analysis_report_by_guid(guid, **kwargs))
+
+    #
+    # Linking
+    #
+
+    @dynamic_catch
+    async def _async_link_analysis_report_to_asset(self, analysis_report_guid: str, asset_guid: str, body: Optional[dict | NewRelationshipRequestBody] = None) -> None:
+        """Link an analysis report to an asset. Async version."""
+        url = f"{self.platform_url}/servers/{self.view_server}/api/open-metadata/data-discovery/analysis-reports/{analysis_report_guid}/assets/{asset_guid}/attach"
+        await self._async_new_relationship_request(url, body=body)
+
+    def link_analysis_report_to_asset(self, analysis_report_guid: str, asset_guid: str, body: Optional[dict | NewRelationshipRequestBody] = None) -> None:
+        """Link an analysis report to an asset."""
+        loop = asyncio.get_event_loop()
+        loop.run_until_complete(self._async_link_analysis_report_to_asset(analysis_report_guid, asset_guid, body))
+
+    @dynamic_catch
+    async def _async_detach_analysis_report_from_asset(self, analysis_report_guid: str, asset_guid: str, body: Optional[dict | DeleteRelationshipRequestBody] = None) -> None:
+        """Detach an analysis report from an asset. Async version."""
+        url = f"{self.platform_url}/servers/{self.view_server}/api/open-metadata/data-discovery/analysis-reports/{analysis_report_guid}/assets/{asset_guid}/detach"
+        await self._async_delete_relationship_request(url, body)
+
+    def detach_analysis_report_from_asset(self, analysis_report_guid: str, asset_guid: str, body: Optional[dict | DeleteRelationshipRequestBody] = None) -> None:
+        """Detach an analysis report from an asset."""
+        loop = asyncio.get_event_loop()
+        loop.run_until_complete(self._async_detach_analysis_report_from_asset(analysis_report_guid, asset_guid, body))
+
+
+    @dynamic_catch
+    async def _async_link_request_for_action_target(self, annotation_guid: str, element_guid: str, body: Optional[dict | NewRelationshipRequestBody] = None) -> None:
+        """Link a request for action target. Async version."""
+        url = f"{self.platform_url}/servers/{self.view_server}/api/open-metadata/data-discovery/annotations/{annotation_guid}/request-for-action-targets/{element_guid}/attach"
+        await self._async_new_relationship_request(url, ["RequestForActionProperties"], body)
+
+    def link_request_for_action_target(self, annotation_guid: str, element_guid: str, body: Optional[dict | NewRelationshipRequestBody] = None) -> None:
+        """Link a request for action target."""
+        loop = asyncio.get_event_loop()
+        loop.run_until_complete(self._async_link_request_for_action_target(annotation_guid, element_guid, body))
+
+    @dynamic_catch
+    async def _async_detach_request_for_action_target(self, annotation_guid: str, element_guid: str, body: Optional[dict | DeleteRelationshipRequestBody] = None) -> None:
+        """Detach a request for action target. Async version."""
+        url = f"{self.platform_url}/servers/{self.view_server}/api/open-metadata/data-discovery/annotations/{annotation_guid}/request-for-action-targets/{element_guid}/detach"
+        await self._async_delete_relationship_request(url, body)
+
+    def detach_request_for_action_target(self, annotation_guid: str, element_guid: str, body: Optional[dict | DeleteRelationshipRequestBody] = None) -> None:
+        """Detach a request for action target."""
+        loop = asyncio.get_event_loop()
+        loop.run_until_complete(self._async_detach_request_for_action_target(annotation_guid, element_guid, body))

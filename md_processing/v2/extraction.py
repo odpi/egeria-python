@@ -10,7 +10,21 @@ from loguru import logger
 STANDARD_VERBS = {
     "Create", "Update", "Delete", "Link", "Attach", "Add",
     "Unlink", "Detach", "Remove", "Display", "Run", "View",
-    "Search", "Find", "Provenance", "Validate", "Process"
+    "Search", "Find", "Provenance", "Validate", "Process",
+    "Classify", "Reclassify", "Declassify",
+    # "Cancel Engine Action" -- stops an in-progress engine action request;
+    # matches the concept name used everywhere else in the codebase (the
+    # Egeria REST endpoint, pyegeria's cancel_engine_action, the Operations
+    # UI's Cancel button), so it earns its own verb rather than overloading
+    # Delete/Remove (which would misleadingly imply erasing the audit record).
+    "Cancel",
+    # "Initiate Engine Action" -- ad-hoc triggers a governance engine request;
+    # matches pyegeria's initiate_engine_action / Egeria's own
+    # InitiateEngineActionRequestBody naming. Deliberately not "Create Engine
+    # Action": unlike every other Create command in this codebase, this is
+    # never an idempotent upsert-by-qualified-name -- each call mints a new
+    # runtime request even if a prior one shares the same display name.
+    "Initiate",
 }
 
 # Commands that appear as a single word (no separate verb) and map to canonical verb+object

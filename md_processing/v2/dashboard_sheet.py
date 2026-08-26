@@ -1,0 +1,283 @@
+"""
+Dashboard Sheet Processors for Dr.Egeria v2.
+
+Handles `Create Dashboard Sheet` and `Link Report to Dashboard Sheet` -- the
+first Dr.Egeria commands that manage a purely local, pyegeria-only record
+(see pyegeria.view._output_dashboard_sheet_models.DashboardSheet) instead of
+an Egeria element. No OMVS calls are made.
+
+Design: rather than bypass AsyncBaseCommandProcessor entirely, the base
+class's Egeria-lookup primitives (fetch_element / resolve_element_guid) are
+overridden to consult a local JSON store instead of Egeria -- so the
+inherited create<->update upsert-transition, qualified-name derivation,
+caching, and validate/display dry-run machinery all keep working, just
+against local data. This is a first version: once Dashboard Sheet becomes a
+real Egeria Collection subtype (see OVERVIEW_REPORTING_MODEL.md SS10 and the
+"PLANNED" notes on the Dashboard Sheet Base / Report to Dashboard Sheet Link
+Base Tinderbox bundles), these processors extend to call real OMVS methods
+instead of the local store, without changing the compact command specs.
+
+Store: PYEGERIA_DASHBOARD_SHEETS_STORE (default ~/.pyegeria/dashboard_sheets.json),
+a single JSON file loaded fresh and saved back on every command -- durable
+across separate `dr_egeria` invocations, unlike dashboard_sheet_registry.py's
+in-memory RUNTIME store (which is for app-level consumers reading a merged
+CONFIG+RUNTIME view, not for this authoring path).
+"""
+import os
+from typing import Any, Dict, Optional
+
+from loguru import logger
+
+from md_processing.v2.processors import AsyncBaseCommandProcessor
+from pyegeria.view._output_dashboard_sheet_models import DashboardSheet, Placement, DashboardSheetDict
+
+
+def _default_store_path() -> str:
+    return os.path.expanduser(
+        os.getenv("PYEGERIA_DASHBOARD_SHEETS_STORE", "~/.pyegeria/dashboard_sheets.json")
+    )
+
+
+def _parse_placement_perspectives(attributes: Dict[str, Any]) -> list:
+    """Read "Placement Perspectives" (BACKLOG.md NEXT-19, egeria-workspaces-fs)
+    out of a command's parsed attributes -- a "Simple List"-style attribute,
+    which the base attribute-parsing pipeline may hand back either as an
+    already-split list or as a raw comma-separated string (both shapes seen
+    elsewhere for this attribute style, see _normalize_report_params's own
+    _to_string_list coercion in format_set_executor.py); tolerate either
+    rather than assume one. Shared by both LinkReportToDashboardSheetProcessor
+    and AddTextOnDashboardSheetProcessor so the parsing rule lives in one
+    place, not duplicated per processor."""
+    value = attributes.get("Placement Perspectives", {}).get("value") or []
+    if isinstance(value, str):
+        return [p.strip() for p in value.split(",") if p.strip()]
+    return list(value)
+
+
+def _load_store(path: str) -> DashboardSheetDict:
+    if os.path.exists(path):
+        return DashboardSheetDict.load_from_json(path)
+    return DashboardSheetDict()
+
+
+def _sheet_to_element(sheet: DashboardSheet) -> Dict[str, Any]:
+    """Wrap a DashboardSheet in a minimal Egeria-elementHeader-shaped dict so
+    the inherited pipeline's generic `element.get('elementHeader', {})...`
+    patterns work unmodified against local data."""
+    return {
+        "elementHeader": {"guid": sheet.name, "type": {"typeName": "DashboardSheet"}},
+        "properties": {
+            "qualifiedName": f"Dashboard::{sheet.name}",
+            "displayName": sheet.heading,
+            "description": sheet.description,
+        },
+    }
+
+
+class CreateDashboardSheetProcessor(AsyncBaseCommandProcessor):
+    """Processor for Create Dashboard Sheet (and its Update transition)."""
+
+    def derive_qualified_name(self, attributes: Optional[Dict[str, Any]] = None) -> str:
+        """Override the inherited Egeria-style qn_prefix/org/version qualified-name
+        derivation -- local records are keyed by their plain Display Name,
+        so that's what fetch_as_is()/resolve_element_guid() need to match against.
+
+        2026-07-31: switched from the family-specific "Dashboard Sheet Name"
+        attribute to the universal "Display Name" -- Dashboard Sheet Base no
+        longer carries its own duplicate naming attribute."""
+        if attributes is None:
+            attributes = self.parsed_output.get("attributes", {})
+        return attributes.get("Display Name", {}).get("value") or ""
+
+    async def resolve_element_guid(self, name_or_guid: str, tech_type: Optional[str] = None) -> Optional[str]:
+        if not name_or_guid:
+            return None
+        sheets = _load_store(_default_store_path())
+        return name_or_guid if name_or_guid in sheets else None
+
+    async def fetch_element(self, guid: str) -> Optional[Dict[str, Any]]:
+        sheets = _load_store(_default_store_path())
+        sheet = sheets.get(guid)
+        return _sheet_to_element(sheet) if sheet else None
+
+    async def apply_changes(self) -> str:
+        attributes = self.parsed_output["attributes"]
+        name = attributes.get("Display Name", {}).get("value")
+        if not name:
+            raise ValueError("Display Name is required.")
+        heading = attributes.get("Dashboard Sheet Heading", {}).get("value") or name
+        description = attributes.get("Dashboard Sheet Description", {}).get("value") or ""
+        family = attributes.get("Dashboard Sheet Family", {}).get("value") or None
+
+        path = _default_store_path()
+        sheets = _load_store(path)
+        is_update = name in sheets
+        sheets.upsert(name, DashboardSheet(name=name, heading=heading, description=description, family=family))
+        sheets.save_to_json(path)
+
+        self.parsed_output["guid"] = name
+        verb_word = "Updated" if is_update else "Created"
+        logger.success(f"{verb_word} Dashboard Sheet '{name}' at {path}")
+        return (
+            f"\n\n## {self.command.verb} Dashboard Sheet\n\n"
+            f"{verb_word} Dashboard Sheet **{name}**\n\n"
+            f"- **Heading**: {heading}\n"
+            f"- **Description**: {description or '_(none)_'}\n"
+            f"- **Family**: {family or '_(none)_'}\n"
+        )
+
+
+class LinkReportToDashboardSheetProcessor(AsyncBaseCommandProcessor):
+    """
+    Processor for Link Report to Dashboard Sheet -- places a Report (a real
+    Egeria `Report` asset created via `Create Report`, carrying a Report Spec
+    reference plus its own default execution parameters) into a Dashboard
+    Sheet as an ordered Placement. The target Dashboard Sheet must already
+    exist (created via Create Dashboard Sheet).
+
+    Hard cutover 2026-07-29: this used to place a bare Report Spec (FormatSet)
+    name directly -- switched to referencing a Report element by name instead,
+    since a Report Spec has no way to carry fixed/scoped parameters (see
+    egeria-workspaces-fs BACKLOG.md NEXT-14). `Report Name` is a Reference
+    Name-style attribute, so the base class's generic attribute-resolution
+    pipeline (step 5 of execute()) already resolves it against Egeria and
+    populates `.get("guid")` -- used here only for a best-effort "does this
+    Report actually exist yet" warning, not required for the placement
+    record itself (which still stores the plain name as `Placement.ref`,
+    resolved later by the consuming app, same as the old Report Spec-ref
+    scheme).
+    """
+
+    async def fetch_as_is(self) -> Optional[Dict[str, Any]]:
+        return None
+
+    def supports_target_element_lookup(self) -> bool:
+        return False
+
+    async def apply_changes(self) -> str:
+        attributes = self.parsed_output["attributes"]
+        sheet_name = attributes.get("Dashboard Sheet Name", {}).get("value")
+        report_name = attributes.get("Report Name", {}).get("value")
+        report_guid = attributes.get("Report Name", {}).get("guid")
+        span = attributes.get("Placement Span", {}).get("value") or "1"
+        emphasis = attributes.get("Placement Emphasis", {}).get("value") or "kpi"
+        # BACKLOG.md NEXT-19/NEXT-21 (egeria-workspaces-fs). "Placement Detail
+        # Spec" is a plain optional string, same pattern as report_name.
+        perspectives = _parse_placement_perspectives(attributes)
+        detail_spec = attributes.get("Placement Detail Spec", {}).get("value") or None
+
+        if not sheet_name:
+            raise ValueError("Dashboard Sheet Name is required.")
+        if not report_name:
+            raise ValueError("Report Name is required.")
+
+        if not report_guid:
+            self._add_warning(
+                f"Report '{report_name}' was not found in Egeria — the placement will be "
+                f"unresolved until a Report with that name exists (create one with 'Create Report')."
+            )
+
+        path = _default_store_path()
+        sheets = _load_store(path)
+        sheet = sheets.get(sheet_name)
+        if not sheet:
+            raise ValueError(
+                f"Dashboard Sheet '{sheet_name}' does not exist. Create it first with 'Create Dashboard Sheet'."
+            )
+
+        placement = Placement(
+            ref=report_name, span=span, emphasis=emphasis,
+            perspectives=perspectives, detail_spec=detail_spec,
+        )
+        replaced = False
+        for i, p in enumerate(sheet.placements):
+            if p.ref == report_name:
+                sheet.placements[i] = placement
+                replaced = True
+                break
+        if not replaced:
+            sheet.placements.append(placement)
+
+        sheets.save_to_json(path)
+        verb_word = "Updated placement of" if replaced else "Placed"
+        logger.success(f"{verb_word} Report '{report_name}' in Dashboard Sheet '{sheet_name}'")
+        extra = []
+        if perspectives:
+            extra.append(f"perspectives={','.join(perspectives)}")
+        if detail_spec:
+            extra.append(f"detail_spec={detail_spec}")
+        extra_str = (", " + ", ".join(extra)) if extra else ""
+        return (
+            f"\n\n## {self.command.verb} Report to Dashboard Sheet\n\n"
+            f"{verb_word} **{report_name}** in Dashboard Sheet **{sheet_name}** "
+            f"(span={span}, emphasis={emphasis}{extra_str})\n"
+        )
+
+
+class AddTextOnDashboardSheetProcessor(AsyncBaseCommandProcessor):
+    """
+    Processor for Place Text on Dashboard Sheet -- places literal markdown
+    text (a section header, explanation, or caption) into a Dashboard Sheet
+    as an ordered Placement, alongside Report placements. Not an Egeria
+    element or relationship, and unlike Report placements, `Placement Name`
+    isn't a Reference Name-style attribute either -- there's nothing in
+    Egeria to resolve, it's purely the local replace-by-name key (same role
+    `Report Name` plays for a Report placement's `Placement.ref`).
+    """
+
+    async def fetch_as_is(self) -> Optional[Dict[str, Any]]:
+        return None
+
+    def supports_target_element_lookup(self) -> bool:
+        return False
+
+    async def apply_changes(self) -> str:
+        attributes = self.parsed_output["attributes"]
+        sheet_name = attributes.get("Dashboard Sheet Name", {}).get("value")
+        placement_name = attributes.get("Placement Name", {}).get("value")
+        content = attributes.get("MD Content", {}).get("value")
+        span = attributes.get("Placement Span", {}).get("value") or "1"
+        emphasis = attributes.get("Placement Emphasis", {}).get("value") or "kpi"
+        # BACKLOG.md NEXT-19 (egeria-workspaces-fs) -- a text placement (e.g. a
+        # section header) can be perspective-scoped too, not just a Report
+        # placement; no detail_spec here, a text block has no result to drill
+        # into.
+        perspectives = _parse_placement_perspectives(attributes)
+
+        if not sheet_name:
+            raise ValueError("Dashboard Sheet Name is required.")
+        if not placement_name:
+            raise ValueError("Placement Name is required.")
+        if not content:
+            raise ValueError("MD Content is required.")
+
+        path = _default_store_path()
+        sheets = _load_store(path)
+        sheet = sheets.get(sheet_name)
+        if not sheet:
+            raise ValueError(
+                f"Dashboard Sheet '{sheet_name}' does not exist. Create it first with 'Create Dashboard Sheet'."
+            )
+
+        placement = Placement(
+            ref=placement_name, span=span, emphasis=emphasis, content=content,
+            perspectives=perspectives,
+        )
+        replaced = False
+        for i, p in enumerate(sheet.placements):
+            if p.ref == placement_name:
+                sheet.placements[i] = placement
+                replaced = True
+                break
+        if not replaced:
+            sheet.placements.append(placement)
+
+        sheets.save_to_json(path)
+        verb_word = "Updated" if replaced else "Placed"
+        logger.success(f"{verb_word} text placement '{placement_name}' in Dashboard Sheet '{sheet_name}'")
+        extra_str = f", perspectives={','.join(perspectives)}" if perspectives else ""
+        return (
+            f"\n\n## {self.command.verb} Text on Dashboard Sheet\n\n"
+            f"{verb_word} text placement **{placement_name}** in Dashboard Sheet **{sheet_name}** "
+            f"(span={span}, emphasis={emphasis}{extra_str})\n"
+        )

@@ -18,6 +18,7 @@ from pyegeria.models import (
     UpdateElementRequestBody,
     NewRelationshipRequestBody,
     DeleteRelationshipRequestBody,
+    UpdateRelationshipRequestBody,
     DeleteElementRequestBody,
 )
 from pyegeria.core.utils import dynamic_catch, body_slimmer
@@ -519,7 +520,8 @@ class ProductManager(CollectionManager):
                                                       _gen_output=self._generate_collection_output,
                                                       filter_string=name,
                                                       classification_names=classification_names, start_from=start_from,
-                                                      page_size=page_size, output_format=output_format,
+                                                      page_size=page_size, graph_query_depth=graph_query_depth,
+                                                      output_format=output_format,
                                                       report_spec=report_spec, body=body)
         return response
 
@@ -786,7 +788,7 @@ class ProductManager(CollectionManager):
         consumer_product_guid: str,
         consumed_product_guid: str,
         body: Optional[dict | NewRelationshipRequestBody] = None,
-    ) -> None:
+    ) -> Optional[str]:
         """Link two dependent digital products. Async version.
 
         Parameters
@@ -800,7 +802,14 @@ class ProductManager(CollectionManager):
 
         Returns
         -------
-        None
+        str | None
+            The GUID of the newly created DigitalProductDependency relationship
+            (DigitalProductDependency is MULTI_LINK -- see
+            pyegeria.core.relationship_multiplicity -- more than one dependency
+            relationship can exist between the same product pair, so this GUID
+            is needed to target this specific instance later via
+            _async_detach_digital_product_dependency_by_id). None if the server
+            didn't return one.
 
         Raises
         ------
@@ -825,15 +834,16 @@ class ProductManager(CollectionManager):
             f"{self.product_manager_command_root}/digital-products/"
             f"{consumer_product_guid}/product-dependencies/{consumed_product_guid}/attach"
         )
-        await self._async_new_relationship_request(url, ["DigitalProductDependencyProperties"], body)
+        guid = await self._async_new_relationship_request(url, ["DigitalProductDependencyProperties"], body)
         logger.info(f"Linked {consumed_product_guid} -> {consumer_product_guid}")
+        return guid
 
     def link_digital_product_dependency(
         self,
         consumer_product_guid: str,
         consumed_product_guid: str,
         body: Optional[dict | NewRelationshipRequestBody] = None,
-    ) -> None:
+    ) -> Optional[str]:
         """Link two dependent digital products.
 
         Parameters
@@ -847,7 +857,9 @@ class ProductManager(CollectionManager):
 
         Returns
         -------
-        None
+        str | None
+            The GUID of the newly created DigitalProductDependency relationship.
+            None if the server didn't return one.
 
         Raises
         ------
@@ -869,7 +881,7 @@ class ProductManager(CollectionManager):
         ```
         """
         loop = asyncio.get_event_loop()
-        loop.run_until_complete(
+        return loop.run_until_complete(
             self._async_link_digital_product_dependency(
                 consumer_product_guid, consumed_product_guid, body
             )
@@ -1507,7 +1519,8 @@ class ProductManager(CollectionManager):
         response = await self._async_get_name_request(url, _type="DigitalProductCatalog", _gen_output=None,
                                                       filter_string=name,
                                                       classification_names=classification_names, start_from=start_from,
-                                                      page_size=page_size, output_format=output_format,
+                                                      page_size=page_size, graph_query_depth=graph_query_depth,
+                                                      output_format=output_format,
                                                       report_spec=report_spec, body=body)
         return response
 
@@ -1755,3 +1768,36 @@ class ProductManager(CollectionManager):
                 **kwargs
             )
         )
+    #
+    # Additional relationship maintenance - added to close the gap found by
+    # scripts/omvs_audit.py against the product-manager .http ground truth
+    # (2026-08-21).
+    #
+
+    @dynamic_catch
+    async def _async_update_digital_product_dependency(self, digital_product_dependency_relationship_guid: str,
+                                                        body: Optional[dict | UpdateRelationshipRequestBody] = None) -> None:
+        """Update the properties of a DigitalProductDependency relationship, identified by its own relationship GUID. Async version."""
+        url = f"{self.platform_url}/servers/{self.view_server}/api/open-metadata/product-manager/digital-product-dependencies/{digital_product_dependency_relationship_guid}/update"
+        await self._async_update_relationship_request(url, ["DigitalProductDependencyProperties"], body)
+
+    @dynamic_catch
+    def update_digital_product_dependency(self, digital_product_dependency_relationship_guid: str,
+                                          body: Optional[dict | UpdateRelationshipRequestBody] = None) -> None:
+        """Update the properties of a DigitalProductDependency relationship, identified by its own relationship GUID."""
+        loop = asyncio.get_event_loop()
+        loop.run_until_complete(self._async_update_digital_product_dependency(digital_product_dependency_relationship_guid, body))
+
+    @dynamic_catch
+    async def _async_detach_digital_product_dependency_by_id(self, digital_product_dependency_relationship_guid: str,
+                                                              body: Optional[dict | DeleteRelationshipRequestBody] = None) -> None:
+        """Detach one specific DigitalProductDependency relationship, identified by its own relationship GUID. Async version."""
+        url = f"{self.platform_url}/servers/{self.view_server}/api/open-metadata/product-manager/digital-product-dependencies/{digital_product_dependency_relationship_guid}/detach"
+        await self._async_delete_relationship_request(url, body)
+
+    @dynamic_catch
+    def detach_digital_product_dependency_by_id(self, digital_product_dependency_relationship_guid: str,
+                                                 body: Optional[dict | DeleteRelationshipRequestBody] = None) -> None:
+        """Detach one specific DigitalProductDependency relationship, identified by its own relationship GUID."""
+        loop = asyncio.get_event_loop()
+        loop.run_until_complete(self._async_detach_digital_product_dependency_by_id(digital_product_dependency_relationship_guid, body))

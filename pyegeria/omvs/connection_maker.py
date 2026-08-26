@@ -423,6 +423,69 @@ class ConnectionMaker(ServerClient):
             )
         )
 
+    async def _async_get_connector_types_by_connector_provider_class_name(
+        self,
+        connector_provider_class_name: str,
+        metadata_element_subtypes: list[str] | None = None,
+        include_only_relationships: list[str] | None = None,
+        skip_relationships: list[str] | None = None,
+        graph_query_depth: int = 3,
+        start_from: int = 0,
+        page_size: int = 0,
+        output_format: str = "JSON",
+        report_spec: Optional[str | dict] = None,
+        body: Union[FilterRequestBody, dict] = None,
+        **kwargs,
+    ) -> dict | list | str:
+        url = f"{self.base_url}/connector-types/by-connector-provider-class-name"
+        return await self._async_get_name_request(
+            url,
+            "ConnectorType",
+            self._generate_referenceable_output,
+            filter_string=connector_provider_class_name,
+            metadata_element_subtypes=metadata_element_subtypes,
+            include_only_relationships=include_only_relationships,
+            skip_relationships=skip_relationships,
+            graph_query_depth=graph_query_depth,
+            start_from=start_from,
+            page_size=page_size,
+            output_format=output_format,
+            report_spec=report_spec,
+            body=body,
+            **kwargs,
+        )
+
+    def get_connector_types_by_connector_provider_class_name(
+        self,
+        connector_provider_class_name: str,
+        metadata_element_subtypes: list[str] | None = None,
+        include_only_relationships: list[str] | None = None,
+        skip_relationships: list[str] | None = None,
+        graph_query_depth: int = 3,
+        start_from: int = 0,
+        page_size: int = 0,
+        output_format: str = "JSON",
+        report_spec: Optional[str | dict] = None,
+        body: Union[FilterRequestBody, dict] = None,
+        **kwargs,
+    ) -> dict | list | str:
+        loop = asyncio.get_event_loop()
+        return loop.run_until_complete(
+            self._async_get_connector_types_by_connector_provider_class_name(
+                connector_provider_class_name=connector_provider_class_name,
+                metadata_element_subtypes=metadata_element_subtypes,
+                include_only_relationships=include_only_relationships,
+                skip_relationships=skip_relationships,
+                graph_query_depth=graph_query_depth,
+                start_from=start_from,
+                page_size=page_size,
+                output_format=output_format,
+                report_spec=report_spec,
+                body=body,
+                **kwargs
+            )
+        )
+
     async def _async_find_connector_types(
         self,
         search_string: str = "*",

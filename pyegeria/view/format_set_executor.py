@@ -17,7 +17,7 @@ import asyncio
 import inspect
 import json
 import sys
-from typing import Any, Dict, Optional
+from typing import Any, Dict, Optional, Union
 
 from loguru import logger
 from pydantic import ValidationError
@@ -33,6 +33,7 @@ from pyegeria.view.base_report_formats import (
     get_report_registry,
 )
 from pyegeria.view.output_formatter import generate_output
+from pyegeria.view.analytic_registry import AnalyticActionSpec
 from pyegeria.egeria_tech_client import EgeriaTech
 
 _CLIENT_CLASS_MAP = {
@@ -82,6 +83,112 @@ def _resolve_client_and_method(func_decl: str):
         client_class = EgeriaTech
         
     return (client_class, method_name)
+
+
+def _resolve_analytic_function(func_decl: str):
+    """Given a dotted import path like 'pyegeria.view.overview_metrics.growth_series',
+    import and return the callable. Unlike `function` (find_method), `analytic_function`
+    (extra_find) targets a plain module-level function, not a client class method --
+    overview_metrics.py's whole design boundary is that its functions take an
+    already-constructed, already-authenticated client as their first argument, so
+    there's no client class to resolve here, just the function itself."""
+    if not isinstance(func_decl, str) or "." not in func_decl:
+        raise ValueError(f"Invalid analytic_function declaration: {func_decl!r}")
+    module_path, func_name = func_decl.rsplit(".", 1)
+    module = importlib.import_module(module_path)
+    func = getattr(module, func_name, None)
+    if func is None or not callable(func):
+        raise AttributeError(f"'{func_name}' not found in module '{module_path}'")
+    return func
+
+
+# Parameter names an analytic function uses for its leading client argument(s)
+# -- pyegeria.view.overview_metrics's functions take one (`mgr` or `ce`) or,
+# for semantic_grounding, two (`mgr`, `ce`) positional clients before their
+# real parameters. EgeriaTech is a facade that proxies to every subclient via
+# __getattr__ (see egeria_tech_client.py), so the same instance satisfies
+# either role -- no need to construct a second client.
+_ANALYTIC_CLIENT_PARAM_NAMES = {"mgr", "ce", "expert", "client"}
+
+
+def _bind_client_args(func, client: Any) -> list:
+    """Return the positional args to pass before **kwargs: one copy of `client`
+    per leading parameter named like a client (mgr/ce/expert/client)."""
+    args = []
+    for name, param in inspect.signature(func).parameters.items():
+        if name in _ANALYTIC_CLIENT_PARAM_NAMES and param.kind in (
+            inspect.Parameter.POSITIONAL_ONLY, inspect.Parameter.POSITIONAL_OR_KEYWORD,
+        ):
+            args.append(client)
+        else:
+            break
+    return args
+
+
+def run_analytic_action(
+    action: AnalyticActionSpec, client: Any, *,
+    fetch_kwargs: Optional[Dict[str, Any]] = None,
+    analytic_kwargs: Optional[Dict[str, Any]] = None,
+) -> Any:
+    """Run an `analytic_registry.AnalyticActionSpec`'s fetch step, then (if
+    declared) its analytic step over the fetch's raw result -- the executor
+    for the fetch+analytic action shape (BACKLOG.md NEXT-18, egeria-workspaces).
+    Generalizes the pattern `ai_ready_assets` (overview_metrics.py) already
+    used by hand into a declared, reusable shape; every existing registered
+    analytic function with a plain `.function` string is untouched by this
+    and keeps using `_run_analytic_function`/`_resolve_analytic_function`
+    below exactly as before -- this is a separate, additive entry point, not
+    a replacement.
+
+    `client` is resolved once by the caller (same convention as
+    `_run_analytic_function`) and bound positionally to both steps' leading
+    client-shaped parameters -- `fetch` via the usual signature introspection
+    (`_bind_client_args`), `analytic` via the SAME resolved client args
+    (not re-introspected from `analytic`'s own signature, since its first
+    positional parameter is the fetch result, not a client) -- so `analytic`
+    can itself make a further client call (e.g. follow a relationship to
+    enrich) using the identical already-authenticated client `fetch` used.
+    """
+    fetch_func = _resolve_analytic_function(action.fetch)
+    fetch_clients = _bind_client_args(fetch_func, client)
+    raw_result = fetch_func(*fetch_clients, **(fetch_kwargs or {}))
+
+    if not action.analytic:
+        return raw_result
+
+    analytic_func = _resolve_analytic_function(action.analytic)
+    return analytic_func(raw_result, *fetch_clients, **(analytic_kwargs or {}))
+
+
+def _run_analytic_function(
+    action: dict, *, params: Dict[str, Any],
+    view_server: str, view_url: str, user: str, user_pass: str,
+) -> Any:
+    """Resolve and call a report spec action's `analytic_function` (extra_find),
+    returning the function's raw result -- no chart-wrapping, no output_format
+    handling. Shared by `_exec_analytic_series` (SERIES/chart path) and
+    `exec_report_spec`'s analytic-only passthrough (DICT/JSON/etc. path)."""
+    func_decl = action.get("analytic_function")
+    if not func_decl:
+        raise ValueError("Report spec action has no analytic_function (extra_find).")
+    spec_params = action.get("analytic_spec_params", {}) or {}
+
+    # Deliberately no fixed required/optional-param whitelist (see
+    # _exec_analytic_chart's docstring) -- every caller-supplied param is
+    # forwarded as-is; Python's own TypeError on an unexpected keyword is the
+    # validation. `analytic_spec_params` are DEFAULTS, not pins: a report
+    # spec author sets a sensible starting value (e.g. type_name="GlossaryTerm"),
+    # and a caller who explicitly supplies that same param overrides it --
+    # this is what lets a report spec's "Element Count by Type" demo, e.g.,
+    # actually be re-pointed at a different type from the UI/API instead of
+    # being permanently locked to the demo's own default.
+    call_params: Dict[str, Any] = dict(spec_params)
+    call_params.update({k: v for k, v in params.items() if v not in (None, "")})
+
+    func = _resolve_analytic_function(func_decl)
+    client = EgeriaTech(view_server, view_url, user_id=user, user_pwd=user_pass)
+    client.create_egeria_bearer_token()
+    return func(*_bind_client_args(func, client), **call_params)
 
 
 def _resolve_action_target_client(egeria_client: EgeriaTech, client_class: type) -> Any:
@@ -461,6 +568,121 @@ async def _async_run_report(
 
 
 
+def _exec_analytic_chart(
+    format_set_name: str,
+    *,
+    chart_kind: str,
+    params: Dict[str, Any],
+    view_server: str,
+    view_url: str,
+    user: str,
+    user_pass: str,
+) -> Dict[str, Any]:
+    """Run a report spec's `analytic_function` (extra_find) and wrap the
+    result as a Vega-Lite chart -- `chart_kind` picks which:
+
+    - "line": a time series -- List[Dict] of {label, date, <metric>: value, ...}
+      points, one line per metric key (e.g. growth_series).
+    - "bar"/"pie": a flat category breakdown -- either a plain
+      {category: value} dict (e.g. governed_coverage's byClassification), or
+      a List[Dict] with one label-like field and exactly one numeric field
+      (e.g. counts_by_type's [{label, type, count}, ...]).
+
+    Falls back to returning the raw result (`{"kind":"json","data":...}`,
+    same as the plain DICT/JSON analytic path) if the result doesn't match
+    the requested chart_kind's expected shape, rather than raising --
+    picking a chart output_format is a rendering *preference*, not a
+    contract every analytic function's result shape can satisfy.
+    """
+    from pyegeria.view.vega_utilities import generate_vega_line_chart, generate_vega_bar_chart, generate_vega_pie_chart
+
+    fmt_any = select_report_spec(format_set_name, "ANY")
+    if not fmt_any:
+        raise ValueError(f"Unknown report spec '{format_set_name}'. Run 'list_reports' to see available reports.")
+    if "action" not in fmt_any:
+        raise ValueError(f"Report spec '{format_set_name}' does not have an action property.")
+
+    action = fmt_any["action"]
+    if not action.get("analytic_function"):
+        raise ValueError(
+            f"Report spec '{format_set_name}' has no analytic_function (extra_find) -- "
+            f"{chart_kind.upper()} output isn't supported for this spec."
+        )
+
+    result = _run_analytic_function(
+        action, params=params, view_server=view_server, view_url=view_url,
+        user=user, user_pass=user_pass,
+    )
+    if not result:
+        return {"kind": "empty"}
+
+    try:
+        heading = get_report_spec_heading(format_set_name) or str(format_set_name)
+    except Exception:  # noqa: BLE001 -- registry lookup quirks shouldn't block chart rendering
+        heading = str(format_set_name)
+
+    if chart_kind == "line":
+        if not isinstance(result, list) or not all(isinstance(pt, dict) for pt in result):
+            return {"kind": "json", "data": result}
+        x_field = "label" if any("label" in pt for pt in result) else "date"
+        y_fields = sorted({
+            k for pt in result for k, v in pt.items()
+            if k not in ("label", "date") and isinstance(v, (int, float)) and not isinstance(v, bool)
+        })
+        if not y_fields:
+            return {"kind": "json", "data": result}
+        chart = generate_vega_line_chart(
+            result, x_field=x_field, y_fields=y_fields,
+            title=heading, x_label=x_field.capitalize(), y_label="Count",
+        )
+        return {"kind": "json", "data": chart} if chart else {"kind": "json", "data": result}
+
+    # bar / pie -- both need a plain {category: numeric_value} mapping
+    cat_values = _as_category_value_dict(result)
+    if not cat_values:
+        return {"kind": "json", "data": result}
+    chart = (generate_vega_bar_chart(cat_values, title=heading) if chart_kind == "bar"
+             else generate_vega_pie_chart(cat_values, title=heading))
+    return {"kind": "json", "data": chart} if chart else {"kind": "json", "data": result}
+
+
+def _as_category_value_dict(result: Any) -> Optional[Dict[str, Union[int, float]]]:
+    """Coerce an analytic result into {category: numeric_value} for a bar/pie
+    chart, or None if it doesn't fit that shape. Handles two real shapes:
+    a plain dict already in that form (numeric values only -- non-numeric
+    entries are dropped rather than disqualifying the whole dict, e.g.
+    governed_coverage's topZones sits alongside byClassification), and a
+    list[dict] with one label-like field plus exactly one numeric field
+    (e.g. counts_by_type's [{label, type, count}, ...])."""
+    if isinstance(result, dict):
+        numeric = {str(k): v for k, v in result.items()
+                   if isinstance(v, (int, float)) and not isinstance(v, bool)}
+        if len(numeric) >= 2:
+            return numeric
+        # Fewer than 2 top-level numeric fields isn't a meaningful bar/pie (a
+        # single bar/slice) -- prefer a nested dict-of-numerics breakdown
+        # instead, e.g. governed_coverage's byClassification or
+        # feedback_summary's byType, which is usually what "chart this" means
+        # for a summary dict whose interesting content is one level down.
+        for v in result.values():
+            if isinstance(v, dict):
+                nested = {str(k): v2 for k, v2 in v.items()
+                          if isinstance(v2, (int, float)) and not isinstance(v2, bool)}
+                if len(nested) >= 2:
+                    return nested
+        return numeric or None
+    if isinstance(result, list) and result and all(isinstance(r, dict) for r in result):
+        sample = result[0]
+        label_key = "label" if "label" in sample else next(
+            (k for k, v in sample.items() if isinstance(v, str)), None)
+        numeric_keys = [k for k, v in sample.items()
+                         if isinstance(v, (int, float)) and not isinstance(v, bool)]
+        if label_key and len(numeric_keys) == 1:
+            value_key = numeric_keys[0]
+            return {str(r.get(label_key)): r.get(value_key) for r in result if r.get(label_key) is not None}
+    return None
+
+
 def exec_report_spec(
     format_set_name: str | dict,
     *,
@@ -482,6 +704,19 @@ def exec_report_spec(
     """
     output_format = (output_format or "DICT").upper()
     params = _normalize_report_params(dict(params or {}), action_mode="find")
+
+    # SERIES/BAR/PIE are not Format-row output types like TABLE/DICT/REPORT --
+    # they don't need per-column formatting at all, just the analytic
+    # function's already-aggregated result wrapped as the corresponding
+    # Vega-Lite chart. Dispatch before the normal Format-row lookup (which
+    # would reject them as unsupported, since no FormatSet declares a
+    # "SERIES"/"BAR"/"PIE" Format row).
+    _CHART_KINDS = {"SERIES": "line", "BAR": "bar", "PIE": "pie"}
+    if output_format in _CHART_KINDS:
+        return _exec_analytic_chart(
+            format_set_name, chart_kind=_CHART_KINDS[output_format], params=params,
+            view_server=view_server, view_url=view_url, user=user, user_pass=user_pass,
+        )
 
     # Resolve the format set and action
     if isinstance(format_set_name, dict):
@@ -528,6 +763,26 @@ def exec_report_spec(
 
     action = fmt["action"]
     func_decl = action.get("function")
+
+    # Analytic-only report spec (no find_method -- e.g. an Overview-style KPI
+    # backed by an overview_metrics function that returns a scalar/dict, not a
+    # list of elements to format). SERIES is handled above via the dedicated
+    # chart-wrapping path; this covers every other output_format (DICT/JSON/
+    # TABLE/...) by just running the analytic function and returning its
+    # result as-is -- there's no element list here to run through
+    # generate_output's column formatting. A spec with BOTH a real find_method
+    # and an analytic_function (the "supports both" case the ActionParameter
+    # docstring describes) still falls through to the find path below for
+    # anything other than SERIES, unchanged.
+    if action.get("analytic_function") and not func_decl:
+        result = _run_analytic_function(
+            action, params=params, view_server=view_server, view_url=view_url,
+            user=user, user_pass=user_pass,
+        )
+        if result is None or result == [] or result == {}:
+            return {"kind": "empty"}
+        return {"kind": "json", "data": result}
+
     required_params = action.get("required_params", action.get("user_params", [])) or []
     optional_params = action.get("optional_params", []) or []
     spec_params = action.get("spec_params", {}) or {}

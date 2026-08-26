@@ -1,6 +1,6 @@
 {
   "family": "External References",
-  "exported": "Jul 6, 2026 at 1:00:39 PM",
+  "exported": "Jul 27, 2026 at 8:27:25\u202fAM",
   "attribute_definitions": {
     "Activity Status": {
       "variable_name": "activity_status",
@@ -145,7 +145,7 @@
       "unique": false,
       "input_required": false,
       "min_cardinality": 0,
-      "max_cardinality": 1,
+      "max_cardinality": -1,
       "level": "Common",
       "Journal Entry": ""
     },
@@ -811,7 +811,7 @@
       "variable_name": "file_path",
       "inUpdate": true,
       "attr_labels": "File Path Name",
-      "examples": "\/home\/mumble.csv",
+      "examples": "/home/mumble.csv",
       "default_value": "",
       "valid_values": [],
       "existing_element": "",
@@ -900,6 +900,25 @@
       "min_cardinality": 0,
       "max_cardinality": 1,
       "level": "Common",
+      "Journal Entry": ""
+    },
+    "Frequency": {
+      "variable_name": "frequency",
+      "inUpdate": true,
+      "attr_labels": "",
+      "examples": "",
+      "default_value": "",
+      "valid_values": [],
+      "existing_element": "",
+      "description": "A frequency of interaction.",
+      "generated": false,
+      "style": "Simple",
+      "user_specified": true,
+      "unique": false,
+      "input_required": false,
+      "min_cardinality": 0,
+      "max_cardinality": 1,
+      "level": "Basic",
       "Journal Entry": ""
     },
     "Glossary Term": {
@@ -1087,7 +1106,7 @@
       "default_value": "",
       "valid_values": [],
       "existing_element": "",
-      "description": "Copyright and\/or license information for the element or associated resource.",
+      "description": "Copyright and/or license information for the element or associated resource.",
       "generated": false,
       "style": "Simple",
       "user_specified": true,
@@ -1459,6 +1478,25 @@
       "level": "Common",
       "Journal Entry": ""
     },
+    "Protocol": {
+      "variable_name": "protocol",
+      "inUpdate": true,
+      "attr_labels": "",
+      "examples": "",
+      "default_value": "",
+      "valid_values": [],
+      "existing_element": "",
+      "description": "Name of the protocol used for interaction.",
+      "generated": false,
+      "style": "Simple",
+      "user_specified": true,
+      "unique": false,
+      "input_required": false,
+      "min_cardinality": 0,
+      "max_cardinality": 1,
+      "level": "Common",
+      "Journal Entry": ""
+    },
     "Purpose": {
       "variable_name": "purpose",
       "inUpdate": true,
@@ -1467,7 +1505,7 @@
       "default_value": "",
       "valid_values": [],
       "existing_element": "",
-      "description": "The purpose of this collection — a short description of why it exists or what it is used for.",
+      "description": "The purpose of this collection \u2014 a short description of why it exists or what it is used for.",
       "generated": false,
       "style": "Simple",
       "user_specified": true,
@@ -2044,7 +2082,7 @@
       "default_value": "",
       "valid_values": [],
       "existing_element": "",
-      "description": "The usage guidance for this element — how it is intended to be used in context.",
+      "description": "The usage guidance for this element \u2014 how it is intended to be used in context.",
       "generated": false,
       "style": "Simple",
       "user_specified": true,
@@ -2160,7 +2198,7 @@
       "existing_element": "",
       "description": "Zones scope visibility of elements to different users.",
       "generated": false,
-      "style": "Simple",
+      "style": "Simple List",
       "user_specified": true,
       "unique": false,
       "input_required": false,
@@ -2858,7 +2896,6 @@
       "own_attributes": [
         "Additional Properties",
         "Category",
-        "Class Word Classification",
         "Confidence Classification",
         "Confidentiality Classification",
         "Criticality Classification",
@@ -2868,9 +2905,7 @@
         "Identifier",
         "Impact Classification",
         "Legal",
-        "Modifier Classification",
         "Policy Management Point",
-        "Prime Word Classification",
         "Qualified Name",
         "Retention Classification",
         "Security Tags",
@@ -2941,7 +2976,8 @@
       "inherits": "Link Command Base",
       "own_attributes": [
         "Element Name",
-        "External Reference"
+        "External Reference",
+        "GUID"
       ]
     },
     "Media Reference Link": {
@@ -2951,7 +2987,8 @@
         "Media Id",
         "Media Reference",
         "Media Usage",
-        "Media Usage Other Id"
+        "Media Usage Other Id",
+        "GUID"
       ]
     },
     "Cited Document Link": {
@@ -2960,7 +2997,8 @@
         "Cited Document",
         "Element Name",
         "Pages",
-        "Reference Id"
+        "Reference Id",
+        "GUID"
       ]
     }
   },
@@ -3146,6 +3184,25 @@
       "extra_constraints": "",
       "OM_TYPE": "CitedDocumentLink",
       "bundle": "Cited Document Link",
+      "custom_attributes": [],
+      "Journal Entry": ""
+    },
+    "Create External Standard": {
+      "display_name": "External Standard",
+      "qn_prefix": "ExtStandard",
+      "alternate_names": [],
+      "family": "External Reference",
+      "description": "Create or update an External Standard - an external reference that links to an externally published standard.",
+      "verb": "Create",
+      "upsert": true,
+      "attach": false,
+      "level": "Basic",
+      "find_method": "ExternalReferences.find_external_references",
+      "find_constraints": "{\"metadata_element_types\": [\"ExternalStandard\"]}",
+      "extra_find": "",
+      "extra_constraints": "",
+      "OM_TYPE": "ExternalStandard",
+      "bundle": "External Reference Base",
       "custom_attributes": [],
       "Journal Entry": ""
     }

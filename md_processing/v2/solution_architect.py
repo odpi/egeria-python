@@ -79,7 +79,9 @@ class BlueprintProcessor(AsyncBaseCommandProcessor):
             guid = self.extract_guid_or_raise(raw_guid, "Create Solution Blueprint")
             if guid:
                 self.parsed_output["guid"] = guid
-                sync_res = await self._sync_components(guid, comp_guids, replace_all=True)
+                # known_new=True: this GUID was just created, so it cannot have
+                # any existing component memberships yet -- skip the as-is fetch.
+                sync_res = await self._sync_components(guid, comp_guids, replace_all=True, known_new=True)
                 if sync_res.get("added") or sync_res.get("removed"):
                     self.add_related_result("Components Sync", message=f"Added {len(sync_res['added'])}, Removed {len(sync_res['removed'])}")
                 if sync_res.get("errors"):
@@ -99,13 +101,16 @@ class BlueprintProcessor(AsyncBaseCommandProcessor):
 
         return self.command.raw_block
 
-    async def _sync_components(self, guid: str, to_be_guids: Set[str], replace_all: bool) -> Dict[str, Any]:
-        bp_element = await self.client._async_get_solution_blueprint_by_guid(guid)
-        as_is = {
-            m['relatedElement']['elementHeader']['guid']
-            for m in bp_element.get('collectionMembers', [])
-            if m.get('relatedElement', {}).get('elementHeader', {}).get('type', {}).get('typeName') == 'SolutionComponent'
-        }
+    async def _sync_components(self, guid: str, to_be_guids: Set[str], replace_all: bool, known_new: bool = False) -> Dict[str, Any]:
+        if known_new:
+            as_is: Set[str] = set()
+        else:
+            bp_element = await self.client._async_get_solution_blueprint_by_guid(guid)
+            as_is = {
+                m['relatedElement']['elementHeader']['guid']
+                for m in bp_element.get('collectionMembers', [])
+                if m.get('relatedElement', {}).get('elementHeader', {}).get('type', {}).get('typeName') == 'SolutionComponent'
+            }
 
         async def add_fn(comp_guid):
             body = {"class": "NewRelationshipRequestBody", "properties": {"class": "CollectionMembershipProperties", "membershipRationale": "linked by Dr.Egeria v2"}}
@@ -140,12 +145,32 @@ class ComponentProcessor(AsyncBaseCommandProcessor):
 
         # 1. Properties
         prop_body = set_element_prop_body(om_type or "SolutionComponent", qualified_name, attributes)
-        
+        # SolutionComponentProperties-specific fields -- set_element_prop_body() only builds
+        # the generic Referenceable-level property set, so these need adding here.
+        # solutionComponentType/plannedDeployedImplementationType are SolutionComponentProperties'
+        # own fields; canonicalName is inherited from DesignModelElementProperties (the shared
+        # superclass for every "design model element" type -- SolutionComponent, SolutionPort,
+        # and the ConceptBead* concept-modeling types -- confirmed via
+        # frameworks/open-metadata-framework/.../designmodels/DesignModelElementProperties.java).
+        # Solution Port and Concept Bead have no Dr.Egeria commands yet, so this is currently
+        # Solution Component-only; wire canonicalName the same way if/when those are added.
+        prop_body.update({
+            "solutionComponentType": attributes.get('Solution Component Type', {}).get('value'),
+            "plannedDeployedImplementationType": attributes.get('Planned Deployed Implementation Type', {}).get('value'),
+            "canonicalName": attributes.get('Canonical Name', {}).get('value'),
+        })
+
         # 2. Relationships
         actor_guids = set(attributes.get('Actors', {}).get('guid_list', []))
         blueprint_guids = set(attributes.get('In Solution Blueprints', {}).get('guid_list', []))
-        supply_chain_guids = set(attributes.get('In Information Supply Chains', {}).get('guid_list', []))
-        parent_comp_guids = set(attributes.get('Parent Components', {}).get('guid_list', []))
+        # NOTE: attribute names below must match commands_solution_architect_compact.json's
+        # attribute_definitions exactly -- "In Information Supply Chains" (plural) and
+        # "Parent Components" don't exist there (the real names are singular "In Information
+        # Supply Chain" and "In Solution Components"), so those spellings always resolved to
+        # an empty attributes.get() default and silently synced nothing.
+        supply_chain_guids = set(attributes.get('In Information Supply Chain', {}).get('guid_list', []))
+        parent_comp_guids = set(attributes.get('In Solution Components', {}).get('guid_list', []))
+        sub_comp_guids = set(attributes.get('Solution SubComponents', {}).get('guid_list', []))
         keywords = set(attributes.get('Search Keywords', {}).get('value', []))
 
         if verb == "Update":
@@ -161,7 +186,7 @@ class ComponentProcessor(AsyncBaseCommandProcessor):
             await self.client._async_update_solution_component(guid, body)
             self.parsed_output["guid"] = guid
             
-            sync_res = await self._sync_all_rels(guid, supply_chain_guids, parent_comp_guids, actor_guids, blueprint_guids, keywords, not merge_update)
+            sync_res = await self._sync_all_rels(guid, supply_chain_guids, parent_comp_guids, actor_guids, blueprint_guids, keywords, not merge_update, sub_comp_guids)
             if sync_res.get("errors"):
                 self.add_related_result("Relationships Sync", status="failure", message="; ".join(sync_res["errors"][:5]))
             elif sync_res.get("added") or sync_res.get("removed"):
@@ -195,7 +220,9 @@ class ComponentProcessor(AsyncBaseCommandProcessor):
             guid = self.extract_guid_or_raise(raw_guid, "Create Solution Component")
             if guid:
                 self.parsed_output["guid"] = guid
-                sync_res = await self._sync_all_rels(guid, supply_chain_guids, parent_comp_guids, actor_guids, blueprint_guids, keywords, replace_all=True)
+                # known_new=True: this GUID was just created, so it cannot have
+                # any existing relationships yet -- skip the as-is fetch.
+                sync_res = await self._sync_all_rels(guid, supply_chain_guids, parent_comp_guids, actor_guids, blueprint_guids, keywords, replace_all=True, sc_sub_guids=sub_comp_guids, known_new=True)
                 if sync_res.get("errors"):
                     self.add_related_result("Relationships Sync", status="failure", message="; ".join(sync_res["errors"][:5]))
                 elif sync_res.get("added") or sync_res.get("removed"):
@@ -215,8 +242,10 @@ class ComponentProcessor(AsyncBaseCommandProcessor):
 
         return self.command.raw_block
 
-    async def _sync_all_rels(self, guid: str, sc_guids: Set[str], parent_guids: Set[str], actor_guids: Set[str], bp_guids: Set[str], keywords: Set[str], replace_all: bool) -> Dict[str, Any]:
-        rel_els = await self._get_component_related_elements(guid)
+    async def _sync_all_rels(self, guid: str, sc_guids: Set[str], parent_guids: Set[str], actor_guids: Set[str], bp_guids: Set[str], keywords: Set[str],
+                              replace_all: bool, sc_sub_guids: Set[str] = frozenset(), known_new: bool = False) -> Dict[str, Any]:
+        """known_new=True skips the as-is fetch below -- a brand-new component cannot have any existing relationships yet."""
+        rel_els = {} if known_new else await self._get_component_related_elements(guid)
         combined_results = {"added": [], "removed": [], "errors": []}
         
         # 1. Supply Chains
@@ -235,6 +264,14 @@ class ComponentProcessor(AsyncBaseCommandProcessor):
                                replace_all)
         for k in combined_results: combined_results[k].extend(res.get(k, []))
                                
+        # 2b. Sub-Components (this component's own children -- reverse direction of #2)
+        as_is_subs = set(rel_els.get("sub_component_guids", []))
+        res = await self.sync_members(as_is_subs, sc_sub_guids,
+                               lambda s: self.client._async_link_subcomponent(guid, s, None),
+                               lambda s: self.client._async_detach_sub_component(guid, s, None),
+                               replace_all)
+        for k in combined_results: combined_results[k].extend(res.get(k, []))
+
         # 3. Actors
         as_is_actors = set(rel_els.get("actor_guids", []))
         res = await self.sync_members(as_is_actors, actor_guids,
@@ -340,6 +377,15 @@ class SupplyChainProcessor(AsyncBaseCommandProcessor):
         om_type = spec.get("OM_TYPE")
 
         prop_body = set_element_prop_body(om_type or "InformationSupplyChain", qualified_name, attributes)
+        # InformationSupplyChainProperties-specific fields set_element_prop_body doesn't know
+        # about (confirmed against Egeria-api-solution-architect.http's createInformationSupplyChain/
+        # updateInformationSupplyChain worked examples -- ISSUE-64: these two were previously never
+        # read from attributes at all, so Purposes/Scope validated and processed with SUCCESS but
+        # were silently never persisted). Note the real wire property is "dataProcessingPurposes",
+        # not "purposes" -- the compact spec's "Purposes" attribute has no property_name override,
+        # so this can't be picked up generically; must be set explicitly here.
+        prop_body["dataProcessingPurposes"] = attributes.get('Purposes', {}).get('value')
+        prop_body["scope"] = attributes.get('Scope', {}).get('value')
 
         in_sc_guids = set(attributes.get('In Information Supply Chain', {}).get('guid_list', []))
         nested_sc_guids = set(attributes.get('Nested Information Supply Chains', {}).get('guid_list', []))
@@ -379,7 +425,9 @@ class SupplyChainProcessor(AsyncBaseCommandProcessor):
             guid = self.extract_guid_or_raise(raw_guid, "Create Information Supply Chain")
             if guid:
                 self.parsed_output["guid"] = guid
-                sync_res = await self._sync_rels(guid, in_sc_guids, nested_sc_guids, replace_all=True)
+                # known_new=True: this GUID was just created, so it cannot have
+                # any existing relationships yet -- skip the as-is fetch.
+                sync_res = await self._sync_rels(guid, in_sc_guids, nested_sc_guids, replace_all=True, known_new=True)
                 if any(sync_res.values()):
                     self.add_related_result("Relationships Sync", message=f"Initial relationships (Success: {len(sync_res['added']) + len(sync_res['removed'])}, Errors: {len(sync_res['errors'])})")
 
@@ -397,8 +445,9 @@ class SupplyChainProcessor(AsyncBaseCommandProcessor):
 
         return self.command.raw_block
 
-    async def _sync_rels(self, guid: str, parent_guids: Set[str], nested_guids: Set[str], replace_all: bool) -> Dict[str, Any]:
-        rel_els = await self._get_supply_chain_rel_elements(guid)
+    async def _sync_rels(self, guid: str, parent_guids: Set[str], nested_guids: Set[str], replace_all: bool, known_new: bool = False) -> Dict[str, Any]:
+        """known_new=True skips the as-is fetch below -- a brand-new supply chain cannot have any existing relationships yet."""
+        rel_els = {} if known_new else await self._get_supply_chain_rel_elements(guid)
         combined_results = {"added": [], "removed": [], "errors": []}
         
         # 1. Parents (this ISC is a member of the parent ISC's collection)
@@ -477,6 +526,8 @@ class SolutionArchitectProcessor(AsyncBaseCommandProcessor):
                 return await self.client._async_get_solution_role_by_guid(guid)
             elif om_type == "DesignPattern":
                 return await self.client._async_get_design_pattern_by_guid(guid)
+            elif om_type in ("ConceptBead", "ConceptBeadAttribute", "ConceptBeadRelationship"):
+                return await self.client._async_get_concept_model_element_by_guid(guid)
             return None
         except PyegeriaException:
             return None
@@ -510,6 +561,8 @@ class SolutionArchitectProcessor(AsyncBaseCommandProcessor):
                 await self.client._async_update_solution_role(guid, body)
             elif om_type == "DesignPattern":
                 await self.client._async_update_design_pattern(guid, body)
+            elif om_type in ("ConceptBead", "ConceptBeadAttribute", "ConceptBeadRelationship"):
+                await self.client._async_update_concept_model_element(guid, body)
 
             self.parsed_output["guid"] = guid
             
@@ -536,6 +589,8 @@ class SolutionArchitectProcessor(AsyncBaseCommandProcessor):
                 raw_guid = await self.client._async_create_solution_role(body)
             elif om_type == "DesignPattern":
                 raw_guid = await self.client._async_create_design_pattern(body)
+            elif om_type in ("ConceptBead", "ConceptBeadAttribute", "ConceptBeadRelationship"):
+                raw_guid = await self.client._async_create_concept_model_element(body)
 
             guid = self.extract_guid_or_raise(raw_guid, f"Create {om_type}")
             if guid:
@@ -595,8 +650,13 @@ class SolutionLinkProcessor(AsyncBaseCommandProcessor):
                     id2_key = candidates[1]
 
         if not (id1_key and id2_key):
-            logger.error(f"Command {object_type} has fewer than 2 attributes for linking - {attributes.keys()}")
-            return self.command.raw_block
+            msg = f"Command {object_type} has fewer than 2 attributes for linking - {list(attributes.keys())}"
+            logger.error(msg)
+            # Must raise, not return raw_block: execute() reports "status": "success"
+            # for any string apply_changes() returns without raising - a silent
+            # `return self.command.raw_block` here was previously misreported as
+            # a successful link.
+            raise ValueError(msg)
             
         id1 = attributes.get(id1_key, {}).get('guid')
         id2 = attributes.get(id2_key, {}).get('guid')
@@ -635,8 +695,33 @@ class SolutionLinkProcessor(AsyncBaseCommandProcessor):
             id2 = await self.resolve_element_guid(attributes[id2_key]['value'], tech_type=type2)
 
         if not (id1 and id2):
-            logger.warning(f"Missing GUIDs for {object_type}: {id1_key}={id1}, {id2_key}={id2}")
-            return self.command.raw_block
+            # This duplicate resolution (see note above the id1_key/id2_key
+            # selection) is the one path in this processor that doesn't go
+            # through execute()'s Step-7 loop, so it doesn't get that loop's
+            # batch_target_qns-aware forward-reference deferral for free.
+            # Check for it directly here: if whichever side failed to resolve
+            # is a legitimate target of some other (not-yet-run) command in
+            # this batch, defer the whole command instead of failing it.
+            batch_targets = self.context.get("batch_target_qns", set())
+            unresolved_names = []
+            if not id1:
+                unresolved_names.append(attributes.get(id1_key, {}).get('value'))
+            if not id2:
+                unresolved_names.append(attributes.get(id2_key, {}).get('value'))
+            unresolved_names = [n for n in unresolved_names if n]
+
+            if unresolved_names and all(n in batch_targets for n in unresolved_names):
+                self.parsed_output["deferred"] = True
+                logger.debug(f"Deferring {object_type}: waiting on {unresolved_names}")
+                return self.command.raw_block
+
+            msg = f"Missing GUIDs for {object_type}: {id1_key}={id1}, {id2_key}={id2}"
+            logger.error(msg)
+            # Must raise, not return raw_block: execute() reports "status": "success"
+            # for any string apply_changes() returns without raising - a silent
+            # `return self.command.raw_block` here was previously misreported as
+            # a successful link.
+            raise ValueError(msg)
 
         label = attributes.get('Wire Label', {}).get('value') or attributes.get('Link Label', {}).get('value') or attributes.get('Label', {}).get('value', "")
         description = attributes.get('Description', {}).get('value', "")
@@ -676,34 +761,39 @@ class SolutionLinkProcessor(AsyncBaseCommandProcessor):
             }
             
             if om_type == "SolutionLinkingWire":
-                # Egeria server behavior: a second SolutionLinkingWire attach call with the
-                # *same* ordered (id1, id2) pair silently overwrites the existing relationship's
-                # properties (including label) rather than creating a parallel wire - the type
-                # system allows ANY_NUMBER of these relationships per pair, but the view service
-                # attach handler does not. Warn so this isn't a silent data-loss surprise.
-                try:
-                    existing = await self.client._async_get_solution_component_by_guid(id1)
-                    for wire in (existing.get("wiredTo", []) or []):
-                        related_guid = wire.get('relatedElement', {}).get('elementHeader', {}).get('guid')
-                        at_end1 = wire.get('relatedElementAtEnd1')
-                        if related_guid == id2 and at_end1 is False:
-                            existing_label = wire.get('relationshipProperties', {}).get('label', '')
-                            logger.warning(
-                                f"Link Solution Components: a SolutionLinkingWire already exists from {id1} to {id2} "
-                                f"(label={existing_label!r}); this call will overwrite it in place rather than adding "
-                                f"a parallel wire, since Egeria does not create a second relationship for the same "
-                                f"ordered component pair. Use 'One Way: False' for bidirectional flow instead of two "
-                                f"same-direction Link commands."
-                            )
-                            self.add_related_result(
-                                "Existing Wire Overwrite", status="warning",
-                                message=f"Overwriting existing wire (was label={existing_label!r}) between these components in this direction"
-                            )
-                            break
-                except Exception as e:
-                    logger.debug(f"Could not pre-check existing SolutionLinkingWire for {id1}->{id2}: {e}")
+                # SolutionLinkingWire is a multi-link relationship (Egeria PR #9156,
+                # 2026-08-09) -- ANY_NUMBER of wires can exist between the same ordered
+                # pair of components. Dedupe on `label` so re-running the same markdown
+                # file updates the matching wire in place rather than piling up
+                # duplicates; a wire with no label is never matched (always creates a
+                # new one), and two wires with genuinely different labels both persist.
+                wire_guid = attributes.get('Wire GUID', {}).get('value')
+                if not wire_guid and label:
+                    try:
+                        found = await self.client._async_find_relationships_between_elements(
+                            {"class": "FindRelationshipRequestBody", "relationshipTypeName": "SolutionLinkingWire"}
+                        )
+                        for rel in (found if isinstance(found, list) else []):
+                            if not isinstance(rel, dict):
+                                continue
+                            if rel.get("elementGUIDAtEnd1") == id1 and rel.get("elementGUIDAtEnd2") == id2 \
+                                    and rel.get("relationshipProperties", {}).get("label") == label:
+                                wire_guid = rel.get("relationshipGUID")
+                                break
+                    except Exception as e:
+                        logger.debug(f"Could not look up existing SolutionLinkingWire for {id1}->{id2} label={label!r}: {e}")
 
-                await self.client._async_link_solution_linking_wire(id1, id2, body)
+                if wire_guid:
+                    update_body = {"class": "UpdateRelationshipRequestBody", "properties": properties, "mergeUpdate": True}
+                    await self.client._async_update_solution_linking_wire(wire_guid, update_body)
+                    logger.success(f"Updated existing SolutionLinkingWire {wire_guid} (label={label!r})")
+                    return f"\n\n# {verb} {object_type}\n\nUpdated wire {wire_guid} between {id1} and {id2}"
+                else:
+                    new_wire_guid = await self.client._async_link_solution_linking_wire(id1, id2, body)
+                    if new_wire_guid:
+                        self.parsed_output["guid"] = new_wire_guid
+                        logger.success(f"Created new SolutionLinkingWire {new_wire_guid} between {id1} and {id2}")
+                        return f"\n\n# {verb} {object_type}\n\nCreated wire {new_wire_guid} between {id1} and {id2}"
             elif om_type == "InformationSupplyChainLink":
                 await self.client._async_link_peer_info_supply_chains(id1, id2, body)
             elif om_type == "SolutionComposition":
@@ -724,6 +814,22 @@ class SolutionLinkProcessor(AsyncBaseCommandProcessor):
                  await self.client._async_link_specialized_design_patterns(id1, id2, body)
             elif om_type == "RelatedDesignPattern":
                  await self.client._async_link_related_design_patterns(id1, id2, body)
+            elif om_type == "ConceptDesign":
+                 await self.client._async_link_concept_design(id1, id2, body)
+            elif om_type == "ConceptBeadRelationshipEnd":
+                 await self.client._async_link_concept_bead_relationship_end(id1, id2, body)
+            elif om_type == "TypedByConceptBead":
+                 await self.client._async_link_typed_by_concept_bead(id1, id2, body)
+            elif om_type == "IsAConceptBead":
+                 await self.client._async_link_is_a_concept_bead(id1, id2, body)
+            elif om_type == "ConceptBeadAttributeLink":
+                 await self.client._async_link_concept_bead_attribute_link(id1, id2, body)
+            elif om_type == "ConceptBeadExtension":
+                 await self.client._async_link_concept_bead_extension(id1, id2, body)
+            elif om_type == "SolutionComponentPort":
+                 await self.client._async_link_solution_component_port(id1, id2, body)
+            elif om_type == "SolutionPortDelegation":
+                 await self.client._async_link_solution_port_delegation(id1, id2, body)
             else:
                  logger.warning(f"OM_TYPE {om_type} not yet supported in SolutionLinkProcessor")
                  return self.command.raw_block
@@ -734,7 +840,13 @@ class SolutionLinkProcessor(AsyncBaseCommandProcessor):
         elif verb in ["Detach", "Unlink", "Remove"]:
             body = {"class": "DeleteRelationshipRequestBody"}
             if om_type == "SolutionLinkingWire":
-                await self.client._async_detach_solution_linking_wire(id1, id2, body)
+                wire_guid = attributes.get('Wire GUID', {}).get('value')
+                if wire_guid:
+                    # Target one specific wire -- the pair-based endpoint below now
+                    # detaches ALL wires between the pair (Egeria PR #9156).
+                    await self.client._async_detach_solution_linking_wire_by_guid(wire_guid, body)
+                else:
+                    await self.client._async_detach_solution_linking_wire(id1, id2, body)
             elif om_type == "InformationSupplyChainLink":
                 await self.client._async_unlink_peer_info_supply_chains(id1, id2, body)
             elif om_type == "SolutionComposition":
@@ -751,6 +863,22 @@ class SolutionLinkProcessor(AsyncBaseCommandProcessor):
                 await self.client._async_detach_specialized_design_patterns(id1, id2, body)
             elif om_type == "RelatedDesignPattern":
                 await self.client._async_detach_related_design_patterns(id1, id2, body)
+            elif om_type == "ConceptDesign":
+                await self.client._async_detach_concept_design(id1, id2, body)
+            elif om_type == "ConceptBeadRelationshipEnd":
+                await self.client._async_detach_concept_bead_relationship_end(id1, id2, body)
+            elif om_type == "TypedByConceptBead":
+                await self.client._async_detach_typed_by_concept_bead(id1, id2, body)
+            elif om_type == "IsAConceptBead":
+                await self.client._async_detach_is_a_concept_bead(id1, id2, body)
+            elif om_type == "ConceptBeadAttributeLink":
+                await self.client._async_detach_concept_bead_attribute_link(id1, id2, body)
+            elif om_type == "ConceptBeadExtension":
+                await self.client._async_detach_concept_bead_extension(id1, id2, body)
+            elif om_type == "SolutionComponentPort":
+                await self.client._async_detach_solution_component_port(id1, id2, body)
+            elif om_type == "SolutionPortDelegation":
+                await self.client._async_detach_solution_port_delegation(id1, id2, body)
             else:
                 logger.warning(f"OM_TYPE {om_type} not yet supported in SolutionLinkProcessor for detach")
                 return self.command.raw_block

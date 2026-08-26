@@ -1,6 +1,6 @@
 {
   "family": "Glossary",
-  "exported": "Jul 6, 2026 at 1:15:33 PM",
+  "exported": "Jul 27, 2026 at 8:28:04\u202fAM",
   "attribute_definitions": {
     "Activity Status": {
       "variable_name": "activity_status",
@@ -145,7 +145,7 @@
       "unique": false,
       "input_required": false,
       "min_cardinality": 0,
-      "max_cardinality": 1,
+      "max_cardinality": -1,
       "level": "Common",
       "Journal Entry": ""
     },
@@ -811,7 +811,7 @@
       "variable_name": "file_path",
       "inUpdate": true,
       "attr_labels": "File Path Name",
-      "examples": "\/home\/mumble.csv",
+      "examples": "/home/mumble.csv",
       "default_value": "",
       "valid_values": [],
       "existing_element": "",
@@ -900,6 +900,25 @@
       "min_cardinality": 0,
       "max_cardinality": 1,
       "level": "Common",
+      "Journal Entry": ""
+    },
+    "Frequency": {
+      "variable_name": "frequency",
+      "inUpdate": true,
+      "attr_labels": "",
+      "examples": "",
+      "default_value": "",
+      "valid_values": [],
+      "existing_element": "",
+      "description": "A frequency of interaction.",
+      "generated": false,
+      "style": "Simple",
+      "user_specified": true,
+      "unique": false,
+      "input_required": false,
+      "min_cardinality": 0,
+      "max_cardinality": 1,
+      "level": "Basic",
       "Journal Entry": ""
     },
     "Glossary Term": {
@@ -1087,7 +1106,7 @@
       "default_value": "",
       "valid_values": [],
       "existing_element": "",
-      "description": "Copyright and\/or license information for the element or associated resource.",
+      "description": "Copyright and/or license information for the element or associated resource.",
       "generated": false,
       "style": "Simple",
       "user_specified": true,
@@ -1459,6 +1478,25 @@
       "level": "Common",
       "Journal Entry": ""
     },
+    "Protocol": {
+      "variable_name": "protocol",
+      "inUpdate": true,
+      "attr_labels": "",
+      "examples": "",
+      "default_value": "",
+      "valid_values": [],
+      "existing_element": "",
+      "description": "Name of the protocol used for interaction.",
+      "generated": false,
+      "style": "Simple",
+      "user_specified": true,
+      "unique": false,
+      "input_required": false,
+      "min_cardinality": 0,
+      "max_cardinality": 1,
+      "level": "Common",
+      "Journal Entry": ""
+    },
     "Purpose": {
       "variable_name": "purpose",
       "inUpdate": true,
@@ -1467,7 +1505,7 @@
       "default_value": "",
       "valid_values": [],
       "existing_element": "",
-      "description": "The purpose of this collection — a short description of why it exists or what it is used for.",
+      "description": "The purpose of this collection \u2014 a short description of why it exists or what it is used for.",
       "generated": false,
       "style": "Simple",
       "user_specified": true,
@@ -2044,7 +2082,7 @@
       "default_value": "",
       "valid_values": [],
       "existing_element": "",
-      "description": "The usage guidance for this element — how it is intended to be used in context.",
+      "description": "The usage guidance for this element \u2014 how it is intended to be used in context.",
       "generated": false,
       "style": "Simple",
       "user_specified": true,
@@ -2160,7 +2198,7 @@
       "existing_element": "",
       "description": "Zones scope visibility of elements to different users.",
       "generated": false,
-      "style": "Simple",
+      "style": "Simple List",
       "user_specified": true,
       "unique": false,
       "input_required": false,
@@ -2485,18 +2523,11 @@
         "Antonym",
         "PreferredTerm",
         "ReplacementTerm",
-        "Translation",
         "ISA",
-        "ValidValue",
-        "ISARelationship",
-        "TermHASARelationship",
-        "TYPED BY",
-        "TermTYPEDBYRelationship",
-        "TYPE OF",
-        "TermISATYPEOFRelationship"
+        "ISARelationship"
       ],
       "existing_element": "",
-      "description": "The type of relationship connecting the two terms. E.g. Synonym, Antonym, PreferredTerm, ReplacedByTerm, TranslationOf, etc.",
+      "description": "The type of relationship connecting the two terms. E.g. Synonym, Antonym, PreferredTerm, ReplacementTerm, ISA.",
       "generated": false,
       "style": "Enum",
       "user_specified": true,
@@ -2505,7 +2536,7 @@
       "min_cardinality": 1,
       "max_cardinality": 1,
       "level": "Domain",
-      "Journal Entry": "The type of semantic relationship between two glossary terms. Enum values (from 0350-Related-Terms UML): RelatedTerm, Synonym, Antonym, PreferredTerm, ReplacementTerm, Translation, IsA, ValidValue."
+      "Journal Entry": "The type of semantic relationship between two glossary terms. Confirmed live against get_all_relationship_defs() (2026-08-26, ISSUE-76): these are the only real GlossaryTerm<->GlossaryTerm relationship types Egeria currently defines. Dropped Translation/ValidValue (real Egeria types exist under those names, e.g. TranslationLink, but neither is a GlossaryTerm<->GlossaryTerm relationship) and TermHASARelationship/TYPED BY/TermTYPEDBYRelationship/TYPE OF/TermISATYPEOFRelationship (never real types in any Egeria version -- confirmed against every open-metadata-types archive)."
     },
     "Term 1": {
       "variable_name": "term_1",
@@ -2639,6 +2670,25 @@
       "max_cardinality": 1,
       "level": "Domain",
       "Journal Entry": "The status of the term relationship. Enum values (TermRelationshipStatus): DRAFT, ACTIVE, DEPRECATED, OBSOLETE, OTHER."
+    },
+    "Valid Value Set": {
+      "variable_name": "valid_value_set",
+      "inUpdate": false,
+      "attr_labels": "Valid Value Definition",
+      "examples": "",
+      "default_value": "",
+      "valid_values": [],
+      "existing_element": "ValidValueDefinition",
+      "description": "The valid value set/definition that defines the allowed values for this element (ValidValuesAssignment relationship).",
+      "generated": false,
+      "style": "Reference Name",
+      "user_specified": true,
+      "unique": false,
+      "input_required": true,
+      "min_cardinality": 1,
+      "max_cardinality": 1,
+      "level": "Domain",
+      "Journal Entry": ""
     }
   },
   "bundles": {
@@ -2722,7 +2772,6 @@
       "own_attributes": [
         "Additional Properties",
         "Category",
-        "Class Word Classification",
         "Confidence Classification",
         "Confidentiality Classification",
         "Criticality Classification",
@@ -2732,9 +2781,7 @@
         "Identifier",
         "Impact Classification",
         "Legal",
-        "Modifier Classification",
         "Policy Management Point",
-        "Prime Word Classification",
         "Qualified Name",
         "Retention Classification",
         "Security Tags",
@@ -2780,6 +2827,7 @@
       "own_attributes": [
         "Abbreviation",
         "Aliases",
+        "Class Word Classification",
         "Context Description",
         "Context Scope",
         "Example",
@@ -2789,6 +2837,8 @@
         "Is Activity Description",
         "Is Context",
         "Is Data Value",
+        "Modifier Classification",
+        "Prime Word Classification",
         "Summary",
         "Term Activity Type",
         "Usage"
@@ -2800,6 +2850,27 @@
         "Confidence",
         "Expression",
         "Relationship Type",
+        "Source",
+        "Steward",
+        "Term Relationship Status"
+      ]
+    },
+    "Question Valid Values Base": {
+      "inherits": "Request Base",
+      "own_attributes": [
+        "Term 1",
+        "Valid Value Set"
+      ]
+    },
+    "Detach Term as Context Base": {
+      "inherits": null,
+      "own_attributes": []
+    },
+    "Term as Context Base": {
+      "inherits": null,
+      "own_attributes": [
+        "Confidence",
+        "Expression",
         "Source",
         "Steward",
         "Term Relationship Status"
@@ -2875,7 +2946,7 @@
       "qn_prefix": "Glossary",
       "alternate_names": [],
       "family": "Glossary",
-      "description": "Creates or updates a glossary — a collection of related terms for a specific domain or purpose.",
+      "description": "Creates or updates a glossary \u2014 a collection of related terms for a specific domain or purpose.",
       "verb": "Create",
       "upsert": true,
       "attach": false,
@@ -2896,7 +2967,7 @@
         "Term"
       ],
       "family": "Glossary",
-      "description": "Creates or updates a glossary term — a concept, phrase, or word defined within a glossary.",
+      "description": "Creates or updates a glossary term \u2014 a concept, phrase, or word defined within a glossary.",
       "verb": "Create",
       "upsert": true,
       "attach": false,
@@ -2947,12 +3018,12 @@
       "extra_find": "",
       "extra_constraints": "",
       "OM_TYPE": "UsedInContext",
-      "bundle": "Term-Term Link Base",
+      "bundle": "Term as Context Base",
       "custom_attributes": [
         "Term 1",
         "Element Id"
       ],
-      "Journal Entry": ""
+      "Journal Entry": "ISSUE-76: was incorrectly sharing the Term-Term Relationship bundle, which pulled in a required but completely unused Relationship Type attribute (TermAsContextProcessor never reads it -- UsedInContext is a fixed relationship type, not user-selectable). Repointed to a dedicated bundle with only the attributes the processor actually reads."
     },
     "Link Term-Term Relationship": {
       "display_name": "Term-Term Relationship",
@@ -2976,6 +3047,131 @@
       "custom_attributes": [
         "Term 1",
         "Term 2"
+      ],
+      "Journal Entry": ""
+    },
+    "Declassify Term as Question": {
+      "display_name": "Set Term as Question",
+      "qn_prefix": "",
+      "alternate_names": [],
+      "family": "Glossary",
+      "description": "Remove the Question classification from a glossary term",
+      "verb": "Declassify",
+      "upsert": true,
+      "attach": false,
+      "level": "Basic",
+      "find_method": "",
+      "find_constraints": "",
+      "extra_find": "",
+      "extra_constraints": "",
+      "OM_TYPE": "GlossaryTerm",
+      "bundle": "Request Base",
+      "custom_attributes": [
+        "Term Name"
+      ],
+      "Journal Entry": ""
+    },
+    "Link Question to Valid Values": {
+      "display_name": "Question to Valid Values",
+      "qn_prefix": "",
+      "alternate_names": [],
+      "family": "Glossary",
+      "description": "Link a Question (GlossaryTerm) to the ValidValueSet defining how to interpret its answer (ValidValuesAssignment relationship).",
+      "verb": "Link",
+      "upsert": false,
+      "attach": false,
+      "level": "Basic",
+      "find_method": "",
+      "find_constraints": "",
+      "extra_find": "",
+      "extra_constraints": "",
+      "OM_TYPE": "ValidValuesAssignment",
+      "bundle": "Question Valid Values Base",
+      "custom_attributes": [],
+      "Journal Entry": ""
+    },
+    "Detach Question from Valid Values": {
+      "display_name": "Question from Valid Values",
+      "qn_prefix": "",
+      "alternate_names": [],
+      "family": "Glossary",
+      "description": "Remove the ValidValuesAssignment relationship between a Question (GlossaryTerm) and its ValidValueSet.",
+      "verb": "Detach",
+      "upsert": false,
+      "attach": false,
+      "level": "Basic",
+      "find_method": "",
+      "find_constraints": "",
+      "extra_find": "",
+      "extra_constraints": "",
+      "OM_TYPE": "ValidValuesAssignment",
+      "bundle": "Question Valid Values Base",
+      "custom_attributes": [],
+      "Journal Entry": ""
+    },
+    "Detach Term as Context": {
+      "display_name": "Term as Context",
+      "qn_prefix": "",
+      "alternate_names": [
+        "Detach Used in Context"
+      ],
+      "family": "Glossary",
+      "description": "Removes the UsedInContext relationship between a glossary term and the referenceable it provides context for.",
+      "verb": "Detach",
+      "upsert": false,
+      "attach": false,
+      "level": "Basic",
+      "find_method": "",
+      "find_constraints": "",
+      "extra_find": "",
+      "extra_constraints": "",
+      "OM_TYPE": "UsedInContext",
+      "bundle": "Detach Term as Context Base",
+      "custom_attributes": [
+        "Term 1",
+        "Element Id"
+      ],
+      "Journal Entry": ""
+    },
+    "Classify Term as Element Supplement": {
+      "display_name": "Set Term as Element Supplement",
+      "qn_prefix": "",
+      "alternate_names": [],
+      "family": "Glossary",
+      "description": "Classify a glossary term as a supplement (additional description) for another element.",
+      "verb": "Classify",
+      "upsert": true,
+      "attach": false,
+      "level": "Basic",
+      "find_method": "",
+      "find_constraints": "",
+      "extra_find": "",
+      "extra_constraints": "",
+      "OM_TYPE": "GlossaryTerm",
+      "bundle": "Request Base",
+      "custom_attributes": [
+        "Term Name"
+      ],
+      "Journal Entry": ""
+    },
+    "Declassify Term as Element Supplement": {
+      "display_name": "Unset Term as Element Supplement",
+      "qn_prefix": "",
+      "alternate_names": [],
+      "family": "Glossary",
+      "description": "Remove the ElementSupplement classification from a glossary term.",
+      "verb": "Declassify",
+      "upsert": true,
+      "attach": false,
+      "level": "Basic",
+      "find_method": "",
+      "find_constraints": "",
+      "extra_find": "",
+      "extra_constraints": "",
+      "OM_TYPE": "GlossaryTerm",
+      "bundle": "Request Base",
+      "custom_attributes": [
+        "Term Name"
       ],
       "Journal Entry": ""
     }

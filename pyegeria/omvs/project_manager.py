@@ -459,8 +459,7 @@ class ProjectManager(ServerClient):
             f"{self.platform_url}/servers/{self.view_server}/api/open-metadata/project-manager/"
             f"projects/{project_guid}/classification-properties/declassify"
         )
-        response = await self._async_new_classification_request(url, ["ProjectClassificationProperties"],
-                                                                body=body)
+        response = await self._async_delete_classification_request(url, body=body)
         return response
 
     @dynamic_catch
@@ -751,6 +750,93 @@ class ProjectManager(ServerClient):
         resp = loop.run_until_complete(
             self._async_get_project_team(project_guid, team_role, start_from, page_size,
                                          output_format,report_spec, body, **kwargs  )
+        )
+        return resp
+
+    @dynamic_catch
+    async def _async_get_project_hierarchy(
+            self,
+            project_guid: str,
+            output_format: str = 'JSON',
+            report_spec: str | dict = None,
+            body: Optional[dict | GetRequestBody] = None,
+            **kwargs) -> str | dict:
+        """Returns the hierarchy of managed projects and resources starting with the supplied project guid.
+           Request body is optional. Async version.
+
+        Parameters
+        ----------
+        project_guid: str
+            Identifier of the project to return the hierarchy for.
+        body: dict | GetRequestBody, optional, default = None
+            full request body.
+
+        Returns
+        -------
+        List | str
+
+        The hierarchy of managed projects and resources.
+
+        Raises
+        ------
+
+        PyegeriaException
+
+        """
+        url = (
+            f"{self.platform_url}/servers/{self.view_server}/api/open-metadata/project-manager/"
+            f"projects/{project_guid}/hierarchy"
+        )
+        if body:
+            response = await self._async_make_request("POST", url, body, **kwargs)
+        else:
+            response = await self._async_make_request("POST", url, **kwargs)
+
+        elements = response.json().get("elements", NO_ELEMENTS_FOUND)
+        if type(elements) is str or len(elements) == 0:
+            logger.info(NO_ELEMENTS_FOUND)
+            return NO_ELEMENTS_FOUND
+
+        if output_format != 'JSON':  # return a simplified markdown representation
+            logger.info(f"Found elements, output format: {output_format} and report_spec: {report_spec}")
+            return self._generate_project_output(elements, None, "Project Hierarchy",
+                                                 output_format, report_spec)
+        return elements
+
+    @dynamic_catch
+    def get_project_hierarchy(
+            self,
+            project_guid: str,
+            output_format: str = 'JSON',
+            report_spec: str | dict = None,
+            body: Optional[dict | GetRequestBody] = None,
+            **kwargs
+    ) -> str | dict:
+        """Returns the hierarchy of managed projects and resources starting with the supplied project guid.
+           Request body is optional.
+
+        Parameters
+        ----------
+        project_guid: str
+            Identifier of the project to return the hierarchy for.
+        body: dict | GetRequestBody, optional, default = None
+            full request body.
+
+        Returns
+        -------
+        List | str
+
+        The hierarchy of managed projects and resources.
+
+        Raises
+        ------
+
+        PyegeriaException
+
+        """
+        loop = asyncio.get_event_loop()
+        resp = loop.run_until_complete(
+            self._async_get_project_hierarchy(project_guid, output_format, report_spec, body, **kwargs)
         )
         return resp
 
@@ -1201,15 +1287,15 @@ class ProjectManager(ServerClient):
           "parentRelationshipTypeName" : "open metadata type name",
           "parentAtEnd1": True,
           "initialClassifications" : {
-                "Folder" : {
-                  "class": "FolderProperties"
+                "PersonalProject" : {
+                  "class": "PersonalProjectProperties"
                 }
               },
           "properties": {
             "class" : "ProjectProperties",
             "qualifiedName": "Must provide a unique name here",
             "identifier" : "Add business identifier",
-            "name" : "Add display name here",
+            "displayName" : "Add display name here",
             "description" : "Add description of the project here",
             "projectStatus": "Add appropriate valid value for type",
             "projectPhase" : "Add appropriate valid value for phase",
@@ -1238,7 +1324,7 @@ class ProjectManager(ServerClient):
                     "class": "ProjectProperties",
                     "qualifiedName": f"{classification_name}-{display_name}-{time.asctime()}",
                     "identifier": identifier,
-                    "name": display_name,
+                    "displayName": display_name,
                     "description": description,
                     "projectStatus": status,
                     "projectPhase": phase,
@@ -1332,7 +1418,7 @@ class ProjectManager(ServerClient):
             "class" : "ProjectProperties",
             "qualifiedName": "Must provide a unique name here",
             "identifier" : "Add business identifier",
-            "name" : "Add display name here",
+            "displayName" : "Add display name here",
             "description" : "Add description of the project here",
             "projectStatus": "Add appropriate valid value for type",
             "projectPhase" : "Add appropriate valid value for phase",
@@ -1544,7 +1630,7 @@ class ProjectManager(ServerClient):
                     "class": "ProjectProperties",
                     "qualifiedName": qualified_name,
                     "identifier": identifier,
-                    "name": display_name,
+                    "displayName": display_name,
                     "description": description,
                     "projectStatus": project_status,
                     "projectPhase": project_phase,
@@ -1732,7 +1818,7 @@ class ProjectManager(ServerClient):
         url = (
             f"{self.project_command_base}/{project_guid}/project-dependencies/{upstream_project_guid}/attach"
         )
-        await self._async_new_relationship_request(url, "ProjectDependencyProperties", body)
+        await self._async_new_relationship_request(url, None, body)
         logger.info(f"Project {project_guid} depends on -> {upstream_project_guid}")
 
     @dynamic_catch
@@ -1901,7 +1987,7 @@ class ProjectManager(ServerClient):
         url = (
             f"{self.project_command_base}/{parent_project_guid}/project-hierarchies/{project_guid}/attach"
         )
-        await self._async_new_relationship_request(url, ["ProjectHierarchyProperties"], body)
+        await self._async_new_relationship_request(url, None, body)
         logger.info(f"Project {project_guid} managed by -> {parent_project_guid}")
 
     @dynamic_catch
@@ -2242,7 +2328,7 @@ class ProjectManager(ServerClient):
                     "class": "ProjectProperties",
                     "qualifiedName": f"Task-{display_name}-{time.asctime()}",
                     "identifier": identifier,
-                    "name": display_name,
+                    "displayName": display_name,
                     "description": description,
                     "projectStatus": status,
                     "projectPhase": phase,
@@ -2253,7 +2339,7 @@ class ProjectManager(ServerClient):
             }
 
         url = f"{self.project_command_base}/{project_guid}/task"
-        response = await self._async_new_element_request(url, body)
+        response = await self._async_create_element_body_request(url, ["ProjectProperties"], body)
         logger.info(f"Created task for project {project_guid}")
         return response
 
@@ -2278,6 +2364,274 @@ class ProjectManager(ServerClient):
                                             start_date, planned_end_date, body)
         )
         return resp
+
+
+
+    #
+    # Project classification maintenance - added to close the gap found by
+    # scripts/omvs_audit.py against the project-manager .http ground truth
+    # (2026-08-21). Same shape as _async_add_project_classification /
+    # _async_remove_project_classification already in this file. (.http's
+    # createTaskForProject documents the same task-classification endpoint
+    # as setProjectAsTask under an older NewAttachmentRequestBody name - no
+    # separate method needed, set_project_as_task covers it.)
+    #
+
+    @dynamic_catch
+    async def _async_set_project_as_campaign(self, project_guid: str,
+                                 body: Optional[dict | NewClassificationRequestBody] = None) -> None:
+        """Classify a project as a campaign. Async version."""
+        url = f"{self.platform_url}/servers/{self.view_server}/api/open-metadata/project-manager/projects/{project_guid}/campaign"
+        if body is None:
+            body = {"class": "NewClassificationRequestBody", "properties": {"class": "CampaignProperties"}}
+        await self._async_new_classification_request(url, ["CampaignProperties"], body)
+        logger.info(f"Classified project {project_guid} as campaign")
+
+    @dynamic_catch
+    def set_project_as_campaign(self, project_guid: str,
+                    body: Optional[dict | NewClassificationRequestBody] = None) -> None:
+        """Classify a project as a campaign."""
+        loop = asyncio.get_event_loop()
+        loop.run_until_complete(self._async_set_project_as_campaign(project_guid, body))
+
+    @dynamic_catch
+    async def _async_clear_project_as_campaign(self, project_guid: str,
+                                   body: Optional[dict | DeleteClassificationRequestBody] = None) -> None:
+        """Remove the campaign classification from a project. Async version."""
+        url = f"{self.platform_url}/servers/{self.view_server}/api/open-metadata/project-manager/projects/{project_guid}/campaign/remove"
+        await self._async_delete_classification_request(url, body)
+        logger.info(f"Removed campaign classification from project {project_guid}")
+
+    @dynamic_catch
+    def clear_project_as_campaign(self, project_guid: str,
+                      body: Optional[dict | DeleteClassificationRequestBody] = None) -> None:
+        """Remove the campaign classification from a project."""
+        loop = asyncio.get_event_loop()
+        loop.run_until_complete(self._async_clear_project_as_campaign(project_guid, body))
+
+    @dynamic_catch
+    async def _async_set_project_as_task(self, project_guid: str,
+                                 body: Optional[dict | NewClassificationRequestBody] = None) -> None:
+        """Classify a project as a task. Async version."""
+        url = f"{self.platform_url}/servers/{self.view_server}/api/open-metadata/project-manager/projects/{project_guid}/task-classification"
+        if body is None:
+            body = {"class": "NewClassificationRequestBody", "properties": {"class": "TaskProperties"}}
+        await self._async_new_classification_request(url, ["TaskProperties"], body)
+        logger.info(f"Classified project {project_guid} as task")
+
+    @dynamic_catch
+    def set_project_as_task(self, project_guid: str,
+                    body: Optional[dict | NewClassificationRequestBody] = None) -> None:
+        """Classify a project as a task."""
+        loop = asyncio.get_event_loop()
+        loop.run_until_complete(self._async_set_project_as_task(project_guid, body))
+
+    @dynamic_catch
+    async def _async_clear_project_as_task(self, project_guid: str,
+                                   body: Optional[dict | DeleteClassificationRequestBody] = None) -> None:
+        """Remove the task classification from a project. Async version."""
+        url = f"{self.platform_url}/servers/{self.view_server}/api/open-metadata/project-manager/projects/{project_guid}/task-classification/remove"
+        await self._async_delete_classification_request(url, body)
+        logger.info(f"Removed task classification from project {project_guid}")
+
+    @dynamic_catch
+    def clear_project_as_task(self, project_guid: str,
+                      body: Optional[dict | DeleteClassificationRequestBody] = None) -> None:
+        """Remove the task classification from a project."""
+        loop = asyncio.get_event_loop()
+        loop.run_until_complete(self._async_clear_project_as_task(project_guid, body))
+
+    @dynamic_catch
+    async def _async_set_project_as_personal_project(self, project_guid: str,
+                                 body: Optional[dict | NewClassificationRequestBody] = None) -> None:
+        """Classify a project as a personal project. Async version."""
+        url = f"{self.platform_url}/servers/{self.view_server}/api/open-metadata/project-manager/projects/{project_guid}/personal-project"
+        if body is None:
+            body = {"class": "NewClassificationRequestBody", "properties": {"class": "PersonalProjectProperties"}}
+        await self._async_new_classification_request(url, ["PersonalProjectProperties"], body)
+        logger.info(f"Classified project {project_guid} as personal project")
+
+    @dynamic_catch
+    def set_project_as_personal_project(self, project_guid: str,
+                    body: Optional[dict | NewClassificationRequestBody] = None) -> None:
+        """Classify a project as a personal project."""
+        loop = asyncio.get_event_loop()
+        loop.run_until_complete(self._async_set_project_as_personal_project(project_guid, body))
+
+    @dynamic_catch
+    async def _async_clear_project_as_personal_project(self, project_guid: str,
+                                   body: Optional[dict | DeleteClassificationRequestBody] = None) -> None:
+        """Remove the personal project classification from a project. Async version."""
+        url = f"{self.platform_url}/servers/{self.view_server}/api/open-metadata/project-manager/projects/{project_guid}/personal-project/remove"
+        await self._async_delete_classification_request(url, body)
+        logger.info(f"Removed personal project classification from project {project_guid}")
+
+    @dynamic_catch
+    def clear_project_as_personal_project(self, project_guid: str,
+                      body: Optional[dict | DeleteClassificationRequestBody] = None) -> None:
+        """Remove the personal project classification from a project."""
+        loop = asyncio.get_event_loop()
+        loop.run_until_complete(self._async_clear_project_as_personal_project(project_guid, body))
+
+    @dynamic_catch
+    async def _async_set_project_as_study_project(self, project_guid: str,
+                                 body: Optional[dict | NewClassificationRequestBody] = None) -> None:
+        """Classify a project as a study project. Async version."""
+        url = f"{self.platform_url}/servers/{self.view_server}/api/open-metadata/project-manager/projects/{project_guid}/study-project"
+        if body is None:
+            body = {"class": "NewClassificationRequestBody", "properties": {"class": "StudyProjectProperties"}}
+        await self._async_new_classification_request(url, ["StudyProjectProperties"], body)
+        logger.info(f"Classified project {project_guid} as study project")
+
+    @dynamic_catch
+    def set_project_as_study_project(self, project_guid: str,
+                    body: Optional[dict | NewClassificationRequestBody] = None) -> None:
+        """Classify a project as a study project."""
+        loop = asyncio.get_event_loop()
+        loop.run_until_complete(self._async_set_project_as_study_project(project_guid, body))
+
+    @dynamic_catch
+    async def _async_clear_project_as_study_project(self, project_guid: str,
+                                   body: Optional[dict | DeleteClassificationRequestBody] = None) -> None:
+        """Remove the study project classification from a project. Async version."""
+        url = f"{self.platform_url}/servers/{self.view_server}/api/open-metadata/project-manager/projects/{project_guid}/study-project/remove"
+        await self._async_delete_classification_request(url, body)
+        logger.info(f"Removed study project classification from project {project_guid}")
+
+    @dynamic_catch
+    def clear_project_as_study_project(self, project_guid: str,
+                      body: Optional[dict | DeleteClassificationRequestBody] = None) -> None:
+        """Remove the study project classification from a project."""
+        loop = asyncio.get_event_loop()
+        loop.run_until_complete(self._async_clear_project_as_study_project(project_guid, body))
+
+    @dynamic_catch
+    async def _async_set_project_as_experiment(self, project_guid: str,
+                                 body: Optional[dict | NewClassificationRequestBody] = None) -> None:
+        """Classify a project as a experiment. Async version."""
+        url = f"{self.platform_url}/servers/{self.view_server}/api/open-metadata/project-manager/projects/{project_guid}/experiment"
+        if body is None:
+            body = {"class": "NewClassificationRequestBody", "properties": {"class": "ExperimentProperties"}}
+        await self._async_new_classification_request(url, ["ExperimentProperties"], body)
+        logger.info(f"Classified project {project_guid} as experiment")
+
+    @dynamic_catch
+    def set_project_as_experiment(self, project_guid: str,
+                    body: Optional[dict | NewClassificationRequestBody] = None) -> None:
+        """Classify a project as a experiment."""
+        loop = asyncio.get_event_loop()
+        loop.run_until_complete(self._async_set_project_as_experiment(project_guid, body))
+
+    @dynamic_catch
+    async def _async_clear_project_as_experiment(self, project_guid: str,
+                                   body: Optional[dict | DeleteClassificationRequestBody] = None) -> None:
+        """Remove the experiment classification from a project. Async version."""
+        url = f"{self.platform_url}/servers/{self.view_server}/api/open-metadata/project-manager/projects/{project_guid}/experiment/remove"
+        await self._async_delete_classification_request(url, body)
+        logger.info(f"Removed experiment classification from project {project_guid}")
+
+    @dynamic_catch
+    def clear_project_as_experiment(self, project_guid: str,
+                      body: Optional[dict | DeleteClassificationRequestBody] = None) -> None:
+        """Remove the experiment classification from a project."""
+        loop = asyncio.get_event_loop()
+        loop.run_until_complete(self._async_clear_project_as_experiment(project_guid, body))
+
+    @dynamic_catch
+    async def _async_set_project_as_glossary_project(self, project_guid: str,
+                                 body: Optional[dict | NewClassificationRequestBody] = None) -> None:
+        """Classify a project as a glossary project. Async version."""
+        url = f"{self.platform_url}/servers/{self.view_server}/api/open-metadata/project-manager/projects/{project_guid}/glossary-project"
+        if body is None:
+            body = {"class": "NewClassificationRequestBody", "properties": {"class": "GlossaryProjectProperties"}}
+        await self._async_new_classification_request(url, ["GlossaryProjectProperties"], body)
+        logger.info(f"Classified project {project_guid} as glossary project")
+
+    @dynamic_catch
+    def set_project_as_glossary_project(self, project_guid: str,
+                    body: Optional[dict | NewClassificationRequestBody] = None) -> None:
+        """Classify a project as a glossary project."""
+        loop = asyncio.get_event_loop()
+        loop.run_until_complete(self._async_set_project_as_glossary_project(project_guid, body))
+
+    @dynamic_catch
+    async def _async_clear_project_as_glossary_project(self, project_guid: str,
+                                   body: Optional[dict | DeleteClassificationRequestBody] = None) -> None:
+        """Remove the glossary project classification from a project. Async version."""
+        url = f"{self.platform_url}/servers/{self.view_server}/api/open-metadata/project-manager/projects/{project_guid}/glossary-project/remove"
+        await self._async_delete_classification_request(url, body)
+        logger.info(f"Removed glossary project classification from project {project_guid}")
+
+    @dynamic_catch
+    def clear_project_as_glossary_project(self, project_guid: str,
+                      body: Optional[dict | DeleteClassificationRequestBody] = None) -> None:
+        """Remove the glossary project classification from a project."""
+        loop = asyncio.get_event_loop()
+        loop.run_until_complete(self._async_clear_project_as_glossary_project(project_guid, body))
+
+    @dynamic_catch
+    async def _async_set_project_as_governance_project(self, project_guid: str,
+                                 body: Optional[dict | NewClassificationRequestBody] = None) -> None:
+        """Classify a project as a governance project. Async version."""
+        url = f"{self.platform_url}/servers/{self.view_server}/api/open-metadata/project-manager/projects/{project_guid}/governance-project"
+        if body is None:
+            body = {"class": "NewClassificationRequestBody", "properties": {"class": "GovernanceProjectProperties"}}
+        await self._async_new_classification_request(url, ["GovernanceProjectProperties"], body)
+        logger.info(f"Classified project {project_guid} as governance project")
+
+    @dynamic_catch
+    def set_project_as_governance_project(self, project_guid: str,
+                    body: Optional[dict | NewClassificationRequestBody] = None) -> None:
+        """Classify a project as a governance project."""
+        loop = asyncio.get_event_loop()
+        loop.run_until_complete(self._async_set_project_as_governance_project(project_guid, body))
+
+    @dynamic_catch
+    async def _async_clear_project_as_governance_project(self, project_guid: str,
+                                   body: Optional[dict | DeleteClassificationRequestBody] = None) -> None:
+        """Remove the governance project classification from a project. Async version."""
+        url = f"{self.platform_url}/servers/{self.view_server}/api/open-metadata/project-manager/projects/{project_guid}/governance-project/remove"
+        await self._async_delete_classification_request(url, body)
+        logger.info(f"Removed governance project classification from project {project_guid}")
+
+    @dynamic_catch
+    def clear_project_as_governance_project(self, project_guid: str,
+                      body: Optional[dict | DeleteClassificationRequestBody] = None) -> None:
+        """Remove the governance project classification from a project."""
+        loop = asyncio.get_event_loop()
+        loop.run_until_complete(self._async_clear_project_as_governance_project(project_guid, body))
+
+    @dynamic_catch
+    async def _async_set_project_kind(self, project_guid: str,
+                                 body: Optional[dict | NewClassificationRequestBody] = None) -> None:
+        """Classify a project as a project kind. Async version."""
+        url = f"{self.platform_url}/servers/{self.view_server}/api/open-metadata/project-manager/projects/{project_guid}/project-kind"
+        if body is None:
+            body = {"class": "NewClassificationRequestBody", "properties": {"class": "ProjectKindProperties"}}
+        await self._async_new_classification_request(url, ["ProjectKindProperties"], body)
+        logger.info(f"Classified project {project_guid} as project kind")
+
+    @dynamic_catch
+    def set_project_kind(self, project_guid: str,
+                    body: Optional[dict | NewClassificationRequestBody] = None) -> None:
+        """Classify a project as a project kind."""
+        loop = asyncio.get_event_loop()
+        loop.run_until_complete(self._async_set_project_kind(project_guid, body))
+
+    @dynamic_catch
+    async def _async_clear_project_kind(self, project_guid: str,
+                                   body: Optional[dict | DeleteClassificationRequestBody] = None) -> None:
+        """Remove the project kind classification from a project. Async version."""
+        url = f"{self.platform_url}/servers/{self.view_server}/api/open-metadata/project-manager/projects/{project_guid}/project-kind/remove"
+        await self._async_delete_classification_request(url, body)
+        logger.info(f"Removed project kind classification from project {project_guid}")
+
+    @dynamic_catch
+    def clear_project_kind(self, project_guid: str,
+                      body: Optional[dict | DeleteClassificationRequestBody] = None) -> None:
+        """Remove the project kind classification from a project."""
+        loop = asyncio.get_event_loop()
+        loop.run_until_complete(self._async_clear_project_kind(project_guid, body))
 
 
 if __name__ == "__main__":

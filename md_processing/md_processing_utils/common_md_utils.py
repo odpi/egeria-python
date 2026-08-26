@@ -301,7 +301,7 @@ def set_create_body(object_type: str, attributes: dict)->dict:
         "parentRelationshipTypeName": attributes.get('Parent Relationship Type Name', {}).get('value', None) or attributes.get('Parent Relationship Type', {}).get('value', None),
         "parentRelationshipProperties": attributes.get('Parent Relationship Attributes', {}).get('value', None) or attributes.get('Parent Relationship Properties', {}).get('value', None),
         "parentAtEnd1": attributes.get('Parent at End1', {}).get('value', True),
-        "anchorScopeGUID": attributes.get('Anchor Scope GUID', {}).get('guid', None),
+        "anchorScopeGUID": attributes.get('Anchor Scope ID', {}).get('guid', None),
         "properties": "",
         "initialStatus": attributes.get('Status', {}).get('value', "ACTIVE"),
         "initialClassifications": {}}
@@ -380,7 +380,6 @@ def set_element_prop_body(object_type: str, qualified_name: str, attributes: dic
         "class": prop_name + "Properties",
         "typeName": prop_name,
         "displayName": attributes.get('Display Name', {}).get('value', None),
-        "name": attributes.get('Display Name', {}).get('value', None) if ("Project" in object_type or "Campaign" in object_type or "Task" in object_type or "StudyProject" in object_type) else None,
         "qualifiedName" : qualified_name,
         "description": attributes.get('Description', {}).get('value', None),
         "category": attributes.get('Category', {}).get('value', None),
@@ -444,6 +443,10 @@ def set_collection_manager_body(object_type: str, qualified_name: str, attribute
     # Handle Security subtypes
     if object_type in ["Security Group", "Security List", "Security Role", "SecurityGroup", "SecurityList", "SecurityRole"]:
         prop_bod['distinguishedName'] = attributes.get('Distinguished Name', {}).get('value', None)
+
+    # Handle Working Set
+    if "Working Set" in object_type:
+        prop_bod['disposition'] = attributes.get('Disposition', {}).get('value', None)
 
     return prop_bod
 
@@ -511,7 +514,18 @@ def set_solution_architect_body(object_type: str, qualified_name: str, attribute
             "forces": attributes.get('Forces', {}).get('value', None),
             "benefits": attributes.get('Benefits', {}).get('value', None),
             "liabilities": attributes.get('Liabilities', {}).get('value', None),
+            # ISSUE-66: usage is a real DesignPatternProperties field (confirmed in
+            # Egeria-api-solution-architect.http's createDesignPattern/updateDesignPattern
+            # worked examples) that the "Design Pattern Base" bundle never declared, so it
+            # could never be set at all -- not even silently dropped, since --validate
+            # would reject an undeclared "### Usage" attribute outright.
+            "usage": attributes.get('Usage', {}).get('value', None),
         })
+
+    if object_type in ("Solution Role", "SolutionRole", "SolutionActorRole"):
+        role_domain_id = attributes.get('Role Domain Identifier', {}).get('value', 0)
+        resolved_domain = resolve_enum(GovernanceDomains, role_domain_id)
+        prop_bod["domainIdentifier"] = resolved_domain if resolved_domain is not None else role_domain_id
 
     return prop_bod
 
@@ -656,6 +670,22 @@ def update_gov_body_for_type(object_type: str, body: dict, attributes: dict) -> 
 
         return body
 
+    elif gov_def_name in {"GovernanceActionType", "GovernanceActionProcessStep"}:
+        # ISSUE-71: neither type had a branch here, so every attribute added by
+        # their compact-spec bundles -- Implementation Description (inherited
+        # from Governance Control Base), Produced Guards and Wait Time
+        # (Governance Action Type Base), and Ignore Multiple Triggers
+        # (Governance Action Process Step Base, GovernanceActionProcessStep
+        # only) -- was silently dropped: they fell through to the generic
+        # "no dedicated mapping" fallback below, which only preserves base
+        # Referenceable/GovernanceDefinition fields.
+        body['implementationDescription'] = attributes.get('Implementation Description', {}).get('value', None)
+        body['producedGuards'] = attributes.get('Produced Guards', {}).get('value', [])
+        body['waitTime'] = attributes.get('Wait Time', {}).get('value', None)
+        if gov_def_name == "GovernanceActionProcessStep":
+            body['ignoreMultipleTriggers'] = attributes.get('Ignore Multiple Triggers', {}).get('value', None)
+        return body
+
     # Preserve base governance fields for subtypes without dedicated custom mappings.
     return body
 
@@ -673,6 +703,14 @@ def set_rel_request_body(object_type: str, attributes: dict)->dict:
       "effectiveTime": attributes.get('Effective Time', {}).get('value', None),
       "forLineage": attributes.get('For Lineage', {}).get('value', False),
       "forDuplicateProcessing": attributes.get('For Duplicate Processing', {}).get('value', False),
+      # ISSUE-77: "Make Anchor"/"Anchor Scope IDs" live on the "Link Command
+      # Base" bundle (relationship-establishing commands) but were parsed and
+      # validated without ever being sent -- confirmed against
+      # Egeria-api-lineage-linker.http (NewRelationshipRequestBody sample
+      # body): both are real top-level fields here, not on the create-element
+      # body (that's the separate, already-wired singular "Anchor Scope ID").
+      "makeAnchor": attributes.get('Make Anchor', {}).get('value', None),
+      "anchorScopeGUIDs": attributes.get('Anchor Scope IDs', {}).get('guid_list', None),
       "properties": "",
     }
 

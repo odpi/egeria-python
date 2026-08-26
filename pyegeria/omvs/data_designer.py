@@ -267,7 +267,7 @@ class DataDesigner(ServerClient):
         """
         url = (
             f"{self.ref_data_designer_command_base}/data-value-specifications/{spec_guid}"
-            f"/specialized-data-value-specification-definition/{grain_guid}/detach"
+            f"/specialized-data-value-specifications/{grain_guid}/detach"
         )
         await self._async_delete_relationship_request(url, body, cascade_delete)
 
@@ -402,6 +402,58 @@ class DataDesigner(ServerClient):
         """
         loop = asyncio.get_event_loop()
         return loop.run_until_complete(self._async_create_data_value_specification(body))
+
+    @dynamic_catch
+    async def _async_create_data_value_specification_from_template(
+            self, body: Optional[dict | TemplateRequestBody] = None) -> str:
+        """
+        Create a new metadata element to represent a data value specification using an existing metadata
+        element as a template. The template defines additional classifications and relationships that should
+        be added to the new element. Async version.
+
+        Parameters
+        ----------
+        body : dict | TemplateRequestBody, optional
+            The template details for the data value specification.
+
+        Returns
+        -------
+        str
+            The unique identifier of the newly created data value specification.
+
+        Raises
+        ------
+        PyegeriaException
+            If there are issues in communications, message format, or Egeria errors.
+        """
+        url = f"{self.ref_data_designer_command_base}/data-value-specifications/from-template"
+        return await self._async_create_element_from_template(url, body)
+
+    @dynamic_catch
+    def create_data_value_specification_from_template(
+            self, body: Optional[dict | TemplateRequestBody] = None) -> str:
+        """
+        Create a new metadata element to represent a data value specification using an existing metadata
+        element as a template. The template defines additional classifications and relationships that should
+        be added to the new element.
+
+        Parameters
+        ----------
+        body : dict | TemplateRequestBody, optional
+            The template details for the data value specification.
+
+        Returns
+        -------
+        str
+            The unique identifier of the newly created data value specification.
+
+        Raises
+        ------
+        PyegeriaException
+            If there are issues in communications, message format, or Egeria errors.
+        """
+        loop = asyncio.get_event_loop()
+        return loop.run_until_complete(self._async_create_data_value_specification_from_template(body))
 
     @dynamic_catch
     async def _async_create_data_grain(self, body: dict | NewElementRequestBody) -> str:
@@ -850,472 +902,6 @@ class DataDesigner(ServerClient):
         loop = asyncio.get_event_loop()
         response = loop.run_until_complete(self._async_create_data_structure_from_template(body))
         return response
-
-    @dynamic_catch
-    async def _async_update_data_structure(self, data_struct_guid: str, body: dict | UpdateElementRequestBody) -> None:
-        """
-        Update the properties of a data structure. Async version.
-
-        Parameters
-        ----------
-        data_struct_guid: str
-            - the GUID of the data structure to be updated.
-        body: dict
-            - a dictionary containing the properties of the data structure to be created.
-
-        Returns
-        -------
-        None
-
-        Raises
-        ------
-        PyegeriaException
-
-        ValidationError
-
-        Note
-        ----
-        Full sample body:
-        {
-          "class" : "UpdateElementRequestBody",
-          "requestId": "A request id",
-          "mergeUpdate": true,
-          "properties": {
-            "class" : "DataStructureProperties",
-            "qualifiedName": "add unique name here",
-            "displayName": "add short name here",
-            "description": "add description here",
-            "namespacePath": "add namespace for this structure",
-            "versionIdentifier": "add version for this structure",
-            "additionalProperties": {
-              "property1" : "propertyValue1",
-              "property2" : "propertyValue2"
-            },
-            "effectiveFrom": "{{$isoTimestamp}}",
-            "effectiveTo": "{{$isoTimestamp}}"
-          },
-          "externalSourceGUID": "add guid here",
-          "externalSourceName": "add qualified name here",
-          "effectiveTime" : "{{$isoTimestamp}}",
-          "forLineage" : false,
-          "forDuplicateProcessing" : false
-        }
-
-        """
-
-        url = f"{self.ref_data_designer_command_base}/data-structures/{data_struct_guid}/update"
-        await self._async_update_element_body_request(url, ["DataStructure"], body)
-        logger.info(f"Data structure {data_struct_guid} updated.")
-
-    @dynamic_catch
-    def update_data_structure(self, data_struct_guid: str, body: dict | UpdateElementRequestBody) -> None:
-        """
-        Update the properties of a data structure.
-
-        Parameters
-        ----------
-        data_struct_guid: str
-            - the GUID of the data structure to be updated.
-        body: dict
-            - a dictionary containing the properties of the data structure to be created.
-
-        Returns
-        -------
-        None
-
-        Raises
-        ------
-        PyegeriaException
-
-        ValidationError
-
-        Note
-        ----
-        Full sample body:
-        {
-          "class" : "UpdateElementRequestBody",
-          "requestId": "A request id",
-          "mergeUpdate": true,
-          "properties": {
-            "class" : "DataStructureProperties",
-            "qualifiedName": "add unique name here",
-            "displayName": "add short name here",
-            "description": "add description here",
-            "namespacePath": "add namespace for this structure",
-            "versionIdentifier": "add version for this structure",
-            "additionalProperties": {
-              "property1" : "propertyValue1",
-              "property2" : "propertyValue2"
-            },
-            "effectiveFrom": "{{$isoTimestamp}}",
-            "effectiveTo": "{{$isoTimestamp}}"
-          },
-          "externalSourceGUID": "add guid here",
-          "externalSourceName": "add qualified name here",
-          "effectiveTime" : "{{$isoTimestamp}}",
-          "forLineage" : false,
-          "forDuplicateProcessing" : false
-        }
-
-        """
-
-        loop = asyncio.get_event_loop()
-        loop.run_until_complete(
-            self._async_update_data_structure(data_struct_guid, body))
-
-    @dynamic_catch
-    async def _async_link_member_data_field(self, parent_data_struct_guid: str, member_data_field_guid: str,
-                                            body: Optional[dict | NewRelationshipRequestBody] = None) -> None:
-        """
-        Connect a data structure to a data field. Async version.
-
-        Parameters
-        ----------
-        parent_data_struct_guid: str
-            - the GUID of the parent data structure the data class will be connected to.
-        member_data_field_guid: str
-            - the GUID of the data class to be connected.
-        body: dict, optional
-            - a dictionary containing additional properties.
-
-        Returns
-        -------
-        None
-
-        Raises
-        ------
-        PyegeriaInvalidParameterException
-            one of the parameters is null or invalid or
-        PyegeriaAPIException
-            There is a problem adding the element properties to the metadata repository or
-        PyegeriaUnauthorizedException
-            the requesting user is not authorized to issue this request.
-
-        Note
-        ----
-
-        Full sample body:
-        {
-          "class" : "NewRelationshipRequestBody",
-          "requestId": "A request id",
-          "properties": {
-            "class": "MemberDataFieldProperties",
-            "dataFieldPosition": 0,
-            "minCardinality": 0,
-            "maxCardinality": 0,
-            "effectiveFrom": "{{$isoTimestamp}}",
-            "effectiveTo": "{{$isoTimestamp}}"
-          },
-          "externalSourceGUID": "add guid here",
-          "externalSourceName": "add qualified name here",
-          "effectiveTime" : "{{$isoTimestamp}}",
-          "forLineage" : false,
-          "forDuplicateProcessing" : false
-        }
-
-        """
-
-        url = (f"{self.ref_data_designer_command_base}/data-structures/{parent_data_struct_guid}"
-               f"/member-data-fields/{member_data_field_guid}/attach")
-        await self._async_new_relationship_request(url, ["MemberDataFieldProperties"], body)
-        logger.info(f"Data field {member_data_field_guid} attached to Data structure {parent_data_struct_guid}.")
-
-    @dynamic_catch
-    def link_member_data_field(self, parent_data_struct_guid: str, member_data_field_guid: str,
-                               body: Optional[dict | NewRelationshipRequestBody] = None) -> None:
-        """
-         Connect a data structure to a data field.
-
-         Parameters
-         ----------
-         parent_data_struct_guid: str
-             - the GUID of the parent data structure the data class will be connected to.
-         member_data_field_guid: str
-             - the GUID of the data class to be connected.
-         body: dict, optional
-             - a dictionary containing additional properties.
-
-         Returns
-         -------
-         None
-
-         Raises
-         ------
-         PyegeriaInvalidParameterException
-             one of the parameters is null or invalid or
-         PyegeriaAPIException
-             There is a problem adding the element properties to the metadata repository or
-         PyegeriaUnauthorizedException
-             the requesting user is not authorized to issue this request.
-
-         Note
-         ----
-
-         Full sample body:
-         {
-           "class" : "NewRelationshipRequestBody",
-           "requestId": "A request id",
-           "properties": {
-             "class": "MemberDataFieldProperties",
-             "dataFieldPosition": 0,
-             "minCardinality": 0,
-             "maxCardinality": 0,
-             "effectiveFrom": "{{$isoTimestamp}}",
-             "effectiveTo": "{{$isoTimestamp}}"
-           },
-           "externalSourceGUID": "add guid here",
-           "externalSourceName": "add qualified name here",
-           "effectiveTime" : "{{$isoTimestamp}}",
-           "forLineage" : false,
-           "forDuplicateProcessing" : false
-         }
-
-         """
-
-        loop = asyncio.get_event_loop()
-        loop.run_until_complete(
-            self._async_link_member_data_field(parent_data_struct_guid, member_data_field_guid, body))
-
-    @dynamic_catch
-    async def _async_detach_member_data_field(self, parent_data_struct_guid: str, member_data_field_guid: str,
-                                              body: Optional[dict | DeleteRelationshipRequestBody] = None,
-                                              cascade_delete: bool = False) -> None:
-        """
-        Detach a data class from a data structure. Request body is optional. Async version.
-
-        Parameters
-        ----------
-        parent_data_struct_guid: str
-            - the GUID of the parent data structure the data class will be detached from..
-        member_data_field_guid: str
-            - the GUID of the data class to be disconnected.
-        body: dict, optional
-            - a dictionary containing additional properties.
-
-
-        Returns
-        -------
-        None
-
-        Raises
-        ------
-        PyegeriaInvalidParameterException
-            one of the parameters is null or invalid or
-        PyegeriaAPIException
-            There is a problem adding the element properties to the metadata repository or
-        PyegeriaUnauthorizedException
-            the requesting user is not authorized to issue this request.
-
-        Note
-        ----
-
-        Full sample body:
-        {
-          "class": "DeleteRelationshipRequestBody",
-          "requestId": "A request id",
-          "cascadedDelete": false,
-          "deleteMethod": "LOOK_FOR_LINEAGE",
-          "externalSourceGUID": "add guid here",
-          "externalSourceName": "add qualified name here",
-          "effectiveTime": "{{$isoTimestamp}}",
-          "forLineage": false,
-          "forDuplicateProcessing": false
-        }
-
-
-        """
-
-        url = (f"{self.ref_data_designer_command_base}/data-structures/{parent_data_struct_guid}"
-               f"/member-data-fields/{member_data_field_guid}/detach")
-
-        await self._async_delete_relationship_request(url, body, cascade_delete)
-        logger.info(f"Data field {member_data_field_guid} detached from data structure {parent_data_struct_guid}.")
-
-    @dynamic_catch
-    def detach_member_data_field(self, parent_data_struct_guid: str, member_data_field_guid: str,
-                                 body: dict = None | DeleteRelationshipRequestBody, cascade_delete: bool = False) -> None:
-        """
-        Detach a data class from a data structure. Request body is optional.
-
-        Parameters
-        ----------
-        parent_data_struct_guid: str
-            - the GUID of the parent data structure the data class will be detached from..
-        member_data_field_guid: str
-            - the GUID of the data class to be disconnected.
-        body: dict, optional
-            - a dictionary containing additional properties.
-
-        Returns
-        -------
-        None
-
-        Raises
-        ------
-        PyegeriaInvalidParameterException
-            one of the parameters is null or invalid or
-        PyegeriaAPIException
-            There is a problem adding the element properties to the metadata repository or
-        PyegeriaUnauthorizedException
-            the requesting user is not authorized to issue this request.
-
-        Note
-        ----
-
-        Full sample body:
-        {
-          "class": "DeleteRelationshipRequestBody",
-          "requestId": "A request id",
-          "cascadedDelete": false,
-          "deleteMethod": "LOOK_FOR_LINEAGE",
-          "externalSourceGUID": "add guid here",
-          "externalSourceName": "add qualified name here",
-          "effectiveTime": "{{$isoTimestamp}}",
-          "forLineage": false,
-          "forDuplicateProcessing": false
-        }
-
-
-        """
-
-        loop = asyncio.get_event_loop()
-        loop.run_until_complete(
-            self._async_detach_member_data_field(parent_data_struct_guid, member_data_field_guid, body, cascade_delete))
-
-
-    @dynamic_catch
-    async def _async_link_nested_data_field(self, parent_data_field_guid: str, nested_data_field_guid: str,
-                                             body: Optional[dict | NewRelationshipRequestBody] = None) -> None:
-        """Link a nested data field to a parent data field (NestedDataField relationship). Async version."""
-        url = (f"{self.ref_data_designer_command_base}/data-fields/{parent_data_field_guid}"
-               f"/nested-data-fields/{nested_data_field_guid}/attach")
-        await self._async_new_relationship_request(url, ["NestedDataFieldProperties"], body)
-        logger.info(f"Nested data field {nested_data_field_guid} linked to parent {parent_data_field_guid}.")
-
-    @dynamic_catch
-    def link_nested_data_field(self, parent_data_field_guid: str, nested_data_field_guid: str,
-                               body: Optional[dict | NewRelationshipRequestBody] = None) -> None:
-        """Link a nested data field to a parent data field (NestedDataField relationship)."""
-        loop = asyncio.get_event_loop()
-        loop.run_until_complete(self._async_link_nested_data_field(parent_data_field_guid, nested_data_field_guid, body))
-
-    @dynamic_catch
-    async def _async_detach_nested_data_field(self, parent_data_field_guid: str, nested_data_field_guid: str,
-                                               body: Optional[dict] = None, cascade_delete: bool = False) -> None:
-        """Detach a nested data field from its parent data field. Async version."""
-        url = (f"{self.ref_data_designer_command_base}/data-fields/{parent_data_field_guid}"
-               f"/nested-data-fields/{nested_data_field_guid}/detach")
-        await self._async_delete_relationship_request(url, body, cascade_delete)
-        logger.info(f"Nested data field {nested_data_field_guid} detached from parent {parent_data_field_guid}.")
-
-    @dynamic_catch
-    def detach_nested_data_field(self, parent_data_field_guid: str, nested_data_field_guid: str,
-                                  body: Optional[dict] = None, cascade_delete: bool = False) -> None:
-        """Detach a nested data field from its parent data field."""
-        loop = asyncio.get_event_loop()
-        loop.run_until_complete(self._async_detach_nested_data_field(
-            parent_data_field_guid, nested_data_field_guid, body, cascade_delete))
-
-    @dynamic_catch
-    async def _async_delete_data_structure(self, data_struct_guid: str, body: dict = None,
-                                           cascade_delete: bool = False) -> None:
-        """
-        Delete a data structure. Request body is optional. Async version.
-
-        Parameters
-        ----------
-        data_struct_guid: str
-            - the GUID of the parent data structure to delete.
-        body: dict, optional
-            - a dictionary containing additional properties.
-        cascade_delete: bool, optional
-            - if True, then all child data structures will be deleted as well. Otherwise, only the data structure
-
-        Returns
-        -------
-        None
-
-        Raises
-        ------
-        PyegeriaInvalidParameterException
-            one of the parameters is null or invalid or
-        PyegeriaAPIException
-            There is a problem adding the element properties to the metadata repository or
-        PyegeriaUnauthorizedException
-            the requesting user is not authorized to issue this request.
-
-        Note
-        ----
-
-        Full sample body:
-
-        {
-          "class": "DeleteRelationshipRequestBody",
-          "requestId": "A request id",
-          "cascadedDelete": false,
-          "deleteMethod": "LOOK_FOR_LINEAGE",
-          "externalSourceGUID": "add guid here",
-          "externalSourceName": "add qualified name here",
-          "effectiveTime": "{{$isoTimestamp}}",
-          "forLineage": false,
-          "forDuplicateProcessing": false
-        }
-
-        """
-
-        url = f"{self.ref_data_designer_command_base}/data-structures/{data_struct_guid}/delete"
-
-        await self._async_delete_element_request(url, body, cascade_delete)
-        logger.info(f"Data structure {data_struct_guid} deleted.")
-
-    @dynamic_catch
-    def delete_data_structure(self, data_struct_guid: str, body: dict = None, cascade_delete: bool = False) -> None:
-        """
-        Delete a data structure. Request body is optional. Async version.
-
-        Parameters
-        ----------
-        data_struct_guid: str
-            - the GUID of the parent data structure to delete.
-        body: dict, optional
-            - a dictionary containing additional properties.
-        cascade_delete: bool, optional
-            - if True, then all child data structures will be deleted as well. Otherwise, only the data structure
-
-        Returns
-        -------
-        None
-
-        Raises
-        ------
-        PyegeriaInvalidParameterException
-            one of the parameters is null or invalid or
-        PyegeriaAPIException
-            There is a problem adding the element properties to the metadata repository or
-        PyegeriaUnauthorizedException
-            the requesting user is not authorized to issue this request.
-
-        Note
-        ----
-
-        Full sample body:
-
-        {
-          "class": "DeleteRelationshipRequestBody",
-          "requestId": "A request id",
-          "cascadedDelete": false,
-          "deleteMethod": "LOOK_FOR_LINEAGE",
-          "externalSourceGUID": "add guid here",
-          "externalSourceName": "add qualified name here",
-          "effectiveTime": "{{$isoTimestamp}}",
-          "forLineage": false,
-          "forDuplicateProcessing": false
-        }
-
-        """
-
-        loop = asyncio.get_event_loop()
-        loop.run_until_complete(self._async_delete_data_structure(data_struct_guid, body, cascade_delete))
 
     @dynamic_catch
     async def _async_find_all_data_structures(self, graph_query_depth: int = 3, output_format: str = 'JSON',
@@ -4852,7 +4438,7 @@ class DataDesigner(ServerClient):
 
         """
 
-        url = (f"{self.ref_data_designer_command_base}/certification-stypes/{certification_type_guid}"
+        url = (f"{self.ref_data_designer_command_base}/certification-types/{certification_type_guid}"
                f"/data-structure-definition/{data_structure_guid}/detach")
 
         await self._async_delete_relationship_request(url, body, cascade_delete)
@@ -5281,6 +4867,23 @@ class DataDesigner(ServerClient):
         loop.run_until_complete(self._async_link_data_value_assignment(element_guid, spec_guid, body))
 
     @dynamic_catch
+    async def _async_detach_data_value_assignment(self, element_guid: str, spec_guid: str, body: dict = None) -> None:
+        """
+        Detach a Data Value Specification from an element (DataValueAssignment relationship). Async version.
+        """
+        url = f"{self.ref_data_designer_command_base}/elements/{element_guid}/data-value-specifications/{spec_guid}/detach"
+        await self._async_delete_relationship_request(url, body)
+        logger.info(f"Data Value Specification {spec_guid} unassigned from element {element_guid}.")
+
+    @dynamic_catch
+    def detach_data_value_assignment(self, element_guid: str, spec_guid: str, body: dict = None) -> None:
+        """
+        Detach a Data Value Specification from an element (DataValueAssignment relationship). Sync version.
+        """
+        loop = asyncio.get_event_loop()
+        loop.run_until_complete(self._async_detach_data_value_assignment(element_guid, spec_guid, body))
+
+    @dynamic_catch
     async def _async_update_data_field(self, data_field_guid: str, body: dict | UpdateElementRequestBody) -> None:
         """
         Update the properties of a data field. Async version.
@@ -5335,6 +4938,113 @@ class DataDesigner(ServerClient):
         """
         loop = asyncio.get_event_loop()
         loop.run_until_complete(self._async_update_data_value_specification(guid, body))
+
+    #
+    # Additional relationship maintenance - added to close the gap found by
+    # scripts/omvs_audit.py against the data-designer .http ground truth
+    # (2026-08-21). Same shape as _async_link_nested_data_field /
+    # _async_detach_nested_data_field already in this file.
+    #
+
+    @dynamic_catch
+    async def _async_link_linked_data_field(self, data_field_one_guid: str, data_field_two_guid: str,
+                                            body: Optional[dict | NewRelationshipRequestBody] = None) -> None:
+        """Attach two related data fields (LinkedDataField relationship). Async version."""
+        url = f"{self.ref_data_designer_command_base}/data-fields/{data_field_one_guid}/linked-data-fields/{data_field_two_guid}/attach"
+        await self._async_new_relationship_request(url, ["LinkedDataFieldProperties"], body)
+        logger.info(f"Data field {data_field_two_guid} linked to data field {data_field_one_guid}.")
+
+    @dynamic_catch
+    def link_linked_data_field(self, data_field_one_guid: str, data_field_two_guid: str,
+                               body: Optional[dict | NewRelationshipRequestBody] = None) -> None:
+        """Attach two related data fields (LinkedDataField relationship)."""
+        loop = asyncio.get_event_loop()
+        loop.run_until_complete(self._async_link_linked_data_field(data_field_one_guid, data_field_two_guid, body))
+
+    @dynamic_catch
+    async def _async_detach_linked_data_field(self, data_field_one_guid: str, data_field_two_guid: str,
+                                              body: Optional[dict | DeleteRelationshipRequestBody] = None,
+                                              cascade_delete: bool = False) -> None:
+        """Detach two related data fields. Async version."""
+        url = f"{self.ref_data_designer_command_base}/data-fields/{data_field_one_guid}/linked-data-fields/{data_field_two_guid}/detach"
+        await self._async_delete_relationship_request(url, body, cascade_delete)
+        logger.info(f"Data field {data_field_two_guid} detached from data field {data_field_one_guid}.")
+
+    @dynamic_catch
+    def detach_linked_data_field(self, data_field_one_guid: str, data_field_two_guid: str,
+                                 body: Optional[dict | DeleteRelationshipRequestBody] = None,
+                                 cascade_delete: bool = False) -> None:
+        """Detach two related data fields."""
+        loop = asyncio.get_event_loop()
+        loop.run_until_complete(self._async_detach_linked_data_field(
+            data_field_one_guid, data_field_two_guid, body, cascade_delete))
+
+    @dynamic_catch
+    async def _async_link_schema_attribute_definition(self, data_field_guid: str, schema_attribute_guid: str,
+                                                       body: Optional[dict | NewRelationshipRequestBody] = None) -> None:
+        """Attach a data field to the schema attribute that defines it (SchemaAttributeDefinition relationship). Async version."""
+        url = f"{self.ref_data_designer_command_base}/data-fields/{data_field_guid}/schema-attribute-definitions/{schema_attribute_guid}/attach"
+        await self._async_new_relationship_request(url, ["SchemaAttributeDefinitionProperties"], body)
+        logger.info(f"Schema attribute {schema_attribute_guid} linked to data field {data_field_guid}.")
+
+    @dynamic_catch
+    def link_schema_attribute_definition(self, data_field_guid: str, schema_attribute_guid: str,
+                                         body: Optional[dict | NewRelationshipRequestBody] = None) -> None:
+        """Attach a data field to the schema attribute that defines it (SchemaAttributeDefinition relationship)."""
+        loop = asyncio.get_event_loop()
+        loop.run_until_complete(self._async_link_schema_attribute_definition(data_field_guid, schema_attribute_guid, body))
+
+    @dynamic_catch
+    async def _async_detach_schema_attribute_definition(self, data_field_guid: str, schema_attribute_guid: str,
+                                                         body: Optional[dict | DeleteRelationshipRequestBody] = None,
+                                                         cascade_delete: bool = False) -> None:
+        """Detach a data field from the schema attribute that defines it. Async version."""
+        url = f"{self.ref_data_designer_command_base}/data-fields/{data_field_guid}/schema-attribute-definitions/{schema_attribute_guid}/detach"
+        await self._async_delete_relationship_request(url, body, cascade_delete)
+        logger.info(f"Schema attribute {schema_attribute_guid} detached from data field {data_field_guid}.")
+
+    @dynamic_catch
+    def detach_schema_attribute_definition(self, data_field_guid: str, schema_attribute_guid: str,
+                                           body: Optional[dict | DeleteRelationshipRequestBody] = None,
+                                           cascade_delete: bool = False) -> None:
+        """Detach a data field from the schema attribute that defines it."""
+        loop = asyncio.get_event_loop()
+        loop.run_until_complete(self._async_detach_schema_attribute_definition(
+            data_field_guid, schema_attribute_guid, body, cascade_delete))
+
+    @dynamic_catch
+    async def _async_link_schema_type_definition(self, data_structure_guid: str, schema_type_guid: str,
+                                                  body: Optional[dict | NewRelationshipRequestBody] = None) -> None:
+        """Attach a data structure to the schema type that defines it (SchemaTypeDefinition relationship). Async version."""
+        url = f"{self.ref_data_designer_command_base}/data-structures/{data_structure_guid}/schema-type-definitions/{schema_type_guid}/attach"
+        await self._async_new_relationship_request(url, ["SchemaTypeDefinitionProperties"], body)
+        logger.info(f"Schema type {schema_type_guid} linked to data structure {data_structure_guid}.")
+
+    @dynamic_catch
+    def link_schema_type_definition(self, data_structure_guid: str, schema_type_guid: str,
+                                    body: Optional[dict | NewRelationshipRequestBody] = None) -> None:
+        """Attach a data structure to the schema type that defines it (SchemaTypeDefinition relationship)."""
+        loop = asyncio.get_event_loop()
+        loop.run_until_complete(self._async_link_schema_type_definition(data_structure_guid, schema_type_guid, body))
+
+    @dynamic_catch
+    async def _async_detach_schema_type_definition(self, data_structure_guid: str, schema_type_guid: str,
+                                                    body: Optional[dict | DeleteRelationshipRequestBody] = None,
+                                                    cascade_delete: bool = False) -> None:
+        """Detach a data structure from the schema type that defines it. Async version."""
+        url = f"{self.ref_data_designer_command_base}/data-structures/{data_structure_guid}/schema-type-definitions/{schema_type_guid}/detach"
+        await self._async_delete_relationship_request(url, body, cascade_delete)
+        logger.info(f"Schema type {schema_type_guid} detached from data structure {data_structure_guid}.")
+
+    @dynamic_catch
+    def detach_schema_type_definition(self, data_structure_guid: str, schema_type_guid: str,
+                                      body: Optional[dict | DeleteRelationshipRequestBody] = None,
+                                      cascade_delete: bool = False) -> None:
+        """Detach a data structure from the schema type that defines it."""
+        loop = asyncio.get_event_loop()
+        loop.run_until_complete(self._async_detach_schema_type_definition(
+            data_structure_guid, schema_type_guid, body, cascade_delete))
+
 
 if __name__ == "__main__":
     print("Data Designer")

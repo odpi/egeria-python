@@ -39,9 +39,9 @@ class ServerOps(Platform):
         token: Optional[str] = None,
         timeout: int = None):
         Platform.__init__(self, server_name, platform_url, user_id, user_pwd, token=token)
+        # No trailing slash - every call site below appends "/servers/...".
         self.ops_command_root = (
-            # f"{self.platform_url}/open-metadata/server-operations/users/{user_id}"
-            f"{self.platform_url}/open-metadata/server-operations/"
+            f"{self.platform_url}/open-metadata/server-operations"
         )
 
     async def _async_get_active_configuration(self, server: str = None) -> dict | str:
@@ -146,7 +146,7 @@ class ServerOps(Platform):
     ) -> None:
         """Load the server with the contents of the indicated archive file.
 
-        /open-metadata/server-operations/users/{userId}/server-platform/servers/{serverName}/instance/open-metadata-archives/connection
+        /open-metadata/server-operations/servers/{serverName}/instance/open-metadata-archives/connection
 
         Parameters
         ----------
@@ -176,7 +176,7 @@ class ServerOps(Platform):
         """
         Load the server with the contents of the indicated archive file.
 
-        /open-metadata/server-operations/users/{userId}/server-platform/servers/{serverName}/instance/open-metadata-archives/connection
+        /open-metadata/server-operations/servers/{serverName}/instance/open-metadata-archives/connection
 
         Parameters
         ----------
@@ -192,7 +192,7 @@ class ServerOps(Platform):
         """
         loop = asyncio.get_event_loop()
         loop.run_until_complete(
-            self._async_add_archive_file(archive_connection, server)
+            self._async_add_archive(archive_connection, server)
         )
 
     #
@@ -222,7 +222,7 @@ class ServerOps(Platform):
         if server is None:
             server = self.server_name
 
-        url = self.admin_command_root + "/servers/" + server + "/instance/status"
+        url = self.ops_command_root + "/servers/" + server + "/instance/status"
 
         response = await self._async_make_request("GET", url)
         return response
@@ -230,7 +230,7 @@ class ServerOps(Platform):
     def get_active_server_status(self, server: str = None) -> dict:
         """
         Get the status for the specified server.
-        /open-metadata/platform-services/users/{userId}/server-platform/servers/{server}/instance/status
+        /open-metadata/server-operations/servers/{server}/instance/status
 
         Parameters
         ----------
@@ -257,9 +257,9 @@ class ServerOps(Platform):
         self, server: str = None
     ) -> Response:
         """
-        List all known active servers on the associated platform.
+        List all active services for the specified server.
 
-        /open-metadata/server-operations/users/{userId}/server-platform/servers/{server}/services
+        /open-metadata/server-operations/servers/{server}/services
 
         Parameters
         ----------
@@ -279,9 +279,9 @@ class ServerOps(Platform):
 
     def get_active_service_list_for_server(self, server: str = None) -> Response:
         """
-        List all known active servers on the associated platform.
+        List all active services for the specified server.
 
-        /open-metadata/server-operations/users/{userId}/server-platform/servers/{server}/services
+        /open-metadata/server-operations/servers/{server}/services
 
         Parameters
         ----------
@@ -319,7 +319,7 @@ class ServerOps(Platform):
             server = self.server_name
 
         url = (
-            f"{self.platform_url}/servers/{server}/open-metadata/engine-host/users/{self.user_id}"
+            f"{self.platform_url}/servers/{server}/open-metadata/engine-host"
             f"/governance-engines/summary"
         )
         response = await self._async_make_request("GET", url)
@@ -355,7 +355,7 @@ class ServerOps(Platform):
         if server is None:
             server = self.server_name
 
-        url = f"{self.platform_url}/servers/{server}/open-metadata/integration_daemon/users/{self.user_id}/status"
+        url = f"{self.platform_url}/servers/{server}/open-metadata/integration-daemon/status"
         response = await self._async_make_request("GET", url)
         return response.json().get("integrationDaemonStatus", "No Integration Groups")
         # return response.json()
@@ -378,7 +378,7 @@ class ServerOps(Platform):
         validate_name(connector_name)
 
         url = (
-            f"{self.platform_url}/servers/{server}/open-metadata/integration_daemon/users/{self.user_id}/"
+            f"{self.platform_url}/servers/{server}/open-metadata/integration-daemon/"
             f"integration-connectors/{connector_name}/configuration-properties"
         )
 
@@ -412,8 +412,8 @@ class ServerOps(Platform):
             server = self.server_name
 
         url = (
-            f"{self.platform_url}/servers/{server}/open-metadata/integration_daemon/users/"
-            f"{self.user_id}/integration-connectors/restart"
+            f"{self.platform_url}/servers/{server}/open-metadata/integration-daemon/"
+            f"integration-connectors/restart"
         )
         body = {"class": "NameRequestBody", "name": connector_name}
         response = await self._async_make_request("POST", url, body)
@@ -440,8 +440,8 @@ class ServerOps(Platform):
             connector_name = None
 
         url = (
-            f"{self.platform_url}/servers/{server}/open-metadata/integration_daemon/users/"
-            f"{self.user_id}/integration-connectors/refresh"
+            f"{self.platform_url}/servers/{server}/open-metadata/integration-daemon/"
+            f"integration-connectors/refresh"
         )
         if connector_name:
             body = {"class": "NameRequestBody", "name": connector_name}

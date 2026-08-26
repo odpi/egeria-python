@@ -10,7 +10,7 @@ from datetime import datetime
 from enum import Enum, StrEnum
 from typing import Literal, Annotated, Any, Optional, Dict
 
-from pydantic import BaseModel, Field, ConfigDict, root_validator, model_validator
+from pydantic import BaseModel, Field, ConfigDict, root_validator, model_validator, AliasChoices
 
 
 
@@ -292,10 +292,60 @@ class DeleteRequestBody(RequestBody):
 
 class DeleteElementRequestBody(RequestBody):
     class_: Annotated[Literal["DeleteElementRequestBody"], Field(alias="class")]
+    # Both fields were previously missing entirely -- PyegeriaModel's
+    # extra='ignore' meant a caller-supplied dict with "cascadeDelete"/
+    # "deleteMethod" validated successfully but silently dropped both values
+    # before serialization (confirmed directly via model_validate + dump,
+    # no live server needed: DataDesigner.delete_data_structure(guid,
+    # cascade_delete=True) -- and every other _async_delete_X wrapper that
+    # threads cascade_delete through _async_delete_element_request's
+    # no-body-provided path -- has never actually sent cascadeDelete in the
+    # outgoing request body). See PYEGERIA_ISSUES.md ISSUE-62.
+    #
+    # deleteMethod: confirmed via ground-truth .http reference files
+    # (Egeria-api-actor-manager.http and others) that real
+    # DeleteElementRequestBody bodies carry "deleteMethod" consistently --
+    # no spelling ambiguity found for this field.
+    delete_method: Optional[DeleteMethod] = None
+    # cascadeDelete: ground-truth .http files are genuinely split roughly
+    # 50/50 between "cascadeDelete" and "cascadedDelete" for this same class
+    # -- even within a single file (Egeria-api-actor-manager.http uses
+    # both). Not resolved here; "cascadeDelete" was chosen as the
+    # OUTGOING/serialized name because it's what this repo's own code has
+    # already been trying to send since before this fix
+    # (validate_delete_element_request's no-body-provided branch). Both
+    # spellings are accepted on input via validation_alias so a
+    # caller-supplied dict using either one still populates correctly.
+    # Flagged in PYEGERIA_ISSUES.md ISSUE-62 for live verification -- if a
+    # given delete endpoint actually expects "cascadedDelete" instead, this
+    # choice would need revisiting for that specific endpoint.
+    cascade_delete: Optional[bool] = Field(
+        default=None,
+        validation_alias=AliasChoices("cascadeDelete", "cascadedDelete"),
+        serialization_alias="cascadeDelete",
+    )
 
 
 class DeleteRelationshipRequestBody(RequestBody):
     class_: Annotated[Literal["DeleteRelationshipRequestBody"], Field(alias="class")]
+    # No deleteMethod field previously -- when omitted, the Egeria server's
+    # deleteRelationshipInStore operation applies its own default of
+    # LookForLineage, which that specific operation's own validation then
+    # rejects as invalid (confirmed live 2026-08-17 against a real DataFlow
+    # relationship -- OMAG-COMMON-400-032, "The value DeleteMethod{...
+    # LookForLineage...} passed on the deleteMethod parameter... is
+    # invalid"). LookForLineage's semantics ("if the ELEMENT has lineage
+    # relationships then archive; otherwise soft-delete") don't apply to
+    # deleting a relationship in the first place, so the server-side default
+    # is simply the wrong one for this operation -- callers need to be able
+    # to override it explicitly. delete_method left optional/None by default
+    # (not defaulted to SOFT_DELETE here) since that changes existing
+    # callers' behavior invisibly; explicit callers (e.g.
+    # LineageLinker.detach_lineage) should pass one of the values the
+    # server's relationship-delete path actually accepts (SoftDelete/Purge/
+    # Archive have been reported as generally valid; LookForLineage/Other
+    # are not for this operation).
+    delete_method: Optional[DeleteMethod] = None
 
 
 class DeleteClassificationRequestBody(RequestBody):
@@ -526,10 +576,16 @@ class NewOpenMetadataElementRequestBody(RequestBody):
 
 
 class NewRelatedElementsRequestBody(RequestBody):
+    # Field names/aliases match the real Java DTO
+    # (frameworkservices/omf/rest/NewRelatedElementsRequestBody.java):
+    # typeName, metadataElement1GUID, metadataElement2GUID, properties -
+    # previously named relationship_type_name/end_1_guid/end_2_guid, which
+    # don't exist on the server-side class at all (silently ignored, causing
+    # e.g. "the name passed on the relationshipTypeName parameter ... is null").
     class_: Annotated[Literal["NewRelatedElementsRequestBody"], Field(alias="class")]
-    relationship_type_name: str | None = None
-    end_1_guid: str | None = None
-    end_2_guid: str | None = None
+    type_name: str | None = None
+    metadata_element_1_guid: str | None = None
+    metadata_element_2_guid: str | None = None
     properties: dict | None = None
 
 
@@ -544,8 +600,28 @@ class NewRelatedElementsRequestBody(RequestBody):
 
 
 class GetRequestBody(RequestBody):
-    class_: Annotated[Literal["GetRequestBody"], Field(alias="class")]
+    # ISSUE-298: not a Literal. Egeria has no dedicated Pydantic model for
+    # every legitimate subclass of this body shape -- callers (including
+    # this SDK's own docstrings, e.g. SolutionArchitect.get_solution_
+    # component_by_guid's "AnyTimeRequestBody", ProjectManager.
+    # get_linked_projects's "RelationshipRequestBody") send the real Egeria-
+    # side polymorphism tag for a dict-shaped body that's otherwise
+    # identical to this model. Locking "class" to the literal
+    # "GetRequestBody" rejected every one of those before the request ever
+    # reached the server. Nothing downstream branches on the exact string,
+    # so a plain str preserves the "class must be present" requirement
+    # without blocking legitimate subclass names pyegeria hasn't (and can't
+    # exhaustively) modeled.
+    class_: Annotated[str, Field(alias="class")]
     metadata_element_type_name: str | None = None
+    # ISSUE-55 note: Egeria PR #9215 moved metadataElementSubtypeNames off the
+    # server-side GetOptions class (this model's real counterpart) onto
+    # QueryOptions instead -- it has no effect on a plain get-by-guid style
+    # request anymore. Left here rather than removed since the server
+    # ignores unknown/inapplicable body fields rather than rejecting them
+    # (no live breakage either way), but don't rely on it for a GetRequestBody
+    # call; see FindRequestBody.metadata_element_subtype_names/skip_subtypes
+    # for the fields that are actually honored.
     metadata_element_subtype_names: list[str] | None = None
     skip_relationships: list[str] | None = None
     include_only_relationships: list[str] | None = None
@@ -558,7 +634,8 @@ class GetRequestBody(RequestBody):
     relationships_page_size: int = 0
 
 class ResultsRequestBody(GetRequestBody):
-    class_: Annotated[Literal["ResultsRequestBody"], Field(alias="class")]
+    # ISSUE-298: same reasoning as GetRequestBody.class_ above.
+    class_: Annotated[str, Field(alias="class")]
     anchor_guid: str | None = None
     anchor_domain_name: str | None = None
     anchor_scope_guid: str | None = None
@@ -592,6 +669,22 @@ class FindRequestBody(ResultsRequestBody):
     metadata_element_subtype_names: list[str] | None = Field(
         None, alias="metadataElementSubtypeNames"
     )
+    # ISSUE-55: Egeria PR #9215 (odpi/egeria) added exclude-list semantics for
+    # metadata_element_subtype_names -- when skip_subtypes is true, the listed
+    # subtypes are excluded from the results instead of being the only
+    # subtypes included (the pre-existing default, skip_subtypes=False/absent).
+    # Lives on QueryOptions server-side (the class this model's field set is
+    # otherwise mirroring); without this field, any caller going through the
+    # validated `FindRequestBody.model_validate(...)`/TypeAdapter path (e.g.
+    # classification_explorer.py's _async_find_root_elements) would have it
+    # silently dropped by PyegeriaModel's extra='ignore', same bug class as
+    # ISSUE-62/63. Callers using the raw-dict pass-through path (e.g.
+    # MetadataExpert._async_find_metadata_elements, which sends the body
+    # as-is with no validation) could already set "skipSubtypes": true
+    # without this field existing -- confirmed live, both before and after
+    # this field was added -- but it's needed here for the validated path
+    # and so the typed model matches the real wire contract.
+    skip_subtypes: bool | None = Field(None, alias="skipSubtypes")
     search_properties: dict | None = Field(None, alias="searchProperties")
     match_classifications: dict | None = Field(None, alias="matchClassifications")
     as_of_time: datetime | None = Field(None, alias="asOfTime")

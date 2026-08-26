@@ -206,17 +206,52 @@ class Format(BaseModel):
 class ActionParameter(BaseModel):
     """
     Represents a parameter for an action.
-    
+
+    A FormatSet's action has up to two independent execution paths, mirroring
+    the two function slots Dr.Egeria commands have always carried
+    (`find_method`/`find_constraints` and `extra_find`/`extra_constraints` --
+    present in the compact command schema since its inception, but `extra_find`
+    was inert until this field was added: gen_report_specs.py only ever read
+    `find_method`). Both draw their parameter *values* from the same command
+    attributes at runtime -- they differ in which Python function gets called
+    and what shape of result it returns:
+
+    - `function` (from `find_method`): an element-query call, typically a
+      `pyegeria.omvs.*` method (e.g. `MetadataExpert.find_metadata_elements_with_string`)
+      -- returns a list of Egeria elements, formatted per-column by the
+      FormatSet's `Format.attributes` (the TABLE/DICT/REPORT/MERMAID path).
+    - `analytic_function` (from `extra_find`): a generic counting/aggregation
+      call, typically a `pyegeria.view.overview_metrics` (or similar) function
+      -- returns already-aggregated {label, value[, series]}-shaped dicts
+      ready for a Vega chart generator, not raw elements. Optional: only set
+      when the same report spec should also support a chart-shaped
+      representation of the same underlying data (e.g. a growth-over-time
+      line chart alongside a plain element list).
+
+    Unlike `function`, `analytic_function` has no fixed required/optional
+    param-name list: each analytic function takes whatever arbitrary
+    parameters it needs (window/points for growth_series, something else for
+    the next one), supplied via a Report's free-form "Analytic Parameters"
+    dict (a `Create Report` attribute) and forwarded to the analytic function
+    as-is at execution time -- no per-function param registry to maintain
+    here as more analytic functions are added.
+
     Attributes:
-        function: The function to call
-        required_params: Parameters that are required from the user
-        optional_params: Parameters that are optional from the user
-        spec_params: Parameters that are fixed for this action
+        function: The (find) function to call
+        required_params: Parameters that are required from the user, for `function`
+        optional_params: Parameters that are optional from the user, for `function`
+        spec_params: Parameters that are fixed for this action, for `function`
+        analytic_function: The (extra_find) analytic/aggregation function to call, if any
+        analytic_spec_params: Parameters fixed for this action, for `analytic_function`
+            (from `extra_constraints`) -- layered under whatever arbitrary
+            parameters the caller supplies at execution time.
     """
     function: str
     required_params: List[str] = Field(default_factory=list)
     optional_params: Optional[List[str]] = Field(default_factory=list)
     spec_params: Dict[str, Any] = Field(default_factory=dict)
+    analytic_function: Optional[str] = None
+    analytic_spec_params: Dict[str, Any] = Field(default_factory=dict)
 
     @root_validator(pre=True)
     def _migrate_legacy_user_params(cls, values):
