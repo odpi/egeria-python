@@ -797,6 +797,44 @@ generally if new zero-result reports show up elsewhere.
 
 ---
 
+## Open pyegeria items (including follow-ons blocked on an Egeria fix)
+
+Actionable in this repo. Some of these are fully blocked today — waiting
+on an Egeria Server capability that doesn't exist yet — but the pyegeria/
+Dr.Egeria-side work each will need once that capability ships is written
+into the entry now, so it isn't rediscovered from scratch later.
+
+---
+
+# Quick reference: which OMVS client class for which purpose
+
+| Need | Class | Notes |
+|---|---|---|
+| Business reference data (country/currency codes) | `ReferenceDataManager` | Does **not** cover specification properties (ISSUE-19, docs-only) |
+| Valid metadata values for a property name | `ReferenceDataManager` or `MetadataExpert` | `get_valid_metadata_values` lives on shared `ServerClient` base; no `as_of_time` support — Egeria endpoint doesn't expose it (ISSUE-18) |
+| Specification properties (placeholders, guards, action targets, etc.) | `SpecificationProperties` | `get_specification_property_by_type` now works with either PascalCase or `SCREAMING_SNAKE_CASE` input (ISSUE-17, fixed 2026-08-15); `find_specification_property` with `graph_query_depth=0` also available (ISSUE-15); `get_specification_property_by_guid` works too, `NameError` fixed (ISSUE-28, fixed 2026-08-05, re-verified 2026-08-15) |
+| `DataGrain` / `DataClass` listing | `find_data_value_specifications` / `get_data_value_specifications_by_name("*")` | Both fixed (ISSUE-1, ISSUE-2) |
+| `DataSpec` (Collection subtype) | `CollectionManager.find_collections(metadata_element_type="DataSpec")` | |
+| `DataStructure` / `DataField` | `DataDesigner.find_data_structures` / `find_data_fields` | |
+| Solution blueprints/components (any pyegeria version) | `SolutionArchitect.find_solution_blueprints/components(search_string="*")` | Avoid `find_all_*` variants on old versions (ISSUE-11) |
+| Note logs (list) | `find_note_logs("*", graph_query_depth=0)` | ISSUE-15 |
+| Note logs (entries) | `get_notes_for_note_log(guid, page_size=100)` | ISSUE-3 — never pass `metadata_element_type_name="NoteLog"` |
+| Collection members | `get_collection_members(collection_guid)` | ISSUE-8 — now returns members of any type, not just the collection's own type |
+| Comparing results across two runs/environments that don't match | — | Check whether the same user's credentials were used in both — governance zone visibility can legitimately change results per-user (ISSUE-29) before assuming a pyegeria bug |
+| Multi-classification search (`matchClassifications`, 2+ conditions) | `MetadataExpert.find_metadata_elements` | Fixed in Egeria server (ISSUE-35) |
+| Paging a `find_metadata_elements` result | Set `"startFrom"`/`"pageSize"` **in the body dict** | Fixed (ISSUE-34) — these are NOT separate parameters on this method anymore; passing them as kwargs is silently a no-op. Same for `"graphQueryDepth"`. |
+| Relationships for a single element by guid | `MetadataExpert.get_all_related_elements(guid)` | **Not** `get_metadata_element_by_guid` — that call never returns relationships, by design (ISSUE-37, not a bug) |
+| Project parent/child hierarchy (any linked project, not just hierarchy) | `ProjectManager.get_linked_projects(guid)` | Fixed (ISSUE-42) — was silently returning "No elements found" regardless of real data |
+
+---
+
+
+---
+
+# Appendix: Closed / Not-a-bug entries
+
+## Fixed / Resolved
+
 ### ISSUE-70: `ActionAuthor.update_next_action_process_step()` always raises `AttributeError` — calls a method that does not exist
 
 **Status:** fixed 2026-08-21 (Pyegeria — `pyegeria/omvs/action_author.py`,
@@ -1315,7 +1353,7 @@ would have introduced a *new* live failure.** Their real endpoints
 (`_async_set_is_class_word` etc., `pyegeria/omvs/glossary_manager.py`) are
 `/glossaries/terms/{term_guid}/is-class-word` — **GlossaryTerm-only**, not
 generic — confirmed against the actual URL. The embedded attributes were
-on the same universal `Referenceable` bundle as `Security Tags` above,
+on the same widely-shared `Referenceable` bundle as `Security Tags` above,
 inherited by ~100 unrelated Create commands (`Create Governance Action
 Process`, `Create Digital Product`, ...). Syncing these generically for
 every Create/Update guid would 400 against the term-only endpoint for
@@ -1364,44 +1402,6 @@ on that body. Fixed by adding both to `set_rel_request_body()`.
 required. Full `pytest tests/micro-tests/` green throughout.
 
 ---
-
-## Open pyegeria items (including follow-ons blocked on an Egeria fix)
-
-Actionable in this repo. Some of these are fully blocked today — waiting
-on an Egeria Server capability that doesn't exist yet — but the pyegeria/
-Dr.Egeria-side work each will need once that capability ships is written
-into the entry now, so it isn't rediscovered from scratch later.
-
----
-
-# Quick reference: which OMVS client class for which purpose
-
-| Need | Class | Notes |
-|---|---|---|
-| Business reference data (country/currency codes) | `ReferenceDataManager` | Does **not** cover specification properties (ISSUE-19, docs-only) |
-| Valid metadata values for a property name | `ReferenceDataManager` or `MetadataExpert` | `get_valid_metadata_values` lives on shared `ServerClient` base; no `as_of_time` support — Egeria endpoint doesn't expose it (ISSUE-18) |
-| Specification properties (placeholders, guards, action targets, etc.) | `SpecificationProperties` | `get_specification_property_by_type` now works with either PascalCase or `SCREAMING_SNAKE_CASE` input (ISSUE-17, fixed 2026-08-15); `find_specification_property` with `graph_query_depth=0` also available (ISSUE-15); `get_specification_property_by_guid` works too, `NameError` fixed (ISSUE-28, fixed 2026-08-05, re-verified 2026-08-15) |
-| `DataGrain` / `DataClass` listing | `find_data_value_specifications` / `get_data_value_specifications_by_name("*")` | Both fixed (ISSUE-1, ISSUE-2) |
-| `DataSpec` (Collection subtype) | `CollectionManager.find_collections(metadata_element_type="DataSpec")` | |
-| `DataStructure` / `DataField` | `DataDesigner.find_data_structures` / `find_data_fields` | |
-| Solution blueprints/components (any pyegeria version) | `SolutionArchitect.find_solution_blueprints/components(search_string="*")` | Avoid `find_all_*` variants on old versions (ISSUE-11) |
-| Note logs (list) | `find_note_logs("*", graph_query_depth=0)` | ISSUE-15 |
-| Note logs (entries) | `get_notes_for_note_log(guid, page_size=100)` | ISSUE-3 — never pass `metadata_element_type_name="NoteLog"` |
-| Collection members | `get_collection_members(collection_guid)` | ISSUE-8 — now returns members of any type, not just the collection's own type |
-| Comparing results across two runs/environments that don't match | — | Check whether the same user's credentials were used in both — governance zone visibility can legitimately change results per-user (ISSUE-29) before assuming a pyegeria bug |
-| Multi-classification search (`matchClassifications`, 2+ conditions) | `MetadataExpert.find_metadata_elements` | Fixed in Egeria server (ISSUE-35) |
-| Paging a `find_metadata_elements` result | Set `"startFrom"`/`"pageSize"` **in the body dict** | Fixed (ISSUE-34) — these are NOT separate parameters on this method anymore; passing them as kwargs is silently a no-op. Same for `"graphQueryDepth"`. |
-| Relationships for a single element by guid | `MetadataExpert.get_all_related_elements(guid)` | **Not** `get_metadata_element_by_guid` — that call never returns relationships, by design (ISSUE-37, not a bug) |
-| Project parent/child hierarchy (any linked project, not just hierarchy) | `ProjectManager.get_linked_projects(guid)` | Fixed (ISSUE-42) — was silently returning "No elements found" regardless of real data |
-
----
-
-
----
-
-# Appendix: Closed / Not-a-bug entries
-
-## Fixed / Resolved
 
 ### ISSUE-48: No OMVS wrapper exists for the `SchemaAttributeDefinition` relationship (physical `SchemaAttribute` ↔ logical `DataField`)
 
