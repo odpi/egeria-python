@@ -287,6 +287,130 @@ class AsyncBaseCommandProcessor(ABC):
                 logger.error(f"Error syncing {attr_name} for {guid}: {e}")
                 self.add_related_result(attr_name, guid=guid, status="failure", message=str(e))
 
+    # Dr.Egeria attribute name -> CLASSIFICATION_METHODS key (md_processing.v2.curation).
+    # Both of these live on the shared "Referenceable" bundle inherited by nearly
+    # every Create command, alongside the 5 handled by _sync_governance_classifications
+    # above -- but were never wired to anything (confirmed dead by
+    # scripts/dr_egeria_audit.py's DEAD_ATTRIBUTE check, PYEGERIA_ISSUES.md ISSUE-77).
+    # Both already have a fully-working standalone "Classify X as ..." command
+    # (CurationClassifyProcessor) using the same CLASSIFICATION_METHODS spec reused
+    # here, and -- unlike ClassWord/Modifier/PrimeWord (see
+    # _sync_term_naming_classifications below) -- both real Egeria endpoints are
+    # genuinely generic (`elements/{guid}/...`), so it's correct to apply them for
+    # any Referenceable, not just a specific element type.
+    _REFERENCEABLE_CLASSIFICATION_MAP = {
+        "Security Tags": "SecurityTags",
+        "Policy Management Point": "PolicyManagementPoint",
+    }
+
+    async def _sync_referenceable_classifications(self, guid: str, attributes: Dict[str, Any]) -> None:
+        """
+        Apply the Security Tags / Policy Management Point classifications when
+        the corresponding embedded Dr.Egeria attribute is present. See the
+        docstring on _REFERENCEABLE_CLASSIFICATION_MAP above for why these two
+        (and not the other 3 dead classification attributes on the same
+        bundle) are handled generically here.
+        """
+        # Deferred import: curation.py imports AsyncBaseCommandProcessor from
+        # this module, so importing curation.py's symbols at module load time
+        # here would be circular. Safe as a call-time import -- both modules
+        # are fully loaded by the time any command actually executes.
+        from md_processing.v2.curation import CLASSIFICATION_METHODS, CURATION_CLASSIFICATION_CLIENTS
+
+        for attr_name, om_type in self._REFERENCEABLE_CLASSIFICATION_MAP.items():
+            attr_data = attributes.get(attr_name, {})
+            if "value" not in attr_data:
+                continue
+            value = attr_data.get("value")
+
+            spec = CLASSIFICATION_METHODS[om_type]
+            client_attr = CURATION_CLASSIFICATION_CLIENTS.get(om_type)
+            client = getattr(self.client, client_attr) if client_attr else self.client.classification_manager
+            set_method = getattr(client, spec.set_method)
+            clear_method = getattr(client, spec.clear_method)
+
+            try:
+                if not value:
+                    await clear_method(guid)
+                    self.add_related_result(attr_name, guid=guid, message="Cleared")
+                    continue
+
+                if om_type == "PolicyManagementPoint":
+                    # Dictionary-style attribute {point_type, name, description} ->
+                    # PolicyManagementPointProperties {pointType, label, description}
+                    # (confirmed against Egeria-api-governance-officer.http).
+                    if not isinstance(value, dict):
+                        logger.warning(f"'{attr_name}' expects a dictionary value; skipping classification sync.")
+                        continue
+                    properties = {"class": spec.props_class}
+                    if value.get("point_type"):
+                        properties["pointType"] = value["point_type"]
+                    if value.get("name"):
+                        properties["label"] = value["name"]
+                    if value.get("description"):
+                        properties["description"] = value["description"]
+                else:
+                    # Security Tags: Simple-List-style attribute -> SecurityTagsProperties.securityLabels
+                    # (confirmed against Egeria-api-classification-explorer.http).
+                    labels = value if isinstance(value, list) else [value]
+                    properties = {"class": spec.props_class, "securityLabels": labels}
+
+                body = {"class": "NewClassificationRequestBody", "properties": properties}
+                await set_method(guid, body)
+                self.add_related_result(attr_name, guid=guid, message="Set")
+            except PyegeriaException as e:
+                logger.error(f"Error syncing {attr_name} for {guid}: {e}")
+                self.add_related_result(attr_name, guid=guid, status="failure", message=str(e))
+
+    # Dr.Egeria attribute name -> CLASSIFICATION_METHODS key. ClassWord/Modifier/
+    # PrimeWord's real Egeria endpoints (glossary-manager's is-class-word/
+    # is-modifier/is-prime-word) are GlossaryTerm-only
+    # (`/glossaries/terms/{term_guid}/is-class-word`, confirmed against
+    # pyegeria/omvs/glossary_manager.py) -- unlike Security Tags/Policy
+    # Management Point above, these must NOT be synced generically for every
+    # Create command's guid, or a non-term element's guid would 400 against a
+    # term-only URL. Per dwolfson's direction (PYEGERIA_ISSUES.md ISSUE-77):
+    # removed from the shared "Referenceable" bundle everywhere except the
+    # term-specific "Glossary Term Base" bundle, and only ever called from
+    # TermProcessor/QuestionProcessor (md_processing.v2.glossary) where the
+    # guid is known to be a real GlossaryTerm.
+    _TERM_NAMING_CLASSIFICATION_MAP = {
+        "Class Word Classification": "ClassWord",
+        "Modifier Classification": "Modifier",
+        "Prime Word Classification": "PrimeWord",
+    }
+
+    async def _sync_term_naming_classifications(self, term_guid: str, attributes: Dict[str, Any]) -> None:
+        """Apply the Class Word / Modifier / Prime Word naming-standard marker
+        classifications when the corresponding embedded Dr.Egeria attribute is
+        present. Only call this with a GUID known to be a GlossaryTerm -- see
+        the docstring on _TERM_NAMING_CLASSIFICATION_MAP above."""
+        from md_processing.v2.curation import CLASSIFICATION_METHODS, CURATION_CLASSIFICATION_CLIENTS
+
+        for attr_name, om_type in self._TERM_NAMING_CLASSIFICATION_MAP.items():
+            attr_data = attributes.get(attr_name, {})
+            if "value" not in attr_data:
+                continue
+            value = attr_data.get("value")
+
+            spec = CLASSIFICATION_METHODS[om_type]
+            client_attr = CURATION_CLASSIFICATION_CLIENTS.get(om_type)
+            client = getattr(self.client, client_attr) if client_attr else self.client.classification_manager
+            set_method = getattr(client, spec.set_method)
+            clear_method = getattr(client, spec.clear_method)
+
+            try:
+                if not value:
+                    await clear_method(term_guid)
+                    self.add_related_result(attr_name, guid=term_guid, message="Cleared")
+                    continue
+                body = {"class": "NewClassificationRequestBody", "properties": {"class": spec.props_class}}
+                await set_method(term_guid, body)
+                self.add_related_result(attr_name, guid=term_guid, message="Set")
+            except PyegeriaException as e:
+                logger.error(f"Error syncing {attr_name} for {term_guid}: {e}")
+                self.add_related_result(attr_name, guid=term_guid, status="failure", message=str(e))
+
     async def _sync_zone_membership(self, guid: str, attributes: Dict[str, Any]) -> None:
         """
         Apply the "Zone Membership" attribute (a ZoneMembershipProperties classification,
@@ -417,6 +541,19 @@ class AsyncBaseCommandProcessor(ABC):
         spec = self.get_command_spec()
         self.parsed_output = await self.parser.parse()
         attributes = self.parsed_output.get("attributes", {})
+
+        # ISSUE-77: the "Request ID" attribute (present on nearly every command
+        # via the shared "Request Base" bundle) was parsed and validated but
+        # never actually used anywhere -- self.context["request_id"] is always
+        # the __init__-time auto-generated uuid4(), regardless of what a user
+        # typed here. A rare/Advanced-level corner case (per dwolfson), so this
+        # is deliberately minimal: an explicit value overrides the
+        # auto-generated one for this command's own execution, rather than
+        # building out a full user-facing request-id feature nothing consumes
+        # yet.
+        explicit_request_id = attributes.get("Request ID", {}).get("value")
+        if explicit_request_id:
+            self.context["request_id"] = explicit_request_id
 
         # Extract Display Name if present
         if self.is_report_view_command():
@@ -995,6 +1132,7 @@ class AsyncBaseCommandProcessor(ABC):
                 await self._sync_zone_membership(guid, attributes)
                 await self._sync_parent_relationship(guid, attributes)
                 await self._sync_governance_classifications(guid, attributes)
+                await self._sync_referenceable_classifications(guid, attributes)
 
         deferred = bool(self.parsed_output.get("deferred")) and not self.context.get("final_round")
 
