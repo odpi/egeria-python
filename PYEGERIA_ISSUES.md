@@ -405,7 +405,7 @@ urgency than originally assessed.
 
 ---
 
-### ISSUE-54: `findMetadataElements` scoped to the universal base type `Referenceable` silently returns an incomplete, arbitrary subset instead of the true population
+### ISSUE-54: `findMetadataElements` scoped to `Referenceable` silently returns an incomplete, arbitrary subset instead of the true population
 
 **Update 2026-08-26: re-confirmed again, unchanged.** Re-ran the exhaustive
 `Referenceable` scan (unsequenced, `pageSize=500`, advancing unconditionally,
@@ -592,9 +592,14 @@ confirmed non-functional).
 **Layer:** Egeria Server — not fixable in pyegeria.
 
 **What:** an exhaustive, fully-paginated `find_metadata_elements` scoped to
-`metadataElementTypeName="Referenceable"` (the universal base type — every
-open-metadata entity is a `Referenceable`) returns a small, arbitrary
-subset instead of the true population, with no error, no truncation flag,
+`metadataElementTypeName="Referenceable"` (**not** the true type-hierarchy
+root — that's `OpenMetadataRoot`, confirmed live via `get_all_entity_defs`;
+`Referenceable` is one of five direct subtypes of `OpenMetadataRoot`
+alongside `SearchKeyword`/`Rating`/`Like`/`TranslationDetail`, but it's the
+practical common ancestor of essentially every entity type an
+application-level search actually cares about, which is why it's the type
+most callers reach for as a "find everything" scope) returns a small,
+arbitrary subset instead of the true population, with no error, no truncation flag,
 and pagination genuinely terminating normally (`added == 0`/`len(page) <
 page_size` on the last page — the loop believes it's done). Confirmed live
 against `qs-view-server` by direct comparison:
@@ -616,9 +621,9 @@ real participants (94%) are simply absent from a scan of the type that is
 supposed to be their common ancestor and therefore cover all of them.
 
 **Impact:** `metadataElementTypeName="Referenceable"` cannot be used as a
-"safe, unscoped, find-everything" fallback the way its position at the
-root of the type hierarchy implies — a caller that scopes a search this
-broadly on purpose (not just as an accidental fallback) will silently miss
+"safe, unscoped, find-everything" fallback the way its practical role as
+the common ancestor of nearly every real entity type implies — a caller
+that scopes a search this broadly on purpose (not just as an accidental fallback) will silently miss
 the majority of real results, not just cap them at a boundary. Confirmed
 this is specific to the base-type-wide scan, not pagination itself —
 directly-typed exhaustive searches for the exact same real types
