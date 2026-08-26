@@ -154,7 +154,22 @@ attribute table) and the theory doesn't hold: there is no sqlite3 usage
 anywhere in `md_processing/`/`pyegeria/` (`grep -rn "sqlite3"` — zero
 hits), and the wire payload itself is provably clean.
 
-**Status: still open, root cause now correctly located.**
+**Update 2026-08-26: re-verified, no longer reproduces.** Re-ran the exact
+repro (`_async_create_glossary_term` with an apostrophe in `displayName`,
+`qualifiedName`, and `description`, immediate read-back by GUID) against
+the currently-running server (`6.2-SNAPSHOT`, platform build timestamp
+`2026-08-24T18:27:04Z` per `/api/about` — a newer build than whatever was
+running on 2026-08-19). All three properties round-tripped byte-for-byte
+correct, single apostrophes, no doubling. Ran twice independently, both
+clean; test terms deleted after confirming. This looks like a server-side
+fix landed via a platform redeploy between 2026-08-19 and now, not a
+pyegeria/Dr.Egeria change (nothing in this repo touched the write path in
+between). **Leaving this entry in place rather than moving it to Fixed/
+Resolved** — it's a SNAPSHOT build, not a pinned release, so treat as
+"currently not reproducing" rather than "permanently fixed" until it's
+been stable across a real release cut. Re-check if it resurfaces.
+
+**Status (as originally logged, kept for history): was open, root cause was correctly located as follows.**
 
 **Re-traced live, instrumenting `_async_make_request` directly** (not
 just Dr.Egeria's parser echo, which the original report already showed
@@ -390,7 +405,23 @@ urgency than originally assessed.
 
 ---
 
-### ISSUE-54: `findMetadataElements` scoped to the universal base type `Referenceable` silently returns an incomplete, arbitrary subset instead of the true population
+### ISSUE-54: `findMetadataElements` scoped to `Referenceable` silently returns an incomplete, arbitrary subset instead of the true population
+
+**Update 2026-08-26: re-confirmed again, unchanged.** Re-ran the exhaustive
+`Referenceable` scan (unsequenced, `pageSize=500`, advancing unconditionally,
+stopping only on an empty page — the correct pagination contract per the
+note below) against the current server build (`6.2-SNAPSHOT`, platform
+timestamp `2026-08-24T18:27:04Z` — the same redeploy that turned out to
+have fixed ISSUE-69, checked in the same pass on the chance this one had
+also moved). It hadn't: 9,344 raw elements fetched across 19 pages, only
+**6,789 distinct GUIDs** (2,555 duplicates) against a native
+`count_metadata_elements` population of **9,636** — ~70% coverage, in the
+same range as every prior check (54-73% across past re-checks). Cross-check
+against a direct exhaustive `GlossaryTerm` scan (262 real, distinct GUIDs):
+only **80 (31%)** of them appear anywhere in the broad `Referenceable`
+scan, **183 missing**. Same shape as originally documented — this is a
+live, unresolved Egeria server bug, not something that rides along with
+whatever fixed ISSUE-69.
 
 **Status:** still open (Egeria server) — **NOT fixed, re-confirmed
 2026-08-18, and this pass corrects a misdiagnosis made earlier the same
@@ -561,9 +592,14 @@ confirmed non-functional).
 **Layer:** Egeria Server — not fixable in pyegeria.
 
 **What:** an exhaustive, fully-paginated `find_metadata_elements` scoped to
-`metadataElementTypeName="Referenceable"` (the universal base type — every
-open-metadata entity is a `Referenceable`) returns a small, arbitrary
-subset instead of the true population, with no error, no truncation flag,
+`metadataElementTypeName="Referenceable"` (**not** the true type-hierarchy
+root — that's `OpenMetadataRoot`, confirmed live via `get_all_entity_defs`;
+`Referenceable` is one of five direct subtypes of `OpenMetadataRoot`
+alongside `SearchKeyword`/`Rating`/`Like`/`TranslationDetail`, but it's the
+practical common ancestor of essentially every entity type an
+application-level search actually cares about, which is why it's the type
+most callers reach for as a "find everything" scope) returns a small,
+arbitrary subset instead of the true population, with no error, no truncation flag,
 and pagination genuinely terminating normally (`added == 0`/`len(page) <
 page_size` on the last page — the loop believes it's done). Confirmed live
 against `qs-view-server` by direct comparison:
@@ -585,9 +621,9 @@ real participants (94%) are simply absent from a scan of the type that is
 supposed to be their common ancestor and therefore cover all of them.
 
 **Impact:** `metadataElementTypeName="Referenceable"` cannot be used as a
-"safe, unscoped, find-everything" fallback the way its position at the
-root of the type hierarchy implies — a caller that scopes a search this
-broadly on purpose (not just as an accidental fallback) will silently miss
+"safe, unscoped, find-everything" fallback the way its practical role as
+the common ancestor of nearly every real entity type implies — a caller
+that scopes a search this broadly on purpose (not just as an accidental fallback) will silently miss
 the majority of real results, not just cap them at a boundary. Confirmed
 this is specific to the base-type-wide scan, not pagination itself —
 directly-typed exhaustive searches for the exact same real types
