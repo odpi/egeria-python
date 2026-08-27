@@ -688,6 +688,57 @@ on an Egeria Server capability that doesn't exist yet — but the pyegeria/
 Dr.Egeria-side work each will need once that capability ships is written
 into the entry now, so it isn't rediscovered from scratch later.
 
+### ISSUE-78: engine-host participation trio is implemented on `main` but absent from the released 6.0.18.4
+
+**Not a bug — a release ask.** `claim_engine_action`,
+`update_engine_action_status` and `get_active_claimed_engine_actions` exist
+in this repo's `main` (commit `8362b1c`, "implement remaining
+confirmed-missing methods") and are **not** in the pyegeria 6.0.18.4 that
+Resource Explorer resolves from PyPI. Nothing needs writing; the methods
+need to ship.
+
+Measured 2026-08-26 against the installed package and this checkout:
+
+| method | 6.0.18.4 | `main` |
+|---|---|---|
+| `initiate_engine_action` | ✓ | ✓ |
+| `get_active_engine_actions` | ✓ | ✓ |
+| `get_engine_actions` / `_by_name` / `find_engine_actions` | ✓ | ✓ |
+| `cancel_engine_action` | ✓ | ✓ |
+| **`claim_engine_action`** | ✗ | ✓ |
+| **`update_engine_action_status`** | ✗ | ✓ |
+| **`get_active_claimed_engine_actions`** | ✗ | ✓ |
+
+**Why these three specifically.** They are the whole participation loop for a
+non-Java engine host: find work claimed for my engine → claim it → report
+progress. RE is being modelled as an additional engine host
+(`packages/resource-explorer/docs/survey-model-and-engine-host-design.md`
+§4), and without `claim` there is no arbitration between hosts, while
+without `update_engine_action_status` a host could take work and never
+report completion — worse than not participating at all.
+
+**The server side is confirmed working**, so this really is only a client
+packaging gap. Tested 2026-08-26 by POSTing
+`/engine-actions/{guid}/claim` directly for an action already `IN_PROGRESS`
+under the running `EgeriaWatchdog`:
+
+```
+OMAG-GENERIC-HANDLERS-403-003  Engine Host OMAG Server with a userId of
+erinoverview is not allowed claim the engine action ... because it is
+already claimed
+systemAction: The system cannot claim an engine action because another
+Engine Host OMAG Server has got there first.
+```
+
+First-claim-wins, server-enforced, and the refused claim left the other
+host's action untouched. That is also what makes a polling client safe —
+every host may see an action and only one can take it — so **no Kafka
+consumer is being asked for**. Delivery is a latency optimisation;
+correctness rests on `claim`.
+
+**Blocks:** RE engine-host participation (design note §4.1, §5 step 8).
+Nothing else in RE is waiting on it.
+
 ---
 
 # Quick reference: which OMVS client class for which purpose
