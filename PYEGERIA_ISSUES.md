@@ -690,6 +690,16 @@ into the entry now, so it isn't rediscovered from scratch later.
 
 ### ISSUE-78: engine-host participation trio is implemented on `main` but absent from the released 6.0.18.4
 
+> **RESOLVED by pyegeria 6.1.5** (verified 2026-08-27). All three methods ship in
+> the wheel. Resource Explorer upgraded from 6.0.18.4 → 6.1.5 and its full suite
+> (2613 tests), live Egeria smoke tests (20) and live alignment scan all pass, so
+> the minor bump is clean for RE's usage. `claim_engine_action` was exercised
+> against the live platform through the client: claiming an action already
+> `IN_PROGRESS` under `EgeriaWatchdog` raises `PyegeriaUnauthorizedException`
+> carrying `OMAG-GENERIC-HANDLERS-403-003` — a typed, catchable exception, which
+> is what an engine-host loop needs to tell "another host got there first" from a
+> real failure. Entry kept for history; move to Fixed / Resolved when convenient.
+
 **Not a bug — a release ask.** `claim_engine_action`,
 `update_engine_action_status` and `get_active_claimed_engine_actions` exist
 in this repo's `main` (commit `8362b1c`, "implement remaining
