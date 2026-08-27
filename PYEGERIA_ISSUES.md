@@ -681,6 +681,101 @@ generally if new zero-result reports show up elsewhere.
 
 ---
 
+### ISSUE-79: native survey against a template-created `FileFolder` asset fails server-side — `assetConnector` is null in `BasicFolderConnector.getFile()`
+
+**Status:** open (Egeria Server), reproduced live 2026-08-27. Filed by
+content, not by number — see "why this entry exists" below.
+
+**Layer:** Egeria Server (survey action framework / `BasicFolderConnector`),
+not pyegeria. `create_folder_element_from_template` and the survey-initiate
+call both succeed and are correctly formed; the failure happens entirely
+inside the server's survey action service.
+
+**Why this entry exists.** Resource Explorer's `re-as-engine-host-plan.md`
+is ON HOLD citing this exact symptom ("connector is null" on a native
+survey against a template-created asset) under the name `PYEGERIA_ISSUES.md`
+**ISSUE-51** — but this file was renumbered on 2026-08-15, and today's
+ISSUE-51 is an unrelated, already-fixed `fetch_element()` shape problem.
+The blocker's own content had no surviving entry anywhere in this file.
+Investigated fresh rather than guessed at, per the plan's own citation
+being untrustworthy.
+
+**Two candidate bugs were in play, and they are not the same bug:**
+
+1. **Resource Explorer's superseded tracker, entry E1** (`packages/
+   resource-explorer/docs/egeria-pyegeria-issues.md`) describes a *different*
+   symptom: a 500 from the PostgreSQL repository connector on
+   `createMetadataElementFromTemplate` (`metadata_collection_guid` null
+   while saving a classification) — a failure to *create* the element at
+   all. **Re-tested live 2026-08-27 and does not reproduce**:
+   `create_folder_element_from_template(path_name=..., folder_name=...,
+   file_system="localhost")` against `qs-view-server` returned a real GUID
+   with no error. Whatever this was, it looks fixed.
+2. **The design doc's actual blocker** — a template-created asset surveyed
+   natively fails with a null connector — **does still reproduce**, and is
+   what this entry tracks.
+
+**Reproduction** (against `qs-view-server`, no pyegeria bug involved):
+```python
+from pyegeria import AutomatedCuration
+c = AutomatedCuration("qs-view-server", "https://localhost:9443", "erinoverview", "secret")
+c.create_egeria_bearer_token()
+
+folder_guid = c.create_folder_element_from_template(
+    path_name="/tmp/some-new-path", folder_name="probe-folder", file_system="localhost")
+
+# Note: initiate_file_folder_survey's own default survey_name
+# ("FileSurveys:survey-folder") and the .http ground truth's example
+# ("AssetSurvey:survey-folder") are BOTH wrong on this server -- neither
+# GovernanceActionType is registered (OMAG-GENERIC-HANDLERS-400-013). The
+# real registered qualifiedName, confirmed via
+# `EgeriaTech.get_elements("GovernanceActionType")`, is "FileSurvey::survey-folder".
+action_guid = c.initiate_file_folder_survey(folder_guid, survey_name="FileSurvey::survey-folder")
+```
+
+Poll the resulting `EngineAction` (`EgeriaTech.get_elements("EngineAction")`,
+match on `elementHeader.guid`) — it completes (fast, ~1s) with
+`activityStatus: "FAILED"` and `completionGuards: ["survey-failed"]`. Full
+`completionMessage`:
+```
+OMES-SURVEY-ACTION-0018 The survey action service folder-survey-service
+threw a org.odpi.openmetadata.frameworks.connectors.ffdc.ConnectorCheckedException
+exception during the generation of survey report ... for asset
+<folder-guid> during request type survey-folder in survey action engine
+FileSurvey (guid=4168abb9-6c60-46fb-b9c0-b44180d19500). The error message
+was OPEN-SURVEY-500-001 Unexpected exception in survey action service
+folder-survey-service of type java.lang.NullPointerException detected by
+method start. The error message was Cannot invoke
+"org.odpi.openmetadata.adapters.connectors.datastore.basicfile.BasicFolderConnector.getFile()"
+because "assetConnector" is null
+```
+
+**Analysis.** `create_folder_element_from_template` creates the `FileFolder`
+element and it looks entirely normal (confirmed via `get_elements`: proper
+`pathName`, `resourceName`, `Anchors` classification) — but no working
+`Connection`/`Connector` got wired to it, so when `folder-survey-service`
+tries to open the asset via `BasicFolderConnector.getFile()`, the
+connector reference is null and the survey action service crashes with an
+NPE rather than a clean error. This matches the design doc's
+characterization exactly ("template-based asset creation never wires up a
+working Connection, so any native survey against a template-created asset
+fails server-side with a NullPointerException") — just with the precise
+class/method now on record, which the design doc didn't have.
+
+**Impact:** blocks Resource Explorer's engine-host participation design
+(`re-as-engine-host-plan.md`, cases 1/2/4 — anything needing a native
+survey to actually *complete*, not just be triggered; case 3, RE-local
+surveying, is unaffected). The hold should be re-evaluated against this
+entry specifically, not against the old ISSUE-51 number.
+
+**Leftover from this investigation:** a probe `FileFolder` element
+(`qualifiedName: "FileFolder::localhost:/tmp/re-e1-probe-*"`, created on
+`qs-metadata-store` 2026-08-27) plus its failed `SurveyReport` and
+`EngineAction`, left in place as the reproduction evidence above — not yet
+deleted.
+
+---
+
 ## Open pyegeria items (including follow-ons blocked on an Egeria fix)
 
 Actionable in this repo. Some of these are fully blocked today — waiting
@@ -689,6 +784,16 @@ Dr.Egeria-side work each will need once that capability ships is written
 into the entry now, so it isn't rediscovered from scratch later.
 
 ### ISSUE-78: engine-host participation trio is implemented on `main` but absent from the released 6.0.18.4
+
+> **RESOLVED by pyegeria 6.1.5** (verified 2026-08-27). All three methods ship in
+> the wheel. Resource Explorer upgraded from 6.0.18.4 → 6.1.5 and its full suite
+> (2613 tests), live Egeria smoke tests (20) and live alignment scan all pass, so
+> the minor bump is clean for RE's usage. `claim_engine_action` was exercised
+> against the live platform through the client: claiming an action already
+> `IN_PROGRESS` under `EgeriaWatchdog` raises `PyegeriaUnauthorizedException`
+> carrying `OMAG-GENERIC-HANDLERS-403-003` — a typed, catchable exception, which
+> is what an engine-host loop needs to tell "another host got there first" from a
+> real failure. Entry kept for history; move to Fixed / Resolved when convenient.
 
 **Not a bug — a release ask.** `claim_engine_action`,
 `update_engine_action_status` and `get_active_claimed_engine_actions` exist
