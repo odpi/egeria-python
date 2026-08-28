@@ -813,6 +813,11 @@ into the entry now, so it isn't rediscovered from scratch later.
 
 ### ISSUE-81: `migrate_question_specs.py` links Perspective↔Question via the wrong relationship type (`AssignmentScope`, not `ScopedBy`) — every bootstrap-migrated perspective silently relies on a filename-inference fallback instead
 
+**Status:** fixed 2026-08-28 — script corrected (see "Fix landed" below);
+no data repair needed on the checked deployment (see "Checked the live
+instance" below). Semantics settled against the canonical docs, not just
+source-reading; see "Which relationship is actually correct" below.
+
 **A real bug**, found 2026-08-28 answering "is the folder-name-inferred
 perspective fallback in `load_egeria_report_specs()` actually used
 anywhere?" Short answer: yes — for every question migrated through the
@@ -838,8 +843,9 @@ empty for every question the bootstrap script touched, and
 `load_egeria_report_specs()` falls through to its documented fallback:
 inferring the perspective from the QuestionSpec folder's own
 qualified-name suffix (`QuestionSpec::TypeDef::Developer` → `Developer`).
-That fallback isn't a rare edge case — it's the sole source of every
-perspective attached to any of the 74 originally-migrated report types.
+That fallback is a real, reachable code path with no bug in it — but see
+"Checked the live instance" below before assuming it's actually load-bearing
+for any specific deployment's data.
 
 **The Dr.Egeria-authored path is correct**, for contrast:
 `Link Perspective to Question` (`md_processing/v2/actor_manager.py`,
@@ -848,19 +854,68 @@ perspective attached to any of the 74 originally-migrated report types.
 endpoint. Anything linked that way going forward works via the intended
 relationship; only the one-time bulk migration is affected.
 
-**Impact:** cosmetic today, since the fallback happens to produce usable
-(if less precise — no many-to-many, no server-side truth) results. But
-`AssignmentScope` relationships sitting on migrated Questions are real,
-queryable, wrong-typed data in Egeria now — anyone querying by `ScopedBy`
-directly (bypassing this fallback), or any future code trusting
-`AssignmentScope` to mean "this profile/role manages this question" (its
-actual documented meaning), will get nonsense.
+**Which relationship is actually correct** (not a majority vote between
+the three call sites — checked against the canonical type definitions,
+https://egeria-project.org/types/1/0120-Assignment-Scopes):
 
-**Candidate fix:** change `migrate_question_specs.py`'s
-`_ensure_scoped_by()` to call `classification_manager._async_add_scope_to_element`
-(matching the Dr.Egeria command), and separately decide whether to
-re-migrate/clean up the `AssignmentScope` relationships already created on
-whatever Egeria instance ran the original bootstrap.
+- `AssignmentScope`: *"identifies individuals, teams, projects, or other
+  actors **assigned to manage** resources represented by a linked
+  element"* — carries `assignmentScope` values `Contributor`,
+  `Administrator`, `Leader`, `Owner`, `Observer`, `Sponsor`, `Other`. An
+  operational-responsibility relationship: who administers/owns a
+  resource.
+- `ScopedBy`: *"connects an element to organizations, projects, teams, and
+  similar entities that **define the impact scope or applicability
+  boundaries** of that element."*
+
+A Question isn't "managed" by a Perspective the way an asset is
+administered by an owner — none of `AssignmentScope`'s predefined values
+(`Contributor`/`Administrator`/`Owner`/...) make sense applied to a
+Question. It's *relevant within* the boundary a Perspective defines,
+which is exactly `ScopedBy`'s stated purpose. Direction confirms it too:
+the (correct) Dr.Egeria command passes Perspective as the scope
+(`scoped_by_guid`) and Question as the bounded element (`element_guid`),
+matching "connects an element to ... entities that define the ... scope."
+**`ScopedBy` is correct; `AssignmentScope` is the bug.**
+
+**Checked the live instance — no repair needed there.** Queried all 84
+Question elements (`get_related_elements(guid, relationship_type=X)` for
+both `ScopedBy` and `AssignmentScope`, every one): **all 84 already carry
+a real `ScopedBy` relationship; zero carry `AssignmentScope`.** So this
+deployment's Question data was bootstrapped via the correct path (the
+Dr.Egeria markdown/`run_all.sh` route through `Link Perspective to
+Question`, which was never buggy) rather than by running
+`migrate_question_specs.py` directly — the folder-name-inference fallback,
+while real code with no bug in it, turns out not to be load-bearing for
+*this* deployment's data after all. The original "sole source of every
+perspective" claim above was inferred from reading the script, not
+verified against live data — correcting that here rather than leaving an
+overclaim standing.
+
+**Impact:** the code bug is still real — `migrate_question_specs.py`
+would create wrong-typed data on any instance it's actually run against,
+and any such data would be silently masked by the inference fallback
+exactly as first described. `AssignmentScope` relationships would be real,
+queryable, wrong-typed data in Egeria — anyone querying by `ScopedBy`
+directly (bypassing the fallback), or any future code trusting
+`AssignmentScope` to mean "this profile/role manages this question" (its
+actual documented meaning), would get nonsense. Whether any other
+deployment actually has this data is unknown — check before assuming
+either way.
+
+**Fix landed:** `migrate_question_specs.py`'s `_ensure_scoped_by()` now
+calls `classification_manager.add_scope_to_element` (matching the
+Dr.Egeria command) instead of `actor_manager.link_assignment_scope`, so
+the properties class actually sent is `ScopedByProperties`, not
+`AssignmentScopeProperties`.
+
+**No data repair needed** on this deployment (see "Checked the live
+instance" above) — nothing here to detach/recreate. If another deployment
+did run the buggy script directly, the same live-check
+(`get_related_elements(question_guid, relationship_type="AssignmentScope")`
+across every Question) will show whether it needs the same repair; write
+a small one-off script at that point rather than building one speculatively
+now for data that may not exist anywhere.
 
 ### ISSUE-80: `find_report_specs_by_perspective`/`find_report_specs_by_question` are implemented and tested but not exposed anywhere
 
