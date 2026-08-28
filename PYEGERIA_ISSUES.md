@@ -783,6 +783,57 @@ on an Egeria Server capability that doesn't exist yet — but the pyegeria/
 Dr.Egeria-side work each will need once that capability ships is written
 into the entry now, so it isn't rediscovered from scratch later.
 
+### ISSUE-81: `migrate_question_specs.py` links Perspective↔Question via the wrong relationship type (`AssignmentScope`, not `ScopedBy`) — every bootstrap-migrated perspective silently relies on a filename-inference fallback instead
+
+**A real bug**, found 2026-08-28 answering "is the folder-name-inferred
+perspective fallback in `load_egeria_report_specs()` actually used
+anywhere?" Short answer: yes — for every question migrated through the
+Phase 1 bootstrap, it's the *only* thing that has ever worked.
+
+**Root cause.** `commands/migrate_question_specs.py`'s `_ensure_scoped_by()`
+(despite its name) calls `client.actor_manager.link_assignment_scope(...)`
+with `properties: {"class": "AssignmentScopeProperties"}` — that creates
+Egeria's **`AssignmentScope`** relationship (`e3fdafe3-...`, "Links a
+profile, role, or project to the elements that they are responsible for
+managing"). But `load_egeria_report_specs()` reads perspectives back with
+`client.get_related_elements(question_guid, relationship_type="ScopedBy")`
+— a **different** relationship type (`3845b5cc-...`, "Link between a scope
+... and an element restricted the scope"). Confirmed both are genuinely
+distinct types, not aliases of one another, via Egeria's own type registry
+(`OpenMetadataType.java`: `ASSIGNMENT_SCOPE_RELATIONSHIP` vs
+`SCOPED_BY_RELATIONSHIP`, different GUIDs, different Properties classes)
+— they just happen to share a doc page (0120-Assignment-Scopes) because
+they're related concepts.
+
+Since the two never match, `get_related_elements(..., "ScopedBy")` returns
+empty for every question the bootstrap script touched, and
+`load_egeria_report_specs()` falls through to its documented fallback:
+inferring the perspective from the QuestionSpec folder's own
+qualified-name suffix (`QuestionSpec::TypeDef::Developer` → `Developer`).
+That fallback isn't a rare edge case — it's the sole source of every
+perspective attached to any of the 74 originally-migrated report types.
+
+**The Dr.Egeria-authored path is correct**, for contrast:
+`Link Perspective to Question` (`md_processing/v2/actor_manager.py`,
+`object_type == "Perspective to Question"`) calls
+`classification_manager._async_add_scope_to_element` — the real `ScopedBy`
+endpoint. Anything linked that way going forward works via the intended
+relationship; only the one-time bulk migration is affected.
+
+**Impact:** cosmetic today, since the fallback happens to produce usable
+(if less precise — no many-to-many, no server-side truth) results. But
+`AssignmentScope` relationships sitting on migrated Questions are real,
+queryable, wrong-typed data in Egeria now — anyone querying by `ScopedBy`
+directly (bypassing this fallback), or any future code trusting
+`AssignmentScope` to mean "this profile/role manages this question" (its
+actual documented meaning), will get nonsense.
+
+**Candidate fix:** change `migrate_question_specs.py`'s
+`_ensure_scoped_by()` to call `classification_manager._async_add_scope_to_element`
+(matching the Dr.Egeria command), and separately decide whether to
+re-migrate/clean up the `AssignmentScope` relationships already created on
+whatever Egeria instance ran the original bootstrap.
+
 ### ISSUE-80: `find_report_specs_by_perspective`/`find_report_specs_by_question` are implemented and tested but not exposed anywhere
 
 **Not a bug — a follow-up.** Found 2026-08-28 while reviewing the Question
