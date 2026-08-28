@@ -25,6 +25,15 @@ STANDARD_VERBS = {
     # never an idempotent upsert-by-qualified-name -- each call mints a new
     # runtime request even if a prior one shares the same display name.
     "Initiate",
+    # Reference Data family: valid metadata values, map names, map values
+    # ("Setup Valid Metadata Value", "Clear Valid Metadata Map Name", "Set
+    # Consistent Metadata Values", etc.). Without these, the whole family's
+    # `## Setup ...`/`## Clear ...`/`## Set ...` headings never match
+    # cmd_header_rx, so extract_commands() silently falls through to its
+    # "preserve as prose" branch (is_command=False) -- no error, no summary
+    # row, and every downstream definition/link claiming the never-created
+    # valid value fails with an unrelated-looking message instead.
+    "Setup", "Clear", "Set",
 }
 
 # Commands that appear as a single word (no separate verb) and map to canonical verb+object
