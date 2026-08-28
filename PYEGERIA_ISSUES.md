@@ -711,8 +711,13 @@ generally if new zero-result reports show up elsewhere.
 
 ### ISSUE-79: native survey against a template-created `FileFolder` asset fails server-side — `assetConnector` is null in `BasicFolderConnector.getFile()`
 
-**Status:** open (Egeria Server), reproduced live 2026-08-27. Filed by
-content, not by number — see "why this entry exists" below.
+**Status:** open (Egeria Server), reproduced live 2026-08-27, **re-checked
+2026-08-28 — still reproduces, identical failure.** Same class/method
+(`BasicFolderConnector.getFile()`, `assetConnector` null), same error IDs
+(`OMES-SURVEY-ACTION-0018`/`OPEN-SURVEY-500-001`), same
+`java.lang.NullPointerException`, against a freshly created `FileFolder`
+and a fresh survey run — not a one-off. Filed by content, not by number —
+see "why this entry exists" below.
 
 **Layer:** Egeria Server (survey action framework / `BasicFolderConnector`),
 not pyegeria. `create_folder_element_from_template` and the survey-initiate
@@ -794,13 +799,22 @@ class/method now on record, which the design doc didn't have.
 (`re-as-engine-host-plan.md`, cases 1/2/4 — anything needing a native
 survey to actually *complete*, not just be triggered; case 3, RE-local
 surveying, is unaffected). The hold should be re-evaluated against this
-entry specifically, not against the old ISSUE-51 number.
+entry specifically, not against the old ISSUE-51 number. As of 2026-08-28
+this is confirmed the *only* thing still blocking that work on the
+pyegeria side — ISSUE-78's engine-host method trio shipped in 6.1.5 and RE
+has upgraded and verified it end to end, and the two other gaps
+identified alongside it (no REST way to create a `GovernanceEngine`/
+`GovernanceService` element; no per-engine "claimable work" listing,
+`get_active_engine_actions()` filtered client-side is the only option) are
+both genuine server-side gaps, not pyegeria ones. This entry is the real
+holdup.
 
-**Leftover from this investigation:** a probe `FileFolder` element
-(`qualifiedName: "FileFolder::localhost:/tmp/re-e1-probe-*"`, created on
-`qs-metadata-store` 2026-08-27) plus its failed `SurveyReport` and
-`EngineAction`, left in place as the reproduction evidence above — not yet
-deleted.
+**Leftover from this investigation:** probe `FileFolder` elements
+(`qualifiedName: "FileFolder::localhost:/tmp/re-e1-probe-*"` from
+2026-08-27, `"FileFolder::localhost:/tmp/re-issue79-recheck-*"` from the
+2026-08-28 re-check) on `qs-metadata-store`, plus their failed
+`SurveyReport`/`EngineAction` pairs, left in place as reproduction
+evidence for both dates — not yet deleted.
 
 ---
 
