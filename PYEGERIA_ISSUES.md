@@ -825,6 +825,118 @@ on an Egeria Server capability that doesn't exist yet — but the pyegeria/
 Dr.Egeria-side work each will need once that capability ships is written
 into the entry now, so it isn't rediscovered from scratch later.
 
+### ISSUE-82: `pyegeria/omvs/valid_metadata.py` sends the literal query string `typeName=None` whenever `type_name` is Python `None` — breaks every Type-Name-omitted (global) Valid Metadata Value, in 12 of 14 methods across `ValidMetadataManager`
+
+**Status:** fixed and live-verified 2026-08-28 — all 12 affected methods
+patched to match the one method that already did this correctly (see "Fix
+landed" below); released as pyegeria 6.1.7. Verified with a mocked HTTP
+layer first (URL no longer contains the literal string `None`, correctly
+omits `typeName` when unset, and still includes it when set), then
+confirmed live: `egeria-workspaces-5f` upgraded quickstart-pyegeria-web's
+container to 6.1.7 and re-ran all 5 originally-failing files
+(`human-resource-management.md`, `health-and-safety.md`,
+`biological-agents-and-gmo.md`, `dangerous-goods-transport.md`,
+`diversity-equity-inclusion.md`) against a live `qs-view-server` — every
+one now exits 0/SUCCESS, zero occurrences of the "not a valid metadata
+value", "Missing unresolved reference", or
+`PyegeriaNotFoundException`/404 signatures across all 5. Also confirmed
+the `type_name` guard is present in the installed package, not just this
+checkout. `egeria-workspaces`' own `BACKLOG.md` entry (`PY-25`) closed as
+verified on their side.
+
+**Reported by another Claude session** (`egeria-workspaces-5f`, no local
+`egeria-python` checkout) debugging a failed Dr.Egeria batch run. A
+`## Setup Valid Metadata Value` command that registers a new
+`domainIdentifier` value with `### Type Name` deliberately omitted (i.e.
+"applies to all open metadata types") is never visible to the very next
+command's `### Domain Identifier` field validation in the same file:
+
+```
+ERROR | md_processing.v2.processors:615 - Validation failed: Value 'Human
+Resource Management' is not a valid metadata value for 'Domain Identifier'
+(Validated by Egeria) for Create Business Imperative
+```
+
+Confirmed deterministic, not a timing/cache race (re-ran the same file
+twice, 20+ minutes apart, identical failure both times). Real-world repro:
+`egeria-workspaces`' `compose-configs/egeria-quickstart/PyegeriaWebHandler/
+coco-workbooks/0. data-governance-program/` — exactly the files that
+self-register a custom domain before using it
+(`human-resource-management.md`, `health-and-safety.md`,
+`biological-agents-and-gmo.md`, `dangerous-goods-transport.md`,
+`diversity-equity-inclusion.md`) fail 100% reproducibly; the other 12
+files in the same batch, which only use Egeria-builtin/CocoComboArchive
+domains, run clean. Downstream cascade: every `Create <GovernanceDefinition
+subtype>` that references the new domain fails validation, so every later
+`Link Governance Response/Mechanism/Drivers/Policies` in the same file then
+fails with `Missing unresolved reference GUID(s)` (~20+ occurrences per
+file), and `Add Member to Collection` 404s (`OMAG-REPOSITORY-HANDLER-404-007`)
+trying to add a member that was never created.
+
+**Root cause — confirmed in source, this repo's own code.** Every method on
+`ValidMetadataManager` (`pyegeria/omvs/valid_metadata.py`) takes an optional
+`type_name`, documented as: *"If the typeName is null, this valid value
+applies to properties of this name from all types."* Exactly one method
+honored that — `_async_get_valid_metadata_values` — with
+`if type_name: url += f"&typeName={type_name}"`. Every other method instead
+hardcoded the query param unconditionally into an f-string, e.g.
+`_async_validate_metadata_value`:
+
+```python
+url = (
+    f".../validate-value/{property_name}?typeName={type_name}&actualValue={actual_value}"
+)
+```
+
+When `type_name` is Python `None`, f-string interpolation renders it as the
+four-character string `"None"` — so the request sent is literally
+`?typeName=None&actualValue=Human Resource Management`, not "no type
+filter." Egeria correctly (from its point of view) doesn't recognize a
+type named `None` and treats the value as not found/not valid, for **both**
+the initial registration and every later lookup — so this isn't a filter
+that merely excludes globally-scoped values, it's the *setup* call itself
+that never actually registers a true global (`typeName IS NULL`) entry
+either; it registers under (or is rejected against) the bogus literal type
+`"None"`. That fully explains the reporter's own top hypothesis ("is the
+later validation scoped by a Type Name filter that a Type-Name-omitted
+registration doesn't satisfy?") — yes, effectively, though the mechanism is
+a string-interpolation bug, not an intentional filter.
+
+Affected methods (12): `_async_setup_valid_metadata_value`,
+`_async_setup_valid_metadata_map_name`,
+`_async_setup_valid_metadata_map_value`,
+`_async_validate_metadata_value`, `_async_validate_metadata_map_name`,
+`_async_validate_metadata_map_value`, `_async_get_valid_metadata_value`,
+`_async_get_valid_metadata_map_name`, `_async_clear_valid_metadata_value`,
+`_async_clear_valid_metadata_map_name`,
+`_async_clear_valid_metadata_map_value` (11 async methods; their sync
+`loop.run_until_complete` twins inherit the fix for free since they just
+delegate). `_async_get_valid_metadata_values` and
+`_async_get_valid_metadata_map_value` (the latter passes `type_name` via a
+`params=` dict, which httpx already drops when the value is `None`) were
+already correct and untouched.
+
+This is exactly the flow `md_processing/v2/parsing.py`'s `Valid Value`
+style hits for the `Domain Identifier` attribute (`property_name` =
+`domainIdentifier`, `type_name` = `None` — the compact spec for `Domain
+Identifier` has no `type_name` key at all) — so any deployment-added,
+type-unscoped `domainIdentifier` (or any other property registered the
+same way) was unreachable through this path regardless of caching, exactly
+matching "not a race... possibly not ever."
+
+**Fix landed:** every affected method now builds the URL without the query
+param first, then conditionally appends it — the same pattern
+`_async_get_valid_metadata_values` already used:
+
+```python
+url = f".../validate-value/{property_name}?actualValue={actual_value}"
+if type_name:
+    url += f"&typeName={type_name}"
+```
+
+**Nothing left open here.** Fixed, released (pyegeria 6.1.7), and live-verified
+end-to-end against the original real-world repro, not just unit-tested.
+
 ### ISSUE-81: `migrate_question_specs.py` links Perspective↔Question via the wrong relationship type (`AssignmentScope`, not `ScopedBy`) — every bootstrap-migrated perspective silently relies on a filename-inference fallback instead
 
 **Status:** fixed 2026-08-28 — script corrected (see "Fix landed" below);

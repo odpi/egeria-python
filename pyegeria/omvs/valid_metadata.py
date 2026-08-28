@@ -315,9 +315,10 @@ class ValidMetadataManager(ServerClient):
         """
 
         url = (
-            f"{self.platform_url}/servers/{self.view_server}/api/open-metadata/valid-metadata/setup-value/{property_name}?"
-            f"typeName={type_name}"
+            f"{self.platform_url}/servers/{self.view_server}/api/open-metadata/valid-metadata/setup-value/{property_name}"
         )
+        if type_name:
+            url += f"?typeName={type_name}"
 
         await self._async_make_request("POST", url, body)
         return
@@ -428,9 +429,10 @@ class ValidMetadataManager(ServerClient):
         """
 
         url = (
-            f"{self.platform_url}/servers/{self.view_server}/api/open-metadata/valid-metadata/setup-map-name/{property_name}?"
-            f"typeName={type_name}"
+            f"{self.platform_url}/servers/{self.view_server}/api/open-metadata/valid-metadata/setup-map-name/{property_name}"
         )
+        if type_name:
+            url += f"?typeName={type_name}"
 
         await self._async_make_request("POST", url, body)
         return
@@ -544,8 +546,10 @@ class ValidMetadataManager(ServerClient):
         """
         url = (
             f"{self.platform_url}/servers/{self.view_server}/api/open-metadata/valid-metadata/setup-map-value/"
-            f"{property_name}/{map_name}?typeName={type_name}"
+            f"{property_name}/{map_name}"
         )
+        if type_name:
+            url += f"?typeName={type_name}"
 
         await self._async_make_request("POST", url, body)
         return
@@ -639,8 +643,10 @@ class ValidMetadataManager(ServerClient):
         """
         url = (
             f"{self.platform_url}/servers/{self.view_server}/api/open-metadata/valid-metadata/clear-value/"
-            f"{property_name}?typeName={type_name}&preferredValue={preferred_value}"
+            f"{property_name}?preferredValue={preferred_value}"
         )
+        if type_name:
+            url += f"&typeName={type_name}"
 
         await self._async_make_request("POST", url)
         return
@@ -716,8 +722,10 @@ class ValidMetadataManager(ServerClient):
 
         url = (
             f"{self.platform_url}/servers/{self.view_server}/api/open-metadata/valid-metadata/clear-map-name/"
-            f"{property_name}?typeName={type_name}&mapName={map_name}"
+            f"{property_name}?mapName={map_name}"
         )
+        if type_name:
+            url += f"&typeName={type_name}"
 
         await self._async_make_request("POST", url)
         return
@@ -790,8 +798,10 @@ class ValidMetadataManager(ServerClient):
 
         url = (
             f"{self.platform_url}/servers/{self.view_server}/api/open-metadata/valid-metadata/clear-map-value/"
-            f"{property_name}/{map_name}?typeName={type_name}&preferredValue={preferred_value}"
+            f"{property_name}/{map_name}?preferredValue={preferred_value}"
         )
+        if type_name:
+            url += f"&typeName={type_name}"
 
         await self._async_make_request("POST", url)
         return
@@ -861,8 +871,10 @@ class ValidMetadataManager(ServerClient):
 
         url = (
             f"{self.platform_url}/servers/{self.view_server}/api/open-metadata/valid-metadata/validate-value/"
-            f"{property_name}?typeName={type_name}&actualValue={actual_value}"
+            f"{property_name}?actualValue={actual_value}"
         )
+        if type_name:
+            url += f"&typeName={type_name}"
 
         response = await self._async_make_request("GET", url)
         return response.json().get("flag", "No flag found")
@@ -935,8 +947,10 @@ class ValidMetadataManager(ServerClient):
 
         url = (
             f"{self.platform_url}/servers/{self.view_server}/api/open-metadata/valid-metadata/validate-map-name/"
-            f"{property_name}?typeName={type_name}&mapName={map_name}"
+            f"{property_name}?mapName={map_name}"
         )
+        if type_name:
+            url += f"&typeName={type_name}"
 
         response = await self._async_make_request("GET", url)
         return response.json().get("flag", "No flag found")
@@ -1009,8 +1023,10 @@ class ValidMetadataManager(ServerClient):
 
         url = (
             f"{self.platform_url}/servers/{self.view_server}/api/open-metadata/valid-metadata/validate-map-value/"
-            f"{property_name}/{map_name}?typeName={type_name}&actualValue={actual_value}"
+            f"{property_name}/{map_name}?actualValue={actual_value}"
         )
+        if type_name:
+            url += f"&typeName={type_name}"
 
         response = await self._async_make_request("GET", url)
         return response.json().get("flag", "No flag found")
@@ -1092,8 +1108,10 @@ class ValidMetadataManager(ServerClient):
 
         url = (
             f"{self.platform_url}/servers/{self.view_server}/api/open-metadata/valid-metadata/get-value/"
-            f"{property_name}?typeName={type_name}&preferredValue={preferred_value}"
+            f"{property_name}?preferredValue={preferred_value}"
         )
+        if type_name:
+            url += f"&typeName={type_name}"
 
         response = await self._async_make_request("GET", url)
         element = response.json().get("element", NO_ELEMENTS_FOUND)
@@ -1185,8 +1203,10 @@ class ValidMetadataManager(ServerClient):
 
         url = (
             f"{self.platform_url}/servers/{self.view_server}/api/open-metadata/valid-metadata/get-map-name/"
-            f"{property_name}?typeName={type_name}&mapName={map_name}"
+            f"{property_name}?mapName={map_name}"
         )
+        if type_name:
+            url += f"&typeName={type_name}"
 
         response = await self._async_make_request("GET", url)
         element = response.json().get("element", NO_ELEMENTS_FOUND)
