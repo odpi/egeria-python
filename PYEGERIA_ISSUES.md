@@ -783,6 +783,33 @@ on an Egeria Server capability that doesn't exist yet — but the pyegeria/
 Dr.Egeria-side work each will need once that capability ships is written
 into the entry now, so it isn't rediscovered from scratch later.
 
+### ISSUE-80: `find_report_specs_by_perspective`/`find_report_specs_by_question` are implemented and tested but not exposed anywhere
+
+**Not a bug — a follow-up.** Found 2026-08-28 while reviewing the Question
+Spec migration (`docs/design/report_spec_migration_design.md`, Phase 1
+complete since 2026-05-18/`6c946af`). Both functions
+(`pyegeria/view/base_report_formats.py:3678`/`3715`) are real, working
+query methods over the Egeria-sourced `question_spec` data that
+`load_egeria_report_specs()` merges into the runtime registry — not
+leftover pre-migration code, and not candidates for removal (see the
+design doc discussion this follow-up came out of).
+
+**The gap:** neither is exported from `pyegeria/__init__.py`, registered
+as an MCP tool (`pyegeria/core/mcp_server.py`), or wired into any
+`hey_egeria`/`commands/` CLI surface. The only thing that currently
+exercises them is their own functional test,
+`tests/functional-tests/test_question_specs.py`. Someone wanting "which
+report specs does the Data Steward perspective care about" or "which
+report answers this question" today has to import
+`pyegeria.view.base_report_formats` directly — there's no MCP tool or CLI
+command for either.
+
+**Candidate fix, not started:** expose both as MCP tools (natural fit
+alongside the existing `find_report_specs` tool the MCP server already
+wires at startup via `load_egeria_report_specs`) and/or as a
+`hey_egeria cat show` subcommand. Low risk — additive, no changes needed
+to the functions themselves.
+
 ### ISSUE-78: engine-host participation trio is implemented on `main` but absent from the released 6.0.18.4
 
 > **RESOLVED by pyegeria 6.1.5** (verified 2026-08-27). All three methods ship in
