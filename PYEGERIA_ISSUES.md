@@ -827,12 +827,22 @@ into the entry now, so it isn't rediscovered from scratch later.
 
 ### ISSUE-82: `pyegeria/omvs/valid_metadata.py` sends the literal query string `typeName=None` whenever `type_name` is Python `None` — breaks every Type-Name-omitted (global) Valid Metadata Value, in 12 of 14 methods across `ValidMetadataManager`
 
-**Status:** fixed 2026-08-28 — all 12 affected methods patched to match the
-one method that already did this correctly (see "Fix landed" below).
-Verified with a mocked HTTP layer (URL no longer contains the literal
-string `None`, correctly omits `typeName` when unset, and still includes
-it when set); **not yet re-run against a live Egeria server** or the
-originating `egeria-workspaces` batch — see "What's still open" below.
+**Status:** fixed and live-verified 2026-08-28 — all 12 affected methods
+patched to match the one method that already did this correctly (see "Fix
+landed" below); released as pyegeria 6.1.7. Verified with a mocked HTTP
+layer first (URL no longer contains the literal string `None`, correctly
+omits `typeName` when unset, and still includes it when set), then
+confirmed live: `egeria-workspaces-5f` upgraded quickstart-pyegeria-web's
+container to 6.1.7 and re-ran all 5 originally-failing files
+(`human-resource-management.md`, `health-and-safety.md`,
+`biological-agents-and-gmo.md`, `dangerous-goods-transport.md`,
+`diversity-equity-inclusion.md`) against a live `qs-view-server` — every
+one now exits 0/SUCCESS, zero occurrences of the "not a valid metadata
+value", "Missing unresolved reference", or
+`PyegeriaNotFoundException`/404 signatures across all 5. Also confirmed
+the `type_name` guard is present in the installed package, not just this
+checkout. `egeria-workspaces`' own `BACKLOG.md` entry (`PY-25`) closed as
+verified on their side.
 
 **Reported by another Claude session** (`egeria-workspaces-5f`, no local
 `egeria-python` checkout) debugging a failed Dr.Egeria batch run. A
@@ -924,18 +934,8 @@ if type_name:
     url += f"&typeName={type_name}"
 ```
 
-**What's still open:** fixed and unit-verified in isolation (mocked
-`_async_make_request`, asserted the literal string `None` no longer
-appears in any of the 12 URLs and that a real `type_name` still comes
-through correctly), but not yet committed/released. **Not yet confirmed
-against a live Egeria server**, and not yet re-run through the actual
-`egeria-workspaces` batch that surfaced this (that repo has no local
-`egeria-python` checkout to pull the fix from until it's released to
-PyPI). Whoever picks this up next should re-run
-`dr_egeria --process human-resource-management.md` (or any of the other
-four listed files) against a `qs-view-server` once this fix is installed,
-and confirm the previously-failing `Create Business Imperative` /
-`Link Governance *` / `Add Member to Collection` commands now succeed.
+**Nothing left open here.** Fixed, released (pyegeria 6.1.7), and live-verified
+end-to-end against the original real-world repro, not just unit-tested.
 
 ### ISSUE-81: `migrate_question_specs.py` links Perspective↔Question via the wrong relationship type (`AssignmentScope`, not `ScopedBy`) — every bootstrap-migrated perspective silently relies on a filename-inference fallback instead
 
