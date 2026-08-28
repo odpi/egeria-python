@@ -811,6 +811,84 @@ on an Egeria Server capability that doesn't exist yet — but the pyegeria/
 Dr.Egeria-side work each will need once that capability ships is written
 into the entry now, so it isn't rediscovered from scratch later.
 
+### ISSUE-81: `migrate_question_specs.py` links Perspective↔Question via the wrong relationship type (`AssignmentScope`, not `ScopedBy`) — every bootstrap-migrated perspective silently relies on a filename-inference fallback instead
+
+**A real bug**, found 2026-08-28 answering "is the folder-name-inferred
+perspective fallback in `load_egeria_report_specs()` actually used
+anywhere?" Short answer: yes — for every question migrated through the
+Phase 1 bootstrap, it's the *only* thing that has ever worked.
+
+**Root cause.** `commands/migrate_question_specs.py`'s `_ensure_scoped_by()`
+(despite its name) calls `client.actor_manager.link_assignment_scope(...)`
+with `properties: {"class": "AssignmentScopeProperties"}` — that creates
+Egeria's **`AssignmentScope`** relationship (`e3fdafe3-...`, "Links a
+profile, role, or project to the elements that they are responsible for
+managing"). But `load_egeria_report_specs()` reads perspectives back with
+`client.get_related_elements(question_guid, relationship_type="ScopedBy")`
+— a **different** relationship type (`3845b5cc-...`, "Link between a scope
+... and an element restricted the scope"). Confirmed both are genuinely
+distinct types, not aliases of one another, via Egeria's own type registry
+(`OpenMetadataType.java`: `ASSIGNMENT_SCOPE_RELATIONSHIP` vs
+`SCOPED_BY_RELATIONSHIP`, different GUIDs, different Properties classes)
+— they just happen to share a doc page (0120-Assignment-Scopes) because
+they're related concepts.
+
+Since the two never match, `get_related_elements(..., "ScopedBy")` returns
+empty for every question the bootstrap script touched, and
+`load_egeria_report_specs()` falls through to its documented fallback:
+inferring the perspective from the QuestionSpec folder's own
+qualified-name suffix (`QuestionSpec::TypeDef::Developer` → `Developer`).
+That fallback isn't a rare edge case — it's the sole source of every
+perspective attached to any of the 74 originally-migrated report types.
+
+**The Dr.Egeria-authored path is correct**, for contrast:
+`Link Perspective to Question` (`md_processing/v2/actor_manager.py`,
+`object_type == "Perspective to Question"`) calls
+`classification_manager._async_add_scope_to_element` — the real `ScopedBy`
+endpoint. Anything linked that way going forward works via the intended
+relationship; only the one-time bulk migration is affected.
+
+**Impact:** cosmetic today, since the fallback happens to produce usable
+(if less precise — no many-to-many, no server-side truth) results. But
+`AssignmentScope` relationships sitting on migrated Questions are real,
+queryable, wrong-typed data in Egeria now — anyone querying by `ScopedBy`
+directly (bypassing this fallback), or any future code trusting
+`AssignmentScope` to mean "this profile/role manages this question" (its
+actual documented meaning), will get nonsense.
+
+**Candidate fix:** change `migrate_question_specs.py`'s
+`_ensure_scoped_by()` to call `classification_manager._async_add_scope_to_element`
+(matching the Dr.Egeria command), and separately decide whether to
+re-migrate/clean up the `AssignmentScope` relationships already created on
+whatever Egeria instance ran the original bootstrap.
+
+### ISSUE-80: `find_report_specs_by_perspective`/`find_report_specs_by_question` are implemented and tested but not exposed anywhere
+
+**Not a bug — a follow-up.** Found 2026-08-28 while reviewing the Question
+Spec migration (`docs/design/report_spec_migration_design.md`, Phase 1
+complete since 2026-05-18/`6c946af`). Both functions
+(`pyegeria/view/base_report_formats.py:3678`/`3715`) are real, working
+query methods over the Egeria-sourced `question_spec` data that
+`load_egeria_report_specs()` merges into the runtime registry — not
+leftover pre-migration code, and not candidates for removal (see the
+design doc discussion this follow-up came out of).
+
+**The gap:** neither is exported from `pyegeria/__init__.py`, registered
+as an MCP tool (`pyegeria/core/mcp_server.py`), or wired into any
+`hey_egeria`/`commands/` CLI surface. The only thing that currently
+exercises them is their own functional test,
+`tests/functional-tests/test_question_specs.py`. Someone wanting "which
+report specs does the Data Steward perspective care about" or "which
+report answers this question" today has to import
+`pyegeria.view.base_report_formats` directly — there's no MCP tool or CLI
+command for either.
+
+**Candidate fix, not started:** expose both as MCP tools (natural fit
+alongside the existing `find_report_specs` tool the MCP server already
+wires at startup via `load_egeria_report_specs`) and/or as a
+`hey_egeria cat show` subcommand. Low risk — additive, no changes needed
+to the functions themselves.
+
 ### ISSUE-78: engine-host participation trio is implemented on `main` but absent from the released 6.0.18.4
 
 > **RESOLVED by pyegeria 6.1.5** (verified 2026-08-27). All three methods ship in
