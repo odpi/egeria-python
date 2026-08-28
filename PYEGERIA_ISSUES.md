@@ -601,6 +601,34 @@ native counting only for **element** counts.
 
 ### ISSUE-41 (PY-21): `find_glossary_terms(sequencing_order=..., include_only_classified_elements=...)` returns ZERO results when combined — each filter alone works fine
 
+**Update 2026-08-27: regression — `include_only_classified_elements` alone
+now also returns ZERO, no `sequencing_order` involved at all.** Found
+debugging Egeria Explorer's Questions tab showing no questions on the
+left (`egeria-workspaces-fs`'s `perspectives_handler.py`'s `get_questions()`,
+which had already dropped `sequencing_order` per this issue's earlier
+guidance). Reproduced directly against `qs-view-server`:
+`find_glossary_terms(search_string="*", starts_with=True, graph_query_depth=0,
+include_only_classified_elements=["Question"], page_size=200)` → **0** hits,
+where the **2026-08-26** update immediately below recorded this exact call
+(classification filter alone) returning **43** hits one day earlier. Ruled
+out a `"Question"`-specific cause: swapped in `include_only_classified_elements=
+["Template"]` (a long-established classification, unrelated to anything
+created recently) → also **0**. An unfiltered call on the same connection
+(`find_glossary_terms(search_string="*", starts_with=True, graph_query_depth=0,
+page_size=200)`, no classification filter at all) → **200** hits (page-size
+ceiling), so the connection/server itself is healthy and the classification
+data is intact (confirmed via direct `get_term_by_guid` on one of the
+"missing" terms — its `elementHeader.otherClassifications` correctly carries
+`classificationName: "Question"`). So as of this server instance today,
+`include_only_classified_elements` appears to return zero regardless of
+`sequencing_order` — a strictly worse regression than this issue's original
+scope. Workaround applied in `perspectives_handler.py`: drop the server-side
+classification filter entirely, fetch unfiltered (`page_size=1000`, the
+server's own max), and filter client-side on `otherClassifications`.
+Worth re-testing the classification-filter-alone case again on a later
+server build, the way this issue's own history already does for the
+combined-filter case.
+
 **Update 2026-08-26: re-confirmed again, unchanged.** Re-ran the exact
 repro against the current server build (`6.2-SNAPSHOT`, platform
 timestamp `2026-08-24T18:27:04Z` — the same build that turned out to have
