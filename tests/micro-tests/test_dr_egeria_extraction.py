@@ -274,3 +274,65 @@ async def test_view_report_anchor_scope_id_resolves_when_declared_reference_styl
     assert "Referenced element" in result.get("analysis", "")
 
 
+
+
+def test_setup_clear_set_verbs_are_recognized_as_commands():
+    """Regression test: STANDARD_VERBS was missing "Setup"/"Clear"/"Set" --
+    the entire Reference Data valid-metadata-value/map family (7 registered
+    commands) silently fell through to the "preserve as prose" branch
+    (is_command=False), producing no error and no summary row. See
+    PYEGERIA_ISSUES.md for the full report -- reproduced here with the
+    exact repro block that surfaced it against a real Coco Pharmaceuticals
+    load."""
+    text = """
+___
+
+## Setup Valid Metadata Value
+
+### Metadata Property Name
+domainIdentifier
+
+### Preferred Value
+22
+
+### Metadata Display Name
+Human Resource Management
+
+### Metadata Description
+The governance domain for human resources.
+
+___
+"""
+    extractor = UniversalExtractor(text)
+    commands = extractor.extract_commands()
+    actual_commands = [c for c in commands if c.is_command]
+
+    assert len(actual_commands) == 1
+    assert actual_commands[0].verb == "Setup"
+    assert actual_commands[0].object_type == "Valid Metadata Value"
+    assert actual_commands[0].attributes["Metadata Property Name"] == "domainIdentifier"
+    assert actual_commands[0].attributes["Preferred Value"] == "22"
+
+
+@pytest.mark.parametrize("heading", [
+    "## Setup Valid Metadata Map Name",
+    "## Setup Valid Metadata Map Value",
+    "## Clear Valid Metadata Value",
+    "## Clear Valid Metadata Map Name",
+    "## Clear Valid Metadata Map Value",
+    "## Set Consistent Metadata Values",
+])
+def test_every_reference_data_verb_is_recognized(heading):
+    """All 7 commands the bug report identified as unreachable -- one per
+    verb/object combination actually registered in dr_egeria.py."""
+    text = f"""
+{heading}
+
+### Metadata Property Name
+someProperty
+"""
+    extractor = UniversalExtractor(text)
+    commands = extractor.extract_commands()
+    actual_commands = [c for c in commands if c.is_command]
+
+    assert len(actual_commands) == 1, f"'{heading}' was not recognized as a command"
