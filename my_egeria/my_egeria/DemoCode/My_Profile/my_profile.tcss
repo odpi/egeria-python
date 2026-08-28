@@ -24,14 +24,6 @@ Screen {
     grid-gutter: 1;
 }
 
-#edit_associations_screen {
-    layout: grid;
-    grid-size: 2;
-    grid-columns: 1fr 1fr;
-    grid-gutter: 1;
-    border: round white;
-}
-
 #main_header {
     column-span: 3;
     height: 3;
@@ -91,6 +83,13 @@ ModalScreen > Header, ModalScreen > Footer {
 #edit_communities_container,
 #edit_identities_container,
 #edit_teams_container,
+#edit_associations_container,
+#edit_blogs_container,
+#edit_collections_container,
+#edit_journal_container,
+#edit_projects_container,
+#edit_todos_container,
+#confirm_delete_container,
 #status_container,
 #user_identities_container,
 #main_identities_container {
@@ -112,7 +111,17 @@ ModalScreen > Header, ModalScreen > Footer {
 #user_identity_table,
 #user_identity_datatable,
 #status_table,
-#root_collection_table {
+#root_collection_table,
+#associations_destination,
+#blogs_destination,
+#collections_destination,
+#communities_destination,
+#identities_destination,
+#journal_destination,
+#projects_destination,
+#roles_destination,
+#teams_destination,
+#todos_destination {
     width: 100%;
     height: 100%;
 }

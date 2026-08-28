@@ -8,6 +8,7 @@
 
 import pwd
 from datetime import datetime
+from typing import Any
 
 import optional
 from textual import on
@@ -1273,3 +1274,17 @@ class AddTeamScreen(ModalScreen):
     def handle_quit_button(self, event: Button.Pressed):
         """ Handle the quit button press """
         self.action_quit()
+
+class AddCollectionScreen(ModalScreen):
+    """ Add a new Collection to Egeria"""
+    def __init__(self, *args, **kwargs: Any) -> None:
+        super().__init__(*args, **kwargs)
+        pass
+
+
+class AddUserIdentityScreen(ModalScreen):
+    """ Add a new User Identity to Egeria"""
+    def __init__(self, *args, **kwargs: Any) -> None:
+        super().__init__(*args, **kwargs)
+        pass
+
