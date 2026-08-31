@@ -243,7 +243,7 @@ class MyProfileApp(App, TechTypesMixin, ShopForDataMixin, TeamRolesMixin, Elemen
                 report_spec="My-User-MD",
             )
             self.log(f"Profile retrieved successfully: {self.user_profile_struct}")
-            self._show_main_screen()
+            self.show_main_screen()
         except PyegeriaException as e2:
             self.log(f"Error retrieving user profile: {e2!s}")
             self.exit(412)
@@ -391,6 +391,12 @@ class MyProfileApp(App, TechTypesMixin, ShopForDataMixin, TeamRolesMixin, Elemen
             self.communities_table.add_columns("Assignment Type", "Community Name", "Description", "GUID")
             self.communities_table.zebra_stripes = True
             self.communities_table.cursor_type = "row"
+
+        self.digital_product_catalog_table: DataTable = DataTable(id="digital_product_catalog_table")
+        self.digital_product_catalog_table.add_columns("Digital Product Catalog Name", "Description", "Qualified Name")
+        self.digital_product_catalog_table.cursor_type = "row"
+        self.digital_product_catalog_table.zebra_stripes = True
+
 
         self.roles_table.clear(columns=True)
         self.roles_table.add_columns("Role Name", "Role Type", "Description", "GUID")
@@ -556,22 +562,28 @@ class MyProfileApp(App, TechTypesMixin, ShopForDataMixin, TeamRolesMixin, Elemen
         self.log(f"Status screen returned: {status_callback_rc}")
         self.exit(status_callback_rc)
 
-    def _show_main_screen(self) -> None:
-        """Show or switch back to the main screen."""
+    def show_main_screen(self) -> None:
+        """Show or switch back to the main screen by unwinding the screen stack."""
         self.log("Returning to main screen")
         try:
-            self.get_screen("main")
-            if getattr(self, "is_mounted", False) and len(getattr(self, "screen_stack", [])) > 0:
-                self.switch_screen("main")
-        except Exception:
-            self.log("Main screen does not exist")
-            if getattr(self, "is_mounted", False):
+            while len(getattr(self, "screen_stack", [])) > 1:
+                self.pop_screen()
+        except Exception as e:
+            self.log(f"Error popping screens to return to main screen: {e}")
+
+        try:
+            if getattr(self, "is_mounted", False) and len(getattr(self, "screen_stack", [])) == 0:
                 self.push_screen("main")
+        except Exception as e:
+            self.log(f"Error ensuring main screen: {e}")
+
+    # Alias for handlers calling _show_main_screen
+    _show_main_screen = show_main_screen
 
     def view_subscriptions_callback(self, subscriptions_callback_rc: Any) -> None:
         """Callback routine from the view subscriptions screen."""
         self.log(f"View subscriptions screen returned: {subscriptions_callback_rc}")
-        self._show_main_screen()
+        self.show_main_screen()
 
     # Compatibility wrappers delegating to profile_utils
     def clean_structure(self, data: Any, target: str = "specificationMermaidGraph") -> Any:

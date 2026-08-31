@@ -169,13 +169,38 @@ class TestMyProfileAppActionsAndOptions:
 
     def test_show_main_screen(self):
         app = MyProfileApp()
-        app.get_screen = MagicMock()
-        app.switch_screen = MagicMock()
+        app.pop_screen = MagicMock()
+        app.push_screen = MagicMock()
         app.is_mounted = True
+
+        # When screen stack has multiple screens, pop until only 1 remains
+        stack_list = [MagicMock(), MagicMock(), MagicMock()]
         with patch.object(MyProfileApp, "screen_stack", new_callable=PropertyMock) as mock_stack:
-            mock_stack.return_value = [MagicMock()]
+            def side_effect():
+                if stack_list:
+                    return stack_list
+                return []
+            mock_stack.side_effect = lambda: stack_list
+
+            def mock_pop():
+                if len(stack_list) > 1:
+                    stack_list.pop()
+            app.pop_screen.side_effect = mock_pop
+
+            app.show_main_screen()
+            assert len(stack_list) == 1
+            assert app.pop_screen.call_count == 2
+
+        # Alias _show_main_screen test
+        stack_list_2 = [MagicMock(), MagicMock()]
+        with patch.object(MyProfileApp, "screen_stack", new_callable=PropertyMock) as mock_stack:
+            mock_stack.side_effect = lambda: stack_list_2
+            def mock_pop_2():
+                if len(stack_list_2) > 1:
+                    stack_list_2.pop()
+            app.pop_screen.side_effect = mock_pop_2
             app._show_main_screen()
-            app.switch_screen.assert_called_once_with("main")
+            assert len(stack_list_2) == 1
 
     def test_utility_delegation_wrappers(self):
         app = MyProfileApp()
