@@ -1,0 +1,15 @@
+version: 2
+updates:
+  - package-ecosystem: "github-actions"
+    directory: "/"
+    schedule:
+      interval: "weekly"
+    # Keeps the SHA-pinned `uses:` refs in .github/workflows/*.yml current --
+    # Dependabot resolves the new tag to its commit SHA itself, so pinning
+    # doesn't mean these go stale silently.
+
+  - package-ecosystem: "pip"
+    directory: "/"
+    schedule:
+      interval: "weekly"
+    open-pull-requests-limit: 10
