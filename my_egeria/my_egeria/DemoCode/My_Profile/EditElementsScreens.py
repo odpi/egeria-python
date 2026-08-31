@@ -528,6 +528,30 @@ class EditProfileScreen(ModalScreen[Any]):
         return(200)
 
     def action_Edit_communities(self) -> str:
+        #base code from which tyo build
+        # ========================================================
+        # token = client.create_egeria_bearer_token()  # uses env vars; or pass (user, password) explicitly
+        #
+        # try:
+        #     # --- API call ---
+        #
+        #     community_guid_to_update = "YOUR_COMMUNITY_GUID_TO_UPDATE"
+        #
+        #     body_for_community_update = {
+        #         'class': 'UpdateElementRequestBody',
+        #         'properties': {
+        #             'displayName': 'New display name for the updated community',  # Update this
+        #             'description': 'Updated description of the community'  # Update this
+        #         }
+        #     }
+        #
+        #     client.update_community(community_guid_to_update, body_for_community_update)
+        #
+        # except PyegeriaException as e:
+        #     print_basic_exception(e)
+        # finally:
+        #     client.close_session()
+        # ========================================================
         self.dismiss("community")
 
     def action_Edit_identities(self) -> str:

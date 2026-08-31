@@ -182,8 +182,14 @@ class AddAssociationScreen(ModalScreen):
         self.community_guid = ""
         self.community_link_guid = ""
         self.project_link_guid = ""
-        self.link_community_to_profile = True
-        self.link_project_to_profile = True
+        self.link_community_to_profile = False
+        self.link_project_to_profile = False
+        self.selected_element_type = None
+        self.todo_name = None
+        self.todo_description = None
+        self.todo_priority = None
+        self.todo_guid = None
+
 
     def on_mount(self):
         main_screen = self.app.get_screen("main")
@@ -195,7 +201,7 @@ class AddAssociationScreen(ModalScreen):
                    "First please select which element type you want to add, Project or Community, and the screen will change accordingly.\n"
                    "Please ensure that you have filled in all fields before clicking 'Add Association'\n"
                    "For bulk additions please use Dr_Egeria instead."),
-            Input("Element type to be added:", id="element_type"),
+            Input(placeholder="Element type to be added:", id="element_type"),
             Horizontal(
                 Button("Select Element Type", id="select_element_type_button", variant="primary"),
                 Button("Quit", id="quit_button", variant="warning"),
@@ -210,17 +216,15 @@ class AddAssociationScreen(ModalScreen):
         input_container.remove_children()
         input_container.border_title = "Add New Project"
         input_container.mount(Static("Please fill in all input fields before clicking 'Add Project'"),
-                              Input("Name of the project:", id="project_name"),
-                              Input("Description of the project:", id="project_description"),
+                              Input(placeholder="Name of the project:", id="project_name"),
+                              Input(placeholder="Description of the project:", id="project_description"),
                               Static("Classification: Campaign, StudyProject, Task, PersonalProject or Project"),
-                              Input("Project Classification:", id="project_classification"),
-                              Input("Project Identifier:", id="project_identifier"),
-                              Input("Start Date (mm/dd/yyyy):", id="project_start_date"),
-                              Input("Planned End Date (mm/dd/yyyy):", id="project_end_date"),
-                              Horizontal(
-                                  Static("Link Project to your profile? True or False, Default = True"),
-                                  Switch(value=True, id="link_project_to_profile")
-                              ),
+                              Input(placeholder="Project Classification:", id="project_classification"),
+                              Input(placeholder="Project Identifier:", id="project_identifier"),
+                              Input(placeholder="Start Date (mm/dd/yyyy):", id="project_start_date"),
+                              Input(placeholder="Planned End Date (mm/dd/yyyy):", id="project_end_date"),
+                              Static("Link Project to your profile? True or False, Default = True"),
+                              Switch(value=False, id="link_project_to_profile"),
                               Horizontal(
                                   Button("Add Project", id="add_project_button"),
                                   Button("Quit", id="quit_button")
@@ -232,12 +236,10 @@ class AddAssociationScreen(ModalScreen):
         input_container.remove_children()
         input_container.border_title = "Add New Community"
         input_container.mount(Static("Please fill in all input fields before clicking 'Add Project'"),
-                              Input("Name of the community:", id="community_name"),
-                              Input("Description of the community:", id="community_description"),
-                              Horizontal(
-                                  Static("Link Community to your profile? True or False, Default = True"),
-                                  Switch(value=True, id="link_community_to_profile")
-                              ),
+                              Input(placeholder="Name of the community:", id="community_name"),
+                              Input(placeholder="Description of the community:", id="community_description"),
+                              Static("Link Community to your profile? True or False, Default = True"),
+                              Switch(value=False, id="link_community_to_profile"),
                               Horizontal(
                                   Button("Add Community", id="add_community_button"),
                                   Button("Quit", id="quit_button")
@@ -365,51 +367,26 @@ class AddAssociationScreen(ModalScreen):
     def handle_link_community_to_profile_changed(self, event: Switch.Changed):
         self.link_community_to_profile = event.switch.value
 
-    @on(Input.Changed)
-    def handle_input_changed(self, event: Input.Changed):
-        if event.input.id == "select_element_type":
-            self.selected_element_type = event.input.value
-            if self.selected_element_type == "Project":
-                self.log.info("Selected element type is Project")
-            elif self.selected_element_type == "Community":
-                self.log.info("Selected element type is Community")
-            else:
-                self.notify("Invalid element type selected, Only 'Project' or 'Community' are allowed.", severity="error", timeout=15)
-        elif event.input.id == "project_name":
-            self.project_name = event.input.value
-        elif event.input.id == "project_description":
-            self.project_description = event.input.value
-        elif event.input.id == "project classification":
-            self.project_classification = event.input.value
-        elif event.input.id == "project_identifier":
-            self.project_identifier = event.input.value
-        elif event.input.id == "project_start_date":
-            self.project_start_date = event.input.value
-        elif event.input.id == "project_end_date":
-            self.project_end_date = event.input.value
-        elif event.input.id == "community_name":
-            self.community_name = event.input.value
-        elif event.input.id == "community_description":
-            self.community_description = event.input.value
-        else:
-            self.notify("Invalid input field selected.", severity="error", timeout=10)
-
     def action_quit(self):
         self.dismiss(200)
 
     @on(Button.Pressed, "#select_element_type_button")
     def handle_select_element_type_button(self, event: Button.Pressed):
-        self.selected_element_type = event.button.id
-        if self.selected_element_type == "Project":
+        self.event_id = event.control.id
+        self.selected_element_type = self.query_one("#element_type", Input).value
+        if self.selected_element_type.upper() == "PROJECT":
             self.display_add_new_project_screen()
-        elif self.selected_element_type == "Community":
+        elif self.selected_element_type.upper() == "COMMUNITY":
             self.display_add_new_community_screen()
         else:
             self.notify("Invalid element type selected, Only 'Project' or 'Community' are allowed.", severity="error", timeout=15)
 
     @on(Button.Pressed, "#add_community_button")
     def handle_add_community_button(self, event: Button.Pressed):
+        self.event_id= event.control.id
         """ Handle the add button press """
+        self.community_name = self.query_one("#community_name", Input).value
+        self.community_description = self.query_one("#community_description", Input).value
         if self.community_name and self.community_description:
             self.action_add_new_community()
         else:
@@ -418,10 +395,17 @@ class AddAssociationScreen(ModalScreen):
     @on(Button.Pressed, "#add_project_button")
     def handle_add_project_button(self, event: Button.Pressed):
         """ Handle the add button press """
+        self.event_id= event.control.id
+        self.project_name = self.query_one("#project_name", Input).value
+        self.project_description = self.query_one("#project_description", Input).value
+        self.project_classification = self.query_one("#project_classification", Input).value
+        self.project_identifier = self.query_one("#project_identifier", Input).value
+        self.project_start_date = self.query_one("#project_start_date", Input).value
+        self.project_end_date = self.query_one("#project_end_date", Input).value
         if self.project_name and self.project_description:
             self.action_add_new_project()
         else:
-            self.notify("Please enter new community name and description before selecting Add Community button",
+            self.notify("Please enter new project values before selecting Add Community button",
                         timeout=10, severity="error")
 
     @on(Button.Pressed, "#quit_button")
@@ -479,13 +463,11 @@ class AddBlogEntryScreen(ModalScreen):
             Static("Situation"),
             Input("Situation", id="blog_entry_situation"),
             Horizontal(
-                Static("Link Blog Entry to your profile? True or False, Default = True"),
-                Switch(value=True, id="link_blog_entry_to_profile")
-            ),
-            Horizontal(
                 Button("Add Blog Entry", id="add_entry_button", variant="primary"),
                 Button("Quit", id="quit_button", variant="warning")
-            ))
+                ),
+            id="blog_input_container",
+        )
         yield Footer()
 
     def action_add_new_blog(self):
@@ -512,17 +494,17 @@ class AddBlogEntryScreen(ModalScreen):
             assert isinstance(blog_entry_response, str)
             blog_entry_guid = blog_entry_response
             self.log(f"Created Blog Entry assigned to the current user: {blog_entry_guid}")
-            if self.link_blog_entry_to_profile is True:
-                try:
-                    tclient.link_element_to_profile(
-                        element_guid=self.user_guid,
-                        linked_element_guid=blog_entry_guid,
-                        relationship_type="BlogEntryToUser",
-                        relationship_properties={"class": "BlogEntryToUserProperties"},
-                    )
-                    self.notify(f"Linked Blog Entry to Profile: {blog_entry_guid}", timeout=10, severity="information")
-                except PyegeriaException as e:
-                    self.notify(f"Link Blog Entry to Profile failed with return: {e}", timeout=10, severity="error")
+            # if self.link_blog_entry_to_profile is True:
+            #     try:
+            #         tclient.link_element_to_profile(
+            #             element_guid=self.user_guid,
+            #             linked_element_guid=blog_entry_guid,
+            #             relationship_type="BlogEntryToUser",
+            #             relationship_properties={"class": "BlogEntryToUserProperties"},
+            #         )
+            #         self.notify(f"Linked Blog Entry to Profile: {blog_entry_guid}", timeout=10, severity="information")
+            #     except PyegeriaException as e:
+            #         self.notify(f"Link Blog Entry to Profile failed with return: {e}", timeout=10, severity="error")
         except PyegeriaException as e:
             self.notify(f"Add blog entry failed with return: {e}", timeout=10, severity="error")
         finally:
@@ -534,6 +516,8 @@ class AddBlogEntryScreen(ModalScreen):
             self.query_one("#blog_entry_name", Input).clear()
             self.query_one("#blog_entry_text", Input).clear()
             self.query_one("#blog_entry_situation", Input).clear()
+            self.query_one("#blog_entry_guid", Input).clear()
+            self.query_one("#blog_entry_container", ScrollableContainer).refresh()
         return
 
     @on(Input.Changed)
@@ -545,9 +529,9 @@ class AddBlogEntryScreen(ModalScreen):
         if event.input.id == "blog_entry_situation":
             self.blog_entry_situation = event.input.value
 
-    @on(Switch.Changed, "#link_blog_entry_to_profile")
-    def handle_link_blog_entry_to_profile_changed(self, event: Switch.Changed):
-        self.link_blog_entry_to_profile = event.switch.value
+    # @on(Switch.Changed, "#link_blog_entry_to_profile")
+    # def handle_link_blog_entry_to_profile_changed(self, event: Switch.Changed):
+    #     self.link_blog_entry_to_profile = event.switch.value
 
     def action_quit(self):
         self.dismiss(200)
@@ -723,7 +707,7 @@ class AddJournalEntryScreen(ModalScreen):
         self.journal_table.focus()
 
     def compose(self) -> ComposeResult:
-        yield Static("Add Todo Screen")
+        yield Static("Add Journal Entry Screen")
         yield ScrollableContainer(
             Static("Please ensure that you have filled in all fields before clicking 'Add Journal Entry' Button\n"
                    "For bulk additions please use Dr_Egeria instead."),

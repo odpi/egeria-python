@@ -31,6 +31,7 @@ from SearchForTermScreen import SearchForTermScreen
 from SelectionOverviewScreen import SelectionOverviewScreen
 from CreateSubscriptionRequestScreen import CreateSubscriptionRequestScreen
 from StatusScreen import StatusScreen
+from GenericDataViewScreen import GenericDataViewScreen
 
 
 class ShopForDataMixin:
@@ -748,5 +749,118 @@ class ShopForDataMixin:
         self.cursor_row_highlighted = selection_parm_2
         self.data_table_highlighted = selection_parm_3
         self.log(f"Data selected: row={selection_parm_1}, cursor_row={selection_parm_2}, data_table={selection_parm_3}")
-        selected_item = self.query_one("#" + self.data_table_highlighted, DataTable)
-        item_content = selected_item.get_row(self.row_highlighted)
+
+        if not self.data_table_highlighted:
+            self.log("No table highlighted for data sampling")
+            self._show_main_screen()
+            return
+
+        try:
+            selected_table = self.query_one("#" + str(self.data_table_highlighted), DataTable)
+        except Exception as e:
+            self.log(f"Could not find table #{self.data_table_highlighted}: {e}")
+            selected_table = None
+
+        item_content = []
+        if selected_table:
+            try:
+                if self.row_highlighted is not None:
+                    item_content = selected_table.get_row(self.row_highlighted)
+                elif self.cursor_row_highlighted is not None and selected_table.row_count > self.cursor_row_highlighted:
+                    item_content = selected_table.get_row_at(self.cursor_row_highlighted)
+                elif selected_table.row_count > 0:
+                    item_content = selected_table.get_row_at(0)
+            except Exception as e:
+                self.log(f"Error getting row from table: {e}")
+                if selected_table.row_count > 0:
+                    try:
+                        item_content = selected_table.get_row_at(0)
+                    except Exception:
+                        item_content = []
+
+        element_name = "Selected Data Element"
+        element_qname = ""
+        element_desc = ""
+        sample_data = None
+
+        if item_content and len(item_content) > 0:
+            if self.data_table_highlighted in ["glossary_table", "digital_product_catalog_table", "data_dictionary_table"]:
+                element_name = str(item_content[0]) if len(item_content) > 0 else ""
+                element_desc = str(item_content[1]) if len(item_content) > 1 else ""
+                element_qname = str(item_content[2]) if len(item_content) > 2 else ""
+            else:
+                element_name = str(item_content[0]) if len(item_content) > 0 else ""
+                element_desc = str(item_content[1]) if len(item_content) > 1 else ""
+                element_qname = str(item_content[0]) if len(item_content) > 0 else ""
+
+            # Attempt to fetch sample data from Egeria backend
+            if self.data_table_highlighted == "digital_product_catalog_table" and element_qname:
+                try:
+                    dclient = Egeria(self.view_server, self.platform_url, self.user_name, self.user_password)
+                    dclient.create_egeria_bearer_token(self.user_name, self.user_password)
+                    data_set_metadata = dclient.find_tabular_data_sets(
+                        search_string=element_qname,
+                        start_from=0,
+                        page_size=1,
+                        output_format="DICT",
+                    )
+                    if isinstance(data_set_metadata, list) and len(data_set_metadata) > 0 and data_set_metadata != "No elements found":
+                        data_set_guid = data_set_metadata[0].get("GUID")
+                        if data_set_guid:
+                            sample_data = dclient.get_tabular_data_set(
+                                tabular_data_set_guid=data_set_guid,
+                                start_from_row=0,
+                                max_row_count=10,
+                                output_format="DICT",
+                            )
+                except Exception as e:
+                    self.log(f"Error fetching sample tabular data: {e}")
+
+            if sample_data is None:
+                # Provide structured element sample attributes
+                sample_data = {
+                    "Display Name": element_name,
+                    "Qualified Name": element_qname,
+                    "Description": element_desc,
+                    "Data Category": str(self.data_table_highlighted).replace("_table", "").replace("_", " ").title(),
+                    "Source Table": str(self.data_table_highlighted),
+                }
+        else:
+            sample_data = {"Status": "No element selected to sample"}
+
+        self.push_screen(
+            GenericDataViewScreen(
+                sample_data=sample_data,
+                data_element_name=element_name,
+                data_element_qualified_name=element_qname,
+                view_server=self.view_server,
+                platform_url=self.platform_url,
+                user_name=self.user_name,
+                user_password=self.user_password,
+            ),
+            callback=self.generic_data_view_callback,
+        )
+
+    async def generic_data_view_callback(self, result: Any) -> None:
+        """Callback for Generic Data View screen."""
+        self.log(f"Generic Data View screen returned: {result}")
+        if isinstance(result, list) and len(result) > 0 and result[0] == 211:
+            element_qname = (
+                result[2]
+                if len(result) > 2 and result[2]
+                else (result[1] if len(result) > 1 and result[1] else getattr(self, "selected_item", ""))
+            )
+            self.log(f"Subscribing to data element from sample view: {element_qname}")
+            try:
+                s_client = ProductManager(self.view_server, self.platform_url, self.user_name, self.user_password)
+                s_client.create_egeria_bearer_token(self.user_name, self.user_password)
+                s_client.create_digital_subscription(element_qname)
+                self.notify(f"Created digital subscription for {element_qname}")
+            except Exception as e:
+                self.log(f"Error creating digital subscription: {e}")
+                self.notify(f"Error creating digital subscription: {e}")
+                await self.push_screen(CreateSubscriptionRequestScreen(), callback=self.create_subscription_callback)
+        elif isinstance(result, int) and result == 210:
+            self._show_main_screen()
+        else:
+            await self.handle_shop_for_data_option()

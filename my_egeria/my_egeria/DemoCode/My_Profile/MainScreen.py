@@ -53,7 +53,7 @@ class MainScreen(Screen):
                 Option("User Identities"),
                 Option("Catalogs/Shop for Data"),
                 Option("Edit Profile"),
-                Option("Subscriptions", disabled=True),
+                Option("Subscriptions"),
                 Option("Technology Types"),
                 Option("User Bookmarks", disabled=True),
                 id="other_function_list"
@@ -103,7 +103,11 @@ class MainScreen(Screen):
         if self.selected_table and self.selected_row:
             await self.app.edit_tables(self.selected_table, self.selected_row)
         else:
-            self.notify("Please select a row and table to edit.", timeout=5, severity="warning")
+            active_table = self.get_focused_table()
+            if active_table:
+                await self.app.add_to_tables(active_table, "0")
+            else:
+                self.notify("Please select at least a table, or a table and row to edit.", timeout=5, severity="warning")
 
     async def action_show_comments(self):
         """ Show comments for the selected table """
@@ -122,3 +126,13 @@ class MainScreen(Screen):
             await self.app.add_to_tables(self.selected_table, self.selected_row)
         else:
             self.notify("Please select a table to add to.", timeout=5, severity="warning")
+
+    def get_focused_table(self) -> DataTable | None:
+        focused_widget = self.screen.focused
+
+        # Check if the focused widget is a DataTable
+        if isinstance(focused_widget, DataTable):
+            return focused_widget
+
+        return None
+

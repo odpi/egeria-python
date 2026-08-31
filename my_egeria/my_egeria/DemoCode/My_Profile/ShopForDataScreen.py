@@ -34,6 +34,9 @@ class ShopForDataScreen(Screen):
         self.user_password = user_password
         self.view_server = view_server
         self.platform_url = platform_url
+        self.row_highlighted = None
+        self.cursor_row_highlighted = None
+        self.data_table_highlighted = None
         super().__init__()
 
     def compose(self) -> ComposeResult:
@@ -132,16 +135,13 @@ class ShopForDataScreen(Screen):
         self.log(f"Row selected: {row_selected}, values: {row_values}, qualified name: {row_qualified_name}, description: {row_description}, GUID: {row_GUID}")
         self.dismiss (["collection", row_qualified_name, row_description])
 
-    # @on(DataTable.RowHighlighted)
-    # def handle_row_highlighted(self, event: DataTable.RowHighlighted) -> None:
-    #     """ Handle the highlighting of a row in the DataTable."""
-    #     table = event.data_table
-    #     row_key = event.row_key
-    #     row_values = self.query_one("#"+str(table), DataTable).get_row(row_key)
-    #     row_qualified_name = row_values[0]
-    #     row_description = row_values[1]
-    #     row_GUID = row_values[2]
-    #     self.log(f"Table {table} Row highlighted: {row_key}, values: {row_values}, qualified name: {row_qualified_name}, description: {row_description}, GUID: {row_GUID}")
+    @on(DataTable.RowHighlighted)
+    def handle_row_highlighted(self, event: DataTable.RowHighlighted) -> None:
+        """Handle the highlighting of a row in any DataTable."""
+        self.row_highlighted = event.row_key
+        self.cursor_row_highlighted = event.cursor_row
+        self.data_table_highlighted = event.data_table.id
+        self.log(f"Table {self.data_table_highlighted} Row highlighted: {self.row_highlighted}, cursor: {self.cursor_row_highlighted}")
 
     def action_back(self) -> None:
         """ The back option in the footer has been selected. Dismiss the screen."""
@@ -155,10 +155,22 @@ class ShopForDataScreen(Screen):
         """ The quit option in the footer has been selected. Dismiss the screen."""
         self.dismiss([210])
 
-    # def action_subscribe_to_data(self) -> None:
-    #     """ The subscribe to data option in the footer has been selected."""
-    #     self.dismiss([211])
-
     def action_sample_data_source(self):
         """ The sample data source option in the footer has been selected."""
-        self.dismiss([212, self.row_highlighted, self.cursor_row_highlighted, self.data_table_highlighted])
+        if not getattr(self, "data_table_highlighted", None):
+            for table in [
+                self.glossary_table,
+                self.digital_product_catalog_table,
+                self.data_dictionary_table,
+                self.business_domain_table,
+                self.root_collection_table,
+            ]:
+                if table.row_count > 0:
+                    self.data_table_highlighted = table.id
+                    self.cursor_row_highlighted = table.cursor_row
+                    try:
+                        self.row_highlighted = list(table.rows.keys())[table.cursor_row]
+                    except Exception:
+                        self.row_highlighted = None
+                    break
+        self.dismiss([212, getattr(self, "row_highlighted", None), getattr(self, "cursor_row_highlighted", None), getattr(self, "data_table_highlighted", None)])
