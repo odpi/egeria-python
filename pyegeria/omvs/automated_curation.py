@@ -3472,7 +3472,7 @@ class AutomatedCuration(ServerClient):
         loop = asyncio.get_event_loop()
         response = loop.run_until_complete(
             self._async_initiate_survey(
-                "PostgreSQLSurvey:survey-postgres-database", postgres_database_guid
+                "PostgreSQLSurvey::survey-postgres-database", postgres_database_guid
             )
         )
         return response
@@ -3490,7 +3490,7 @@ class AutomatedCuration(ServerClient):
     def initiate_file_folder_survey(
             self,
             file_folder_guid: str,
-            survey_name: str = "FileSurveys:survey-folder",
+            survey_name: str = "FileSurvey::survey-folder",
     ) -> str:
         """Initiate a file folder survey - async version
 
@@ -3499,7 +3499,8 @@ class AutomatedCuration(ServerClient):
             file_folder_guid: str
                 The GUID of the File Folder that we wish to survey.
             survey_name: str, optional
-                The unique name of the survey routine to execute. Default surveys all folders.
+                The unique name of the survey routine to execute. Defaults to a single-folder survey
+                (non-recursive).
 
         Returns:
         -------
@@ -3514,14 +3515,21 @@ class AutomatedCuration(ServerClient):
             PyegeriaUnauthorizedException:
 
         Notes:
-            There are multiple kinds of file folder surveys available, each with their own purpose. They are described
-            in the Core Content Brain.
+            There are multiple kinds of file folder surveys available, each with their own purpose.
 
-            File Folder Survey Names currently include::
-            - Egeria:GovernanceActionType:AssetSurvey:survey-folders
-            - Egeria:GovernanceActionType:AssetSurvey:survey-folder-and-files
-            - Egeria:GovernanceActionType:AssetSurvey:survey-all-folders
-            - Egeria:GovernanceActionType:AssetSurvey:survey-all-folders-and-files
+            A governance action type is registered under
+            `<governanceEngineName>::<requestType>` (two colons); the engine
+            for all of these is `FileSurvey`, not `AssetSurvey` -- no engine
+            by that name exists, and passing a name it doesn't recognize
+            raises OMAG-GENERIC-HANDLERS-400-013 ("the name is not
+            recognized") without saying what it wanted instead. Confirmed
+            live against a real server (2026-08-30) via
+            `EgeriaTech.get_elements("GovernanceActionType")`. File Folder
+            Survey Names currently include::
+            - FileSurvey::survey-folder (this default -- one folder, not recursive)
+            - FileSurvey::survey-folder-and-files
+            - FileSurvey::survey-all-folders
+            - FileSurvey::survey-all-folders-and-files
 
 
         """
@@ -3538,7 +3546,7 @@ class AutomatedCuration(ServerClient):
         """Initiate a file survey"""
         loop = asyncio.get_event_loop()
         response = loop.run_until_complete(
-            self._async_initiate_survey("FileSurveys:survey-data-file", file_guid)
+            self._async_initiate_survey("FileSurvey::survey-data-file", file_guid)
         )
         return response
 
@@ -3559,7 +3567,7 @@ class AutomatedCuration(ServerClient):
         loop = asyncio.get_event_loop()
         response = loop.run_until_complete(
             self._async_initiate_survey(
-                "ApacheKafkaSurveys:survey-kafka-server", kafka_server_guid
+                "ApacheKafkaSurvey::survey-kafka-server", kafka_server_guid
             )
         )
         return response
@@ -3581,7 +3589,7 @@ class AutomatedCuration(ServerClient):
         loop = asyncio.get_event_loop()
         response = loop.run_until_complete(
             self._async_initiate_survey(
-                "UnityCatalogSurveys:survey-unity-catalog-server", uc_server_guid
+                "UnityCatalogSurvey::survey-unity-catalog-server", uc_server_guid
             )
         )
         return response
@@ -3604,7 +3612,7 @@ class AutomatedCuration(ServerClient):
         loop = asyncio.get_event_loop()
         response = loop.run_until_complete(
             self._async_initiate_survey(
-                "UnityCatalogSurveys:survey-unity-catalog-schema", uc_schema_guid
+                "UnityCatalogSurvey::survey-unity-catalog-schema", uc_schema_guid
             )
         )
         return response
