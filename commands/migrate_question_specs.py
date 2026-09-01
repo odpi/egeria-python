@@ -106,7 +106,21 @@ def _find_or_create_question(client: EgeriaTech, question_text: str, dry_run: bo
 
 
 def _ensure_scoped_by(client: EgeriaTech, perspective_guid: str, question_guid: str, dry_run: bool) -> None:
-    """Create a ScopedBy relationship between a Perspective and a Question if it doesn't exist."""
+    """Create a ScopedBy relationship between a Perspective and a Question if it doesn't exist.
+
+    ISSUE-81: this used to call `actor_manager.link_assignment_scope`, which
+    creates Egeria's AssignmentScope relationship -- a different, wrong-typed
+    relationship ("identifies actors assigned to manage resources", per
+    https://egeria-project.org/types/1/0120-Assignment-Scopes/) that the
+    reader (`load_egeria_report_specs`) never looked for, since it queries
+    for ScopedBy specifically. Fixed to call the same
+    `classification_manager.add_scope_to_element` the Dr.Egeria "Link
+    Perspective to Question" command uses, which creates the real ScopedBy
+    relationship ("connects an element to ... entities that define the
+    impact scope or applicability boundaries of that element") -- the
+    correct semantics for "this Question is relevant within this
+    Perspective's scope."
+    """
     try:
         existing = client.get_related_elements(question_guid, relationship_type="ScopedBy")
         if existing and not isinstance(existing, str):
@@ -117,17 +131,17 @@ def _ensure_scoped_by(client: EgeriaTech, perspective_guid: str, question_guid: 
         pass
 
     if dry_run:
-        logger.info(f"[DRY-RUN] Would link Perspective {perspective_guid} → Question {question_guid}")
+        logger.info(f"[DRY-RUN] Would link Perspective {perspective_guid} → Question {question_guid} (ScopedBy)")
         return
 
     body = {
         "class": "NewRelationshipRequestBody",
-        "properties": {"class": "AssignmentScopeProperties"},
+        "properties": {"class": "ScopedByProperties"},
     }
-    client.actor_manager.link_assignment_scope(
-        scope_element_guid=perspective_guid, actor_guid=question_guid, body=body
+    client.classification_manager.add_scope_to_element(
+        scoped_by_guid=perspective_guid, element_guid=question_guid, body=body
     )
-    logger.success(f"Linked Perspective {perspective_guid} → Question {question_guid}")
+    logger.success(f"Linked Perspective {perspective_guid} → Question {question_guid} (ScopedBy)")
 
 
 def _migrate_format_set(client: EgeriaTech, label: str, format_set, dry_run: bool) -> None:

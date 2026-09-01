@@ -50,6 +50,7 @@ __all__ = [
     "feedback_summary",
     "usage_context_counts",
     "contextualised_coverage",
+    "solution_component_realisation",
     "karma_leaderboard",
     "engagement_series",
     "orphan_glossary_terms",
@@ -1153,6 +1154,63 @@ def contextualised_coverage(mgr, ce, as_of: Optional[str] = None) -> Dict[str, O
         "contextualisedCount": contextualised_count,
         "assetTotal": asset_total or None,
         "contextualisedPct": pct,
+    }
+
+
+def solution_component_realisation(mgr, ce, as_of: Optional[str] = None) -> Dict[str, Optional[int]]:
+    """
+    SolutionComponent count and how many of them are "realised" (have at
+    least one concrete implementation) -- Overview dashboard's Solution
+    Blueprints drill-down panel, whose secondary stats ("components",
+    "realised by") were hardcoded placeholder dashes (drillLivePatch only
+    ever overlaid the headline blueprint count, stats[0]).
+
+    `solutionComponentsTotal` is a plain native count (count_elements,
+    same cost class as usage_context_counts' blueprint/ISC counts).
+    `solutionComponentsRealised` reuses the exact ImplementedBy relationship
+    fetch contextualised_coverage already makes (model 0737, Solution
+    Implementation) -- that function counts distinct Asset-subtype end2
+    GUIDs; this one counts distinct SolutionComponent end1 GUIDs from the
+    same relationship instead, i.e. how many components have >=1 real
+    implementation rather than how many assets got *some* context. Two
+    independent relationship fetches (this function does not share
+    contextualised_coverage's already-fetched list), same as every other
+    metric function in this module -- consistent with the codebase's
+    one-function-one-fetch convention, at the cost of one duplicate
+    ImplementedBy fetch when both are called together (as the Usage Context
+    endpoint does).
+
+    Honesty note: a component with an ImplementedBy link has *a* concrete
+    implementation, not necessarily one that itself participates in the
+    ISC/blueprint the component is drawn from -- same single-hop proxy
+    tradeoff as contextualised_coverage's own docstring.
+
+    Returns {"solutionComponentsTotal": int|None, "solutionComponentsRealised":
+    int|None}. Either field is None on total failure for its own step (never
+    raises).
+    """
+    total = count_elements(mgr, "SolutionComponent", as_of)
+
+    realised_count = None
+    try:
+        rel_body = {"class": "ResultsRequestBody", "asOfTime": as_of} if as_of else None
+        rels = _json_list(ce.get_relationships(
+            relationship_type="ImplementedBy", output_format="JSON",
+            start_from=0, page_size=max_paging_size, body=rel_body))
+        component_guids: set = set()
+        for r in rels:
+            end1 = (r.get("end1") or {}) if isinstance(r, dict) else {}
+            end1_type = end1.get("type") or {}
+            type_names = {end1_type.get("typeName")} | set(end1_type.get("superTypeNames") or [])
+            if "SolutionComponent" in type_names and end1.get("guid"):
+                component_guids.add(end1["guid"])
+        realised_count = len(component_guids)
+    except Exception as exc:  # noqa: BLE001
+        logger.debug(f"solution_component_realisation: ImplementedBy query failed: {exc}")
+
+    return {
+        "solutionComponentsTotal": total or None,
+        "solutionComponentsRealised": realised_count,
     }
 
 

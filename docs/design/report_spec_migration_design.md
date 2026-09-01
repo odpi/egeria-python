@@ -1,10 +1,31 @@
 # Design: Migrating Report Specs to Egeria
 
-**Status:** Design decisions captured — ready for Phase 1 planning  
+**Status:** Phase 1 (§6) shipped and complete — see "Migration status" below.
+Phase 2 (`formats`/`action`/`target_type`/`family`) not started.  
 **Date:** 2026-05-17  
 **Context:** `pyegeria/view/base_report_formats.py` currently holds all report specs (FormatSet objects)
 as Python/JSON. Goal is to make Egeria the source of truth for the metadata portions — starting with
 `question_spec` — while keeping file-based specs for formats and action wiring.
+
+## Migration status
+
+**Phase 1 complete 2026-05-18**, commit `6c946af` ("Question Spec migration:
+Egeria as system of record for report question metadata") — everything in
+§6's "What we build" landed in that single commit: all four Dr.Egeria
+commands, `load_egeria_report_specs()` with its TTL cache, the CLI/MCP
+wiring, and the bootstrap tooling (`generate_question_spec_markdown.py`,
+`migrate_question_specs.py`, the 74-file `sample-data/question-spec-install/`
+corpus). §7's migration plan (D3) was carried out fully in that same
+commit — all 74 `question_spec=[...]` blocks (999 lines) were removed from
+`base_report_formats.py`; Egeria has been the sole system of record since,
+with no file-based fallback. Re-verified 2026-08-28: no reversion, no open
+`PYEGERIA_ISSUES.md` entries against it — the only later commits touching
+`base_report_formats.py` (a README pass, an unrelated ISSUE-67 lint/dead-code
+cleanup) don't reintroduce file-based question specs.
+
+Phase 2 (§6 "What we defer") — migrating `formats`, `action`, `target_type`,
+and `family` off the file, plus `refresh_specs --push` — has not been
+started.
 
 ---
 

@@ -9,10 +9,12 @@ jobs:
   test:
     name: Run Tests
     runs-on: ubuntu-latest
+    permissions:
+      contents: read # Only checks out and reads the repo -- no write access needed.
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4
       - name: Install uv
-        uses: astral-sh/setup-uv@v3
+        uses: astral-sh/setup-uv@caf0cab7a618c569241d31dcd442f54681755d39 # v3
       - name: Set up Python
         # Pinned explicitly: a bare `uv python install` grabs whatever's
         # newest at run time. Confirmed 2026-08-19: it silently picked up
@@ -54,21 +56,28 @@ jobs:
       id-token: write # Required for OIDC trusted publishing
       contents: write # Required to create GitHub Release
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4
         with:
           fetch-depth: 0
 
       - name: Install uv
-        uses: astral-sh/setup-uv@v3
+        uses: astral-sh/setup-uv@caf0cab7a618c569241d31dcd442f54681755d39 # v3
 
       - name: Build package
         run: uv build
 
       - name: Publish to PyPI
-        uses: pypa/gh-action-pypi-publish@release/v1
+        # release/v1 is a floating branch, not a tag -- pypa's own convention
+        # for this action's "stable" channel, updated more often than a
+        # versioned release. Pinned to its tip as of 2026-08-29; Dependabot
+        # (see .github/dependabot.yml) will open a PR to re-pin as it moves.
+        uses: pypa/gh-action-pypi-publish@dc37677b2e1c63e2034f94d8a5b11f265b73ba33 # release/v1
+        # attestations: true is the action's own default (PEP 740, via
+        # Trusted Publishing -- already in effect here through id-token:
+        # write above) -- no extra input needed for Signed-Releases.
 
       - name: Create GitHub Release
-        uses: softprops/action-gh-release@v1
+        uses: softprops/action-gh-release@de2c0eb89ae2a093876385947365aca7b0e5f844 # v1
         with:
           files: dist/*
           generate_release_notes: true
