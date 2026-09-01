@@ -18,7 +18,8 @@ class EditRolesScreen(ModalScreen):
 
     BINDINGS = [
         ("escape", "exit_screen", "Exit"),
-        ("d", "delete_row", "Delete Row")
+        ("ctrl+a", "add_role", "Add Role"),
+        ("ctrl+d", "delete_role", "Delete Role"),
     ]
 
     def __init__(self, columns, rows_with_keys, *args, **kwargs):
@@ -75,7 +76,7 @@ class EditRolesScreen(ModalScreen):
             rows_with_keys.append((row_key.value, self.my_roles_table.get_row(row_key)))
         self.dismiss(rows_with_keys)
 
-    def action_delete_row(self):
+    def action_delete_role(self):
         """ The user has selected the delete row option """
         self.log(f"Delete row selected, row key: {self.row_key}")
         # If there is a row selected, delete it and clear the row key variable
@@ -89,3 +90,9 @@ class EditRolesScreen(ModalScreen):
         else:
             self.roles_container.mount(Static("Please select a row to delete prior to using the hot key!"))
             self.roles_container.refresh(layout=True)
+
+    def action_add_role(self):
+        """ The user has selected the add role option """
+        self.log("Add role selected")
+        self.roles_container.mount(Static("Add role functionality not yet implemented!"))
+        self.roles_container.refresh(layout=True)

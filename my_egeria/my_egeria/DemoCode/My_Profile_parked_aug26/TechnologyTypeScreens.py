@@ -15,7 +15,7 @@ from textual.app import ComposeResult
 from textual.containers import ScrollableContainer, Container
 from textual.css.query import NoMatches
 from textual.screen import ModalScreen
-from textual.widgets import Header, Static, OptionList, Button, Footer, Input, Tree, TextArea
+from textual.widgets import Header, Static, OptionList, Button, Footer, Input, TextArea, Tree
 from textual.widgets._option_list import Option
 
 
@@ -28,30 +28,23 @@ class TechnologyTypeOptionsScreen(ModalScreen):
 
     CSS_PATH = "my_profile.tcss"
 
-    def __init__(
-        self,
-        tech_type_guid: str | None = None,
-        tech_type_name: str | None = None,
-        tech_type_description: str | None = None,
-        user_name: str | None = None,
-        user_pwd: str | None = None,
-        user_kpts: int | None = None,
-        tech_type_templates: list[dict] | None = None,
-        tech_type_processes: list[dict] | None = None,
-        *args,
-        **kwargs,
-    ) -> None:
+    def __init__(self, tech_type_guid: str,
+                       tech_type_name: str,
+                       tech_type_description: str,
+                       user_name: str,
+                       user_pwd:str,
+                       user_kpts: int,
+                       tech_type_templates: list[dict],
+                       tech_type_processes: list[dict]) -> None:
         """Initialize the TechnologyTypeOptions screen with a technology type's templates and processes."""
-        super().__init__(*args, **kwargs)
-        load_app_config()
-        app_user = settings.User_Profile
+        super().__init__()
         self.selected_process_index = None
         self.tech_type_guid = tech_type_guid
-        self.tech_type_name = tech_type_name or ""
-        self.tech_type_description = tech_type_description or ""
-        self.user_name = user_name or app_user.user_name or "garygeeke"
-        self.user_password = user_pwd or app_user.user_pwd or "secret"
-        self.karma_points = user_kpts if user_kpts is not None else 0
+        self.tech_type_name = tech_type_name
+        self.tech_type_description = tech_type_description
+        self.user_name = user_name
+        self.user_password = user_pwd
+        self.karma_points = user_kpts
         self.tech_type_templates = tech_type_templates
         self.tech_type_processes = tech_type_processes
         self.selected_template_guid = None
@@ -62,6 +55,14 @@ class TechnologyTypeOptionsScreen(ModalScreen):
         self.selected_template_data = None
         self.selected_process = None
         self.selected_process_data = None
+
+        load_app_config("config/config.json")
+        app_config = settings.Environment
+        app_user = settings.User_Profile
+
+        if not self.user_name:
+            self.user_name = app_user.user_name or "garygeeke"
+            self.user_password = app_user.user_pwd or "secret"
 
     def compose(self) -> ComposeResult:
 
@@ -259,6 +260,7 @@ class TechnologyTypeOptionsScreen(ModalScreen):
         self.log(f"Process option selected: {self.selected_process}")
         self.dismiss(["process", self.selected_process])
 
+
 class TechnologyTypeProcessesScreen(ModalScreen[Any]):
     """Modal screen to display technology type processes in Egeria."""
     BINDINGS = [("q", "quit", "Quit"),
@@ -267,24 +269,19 @@ class TechnologyTypeProcessesScreen(ModalScreen[Any]):
 
     CSS_PATH = "my_profile.tcss"
 
-    def __init__(
-        self,
-        user_name: str | None = None,
-        user_kpts: int | None = None,
-        tech_type_name: str = "",
-        tech_type_description: str = "",
-        selected_t_option: str = "",
-        tech_type_option_selected: str = "",
-        tech_type_processes: list[dict] | None = None,
-        *args,
-        **kwargs,
-    ) -> None:
+    def __init__ (self,
+                  user_name: str,
+                  user_kpts: int,
+                  tech_type_name: str,
+                  tech_type_description: str,
+                  selected_t_option,
+                  tech_type_option_selected,
+                  tech_type_processes
+                  ) -> None:
         """Initialize the TechnologyTypeProcesses screen."""
-        super().__init__(*args, **kwargs)
-        load_app_config()
-        app_user = settings.User_Profile
-        self.user_name = user_name or app_user.user_name or "garygeeke"
-        self.karma_points = user_kpts if user_kpts is not None else 0
+        super().__init__()
+        self.user_name = user_name
+        self.karma_points = user_kpts
         self.tech_type_name = tech_type_name
         self.tech_type_description = tech_type_description
         self.selected_t_option = selected_t_option
@@ -292,6 +289,7 @@ class TechnologyTypeProcessesScreen(ModalScreen[Any]):
         self.tech_type_processes = tech_type_processes
         self.full_process = None
         self.selected_process = None
+        load_app_config()
 
     async def on_mount(self) -> None:
         """ On Mount function of the Technology_Type_Templatess screen."""
@@ -408,24 +406,13 @@ class TechnologyTypesScreen(ModalScreen):
 
     CSS_PATH = "my_profile.tcss"
 
-    def __init__(
-        self,
-        ttlist: list | None = None,
-        user_name: str | None = None,
-        user_pwd: str | None = None,
-        user_kpts: int | None = None,
-        *args,
-        **kwargs,
-    ):
+    def __init__(self, ttlist, user_name, user_pwd, user_kpts):
         """Initialize the TechnologyTypes screen with a list of technology types."""
-        super().__init__(*args, **kwargs)
-        load_app_config()
-        app_config = settings.Environment
-        app_user = settings.User_Profile
+        super().__init__()
         self.tech_type_list = ttlist
-        self.user_name = user_name or app_user.user_name or "garygeeke"
-        self.user_password = user_pwd or app_user.user_pwd or "secret"
-        self.karma_points = user_kpts if user_kpts is not None else 0
+        self.user_name = user_name
+        self.user_password = user_pwd
+        self.karma_points = user_kpts
         self.tech_type_tree: Tree[str] = Tree(label="Technology Types", id="technology_types_tree")
         self.tech_type_tree.root.expand()
         self.tech_type_tree.auto_expand = True
@@ -433,6 +420,12 @@ class TechnologyTypesScreen(ModalScreen):
         self.selected_t_node_label = None
         self.node_id = None
         self.node_status = "expanded"
+        load_app_config()
+        app_config = settings.Environment
+        app_user = settings.User_Profile
+        # config_logging()
+        self.user_name = app_user.user_name or "garygeeke"
+        self.user_password = app_user.user_pwd or "secret"
 
     def on_mount(self) -> None:
         self.title = f"User: {self.user_name}"
@@ -545,24 +538,19 @@ class TechnologyTypeTemplatesScreen(ModalScreen[Any]):
 
     CSS_PATH = "my_profile.tcss"
 
-    def __init__(
-        self,
-        user_name: str | None = None,
-        user_kpts: int | None = None,
-        tech_type_name: str = "",
-        tech_type_description: str = "",
-        selected_t_option: str = "",
-        tech_type_option_selected: str = "",
-        tech_type_templates: list[dict] | None = None,
-        *args,
-        **kwargs,
-    ) -> None:
-        """Initialize the Technology_Type_Templates screen."""
-        super().__init__(*args, **kwargs)
-        load_app_config()
-        app_user = settings.User_Profile
-        self.user_name = user_name or app_user.user_name or "garygeeke"
-        self.karma_points = user_kpts if user_kpts is not None else 0
+    def __init__ (self,
+                  user_name: str,
+                  user_kpts: int,
+                  tech_type_name: str,
+                  tech_type_description: str,
+                  selected_t_option,
+                  tech_type_option_selected,
+                  tech_type_templates
+                  ) -> None:
+        """Initialize the Technology_Type_Templatess screen."""
+        super().__init__()
+        self.user_name = user_name
+        self.karma_points = user_kpts
         self.tech_type_name = tech_type_name
         self.tech_type_description = tech_type_description
         self.selected_t_option = selected_t_option
@@ -570,6 +558,7 @@ class TechnologyTypeTemplatesScreen(ModalScreen[Any]):
         self.tech_type_templates = tech_type_templates
         self.full_template = None
         self.selected_t_template = None
+        load_app_config()
 
     async def on_mount(self) -> None:
         """ On Mount function of the Technology_Type_Templatess screen."""
