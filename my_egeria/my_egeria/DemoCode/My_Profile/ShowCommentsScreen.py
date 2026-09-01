@@ -13,7 +13,7 @@ from textual.css.query import NoMatches
 from textual.screen import ModalScreen
 from textual.widgets import DataTable, Header, Static, Footer, Input, Button
 
-from pyegeria import PyegeriaException, EgeriaTech, exec_report_spec
+from pyegeria import PyegeriaException, EgeriaTech, exec_report_spec, load_app_config, settings
 
 
 class ShowCommentsScreen(ModalScreen):
@@ -26,14 +26,30 @@ class ShowCommentsScreen(ModalScreen):
 
     CSS_PATH = "my_profile.tcss"
 
-    def __init__(self, table_name, table_row, view_server, platfgorm_url, user_name, user_password, *args, **kwargs):
+    def __init__(
+        self,
+        table_name: str | None = None,
+        table_row: Any = None,
+        view_server: str | None = None,
+        platform_url: str | None = None,
+        user_name: str | None = None,
+        user_password: str | None = None,
+        platfgorm_url: str | None = None,
+        *args,
+        **kwargs,
+    ):
         super().__init__(*args, **kwargs)
+        load_app_config()
+        app_config = settings.Environment
+        app_user = settings.User_Profile
         self.table = table_name
         self.row = table_row
-        self.view_server = view_server
-        self.platform_url = platfgorm_url
-        self.user_name = user_name
-        self.user_password = user_password
+        self.view_server = view_server or app_config.egeria_view_server or "qs-view-server"
+        self.platform_url = (
+            platform_url or platfgorm_url or kwargs.get("platfgorm_url") or app_config.egeria_platform_url or "https://127.0.0.1:9443"
+        )
+        self.user_name = user_name or app_user.user_name or "garygeeke"
+        self.user_password = user_password or app_user.user_pwd or "secret"
         self.selected_row = ""
         self.comment_text = ""
         self.comment_type = ""
@@ -51,9 +67,15 @@ class ShowCommentsScreen(ModalScreen):
             self.notify(f"Accessing backend system with identifier: {backend_id}")
             self.backend_id = backend_id
             try:
-                comments_list = exec_report_spec(format_set_name="Comment-by-Element",
-                                                       output_format="DICT",
-                                                       params={"element_guid" : backend_id,})
+                comments_list = exec_report_spec(
+                    format_set_name="Comment-by-Element",
+                    output_format="DICT",
+                    params={"element_guid": backend_id},
+                    view_server=self.view_server,
+                    view_url=self.platform_url,
+                    user=self.user_name,
+                    user_pass=self.user_password,
+                )
                 self.log(f"comments_list: {comments_list}")
 
                 if isinstance(comments_list, dict):

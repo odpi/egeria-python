@@ -21,7 +21,7 @@ if str(current_dir) not in sys.path:
 from textual import on
 from textual.widgets import DataTable, Static
 from textual.containers import ScrollableContainer
-from pyegeria import exec_report_spec, PyegeriaException, print_basic_exception
+from pyegeria import exec_report_spec, PyegeriaException, print_basic_exception, load_app_config, settings
 from MyTeamScreen import MyTeam
 from ShopForDataScreen import ShopForDataScreen
 from StatusScreen import StatusScreen
@@ -29,6 +29,20 @@ from StatusScreen import StatusScreen
 
 class TeamRolesMixin:
     """Mixin class providing Team and Roles interactions for MyProfileApp."""
+
+    def __init__(self, *args, **kwargs) -> None:
+        try:
+            super().__init__(*args, **kwargs)
+        except Exception:
+            pass
+        load_app_config()
+        app_config = settings.Environment
+        app_user = settings.User_Profile
+        if not hasattr(self, "user_name") or not self.user_name:
+            self.user_name = app_user.user_name or "garygeeke"
+            self.user_password = app_user.user_pwd or "secret"
+            self.view_server = app_config.egeria_view_server or "qs-view-server"
+            self.platform_url = app_config.egeria_platform_url or "https://127.0.0.1:9443"
 
     @on(DataTable.RowSelected, "#roles_table")
     def handle_roles_table_row_selection(self, event: DataTable.RowSelected) -> Any:
@@ -86,7 +100,10 @@ class TeamRolesMixin:
         self.log(f"team_members: {self.team_members}")
         self.log(f"team_properties: {team_properties}")
         self.log(f"User name: {self.user_name}")
-        self.push_screen(MyTeam(self.team_members, team_properties, self.user_name), callback=self.my_team_callback)
+        self.push_screen(
+            MyTeam(my_team=self.team_members, my_team_properties=team_properties, leader_name=self.user_name),
+            callback=self.my_team_callback,
+        )
 
     def find_team_members(self, role_name: str) -> list[Any]:
         """Common routine for finding team members given a role name.
@@ -167,24 +184,9 @@ class TeamRolesMixin:
             self.log("Search for term screen completed successfully")
             self._show_main_screen()
         elif status == 201:
-            glossary_table = self.query_one("g#glossary_table", DataTable)
-            digital_product_catalog_table = self.query_one("d#digital_product_catalog_table", DataTable)
-            data_dictionary_table = self.query_one("d#data_dictionary_table", DataTable)
-            business_domain_table = self.query_one("b#business_domain_table", DataTable)
-            data_specification_table = self.query_one("d#data_specification_table", DataTable)
             self.log("No matches found for search term")
             self.push_screen(
-                ShopForDataScreen(
-                    glossary_table,
-                    digital_product_catalog_table,
-                    data_dictionary_table,
-                    business_domain_table,
-                    data_specification_table,
-                    self.user_name,
-                    self.user_password,
-                    self.view_server,
-                    self.platform_url,
-                ),
+                ShopForDataScreen(),
                 callback=self.shop_for_data_callback,
             )
         else:

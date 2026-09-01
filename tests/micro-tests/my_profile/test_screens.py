@@ -280,6 +280,30 @@ class TestEditElementsScreens:
             await pilot.pause()
             assert app.dismissed_result is not None
 
+    @pytest.mark.asyncio
+    @pytest.mark.parametrize(
+        "screen_cls",
+        [
+            EditIdentitiesScreen,
+            EditCommunitiesScreen,
+            EditRolesScreen,
+            EditTeamsScreen,
+            EditProjectsScreen,
+            EditTodosScreen,
+            EditBlogsScreen,
+            EditJournalScreen,
+            EditAssociationsScreen,
+        ],
+    )
+    async def test_edit_screens_query_one_source_table(self, screen_cls):
+        """Verify edit screens query the source table from main screen when instantiated without args."""
+        app = ScreenTestHostApp(lambda: screen_cls())
+        async with app.run_test() as pilot:
+            assert app.target_screen is not None
+            app.target_screen.action_exit_screen()
+            await pilot.pause()
+            assert app.dismissed_result is not None
+
 
 class TestTechnologyTypeScreens:
     """Tests for TechnologyTypeScreens."""
@@ -291,12 +315,26 @@ class TestTechnologyTypeScreens:
             assert app.target_screen is not None
 
     @pytest.mark.asyncio
+    async def test_tech_types_screen_default_config(self):
+        app = ScreenTestHostApp(lambda: TechnologyTypesScreen())
+        async with app.run_test() as pilot:
+            assert app.target_screen is not None
+            assert app.target_screen.user_name is not None
+
+    @pytest.mark.asyncio
     async def test_tech_type_options_screen(self):
         templates = [{"displayName": "Tmpl1", "Catalog Template Name": "Tmpl1"}]
         processes = [{"displayName": "Proc1"}]
         app = ScreenTestHostApp(lambda: TechnologyTypeOptionsScreen("guid-1", "PostgreSQL", "DB", "user", "pwd", 100, templates, processes))
         async with app.run_test() as pilot:
             assert app.target_screen is not None
+
+    @pytest.mark.asyncio
+    async def test_tech_type_options_screen_default_config(self):
+        app = ScreenTestHostApp(lambda: TechnologyTypeOptionsScreen())
+        async with app.run_test() as pilot:
+            assert app.target_screen is not None
+            assert app.target_screen.user_name is not None
 
     @pytest.mark.asyncio
     async def test_tech_type_templates_screen(self):
@@ -306,9 +344,21 @@ class TestTechnologyTypeScreens:
             assert app.target_screen is not None
 
     @pytest.mark.asyncio
+    async def test_tech_type_templates_screen_default_config(self):
+        app = ScreenTestHostApp(lambda: TechnologyTypeTemplatesScreen())
+        async with app.run_test() as pilot:
+            assert app.target_screen is not None
+
+    @pytest.mark.asyncio
     async def test_tech_type_processes_screen(self):
         processes = [{"displayName": "Proc1", "additionalProperties": {"templateGUID": "tmpl-1"}}]
         app = ScreenTestHostApp(lambda: TechnologyTypeProcessesScreen("user", 100, "PostgreSQL", "DB", "process", "Proc1", processes))
+        async with app.run_test() as pilot:
+            assert app.target_screen is not None
+
+    @pytest.mark.asyncio
+    async def test_tech_type_processes_screen_default_config(self):
+        app = ScreenTestHostApp(lambda: TechnologyTypeProcessesScreen())
         async with app.run_test() as pilot:
             assert app.target_screen is not None
 
@@ -326,6 +376,14 @@ class TestShopForDataAndOverviewScreens:
             assert app.dismissed_result == 210
 
     @pytest.mark.asyncio
+    async def test_selection_overview_screen_default_config(self):
+        app = ScreenTestHostApp(lambda: SelectionOverviewScreen())
+        async with app.run_test() as pilot:
+            app.target_screen.action_quit()
+            await pilot.pause()
+            assert app.dismissed_result == 210
+
+    @pytest.mark.asyncio
     async def test_shop_for_data_screen(self):
         t1 = DataTable(id="glossary_table")
         t2 = DataTable(id="digital_product_catalog_table")
@@ -333,6 +391,14 @@ class TestShopForDataAndOverviewScreens:
         t4 = DataTable(id="business_domain_table")
         t5 = DataTable(id="data_specification_table")
         app = ScreenTestHostApp(lambda: ShopForDataScreen(t1, t2, t3, t4, t5, "user", "pwd", "view-server", "https://url"))
+        async with app.run_test() as pilot:
+            app.target_screen.action_quit()
+            await pilot.pause()
+            assert app.dismissed_result == [210]
+
+    @pytest.mark.asyncio
+    async def test_shop_for_data_screen_default_config(self):
+        app = ScreenTestHostApp(lambda: ShopForDataScreen())
         async with app.run_test() as pilot:
             app.target_screen.action_quit()
             await pilot.pause()

@@ -257,14 +257,15 @@ class DummyShopForDataApp(ShopForDataMixin):
 class TestShopForDataSamplingIntegration:
     """Integration tests for launching GenericDataViewScreen from shop_for_data_handler."""
 
-    def test_request_to_sample_data_source_launches_screen(self):
+    @pytest.mark.asyncio
+    async def test_request_to_sample_data_source_launches_screen(self):
         app = DummyShopForDataApp()
         mock_table = MagicMock()
         mock_table.get_row.return_value = ["Product 1", "Product Description", "DP::Product1"]
         mock_table.row_count = 1
         app.widgets["#digital_product_catalog_table"] = mock_table
 
-        app.request_to_sample_data_source("row1", 0, "digital_product_catalog_table")
+        await app.request_to_sample_data_source("row1", 0, "digital_product_catalog_table")
 
         assert len(app.pushed_screens) == 1
         screen, cb = app.pushed_screens[0]
@@ -272,6 +273,43 @@ class TestShopForDataSamplingIntegration:
         assert screen.data_element_name == "Product 1"
         assert screen.data_element_qualified_name == "DP::Product1"
         assert cb == app.generic_data_view_callback
+
+    @pytest.mark.asyncio
+    async def test_request_to_sample_data_source_with_passed_row_values(self):
+        app = DummyShopForDataApp()
+        row_values = ["Direct Product", "Direct Desc", "DP::Direct::1"]
+        await app.request_to_sample_data_source("row1", 0, "digital_product_catalog_table", row_values=row_values)
+
+        assert len(app.pushed_screens) == 1
+        screen, cb = app.pushed_screens[0]
+        assert isinstance(screen, GenericDataViewScreen)
+        assert screen.data_element_name == "Direct Product"
+        assert screen.data_element_qualified_name == "DP::Direct::1"
+        assert cb == app.generic_data_view_callback
+
+    def test_parse_tabular_data_set_report(self):
+        sample_report = {
+            "tabularDataSetReport": {
+                "recordCount": 2,
+                "tableName": "TestTable",
+                "columnDescriptions": [
+                    {"columnName": "ID"},
+                    {"columnName": "Value"},
+                    {"columnName": "Description"},
+                ],
+                "dataRecords": {
+                    "0": ["REC-1", "Val-1", "Desc-1"],
+                    "1": ["REC-2", "Val-2", "Desc-2"],
+                },
+            }
+        }
+        rows = GenericDataViewScreen.parse_sample_data(sample_report, max_rows=10)
+        assert len(rows) == 2
+        assert rows[0][0] == "REC-1"
+        assert "Value: Val-1" in rows[0][1]
+        assert "Description: Desc-1" in rows[0][1]
+        assert rows[1][0] == "REC-2"
+        assert "Value: Val-2" in rows[1][1]
 
     @pytest.mark.asyncio
     @patch("shop_for_data_handler.ProductManager")
@@ -289,3 +327,55 @@ class TestShopForDataSamplingIntegration:
         app = DummyShopForDataApp()
         await app.generic_data_view_callback(210)
         assert app.shown_main_screen is True
+
+    @pytest.mark.asyncio
+    @patch("shop_for_data_handler.Egeria")
+    async def test_request_to_sample_data_source_with_egeria_tabular_data(self, mock_egeria_cls):
+        mock_egeria = MagicMock()
+        mock_egeria_cls.return_value = mock_egeria
+        mock_egeria.find_tabular_data_sets.return_value = [{"GUID": "guid-123"}]
+        mock_egeria.get_tabular_data_set.return_value = {
+            "tabularDataSetReport": {
+                "recordCount": 1,
+                "tableName": "SampleTabular",
+                "columnDescriptions": [{"columnName": "Col1"}, {"columnName": "Col2"}],
+                "dataRecords": {"0": ["V1", "V2"]},
+            }
+        }
+
+        app = DummyShopForDataApp()
+        row_values = ["Tabular Prod", "Tabular Desc", "DP::Tabular::1"]
+        await app.request_to_sample_data_source("row1", 0, "digital_product_catalog_table", row_values=row_values)
+
+        assert len(app.pushed_screens) == 1
+        screen, cb = app.pushed_screens[0]
+        assert isinstance(screen, GenericDataViewScreen)
+        assert screen.sample_data["tabularDataSetReport"]["tableName"] == "SampleTabular"
+
+    @pytest.mark.asyncio
+    async def test_request_to_sample_data_source_placeholder_notifies(self):
+        app = DummyShopForDataApp()
+        app.handle_shop_for_data_option = AsyncMock()
+        row_values = ["No digital product catalogs found", "No data returned from Egeria", ""]
+        await app.request_to_sample_data_source("row1", 0, "digital_product_catalog_table", row_values=row_values)
+
+        assert len(app.pushed_screens) == 0
+        assert any("No data element selected" in msg for msg in app.log_messages)
+        app.handle_shop_for_data_option.assert_awaited_once()
+
+    @pytest.mark.asyncio
+    async def test_shop_for_data_screen_action_sample_data_source(self):
+        mock_table = DataTable(id="digital_product_catalog_table")
+        screen = ShopForDataScreen(digital_product_catalog_table=mock_table)
+        screen.dismiss = MagicMock()
+        screen.data_table_highlighted = "digital_product_catalog_table"
+        screen.row_highlighted = "r1"
+        screen.cursor_row_highlighted = 0
+
+        screen.action_sample_data_source()
+        screen.dismiss.assert_called_once()
+        args = screen.dismiss.call_args[0][0]
+        assert args[0] == 212
+        assert args[1] == "r1"
+        assert args[2] == 0
+        assert args[3] == "digital_product_catalog_table"

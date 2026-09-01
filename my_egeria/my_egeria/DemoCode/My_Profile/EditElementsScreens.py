@@ -14,7 +14,7 @@ from textual.css.query import NoMatches
 from textual.screen import ModalScreen
 from textual.widgets import Header, Footer, DataTable, Static, Placeholder, Input, Button
 
-from pyegeria import PyegeriaException, Egeria, load_app_config
+from pyegeria import PyegeriaException, Egeria, load_app_config, settings
 
 
 class ConfirmDeleteScreen(ModalScreen[bool]):
@@ -130,6 +130,25 @@ class BaseEditScreen(ModalScreen):
     async def on_mount(self) -> None:
         self.title = "Egeria - my_profile"
         self.sub_title = self.TITLE_TEXT
+
+        if (not self.columns or not self.rows_with_keys) and self.SOURCE_TABLE:
+            try:
+                main_table = None
+                try:
+                    main_screen = self.app.get_screen("main")
+                    main_table = main_screen.query_one(f"#{self.SOURCE_TABLE}", DataTable)
+                except Exception:
+                    try:
+                        main_table = self.app.query_one(f"#{self.SOURCE_TABLE}", DataTable)
+                    except Exception:
+                        main_table = None
+                if main_table is not None:
+                    if not self.columns:
+                        self.columns = [col.label.plain for col in main_table.columns.values()]
+                    if not self.rows_with_keys:
+                        self.rows_with_keys = [(row_key.value, main_table.get_row(row_key)) for row_key in main_table.rows]
+            except Exception as e:
+                self.log(f"Error querying source table #{self.SOURCE_TABLE}: {e}")
 
         self.table.clear(columns=True)
         if self.columns:
@@ -341,33 +360,50 @@ class EditProfileScreen(ModalScreen[Any]):
 
     CSS_PATH = "my_profile.tcss"
 
-    def __init__(self, user,
-                        password,
-                        view_server,
-                        platform_url,
-                        karma_points,
-                        user_profile,
-                        user_GUID
-                 ):
-        super().__init__(id="edit_profile_screen")
+    def __init__(
+        self,
+        user: str | None = None,
+        password: str | None = None,
+        view_server: str | None = None,
+        platform_url: str | None = None,
+        karma_points: int | None = None,
+        user_profile: dict | None = None,
+        user_GUID: str | None = None,
+        *args,
+        **kwargs,
+    ):
+        super().__init__(id="edit_profile_screen", *args, **kwargs)
         load_app_config()
-        self.user_name = user
-        self.user_password = password
-        self.view_server = view_server
-        self.platform_url = platform_url
-        self.karma_points = karma_points
-        self.user_profile = user_profile
-        self.user_GUID = user_GUID
+        app_config = settings.Environment
+        app_user = settings.User_Profile
+        self.user_name = user or app_user.user_name or "garygeeke"
+        self.user_password = password or app_user.user_pwd or "secret"
+        self.view_server = view_server or app_config.egeria_view_server or "qs-view-server"
+        self.platform_url = platform_url or app_config.egeria_platform_url or "https://127.0.0.1:9443"
+        self.karma_points = karma_points if karma_points is not None else 0
+        self.user_profile = user_profile or {}
+        self.user_GUID = user_GUID or ""
         print("Platform:", self.platform_url)
         print("View Server:", self.view_server)
 
     def on_mount(self) -> None:
+        if not self.user_profile and hasattr(self, "app"):
+            self.user_profile = getattr(self.app, "user_profile", {})
+        if not self.user_GUID and hasattr(self, "app"):
+            self.user_GUID = getattr(self.app, "user_GUID", "")
+        if self.karma_points == 0 and hasattr(self, "app"):
+            self.karma_points = getattr(self.app, "karma_points", 0)
         self.title = f"User: {self.user_name}, Karma Points: {self.karma_points}"
         self.sub_title = f"Edit Egeria Profile for user: {self.user_name}"
         # retrieve person profile details
 
-
     def compose(self) -> ComposeResult:
+        if not self.user_profile and hasattr(self, "app"):
+            self.user_profile = getattr(self.app, "user_profile", {})
+        if not self.user_GUID and hasattr(self, "app"):
+            self.user_GUID = getattr(self.app, "user_GUID", "")
+        if self.karma_points == 0 and hasattr(self, "app"):
+            self.karma_points = getattr(self.app, "karma_points", 0)
         self.job_title = str(self.user_profile.get("jobTitle", self.user_profile.get("Job Title", "")))
         self.log(f"Job Title: {self.job_title}")
         self.given_names = str(self.user_profile.get("givenNames", ""))

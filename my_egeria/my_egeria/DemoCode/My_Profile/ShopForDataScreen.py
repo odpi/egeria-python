@@ -6,6 +6,7 @@
 
 """
 
+from pyegeria import load_app_config, settings
 from textual import on
 from textual.app import ComposeResult
 from textual.containers import ScrollableContainer
@@ -22,22 +23,50 @@ class ShopForDataScreen(Screen):
 
     CSS_PATH = "my_profile.tcss"
 
-    def __init__ (self, glossary_table, digital_product_catalog_table, data_dictionary_table, business_domain_table, root_collection_table,
-                  user_name, user_password, view_server, platform_url):
+    def __init__(
+        self,
+        glossary_table: DataTable | None = None,
+        digital_product_catalog_table: DataTable | None = None,
+        data_dictionary_table: DataTable | None = None,
+        business_domain_table: DataTable | None = None,
+        root_collection_table: DataTable | None = None,
+        user_name: str | None = None,
+        user_password: str | None = None,
+        view_server: str | None = None,
+        platform_url: str | None = None,
+        data_specification_table: DataTable | None = None,
+        *args,
+        **kwargs,
+    ):
         """Initialize the ShopForDataScreen screen."""
-        self.glossary_table: DataTable = glossary_table
-        self.digital_product_catalog_table: DataTable = digital_product_catalog_table
-        self.data_dictionary_table: DataTable = data_dictionary_table
-        self.business_domain_table: DataTable = business_domain_table
-        self.root_collection_table: DataTable = root_collection_table
-        self.user_name = user_name
-        self.user_password = user_password
-        self.view_server = view_server
-        self.platform_url = platform_url
+        super().__init__(*args, **kwargs)
+        load_app_config()
+        app_config = settings.Environment
+        app_user = settings.User_Profile
+        self.user_name = user_name or app_user.user_name or "garygeeke"
+        self.user_password = user_password or app_user.user_pwd or "secret"
+        self.view_server = view_server or app_config.egeria_view_server or "qs-view-server"
+        self.platform_url = platform_url or app_config.egeria_platform_url or "https://127.0.0.1:9443"
+
+        self.glossary_table: DataTable = glossary_table if glossary_table is not None else DataTable(id="glossary_table")
+        self.digital_product_catalog_table: DataTable = (
+            digital_product_catalog_table if digital_product_catalog_table is not None else DataTable(id="digital_product_catalog_table")
+        )
+        self.data_dictionary_table: DataTable = (
+            data_dictionary_table if data_dictionary_table is not None else DataTable(id="data_dictionary_table")
+        )
+        self.business_domain_table: DataTable = (
+            business_domain_table if business_domain_table is not None else DataTable(id="business_domain_table")
+        )
+        self.root_collection_table: DataTable = (
+            root_collection_table if root_collection_table is not None else DataTable(id="root_collection_table")
+        )
+        self.data_specification_table: DataTable = (
+            data_specification_table if data_specification_table is not None else DataTable(id="data_specification_table")
+        )
         self.row_highlighted = None
         self.cursor_row_highlighted = None
         self.data_table_highlighted = None
-        super().__init__()
 
     def compose(self) -> ComposeResult:
         """ Compose the UI components for the ShopForDataScreen screen."""
@@ -157,20 +186,62 @@ class ShopForDataScreen(Screen):
 
     def action_sample_data_source(self):
         """ The sample data source option in the footer has been selected."""
-        if not getattr(self, "data_table_highlighted", None):
-            for table in [
-                self.glossary_table,
-                self.digital_product_catalog_table,
-                self.data_dictionary_table,
-                self.business_domain_table,
-                self.root_collection_table,
-            ]:
-                if table.row_count > 0:
-                    self.data_table_highlighted = table.id
-                    self.cursor_row_highlighted = table.cursor_row
+        tables = [
+            self.digital_product_catalog_table,
+            self.glossary_table,
+            self.data_dictionary_table,
+            self.business_domain_table,
+            self.root_collection_table,
+            self.data_specification_table,
+        ]
+        target_table = None
+        if getattr(self, "data_table_highlighted", None):
+            for t in tables:
+                if t is not None and getattr(t, "id", None) == self.data_table_highlighted:
+                    target_table = t
+                    break
+
+        if target_table is None:
+            focused = getattr(self, "focused", None)
+            if isinstance(focused, DataTable):
+                target_table = focused
+                self.data_table_highlighted = getattr(focused, "id", None)
+                self.cursor_row_highlighted = focused.cursor_row
+                try:
+                    self.row_highlighted = list(focused.rows.keys())[focused.cursor_row] if focused.cursor_row is not None and focused.cursor_row < len(focused.rows) else None
+                except Exception:
+                    self.row_highlighted = None
+
+        if target_table is None:
+            for t in tables:
+                if t is not None and getattr(t, "row_count", 0) > 0:
+                    target_table = t
+                    self.data_table_highlighted = getattr(t, "id", None)
+                    self.cursor_row_highlighted = t.cursor_row
                     try:
-                        self.row_highlighted = list(table.rows.keys())[table.cursor_row]
+                        self.row_highlighted = list(t.rows.keys())[t.cursor_row] if t.cursor_row is not None and t.cursor_row < len(t.rows) else None
                     except Exception:
                         self.row_highlighted = None
                     break
-        self.dismiss([212, getattr(self, "row_highlighted", None), getattr(self, "cursor_row_highlighted", None), getattr(self, "data_table_highlighted", None)])
+
+        row_data = []
+        if target_table is not None and getattr(target_table, "row_count", 0) > 0:
+            try:
+                if getattr(self, "row_highlighted", None) is not None and hasattr(target_table, "rows") and self.row_highlighted in target_table.rows:
+                    row_data = list(target_table.get_row(self.row_highlighted))
+                elif getattr(self, "cursor_row_highlighted", None) is not None and target_table.row_count > self.cursor_row_highlighted:
+                    row_data = list(target_table.get_row_at(self.cursor_row_highlighted))
+                elif target_table.cursor_row is not None and target_table.row_count > target_table.cursor_row:
+                    row_data = list(target_table.get_row_at(target_table.cursor_row))
+                else:
+                    row_data = list(target_table.get_row_at(0))
+            except Exception as e:
+                self.log(f"Error getting row data from table: {e}")
+
+        self.dismiss([
+            212,
+            getattr(self, "row_highlighted", None),
+            getattr(self, "cursor_row_highlighted", None),
+            getattr(self, "data_table_highlighted", None),
+            row_data,
+        ])

@@ -11,7 +11,7 @@ from textual.containers import ScrollableContainer
 from textual.screen import ModalScreen
 from textual.widgets import Header, Footer, Static, DataTable
 
-from pyegeria import Egeria
+from pyegeria import Egeria, load_app_config, settings
 
 
 class MyTeam(ModalScreen):
@@ -23,16 +23,28 @@ class MyTeam(ModalScreen):
         ]
     CSS_PATH = "my_profile.tcss"
 
-    def __init__(self, my_team, my_team_properties, leader_name):
-        super().__init__()
+    def __init__(
+        self,
+        my_team: list | None = None,
+        my_team_properties: list | None = None,
+        leader_name: str | None = None,
+        *args,
+        **kwargs,
+    ):
+        super().__init__(*args, **kwargs)
+        load_app_config()
+        app_user = settings.User_Profile
         self.title = "My Team"
-        self.my_team = my_team
-        self.my_team_display_name = my_team_properties[0]
-        self.my_team_qualified_name = my_team_properties[1]
-        self.my_team_category = my_team_properties[2]
-        self.my_team_description = my_team_properties[3]
-        self.leader_name = leader_name
-        self.team_table: DataTable = DataTable(id = "team_table")
+        self.my_team = my_team or []
+        props = list(my_team_properties) if my_team_properties is not None else ["", "", "", ""]
+        while len(props) < 4:
+            props.append("")
+        self.my_team_display_name = props[0]
+        self.my_team_qualified_name = props[1]
+        self.my_team_category = props[2]
+        self.my_team_description = props[3]
+        self.leader_name = leader_name or app_user.user_name or "garygeeke"
+        self.team_table: DataTable = DataTable(id="team_table")
 
     def on_mount(self) -> None:
         if self.my_team:

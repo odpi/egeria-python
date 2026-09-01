@@ -152,42 +152,18 @@ class ElementsCrudMixin:
                 self._show_main_screen()
         elif isinstance(return_c, str):
             if return_c == "identity":
-                main_screen = self.get_screen("main")
-                self.identities_table = main_screen.query_one("#user_identity_table", DataTable)
-                columns = [col.label.plain for col in self.identities_table.columns.values()]
-                rows_with_keys = []
-                for row_key in self.identities_table.rows:
-                    rows_with_keys.append((row_key.value, self.identities_table.get_row(row_key)))
-                self.push_screen(EditIdentitiesScreen(columns, rows_with_keys), callback=self.edit_identities_callback)
+                self.push_screen(EditIdentitiesScreen(), callback=self.edit_identities_callback)
             elif return_c == "community":
-                main_screen = self.get_screen("main")
-                self.communities_table = main_screen.query_one("#communities_table", DataTable)
-                columns = [col.label.plain for col in self.communities_table.columns.values()]
-                rows_with_keys = []
-                for row_key in self.communities_table.rows:
-                    rows_with_keys.append((row_key.value, self.communities_table.get_row(row_key)))
-                self.push_screen(EditCommunitiesScreen(columns, rows_with_keys), callback=self.edit_communities_callback)
+                self.push_screen(EditCommunitiesScreen(), callback=self.edit_communities_callback)
             elif return_c == "role":
-                main_screen = self.get_screen("main")
-                self.roles_table = main_screen.query_one("#roles_table", DataTable)
-                columns = [col.label.plain for col in self.roles_table.columns.values()]
-                rows_with_keys = []
-                for row_key in self.roles_table.rows:
-                    rows_with_keys.append((row_key.value, self.roles_table.get_row(row_key)))
-                self.push_screen(EditRolesScreen(columns, rows_with_keys), callback=self.edit_roles_callback)
+                self.push_screen(EditRolesScreen(), callback=self.edit_roles_callback)
             elif return_c == "team":
-                main_screen = self.get_screen("main")
-                self.teams_table = main_screen.query_one("#teams_table", DataTable)
-                columns = [col.label.plain for col in self.teams_table.columns.values()]
-                rows_with_keys = []
-                for row_key in self.teams_table.rows:
-                    rows_with_keys.append((row_key.value, self.teams_table.get_row(row_key)))
-                self.push_screen(EditTeamsScreen(columns, rows_with_keys), callback=self.edit_teams_callback)
+                self.push_screen(EditTeamsScreen(), callback=self.edit_teams_callback)
         else:
             self.log(f"Unexpected return type from EditProfileScreen: {type(return_c)}")
             self._show_main_screen()
 
-    async def edit_tables(self, table_name: str, row_k: Any) -> None:
+    def edit_tables(self, table_name: str, row_k: Any) -> None:
         """Push the edit screen for the selected table, populated with its live rows."""
         self.log(f"Editing table: {table_name}, row: {row_k}")
         route = EDIT_TABLE_ROUTES.get(table_name)
@@ -196,15 +172,7 @@ class ElementsCrudMixin:
             return
 
         screen_cls, callback_name = route
-        table = self._get_main_table(table_name)
-        if table is None:
-            self.notify(f"The {table_name} table isn't available to edit.",
-                        timeout=5, severity="warning")
-            return
-
-        columns = [col.label.plain for col in table.columns.values()]
-        rows_with_keys = [(row_key.value, table.get_row(row_key)) for row_key in table.rows]
-        self.push_screen(screen_cls(columns, rows_with_keys), callback=getattr(self, callback_name))
+        self.push_screen(screen_cls(), callback=getattr(self, callback_name))
 
     def edit_projects_callback(self, rows_with_keys: Any) -> None:
         """Callback for EditProjectsScreen."""
@@ -275,12 +243,8 @@ class ElementsCrudMixin:
         self.log(f"Showing comments for table: {table_name}, row: {row_k}")
         self.push_screen(
             ShowCommentsScreen(
-                table_name,
-                row_k,
-                self.view_server,
-                self.platform_url,
-                self.user_name,
-                self.user_password,
+                table_name=table_name,
+                table_row=row_k,
             ),
             callback=self.show_comments_callback,
         )

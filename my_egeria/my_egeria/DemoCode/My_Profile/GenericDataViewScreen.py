@@ -14,6 +14,7 @@ from textual.app import ComposeResult
 from textual.containers import ScrollableContainer, Container
 from textual.screen import ModalScreen
 from textual.widgets import DataTable, Header, Footer, Static, Label, Button
+from pyegeria import load_app_config, settings
 
 
 class GenericDataViewScreen(ModalScreen):
@@ -36,10 +37,10 @@ class GenericDataViewScreen(ModalScreen):
         sample_data: Any = None,
         data_element_name: str = "",
         data_element_qualified_name: str = "",
-        view_server: str = "",
-        platform_url: str = "",
-        user_name: str = "",
-        user_password: str = "",
+        view_server: str | None = None,
+        platform_url: str | None = None,
+        user_name: str | None = None,
+        user_password: str | None = None,
         max_rows: int = 10,
         *args,
         **kwargs,
@@ -66,13 +67,16 @@ class GenericDataViewScreen(ModalScreen):
             Maximum number of rows to display (default 10).
         """
         super().__init__(id="generic_data_view_screen", *args, **kwargs)
+        load_app_config()
+        app_config = settings.Environment
+        app_user = settings.User_Profile
         self.sample_data = sample_data
         self.data_element_name = data_element_name or "Selected Data Element"
         self.data_element_qualified_name = data_element_qualified_name or ""
-        self.view_server = view_server
-        self.platform_url = platform_url
-        self.user_name = user_name
-        self.user_password = user_password
+        self.view_server = view_server or app_config.egeria_view_server or "qs-view-server"
+        self.platform_url = platform_url or app_config.egeria_platform_url or "https://127.0.0.1:9443"
+        self.user_name = user_name or app_user.user_name or "garygeeke"
+        self.user_password = user_password or app_user.user_pwd or "secret"
         self.max_rows = max_rows
         self.data_table: DataTable = DataTable(id="generic_data_view_table")
 
@@ -106,6 +110,18 @@ class GenericDataViewScreen(ModalScreen):
         parsed_rows = self.parse_sample_data(self.sample_data, self.max_rows)
         if not parsed_rows:
             self.data_table.add_row("No data", "No sample data available for this data element")
+            if hasattr(self.app, "notify"):
+                self.app.notify(
+                    f"No sample data available for {self.data_element_name}",
+                    title="Sample Data",
+                    severity="information",
+                )
+            elif hasattr(self, "notify"):
+                self.notify(
+                    f"No sample data available for {self.data_element_name}",
+                    title="Sample Data",
+                    severity="information",
+                )
         else:
             for key, val in parsed_rows:
                 self.data_table.add_row(str(key), str(val))
@@ -115,7 +131,7 @@ class GenericDataViewScreen(ModalScreen):
         """Format raw sample data into a list of (Key, Value) tuples up to max_rows.
 
         Supports:
-        - dict: key-value pairs (or wrapped {"data": [...]})
+        - dict: key-value pairs (or wrapped {"data": [...]}, {"tabularDataSetReport": {...}})
         - list of dicts: each dict converted to key/value representation
         - other fallback types (strings, lists, etc.)
         """
@@ -124,9 +140,64 @@ class GenericDataViewScreen(ModalScreen):
 
         rows: List[tuple] = []
 
+        # Check if dict wraps a tabular data report e.g. {"tabularDataSetReport": {...}}
+        if isinstance(raw_data, dict) and "tabularDataSetReport" in raw_data and isinstance(raw_data["tabularDataSetReport"], dict):
+            raw_data = raw_data["tabularDataSetReport"]
+
         # Check if dict wraps a list in standard response format e.g. {"data": [...], "kind": ...}
         if isinstance(raw_data, dict) and "data" in raw_data and isinstance(raw_data["data"], list):
             raw_data = raw_data["data"]
+
+        # Check if dict is a tabular data set report with dataRecords
+        if isinstance(raw_data, dict) and "dataRecords" in raw_data:
+            column_descs = raw_data.get("columnDescriptions", [])
+            col_names = []
+            if isinstance(column_descs, list):
+                for idx, col in enumerate(column_descs):
+                    if isinstance(col, dict) and "columnName" in col:
+                        col_names.append(col["columnName"])
+                    elif isinstance(col, str):
+                        col_names.append(col)
+                    else:
+                        col_names.append(f"Column {idx + 1}")
+
+            data_records = raw_data.get("dataRecords")
+            if isinstance(data_records, dict):
+                rec_items = list(data_records.values())[:max_rows]
+            elif isinstance(data_records, list):
+                rec_items = data_records[:max_rows]
+            else:
+                rec_items = []
+
+            for idx, rec_val in enumerate(rec_items):
+                if isinstance(rec_val, list):
+                    if col_names and len(col_names) == len(rec_val):
+                        row_key = str(rec_val[0]) if len(rec_val) > 0 else f"Row {idx + 1}"
+                        if len(rec_val) > 1:
+                            row_val = ", ".join(f"{col_names[i]}: {GenericDataViewScreen._format_value(rec_val[i])}" for i in range(1, len(rec_val)))
+                        else:
+                            row_val = str(rec_val[0]) if len(rec_val) > 0 else ""
+                        rows.append((row_key, row_val))
+                    elif len(rec_val) >= 2:
+                        rows.append((str(rec_val[0]), ", ".join(GenericDataViewScreen._format_value(v) for v in rec_val[1:])))
+                    elif len(rec_val) == 1:
+                        rows.append((f"Row {idx + 1}", GenericDataViewScreen._format_value(rec_val[0])))
+                    else:
+                        rows.append((f"Row {idx + 1}", ""))
+                elif isinstance(rec_val, dict):
+                    key_cand = next((cand for cand in ["Display Name", "Qualified Name", "Name", "ID", "Key"] if cand in rec_val), None)
+                    if key_cand:
+                        row_key = str(rec_val[key_cand])
+                        other = {k: v for k, v in rec_val.items() if k != key_cand}
+                        row_val = ", ".join(f"{k}: {GenericDataViewScreen._format_value(v)}" for k, v in other.items()) if other else str(rec_val[key_cand])
+                        rows.append((row_key, row_val))
+                    else:
+                        rows.append((f"Row {idx + 1}", ", ".join(f"{k}: {GenericDataViewScreen._format_value(v)}" for k, v in rec_val.items())))
+                else:
+                    rows.append((f"Row {idx + 1}", str(rec_val)))
+
+            if rows:
+                return rows[:max_rows]
 
         if isinstance(raw_data, dict):
             # Format: dict -> Key / Value pairs up to max_rows

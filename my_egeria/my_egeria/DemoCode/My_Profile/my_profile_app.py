@@ -214,12 +214,7 @@ class MyProfileApp(App, TechTypesMixin, ShopForDataMixin, TeamRolesMixin, Elemen
             self.log("Error retrieving profile. Prompting to create one...")
             self.log("To create a profile you must have a valid userid in the system, please contact your system administrator to create one if needed")
             await self.push_screen(
-                CreateProfileScreen(
-                    self.user_name,
-                    self.user_password,
-                    self.view_server,
-                    self.platform_url,
-                ),
+                CreateProfileScreen(),
                 callback=self.new_profile_return,
             )
         else:
@@ -357,7 +352,7 @@ class MyProfileApp(App, TechTypesMixin, ShopForDataMixin, TeamRolesMixin, Elemen
         else:
             self.user_identity = self.user_identities.get("User-Identities") or []
 
-    async def _populate_tables(self) -> None:
+    async def _populate_tables(self) -> Any:
         """Populates tables from normalized profile data."""
         main_screen = self.get_screen("main")
 
@@ -396,7 +391,6 @@ class MyProfileApp(App, TechTypesMixin, ShopForDataMixin, TeamRolesMixin, Elemen
         self.digital_product_catalog_table.add_columns("Digital Product Catalog Name", "Description", "Qualified Name")
         self.digital_product_catalog_table.cursor_type = "row"
         self.digital_product_catalog_table.zebra_stripes = True
-
 
         self.roles_table.clear(columns=True)
         self.roles_table.add_columns("Role Name", "Role Type", "Description", "GUID")
@@ -530,10 +524,8 @@ class MyProfileApp(App, TechTypesMixin, ShopForDataMixin, TeamRolesMixin, Elemen
         elif selected_option == "User Identities":
             await self.push_screen(
                 UserIdentitiesScreen(
-                    self.user_name,
-                    self.user_password,
-                    self.karma_points,
-                    self.user_identities,
+                    karma_points=self.karma_points,
+                    user_identities=self.user_identities,
                 ),
                 callback=self.user_identities_callback,
             )
@@ -542,13 +534,9 @@ class MyProfileApp(App, TechTypesMixin, ShopForDataMixin, TeamRolesMixin, Elemen
         elif selected_option == "Edit Profile":
             await self.push_screen(
                 EditProfileScreen(
-                    self.user_name,
-                    self.user_password,
-                    self.view_server,
-                    self.platform_url,
-                    self.karma_points,
-                    self.user_profile,
-                    self.user_GUID,
+                    karma_points=self.karma_points,
+                    user_profile=self.user_profile,
+                    user_GUID=self.user_GUID,
                 ),
                 callback=self.edit_profile_callback,
             )
@@ -566,13 +554,13 @@ class MyProfileApp(App, TechTypesMixin, ShopForDataMixin, TeamRolesMixin, Elemen
         """Show or switch back to the main screen by unwinding the screen stack."""
         self.log("Returning to main screen")
         try:
-            while len(getattr(self, "screen_stack", [])) > 1:
+            while len(getattr(self, "screen_stack", [])) > 1 and not isinstance(getattr(self, "screen", None), MainScreen):
                 self.pop_screen()
         except Exception as e:
             self.log(f"Error popping screens to return to main screen: {e}")
 
         try:
-            if getattr(self, "is_mounted", False) and len(getattr(self, "screen_stack", [])) == 0:
+            if getattr(self, "is_mounted", False) and not isinstance(getattr(self, "screen", None), MainScreen):
                 self.push_screen("main")
         except Exception as e:
             self.log(f"Error ensuring main screen: {e}")
@@ -584,6 +572,53 @@ class MyProfileApp(App, TechTypesMixin, ShopForDataMixin, TeamRolesMixin, Elemen
         """Callback routine from the view subscriptions screen."""
         self.log(f"View subscriptions screen returned: {subscriptions_callback_rc}")
         self.show_main_screen()
+
+    def get_data_product_catalog_table(self) -> int:
+        """Fetch and populate digital product catalog table."""
+        if not hasattr(self, "digital_product_catalog_table") or self.digital_product_catalog_table is None:
+            self.digital_product_catalog_table = DataTable(id="digital_product_catalog_table")
+            self.digital_product_catalog_table.add_columns("Digital Product Catalog Name", "Description", "Qualified Name")
+            self.digital_product_catalog_table.cursor_type = "row"
+            self.digital_product_catalog_table.zebra_stripes = True
+        else:
+            self.digital_product_catalog_table.clear(columns=True)
+            self.digital_product_catalog_table.add_columns("Digital Product Catalog Name", "Description", "Qualified Name")
+            self.digital_product_catalog_table.cursor_type = "row"
+            self.digital_product_catalog_table.zebra_stripes = True
+
+        try:
+            self.digital_product_catalog_data = exec_report_spec(
+                format_set_name="Digital-Product-Catalog",
+                output_format="DICT",
+                params={
+                    "search_string": "*",
+                    "metadata_element_subtypes": ["DigitalProduct", "DigitalProductFamily"],
+                },
+                view_server=self.view_server,
+                view_url=self.platform_url,
+                user=self.user_name,
+                user_pass=self.user_password,
+            )
+        except PyegeriaException as e:
+            self.log(f"Error retrieving digital product catalog details: {e!s}")
+            return 421
+        self.log(f"Digital Product Catalog data returned: {self.digital_product_catalog_data}")
+        self.digital_product_catalog_data_extract = self.digital_product_catalog_data.get("data") or []
+        self.log(f"Digital Product Catalog data extracted: {self.digital_product_catalog_data_extract}")
+        if not self.digital_product_catalog_data_extract:
+            self.log(f"No digital product catalog data found for user: {self.user_name}")
+            self.digital_product_catalog_table.add_row("No digital product catalogs found",
+                                                       "No data returned from Egeria", "")
+            if hasattr(self, "notify"):
+                self.notify(f"No digital product catalogs found for user: {self.user_name}")
+        else:
+            for catalog_item in self.digital_product_catalog_data_extract:
+                self.digital_product_catalog_table.add_row(
+                    catalog_item.get("Display Name", ""),
+                    catalog_item.get("Description", ""),
+                    catalog_item.get("Qualified Name", ""),
+                )
+        return 200
 
     # Compatibility wrappers delegating to profile_utils
     def clean_structure(self, data: Any, target: str = "specificationMermaidGraph") -> Any:
