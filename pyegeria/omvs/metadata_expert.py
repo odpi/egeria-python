@@ -3399,6 +3399,7 @@ class MetadataExpert(ServerClient):
     async def _async_count_metadata_elements(
         self,
         body: dict,
+        push_down: Optional[bool] = None,
         timeout: int = default_timeout,
         **kwargs,
     ) -> int:
@@ -3413,6 +3414,17 @@ class MetadataExpert(ServerClient):
         ----------
         body: dict
             - A `FindRequestBody` search structure (see `find_metadata_elements`).
+        push_down: bool, optional, default = None
+            - ISSUE-38 (PY-18): controls whether the repository counts matching
+              rows itself (`pushDown=True`, the server default when omitted —
+              fast, but does not apply the per-element visibility check
+              `find_metadata_elements` does, so it can disagree with a list
+              built from the same search) or whether the server retrieves and
+              counts the matching elements the same way a find would
+              (`pushDown=False` — agrees with a corresponding
+              `find_metadata_elements` call by construction, at the cost of
+              reading every one of them server-side). `None` omits the query
+              parameter entirely, i.e. today's existing behaviour.
         timeout: int, default = default_timeout
             - http request timeout for this request
 
@@ -3443,6 +3455,8 @@ class MetadataExpert(ServerClient):
         url = (
             f"{base_path(self, self.view_server)}/metadata-elements/by-search-conditions/count"
         )
+        if push_down is not None:
+            url += f"?pushDown={'true' if push_down else 'false'}"
         response: Response = await self._async_make_request(
             "POST", url, body_slimmer(body), timeout=timeout
         )
@@ -3451,6 +3465,7 @@ class MetadataExpert(ServerClient):
     def count_metadata_elements(
         self,
         body: dict,
+        push_down: Optional[bool] = None,
         timeout: int = default_timeout,
         **kwargs,
     ) -> int:
@@ -3464,6 +3479,9 @@ class MetadataExpert(ServerClient):
         ----------
         body: dict
             - A `FindRequestBody` search structure (see `find_metadata_elements`).
+        push_down: bool, optional, default = None
+            - ISSUE-38 (PY-18): see `_async_count_metadata_elements` for the full
+              explanation. `None` omits the query parameter (today's behaviour).
         timeout: int, default = default_timeout
             - http request timeout for this request
 
@@ -3483,7 +3501,7 @@ class MetadataExpert(ServerClient):
         """
         loop = asyncio.get_event_loop()
         return loop.run_until_complete(
-            self._async_count_metadata_elements(body, timeout=timeout, **kwargs)
+            self._async_count_metadata_elements(body, push_down=push_down, timeout=timeout, **kwargs)
         )
 
     async def _async_find_relationships_between_elements(
@@ -3686,6 +3704,7 @@ class MetadataExpert(ServerClient):
     async def _async_count_relationships_between_elements(
         self,
         body: dict,
+        push_down: Optional[bool] = None,
         timeout: int = default_timeout,
         **kwargs,
     ) -> int:
@@ -3700,6 +3719,20 @@ class MetadataExpert(ServerClient):
         body: dict
             - A `FindRelationshipRequestBody` search structure
               (see `find_relationships_between_elements`).
+        push_down: bool, optional, default = None
+            - ISSUE-38 (PY-18): controls whether the repository counts matching
+              rows itself (`pushDown=True`, the server default when omitted —
+              fast, but skips the per-relationship-end visibility check
+              `find_relationships_between_elements` applies, so it can disagree
+              with a list built from the same search — this is exactly the
+              `count_relationships_between_elements("Exception")` vs.
+              `ClassificationExplorer.get_relationships("Exception")` divergence
+              ISSUE-38 tracked) or whether the server retrieves and counts the
+              matching relationships the same way a find would
+              (`pushDown=False` — agrees with a corresponding find by
+              construction, at the cost of reading every one of them
+              server-side). `None` omits the query parameter entirely, i.e.
+              today's existing behaviour.
         timeout: int, default = default_timeout
             - http request timeout for this request
 
@@ -3731,6 +3764,8 @@ class MetadataExpert(ServerClient):
         url = (
             f"{base_path(self, self.view_server)}/relationships/by-search-conditions/count"
         )
+        if push_down is not None:
+            url += f"?pushDown={'true' if push_down else 'false'}"
         response: Response = await self._async_make_request(
             "POST", url, body_slimmer(body), timeout=timeout
         )
@@ -3739,6 +3774,7 @@ class MetadataExpert(ServerClient):
     def count_relationships_between_elements(
         self,
         body: dict,
+        push_down: Optional[bool] = None,
         timeout: int = default_timeout,
         **kwargs,
     ) -> int:
@@ -3753,6 +3789,10 @@ class MetadataExpert(ServerClient):
         body: dict
             - A `FindRelationshipRequestBody` search structure
               (see `find_relationships_between_elements`).
+        push_down: bool, optional, default = None
+            - ISSUE-38 (PY-18): see `_async_count_relationships_between_elements`
+              for the full explanation. `None` omits the query parameter
+              (today's behaviour).
         timeout: int, default = default_timeout
             - http request timeout for this request
 
@@ -3772,7 +3812,7 @@ class MetadataExpert(ServerClient):
         """
         loop = asyncio.get_event_loop()
         return loop.run_until_complete(
-            self._async_count_relationships_between_elements(body, timeout=timeout, **kwargs)
+            self._async_count_relationships_between_elements(body, push_down=push_down, timeout=timeout, **kwargs)
         )
 
     async def _async_get_relationship_by_guid(

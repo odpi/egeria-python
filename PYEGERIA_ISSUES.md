@@ -247,6 +247,56 @@ element the calling user cannot read, which that suite cannot arrange.
 Which is why the verification above, against real data, is the part that
 actually proves the fix.
 
+**Update 2026-09-02 — pyegeria side implemented, verification attempted
+and blocked (not failed) by a stale deployed platform image.**
+
+`push_down: Optional[bool] = None` added to
+`MetadataExpert.count_metadata_elements`/`_async_count_metadata_elements`
+and `count_relationships_between_elements`/
+`_async_count_relationships_between_elements` (`pyegeria/omvs/
+metadata_expert.py`) — `None` omits the `pushDown` query param entirely
+(today's existing behaviour, zero change for any existing caller); `True`/
+`False` append `?pushDown=true`/`?pushDown=false` explicitly, following the
+same `if <value>: url += f"&{param}=..."` conditional-append convention
+already used elsewhere in this codebase (e.g. `valid_metadata.py`'s
+`typeName` handling, ISSUE-82/PY-25).
+
+Ran this entry's own 3-test verification plan live-patched into
+`quickstart-pyegeria-web` (site-packages `docker cp` + restart, diff-
+confirmed byte-identical), against `qs-metadata-store`:
+
+```
+count (pushDown omitted):  58
+count (pushDown=true):     58
+count (pushDown=false):    58
+ClassificationExplorer.get_relationships("Exception") length: 57
+```
+
+Test 1 (accurate count == list) came out **unequal** (58 vs 57) — but
+before treating that as "the visibility check isn't it," checked whether
+the platform under test actually has the 2026-08-30 fix at all. It
+doesn't: `docker.io/odpi/egeria-platform:latest` (freshly re-pulled
+2026-09-02, digest `sha256:4a00179aa3de62c8043199ce105c960e4e69d500
+adda2f187d04639c7813dc63`) carries `build-date: 2026-08-24T15:58:26` —
+**six days before** the server-side merge this entry is about. ODPi has
+not yet published a container image built from a post-2026-08-30
+`omf-metadata-spring`/`omf-metadata-server`. The server accepts
+`?pushDown=false` (200, no error — an unrecognized query param is simply
+ignored, not rejected) but it has no effect: all three counts come back
+identical, matching the exact pre-fix numbers this entry already had on
+record. Test 3 (`SemanticAssignment`, an already-agreeing type) still
+returned 170=170 either way, as expected regardless of whether the
+platform has the fix, so that one doesn't help distinguish "not deployed
+yet" from "deployed and still broken."
+
+**This is a blocked verification, not a failed one** — per this entry's
+own "if test 1 comes out unequal" clause, the honest reading given the
+platform-date mismatch is "cannot yet tell," not "the fix doesn't work."
+Leaving this entry in Open Egeria Server issues, as before. **Re-run once
+a platform image built after 2026-08-30 is available** — the pyegeria-side
+`push_down` parameter is ready and requires no further client-side work;
+only the deployed Egeria server needs to catch up.
+
 **Status:** re-confirmed 2026-08-18, byte-for-byte identical to the
 2026-08-15 numbers below — `count_relationships_between_elements("Exception")`
 still returns 58, `get_relationships("Exception")` still returns 57, same
@@ -5809,6 +5859,21 @@ reported bug.
 ---
 
 ### ISSUE-18 (part of PY-7/8/11): `get_valid_metadata_values` has no `asOfTime` support
+
+**Status: re-confirmed live 2026-09-02, unchanged.** Called
+`get-valid-metadata-values/criticalityLevel` (a property with real
+registered demo values, 6 elements) twice against `qs-metadata-store` —
+once with no `asOfTime`, once with `asOfTime=2000-01-01T00:00:00.000Z`
+(long before any of this platform's demo data existed). Both calls
+returned the identical 6 elements. If the server honoured `asOfTime` here
+the way it does on POST-body search endpoints, the year-2000 call should
+have returned nothing (same "not found at that time" behavior confirmed
+elsewhere for methods that *do* support it, e.g. `get_asset_by_guid` —
+ISSUE-4/PY-10). It didn't, so the parameter is still silently accepted-
+and-ignored, not silently rejected — consistent with, not a regression
+from, the original finding below. Checked incidentally while verifying
+ISSUE-38's `pushDown` fix on the same platform build (2026-08-24) — this
+endpoint's own gap is unrelated to that fix and remains open on its own.
 
 **Status:** n/a — reclassified, not a pyegeria fix. Checked the
 ground-truth `.http` files: `get-valid-metadata-values/{propertyName}` is a
