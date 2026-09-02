@@ -681,6 +681,59 @@ if type_name:
 **Nothing left open here.** Fixed, released (pyegeria 6.1.7), and live-verified
 end-to-end against the original real-world repro, not just unit-tested.
 
+### ISSUE-83: `AutomatedCuration.get_technology_type_elements(get_templates=True)` sends `skipClassifiedElements: [""]` (a list containing an empty string) instead of `[]` — Egeria rejects the empty classification name, so every Tech Catalog technology-type listing renders silently empty instead of erroring
+
+**Status:** fixed and live-verified 2026-09-02.
+
+**Root cause:** `_async_get_technology_type_elements`
+(`pyegeria/omvs/automated_curation.py`) built `skipClassifiedElements` as
+`[skip_templates]` where `skip_templates = "Template" if not get_templates
+else ""` — when `get_templates=True` (the caller wants templates
+*included*, i.e. skip nothing), this sent `["", ]`, a one-element list
+containing an empty string, not `[]`. Egeria's server correctly rejects an
+empty classification name:
+
+```
+OMAG-COMMON-400-018 The type name  passed on method findMetadataElements
+of service Open Metadata Store Services is not recognized
+```
+
+**Why it went unnoticed:** the failure is masked downstream. `egeria-
+workspaces`' `tech_catalog_handler.py` calls this with `get_templates=True`
+unconditionally (`get_tech_type_elements`), and its own exception handler
+treats any error message containing `"400"` as "no elements found," so the
+whole Tech Catalog "Elements" listing for a technology type renders as an
+honest-looking, self-consistent **empty list** instead of surfacing the
+real 500. Any caller with a similar "400 means empty" convenience handler
+would hit the same masking.
+
+**Found by:** a user report — a known live `RelationalDatabase` asset
+(`deployedImplementationType: "PostgreSQL Relational Database"`, confirmed
+present via direct GUID lookup) did not appear browsing Technology Types →
+Postgres Relational Databases in `egeria-workspaces`' Tech Catalog.
+Reproducing the exact call chain (`AutomatedCuration.
+get_technology_type_elements(filter_string="PostgreSQL Relational
+Database", get_templates=True, ...)`, the parameters `tech_catalog_handler.
+py`'s `/api/tech-catalog/tech-types/{qualified_name}/elements` route
+actually uses) reproduced the 500 directly; the same call with
+`get_templates=False` succeeded and returned the asset correctly (14
+items) — isolating the defect to the `get_templates=True` branch
+specifically, not a metadata/zone/visibility problem on the asset itself.
+
+**Fix:** `skip_classified_elements = [] if get_templates else ["Template"]`
+— an empty list (skip nothing) when templates should be included, a
+one-element list naming the real `Template` classification to skip
+otherwise. Also corrected the method's own docstring sample JSON body,
+which showed the same `[""]` value as if it were correct usage.
+
+**Live-verified end-to-end**, not just unit-tested: live-patched into
+`quickstart-pyegeria-web`'s installed pyegeria (`docker cp` + restart,
+diff-confirmed byte-identical), then curled the actual production route —
+`GET /api/tech-catalog/tech-types/PostgreSQL%20Relational%20Database/
+elements?display_name=PostgreSQL%20Relational%20Database` — which now
+returns the previously-missing asset as the first result, alongside the
+other 14 (15 total with templates included, vs. 14 without — consistent).
+
 ### ISSUE-81: `migrate_question_specs.py` links Perspective↔Question via the wrong relationship type (`AssignmentScope`, not `ScopedBy`) — every bootstrap-migrated perspective silently relies on a filename-inference fallback instead
 
 **Status:** fixed 2026-08-28 — script corrected (see "Fix landed" below);
