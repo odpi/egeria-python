@@ -274,20 +274,30 @@ ClassificationExplorer.get_relationships("Exception") length: 57
 
 Test 1 (accurate count == list) came out **unequal** (58 vs 57) — but
 before treating that as "the visibility check isn't it," checked whether
-the platform under test actually has the 2026-08-30 fix at all. It
-doesn't: `docker.io/odpi/egeria-platform:latest` (freshly re-pulled
-2026-09-02, digest `sha256:4a00179aa3de62c8043199ce105c960e4e69d500
-adda2f187d04639c7813dc63`) carries `build-date: 2026-08-24T15:58:26` —
-**six days before** the server-side merge this entry is about. ODPi has
-not yet published a container image built from a post-2026-08-30
-`omf-metadata-spring`/`omf-metadata-server`. The server accepts
-`?pushDown=false` (200, no error — an unrecognized query param is simply
-ignored, not rejected) but it has no effect: all three counts come back
-identical, matching the exact pre-fix numbers this entry already had on
-record. Test 3 (`SemanticAssignment`, an already-agreeing type) still
-returned 170=170 either way, as expected regardless of whether the
-platform has the fix, so that one doesn't help distinguish "not deployed
-yet" from "deployed and still broken."
+the platform under test actually has the 2026-08-30 fix at all. First
+pass looked at the running image's `build-date` label (2026-08-24, six
+days before the merge) and Docker Hub's manifest digest for `:latest`,
+which matched what was already deployed — reasonable evidence, but not
+airtight, since Docker Hub then showed the `latest` tag re-pushed
+2026-08-31 (label alone can't tell "same app, new base layer" from "new
+app build that forgot to bump the label"). Settled it properly: pulled
+that exact 2026-08-31 digest
+(`sha256:8ff341b7cf1b440f7aa4db991258afd70758f15e803c43db9bd40b41f3a0b9e5`)
+and diffed the actual server jar against the one already deployed —
+`deployments/omag-server-platform-6.2-SNAPSHOT.jar`, **identical
+SHA-256 in both images** (`38d3512e1ab66c0d66c94bebf09e121176fa8643
+b6d5fe2fc16400e26d8afda0`). The 2026-08-31 push is a container-image
+rebuild (base OS/security layer) around the byte-for-byte same,
+still-pre-fix application jar — not a new Egeria build. So: confirmed,
+not just inferred from a label — **no published image yet includes the
+2026-08-30 server-side merge.** The server accepts `?pushDown=false`
+(200, no error — an unrecognized query param is simply ignored, not
+rejected) but it has no effect: all three counts come back identical,
+matching the exact pre-fix numbers this entry already had on record.
+Test 3 (`SemanticAssignment`, an already-agreeing type) still returned
+170=170 either way, as expected regardless of whether the platform has
+the fix, so that one doesn't help distinguish "not deployed yet" from
+"deployed and still broken."
 
 **This is a blocked verification, not a failed one** — per this entry's
 own "if test 1 comes out unequal" clause, the honest reading given the
