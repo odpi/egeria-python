@@ -1,0 +1,40 @@
+name: CodeQL
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+  schedule:
+    # Weekly, independent of push/PR activity -- catches newly published
+    # CodeQL query/advisory updates against unchanged code.
+    - cron: '0 7 * * 1'
+
+jobs:
+  analyze:
+    name: Analyze (Python)
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      security-events: write # Required to upload results to the Security tab.
+    steps:
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4
+
+      - uses: github/codeql-action/init@6f5948dfacef28e207b48d0905cf90c03365536d # v3
+        with:
+          languages: python
+          # Scoped to real package source -- excludes vendored/generated
+          # content and sample data that would otherwise dominate results
+          # with noise from third-party or non-shipped code.
+          paths: |
+            pyegeria
+            md_processing
+            commands
+            my_egeria
+          paths-ignore: |
+            **/data/**
+            **/*.json
+
+      - uses: github/codeql-action/analyze@6f5948dfacef28e207b48d0905cf90c03365536d # v3
+        with:
+          category: "/language:python"
