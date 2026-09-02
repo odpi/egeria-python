@@ -683,7 +683,11 @@ end-to-end against the original real-world repro, not just unit-tested.
 
 ### ISSUE-83: `AutomatedCuration.get_technology_type_elements(get_templates=True)` sends `skipClassifiedElements: [""]` (a list containing an empty string) instead of `[]` — Egeria rejects the empty classification name, so every Tech Catalog technology-type listing renders silently empty instead of erroring
 
-**Status:** fixed and live-verified 2026-09-02.
+**Status:** fixed and live-verified 2026-09-02. Landed directly on
+`odpi/egeria-python@main` (`d52f394e`, cherry-picked after review against
+the `.http` ground truth for `skipClassifiedElements`) alongside the
+pending 6.1.8 version bump (`b923123c`); PR #336 closed as superseded by
+that merge rather than merged itself.
 
 **Root cause:** `_async_get_technology_type_elements`
 (`pyegeria/omvs/automated_curation.py`) built `skipClassifiedElements` as
