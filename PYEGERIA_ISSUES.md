@@ -783,9 +783,11 @@ exhaustion: `contentStatus: "DRAFT"` inside `properties` on
 read-back (`properties.contentStatus == "DRAFT"`), no separate request-body
 class needed — confirmed twice, once as a standalone probe and once through
 Resource Explorer's actual application path (accepting a real candidate
-blueprint end-to-end via the Curate UI's API). `elementHeader.status` stays `ACTIVE` regardless, as expected — a
-different axis (header status vs. `contentStatus`, distinct concepts in
-Egeria's status model), not a sign the fix is incomplete.
+blueprint end-to-end via the Curate UI's API, materialized element guid
+`809025b5-cca9-4e9a-a2f7-3a5104138f67`, independently queried back by that
+guid to confirm). `elementHeader.status` stays `ACTIVE` regardless, as
+expected — a different axis (header status vs. `contentStatus`, distinct
+concepts in Egeria's status model), not a sign the fix is incomplete.
 
 `BlueprintMaterializer.materialize_blueprint_element` has been upgraded to
 send `contentStatus: "DRAFT"` in `properties`, replacing its earlier
