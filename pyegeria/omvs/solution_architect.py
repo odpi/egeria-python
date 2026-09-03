@@ -2250,9 +2250,10 @@ class SolutionArchitect(ServerClient):
 
     @dynamic_catch
     async def _async_create_solution_blueprint(self, body: dict | NewElementRequestBody) -> str:
-        """ Create a solution blueprint. To set a lifecycle status
-            use a NewSolutionElementRequestBody which has a default status of DRAFT. Using a
-            NewElementRequestBody sets the status to ACTIVE.
+        """ Create a solution blueprint. To set a lifecycle status other than the
+            server's default (ACTIVE), set `contentStatus` inside `properties`
+            (see ISSUE-84: there is no separate request-body class for this --
+            `NewElementRequestBody` is the only body this endpoint accepts).
             Async version.
 
             Parameters
@@ -2305,8 +2306,6 @@ class SolutionArchitect(ServerClient):
                 "displayName": "add short name here",
                 "description": "add description here",
                 "versionIdentifier": "add version here",
-                "userDefinedStatus" : "add status here",
-                "lifecycleStatus": "DRAFT"
                 "additionalProperties": {
                   "property1": "propertyValue1",
                   "property2": "propertyValue2"
@@ -2316,13 +2315,27 @@ class SolutionArchitect(ServerClient):
               }
             }
 
-            To set a lifecycle use:
-
-            Set initialStatus which can be DRAFT, PREPARED, PROPPOSED, APPROVED, REJECTED, ACTIVE, DISABLED, DEPRECATED,
-            OTHER.  If other is used, set userDefinedStatus.
+            ISSUE-84 (fixed 2026-09-03): this docstring previously described a
+            separate "NewSolutionElementRequestBody" body (with a top-level
+            "initialStatus" field) as the way to set a lifecycle status other
+            than ACTIVE -- and the plain example above it carried stray
+            "userDefinedStatus"/"lifecycleStatus" fields left over from that
+            same fictional shape (with a missing comma, making it invalid
+            JSON even as an example). None of that was ever real -- confirmed
+            absent from both pyegeria/models/ and every .http ground-truth
+            file in this repo -- so following it raised a client-side
+            PyegeriaInvalidParameterException before any HTTP call, which read
+            exactly like an Egeria-side rejection. There is only one body this
+            endpoint accepts: "NewElementRequestBody". To set the status,
+            include "contentStatus" inside "properties" instead -- confirmed
+            against Egeria-api-solution-architect.http's own
+            updateSolutionBlueprintStatus example, which sets a blueprint's
+            status via "contentStatus" the same way, and "content_status" is
+            already a real field on ReferenceableProperties (the base class of
+            SolutionBlueprintProperties):
 
             {
-              "class" : "NewSolutionElementRequestBody",
+              "class" : "NewElementRequestBody",
               "anchorGUID" : "add guid here",
               "isOwnAnchor": false,
               "parentGUID": "add guid here",
@@ -2344,7 +2357,7 @@ class SolutionArchitect(ServerClient):
                 "displayName": "add short name here",
                 "description": "add description here",
                 "versionIdentifier": "add version for this blueprint",
-                "userDefinedStatus" : "add status here if initialStatus=OTHER",
+                "contentStatus" : "DRAFT",
                 "additionalProperties": {
                   "property1" : "propertyValue1",
                   "property2" : "propertyValue2"
@@ -2352,7 +2365,6 @@ class SolutionArchitect(ServerClient):
                 "effectiveFrom": "{{$isoTimestamp}}",
                 "effectiveTo": "{{$isoTimestamp}}"
               },
-              "initialStatus" : "DRAFT",
               "externalSourceGUID": "add guid here",
               "externalSourceName": "add qualified name here",
               "effectiveTime" : "{{$isoTimestamp}}",
@@ -2368,9 +2380,10 @@ class SolutionArchitect(ServerClient):
 
     @dynamic_catch
     def create_solution_blueprint(self, body: dict | NewElementRequestBody) -> str:
-        """ Create a solution blueprint. To set a lifecycle status
-            use a NewSolutionElementRequestBody which has a default status of DRAFT. Using a
-            NewElementRequestBody sets the status to ACTIVE.
+        """ Create a solution blueprint. To set a lifecycle status other than the
+            server's default (ACTIVE), set `contentStatus` inside `properties`
+            (see ISSUE-84: there is no separate request-body class for this --
+            `NewElementRequestBody` is the only body this endpoint accepts).
 
             Parameters
             ----------
@@ -2431,13 +2444,24 @@ class SolutionArchitect(ServerClient):
               }
             }
 
-            To set a lifecycle use:
-
-            Set initialStatus which can be DRAFT, PREPARED, PROPPOSED, APPROVED, REJECTED, ACTIVE, DISABLED, DEPRECATED,
-            OTHER.  If other is used, set userDefinedStatus.
+            ISSUE-84 (fixed 2026-09-03): this docstring previously described a
+            separate "NewSolutionElementRequestBody" body (with a top-level
+            "initialStatus" field) as the way to set a lifecycle status other
+            than ACTIVE. That class was never real -- confirmed absent from
+            both pyegeria/models/ and every .http ground-truth file in this
+            repo -- so following it raised a client-side
+            PyegeriaInvalidParameterException before any HTTP call, which read
+            exactly like an Egeria-side rejection. There is only one body this
+            endpoint accepts: "NewElementRequestBody". To set the status,
+            include "contentStatus" inside "properties" instead -- confirmed
+            against Egeria-api-solution-architect.http's own
+            updateSolutionBlueprintStatus example, which sets a blueprint's
+            status via "contentStatus" the same way, and "content_status" is
+            already a real field on ReferenceableProperties (the base class of
+            SolutionBlueprintProperties):
 
             {
-              "class" : "NewSolutionElementRequestBody",
+              "class" : "NewElementRequestBody",
               "anchorGUID" : "add guid here",
               "isOwnAnchor": false,
               "parentGUID": "add guid here",
@@ -2459,7 +2483,7 @@ class SolutionArchitect(ServerClient):
                 "displayName": "add short name here",
                 "description": "add description here",
                 "versionIdentifier": "add version for this blueprint",
-                "userDefinedStatus" : "add status here if initialStatus=OTHER",
+                "contentStatus" : "DRAFT",
                 "additionalProperties": {
                   "property1" : "propertyValue1",
                   "property2" : "propertyValue2"
@@ -2467,7 +2491,6 @@ class SolutionArchitect(ServerClient):
                 "effectiveFrom": "{{$isoTimestamp}}",
                 "effectiveTo": "{{$isoTimestamp}}"
               },
-              "initialStatus" : "DRAFT",
               "externalSourceGUID": "add guid here",
               "externalSourceName": "add qualified name here",
               "effectiveTime" : "{{$isoTimestamp}}",
@@ -3538,9 +3561,10 @@ class SolutionArchitect(ServerClient):
 
     @dynamic_catch
     async def _async_create_solution_component(self, body: dict | NewElementRequestBody) -> str:
-        """Create a solution component. To set a lifecycle status
-            use a NewSolutionElementRequestBody which has a default status of DRAFT. Using a
-            NewElementRequestBody sets the status to ACTIVE.
+        """Create a solution component. To set a lifecycle status other than the
+            server's default (ACTIVE), set `contentStatus` inside `properties`
+            (see ISSUE-84: there is no separate request-body class for this --
+            `NewElementRequestBody` is the only body this endpoint accepts).
             Async version.
 
         Parameters
@@ -3567,7 +3591,24 @@ class SolutionArchitect(ServerClient):
 
         Notes
         ----
-        With lifecycle:
+        ISSUE-84 (fixed 2026-09-03): this example previously included a
+        top-level "initialStatus" field and a "userDefinedStatus" field
+        inside "properties", framed (in this method's twin docstring
+        elsewhere in this file) as requiring a separate
+        "NewSolutionElementRequestBody" body class. Neither of those was
+        ever real -- confirmed absent from both pyegeria/models/ and every
+        .http ground-truth file in this repo. Because the top-level "class"
+        here was already the real "NewElementRequestBody", this particular
+        shape did NOT fail validation -- `NewElementRequestBody` silently
+        ignores unknown fields (PyegeriaModel's `extra='ignore'`), so
+        "initialStatus" was dropped with no warning and the component was
+        always created ACTIVE regardless of the intent to set DRAFT. To set
+        the status, include "contentStatus" inside "properties" instead --
+        confirmed against Egeria-api-solution-architect.http's own
+        updateSolutionBlueprintStatus example, which sets status via
+        "contentStatus" the same way, and "content_status" is already a
+        real field on ReferenceableProperties (the base class
+        SolutionComponentProperties ultimately derives from).
 
         Body structure:
         {
@@ -3600,7 +3641,7 @@ class SolutionArchitect(ServerClient):
             "solutionComponentType": "add optional type for this component",
             "versionIdentifier": "add version for this component",
             "plannedDeployedImplementationType": "add details of the type of implementation for this component",
-            "userDefinedStatus" : "Add own status here if initialStatus=OTHER",
+            "contentStatus" : "DRAFT",
             "additionalProperties": {
               "property1" : "propertyValue1",
               "property2" : "propertyValue2"
@@ -3608,7 +3649,6 @@ class SolutionArchitect(ServerClient):
             "effectiveFrom": "{{$isoTimestamp}}",
             "effectiveTo": "{{$isoTimestamp}}"
           },
-          "initialStatus" : "DRAFT",
           "externalSourceGUID": "add guid here",
           "externalSourceName": "add qualified name here",
           "effectiveTime" : "{{$isoTimestamp}}",
@@ -3625,9 +3665,10 @@ class SolutionArchitect(ServerClient):
 
     @dynamic_catch
     def create_solution_component(self, body: dict | NewElementRequestBody) -> str:
-        """Create a solution component. To set a lifecycle status
-            use a NewSolutionElementRequestBody which has a default status of DRAFT. Using a
-            NewElementRequestBody sets the status to ACTIVE.
+        """Create a solution component. To set a lifecycle status other than the
+            server's default (ACTIVE), set `contentStatus` inside `properties`
+            (see ISSUE-84: there is no separate request-body class for this --
+            `NewElementRequestBody` is the only body this endpoint accepts).
 
         Parameters
         ----------
@@ -3652,7 +3693,24 @@ class SolutionArchitect(ServerClient):
 
         Notes
         ----
-        With lifecycle:
+        ISSUE-84 (fixed 2026-09-03): this example previously included a
+        top-level "initialStatus" field and a "userDefinedStatus" field
+        inside "properties", framed (in this method's twin docstring
+        elsewhere in this file) as requiring a separate
+        "NewSolutionElementRequestBody" body class. Neither of those was
+        ever real -- confirmed absent from both pyegeria/models/ and every
+        .http ground-truth file in this repo. Because the top-level "class"
+        here was already the real "NewElementRequestBody", this particular
+        shape did NOT fail validation -- `NewElementRequestBody` silently
+        ignores unknown fields (PyegeriaModel's `extra='ignore'`), so
+        "initialStatus" was dropped with no warning and the component was
+        always created ACTIVE regardless of the intent to set DRAFT. To set
+        the status, include "contentStatus" inside "properties" instead --
+        confirmed against Egeria-api-solution-architect.http's own
+        updateSolutionBlueprintStatus example, which sets status via
+        "contentStatus" the same way, and "content_status" is already a
+        real field on ReferenceableProperties (the base class
+        SolutionComponentProperties ultimately derives from).
 
         Body structure:
         {
@@ -3685,7 +3743,7 @@ class SolutionArchitect(ServerClient):
             "solutionComponentType": "add optional type for this component",
             "versionIdentifier": "add version for this component",
             "plannedDeployedImplementationType": "add details of the type of implementation for this component",
-            "userDefinedStatus" : "Add own status here if initialStatus=OTHER",
+            "contentStatus" : "DRAFT",
             "additionalProperties": {
               "property1" : "propertyValue1",
               "property2" : "propertyValue2"
@@ -3693,7 +3751,6 @@ class SolutionArchitect(ServerClient):
             "effectiveFrom": "{{$isoTimestamp}}",
             "effectiveTo": "{{$isoTimestamp}}"
           },
-          "initialStatus" : "DRAFT",
           "externalSourceGUID": "add guid here",
           "externalSourceName": "add qualified name here",
           "effectiveTime" : "{{$isoTimestamp}}",

@@ -629,6 +629,153 @@ on an Egeria Server capability that doesn't exist yet — but the pyegeria/
 Dr.Egeria-side work each will need once that capability ships is written
 into the entry now, so it isn't rediscovered from scratch later.
 
+### ISSUE-84: `SolutionArchitect.create_solution_blueprint`'s own docstring documents a `NewSolutionElementRequestBody` body (with `initialStatus`) for Draft-status creation — that class does not exist as a pydantic model, so the documented shape fails client-side validation before any HTTP call
+
+**Status:** fixed 2026-09-03 — docstring-only fix (see "Fix landed" below).
+Reported by a consumer (trellis/Resource Explorer's `BlueprintMaterializer`,
+`docs/blueprint-materialization-plan.md` Phase A).
+
+**Confirmed in both**: this checkout's installed pyegeria (5.3.4.23, via
+the trellis venv) and this repo's own working tree (6.1.9-dev) —
+`grep -rn "class NewSolutionElementRequestBody" pyegeria/models/*.py`
+returns nothing in either; the class is documented in
+`SolutionArchitect.create_solution_blueprint`'s (and its `_async_*`
+sibling's) docstring — twice, once per method, `omvs/solution_architect.py`
+lines ~2325 and ~2440 in this tree — as the way to set `initialStatus`
+(DRAFT/PREPARED/PROPOSED/APPROVED/REJECTED/ACTIVE/DISABLED/DEPRECATED/OTHER)
+on a newly-created blueprint, distinct from `NewElementRequestBody` which
+"sets the status to ACTIVE." No such model backs that documented shape.
+
+**What actually happens**: `create_solution_blueprint`'s real validation
+path (`ServerClient._async_create_element_body_request` →
+`validate_new_element_request` → `self._validate_body(self.
+_new_element_request_adapter.validate_python, body)`) uses a bare
+`TypeAdapter(NewElementRequestBody)` (set in `ServerClient.__init__`) —
+`NewElementRequestBody.class_` is `Annotated[Literal["NewElementRequestBody"],
+Field(alias="class")]`, a strict literal. Any other `class` value —
+including the documented `"NewSolutionElementRequestBody"` — fails pydantic
+validation locally, before any network call, raising
+`PyegeriaInvalidParameterException` with `additional_info={"reason":
+"Request body failed validation", "validation_errors": [...]}`. The
+resulting exception message reads exactly like a server-side rejection
+("Egeria rejected the new SolutionBlueprint: ...VALIDATION_ERROR_1...
+Invalid parameters were provided...") and cost real debugging time on the
+consumer side tracing it back to "not actually an Egeria call at all."
+
+Reproduced directly:
+```python
+from pyegeria.models import NewElementRequestBody
+from pydantic import TypeAdapter
+TypeAdapter(NewElementRequestBody).validate_python({
+    "class": "NewSolutionElementRequestBody", "isOwnAnchor": True,
+    "initialStatus": "DRAFT",
+    "properties": {"class": "SolutionBlueprintProperties",
+                   "qualifiedName": "test", "displayName": "test"},
+})
+# ValidationError: Input should be 'NewElementRequestBody'
+# [type=literal_error, input_value='NewSolutionElementRequestBody', ...]
+```
+
+**Scope beyond `create_solution_blueprint`**: `create_solution_component` (and
+its `_async_*` sibling) carries the identical docstring text and the
+identical gap — confirmed by walking each `NewSolutionElementRequestBody`
+docstring reference in `omvs/solution_architect.py` (lines 2254/2372/3542/3629
+in this tree) back to its enclosing method: `_async_create_solution_blueprint`/
+`create_solution_blueprint` (the two checked above) and
+`_async_create_solution_component`/`create_solution_component`. Both public
+create-element methods in this file document the same unbacked Draft-status
+path. Not checked beyond `solution_architect.py`: worth a full grep across
+`omvs/*.py` for any other method documenting `NewSolutionElementRequestBody`,
+`NewGovernanceElementRequestBody`, or any other `New*ElementRequestBody`
+variant that isn't `NewElementRequestBody` itself, since the same
+"documented in the docstring, no model behind it" shape could recur
+per-family.
+
+**Candidate fix** (not applied — for whoever picks this up): either (a)
+define a real `NewSolutionElementRequestBody` pydantic model (subclassing
+or extending `NewElementRequestBody` with an `initial_status` field and its
+own `class_: Literal["NewSolutionElementRequestBody"]`) and register it
+alongside `NewElementRequestBody` wherever `_new_element_request_adapter`
+is built (likely needs a `Union`/discriminated-union `TypeAdapter`, not a
+single-model one, so both class names validate), or (b) if
+`initialStatus` is actually accepted by `NewElementRequestBody` itself on
+the Egeria server side despite not being a declared pydantic field, add
+`initial_status: str | None = None` directly to `NewElementRequestBody`
+and drop the docstring's separate-class framing — cheaper, but needs
+confirming server-side that `NewElementRequestBody` + `initialStatus` is
+accepted (not verified here; the consumer's own fallback, tracked in their
+own Backlog, is to use `NewElementRequestBody` with no `initialStatus` at
+all, which creates the element ACTIVE, not Draft, until this is resolved).
+
+**Consumer-side workaround, now supersedable**: `BlueprintMaterializer.
+materialize_blueprint_element` (trellis/resource_explorer, `surveyors/
+arch_recovery/blueprint_materializer.py`) sends `class: "NewElementRequestBody"`
+with no status field at all, same as their pre-existing `ComponentMaterializer`
+— blueprints materialize ACTIVE, not Draft. With this fix landed, that
+workaround can be upgraded to set `contentStatus: "DRAFT"` inside
+`properties` on the same `NewElementRequestBody` to get the originally
+intended Draft-status behavior — not applied here since this is a
+consumer-side change, tracked for `dwolfson-1b`/trellis to pick up.
+
+**Fix landed 2026-09-03 — docstring correction, no model change needed.**
+Checked ground truth first: `NewSolutionElementRequestBody` and
+`initialStatus` appear in **zero** `.http` files anywhere in this repo
+(`grep -rln "NewSolutionElementRequestBody\|initialStatus" "pyegeria/http
+clients/"` returns nothing) — the documented shape was never a real Egeria
+API surface, not merely an unmodeled one, which rules out candidate fix (a)
+(defining a real model) and (b) (adding `initial_status` to
+`NewElementRequestBody`) from the original write-up. The actual, real
+mechanism for setting status on these elements already exists:
+`Egeria-api-solution-architect.http`'s own `updateSolutionBlueprintStatus`
+example sets a blueprint's status via `"contentStatus": "ACTIVE"` inside an
+`AuthoredReferenceableProperties`-shaped `properties` object — and
+`content_status: str | None = None` is already a real field on
+`ReferenceableProperties` (`pyegeria/models/models.py`), the base class
+both `SolutionBlueprintProperties` and (transitively)
+`SolutionComponentProperties` derive from. Since `NewElementRequestBody.
+properties` is a bare `dict` (no nested pydantic validation), passing
+`contentStatus` inside it at *creation* time was always possible — the
+docstrings just never said so, and instead pointed at a body shape that
+doesn't exist anywhere.
+
+Rewrote all four docstrings (`_async_create_solution_blueprint`/
+`create_solution_blueprint`, `_async_create_solution_component`/
+`create_solution_component`, `omvs/solution_architect.py`) to drop every
+reference to `NewSolutionElementRequestBody`/`initialStatus` and document
+`contentStatus` inside `properties` instead, with a `NewElementRequestBody`
+example that now sets `"contentStatus": "DRAFT"`. Two extra defects found
+and fixed while doing this walk, both worse than the one originally
+reported:
+- `_async_create_solution_blueprint`'s *first* ("no lifecycle") example
+  body already carried stray `"userDefinedStatus"`/`"lifecycleStatus"`
+  fields left over from the fictional shape — with a **missing comma**
+  after `"lifecycleStatus": "DRAFT"`, making it invalid JSON even as a
+  copy-paste example, independent of the pydantic-validation bug.
+- `_async_create_solution_component`/`create_solution_component`'s only
+  example already used the real `"class": "NewElementRequestBody"` (so it
+  passed validation) but paired it with the fictional top-level
+  `"initialStatus"` field anyway. This is a *different, silent* failure
+  mode from the reported one: `NewElementRequestBody` inherits
+  `PyegeriaModel`'s `extra='ignore'`, so `initialStatus` validated
+  successfully and was silently dropped before serialization — no
+  exception at all, just an element that always came out ACTIVE regardless
+  of the caller's intent to set DRAFT. Exactly the class of bug flagged
+  generally in this file's own `pyegeria/core/` gotcha note about
+  request-body models silently dropping undeclared fields.
+
+Verified locally (no live server access from this environment): the
+original repro's `TypeAdapter(NewElementRequestBody).validate_python(...)`
+call with the old `NewSolutionElementRequestBody`/`initialStatus` shape
+still fails as expected (proving the understanding of the original bug is
+correct), and the corrected shape
+(`{"class": "NewElementRequestBody", "properties": {...,
+"contentStatus": "DRAFT"}}`) validates cleanly with `contentStatus`
+preserved intact through to the serialized JSON. **Not live-verified
+against a real Egeria server** — `dwolfson-1b`/trellis has live access;
+recommend they confirm `contentStatus: "DRAFT"` at creation actually lands
+as the blueprint/component's status server-side before switching
+`BlueprintMaterializer` off its ACTIVE-only workaround.
+
 ### ISSUE-82: `pyegeria/omvs/valid_metadata.py` sends the literal query string `typeName=None` whenever `type_name` is Python `None` — breaks every Type-Name-omitted (global) Valid Metadata Value, in 12 of 14 methods across `ValidMetadataManager`
 
 **Status:** fixed and live-verified 2026-08-28 — all 12 affected methods
