@@ -631,9 +631,13 @@ into the entry now, so it isn't rediscovered from scratch later.
 
 ### ISSUE-84: `SolutionArchitect.create_solution_blueprint`'s own docstring documents a `NewSolutionElementRequestBody` body (with `initialStatus`) for Draft-status creation — that class does not exist as a pydantic model, so the documented shape fails client-side validation before any HTTP call
 
-**Status:** fixed 2026-09-03 — docstring-only fix (see "Fix landed" below).
-Reported by a consumer (trellis/Resource Explorer's `BlueprintMaterializer`,
-`docs/blueprint-materialization-plan.md` Phase A).
+**Status:** fixed and live-verified 2026-09-03 — docstring-only fix (see
+"Fix landed" below), merged upstream via
+[PR #338](https://github.com/odpi/egeria-python/pull/338). Reported by a
+consumer (trellis/Resource Explorer's `BlueprintMaterializer`,
+`docs/blueprint-materialization-plan.md` Phase A), who also live-verified
+it once their shared `quickstart-egeria-main` instance recovered from an
+unrelated Postgres connection-pool exhaustion (`jdbcMaximumPoolSize` bump).
 
 **Confirmed in both**: this checkout's installed pyegeria (5.3.4.23, via
 the trellis venv) and this repo's own working tree (6.1.9-dev) —
@@ -770,11 +774,24 @@ still fails as expected (proving the understanding of the original bug is
 correct), and the corrected shape
 (`{"class": "NewElementRequestBody", "properties": {...,
 "contentStatus": "DRAFT"}}`) validates cleanly with `contentStatus`
-preserved intact through to the serialized JSON. **Not live-verified
-against a real Egeria server** — `dwolfson-1b`/trellis has live access;
-recommend they confirm `contentStatus: "DRAFT"` at creation actually lands
-as the blueprint/component's status server-side before switching
-`BlueprintMaterializer` off its ACTIVE-only workaround.
+preserved intact through to the serialized JSON.
+
+**Live-verified 2026-09-03 by `dwolfson-1b`/trellis**, once their shared
+`quickstart-egeria-main` instance recovered from unrelated Postgres pool
+exhaustion: `contentStatus: "DRAFT"` inside `properties` on
+`NewElementRequestBody` creates without error and round-trips correctly on
+read-back (`properties.contentStatus == "DRAFT"`), no separate request-body
+class needed — confirmed twice, once as a standalone probe and once through
+Resource Explorer's actual application path (accepting a real candidate
+blueprint end-to-end via the Curate UI's API). `elementHeader.status` stays `ACTIVE` regardless, as expected — a
+different axis (header status vs. `contentStatus`, distinct concepts in
+Egeria's status model), not a sign the fix is incomplete.
+
+`BlueprintMaterializer.materialize_blueprint_element` has been upgraded to
+send `contentStatus: "DRAFT"` in `properties`, replacing its earlier
+ACTIVE-only workaround. `ComponentMaterializer`'s identical gap is
+**still open** — same fix applies, not yet applied there, tracked
+separately on the trellis/Resource Explorer side.
 
 ### ISSUE-82: `pyegeria/omvs/valid_metadata.py` sends the literal query string `typeName=None` whenever `type_name` is Python `None` — breaks every Type-Name-omitted (global) Valid Metadata Value, in 12 of 14 methods across `ValidMetadataManager`
 
