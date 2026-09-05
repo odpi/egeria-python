@@ -26,7 +26,8 @@ try:
         list_reports,
         describe_report,
         run_report, _execute_egeria_call_blocking,
-        _async_run_report_tool, run_find_report_specs
+        _async_run_report_tool, run_find_report_specs,
+        run_find_report_specs_by_perspective, run_find_report_specs_by_question,
     )
 
     print("MCP import successful...", file=sys.stderr)
@@ -90,6 +91,18 @@ def main() -> None:
         """Finds report specs that match the given perspective, question, and report spec."""
         logger.debug("Finding report specs...")
         return _ok(run_find_report_specs(perspective=perspective, question=question, report_spec=report_spec))
+
+    @srv.tool(name="find_report_specs_by_perspective")
+    def find_report_specs_by_perspective_tool(perspective: str, case_insensitive: bool = True) -> Dict[str, Any]:
+        """Finds report specs whose question_spec includes the given perspective (e.g. "Data Steward")."""
+        logger.debug("Finding report specs by perspective...")
+        return _ok(run_find_report_specs_by_perspective(perspective, case_insensitive=case_insensitive))
+
+    @srv.tool(name="find_report_specs_by_question")
+    def find_report_specs_by_question_tool(question: str, case_insensitive: bool = True, substring: bool = True) -> Dict[str, Any]:
+        """Finds report specs whose question_spec includes a matching example question."""
+        logger.debug("Finding report specs by question...")
+        return _ok(run_find_report_specs_by_question(question, case_insensitive=case_insensitive, substring=substring))
 
 
     @srv.tool(name="describe_report")

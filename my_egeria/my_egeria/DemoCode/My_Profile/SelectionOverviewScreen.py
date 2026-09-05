@@ -8,7 +8,7 @@
 
 from typing import Any
 
-from pyegeria import exec_report_spec, PyegeriaException, print_basic_exception
+from pyegeria import exec_report_spec, PyegeriaException, print_basic_exception, load_app_config, settings
 from textual import app, on
 from textual.app import ComposeResult
 from textual.containers import ScrollableContainer, Container
@@ -27,51 +27,47 @@ class SelectionOverviewScreen(ModalScreen):
 
     CSS_PATH = "my_profile.tcss"
 
-    def __init__(self, category, view_server, url, user, pwd, data_tree=None, data_samples=None):
-        self.category = category
-        self.view_server = view_server
-        self.platform_url = url
-        self.user_name = user
-        self.user_password = pwd
+    def __init__(
+        self,
+        category: str | None = None,
+        view_server: str | None = None,
+        url: str | None = None,
+        user: str | None = None,
+        pwd: str | None = None,
+        data_tree: Tree | None = None,
+        data_samples: Any = None,
+        *args,
+        **kwargs,
+    ):
+        super().__init__(*args, **kwargs)
+        load_app_config()
+        app_config = settings.Environment
+        app_user = settings.User_Profile
+        self.category = category or "glossary"
+        self.view_server = view_server or app_config.egeria_view_server or "qs-view-server"
+        self.platform_url = url or app_config.egeria_platform_url or "https://127.0.0.1:9443"
+        self.user_name = user or app_user.user_name or "garygeeke"
+        self.user_password = pwd or app_user.user_pwd or "secret"
         self.data_tree = data_tree
         self.sample_data = data_samples
         self.glossary_term_var_list: list = []
 
+        if self.data_tree is None and hasattr(self, "app"):
+            tree_id_map = {
+                "glossary": "#glossary_details_tree",
+                "catalog": "#digital_product_catalog_tree",
+                "dictionary": "#data_dictionary_tree",
+                "domain": "#business_domain_tree",
+                "collection": "#root_collection_tree",
+            }
+            tree_id = tree_id_map.get(self.category)
+            if tree_id:
+                try:
+                    self.data_tree = self.app.query_one(tree_id, Tree)
+                except Exception:
+                    self.data_tree = None
         if self.data_tree is None:
-            if self.category == "glossary":
-                try:
-                    self.data_tree: Tree = self.app.query_one("#glossary_details_tree", Tree)
-                except NoMatches:
-                    self.dismiss(411)
-                    return
-            elif self.category == "catalog":
-                try:
-                    self.data_tree: Tree = self.app.query_one("#digital_product_catalog_tree", Tree)
-                except NoMatches:
-                    self.dismiss(412)
-                    return
-            elif self.category == "dictionary":
-                try:
-                    self.data_tree: Tree = self.app.query_one("#data_dictionary_tree", Tree)
-                except NoMatches:
-                    self.dismiss(413)
-                    return
-            elif self.category == "domain":
-                try:
-                    self.data_tree: Tree = self.app.query_one("#business_domain_tree", Tree)
-                except NoMatches:
-                    self.dismiss(414)
-                    return
-            elif self.category == "collection":
-                try:
-                    self.data_tree: Tree = self.app.query_one("#root_collection_tree", Tree)
-                except NoMatches:
-                    self.dismiss(415)
-                    return
-            else:
-                # unknown category
-                self.dismiss(410)
-        super().__init__()
+            self.data_tree = Tree(f"{self.category.capitalize()} Details")
 
     def compose(self) -> ComposeResult:
         """ Compose the UI components for the SelectionOverviewScreen screen."""

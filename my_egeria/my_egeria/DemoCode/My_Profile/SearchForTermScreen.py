@@ -23,13 +23,24 @@ class SearchForTermScreen(ModalScreen):
 
     CSS_PATH = "my_profile.tcss"
 
-    def __init__(self, user, password, view_server, platform_url):
-        super().__init__()
+    def __init__(
+        self,
+        user: str | None = None,
+        password: str | None = None,
+        view_server: str | None = None,
+        platform_url: str | None = None,
+        *args,
+        **kwargs,
+    ):
+        super().__init__(*args, **kwargs)
+        load_app_config()
+        app_config = settings.Environment
+        app_user = settings.User_Profile
         self.search_term = ""
-        self.view_server = view_server
-        self.platform_url = platform_url
-        self.user = user
-        self.password = password
+        self.user = user or app_user.user_name or "garygeeke"
+        self.password = password or app_user.user_pwd or "secret"
+        self.view_server = view_server or app_config.egeria_view_server or "qs-view-server"
+        self.platform_url = platform_url or app_config.egeria_platform_url or "https://127.0.0.1:9443"
 
     def on_mount(self):
         self.title = "Egeria"

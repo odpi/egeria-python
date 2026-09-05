@@ -11,6 +11,7 @@ from textual.widgets import OptionList, DataTable
 from textual.widgets._option_list import Option
 
 from my_profile_app import MyProfileApp
+from MainScreen import MainScreen
 from CreateProfileScreen import CreateProfileScreen
 from UserIdentitiesScreen import UserIdentitiesScreen
 from EditElementsScreens import EditProfileScreen
@@ -169,13 +170,58 @@ class TestMyProfileAppActionsAndOptions:
 
     def test_show_main_screen(self):
         app = MyProfileApp()
-        app.get_screen = MagicMock()
-        app.switch_screen = MagicMock()
+        app.pop_screen = MagicMock()
+        app.push_screen = MagicMock()
         app.is_mounted = True
-        with patch.object(MyProfileApp, "screen_stack", new_callable=PropertyMock) as mock_stack:
-            mock_stack.return_value = [MagicMock()]
-            app._show_main_screen()
-            app.switch_screen.assert_called_once_with("main")
+
+        main_screen_obj = MainScreen()
+        modal1 = MagicMock()
+        modal2 = MagicMock()
+        default_screen = MagicMock()
+
+        # Case 1: Multiple screens above MainScreen - pop until MainScreen is active
+        stack_list = [default_screen, main_screen_obj, modal1, modal2]
+        with patch.object(MyProfileApp, "screen_stack", new_callable=PropertyMock) as mock_stack, \
+             patch.object(MyProfileApp, "screen", new_callable=PropertyMock) as mock_screen:
+            mock_stack.side_effect = lambda: stack_list
+            mock_screen.side_effect = lambda: stack_list[-1] if stack_list else None
+
+            def mock_pop():
+                if len(stack_list) > 1:
+                    stack_list.pop()
+            app.pop_screen.side_effect = mock_pop
+
+            app.show_main_screen()
+            assert stack_list[-1] is main_screen_obj
+            assert app.pop_screen.call_count == 2
+            app.push_screen.assert_not_called()
+
+        # Case 2: MainScreen is already active - do not pop MainScreen
+        app.pop_screen.reset_mock()
+        app.push_screen.reset_mock()
+        stack_list_2 = [default_screen, main_screen_obj]
+        with patch.object(MyProfileApp, "screen_stack", new_callable=PropertyMock) as mock_stack, \
+             patch.object(MyProfileApp, "screen", new_callable=PropertyMock) as mock_screen:
+            mock_stack.side_effect = lambda: stack_list_2
+            mock_screen.side_effect = lambda: stack_list_2[-1] if stack_list_2 else None
+
+            app.show_main_screen()
+            assert app.pop_screen.call_count == 0
+            assert len(stack_list_2) == 2
+            app.push_screen.assert_not_called()
+
+        # Case 3: Only default screen on stack - push 'main'
+        app.pop_screen.reset_mock()
+        app.push_screen.reset_mock()
+        stack_list_3 = [default_screen]
+        with patch.object(MyProfileApp, "screen_stack", new_callable=PropertyMock) as mock_stack, \
+             patch.object(MyProfileApp, "screen", new_callable=PropertyMock) as mock_screen:
+            mock_stack.side_effect = lambda: stack_list_3
+            mock_screen.side_effect = lambda: stack_list_3[-1] if stack_list_3 else None
+
+            app.show_main_screen()
+            assert app.pop_screen.call_count == 0
+            app.push_screen.assert_called_once_with("main")
 
     def test_utility_delegation_wrappers(self):
         app = MyProfileApp()
@@ -195,3 +241,34 @@ class TestMyProfileAppActionsAndOptions:
         # Extract glossary terms
         res = app.extract_glossary_terms("GlossaryTerm::TermA, other")
         assert res == ["TermA"]
+
+    @pytest.mark.asyncio
+    @patch("my_profile_app.exec_report_spec")
+    async def test_get_data_product_catalog_table_success(self, mock_exec):
+        mock_exec.return_value = {
+            "kind": "data",
+            "data": [
+                {
+                    "Display Name": "Catalog 1",
+                    "Description": "Desc 1",
+                    "Qualified Name": "Cat::1",
+                }
+            ],
+        }
+        app = MyProfileApp()
+        async with app.run_test():
+            rc = app.get_data_product_catalog_table()
+            assert rc == 200
+            assert app.digital_product_catalog_table is not None
+            assert app.digital_product_catalog_table.row_count == 1
+
+    @pytest.mark.asyncio
+    @patch("my_profile_app.exec_report_spec")
+    async def test_get_data_product_catalog_table_empty(self, mock_exec):
+        mock_exec.return_value = {"kind": "empty", "data": []}
+        app = MyProfileApp()
+        async with app.run_test():
+            rc = app.get_data_product_catalog_table()
+            assert rc == 200
+            assert app.digital_product_catalog_table is not None
+            assert app.digital_product_catalog_table.row_count == 1

@@ -5350,14 +5350,24 @@ class AutomatedCuration(ServerClient):
           "class": "FilterRequestBody",
           "filter": "File System Directory",
           "effectiveTime": "2023-10-27T10:00:00",
-          "skipClassifiedElements": [""],
+          "skipClassifiedElements": ["Template"],
           "startFrom": 0,
           "pageSize": 100
         }
         ```
         """
 
-        skip_templates = "Template" if not get_templates else ""
+        # ISSUE-83: skipClassifiedElements must be [] to skip nothing (include
+        # templates), not [""] -- a list containing an empty string is sent to
+        # Egeria as a request to skip elements classified with an empty-string
+        # classification name, which the server correctly rejects with
+        # OMAG-COMMON-400-018 "The type name  ... is not recognized". That
+        # made every get_technology_type_elements(get_templates=True) call
+        # fail outright, silently masked downstream by callers that treat any
+        # 400 as "no elements found" -- e.g. an entire Tech Catalog technology
+        # type listing renders as empty (self-consistent, easy to mistake for
+        # correct) instead of surfacing the real error.
+        skip_classified_elements = [] if get_templates else ["Template"]
         validate_name(filter_string)
 
         url = (
@@ -5368,7 +5378,7 @@ class AutomatedCuration(ServerClient):
                     "class" : "FilterRequestBody",
                     "filter": filter_string,
                     "effectiveTime": effective_time,
-                    "skipClassifiedElements": [skip_templates],
+                    "skipClassifiedElements": skip_classified_elements,
                     "startFrom": start_from,
                     "pageSize": page_size,
                     **kwargs,

@@ -22,7 +22,7 @@ class TechnologyTypeTemplatesScreen(ModalScreen[Any]):
                 ("b", "back", "Go back"),
                 ("ctl+e", "expand", "Toggle Twisties")]
 
-    CSS_PATH = "my_profile.tcss"
+    CSS_PATH = "../My_Profile/my_profile.tcss"
 
     def __init__ (self,
                   user_name: str,
