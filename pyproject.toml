@@ -24,7 +24,7 @@ dependencies = [
     "urllib3",
     "requests",
     "jupyter",
-    "click==8.3.1",
+    "click==8.5.0",
     "trogon",
     #    "mermaid-py",
     "psycopg2-binary>=2.9.11",
