@@ -14,390 +14,334 @@ from textual.css.query import NoMatches
 from textual.screen import ModalScreen
 from textual.widgets import Header, Footer, DataTable, Static, Placeholder, Input, Button
 
-from pyegeria import PyegeriaException, Egeria, load_app_config
+from pyegeria import PyegeriaException, Egeria, load_app_config, settings
 
 
-class EditAssociationsScreen(ModalScreen):
-    """ Screen called during editing of a users profile to allow editing of the communities and projects
-        they belong too."""
+class ConfirmDeleteScreen(ModalScreen[bool]):
+    """Confirmation prompt shown before an element is deleted from Egeria.
 
-    BINDINGS = [
-        ("e", "exit_screen", "Exit"),
-    ]
+    Dismisses with True to proceed with the delete, False to cancel.
+    """
 
-    def __init__(self, columns=None, rows_with_keys=None, *args, **kwargs):
-        super().__init__(*args, **kwargs, id="edit_associations_screen")
-        self.columns = columns or []
-        self.rows_with_keys = rows_with_keys or []
+    BINDINGS = [("escape", "cancel", "Cancel")]
+
+    CSS_PATH = "my_profile.tcss"
+
+    def __init__(self, label: str, guid: str, context: str = "", *args, **kwargs):
+        super().__init__(*args, **kwargs, id="confirm_delete_screen")
+        self.label = label
+        self.guid = guid
+        self.context = context
 
     def compose(self) -> ComposeResult:
         yield Header(show_clock=True)
-        yield Static("Edit Communities", classes="span-3", id="edit_communities_title")
-        yield Static(" Please note you may only delete one row at a time!", classes="span-3")
+        yield Static("Confirm Deletion", classes="span-3", id="confirm_delete_title")
         yield ScrollableContainer(
-            DataTable(id="my_communities_table"),
+            Static("This will permanently delete the following element from Egeria:"),
+            Static(f"  {self.label}"),
+            Static(f"  GUID: {self.guid}"),
+            Static(""),
+            Static("This cannot be undone from this screen."),
             Horizontal(
-                Button("Remove", id="remove_community", variant="error"),
-                Button("Edit Values for selected row", id="edit_community", variant="warning"),
-                ),
-            id="edit_communities_container")
-        yield ScrollableContainer(
-            DataTable(id="my_projects_table"),
-            Horizontal(
-                Button("Remove", id="remove_project",variant="error"),
-                Button("Edit Values for selected row", id="edit_project", variant="warning"),
-                ),
-            id="edit_projects_container")
-        yield Horizontal(
-            Button("Exit", id="exit_screen", variant="primary"),
-            id="bottom_buttons_container")
+                Button("Delete", id="confirm_delete_btn", variant="error"),
+                Button("Cancel", id="cancel_delete_btn", variant="primary"),
+            ),
+            id="confirm_delete_container",
+        )
         yield Footer()
 
-    async def on_mount(self):
-        self.log("Edit communities screen mounted")
+    def on_mount(self) -> None:
         self.title = "Egeria - my_profile"
-        self.sub_title = "Edit Communities"
+        self.sub_title = f"Confirm Deletion{f' - {self.context}' if self.context else ''}"
 
-    @on(DataTable.RowSelected, "#communities_table")
-    def row_selected(self, event: DataTable.RowSelected):
-        """ When the user selects a row in the data table store the row key"""
-        self.row_key = event.row_key
+    @on(Button.Pressed, "#confirm_delete_btn")
+    def handle_confirm_button(self, event: Button.Pressed) -> None:
+        self.dismiss(True)
 
-    @on(DataTable.RowSelected, "#projects_table")
-    def row_selected(self, event: DataTable.RowSelected):
-        """ When the user selects a row in the data table store the row key"""
-        self.row_key = event.row_key
+    @on(Button.Pressed, "#cancel_delete_btn")
+    def handle_cancel_button(self, event: Button.Pressed) -> None:
+        self.dismiss(False)
 
-    def action_exit_screen(self):
-        """ The user has requested to exit the screen, return the current table data """
-        self.dismiss(200)
+    def action_cancel(self) -> None:
+        self.dismiss(False)
 
-    def action_remove_community(self):
-        """ The user has selected the delete row option """
-        self.log(f"Delete row selected, row key: {self.row_key}")
-        # If there is a row selected, delete it and clear the row key variable
-        if self.row_key:
-            self.my_communities_table.remove_row(self.row_key)
-            self.my_communities_table.refresh()
-            # self.communities_container.refresh(layout=True)
-            self.row_key = None
-        # If there is no row key in the variable, inform the user by mounting a message into the container
-        # and wait for any further actions.
-        else:
-            self.communities_container.mount(Static("Please select a row to delete prior to using the hot key!"))
-            self.communities_container.refresh(layout=True)
 
-class EditBlogsScreen(ModalScreen):
-    """ Screen called during editing of a users profile to allow editing of the blogs
-        they belong too."""
+class BaseEditScreen(ModalScreen):
+    """Shared behaviour for every per-table edit screen.
+
+    Subclasses declare only their identifiers; the parse/mount/add/delete logic
+    lives here once. Each subclass keeps its historical attribute names
+    (``my_roles_table``, ``roles_container``, ...) because the stylesheet and the
+    rest of the app refer to them.
+
+    Dismisses with the screen's rows as ``[(row_key, row_values), ...]`` so the
+    caller can write them back to the corresponding table on the main screen.
+    """
+
+    #: id given to the screen itself
+    SCREEN_ID: str = ""
+    #: id of the DataTable this screen owns
+    TABLE_ID: str = ""
+    #: id of the ScrollableContainer the table is mounted into
+    CONTAINER_ID: str = ""
+    #: id of the title Static
+    TITLE_ID: str = ""
+    #: historical attribute name for the table, e.g. "my_roles_table"
+    TABLE_ATTR: str = ""
+    #: historical attribute name for the container, e.g. "roles_container"
+    CONTAINER_ATTR: str = ""
+    #: heading text, also used as the sub-title
+    TITLE_TEXT: str = ""
+    #: id of the originating table on the main screen, used for add/delete routing
+    SOURCE_TABLE: str = ""
 
     BINDINGS = [
         ("escape", "exit_screen", "Exit"),
-        ("d", "delete_row", "Delete Row")
+        ("a", "add_row", "Add Row"),
+        ("d", "delete_row", "Delete Row"),
     ]
 
+    CSS_PATH = "my_profile.tcss"
+
     def __init__(self, columns=None, rows_with_keys=None, *args, **kwargs):
-        super().__init__(*args, **kwargs, id="edit_blogs_screen")
-        self.my_blogs_table: DataTable = DataTable(id="blogs_destination")
-        self.row_key = None
+        super().__init__(*args, **kwargs, id=self.SCREEN_ID)
         self.columns = columns or []
         self.rows_with_keys = rows_with_keys or []
-        self.blogs_container: ScrollableContainer
+        self.row_key = None
+        self.table: DataTable = DataTable(id=self.TABLE_ID)
+        self.table.zebra_stripes = True
+        self.table.cursor_type = "row"
+        self.container: ScrollableContainer | None = None
+        # Keep the per-screen attribute names the stylesheet and app expect.
+        if self.TABLE_ATTR:
+            setattr(self, self.TABLE_ATTR, self.table)
 
     def compose(self) -> ComposeResult:
         yield Header(show_clock=True)
-        yield Static("Edit Blogs", classes="span-3", id="edit_blogs_title")
-        yield Static(" Please note you may only delete one row at a time!", classes="span-3")
-        yield ScrollableContainer(id="edit_blogs_container")
+        yield Static(self.TITLE_TEXT, classes="span-3", id=self.TITLE_ID)
+        yield Static(
+            " Press 'a' to add a row, 'd' to delete the selected row, Esc to exit."
+            " Please note you may only delete one row at a time!",
+            classes="span-3",
+        )
+        yield ScrollableContainer(id=self.CONTAINER_ID)
         yield Footer()
 
-    async def on_mount(self):
-        self.log("Edit blogs screen mounted")
+    async def on_mount(self) -> None:
         self.title = "Egeria - my_profile"
-        self.sub_title = "Edit Blogs"
-        # Populate DataTable
-        self.my_blogs_table.clear(columns=True)
-        self.my_blogs_table.add_columns(*self.columns)
+        self.sub_title = self.TITLE_TEXT
+
+        if (not self.columns or not self.rows_with_keys) and self.SOURCE_TABLE:
+            try:
+                main_table = None
+                try:
+                    main_screen = self.app.get_screen("main")
+                    main_table = main_screen.query_one(f"#{self.SOURCE_TABLE}", DataTable)
+                except Exception:
+                    try:
+                        main_table = self.app.query_one(f"#{self.SOURCE_TABLE}", DataTable)
+                    except Exception:
+                        main_table = None
+                if main_table is not None:
+                    if not self.columns:
+                        self.columns = [col.label.plain for col in main_table.columns.values()]
+                    if not self.rows_with_keys:
+                        self.rows_with_keys = [(row_key.value, main_table.get_row(row_key)) for row_key in main_table.rows]
+            except Exception as e:
+                self.log(f"Error querying source table #{self.SOURCE_TABLE}: {e}")
+
+        self.table.clear(columns=True)
+        if self.columns:
+            self.table.add_columns(*self.columns)
         for key_str, cell_values in self.rows_with_keys:
-            self.my_blogs_table.add_row(*cell_values, key=key_str)
+            self.table.add_row(*cell_values, key=key_str)
 
         try:
-            # Access the edit blogs container in the screen composition objects
-            self.blogs_container = self.query_one("#edit_blogs_container", ScrollableContainer)
-            self.log(f"Blogs container found: {self.blogs_container}")
-            # Mount the table into the container
-            await self.blogs_container.mount(self.my_blogs_table)
-            self.log("Table mounted into container")
-            # To make sure, refresh the container object on the display
-            self.blogs_container.refresh(layout=True)
-            self.my_blogs_table.refresh(layout=True)
+            self.container = self.query_one(f"#{self.CONTAINER_ID}", ScrollableContainer)
+            if self.CONTAINER_ATTR:
+                setattr(self, self.CONTAINER_ATTR, self.container)
+            await self.container.mount(self.table)
+            self.container.refresh(layout=True)
+            self.table.refresh(layout=True)
             self.focus()
-            self.call_after_refresh(self.my_blogs_table.focus)
+            self.call_after_refresh(self.table.focus)
         except NoMatches as e:
-            # If there is an error finding the container
-            self.log(f"Edit blogs container not found - Error: {e}")
-            await self.dismiss(400)
+            self.log(f"Container #{self.CONTAINER_ID} not found: {e}")
+            self.dismiss(400)
 
-    @on(DataTable.RowSelected, "#blogs_destination")
-    def row_selected(self, event: DataTable.RowSelected):
-        """ When the user selects a row in the data table store the row key"""
+    def on_data_table_row_selected(self, event: DataTable.RowSelected) -> None:
+        """Remember which row the user picked."""
         self.row_key = event.row_key
 
-    def action_exit_screen(self):
-        """ The user has requested to exit the screen, return the current table data """
+    def on_data_table_row_highlighted(self, event: DataTable.RowHighlighted) -> None:
+        """Track the cursor too, so 'd' acts on the highlighted row."""
+        self.row_key = event.row_key
+
+    def action_exit_screen(self) -> None:
+        """Hand the current rows back to the caller."""
         rows_with_keys = []
-        for row_key in self.my_blogs_table.rows:
-            rows_with_keys.append((row_key.value, self.my_blogs_table.get_row(row_key)))
+        for row_key in self.table.rows:
+            rows_with_keys.append((row_key.value, self.table.get_row(row_key)))
         self.dismiss(rows_with_keys)
 
-    def action_delete_row(self):
-        """ The user has selected the delete row option """
-        self.log(f"Delete row selected, row key: {self.row_key}")
-        # If there is a row selected, delete it and clear the row key variable
-        if self.row_key:
-            self.my_blogs_table.remove_row(self.row_key)
-            self.my_blogs_table.refresh()
-            self.blogs_container.refresh(layout=True)
-            self.row_key = None
-        # If there is no row key in the variable, inform the user by mounting a message into the container
-        # and wait for any further actions.
-        else:
-            self.blogs_container.mount(Static("Please select a row to delete prior to using the hot key!"))
-            self.blogs_container.refresh(layout=True)
+    async def action_add_row(self) -> None:
+        """Open this table's Add screen."""
+        if not self.SOURCE_TABLE:
+            self.notify("Adding rows is not supported for this table.", timeout=5, severity="warning")
+            return
+        await self.app.add_to_tables(self.SOURCE_TABLE, self.row_key)
 
-class EditCommunitiesScreen(ModalScreen):
-    """ Screen called during editing of a users profile to allow editing of the communities
-        they belong too."""
+    def _selected_guid(self) -> str | None:
+        """GUID of the selected row, or None (having notified) if unusable.
 
-    BINDINGS = [
-        ("escape", "exit_screen", "Exit"),
-        ("d", "delete_row", "Delete Row")
-    ]
-
-    def __init__(self, columns=None, rows_with_keys=None, *args, **kwargs):
-        super().__init__(*args, **kwargs, id="edit_communities_screen")
-        self.my_communities_table: DataTable = DataTable(id="communities_destination")
-        self.row_key = None
-        self.columns = columns or []
-        self.rows_with_keys = rows_with_keys or []
-        self.communities_container: ScrollableContainer
-
-    def compose(self) -> ComposeResult:
-        yield Header(show_clock=True)
-        yield Static("Edit Communities", classes="span-3", id="edit_communities_title")
-        yield Static(" Please note you may only delete one row at a time!", classes="span-3")
-        yield ScrollableContainer(id="edit_communities_container")
-        yield Footer()
-
-    async def on_mount(self):
-        self.log("Edit communities screen mounted")
-        self.title = "Egeria - my_profile"
-        self.sub_title = "Edit Communities"
-        # Populate DataTable
-        self.my_communities_table.clear(columns=True)
-        self.my_communities_table.add_columns(*self.columns)
-        for key_str, cell_values in self.rows_with_keys:
-            self.my_communities_table.add_row(*cell_values, key=key_str)
-
+        The GUID is always the last column: most tables carry four columns, but
+        my_collections_table has only three.
+        """
+        if self.row_key is None:
+            self.notify("Please select a row to delete prior to using the hot key!",
+                        timeout=5, severity="warning")
+            return None
         try:
-            # Access the edit communities container in the screen composition objects
-            self.communities_container = self.query_one("#edit_communities_container", ScrollableContainer)
-            self.log(f"Communities container found: {self.communities_container}")
-            # Mount the table into the container
-            await self.communities_container.mount(self.my_communities_table)
-            self.log("Table mounted into container")
-            # To make sure, refresh the container object on the display
-            self.communities_container.refresh(layout=True)
-            self.my_communities_table.refresh(layout=True)
-            self.focus()
-            self.call_after_refresh(self.my_communities_table.focus)
-        except NoMatches as e:
-            # If there is an error finding the container
-            self.log(f"Edit communities container not found - Error: {e}")
-            await self.dismiss(400)
+            row = self.table.get_row(self.row_key)
+        except Exception as e:  # row removed, or key no longer valid
+            self.log(f"Could not read row {self.row_key}: {e}")
+            self.notify("Could not read the selected row.", timeout=5, severity="error")
+            return None
 
-    @on(DataTable.RowSelected, "#communities_destination")
-    def row_selected(self, event: DataTable.RowSelected):
-        """ When the user selects a row in the data table store the row key"""
-        self.row_key = event.row_key
+        guid = str(row[-1]).strip() if row else ""
+        if not guid or guid.lower() in ("none", "null"):
+            self.notify("This row has no GUID, so it cannot be deleted from Egeria.",
+                        timeout=8, severity="warning")
+            return None
+        return guid
 
-    def action_exit_screen(self):
-        """ The user has requested to exit the screen, return the current table data """
-        rows_with_keys = []
-        for row_key in self.my_communities_table.rows:
-            rows_with_keys.append((row_key.value, self.my_communities_table.get_row(row_key)))
-        self.dismiss(rows_with_keys)
-
-    def action_delete_row(self):
-        """ The user has selected the delete row option """
-        self.log(f"Delete row selected, row key: {self.row_key}")
-        # If there is a row selected, delete it and clear the row key variable
-        if self.row_key:
-            self.my_communities_table.remove_row(self.row_key)
-            self.my_communities_table.refresh()
-            self.communities_container.refresh(layout=True)
-            self.row_key = None
-        # If there is no row key in the variable, inform the user by mounting a message into the container
-        # and wait for any further actions.
-        else:
-            self.communities_container.mount(Static("Please select a row to delete prior to using the hot key!"))
-            self.communities_container.refresh(layout=True)
-
-class EditIdentitiesScreen(ModalScreen):
-    """ Screen called during editing of a users profile to allow editing of the identities
-        they have in Egeria."""
-
-    BINDINGS = [
-        ("escape", "exit_screen", "Exit"),
-        ("d", "delete_row", "Delete Row")
-    ]
-
-    def __init__(self, columns=None, rows_with_keys=None, *args, **kwargs):
-        super().__init__(*args, **kwargs, id="edit_identities_screen")
-        self.my_identities_table: DataTable = DataTable(id="identities_destination")
-        self.row_key = None
-        self.columns = columns or []
-        self.rows_with_keys = rows_with_keys or []
-        self.identities_container: ScrollableContainer
-
-    def compose(self) -> ComposeResult:
-        yield Header(show_clock=True)
-        yield Static("Edit Identities", classes="span-3", id="edit_identities_title")
-        yield Static(" Please note you may only delete one row at a time!", classes="span-3")
-        yield ScrollableContainer(id="edit_identities_container")
-        yield Footer()
-
-    async def on_mount(self):
-        self.log("Edit identities screen mounted")
-        self.title = "Egeria - my_profile"
-        self.sub_title = "Edit Identities"
-        # Populate DataTable
-        self.my_identities_table.clear(columns=True)
-        self.my_identities_table.add_columns(*self.columns)
-        for key_str, cell_values in self.rows_with_keys:
-            self.my_identities_table.add_row(*cell_values, key=key_str)
-
+    def _row_label(self) -> str:
+        """A human-readable name for the selected row, for the confirm prompt."""
         try:
-            # Access the edit identities container in the screen composition objects
-            self.identities_container = self.query_one("#edit_identities_container", ScrollableContainer)
-            self.log(f"Identities container found: {self.identities_container}")
-            # Mount the table into the container
-            await self.identities_container.mount(self.my_identities_table)
-            self.log("Table mounted into container")
-            # To make sure, refresh the container object on the display
-            self.identities_container.refresh(layout=True)
-            self.my_identities_table.refresh(layout=True)
-            self.focus()
-            self.call_after_refresh(self.my_identities_table.focus)
-        except NoMatches as e:
-            # If there is an error finding the container
-            self.log(f"Edit identities container not found - Error: {e}")
-            await self.dismiss(400)
+            row = self.table.get_row(self.row_key)
+        except Exception:
+            return "the selected row"
+        for cell in row:
+            text = str(cell).strip()
+            if text:
+                return text
+        return "the selected row"
 
-    @on(DataTable.RowSelected, "#identities_destination")
-    def row_selected(self, event: DataTable.RowSelected):
-        """ When the user selects a row in the data table store the row key"""
-        self.row_key = event.row_key
+    async def action_delete_row(self) -> None:
+        """Delete the selected row's element from Egeria, after confirmation."""
+        guid = self._selected_guid()
+        if guid is None:
+            return
 
-    def action_exit_screen(self):
-        """ The user has requested to exit the screen, return the current table data """
-        rows_with_keys = []
-        for row_key in self.my_identities_table.rows:
-            rows_with_keys.append((row_key.value, self.my_identities_table.get_row(row_key)))
-        self.dismiss(rows_with_keys)
+        row_key = self.row_key
+        label = self._row_label()
 
-    def action_delete_row(self):
-        """ The user has selected the delete row option """
-        self.log(f"Delete row selected, row key: {self.row_key}")
-        # If there is a row selected, delete it and clear the row key variable
-        if self.row_key:
-            self.my_identities_table.remove_row(self.row_key)
-            self.my_identities_table.refresh()
-            self.identities_container.refresh(layout=True)
-            self.row_key = None
-        # If there is no row key in the variable, inform the user by mounting a message into the container
-        # and wait for any further actions.
-        else:
-            self.identities_container.mount(Static("Please select a row to delete prior to using the hot key!"))
-            self.identities_container.refresh(layout=True)
+        async def on_confirm(confirmed: bool | None) -> None:
+            if not confirmed:
+                self.notify("Delete cancelled.", timeout=4)
+                return
+            deleted = await self.app.delete_element(self.SOURCE_TABLE, guid)
+            if not deleted:
+                # delete_element has already reported why; leave the row in place
+                # so the display keeps matching Egeria.
+                return
+            try:
+                self.table.remove_row(row_key)
+            except Exception as e:
+                self.log(f"Row {row_key} already gone from the display: {e}")
+            self.table.refresh()
+            if self.container is not None:
+                self.container.refresh(layout=True)
+            if self.row_key == row_key:
+                self.row_key = None
+            self.notify(f"Deleted {label} from Egeria.", timeout=6)
 
-class EditJournalScreen(ModalScreen):
-    """ Screen called during editing of a users profile to allow editing of the journal
-        they belong too."""
+        self.push_screen(ConfirmDeleteScreen(label, guid, self.TITLE_TEXT), callback=on_confirm)
 
-    BINDINGS = [
-        ("escape", "exit_screen", "Exit"),
-        ("d", "delete_row", "Delete Row")
-    ]
 
-    def __init__(self, columns=None, rows_with_keys=None, *args, **kwargs):
-        super().__init__(*args, **kwargs, id="edit_journal_screen")
-        self.my_journal_table: DataTable = DataTable(id="journal_destination")
-        self.row_key = None
-        self.columns = columns or []
-        self.rows_with_keys = rows_with_keys or []
-        self.journal_container: ScrollableContainer
+class EditAssociationsScreen(BaseEditScreen):
+    """Screen called during editing of a user's profile to allow editing of the
+    associations (communities and projects) the user belongs to."""
 
-    def compose(self) -> ComposeResult:
-        yield Header(show_clock=True)
-        yield Static("Edit Journal", classes="span-3", id="edit_journal_title")
-        yield Static(" Please note you may only delete one row at a time!", classes="span-3")
-        yield ScrollableContainer(id="edit_journal_container")
-        yield Footer()
+    SCREEN_ID = "edit_associations_screen"
+    TABLE_ID = "associations_destination"
+    CONTAINER_ID = "edit_associations_container"
+    TITLE_ID = "edit_associations_title"
+    TABLE_ATTR = "my_associations_table"
+    CONTAINER_ATTR = "associations_container"
+    TITLE_TEXT = "Edit Associations"
+    SOURCE_TABLE = "associations_table"
 
-    async def on_mount(self):
-        self.log("Edit journal screen mounted")
-        self.title = "Egeria - my_profile"
-        self.sub_title = "Edit Journal"
-        # Populate DataTable
-        self.my_journal_table.clear(columns=True)
-        self.my_journal_table.add_columns(*self.columns)
-        for key_str, cell_values in self.rows_with_keys:
-            self.my_journal_table.add_row(*cell_values, key=key_str)
 
-        try:
-            # Access the edit journal container in the screen composition objects
-            self.journal_container = self.query_one("#edit_journal_container", ScrollableContainer)
-            self.log(f"Journal container found: {self.journal_container}")
-            # Mount the table into the container
-            await self.journal_container.mount(self.my_journal_table)
-            self.log("Table mounted into container")
-            # To make sure, refresh the container object on the display
-            self.journal_container.refresh(layout=True)
-            self.my_journal_table.refresh(layout=True)
-            self.focus()
-            self.call_after_refresh(self.my_journal_table.focus)
-        except NoMatches as e:
-            # If there is an error finding the container
-            self.log(f"Edit journal container not found - Error: {e}")
-            await self.dismiss(400)
+class EditBlogsScreen(BaseEditScreen):
+    """Screen called during editing of a user's profile to allow editing of the
+    blog entries the user has written."""
 
-    @on(DataTable.RowSelected, "#journal_destination")
-    def row_selected(self, event: DataTable.RowSelected):
-        """ When the user selects a row in the data table store the row key"""
-        self.row_key = event.row_key
+    SCREEN_ID = "edit_blogs_screen"
+    TABLE_ID = "blogs_destination"
+    CONTAINER_ID = "edit_blogs_container"
+    TITLE_ID = "edit_blogs_title"
+    TABLE_ATTR = "my_blogs_table"
+    CONTAINER_ATTR = "blogs_container"
+    TITLE_TEXT = "Edit Blogs"
+    SOURCE_TABLE = "blogs_table"
 
-    def action_exit_screen(self):
-        """ The user has requested to exit the screen, return the current table data """
-        rows_with_keys = []
-        for row_key in self.my_journal_table.rows:
-            rows_with_keys.append((row_key.value, self.my_journal_table.get_row(row_key)))
-        self.dismiss(rows_with_keys)
 
-    def action_delete_row(self):
-        """ The user has selected the delete row option """
-        self.log(f"Delete row selected, row key: {self.row_key}")
-        # If there is a row selected, delete it and clear the row key variable
-        if self.row_key:
-            self.my_journal_table.remove_row(self.row_key)
-            self.my_journal_table.refresh()
-            self.journal_container.refresh(layout=True)
-            self.row_key = None
-        # If there is no row key in the variable, inform the user by mounting a message into the container
-        # and wait for any further actions.
-        else:
-            self.journal_container.mount(Static("Please select a row to delete prior to using the hot key!"))
-            self.journal_container.refresh(layout=True)
+class EditCollectionsScreen(BaseEditScreen):
+    """Screen called during editing of a user's profile to allow editing of the
+    collections the user owns."""
+
+    SCREEN_ID = "edit_collections_screen"
+    TABLE_ID = "collections_destination"
+    CONTAINER_ID = "edit_collections_container"
+    TITLE_ID = "edit_collections_title"
+    TABLE_ATTR = "my_collections_table"
+    CONTAINER_ATTR = "collections_container"
+    TITLE_TEXT = "Edit Collections"
+    SOURCE_TABLE = "my_collections_table"
+
+
+class EditCommunitiesScreen(BaseEditScreen):
+    """Screen called during editing of a user's profile to allow editing of the
+    communities the user belongs to."""
+
+    SCREEN_ID = "edit_communities_screen"
+    TABLE_ID = "communities_destination"
+    CONTAINER_ID = "edit_communities_container"
+    TITLE_ID = "edit_communities_title"
+    TABLE_ATTR = "my_communities_table"
+    CONTAINER_ATTR = "communities_container"
+    TITLE_TEXT = "Edit Communities"
+    SOURCE_TABLE = "communities_table"
+
+
+class EditIdentitiesScreen(BaseEditScreen):
+    """Screen called during editing of a user's profile to allow editing of the
+    user identities associated with the profile."""
+
+    SCREEN_ID = "edit_identities_screen"
+    TABLE_ID = "identities_destination"
+    CONTAINER_ID = "edit_identities_container"
+    TITLE_ID = "edit_identities_title"
+    TABLE_ATTR = "my_identities_table"
+    CONTAINER_ATTR = "identities_container"
+    TITLE_TEXT = "Edit Identities"
+    SOURCE_TABLE = "user_identity_table"
+
+
+class EditJournalScreen(BaseEditScreen):
+    """Screen called during editing of a user's profile to allow editing of the
+    journal entries the user has written."""
+
+    SCREEN_ID = "edit_journal_screen"
+    TABLE_ID = "journal_destination"
+    CONTAINER_ID = "edit_journal_container"
+    TITLE_ID = "edit_journal_title"
+    TABLE_ATTR = "my_journal_table"
+    CONTAINER_ATTR = "journal_container"
+    TITLE_TEXT = "Edit Journal"
+    SOURCE_TABLE = "journal_table"
+
 
 class EditProfileScreen(ModalScreen[Any]):
     """Modal screen to create a new user profile in Egeria.
@@ -416,33 +360,50 @@ class EditProfileScreen(ModalScreen[Any]):
 
     CSS_PATH = "my_profile.tcss"
 
-    def __init__(self, user,
-                        password,
-                        view_server,
-                        platform_url,
-                        karma_points,
-                        user_profile,
-                        user_GUID
-                 ):
-        super().__init__(id="edit_profile_screen")
+    def __init__(
+        self,
+        user: str | None = None,
+        password: str | None = None,
+        view_server: str | None = None,
+        platform_url: str | None = None,
+        karma_points: int | None = None,
+        user_profile: dict | None = None,
+        user_GUID: str | None = None,
+        *args,
+        **kwargs,
+    ):
+        super().__init__(id="edit_profile_screen", *args, **kwargs)
         load_app_config()
-        self.user_name = user
-        self.user_password = password
-        self.view_server = view_server
-        self.platform_url = platform_url
-        self.karma_points = karma_points
-        self.user_profile = user_profile
-        self.user_GUID = user_GUID
+        app_config = settings.Environment
+        app_user = settings.User_Profile
+        self.user_name = user or app_user.user_name or "garygeeke"
+        self.user_password = password or app_user.user_pwd or "secret"
+        self.view_server = view_server or app_config.egeria_view_server or "qs-view-server"
+        self.platform_url = platform_url or app_config.egeria_platform_url or "https://127.0.0.1:9443"
+        self.karma_points = karma_points if karma_points is not None else 0
+        self.user_profile = user_profile or {}
+        self.user_GUID = user_GUID or ""
         print("Platform:", self.platform_url)
         print("View Server:", self.view_server)
 
     def on_mount(self) -> None:
+        if not self.user_profile and hasattr(self, "app"):
+            self.user_profile = getattr(self.app, "user_profile", {})
+        if not self.user_GUID and hasattr(self, "app"):
+            self.user_GUID = getattr(self.app, "user_GUID", "")
+        if self.karma_points == 0 and hasattr(self, "app"):
+            self.karma_points = getattr(self.app, "karma_points", 0)
         self.title = f"User: {self.user_name}, Karma Points: {self.karma_points}"
         self.sub_title = f"Edit Egeria Profile for user: {self.user_name}"
         # retrieve person profile details
 
-
     def compose(self) -> ComposeResult:
+        if not self.user_profile and hasattr(self, "app"):
+            self.user_profile = getattr(self.app, "user_profile", {})
+        if not self.user_GUID and hasattr(self, "app"):
+            self.user_GUID = getattr(self.app, "user_GUID", "")
+        if self.karma_points == 0 and hasattr(self, "app"):
+            self.karma_points = getattr(self.app, "karma_points", 0)
         self.job_title = str(self.user_profile.get("jobTitle", self.user_profile.get("Job Title", "")))
         self.log(f"Job Title: {self.job_title}")
         self.given_names = str(self.user_profile.get("givenNames", ""))
@@ -603,6 +564,30 @@ class EditProfileScreen(ModalScreen[Any]):
         return(200)
 
     def action_Edit_communities(self) -> str:
+        #base code from which tyo build
+        # ========================================================
+        # token = client.create_egeria_bearer_token()  # uses env vars; or pass (user, password) explicitly
+        #
+        # try:
+        #     # --- API call ---
+        #
+        #     community_guid_to_update = "YOUR_COMMUNITY_GUID_TO_UPDATE"
+        #
+        #     body_for_community_update = {
+        #         'class': 'UpdateElementRequestBody',
+        #         'properties': {
+        #             'displayName': 'New display name for the updated community',  # Update this
+        #             'description': 'Updated description of the community'  # Update this
+        #         }
+        #     }
+        #
+        #     client.update_community(community_guid_to_update, body_for_community_update)
+        #
+        # except PyegeriaException as e:
+        #     print_basic_exception(e)
+        # finally:
+        #     client.close_session()
+        # ========================================================
         self.dismiss("community")
 
     def action_Edit_identities(self) -> str:
@@ -615,314 +600,57 @@ class EditProfileScreen(ModalScreen[Any]):
         self.dismiss("team")
 
 
-class EditProjectsScreen(ModalScreen):
-    """ Screen called during editing of a users profile to allow editing of the projects
-        they belong too."""
+class EditProjectsScreen(BaseEditScreen):
+    """Screen called during editing of a user's profile to allow editing of the
+    projects the user belongs to."""
 
-    BINDINGS = [
-        ("escape", "exit_screen", "Exit"),
-        ("d", "delete_row", "Delete Row")
-    ]
+    SCREEN_ID = "edit_projects_screen"
+    TABLE_ID = "projects_destination"
+    CONTAINER_ID = "edit_projects_container"
+    TITLE_ID = "edit_projects_title"
+    TABLE_ATTR = "my_projects_table"
+    CONTAINER_ATTR = "projects_container"
+    TITLE_TEXT = "Edit Projects"
+    SOURCE_TABLE = "projects_table"
 
-    def __init__(self, columns=None, rows_with_keys=None, *args, **kwargs):
-        super().__init__(*args, **kwargs, id="edit_projects_screen")
-        self.my_projects_table: DataTable = DataTable(id="projects_destination")
-        self.row_key = None
-        self.columns = columns or []
-        self.rows_with_keys = rows_with_keys or []
-        self.projects_container: ScrollableContainer
 
-    def compose(self) -> ComposeResult:
-        yield Header(show_clock=True)
-        yield Static("Edit Projects", classes="span-3", id="edit_projects_title")
-        yield Static(" Please note you may only delete one row at a time!", classes="span-3")
-        yield ScrollableContainer(id="edit_projects_container")
-        yield Footer()
+class EditRolesScreen(BaseEditScreen):
+    """Screen called during editing of a user's profile to allow editing of the
+    roles the user holds."""
 
-    async def on_mount(self):
-        self.log("Edit projects screen mounted")
-        self.title = "Egeria - my_profile"
-        self.sub_title = "Edit Projects"
-        # Populate DataTable
-        self.my_projects_table.clear(columns=True)
-        self.my_projects_table.add_columns(*self.columns)
-        for key_str, cell_values in self.rows_with_keys:
-            self.my_projects_table.add_row(*cell_values, key=key_str)
+    SCREEN_ID = "edit_roles_screen"
+    TABLE_ID = "roles_destination"
+    CONTAINER_ID = "edit_roles_container"
+    TITLE_ID = "edit_roles_title"
+    TABLE_ATTR = "my_roles_table"
+    CONTAINER_ATTR = "roles_container"
+    TITLE_TEXT = "Edit Roles"
+    SOURCE_TABLE = "roles_table"
 
-        try:
-            # Access the edit projects container in the screen composition objects
-            self.projects_container = self.query_one("#edit_projects_container", ScrollableContainer)
-            self.log(f"Projects container found: {self.projects_container}")
-            # Mount the table into the container
-            await self.projects_container.mount(self.my_projects_table)
-            self.log("Table mounted into container")
-            # To make sure, refresh the container object on the display
-            self.projects_container.refresh(layout=True)
-            self.my_projects_table.refresh(layout=True)
-            self.focus()
-            self.call_after_refresh(self.my_projects_table.focus)
-        except NoMatches as e:
-            # If there is an error finding the container
-            self.log(f"Edit projects container not found - Error: {e}")
-            await self.dismiss(400)
 
-    @on(DataTable.RowSelected, "#projects_destination")
-    def row_selected(self, event: DataTable.RowSelected):
-        """ When the user selects a row in the data table store the row key"""
-        self.row_key = event.row_key
+class EditTeamsScreen(BaseEditScreen):
+    """Screen called during editing of a user's profile to allow editing of the
+    teams the user belongs to."""
 
-    def action_exit_screen(self):
-        """ The user has requested to exit the screen, return the current table data """
-        rows_with_keys = []
-        for row_key in self.my_projects_table.rows:
-            rows_with_keys.append((row_key.value, self.my_projects_table.get_row(row_key)))
-        self.dismiss(rows_with_keys)
+    SCREEN_ID = "edit_teams_screen"
+    TABLE_ID = "teams_destination"
+    CONTAINER_ID = "edit_teams_container"
+    TITLE_ID = "edit_teams_title"
+    TABLE_ATTR = "my_teams_table"
+    CONTAINER_ATTR = "teams_container"
+    TITLE_TEXT = "Edit Teams"
+    SOURCE_TABLE = "teams_table"
 
-    def action_delete_row(self):
-        """ The user has selected the delete row option """
-        self.log(f"Delete row selected, row key: {self.row_key}")
-        # If there is a row selected, delete it and clear the row key variable
-        if self.row_key:
-            self.my_projects_table.remove_row(self.row_key)
-            self.my_projects_table.refresh()
-            self.projects_container.refresh(layout=True)
-            self.row_key = None
-        # If there is no row key in the variable, inform the user by mounting a message into the container
-        # and wait for any further actions.
-        else:
-            self.projects_container.mount(Static("Please select a row to delete prior to using the hot key!"))
-            self.projects_container.refresh(layout=True)
 
-class EditRolesScreen(ModalScreen):
-    """ Screen called during editing of a users profile to allow editing of the roles
-        they belong too."""
+class EditTodosScreen(BaseEditScreen):
+    """Screen called during editing of a user's profile to allow editing of the
+    to-dos assigned to the user."""
 
-    BINDINGS = [
-        ("escape", "exit_screen", "Exit"),
-        ("d", "delete_row", "Delete Row")
-    ]
-
-    def __init__(self, columns=None, rows_with_keys=None, *args, **kwargs):
-        super().__init__(*args, **kwargs, id="edit_roles_screen")
-        self.my_roles_table: DataTable = DataTable(id="roles_destination")
-        self.row_key = None
-        self.columns = columns or []
-        self.rows_with_keys = rows_with_keys or []
-        self.roles_container: ScrollableContainer
-
-    def compose(self) -> ComposeResult:
-        yield Header(show_clock=True)
-        yield Static("Edit Roles", classes="span-3", id="edit_roles_title")
-        yield Static(" Please note you may only delete one row at a time!", classes="span-3")
-        yield ScrollableContainer(id="edit_roles_container")
-        yield Footer()
-
-    async def on_mount(self):
-        self.log("Edit roles screen mounted")
-        self.title = "Egeria - my_profile"
-        self.sub_title = "Edit Roles"
-        # Populate DataTable
-        self.my_roles_table.clear(columns=True)
-        self.my_roles_table.add_columns(*self.columns)
-        for key_str, cell_values in self.rows_with_keys:
-            self.my_roles_table.add_row(*cell_values, key=key_str)
-
-        try:
-            # Access the edit roles container in the screen composition objects
-            self.roles_container = self.query_one("#edit_roles_container", ScrollableContainer)
-            self.log(f"Roles container found: {self.roles_container}")
-            # Mount the table into the container
-            await self.roles_container.mount(self.my_roles_table)
-            self.log("Table mounted into container")
-            # To make sure, refresh the container object on the display
-            self.roles_container.refresh(layout=True)
-            self.my_roles_table.refresh(layout=True)
-            self.focus()
-            self.call_after_refresh(self.my_roles_table.focus)
-        except NoMatches as e:
-            # If there is an error finding the container
-            self.log(f"Edit roles container not found - Error: {e}")
-            await self.dismiss(400)
-
-    @on(DataTable.RowSelected, "#roles_destination")
-    def row_selected(self, event: DataTable.RowSelected):
-        """ When the user selects a row in the data table store the row key"""
-        self.row_key = event.row_key
-
-    def action_exit_screen(self):
-        """ The user has requested to exit the screen, return the current table data """
-        rows_with_keys = []
-        for row_key in self.my_roles_table.rows:
-            rows_with_keys.append((row_key.value, self.my_roles_table.get_row(row_key)))
-        self.dismiss(rows_with_keys)
-
-    def action_delete_row(self):
-        """ The user has selected the delete row option """
-        self.log(f"Delete row selected, row key: {self.row_key}")
-        # If there is a row selected, delete it and clear the row key variable
-        if self.row_key:
-            self.my_roles_table.remove_row(self.row_key)
-            self.my_roles_table.refresh()
-            self.roles_container.refresh(layout=True)
-            self.row_key = None
-        # If there is no row key in the variable, inform the user by mounting a message into the container
-        # and wait for any further actions.
-        else:
-            self.roles_container.mount(Static("Please select a row to delete prior to using the hot key!"))
-            self.roles_container.refresh(layout=True)
-
-class EditTeamsScreen(ModalScreen):
-    """ Screen called during editing of a users profile to allow editing of the teams
-        they belong too."""
-
-    BINDINGS = [
-        ("escape", "exit_screen", "Exit"),
-        ("d", "delete_row", "Delete Row")
-    ]
-
-    def __init__(self, columns=None, rows_with_keys=None, *args, **kwargs):
-        super().__init__(*args, **kwargs, id="edit_teams_screen")
-        self.my_teams_table: DataTable = DataTable(id="teams_destination")
-        self.row_key = None
-        self.columns = columns or []
-        self.rows_with_keys = rows_with_keys or []
-        self.teams_container: ScrollableContainer
-
-    def compose(self) -> ComposeResult:
-        yield Header(show_clock=True)
-        yield Static("Edit Teams", classes="span-3", id="edit_teams_title")
-        yield Static(" Please note you may only delete one row at a time!", classes="span-3")
-        yield ScrollableContainer(id="edit_teams_container")
-        yield Footer()
-
-    async def on_mount(self):
-        self.log("Edit teams screen mounted")
-        self.title = "Egeria - my_profile"
-        self.sub_title = "Edit Teams"
-        # Polulate DataTable
-        self.my_teams_table.clear(columns=True)
-        self.my_teams_table.add_columns(*self.columns)
-        for key_str, cell_values in self.rows_with_keys:
-            self.my_teams_table.add_row(*cell_values, key=key_str)
-        try:
-            # Access the edit teams container in the screen composition objects
-            self.teams_container = self.query_one("#edit_teams_container", ScrollableContainer)
-            self.log(f"Teams container found: {self.teams_container}")
-            # Mount the table into the container
-            await self.teams_container.mount(self.my_teams_table)
-            self.log("Table mounted into container")
-            # To make sure, refresh the container object on the display
-            self.teams_container.refresh(layout=True)
-            self.my_teams_table.refresh(layout=True)
-            self.focus()
-            self.call_after_refresh(self.my_teams_table.focus)
-        except NoMatches as e:
-            # If there is an error finding the container
-            self.log(f"Edit teams container not found - Error: {e}")
-            await self.dismiss(400)
-
-    @on(DataTable.RowSelected, "#teams_destination")
-    def row_selected(self, event: DataTable.RowSelected):
-        """ When the user selects a row in the data table store the row key"""
-        self.row_key = event.row_key
-
-    def action_exit_screen(self):
-        """ The user has requested to exit the screen, return the current table data """
-        rows_with_keys = []
-        for row_key in self.my_teams_table.rows:
-            rows_with_keys.append((row_key.value, self.my_teams_table.get_row(row_key)))
-        self.dismiss(rows_with_keys)
-
-    def action_delete_row(self):
-        """ The user has selected the delete row option """
-        self.log(f"Delete row selected, row key: {self.row_key}")
-        # If there is a row selected, delete it and clear the row key variable
-        if self.row_key:
-            self.my_teams_table.remove_row(self.row_key)
-            self.my_teams_table.refresh()
-            self.teams_container.refresh(layout=True)
-            self.row_key = None
-        # If there is no row key in the variable, inform the user by mounting a message into the container
-        # and wait for any further actions.
-        else:
-            self.teams_container.mount(Static("Please select a row to delete prior to using the hot key!"))
-            self.teams_container.refresh(layout=True)
-
-class EditTodosScreen(ModalScreen):
-    """ Screen called during editing of a users profile to allow editing of the todos
-        they belong too."""
-
-    BINDINGS = [
-        ("escape", "exit_screen", "Exit"),
-        ("d", "delete_row", "Delete Row")
-    ]
-
-    def __init__(self, columns=None, rows_with_keys=None, *args, **kwargs):
-        super().__init__(*args, **kwargs, id="edit_todos_screen")
-        self.my_todos_table: DataTable = DataTable(id="todos_destination")
-        self.row_key = None
-        self.columns = columns or []
-        self.rows_with_keys = rows_with_keys or []
-        self.todos_container: ScrollableContainer
-
-    def compose(self) -> ComposeResult:
-        yield Header(show_clock=True)
-        yield Static("Edit Todos", classes="span-3", id="edit_todos_title")
-        yield Static(" Please note you may only delete one row at a time!", classes="span-3")
-        yield ScrollableContainer(id="edit_todos_container")
-        yield Footer()
-
-    async def on_mount(self):
-        self.log("Edit todos screen mounted")
-        self.title = "Egeria - my_profile"
-        self.sub_title = "Edit Todos"
-        # Populate DataTable
-        self.my_todos_table.clear(columns=True)
-        self.my_todos_table.add_columns(*self.columns)
-        for key_str, cell_values in self.rows_with_keys:
-            self.my_todos_table.add_row(*cell_values, key=key_str)
-
-        try:
-            # Access the edit todos container in the screen composition objects
-            self.todos_container = self.query_one("#edit_todos_container", ScrollableContainer)
-            self.log(f"Todos container found: {self.todos_container}")
-            # Mount the table into the container
-            await self.todos_container.mount(self.my_todos_table)
-            self.log("Table mounted into container")
-            # To make sure, refresh the container object on the display
-            self.todos_container.refresh(layout=True)
-            self.my_todos_table.refresh(layout=True)
-            self.focus()
-            self.call_after_refresh(self.my_todos_table.focus)
-        except NoMatches as e:
-            # If there is an error finding the container
-            self.log(f"Edit todos container not found - Error: {e}")
-            await self.dismiss(400)
-
-    @on(DataTable.RowSelected, "#todos_destination")
-    def row_selected(self, event: DataTable.RowSelected):
-        """ When the user selects a row in the data table store the row key"""
-        self.row_key = event.row_key
-
-    def action_exit_screen(self):
-        """ The user has requested to exit the screen, return the current table data """
-        rows_with_keys = []
-        for row_key in self.my_todos_table.rows:
-            rows_with_keys.append((row_key.value, self.my_todos_table.get_row(row_key)))
-        self.dismiss(rows_with_keys)
-
-    def action_delete_row(self):
-        """ The user has selected the delete row option """
-        self.log(f"Delete row selected, row key: {self.row_key}")
-        # If there is a row selected, delete it and clear the row key variable
-        if self.row_key:
-            self.my_todos_table.remove_row(self.row_key)
-            self.my_todos_table.refresh()
-            self.todos_container.refresh(layout=True)
-            self.row_key = None
-        # If there is no row key in the variable, inform the user by mounting a message into the container
-        # and wait for any further actions.
-        else:
-            self.todos_container.mount(Static("Please select a row to delete prior to using the hot key!"))
-            self.todos_container.refresh(layout=True)
-
+    SCREEN_ID = "edit_todos_screen"
+    TABLE_ID = "todos_destination"
+    CONTAINER_ID = "edit_todos_container"
+    TITLE_ID = "edit_todos_title"
+    TABLE_ATTR = "my_todos_table"
+    CONTAINER_ATTR = "todos_container"
+    TITLE_TEXT = "Edit Todos"
+    SOURCE_TABLE = "todos_table"

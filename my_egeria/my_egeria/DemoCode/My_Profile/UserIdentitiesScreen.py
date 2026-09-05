@@ -10,6 +10,9 @@ from textual.containers import ScrollableContainer
 from textual.css.query import NoMatches
 from textual.screen import ModalScreen
 from textual.widgets import Header, Footer, Placeholder, DataTable, Static
+from typing import Any
+
+from pyegeria import load_app_config, settings
 
 
 class UserIdentitiesScreen(ModalScreen):
@@ -22,14 +25,28 @@ class UserIdentitiesScreen(ModalScreen):
 
     CSS_PATH = "my_profile.tcss"
 
-    def __init__(self, user_name, user_password, karma_points, user_identities):
-        super().__init__()
-        self.user_name = user_name
-        self.user_password = user_password
-        self.karma_points = karma_points
+    def __init__(
+        self,
+        user_name: str | None = None,
+        user_password: str | None = None,
+        karma_points: int | None = None,
+        user_identities: Any = None,
+        *args,
+        **kwargs,
+    ):
+        super().__init__(*args, **kwargs)
+        load_app_config()
+        app_user = settings.User_Profile
+        self.user_name = user_name or app_user.user_name or "garygeeke"
+        self.user_password = user_password or app_user.user_pwd or "secret"
+        self.karma_points = karma_points if karma_points is not None else 0
         self.user_identities = user_identities
 
     def on_mount(self) -> None:
+        if self.user_identities is None and hasattr(self, "app"):
+            self.user_identities = getattr(self.app, "user_identities", None)
+        if self.karma_points == 0 and hasattr(self, "app"):
+            self.karma_points = getattr(self.app, "karma_points", 0)
         self.title = "My_Egeria User Identities Screen"
         self.sub_title = f"User Identities for {self.user_name}, Karma Points: {self.karma_points}"
         self.log(f"UserIdentitiesScreen mounted for user: {self.user_name}, Karma Points: {self.karma_points}")

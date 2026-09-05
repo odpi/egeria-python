@@ -25,18 +25,17 @@ class CreateProfileScreen(ModalScreen[int]):
     BINDINGS = [("q", "dismiss(200)", "Quit")]
     CSS_PATH = "my_profile.tcss"
 
-    def __init__(self, user, password, view_server, platform_url):
-        super().__init__()
+    def __init__(self, user: str | None = None, password: str | None = None, view_server: str | None = None, platform_url: str | None = None, *args, **kwargs):
+        super().__init__(*args, **kwargs)
         load_app_config()
         app_config = settings.Environment
         app_user = settings.User_Profile
-        # config_logging()
         self.karma_points = 0
 
-        self.user_name = user
-        self.user_password = password
-        self.view_server = view_server
-        self.platform_url = platform_url
+        self.user_name = user or app_user.user_name or "garygeeke"
+        self.user_password = password or app_user.user_pwd or "secret"
+        self.view_server = view_server or app_config.egeria_view_server or "qs-view-server"
+        self.platform_url = platform_url or app_config.egeria_platform_url or "https://127.0.0.1:9443"
         print("Platform:", self.platform_url)
         print("View Server:", self.view_server)
 
@@ -100,7 +99,8 @@ class CreateProfileScreen(ModalScreen[int]):
                                               }
                                             }
         try:
-            new_profile_inst = MyProfile(self.app.view_server, self.app.platform_url, self.app.user, self.app.password)
+            new_profile_inst = MyProfile(self.view_server, self.platform_url, self.user_name, self.user_password)
+            new_profile_inst.create_egeria_bearer_token(self.user_name, self.user_password)
             new_profile_guid = new_profile_inst.add_my_profile(self.new_element_request_body)
             self.log(f"Profile created with GUID: {new_profile_guid}")
             self.dismiss(200)
