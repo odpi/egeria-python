@@ -24,7 +24,7 @@ from pyegeria import (
     MyProfile,
     PyegeriaException,
     print_basic_exception,
-    exec_report_spec,
+    exec_report_spec, Egeria,
 )
 from textual import on
 from textual.app import App, ComposeResult
@@ -68,6 +68,8 @@ from AddToElementsScreens import (
     AddTodoScreen,
     AddAssociationScreen,
 )
+from ViewSubscriptionsScreen import ViewSubscriptionsScreen
+from GenericDataViewScreen import GenericDataViewScreen, DataViewScreen
 
 from profile_utils import (
     truncate_at_sequence,
@@ -127,6 +129,9 @@ class MyProfileApp(App, TechTypesMixin, ShopForDataMixin, TeamRolesMixin, Elemen
         "add_journal_entry": AddJournalEntryScreen,
         "add_todo": AddTodoScreen,
         "add_association": AddAssociationScreen,
+        "view_subscriptions": ViewSubscriptionsScreen,
+        "generic_data_view": GenericDataViewScreen,
+        "data_view": DataViewScreen,
     }
 
     def __init__(self, *args, **kwargs):
@@ -209,12 +214,7 @@ class MyProfileApp(App, TechTypesMixin, ShopForDataMixin, TeamRolesMixin, Elemen
             self.log("Error retrieving profile. Prompting to create one...")
             self.log("To create a profile you must have a valid userid in the system, please contact your system administrator to create one if needed")
             await self.push_screen(
-                CreateProfileScreen(
-                    self.user_name,
-                    self.user_password,
-                    self.view_server,
-                    self.platform_url,
-                ),
+                CreateProfileScreen(),
                 callback=self.new_profile_return,
             )
         else:
@@ -238,7 +238,7 @@ class MyProfileApp(App, TechTypesMixin, ShopForDataMixin, TeamRolesMixin, Elemen
                 report_spec="My-User-MD",
             )
             self.log(f"Profile retrieved successfully: {self.user_profile_struct}")
-            self._show_main_screen()
+            self.show_main_screen()
         except PyegeriaException as e2:
             self.log(f"Error retrieving user profile: {e2!s}")
             self.exit(412)
@@ -273,6 +273,8 @@ class MyProfileApp(App, TechTypesMixin, ShopForDataMixin, TeamRolesMixin, Elemen
                 self.my_blogs_data.append(entry)
             elif entry.get("class") == "JournalEntryProperties":
                 self.my_journal_data.append(entry)
+                # are todos part of note logs?
+
         self.log(f"Contribution Record: {self.contribution_record}")
         self.log(f"Karma Points: {self.karma_points}")
         self.log(f"my_projects_data: {self.my_projects_data}")
@@ -350,7 +352,7 @@ class MyProfileApp(App, TechTypesMixin, ShopForDataMixin, TeamRolesMixin, Elemen
         else:
             self.user_identity = self.user_identities.get("User-Identities") or []
 
-    async def _populate_tables(self) -> None:
+    async def _populate_tables(self) -> Any:
         """Populates tables from normalized profile data."""
         main_screen = self.get_screen("main")
 
@@ -385,6 +387,11 @@ class MyProfileApp(App, TechTypesMixin, ShopForDataMixin, TeamRolesMixin, Elemen
             self.communities_table.zebra_stripes = True
             self.communities_table.cursor_type = "row"
 
+        self.digital_product_catalog_table: DataTable = DataTable(id="digital_product_catalog_table")
+        self.digital_product_catalog_table.add_columns("Digital Product Catalog Name", "Description", "Qualified Name")
+        self.digital_product_catalog_table.cursor_type = "row"
+        self.digital_product_catalog_table.zebra_stripes = True
+
         self.roles_table.clear(columns=True)
         self.roles_table.add_columns("Role Name", "Role Type", "Description", "GUID")
         self.roles_table.zebra_stripes = True
@@ -399,6 +406,12 @@ class MyProfileApp(App, TechTypesMixin, ShopForDataMixin, TeamRolesMixin, Elemen
         self.blogs_table.add_columns("Blog Title", "Date", "Text", "GUID")
         self.blogs_table.zebra_stripes = True
         self.blogs_table.cursor_type = "row"
+        # for b in self.blogs if isinstance(self.blogs, list) else []:
+        #     if b != "":
+        #         temp_qname = b.get("qualifiedName", "")
+        #         temp_guid = await self.get_guid_for_qualified_name(temp_qname), ""
+        #         b.update("GUID", temp_guid)
+        #         self.log(f"GUID: {temp_guid}, retrieved for {temp_qname}")
 
         self.journal_table.clear(columns=True)
         self.journal_table.add_columns("Journal Entry", "Date", "Text", "GUID")
@@ -444,8 +457,8 @@ class MyProfileApp(App, TechTypesMixin, ShopForDataMixin, TeamRolesMixin, Elemen
                 )
         for r in self.roles if isinstance(self.roles, list) else []:
             self.roles_table.add_row(
-                str(r.get("Role Name", "")),
-                str(r.get("Role Type", "")),
+                str(r.get("Name", "")),
+                str(r.get("Type", "")),
                 str(r.get("Description", "")),
                 str(r.get("GUID", r.get("guid", ""))),
             )
@@ -457,22 +470,22 @@ class MyProfileApp(App, TechTypesMixin, ShopForDataMixin, TeamRolesMixin, Elemen
                 str(t.get("GUID", t.get("guid", ""))),
             )
         for b in self.blogs if isinstance(self.blogs, list) else []:
-            self.blogs_table.add_row(
-                str(b.get("Qualified Name", "")),
-                str(b.get("Effective Time", "")),
-                str(b.get("Text", "")),
-                str(b.get("GUID", b.get("guid", ""))),
-            )
+                self.blogs_table.add_row(
+                    str(b.get("qualifiedName", "")),
+                    str(b.get("time", "")),
+                    str(b.get("text", "")),
+                    str(b.get("GUID", "")),
+                    )
         for j in self.journal if isinstance(self.journal, list) else []:
             self.journal_table.add_row(
-                str(j.get("Qualified Name", "")),
-                str(j.get("Effective Time", "")),
-                str(j.get("Text", "")),
+                str(j.get("qualifiedName", "")),
+                str(j.get("time", "")),
+                str(j.get("text", "")),
                 str(j.get("GUID", j.get("guid", ""))),
             )
         for td in self.todos if isinstance(self.todos, list) else []:
             self.todos_table.add_row(
-                str(td.get("To-Do Name", "")),
+                str(td.get("Name", "")),
                 str(td.get("Activity Status", "")),
                 str(td.get("Description", "")),
                 str(td.get("GUID", td.get("guid", ""))),
@@ -511,10 +524,8 @@ class MyProfileApp(App, TechTypesMixin, ShopForDataMixin, TeamRolesMixin, Elemen
         elif selected_option == "User Identities":
             await self.push_screen(
                 UserIdentitiesScreen(
-                    self.user_name,
-                    self.user_password,
-                    self.karma_points,
-                    self.user_identities,
+                    karma_points=self.karma_points,
+                    user_identities=self.user_identities,
                 ),
                 callback=self.user_identities_callback,
             )
@@ -523,37 +534,91 @@ class MyProfileApp(App, TechTypesMixin, ShopForDataMixin, TeamRolesMixin, Elemen
         elif selected_option == "Edit Profile":
             await self.push_screen(
                 EditProfileScreen(
-                    self.user_name,
-                    self.user_password,
-                    self.view_server,
-                    self.platform_url,
-                    self.karma_points,
-                    self.user_profile,
-                    self.user_GUID,
+                    karma_points=self.karma_points,
+                    user_profile=self.user_profile,
+                    user_GUID=self.user_GUID,
                 ),
                 callback=self.edit_profile_callback,
             )
         elif selected_option == "User Bookmarks":
             pass
         elif selected_option == "Subscriptions":
-            pass
+            await self.push_screen(ViewSubscriptionsScreen(), callback=self.view_subscriptions_callback)
 
     def status_callback(self, status_callback_rc: Any) -> None:
         """Callback routine from the status screen."""
         self.log(f"Status screen returned: {status_callback_rc}")
         self.exit(status_callback_rc)
 
-    def _show_main_screen(self) -> None:
-        """Show or switch back to the main screen."""
+    def show_main_screen(self) -> None:
+        """Show or switch back to the main screen by unwinding the screen stack."""
         self.log("Returning to main screen")
         try:
-            self.get_screen("main")
-            if getattr(self, "is_mounted", False) and len(getattr(self, "screen_stack", [])) > 0:
-                self.switch_screen("main")
-        except Exception:
-            self.log("Main screen does not exist")
-            if getattr(self, "is_mounted", False):
+            while len(getattr(self, "screen_stack", [])) > 1 and not isinstance(getattr(self, "screen", None), MainScreen):
+                self.pop_screen()
+        except Exception as e:
+            self.log(f"Error popping screens to return to main screen: {e}")
+
+        try:
+            if getattr(self, "is_mounted", False) and not isinstance(getattr(self, "screen", None), MainScreen):
                 self.push_screen("main")
+        except Exception as e:
+            self.log(f"Error ensuring main screen: {e}")
+
+    # Alias for handlers calling _show_main_screen
+    _show_main_screen = show_main_screen
+
+    def view_subscriptions_callback(self, subscriptions_callback_rc: Any) -> None:
+        """Callback routine from the view subscriptions screen."""
+        self.log(f"View subscriptions screen returned: {subscriptions_callback_rc}")
+        self.show_main_screen()
+
+    def get_data_product_catalog_table(self) -> int:
+        """Fetch and populate digital product catalog table."""
+        if not hasattr(self, "digital_product_catalog_table") or self.digital_product_catalog_table is None:
+            self.digital_product_catalog_table = DataTable(id="digital_product_catalog_table")
+            self.digital_product_catalog_table.add_columns("Digital Product Catalog Name", "Description", "Qualified Name")
+            self.digital_product_catalog_table.cursor_type = "row"
+            self.digital_product_catalog_table.zebra_stripes = True
+        else:
+            self.digital_product_catalog_table.clear(columns=True)
+            self.digital_product_catalog_table.add_columns("Digital Product Catalog Name", "Description", "Qualified Name")
+            self.digital_product_catalog_table.cursor_type = "row"
+            self.digital_product_catalog_table.zebra_stripes = True
+
+        try:
+            self.digital_product_catalog_data = exec_report_spec(
+                format_set_name="Digital-Product-Catalog",
+                output_format="DICT",
+                params={
+                    "search_string": "*",
+                    "metadata_element_subtypes": ["DigitalProduct", "DigitalProductFamily"],
+                },
+                view_server=self.view_server,
+                view_url=self.platform_url,
+                user=self.user_name,
+                user_pass=self.user_password,
+            )
+        except PyegeriaException as e:
+            self.log(f"Error retrieving digital product catalog details: {e!s}")
+            return 421
+        self.log(f"Digital Product Catalog data returned: {self.digital_product_catalog_data}")
+        self.digital_product_catalog_data_extract = self.digital_product_catalog_data.get("data") or []
+        self.log(f"Digital Product Catalog data extracted: {self.digital_product_catalog_data_extract}")
+        if not self.digital_product_catalog_data_extract:
+            self.log(f"No digital product catalog data found for user: {self.user_name}")
+            self.digital_product_catalog_table.add_row("No digital product catalogs found",
+                                                       "No data returned from Egeria", "")
+            if hasattr(self, "notify"):
+                self.notify(f"No digital product catalogs found for user: {self.user_name}")
+        else:
+            for catalog_item in self.digital_product_catalog_data_extract:
+                self.digital_product_catalog_table.add_row(
+                    catalog_item.get("Display Name", ""),
+                    catalog_item.get("Description", ""),
+                    catalog_item.get("Qualified Name", ""),
+                )
+        return 200
 
     # Compatibility wrappers delegating to profile_utils
     def clean_structure(self, data: Any, target: str = "specificationMermaidGraph") -> Any:
@@ -568,6 +633,18 @@ class MyProfileApp(App, TechTypesMixin, ShopForDataMixin, TeamRolesMixin, Elemen
     def extract_glossary_terms(self, text: str) -> list[str]:
         return extract_glossary_terms(text)
 
+    async def get_guid_for_qualified_name(self, qname: str) -> str:
+        eclient=Egeria(
+                        self.view_server,
+                        self.platform_url,
+                        self.user_name,
+                        self.user_password,
+                        )
+        token = eclient.create_egeria_bearer_token(self.user_name, self.user_password)
+        guid = eclient.get_guid_for_name(name=qname)
+        self.log(f"GUID: {guid} returned for qualified name: {qname}")
+        eclient.close_session()
+        return guid
 
 if __name__ == "__main__":
     app = MyProfileApp()

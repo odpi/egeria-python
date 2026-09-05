@@ -19,7 +19,8 @@ class EditTeamsScreen(ModalScreen):
 
     BINDINGS = [
         ("escape", "exit_screen", "Exit"),
-        ("d", "delete_row", "Delete Row")
+        ("ctrl+t", "add_team", "Add Team"),
+        ("ctrl+r", "delete_team", "Delete Team")
     ]
 
     def __init__(self, columns, rows_with_keys, *args, **kwargs):
@@ -44,6 +45,7 @@ class EditTeamsScreen(ModalScreen):
         # Polulate DataTable
         self.my_teams_table.clear(columns=True)
         self.my_teams_table.add_columns(*self.columns)
+        self.my_teams_table.cursor_type="row"
         for key_str, cell_values in self.rows_with_keys:
             self.my_teams_table.add_row(*cell_values, key=key_str)
         try:
@@ -67,6 +69,7 @@ class EditTeamsScreen(ModalScreen):
     def row_selected(self, event: DataTable.RowSelected):
         """ When the user selects a row in the data table store the row key"""
         self.row_key = event.row_key
+        self.table = event.data_table
 
     def action_exit_screen(self):
         """ The user has requested to exit the screen, return the current table data """
@@ -75,7 +78,7 @@ class EditTeamsScreen(ModalScreen):
             rows_with_keys.append((row_key.value, self.my_teams_table.get_row(row_key)))
         self.dismiss(rows_with_keys)
 
-    def action_delete_row(self):
+    def action_delete_team(self):
         """ The user has selected the delete row option """
         self.log(f"Delete row selected, row key: {self.row_key}")
         # If there is a row selected, delete it and clear the row key variable
@@ -89,3 +92,9 @@ class EditTeamsScreen(ModalScreen):
         else:
             self.teams_container.mount(Static("Please select a row to delete prior to using the hot key!"))
             self.teams_container.refresh(layout=True)
+
+    def action_add_team(self):
+        """ The user has selected the add team option """
+        self.log("Add team selected")
+        self.teams_container.mount(Static("Add team functionality not yet implemented!"))
+        self.teams_container.refresh(layout=True)

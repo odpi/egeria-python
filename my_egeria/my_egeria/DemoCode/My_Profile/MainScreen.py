@@ -18,14 +18,8 @@ class MainScreen(Screen):
 
     BINDINGS = [
         ("q", "app.quit", "Quit"),
+        ("ctrl+e", "edit_table", "Edit Selected Table"),
         ("ctrl+s", "show_comments", "Show Comments for Selected Row"),
-        ("ctrl+t", "add_todos", "Add Todos"),
-        ("ctrl+j", "add_journals", "Add Journals"),
-        ("ctrl+b", "add_blogs", "Add Blogs"),
-        ("ctrl+c", "add_association", "Add Association"),
-        ("ctrl+r", "add_role", "Add Role"),
-        ("ctrl+g", "add_team", "Add Team"),
-        ("ctrl+m", "add_my_collections", "Add My Collections"),
     ]
 
     CSS_PATH = "my_profile.tcss"
@@ -59,7 +53,7 @@ class MainScreen(Screen):
                 Option("User Identities"),
                 Option("Catalogs/Shop for Data"),
                 Option("Edit Profile"),
-                Option("Subscriptions", disabled=True),
+                Option("Subscriptions"),
                 Option("Technology Types"),
                 Option("User Bookmarks", disabled=True),
                 id="other_function_list"
@@ -109,7 +103,11 @@ class MainScreen(Screen):
         if self.selected_table and self.selected_row:
             await self.app.edit_tables(self.selected_table, self.selected_row)
         else:
-            self.notify("Please select a row and table to edit.", timeout=5, severity="warning")
+            active_table = self.get_focused_table()
+            if active_table:
+                await self.app.add_to_tables(active_table, "0")
+            else:
+                self.notify("Please select at least a table, or a table and row to edit.", timeout=5, severity="warning")
 
     async def action_show_comments(self):
         """ Show comments for the selected table """
@@ -119,50 +117,22 @@ class MainScreen(Screen):
             self.notify("Please select a row and table to show comments.", timeout=5, severity="warning")
 
     async def action_add_to_table(self):
-        """ Add to the selected table """
-        if self.selected_table and self.selected_row:
+        """ Add to the selected table.
+
+        Kept as a generic entry point; adding a row is normally reached from
+        within the per-table edit screen (Edit Selected Table -> Add Row).
+        """
+        if self.selected_table:
             await self.app.add_to_tables(self.selected_table, self.selected_row)
         else:
-            self.notify("Please select a row and table to add to.", timeout=5, severity="warning")
+            self.notify("Please select a table to add to.", timeout=5, severity="warning")
 
-    async def action_add_todos(self):
-        """ Add to the selected table """
-        self.selected_table = "todos_table"
-        self.selected_row = 0
-        await self.app.add_to_tables(self.selected_table, self.selected_row)
+    def get_focused_table(self) -> DataTable | None:
+        focused_widget = self.screen.focused
 
-    async def action_add_journals(self):
-        """ Add to the selected table """
-        self.selected_table = "journal_table"
-        self.selected_row = 0
-        await self.app.add_to_tables(self.selected_table, self.selected_row)
+        # Check if the focused widget is a DataTable
+        if isinstance(focused_widget, DataTable):
+            return focused_widget
 
-    async def action_add_blogs(self):
-        """ Add to the selected table """
-        self.selected_table = "blogs_table"
-        self.selected_row = 0
-        await self.app.add_to_tables(self.selected_table, self.selected_row)
+        return None
 
-    async def action_add_my_collections(self):
-        """ Add to the selected table """
-        self.selected_table = "my_collections_table"
-        self.selected_row = 0
-        await self.app.add_to_tables(self.selected_table, self.selected_row)
-
-    async def action_add_association(self):
-        """ Add to the selected table """
-        self.selected_table = "associations_table"
-        self.selected_row = 0
-        await self.app.add_to_tables(self.selected_table, self.selected_row)
-
-    async def action_add_role(self):
-        """ Add to the selected table """
-        self.selected_table = "roles_table"
-        self.selected_row = 0
-        await self.app.add_to_tables(self.selected_table, self.selected_row)
-
-    async def action_add_team(self):
-        """ Add to the selected table """
-        self.selected_table = "my_team_table"
-        self.selected_row = 0
-        await self.app.add_to_tables(self.selected_table, self.selected_row)

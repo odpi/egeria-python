@@ -18,6 +18,7 @@ from loguru import logger
 from pyegeria.view.base_report_formats import (
     list_mcp_format_sets,
     select_report_spec, find_report_specs,
+    find_report_specs_by_perspective, find_report_specs_by_question,
 )
 from pyegeria.egeria_tech_client import EgeriaTech
 from pyegeria.view.format_set_executor import exec_report_spec, _async_run_report
@@ -48,6 +49,50 @@ def run_find_report_specs(perspective: str= None, question: str= None, report_sp
         raise ValueError(f"No report specs found for perspective '{perspective}' and question '{question}'")
     return {"Matching Report Specs" : report_specs}
 
+
+def run_find_report_specs_by_perspective(perspective: str, case_insensitive: bool = True) -> Dict[str, Any]:
+    """
+    ISSUE-80: expose find_report_specs_by_perspective as an MCP tool.
+
+    Find report specs whose question_spec includes the given perspective
+    (e.g. "which report specs does the Data Steward perspective care about").
+
+    Args:
+        perspective (str): The perspective to search for (e.g., "Data Steward").
+        case_insensitive (bool): If True, compare perspectives case-insensitively.
+
+    Returns:
+        dict: {"Matching Report Specs": [...]}, one entry per matching question_spec item.
+    """
+    results = find_report_specs_by_perspective(perspective, case_insensitive=case_insensitive)
+    if not results:
+        raise ValueError(f"No report specs found for perspective '{perspective}'")
+    return {"Matching Report Specs": results}
+
+
+def run_find_report_specs_by_question(
+        question: str, case_insensitive: bool = True, substring: bool = True
+) -> Dict[str, Any]:
+    """
+    ISSUE-80: expose find_report_specs_by_question as an MCP tool.
+
+    Find report specs whose question_spec includes a matching example question
+    (e.g. "which report answers this question").
+
+    Args:
+        question (str): The question to search for.
+        case_insensitive (bool): If True, compare questions case-insensitively.
+        substring (bool): If True, treat `question` as a substring to match; otherwise require exact match.
+
+    Returns:
+        dict: {"Matching Report Specs": [...]}, one entry per matching question_spec item.
+    """
+    results = find_report_specs_by_question(question, case_insensitive=case_insensitive, substring=substring)
+    if not results:
+        raise ValueError(f"No report specs found for question '{question}'")
+    return {"Matching Report Specs": results}
+
+
 def describe_report(name: str, output_type: str = "DICT") -> Dict[str, Any]:
     """
     Describe a format set for MCP discovery. If outputType != ANY, a concrete format
@@ -66,12 +111,17 @@ def _execute_egeria_call_blocking(
         view_server: Optional[str] = None,
         view_url: Optional[str] = None,
         user: Optional[str] = None,
-        user_pass: Optional[str] = None,) -> Dict[str, Any]:
+        user_pass: Optional[str] = None,
+        token: Optional[str] = None,) -> Dict[str, Any]:
     """
     Executes the synchronous, blocking Egeria client call on a dedicated worker thread.
 
     You must replace the hardcoded return with your actual Egeria client logic here.
     All code in this function runs in a blocking, synchronous manner.
+
+    ISSUE-86: `token`, when given, is passed through to `exec_report_spec` so
+    the report runs as the bearer-token-holding caller rather than the
+    `user`/`user_pass` service account.
     """
 
     print(
@@ -90,6 +140,7 @@ def _execute_egeria_call_blocking(
         view_url=view_url if view_url is not None else _settings.Environment.egeria_view_server_url,
         user=user if user is not None else _settings.User_Profile.user_name,
         user_pass=user_pass if user_pass is not None else _settings.User_Profile.user_pwd,
+        token=token,
     )
     # # Returning the hardcoded success for now to prove the async structure works.
     # return {
@@ -108,10 +159,17 @@ def run_report(
     view_url: Optional[str] = None,
     user: Optional[str] = None,
     user_pass: Optional[str] = None,
+    token: Optional[str] = None,
 ) -> Dict[str, Any]:
     """
     Execute a format set action as an MCP-style tool. Enforces DICT/ALL by default.
     Caller may pass credentials explicitly; otherwise defaults are used from config.
+
+    ISSUE-86: pass `token` when the caller already holds a bearer token for
+    the calling user, so the report runs (and its provenance is recorded)
+    as that user instead of falling back to the `user`/`user_pass` service
+    account. `user`/`user_pass` remain fully backward compatible when
+    `token` is not given.
     """
     print(f"Format set: {report}\nparams: {json.dumps(params)}\nview_server: {view_server}\nview_url: {view_url}\nuser: {user}\nuser_pass: {user_pass}", file=sys.stderr)
     # Lazy import of settings to avoid circulars when optional args are None
@@ -125,6 +183,7 @@ def run_report(
         view_url=view_url if view_url is not None else _settings.Environment.egeria_view_server_url,
         user=user if user is not None else _settings.User_Profile.user_name,
         user_pass=user_pass if user_pass is not None else _settings.User_Profile.user_pwd,
+        token=token,
     )
 
 async def _async_run_report_tool(

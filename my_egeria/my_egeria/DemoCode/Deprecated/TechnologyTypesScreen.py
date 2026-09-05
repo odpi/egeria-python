@@ -21,7 +21,7 @@ class TechnologyTypesScreen(ModalScreen):
                 ("g", "go_back", "Back"),
                 ("ctl+e", "expand", "Toggle Twisties")]
 
-    CSS_PATH = "my_profile.tcss"
+    CSS_PATH = "../My_Profile/my_profile.tcss"
 
     def __init__(self, ttlist, user_name, user_pwd, user_kpts):
         """Initialize the TechnologyTypes screen with a list of technology types."""

@@ -20,7 +20,7 @@ current_dir = Path(__file__).resolve().parent
 if str(current_dir) not in sys.path:
     sys.path.append(str(current_dir))
 
-from pyegeria import AutomatedCuration, PyegeriaException, print_basic_exception
+from pyegeria import AutomatedCuration, PyegeriaException, print_basic_exception, load_app_config, settings
 from StatusScreen import StatusScreen
 from TechnologyTypeScreens import (
     TechnologyTypesScreen,
@@ -49,10 +49,8 @@ class TechTypesMixin:
         self.log("Displaying technology types...")
         await self.push_screen(
             TechnologyTypesScreen(
-                self.tech_type_list,
-                self.user_name,
-                self.user_password,
-                self.karma_points,
+                ttlist=self.tech_type_list,
+                user_kpts=self.karma_points,
             ),
             callback=self.tech_type_callback,
         )
@@ -118,14 +116,12 @@ class TechTypesMixin:
 
         await self.push_screen(
             TechnologyTypeOptionsScreen(
-                self.tech_type_guid,
-                self.tech_type_name,
-                self.tech_type_description,
-                self.user_name,
-                self.user_password,
-                self.karma_points,
-                self.tech_type_templates,
-                self.tech_type_processes,
+                tech_type_guid=self.tech_type_guid,
+                tech_type_name=self.tech_type_name,
+                tech_type_description=self.tech_type_description,
+                user_kpts=self.karma_points,
+                tech_type_templates=self.tech_type_templates,
+                tech_type_processes=self.tech_type_processes,
             ),
             callback=self.tech_type_options_callback,
         )
@@ -187,26 +183,24 @@ class TechTypesMixin:
         if self.selected_t_option == "template":
             await self.push_screen(
                 TechnologyTypeTemplatesScreen(
-                    self.user_name,
-                    self.karma_points,
-                    self.tech_type_name,
-                    self.tech_type_description,
-                    self.selected_t_option,
-                    self.selected_t_option_selected,
-                    self.tech_type_templates,
+                    user_kpts=self.karma_points,
+                    tech_type_name=self.tech_type_name,
+                    tech_type_description=self.tech_type_description,
+                    selected_t_option=self.selected_t_option,
+                    tech_type_option_selected=self.selected_t_option_selected,
+                    tech_type_templates=self.tech_type_templates,
                 ),
                 callback=self.tech_type_templates_callback,
             )
         elif self.selected_t_option == "process":
             await self.push_screen(
                 TechnologyTypeProcessesScreen(
-                    self.user_name,
-                    self.karma_points,
-                    self.tech_type_name,
-                    self.tech_type_description,
-                    self.selected_t_option,
-                    self.selected_t_option_selected,
-                    self.tech_type_processes,
+                    user_kpts=self.karma_points,
+                    tech_type_name=self.tech_type_name,
+                    tech_type_description=self.tech_type_description,
+                    selected_t_option=self.selected_t_option,
+                    tech_type_option_selected=self.selected_t_option_selected,
+                    tech_type_processes=self.tech_type_processes,
                 ),
                 callback=self.tech_type_processes_callback,
             )

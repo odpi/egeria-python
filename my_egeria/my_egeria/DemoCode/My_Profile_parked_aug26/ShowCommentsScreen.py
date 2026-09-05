@@ -5,15 +5,15 @@
    This file provides a set of report specification related functions for my_egeria.
 
 """
-from typing import Any
 
 from textual.app import ComposeResult
 from textual.containers import ScrollableContainer
 from textual.css.query import NoMatches
-from textual.screen import ModalScreen
-from textual.widgets import DataTable, Header, Static, Footer, Input, Button
+from textual.screen import Screen, ModalScreen
+from textual.widgets import DataTable, OptionList, Header, Static, Footer, Input, Button
+from textual.widgets._option_list import Option
 
-from pyegeria import PyegeriaException, EgeriaTech, exec_report_spec, load_app_config, settings
+from pyegeria import Egeria, PyegeriaException, EgeriaTech
 
 
 class ShowCommentsScreen(ModalScreen):
@@ -26,35 +26,18 @@ class ShowCommentsScreen(ModalScreen):
 
     CSS_PATH = "my_profile.tcss"
 
-    def __init__(
-        self,
-        table_name: str | None = None,
-        table_row: Any = None,
-        view_server: str | None = None,
-        platform_url: str | None = None,
-        user_name: str | None = None,
-        user_password: str | None = None,
-        platfgorm_url: str | None = None,
-        *args,
-        **kwargs,
-    ):
+    def __init__(self, table_name, table_row, view_server, platfgorm_url, user_name, user_password, *args, **kwargs):
         super().__init__(*args, **kwargs)
-        load_app_config()
-        app_config = settings.Environment
-        app_user = settings.User_Profile
         self.table = table_name
         self.row = table_row
-        self.view_server = view_server or app_config.egeria_view_server or "qs-view-server"
-        self.platform_url = (
-            platform_url or platfgorm_url or kwargs.get("platfgorm_url") or app_config.egeria_platform_url or "https://127.0.0.1:9443"
-        )
-        self.user_name = user_name or app_user.user_name or "garygeeke"
-        self.user_password = user_password or app_user.user_pwd or "secret"
+        self.view_server = view_server
+        self.platform_url = platfgorm_url
+        self.user_name = user_name
+        self.user_password = user_password
         self.selected_row = ""
         self.comment_text = ""
         self.comment_type = ""
         self.backend_id = ""
-        self.show_comments_datatable: DataTable = DataTable(id="show_comments_dt")
 
     def on_mount(self):
         """On mount, find the GUID for the Row """
@@ -66,33 +49,16 @@ class ShowCommentsScreen(ModalScreen):
         if backend_id:
             self.notify(f"Accessing backend system with identifier: {backend_id}")
             self.backend_id = backend_id
+            # replace this by using the report format comment-by-element to retrieve linked comments
             try:
-                comments_list = exec_report_spec(
-                    format_set_name="Comment-by-Element",
-                    output_format="DICT",
-                    params={"element_guid": backend_id},
-                    view_server=self.view_server,
-                    view_url=self.platform_url,
-                    user=self.user_name,
-                    user_pass=self.user_password,
-                )
-                self.log(f"comments_list: {comments_list}")
-
-                if isinstance(comments_list, dict):
-                    comment_count = 0
-                    structured_comments: list[list] = []
-                    comment_text: list[Any] = []
-                    for key, value in comments_list.items():
-                        structured_comments[comment_count] = (key,
-                                                              value["Display Name"],
-                                                              value["Qualified Name"],
-                                                              value["Comment Guid"],
-                                                              value["Description"])
-                        comment_count += 1
-                    for row in structured_comments:
-                        comment_text.append[row]
-                        self.query_one("#show_comments_container", ScrollableContainer).mount(Static(row))
-                elif isinstance(comments_list, str):
+                cclient = Egeria(self.view_server,
+                                 self.platform_url,
+                                 self.user_name,
+                                 self.user_password)
+                token = cclient.create_egeria_bearer_token(self.user_name, self.user_password)
+                comments_list = cclient.get_attached_comments(backend_id)
+                self.log(f"Retrieved: {comments_list} :for element {backend_id}, type: {type(comments_list)}")
+                if isinstance(comments_list, str) or comments_list == "No elements found":
                     self.log(f"processing str comment: {comments_list}")
                     comment_text = str(comments_list)
                     self.query_one("#show_comments_container", ScrollableContainer).mount(Static(comment_text))
@@ -134,12 +100,8 @@ class ShowCommentsScreen(ModalScreen):
         if "GUID" in upper_mapping:
             idx = upper_mapping["GUID"]
         elif "QUALIFIED NAME" in upper_mapping:
-            # use pyegeria to get a GUID for that Qualified Name entity and use it as the index (upper)
-            comment_attributes = exec_report_spec(format_set_name="Search-Keywords",
-                                                   output_format="DICT",
-                                                   params=({"search_string":upper_mapping["QUALIFIED NAME"]}))
-            backend_id = comment_attributes["GUID"]
-            idx = backend_id
+            # use pyegeria to obtain a GUID for that Qualified Name entity and use it as the index (upper)
+            idx = upper_mapping["QUALIFIED NAME"]
         self.log(f"Target column idx value: {idx}")
         if idx is None:
             self.log(f"Target columns GUID or Qualified Name not found in {list(column_mapping.keys())}")
