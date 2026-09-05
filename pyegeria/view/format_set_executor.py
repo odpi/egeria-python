@@ -163,11 +163,22 @@ def run_analytic_action(
 def _run_analytic_function(
     action: dict, *, params: Dict[str, Any],
     view_server: str, view_url: str, user: str, user_pass: str,
+    token: Optional[str] = None,
 ) -> Any:
     """Resolve and call a report spec action's `analytic_function` (extra_find),
     returning the function's raw result -- no chart-wrapping, no output_format
     handling. Shared by `_exec_analytic_series` (SERIES/chart path) and
-    `exec_report_spec`'s analytic-only passthrough (DICT/JSON/etc. path)."""
+    `exec_report_spec`'s analytic-only passthrough (DICT/JSON/etc. path).
+
+    ISSUE-86: when `token` is given, the client is authenticated with it
+    directly (`set_bearer_token`) instead of minting a fresh token via
+    `create_egeria_bearer_token()` -- lets a caller that already holds a
+    bearer token for the calling user (e.g. Egeria Advisor's app JWT, which
+    carries the user's Egeria token and no longer the password) run a report
+    as that user instead of falling back to the `user`/`user_pass` service
+    account. Backward compatible: `user`/`user_pass` keep working exactly as
+    before when no token is given.
+    """
     func_decl = action.get("analytic_function")
     if not func_decl:
         raise ValueError("Report spec action has no analytic_function (extra_find).")
@@ -186,8 +197,12 @@ def _run_analytic_function(
     call_params.update({k: v for k, v in params.items() if v not in (None, "")})
 
     func = _resolve_analytic_function(func_decl)
-    client = EgeriaTech(view_server, view_url, user_id=user, user_pwd=user_pass)
-    client.create_egeria_bearer_token()
+    if token:
+        client = EgeriaTech(view_server, view_url, user_id=user, user_pwd=user_pass)
+        client.set_bearer_token(token)
+    else:
+        client = EgeriaTech(view_server, view_url, user_id=user, user_pwd=user_pass)
+        client.create_egeria_bearer_token()
     return func(*_bind_client_args(func, client), **call_params)
 
 
@@ -577,6 +592,7 @@ def _exec_analytic_chart(
     view_url: str,
     user: str,
     user_pass: str,
+    token: Optional[str] = None,
 ) -> Dict[str, Any]:
     """Run a report spec's `analytic_function` (extra_find) and wrap the
     result as a Vega-Lite chart -- `chart_kind` picks which:
@@ -611,7 +627,7 @@ def _exec_analytic_chart(
 
     result = _run_analytic_function(
         action, params=params, view_server=view_server, view_url=view_url,
-        user=user, user_pass=user_pass,
+        user=user, user_pass=user_pass, token=token,
     )
     if not result:
         return {"kind": "empty"}
@@ -692,6 +708,7 @@ def exec_report_spec(
     view_url: str = settings.Environment.egeria_view_server_url,
     user: str = settings.User_Profile.user_name,
     user_pass: str = settings.User_Profile.user_pwd,
+    token: Optional[str] = None,
 ) -> Dict[str, Any]:
     """
     Execute the action for a given format set and return a normalized result structure.
@@ -701,6 +718,15 @@ def exec_report_spec(
     - {"kind":"json","data": <list|dict|any>}
     - {"kind":"text","mime": "text/markdown"|"text/html","content": str}
     - {"kind":"unknown","raw": any}
+
+    ISSUE-86: `token`, when given, authenticates the client(s) built here with
+    `set_bearer_token(token)` instead of minting a fresh token from
+    `user`/`user_pass` via `create_egeria_bearer_token()`. Use this when the
+    caller already holds a bearer token for the calling user (e.g. an app
+    whose session carries the user's Egeria token, not their password) so
+    report execution -- and its provenance -- reflects that user, not a
+    fallback service account. `user`/`user_pass` remain fully backward
+    compatible when `token` is not given.
     """
     output_format = (output_format or "DICT").upper()
     params = _normalize_report_params(dict(params or {}), action_mode="find")
@@ -716,6 +742,7 @@ def exec_report_spec(
         return _exec_analytic_chart(
             format_set_name, chart_kind=_CHART_KINDS[output_format], params=params,
             view_server=view_server, view_url=view_url, user=user, user_pass=user_pass,
+            token=token,
         )
 
     # Resolve the format set and action
@@ -777,7 +804,7 @@ def exec_report_spec(
     if action.get("analytic_function") and not func_decl:
         result = _run_analytic_function(
             action, params=params, view_server=view_server, view_url=view_url,
-            user=user, user_pass=user_pass,
+            user=user, user_pass=user_pass, token=token,
         )
         if result is None or result == [] or result == {}:
             return {"kind": "empty"}
@@ -814,7 +841,10 @@ def exec_report_spec(
     client = client_class(view_server, view_url, user_id=user, user_pwd=user_pass)
 
     try:
-        client.create_egeria_bearer_token()
+        if token:
+            client.set_bearer_token(token)
+        else:
+            client.create_egeria_bearer_token()
         func = getattr(client, method_name) if method_name and hasattr(client, method_name) else None
         if func is None:
             raise AttributeError(

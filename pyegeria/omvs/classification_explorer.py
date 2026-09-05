@@ -8264,7 +8264,7 @@ class ClassificationExplorer(ServerClient):
         {
            "class" : "NewClassificationRequestBody",
            "properties" : {
-               "class" : "OwnerProperties",
+               "class" : "OwnershipProperties",
                "owner" : "Add value here",
                "ownerTypeName" : "Add value here",
                "ownerPropertyName" : "Add value here"
@@ -8321,7 +8321,7 @@ class ClassificationExplorer(ServerClient):
         {
            "class" : "NewClassificationRequestBody",
            "properties" : {
-               "class" : "OwnerProperties",
+               "class" : "OwnershipProperties",
                "owner" : "Add value here",
                "ownerTypeName" : "Add value here",
                "ownerPropertyName" : "Add value here"

@@ -143,6 +143,62 @@ enough to track there too).
 
 ---
 
+### ISSUE-89: No configurable bearer-token lifetime in `application.properties` — platform tokens are fixed at 3600 s, and the signing key is random per restart
+
+**Layer:** Egeria Server · **Status:** open · **Found:** 2026-09-04 (trellis-auth token contract)
+
+With `authentication.mode=token`, every token minted by the platform decodes to `exp - iat = 3600`
+(observed on `omag-server-platform-6.2-SNAPSHOT`, quickstart, `authentication.source=platform`).
+`application.properties` exposes `authentication.mode`, `authentication.source` and `rsa.key-id`, and
+nothing that controls the lifetime; with `rsa.key-id` empty the signing key is regenerated at start, so
+every token also dies on a platform restart. Client applications that hold a platform token on the
+user's behalf (Portal, Egeria Advisor, Resource Explorer — which now carry the Egeria bearer token in
+their session and never the password) cannot offer a session longer than an hour without either
+re-prompting the user or caching a password, which is what a bearer token exists to avoid.
+
+**Ask:** a property such as `authentication.token.lifetime=3600` (seconds, default unchanged), read at
+start and applied when a token is issued; optionally a refresh operation that returns a new token for a
+valid unexpired one. Full draft issue text: trellis session scratch `egeria-issue-token-lifetime.md`.
+
+### ISSUE-90: `qs-engine-host` retries `startMissedEngineActions` forever when one incomplete engine action's anchor is unreadable by the engine-host user
+
+**Layer:** Egeria Server (possibly quickstart content) · **Status:** open · **Found:** 2026-09-04 (trevor fresh quickstart)
+
+On a fresh quickstart repository (6.2-SNAPSHOT builds of 2026-08-31 and 2026-09-04, all standard
+content packs, stock `coco-user-directory.omsecrets`) the engine host logs, every few seconds from first
+start and without end:
+
+```
+qs-engine-host Error ENGINE-HOST-SERVICES-2002 startMissedEngineActions caught an exception
+UserNotAuthorizedException while restarting incomplete engine actions; the error message was
+OMAG-SERVER-SECURITY-403-007 User generalnpa is not authorized to issue operation Read on
+a0baa4da-5f85-446c-b655-88ae81455966 anchor element DigitalProductFamily
+```
+
+Always the same element GUID; 196 refusals in ten minutes, >2,000 in ninety. A second quickstart on
+another machine, with the identical platform build, identical server configuration documents (only the
+generated `localServerId` differs), identical `coco-user-directory.omsecrets`, `DEMO_MODE=false` on both,
+and its repository also reloaded the same day, shows zero refusals in 24 h. The one thing that differs is
+history: the affected platform was stopped and restarted several times during its first hour (a
+configuration copy, a Kafka log-directory reset, a rebuild) while content packs and the nanny daemon's
+integration groups were still initialising; the healthy one was loaded once and left alone. The refused
+element cannot be read through the view server by `garygeeke`, `peterprofile` or `erinoverview` either
+(401), so it is not merely a `generalnpa` permission gap — the anchor looks unreadable by everyone, as
+if left behind by an interrupted initialisation.
+
+**What it means:** an `EngineAction` exists whose anchor is a `DigitalProductFamily`; the engine host's own
+identity (`generalnpa`) may not read that anchor under the security connector; the "restart incomplete
+engine actions" pass treats the authorization failure as transient, aborts on it, and retries at its
+normal cadence, so one permanently unreadable action becomes a permanent loop. Cost: platform container
+at 200-330 % CPU and its Postgres at 500-750 % on an idle box, from `EngineAction` entity searches and
+classification reads; everything else on the platform is slower.
+
+**Ask (either helps):** (1) engine-host-services: treat `UserNotAuthorizedException` for a specific engine
+action as terminal for that action — log once, skip it, continue with the rest, do not retry it until the
+security context changes; (2) quickstart content: give `generalnpa` read access to the digital-product
+elements its engine actions anchor to, or anchor those actions to elements the engine-host identity can
+read. Full draft: trellis session scratch `egeria-issue-engine-host-403-loop.md`.
+
 ### ISSUE-38 (PY-18): `count_relationships_between_elements("Exception")` (276) disagrees with `ClassificationExplorer.get_relationships("Exception")` (55)
 
 **Update 2026-08-30, from the Egeria team (Mandy Chessell).** Leaving this
@@ -695,6 +751,108 @@ on an Egeria Server capability that doesn't exist yet — but the pyegeria/
 Dr.Egeria-side work each will need once that capability ships is written
 into the entry now, so it isn't rediscovered from scratch later.
 
+### ISSUE-87: `ClassificationExplorer.add_ownership_to_element`'s docstring sample body says `"class": "OwnerProperties"` — the method itself only accepts `"OwnershipProperties"`, so the documented body cannot be sent
+
+**Layer:** Pyegeria · **Status:** fixed 2026-09-05 (Pyegeria —
+`pyegeria/omvs/classification_explorer.py`). Both docstrings (async
+`_async_add_ownership_to_element` and its sync wrapper
+`add_ownership_to_element`) corrected to `"OwnershipProperties"`, matching
+the code's own `prop=["OwnershipProperties"]` and the `.http` ground
+truth. Verified: `TypeAdapter(NewClassificationRequestBody).validate_python(...)`
+with the corrected body now validates cleanly (previously raised
+`ValidationError`/`unexpected property class name` from the class-name
+mismatch). Swept the rest of the file per the original report's suggestion
+(every `_async_new_classification_request` caller, matched by function
+boundary rather than naive line-proximity to avoid false positives from
+adjacent functions) — this was the only class-name/`prop=` mismatch in
+`classification_explorer.py`; not repeated elsewhere. Found 2026-09-04
+(Resource Explorer, `Ownership` on everything it publishes).
+
+`classification_explorer.py:8231` `_async_add_ownership_to_element` documents:
+
+```
+{
+   "class" : "NewClassificationRequestBody",
+   "properties" : {
+       "class" : "OwnerProperties",
+       "owner" : "Add value here",
+       ...
+```
+
+and then calls `self._async_new_classification_request(url, prop=["OwnershipProperties"], body=body)`
+(`:8285`). `_server_client.py:6175` `validate_new_classification_request` compares
+`body["properties"]["class"]` against `prop` and raises
+`PyegeriaInvalidParameterException(reason="unexpected property class name")`
+when it does not match — **before any HTTP request is made**. So the body in the
+docstring is rejected client-side, 100% of the time.
+
+`pyegeria/http clients/Egeria-api-classification-explorer.http:670` uses
+`"OwnershipProperties"` and agrees with the code. The docstring is the outlier;
+the same sample appears again in the sync wrapper at `:8288`.
+
+**How it was found:** by running the documented body against the live
+quickstart platform. The exception names neither the class it expected nor the
+class it got — `unexpected property class name` with an empty context — so
+reading the error does not lead to the answer; only reading
+`validate_new_classification_request` does.
+
+**Ask:** correct both docstrings to `"OwnershipProperties"`. Worth a sweep of
+the other `_async_new_classification_request` callers in the same file for the
+same docstring/`prop=` divergence — the two were written from different sources
+here, so this is unlikely to be the only one. Separately, the validation error
+would be far more useful if it named the expected and supplied class names;
+`{"reason": "unexpected property class name"}` is a hard error to act on.
+
+### ISSUE-86: `exec_report_spec` (and `_exec_analytic_chart`, `_run_report_spec`) accept only `user`/`user_pass` — no way to run a report with a bearer token the caller already holds
+
+**Layer:** Pyegeria · **Status:** fixed 2026-09-05 (Pyegeria —
+`pyegeria/view/format_set_executor.py`, `pyegeria/core/mcp_adapter.py`).
+Added `token: Optional[str] = None` to `exec_report_spec`,
+`_exec_analytic_chart`, and `_run_analytic_function` (the function this
+entry's title calls `_run_report_spec` — no such name exists in the
+codebase; `_run_analytic_function` is the one all three client-building
+call sites actually route through), threaded through every place a client
+is built from `view_server`/`view_url`/`user`/`user_pass`. When `token` is
+given, the client is authenticated with `set_bearer_token(token)` instead
+of `create_egeria_bearer_token()`; when omitted, behavior is byte-for-byte
+unchanged (`user`/`user_pass` still mint a fresh token exactly as before).
+Also threaded through `run_report`/`_execute_egeria_call_blocking` in
+`pyegeria/core/mcp_adapter.py`, per the original ask's "same for
+run_report/... on the MCP side if they share the builder" — both do,
+both now accept `token`. `describe_report` doesn't build a client at all
+(pure registry lookup), so it needed no change. The MCP server's own
+`run_report` tool (`pyegeria/core/mcp_server.py`) takes a different,
+already-token-capable path (`_async_run_report_tool` + a pre-built
+`egeria_client`, not `exec_report_spec`'s builder) — out of scope per the
+same "if they share the builder" qualifier, not touched.
+
+New unit test `tests/micro-tests/test_exec_report_spec_token.py` (2 tests,
+monkeypatched `EgeriaTech`, no live server): confirms `token` routes
+through `set_bearer_token` with zero calls to `create_egeria_bearer_token`,
+and confirms the no-token path is unchanged. Full `pytest
+tests/micro-tests/` green (exit 0) throughout.
+
+**Original report, found 2026-09-04** (Egeria Advisor, trellis-auth token
+contract change):
+
+`pyegeria/view/format_set_executor.py:686` `exec_report_spec(..., user=, user_pass=)` builds its own
+client (`:189` and `:814`: `client_class(view_server, view_url, user_id=user, user_pwd=user_pass)`
+then `client.create_egeria_bearer_token()`) and passes `user`/`user_pass` down to `_exec_analytic_chart`
+(`:718`) and the format-row path (`:780`). There is no parameter for a pre-built client or a bearer
+token, and `create_egeria_bearer_token()` is unconditional.
+
+**Why it matters:** Egeria Advisor's app JWT carries the user's Egeria bearer token and no longer
+carries the password (matching the Portal, whose `X-Egeria-Token` + `set_bearer_token()` pattern
+already does this for every PyegeriaWebHandler endpoint). Every other EA call site builds a client
+and calls `set_bearer_token(token)`; report execution cannot, so EA falls back to the service
+account for that one path and Egeria's provenance records the service account instead of the
+person who ran the report (`advisor/report_pipeline.py`, search "ISSUE-86").
+
+**Ask:** add `token: str | None = None` (or `client: EgeriaTech | None = None`) to `exec_report_spec`
+and thread it to the two builders; when given, `set_bearer_token(token)` instead of
+`create_egeria_bearer_token()`. Same for `run_report`/`describe_report` on the MCP side if they share
+the builder. Backward compatible: `user`/`user_pass` keep working when no token is given.
+
 ### ISSUE-84: `SolutionArchitect.create_solution_blueprint`'s own docstring documents a `NewSolutionElementRequestBody` body (with `initialStatus`) for Draft-status creation — that class does not exist as a pydantic model, so the documented shape fails client-side validation before any HTTP call
 
 **Status:** fixed and live-verified 2026-09-03 — docstring-only fix (see
@@ -860,6 +1018,13 @@ send `contentStatus: "DRAFT"` in `properties`, replacing its earlier
 ACTIVE-only workaround. `ComponentMaterializer`'s identical gap is
 **still open** — same fix applies, not yet applied there, tracked
 separately on the trellis/Resource Explorer side.
+
+**GUID note (2026-09-04):** `quickstart-egeria-main` was redeployed with a full
+repository-store wipe the same day this was verified. `809025b5-cca9-4e9a-a2f7-3a5104138f67`
+is historical — valid as of the 2026-09-03 verification date, not resolvable against the
+platform after the wipe. The finding (`contentStatus` round-trips via `properties`, no
+separate request-body class needed) is a property of the API/fix, not of that instance, and
+is unaffected.
 
 ### ISSUE-82: `pyegeria/omvs/valid_metadata.py` sends the literal query string `typeName=None` whenever `type_name` is Python `None` — breaks every Type-Name-omitted (global) Valid Metadata Value, in 12 of 14 methods across `ValidMetadataManager`
 
@@ -1133,6 +1298,21 @@ a small one-off script at that point rather than building one speculatively
 now for data that may not exist anywhere.
 
 ### ISSUE-80: `find_report_specs_by_perspective`/`find_report_specs_by_question` are implemented and tested but not exposed anywhere
+
+**Status:** fixed 2026-09-05 (Pyegeria — `pyegeria/core/mcp_adapter.py`,
+`pyegeria/core/mcp_server.py`). Added `run_find_report_specs_by_perspective`/
+`run_find_report_specs_by_question` adapters (same thin-wrapper pattern as
+the existing `run_find_report_specs`) and registered them as MCP tools
+`find_report_specs_by_perspective`/`find_report_specs_by_question`,
+alongside the existing `find_report_specs` tool. No change to the
+underlying functions themselves — pure additive wiring, per the candidate
+fix below. `hey_egeria` CLI exposure (the "and/or" half of the original
+ask) left undone — MCP was the natural fit given the existing
+`find_report_specs` tool precedent; a CLI subcommand is separate follow-up
+work if wanted. Full `pytest tests/micro-tests/` green (exit 0); the
+underlying functions already have their own functional-test coverage
+(`tests/functional-tests/test_question_specs.py`, live-server only), not
+re-run here.
 
 **Not a bug — a follow-up.** Found 2026-08-28 while reviewing the Question
 Spec migration (`docs/design/report_spec_migration_design.md`, Phase 1
@@ -5936,6 +6116,59 @@ deployment-timing issue, not a code defect — see ISSUE-12, below.
 ---
 
 ## Not a bug / n/a
+
+### ISSUE-88: no `GovernanceZone` create or lookup anywhere in pyegeria — a zone can be *referenced* by every search and classification, but not made
+
+**Layer:** Pyegeria · **Status: n/a — not a bug, corrected 2026-09-05 by dwolfson.**
+`GovernanceZone` (`0424`) is a `GovernanceDefinition` subtype like every other
+one `create_governance_definition` already handles — it's created the same
+generic way as `BusinessImperative`/`RegulationArticle`/etc.: pass
+`GovernanceDefinitionProperties` with `typeName: "GovernanceZone"` (plus
+whatever zone-specific fields the type carries) to
+`create_governance_definition`. No dedicated `create_governance_zone`
+method is needed, same as there's no `create_business_imperative`. The
+workaround below (raw `MetadataExpert`) was solving a problem that
+`GovernanceOfficer.create_governance_definition` already covers — confirmed
+against `GOV_DEF_PROPERTIES_LIST` in `pyegeria/omvs/governance_officer.py`,
+which already accepts `GovernanceDefinitionProperties`, and against the
+`.http` ground truth, which has no separate `governance-zones` create
+endpoint at all (consistent with there being no dedicated endpoint, because
+none is needed). **Real, worth fixing separately:** the method's own
+docstring only lists 7 example type names and doesn't mention `GovernanceZone`
+(or the other `0401`-family subtypes) as valid `typeName` values — that's
+a documentation gap, not an API gap; left as a small follow-up rather than
+its own numbered issue.
+
+**Original (incorrect) report, kept for history:** Found 2026-09-04
+(Resource Explorer, trellis-auth adoption / draft-zone partitioning).
+
+Searched `pyegeria/omvs/` and `pyegeria/*.py` on 2026-09-04 for
+`GovernanceZone` / `governance_zone` / `governance-zones`. Every hit is a
+**filter parameter** — `governance_zone_filter=` on `AssetMaker`,
+`AutomatedCuration`, `GovernanceOfficer` finds — plus
+`ClassificationExplorer.add_zone_membership` / `clear_zone_membership`, which
+classify an element *into* a zone. `GovernanceOfficer.create_governance_definition`
+creates a `GovernanceDefinition` (`0401`); `GovernanceZone` is `0424` and is not
+one of the types that method's own docstring lists. There is no
+`create_governance_zone`, no `find_governance_zones`, no `get_governance_zone_by_name`.
+
+**Why it matters (per the original report — since corrected above):** the
+whole `ZoneMembership` partitioning story (Egeria's own recommended
+mechanism, `0424`) can be *consumed* through pyegeria but not *bootstrapped*.
+An application that partitions what it publishes — Resource Explorer puts
+everything it publishes into a `resource-explorer-draft` zone and promotes
+it out on curate-accept — has to create that zone before it can be navigated
+to, and cannot ask pyegeria to do it. A zone classification does not require
+the zone element to exist, so the failure is quiet: elements carry a
+`zoneMembership` naming a zone the catalogue has no record of, which reads
+as working until someone tries to browse by zone.
+
+**Workaround in use** (`resource_explorer/egeria_identity.py::ensure_draft_zone_exists`):
+`MetadataExpert.create_metadata_element` with `typeName: "GovernanceZone"` and an
+`ElementProperties` `propertyValueMap`, guarded by
+`get_metadata_element_by_unique_name` for idempotency. It works, but per the
+correction above it's solving a problem `create_governance_definition`
+already handles more simply — worth switching to that instead.
 
 ### ISSUE-65: `GlossaryManager.get_term_by_guid`'s naming-standards classifications (PrimeWord/ClassWord/Modifier) don't surface as individually-named `elementHeader` keys like most classifications do — undocumented response-shape gotcha, not a data-missing bug
 
