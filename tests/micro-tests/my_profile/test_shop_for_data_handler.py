@@ -97,6 +97,14 @@ class TestShopForDataMixin:
         assert isinstance(screen, ShopForDataScreen)
         assert cb == app.shop_for_data_callback
 
+        # Verify that Digital-Product-Catalog-MyE was called with params={"search_string": "*"}
+        catalog_calls = [
+            call for call in mock_exec.call_args_list
+            if call.kwargs.get("format_set_name") == "Digital-Product-Catalog-MyE"
+        ]
+        assert len(catalog_calls) == 1
+        assert catalog_calls[0].kwargs.get("params") == {"search_string": "*"}
+
     @pytest.mark.asyncio
     @patch("shop_for_data_handler.DataTable")
     @patch("shop_for_data_handler.exec_report_spec")
