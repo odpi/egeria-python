@@ -199,6 +199,50 @@ security context changes; (2) quickstart content: give `generalnpa` read access 
 elements its engine actions anchor to, or anchor those actions to elements the engine-host identity can
 read. Full draft: trellis session scratch `egeria-issue-engine-host-403-loop.md`.
 
+### ISSUE-91: `pyegeria.core.mcp_server` imports `mcp.server.mcpserver` (mcp 2.x only) but `pyproject.toml` declares `mcp >=0.1` — any consumer that resolves mcp 1.x gets a server that dies at import
+
+**Layer:** pyegeria packaging · **Status:** open · **Found:** 2026-09-05 (Egeria Advisor dev startup on the M3 Max)
+
+Commit 2b39ba06 (2026-07-30, "migrate mcp_server.py to mcp 2.0.0's MCPServer") changed the
+server's import to:
+
+```python
+from mcp.server.mcpserver import MCPServer
+```
+
+That module exists only in `mcp >= 2.0.0` (1.x ships `mcp.server.fastmcp` instead). The
+dependency declaration was not updated and still reads `"mcp >=0.1"` — verified in the released
+6.1.5 wheel's METADATA (`Requires-Dist: mcp>=0.1`) and in the current `pyproject.toml` at 6.1.10.
+
+**How it shows up.** trellis pinned `mcp>=1.0.0` and its lock resolved mcp 1.29.0, which satisfies
+pyegeria's declared range. Launching the server then fails before it can speak MCP:
+
+```
+$ python -m pyegeria.core.mcp_server
+MCP import failed.
+  File ".../pyegeria/core/mcp_server.py", line 24, in <module>
+    from mcp.server.mcpserver import MCPServer
+ModuleNotFoundError: No module named 'mcp.server.mcpserver'
+```
+
+A client sees only "No response from MCP server" because the traceback goes to stderr and the
+process exits without writing a JSON-RPC frame. With mcp 2.1.1 installed the same command answers
+`initialize` normally (`serverInfo.name = "pyegeria-mcp"`).
+
+**Why it went unnoticed.** The quickstart containers run mcp 2.1.1 (pyegeria 6.1.9) and use their own
+`/app/mcp_server.py` mounted over SSE in `pyegeria_handler`, not this stdio module, so the
+egeria-workspaces path never exercised it. The egeria-python checkout's own venv also has mcp 2.0.0.
+
+**Proposed fix (backward compatible for callers).** In `pyproject.toml` declare `"mcp >=2.0"`. Nothing
+else needs to change: the import is already 2.x-only, so raising the floor only turns a runtime
+import crash into a resolver error at install time. If 1.x support is wanted instead, gate the
+import (`try: from mcp.server.mcpserver import MCPServer except ImportError: from mcp.server.fastmcp
+import FastMCP as MCPServer`) — but the 2.x API differs beyond the class name, so the floor bump is
+the honest option.
+
+**Consumer-side workaround applied in trellis (8441efb):** both packages now declare `mcp>=2.0.0`
+and the lock carries mcp 2.1.1, matching the quickstart containers.
+
 ### ISSUE-38 (PY-18): `count_relationships_between_elements("Exception")` (276) disagrees with `ClassificationExplorer.get_relationships("Exception")` (55)
 
 **Update 2026-08-30, from the Egeria team (Mandy Chessell).** Leaving this
@@ -750,6 +794,37 @@ Actionable in this repo. Some of these are fully blocked today — waiting
 on an Egeria Server capability that doesn't exist yet — but the pyegeria/
 Dr.Egeria-side work each will need once that capability ships is written
 into the entry now, so it isn't rediscovered from scratch later.
+
+### ISSUE-91: `pyproject.toml` declares `mcp >=0.1`, but `pyegeria.core.mcp_server` needs `mcp>=2.0` — the declared floor lets a resolver install a version too old to import the module at all
+
+**Layer:** Pyegeria · **Status:** open · **Found:** 2026-09-06 (Egeria Advisor, containerized demo deployment rebuild against pyegeria 6.1.10).
+
+`pyproject.toml`'s `[project.dependencies]` declares `"mcp >=0.1"`, but
+`pyegeria/core/mcp_server.py` imports `from mcp.server.mcpserver import
+MCPServer` — confirmed live in this checkout's dev venv:
+`importlib.metadata.version("mcp")` is `2.0.0`, and
+`mcp.server.mcpserver.MCPServer` only exists at that version; the module
+path is new to the 2.x line, not present in the 0.x/1.x `mcp` package
+history. A resolver that's free to pick anything satisfying `>=0.1` (no
+upper or tighter lower bound forcing 2.x) can legitimately land on a much
+older `mcp` release, at which point `import pyegeria.core.mcp_server`
+fails outright rather than degrading gracefully.
+
+**Why it matters, found how:** a container rebuild of Egeria Advisor's
+demo deployment against pyegeria 6.1.10 pinned `mcp==2.1.1` explicitly
+(not resolved from pyegeria's own floor) and confirmed EA's MCP agent
+pre-warms cleanly on it — so 6.1.10 itself works fine when the caller
+pins a modern `mcp`, but nothing in pyegeria's own declared dependency
+would have caught a caller who didn't.
+
+**Ask:** tighten `pyproject.toml`'s `mcp` constraint to actually match
+what `mcp_server.py` requires (`mcp>=2.0` at minimum — confirm the exact
+version `MCPServer`/`mcp.server.mcpserver` was introduced at, and pin to
+that) rather than the inherited placeholder `>=0.1` floor. Not
+independently verified against the `mcp` package's own changelog/git
+history here — the live import check above shows 2.0.0 works and the
+module path is absent from the 0.x/1.x line by inspection, but the exact
+first-working version wasn't pinned down.
 
 ### ISSUE-87: `ClassificationExplorer.add_ownership_to_element`'s docstring sample body says `"class": "OwnerProperties"` — the method itself only accepts `"OwnershipProperties"`, so the documented body cannot be sent
 
