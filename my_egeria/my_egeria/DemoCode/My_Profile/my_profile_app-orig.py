@@ -38,7 +38,7 @@ from my_egeria.DemoCode.Deprecated.TechnologyTypeProcessesScreen import Technolo
 from StatusScreen import StatusScreen
 from ShopForDataScreen import ShopForDataScreen
 from SelectionOverviewScreen import SelectionOverviewScreen
-from MyTeam import MyTeam
+from MyTeamScreen import MyTeam
 from MainScreen import MainScreen
 from SearchForTermScreen import SearchForTermScreen
 from CreateSubscriptionRequestScreen import CreateSubscriptionRequestScreen

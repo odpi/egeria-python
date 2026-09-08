@@ -69,10 +69,6 @@ class AddTodoScreen(ModalScreen):
             Input("Priority of Todo", id="todo_priority"),
             Static("Status will be automatically set to 'REQUESTED'"),
             Horizontal(
-                Static("Link Todo to your profile? True or False, Default = True"),
-                Switch(value=True, id="link_todo_to_profile")
-            ),
-            Horizontal(
                 Button("Add Todo", id="add_todo_button", variant="primary"),
                 Button("Quit", id="quit_button", variant="warning")
             ))
@@ -95,17 +91,8 @@ class AddTodoScreen(ModalScreen):
                         priority=self.todo_priority,
                         activity_status="REQUESTED"
                         )
-            self.log(f"Created ToDo assigned to the current user: {todo_guid}")
-            if self.link_todo_to_profile is True:
-                try:
-                    self.todo_link_guid = tclient.link_todo_to_profile(
-                        todo_guid=todo_guid,
-                        profile_guid=self.user_guid
-                    )
-                    self.notify(f"Linked ToDo to profile: {self.todo_link_guid}", timeout=10, severity="information")
-                except PyegeriaException as e:
-                    self.log(f"Link todo to profile failed with return: {e}")
-                    self.notify(f"Link todo to profile failed with return: {e}", timeout=10, severity="error")
+            self.log(f"Created ToDo: {todo_guid}")
+
         except PyegeriaException as e:
             self.notify(f"Add todo failed with return: {e}", timeout=10, severity="error")
         finally:
@@ -516,7 +503,6 @@ class AddBlogEntryScreen(ModalScreen):
             self.query_one("#blog_entry_name", Input).clear()
             self.query_one("#blog_entry_text", Input).clear()
             self.query_one("#blog_entry_situation", Input).clear()
-            self.query_one("#blog_entry_guid", Input).clear()
             self.query_one("#blog_entry_container", ScrollableContainer).refresh()
         return
 
@@ -528,10 +514,6 @@ class AddBlogEntryScreen(ModalScreen):
             self.blog_entry_text = event.input.value
         if event.input.id == "blog_entry_situation":
             self.blog_entry_situation = event.input.value
-
-    # @on(Switch.Changed, "#link_blog_entry_to_profile")
-    # def handle_link_blog_entry_to_profile_changed(self, event: Switch.Changed):
-    #     self.link_blog_entry_to_profile = event.switch.value
 
     def action_quit(self):
         self.dismiss(200)

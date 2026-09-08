@@ -19,6 +19,8 @@ class ShopForDataScreen(Screen):
     """ Screen to Present a choice of different data sources to the user."""
     BINDINGS = [("q", "dismiss(200)", "Quit"),
                 ("s", "sample_data_source", "Sample data source"),
+                ("u", "subscribe_to_data_source", "Subscribe"),
+                ("ctrl+s", "subscribe_to_data_source", "Subscribe"),
                 ("b", "back", "Go back")]
 
     CSS_PATH = "my_profile.tcss"
@@ -121,8 +123,9 @@ class ShopForDataScreen(Screen):
         row_display_name = row_values[0]
         row_description = row_values[1]
         row_qualified_name = row_values[2]
-        self.log(f"Row selected: {row_selected}, values: {row_values}, display name: {row_display_name}, description: {row_description}, qualified name: {row_qualified_name}")
-        self.dismiss (["catalog", row_qualified_name, row_display_name])
+        row_guid = row_values[3] if len(row_values) > 3 else None
+        self.log(f"Row selected: {row_selected}, values: {row_values}, display name: {row_display_name}, description: {row_description}, qualified name: {row_qualified_name}, guid: {row_guid}")
+        self.dismiss(["catalog", row_qualified_name, row_display_name, row_guid])
 
     @on(DataTable.RowSelected, "#data_dictionary_table")
     def handle_data_dictionary_table_selection(self, event: DataTable.RowSelected):
@@ -245,3 +248,73 @@ class ShopForDataScreen(Screen):
             getattr(self, "data_table_highlighted", None),
             row_data,
         ])
+
+    def action_subscribe_to_data_source(self):
+        """ The subscribe to data source option in the footer has been selected."""
+        tables = [
+            self.digital_product_catalog_table,
+            self.glossary_table,
+            self.data_dictionary_table,
+            self.business_domain_table,
+            self.root_collection_table,
+            self.data_specification_table,
+        ]
+        target_table = None
+        if getattr(self, "data_table_highlighted", None):
+            for t in tables:
+                if t is not None and getattr(t, "id", None) == self.data_table_highlighted:
+                    target_table = t
+                    break
+
+        if target_table is None:
+            focused = getattr(self, "focused", None)
+            if isinstance(focused, DataTable):
+                target_table = focused
+                self.data_table_highlighted = getattr(focused, "id", None)
+                self.cursor_row_highlighted = focused.cursor_row
+                try:
+                    self.row_highlighted = list(focused.rows.keys())[focused.cursor_row] if focused.cursor_row is not None and focused.cursor_row < len(focused.rows) else None
+                except Exception:
+                    self.row_highlighted = None
+
+        if target_table is None:
+            for t in tables:
+                if t is not None and getattr(t, "row_count", 0) > 0:
+                    target_table = t
+                    self.data_table_highlighted = getattr(t, "id", None)
+                    self.cursor_row_highlighted = t.cursor_row
+                    try:
+                        self.row_highlighted = list(t.rows.keys())[t.cursor_row] if t.cursor_row is not None and t.cursor_row < len(t.rows) else None
+                    except Exception:
+                        self.row_highlighted = None
+                    break
+
+        row_data = []
+        if target_table is not None and getattr(target_table, "row_count", 0) > 0:
+            try:
+                if getattr(self, "row_highlighted", None) is not None and hasattr(target_table, "rows") and self.row_highlighted in target_table.rows:
+                    row_data = list(target_table.get_row(self.row_highlighted))
+                elif getattr(self, "cursor_row_highlighted", None) is not None and target_table.row_count > self.cursor_row_highlighted:
+                    row_data = list(target_table.get_row_at(self.cursor_row_highlighted))
+                elif target_table.cursor_row is not None and target_table.row_count > target_table.cursor_row:
+                    row_data = list(target_table.get_row_at(target_table.cursor_row))
+                else:
+                    row_data = list(target_table.get_row_at(0))
+            except Exception as e:
+                self.log(f"Error getting row data from table: {e}")
+
+        self.dismiss([
+            211,
+            getattr(self, "row_highlighted", None),
+            getattr(self, "cursor_row_highlighted", None),
+            getattr(self, "data_table_highlighted", None),
+            row_data,
+        ])
+
+    def action_subscribe(self):
+        """ Alias for action_subscribe_to_data_source."""
+        self.action_subscribe_to_data_source()
+
+    def action_subscribe_data_source(self):
+        """ Alias for action_subscribe_to_data_source."""
+        self.action_subscribe_to_data_source()

@@ -2352,6 +2352,7 @@ formats=[
             Format(
                 types=["DICT", "TABLE", "LIST", "MD", "FORM", "REPORT"],
                 attributes=COMMON_COLUMNS + [
+                    Column(name="GUID", key='GUID'),
                     Column(name="Containing Members", key='collection_members'),
                     Column(name="Member Of", key='member_of_collections')
                 ]
