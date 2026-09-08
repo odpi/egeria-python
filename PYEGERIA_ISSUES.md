@@ -199,6 +199,63 @@ security context changes; (2) quickstart content: give `generalnpa` read access 
 elements its engine actions anchor to, or anchor those actions to elements the engine-host identity can
 read. Full draft: trellis session scratch `egeria-issue-engine-host-403-loop.md`.
 
+### ISSUE-93: `declassify_metadata_element` raises `AttributeError` when `body` is omitted, though the parameter is Optional — and the classification is silently left in place
+
+**Layer:** Pyegeria · **Status:** open · **Found:** 2026-09-08 (Resource Explorer, swapping a Project's kind classification during investigation reclassification).
+
+`MetadataExpert.declassify_metadata_element(metadata_element_guid, classification_name, body=None)`
+declares `body` as `Optional[dict | MetadataSourceRequestBody] = None`, but the
+implementation calls `.model_dump()` on it unconditionally. Omitting it raises:
+
+```
+AttributeError: 'NoneType' object has no attribute 'model_dump'
+```
+
+**Why this is worse than an ordinary signature bug:** the exception arrives from
+deep inside the client, so a caller that wraps the call defensively — which is
+reasonable, since a classification that is already absent should not be fatal —
+swallows it and *believes the classification was removed*. It was not. Measured
+live:
+
+```python
+kinds before: ['Task']
+declassify_metadata_element(guid, "Task")        # raises AttributeError
+kinds after:  ['Task']                            # unchanged
+```
+
+In our case the element then carried **two** kind classifications at once
+(`['Task', 'PersonalProject']`) — the new one added, the old one never removed —
+and a check that only asked "is the new classification present?" reported
+success. The wrong-but-plausible state was invisible until the element was read
+back for *both* names.
+
+**Working around it** — pass an explicit body:
+
+```python
+me.declassify_metadata_element(guid, "Task", {"class": "MetadataSourceRequestBody"})
+# kinds after: []
+```
+
+**Candidate fix:** default the body when `None`, matching the Optional
+declaration — the same shape the workaround passes:
+
+```python
+body = body or {"class": "MetadataSourceRequestBody"}
+```
+
+**Worth checking while in there:** `classify_metadata_element` and
+`reclassify_metadata_element` sit beside it with the same `Optional` body
+declaration. We pass a body to both so we have not hit them, but if they share
+the unconditional `.model_dump()` they have the same defect — and the
+declassify case shows the failure mode is silent at the caller, not loud.
+
+**Where seen:** `trellis/packages/resource-explorer/resource_explorer/surveyors/
+investigation_reclassifier.py::_move_kind_classification`, which now passes the
+body explicitly and additionally verifies that the OLD classification is gone
+rather than only that the new one is present.
+
+---
+
 ### ISSUE-92: `Project Type`'s description in `commands_project_compact.json` lists only 4 of its 6 `valid_values` — omits `Project` and `Experiment`, and the stale text is baked into 24 generated files
 
 **Layer:** Pyegeria · **Status:** open · **Found:** 2026-09-07 (Resource
