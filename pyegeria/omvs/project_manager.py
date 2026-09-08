@@ -20,7 +20,7 @@ from pyegeria.view.output_formatter import populate_common_columns, overlay_addi
 from pyegeria.core.utils import body_slimmer, dynamic_catch
 from loguru import logger
 
-PROJECT_TYPES = ["Project", "Campaign", "StudyProject", "Task", "PersonalProject"]
+PROJECT_TYPES = ["Project", "Campaign", "StudyProject", "Task", "PersonalProject", "Experiment", "Investigation"]
 
 
 class ProjectManager(ServerClient):
@@ -2536,6 +2536,38 @@ class ProjectManager(ServerClient):
         """Remove the experiment classification from a project."""
         loop = asyncio.get_event_loop()
         loop.run_until_complete(self._async_clear_project_as_experiment(project_guid, body))
+
+    @dynamic_catch
+    async def _async_set_project_as_investigation(self, project_guid: str,
+                                 body: Optional[dict | NewClassificationRequestBody] = None) -> None:
+        """Classify a project as an investigation that is seeking to answer a question. Async version."""
+        url = f"{self.platform_url}/servers/{self.view_server}/api/open-metadata/project-manager/projects/{project_guid}/investigation"
+        if body is None:
+            body = {"class": "NewClassificationRequestBody", "properties": {"class": "InvestigationProperties"}}
+        await self._async_new_classification_request(url, ["InvestigationProperties"], body)
+        logger.info(f"Classified project {project_guid} as investigation")
+
+    @dynamic_catch
+    def set_project_as_investigation(self, project_guid: str,
+                    body: Optional[dict | NewClassificationRequestBody] = None) -> None:
+        """Classify a project as an investigation that is seeking to answer a question."""
+        loop = asyncio.get_event_loop()
+        loop.run_until_complete(self._async_set_project_as_investigation(project_guid, body))
+
+    @dynamic_catch
+    async def _async_clear_project_as_investigation(self, project_guid: str,
+                                   body: Optional[dict | DeleteClassificationRequestBody] = None) -> None:
+        """Remove the investigation classification from a project. Async version."""
+        url = f"{self.platform_url}/servers/{self.view_server}/api/open-metadata/project-manager/projects/{project_guid}/investigation/remove"
+        await self._async_delete_classification_request(url, body)
+        logger.info(f"Removed investigation classification from project {project_guid}")
+
+    @dynamic_catch
+    def clear_project_as_investigation(self, project_guid: str,
+                      body: Optional[dict | DeleteClassificationRequestBody] = None) -> None:
+        """Remove the investigation classification from a project."""
+        loop = asyncio.get_event_loop()
+        loop.run_until_complete(self._async_clear_project_as_investigation(project_guid, body))
 
     @dynamic_catch
     async def _async_set_project_as_glossary_project(self, project_guid: str,

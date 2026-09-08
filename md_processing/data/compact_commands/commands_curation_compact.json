@@ -3302,6 +3302,20 @@
       "own_attributes": [
         "Search Keyword GUID"
       ]
+    },
+    "Investigation Base": {
+      "inherits": "Request Base",
+      "own_attributes": [
+        "Target Element",
+        "Additional Properties"
+      ]
+    },
+    "Naming Standards Vocabulary Base": {
+      "inherits": "Request Base",
+      "own_attributes": [
+        "Target Element",
+        "Additional Properties"
+      ]
     }
   },
   "commands": {
@@ -5277,6 +5291,82 @@
       "extra_find": "",
       "extra_constraints": "",
       "OM_TYPE": "DataSharingAgreement",
+      "bundle": "Declassify Base",
+      "custom_attributes": [],
+      "Journal Entry": ""
+    },
+    "Classify Investigation": {
+      "display_name": "investigation_classification",
+      "qn_prefix": "Investigation",
+      "alternate_names": [],
+      "family": "Curation",
+      "description": "Classify an existing Project as an investigation that is being conducted to answer a question or seek out information (0130).",
+      "verb": "Classify",
+      "upsert": false,
+      "attach": false,
+      "level": "Basic",
+      "find_method": "",
+      "find_constraints": "",
+      "extra_find": "",
+      "extra_constraints": "",
+      "OM_TYPE": "Investigation",
+      "bundle": "Investigation Base",
+      "custom_attributes": [],
+      "Journal Entry": ""
+    },
+    "Declassify Investigation": {
+      "display_name": "investigation_classification",
+      "qn_prefix": "Investigation",
+      "alternate_names": [],
+      "family": "Curation",
+      "description": "Remove the Investigation classification from a Project.",
+      "verb": "Declassify",
+      "upsert": false,
+      "attach": false,
+      "level": "Basic",
+      "find_method": "",
+      "find_constraints": "",
+      "extra_find": "",
+      "extra_constraints": "",
+      "OM_TYPE": "Investigation",
+      "bundle": "Declassify Base",
+      "custom_attributes": [],
+      "Journal Entry": ""
+    },
+    "Classify Naming Standards Vocabulary": {
+      "display_name": "naming_standards_vocabulary_classification",
+      "qn_prefix": "NamingStandardsVocabulary",
+      "alternate_names": [],
+      "family": "Curation",
+      "description": "Classify an existing Glossary as a naming standards vocabulary -- a glossary that describes the terms used in naming standards (0438).",
+      "verb": "Classify",
+      "upsert": false,
+      "attach": false,
+      "level": "Basic",
+      "find_method": "",
+      "find_constraints": "",
+      "extra_find": "",
+      "extra_constraints": "",
+      "OM_TYPE": "NamingStandardsVocabulary",
+      "bundle": "Naming Standards Vocabulary Base",
+      "custom_attributes": [],
+      "Journal Entry": ""
+    },
+    "Declassify Naming Standards Vocabulary": {
+      "display_name": "naming_standards_vocabulary_classification",
+      "qn_prefix": "NamingStandardsVocabulary",
+      "alternate_names": [],
+      "family": "Curation",
+      "description": "Remove the NamingStandardsVocabulary classification from a Glossary.",
+      "verb": "Declassify",
+      "upsert": false,
+      "attach": false,
+      "level": "Basic",
+      "find_method": "",
+      "find_constraints": "",
+      "extra_find": "",
+      "extra_constraints": "",
+      "OM_TYPE": "NamingStandardsVocabulary",
       "bundle": "Declassify Base",
       "custom_attributes": [],
       "Journal Entry": ""
