@@ -216,7 +216,7 @@ class TestCreateSubscriptionRequestScreen:
 
     @pytest.mark.asyncio
     async def test_create_subscription_request_screen(self):
-        app = ScreenTestHostApp(lambda: CreateSubscriptionRequestScreen())
+        app = ScreenTestHostApp(lambda: CreateSubscriptionRequestScreen(selected_item="guid-item-123"))
         async with app.run_test() as pilot:
             inp = app.target_screen.query_one("#sub_display_name", Input)
             inp.value = "My Sub"
@@ -225,7 +225,12 @@ class TestCreateSubscriptionRequestScreen:
             await pilot.pause()
             app.target_screen.action_create_subscription()
             await pilot.pause()
-            assert app.dismissed_result == ["My Sub", "Status: ACTIVE"]
+            assert app.dismissed_result == {
+                "externalSourceGUID": "guid-item-123",
+                "guid": "guid-item-123",
+                "displayName": "My Sub",
+                "Status": "ACTIVE",
+            }
 
 
 class TestAddToElementsScreens:
@@ -397,9 +402,111 @@ class TestShopForDataAndOverviewScreens:
             assert app.dismissed_result == [210]
 
     @pytest.mark.asyncio
+    async def test_shop_for_data_screen_catalog_selection(self):
+        t2 = DataTable(id="digital_product_catalog_table")
+        app = ScreenTestHostApp(lambda: ShopForDataScreen(digital_product_catalog_table=t2))
+        async with app.run_test() as pilot:
+            target = app.target_screen.query_one("#digital_product_catalog_table", DataTable)
+            target.add_columns("Name", "Desc", "QN", "GUID")
+            row_key = target.add_row("Prod1", "Desc1", "Cat::Prod1", "guid-prod-999")
+            target.move_cursor(row=0)
+            await pilot.pause()
+            app.target_screen.handle_digital_product_catalog_table_selection(
+                DataTable.RowSelected(target, row_key=row_key, cursor_row=0)
+            )
+            await pilot.pause()
+            assert app.dismissed_result == ["catalog", "Cat::Prod1", "Prod1", "guid-prod-999"]
+
+    @pytest.mark.asyncio
     async def test_shop_for_data_screen_default_config(self):
         app = ScreenTestHostApp(lambda: ShopForDataScreen())
         async with app.run_test() as pilot:
             app.target_screen.action_quit()
             await pilot.pause()
             assert app.dismissed_result == [210]
+
+    @pytest.mark.asyncio
+    async def test_shop_for_data_screen_subscribe_action(self):
+        t2 = DataTable(id="digital_product_catalog_table")
+        app = ScreenTestHostApp(lambda: ShopForDataScreen(digital_product_catalog_table=t2))
+        async with app.run_test() as pilot:
+            target = app.target_screen.query_one("#digital_product_catalog_table", DataTable)
+            target.add_columns("Name", "Desc", "QN", "GUID")
+            row_key = target.add_row("Prod1", "Desc1", "Cat::Prod1", "guid-prod-999")
+            target.move_cursor(row=0)
+            app.target_screen.data_table_highlighted = "digital_product_catalog_table"
+            app.target_screen.row_highlighted = row_key
+            app.target_screen.cursor_row_highlighted = 0
+            await pilot.pause()
+
+            app.target_screen.action_subscribe_to_data_source()
+            await pilot.pause()
+            assert app.dismissed_result is not None
+            assert app.dismissed_result[0] == 211
+            assert app.dismissed_result[4] == ["Prod1", "Desc1", "Cat::Prod1", "guid-prod-999"]
+
+
+class TestMainScreen:
+    """Tests for MainScreen table selection and edit actions."""
+
+    @pytest.mark.asyncio
+    @pytest.mark.parametrize(
+        "table_id",
+        [
+            "roles_table",
+            "teams_table",
+            "blogs_table",
+            "journal_table",
+            "todos_table",
+            "user_identity_table",
+            "associations_table",
+            "my_collections_table",
+        ],
+    )
+    async def test_main_screen_edit_selected_table(self, table_id):
+        """Verify clicking any DataTable selects it and edit action targets that table."""
+        class MockMainHostApp(App):
+            def __init__(self):
+                super().__init__()
+                self.edited_calls = []
+
+            async def on_mount(self):
+                self.main_screen = MainScreen()
+                self.install_screen(self.main_screen, name="main")
+                await self.push_screen("main")
+
+            def edit_tables(self, table_name, row_k):
+                self.edited_calls.append((table_name, row_k))
+
+        app = MockMainHostApp()
+        async with app.run_test() as pilot:
+            main_screen = app.main_screen
+
+            # Populate tables with sample data
+            for t_name in [
+                "roles_table",
+                "teams_table",
+                "blogs_table",
+                "journal_table",
+                "todos_table",
+                "user_identity_table",
+                "associations_table",
+                "my_collections_table",
+            ]:
+                t = main_screen.query_one(f"#{t_name}", DataTable)
+                t.cursor_type = "row"
+                t.add_columns("Col1", "Col2")
+                t.add_row("val1", "val2", key=f"{t_name}_row_1")
+
+            await pilot.pause()
+
+            # Click on target table
+            await pilot.click(f"#{table_id}")
+            await pilot.pause()
+
+            # Trigger edit table hotkey
+            await pilot.press("ctrl+t")
+            await pilot.pause()
+
+            assert len(app.edited_calls) == 1
+            assert app.edited_calls[0][0] == table_id

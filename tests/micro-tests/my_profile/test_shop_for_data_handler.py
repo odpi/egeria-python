@@ -97,6 +97,14 @@ class TestShopForDataMixin:
         assert isinstance(screen, ShopForDataScreen)
         assert cb == app.shop_for_data_callback
 
+        # Verify that Digital-Product-Catalog-MyE was called with params={"search_string": "*"}
+        catalog_calls = [
+            call for call in mock_exec.call_args_list
+            if call.kwargs.get("format_set_name") == "Digital-Product-Catalog-MyE"
+        ]
+        assert len(catalog_calls) == 1
+        assert catalog_calls[0].kwargs.get("params") == {"search_string": "*"}
+
     @pytest.mark.asyncio
     @patch("shop_for_data_handler.DataTable")
     @patch("shop_for_data_handler.exec_report_spec")
@@ -254,24 +262,16 @@ class TestShopForDataMixin:
                 assert len(app.pushed_screens) == 1
                 assert isinstance(app.pushed_screens[0][0], StatusScreen)
 
-    @patch("shop_for_data_handler.ProductManager")
-    def test_overview_callback_subscribe_success(self, mock_pm_cls):
+    def test_overview_callback_subscribe_success(self):
         app = DummyShopApp()
-        mock_pm = MagicMock()
-        mock_pm.create_egeria_bearer_token.return_value = "token"
-        mock_pm_cls.return_value = mock_pm
-
         app.overview_callback([211, "Item1", "Tree1"])
-        mock_pm.create_digital_subscription.assert_called_once_with("Item1")
+        assert len(app.pushed_screens) == 1
+        screen, cb = app.pushed_screens[0]
+        assert isinstance(screen, CreateSubscriptionRequestScreen)
+        assert cb == app.create_subscription_callback
 
-    @patch("shop_for_data_handler.ProductManager")
-    def test_overview_callback_subscribe_failure(self, mock_pm_cls):
+    def test_overview_callback_subscribe_failure(self):
         app = DummyShopApp()
-        mock_pm = MagicMock()
-        mock_pm.create_egeria_bearer_token.return_value = "token"
-        mock_pm.create_digital_subscription.side_effect = PyegeriaException("Subscription failed")
-        mock_pm_cls.return_value = mock_pm
-
         app.overview_callback([211, "Item1", "Tree1"])
         assert len(app.pushed_screens) == 1
         screen, cb = app.pushed_screens[0]
@@ -286,3 +286,71 @@ class TestShopForDataMixin:
         app = DummyShopApp()
         app.create_subscription_callback("Sub-Result-123")
         assert any("Subscription created" in msg for msg in app.log_messages)
+
+    def test_create_subscription_callback_dict_with_guid(self):
+        app = DummyShopApp()
+        app.selected_item = "fallback-guid"
+        app.create_subscription_callback({
+            "externalSourceGUID": "item-guid-123",
+            "displayName": "Test Sub",
+            "Status": "ACTIVE",
+            "description": "Test Desc",
+            "identifier": "TS1",
+        })
+        assert any("Subscription created" in msg for msg in app.log_messages)
+
+    @pytest.mark.asyncio
+    @patch("shop_for_data_handler.ProductManager")
+    async def test_shop_for_data_callback_direct_subscribe(self, mock_pm_cls):
+        app = DummyShopApp()
+        res = await app.shop_for_data_callback([
+            211,
+            "row1",
+            0,
+            "digital_product_catalog_table",
+            ["Prod Name", "Prod Desc", "Prod::QN", "guid-prod-123"],
+        ])
+        assert res == 211
+        assert len(app.pushed_screens) == 1
+        screen, cb = app.pushed_screens[0]
+        assert isinstance(screen, CreateSubscriptionRequestScreen)
+        assert cb == app.create_subscription_callback
+        assert app.selected_item == "guid-prod-123"
+
+    @pytest.mark.asyncio
+    @patch("shop_for_data_handler.ProductManager")
+    async def test_request_to_subscribe_data_source_placeholder(self, mock_pm_cls):
+        app = DummyShopApp()
+        app.handle_shop_for_data_option = AsyncMock()
+        await app.request_to_subscribe_data_source(
+            "row1",
+            0,
+            "digital_product_catalog_table",
+            row_values=["No digital product catalogs found", "No data returned from Egeria", "", ""],
+        )
+        assert any("No valid data element selected to subscribe" in msg for msg in app.log_messages)
+        assert app.handle_shop_for_data_option.called
+
+    @patch("shop_for_data_handler.ProductManager")
+    def test_create_subscription_callback_creates_subscription_with_client(self, mock_pm_cls):
+        mock_client = MagicMock()
+        mock_pm_cls.return_value = mock_client
+        mock_client.create_digital_subscription.return_value = "created-sub-guid"
+
+        app = DummyShopApp()
+        app.selected_item = "guid-prod-123"
+        app.create_subscription_callback({
+            "displayName": "My Sub",
+            "description": "Sub Desc",
+            "Status": "ACTIVE",
+            "identifier": "MS-01",
+            "externalSourceGUID": "guid-prod-123",
+        })
+
+        assert mock_client.create_digital_subscription.called
+        call_args = mock_client.create_digital_subscription.call_args[0][0]
+        assert call_args["class"] == "NewAgreementRequestBody"
+        assert call_args["initialStatus"] == "ACTIVE"
+        assert call_args["externalSourceGUID"] == "guid-prod-123"
+        assert call_args["properties"]["displayName"] == "My Sub"
+        assert any("Created digital subscription successfully" in msg for msg in app.log_messages)
