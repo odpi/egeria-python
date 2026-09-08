@@ -224,6 +224,18 @@ CLASSIFICATION_METHODS: Dict[str, ClassificationSpec] = {
     "DataSharingAgreement": ClassificationSpec(
         "_async_set_agreement_as_data_sharing_agreement", "_async_clear_agreement_as_data_sharing_agreement",
         "DataSharingAgreementProperties"),
+    # Data Standards types (Egeria PR #9300) -- pure marker classifications, no
+    # custom properties. Investigation (0130 ProjectKind) routed through
+    # ProjectManager; NamingStandardsVocabulary (0438) routed through
+    # GlossaryManager (see CURATION_CLASSIFICATION_CLIENTS below). Not yet
+    # verified against a live server -- the type is not deployed there yet
+    # (confirmed with the user 2026-09-08); .http ground truth also not yet
+    # updated in this checkout.
+    "Investigation": ClassificationSpec(
+        "_async_set_project_as_investigation", "_async_clear_project_as_investigation", "InvestigationProperties"),
+    "NamingStandardsVocabulary": ClassificationSpec(
+        "_async_set_glossary_as_naming_standards_vocabulary", "_async_clear_glossary_as_naming_standards_vocabulary",
+        "NamingStandardsVocabularyProperties"),
 }
 
 # OM_TYPEs in CLASSIFICATION_METHODS whose set/clear methods live on a client other than
@@ -245,6 +257,8 @@ CURATION_CLASSIFICATION_CLIENTS = {
     "ProjectKind": "project_manager",
     "CollectionKind": "collection_manager",
     "DataSharingAgreement": "digital_business",
+    "Investigation": "project_manager",
+    "NamingStandardsVocabulary": "glossary_manager",
 }
 
 
