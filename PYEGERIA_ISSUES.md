@@ -199,6 +199,93 @@ security context changes; (2) quickstart content: give `generalnpa` read access 
 elements its engine actions anchor to, or anchor those actions to elements the engine-host identity can
 read. Full draft: trellis session scratch `egeria-issue-engine-host-403-loop.md`.
 
+### ISSUE-92: `Project Type`'s description in `commands_project_compact.json` lists only 4 of its 6 `valid_values` — omits `Project` and `Experiment`, and the stale text is baked into 24 generated files
+
+**Layer:** Pyegeria · **Status:** open · **Found:** 2026-09-07 (Resource
+Explorer, designing investigation → Egeria Project classification mapping).
+
+`md_processing/data/compact_commands/commands_project_compact.json`, the
+`Project Type` attribute (`variable_name: project_type`):
+
+```json
+"valid_values": [
+  "Project", "Campaign", "Task", "PersonalProject", "StudyProject", "Experiment"
+],
+"description": "A string classifying the project. Supported values are Campaign, Task, PersonalProject and StudyProject."
+```
+
+`valid_values` has six entries; the description names four. `Project` (which
+is also this attribute's own `default_value`) and `Experiment` are both
+missing from the prose. The machine-readable list is correct — it matches
+Egeria 6's actual Project classifications in
+`OpenMetadataType.java` (0130): `CAMPAIGN_CLASSIFICATION`,
+`TASK_CLASSIFICATION`, `PERSONAL_PROJECT_CLASSIFICATION`,
+`STUDY_PROJECT_CLASSIFICATION`, `EXPERIMENT_CLASSIFICATION`. Only the
+description is behind.
+
+**Why it matters more than one stale string:** the description is what
+`gen_md_cmd_templates` and `gen_dr_help` render, so it has propagated. In
+this checkout, 25 files in the main tree carry the sentence verbatim — the
+one source JSON plus 24 generated artifacts:
+
+```
+md_processing/data/compact_commands/commands_project_compact.json   <- source
+md_processing/data/compact_commands_backup/commands_project_compact.json
+sample-data/templates/{basic,advanced}/Projects/*.md                (16)
+sample-data/egeria-inbox/dr-egeria-help-*.md                         (7)
+```
+
+The sharpest symptom: **`sample-data/templates/{basic,advanced}/Projects/Create_Experiment.md`
+tells the reader that `Experiment` is not a supported value** — on the
+template whose entire purpose is to create one. `Create_Project.md` has the
+same problem for `Project`. The generated help tables are self-contradictory
+in a single row, because they print the prose and the `valid_values` list
+side by side:
+
+```
+... Supported values are Campaign, Task, PersonalProject and StudyProject. | False | Project, Campaign, Task, PersonalProject, StudyProject, Experiment | Domain |
+```
+
+A reader who trusts the sentence over the column will never reach for
+`Experiment`, which is the one classification carrying its own defining
+attribute (`hypothesis`), so the omission suppresses a real capability
+rather than just reading untidily.
+
+**Where seen:** found while mapping Resource Explorer's investigation
+`project_classification` onto Egeria's Project classifications — the
+description was the first thing read, and it made `Experiment` look
+unsupported until `valid_values` and the Egeria type source were checked.
+
+**Candidate fix (one string, then regenerate):** edit the `description` in
+`commands_project_compact.json` to cover all six, ideally naming what each
+means rather than just listing them again — the `valid_values` array
+already lists them, so prose that only repeats the list adds nothing and
+will drift again the next time a value is added. Suggested:
+
+> "A string classifying the project. `Project` (the default) applies no
+> classification. `Campaign` is a long-term strategic initiative delivered
+> through multiple projects; `Task` a self-contained short activity;
+> `PersonalProject` an informal project an individual creates to organize
+> their own work; `StudyProject` a focused analysis of a topic, person,
+> object or situation; `Experiment` a project testing a hypothesis, which
+> is recorded in the `hypothesis` attribute."
+
+(Wording taken from the Egeria type definitions themselves so the two
+cannot disagree.)
+
+Then re-run `refresh_specs`, `gen_md_cmd_templates` and `gen_dr_help` per
+the Dr.Egeria command-sync flow and propagate the regenerated templates/help
+to `egeria-workspaces` and `egeria-advisor` — the 24 generated files above
+will not update on their own, and 16 of them ship as user-facing templates.
+
+**Worth checking while in there:** whether any other compact-command
+attribute has a `description` that enumerates its `valid_values` in prose.
+Any such pair is the same latent defect — two lists that must be edited
+together with nothing enforcing it. A cheap guard would be a spec-validation
+check that flags a `description` naming a subset of its own `valid_values`.
+
+---
+
 ### ISSUE-91: `pyegeria.core.mcp_server` imports `mcp.server.mcpserver` (mcp 2.x only) but `pyproject.toml` declares `mcp >=0.1` — any consumer that resolves mcp 1.x gets a server that dies at import
 
 **Layer:** pyegeria packaging · **Status:** open · **Found:** 2026-09-05 (Egeria Advisor dev startup on the M3 Max)
