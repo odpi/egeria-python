@@ -42,6 +42,15 @@ from GenericDataViewScreen import GenericDataViewScreen
 class ShopForDataMixin():
     """Mixin class providing Catalogs & Shop For Data functionality for MyProfileApp."""
 
+    _app_instance: Any = None
+    glossary_data: dict[str, Any] = {}
+    glossary_data_extract: list[dict[str, Any]] = []
+    selected_t_node: str = "*"
+    selected_item: str = ""
+    selected_tree: str = ""
+    digital_product_catalog_table: DataTable | None = None
+    collections: Any = []
+
     def __init__(self, app_instance: Any = None, *args, **kwargs) -> None:
         try:
             super().__init__(*args, **kwargs)
@@ -55,11 +64,18 @@ class ShopForDataMixin():
         self.user_password = app_user.user_pwd or "secret"
         self.view_server = app_config.egeria_view_server or "qs-view-server"
         self.platform_url = app_config.egeria_platform_url or "https://127.0.0.1:9443"
+        self.glossary_data = {}
+        self.glossary_data_extract = []
+        self.selected_t_node = "*"
+        self.selected_item = ""
+        self.selected_tree = ""
+        self.digital_product_catalog_table = None
+        self.collections = []
 
     @property
     def app(self) -> Any:
         """Return the bound app instance, falling back to self if mixed into an App."""
-        return getattr(self, "_app_instance", None) or self
+        return self._app_instance or self
 
     @app.setter
     def app(self, value: Any) -> None:
@@ -67,15 +83,12 @@ class ShopForDataMixin():
 
     def show_main_screen(self) -> None:
         """Show main screen helper delegating to app instance or unwinding the stack."""
-        target_app = self.app
-        if target_app is not self and hasattr(target_app, "show_main_screen"):
-            target_app.show_main_screen()
-        elif target_app is not self and hasattr(target_app, "_show_main_screen"):
-            target_app._show_main_screen()
-        elif hasattr(self, "_show_main_screen") and callable(getattr(self, "_show_main_screen")) and getattr(self, "_show_main_screen") != self.show_main_screen:
-            self._show_main_screen()
-        elif hasattr(super(), "show_main_screen"):
-            super().show_main_screen()
+        if hasattr(self.app, "_show_main_screen"):
+            self.app._show_main_screen()
+        elif hasattr(self.app, "show_main_screen") and self.app.show_main_screen != self.show_main_screen:
+            self.app.show_main_screen()
+        elif hasattr(self.app, "pop_screen"):
+            self.app.pop_screen()
 
     _show_main_screen = show_main_screen
 
@@ -104,69 +117,58 @@ class ShopForDataMixin():
         except PyegeriaException as e:
             print_basic_exception(e)
             self.app.log(f"Error retrieving glossary details: {e!s}")
-            if hasattr(self.app, "exit"):
-                self.app.exit(420)
+            self.app.exit(420)
             return 420
         self.app.log(f"Glossary data returned: {self.glossary_data}")
         self.glossary_data_extract = self.glossary_data.get("data") or []
         self.app.log(f"Glossary data extracted: {self.glossary_data_extract}")
-        if self.glossary_data_extract == []:
-            self.app.log(f"No glossary data found for search string: {getattr(self, 'selected_t_node', '*')}")
+        if not self.glossary_data_extract:
+            self.app.log(f"No glossary data found for search string: {self.selected_t_node}")
             glossary_table.add_row("No glossaries found", "No data returned from Egeria", "")
         else:
             for g in self.glossary_data_extract:
                 glossary_table.add_row(g.get("Display Name"), g.get("Description"), g.get("Qualified Name"))
 
         # Digital Product Catalogs
-        if hasattr(self.app, "get_data_product_catalog_table") and callable(self.app.get_data_product_catalog_table):
-            return_code = self.app.get_data_product_catalog_table()
-            self.digital_product_catalog_table: DataTable = getattr(self.app, "digital_product_catalog_table", None)
-        elif hasattr(self, "get_data_product_catalog_table") and callable(getattr(self, "get_data_product_catalog_table")):
-            return_code = self.get_data_product_catalog_table()
-            self.digital_product_catalog_table: DataTable = getattr(self, "digital_product_catalog_table", None)
+        self.digital_product_catalog_table = DataTable(id="digital_product_catalog_table")
+        self.digital_product_catalog_table.add_columns("Digital Product Catalog Name", "Description", "Qualified Name", "GUID")
+        self.digital_product_catalog_table.cursor_type = "row"
+        self.digital_product_catalog_table.zebra_stripes = True
+        try:
+            self.digital_product_catalog_data = exec_report_spec(
+                format_set_name="Digital-Product-Catalog-MyE",
+                output_format="DICT",
+                params={
+                    "search_string": "*",
+                    "metadata_element_subtypes": ["DigitalProduct", "DigitalProductFamily"],
+                },
+                view_server=self.view_server,
+                view_url=self.platform_url,
+                user=self.user_name,
+                user_pass=self.user_password,
+            )
+        except PyegeriaException as e:
+            self.app.log(f"Error retrieving digital product catalog details: {e!s}")
+            print_basic_exception(e)
+            return 421
+        self.app.log(f"Digital Product Catalog data returned: {self.digital_product_catalog_data}")
+        self.digital_product_catalog_data_extract = self.digital_product_catalog_data.get("data") or []
+        self.app.log(f"Digital Product Catalog data extracted: {self.digital_product_catalog_data_extract}")
+        if not self.digital_product_catalog_data_extract:
+            self.app.log(f"No digital product catalog data found for user: {self.user_name}")
+            self.digital_product_catalog_table.add_row("No digital product catalogs found", "No data returned from Egeria", "")
         else:
-            self.digital_product_catalog_table = None
-
-        if self.digital_product_catalog_table is None:
-            self.digital_product_catalog_table = DataTable(id="digital_product_catalog_table")
-            self.digital_product_catalog_table.add_columns("Digital Product Catalog Name", "Description", "Qualified Name")
-            self.digital_product_catalog_table.cursor_type = "row"
-            self.digital_product_catalog_table.zebra_stripes = True
-
-        # try:
-        #     self.digital_product_catalog_data = exec_report_spec(
-        #         format_set_name="Digital-Product-Catalog",
-        #         output_format="DICT",
-        #         params={
-        #             "search_string": "*",
-        #             "metadata_element_subtypes": ["DigitalProduct", "DigitalProductFamily"],
-        #         },
-        #         view_server=self.view_server,
-        #         view_url=self.platform_url,
-        #         user=self.user_name,
-        #         user_pass=self.user_password,
-        #     )
-        # except PyegeriaException as e:
-        #     self.app.log(f"Error retrieving digital product catalog details: {e!s}")
-        #     # self.exit(421)
-        #     return 421
-        # self.app.log(f"Digital Product Catalog data returned: {self.digital_product_catalog_data}")
-        # self.digital_product_catalog_data_extract = self.digital_product_catalog_data.get("data") or []
-        # self.app.log(f"Digital Product Catalog data extracted: {self.digital_product_catalog_data_extract}")
-        # if self.digital_product_catalog_data_extract == []:
-        #     self.app.log(f"No digital product catalog data found for user: {self.user_name}")
-        #     self.digital_product_catalog_table.add_row("No digital product catalogs found", "No data returned from Egeria", "")
-        # else:
-        #     for catalog_item in self.digital_product_catalog_data_extract:
-        #         self.digital_product_catalog_table.add_row(
-        #             catalog_item["Display Name"],
-        #             catalog_item["Description"],
-        #             catalog_item["Qualified Name"],
-        #         )
+            for catalog_item in self.digital_product_catalog_data_extract:
+                self.digital_product_catalog_table.add_row(
+                    catalog_item.get("Display Name", ""),
+                    catalog_item.get("Description", ""),
+                    catalog_item.get("Qualified Name", ""),
+                    catalog_item.get("GUID", "")
+                )
 
         # Data Dictionaries
         data_dictionary_table: DataTable = DataTable(id="data_dictionary_table")
-        data_dictionary_table.add_columns("Data Dictionary Name", "Description", "Qualified Name")
+        data_dictionary_table.add_columns("Data Dictionary Name", "Description", "Qualified Name", "GUID")
         data_dictionary_table.cursor_type = "row"
         data_dictionary_table.zebra_stripes = True
         try:
@@ -180,7 +182,8 @@ class ShopForDataMixin():
                 user_pass=self.user_password,
             )
         except PyegeriaException as e:
-            self.app.log(f"Error retrieving data dictionary details: {e!s}")
+            self.app.log(f"Error retrieving data dictionary details: {e}")
+            print_basic_exception(e)
             # self.exit(422)
             return 422
         self.data_dictionary_data_extract = self.data_dictionary_data.get("data") or []
@@ -214,7 +217,7 @@ class ShopForDataMixin():
             )
         except PyegeriaException as e:
             self.app.log(f"Error retrieving business domain details: {e!s}")
-            # self.exit(423)
+            print_basic_exception(e)
             return 423
         self.business_domain_data_extract = self.business_domain_data.get("data") or []
         if self.business_domain_data_extract == []:
@@ -248,6 +251,7 @@ class ShopForDataMixin():
         except PyegeriaException as e:
             print_basic_exception(e)
             self.collections = "Error retrieving collections: " + str(e)
+
         self.app.log(f"Found {len(self.collections)} root collections for user {self.user_name}")
         self.app.log(f"Root collections: {self.collections}")
         if isinstance(self.collections, str):
@@ -321,6 +325,9 @@ class ShopForDataMixin():
                 return 200
             elif selection_type == 211:
                 self.app.log(f"Shop For Data screen returned: {selection_type}, request to subscribe to data source ")
+                await self.request_to_subscribe_data_source(
+                    selection_parm_1, selection_parm_2, selection_parm_3, row_values=selection_parm_4
+                )
                 return 211
             elif selection_type == 212:
                 self.app.log(f"Shop For Data screen returned: {selection_type}, request to sample data source ")
@@ -340,8 +347,8 @@ class ShopForDataMixin():
             self.app.log(f"Selected business domain with qualified name: {selection_parm_1}")
             self.build_domain_details(selection_parm_1, selection_parm_2)
         elif selection_type == "catalog":
-            self.app.log(f"Selected catalog with qualified name: {selection_parm_1}")
-            self.build_catalog_details(selection_parm_1, selection_parm_2)
+            self.app.log(f"Selected catalog with qualified name: {selection_parm_1}, guid: {selection_parm_3}")
+            self.build_catalog_details(selection_parm_1, selection_parm_2, target_guid=selection_parm_3)
         elif selection_type == "glossary":
             self.app.log(f"Selected glossary with qualified name: {selection_parm_2}")
             self.build_glossary_details(selection_parm_1, selection_parm_2)
@@ -372,8 +379,8 @@ class ShopForDataMixin():
         except PyegeriaException as e:
             print_basic_exception(e)
             self.app.log(f"Error retrieving dictionary details: {e!s}")
-            # self.exit(420)
             return 420
+
         self.app.log(f"Dictionary Details: {self.dictionary_details}")
         if not self.dictionary_details:
             error_category = "Dictionary Details"
@@ -436,8 +443,8 @@ class ShopForDataMixin():
         except PyegeriaException as e:
             print_basic_exception(e)
             self.app.log(f"Error retrieving business domain details: {e!s}")
-            # self.exit(420)
             return 420
+
         self.app.log(f"domain_details: {self.domain_details}")
         if not self.domain_details:
             error_category = "Business Domain Details"
@@ -496,11 +503,12 @@ class ShopForDataMixin():
             callback=self.overview_callback,
         )
 
-    def build_catalog_details(self, target_qualified_name: str, target_display_name: str) -> Any:
+    def build_catalog_details(self, target_qualified_name: str, target_display_name: str, target_guid: str | None = None) -> Any:
         """Build the details object for a product catalog details screen."""
-        self.app.log(f"Building product catalog details for qualified name: {target_qualified_name}")
+        self.app.log(f"Building product catalog details for qualified name: {target_qualified_name}, guid: {target_guid}")
         self.catalog_qualified_name = target_qualified_name
         self.catalog_display_name = target_display_name
+        self.catalog_guid = target_guid
         build_structure: dict = {}
 
         try:
@@ -516,8 +524,8 @@ class ShopForDataMixin():
         except PyegeriaException as e:
             print_basic_exception(e)
             self.app.log(f"Error retrieving catalog details: {e!s}")
-            # self.exit(420)
             return 420
+
         self.app.log(f"catalog_details: {self.catalog_details}")
         if not self.catalog_details:
             error_category = "Catalog Details"
@@ -547,18 +555,23 @@ class ShopForDataMixin():
                 term_qualified_name = product.get("Qualified Name") or ""
                 term_subject = product.get("Display Name") or ""
                 term_summary = product.get("Description") or ""
+                product_guid = product.get("GUID") or target_guid or term_qualified_name
                 if term_subject not in build_structure:
                     build_structure[term_subject] = []
-                build_structure[term_subject].append({term_qualified_name: term_summary})
+                build_structure[term_subject].append({term_qualified_name: (term_summary, product_guid)})
                 self.app.log(f"build_structure: {build_structure}")
 
             sample_data = []
             for instance, data_prods in build_structure.items():
                 catalog_branch = catalog_tree.root.add(instance)
                 for data_prod in data_prods:
-                    for term_qualified_name, term_summary in data_prod.items():
-                        catalog_branch.add_leaf(term_summary, data=term_qualified_name)
-                        self.app.log(f"term_qualified_name: {term_qualified_name}, term summary: {term_summary}")
+                    for term_qualified_name, item_info in data_prod.items():
+                        if isinstance(item_info, (tuple, list)):
+                            term_summary, leaf_guid = item_info
+                        else:
+                            term_summary, leaf_guid = item_info, term_qualified_name
+                        catalog_branch.add_leaf(term_summary, data=leaf_guid)
+                        self.app.log(f"term_qualified_name: {term_qualified_name}, term summary: {term_summary}, guid: {leaf_guid}")
                 catalog_tree.root.expand()
 
             # get some sample data from the data source for each product
@@ -619,7 +632,7 @@ class ShopForDataMixin():
 
         glossary_tree: Tree = Tree(label=self.glossary_display_name, id="glossary_details_tree")
 
-        for glossary_instance in getattr(self, "glossary_data_extract", []):
+        for glossary_instance in self.glossary_data_extract:
             if glossary_instance.get("Qualified Name") == target_qualified_name:
                 self.glossary_folders = glossary_instance.get("Folders") or None
                 self.app.log(f"glossary_folders: {self.glossary_folders}")
@@ -743,26 +756,163 @@ class ShopForDataMixin():
             self.app.log(f"Overview screen callback, return code : {r_code}")
             if r_code == 211:
                 self.app.log(f"Subscribing to selected item: {self.selected_item} from {self.selected_tree}")
-                try:
-                    s_client = ProductManager(self.view_server, self.platform_url, self.user_name, self.user_password)
-                    s_client.create_egeria_bearer_token(self.user_name, self.user_password)
-                    s_client.create_digital_subscription(self.selected_item)
-                except PyegeriaException:
-                    self.app.log(f"Error creating digital subscription: {self.selected_item} from {self.selected_tree}")
-                    self.app.notify("Error creating digital subscription")
-                    self.app.push_screen(CreateSubscriptionRequestScreen(), callback=self.create_subscription_callback)
-            else:
-                self.app.push_screen(
-                    ShopForDataScreen(),
-                    callback=self.shop_for_data_callback,
-                )
+                # try:
+                #     s_client = ProductManager(self.view_server, self.platform_url, self.user_name, self.user_password)
+                #     s_client.create_egeria_bearer_token(self.user_name, self.user_password)
+                #     s_client.create_digital_subscription(self.selected_item)
+                # except PyegeriaException:
+                #     self.app.log(f"Error creating digital subscription: {self.selected_item} from {self.selected_tree}")
+                #     self.app.notify("Error creating digital subscription")
+                self.app.push_screen(CreateSubscriptionRequestScreen(self.selected_item), callback=self.create_subscription_callback)
+            # else:
+            #     self.app.push_screen(
+            #         ShopForDataScreen(),
+            #         callback=self.shop_for_data_callback,
+            #     )
 
     def create_subscription_callback(self, result: Any) -> None:
         """Callback routine for create subscription request screen."""
-        if result is None:
+        if result is None or result == 200:
             self.app.log("User cancelled subscription creation")
             return
         self.app.log(f"Subscription created: {result}")
+
+        display_name = result.get("displayName", "") if isinstance(result, dict) else str(result)
+        description = result.get("description", "") if isinstance(result, dict) else ""
+        status = result.get("Status", "DRAFT") if isinstance(result, dict) else "DRAFT"
+        identifier = result.get("identifier", "") if isinstance(result, dict) else ""
+        item_guid = (
+            result.get("externalSourceGUID")
+            or result.get("guid")
+            or (self.selected_item if hasattr(self, "selected_item") else "")
+            or ""
+        ) if isinstance(result, dict) else (self.selected_item if hasattr(self, "selected_item") else "")
+
+        body = {
+            "class": "NewAgreementRequestBody",
+            "isOwnAnchor": True,
+            "anchorScopeGUID": None,
+            "parentGUID": None,
+            "parentRelationshipTypeName": "CollectionMembership",
+            "parentAtEnd1": True,
+            "properties": {
+                "class": "DigitalSubscriptionProperties",
+                "qualifiedName": "DigitalSubscription::" + display_name,
+                "displayName": display_name or "display name",
+                "description": description,
+                "userDefinedStatus": "DRAFT",
+                "identifier": identifier,
+                "supportLevel": "Community",
+                "serviceLevels": None,
+                "additionalProperties": None,
+                },
+            "initialStatus": status,
+            "externalSourceGUID": item_guid,
+            "externalSourceName": display_name,
+            "effectiveTime": None,
+            "forLineage": False,
+            "forDuplicateProcessing": False,
+            }
+
+        try:
+            s_client = ProductManager(self.view_server, self.platform_url, self.user_name, self.user_password)
+            s_client.create_egeria_bearer_token(self.user_name, self.user_password)
+            res = s_client.create_digital_subscription(body)
+            self.app.log(f"Created digital subscription successfully: {res}")
+            self.app.notify(f"Created digital subscription for {display_name or item_guid}")
+        except Exception as e:
+            self.app.log(f"Error creating digital subscription in callback: {e}")
+            self.app.notify(f"Error creating digital subscription: {e}")
+
+    async def request_to_subscribe_data_source(
+        self,
+        selection_parm_1: Any = None,
+        selection_parm_2: Any = None,
+        selection_parm_3: Any = None,
+        row_values: Any = None,
+    ) -> None:
+        """The user has requested to subscribe directly to the selected data source without sampling."""
+        self.row_highlighted = selection_parm_1
+        self.cursor_row_highlighted = selection_parm_2
+        self.data_table_highlighted = selection_parm_3
+        self.app.log(
+            f"Direct subscribe requested: row={selection_parm_1}, cursor_row={selection_parm_2}, data_table={selection_parm_3}, row_values={row_values}"
+        )
+
+        item_content = []
+        if row_values and isinstance(row_values, (list, tuple)) and len(row_values) > 0:
+            item_content = list(row_values)
+        else:
+            # Fallback to query_one on app or active screen
+            table_obj = None
+            if self.data_table_highlighted:
+                table_id = f"#{str(self.data_table_highlighted).lstrip('#')}"
+                try:
+                    table_obj = self.app.query_one(table_id, DataTable)
+                except Exception:
+                    try:
+                        table_obj = self.app.screen.query_one(table_id, DataTable)
+                    except Exception:
+                        table_obj = None
+
+            if table_obj:
+                try:
+                    if self.row_highlighted is not None and hasattr(table_obj, "get_row"):
+                        item_content = list(table_obj.get_row(self.row_highlighted))
+                    elif self.cursor_row_highlighted is not None and hasattr(table_obj, "get_row_at"):
+                        item_content = list(table_obj.get_row_at(self.cursor_row_highlighted))
+                    elif hasattr(table_obj, "get_row_at"):
+                        item_content = list(table_obj.get_row_at(0))
+                except Exception as e:
+                    self.app.log(f"Error getting row from table fallback: {e}")
+
+        element_name = "Selected Data Element"
+        element_qname = ""
+        element_desc = ""
+        element_guid = ""
+
+        if item_content and len(item_content) > 0:
+            if self.data_table_highlighted in ["glossary_table", "digital_product_catalog_table", "data_dictionary_table"]:
+                element_name = str(item_content[0]) if len(item_content) > 0 else ""
+                element_desc = str(item_content[1]) if len(item_content) > 1 else ""
+                element_qname = str(item_content[2]) if len(item_content) > 2 else ""
+                element_guid = str(item_content[3]) if len(item_content) > 3 else ""
+            else:
+                element_name = str(item_content[0]) if len(item_content) > 0 else ""
+                element_desc = str(item_content[1]) if len(item_content) > 1 else ""
+                element_qname = str(item_content[0]) if len(item_content) > 0 else ""
+                element_guid = str(item_content[2]) if len(item_content) > 2 else ""
+
+        if element_guid:
+            self.selected_item = element_guid
+        elif element_qname:
+            self.selected_item = element_qname
+        elif element_name:
+            self.selected_item = element_name
+
+        is_placeholder = (
+            not item_content
+            or not element_name
+            or element_name.startswith("No ")
+            or element_desc == "No data returned from Egeria"
+        )
+
+        if is_placeholder:
+            self.app.log("No valid data element selected to subscribe")
+            self.app.notify("No data element selected to subscribe", title="Shop for Data", severity="warning")
+            await self.handle_shop_for_data_option()
+            return
+
+        target_subscription_item = element_guid or element_qname or self.selected_item
+        self.app.log(f"Direct subscription for item: {target_subscription_item} ({element_name})")
+
+        push_res = self.app.push_screen(
+            CreateSubscriptionRequestScreen(self.selected_item),
+            callback=self.create_subscription_callback,
+        )
+        if asyncio.iscoroutine(push_res):
+            await push_res
+        
 
     async def request_to_sample_data_source(
         self,
@@ -783,26 +933,19 @@ class ShopForDataMixin():
         if row_values and isinstance(row_values, (list, tuple)) and len(row_values) > 0:
             item_content = list(row_values)
         else:
-            # Fallback to tables stored on self or self.app or via query_one
+            # Fallback to query_one on app or active screen
             table_obj = None
             if self.data_table_highlighted:
-                table_attr_name = str(self.data_table_highlighted).lstrip("#")
-                table_obj = getattr(self, table_attr_name, None) or getattr(self.app, table_attr_name, None)
-                if table_obj is None and hasattr(self.app, "query_one"):
+                table_id = f"#{str(self.data_table_highlighted).lstrip('#')}"
+                try:
+                    table_obj = self.app.query_one(table_id, DataTable)
+                except Exception:
                     try:
-                        table_obj = self.app.query_one("#" + table_attr_name, DataTable)
-                    except Exception:
-                        try:
-                            table_obj = self.app.query_one("#" + table_attr_name)
-                        except Exception:
-                            table_obj = None
-                if table_obj is None and hasattr(self, "query_one"):
-                    try:
-                        table_obj = self.query_one("#" + table_attr_name)
+                        table_obj = self.app.screen.query_one(table_id, DataTable)
                     except Exception:
                         table_obj = None
 
-            if table_obj and (hasattr(table_obj, "row_count") or hasattr(table_obj, "get_row")):
+            if table_obj:
                 try:
                     if self.row_highlighted is not None and hasattr(table_obj, "get_row"):
                         item_content = list(table_obj.get_row(self.row_highlighted))
@@ -816,16 +959,24 @@ class ShopForDataMixin():
         element_name = "Selected Data Element"
         element_qname = ""
         element_desc = ""
+        element_guid = ""
 
         if item_content and len(item_content) > 0:
             if self.data_table_highlighted in ["glossary_table", "digital_product_catalog_table", "data_dictionary_table"]:
                 element_name = str(item_content[0]) if len(item_content) > 0 else ""
                 element_desc = str(item_content[1]) if len(item_content) > 1 else ""
                 element_qname = str(item_content[2]) if len(item_content) > 2 else ""
+                element_guid = str(item_content[3]) if len(item_content) > 3 else ""
             else:
                 element_name = str(item_content[0]) if len(item_content) > 0 else ""
                 element_desc = str(item_content[1]) if len(item_content) > 1 else ""
                 element_qname = str(item_content[0]) if len(item_content) > 0 else ""
+                element_guid = str(item_content[2]) if len(item_content) > 2 else ""
+
+        if element_guid:
+            self.selected_item = element_guid
+        elif element_qname:
+            self.selected_item = element_qname
 
         is_placeholder = (
             not item_content
@@ -836,10 +987,7 @@ class ShopForDataMixin():
 
         if is_placeholder:
             self.app.log("No valid data element selected to sample")
-            if hasattr(self.app, "notify"):
-                self.app.notify("No data element selected to sample", title="Shop for Data", severity="warning")
-            elif hasattr(self, "notify"):
-                self.notify("No data element selected to sample", title="Shop for Data", severity="warning")
+            self.app.notify("No data element selected to sample", title="Shop for Data", severity="warning")
             await self.handle_shop_for_data_option()
             return
 
@@ -903,7 +1051,7 @@ class ShopForDataMixin():
             element_qname = (
                 result[2]
                 if len(result) > 2 and result[2]
-                else (result[1] if len(result) > 1 and result[1] else getattr(self, "selected_item", ""))
+                else (result[1] if len(result) > 1 and result[1] else self.selected_item)
             )
             self.app.log(f"Subscribing to data element from sample view: {element_qname}")
             try:
@@ -914,7 +1062,7 @@ class ShopForDataMixin():
             except Exception as e:
                 self.app.log(f"Error creating digital subscription: {e}")
                 self.app.notify(f"Error creating digital subscription: {e}")
-                await self.app.push_screen(CreateSubscriptionRequestScreen(), callback=self.create_subscription_callback)
+                await self.app.push_screen(CreateSubscriptionRequestScreen(self.selected_item), callback=self.create_subscription_callback)
         elif isinstance(result, int) and result == 210:
             self.show_main_screen()
         else:
