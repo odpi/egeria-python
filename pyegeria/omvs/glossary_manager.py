@@ -625,6 +625,159 @@ class GlossaryManager(CollectionManager):
         loop = asyncio.get_event_loop()
         loop.run_until_complete(self._async_clear_glossary_as_canonical(glossary_guid, body))
 
+    @dynamic_catch
+    async def _async_set_glossary_as_naming_standards_vocabulary(self, glossary_guid: str,
+                                               body: Optional[dict | NewClassificationRequestBody] = None) -> None:
+        """Classify a glossary to declare that it describes the terms used in naming standards. The terms in
+        this type of glossary are the name parts that are combined to form names that follow the organization's
+        naming standards. Async version.
+
+        Parameters
+        ----------
+        glossary_guid : str
+            Unique identifier of the glossary to classify.
+        body : dict | NewClassificationRequestBody, optional
+            Full request body. If supplied, overrides other parameters.
+
+        Returns
+        -------
+        None
+
+        Raises
+        ------
+        PyegeriaInvalidParameterException
+        PyegeriaAPIException
+        NotAuthorizedException
+
+        Notes
+        -----
+        Example body:
+        {
+            "class": "NewClassificationRequestBody",
+            "properties": {
+                "class": "NamingStandardsVocabularyProperties"
+            }
+        }
+        """
+        url = (f"{self.platform_url}/servers/{self.view_server}/api/open-metadata/glossary-manager/glossaries/"
+               f"{glossary_guid}/is-naming-standards-vocabulary")
+        if body is None:
+            body = {
+                "class": "NewClassificationRequestBody",
+                "properties": {
+                    "class": "NamingStandardsVocabularyProperties"
+                }
+            }
+        await self._async_new_classification_request(url, "NamingStandardsVocabularyProperties", body)
+        logger.info(f"Set glossary {glossary_guid} as naming standards vocabulary")
+
+    @dynamic_catch
+    def set_glossary_as_naming_standards_vocabulary(self, glossary_guid: str,
+                                  body: Optional[dict | NewClassificationRequestBody] = None) -> None:
+        """Classify a glossary to declare that it describes the terms used in naming standards. The terms in
+        this type of glossary are the name parts that are combined to form names that follow the organization's
+        naming standards.
+
+        Parameters
+        ----------
+        glossary_guid : str
+            Unique identifier of the glossary to classify.
+        body : dict | NewClassificationRequestBody, optional
+            Full request body. If supplied, overrides other parameters.
+
+        Returns
+        -------
+        None
+
+        Raises
+        ------
+        PyegeriaInvalidParameterException
+        PyegeriaAPIException
+        NotAuthorizedException
+
+        Notes
+        -----
+        Example body:
+        {
+            "class": "NewClassificationRequestBody",
+            "properties": {
+                "class": "NamingStandardsVocabularyProperties"
+            }
+        }
+        """
+        loop = asyncio.get_event_loop()
+        loop.run_until_complete(self._async_set_glossary_as_naming_standards_vocabulary(glossary_guid, body))
+
+    @dynamic_catch
+    async def _async_clear_glossary_as_naming_standards_vocabulary(self, glossary_guid: str,
+                                                 body: Optional[dict | DeleteClassificationRequestBody] = None) -> None:
+        """Remove the naming standards vocabulary classification from a glossary. Async version.
+
+        Parameters
+        ----------
+        glossary_guid : str
+            Unique identifier of the glossary.
+        body : dict | DeleteClassificationRequestBody, optional
+            Request body with correlation properties.
+
+        Returns
+        -------
+        None
+
+        Raises
+        ------
+        PyegeriaInvalidParameterException
+        PyegeriaAPIException
+        NotAuthorizedException
+
+        Notes
+        -----
+        Example body:
+        {
+            "class": "DeleteClassificationRequestBody",
+            "forLineage": false,
+            "forDuplicateProcessing": false
+        }
+        """
+        url = (f"{self.platform_url}/servers/{self.view_server}/api/open-metadata/glossary-manager/glossaries/"
+               f"{glossary_guid}/is-naming-standards-vocabulary/remove")
+        await self._async_delete_classification_request(url, body)
+        logger.info(f"Cleared naming standards vocabulary classification from glossary {glossary_guid}")
+
+    @dynamic_catch
+    def clear_glossary_as_naming_standards_vocabulary(self, glossary_guid: str,
+                                    body: Optional[dict | DeleteClassificationRequestBody] = None) -> None:
+        """Remove the naming standards vocabulary classification from a glossary.
+
+        Parameters
+        ----------
+        glossary_guid : str
+            Unique identifier of the glossary.
+        body : dict | DeleteClassificationRequestBody, optional
+            Request body with correlation properties.
+
+        Returns
+        -------
+        None
+
+        Raises
+        ------
+        PyegeriaInvalidParameterException
+        PyegeriaAPIException
+        NotAuthorizedException
+
+        Notes
+        -----
+        Example body:
+        {
+            "class": "DeleteClassificationRequestBody",
+            "forLineage": false,
+            "forDuplicateProcessing": false
+        }
+        """
+        loop = asyncio.get_event_loop()
+        loop.run_until_complete(self._async_clear_glossary_as_naming_standards_vocabulary(glossary_guid, body))
+
     #
     #  Terms
     #
