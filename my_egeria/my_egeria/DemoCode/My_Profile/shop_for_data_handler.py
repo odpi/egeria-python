@@ -10,8 +10,10 @@ import asyncio
 from pathlib import Path
 from typing import Any
 
+from textual import work
 from textual.app import App
 from textual.widget import Widget
+from textual.worker import Worker, WorkerState
 
 # Ensure project root is on sys.path
 root_path = Path(__file__).resolve().parents[4]
@@ -98,12 +100,155 @@ class ShopForDataMixin():
         display a list of available collections of the chosen type and allow the user to subscribe to them.
         """
         # start by gathering the data using Pyegeria to access the Egeria backend servers
-
-        # Glossaries
         glossary_table: DataTable = DataTable(id="glossary_table")
         glossary_table.add_columns("Glossary Name", "Description", "Qualified Name")
         glossary_table.cursor_type = "row"
         glossary_table.zebra_stripes = True
+        glossary_table.loading=True
+        self.get_glossary_data()
+
+        digital_product_catalog_table = DataTable(id="digital_product_catalog_table")
+        digital_product_catalog_table.add_columns("Digital Product Catalog Name", "Description", "Qualified Name",
+                                                       "GUID")
+        digital_product_catalog_table.cursor_type = "row"
+        digital_product_catalog_table.zebra_stripes = True
+        digital_product_catalog_table.loading=True
+        self.get_digital_product_data()
+
+        data_dictionary_table: DataTable = DataTable(id="data_dictionary_table")
+        data_dictionary_table.add_columns("Data Dictionary Name", "Description", "Qualified Name", "GUID")
+        data_dictionary_table.cursor_type = "row"
+        data_dictionary_table.zebra_stripes = True
+        data_dictionary_table.loading=True
+        self.get_data_dictionary_data()
+
+        business_domain_table: DataTable = DataTable(id="business_domain_table")
+        business_domain_table.add_columns("Business Area Name", "Type Name", "GUID")
+        business_domain_table.cursor_type = "row"
+        business_domain_table.zebra_stripes = True
+        business_domain_table.loading=True
+        self.get_business_domain_data()
+
+        root_collection_table = DataTable(id="root_collection_table")
+        root_collection_table.add_columns("Root Collection Name", "Description", "GUID")
+        root_collection_table.cursor_type = "row"
+        root_collection_table.zebra_stripes = True
+        root_collection_table.loading=True
+        self.get_root_collection_data()
+
+        # hand the data to the Screen for displaying
+        self.app.push_screen(ShopForDataScreen(), callback=self.shop_for_data_callback)
+
+    def on_worker_state_changed(self, event: Worker.StateChanged) -> None:
+        """ Handle tables as loaded and remove spinners """
+        group_name = event.worker.group
+
+        if event.state == WorkerState.SUCCESS:
+            if group_name == "glossary_group":
+                self.glossary_data = event.worker.result
+                glossary_table = self.app.query_one("#glossary_table", DataTable)
+                self.app.log(f"Glossary data returned: {self.glossary_data}")
+                self.glossary_data_extract = self.glossary_data.get("data") or []
+                self.app.log(f"Glossary data extracted: {self.glossary_data_extract}")
+                if not self.glossary_data_extract:
+                    self.app.log(f"No glossary data found for search string: {self.selected_t_node}")
+                    glossary_table.add_row("No glossaries found", "No data returned from Egeria", "")
+                else:
+                    for g in self.glossary_data_extract:
+                        glossary_table.add_row(g.get("Display Name"), g.get("Description"), g.get("Qualified Name"))
+
+            elif group_name == "product_group":
+                digital_product_catalog_table = self.app.query_one("#digital_product_catalog_table", DataTable)
+                self.app.log(f"Digital Product Catalog data returned: {self.digital_product_catalog_data}")
+                self.digital_product_catalog_data_extract = self.digital_product_catalog_data.get("data") or []
+                self.app.log(f"Digital Product Catalog data extracted: {self.digital_product_catalog_data_extract}")
+                if not self.digital_product_catalog_data_extract:
+                    self.app.log(f"No digital product catalog data found for user: {self.user_name}")
+                    digital_product_catalog_table.add_row("No digital product catalogs found",
+                                                          "No data returned from Egeria", "")
+                else:
+                    for catalog_item in self.digital_product_catalog_data_extract:
+                        digital_product_catalog_table.add_row(
+                            catalog_item.get("Display Name", ""),
+                            catalog_item.get("Description", ""),
+                            catalog_item.get("Qualified Name", ""),
+                            catalog_item.get("GUID", "")
+                        )
+
+            elif  group_name == "dictionary_group":
+                data_dictionary_table = self.app.query_one("#data_dictionary_table", DataTable)
+                self.data_dictionary_data_extract = self.data_dictionary_data.get("data") or []
+                if self.data_dictionary_data_extract == []:
+                    self.app.log(f"No data dictionary details found for user: {self.user_name}")
+                    data_dictionary_table.add_row("No data dictionaries found", "No data returned from Egeria", "")
+                else:
+                    self.app.log(
+                        f"Found {self.data_dictionary_data_extract} data dictionaries for user {self.user_name}")
+                    data_dictionary_table.add_row("Display Name", "Description", "Qualified Name")
+                    for dictionary in self.data_dictionary_data_extract:
+                        data_dictionary_table.add_row(
+                            dictionary.get("Display Name", ""),
+                            dictionary.get("Description", ""),
+                            dictionary.get("Qualified Name", ""),
+                        )
+
+            elif group_name == "domain_group":
+                business_domain_table = self.app.query_one("#business_domain_table", DataTable)
+                self.business_domain_data_extract = self.business_domain_data.get("data") or []
+                if self.business_domain_data_extract == []:
+                    self.app.log(f"No business domains found for user {self.user_name}")
+                    business_domain_table.add_row("No business domains found", "No data returned from Egeria", "")
+                else:
+                    self.app.log(
+                        f"Found {self.business_domain_data_extract} business domains for user {self.user_name}")
+                    for domain in self.business_domain_data_extract:
+                        business_domain_table.add_row(
+                            domain.get("Qualified Name", ""),
+                            domain.get("Type Name", ""),
+                            domain.get("GUID", ""),
+                        )
+
+            elif group_name == "root_group":
+                root_collection_table = self.app.query_one("#root_collection_table", DataTable)
+                self.app.log(f"Found {len(self.collections)} root collections for user {self.user_name}")
+                self.app.log(f"Root collections: {self.collections}")
+                if isinstance(self.collections, str):
+                    root_collection_table.add_row("No root collections found", self.collections, "")
+                elif isinstance(self.collections, dict) and self.collections.get("kind") == "json":
+                    self.collections = self.collections.get("data")
+                    for collection in self.collections:
+                        root_collection_table.add_row(
+                            collection.get("Qualified Name"),
+                            collection.get("Type Name"),
+                            collection.get("GUID"),
+                        )
+                elif isinstance(self.collections, list):
+                    for collection in self.collections:
+                        root_collection_table.add_row(
+                            collection.get("Qualified Name"),
+                            collection.get("Type Name"),
+                            collection.get("GUID"),
+                        )
+                else:
+                    self.app.log(f"Unexpected data type returned from Egeria: {type(self.collections)}")
+                    root_collection_table.add_row("Invalid data type", "Unexpected data type returned from Egeria", "")
+
+
+        if event.state in (WorkerState.SUCCESS, WorkerState.ERROR, WorkerState.CANCELLED):
+            if group_name == "glossary_group":
+                self.app.query_one("#glossary_table", DataTable).loading=False
+            elif group_name == "product_group":
+                self.app.query_one("#digital_product_catalog_table").loading=False
+            elif group_name == "dictionary_group":
+                self.app.query_one("#business_domain_table", DataTable).loading=False
+            elif group_name == "root_group":
+                self.app.query_one("#root_collection_table", DataTable).loading=False
+
+    @work(thread=True, exclusive=False, group="glossary_group")
+    async def get_glossary_data(self):
+        # glossaries
+
+
         try:
             self.glossary_data = exec_report_spec(
                 format_set_name="Glossaries",
@@ -118,22 +263,12 @@ class ShopForDataMixin():
             print_basic_exception(e)
             self.app.log(f"Error retrieving glossary details: {e!s}")
             self.app.exit(420)
-            return 420
-        self.app.log(f"Glossary data returned: {self.glossary_data}")
-        self.glossary_data_extract = self.glossary_data.get("data") or []
-        self.app.log(f"Glossary data extracted: {self.glossary_data_extract}")
-        if not self.glossary_data_extract:
-            self.app.log(f"No glossary data found for search string: {self.selected_t_node}")
-            glossary_table.add_row("No glossaries found", "No data returned from Egeria", "")
-        else:
-            for g in self.glossary_data_extract:
-                glossary_table.add_row(g.get("Display Name"), g.get("Description"), g.get("Qualified Name"))
+        return self.glossary_data
 
-        # Digital Product Catalogs
-        self.digital_product_catalog_table = DataTable(id="digital_product_catalog_table")
-        self.digital_product_catalog_table.add_columns("Digital Product Catalog Name", "Description", "Qualified Name", "GUID")
-        self.digital_product_catalog_table.cursor_type = "row"
-        self.digital_product_catalog_table.zebra_stripes = True
+    @work(thread=True, exclusive=False, group="product_group")
+    async def get_digital_product_data(self):
+        # digital product catalog
+
         try:
             self.digital_product_catalog_data = exec_report_spec(
                 format_set_name="Digital-Product-Catalog-MyE",
@@ -150,27 +285,14 @@ class ShopForDataMixin():
         except PyegeriaException as e:
             self.app.log(f"Error retrieving digital product catalog details: {e!s}")
             print_basic_exception(e)
-            return 421
-        self.app.log(f"Digital Product Catalog data returned: {self.digital_product_catalog_data}")
-        self.digital_product_catalog_data_extract = self.digital_product_catalog_data.get("data") or []
-        self.app.log(f"Digital Product Catalog data extracted: {self.digital_product_catalog_data_extract}")
-        if not self.digital_product_catalog_data_extract:
-            self.app.log(f"No digital product catalog data found for user: {self.user_name}")
-            self.digital_product_catalog_table.add_row("No digital product catalogs found", "No data returned from Egeria", "")
-        else:
-            for catalog_item in self.digital_product_catalog_data_extract:
-                self.digital_product_catalog_table.add_row(
-                    catalog_item.get("Display Name", ""),
-                    catalog_item.get("Description", ""),
-                    catalog_item.get("Qualified Name", ""),
-                    catalog_item.get("GUID", "")
-                )
+            self.digital_product_catalog_data = ["No Data", "Returned by Egeria"]
 
-        # Data Dictionaries
-        data_dictionary_table: DataTable = DataTable(id="data_dictionary_table")
-        data_dictionary_table.add_columns("Data Dictionary Name", "Description", "Qualified Name", "GUID")
-        data_dictionary_table.cursor_type = "row"
-        data_dictionary_table.zebra_stripes = True
+        return self.digital_product_catalog_data
+
+    @work(thread=True, exclusive=False, group="dictionary_group")
+    async def get_data_dictionary_data(self):
+        # data dictionary
+
         try:
             self.data_dictionary_data = exec_report_spec(
                 format_set_name="Data-Dictionaries",
@@ -184,27 +306,14 @@ class ShopForDataMixin():
         except PyegeriaException as e:
             self.app.log(f"Error retrieving data dictionary details: {e}")
             print_basic_exception(e)
-            # self.exit(422)
-            return 422
-        self.data_dictionary_data_extract = self.data_dictionary_data.get("data") or []
-        if self.data_dictionary_data_extract == []:
-            self.app.log(f"No data dictionary details found for user: {self.user_name}")
-            data_dictionary_table.add_row("No data dictionaries found", "No data returned from Egeria", "")
-        else:
-            self.app.log(f"Found {self.data_dictionary_data_extract} data dictionaries for user {self.user_name}")
-            data_dictionary_table.add_row("Display Name", "Description", "Qualified Name")
-            for dictionary in self.data_dictionary_data_extract:
-                data_dictionary_table.add_row(
-                    dictionary.get("Display Name", ""),
-                    dictionary.get("Description", ""),
-                    dictionary.get("Qualified Name", ""),
-                )
+            self.data_dictionary_data = ["No Data", "Returned by Egeria"]
 
+        return self.data_dictionary_data
+
+    @work(thread=True, exclusive=False, group="domain_group")
+    async def get_business_domain_data(self):
         # Business Domains
-        business_domain_table: DataTable = DataTable(id="business_domain_table")
-        business_domain_table.add_columns("Business Area Name", "Type Name", "GUID")
-        business_domain_table.cursor_type = "row"
-        business_domain_table.zebra_stripes = True
+
         try:
             self.business_domain_data = exec_report_spec(
                 format_set_name="BusinessCapabilities",
@@ -218,25 +327,13 @@ class ShopForDataMixin():
         except PyegeriaException as e:
             self.app.log(f"Error retrieving business domain details: {e!s}")
             print_basic_exception(e)
-            return 423
-        self.business_domain_data_extract = self.business_domain_data.get("data") or []
-        if self.business_domain_data_extract == []:
-            self.app.log(f"No business domains found for user {self.user_name}")
-            business_domain_table.add_row("No business domains found", "No data returned from Egeria", "")
-        else:
-            self.app.log(f"Found {self.business_domain_data_extract} business domains for user {self.user_name}")
-            for domain in self.business_domain_data_extract:
-                business_domain_table.add_row(
-                    domain.get("Qualified Name", ""),
-                    domain.get("Type Name", ""),
-                    domain.get("GUID", ""),
-                )
+            self.business_domain_data = ["No Data", "Returned by Egeria"]
 
+        return self.business_domain_data
+
+    @work(thread=True, exclusive=False, group="root_group")
+    async def get_root_collection_data(self):
         # Root Collections
-        self.root_collection_table = DataTable(id="root_collection_table")
-        self.root_collection_table.add_columns("Root Collection Name", "Description", "GUID")
-        self.root_collection_table.cursor_type = "row"
-        self.root_collection_table.zebra_stripes = True
 
         try:
             self.collections = exec_report_spec(
@@ -252,40 +349,7 @@ class ShopForDataMixin():
             print_basic_exception(e)
             self.collections = "Error retrieving collections: " + str(e)
 
-        self.app.log(f"Found {len(self.collections)} root collections for user {self.user_name}")
-        self.app.log(f"Root collections: {self.collections}")
-        if isinstance(self.collections, str):
-            self.root_collection_table.add_row("No root collections found", self.collections, "")
-        elif isinstance(self.collections, dict) and self.collections.get("kind") == "json":
-            self.collections = self.collections.get("data")
-            for collection in self.collections:
-                self.root_collection_table.add_row(
-                    collection.get("Qualified Name"),
-                    collection.get("Type Name"),
-                    collection.get("GUID"),
-                )
-        elif isinstance(self.collections, list):
-            for collection in self.collections:
-                self.root_collection_table.add_row(
-                    collection.get("Qualified Name"),
-                    collection.get("Type Name"),
-                    collection.get("GUID"),
-                )
-        else:
-            self.app.log(f"Unexpected data type returned from Egeria: {type(self.collections)}")
-            self.root_collection_table.add_row("Invalid data type", "Unexpected data type returned from Egeria", "")
-
-        # hand the data to the Screen for displaying
-        await self.app.push_screen(
-            ShopForDataScreen(
-                glossary_table=glossary_table,
-                digital_product_catalog_table=self.digital_product_catalog_table,
-                data_dictionary_table=data_dictionary_table,
-                business_domain_table=business_domain_table,
-                root_collection_table=self.root_collection_table,
-            ),
-            callback=self.shop_for_data_callback,
-        )
+        return self.collections
 
     async def shop_for_data_callback(self, result: Any) -> Any:
         """Callback for Shop For Data screen."""
@@ -320,7 +384,7 @@ class ShopForDataMixin():
                 self.app.log(f"Shop For Data screen returned: {selection_type}, request to search for a term ")
                 await self.app.push_screen(
                     SearchForTermScreen(),
-                    callback=self.search_for_term_callback,
+                    callback=self.app.search_for_term_callback,
                 )
                 return 200
             elif selection_type == 211:
@@ -386,7 +450,7 @@ class ShopForDataMixin():
             error_category = "Dictionary Details"
             error_message = "No dictionary details found"
             self.app.log(f"Error retrieving dictionary details: {error_category}, {error_message}")
-            self.app.push_screen(StatusScreen(f"{error_category}: {error_message}"), callback=self.status_callback)
+            self.app.push_screen(StatusScreen(f"{error_category}: {error_message}"), callback=self.app.status_callback)
         elif self.dictionary_details.get("kind") == "empty":
             dictionary_tree: Tree = Tree(label="Empty Dictionary", id="data_dictionary_tree")
             dictionary_tree.root.expand()
@@ -395,7 +459,8 @@ class ShopForDataMixin():
             dictionary_tree = Tree(label=self.dictionary_display_name, id="data_dictionary_tree")
             dictionary_tree.root.expand()
             dictionary_tree.auto_expand = True
-            self.dictionary_details_data = self.dictionary_details.get("data")
+            self.dictionary_details_data: list[dict] = self.dictionary_details.get("data")
+
             for term in self.dictionary_details_data:
                 self.app.log(f"Dictionary term: {term} being processed")
                 term_qualified_name = term.get("Qualified Name") or ""

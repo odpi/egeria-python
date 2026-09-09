@@ -25,47 +25,24 @@ class ShopForDataScreen(Screen):
 
     CSS_PATH = "my_profile.tcss"
 
-    def __init__(
-        self,
-        glossary_table: DataTable | None = None,
-        digital_product_catalog_table: DataTable | None = None,
-        data_dictionary_table: DataTable | None = None,
-        business_domain_table: DataTable | None = None,
-        root_collection_table: DataTable | None = None,
-        user_name: str | None = None,
-        user_password: str | None = None,
-        view_server: str | None = None,
-        platform_url: str | None = None,
-        data_specification_table: DataTable | None = None,
-        *args,
-        **kwargs,
-    ):
-        """Initialize the ShopForDataScreen screen."""
+    def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
+
         load_app_config()
         app_config = settings.Environment
         app_user = settings.User_Profile
-        self.user_name = user_name or app_user.user_name or "garygeeke"
-        self.user_password = user_password or app_user.user_pwd or "secret"
-        self.view_server = view_server or app_config.egeria_view_server or "qs-view-server"
-        self.platform_url = platform_url or app_config.egeria_platform_url or "https://127.0.0.1:9443"
 
-        self.glossary_table: DataTable = glossary_table if glossary_table is not None else DataTable(id="glossary_table")
-        self.digital_product_catalog_table: DataTable = (
-            digital_product_catalog_table if digital_product_catalog_table is not None else DataTable(id="digital_product_catalog_table")
-        )
-        self.data_dictionary_table: DataTable = (
-            data_dictionary_table if data_dictionary_table is not None else DataTable(id="data_dictionary_table")
-        )
-        self.business_domain_table: DataTable = (
-            business_domain_table if business_domain_table is not None else DataTable(id="business_domain_table")
-        )
-        self.root_collection_table: DataTable = (
-            root_collection_table if root_collection_table is not None else DataTable(id="root_collection_table")
-        )
-        self.data_specification_table: DataTable = (
-            data_specification_table if data_specification_table is not None else DataTable(id="data_specification_table")
-        )
+        self.user_name = app_user.user_name or "garygeeke"
+        self.user_password = app_user.user_pwd or "secret"
+        self.view_server = app_config.egeria_view_server or "qs-view-server"
+        self.platform_url = app_config.egeria_platform_url or "https://127.0.0.1:9443"
+
+        self.glossary_table: DataTable = self.query_one("#glossary_table", DataTable)
+        self.digital_product_catalog_table: DataTable = self.query_one("#digital_product_catalog_table", DataTable)
+        self.data_dictionary_table: DataTable = self.query_one("#data_dictionary_table", DataTable)
+        self.business_domain_table: DataTable = self.query_one("#business_domain_table", DataTable)
+        self.root_collection_table: DataTable = self.query_one("#root_collection_table", DataTable)
+
         self.row_highlighted = None
         self.cursor_row_highlighted = None
         self.data_table_highlighted = None
@@ -95,14 +72,6 @@ class ShopForDataScreen(Screen):
     def on_mount(self) -> None:
         self.header = f"Egeria Data Sources for user {self.user_name}"
         self.sub_header = "Shop for Data"
-
-    # @on(DataTable.RowSelected)
-    # def handle_data_table_highlight(self, event: DataTable.RowHighlighted):
-    #     self.row_highlighted = event.row_key
-    #     self.cursor_row_highlighted = event.cursor_row
-    #     self.data_table_highlighted = event.data_table
-    #     self.log(f"Row highlighted: {self.row_highlighted}")
-
 
     @on(DataTable.RowSelected, "#glossary_table")
     def handle_glossary_table_selection(self, event: DataTable.RowSelected):
@@ -147,16 +116,6 @@ class ShopForDataScreen(Screen):
         self.log(f"Row selected: {row_selected}, values: {row_values}, qualified name: {row_qualified_name}, type name: {row_type_name}, guid: {row_guid}")
         self.dismiss (["domain", row_qualified_name, row_type_name])
 
-    @on(DataTable.RowSelected, "#data_specification_table")
-    def handle_data_specification_table_selection(self, event: DataTable.RowSelected):
-        row_selected = event.row_key
-        row_values = self.query_one("#data_specification_table", DataTable).get_row(event.row_key)
-        row_display_name = row_values[0]
-        row_description = row_values[1]
-        row_qualified_name = row_values[2]
-        self.log(f"Row selected: {row_selected}, values: {row_values}, display name: {row_display_name}, description: {row_description}, qualified name: {row_qualified_name}")
-        self.dismiss (["specification", row_qualified_name, row_display_name])
-
     @on (DataTable.RowSelected, "#root_collection_table")
     def handle_root_collection_table_selection(self, event: DataTable.RowSelected):
         row_selected = event.row_key
@@ -195,7 +154,6 @@ class ShopForDataScreen(Screen):
             self.data_dictionary_table,
             self.business_domain_table,
             self.root_collection_table,
-            self.data_specification_table,
         ]
         target_table = None
         if getattr(self, "data_table_highlighted", None):
@@ -257,7 +215,6 @@ class ShopForDataScreen(Screen):
             self.data_dictionary_table,
             self.business_domain_table,
             self.root_collection_table,
-            self.data_specification_table,
         ]
         target_table = None
         if getattr(self, "data_table_highlighted", None):
