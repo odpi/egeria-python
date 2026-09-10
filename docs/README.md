@@ -10,6 +10,8 @@ contributors who need more depth than the top-level `README.md`/`CLAUDE.md`/
 | File | Covers |
 |---|---|
 | `dr_egeria_manual.md` | The Dr.Egeria user manual — command reference, markdown authoring conventions, attribute styles. |
+| `my_profile_app_manual.md` | The My Profile App user manual — configuration, dashboard overview, keyboard shortcuts. |
+| `My-Egeria-Doc.md` | In-depth architecture, workflow flows, and sequence diagrams for My Profile / MyEgeria. |
 | `output-formats-and-report-specs.md` | How `generate_output()`/report specs work: `FormatSet`/`Format`/`Column`/`ActionParameter` models, analytic functions, chart output formats. |
 | `reference-data-and-valid-metadata-mechanisms.md` | Reference data (`ReferenceDataManager`) vs. valid metadata values — what each mechanism is for and when to use which. |
 | `parameter_cleanup_plan.md` | Working notes from an in-progress parameter-naming/consistency audit across OMVS clients. |

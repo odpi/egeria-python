@@ -294,6 +294,7 @@ class MyProfileApp(App, TechTypesMixin, ShopForDataMixin, TeamRolesMixin, Elemen
         try:
             self.user_identities = self.my_profile_inst.get_my_profile(
                 report_spec="User-Identities",
+                params={"graph_query_depth": 0},
                 output_format="DICT",
             )
             self.log(f"User-Identities: {self.user_identities}, type: {type(self.user_identities)}")
@@ -305,6 +306,7 @@ class MyProfileApp(App, TechTypesMixin, ShopForDataMixin, TeamRolesMixin, Elemen
         try:
             self.my_todos_data = self.my_profile_inst.get_my_to_dos(
                 report_spec="My-User-ToDos",
+                params={"graph_query_depth": 0},
                 output_format="DICT",
             )
             self.log(f"My To-Dos: {self.my_todos_data}, type: {type(self.my_todos_data)}")
@@ -323,7 +325,7 @@ class MyProfileApp(App, TechTypesMixin, ShopForDataMixin, TeamRolesMixin, Elemen
                 actor = exec_report_spec(
                     format_set_name="Actor-Profiles",
                     output_format="DICT",
-                    params={"search_string": self.user_name},
+                    params={"search_string": self.user_name, "graph_query_depth": 2},
                     view_server=self.view_server,
                     view_url=self.platform_url,
                     user=self.user_name,
@@ -386,58 +388,62 @@ class MyProfileApp(App, TechTypesMixin, ShopForDataMixin, TeamRolesMixin, Elemen
             self.projects_table.add_columns("Status or Type", "Name", "Description", "GUID")
             self.projects_table.zebra_stripes = True
             self.projects_table.cursor_type = "row"
+            self.projects_table.loading=True
 
         if self.communities_table:
             self.communities_table.clear(columns=True)
             self.communities_table.add_columns("Assignment Type", "Community Name", "Description", "GUID")
             self.communities_table.zebra_stripes = True
             self.communities_table.cursor_type = "row"
+            self.communities_table.loading=True
 
         self.digital_product_catalog_table: DataTable = DataTable(id="digital_product_catalog_table")
         self.digital_product_catalog_table.add_columns("Digital Product Catalog Name", "Description", "Qualified Name", "GUID")
         self.digital_product_catalog_table.cursor_type = "row"
         self.digital_product_catalog_table.zebra_stripes = True
+        self.digital_product_catalog_table.loading=True
 
         self.roles_table.clear(columns=True)
         self.roles_table.add_columns("Role Name", "Role Type", "Description", "GUID")
         self.roles_table.zebra_stripes = True
         self.roles_table.cursor_type = "row"
+        self.roles_table.loading=True
 
         self.teams_table.clear(columns=True)
         self.teams_table.add_columns("Assignment Type", "Team Name", "Description", "GUID")
         self.teams_table.zebra_stripes = True
         self.teams_table.cursor_type = "row"
+        self.teams_table.loading=True
 
         self.blogs_table.clear(columns=True)
         self.blogs_table.add_columns("Blog Title", "Date", "Text", "GUID")
         self.blogs_table.zebra_stripes = True
         self.blogs_table.cursor_type = "row"
-        # for b in self.blogs if isinstance(self.blogs, list) else []:
-        #     if b != "":
-        #         temp_qname = b.get("qualifiedName", "")
-        #         temp_guid = await self.get_guid_for_qualified_name(temp_qname), ""
-        #         b.update("GUID", temp_guid)
-        #         self.log(f"GUID: {temp_guid}, retrieved for {temp_qname}")
+        self.blogs_table.loading=True
 
         self.journal_table.clear(columns=True)
         self.journal_table.add_columns("Journal Entry", "Date", "Text", "GUID")
         self.journal_table.zebra_stripes = True
         self.journal_table.cursor_type = "row"
+        self.journal_table.loading=True
 
         self.todos_table.clear(columns=True)
         self.todos_table.add_columns("To-Do Name", "Activity Status", "Description", "GUID")
         self.todos_table.zebra_stripes = True
         self.todos_table.cursor_type = "row"
+        self.todos_table.loading=True
 
         self.user_identity_table.clear(columns=True)
         self.user_identity_table.add_columns("Display Name", "User ID", "Distinguished Name", "GUID")
         self.user_identity_table.zebra_stripes = True
         self.user_identity_table.cursor_type = "row"
+        self.user_identity_table.loading=True
 
         self.associations_table.clear(columns=True)
         self.associations_table.add_columns("Status or Type", "Name", "Description", "GUID")
         self.associations_table.zebra_stripes = True
         self.associations_table.cursor_type = "row"
+        self.associations_table.loading=True
 
         self.my_collections_table.clear(columns=True)
         self.my_collections_table.add_columns("Collection Name", "Collection Description", "Collection GUID")
@@ -453,6 +459,7 @@ class MyProfileApp(App, TechTypesMixin, ShopForDataMixin, TeamRolesMixin, Elemen
                     str(p.get("Description", "")),
                     str(p.get("GUID", p.get("guid", ""))),
                 )
+                self.projects_table.loading=False
         if self.communities_table:
             for c in self.communities if isinstance(self.communities, list) else []:
                 self.communities_table.add_row(
@@ -461,6 +468,7 @@ class MyProfileApp(App, TechTypesMixin, ShopForDataMixin, TeamRolesMixin, Elemen
                     str(c.get("Description", "")),
                     str(c.get("GUID", c.get("guid", ""))),
                 )
+                self.communities_table.loading=False
         for r in self.roles if isinstance(self.roles, list) else []:
             self.roles_table.add_row(
                 str(r.get("Name", "")),
@@ -468,6 +476,7 @@ class MyProfileApp(App, TechTypesMixin, ShopForDataMixin, TeamRolesMixin, Elemen
                 str(r.get("Description", "")),
                 str(r.get("GUID", r.get("guid", ""))),
             )
+            self.roles_table.loading=False
         for t in self.teams if isinstance(self.teams, list) else []:
             self.teams_table.add_row(
                 str(t.get("Assignment Type", "")),
@@ -475,13 +484,15 @@ class MyProfileApp(App, TechTypesMixin, ShopForDataMixin, TeamRolesMixin, Elemen
                 str(t.get("Description", "")),
                 str(t.get("GUID", t.get("guid", ""))),
             )
+            self.teams_table.loading=False
         for b in self.blogs if isinstance(self.blogs, list) else []:
-                self.blogs_table.add_row(
-                    str(b.get("qualifiedName", "")),
-                    str(b.get("time", "")),
-                    str(b.get("text", "")),
-                    str(b.get("GUID", "")),
-                    )
+            self.blogs_table.add_row(
+                str(b.get("qualifiedName", "")),
+                str(b.get("time", "")),
+                str(b.get("text", "")),
+                str(b.get("GUID", "")),
+                )
+            self.blogs_table.loading=False
         for j in self.journal if isinstance(self.journal, list) else []:
             self.journal_table.add_row(
                 str(j.get("qualifiedName", "")),
@@ -489,6 +500,7 @@ class MyProfileApp(App, TechTypesMixin, ShopForDataMixin, TeamRolesMixin, Elemen
                 str(j.get("text", "")),
                 str(j.get("GUID", j.get("guid", ""))),
             )
+            self.journal_table.loading=False
         for td in self.todos if isinstance(self.todos, list) else []:
             self.todos_table.add_row(
                 str(td.get("Name", "")),
@@ -496,6 +508,7 @@ class MyProfileApp(App, TechTypesMixin, ShopForDataMixin, TeamRolesMixin, Elemen
                 str(td.get("Description", "")),
                 str(td.get("GUID", td.get("guid", ""))),
             )
+            self.todos_table.loading=False
         for ui in self.user_identity if isinstance(self.user_identity, list) else []:
             self.user_identity_table.add_row(
                 str(ui.get("Display Name", "")),
@@ -503,6 +516,7 @@ class MyProfileApp(App, TechTypesMixin, ShopForDataMixin, TeamRolesMixin, Elemen
                 str(ui.get("Distinguished Name", "")),
                 str(ui.get("GUID", ui.get("guid", ""))),
             )
+            self.user_identity_table.loading=False
         for c in self.communities if isinstance(self.communities, list) else []:
             self.associations_table.add_row(
                 str(c.get("Assignment Type", "")),
@@ -510,6 +524,7 @@ class MyProfileApp(App, TechTypesMixin, ShopForDataMixin, TeamRolesMixin, Elemen
                 str(c.get("Description", "")),
                 str(c.get("GUID", c.get("guid", ""))),
             )
+            self.associations_table.loading=False
 
     def action_quit(self) -> Any:
         self.exit(200)
@@ -599,6 +614,7 @@ class MyProfileApp(App, TechTypesMixin, ShopForDataMixin, TeamRolesMixin, Elemen
                 params={
                     "search_string": "*",
                     "metadata_element_subtypes": ["DigitalProduct", "DigitalProductFamily"],
+                    "graph_query_depth": 0,
                 },
                 view_server=self.view_server,
                 view_url=self.platform_url,
@@ -625,6 +641,7 @@ class MyProfileApp(App, TechTypesMixin, ShopForDataMixin, TeamRolesMixin, Elemen
                     catalog_item.get("Qualified Name", ""),
                     catalog_item.get("GUID", ""),
                 )
+                self.digital_product_catalog_table.loading=False
         return 200
 
     def show_my_bookmarks(self) -> None:
@@ -643,7 +660,8 @@ class MyProfileApp(App, TechTypesMixin, ShopForDataMixin, TeamRolesMixin, Elemen
             # --- API call (show at minimum the required params; document optional ones) ---
             body = {
                 "class": "SearchStringRequestBody",
-                "searchString": "*"
+                "searchString": "*",
+                "graph_query_depth": 0,
             }
             response = eclient.find_locations(
                 search_string="*",

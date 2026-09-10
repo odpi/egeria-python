@@ -8,6 +8,7 @@
 from unittest.mock import MagicMock, AsyncMock, patch
 import pytest
 
+from textual.app import App
 from shop_for_data_handler import ShopForDataMixin
 from ShopForDataScreen import ShopForDataScreen
 from SearchForTermScreen import SearchForTermScreen
@@ -17,10 +18,11 @@ from StatusScreen import StatusScreen
 from pyegeria import PyegeriaException
 
 
-class DummyShopApp(ShopForDataMixin):
+class DummyShopApp(App, ShopForDataMixin):
     """Test harness implementing ShopForDataMixin."""
 
     def __init__(self):
+        super().__init__()
         self.pushed_screens = []
         self.exit_code = None
         self.shown_main_screen = False
@@ -97,9 +99,8 @@ class TestShopForDataMixin:
         assert isinstance(screen, ShopForDataScreen)
         assert cb == app.shop_for_data_callback
 
-        # Verify that Digital-Product-Catalog-MyE was called with the search string plus the
-        # DigitalProduct/DigitalProductFamily subtype filter (added #346, this assertion was
-        # stale until fixed alongside the 6.1.12 release).
+        # Test the underlying worker fetch methods directly
+        await ShopForDataMixin.get_digital_product_data.__wrapped__(app)
         catalog_calls = [
             call for call in mock_exec.call_args_list
             if call.kwargs.get("format_set_name") == "Digital-Product-Catalog-MyE"
@@ -107,7 +108,9 @@ class TestShopForDataMixin:
         assert len(catalog_calls) == 1
         assert catalog_calls[0].kwargs.get("params") == {
             "search_string": "*",
-            "metadata_element_subtypes": ["DigitalProduct", "DigitalProductFamily"],
+            "metadata_element_type": "DigitalProductCatalog",
+            "_type": "DigitalProductCatalog",
+            "graph_query_depth": 0,
         }
 
     @pytest.mark.asyncio
@@ -134,9 +137,10 @@ class TestShopForDataMixin:
         mock_exec.side_effect = PyegeriaException("Network Error")
 
         app = DummyShopApp()
-        res = await app.handle_shop_for_data_option()
-        assert res == 420
-        assert app.exit_code == 420
+        await app.handle_shop_for_data_option()
+        res = await ShopForDataMixin.get_glossary_data.__wrapped__(app)
+        assert res == ["No Data", "Returned by Egeria"]
+        assert app.glossary_data == ["No Data", "Returned by Egeria"]
 
     @pytest.mark.asyncio
     async def test_shop_for_data_callback_exit_codes(self):
@@ -359,3 +363,116 @@ class TestShopForDataMixin:
         assert call_args["externalSourceGUID"] == "guid-prod-123"
         assert call_args["properties"]["displayName"] == "My Sub"
         assert any("Created digital subscription successfully" in msg for msg in app.log_messages)
+
+    def test_on_worker_state_changed_product_group(self):
+        app = DummyShopApp()
+        mock_table = MagicMock()
+        app.digital_product_catalog_table = mock_table
+
+        mock_worker = MagicMock()
+        mock_worker.group = "product_group"
+        mock_worker.result = {
+            "kind": "data",
+            "data": [
+                {
+                    "Display Name": "Catalog 1",
+                    "Description": "Desc 1",
+                    "Qualified Name": "Cat::1",
+                    "GUID": "g-1",
+                }
+            ],
+        }
+
+        mock_event = MagicMock()
+        mock_event.worker = mock_worker
+        from textual.worker import WorkerState
+        mock_event.state = WorkerState.SUCCESS
+
+        app.on_worker_state_changed(mock_event)
+        mock_table.add_row.assert_called_once_with("Catalog 1", "Desc 1", "Cat::1", "g-1")
+        assert mock_table.loading is False
+
+    def test_on_worker_state_changed_without_active_dom_nodes(self):
+        """Verify that when query_one fails, on_worker_state_changed handles it cleanly via instance tables."""
+        app = DummyShopApp()
+        mock_table = MagicMock()
+        app.digital_product_catalog_table = mock_table
+        # query_one raises Exception simulating missing DOM node on Screen(id='_default')
+        app.query_one = MagicMock(side_effect=Exception("No nodes match"))
+
+        mock_worker = MagicMock()
+        mock_worker.group = "product_group"
+        mock_worker.result = {
+            "kind": "data",
+            "data": [
+                {
+                    "Display Name": "Catalog 1",
+                    "Description": "Desc 1",
+                    "Qualified Name": "Cat::1",
+                    "GUID": "g-1",
+                }
+            ],
+        }
+
+        mock_event = MagicMock()
+        mock_event.worker = mock_worker
+        from textual.worker import WorkerState
+        mock_event.state = WorkerState.SUCCESS
+
+        app.on_worker_state_changed(mock_event)
+        mock_table.add_row.assert_called_once_with("Catalog 1", "Desc 1", "Cat::1", "g-1")
+        assert mock_table.loading is False
+
+    def test_on_worker_state_changed_product_group_list_error(self):
+        """Verify that when worker returns a list (e.g. error list ['No Data', 'Returned by Egeria']), no AttributeError is raised."""
+        app = DummyShopApp()
+        mock_table = MagicMock()
+        app.digital_product_catalog_table = mock_table
+
+        mock_worker = MagicMock()
+        mock_worker.group = "product_group"
+        mock_worker.result = ["No Data", "Returned by Egeria"]
+
+        mock_event = MagicMock()
+        mock_event.worker = mock_worker
+        from textual.worker import WorkerState
+        mock_event.state = WorkerState.SUCCESS
+
+        app.on_worker_state_changed(mock_event)
+        mock_table.add_row.assert_called_once_with("No digital product catalogs found", "No data returned from Egeria", "", "")
+        assert mock_table.loading is False
+
+    def test_on_worker_state_changed_all_groups_raw_list(self):
+        """Verify raw list of dicts works for all groups."""
+        from textual.worker import WorkerState
+
+        app = DummyShopApp()
+        glossary_table = MagicMock()
+        dict_table = MagicMock()
+        domain_table = MagicMock()
+        root_table = MagicMock()
+
+        app.glossary_table = glossary_table
+        app.data_dictionary_table = dict_table
+        app.business_domain_table = domain_table
+        app.root_collection_table = root_table
+
+        # Glossary group
+        worker = MagicMock(group="glossary_group", result=[{"Display Name": "G1", "Description": "D1", "Qualified Name": "Q1"}])
+        app.on_worker_state_changed(MagicMock(worker=worker, state=WorkerState.SUCCESS))
+        glossary_table.add_row.assert_called_once_with("G1", "D1", "Q1")
+
+        # Dictionary group
+        worker = MagicMock(group="dictionary_group", result=[{"Display Name": "Dic1", "Description": "D1", "Qualified Name": "Q1", "GUID": "g1"}])
+        app.on_worker_state_changed(MagicMock(worker=worker, state=WorkerState.SUCCESS))
+        dict_table.add_row.assert_called_once_with("Dic1", "D1", "Q1", "g1")
+
+        # Domain group
+        worker = MagicMock(group="domain_group", result=[{"Qualified Name": "Dom1", "Type Name": "T1", "GUID": "g1"}])
+        app.on_worker_state_changed(MagicMock(worker=worker, state=WorkerState.SUCCESS))
+        domain_table.add_row.assert_called_once_with("Dom1", "T1", "g1")
+
+        # Root group
+        worker = MagicMock(group="root_group", result=[{"Root Collection Name": "RC1", "Description": "Desc1", "GUID": "g1"}])
+        app.on_worker_state_changed(MagicMock(worker=worker, state=WorkerState.SUCCESS))
+        root_table.add_row.assert_called_once_with("RC1", "Desc1", "g1")

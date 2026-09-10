@@ -147,5 +147,6 @@ Copyright Contributors to the ODPi Egeria project.
 ## Related Information
 
 - [Egeria Project Documentation](https://egeria-project.org)
-- [pyegeria Programming Guide](../../../../../docs/user_programming.md)
-- [Dr.Egeria User Manual](../../../../../docs/dr_egeria_manual.md)
+- [pyegeria Programming Guide](user_programming.md)
+- [Dr.Egeria User Manual](dr_egeria_manual.md)
+- [My Profile Reference Guide](My-Egeria-Doc.md)
