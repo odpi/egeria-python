@@ -56,7 +56,7 @@ class MyProfileApp(App):
                 ("r", "refresh", "Refresh Data"),
                 ]
 
-    CSS_PATH = "my_profile.tcss"
+    CSS_PATH = "../My_Profile/my_profile.tcss"
 
     SCREENS = {
         "main": MainScreen,

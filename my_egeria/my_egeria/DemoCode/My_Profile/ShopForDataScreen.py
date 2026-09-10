@@ -25,23 +25,54 @@ class ShopForDataScreen(Screen):
 
     CSS_PATH = "my_profile.tcss"
 
-    def __init__(self, *args, **kwargs):
+    def __init__(
+        self,
+        glossary_table: DataTable | None = None,
+        digital_product_catalog_table: DataTable | None = None,
+        data_dictionary_table: DataTable | None = None,
+        business_domain_table: DataTable | None = None,
+        root_collection_table: DataTable | None = None,
+        user_name: str | None = None,
+        user_password: str | None = None,
+        view_server: str | None = None,
+        platform_url: str | None = None,
+        *args,
+        **kwargs,
+    ):
         super().__init__(*args, **kwargs)
 
         load_app_config()
         app_config = settings.Environment
         app_user = settings.User_Profile
 
-        self.user_name = app_user.user_name or "garygeeke"
-        self.user_password = app_user.user_pwd or "secret"
-        self.view_server = app_config.egeria_view_server or "qs-view-server"
-        self.platform_url = app_config.egeria_platform_url or "https://127.0.0.1:9443"
+        self.user_name = user_name or app_user.user_name or "garygeeke"
+        self.user_password = user_password or app_user.user_pwd or "secret"
+        self.view_server = view_server or app_config.egeria_view_server or "qs-view-server"
+        self.platform_url = platform_url or app_config.egeria_platform_url or "https://127.0.0.1:9443"
 
-        self.glossary_table: DataTable = self.query_one("#glossary_table", DataTable)
-        self.digital_product_catalog_table: DataTable = self.query_one("#digital_product_catalog_table", DataTable)
-        self.data_dictionary_table: DataTable = self.query_one("#data_dictionary_table", DataTable)
-        self.business_domain_table: DataTable = self.query_one("#business_domain_table", DataTable)
-        self.root_collection_table: DataTable = self.query_one("#root_collection_table", DataTable)
+        self._default_glossary = glossary_table is None
+        self._default_product = digital_product_catalog_table is None
+        self._default_dictionary = data_dictionary_table is None
+        self._default_domain = business_domain_table is None
+        self._default_root = root_collection_table is None
+
+        self.glossary_table = (
+            glossary_table if glossary_table is not None else DataTable(id="glossary_table")
+        )
+        self.digital_product_catalog_table = (
+            digital_product_catalog_table
+            if digital_product_catalog_table is not None
+            else DataTable(id="digital_product_catalog_table")
+        )
+        self.data_dictionary_table = (
+            data_dictionary_table if data_dictionary_table is not None else DataTable(id="data_dictionary_table")
+        )
+        self.business_domain_table = (
+            business_domain_table if business_domain_table is not None else DataTable(id="business_domain_table")
+        )
+        self.root_collection_table = (
+            root_collection_table if root_collection_table is not None else DataTable(id="root_collection_table")
+        )
 
         self.row_highlighted = None
         self.cursor_row_highlighted = None
@@ -72,6 +103,35 @@ class ShopForDataScreen(Screen):
     def on_mount(self) -> None:
         self.header = f"Egeria Data Sources for user {self.user_name}"
         self.sub_header = "Shop for Data"
+
+        if self._default_glossary and self.glossary_table and not getattr(self.glossary_table, "columns", None):
+            self.glossary_table.add_columns("Glossary Name", "Description", "Qualified Name")
+            self.glossary_table.cursor_type = "row"
+            self.glossary_table.zebra_stripes = True
+
+        if self._default_product and self.digital_product_catalog_table and not getattr(self.digital_product_catalog_table, "columns", None):
+            self.digital_product_catalog_table.add_columns(
+                "Digital Product Catalog Name", "Description", "Qualified Name", "GUID"
+            )
+            self.digital_product_catalog_table.cursor_type = "row"
+            self.digital_product_catalog_table.zebra_stripes = True
+
+        if self._default_dictionary and self.data_dictionary_table and not getattr(self.data_dictionary_table, "columns", None):
+            self.data_dictionary_table.add_columns(
+                "Data Dictionary Name", "Description", "Qualified Name", "GUID"
+            )
+            self.data_dictionary_table.cursor_type = "row"
+            self.data_dictionary_table.zebra_stripes = True
+
+        if self._default_domain and self.business_domain_table and not getattr(self.business_domain_table, "columns", None):
+            self.business_domain_table.add_columns("Business Area Name", "Type Name", "GUID")
+            self.business_domain_table.cursor_type = "row"
+            self.business_domain_table.zebra_stripes = True
+
+        if self._default_root and self.root_collection_table and not getattr(self.root_collection_table, "columns", None):
+            self.root_collection_table.add_columns("Root Collection Name", "Description", "GUID")
+            self.root_collection_table.cursor_type = "row"
+            self.root_collection_table.zebra_stripes = True
 
     @on(DataTable.RowSelected, "#glossary_table")
     def handle_glossary_table_selection(self, event: DataTable.RowSelected):
