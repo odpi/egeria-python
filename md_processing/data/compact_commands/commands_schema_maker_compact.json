@@ -564,22 +564,22 @@
     },
     "Template GUID": {
       "variable_name": "template_guid",
-      "inUpdate": true,
+      "inUpdate": false,
       "attr_labels": "",
       "examples": "",
       "default_value": "",
       "valid_values": [],
-      "existing_element": "Referenceable",
+      "existing_element": "",
       "description": "GUID of the catalog template to instantiate.",
       "generated": false,
-      "style": "Reference Name",
+      "style": "Simple",
       "user_specified": true,
       "unique": false,
       "input_required": true,
       "min_cardinality": 1,
       "max_cardinality": 1,
       "level": "Basic",
-      "Journal Entry": "Added 2026-09-11 -- Schema Maker family, wraps pyegeria/omvs/schema_maker.py (SchemaType/SchemaAttribute lifecycle, relationship links, and PrimaryKey/TypeEmbeddedAttribute/CalculatedValue classifications). Relationship-property and classification-property field names beyond the common GUID targets are best-effort (not yet confirmed against a live server / real Egeria DTOs)."
+      "Journal Entry": "Added 2026-09-11 -- Schema Maker family. Aligned to Asset Maker's identical 'Template GUID' attribute (Simple style, not Reference Name) 2026-09-11 to fix a cross-family rendering collision caught by test_compact_attribute_name_collisions.py."
     },
     "Placeholder Property Values": {
       "variable_name": "placeholder_property_values",

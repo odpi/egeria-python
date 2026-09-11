@@ -4,13 +4,13 @@
   "attribute_definitions": {
     "Description": {
       "variable_name": "description",
-      "inUpdate": false,
+      "inUpdate": true,
       "attr_labels": "",
       "examples": "",
       "default_value": "",
       "valid_values": [],
       "existing_element": "",
-      "description": "Description of the element being created.",
+      "description": "A description.",
       "generated": false,
       "style": "Simple",
       "user_specified": true,
@@ -18,18 +18,18 @@
       "input_required": false,
       "min_cardinality": 0,
       "max_cardinality": 1,
-      "level": "Basic",
-      "Journal Entry": "Added 2026-09-11 -- Asset Maker family (Create Element from Automated Curation)."
+      "level": "Common",
+      "Journal Entry": ""
     },
     "Version Identifier": {
       "variable_name": "version_identifier",
-      "inUpdate": false,
-      "attr_labels": "",
+      "inUpdate": true,
+      "attr_labels": "Version",
       "examples": "",
       "default_value": "",
       "valid_values": [],
       "existing_element": "",
-      "description": "Caller-supplied version identifier for this element (e.g. 'V1.0').",
+      "description": "The version of the element",
       "generated": false,
       "style": "Simple",
       "user_specified": true,
@@ -38,7 +38,7 @@
       "min_cardinality": 0,
       "max_cardinality": 1,
       "level": "Basic",
-      "Journal Entry": "Added 2026-09-11 -- Asset Maker family (Create Element from Automated Curation)."
+      "Journal Entry": ""
     },
     "File System Name": {
       "variable_name": "file_system_name",
@@ -749,13 +749,13 @@
     },
     "Parent Relationship Type Name": {
       "variable_name": "parent_relationship_type_name",
-      "inUpdate": false,
+      "inUpdate": true,
       "attr_labels": "",
       "examples": "",
       "default_value": "",
       "valid_values": [],
       "existing_element": "",
-      "description": "Name of the relationship type to use to link the new element to its Parent GUID.",
+      "description": "The type of parent relationship.",
       "generated": false,
       "style": "Simple",
       "user_specified": true,
@@ -764,7 +764,7 @@
       "min_cardinality": 0,
       "max_cardinality": 1,
       "level": "Advanced",
-      "Journal Entry": "Added 2026-09-11 -- Asset Maker family (Create Element from Automated Curation)."
+      "Journal Entry": ""
     },
     "Element Type Name": {
       "variable_name": "type_name",
