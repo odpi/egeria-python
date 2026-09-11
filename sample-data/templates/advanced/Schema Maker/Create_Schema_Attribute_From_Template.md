@@ -6,7 +6,7 @@ ___
 ### Template GUID
 >	**Input Required**: True
 
->	**Attribute Type**: Reference Name
+>	**Attribute Type**: Simple
 
 >	**Description**: GUID of the catalog template to instantiate.
 
