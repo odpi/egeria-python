@@ -78,9 +78,19 @@ def main():
         python_exec,
         "-m", "commands.tech.gen_report_specs"
     ]
-    # We generally always default to non-interactive mode to prevent blocking
-    # We pass the default path to the compact_commands dir as the input argument.
+    # We generally always default to non-interactive mode to prevent blocking.
+    # We pass the default path to the compact_commands dir as the input argument,
+    # and the default output path explicitly as the second positional argument --
+    # gen_report_specs' main() otherwise falls through to an interactive
+    # Prompt.ask("Output File:", ...) for it when emitting JSON. Under a
+    # non-interactive stdin (no tty, e.g. run from a script or CI) that prompt
+    # raises EOFError, which main() catches silently -- so without this,
+    # sets.save_to_json()/the --merge step never actually run, and this whole
+    # "Report Specifications Generation" step silently does nothing. Confirmed
+    # live 2026-09-11: base_report_formats.py/generated_format_sets.json had
+    # drifted ~120 format sets stale from this.
     cmd_reports.append("md_processing/data/compact_commands")
+    cmd_reports.append("md_processing/data/generated_format_sets.json")
 
     if args.usage_level:
         cmd_reports.extend(["--usage-level", args.usage_level])

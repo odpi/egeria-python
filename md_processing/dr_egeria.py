@@ -48,6 +48,8 @@ from md_processing.v2 import (
     ReferenceDataLinkProcessor, ValidMetadataValueProcessor,
     EmbeddedProcessProcessor, InitiateEngineActionProcessor, CancelEngineActionProcessor,
     LineageLinkProcessor, UpdateLineageRelationshipProcessor,
+    AssetMakerProcessor,
+    SchemaElementProcessor, SchemaTemplateProcessor, SchemaLinkProcessor, SchemaClassificationProcessor,
 )
 
 from pyegeria import settings, EgeriaTech, PyegeriaException, print_basic_exception, print_validation_error
@@ -400,6 +402,39 @@ def setup_dispatcher(client: EgeriaTech) -> V2Dispatcher:
     reg("Link Lineage Relationship", LineageLinkProcessor)
     reg("Unlink Lineage Relationship", LineageLinkProcessor)
     reg("Update Lineage Relationship", UpdateLineageRelationshipProcessor)
+
+    # Asset Maker (Automated Curation's create-from-template surface)
+    reg("Create Element", AssetMakerProcessor)
+    reg("Create Secrets Store Element", AssetMakerProcessor)
+    reg("Create Kafka Server Element", AssetMakerProcessor)
+    reg("Create CSV Data File Element", AssetMakerProcessor)
+    reg("Create Postgres Server Element", AssetMakerProcessor)
+    reg("Create Postgres Database Element", AssetMakerProcessor)
+    reg("Create Folder Element", AssetMakerProcessor)
+    reg("Create UC Server Element", AssetMakerProcessor)
+    reg("Create UC Catalog Element", AssetMakerProcessor)
+    reg("Create UC Schema Element", AssetMakerProcessor)
+    reg("Create UC Table Element", AssetMakerProcessor)
+    reg("Create UC Function Element", AssetMakerProcessor)
+    reg("Create UC Volume Element", AssetMakerProcessor)
+
+    # Schema Maker
+    reg("Create Schema Type", SchemaElementProcessor)
+    reg("Update Schema Type", SchemaElementProcessor)
+    reg("Create Schema Type From Template", SchemaTemplateProcessor)
+    reg("Create Schema Attribute", SchemaElementProcessor)
+    reg("Update Schema Attribute", SchemaElementProcessor)
+    reg("Create Schema Attribute From Template", SchemaTemplateProcessor)
+    for _noun in ("Nested Schema Attribute", "Attribute for Schema", "Foreign Key",
+                  "External Schema Type", "Map From Schema Type", "Map To Schema Type",
+                  "Graph Edge", "Query Target", "Schema", "Relational DB Schema",
+                  "API Operations", "API Header", "API Request", "API Response",
+                  "Schema Type Option"):
+        reg(f"Link {_noun}", SchemaLinkProcessor)
+        reg(f"Detach {_noun}", SchemaLinkProcessor)
+    for _noun in ("Primary Key Classification", "Type Embedded Attribute", "Calculated Value"):
+        reg(f"Add {_noun}", SchemaClassificationProcessor)
+        reg(f"Remove {_noun}", SchemaClassificationProcessor)
 
     # Actor Manager (spec-driven to keep coverage aligned with compact commands)
     # NOTE: "Create ToDo" is family "Actor Manager" in its compact spec, so it's

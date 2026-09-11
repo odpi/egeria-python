@@ -42,6 +42,8 @@ TEST_FILES = [
     "dr_test_action_author.md",
     "dr_test_curation.md",
     "dr_test_data_description_and_value_detach.md",
+    "dr_test_asset_maker.md",
+    "dr_test_schema_maker.md",
 ]
 
 

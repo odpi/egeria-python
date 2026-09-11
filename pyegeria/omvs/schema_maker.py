@@ -22,7 +22,6 @@ from pyegeria.models import (
     SearchStringRequestBody,
     GetRequestBody,
     ReferenceableProperties,
-    MetadataSourceRequestBody,
     NewRelationshipRequestBody,
     DeleteRelationshipRequestBody,
     NewClassificationRequestBody,
@@ -137,14 +136,24 @@ class SchemaMaker(ServerClient):
 
     @dynamic_catch
     async def _async_delete_schema_type(
-        self, schema_type_guid: str, body: dict | MetadataSourceRequestBody
+        self, schema_type_guid: str, body: Optional[dict | DeleteElementRequestBody] = None,
+        cascade_delete: bool = False
     ) -> None:
+        # Confirmed live 2026-09-11: the deployed server's schema-maker delete
+        # endpoints reject "MetadataSourceRequestBody" -- Jackson's
+        # InvalidTypeIdException reports the only known subtypes as
+        # DeleteClassificationRequestBody/DeleteElementRequestBody/
+        # DeleteRelationshipRequestBody. The ground-truth
+        # Egeria-api-schema-maker.http file documents MetadataSourceRequestBody,
+        # which is out of date against this server; using DeleteElementRequestBody
+        # (matching every other _async_delete_* in this codebase) instead.
         url = f"{self.platform_url}/servers/{self.view_server}/api/open-metadata/schema-maker/schema-types/{schema_type_guid}/delete"
-        await self._async_metadata_source_body_request(url, body)
+        await self._async_delete_element_request(url, body, cascade_delete)
 
-    def delete_schema_type(self, schema_type_guid: str, body: dict | MetadataSourceRequestBody) -> None:
+    def delete_schema_type(self, schema_type_guid: str, body: Optional[dict | DeleteElementRequestBody] = None,
+                           cascade_delete: bool = False) -> None:
         loop = asyncio.get_event_loop()
-        loop.run_until_complete(self._async_delete_schema_type(schema_type_guid, body))
+        loop.run_until_complete(self._async_delete_schema_type(schema_type_guid, body, cascade_delete))
 
     # Schema Attributes
 
@@ -172,16 +181,20 @@ class SchemaMaker(ServerClient):
 
     @dynamic_catch
     async def _async_delete_schema_attribute(
-        self, schema_attribute_guid: str, body: dict | MetadataSourceRequestBody
+        self, schema_attribute_guid: str, body: Optional[dict | DeleteElementRequestBody] = None,
+        cascade_delete: bool = False
     ) -> None:
+        # See _async_delete_schema_type's note: this server rejects
+        # MetadataSourceRequestBody for schema-maker delete endpoints.
         url = f"{self.platform_url}/servers/{self.view_server}/api/open-metadata/schema-maker/schema-attributes/{schema_attribute_guid}/delete"
-        await self._async_metadata_source_body_request(url, body)
+        await self._async_delete_element_request(url, body, cascade_delete)
 
     def delete_schema_attribute(
-        self, schema_attribute_guid: str, body: dict | MetadataSourceRequestBody
+        self, schema_attribute_guid: str, body: Optional[dict | DeleteElementRequestBody] = None,
+        cascade_delete: bool = False
     ) -> None:
         loop = asyncio.get_event_loop()
-        loop.run_until_complete(self._async_delete_schema_attribute(schema_attribute_guid, body))
+        loop.run_until_complete(self._async_delete_schema_attribute(schema_attribute_guid, body, cascade_delete))
 
     @dynamic_catch
     async def _async_find_schema_types(

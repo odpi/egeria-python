@@ -44,3 +44,5 @@ from .reference_data import ReferenceDataLinkProcessor, ValidMetadataValueProces
 from .embedded_process import EmbeddedProcessProcessor
 from .engine_action import InitiateEngineActionProcessor, CancelEngineActionProcessor
 from .lineage_linker import LineageLinkProcessor, UpdateLineageRelationshipProcessor
+from .asset_maker import AssetMakerProcessor
+from .schema_maker import SchemaElementProcessor, SchemaTemplateProcessor, SchemaLinkProcessor, SchemaClassificationProcessor
