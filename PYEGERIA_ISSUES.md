@@ -143,6 +143,30 @@ enough to track there too).
 
 ---
 
+### ISSUE-95: No catalog template registered for the "Apache Kafka Server" technology type — `Create Kafka Server Element` (Asset Maker) fails with a 400 on `qs-view-server`
+
+**Layer:** Egeria Server (deployment/archive content) · **Status:** open, being investigated by the user (2026-09-11) · **Found:** 2026-09-11, live-verifying the new Asset Maker Dr.Egeria family (#354)
+
+`AutomatedCuration._async_get_template_guid_for_technology_type("Apache Kafka Server")`
+returns `None` on `qs-view-server` — no catalog template is registered for
+that technology type on this server — so `Create Kafka Server Element`'s
+underlying `_async_create_kafka_server_element_from_template` posts a body
+with `templateGUID: null` and gets back `VALIDATION_ERROR_1` ("Request body
+failed validation"). Not a pyegeria code defect: every other Asset Maker
+technology type tried resolved a real template GUID on the same server
+(CSV Data File, PostgreSQL Server, File System Directory, YAML File Secrets
+Collection, Unity Catalog Server) — this one is specific to the Kafka
+technology type's archive content on this deployment. `Create Kafka Server
+Element` itself is otherwise correct (parses/validates cleanly; the failure
+is entirely server-side at execution).
+
+**Ask:** confirm whether the Apache Kafka Server catalog template is
+expected to ship with quickstart's default archive content, and if so, why
+it's missing here — or add it to whichever archive/content-pack is meant to
+carry it.
+
+---
+
 ### ISSUE-89: No configurable bearer-token lifetime in `application.properties` — platform tokens are fixed at 3600 s, and the signing key is random per restart
 
 **Layer:** Egeria Server · **Status:** open · **Found:** 2026-09-04 (trellis-auth token contract)
@@ -1649,6 +1673,40 @@ Nothing else in RE is waiting on it.
 # Appendix: Closed / Not-a-bug entries
 
 ## Fixed / Resolved
+
+### ISSUE-94: `SchemaMaker._async_delete_schema_type`/`_async_delete_schema_attribute` sent `MetadataSourceRequestBody` — the live server's schema-maker delete endpoints reject it outright
+
+**Status:** fixed 2026-09-11 (Pyegeria — `pyegeria/omvs/schema_maker.py`),
+verified live against `qs-view-server`.
+
+Found while live-verifying the new Asset Maker / Schema Maker Dr.Egeria
+command families (#354). Both methods built `{"class":
+"MetadataSourceRequestBody", ...}` and posted it via
+`_async_metadata_source_body_request` — matching the ground-truth
+`Egeria-api-schema-maker.http` file's documented body for these two
+`POST .../schema-types/{guid}/delete` and
+`.../schema-attributes/{guid}/delete` endpoints. Both nonetheless failed
+against a live server with:
+
+```
+InvalidTypeIdException: Could not resolve type id 'MetadataSourceRequestBody'
+as a subtype of DeleteElementRequestBody: known type ids =
+[DeleteClassificationRequestBody, DeleteElementRequestBody, DeleteRelationshipRequestBody]
+```
+
+i.e. the server's real Jackson type registry for these endpoints never
+recognized `MetadataSourceRequestBody` as a valid subtype — the `.http`
+ground truth was out of date against this server (confirmed by the user,
+who requested the fix directly rather than filing an Egeria-side issue).
+
+**Fix:** switched both methods to `DeleteElementRequestBody` via the
+standard `_async_delete_element_request` helper (`cascade_delete` param
+added to both, matching every other `_async_delete_*` in this codebase);
+corrected `Egeria-api-schema-maker.http`'s two delete sections to match.
+Verified live: created a throwaway `SchemaType` and `SchemaAttribute`,
+deleted each with the default (no-body) call — both succeeded.
+
+---
 
 ### ISSUE-52: `qs-nanny-daemon`/`qs-integration-daemon`'s own connectors generate sustained, heavy background write load against the shared repository — starves interactive requests, plausible cause of "frequent Postgres checkpoints"
 
