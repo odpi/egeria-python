@@ -10,7 +10,7 @@ from datetime import datetime
 from enum import Enum, StrEnum
 from typing import Literal, Annotated, Any, Optional, Dict
 
-from pydantic import BaseModel, Field, ConfigDict, root_validator, model_validator, AliasChoices
+from pydantic import BaseModel, Field, ConfigDict, root_validator, model_validator, AliasChoices, model_serializer
 
 
 
@@ -324,6 +324,9 @@ class DeleteElementRequestBody(RequestBody):
         validation_alias=AliasChoices("cascadeDelete", "cascadedDelete"),
         serialization_alias="cascadeDelete",
     )
+    archive_date: datetime | None = None
+    archive_process: str | None = None
+    archive_properties: dict | None = None
 
 
 class DeleteRelationshipRequestBody(RequestBody):
@@ -437,12 +440,14 @@ class ZoneHierarchy(PyegeriaModel):
 
 
 class InitialClassifications(PyegeriaModel):
-    class_: str = Field(alias="class"),
+    class_: str = Field(alias="class")
     other_props: Dict[str, Any] | None = None
 
     @model_validator(mode="before")
     @classmethod
-    def capture_other_props(cls, data: Dict[str, Any]) -> Dict[str, Any]:
+    def capture_other_props(cls, data: Any) -> Any:
+        if not isinstance(data, dict):
+            return data
         captured_props = data.copy()
 
         class_value = captured_props.pop("class", None)
@@ -452,17 +457,20 @@ class InitialClassifications(PyegeriaModel):
             "other_props": other_props_dict
             }
 
+    @model_serializer(mode="wrap")
+    def serialize_model(self, handler):
+        result = handler(self)
+        other_props = result.pop("other_props", None)
+        if other_props:
+            result.update(other_props)
+        return result
+
 
 class NewAttachmentRequestBody(RequestBody):
     class_: Annotated[Literal["NewAttachmentRequestBody"], Field(alias="class")]
     initial_classifications:  Dict[str, InitialClassifications] | None = None
     parent_relationship_properties: dict | None = None
     properties: dict | None = None
-    external_source_guid: str | None = None
-    external_source_name: str | None = None
-    effective_time: datetime | None = None
-    for_lineage: bool | None = False
-    for_duplicate_processing: bool | None = False
 
 
 class NewElementRequestBody(RequestBody):
@@ -470,7 +478,7 @@ class NewElementRequestBody(RequestBody):
     anchor_guid: str | None = None
     is_own_anchor: bool | None = True
     anchor_scope_guids: list[str] | None = None
-    initial_classifications:  Dict[str, Dict] | None = None
+    initial_classifications:  Dict[str, InitialClassifications] | None = None
     parent_relationship_properties: dict | None = None
     properties: dict | None = None
     parent_guid: str | None = None
@@ -503,7 +511,7 @@ class UpdateRelationshipRequestBody(RequestBody):
     merge_update: bool | None = True
 
 
-class TemplateRequestBody(PyegeriaModel):
+class TemplateRequestBody(RequestBody):
     class_: Annotated[Literal["TemplateRequestBody"], Field(alias="class")]
     anchor_guid: str | None = None
     is_own_anchor: bool | None = True
@@ -522,13 +530,13 @@ class TemplateRequestBody(PyegeriaModel):
     allow_retrieve: bool | None = True
 
 
-class UpdateElementRequestBody(PyegeriaModel):
+class UpdateElementRequestBody(RequestBody):
     class_: Annotated[Literal["UpdateElementRequestBody"], Field(alias="class")]
     properties: dict[str, Any] = {}
     merge_update: bool | None = True
 
 
-class UpdateWithTemplateRequestBody(PyegeriaModel):
+class UpdateWithTemplateRequestBody(RequestBody):
     class_: Annotated[Literal["UpdateWithTemplateRequestBody"], Field(alias="class")]
     merge_update: bool | None = True
     merge_classifications: bool | None = True
@@ -555,9 +563,6 @@ class OpenMetadataDeleteRequestBody(RequestBody):
     class_: Annotated[Literal["OpenMetadataDeleteRequestBody"], Field(alias="class")]
 
 
-class ArchiveRequestBody(RequestBody):
-    class_: Annotated[Literal["ArchiveRequestBody"], Field(alias="class")]
-    archive_properties: dict | None = None
 
 
 class NewOpenMetadataElementRequestBody(RequestBody):

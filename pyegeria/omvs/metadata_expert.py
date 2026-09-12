@@ -12,8 +12,8 @@ from httpx import Response
 from pyegeria.models import (NewOpenMetadataElementRequestBody, TemplateRequestBody,
                              UpdatePropertiesRequestBody, MetadataSourceRequestBody,
                              UpdateEffectivityDatesRequestBody, OpenMetadataDeleteRequestBody,
-                             ArchiveRequestBody, NewClassificationRequestBody,
-                             NewRelatedElementsRequestBody, SearchStringRequestBody,
+                             NewClassificationRequestBody, NewRelatedElementsRequestBody,
+                             SearchStringRequestBody,
                              FilterRequestBody, GetRequestBody, ResultsRequestBody,
                              SearchStringRequestBody as SearchStringBody, DeleteElementRequestBody,
                              DeleteRelationshipRequestBody)
@@ -167,7 +167,7 @@ class MetadataExpert(ServerClient):
           "effectiveFrom" : "2024-01-01T00:00:00.000+00:00",
           "effectiveTo": "2024-12-31T23:59:59.000+00:00",
           "replacementProperties" : {
-            "class": "ElementProperties",
+            "class": "EntityElementProperties",
             "propertyValueMap" : {
               "propertyName" : {
                 "class": "PrimitiveTypePropertyValue",
@@ -222,7 +222,7 @@ class MetadataExpert(ServerClient):
           "forDuplicateProcessing" : false,
           "effectiveTime" : "2024-01-01T00:00:00.000+00:00",
           "properties" : {
-            "class": "ElementProperties",
+            "class": "EntityElementProperties",
             "propertyValueMap" : {
               "description" : {
                 "class": "PrimitiveTypePropertyValue",
@@ -3171,15 +3171,16 @@ class MetadataExpert(ServerClient):
 
     async def _async_find_metadata_elements(
         self,
-        body: dict,
+        body: Optional[dict] = None,
         timeout: int = default_timeout,
+        **kwargs,
     ) -> list | str:
         """Return a list of metadata elements that match the supplied criteria.
         The results can be returned over many pages. Async version.
 
         Parameters
         ----------
-        body: dict
+        body: dict, optional
             - A structure containing the search criteria (example below). Sent
               exactly as provided - the caller is fully responsible for the
               ENTIRE body, including "graphQueryDepth", "startFrom",
@@ -3208,6 +3209,11 @@ class MetadataExpert(ServerClient):
               existed.)
         timeout: int, default = default_timeout
             - http request timeout for this request
+        **kwargs:
+            - Backward compatibility parameters for individual criteria if `body` is not provided.
+              Supported: `metadata_element_type_name`, `metadata_element_subtype_names`, `skip_subtypes`,
+              `search_properties`, `match_classifications`, `effective_time`, `limit_results_by_status`,
+              `as_of_time`, `sequencing_order`, `sequencing_property`, `start_from`, `page_size`.
 
         Returns
         -------
@@ -3280,6 +3286,22 @@ class MetadataExpert(ServerClient):
                 }
         """
 
+        if body is None:
+            body = {
+                "class": "FindRequestBody",
+                "metadataElementTypeName": kwargs.get("metadata_element_type_name"),
+                "metadataElementSubtypeNames": kwargs.get("metadata_element_subtype_names"),
+                "skipSubtypes": kwargs.get("skip_subtypes"),
+                "searchProperties": kwargs.get("search_properties"),
+                "matchClassifications": kwargs.get("match_classifications"),
+                "effectiveTime": kwargs.get("effective_time"),
+                "limitResultsByStatus": kwargs.get("limit_results_by_status"),
+                "asOfTime": kwargs.get("as_of_time"),
+                "sequencingOrder": kwargs.get("sequencing_order"),
+                "sequencingProperty": kwargs.get("sequencing_property"),
+                "startFrom": kwargs.get("start_from"),
+                "pageSize": kwargs.get("page_size"),
+            }
 
         url = f"{base_path(self, self.view_server)}/metadata-elements/by-search-conditions"
 
@@ -3300,15 +3322,16 @@ class MetadataExpert(ServerClient):
 
     def find_metadata_elements(
         self,
-        body: dict,
+        body: Optional[dict] = None,
         timeout: int = default_timeout,
+        **kwargs,
     ) -> list | str:
         """
         Retrieve the relationships linking the supplied elements.
 
         Parameters
         ----------
-        body: dict
+        body: dict, optional
             - A structure containing the search criteria (example below). Sent
               exactly as provided - the caller is fully responsible for the
               ENTIRE body, including "graphQueryDepth", "startFrom",
@@ -3318,6 +3341,8 @@ class MetadataExpert(ServerClient):
               story on why these aren't separate parameters here).
         timeout: int, default = default_timeout
             - http request timeout for this request
+        **kwargs:
+            - Backward compatibility parameters for individual criteria if `body` is not provided.
 
         Returns
         -------
@@ -3392,7 +3417,7 @@ class MetadataExpert(ServerClient):
         """
         loop = asyncio.get_event_loop()
         response = loop.run_until_complete(
-            self._async_find_metadata_elements(body, timeout=timeout)
+            self._async_find_metadata_elements(body, timeout=timeout, **kwargs)
         )
         return response
 

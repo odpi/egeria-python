@@ -20,7 +20,7 @@ from pyegeria.models import (
     SearchStringRequestBody, FilterRequestBody, GetRequestBody, NewElementRequestBody,
     TemplateRequestBody, UpdateElementRequestBody, NewRelationshipRequestBody,
     DeleteElementRequestBody, DeleteRelationshipRequestBody,
-    ArchiveRequestBody, NewOpenMetadataElementRequestBody, FindRequestBody,
+    NewOpenMetadataElementRequestBody, FindRequestBody,
     MetadataSourceRequestBody,
 )
 from pyegeria.view.output_formatter import populate_columns_from_properties, \
@@ -1587,7 +1587,7 @@ class RuntimeManager(ServerClient):
         display_name: Optional[str] = None,
         qualified_name: Optional[str] = None,
         timeout: int = 60,
-        body: Optional[dict | ArchiveRequestBody] = None,
+        body: Optional[dict] = None,
     ) -> None:
         """An open metadata archive contains metadata types and instances.
             This operation loads the supplied open metadata archive into the local repository. It can be used with OMAG
@@ -1608,7 +1608,7 @@ class RuntimeManager(ServerClient):
         timeout : int, optional, default = 60 seconds
             Timeout for the REST call.
 
-        body : dict | ArchiveRequestBody, optional
+        body : dict, optional
             Request body to pass directly to the API.
 
         Returns
@@ -1645,7 +1645,7 @@ class RuntimeManager(ServerClient):
         display_name: Optional[str] = None,
         qualified_name: Optional[str] = None,
         timeout: int = 60,
-        body: Optional[dict | ArchiveRequestBody] = None,
+        body: Optional[dict] = None,
     ) -> None:
         """An open metadata archive contains metadata types and instances.
             This operation loads the supplied open metadata archive into the local repository. It can be used with OMAG
@@ -1666,7 +1666,7 @@ class RuntimeManager(ServerClient):
         timeout : int, optional, default = 60 seconds
             Timeout for the REST call.
 
-        body : dict | ArchiveRequestBody, optional
+        body : dict, optional
             Request body to pass directly to the API.
 
         Returns
@@ -1696,7 +1696,7 @@ class RuntimeManager(ServerClient):
         qualified_name: Optional[str] = None,
         timeout: int = 120,
         organization_name: Optional[str] = None,
-        body: Optional[dict | ArchiveRequestBody] = None,
+        body: Optional[dict] = None,
     ) -> None:
         """Add a new open metadata archive to running OMAG Server's repository.
             An open metadata archive contains metadata types and instances.  This operation loads an open metadata archive
@@ -1718,7 +1718,7 @@ class RuntimeManager(ServerClient):
         timeout: int, optional
            Time out for the rest call.
 
-        body : dict | ArchiveRequestBody, optional
+        body : dict, optional
             Request body to pass directly to the API.
 
         Returns
@@ -1757,7 +1757,7 @@ class RuntimeManager(ServerClient):
         qualified_name: Optional[str] = None,
         timeout: int = 120,
         organization_name: Optional[str] = None,
-        body: Optional[dict | ArchiveRequestBody] = None,
+        body: Optional[dict] = None,
     ) -> None:
         """Add a new open metadata archive to running OMAG Server's repository.
             An open metadata archive contains metadata types and instances.  This operation loads an open metadata archive
@@ -1777,7 +1777,7 @@ class RuntimeManager(ServerClient):
             Unique name of server to act on. If not specified, server_guid or server_name must be.
         timeout: int, optional, default = 60 seconds
 
-        body : dict | ArchiveRequestBody, optional
+        body : dict, optional
             Request body to pass directly to the API.
 
         Returns

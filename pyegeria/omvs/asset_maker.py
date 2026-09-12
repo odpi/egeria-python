@@ -280,7 +280,7 @@ class AssetMaker(ServerClient):
           "parentAtEnd1": false,
           "templateGUID": "add guid here",
           "replacementProperties": {
-            "class": "ElementProperties",
+            "class": "EntityElementProperties",
             "propertyValueMap" : {
               "description" : {
                 "class": "PrimitiveTypePropertyValue",
@@ -346,7 +346,7 @@ class AssetMaker(ServerClient):
           "parentAtEnd1": false,
           "templateGUID": "add guid here",
           "replacementProperties": {
-            "class": "ElementProperties",
+            "class": "EntityElementProperties",
             "propertyValueMap" : {
               "description" : {
                 "class": "PrimitiveTypePropertyValue",

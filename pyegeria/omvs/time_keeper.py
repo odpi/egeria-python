@@ -246,7 +246,7 @@ class TimeKeeper(ServerClient):
           "class" : "TemplateRequestBody",
           "templateGUID": "add guid here",
           "replacementProperties": {
-            "class": "ElementProperties",
+            "class": "EntityElementProperties",
             "propertyValueMap" : {
               "description" : {
                 "class": "PrimitiveTypePropertyValue",
@@ -287,7 +287,7 @@ class TimeKeeper(ServerClient):
           "class" : "TemplateRequestBody",
           "templateGUID": "add guid here",
           "replacementProperties": {
-            "class": "ElementProperties",
+            "class": "EntityElementProperties",
             "propertyValueMap" : {
               "description" : {
                 "class": "PrimitiveTypePropertyValue",

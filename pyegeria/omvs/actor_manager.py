@@ -230,7 +230,7 @@ class ActorManager(ServerClient):
           "parentAtEnd1": true,
           "templateGUID": "template GUID",
           "replacementProperties": {
-            "class": "ElementProperties",
+            "class": "EntityElementProperties",
             "propertyValueMap" : {
               "propertyName" : {
                 "class": "PrimitiveTypePropertyValue",
@@ -289,7 +289,7 @@ class ActorManager(ServerClient):
           "parentAtEnd1": true,
           "templateGUID": "template GUID",
           "replacementProperties": {
-            "class": "ElementProperties",
+            "class": "EntityElementProperties",
             "propertyValueMap" : {
               "propertyName" : {
                 "class": "PrimitiveTypePropertyValue",
@@ -1409,7 +1409,7 @@ class ActorManager(ServerClient):
           "parentAtEnd1": true,
           "templateGUID": "template GUID",
           "replacementProperties": {
-            "class": "ElementProperties",
+            "class": "EntityElementProperties",
             "propertyValueMap" : {
               "propertyName" : {
                 "class": "PrimitiveTypePropertyValue",
@@ -1468,7 +1468,7 @@ class ActorManager(ServerClient):
           "parentAtEnd1": true,
           "templateGUID": "template GUID",
           "replacementProperties": {
-            "class": "ElementProperties",
+            "class": "EntityElementProperties",
             "propertyValueMap" : {
               "propertyName" : {
                 "class": "PrimitiveTypePropertyValue",
@@ -2983,7 +2983,7 @@ class ActorManager(ServerClient):
           "parentAtEnd1": true,
           "templateGUID": "template GUID",
           "replacementProperties": {
-            "class": "ElementProperties",
+            "class": "EntityElementProperties",
             "propertyValueMap" : {
               "propertyName" : {
                 "class": "PrimitiveTypePropertyValue",
@@ -3040,7 +3040,7 @@ class ActorManager(ServerClient):
           "parentAtEnd1": true,
           "templateGUID": "template GUID",
           "replacementProperties": {
-            "class": "ElementProperties",
+            "class": "EntityElementProperties",
             "propertyValueMap" : {
               "propertyName" : {
                 "class": "PrimitiveTypePropertyValue",
@@ -6565,7 +6565,7 @@ class ActorManager(ServerClient):
           "isOwnAnchor": false,
           "templateGUID": "add guid here",
           "replacementProperties": {
-            "class": "ElementProperties",
+            "class": "EntityElementProperties",
             "propertyValueMap" : {
               "description" : {
                 "class": "PrimitiveTypePropertyValue",
@@ -6615,7 +6615,7 @@ class ActorManager(ServerClient):
           "isOwnAnchor": false,
           "templateGUID": "add guid here",
           "replacementProperties": {
-            "class": "ElementProperties",
+            "class": "EntityElementProperties",
             "propertyValueMap" : {
               "description" : {
                 "class": "PrimitiveTypePropertyValue",
@@ -7371,7 +7371,7 @@ class ActorManager(ServerClient):
           "isOwnAnchor": false,
           "templateGUID": "add guid here",
           "replacementProperties": {
-            "class": "ElementProperties",
+            "class": "EntityElementProperties",
             "propertyValueMap" : {
               "description" : {
                 "class": "PrimitiveTypePropertyValue",
@@ -7421,7 +7421,7 @@ class ActorManager(ServerClient):
           "isOwnAnchor": false,
           "templateGUID": "add guid here",
           "replacementProperties": {
-            "class": "ElementProperties",
+            "class": "EntityElementProperties",
             "propertyValueMap" : {
               "description" : {
                 "class": "PrimitiveTypePropertyValue",

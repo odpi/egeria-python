@@ -11,7 +11,7 @@ from datetime import datetime
 from pyegeria.omvs.metadata_expert import MetadataExpert
 from pyegeria.models import (NewOpenMetadataElementRequestBody, UpdatePropertiesRequestBody,
                              MetadataSourceRequestBody, UpdateEffectivityDatesRequestBody,
-                             OpenMetadataDeleteRequestBody, ArchiveRequestBody,
+                             OpenMetadataDeleteRequestBody, DeleteElementRequestBody,
                              NewClassificationRequestBody, NewRelatedElementsRequestBody,
                              TemplateRequestBody)
 from pyegeria.core._exceptions import PyegeriaConnectionException
@@ -157,8 +157,8 @@ class TestMetadataExpert:
     def test_archive_metadata_element(self, expert_client):
         """Test archive_metadata_element"""
         guid = "some-guid"
-        body = ArchiveRequestBody(
-            class_="ArchiveRequestBody",
+        body = DeleteElementRequestBody(
+            class_="DeleteElementRequestBody",
             archive_properties={"archiveDate": datetime.now().isoformat()}
         )
         try:

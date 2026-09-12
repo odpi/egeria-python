@@ -897,7 +897,7 @@ class SolutionArchitect(ServerClient):
           "parentGUID": "add guid here",
           "parentRelationshipTypeName": "add type name here",
           "parentRelationshipProperties": {
-            "class": "ElementProperties",
+            "class": "RelationshipElementProperties",
             "propertyValueMap": {
               "description": {
                 "class": "PrimitiveTypePropertyValue",
@@ -971,7 +971,7 @@ class SolutionArchitect(ServerClient):
           "parentGUID": "add guid here",
           "parentRelationshipTypeName": "add type name here",
           "parentRelationshipProperties": {
-            "class": "ElementProperties",
+            "class": "RelationshipElementProperties",
             "propertyValueMap": {
               "description": {
                 "class": "PrimitiveTypePropertyValue",
@@ -1047,7 +1047,7 @@ class SolutionArchitect(ServerClient):
           "parentGUID": "add guid here",
           "parentRelationshipTypeName": "add type name here",
           "parentRelationshipProperties": {
-            "class": "ElementProperties",
+            "class": "RelationshipElementProperties",
             "propertyValueMap": {
               "description": {
                 "class": "PrimitiveTypePropertyValue",
@@ -1059,7 +1059,7 @@ class SolutionArchitect(ServerClient):
           "parentAtEnd1": false,
           "templateGUID": "add guid here",
           "replacementProperties": {
-            "class": "ElementProperties",
+            "class": "EntityElementProperties",
             "propertyValueMap": {
               "description": {
                 "class": "PrimitiveTypePropertyValue",
@@ -1133,7 +1133,7 @@ class SolutionArchitect(ServerClient):
           "parentGUID": "add guid here",
           "parentRelationshipTypeName": "add type name here",
           "parentRelationshipProperties": {
-            "class": "ElementProperties",
+            "class": "RelationshipElementProperties",
             "propertyValueMap": {
               "description": {
                 "class": "PrimitiveTypePropertyValue",
@@ -1145,7 +1145,7 @@ class SolutionArchitect(ServerClient):
           "parentAtEnd1": false,
           "templateGUID": "add guid here",
           "replacementProperties": {
-            "class": "ElementProperties",
+            "class": "EntityElementProperties",
             "propertyValueMap": {
               "description": {
                 "class": "PrimitiveTypePropertyValue",
@@ -2290,7 +2290,7 @@ class SolutionArchitect(ServerClient):
               "parentGUID": "add guid here",
               "parentRelationshipTypeName": "add type name here",
               "parentRelationshipProperties": {
-                "class": "ElementProperties",
+                "class": "RelationshipElementProperties",
                 "propertyValueMap": {
                   "description": {
                     "class": "PrimitiveTypePropertyValue",
@@ -2341,7 +2341,7 @@ class SolutionArchitect(ServerClient):
               "parentGUID": "add guid here",
               "parentRelationshipTypeName": "add type name here",
               "parentRelationshipProperties": {
-                "class": "ElementProperties",
+                "class": "RelationshipElementProperties",
                 "propertyValueMap" : {
                   "description" : {
                     "class": "PrimitiveTypePropertyValue",
@@ -2419,7 +2419,7 @@ class SolutionArchitect(ServerClient):
               "parentGUID": "add guid here",
               "parentRelationshipTypeName": "add type name here",
               "parentRelationshipProperties": {
-                "class": "ElementProperties",
+                "class": "RelationshipElementProperties",
                 "propertyValueMap": {
                   "description": {
                     "class": "PrimitiveTypePropertyValue",
@@ -2467,7 +2467,7 @@ class SolutionArchitect(ServerClient):
               "parentGUID": "add guid here",
               "parentRelationshipTypeName": "add type name here",
               "parentRelationshipProperties": {
-                "class": "ElementProperties",
+                "class": "RelationshipElementProperties",
                 "propertyValueMap" : {
                   "description" : {
                     "class": "PrimitiveTypePropertyValue",
@@ -2548,7 +2548,7 @@ class SolutionArchitect(ServerClient):
           "parentGUID": "add guid here",
           "parentRelationshipTypeName": "add type name here",
           "parentRelationshipProperties": {
-            "class": "ElementProperties",
+            "class": "RelationshipElementProperties",
             "propertyValueMap": {
               "description": {
                 "class": "PrimitiveTypePropertyValue",
@@ -2560,7 +2560,7 @@ class SolutionArchitect(ServerClient):
           "parentAtEnd1": false,
           "templateGUID": "add guid here",
           "replacementProperties": {
-            "class": "ElementProperties",
+            "class": "EntityElementProperties",
             "propertyValueMap": {
               "description": {
                 "class": "PrimitiveTypePropertyValue",
@@ -2632,7 +2632,7 @@ class SolutionArchitect(ServerClient):
           "parentGUID": "add guid here",
           "parentRelationshipTypeName": "add type name here",
           "parentRelationshipProperties": {
-            "class": "ElementProperties",
+            "class": "RelationshipElementProperties",
             "propertyValueMap": {
               "description": {
                 "class": "PrimitiveTypePropertyValue",
@@ -2644,7 +2644,7 @@ class SolutionArchitect(ServerClient):
           "parentAtEnd1": false,
           "templateGUID": "add guid here",
           "replacementProperties": {
-            "class": "ElementProperties",
+            "class": "EntityElementProperties",
             "propertyValueMap": {
               "description": {
                 "class": "PrimitiveTypePropertyValue",
@@ -2752,7 +2752,7 @@ class SolutionArchitect(ServerClient):
 
             Body structure:
             {
-              "class": "UpdateSElementRequestBody",
+              "class": "UpdateElementRequestBody",
               "externalSourceGUID": "add guid here",
               "externalSourceName": "add qualified name here",
               "effectiveTime": {{isotime}},
@@ -3623,7 +3623,7 @@ class SolutionArchitect(ServerClient):
           "parentGUID": "add guid here",
           "parentRelationshipTypeName": "add type name here",
           "parentRelationshipProperties": {
-            "class": "ElementProperties",
+            "class": "RelationshipElementProperties",
             "propertyValueMap": {
               "description": {
                 "class": "PrimitiveTypePropertyValue",
@@ -3725,7 +3725,7 @@ class SolutionArchitect(ServerClient):
           "parentGUID": "add guid here",
           "parentRelationshipTypeName": "add type name here",
           "parentRelationshipProperties": {
-            "class": "ElementProperties",
+            "class": "RelationshipElementProperties",
             "propertyValueMap": {
               "description": {
                 "class": "PrimitiveTypePropertyValue",
@@ -3807,7 +3807,7 @@ class SolutionArchitect(ServerClient):
           "parentGUID": "add guid here",
           "parentRelationshipTypeName": "add type name here",
           "parentRelationshipProperties": {
-            "class": "ElementProperties",
+            "class": "RelationshipElementProperties",
             "propertyValueMap": {
               "description": {
                 "class": "PrimitiveTypePropertyValue",
@@ -3819,7 +3819,7 @@ class SolutionArchitect(ServerClient):
           "parentAtEnd1": false,
           "templateGUID": "add guid here",
           "replacementProperties": {
-            "class": "ElementProperties",
+            "class": "EntityElementProperties",
             "propertyValueMap": {
               "description": {
                 "class": "PrimitiveTypePropertyValue",
@@ -3893,7 +3893,7 @@ class SolutionArchitect(ServerClient):
                   "parentGUID": "add guid here",
                   "parentRelationshipTypeName": "add type name here",
                   "parentRelationshipProperties": {
-                    "class": "ElementProperties",
+                    "class": "RelationshipElementProperties",
                     "propertyValueMap": {
                       "description": {
                         "class": "PrimitiveTypePropertyValue",
@@ -3905,7 +3905,7 @@ class SolutionArchitect(ServerClient):
                   "parentAtEnd1": false,
                   "templateGUID": "add guid here",
                   "replacementProperties": {
-                    "class": "ElementProperties",
+                    "class": "EntityElementProperties",
                     "propertyValueMap": {
                       "description": {
                         "class": "PrimitiveTypePropertyValue",
@@ -5378,7 +5378,7 @@ class SolutionArchitect(ServerClient):
           "parentGUID": "add guid here",
           "parentRelationshipTypeName": "add type name here",
           "parentRelationshipProperties": {
-            "class": "ElementProperties",
+            "class": "RelationshipElementProperties",
             "propertyValueMap" : {
               "description" : {
                 "class": "PrimitiveTypePropertyValue",
@@ -5449,7 +5449,7 @@ class SolutionArchitect(ServerClient):
           "parentGUID": "add guid here",
           "parentRelationshipTypeName": "add type name here",
           "parentRelationshipProperties": {
-            "class": "ElementProperties",
+            "class": "RelationshipElementProperties",
             "propertyValueMap" : {
               "description" : {
                 "class": "PrimitiveTypePropertyValue",
@@ -5528,7 +5528,7 @@ class SolutionArchitect(ServerClient):
           "parentGUID": "add guid here",
           "parentRelationshipTypeName": "add type name here",
           "parentRelationshipProperties": {
-            "class": "ElementProperties",
+            "class": "RelationshipElementProperties",
             "propertyValueMap": {
               "description": {
                 "class": "PrimitiveTypePropertyValue",
@@ -5540,7 +5540,7 @@ class SolutionArchitect(ServerClient):
           "parentAtEnd1": false,
           "templateGUID": "add guid here",
           "replacementProperties": {
-            "class": "ElementProperties",
+            "class": "EntityElementProperties",
             "propertyValueMap": {
               "description": {
                 "class": "PrimitiveTypePropertyValue",
@@ -5613,7 +5613,7 @@ class SolutionArchitect(ServerClient):
                   "parentGUID": "add guid here",
                   "parentRelationshipTypeName": "add type name here",
                   "parentRelationshipProperties": {
-                    "class": "ElementProperties",
+                    "class": "RelationshipElementProperties",
                     "propertyValueMap": {
                       "description": {
                         "class": "PrimitiveTypePropertyValue",
@@ -5625,7 +5625,7 @@ class SolutionArchitect(ServerClient):
                   "parentAtEnd1": false,
                   "templateGUID": "add guid here",
                   "replacementProperties": {
-                    "class": "ElementProperties",
+                    "class": "EntityElementProperties",
                     "propertyValueMap": {
                       "description": {
                         "class": "PrimitiveTypePropertyValue",
