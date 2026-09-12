@@ -326,7 +326,7 @@ class ExternalReferences(ServerClient):
           "parentAtEnd1": true,
           "templateGUID": "template GUID",
           "replacementProperties": {
-            "class": "ElementProperties",
+            "class": "EntityElementProperties",
             "propertyValueMap" : {
               "propertyName" : {
                 "class": "PrimitiveTypePropertyValue",
@@ -393,7 +393,7 @@ class ExternalReferences(ServerClient):
           "parentAtEnd1": true,
           "templateGUID": "template GUID",
           "replacementProperties": {
-            "class": "ElementProperties",
+            "class": "EntityElementProperties",
             "propertyValueMap" : {
               "propertyName" : {
                 "class": "PrimitiveTypePropertyValue",

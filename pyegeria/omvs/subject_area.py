@@ -206,7 +206,7 @@ class SubjectArea(ServerClient):
           "class" : "TemplateRequestBody",
           "templateGUID": "add guid here",
           "replacementProperties": {
-            "class": "ElementProperties",
+            "class": "EntityElementProperties",
             "propertyValueMap" : {
               "description" : {
                 "class": "PrimitiveTypePropertyValue",
@@ -247,7 +247,7 @@ class SubjectArea(ServerClient):
           "class" : "TemplateRequestBody",
           "templateGUID": "add guid here",
           "replacementProperties": {
-            "class": "ElementProperties",
+            "class": "EntityElementProperties",
             "propertyValueMap" : {
               "description" : {
                 "class": "PrimitiveTypePropertyValue",

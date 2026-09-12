@@ -35,7 +35,7 @@ from pyegeria.models import (SearchStringRequestBody, FilterRequestBody, GetRequ
                              NewExternalIdRequestBody,
                              DeleteElementRequestBody, DeleteRelationshipRequestBody, DeleteClassificationRequestBody,
                              LevelIdentifierQueryBody, UpdatePropertiesRequestBody, MetadataSourceRequestBody,
-                             UpdateEffectivityDatesRequestBody, OpenMetadataDeleteRequestBody, ArchiveRequestBody,
+                             UpdateEffectivityDatesRequestBody, OpenMetadataDeleteRequestBody,
                              NewOpenMetadataElementRequestBody, NewRelatedElementsRequestBody,
                              FindPropertyNamesRequestBody, FindRequestBody,
                              ContentStatusSearchString, ContentStatusFilterRequestBody,
@@ -70,7 +70,6 @@ from pyegeria.models.models import (
     MetadataSourceRequestBody,
     UpdateEffectivityDatesRequestBody,
     OpenMetadataDeleteRequestBody,
-    ArchiveRequestBody,
     NewOpenMetadataElementRequestBody,
     NewRelatedElementsRequestBody,
     FindPropertyNamesRequestBody,
@@ -105,7 +104,6 @@ __all__ = [
     "MetadataSourceRequestBody",
     "UpdateEffectivityDatesRequestBody",
     "OpenMetadataDeleteRequestBody",
-    "ArchiveRequestBody",
     "NewOpenMetadataElementRequestBody",
     "NewRelatedElementsRequestBody",
     "FindPropertyNamesRequestBody"
@@ -195,7 +193,6 @@ class ServerClient(BaseServerClient):
         self._metadata_source_request_adapter = TypeAdapter(MetadataSourceRequestBody)
         self._update_effectivity_dates_request_adapter = TypeAdapter(UpdateEffectivityDatesRequestBody)
         self._open_metadata_delete_request_adapter = TypeAdapter(OpenMetadataDeleteRequestBody)
-        self._archive_request_adapter = TypeAdapter(ArchiveRequestBody)
         self._new_open_metadata_element_request_adapter = TypeAdapter(NewOpenMetadataElementRequestBody)
         self._new_related_elements_request_adapter = TypeAdapter(NewRelatedElementsRequestBody)
         self._find_property_names_request_adapter = TypeAdapter(FindPropertyNamesRequestBody)
@@ -6292,11 +6289,11 @@ class ServerClient(BaseServerClient):
         return validated_body
 
     @dynamic_catch
-    def validate_archive_request(self, body: dict | ArchiveRequestBody) -> ArchiveRequestBody | None:
-        if isinstance(body, ArchiveRequestBody):
+    def validate_archive_request(self, body: dict | DeleteElementRequestBody) -> DeleteElementRequestBody | None:
+        if isinstance(body, DeleteElementRequestBody):
             validated_body = body
         elif isinstance(body, dict):
-            validated_body = self._validate_body(self._archive_request_adapter.validate_python, body)
+            validated_body = self._validate_body(self._delete_element_request_adapter.validate_python, body)
         else:
             validated_body = None
         return validated_body
@@ -6348,7 +6345,7 @@ class ServerClient(BaseServerClient):
         await self._async_make_request("POST", url, validated_body.model_dump(by_alias=True, exclude_none=True))
 
     @dynamic_catch
-    async def _async_archive_body_request(self, url: str, body: Optional[dict | ArchiveRequestBody] = None) -> None:
+    async def _async_archive_body_request(self, url: str, body: Optional[dict | DeleteElementRequestBody] = None) -> None:
         validated_body = self.validate_archive_request(body)
         await self._async_make_request("POST", url, validated_body.model_dump(by_alias=True, exclude_none=True))
 

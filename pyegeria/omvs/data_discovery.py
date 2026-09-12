@@ -203,7 +203,7 @@ class DataDiscovery(ServerClient):
           "class" : "TemplateRequestBody",
           "templateGUID": "add guid here",
           "replacementProperties": {
-            "class": "ElementProperties",
+            "class": "EntityElementProperties",
             "propertyValueMap" : {
               "description" : {
                 "class": "PrimitiveTypePropertyValue",
@@ -244,7 +244,7 @@ class DataDiscovery(ServerClient):
           "class" : "TemplateRequestBody",
           "templateGUID": "add guid here",
           "replacementProperties": {
-            "class": "ElementProperties",
+            "class": "EntityElementProperties",
             "propertyValueMap" : {
               "description" : {
                 "class": "PrimitiveTypePropertyValue",
