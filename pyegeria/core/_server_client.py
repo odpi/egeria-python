@@ -6248,33 +6248,36 @@ class ServerClient(BaseServerClient):
         return validated_body
 
     @dynamic_catch
-    def validate_update_properties_request(self, body: dict | UpdatePropertiesRequestBody) -> UpdatePropertiesRequestBody | None:
+    def validate_update_properties_request(self, body: Optional[dict | UpdatePropertiesRequestBody] = None) -> UpdatePropertiesRequestBody | None:
         if isinstance(body, UpdatePropertiesRequestBody):
             validated_body = body
         elif isinstance(body, dict):
             validated_body = self._validate_body(self._update_properties_request_adapter.validate_python, body)
         else:
-            validated_body = None
+            body = {"class": "UpdatePropertiesRequestBody"}
+            validated_body = self._validate_body(UpdatePropertiesRequestBody.model_validate, body)
         return validated_body
 
     @dynamic_catch
-    def validate_metadata_source_request(self, body: dict | MetadataSourceRequestBody) -> MetadataSourceRequestBody | None:
+    def validate_metadata_source_request(self, body: Optional[dict | MetadataSourceRequestBody] = None) -> MetadataSourceRequestBody | None:
         if isinstance(body, MetadataSourceRequestBody):
             validated_body = body
         elif isinstance(body, dict):
             validated_body = self._validate_body(self._metadata_source_request_adapter.validate_python, body)
         else:
-            validated_body = None
+            body = {"class": "MetadataSourceRequestBody"}
+            validated_body = self._validate_body(MetadataSourceRequestBody.model_validate, body)
         return validated_body
 
     @dynamic_catch
-    def validate_update_effectivity_dates_request(self, body: dict | UpdateEffectivityDatesRequestBody) -> UpdateEffectivityDatesRequestBody | None:
+    def validate_update_effectivity_dates_request(self, body: Optional[dict | UpdateEffectivityDatesRequestBody] = None) -> UpdateEffectivityDatesRequestBody | None:
         if isinstance(body, UpdateEffectivityDatesRequestBody):
             validated_body = body
         elif isinstance(body, dict):
             validated_body = self._validate_body(self._update_effectivity_dates_request_adapter.validate_python, body)
         else:
-            validated_body = None
+            body = {"class": "UpdateEffectivityDatesRequestBody"}
+            validated_body = self._validate_body(UpdateEffectivityDatesRequestBody.model_validate, body)
         return validated_body
 
     @dynamic_catch
@@ -6289,33 +6292,36 @@ class ServerClient(BaseServerClient):
         return validated_body
 
     @dynamic_catch
-    def validate_archive_request(self, body: dict | DeleteElementRequestBody) -> DeleteElementRequestBody | None:
+    def validate_archive_request(self, body: Optional[dict | DeleteElementRequestBody] = None) -> DeleteElementRequestBody | None:
         if isinstance(body, DeleteElementRequestBody):
             validated_body = body
         elif isinstance(body, dict):
             validated_body = self._validate_body(self._delete_element_request_adapter.validate_python, body)
         else:
-            validated_body = None
+            body = {"class": "DeleteElementRequestBody"}
+            validated_body = self._validate_body(DeleteElementRequestBody.model_validate, body)
         return validated_body
 
     @dynamic_catch
-    def validate_new_open_metadata_element_request(self, body: dict | NewOpenMetadataElementRequestBody) -> NewOpenMetadataElementRequestBody | None:
+    def validate_new_open_metadata_element_request(self, body: Optional[dict | NewOpenMetadataElementRequestBody] = None) -> NewOpenMetadataElementRequestBody | None:
         if isinstance(body, NewOpenMetadataElementRequestBody):
             validated_body = body
         elif isinstance(body, dict):
             validated_body = self._validate_body(self._new_open_metadata_element_request_adapter.validate_python, body)
         else:
-            validated_body = None
+            body = {"class": "NewOpenMetadataElementRequestBody"}
+            validated_body = self._validate_body(NewOpenMetadataElementRequestBody.model_validate, body)
         return validated_body
 
     @dynamic_catch
-    def validate_new_related_elements_request(self, body: dict | NewRelatedElementsRequestBody) -> NewRelatedElementsRequestBody | None:
+    def validate_new_related_elements_request(self, body: Optional[dict | NewRelatedElementsRequestBody] = None) -> NewRelatedElementsRequestBody | None:
         if isinstance(body, NewRelatedElementsRequestBody):
             validated_body = body
         elif isinstance(body, dict):
             validated_body = self._validate_body(self._new_related_elements_request_adapter.validate_python, body)
         else:
-            validated_body = None
+            body = {"class": "NewRelatedElementsRequestBody"}
+            validated_body = self._validate_body(NewRelatedElementsRequestBody.model_validate, body)
         return validated_body
 
     @dynamic_catch

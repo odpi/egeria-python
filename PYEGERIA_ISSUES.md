@@ -225,7 +225,7 @@ read. Full draft: trellis session scratch `egeria-issue-engine-host-403-loop.md`
 
 ### ISSUE-93: `declassify_metadata_element` raises `AttributeError` when `body` is omitted, though the parameter is Optional — and the classification is silently left in place
 
-**Layer:** Pyegeria · **Status:** open · **Found:** 2026-09-08 (Resource Explorer, swapping a Project's kind classification during investigation reclassification).
+**Layer:** Pyegeria · **Status:** fixed (2026-09-13) · **Found:** 2026-09-08 (Resource Explorer, swapping a Project's kind classification during investigation reclassification).
 
 `MetadataExpert.declassify_metadata_element(metadata_element_guid, classification_name, body=None)`
 declares `body` as `Optional[dict | MetadataSourceRequestBody] = None`, but the
@@ -282,7 +282,7 @@ rather than only that the new one is present.
 
 ### ISSUE-92: `Project Type`'s description in `commands_project_compact.json` lists only 4 of its 6 `valid_values` — omits `Project` and `Experiment`, and the stale text is baked into 24 generated files
 
-**Layer:** Pyegeria · **Status:** open · **Found:** 2026-09-07 (Resource
+**Layer:** Pyegeria · **Status:** fixed (2026-09-13) · **Found:** 2026-09-07 (Resource
 Explorer, designing investigation → Egeria Project classification mapping).
 
 `md_processing/data/compact_commands/commands_project_compact.json`, the
@@ -369,7 +369,7 @@ check that flags a `description` naming a subset of its own `valid_values`.
 
 ### ISSUE-91: `pyegeria.core.mcp_server` imports `mcp.server.mcpserver` (mcp 2.x only) but `pyproject.toml` declares `mcp >=0.1` — any consumer that resolves mcp 1.x gets a server that dies at import
 
-**Layer:** pyegeria packaging · **Status:** open · **Found:** 2026-09-05 (Egeria Advisor dev startup on the M3 Max)
+**Layer:** pyegeria packaging · **Status:** fixed (2026-09-13) · **Found:** 2026-09-05 (Egeria Advisor dev startup on the M3 Max)
 
 Commit 2b39ba06 (2026-07-30, "migrate mcp_server.py to mcp 2.0.0's MCPServer") changed the
 server's import to:
@@ -965,7 +965,7 @@ into the entry now, so it isn't rediscovered from scratch later.
 
 ### ISSUE-96: get_guid_for_name (and every other sync wrapper using asyncio.get_event_loop().run_until_complete(...)) breaks when a client instance is reused across threads — surfaces as a misleading CLIENT_ERROR_400 "unable to connect"
 
-Layer: pyegeria core (_base_server_client.py, _base_platform_client.py, every OMVS class's sync wrappers) · Status: open · Found: 2026-09-12 (Resource Explorer, SurveyDefinitionReader._lookup_question_guid)
+Layer: pyegeria core (_base_server_client.py, _base_platform_client.py, every OMVS class's sync wrappers) · Status: fixed (2026-09-13) · Found: 2026-09-12 (Resource Explorer, SurveyDefinitionReader._lookup_question_guid)
 
 A single client instance (e.g. ClassificationExplorer) constructed once
 and reused from multiple threads — a natural pattern for any caller with a

@@ -11,6 +11,7 @@ import asyncio
 import inspect
 import json
 import os
+import threading
 
 import httpcore
 import httpx
@@ -124,10 +125,8 @@ class BaseServerClient:
             self.headers["Authorization"] = f"Bearer {self.token}"
             self.text_headers["Authorization"] = f"Bearer {self.token}"
 
-        self.session = AsyncClient(
-            verify=enable_ssl_check,
-            timeout=httpx.Timeout(timeout=float(self.timeout), connect=10.0),
-        )
+        self._thread_local = threading.local()
+
         self.command_root: str = f"{self.platform_url}/servers/{self.server_name}/api/open-metadata/"
 
         try:
@@ -135,6 +134,21 @@ class BaseServerClient:
             logger.debug(f"client initialized, platform origin is: {result}")
         except PyegeriaConnectionException:
             raise
+
+    @property
+    def session(self) -> AsyncClient:
+        """Get the httpx session for the current thread."""
+        if not hasattr(self._thread_local, "session"):
+            self._thread_local.session = AsyncClient(
+                verify=enable_ssl_check,
+                timeout=httpx.Timeout(timeout=float(self.timeout), connect=10.0),
+            )
+        return self._thread_local.session
+
+    @session.setter
+    def session(self, value: AsyncClient):
+        """Allow setting the session for the current thread."""
+        self._thread_local.session = value
 
     async def _async_check_connection(self) -> str:
         """Check if the connection is working. Async version.
