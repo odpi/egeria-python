@@ -130,7 +130,7 @@ ___
 
 >	**Attribute Type**: Enum
 
->	**Description**: A string classifying the project. Supported values are Campaign, Task, PersonalProject and StudyProject.
+>	**Description**: A string classifying the project. `Project` (the default) applies no classification. `Campaign` is a long-term strategic initiative delivered through multiple projects; `Task` a self-contained short activity; `PersonalProject` an informal project an individual creates to organize their own work; `StudyProject` a focused analysis of a topic, person, object or situation; `Experiment` a project testing a hypothesis, which is recorded in the `hypothesis` attribute.
 
 >	**Valid Values**: Project,Campaign,Task,PersonalProject,StudyProject,Experiment
 

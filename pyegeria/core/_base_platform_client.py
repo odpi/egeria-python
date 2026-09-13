@@ -11,6 +11,7 @@ import asyncio
 import inspect
 import json
 import os
+import threading
 
 import httpcore
 import httpx
@@ -125,15 +126,8 @@ class BasePlatformClient:
             self.headers["Authorization"] = f"Bearer {self.token}"
             self.text_headers["Authorization"] = f"Bearer {self.token}"
 
-        self.session = AsyncClient(
-            verify=enable_ssl_check,
-            timeout=httpx.Timeout(timeout=float(self.timeout), connect=10.0),
-            limits=httpx.Limits(
-                max_connections=10,
-                max_keepalive_connections=5,
-                keepalive_expiry=20.0,  # stay under typical reverse-proxy idle timeout (60-75 s)
-            ),
-        )
+        self._thread_local = threading.local()
+
         self.command_root: str = f"{self.platform_url}/servers/{self.server_name}/api/open-metadata/"
 
         try:
@@ -141,6 +135,26 @@ class BasePlatformClient:
             logger.debug(f"client initialized, platform origin is: {result}")
         except PyegeriaConnectionException as e:
             raise
+
+    @property
+    def session(self) -> AsyncClient:
+        """Get the httpx session for the current thread."""
+        if not hasattr(self._thread_local, "session"):
+            self._thread_local.session = AsyncClient(
+                verify=enable_ssl_check,
+                timeout=httpx.Timeout(timeout=float(self.timeout), connect=10.0),
+                limits=httpx.Limits(
+                    max_connections=10,
+                    max_keepalive_connections=5,
+                    keepalive_expiry=20.0,  # stay under typical reverse-proxy idle timeout (60-75 s)
+                ),
+            )
+        return self._thread_local.session
+
+    @session.setter
+    def session(self, value: AsyncClient):
+        """Allow setting the session for the current thread."""
+        self._thread_local.session = value
 
     async def _async_check_connection(self) -> str:
         """Check if the connection is working. Async version.
