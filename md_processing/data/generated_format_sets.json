@@ -224835,6 +224835,14 @@
             "valid_values": []
           },
           {
+            "name": "Implemented By",
+            "key": "implemented_by",
+            "value": null,
+            "format": false,
+            "detail_spec": null,
+            "valid_values": []
+          },
+          {
             "name": "Version Identifier",
             "key": "version_identifier",
             "value": null,
@@ -224960,6 +224968,14 @@
           {
             "name": "Scope",
             "key": "scope",
+            "value": null,
+            "format": false,
+            "detail_spec": null,
+            "valid_values": []
+          },
+          {
+            "name": "Implemented By",
+            "key": "implemented_by",
             "value": null,
             "format": false,
             "detail_spec": null,
@@ -225141,6 +225157,14 @@
             "format": false,
             "detail_spec": null,
             "valid_values": []
+          },
+          {
+            "name": "Implemented By",
+            "key": "implemented_by",
+            "value": null,
+            "format": false,
+            "detail_spec": null,
+            "valid_values": []
           }
         ],
         "columns": [
@@ -225276,6 +225300,14 @@
           {
             "name": "Scope",
             "key": "scope",
+            "value": null,
+            "format": false,
+            "detail_spec": null,
+            "valid_values": []
+          },
+          {
+            "name": "Implemented By",
+            "key": "implemented_by",
             "value": null,
             "format": false,
             "detail_spec": null,
@@ -225583,6 +225615,14 @@
             "valid_values": []
           },
           {
+            "name": "Implemented By",
+            "key": "implemented_by",
+            "value": null,
+            "format": false,
+            "detail_spec": null,
+            "valid_values": []
+          },
+          {
             "name": "Classifications",
             "key": "classifications",
             "value": null,
@@ -225921,6 +225961,14 @@
           {
             "name": "Scope",
             "key": "scope",
+            "value": null,
+            "format": false,
+            "detail_spec": null,
+            "valid_values": []
+          },
+          {
+            "name": "Implemented By",
+            "key": "implemented_by",
             "value": null,
             "format": false,
             "detail_spec": null,
@@ -226333,6 +226381,14 @@
             "valid_values": []
           },
           {
+            "name": "Implemented By",
+            "key": "implemented_by",
+            "value": null,
+            "format": false,
+            "detail_spec": null,
+            "valid_values": []
+          },
+          {
             "name": "User Defined Status",
             "key": "user_defined_status",
             "value": null,
@@ -226679,6 +226735,14 @@
           {
             "name": "Scope",
             "key": "scope",
+            "value": null,
+            "format": false,
+            "detail_spec": null,
+            "valid_values": []
+          },
+          {
+            "name": "Implemented By",
+            "key": "implemented_by",
             "value": null,
             "format": false,
             "detail_spec": null,
