@@ -26,14 +26,19 @@ jobs:
           # Scoped to real package source -- excludes vendored/generated
           # content and sample data that would otherwise dominate results
           # with noise from third-party or non-shipped code.
-          paths: |
-            pyegeria
-            md_processing
-            commands
-            my_egeria
-          paths-ignore: |
-            **/data/**
-            **/*.json
+          # codeql-action v4 dropped the flat paths/paths-ignore init inputs
+          # (confirmed via the action's own "Unexpected input(s)" warning on
+          # PR #360) -- same path-scoping now goes under an inline `config:`
+          # block instead.
+          config: |
+            paths:
+              - pyegeria
+              - md_processing
+              - commands
+              - my_egeria
+            paths-ignore:
+              - '**/data/**'
+              - '**/*.json'
 
       - uses: github/codeql-action/analyze@cdf488f595d80d6e07e03d4674febd5ab45fa938 # v4.37.9
         with:
