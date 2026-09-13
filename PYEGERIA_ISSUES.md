@@ -963,6 +963,71 @@ on an Egeria Server capability that doesn't exist yet — but the pyegeria/
 Dr.Egeria-side work each will need once that capability ships is written
 into the entry now, so it isn't rediscovered from scratch later.
 
+### ISSUE-96: get_guid_for_name (and every other sync wrapper using asyncio.get_event_loop().run_until_complete(...)) breaks when a client instance is reused across threads — surfaces as a misleading CLIENT_ERROR_400 "unable to connect"
+
+Layer: pyegeria core (_base_server_client.py, _base_platform_client.py, every OMVS class's sync wrappers) · Status: open · Found: 2026-09-12 (Resource Explorer, SurveyDefinitionReader._lookup_question_guid)
+
+A single client instance (e.g. ClassificationExplorer) constructed once
+and reused from multiple threads — a natural pattern for any caller with a
+thread pool bridging sync pyegeria calls into async code — fails
+non-deterministically once its httpx.AsyncClient (self.session, created
+once in __init__, _base_platform_client.py:128) is driven by more than
+one event loop over its lifetime. Every sync wrapper (get_guid_for_name,
+create_egeria_bearer_token, and every other
+`loop = asyncio.get_event_loop(); loop.run_until_complete(...)` call —
+~29 call sites in _server_client.py alone) hands the SAME shared client's
+connection pool to whichever thread happens to call it, and
+pyegeria/__init__.py's import-time nest_asyncio.apply()
+(via pyegeria.view.mermaid_utilities) means every calling thread
+silently gets its OWN fresh event loop rather than raising — so the
+mismatch is invisible until the underlying httpcore/anyio connection's
+internal asyncio.locks.Event/lock, bound to loop A, is awaited from loop
+B and raises `RuntimeError: <...> is bound to a different event loop`.
+
+How it shows up. _async_make_request (_base_server_client.py:621)
+catches this (and anything else) broadly and re-raises as
+PyegeriaUnknownException / CLIENT_ERROR_400, "The client is unable to
+connect to the Egeria platform" — the real RuntimeError and its "different
+event loop" text never reach the caller. A direct curl to the same
+platform at the same moment succeeds in milliseconds, ruling out actual
+connectivity.
+
+How to trigger:
+```python
+from pyegeria.omvs.classification_explorer import ClassificationExplorer
+import threading
+
+client = ClassificationExplorer(view_server, platform_url, user, pwd)
+client.create_egeria_bearer_token(user, pwd)   # binds session internals to THIS thread's loop
+
+def call():
+    client.get_guid_for_name("some display name", property_name=["displayName"], type_name="GlossaryTerm")
+
+t = threading.Thread(target=call)
+t.start(); t.join()   # raises PyegeriaUnknownException / CLIENT_ERROR_400
+```
+Reproduced deterministically (100% failure across 52 distinct names, 2
+runs) when the client is called from a shared thread pool or a fresh
+thread per call; 0% failure when the client is always driven by the same
+single thread/loop throughout its life, or when a fresh client is
+constructed inside the very thread that will use it.
+
+Note: pyegeria/core/mcp_server.py:181-184 (this same 6.1.10 release)
+documents this exact failure and works around it by constructing a fresh,
+per-call EgeriaTech client inside the handler rather than reusing a
+module-level one — confirming this is a known, previously-hit instance of
+the same defect, not unique to this caller.
+
+Candidate fix directions (not evaluated for feasibility here): (1)
+make sync wrappers detect a loop change since the client's session was
+last used and rebuild self.session when it happens; (2) document
+plainly that a client instance is not thread-safe / not loop-portable and
+must be confined to one thread or reconstructed per thread; (3) provide a
+supported "fresh session per call" mode, generalizing the workaround
+already used internally in mcp_server.py.
+
+Suggested fix (pyegeria): either make each sync wrapper use a per-thread session/loop (e.g. `threading.local()` holding the httpx.AsyncClient), or document that a client instance is single-thread-affine and raise a clear error — rather than the broad `except` in `_async_make_request` relabelling `RuntimeError: ... bound to a different event loop` as CLIENT_ERROR_400 'unable to connect', which is what cost the diagnosis. Caller-side mitigation used in Resource Explorer (dwolfson/trellis, `re/question-guid-client-per-thread`): one client per thread, constructed inside the thread that uses it — 0/104 failures after, 52/52 before.
+
 ### ISSUE-91: `pyproject.toml` declares `mcp >=0.1`, but `pyegeria.core.mcp_server` needs `mcp>=2.0` — the declared floor lets a resolver install a version too old to import the module at all
 
 **Layer:** Pyegeria · **Status:** open · **Found:** 2026-09-06 (Egeria Advisor, containerized demo deployment rebuild against pyegeria 6.1.10).

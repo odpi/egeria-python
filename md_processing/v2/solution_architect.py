@@ -389,6 +389,7 @@ class SupplyChainProcessor(AsyncBaseCommandProcessor):
 
         in_sc_guids = set(attributes.get('In Information Supply Chain', {}).get('guid_list', []))
         nested_sc_guids = set(attributes.get('Nested Information Supply Chains', {}).get('guid_list', []))
+        implemented_by_guids = set(attributes.get('Implemented By', {}).get('guid_list', []))
 
         if verb == "Update":
             guid = self.parsed_output.get("guid") or (self.as_is_element['elementHeader']['guid'] if self.as_is_element else None)
@@ -401,7 +402,7 @@ class SupplyChainProcessor(AsyncBaseCommandProcessor):
             self.parsed_output["guid"] = guid
             
             # Sync parents/nested
-            sync_res = await self._sync_rels(guid, in_sc_guids, nested_sc_guids, not merge_update)
+            sync_res = await self._sync_rels(guid, in_sc_guids, nested_sc_guids, not merge_update, implemented_by_guids=implemented_by_guids)
             if any(sync_res.values()):
                 self.add_related_result("Relationships Sync", message=f"Updated relationships (Success: {len(sync_res['added']) + len(sync_res['removed'])}, Errors: {len(sync_res['errors'])})")
             
@@ -427,7 +428,7 @@ class SupplyChainProcessor(AsyncBaseCommandProcessor):
                 self.parsed_output["guid"] = guid
                 # known_new=True: this GUID was just created, so it cannot have
                 # any existing relationships yet -- skip the as-is fetch.
-                sync_res = await self._sync_rels(guid, in_sc_guids, nested_sc_guids, replace_all=True, known_new=True)
+                sync_res = await self._sync_rels(guid, in_sc_guids, nested_sc_guids, replace_all=True, known_new=True, implemented_by_guids=implemented_by_guids)
                 if any(sync_res.values()):
                     self.add_related_result("Relationships Sync", message=f"Initial relationships (Success: {len(sync_res['added']) + len(sync_res['removed'])}, Errors: {len(sync_res['errors'])})")
 
@@ -445,11 +446,12 @@ class SupplyChainProcessor(AsyncBaseCommandProcessor):
 
         return self.command.raw_block
 
-    async def _sync_rels(self, guid: str, parent_guids: Set[str], nested_guids: Set[str], replace_all: bool, known_new: bool = False) -> Dict[str, Any]:
+    async def _sync_rels(self, guid: str, parent_guids: Set[str], nested_guids: Set[str], replace_all: bool,
+                          known_new: bool = False, implemented_by_guids: Optional[Set[str]] = None) -> Dict[str, Any]:
         """known_new=True skips the as-is fetch below -- a brand-new supply chain cannot have any existing relationships yet."""
         rel_els = {} if known_new else await self._get_supply_chain_rel_elements(guid)
         combined_results = {"added": [], "removed": [], "errors": []}
-        
+
         # 1. Parents (this ISC is a member of the parent ISC's collection)
         as_is_parents = set(rel_els.get("parent_guids", []))
         res = await self.sync_members(as_is_parents, parent_guids,
@@ -465,6 +467,17 @@ class SupplyChainProcessor(AsyncBaseCommandProcessor):
                                lambda n: self.client._async_remove_from_collection(guid, n, None),
                                replace_all)
         for k in combined_results: combined_results[k].extend(res.get(k, []))
+
+        # 3. Implemented By (elements that implement this ISC via ImplementedBy, 0737) --
+        # governance_officer.link/detach_design_to/from_implementation, this ISC is the
+        # design (end 1), the implementer is end 2.
+        if implemented_by_guids is not None:
+            as_is_implemented_by = set(rel_els.get("implemented_by_guids", []))
+            res = await self.sync_members(as_is_implemented_by, implemented_by_guids,
+                                   lambda i: self.client.governance_officer._async_link_design_to_implementation(guid, i, None),
+                                   lambda i: self.client.governance_officer._async_detach_design_from_implementation(guid, i, None),
+                                   replace_all)
+            for k in combined_results: combined_results[k].extend(res.get(k, []))
 
         return combined_results
 
@@ -494,7 +507,9 @@ class SupplyChainProcessor(AsyncBaseCommandProcessor):
                 res["nested_guids"].append(related['elementHeader']['guid'])
 
         # Implemented By
-        for element in el_struct.get("implementedByList", []):
+        # Field name confirmed 2026-09-13 against AttributedMetadataElement.java
+        # ("implementedBy", not "implementedByList") and a live element fetch.
+        for element in el_struct.get("implementedBy", []):
             res["implemented_by_guids"].append(element['relatedElement']['elementHeader']['guid'])
 
         # Supply To
@@ -751,6 +766,13 @@ class SolutionLinkProcessor(AsyncBaseCommandProcessor):
                  # Additional CollectionMembership properties
                  properties["expression"] = attributes.get('Expression', {}).get('value')
                  properties["membershipStatus"] = attributes.get('Membership Status', {}).get('value', 'ACTIVE').upper()
+            elif om_type == "ImplementedBy":
+                 # ImplementedByProperties (0737) -- confirmed against
+                 # Egeria-api-governance-officer.http's linkDesignToImplementation
+                 # worked example.
+                 properties["designStep"] = attributes.get('Design Step', {}).get('value')
+                 properties["role"] = attributes.get('Implementation Role', {}).get('value')
+                 properties["transformation"] = attributes.get('Transformation', {}).get('value')
             else:
                  # Composition and Design relationships use 'role'
                  properties["role"] = attributes.get("Role", {}).get("value") or attributes.get("Solution Role", {}).get("value") or label
@@ -830,6 +852,11 @@ class SolutionLinkProcessor(AsyncBaseCommandProcessor):
                  await self.client._async_link_solution_component_port(id1, id2, body)
             elif om_type == "SolutionPortDelegation":
                  await self.client._async_link_solution_port_delegation(id1, id2, body)
+            elif om_type == "ImplementedBy":
+                 # Cross-OMVS call: ImplementedBy (0737) is exposed via
+                 # governance_officer's designs/.../implementations/.../attach
+                 # endpoint, not a solution-architect one.
+                 await self.client.governance_officer._async_link_design_to_implementation(id1, id2, body)
             else:
                  logger.warning(f"OM_TYPE {om_type} not yet supported in SolutionLinkProcessor")
                  return self.command.raw_block
@@ -879,6 +906,8 @@ class SolutionLinkProcessor(AsyncBaseCommandProcessor):
                 await self.client._async_detach_solution_component_port(id1, id2, body)
             elif om_type == "SolutionPortDelegation":
                 await self.client._async_detach_solution_port_delegation(id1, id2, body)
+            elif om_type == "ImplementedBy":
+                await self.client.governance_officer._async_detach_design_from_implementation(id1, id2, body)
             else:
                 logger.warning(f"OM_TYPE {om_type} not yet supported in SolutionLinkProcessor for detach")
                 return self.command.raw_block

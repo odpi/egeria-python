@@ -37,6 +37,14 @@ ___
 >	**Description**: A list of supply chains that compose this supply chain.
 
 
+### Implemented By
+>	**Input Required**: False
+
+>	**Attribute Type**: Reference Name List
+
+>	**Description**: Elements that implement this information supply chain (ImplementedBy relationship).
+
+
 ### Journal Entry
 >	**Input Required**: False
 
