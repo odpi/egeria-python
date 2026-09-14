@@ -8,6 +8,7 @@
    Egeria view server when PYEG_LIVE_EGERIA=1 is set.
 """
 
+import re
 from unittest.mock import MagicMock, AsyncMock
 import pytest
 
@@ -232,56 +233,42 @@ class TestTechTypesMixin:
 
     @pytest.mark.live_capable
     def test_tech_type_templates_callback_success(self, backend, request):
-        """Initiates a governance action process — a real write when running live."""
+        """Creates an element from a catalog template — a real write when live."""
         app = DummyTechTypesApp(backend)
 
         if backend.live:
             from pyegeria import AutomatedCuration
 
-            # Known defect, only visible once the client is real: the handler
-            # calls initiate_gov_action_process(body=...), but that SDK method
-            # takes action_type_qualified_name and has no `body` parameter, so
-            # the call raises TypeError and the handler returns 420. Strict
-            # xfail so this flips to a failure — prompting a test update — the
-            # moment tech_types_handler.py is corrected.
-            request.node.add_marker(
-                pytest.mark.xfail(
-                    strict=True,
-                    reason="tech_types_handler.tech_type_templates_callback calls "
-                    "AutomatedCuration.initiate_gov_action_process(body=...), "
-                    "which takes action_type_qualified_name, not body",
-                )
-            )
             app.autoc = AutomatedCuration(
                 app.view_server, app.platform_url, app.user_name, app.user_password
             )
             backend.patch("tech_types_handler.AutomatedCuration")
             full_template = request.getfixturevalue("live_catalog_template")
+            placeholders = request.getfixturevalue("live_template_placeholders")
         else:
             app.autoc = MagicMock()
             mock_instance = MagicMock()
-            mock_instance.initiate_gov_action_process.return_value = "new-proc-guid-999"
+            mock_instance.create_elem_from_template.return_value = "new-elem-guid-999"
             backend.always_fake("tech_types_handler.AutomatedCuration", returns=mock_instance)
-            full_template = {
-                "Catalog Template GUID": "templ-guid-1",
-                "typeName": "Database",
-            }
+            full_template = {"templateGUID": "templ-guid-1"}
+            placeholders = {"database_name_placeholder_input": "mydb"}
 
-        input_result = [
-            "input",
-            {"database_name_placeholder_input": "mydb"},
-            full_template,
-        ]
+        input_result = ["input", placeholders, full_template]
         rc = app.tech_type_templates_callback(input_result)
 
         assert len(app.pushed_screens) == 1
         screen, cb = app.pushed_screens[0]
         assert isinstance(screen, StatusScreen)
         if backend.live:
-            # 420 means the real initiate_gov_action_process raised.
-            assert rc != 420, f"live initiate_gov_action_process failed: {screen.status_message}"
+            # 420 is the handler's "create failed" return.
+            assert rc != 420, f"live create_elem_from_template failed: {screen.status_message}"
+            # The handler keeps the new GUID local, quoting it into the status
+            # message, so that is where the test reads it back from.
+            quoted = re.search(r"'([^']+)'", screen.status_message)
+            assert quoted, f"no GUID in status message: {screen.status_message}"
+            assert nonempty_str(quoted.group(1)) and quoted.group(1) != "None"
         else:
-            assert "new-proc-guid-999" in screen.status_message
+            assert "new-elem-guid-999" in screen.status_message
 
     def test_tech_type_templates_callback_invalid(self):
         app = DummyTechTypesApp()

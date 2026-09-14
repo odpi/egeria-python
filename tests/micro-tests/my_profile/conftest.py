@@ -11,6 +11,7 @@
 
 import contextlib
 import sys
+import uuid
 from pathlib import Path
 import pytest
 
@@ -176,12 +177,12 @@ def live_tech_type_name(backend):
 
 @pytest.fixture
 def live_catalog_template(backend):
-    """A real catalog template, shaped the way tech_type_templates_callback reads it.
+    """A real catalog template entry, exactly as the templates screen passes it.
 
-    Most technology types carry no catalog template, so this scans the whole
-    hierarchy for one that does. Note the key mapping: the handler reads
-    'Catalog Template GUID', while the server's catalogTemplates entries carry
-    'templateGUID'.
+    `TechnologyTypeTemplatesScreen` hands `tech_type_templates_callback` the raw
+    `catalogTemplates` entry from `get_tech_type_detail`, so this returns the
+    same unmodified dict. Most technology types carry no catalog template, so
+    this scans the hierarchy for one that does.
     """
     if not backend.live:
         pytest.skip("live-only fixture")
@@ -189,16 +190,36 @@ def live_catalog_template(backend):
     for name in _live_tech_type_names(client):
         detail = client.get_tech_type_detail(filter_string=name, output_format="JSON")
         for template in (detail or {}).get("catalogTemplates") or []:
-            guid = template.get("templateGUID") or template.get("Catalog Template GUID")
-            if guid:
-                return {
-                    "Catalog Template GUID": guid,
-                    "typeName": (template.get("relatedElement") or {})
-                    .get("elementHeader", {})
-                    .get("type", {})
-                    .get("typeName", ""),
-                }
+            if template.get("templateGUID"):
+                return template
     pytest.skip("live server has no technology type with a catalog template")
+
+
+@pytest.fixture
+def live_template_placeholders(backend, live_catalog_template):
+    """Placeholder values for a real template, keyed the way the screen keys them.
+
+    `TechnologyTypeTemplatesScreen` builds one Input per placeholder with id
+    `{name-with-spaces-as-underscores}_placeholder_input`, and the handler
+    reverses that to recover the placeholder name. Values come from each
+    placeholder's own `example` so they stay type-valid, with a unique suffix on
+    identity-ish fields so repeated live runs don't collide on qualifiedName.
+    """
+    suffix = uuid.uuid4().hex[:8]
+    placeholders = (live_catalog_template.get("specification") or {}).get("placeholderProperty") or []
+
+    values = {}
+    for placeholder in placeholders:
+        if placeholder.get("class") != "PlaceholderProperty":
+            continue
+        name = placeholder.get("name")
+        if not name:
+            continue
+        example = placeholder.get("example") or ""
+        identity_like = any(token in name.lower() for token in ("name", "identifier"))
+        value = f"pytest-{name}-{suffix}" if identity_like else example
+        values[f"{name.replace(' ', '_')}_placeholder_input"] = value
+    return values
 
 
 @pytest.fixture

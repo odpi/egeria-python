@@ -123,10 +123,27 @@ The network guard will tell you if you miss one.
   *calling* user and the server rejects a second one
   (`OMVS-MY-PROFILE-400-001`), so the path is only reachable for a user who has
   none yet.
-- `test_tech_type_templates_callback_success` is a **strict xfail** live.
-  `tech_types_handler.tech_type_templates_callback` calls
-  `AutomatedCuration.initiate_gov_action_process(body=...)`, but that SDK method
-  takes `action_type_qualified_name` and has no `body` parameter, so the call
-  raises `TypeError` and the handler returns 420. The fake-mode test never saw
-  this because the client was fully mocked. Strict xfail means the test turns
-  into a failure — prompting an update here — as soon as the handler is fixed.
+- `test_tech_type_templates_callback_success` **creates a real metadata element**
+  from a real catalog template on every live run, and deliberately does not
+  clean it up — the target is a disposable test instance that gets reloaded from
+  scratch regularly, so teardown would add failure modes for no benefit. If you
+  ever do need to prune, search display names for the `pytest-` prefix.
+
+## What live mode has caught so far
+
+Worth knowing, because it is the argument for running live periodically.
+`tech_type_templates_callback` had three stacked defects that full mocking hid
+completely — the mocked `AutomatedCuration` accepted a nonexistent method called
+with a malformed body built from keys that do not exist:
+
+1. it called `initiate_gov_action_process(body=...)`, which takes
+   `action_type_qualified_name` and has no `body` parameter → `TypeError`;
+2. it read `full_template.get("Catalog Template GUID")`, a key that appears
+   neither in the server payload nor anywhere in the codebase → `templateGUID`
+   was always `None`;
+3. it sent `replacementProperties: {}`, which the server rejects with
+   *"missing type id property 'class'"* — the field must be absent.
+
+All three are fixed in `tech_types_handler.py`. The lesson for new tests: an
+assertion against a `MagicMock` proves the app called *something*, not that it
+called the right thing with a body the server accepts.
