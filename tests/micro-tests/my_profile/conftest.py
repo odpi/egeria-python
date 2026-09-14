@@ -3,21 +3,202 @@
    Copyright Contributors to the ODPi Egeria project.
 
    Fixtures and mock data for My Profile App test suite.
+
+   The suite runs against in-memory fakes by default. Set ``PYEG_LIVE_EGERIA=1``
+   to run the same tests against a real Egeria view server — see
+   ``egeria_backend.py`` and this folder's README for the details.
 """
 
+import contextlib
 import sys
 from pathlib import Path
-from unittest.mock import MagicMock
 import pytest
 
-# Ensure repo root and My_Profile folder are in sys.path
+# Ensure repo root, this folder, and the My_Profile folder are in sys.path
 root_path = Path(__file__).resolve().parents[3]
 if str(root_path) not in sys.path:
     sys.path.insert(0, str(root_path))
 
+# This folder holds egeria_backend.py, imported by conftest and the test modules.
+here = Path(__file__).resolve().parent
+if str(here) not in sys.path:
+    sys.path.insert(0, str(here))
+
 profile_path = root_path / "my_egeria" / "my_egeria" / "DemoCode" / "My_Profile"
 if str(profile_path) not in sys.path:
     sys.path.insert(0, str(profile_path))
+
+# Local to this folder; imported after sys.path is prepared above.
+from egeria_backend import (  # noqa: E402
+    EgeriaBackend,
+    block_network,
+    connection_settings,
+    export_pyegeria_env,
+    live_requested,
+    live_unavailable_reason,
+)
+
+
+def pytest_configure(config):
+    """Register the suite's marker and, in live mode, retarget pyegeria's config.
+
+    ``load_app_config()`` caches the first time an app or screen is built, so the
+    environment has to be set here — before collection finishes — rather than in
+    a fixture.
+    """
+    config.addinivalue_line(
+        "markers",
+        "live_capable: exercises Egeria and switches between fake and live backends",
+    )
+    config.addinivalue_line(
+        "markers",
+        "allow_network: permit real HTTP even in fake mode (escape hatch)",
+    )
+    if live_requested():
+        export_pyegeria_env()
+
+
+@pytest.fixture(autouse=True)
+def no_accidental_network(request, monkeypatch):
+    """In fake mode, no test may reach a real server.
+
+    Applied to every test in this folder so the suite is consistent: a test
+    either mocks its Egeria calls or runs live deliberately. Opt out with
+    `@pytest.mark.allow_network`.
+    """
+    if live_requested() or request.node.get_closest_marker("allow_network"):
+        return
+    block_network(monkeypatch, request.node.name)
+
+
+@pytest.fixture(scope="session")
+def egeria_connection():
+    """The Egeria connection details the suite is configured to use."""
+    return connection_settings()
+
+
+@pytest.fixture
+def backend(request):
+    """Fake or live Egeria backend for a single test.
+
+    In live mode the server is probed once per session; if it is not reachable
+    or will not issue a token, tests skip with the reason rather than failing
+    with a wall of connection errors.
+    """
+    live = live_requested()
+    settings = connection_settings()
+
+    if live:
+        reason = live_unavailable_reason()
+        if reason:
+            pytest.skip(
+                f"{request.node.name}: PYEG_LIVE_EGERIA=1 but Egeria at "
+                f"{settings['platform_url']} is not usable ({reason})"
+            )
+
+    with contextlib.ExitStack() as stack:
+        yield EgeriaBackend(live=live, stack=stack, **settings)
+
+
+@pytest.fixture
+def live_my_profile(backend):
+    """A live MyProfile client, or skip. Used to discover real test inputs."""
+    if not backend.live:
+        pytest.skip("live-only fixture")
+    from pyegeria import MyProfile
+
+    client = MyProfile(backend.view_server, backend.platform_url, backend.user_id, backend.user_pwd)
+    client.create_egeria_bearer_token(backend.user_id, backend.user_pwd)
+    return client
+
+
+@pytest.fixture
+def live_team_role_name(backend, live_my_profile):
+    """A real Team{Leader,Member} role name from the live profile.
+
+    ``find_team_members`` splits the role name on '::' and searches on
+    everything after the first segment, so this has to be a genuine role name
+    from the server rather than a synthetic one.
+    """
+    profile = live_my_profile.get_my_profile(report_spec="My-User-MD", output_format="DICT")
+    roles = (profile or [{}])[0].get("Roles") or []
+    for role in roles:
+        name = role.get("Name") or role.get("Role Name") or ""
+        if "TeamLeader" in name or "TeamMember" in name:
+            return name
+    pytest.skip(f"live profile for {backend.user_id} has no TeamLeader/TeamMember role")
+
+
+def _live_curation_client(backend):
+    from pyegeria import AutomatedCuration
+
+    client = AutomatedCuration(backend.view_server, backend.platform_url, backend.user_id, backend.user_pwd)
+    client.create_egeria_bearer_token(backend.user_id, backend.user_pwd)
+    return client
+
+
+def _live_tech_type_names(client):
+    """Every technology type display name on the live server, depth-first."""
+    names: list[str] = []
+
+    def walk(node):
+        if isinstance(node, dict):
+            name = node.get("displayName")
+            if name and name != "Root Technology Type":
+                names.append(name)
+            for child in node.get("subTypes") or []:
+                walk(child)
+        elif isinstance(node, list):
+            for child in node:
+                walk(child)
+
+    walk(client.get_tech_type_hierarchy(filter_string="*"))
+    return names
+
+
+@pytest.fixture
+def live_tech_type_name(backend):
+    """A real technology-type name that resolves to detail on the live server.
+
+    ``tech_type_callback`` passes the screen's selection straight to
+    ``get_tech_type_detail(filter_string=...)``, which matches on display name,
+    so the live input has to be a genuine name off the type hierarchy.
+    """
+    if not backend.live:
+        pytest.skip("live-only fixture")
+    client = _live_curation_client(backend)
+    for name in _live_tech_type_names(client):
+        detail = client.get_tech_type_detail(filter_string=name, output_format="JSON")
+        if isinstance(detail, dict) and detail.get("displayName"):
+            return name
+    pytest.skip("live server has no technology type with retrievable detail")
+
+
+@pytest.fixture
+def live_catalog_template(backend):
+    """A real catalog template, shaped the way tech_type_templates_callback reads it.
+
+    Most technology types carry no catalog template, so this scans the whole
+    hierarchy for one that does. Note the key mapping: the handler reads
+    'Catalog Template GUID', while the server's catalogTemplates entries carry
+    'templateGUID'.
+    """
+    if not backend.live:
+        pytest.skip("live-only fixture")
+    client = _live_curation_client(backend)
+    for name in _live_tech_type_names(client):
+        detail = client.get_tech_type_detail(filter_string=name, output_format="JSON")
+        for template in (detail or {}).get("catalogTemplates") or []:
+            guid = template.get("templateGUID") or template.get("Catalog Template GUID")
+            if guid:
+                return {
+                    "Catalog Template GUID": guid,
+                    "typeName": (template.get("relatedElement") or {})
+                    .get("elementHeader", {})
+                    .get("type", {})
+                    .get("typeName", ""),
+                }
+    pytest.skip("live server has no technology type with a catalog template")
 
 
 @pytest.fixture

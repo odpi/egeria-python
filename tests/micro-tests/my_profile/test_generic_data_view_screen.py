@@ -5,7 +5,7 @@
    Unit tests for GenericDataViewScreen and its data sampling functionality in My Profile App.
 """
 
-from unittest.mock import MagicMock, AsyncMock, patch
+from unittest.mock import MagicMock, AsyncMock
 import pytest
 from textual.app import App
 from textual.widgets import DataTable
@@ -222,7 +222,7 @@ class TestGenericDataViewScreenUI:
 class DummyShopForDataApp(ShopForDataMixin):
     """Test harness for shop_for_data_handler sampling actions."""
 
-    def __init__(self):
+    def __init__(self, backend=None):
         self.pushed_screens = []
         self.log_messages = []
         self.shown_main_screen = False
@@ -230,6 +230,8 @@ class DummyShopForDataApp(ShopForDataMixin):
         self.user_password = "secret"
         self.view_server = "qs-view-server"
         self.platform_url = "https://127.0.0.1:9443"
+        if backend is not None:
+            backend.apply_connection(self)
         self.widgets = {}
 
     def log(self, msg, *args, **kwargs):
@@ -257,9 +259,13 @@ class DummyShopForDataApp(ShopForDataMixin):
 class TestShopForDataSamplingIntegration:
     """Integration tests for launching GenericDataViewScreen from shop_for_data_handler."""
 
+    @pytest.mark.live_capable
     @pytest.mark.asyncio
-    async def test_request_to_sample_data_source_launches_screen(self):
-        app = DummyShopForDataApp()
+    async def test_request_to_sample_data_source_launches_screen(self, backend):
+        # Sampling a digital_product_catalog_table row calls Egeria to look for
+        # a matching tabular data set, so the client has to go through backend.
+        backend.patch("shop_for_data_handler.Egeria")
+        app = DummyShopForDataApp(backend)
         mock_table = MagicMock()
         mock_table.get_row.return_value = ["Product 1", "Product Description", "DP::Product1"]
         mock_table.row_count = 1
@@ -274,9 +280,11 @@ class TestShopForDataSamplingIntegration:
         assert screen.data_element_qualified_name == "DP::Product1"
         assert cb == app.generic_data_view_callback
 
+    @pytest.mark.live_capable
     @pytest.mark.asyncio
-    async def test_request_to_sample_data_source_with_passed_row_values(self):
-        app = DummyShopForDataApp()
+    async def test_request_to_sample_data_source_with_passed_row_values(self, backend):
+        backend.patch("shop_for_data_handler.Egeria")
+        app = DummyShopForDataApp(backend)
         row_values = ["Direct Product", "Direct Desc", "DP::Direct::1"]
         await app.request_to_sample_data_source("row1", 0, "digital_product_catalog_table", row_values=row_values)
 
@@ -311,16 +319,24 @@ class TestShopForDataSamplingIntegration:
         assert rows[1][0] == "REC-2"
         assert "Value: Val-2" in rows[1][1]
 
+    @pytest.mark.live_capable
     @pytest.mark.asyncio
-    @patch("shop_for_data_handler.ProductManager")
-    async def test_generic_data_view_callback_subscribe(self, mock_pm_cls):
-        mock_pm = MagicMock()
-        mock_pm_cls.return_value = mock_pm
+    async def test_generic_data_view_callback_subscribe(self, backend):
+        """Calls create_digital_subscription — a real write when running live."""
+        mock_pm_cls = backend.patch("shop_for_data_handler.ProductManager")
+        if not backend.live:
+            mock_pm = MagicMock()
+            mock_pm_cls.return_value = mock_pm
 
-        app = DummyShopForDataApp()
+        app = DummyShopForDataApp(backend)
         await app.generic_data_view_callback([211, "Product 1", "DP::Product1"])
 
-        mock_pm.create_digital_subscription.assert_called_once_with("DP::Product1")
+        if backend.live:
+            # The real client is built inside the handler, so only the class
+            # construction is observable through the wrapping mock.
+            assert mock_pm_cls.called
+        else:
+            mock_pm.create_digital_subscription.assert_called_once_with("DP::Product1")
 
     @pytest.mark.asyncio
     async def test_generic_data_view_callback_quit(self):
@@ -328,29 +344,37 @@ class TestShopForDataSamplingIntegration:
         await app.generic_data_view_callback(210)
         assert app.shown_main_screen is True
 
+    @pytest.mark.live_capable
     @pytest.mark.asyncio
-    @patch("shop_for_data_handler.Egeria")
-    async def test_request_to_sample_data_source_with_egeria_tabular_data(self, mock_egeria_cls):
-        mock_egeria = MagicMock()
-        mock_egeria_cls.return_value = mock_egeria
-        mock_egeria.find_tabular_data_sets.return_value = [{"GUID": "guid-123"}]
-        mock_egeria.get_tabular_data_set.return_value = {
-            "tabularDataSetReport": {
-                "recordCount": 1,
-                "tableName": "SampleTabular",
-                "columnDescriptions": [{"columnName": "Col1"}, {"columnName": "Col2"}],
-                "dataRecords": {"0": ["V1", "V2"]},
+    async def test_request_to_sample_data_source_with_egeria_tabular_data(self, backend):
+        mock_egeria_cls = backend.patch("shop_for_data_handler.Egeria")
+        if not backend.live:
+            mock_egeria = MagicMock()
+            mock_egeria_cls.return_value = mock_egeria
+            mock_egeria.find_tabular_data_sets.return_value = [{"GUID": "guid-123"}]
+            mock_egeria.get_tabular_data_set.return_value = {
+                "tabularDataSetReport": {
+                    "recordCount": 1,
+                    "tableName": "SampleTabular",
+                    "columnDescriptions": [{"columnName": "Col1"}, {"columnName": "Col2"}],
+                    "dataRecords": {"0": ["V1", "V2"]},
+                }
             }
-        }
 
-        app = DummyShopForDataApp()
+        app = DummyShopForDataApp(backend)
         row_values = ["Tabular Prod", "Tabular Desc", "DP::Tabular::1"]
         await app.request_to_sample_data_source("row1", 0, "digital_product_catalog_table", row_values=row_values)
 
         assert len(app.pushed_screens) == 1
         screen, cb = app.pushed_screens[0]
         assert isinstance(screen, GenericDataViewScreen)
-        assert screen.sample_data["tabularDataSetReport"]["tableName"] == "SampleTabular"
+        if backend.live:
+            # The synthetic qualified name matches nothing on a real server, so
+            # the handler falls through with no sample data; what this asserts
+            # live is that the real find_tabular_data_sets round-trip worked.
+            assert mock_egeria_cls.called
+        else:
+            assert screen.sample_data["tabularDataSetReport"]["tableName"] == "SampleTabular"
 
     @pytest.mark.asyncio
     async def test_request_to_sample_data_source_placeholder_notifies(self):

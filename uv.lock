@@ -2326,7 +2326,7 @@ sdist = { url = "https://files.pythonhosted.org/packages/f8/f6/8f49005d581cff883
 
 [[package]]
 name = "pyegeria"
-version = "6.1.14"
+version = "6.1.15"
 source = { editable = "." }
 dependencies = [
     { name = "altair" },

@@ -3,23 +3,26 @@
    Copyright Contributors to the ODPi Egeria project.
 
    Unit tests for team_roles_handler module.
+
+   Tests marked `live_capable` run against fakes by default and against a real
+   Egeria view server when PYEG_LIVE_EGERIA=1 is set.
 """
 
-from unittest.mock import MagicMock, patch
+from unittest.mock import MagicMock
 import pytest
-from textual.widgets import DataTable
 
 from team_roles_handler import TeamRolesMixin
 from MyTeamScreen import MyTeam
 from ShopForDataScreen import ShopForDataScreen
 from StatusScreen import StatusScreen
+from egeria_backend import at_least, nonempty_str
 from pyegeria import PyegeriaException
 
 
 class DummyTeamRolesApp(TeamRolesMixin):
     """Test harness implementing TeamRolesMixin."""
 
-    def __init__(self):
+    def __init__(self, backend=None):
         self.pushed_screens = []
         self.exit_code = None
         self.shown_main_screen = False
@@ -28,6 +31,8 @@ class DummyTeamRolesApp(TeamRolesMixin):
         self.user_password = "secret"
         self.view_server = "qs-view-server"
         self.platform_url = "https://127.0.0.1:9443"
+        if backend is not None:
+            backend.apply_connection(self)
         self.team_members = []
         self.widgets = {}
         self.screen = MagicMock()
@@ -72,14 +77,24 @@ class TestTeamRolesMixin:
         assert res == 201
         assert len(app.pushed_screens) == 0
 
-    @patch("team_roles_handler.exec_report_spec")
-    def test_handle_roles_table_row_selection_team_leader(self, mock_exec, sample_team_members_response):
-        app = DummyTeamRolesApp()
-        mock_exec.return_value = sample_team_members_response
+    @pytest.mark.live_capable
+    def test_handle_roles_table_row_selection_team_leader(
+        self, backend, sample_team_members_response, request
+    ):
+        app = DummyTeamRolesApp(backend)
+        backend.patch("team_roles_handler.exec_report_spec", returns=sample_team_members_response)
+
+        # Live mode needs a role name the server actually knows: find_team_members
+        # searches on everything after the first '::' segment.
+        role_name = (
+            request.getfixturevalue("live_team_role_name")
+            if backend.live
+            else "Department::101::TeamLeader"
+        )
 
         mock_event = MagicMock()
         mock_table = MagicMock()
-        mock_table.get_row.return_value = ["Department::101::TeamLeader", "TeamLeader", "Desc", "guid1"]
+        mock_table.get_row.return_value = [role_name, "TeamLeader", "Desc", "guid1"]
         mock_event.data_table = mock_table
         mock_event.row_key = "k1"
 
@@ -89,34 +104,47 @@ class TestTeamRolesMixin:
         screen, cb = app.pushed_screens[0]
         assert isinstance(screen, MyTeam)
         assert cb == app.my_team_callback
-        assert len(app.team_members) == 2
-        assert app.team_members[0] == ["Gary Geeke", "TeamLeader", "profile-guid-12345"]
+        backend.expect(len(app.team_members), fake=2, live=at_least(1), label="team_members")
+        backend.expect(
+            app.team_members[0],
+            fake=["Gary Geeke", "TeamLeader", "profile-guid-12345"],
+            live=lambda row: isinstance(row, list) and len(row) == 3,
+            label="first team member",
+        )
 
-    @patch("team_roles_handler.exec_report_spec")
-    def test_find_team_members_success(self, mock_exec, sample_team_members_response):
-        app = DummyTeamRolesApp()
-        mock_exec.return_value = sample_team_members_response
+    @pytest.mark.live_capable
+    def test_find_team_members_success(self, backend, sample_team_members_response, request):
+        app = DummyTeamRolesApp(backend)
+        backend.patch("team_roles_handler.exec_report_spec", returns=sample_team_members_response)
 
-        members, dname, qname, cat, desc = app.find_team_members("Department::101::TeamLeader")
-        assert len(members) == 2
-        assert dname == "IT Infrastructure Team"
-        assert qname == "Team::IT_Infra"
-        assert cat == "Operations"
-        assert desc == "Team responsible for core infrastructure"
+        role_name = (
+            request.getfixturevalue("live_team_role_name")
+            if backend.live
+            else "Department::101::TeamLeader"
+        )
 
-    @patch("team_roles_handler.exec_report_spec")
-    def test_find_team_members_pyegeria_exception(self, mock_exec):
-        app = DummyTeamRolesApp()
-        mock_exec.side_effect = PyegeriaException("API Error")
+        members, dname, qname, cat, desc = app.find_team_members(role_name)
+        backend.expect(len(members), fake=2, live=at_least(1), label="members")
+        backend.expect(dname, fake="IT Infrastructure Team", live=nonempty_str, label="display name")
+        backend.expect(qname, fake="Team::IT_Infra", live=nonempty_str, label="qualified name")
+        backend.expect(cat, fake="Operations", label="category")
+        backend.expect(
+            desc, fake="Team responsible for core infrastructure", label="description"
+        )
+
+    def test_find_team_members_pyegeria_exception(self, backend):
+        # Always faked: injected failure, exercising the handler's error path.
+        app = DummyTeamRolesApp(backend)
+        backend.always_fake("team_roles_handler.exec_report_spec", side_effect=PyegeriaException("API Error"))
 
         members, dname, qname, cat, desc = app.find_team_members("Department::101::TeamLeader")
         assert members == []
         assert app.exit_code == 440
 
-    @patch("team_roles_handler.exec_report_spec")
-    def test_find_team_members_empty_kind(self, mock_exec):
-        app = DummyTeamRolesApp()
-        mock_exec.return_value = {"kind": "empty"}
+    def test_find_team_members_empty_kind(self, backend):
+        # Always faked: an 'empty' result is not something a live server can be asked for.
+        app = DummyTeamRolesApp(backend)
+        backend.always_fake("team_roles_handler.exec_report_spec", returns={"kind": "empty"})
 
         members, dname, qname, cat, desc = app.find_team_members("Department::101::TeamLeader")
         assert members == []
@@ -124,10 +152,10 @@ class TestTeamRolesMixin:
         screen, cb = app.pushed_screens[0]
         assert isinstance(screen, StatusScreen)
 
-    @patch("team_roles_handler.exec_report_spec")
-    def test_find_team_members_no_members_found(self, mock_exec):
-        app = DummyTeamRolesApp()
-        mock_exec.return_value = {"kind": "data", "data": []}
+    def test_find_team_members_no_members_found(self, backend):
+        # Always faked: as above, a team with no members is a fixed fake state.
+        app = DummyTeamRolesApp(backend)
+        backend.always_fake("team_roles_handler.exec_report_spec", returns={"kind": "data", "data": []})
 
         members, dname, qname, cat, desc = app.find_team_members("Department::101::TeamLeader")
         assert members == []
@@ -163,30 +191,37 @@ class TestTeamRolesMixin:
         screen, cb = app.pushed_screens[0]
         assert isinstance(screen, StatusScreen)
 
-    @patch("team_roles_handler.exec_report_spec")
-    def test_display_glossary_term_details_success(self, mock_exec):
-        app = DummyTeamRolesApp()
-        mock_exec.return_value = {"kind": "data", "data": {"displayName": "Test Term"}}
+    @pytest.mark.live_capable
+    def test_display_glossary_term_details_success(self, backend):
+        app = DummyTeamRolesApp(backend)
+        backend.patch(
+            "team_roles_handler.exec_report_spec",
+            returns={"kind": "data", "data": {"displayName": "Test Term"}},
+        )
         mock_container = MagicMock()
         app.screen.query_one.return_value = mock_container
 
-        ret = app.display_glossary_term_details("Test Term")
+        # '*' matches whatever terms the live glossary holds; the fake ignores it.
+        ret = app.display_glossary_term_details("*" if backend.live else "Test Term")
         assert ret == 200
-        mock_container.mount.assert_called_once()
+        # The handler mounts one Static per field of a dict payload; a live JSON
+        # payload is a list, which mounts nothing, so only assert on the fake.
+        if not backend.live:
+            mock_container.mount.assert_called_once()
 
-    @patch("team_roles_handler.exec_report_spec")
-    def test_display_glossary_term_details_pyegeria_exception(self, mock_exec):
-        app = DummyTeamRolesApp()
-        mock_exec.side_effect = PyegeriaException("API Error")
+    def test_display_glossary_term_details_pyegeria_exception(self, backend):
+        # Always faked: injected failure, exercising the handler's error path.
+        app = DummyTeamRolesApp(backend)
+        backend.always_fake("team_roles_handler.exec_report_spec", side_effect=PyegeriaException("API Error"))
 
         ret = app.display_glossary_term_details("Test Term")
         assert ret == 440
         assert app.exit_code == 440
 
-    @patch("team_roles_handler.exec_report_spec")
-    def test_display_glossary_term_details_empty(self, mock_exec):
-        app = DummyTeamRolesApp()
-        mock_exec.return_value = None
+    def test_display_glossary_term_details_empty(self, backend):
+        # Always faked: a null response is not a live-server state.
+        app = DummyTeamRolesApp(backend)
+        backend.always_fake("team_roles_handler.exec_report_spec", returns=None)
 
         ret = app.display_glossary_term_details("Test Term")
         assert ret == 440

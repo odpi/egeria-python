@@ -3,6 +3,9 @@
    Copyright Contributors to the ODPi Egeria project.
 
    Unit tests for shop_for_data_handler module.
+
+   Tests marked `live_capable` run against fakes by default and against a real
+   Egeria view server when PYEG_LIVE_EGERIA=1 is set.
 """
 
 from unittest.mock import MagicMock, AsyncMock, patch
@@ -21,7 +24,7 @@ from pyegeria import PyegeriaException
 class DummyShopApp(App, ShopForDataMixin):
     """Test harness implementing ShopForDataMixin."""
 
-    def __init__(self):
+    def __init__(self, backend=None):
         super().__init__()
         self.pushed_screens = []
         self.exit_code = None
@@ -31,6 +34,8 @@ class DummyShopApp(App, ShopForDataMixin):
         self.user_password = "secret"
         self.view_server = "qs-view-server"
         self.platform_url = "https://127.0.0.1:9443"
+        if backend is not None:
+            backend.apply_connection(self)
         self.root_collection_table = MagicMock()
         self.collections = []
         self.selected_item = None
@@ -74,24 +79,26 @@ class DummyShopApp(App, ShopForDataMixin):
 class TestShopForDataMixin:
     """Tests for ShopForDataMixin methods."""
 
+    @pytest.mark.live_capable
     @pytest.mark.asyncio
     @patch("shop_for_data_handler.DataTable")
-    @patch("shop_for_data_handler.exec_report_spec")
-    async def test_handle_shop_for_data_option_success(self, mock_exec, mock_table_cls):
-        mock_table = MagicMock()
-        mock_table_cls.return_value = mock_table
-        mock_exec.return_value = {
-            "kind": "data",
-            "data": [
-                {
-                    "Display Name": "Test Element",
-                    "Description": "Test Desc",
-                    "Qualified Name": "Test::QN",
-                }
-            ],
-        }
+    async def test_handle_shop_for_data_option_success(self, mock_table_cls, backend):
+        mock_table_cls.return_value = MagicMock()
+        mock_exec = backend.patch(
+            "shop_for_data_handler.exec_report_spec",
+            returns={
+                "kind": "data",
+                "data": [
+                    {
+                        "Display Name": "Test Element",
+                        "Description": "Test Desc",
+                        "Qualified Name": "Test::QN",
+                    }
+                ],
+            },
+        )
 
-        app = DummyShopApp()
+        app = DummyShopApp(backend)
         await app.handle_shop_for_data_option()
 
         assert len(app.pushed_screens) == 1
@@ -99,7 +106,9 @@ class TestShopForDataMixin:
         assert isinstance(screen, ShopForDataScreen)
         assert cb == app.shop_for_data_callback
 
-        # Test the underlying worker fetch methods directly
+        # Test the underlying worker fetch methods directly. The call-args
+        # assertions below hold in both modes: in live mode the patch wraps the
+        # real exec_report_spec, so calls are recorded *and* reach Egeria.
         await ShopForDataMixin.get_digital_product_data.__wrapped__(app)
         catalog_calls = [
             call for call in mock_exec.call_args_list
@@ -115,13 +124,13 @@ class TestShopForDataMixin:
 
     @pytest.mark.asyncio
     @patch("shop_for_data_handler.DataTable")
-    @patch("shop_for_data_handler.exec_report_spec")
-    async def test_handle_shop_for_data_option_empty_data(self, mock_exec, mock_table_cls):
-        mock_table = MagicMock()
-        mock_table_cls.return_value = mock_table
-        mock_exec.return_value = {"kind": "empty", "data": []}
+    async def test_handle_shop_for_data_option_empty_data(self, mock_table_cls, backend):
+        # Always faked: an empty result set is not something a live server can
+        # be asked for on demand.
+        mock_table_cls.return_value = MagicMock()
+        backend.always_fake("shop_for_data_handler.exec_report_spec", returns={"kind": "empty", "data": []})
 
-        app = DummyShopApp()
+        app = DummyShopApp(backend)
         await app.handle_shop_for_data_option()
 
         assert len(app.pushed_screens) == 1
@@ -130,13 +139,14 @@ class TestShopForDataMixin:
 
     @pytest.mark.asyncio
     @patch("shop_for_data_handler.DataTable")
-    @patch("shop_for_data_handler.exec_report_spec")
-    async def test_handle_shop_for_data_option_exception(self, mock_exec, mock_table_cls):
-        mock_table = MagicMock()
-        mock_table_cls.return_value = mock_table
-        mock_exec.side_effect = PyegeriaException("Network Error")
+    async def test_handle_shop_for_data_option_exception(self, mock_table_cls, backend):
+        # Always faked: injected failure, exercising the handler's fallback.
+        mock_table_cls.return_value = MagicMock()
+        backend.always_fake(
+            "shop_for_data_handler.exec_report_spec", side_effect=PyegeriaException("Network Error")
+        )
 
-        app = DummyShopApp()
+        app = DummyShopApp(backend)
         await app.handle_shop_for_data_option()
         res = await ShopForDataMixin.get_glossary_data.__wrapped__(app)
         assert res == ["No Data", "Returned by Egeria"]
@@ -173,90 +183,102 @@ class TestShopForDataMixin:
         res = await app.shop_for_data_callback([212, "row1", 0, "glossary_table"])
         assert res == 200
 
+    @pytest.mark.live_capable
     @pytest.mark.asyncio
-    @patch("shop_for_data_handler.exec_report_spec")
-    async def test_shop_for_data_callback_glossary_selection(self, mock_exec):
-        mock_exec.return_value = {
-            "kind": "data",
-            "data": [
-                {
-                    "Display Name": "Term 1",
-                    "Description": "Term 1 description",
-                    "Qualified Name": "GlossaryTerm::T1",
-                }
-            ],
-        }
+    async def test_shop_for_data_callback_glossary_selection(self, backend):
+        backend.patch(
+            "shop_for_data_handler.exec_report_spec",
+            returns={
+                "kind": "data",
+                "data": [
+                    {
+                        "Display Name": "Term 1",
+                        "Description": "Term 1 description",
+                        "Qualified Name": "GlossaryTerm::T1",
+                    }
+                ],
+            },
+        )
 
-        app = DummyShopApp()
+        app = DummyShopApp(backend)
         await app.shop_for_data_callback(["glossary", "Clinical Glossary", "Glossary::Clinical"])
         assert len(app.pushed_screens) == 1
         screen, cb = app.pushed_screens[0]
         assert isinstance(screen, SelectionOverviewScreen)
         assert cb == app.overview_callback
 
+    @pytest.mark.live_capable
     @pytest.mark.asyncio
-    @patch("shop_for_data_handler.exec_report_spec")
-    async def test_shop_for_data_callback_dictionary_selection(self, mock_exec):
-        mock_exec.return_value = {
-            "kind": "data",
-            "data": [
-                {
-                    "Display Name": "Dict 1",
-                    "Description": "Dict 1 desc",
-                    "Qualified Name": "Dictionary::D1",
-                }
-            ],
-        }
+    async def test_shop_for_data_callback_dictionary_selection(self, backend):
+        backend.patch(
+            "shop_for_data_handler.exec_report_spec",
+            returns={
+                "kind": "data",
+                "data": [
+                    {
+                        "Display Name": "Dict 1",
+                        "Description": "Dict 1 desc",
+                        "Qualified Name": "Dictionary::D1",
+                    }
+                ],
+            },
+        )
 
-        app = DummyShopApp()
+        app = DummyShopApp(backend)
         await app.shop_for_data_callback(["dictionary", "DataDict", "Dict::QN"])
         assert len(app.pushed_screens) == 1
         screen, cb = app.pushed_screens[0]
         assert isinstance(screen, SelectionOverviewScreen)
 
+    @pytest.mark.live_capable
     @pytest.mark.asyncio
-    @patch("shop_for_data_handler.exec_report_spec")
-    async def test_shop_for_data_callback_domain_selection(self, mock_exec):
-        mock_exec.return_value = {
-            "kind": "data",
-            "data": [
-                {
-                    "Display Name": "Domain 1",
-                    "Description": "Domain 1 desc",
-                    "Qualified Name": "Domain::Dom1",
-                }
-            ],
-        }
+    async def test_shop_for_data_callback_domain_selection(self, backend):
+        backend.patch(
+            "shop_for_data_handler.exec_report_spec",
+            returns={
+                "kind": "data",
+                "data": [
+                    {
+                        "Display Name": "Domain 1",
+                        "Description": "Domain 1 desc",
+                        "Qualified Name": "Domain::Dom1",
+                    }
+                ],
+            },
+        )
 
-        app = DummyShopApp()
+        app = DummyShopApp(backend)
         await app.shop_for_data_callback(["domain", "FinanceDomain", "Domain::Finance"])
         assert len(app.pushed_screens) == 1
         screen, cb = app.pushed_screens[0]
         assert isinstance(screen, SelectionOverviewScreen)
 
+    @pytest.mark.live_capable
     @pytest.mark.asyncio
-    @patch("shop_for_data_handler.exec_report_spec")
-    async def test_shop_for_data_callback_catalog_selection(self, mock_exec):
-        mock_exec.return_value = {
-            "kind": "data",
-            "data": [
-                {
-                    "Display Name": "Cat 1",
-                    "Description": "Cat 1 desc",
-                    "Qualified Name": "Catalog::C1",
-                }
-            ],
-        }
+    async def test_shop_for_data_callback_catalog_selection(self, backend):
+        backend.patch(
+            "shop_for_data_handler.exec_report_spec",
+            returns={
+                "kind": "data",
+                "data": [
+                    {
+                        "Display Name": "Cat 1",
+                        "Description": "Cat 1 desc",
+                        "Qualified Name": "Catalog::C1",
+                    }
+                ],
+            },
+        )
 
-        app = DummyShopApp()
+        app = DummyShopApp(backend)
         await app.shop_for_data_callback(["catalog", "ProductCat", "Catalog::Prod"])
         assert len(app.pushed_screens) == 1
         screen, cb = app.pushed_screens[0]
         assert isinstance(screen, SelectionOverviewScreen)
 
     @pytest.mark.asyncio
-    async def test_shop_for_data_callback_collection_selection(self):
-        app = DummyShopApp()
+    async def test_shop_for_data_callback_collection_selection(self, backend):
+        app = DummyShopApp(backend)
         app.collections = [{"Qualified Name": "Coll::Root", "Containing Members": "Folder1, Folder2"}]
         await app.shop_for_data_callback(["collection", "Coll::Root", "Root Collection"])
         assert len(app.pushed_screens) == 1
@@ -291,27 +313,33 @@ class TestShopForDataMixin:
         app.create_subscription_callback(None)
         assert any("cancelled" in msg for msg in app.log_messages)
 
-    def test_create_subscription_callback_success(self):
-        app = DummyShopApp()
-        app.create_subscription_callback("Sub-Result-123")
+    @pytest.mark.live_capable
+    def test_create_subscription_callback_success(self, backend):
+        # Reaches ProductManager.create_digital_subscription: a real write when live.
+        backend.patch("shop_for_data_handler.ProductManager")
+        app = DummyShopApp(backend)
+        app.create_subscription_callback(backend.unique("Sub-Result-123"))
         assert any("Subscription created" in msg for msg in app.log_messages)
 
-    def test_create_subscription_callback_dict_with_guid(self):
-        app = DummyShopApp()
+    @pytest.mark.live_capable
+    def test_create_subscription_callback_dict_with_guid(self, backend):
+        backend.patch("shop_for_data_handler.ProductManager")
+        app = DummyShopApp(backend)
         app.selected_item = "fallback-guid"
         app.create_subscription_callback({
             "externalSourceGUID": "item-guid-123",
-            "displayName": "Test Sub",
+            "displayName": backend.unique("Test Sub"),
             "Status": "ACTIVE",
             "description": "Test Desc",
             "identifier": "TS1",
         })
         assert any("Subscription created" in msg for msg in app.log_messages)
 
+    @pytest.mark.live_capable
     @pytest.mark.asyncio
-    @patch("shop_for_data_handler.ProductManager")
-    async def test_shop_for_data_callback_direct_subscribe(self, mock_pm_cls):
-        app = DummyShopApp()
+    async def test_shop_for_data_callback_direct_subscribe(self, backend):
+        backend.patch("shop_for_data_handler.ProductManager")
+        app = DummyShopApp(backend)
         res = await app.shop_for_data_callback([
             211,
             "row1",
@@ -326,10 +354,11 @@ class TestShopForDataMixin:
         assert cb == app.create_subscription_callback
         assert app.selected_item == "guid-prod-123"
 
+    @pytest.mark.live_capable
     @pytest.mark.asyncio
-    @patch("shop_for_data_handler.ProductManager")
-    async def test_request_to_subscribe_data_source_placeholder(self, mock_pm_cls):
-        app = DummyShopApp()
+    async def test_request_to_subscribe_data_source_placeholder(self, backend):
+        backend.patch("shop_for_data_handler.ProductManager")
+        app = DummyShopApp(backend)
         app.handle_shop_for_data_option = AsyncMock()
         await app.request_to_subscribe_data_source(
             "row1",
@@ -340,29 +369,41 @@ class TestShopForDataMixin:
         assert any("No valid data element selected to subscribe" in msg for msg in app.log_messages)
         assert app.handle_shop_for_data_option.called
 
-    @patch("shop_for_data_handler.ProductManager")
-    def test_create_subscription_callback_creates_subscription_with_client(self, mock_pm_cls):
-        mock_client = MagicMock()
-        mock_pm_cls.return_value = mock_client
-        mock_client.create_digital_subscription.return_value = "created-sub-guid"
+    @pytest.mark.live_capable
+    def test_create_subscription_callback_creates_subscription_with_client(self, backend):
+        mock_pm_cls = backend.patch("shop_for_data_handler.ProductManager")
+        if not backend.live:
+            mock_client = MagicMock()
+            mock_pm_cls.return_value = mock_client
+            mock_client.create_digital_subscription.return_value = "created-sub-guid"
 
-        app = DummyShopApp()
+        app = DummyShopApp(backend)
         app.selected_item = "guid-prod-123"
+        display_name = backend.unique("My Sub")
         app.create_subscription_callback({
-            "displayName": "My Sub",
+            "displayName": display_name,
             "description": "Sub Desc",
             "Status": "ACTIVE",
             "identifier": "MS-01",
             "externalSourceGUID": "guid-prod-123",
         })
 
-        assert mock_client.create_digital_subscription.called
-        call_args = mock_client.create_digital_subscription.call_args[0][0]
-        assert call_args["class"] == "NewAgreementRequestBody"
-        assert call_args["initialStatus"] == "ACTIVE"
-        assert call_args["externalSourceGUID"] == "guid-prod-123"
-        assert call_args["properties"]["displayName"] == "My Sub"
-        assert any("Created digital subscription successfully" in msg for msg in app.log_messages)
+        # The request body is built before the client call, so it is only
+        # inspectable via the mock in fake mode; live mode instead asserts the
+        # real create reached Egeria without error.
+        if backend.live:
+            assert mock_pm_cls.called
+            assert any("Created digital subscription successfully" in msg for msg in app.log_messages), (
+                f"live create_digital_subscription failed: {app.log_messages}"
+            )
+        else:
+            assert mock_client.create_digital_subscription.called
+            call_args = mock_client.create_digital_subscription.call_args[0][0]
+            assert call_args["class"] == "NewAgreementRequestBody"
+            assert call_args["initialStatus"] == "ACTIVE"
+            assert call_args["externalSourceGUID"] == "guid-prod-123"
+            assert call_args["properties"]["displayName"] == display_name
+            assert any("Created digital subscription successfully" in msg for msg in app.log_messages)
 
     def test_on_worker_state_changed_product_group(self):
         app = DummyShopApp()
