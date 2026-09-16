@@ -67,9 +67,16 @@ jobs:
         run: uv build
 
       - name: Generate SBOM
+        # Written outside dist/ -- pypa/gh-action-pypi-publish globs dist/*
+        # by default and uploads everything there to PyPI as a distribution
+        # file; a bom.json/bom.xml alongside the wheel/sdist fails that
+        # upload with "InvalidDistribution: Unknown distribution format"
+        # (confirmed live on the v6.1.16 release run, the first tag pushed
+        # since this step was added in #368 -- never exercised before).
         run: |
-          uvx --from cyclonedx-bom cyclonedx-py environment --output-format json --output-file dist/bom.json
-          uvx --from cyclonedx-bom cyclonedx-py environment --output-format xml --output-file dist/bom.xml
+          mkdir -p sbom
+          uvx --from cyclonedx-bom cyclonedx-py environment --output-format json --output-file sbom/bom.json
+          uvx --from cyclonedx-bom cyclonedx-py environment --output-format xml --output-file sbom/bom.xml
 
       - name: Publish to PyPI
         # release/v1 is a floating branch, not a tag -- pypa's own convention
@@ -84,7 +91,9 @@ jobs:
       - name: Create GitHub Release
         uses: softprops/action-gh-release@efb35369e0ad2afab669f228072c1b0d510eae64 # v3.0.3
         with:
-          files: dist/*
+          files: |
+            dist/*
+            sbom/*
           generate_release_notes: true
           draft: false
           prerelease: false
