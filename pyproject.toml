@@ -10,7 +10,7 @@ authors = [{name = "Dan Wolfson", email = "dan.wolfson@pdr-associates.com"},]
 readme = "README.md"
 description = "A python client for Egeria"
 keywords = ["egeria", "metadata", "governance"]
-requires-python = ">=3.12"
+requires-python = ">=3.12, <3.14"
 classifiers = [
     "Programming Language :: Python",
     "Programming Language :: Python :: 3",
@@ -205,7 +205,6 @@ dev = [
     "pytest>=8.4.2",
     "wheel>=0.45.1",
     "my-egeria",
-    "cyclonedx-py>=4.6.0",
 ]
 
 [build-system]
