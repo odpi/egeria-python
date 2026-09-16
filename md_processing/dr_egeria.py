@@ -394,14 +394,15 @@ def setup_dispatcher(client: EgeriaTech) -> V2Dispatcher:
     reg("Update Certification", GovernanceLinkProcessor)
     reg("Update License", GovernanceLinkProcessor)
 
-    # Lineage Linker -- one generic Link/Update/Unlink command triple covering
-    # all seven Lineage Linker OMVS relationship types (DataFlow, ControlFlow,
-    # ProcessCall, LineageMapping, DataMapping, UltimateSource,
-    # UltimateDestination) via a "Relationship Type" selector attribute,
-    # rather than a separate command pair per type.
-    reg("Link Lineage Relationship", LineageLinkProcessor)
+    # Lineage Linker -- a dedicated Link/Update command pair per relationship
+    # type (2026-09-16 split from one generic selector-attribute command triple
+    # -- see lineage_linker.py's module docstring for why), plus one shared
+    # Unlink command since detach only needs the relationship GUID.
+    for _lineage_type in ("Data Flow", "Control Flow", "Process Call", "Lineage Mapping",
+                          "Data Mapping", "Ultimate Source", "Ultimate Destination"):
+        reg(f"Link {_lineage_type}", LineageLinkProcessor)
+        reg(f"Update {_lineage_type}", UpdateLineageRelationshipProcessor)
     reg("Unlink Lineage Relationship", LineageLinkProcessor)
-    reg("Update Lineage Relationship", UpdateLineageRelationshipProcessor)
 
     # Asset Maker (Automated Curation's create-from-template surface)
     reg("Create Element", AssetMakerProcessor)

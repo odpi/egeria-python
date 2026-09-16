@@ -238,7 +238,7 @@
       "default_value": "",
       "valid_values": [],
       "existing_element": "",
-      "description": "The GUID of the lineage relationship, as returned when it was linked (Link Lineage Relationship's output).",
+      "description": "The GUID of the lineage relationship, as returned when it was linked (a Link <Type> command's output).",
       "generated": false,
       "style": "Simple",
       "user_specified": true,
@@ -249,116 +249,314 @@
       "level": "Basic",
       "Journal Entry": ""
     },
-    "Lineage Relationship Type": {
-      "variable_name": "relationship_type",
+    "One Way": {
+      "variable_name": "one_way",
+      "inUpdate": true,
+      "attr_labels": "Unidirectional",
+      "examples": "",
+      "default_value": "True",
+      "valid_values": [],
+      "existing_element": "",
+      "description": "Is the link one way or bi-directional?",
+      "generated": false,
+      "style": "Bool",
+      "user_specified": true,
+      "unique": false,
+      "input_required": false,
+      "min_cardinality": 0,
+      "max_cardinality": 1,
+      "level": "Basic",
+      "Journal Entry": ""
+    },
+    "Integration Style": {
+      "variable_name": "integration_style",
       "inUpdate": true,
       "attr_labels": "",
       "examples": "",
       "default_value": "",
-      "valid_values": [
-        "DataFlow",
-        "ControlFlow",
-        "ProcessCall",
-        "LineageMapping",
-        "DataMapping",
-        "UltimateSource",
-        "UltimateDestination"
-      ],
+      "valid_values": [],
       "existing_element": "",
-      "description": "The kind of lineage relationship to create/update -- determines which of the type-specific properties below apply (Formula/Formula Type: DataFlow, ProcessCall, DataMapping; Guard/Mandatory Guard: ControlFlow; Query/Query ID/Query Type: DataMapping only).",
+      "description": "The integration style of the information supply chain (e.g. how data flows between segments).",
       "generated": false,
-      "style": "Valid Value",
+      "style": "Simple",
       "user_specified": true,
       "unique": false,
-      "input_required": true,
-      "min_cardinality": 1,
+      "input_required": false,
+      "min_cardinality": 0,
+      "max_cardinality": 1,
+      "level": "Domain",
+      "Journal Entry": ""
+    },
+    "Protocol": {
+      "variable_name": "protocol",
+      "inUpdate": true,
+      "attr_labels": "",
+      "examples": "",
+      "default_value": "",
+      "valid_values": [],
+      "existing_element": "",
+      "description": "Name of the protocol used for interaction.",
+      "generated": false,
+      "style": "Simple",
+      "user_specified": true,
+      "unique": false,
+      "input_required": false,
+      "min_cardinality": 0,
+      "max_cardinality": 1,
+      "level": "Common",
+      "Journal Entry": ""
+    },
+    "Frequency": {
+      "variable_name": "frequency",
+      "inUpdate": true,
+      "attr_labels": "",
+      "examples": "",
+      "default_value": "",
+      "valid_values": [],
+      "existing_element": "",
+      "description": "A frequency of interaction.",
+      "generated": false,
+      "style": "Simple",
+      "user_specified": true,
+      "unique": false,
+      "input_required": false,
+      "min_cardinality": 0,
       "max_cardinality": 1,
       "level": "Basic",
+      "Journal Entry": ""
+    },
+    "Data Exchanged": {
+      "variable_name": "data_exchanged",
+      "inUpdate": true,
+      "attr_labels": "",
+      "examples": "",
+      "default_value": "",
+      "valid_values": [],
+      "existing_element": "",
+      "description": "The data exchanged in an interaction.",
+      "generated": false,
+      "style": "Simple",
+      "user_specified": true,
+      "unique": false,
+      "input_required": false,
+      "min_cardinality": 0,
+      "max_cardinality": 1,
+      "level": "Domain",
+      "Journal Entry": ""
+    },
+    "Line Number": {
+      "variable_name": "line_number",
+      "inUpdate": true,
+      "attr_labels": "",
+      "examples": "",
+      "default_value": "",
+      "valid_values": [],
+      "existing_element": "",
+      "description": "Line number in the source code where this process call is made (ProcessCall only).",
+      "generated": false,
+      "style": "Simple",
+      "user_specified": true,
+      "unique": false,
+      "input_required": false,
+      "min_cardinality": 0,
+      "max_cardinality": 1,
+      "level": "Advanced",
       "Journal Entry": ""
     }
   },
   "bundles": {
-    "Lineage Link Base": {
-      "inherits": null,
-      "own_attributes": [
-        "Element One",
-        "Element Two",
-        "Lineage Relationship Type",
-        "ISC Qualified Name",
-        "Label",
-        "Description",
-        "Formula",
-        "Formula Type",
-        "Guard",
-        "Mandatory Guard",
-        "Query ID",
-        "Query",
-        "Query Type"
-      ]
-    },
-    "Lineage Update Base": {
-      "inherits": null,
-      "own_attributes": [
-        "Lineage Relationship",
-        "Lineage Relationship Type",
-        "ISC Qualified Name",
-        "Label",
-        "Description",
-        "Formula",
-        "Formula Type",
-        "Guard",
-        "Mandatory Guard",
-        "Query ID",
-        "Query",
-        "Query Type"
-      ]
-    },
     "Lineage Unlink Base": {
       "inherits": null,
+      "own_attributes": [
+        "Lineage Relationship"
+      ]
+    },
+    "Data Flow Properties Base": {
+      "inherits": null,
+      "own_attributes": [
+        "ISC Qualified Name",
+        "Label",
+        "Description",
+        "One Way",
+        "Integration Style",
+        "Protocol",
+        "Frequency",
+        "Data Exchanged",
+        "Formula",
+        "Formula Type"
+      ]
+    },
+    "Control Flow Properties Base": {
+      "inherits": null,
+      "own_attributes": [
+        "ISC Qualified Name",
+        "Label",
+        "Description",
+        "Guard",
+        "Mandatory Guard"
+      ]
+    },
+    "Process Call Properties Base": {
+      "inherits": null,
+      "own_attributes": [
+        "ISC Qualified Name",
+        "Label",
+        "Description",
+        "One Way",
+        "Integration Style",
+        "Protocol",
+        "Frequency",
+        "Data Exchanged",
+        "Formula",
+        "Formula Type",
+        "Line Number"
+      ]
+    },
+    "Lineage Mapping Properties Base": {
+      "inherits": null,
+      "own_attributes": [
+        "ISC Qualified Name",
+        "Label",
+        "Description",
+        "One Way",
+        "Integration Style",
+        "Protocol",
+        "Frequency",
+        "Data Exchanged"
+      ]
+    },
+    "Data Mapping Properties Base": {
+      "inherits": null,
+      "own_attributes": [
+        "ISC Qualified Name",
+        "Label",
+        "Description",
+        "Formula",
+        "Formula Type",
+        "Query ID",
+        "Query",
+        "Query Type"
+      ]
+    },
+    "Ultimate Source Properties Base": {
+      "inherits": null,
+      "own_attributes": [
+        "ISC Qualified Name",
+        "Label",
+        "Description",
+        "One Way",
+        "Integration Style",
+        "Protocol",
+        "Frequency",
+        "Data Exchanged"
+      ]
+    },
+    "Ultimate Destination Properties Base": {
+      "inherits": null,
+      "own_attributes": [
+        "ISC Qualified Name",
+        "Label",
+        "Description",
+        "One Way",
+        "Integration Style",
+        "Protocol",
+        "Frequency",
+        "Data Exchanged"
+      ]
+    },
+    "Link Data Flow": {
+      "inherits": "Data Flow Properties Base",
+      "own_attributes": [
+        "Element One",
+        "Element Two"
+      ]
+    },
+    "Update Data Flow": {
+      "inherits": "Data Flow Properties Base",
+      "own_attributes": [
+        "Lineage Relationship"
+      ]
+    },
+    "Link Control Flow": {
+      "inherits": "Control Flow Properties Base",
+      "own_attributes": [
+        "Element One",
+        "Element Two"
+      ]
+    },
+    "Update Control Flow": {
+      "inherits": "Control Flow Properties Base",
+      "own_attributes": [
+        "Lineage Relationship"
+      ]
+    },
+    "Link Process Call": {
+      "inherits": "Process Call Properties Base",
+      "own_attributes": [
+        "Element One",
+        "Element Two"
+      ]
+    },
+    "Update Process Call": {
+      "inherits": "Process Call Properties Base",
+      "own_attributes": [
+        "Lineage Relationship"
+      ]
+    },
+    "Link Lineage Mapping": {
+      "inherits": "Lineage Mapping Properties Base",
+      "own_attributes": [
+        "Element One",
+        "Element Two"
+      ]
+    },
+    "Update Lineage Mapping": {
+      "inherits": "Lineage Mapping Properties Base",
+      "own_attributes": [
+        "Lineage Relationship"
+      ]
+    },
+    "Link Data Mapping": {
+      "inherits": "Data Mapping Properties Base",
+      "own_attributes": [
+        "Element One",
+        "Element Two"
+      ]
+    },
+    "Update Data Mapping": {
+      "inherits": "Data Mapping Properties Base",
+      "own_attributes": [
+        "Lineage Relationship"
+      ]
+    },
+    "Link Ultimate Source": {
+      "inherits": "Ultimate Source Properties Base",
+      "own_attributes": [
+        "Element One",
+        "Element Two"
+      ]
+    },
+    "Update Ultimate Source": {
+      "inherits": "Ultimate Source Properties Base",
+      "own_attributes": [
+        "Lineage Relationship"
+      ]
+    },
+    "Link Ultimate Destination": {
+      "inherits": "Ultimate Destination Properties Base",
+      "own_attributes": [
+        "Element One",
+        "Element Two"
+      ]
+    },
+    "Update Ultimate Destination": {
+      "inherits": "Ultimate Destination Properties Base",
       "own_attributes": [
         "Lineage Relationship"
       ]
     }
   },
   "commands": {
-    "Link Lineage Relationship": {
-      "display_name": "lineage_relationship",
-      "qn_prefix": "",
-      "alternate_names": [],
-      "family": "Lineage Linker",
-      "description": "Create a lineage relationship (DataFlow, ControlFlow, ProcessCall, LineageMapping, DataMapping, UltimateSource, or UltimateDestination) between two elements, e.g. to trace how data moves through a pipeline.",
-      "verb": "Link",
-      "upsert": false,
-      "attach": false,
-      "level": "Basic",
-      "find_method": "",
-      "find_constraints": "",
-      "extra_find": "",
-      "extra_constraints": "",
-      "OM_TYPE": "",
-      "bundle": "Lineage Link Base",
-      "custom_attributes": [],
-      "Journal Entry": ""
-    },
-    "Update Lineage Relationship": {
-      "display_name": "lineage_relationship",
-      "qn_prefix": "",
-      "alternate_names": [],
-      "family": "Lineage Linker",
-      "description": "Update the properties of an existing lineage relationship, identified by its own relationship GUID (as returned by Link Lineage Relationship).",
-      "verb": "Update",
-      "upsert": false,
-      "attach": false,
-      "level": "Advanced",
-      "find_method": "",
-      "find_constraints": "",
-      "extra_find": "",
-      "extra_constraints": "",
-      "OM_TYPE": "",
-      "bundle": "Lineage Update Base",
-      "custom_attributes": [],
-      "Journal Entry": ""
-    },
     "Unlink Lineage Relationship": {
       "display_name": "lineage_relationship",
       "qn_prefix": "",
@@ -366,7 +564,7 @@
         "Detach Lineage Relationship"
       ],
       "family": "Lineage Linker",
-      "description": "Detach (delete) an existing lineage relationship, identified by its own relationship GUID (as returned by Link Lineage Relationship).",
+      "description": "Detach (delete) an existing lineage relationship of any type, identified by its own relationship GUID (as returned by any Link <Type> command).",
       "verb": "Unlink",
       "upsert": false,
       "attach": false,
@@ -377,6 +575,272 @@
       "extra_constraints": "",
       "OM_TYPE": "",
       "bundle": "Lineage Unlink Base",
+      "custom_attributes": [],
+      "Journal Entry": ""
+    },
+    "Link Data Flow": {
+      "display_name": "lineage_relationship",
+      "qn_prefix": "",
+      "alternate_names": [],
+      "family": "Lineage Linker",
+      "description": "Create a DataFlow lineage relationship between two elements.",
+      "verb": "Link",
+      "upsert": false,
+      "attach": false,
+      "level": "Basic",
+      "find_method": "",
+      "find_constraints": "",
+      "extra_find": "",
+      "extra_constraints": "",
+      "OM_TYPE": "DataFlow",
+      "bundle": "Link Data Flow",
+      "custom_attributes": [],
+      "Journal Entry": ""
+    },
+    "Update Data Flow": {
+      "display_name": "lineage_relationship",
+      "qn_prefix": "",
+      "alternate_names": [],
+      "family": "Lineage Linker",
+      "description": "Update the properties of an existing DataFlow lineage relationship, identified by its own relationship GUID.",
+      "verb": "Update",
+      "upsert": false,
+      "attach": false,
+      "level": "Advanced",
+      "find_method": "",
+      "find_constraints": "",
+      "extra_find": "",
+      "extra_constraints": "",
+      "OM_TYPE": "DataFlow",
+      "bundle": "Update Data Flow",
+      "custom_attributes": [],
+      "Journal Entry": ""
+    },
+    "Link Control Flow": {
+      "display_name": "lineage_relationship",
+      "qn_prefix": "",
+      "alternate_names": [],
+      "family": "Lineage Linker",
+      "description": "Create a ControlFlow lineage relationship between two elements.",
+      "verb": "Link",
+      "upsert": false,
+      "attach": false,
+      "level": "Basic",
+      "find_method": "",
+      "find_constraints": "",
+      "extra_find": "",
+      "extra_constraints": "",
+      "OM_TYPE": "ControlFlow",
+      "bundle": "Link Control Flow",
+      "custom_attributes": [],
+      "Journal Entry": ""
+    },
+    "Update Control Flow": {
+      "display_name": "lineage_relationship",
+      "qn_prefix": "",
+      "alternate_names": [],
+      "family": "Lineage Linker",
+      "description": "Update the properties of an existing ControlFlow lineage relationship, identified by its own relationship GUID.",
+      "verb": "Update",
+      "upsert": false,
+      "attach": false,
+      "level": "Advanced",
+      "find_method": "",
+      "find_constraints": "",
+      "extra_find": "",
+      "extra_constraints": "",
+      "OM_TYPE": "ControlFlow",
+      "bundle": "Update Control Flow",
+      "custom_attributes": [],
+      "Journal Entry": ""
+    },
+    "Link Process Call": {
+      "display_name": "lineage_relationship",
+      "qn_prefix": "",
+      "alternate_names": [],
+      "family": "Lineage Linker",
+      "description": "Create a ProcessCall lineage relationship between two elements.",
+      "verb": "Link",
+      "upsert": false,
+      "attach": false,
+      "level": "Basic",
+      "find_method": "",
+      "find_constraints": "",
+      "extra_find": "",
+      "extra_constraints": "",
+      "OM_TYPE": "ProcessCall",
+      "bundle": "Link Process Call",
+      "custom_attributes": [],
+      "Journal Entry": ""
+    },
+    "Update Process Call": {
+      "display_name": "lineage_relationship",
+      "qn_prefix": "",
+      "alternate_names": [],
+      "family": "Lineage Linker",
+      "description": "Update the properties of an existing ProcessCall lineage relationship, identified by its own relationship GUID.",
+      "verb": "Update",
+      "upsert": false,
+      "attach": false,
+      "level": "Advanced",
+      "find_method": "",
+      "find_constraints": "",
+      "extra_find": "",
+      "extra_constraints": "",
+      "OM_TYPE": "ProcessCall",
+      "bundle": "Update Process Call",
+      "custom_attributes": [],
+      "Journal Entry": ""
+    },
+    "Link Lineage Mapping": {
+      "display_name": "lineage_relationship",
+      "qn_prefix": "",
+      "alternate_names": [],
+      "family": "Lineage Linker",
+      "description": "Create a LineageMapping lineage relationship between two elements.",
+      "verb": "Link",
+      "upsert": false,
+      "attach": false,
+      "level": "Basic",
+      "find_method": "",
+      "find_constraints": "",
+      "extra_find": "",
+      "extra_constraints": "",
+      "OM_TYPE": "LineageMapping",
+      "bundle": "Link Lineage Mapping",
+      "custom_attributes": [],
+      "Journal Entry": ""
+    },
+    "Update Lineage Mapping": {
+      "display_name": "lineage_relationship",
+      "qn_prefix": "",
+      "alternate_names": [],
+      "family": "Lineage Linker",
+      "description": "Update the properties of an existing LineageMapping lineage relationship, identified by its own relationship GUID.",
+      "verb": "Update",
+      "upsert": false,
+      "attach": false,
+      "level": "Advanced",
+      "find_method": "",
+      "find_constraints": "",
+      "extra_find": "",
+      "extra_constraints": "",
+      "OM_TYPE": "LineageMapping",
+      "bundle": "Update Lineage Mapping",
+      "custom_attributes": [],
+      "Journal Entry": ""
+    },
+    "Link Data Mapping": {
+      "display_name": "lineage_relationship",
+      "qn_prefix": "",
+      "alternate_names": [],
+      "family": "Lineage Linker",
+      "description": "Create a DataMapping lineage relationship between two elements.",
+      "verb": "Link",
+      "upsert": false,
+      "attach": false,
+      "level": "Basic",
+      "find_method": "",
+      "find_constraints": "",
+      "extra_find": "",
+      "extra_constraints": "",
+      "OM_TYPE": "DataMapping",
+      "bundle": "Link Data Mapping",
+      "custom_attributes": [],
+      "Journal Entry": ""
+    },
+    "Update Data Mapping": {
+      "display_name": "lineage_relationship",
+      "qn_prefix": "",
+      "alternate_names": [],
+      "family": "Lineage Linker",
+      "description": "Update the properties of an existing DataMapping lineage relationship, identified by its own relationship GUID.",
+      "verb": "Update",
+      "upsert": false,
+      "attach": false,
+      "level": "Advanced",
+      "find_method": "",
+      "find_constraints": "",
+      "extra_find": "",
+      "extra_constraints": "",
+      "OM_TYPE": "DataMapping",
+      "bundle": "Update Data Mapping",
+      "custom_attributes": [],
+      "Journal Entry": ""
+    },
+    "Link Ultimate Source": {
+      "display_name": "lineage_relationship",
+      "qn_prefix": "",
+      "alternate_names": [],
+      "family": "Lineage Linker",
+      "description": "Create a UltimateSource lineage relationship between two elements.",
+      "verb": "Link",
+      "upsert": false,
+      "attach": false,
+      "level": "Basic",
+      "find_method": "",
+      "find_constraints": "",
+      "extra_find": "",
+      "extra_constraints": "",
+      "OM_TYPE": "UltimateSource",
+      "bundle": "Link Ultimate Source",
+      "custom_attributes": [],
+      "Journal Entry": ""
+    },
+    "Update Ultimate Source": {
+      "display_name": "lineage_relationship",
+      "qn_prefix": "",
+      "alternate_names": [],
+      "family": "Lineage Linker",
+      "description": "Update the properties of an existing UltimateSource lineage relationship, identified by its own relationship GUID.",
+      "verb": "Update",
+      "upsert": false,
+      "attach": false,
+      "level": "Advanced",
+      "find_method": "",
+      "find_constraints": "",
+      "extra_find": "",
+      "extra_constraints": "",
+      "OM_TYPE": "UltimateSource",
+      "bundle": "Update Ultimate Source",
+      "custom_attributes": [],
+      "Journal Entry": ""
+    },
+    "Link Ultimate Destination": {
+      "display_name": "lineage_relationship",
+      "qn_prefix": "",
+      "alternate_names": [],
+      "family": "Lineage Linker",
+      "description": "Create a UltimateDestination lineage relationship between two elements.",
+      "verb": "Link",
+      "upsert": false,
+      "attach": false,
+      "level": "Basic",
+      "find_method": "",
+      "find_constraints": "",
+      "extra_find": "",
+      "extra_constraints": "",
+      "OM_TYPE": "UltimateDestination",
+      "bundle": "Link Ultimate Destination",
+      "custom_attributes": [],
+      "Journal Entry": ""
+    },
+    "Update Ultimate Destination": {
+      "display_name": "lineage_relationship",
+      "qn_prefix": "",
+      "alternate_names": [],
+      "family": "Lineage Linker",
+      "description": "Update the properties of an existing UltimateDestination lineage relationship, identified by its own relationship GUID.",
+      "verb": "Update",
+      "upsert": false,
+      "attach": false,
+      "level": "Advanced",
+      "find_method": "",
+      "find_constraints": "",
+      "extra_find": "",
+      "extra_constraints": "",
+      "OM_TYPE": "UltimateDestination",
+      "bundle": "Update Ultimate Destination",
       "custom_attributes": [],
       "Journal Entry": ""
     }

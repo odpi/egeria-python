@@ -1,7 +1,7 @@
 ___
 
 ## Unlink Lineage Relationship
-> Detach (delete) an existing lineage relationship, identified by its own relationship GUID (as returned by Link Lineage Relationship).
+> Detach (delete) an existing lineage relationship of any type, identified by its own relationship GUID (as returned by any Link <Type> command).
 >
 >	**Alternative Names**: Detach Lineage Relationship
 
@@ -10,7 +10,7 @@ ___
 
 >	**Attribute Type**: Simple
 
->	**Description**: The GUID of the lineage relationship, as returned when it was linked (Link Lineage Relationship's output).
+>	**Description**: The GUID of the lineage relationship, as returned when it was linked (a Link <Type> command's output).
 
 
 ___
