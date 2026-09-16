@@ -20,11 +20,39 @@ from pyegeria.models import (
 from pyegeria.core.utils import dynamic_catch
 
 
+# Field set mirrors the real Java DTO inheritance chain (confirmed against
+# open-metadata-framework/.../properties/lineage/*.java):
+#   LabeledRelationshipProperties: label, description
+#     LineageRelationshipProperties: + isc_qualified_name
+#       DataLineageRelationshipProperties: + one_way, integration_style, protocol,
+#                                           frequency, data_exchanged
+#         DataFlowProperties: + formula, formula_type
+#         ProcessCallProperties: + formula, formula_type, line_number
+#         LineageMappingProperties: (no additional fields)
+#         LineageBoundaryProperties: + hops (system-computed graph-distance map,
+#                                     not exposed here -- not user-authored)
+#           UltimateSourceProperties / UltimateDestinationProperties: (no additional fields)
+#       ControlFlowProperties: + guard, mandatory_guard (skips DataLineageRelationshipProperties)
+#       DataMappingProperties: + formula, formula_type, query_id, query, query_type
+#                               (also skips DataLineageRelationshipProperties)
+# Previously these pyegeria models only carried isc_qualified_name/label/description
+# plus their own type-specific fields -- one_way/integration_style/protocol/
+# frequency/data_exchanged/line_number were real fields on the Egeria DTOs that had
+# no home here, so a caller passing them (even via a correctly-shaped dict) would
+# validate silently and have the fields dropped before serialization (PyegeriaModel's
+# extra='ignore' -- see CLAUDE.md's "request-body Pydantic model missing a field"
+# gotcha; this is that same class of defect).
+
 class DataFlowProperties(RelationshipBeanProperties):
     class_: Annotated[Literal["DataFlowProperties"], Field(alias="class")]
     isc_qualified_name: Optional[str] = None
     label: Optional[str] = None
     description: Optional[str] = None
+    one_way: Optional[bool] = None
+    integration_style: Optional[str] = None
+    protocol: Optional[str] = None
+    frequency: Optional[str] = None
+    data_exchanged: Optional[str] = None
     formula: Optional[str] = None
     formula_type: Optional[str] = None
 
@@ -43,8 +71,14 @@ class ProcessCallProperties(RelationshipBeanProperties):
     isc_qualified_name: Optional[str] = None
     label: Optional[str] = None
     description: Optional[str] = None
+    one_way: Optional[bool] = None
+    integration_style: Optional[str] = None
+    protocol: Optional[str] = None
+    frequency: Optional[str] = None
+    data_exchanged: Optional[str] = None
     formula: Optional[str] = None
     formula_type: Optional[str] = None
+    line_number: Optional[str] = None
 
 
 class LineageMappingProperties(RelationshipBeanProperties):
@@ -52,6 +86,11 @@ class LineageMappingProperties(RelationshipBeanProperties):
     isc_qualified_name: Optional[str] = None
     label: Optional[str] = None
     description: Optional[str] = None
+    one_way: Optional[bool] = None
+    integration_style: Optional[str] = None
+    protocol: Optional[str] = None
+    frequency: Optional[str] = None
+    data_exchanged: Optional[str] = None
 
 
 class DataMappingProperties(RelationshipBeanProperties):
@@ -71,6 +110,11 @@ class UltimateSourceProperties(RelationshipBeanProperties):
     isc_qualified_name: Optional[str] = None
     label: Optional[str] = None
     description: Optional[str] = None
+    one_way: Optional[bool] = None
+    integration_style: Optional[str] = None
+    protocol: Optional[str] = None
+    frequency: Optional[str] = None
+    data_exchanged: Optional[str] = None
 
 
 class UltimateDestinationProperties(RelationshipBeanProperties):
@@ -78,6 +122,11 @@ class UltimateDestinationProperties(RelationshipBeanProperties):
     isc_qualified_name: Optional[str] = None
     label: Optional[str] = None
     description: Optional[str] = None
+    one_way: Optional[bool] = None
+    integration_style: Optional[str] = None
+    protocol: Optional[str] = None
+    frequency: Optional[str] = None
+    data_exchanged: Optional[str] = None
 
 
 class LineageLinker(ServerClient):

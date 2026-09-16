@@ -42,6 +42,36 @@ full_file_path = os.path.join(EGERIA_ROOT_PATH, EGERIA_INBOX_PATH, "data_designe
 #            colorize=True)
 logger.add("debug_log", rotation="1 day", retention="1 week", compression="zip", level="TRACE", format=log_format,
            colorize=True)
+# ---------------------------------------------------------------------------
+# See generate_md_cmd_templates.py's identical helper for the full rationale:
+# relationship-only Update commands (their processor's
+# supports_target_element_lookup() returns False) must not get the generic
+# Referenceable upsert attributes (GUID, Qualified Name, Status, ...) --
+# `command_verb in ["Create", "Update"]` alone can't distinguish them from a
+# genuine element Update, and the compact spec's `upsert` flag means
+# something else entirely (Create<->Update variant-name auto-generation).
+_dispatcher_processors: Optional[dict] = None
+
+
+def _get_dispatcher_processors() -> dict:
+    global _dispatcher_processors
+    if _dispatcher_processors is None:
+        from md_processing.dr_egeria import setup_dispatcher
+        _dispatcher_processors = setup_dispatcher(None).processors
+    return _dispatcher_processors
+
+
+def _update_targets_referenceable_element(command_name: str) -> bool:
+    try:
+        processor_cls = _get_dispatcher_processors().get(command_name)
+        if processor_cls is None or "supports_target_element_lookup" not in vars(processor_cls):
+            return True
+        return bool(processor_cls.supports_target_element_lookup(None))
+    except Exception as e:
+        logger.warning(f"Could not determine target-element support for '{command_name}': {e}")
+        return True
+
+
 def get_iso8601_datetime():
     """Returns the current date and time in ISO 8601 format."""
     return datetime.now().strftime('%Y-%m-%dT%H:%M:%S')
@@ -79,7 +109,7 @@ def _extract_help_fields(command: dict, client: Optional[ServerClient] = None):
     command_spec = get_command_spec(command)
     verb = command_spec.get('verb', None)
     from md_processing.md_processing_utils.md_processing_constants import LINK_VERBS
-    if verb in ["Create", "Update"]:
+    if verb == "Create" or (verb == "Update" and _update_targets_referenceable_element(command)):
         distinguished_attributes = command_spec.get('Attributes', [])
         attributes = add_default_upsert_attributes(distinguished_attributes)
     elif verb in LINK_VERBS:

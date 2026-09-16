@@ -248,11 +248,13 @@ class ComponentProcessor(AsyncBaseCommandProcessor):
         rel_els = {} if known_new else await self._get_component_related_elements(guid)
         combined_results = {"added": [], "removed": [], "errors": []}
         
-        # 1. Supply Chains
+        # 1. Supply Chains -- InformationSupplyChain is a Collection subtype, so membership
+        # (not ImplementedBy, which is a design->implementation relationship for a different
+        # purpose) is the correct mechanism: the component is a CollectionMember of the ISC.
         as_is_sc = set(rel_els.get("supply_chain_guids", []))
         res = await self.sync_members(as_is_sc, sc_guids,
-                               lambda sc: self.client._async_link_design_to_implementation(sc, guid, None),
-                               lambda sc: self.client._async_detach_design_from_implementation(sc, guid),
+                               lambda sc: self.client._async_add_to_collection(sc, guid, {"class": "NewRelationshipRequestBody", "properties": {"class": "CollectionMembershipProperties", "membershipRationale": "linked by Dr.Egeria v2"}}),
+                               lambda sc: self.client._async_remove_from_collection(sc, guid, None),
                                replace_all)
         for k in combined_results: combined_results[k].extend(res.get(k, []))
                                
@@ -468,14 +470,19 @@ class SupplyChainProcessor(AsyncBaseCommandProcessor):
                                replace_all)
         for k in combined_results: combined_results[k].extend(res.get(k, []))
 
-        # 3. Implemented By (elements that implement this ISC via ImplementedBy, 0737) --
-        # governance_officer.link/detach_design_to/from_implementation, this ISC is the
-        # design (end 1), the implementer is end 2.
+        # 3. Implemented By -- InformationSupplyChain is a Collection subtype, so membership
+        # (not ImplementedBy -- that's a design->implementation relationship for a different
+        # purpose) is the correct mechanism here too: the implementer is a CollectionMember
+        # of this ISC. Mirrors the fix applied to SolutionComponentProcessor._sync_all_rels'
+        # "1. Supply Chains" sync -- both were using ImplementedBy where CollectionMembership
+        # was correct (2026-09-16, reported live: 71 components each carrying "In Information
+        # Supply Chain" produced 143 ImplementedBy links fanning out from each chain, alongside
+        # the 47 correct CollectionMemberships from explicit Add Member blocks).
         if implemented_by_guids is not None:
             as_is_implemented_by = set(rel_els.get("implemented_by_guids", []))
             res = await self.sync_members(as_is_implemented_by, implemented_by_guids,
-                                   lambda i: self.client.governance_officer._async_link_design_to_implementation(guid, i, None),
-                                   lambda i: self.client.governance_officer._async_detach_design_from_implementation(guid, i, None),
+                                   lambda i: self.client._async_add_to_collection(guid, i, {"class": "NewRelationshipRequestBody", "properties": {"class": "CollectionMembershipProperties", "membershipRationale": "linked by Dr.Egeria v2"}}),
+                                   lambda i: self.client._async_remove_from_collection(guid, i, None),
                                    replace_all)
             for k in combined_results: combined_results[k].extend(res.get(k, []))
 
@@ -500,17 +507,20 @@ class SupplyChainProcessor(AsyncBaseCommandProcessor):
             if related.get('elementHeader', {}).get('type', {}).get('typeName') == 'InformationSupplyChain':
                 res["parent_guids"].append(related['elementHeader']['guid'])
 
-        # Nested (child ISCs that are members of this ISC's collection)
+        # Nested (child ISCs) vs Implemented By (non-ISC members, e.g. components) --
+        # both are now CollectionMembers of this ISC (see the "3. Implemented By" fix
+        # in _sync_rels above), split by whether the member is itself an
+        # InformationSupplyChain. Previously implemented_by_guids was read from a
+        # separate "implementedBy" relationship field (ImplementedBy, 0737) -- now
+        # stale since the sync no longer creates that relationship; collectionMembers
+        # is the correct as-is source for both once membership is the mechanism.
         for element in el_struct.get("collectionMembers", []):
             related = element.get('relatedElement', {})
+            m_guid = related.get('elementHeader', {}).get('guid')
             if related.get('elementHeader', {}).get('type', {}).get('typeName') == 'InformationSupplyChain':
-                res["nested_guids"].append(related['elementHeader']['guid'])
-
-        # Implemented By
-        # Field name confirmed 2026-09-13 against AttributedMetadataElement.java
-        # ("implementedBy", not "implementedByList") and a live element fetch.
-        for element in el_struct.get("implementedBy", []):
-            res["implemented_by_guids"].append(element['relatedElement']['elementHeader']['guid'])
+                res["nested_guids"].append(m_guid)
+            else:
+                res["implemented_by_guids"].append(m_guid)
 
         # Supply To
         for element in el_struct.get("supplyTo", []):
