@@ -1,0 +1,14 @@
+cff-version: 1.2.0
+message: "If you use this software, please cite it as below."
+authors:
+  - name: "Contributors to the ODPi Egeria project"
+title: "pyegeria: A Python SDK for Egeria"
+url: "https://github.com/odpi/egeria-python"
+abstract: "A lightweight Python 3.12+ client and CLI for the Egeria open metadata and governance platform."
+keywords:
+  - metadata
+  - governance
+  - egeria
+  - python
+  - sdk
+license: Apache-2.0

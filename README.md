@@ -3,6 +3,11 @@
 
 ![Egeria Logo](https://egeria-project.org/assets/images/egeria-header.png)
 
+[![Python Tests](https://github.com/odpi/egeria-python/actions/workflows/python-tests.yml/badge.svg)](https://github.com/odpi/egeria-python/actions/workflows/python-tests.yml)
+[![OpenSSF Scorecard](https://api.securityscorecards.dev/projects/github.com/odpi/egeria-python/badge)](https://securityscorecards.dev/viewer/?uri=github.com/odpi/egeria-python)
+[![CII Best Practices](https://bestpractices.coreinfrastructure.org/projects/3044/badge)](https://bestpractices.coreinfrastructure.org/projects/3044)
+[![Contributor Covenant](https://img.shields.io/badge/Contributor%20Covenant-2.1-4baaaa.svg)](CODE_OF_CONDUCT.md)
+[![Governance](https://img.shields.io/badge/Governance-Egeria-blue)](GOVERNANCE.md)
 [![GitHub](https://img.shields.io/github/license/odpi/egeria)](LICENSE)
 
 
