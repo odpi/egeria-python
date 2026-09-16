@@ -40,6 +40,51 @@ debug_level = config.Debug.debug_mode
 
 LEVEL_ORDER = ["Common", "Domain", "Basic", "Advanced", "Expert", "Invisible"]
 
+# ---------------------------------------------------------------------------
+# Relationship-only Update commands must not get the generic Referenceable
+# upsert attributes (GUID, Qualified Name, Status, Category, ...) injected --
+# they update a relationship's own properties by its own GUID, not a
+# Referenceable element's. Confirmed 2026-09-16: the prior `command_verb in
+# ["Create", "Update"]` gate here matched every "Update" command regardless
+# of target, which is a different (broader) signal than compact_loader.py's
+# actual runtime gate (`spec.get("upsert")` -- that flag means "does this
+# command's Create variant auto-generate an Update synonym", not "does it
+# target a Referenceable element", so it can't be reused here either: ~50
+# legitimate element Create commands have upsert=False and still need these
+# defaults). The processor's own `supports_target_element_lookup()` override
+# (see AsyncBaseCommandProcessor and its relationship-only subclass
+# overrides -- LineageLinkProcessor, GovernanceLinkProcessor, etc.) is the
+# actual runtime source of truth for this distinction, so this generator
+# reads it directly from the registered dispatcher rather than re-deriving
+# a second, possibly-diverging heuristic from the compact spec.
+_dispatcher_processors: Optional[dict] = None
+
+
+def _get_dispatcher_processors() -> dict:
+    global _dispatcher_processors
+    if _dispatcher_processors is None:
+        from md_processing.dr_egeria import setup_dispatcher
+        # No live calls happen at registration time -- a dummy client is fine,
+        # this dispatcher is only ever used here to inspect registered classes.
+        _dispatcher_processors = setup_dispatcher(None).processors
+    return _dispatcher_processors
+
+
+def _update_targets_referenceable_element(command_name: str) -> bool:
+    """True unless the command's registered processor declares itself
+    relationship-only via `supports_target_element_lookup() -> False`.
+    Defaults to True (preserve prior behaviour) if the command isn't
+    registered or the check can't be made -- never silently strips an
+    element command's attributes."""
+    try:
+        processor_cls = _get_dispatcher_processors().get(command_name)
+        if processor_cls is None or "supports_target_element_lookup" not in vars(processor_cls):
+            return True
+        return bool(processor_cls.supports_target_element_lookup(None))
+    except Exception as e:
+        logger.warning(f"Could not determine target-element support for '{command_name}': {e}")
+        return True
+
 
 def _level_visible(attr_level: str, usage_level: str = "Advanced") -> bool:
     """Return True if attr_level should be rendered at the given usage_level ceiling.
@@ -302,8 +347,9 @@ def main():
             from md_processing.md_processing_utils.md_processing_constants import LINK_VERBS
             if command_verb in LINK_VERBS:
                 attributes = add_default_link_attributes(copy.deepcopy(distinguished_attributes))
-            elif command_verb in ["Create", "Update"]:
-                # Create, Update uses upsert defaults
+            elif command_verb == "Create" or (command_verb == "Update" and _update_targets_referenceable_element(command)):
+                # Create always targets a Referenceable element in this codebase (confirmed);
+                # Update only sometimes does -- see _update_targets_referenceable_element.
                 attributes = add_default_upsert_attributes(copy.deepcopy(distinguished_attributes))
             else:
                 attributes = copy.deepcopy(distinguished_attributes)

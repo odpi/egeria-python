@@ -399,9 +399,11 @@ class TestShopForDataMixin:
         else:
             assert mock_client.create_digital_subscription.called
             call_args = mock_client.create_digital_subscription.call_args[0][0]
-            assert call_args["class"] == "NewAgreementRequestBody"
-            assert call_args["initialStatus"] == "ACTIVE"
-            assert call_args["externalSourceGUID"] == "guid-prod-123"
+            # DigitalSubscription is created via CollectionManager's generic create
+            # (create_digital_subscription's own signature: body: dict | NewElementRequestBody,
+            # collection_manager.py) -- NewAgreementRequestBody was never the right class here.
+            assert call_args["class"] == "NewElementRequestBody"
+            assert call_args["properties"]["contentStatus"] == "ACTIVE"
             assert call_args["properties"]["displayName"] == display_name
             assert any("Created digital subscription successfully" in msg for msg in app.log_messages)
 
