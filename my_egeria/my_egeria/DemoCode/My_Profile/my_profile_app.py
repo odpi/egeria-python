@@ -459,7 +459,7 @@ class MyProfileApp(App, TechTypesMixin, ShopForDataMixin, TeamRolesMixin, Elemen
                     str(p.get("Description", "")),
                     str(p.get("GUID", p.get("guid", ""))),
                 )
-                self.projects_table.loading=False
+            self.projects_table.loading=False
         if self.communities_table:
             for c in self.communities if isinstance(self.communities, list) else []:
                 self.communities_table.add_row(
@@ -468,7 +468,7 @@ class MyProfileApp(App, TechTypesMixin, ShopForDataMixin, TeamRolesMixin, Elemen
                     str(c.get("Description", "")),
                     str(c.get("GUID", c.get("guid", ""))),
                 )
-                self.communities_table.loading=False
+            self.communities_table.loading=False
         for r in self.roles if isinstance(self.roles, list) else []:
             self.roles_table.add_row(
                 str(r.get("Name", "")),
@@ -476,7 +476,7 @@ class MyProfileApp(App, TechTypesMixin, ShopForDataMixin, TeamRolesMixin, Elemen
                 str(r.get("Description", "")),
                 str(r.get("GUID", r.get("guid", ""))),
             )
-            self.roles_table.loading=False
+        self.roles_table.loading=False
         for t in self.teams if isinstance(self.teams, list) else []:
             self.teams_table.add_row(
                 str(t.get("Assignment Type", "")),
@@ -484,7 +484,7 @@ class MyProfileApp(App, TechTypesMixin, ShopForDataMixin, TeamRolesMixin, Elemen
                 str(t.get("Description", "")),
                 str(t.get("GUID", t.get("guid", ""))),
             )
-            self.teams_table.loading=False
+        self.teams_table.loading=False
         for b in self.blogs if isinstance(self.blogs, list) else []:
             self.blogs_table.add_row(
                 str(b.get("qualifiedName", "")),
@@ -492,7 +492,7 @@ class MyProfileApp(App, TechTypesMixin, ShopForDataMixin, TeamRolesMixin, Elemen
                 str(b.get("text", "")),
                 str(b.get("GUID", "")),
                 )
-            self.blogs_table.loading=False
+        self.blogs_table.loading=False
         for j in self.journal if isinstance(self.journal, list) else []:
             self.journal_table.add_row(
                 str(j.get("qualifiedName", "")),
@@ -500,7 +500,7 @@ class MyProfileApp(App, TechTypesMixin, ShopForDataMixin, TeamRolesMixin, Elemen
                 str(j.get("text", "")),
                 str(j.get("GUID", j.get("guid", ""))),
             )
-            self.journal_table.loading=False
+        self.journal_table.loading=False
         for td in self.todos if isinstance(self.todos, list) else []:
             self.todos_table.add_row(
                 str(td.get("Name", "")),
@@ -508,7 +508,7 @@ class MyProfileApp(App, TechTypesMixin, ShopForDataMixin, TeamRolesMixin, Elemen
                 str(td.get("Description", "")),
                 str(td.get("GUID", td.get("guid", ""))),
             )
-            self.todos_table.loading=False
+        self.todos_table.loading=False
         for ui in self.user_identity if isinstance(self.user_identity, list) else []:
             self.user_identity_table.add_row(
                 str(ui.get("Display Name", "")),
@@ -516,7 +516,7 @@ class MyProfileApp(App, TechTypesMixin, ShopForDataMixin, TeamRolesMixin, Elemen
                 str(ui.get("Distinguished Name", "")),
                 str(ui.get("GUID", ui.get("guid", ""))),
             )
-            self.user_identity_table.loading=False
+        self.user_identity_table.loading=False
         for c in self.communities if isinstance(self.communities, list) else []:
             self.associations_table.add_row(
                 str(c.get("Assignment Type", "")),
@@ -524,7 +524,7 @@ class MyProfileApp(App, TechTypesMixin, ShopForDataMixin, TeamRolesMixin, Elemen
                 str(c.get("Description", "")),
                 str(c.get("GUID", c.get("guid", ""))),
             )
-            self.associations_table.loading=False
+        self.associations_table.loading=False
 
     def action_quit(self) -> Any:
         self.exit(200)
@@ -537,7 +537,7 @@ class MyProfileApp(App, TechTypesMixin, ShopForDataMixin, TeamRolesMixin, Elemen
 
     @on(OptionList.OptionSelected, "#other_function_list")
     async def handle_option_selected(self, event: OptionList.OptionSelected) -> None:
-        selected_option = event.option.prompt
+        selected_option = event.option.prompt.strip("[] ")
         selected_option_id = event.option.id
         self.log(f"Selected option: {selected_option} ({selected_option_id})")
         if selected_option == "Technology Types":

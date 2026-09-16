@@ -5,6 +5,7 @@
    Unit tests for My Profile UI modal screens.
 """
 
+import uuid
 from unittest.mock import MagicMock, AsyncMock, patch
 import pytest
 from textual.app import App, ComposeResult
@@ -53,7 +54,7 @@ from ShopForDataScreen import ShopForDataScreen
 class ScreenTestHostApp(App):
     """Host Textual App with main screen mounted."""
 
-    def __init__(self, screen_factory):
+    def __init__(self, screen_factory, backend=None):
         super().__init__()
         self.screen_factory = screen_factory
         self.target_screen = None
@@ -62,8 +63,10 @@ class ScreenTestHostApp(App):
         self.platform_url = "https://127.0.0.1:9443"
         self.user_name = "garygeeke"
         self.user_password = "secret"
-        self.user = "garygeeke"
-        self.password = "secret"
+        if backend is not None:
+            backend.apply_connection(self)
+        self.user = self.user_name
+        self.password = self.user_password
         self.karma_points = 150
 
     async def on_mount(self):
@@ -167,15 +170,23 @@ class TestSearchForTermScreen:
             await pilot.pause()
             assert app.dismissed_result == 200
 
+    @pytest.mark.live_capable
     @pytest.mark.asyncio
-    @patch("SearchForTermScreen.exec_report_spec")
-    async def test_search_for_term_screen_search(self, mock_exec):
-        mock_exec.return_value = {
-            "kind": "text",
-            "mimeType": "text/markdown",
-            "content": "## Term Details\nDescription of clinical trial",
-        }
-        app = ScreenTestHostApp(lambda: SearchForTermScreen("garygeeke", "secret", "qs-view-server", "https://127.0.0.1:9443"))
+    async def test_search_for_term_screen_search(self, backend):
+        backend.patch(
+            "SearchForTermScreen.exec_report_spec",
+            returns={
+                "kind": "text",
+                "mimeType": "text/markdown",
+                "content": "## Term Details\nDescription of clinical trial",
+            },
+        )
+        app = ScreenTestHostApp(
+            lambda: SearchForTermScreen(
+                backend.user_id, backend.user_pwd, backend.view_server, backend.platform_url
+            ),
+            backend,
+        )
         async with app.run_test() as pilot:
             inp = app.target_screen.query_one("#search_term_input", Input)
             inp.value = "Clinical"
@@ -196,16 +207,59 @@ class TestCreateProfileScreen:
             await pilot.pause()
             assert app.dismissed_result == 200
 
+    @pytest.mark.live_capable
     @pytest.mark.asyncio
-    @patch("CreateProfileScreen.MyProfile")
-    async def test_create_profile_screen_create_profile(self, mock_mp_cls):
-        mock_mp = MagicMock()
-        mock_mp.create_egeria_bearer_token.return_value = "token"
-        mock_mp.add_my_profile.return_value = "profile-guid-999"
-        mock_mp_cls.return_value = mock_mp
+    async def test_create_profile_screen_create_profile(self, backend):
+        """Calls add_my_profile — a real write when running live."""
+        if backend.live:
+            # add_my_profile creates the profile for the *calling* user, and the
+            # server rejects a second one (OMVS-MY-PROFILE-400-001). This path
+            # is only reachable live for a user who has no profile yet.
+            from pyegeria import MyProfile
 
-        app = ScreenTestHostApp(lambda: CreateProfileScreen("garygeeke", "secret", "qs-view-server", "https://127.0.0.1:9443"))
+            probe = MyProfile(
+                backend.view_server, backend.platform_url, backend.user_id, backend.user_pwd
+            )
+            probe.create_egeria_bearer_token(backend.user_id, backend.user_pwd)
+            if probe.get_my_profile(output_format="DICT", report_spec="My-User-MD"):
+                pytest.skip(
+                    f"user {backend.user_id} already has a profile; "
+                    "add_my_profile cannot be exercised live"
+                )
+            backend.patch("CreateProfileScreen.MyProfile")
+        else:
+            mock_mp = MagicMock()
+            mock_mp.create_egeria_bearer_token.return_value = "token"
+            mock_mp.add_my_profile.return_value = "profile-guid-999"
+            backend.always_fake("CreateProfileScreen.MyProfile", returns=mock_mp)
+
+        app = ScreenTestHostApp(
+            lambda: CreateProfileScreen(
+                backend.user_id, backend.user_pwd, backend.view_server, backend.platform_url
+            ),
+            backend,
+        )
         async with app.run_test() as pilot:
+            if backend.live:
+                # An empty form yields qualifiedName "Person", which the server
+                # rejects. Fill it with values unique to this run.
+                suffix = uuid.uuid4().hex[:8]
+                for field_id, value in {
+                    "#user_employee_id": f"TEST-{suffix}",
+                    "#user_resident_country": "United Kingdom",
+                    "#user_given_names": "Pytest",
+                    "#user_family_name": f"Fixture{suffix}",
+                    "#user_preferred_name": f"Pytest Fixture {suffix}",
+                    "#user_title": "Dr",
+                    "#user_pronouns": "they/them",
+                    "#user_job_title": "Automated test profile",
+                    "#user_description": "Created by the My Profile live test suite",
+                    "#user_preferred_language": "English",
+                    "#user_time_zone": "Europe/London",
+                }.items():
+                    app.target_screen.query_one(field_id, Input).value = value
+                await pilot.pause()
+
             app.target_screen.create_profile()
             await pilot.pause()
             assert app.dismissed_result == 200
