@@ -305,13 +305,15 @@ class TechTypesMixin:
             "class": "TemplateRequestBody",
             "externalSourceGUID": self.full_template.get("externalSourceGUID") or "",
             "externalSourceName": self.full_template.get("externalSourceName") or "",
-            "typeName": self.full_template.get("typeName") or "",
-            "templateGUID": self.full_template.get("Catalog Template GUID"),
+            "templateGUID": self.full_template.get("templateGUID"),
             "anchorGUID": self.full_template.get("anchorGUID"),
             "isOwnAnchor": "false",
             "effectiveFrom": "2026-01-01",
             "effectiveTo": "2030-12-31",
-            "replacementProperties": self.full_template.get("replacementProperties") or {},
+            # Must be absent rather than {}: the server resolves this to a typed
+            # EntityProperties subtype and rejects an untyped empty object with
+            # "missing type id property 'class'".
+            "replacementProperties": self.full_template.get("replacementProperties") or None,
             "placeholderPropertyValues": {},
             "parentGUID": None,
             "parentRelationshipTypeName": None,
@@ -327,7 +329,7 @@ class TechTypesMixin:
         try:
             tokendata = self.autoc.create_egeria_bearer_token(self.user_name, self.user_password)
             my_md_instance = AutomatedCuration(self.view_server, self.platform_url, self.user_name, self.user_password, tokendata)
-            new_guid = my_md_instance.initiate_gov_action_process(body=request_body)
+            new_guid = my_md_instance.create_elem_from_template(body=request_body)
         except Exception as e:
             self.log(f"Exception in create_element_from_template: {e}")
             if isinstance(e, PyegeriaException):

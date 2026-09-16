@@ -52,12 +52,12 @@ class MainScreen(Screen):
             Static(f"Other Functions"),
             Static(f"[b]Select a function[/b]"),
             OptionList(
-                Option("User Identities"),
-                Option("Catalogs/Shop for Data"),
-                Option("Edit Profile"),
-                Option("Subscriptions"),
-                Option("Technology Types"),
-                Option("User Bookmarks"),
+                Option("[] User Identities"),
+                Option("[] Catalogs/Shop for Data"),
+                Option("[] Edit Profile"),
+                Option("[] Subscriptions"),
+                Option("[] Technology Types"),
+                Option("[] User Bookmarks"),
                 id="other_function_list"
             ),
             id="other_function_container"

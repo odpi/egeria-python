@@ -911,12 +911,13 @@ class ShopForDataMixin():
         item_guid = (
             result.get("externalSourceGUID")
             or result.get("guid")
+            or result.get("GUID")
             or (self.selected_item if hasattr(self, "selected_item") else "")
             or ""
         ) if isinstance(result, dict) else (self.selected_item if hasattr(self, "selected_item") else "")
 
         body = {
-            "class": "NewAgreementRequestBody",
+            "class": "NewElementRequestBody",
             "isOwnAnchor": True,
             "anchorScopeGUID": None,
             "parentGUID": None,
@@ -927,18 +928,10 @@ class ShopForDataMixin():
                 "qualifiedName": "DigitalSubscription::" + display_name,
                 "displayName": display_name or "display name",
                 "description": description,
-                "userDefinedStatus": "DRAFT",
+                "contentStatus": "ACTIVE",
                 "identifier": identifier,
-                "supportLevel": "Community",
-                "serviceLevels": None,
-                "additionalProperties": None,
-                },
-            "initialStatus": status,
-            "externalSourceGUID": item_guid,
-            "externalSourceName": display_name,
-            "effectiveTime": None,
-            "forLineage": False,
-            "forDuplicateProcessing": False,
+                "supportLevel": "Community"
+                }
             }
 
         try:
