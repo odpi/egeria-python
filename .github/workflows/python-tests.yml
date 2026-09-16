@@ -35,5 +35,5 @@ jobs:
 
     - name: Verify SBOM generation
       run: |
-        uvx cyclonedx-py pyproject --output-format json --output-file bom.json
+        uvx --from cyclonedx-bom cyclonedx-py environment --output-format json --output-file bom.json
         ls -l bom.json
