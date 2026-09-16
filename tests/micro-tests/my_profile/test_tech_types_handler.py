@@ -3,9 +3,13 @@
    Copyright Contributors to the ODPi Egeria project.
 
    Unit tests for tech_types_handler module.
+
+   Tests marked `live_capable` run against fakes by default and against a real
+   Egeria view server when PYEG_LIVE_EGERIA=1 is set.
 """
 
-from unittest.mock import MagicMock, AsyncMock, patch
+import re
+from unittest.mock import MagicMock, AsyncMock
 import pytest
 
 from tech_types_handler import TechTypesMixin
@@ -16,13 +20,14 @@ from TechnologyTypeScreens import (
     TechnologyTypeTemplatesScreen,
     TechnologyTypeProcessesScreen,
 )
+from egeria_backend import nonempty_str
 from pyegeria import PyegeriaException
 
 
 class DummyTechTypesApp(TechTypesMixin):
     """Test harness implementing TechTypesMixin."""
 
-    def __init__(self):
+    def __init__(self, backend=None):
         self.pushed_screens = []
         self.exit_code = None
         self.shown_main_screen = False
@@ -32,6 +37,8 @@ class DummyTechTypesApp(TechTypesMixin):
         self.karma_points = 150
         self.view_server = "qs-view-server"
         self.platform_url = "https://127.0.0.1:9443"
+        if backend is not None:
+            backend.apply_connection(self)
         self.tech_type_response = []
         self.tech_type_list = []
         self.tech_type_data = {}
@@ -61,12 +68,18 @@ class DummyTechTypesApp(TechTypesMixin):
 class TestTechTypesMixin:
     """Tests for TechTypesMixin methods."""
 
+    @pytest.mark.live_capable
     @pytest.mark.asyncio
-    @patch.object(TechTypesMixin, "fetch_technology_types", new_callable=AsyncMock)
-    async def test_handle_technology_types_option_success(self, mock_fetch):
-        app = DummyTechTypesApp()
-        app.tech_type_response = [{"displayName": "Postgres"}]
-        app.tech_type_list = [{"displayName": "Postgres"}]
+    async def test_handle_technology_types_option_success(self, backend):
+        app = DummyTechTypesApp(backend)
+        if backend.live:
+            # Let the real hierarchy fetch populate tech_type_response/list.
+            await app.fetch_technology_types()
+            assert app.tech_type_response, "live server returned no technology type hierarchy"
+        else:
+            backend.patch_object(TechTypesMixin, "fetch_technology_types", AsyncMock())
+            app.tech_type_response = [{"displayName": "Postgres"}]
+            app.tech_type_list = [{"displayName": "Postgres"}]
 
         await app.handle_technology_types_option()
 
@@ -76,39 +89,54 @@ class TestTechTypesMixin:
         assert cb == app.tech_type_callback
 
     @pytest.mark.asyncio
-    @patch.object(TechTypesMixin, "fetch_technology_types", new_callable=AsyncMock)
-    async def test_handle_technology_types_option_empty(self, mock_fetch):
-        app = DummyTechTypesApp()
+    async def test_handle_technology_types_option_empty(self, backend):
+        # Always faked: a server with no technology types is a fixed fake state.
+        app = DummyTechTypesApp(backend)
+        backend.patch_object(TechTypesMixin, "fetch_technology_types", AsyncMock())
         app.tech_type_response = []
 
         await app.handle_technology_types_option()
         assert app.exit_code == 200
 
     @pytest.mark.asyncio
-    @patch.object(TechTypesMixin, "fetch_technology_types", new_callable=AsyncMock)
-    async def test_handle_technology_types_option_error(self, mock_fetch):
-        app = DummyTechTypesApp()
+    async def test_handle_technology_types_option_error(self, backend):
+        # Always faked: injected error response.
+        app = DummyTechTypesApp(backend)
+        backend.patch_object(TechTypesMixin, "fetch_technology_types", AsyncMock())
         app.tech_type_response = "404"
 
         await app.handle_technology_types_option()
         assert app.exit_code == 404
 
+    @pytest.mark.live_capable
     @pytest.mark.asyncio
-    @patch("tech_types_handler.AutomatedCuration")
-    async def test_tech_type_callback_valid_selection(self, mock_ac_cls, sample_tech_type_detail):
-        app = DummyTechTypesApp()
-        mock_ac = MagicMock()
-        mock_ac.create_egeria_bearer_token.return_value = "token"
-        mock_ac.get_tech_type_detail.return_value = sample_tech_type_detail
-        mock_ac_cls.return_value = mock_ac
+    async def test_tech_type_callback_valid_selection(
+        self, backend, sample_tech_type_detail, request
+    ):
+        app = DummyTechTypesApp(backend)
+        if backend.live:
+            backend.patch("tech_types_handler.AutomatedCuration")
+            # get_tech_type_detail matches on display name, so use a real one.
+            selection = request.getfixturevalue("live_tech_type_name")
+        else:
+            mock_ac = MagicMock()
+            mock_ac.create_egeria_bearer_token.return_value = "token"
+            mock_ac.get_tech_type_detail.return_value = sample_tech_type_detail
+            backend.always_fake("tech_types_handler.AutomatedCuration", returns=mock_ac)
+            selection = "tech-type-guid-999"
 
-        res = await app.tech_type_callback("tech-type-guid-999")
+        res = await app.tech_type_callback(selection)
         assert res == 200
         assert len(app.pushed_screens) == 1
         screen, cb = app.pushed_screens[0]
         assert isinstance(screen, TechnologyTypeOptionsScreen)
         assert cb == app.tech_type_options_callback
-        assert app.tech_type_name == "PostgreSQL Database"
+        backend.expect(
+            app.tech_type_name,
+            fake="PostgreSQL Database",
+            live=nonempty_str,
+            label="tech_type_name",
+        )
         assert "specificationMermaidGraph" not in app.tech_type_data
 
     @pytest.mark.asyncio
@@ -124,12 +152,12 @@ class TestTechTypesMixin:
         assert app.shown_main_screen is True
 
     @pytest.mark.asyncio
-    @patch("tech_types_handler.AutomatedCuration")
-    async def test_tech_type_callback_exception(self, mock_ac_cls):
-        app = DummyTechTypesApp()
+    async def test_tech_type_callback_exception(self, backend):
+        # Always faked: injected auth failure, exercising the handler's error path.
+        app = DummyTechTypesApp(backend)
         mock_ac = MagicMock()
         mock_ac.create_egeria_bearer_token.side_effect = PyegeriaException("Auth failed")
-        mock_ac_cls.return_value = mock_ac
+        backend.always_fake("tech_types_handler.AutomatedCuration", returns=mock_ac)
 
         await app.tech_type_callback("tech-type-guid-999")
         assert len(app.pushed_screens) == 2  # StatusScreen pushed on error, then TechnologyTypeOptionsScreen
@@ -203,28 +231,44 @@ class TestTechTypesMixin:
         app.tech_type_data = 12345
         assert app.unpack_egeria_data() == 417
 
-    @patch("tech_types_handler.AutomatedCuration")
-    def test_tech_type_templates_callback_success(self, mock_ac_cls):
-        app = DummyTechTypesApp()
-        app.autoc = MagicMock()
-        mock_instance = MagicMock()
-        mock_instance.initiate_gov_action_process.return_value = "new-proc-guid-999"
-        mock_ac_cls.return_value = mock_instance
+    @pytest.mark.live_capable
+    def test_tech_type_templates_callback_success(self, backend, request):
+        """Creates an element from a catalog template — a real write when live."""
+        app = DummyTechTypesApp(backend)
 
-        input_result = [
-            "input",
-            {"database_name_placeholder_input": "mydb"},
-            {
-                "Catalog Template GUID": "templ-guid-1",
-                "typeName": "Database",
-            },
-        ]
-        app.tech_type_templates_callback(input_result)
+        if backend.live:
+            from pyegeria import AutomatedCuration
+
+            app.autoc = AutomatedCuration(
+                app.view_server, app.platform_url, app.user_name, app.user_password
+            )
+            backend.patch("tech_types_handler.AutomatedCuration")
+            full_template = request.getfixturevalue("live_catalog_template")
+            placeholders = request.getfixturevalue("live_template_placeholders")
+        else:
+            app.autoc = MagicMock()
+            mock_instance = MagicMock()
+            mock_instance.create_elem_from_template.return_value = "new-elem-guid-999"
+            backend.always_fake("tech_types_handler.AutomatedCuration", returns=mock_instance)
+            full_template = {"templateGUID": "templ-guid-1"}
+            placeholders = {"database_name_placeholder_input": "mydb"}
+
+        input_result = ["input", placeholders, full_template]
+        rc = app.tech_type_templates_callback(input_result)
 
         assert len(app.pushed_screens) == 1
         screen, cb = app.pushed_screens[0]
         assert isinstance(screen, StatusScreen)
-        assert "new-proc-guid-999" in screen.status_message
+        if backend.live:
+            # 420 is the handler's "create failed" return.
+            assert rc != 420, f"live create_elem_from_template failed: {screen.status_message}"
+            # The handler keeps the new GUID local, quoting it into the status
+            # message, so that is where the test reads it back from.
+            quoted = re.search(r"'([^']+)'", screen.status_message)
+            assert quoted, f"no GUID in status message: {screen.status_message}"
+            assert nonempty_str(quoted.group(1)) and quoted.group(1) != "None"
+        else:
+            assert "new-elem-guid-999" in screen.status_message
 
     def test_tech_type_templates_callback_invalid(self):
         app = DummyTechTypesApp()

@@ -90,6 +90,7 @@ class CreateSubscriptionRequestScreen(ModalScreen):
         if self.selected_item:
             self.response["externalSourceGUID"] = self.selected_item
             self.response["guid"] = self.selected_item
+            self.response["GUID"] = self.selected_item
         if self.display_name:
             self.response["displayName"] = self.display_name
         if self.status:

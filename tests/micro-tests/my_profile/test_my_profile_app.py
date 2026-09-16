@@ -3,6 +3,9 @@
    Copyright Contributors to the ODPi Egeria project.
 
    Full lifecycle, user functionality, and regression tests for MyProfileApp.
+
+   Tests marked `live_capable` run against fakes by default and against a real
+   Egeria view server when PYEG_LIVE_EGERIA=1 is set.
 """
 
 from unittest.mock import MagicMock, AsyncMock, patch, PropertyMock
@@ -15,7 +18,30 @@ from MainScreen import MainScreen
 from CreateProfileScreen import CreateProfileScreen
 from UserIdentitiesScreen import UserIdentitiesScreen
 from EditElementsScreens import EditProfileScreen
+from egeria_backend import at_least, is_int, nonempty_str
 from pyegeria import PyegeriaException
+
+
+def stub_profile_client(backend, profile_data, identities, todos):
+    """Keep MyProfileApp's on_mount off the network in fake mode.
+
+    Any test that enters `app.run_test()` triggers on_mount ->
+    _load_or_create_profile, which builds a real MyProfile client. Without this
+    the test silently depends on a reachable server even when the behaviour
+    under test is mocked. Live mode leaves the real client in place.
+    """
+    if backend.live:
+        return backend.patch("my_profile_app.MyProfile")
+
+    mock_mp = MagicMock()
+    mock_mp.create_egeria_bearer_token.return_value = "token"
+    mock_mp._async_get_my_profile = AsyncMock(return_value=profile_data)
+    mock_mp.get_my_profile.side_effect = [
+        profile_data,  # for get_my_profile in new_profile_return
+        identities,  # for User-Identities lookup
+    ]
+    mock_mp.get_my_to_dos.return_value = todos
+    return backend.always_fake("my_profile_app.MyProfile", returns=mock_mp)
 
 
 class TestMyProfileAppLifecycle:
@@ -33,46 +59,48 @@ class TestMyProfileAppLifecycle:
         assert app.todos == []
         assert app.karma_points == 0
 
+    @pytest.mark.live_capable
     @pytest.mark.asyncio
-    @patch("my_profile_app.MyProfile")
-    async def test_app_on_mount_success(self, mock_mp_cls, sample_profile_data, sample_user_identities, sample_todos_data):
-        mock_mp = MagicMock()
-        mock_mp.create_egeria_bearer_token.return_value = "token"
-        mock_mp._async_get_my_profile = AsyncMock(return_value=sample_profile_data)
-        mock_mp.get_my_profile.side_effect = [
-            sample_profile_data,  # for get_my_profile in new_profile_return
-            sample_user_identities,  # for User-Identities lookup
-        ]
-        mock_mp.get_my_to_dos.return_value = sample_todos_data
-        mock_mp_cls.return_value = mock_mp
+    async def test_app_on_mount_success(
+        self, backend, sample_profile_data, sample_user_identities, sample_todos_data
+    ):
+        # Live mode uses the real MyProfile against the configured view server.
+        stub_profile_client(
+            backend, sample_profile_data, sample_user_identities, sample_todos_data
+        )
 
         app = MyProfileApp()
         async with app.run_test() as pilot:
             await pilot.pause()
-            assert app.karma_points == 150
-            assert len(app.projects) == 1
-            assert len(app.teams) == 1
-            assert len(app.roles) == 1
-            assert len(app.todos) == 1
-            assert app.user_GUID == "profile-guid-12345"
+            backend.expect(app.karma_points, fake=150, live=is_int, label="karma_points")
+            backend.expect(len(app.projects), fake=1, live=at_least(0), label="projects")
+            backend.expect(len(app.teams), fake=1, live=at_least(0), label="teams")
+            backend.expect(len(app.roles), fake=1, live=at_least(1), label="roles")
+            backend.expect(len(app.todos), fake=1, live=at_least(0), label="todos")
+            backend.expect(
+                app.user_GUID, fake="profile-guid-12345", live=nonempty_str, label="user_GUID"
+            )
 
             main_screen = app.get_screen("main")
-            roles_table = main_screen.query_one("#roles_table", DataTable)
-            assert roles_table.row_count == 1
-            teams_table = main_screen.query_one("#teams_table", DataTable)
-            assert teams_table.row_count == 1
-            todos_table = main_screen.query_one("#todos_table", DataTable)
-            assert todos_table.row_count == 1
+            for table_id, fake_rows in (
+                ("#roles_table", 1),
+                ("#teams_table", 1),
+                ("#todos_table", 1),
+            ):
+                table = main_screen.query_one(table_id, DataTable)
+                backend.expect(
+                    table.row_count, fake=fake_rows, live=at_least(0), label=table_id
+                )
             blogs_table = main_screen.query_one("#blogs_table", DataTable)
             assert blogs_table.row_count >= 1
 
     @pytest.mark.asyncio
-    @patch("my_profile_app.MyProfile")
-    async def test_app_on_mount_prompt_create_profile(self, mock_mp_cls):
+    async def test_app_on_mount_prompt_create_profile(self, backend):
+        # Always faked: a live server cannot be asked for a user with no profile.
         mock_mp = MagicMock()
         mock_mp.create_egeria_bearer_token.return_value = "token"
         mock_mp._async_get_my_profile = AsyncMock(return_value=[])
-        mock_mp_cls.return_value = mock_mp
+        backend.always_fake("my_profile_app.MyProfile", returns=mock_mp)
 
         app = MyProfileApp()
         async with app.run_test() as pilot:
@@ -80,12 +108,12 @@ class TestMyProfileAppLifecycle:
             assert isinstance(app.screen, CreateProfileScreen)
 
     @pytest.mark.asyncio
-    @patch("my_profile_app.MyProfile")
-    async def test_app_load_profile_exception_exits_402(self, mock_mp_cls):
+    async def test_app_load_profile_exception_exits_402(self, backend):
+        # Always faked: exercises the app's error handling, not the server's.
         mock_mp = MagicMock()
         mock_mp.create_egeria_bearer_token.return_value = "token"
         mock_mp._async_get_my_profile = AsyncMock(side_effect=PyegeriaException("Server error"))
-        mock_mp_cls.return_value = mock_mp
+        backend.always_fake("my_profile_app.MyProfile", returns=mock_mp)
 
         app = MyProfileApp()
         app.exit = MagicMock()
@@ -242,30 +270,50 @@ class TestMyProfileAppActionsAndOptions:
         res = app.extract_glossary_terms("GlossaryTerm::TermA, other")
         assert res == ["TermA"]
 
+    @pytest.mark.live_capable
     @pytest.mark.asyncio
-    @patch("my_profile_app.exec_report_spec")
-    async def test_get_data_product_catalog_table_success(self, mock_exec):
-        mock_exec.return_value = {
-            "kind": "data",
-            "data": [
-                {
-                    "Display Name": "Catalog 1",
-                    "Description": "Desc 1",
-                    "Qualified Name": "Cat::1",
-                }
-            ],
-        }
+    async def test_get_data_product_catalog_table_success(
+        self, backend, sample_profile_data, sample_user_identities, sample_todos_data
+    ):
+        stub_profile_client(
+            backend, sample_profile_data, sample_user_identities, sample_todos_data
+        )
+        mock_exec = backend.patch(
+            "my_profile_app.exec_report_spec",
+            returns={
+                "kind": "data",
+                "data": [
+                    {
+                        "Display Name": "Catalog 1",
+                        "Description": "Desc 1",
+                        "Qualified Name": "Cat::1",
+                    }
+                ],
+            },
+        )
         app = MyProfileApp()
         async with app.run_test():
             rc = app.get_data_product_catalog_table()
             assert rc == 200
+            assert mock_exec.called
             assert app.digital_product_catalog_table is not None
-            assert app.digital_product_catalog_table.row_count == 1
+            backend.expect(
+                app.digital_product_catalog_table.row_count,
+                fake=1,
+                live=at_least(1),
+                label="catalog rows",
+            )
 
     @pytest.mark.asyncio
-    @patch("my_profile_app.exec_report_spec")
-    async def test_get_data_product_catalog_table_empty(self, mock_exec):
-        mock_exec.return_value = {"kind": "empty", "data": []}
+    async def test_get_data_product_catalog_table_empty(
+        self, backend, sample_profile_data, sample_user_identities, sample_todos_data
+    ):
+        # Always faked: an empty catalog is a server-state the live instance
+        # cannot be asked to produce.
+        stub_profile_client(
+            backend, sample_profile_data, sample_user_identities, sample_todos_data
+        )
+        backend.always_fake("my_profile_app.exec_report_spec", returns={"kind": "empty", "data": []})
         app = MyProfileApp()
         async with app.run_test():
             rc = app.get_data_product_catalog_table()
