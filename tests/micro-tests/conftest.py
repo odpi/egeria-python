@@ -9,6 +9,12 @@ from md_processing.md_processing_utils.md_processing_constants import load_comma
 load_commands()
 
 
+def pytest_collection_modifyitems(config, items):
+    """Mark all tests in this directory as unit tests."""
+    for item in items:
+        item.add_marker(pytest.mark.unit)
+
+
 @pytest.fixture
 def test_credentials():
     """Provide test credentials."""
