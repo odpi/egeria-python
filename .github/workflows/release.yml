@@ -66,6 +66,11 @@ jobs:
       - name: Build package
         run: uv build
 
+      - name: Generate SBOM
+        run: |
+          uvx cyclonedx-py pyproject --output-format json --output-file dist/bom.json
+          uvx cyclonedx-py pyproject --output-format xml --output-file dist/bom.xml
+
       - name: Publish to PyPI
         # release/v1 is a floating branch, not a tag -- pypa's own convention
         # for this action's "stable" channel, updated more often than a

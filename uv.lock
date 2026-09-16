@@ -2326,11 +2326,12 @@ sdist = { url = "https://files.pythonhosted.org/packages/f8/f6/8f49005d581cff883
 
 [[package]]
 name = "pyegeria"
-version = "6.1.14"
+version = "6.1.15"
 source = { editable = "." }
 dependencies = [
     { name = "altair" },
     { name = "click" },
+    { name = "fastapi" },
     { name = "httpx" },
     { name = "inflect" },
     { name = "jupyter" },
@@ -2379,6 +2380,7 @@ dev = [
 requires-dist = [
     { name = "altair", specifier = "==6.2.2" },
     { name = "click", specifier = "==8.5.0" },
+    { name = "fastapi", specifier = ">=0.141.1" },
     { name = "fastapi", marker = "extra == 'spec-editor'", specifier = ">=0.115" },
     { name = "httpx" },
     { name = "inflect" },

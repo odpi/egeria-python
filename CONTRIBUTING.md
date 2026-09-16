@@ -42,7 +42,21 @@ To run against a live Egeria instance:
 
 ## Pull Request Process
 
+### Developer Certificate of Origin (DCO)
+
+All contributions to this project must be accompanied by a Developer Certificate of Origin (DCO) sign-off. This is a formal declaration that you have the right to submit the code under the project's license.
+
+To sign off on a commit, use the `-s` or `--signoff` flag:
+
+```bash
+git commit -s -m "Your commit message"
+```
+
+This will add a `Signed-off-by: Your Name <your.email@example.com>` line to your commit message.
+
+### Submission Steps
+
 1. Create a feature branch.
-2. Ensure scenario tests pass for your new module.
+2. Ensure unit and scenario tests pass.
 3. Update the `EgeriaTech` client if adding a new OMVS.
 4. Submit your PR for review.
