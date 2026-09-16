@@ -282,6 +282,7 @@ class TestCreateSubscriptionRequestScreen:
             assert app.dismissed_result == {
                 "externalSourceGUID": "guid-item-123",
                 "guid": "guid-item-123",
+                "GUID": "guid-item-123",
                 "displayName": "My Sub",
                 "Status": "ACTIVE",
             }
