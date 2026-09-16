@@ -1,30 +1,22 @@
 <!-- SPDX-License-Identifier: CC-BY-4.0 -->
 <!-- Copyright Contributors to the ODPi Egeria project. -->
 
-# Security Policy
+# Code Quality and Security
 
-pyegeria is part of the [ODPi Egeria](https://github.com/odpi/egeria) project family and follows Egeria's own
-[code quality and security practices](https://github.com/odpi/egeria/blob/main/SECURITY.md), including:
+Egeria has a clear focus on ensuring the code delivered is of the highest quality to ensure that downstream consumers can leverage Egeria with as minimal risk as possible.
 
-- [GitHub Dependabot](https://dependabot.com/) to automatically update dependencies (`.github/dependabot.yml`).
-- [GitHub CodeQL](https://github.com/features/security) to automatically scan for security vulnerabilities
-  (`.github/workflows/codeql.yml`).
-- PyPI [Trusted Publishing](https://docs.pypi.org/trusted-publishers/) (OIDC) for releases — no long-lived API
-  token is stored in this repository.
-- GitHub Actions steps pinned to a specific commit SHA rather than a mutable tag, so a workflow can't be
-  silently altered by a tag being moved upstream.
+Specific items that Egeria employs include but are not limited to...
 
-## Reporting a Vulnerability
+- Participation in the [Core Infrastructure Initiative Best Practices Badge Program](https://bestpractices.coreinfrastructure.org/en/projects/3044). This is a [free program](https://www.coreinfrastructure.org/programs/best-practices-program/) designed with the open source community with criteria that evolves to allow for compensating controls rather than a strict mechanical process.
+- [GitHub Actions](https://github.com/features/actions) to automatically build, test, and scan for vulnerabilities.
+- [GitHub Dependabot](https://dependabot.com/) to automatically update dependencies.
+- [GitHub CodeQL](https://github.com/features/security) to automatically scan for security vulnerabilities.
+- **SBOM (Software Bill of Materials)** generated for every release in CycloneDX format (JSON and XML).
+- [GitHub Security Advisories](https://help.github.com/en/github/managing-security-vulnerabilities/about-github-security-advisories) for triaging security issues that come through (egeria-security@lists.lfaidata.foundation) and other confidential channels before publishing them for broader community awareness.
 
-If you believe you've found a security vulnerability in pyegeria, please report it privately rather than
-opening a public issue:
+For more questions on Egeria's commitment to code quality, feel free to reach out to the [Egeria development team](mailto:egeria-technical-discuss@lists.lfaidata.foundation)
 
-- Use GitHub's [private vulnerability reporting](https://github.com/odpi/egeria-python/security/advisories/new)
-  for this repository, or
-- Email [egeria-security@lists.lfaidata.foundation](mailto:egeria-security@lists.lfaidata.foundation).
-
-For general questions about this policy, reach out to the
-[Egeria development team](mailto:egeria-technical-discuss@lists.lfaidata.foundation).
+If you would like to report a security vulnerability, please do so via the [Egeria development team](mailto:egeria-technical-discuss@lists.lfaidata.foundation).
 
 ----
 License: [CC BY 4.0](https://creativecommons.org/licenses/by/4.0/),
