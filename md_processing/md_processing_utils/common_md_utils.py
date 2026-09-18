@@ -334,7 +334,7 @@ def set_rel_prop_body(object_type: str, attributes: dict)->dict:
     prop_name = object_type.replace(" ", "")
     display_name = attributes.get('Display Name', {}).get('value', None)
 
-    return {
+    body = {
         "class": prop_name + "Properties",
         "description": attributes.get('Description', {}).get('value', None),
         "label": attributes.get('Label', {}).get('value', None) or attributes.get('Link Label', {}).get('value', None),
@@ -343,6 +343,24 @@ def set_rel_prop_body(object_type: str, attributes: dict)->dict:
         "effectiveTo": attributes.get('Effective To', {}).get('value', None),
         "extendedProperties": attributes.get('Extended Properties', {}).get('value', None),
         }
+
+    # Type-specific relationship properties -- set_rel_prop_body is otherwise
+    # fully generic, so a type declaring its own compact-spec attributes
+    # (beyond the shared Description/Label/Effective From/To pool) needs an
+    # explicit branch here, same pattern as update_gov_body_for_type/
+    # set_collection_manager_body for element bodies. Each of these was
+    # found silently dropped (declared in the compact spec, never read
+    # anywhere) via scripts/dr_egeria_attribute_consumption_audit.py.
+    if prop_name == "NotificationSubscriber":
+        body["zoneMembership"] = attributes.get('Zone Membership', {}).get('value')
+        body["lastNotification"] = attributes.get('Last Notification', {}).get('value')
+        body["activityStatus"] = attributes.get('Activity Status', {}).get('value')
+    elif prop_name == "AssignmentScope":
+        body["assignmentType"] = attributes.get('Assignment Type', {}).get('value')
+    elif prop_name in {"PersonRoleAppointment", "TeamRoleAppointment"}:
+        body["expectedTimeAllocationPercent"] = attributes.get('Expected Time Allocation Percent', {}).get('value')
+
+    return body
 
 
 def _to_egeria_type_name(object_type: str) -> str:
@@ -404,12 +422,14 @@ def set_collection_manager_body(object_type: str, qualified_name: str, attribute
     Handles subtypes like Digital Product, Agreement, Digital Subscription, etc.
     """
     prop_bod = set_element_prop_body(object_type, qualified_name, attributes)
+    prop_bod["purpose"] = attributes.get('Purpose', {}).get('value', None)
 
     # Handle Digital Product and Digital Product Family
     if "Digital Product" in object_type:
         prop_bod.update({
             "productName": attributes.get('Product Name', {}).get('value', None),
             "maturity": attributes.get('Maturity', {}).get('value', None),
+            "currentVersion": attributes.get('Current Version', {}).get('value', None),
             "serviceLife": attributes.get('Service Life', {}).get('value', None),
             "introductionDate": attributes.get('Introduction Date', {}).get('value', None),
             "withdrawalDate": attributes.get('Withdrawal Date', {}).get('value', None),
@@ -548,6 +568,7 @@ def set_data_field_body(object_type: str, qualified_name: str, attributes: dict)
     prop_bod["namePatterns"] = attributes.get('Name Patterns', {}).get('value', [])
     prop_bod["defaultValue"] = attributes.get('Default Value', {}).get('value', None)
     prop_bod["isNullable"] = attributes.get('Is Nullable', {}).get('value', None)
+    prop_bod["allowsDuplicateValues"] = attributes.get('Allow Duplicate Values', {}).get('value', None)
     prop_bod["dataType"] = attributes.get('Data Type', {}).get('value', None)
     prop_bod["units"] = attributes.get('Units', {}).get('value', None)
     prop_bod["minimumLength"] = attributes.get('Minimum Length', {}).get('value', None)
@@ -684,6 +705,22 @@ def update_gov_body_for_type(object_type: str, body: dict, attributes: dict) -> 
         body['waitTime'] = attributes.get('Wait Time', {}).get('value', None)
         if gov_def_name == "GovernanceActionProcessStep":
             body['ignoreMultipleTriggers'] = attributes.get('Ignore Multiple Triggers', {}).get('value', None)
+        return body
+
+    elif gov_def_name == "DataLens":
+        # ISSUE-99 follow-up: DataLens had no branch here either, so all 9 of
+        # its compact-spec attributes fell through to the generic fallback
+        # below -- same shape as the GovernanceActionType/ProcessStep gap
+        # above (ISSUE-71).
+        body['dataCollectionStartTime'] = attributes.get('Data Collection Start Time', {}).get('value', None)
+        body['dataCollectionEndTime'] = attributes.get('Data Collection End Time', {}).get('value', None)
+        body['minLongitude'] = attributes.get('Min Longitude', {}).get('value', None)
+        body['maxLongitude'] = attributes.get('Max Longitude', {}).get('value', None)
+        body['minLatitude'] = attributes.get('Min Latitude', {}).get('value', None)
+        body['maxLatitude'] = attributes.get('Max Latitude', {}).get('value', None)
+        body['minHeight'] = attributes.get('Min Height', {}).get('value', None)
+        body['maxHeight'] = attributes.get('Max Height', {}).get('value', None)
+        body['scopeElements'] = attributes.get('Scope Elements', {}).get('value', None)
         return body
 
     # Preserve base governance fields for subtypes without dedicated custom mappings.

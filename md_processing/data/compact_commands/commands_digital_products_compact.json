@@ -2511,44 +2511,6 @@
       "level": "Domain",
       "Journal Entry": ""
     },
-    "Product Status": {
-      "variable_name": "product_status",
-      "inUpdate": true,
-      "attr_labels": "",
-      "examples": "",
-      "default_value": "",
-      "valid_values": [],
-      "existing_element": "",
-      "description": "Lifecycle status of the digital product.",
-      "generated": false,
-      "style": "Valid Value",
-      "user_specified": true,
-      "unique": false,
-      "input_required": false,
-      "min_cardinality": 0,
-      "max_cardinality": 1,
-      "level": "Domain",
-      "Journal Entry": ""
-    },
-    "Product Type": {
-      "variable_name": "product_type",
-      "inUpdate": true,
-      "attr_labels": "",
-      "examples": "",
-      "default_value": "",
-      "valid_values": [],
-      "existing_element": "",
-      "description": "Type of digital product (e.g., Periodic Delta, On Demand, Snapshot).",
-      "generated": false,
-      "style": "Simple",
-      "user_specified": true,
-      "unique": false,
-      "input_required": false,
-      "min_cardinality": 0,
-      "max_cardinality": 1,
-      "level": "Domain",
-      "Journal Entry": ""
-    },
     "Service Life": {
       "variable_name": "service_life",
       "inUpdate": true,
@@ -2602,25 +2564,6 @@
       "unique": false,
       "input_required": false,
       "min_cardinality": 1,
-      "max_cardinality": 1,
-      "level": "Domain",
-      "Journal Entry": ""
-    },
-    "Subscription Level": {
-      "variable_name": "subscription_level",
-      "inUpdate": true,
-      "attr_labels": "",
-      "examples": "",
-      "default_value": "",
-      "valid_values": [],
-      "existing_element": "",
-      "description": "Level or tier of the subscription (e.g., basic, premium, enterprise).",
-      "generated": false,
-      "style": "Simple",
-      "user_specified": true,
-      "unique": false,
-      "input_required": false,
-      "min_cardinality": 0,
       "max_cardinality": 1,
       "level": "Domain",
       "Journal Entry": ""
@@ -2792,8 +2735,6 @@
         "Maturity",
         "Next Version Date",
         "Product Name",
-        "Product Status",
-        "Product Type",
         "Service Life",
         "Withdrawal Date"
       ]
@@ -2807,7 +2748,6 @@
     "Digital Subscription Base": {
       "inherits": "Agreement Base",
       "own_attributes": [
-        "Subscription Level",
         "Support Level"
       ]
     },

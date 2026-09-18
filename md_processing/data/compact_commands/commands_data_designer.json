@@ -2667,7 +2667,7 @@
       "existing_element": "",
       "description": "The time interval in milliseconds between data captures for time-based data grains.",
       "generated": false,
-      "style": "Simple Float",
+      "style": "Simple Int",
       "user_specified": true,
       "unique": false,
       "input_required": false,

@@ -15,14 +15,6 @@ ___
 >	**Alternative Labels**: "Term Name"
 
 
-### Expected Behavior
->	**Input Required**: False
-
->	**Attribute Type**: Simple
-
->	**Description**: Optionally descibe action to be taken.
-
-
 ### Situation
 >	**Input Required**: False
 

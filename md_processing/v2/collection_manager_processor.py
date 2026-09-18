@@ -126,12 +126,25 @@ class CollectionManagerProcessor(AsyncBaseCommandProcessor):
                     }
                 }
             elif "Glossary" in object_type:
-                # Default classifications for Glossary if not specified
-                body["initialClassifications"] = {
-                    "Taxonomy": {"class": "TaxonomyProperties"},
-                    "CanonicalVocabulary": {"class": "CanonicalVocabularyProperties"}
-                }
-            
+                # Was unconditional (both classifications on every Glossary,
+                # regardless of what the user set) -- confirmed live bug, not
+                # just a missing field (PYEGERIA_ISSUES.md Cluster B
+                # follow-up). Is Canonical/Is Taxonomy both default False per
+                # the compact spec, so default False here too if unset.
+                glossary_classifications = {}
+                if attributes.get('Is Taxonomy', {}).get('value', False):
+                    glossary_classifications["Taxonomy"] = {
+                        "class": "TaxonomyProperties",
+                        "organizingPrinciple": attributes.get('Organizing Principle', {}).get('value'),
+                    }
+                if attributes.get('Is Canonical', {}).get('value', False):
+                    glossary_classifications["CanonicalVocabulary"] = {
+                        "class": "CanonicalVocabularyProperties",
+                        "scope": attributes.get('Canonical Scope', {}).get('value'),
+                    }
+                if glossary_classifications:
+                    body["initialClassifications"] = glossary_classifications
+
 
             # Handle parent relationship for collections if specified
             if body.get('parentGUID') and not body.get('parentRelationshipTypeName'):
@@ -313,6 +326,7 @@ class CollectionLinkProcessor(AsyncBaseCommandProcessor):
                 body['properties'] = {
                     "class": "CollectionMembershipProperties",
                     "typeName": "CollectionMembership",
+                    "membershipType": attributes.get('Membership Type', {}).get('value'),
                     "membershipRationale": attributes.get('Membership Rationale', {}).get('value'),
                     "expression": attributes.get('Expression', {}).get('value'),
                     "membershipStatus": attributes.get('Membership Status', {}).get('value', 'ACTIVE').upper(),
@@ -325,7 +339,7 @@ class CollectionLinkProcessor(AsyncBaseCommandProcessor):
                     "notes": attributes.get('Notes', {}).get('value'),
                 }
                 await self.client._async_add_to_collection(guid_coll, guid_el, body_slimmer(body))
-                
+
             elif "Product Dependency" in object_type:
                 guid1 = attributes.get('Digital Product 1', {}).get('guid')
                 guid2 = attributes.get('Digital Product 2', {}).get('guid')
@@ -333,7 +347,7 @@ class CollectionLinkProcessor(AsyncBaseCommandProcessor):
                     "class": "DigitalProductDependencyProperties",
                     "typeName": "DigitalProductDependency",
                     "label": attributes.get('Label', {}).get('value'),
-                    "description": attributes.get('Description', {}).get('value'),
+                    "description": attributes.get('Dependency Description', {}).get('value'),
                     "effectiveFrom": attributes.get('Effective From', {}).get('value'),
                     "effectiveTo": attributes.get('Effective To', {}).get('value')
                 }

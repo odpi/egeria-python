@@ -1,7 +1,7 @@
 ___
 
 ## Link Agreement Terms and Conditions
-> Links an agreement to terms and conditions definition with implementation details.
+> Links an agreement to a terms and conditions definition with agreement-item-specific implementation details (item id, effective dates, usage measurements). Entitlements/Obligations/Restrictions live on the Terms and Conditions element itself, not on this relationship.
 >
 >	**Alternative Names**: Agreement T&C; Agreement Terms & Conditions
 
@@ -21,40 +21,66 @@ ___
 >	**Description**: The name of the agreement to add an item to. Using qualified names is recommended.
 
 
-### Membership Rationale
+### Label
 >	**Input Required**: False
 
 >	**Attribute Type**: Simple
 
->	**Description**: Rationale for membership.
+>	**Description**: A label used to identify or categorise a relationship link.
+
+>	**Alternative Labels**: Wire Label
 
 
-### Membership Status
->	**Input Required**: False
-
->	**Attribute Type**: Valid Value
-
->	**Description**: The status of adding a member to a collection.
-
->	**Valid Values**: UNKNOWN,DISCOVERED,PROPOSED,IMPORTED,VALIDATED,DEPRECATED,OBSOLETE,OTHER
-
->	**Default Value**: PROPOSED
-
-
-### Membership Type
+### Agreement Item Id
 >	**Input Required**: False
 
 >	**Attribute Type**: Simple
 
->	**Description**: Name of the type of membership.
+>	**Description**: A user specified agreement item identifier.
 
 
-### Notes
+### Agreement Start Date
 >	**Input Required**: False
 
 >	**Attribute Type**: Simple
 
->	**Description**: Notes and observations about the element.
+>	**Description**: Date when the agreement becomes effective, in ISO 8601 format.
+
+
+### Agreement End Date
+>	**Input Required**: False
+
+>	**Attribute Type**: Simple
+
+>	**Description**: Date when the agreement expires or was terminated, in ISO 8601 format.
+
+
+### Journal Entry
+>	**Input Required**: False
+
+>	**Attribute Type**: Simple
+
+>	**Description**: A text entry into a journal.
+
+
+### Description
+>	**Input Required**: False
+
+>	**Attribute Type**: Simple
+
+>	**Description**: A description.
+
+
+### Usage Measurements
+>	**Input Required**: False
+
+>	**Attribute Type**: Dictionary
+
+>	**Description**: A dictionary of property:value pairs describing usage measurements.
+
+>	| Parameter Name | Parameter Value |
+>	|---|---|
+>	| example_key | example_value |
 
 
 ___

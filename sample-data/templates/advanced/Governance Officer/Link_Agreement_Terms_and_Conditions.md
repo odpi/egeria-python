@@ -1,7 +1,7 @@
 ___
 
 ## Link Agreement Terms and Conditions
-> Links an agreement to terms and conditions definition with implementation details.
+> Links an agreement to a terms and conditions definition with agreement-item-specific implementation details (item id, effective dates, usage measurements). Entitlements/Obligations/Restrictions live on the Terms and Conditions element itself, not on this relationship.
 >
 >	**Alternative Names**: Agreement T&C; Agreement Terms & Conditions
 
@@ -21,40 +21,130 @@ ___
 >	**Description**: The name of the agreement to add an item to. Using qualified names is recommended.
 
 
-### Membership Rationale
+### Label
 >	**Input Required**: False
 
 >	**Attribute Type**: Simple
 
->	**Description**: Rationale for membership.
+>	**Description**: A label used to identify or categorise a relationship link.
+
+>	**Alternative Labels**: Wire Label
 
 
-### Membership Status
->	**Input Required**: False
-
->	**Attribute Type**: Valid Value
-
->	**Description**: The status of adding a member to a collection.
-
->	**Valid Values**: UNKNOWN,DISCOVERED,PROPOSED,IMPORTED,VALIDATED,DEPRECATED,OBSOLETE,OTHER
-
->	**Default Value**: PROPOSED
-
-
-### Membership Type
+### Agreement Item Id
 >	**Input Required**: False
 
 >	**Attribute Type**: Simple
 
->	**Description**: Name of the type of membership.
+>	**Description**: A user specified agreement item identifier.
 
 
-### Notes
+### Agreement Start Date
 >	**Input Required**: False
 
 >	**Attribute Type**: Simple
 
->	**Description**: Notes and observations about the element.
+>	**Description**: Date when the agreement becomes effective, in ISO 8601 format.
+
+
+### Agreement End Date
+>	**Input Required**: False
+
+>	**Attribute Type**: Simple
+
+>	**Description**: Date when the agreement expires or was terminated, in ISO 8601 format.
+
+
+### Journal Entry
+>	**Input Required**: False
+
+>	**Attribute Type**: Simple
+
+>	**Description**: A text entry into a journal.
+
+
+### Description
+>	**Input Required**: False
+
+>	**Attribute Type**: Simple
+
+>	**Description**: A description.
+
+
+### Usage Measurements
+>	**Input Required**: False
+
+>	**Attribute Type**: Dictionary
+
+>	**Description**: A dictionary of property:value pairs describing usage measurements.
+
+>	| Parameter Name | Parameter Value |
+>	|---|---|
+>	| example_key | example_value |
+
+
+### Effective From
+>	**Input Required**: False
+
+>	**Attribute Type**: Simple
+
+>	**Description**: The beginning of when an element is viewable.
+
+
+### Effective Time
+>	**Input Required**: False
+
+>	**Attribute Type**: Simple
+
+>	**Description**: The time at which an element must be effective in order to be returned by the request.
+
+
+### Effective To
+>	**Input Required**: False
+
+>	**Attribute Type**: Simple
+
+>	**Description**: The ending time at which an element is visible.
+
+
+### External Source GUID
+>	**Input Required**: False
+
+>	**Attribute Type**: GUID
+
+>	**Description**: The unique identifier of an external source.
+
+
+### External Source Name
+>	**Input Required**: False
+
+>	**Attribute Type**: Simple
+
+>	**Description**: The name of an external source
+
+
+### For Duplicate Processing
+>	**Input Required**: False
+
+>	**Attribute Type**: Bool
+
+>	**Description**: Flag indicating if the request is to support duplicate processing.
+
+
+### For Lineage
+>	**Input Required**: False
+
+>	**Attribute Type**: Bool
+
+>	**Description**: Flag indicating if the request is to support lineage.
+
+
+### Request ID
+>	**Input Required**: False
+
+>	**Attribute Type**: Simple
+
+>	**Description**: A user provided or system generated request id for a conversation.
 
 
 ### Anchor Scope IDs
@@ -65,22 +155,6 @@ ___
 >	**Description**: A list of IDs that are anchor scopes for this element.
 
 
-### Confidence
->	**Input Required**: False
-
->	**Attribute Type**: Simple Int
-
->	**Description**: A percent confidence in the proposed adding of the member.
-
-
-### Expression
->	**Input Required**: False
-
->	**Attribute Type**: Simple
-
->	**Description**: An expression describing a membership, relationship or classification.
-
-
 ### Make Anchor
 >	**Input Required**: False
 
@@ -89,70 +163,6 @@ ___
 >	**Description**: Is the element at end2 an anchor to end1?
 
 >	**Default Value**: false
-
-
-### Source
->	**Input Required**: False
-
->	**Attribute Type**: Simple
-
->	**Description**: The source of the information.
-
-
-### Steward
->	**Input Required**: False
-
->	**Attribute Type**: Simple
-
->	**Description**: The identifier of the steward responsible for the element.
-
-
-### Steward Property Name
->	**Input Required**: False
-
->	**Attribute Type**: Simple
-
->	**Description**: Property name used to identify the type of the steward.
-
-
-### Steward Type Name
->	**Input Required**: False
-
->	**Attribute Type**: Simple
-
->	**Description**: The type name of the steward element.
-
-
-### User Defined Status
->	**Input Required**: False
-
->	**Attribute Type**: Simple
-
->	**Description**: A user-defined status value. Only valid when the primary status is set to OTHER.
-
-
-### Effective Time
->	**Input Required**: False
-
->	**Attribute Type**: Simple
-
->	**Description**: An ISO-8601 string representing the time to use for evaluating effectivity of the elements related to this one.
-
-
-### Effective From
->	**Input Required**: False
-
->	**Attribute Type**: Simple
-
->	**Description**: A string in ISO-8601 format that defines the when an element becomes effective (visible).
-
-
-### Effective To
->	**Input Required**: False
-
->	**Attribute Type**: Simple
-
->	**Description**: A string in ISO-8601 format that defines the when an element is no longer effective (visible).
 
 
 ___

@@ -52,6 +52,8 @@ class SavedQueryProcessor(AsyncBaseCommandProcessor):
         props = set_element_prop_body("SavedQuery", qualified_name, attributes)
         props["queryURL"] = attributes.get("Query URL", {}).get("value")
         props["queryRequestBody"] = attributes.get("Query Request Body", {}).get("value")
+        props["deployedImplementationType"] = attributes.get("Deployed Implementation Type", {}).get("value")
+        props["resourceName"] = attributes.get("Resource Name", {}).get("value")
 
         if self.as_is_element:
             guid = self.as_is_element["elementHeader"]["guid"]

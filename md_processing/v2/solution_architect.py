@@ -36,6 +36,7 @@ class BlueprintProcessor(AsyncBaseCommandProcessor):
         journal_entry = attributes.get('Journal Entry', {}).get('value')
 
         comp_guids = set(attributes.get('Solution Components', {}).get('guid_list', []))
+        role_guids = set(attributes.get('Role List', {}).get('guid_list', []))
 
         spec = self.get_command_spec()
         om_type = spec.get("OM_TYPE")
@@ -57,7 +58,13 @@ class BlueprintProcessor(AsyncBaseCommandProcessor):
                 self.add_related_result("Components Sync", message=f"Added {len(sync_res['added'])}, Removed {len(sync_res['removed'])}")
             if sync_res.get("errors"):
                 self.add_related_result("Components Sync", status="failure", message="; ".join(sync_res["errors"]))
-            
+
+            role_sync_res = await self._sync_role_list(guid, role_guids, not merge_update)
+            if role_sync_res.get("added") or role_sync_res.get("removed"):
+                self.add_related_result("Role List Sync", message=f"Added {len(role_sync_res['added'])}, Removed {len(role_sync_res['removed'])}")
+            if role_sync_res.get("errors"):
+                self.add_related_result("Role List Sync", status="failure", message="; ".join(role_sync_res["errors"]))
+
             if journal_entry:
                 try:
                     j_guid = await async_add_note_in_dr_e(self.client, qualified_name, display_name, journal_entry)
@@ -86,6 +93,12 @@ class BlueprintProcessor(AsyncBaseCommandProcessor):
                     self.add_related_result("Components Sync", message=f"Added {len(sync_res['added'])}, Removed {len(sync_res['removed'])}")
                 if sync_res.get("errors"):
                     self.add_related_result("Components Sync", status="failure", message="; ".join(sync_res["errors"]))
+
+                role_sync_res = await self._sync_role_list(guid, role_guids, replace_all=True, known_new=True)
+                if role_sync_res.get("added") or role_sync_res.get("removed"):
+                    self.add_related_result("Role List Sync", message=f"Added {len(role_sync_res['added'])}, Removed {len(role_sync_res['removed'])}")
+                if role_sync_res.get("errors"):
+                    self.add_related_result("Role List Sync", status="failure", message="; ".join(role_sync_res["errors"]))
 
                 if journal_entry:
                     try:
@@ -118,6 +131,32 @@ class BlueprintProcessor(AsyncBaseCommandProcessor):
 
         async def remove_fn(comp_guid):
             await self.client._async_remove_from_collection(guid, comp_guid, None)
+
+        return await self.sync_members(as_is, to_be_guids, add_fn, remove_fn, replace_all)
+
+    async def _sync_role_list(self, guid: str, to_be_guids: Set[str], replace_all: bool, known_new: bool = False) -> Dict[str, Any]:
+        """CollectionMembership sync for 'Role List' -- same shape as the
+        standalone 'Link Actor to Blueprint' command uses (both are plain
+        collection membership; not a bespoke relationship type)."""
+        if known_new:
+            as_is: Set[str] = set()
+        else:
+            bp_element = await self.client._async_get_solution_blueprint_by_guid(guid)
+            as_is = {
+                m['relatedElement']['elementHeader']['guid']
+                for m in bp_element.get('collectionMembers', [])
+                if 'ActorRole' in (
+                    [m.get('relatedElement', {}).get('elementHeader', {}).get('type', {}).get('typeName')]
+                    + (m.get('relatedElement', {}).get('elementHeader', {}).get('type', {}).get('superTypeNames') or [])
+                )
+            }
+
+        async def add_fn(role_guid):
+            body = {"class": "NewRelationshipRequestBody", "properties": {"class": "CollectionMembershipProperties", "membershipRationale": "linked by Dr.Egeria v2"}}
+            await self.client._async_add_to_collection(guid, role_guid, body)
+
+        async def remove_fn(role_guid):
+            await self.client._async_remove_from_collection(guid, role_guid, None)
 
         return await self.sync_members(as_is, to_be_guids, add_fn, remove_fn, replace_all)
 
@@ -774,6 +813,7 @@ class SolutionLinkProcessor(AsyncBaseCommandProcessor):
             elif om_type == "CollectionMembership":
                  properties["membershipRationale"] = attributes.get('Membership Rationale', {}).get('value') or description
                  # Additional CollectionMembership properties
+                 properties["membershipType"] = attributes.get('Membership Type', {}).get('value')
                  properties["expression"] = attributes.get('Expression', {}).get('value')
                  properties["membershipStatus"] = attributes.get('Membership Status', {}).get('value', 'ACTIVE').upper()
             elif om_type == "ImplementedBy":

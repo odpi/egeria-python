@@ -60,6 +60,11 @@ class ProjectProcessor(AsyncBaseCommandProcessor):
                 # matters - without it, the real stored qualifiedName never
                 # matches what Dr.Egeria reports having created.
                 qualified_name=qualified_name,
+                # Objective is a real MeetingProperties field -- confirmed
+                # live it's NOT shared by ToDo/Review/Note despite the
+                # compact spec's shared description implying otherwise
+                # (PYEGERIA_ISSUES.md Cluster B follow-up); only wired here.
+                objective=attributes.get('Objective', {}).get('value'),
             )
             guid = self.extract_guid_or_raise(raw_guid, "Create Meeting")
             self.parsed_output["guid"] = guid

@@ -22855,22 +22855,6 @@
             "valid_values": []
           },
           {
-            "name": "Requested Start Time",
-            "key": "requested_start_time",
-            "value": null,
-            "format": false,
-            "detail_spec": null,
-            "valid_values": []
-          },
-          {
-            "name": "Due Time",
-            "key": "due_time",
-            "value": null,
-            "format": false,
-            "detail_spec": null,
-            "valid_values": []
-          },
-          {
             "name": "Activity Status",
             "key": "activity_status",
             "value": null,
@@ -22929,22 +22913,6 @@
           {
             "name": "Priority",
             "key": "priority",
-            "value": null,
-            "format": false,
-            "detail_spec": null,
-            "valid_values": []
-          },
-          {
-            "name": "Requested Start Time",
-            "key": "requested_start_time",
-            "value": null,
-            "format": false,
-            "detail_spec": null,
-            "valid_values": []
-          },
-          {
-            "name": "Due Time",
-            "key": "due_time",
             "value": null,
             "format": false,
             "detail_spec": null,
@@ -23040,22 +23008,6 @@
               "ABANDONED",
               "OTHER"
             ]
-          },
-          {
-            "name": "Requested Start Time",
-            "key": "requested_start_time",
-            "value": null,
-            "format": false,
-            "detail_spec": null,
-            "valid_values": []
-          },
-          {
-            "name": "Due Time",
-            "key": "due_time",
-            "value": null,
-            "format": false,
-            "detail_spec": null,
-            "valid_values": []
           }
         ],
         "columns": [
@@ -23120,22 +23072,6 @@
               "ABANDONED",
               "OTHER"
             ]
-          },
-          {
-            "name": "Requested Start Time",
-            "key": "requested_start_time",
-            "value": null,
-            "format": false,
-            "detail_spec": null,
-            "valid_values": []
-          },
-          {
-            "name": "Due Time",
-            "key": "due_time",
-            "value": null,
-            "format": false,
-            "detail_spec": null,
-            "valid_values": []
           }
         ]
       }
@@ -23222,22 +23158,6 @@
             "valid_values": []
           },
           {
-            "name": "Requested Start Time",
-            "key": "requested_start_time",
-            "value": null,
-            "format": false,
-            "detail_spec": null,
-            "valid_values": []
-          },
-          {
-            "name": "Due Time",
-            "key": "due_time",
-            "value": null,
-            "format": false,
-            "detail_spec": null,
-            "valid_values": []
-          },
-          {
             "name": "Activity Status",
             "key": "activity_status",
             "value": null,
@@ -23320,22 +23240,6 @@
           {
             "name": "Priority",
             "key": "priority",
-            "value": null,
-            "format": false,
-            "detail_spec": null,
-            "valid_values": []
-          },
-          {
-            "name": "Requested Start Time",
-            "key": "requested_start_time",
-            "value": null,
-            "format": false,
-            "detail_spec": null,
-            "valid_values": []
-          },
-          {
-            "name": "Due Time",
-            "key": "due_time",
             "value": null,
             "format": false,
             "detail_spec": null,
@@ -23455,22 +23359,6 @@
               "ABANDONED",
               "OTHER"
             ]
-          },
-          {
-            "name": "Requested Start Time",
-            "key": "requested_start_time",
-            "value": null,
-            "format": false,
-            "detail_spec": null,
-            "valid_values": []
-          },
-          {
-            "name": "Due Time",
-            "key": "due_time",
-            "value": null,
-            "format": false,
-            "detail_spec": null,
-            "valid_values": []
           }
         ],
         "columns": [
@@ -23559,22 +23447,6 @@
               "ABANDONED",
               "OTHER"
             ]
-          },
-          {
-            "name": "Requested Start Time",
-            "key": "requested_start_time",
-            "value": null,
-            "format": false,
-            "detail_spec": null,
-            "valid_values": []
-          },
-          {
-            "name": "Due Time",
-            "key": "due_time",
-            "value": null,
-            "format": false,
-            "detail_spec": null,
-            "valid_values": []
           }
         ]
       }
@@ -88975,14 +88847,6 @@
             "valid_values": []
           },
           {
-            "name": "Product Type",
-            "key": "product_type",
-            "value": null,
-            "format": false,
-            "detail_spec": null,
-            "valid_values": []
-          },
-          {
             "name": "Service Life",
             "key": "service_life",
             "value": null,
@@ -89022,14 +88886,6 @@
               "DEPRECATED",
               "OTHER"
             ]
-          },
-          {
-            "name": "Product Status",
-            "key": "product_status",
-            "value": null,
-            "format": false,
-            "detail_spec": null,
-            "valid_values": []
           },
           {
             "name": "Category",
@@ -89138,14 +88994,6 @@
             "valid_values": []
           },
           {
-            "name": "Product Type",
-            "key": "product_type",
-            "value": null,
-            "format": false,
-            "detail_spec": null,
-            "valid_values": []
-          },
-          {
             "name": "Service Life",
             "key": "service_life",
             "value": null,
@@ -89185,14 +89033,6 @@
               "DEPRECATED",
               "OTHER"
             ]
-          },
-          {
-            "name": "Product Status",
-            "key": "product_status",
-            "value": null,
-            "format": false,
-            "detail_spec": null,
-            "valid_values": []
           },
           {
             "name": "Category",
@@ -89347,22 +89187,6 @@
             "valid_values": []
           },
           {
-            "name": "Product Status",
-            "key": "product_status",
-            "value": null,
-            "format": false,
-            "detail_spec": null,
-            "valid_values": []
-          },
-          {
-            "name": "Product Type",
-            "key": "product_type",
-            "value": null,
-            "format": false,
-            "detail_spec": null,
-            "valid_values": []
-          },
-          {
             "name": "Service Life",
             "key": "service_life",
             "value": null,
@@ -89512,22 +89336,6 @@
           {
             "name": "Product Name",
             "key": "product_name",
-            "value": null,
-            "format": false,
-            "detail_spec": null,
-            "valid_values": []
-          },
-          {
-            "name": "Product Status",
-            "key": "product_status",
-            "value": null,
-            "format": false,
-            "detail_spec": null,
-            "valid_values": []
-          },
-          {
-            "name": "Product Type",
-            "key": "product_type",
             "value": null,
             "format": false,
             "detail_spec": null,
@@ -89845,14 +89653,6 @@
             "valid_values": []
           },
           {
-            "name": "Product Type",
-            "key": "product_type",
-            "value": null,
-            "format": false,
-            "detail_spec": null,
-            "valid_values": []
-          },
-          {
             "name": "Service Life",
             "key": "service_life",
             "value": null,
@@ -89928,14 +89728,6 @@
           {
             "name": "User Defined Content Status",
             "key": "user_defined_content_status",
-            "value": null,
-            "format": false,
-            "detail_spec": null,
-            "valid_values": []
-          },
-          {
-            "name": "Product Status",
-            "key": "product_status",
             "value": null,
             "format": false,
             "detail_spec": null,
@@ -90213,14 +90005,6 @@
             "valid_values": []
           },
           {
-            "name": "Product Type",
-            "key": "product_type",
-            "value": null,
-            "format": false,
-            "detail_spec": null,
-            "valid_values": []
-          },
-          {
             "name": "Service Life",
             "key": "service_life",
             "value": null,
@@ -90296,14 +90080,6 @@
           {
             "name": "User Defined Content Status",
             "key": "user_defined_content_status",
-            "value": null,
-            "format": false,
-            "detail_spec": null,
-            "valid_values": []
-          },
-          {
-            "name": "Product Status",
-            "key": "product_status",
             "value": null,
             "format": false,
             "detail_spec": null,
@@ -90643,22 +90419,6 @@
             "valid_values": []
           },
           {
-            "name": "Product Status",
-            "key": "product_status",
-            "value": null,
-            "format": false,
-            "detail_spec": null,
-            "valid_values": []
-          },
-          {
-            "name": "Product Type",
-            "key": "product_type",
-            "value": null,
-            "format": false,
-            "detail_spec": null,
-            "valid_values": []
-          },
-          {
             "name": "Service Life",
             "key": "service_life",
             "value": null,
@@ -91013,22 +90773,6 @@
           {
             "name": "Product Name",
             "key": "product_name",
-            "value": null,
-            "format": false,
-            "detail_spec": null,
-            "valid_values": []
-          },
-          {
-            "name": "Product Status",
-            "key": "product_status",
-            "value": null,
-            "format": false,
-            "detail_spec": null,
-            "valid_values": []
-          },
-          {
-            "name": "Product Type",
-            "key": "product_type",
             "value": null,
             "format": false,
             "detail_spec": null,
@@ -96459,14 +96203,6 @@
             "valid_values": []
           },
           {
-            "name": "Subscription Level",
-            "key": "subscription_level",
-            "value": null,
-            "format": false,
-            "detail_spec": null,
-            "valid_values": []
-          },
-          {
             "name": "Support Level",
             "key": "support_level",
             "value": null,
@@ -96568,14 +96304,6 @@
           {
             "name": "Agreement Type",
             "key": "agreement_type",
-            "value": null,
-            "format": false,
-            "detail_spec": null,
-            "valid_values": []
-          },
-          {
-            "name": "Subscription Level",
-            "key": "subscription_level",
             "value": null,
             "format": false,
             "detail_spec": null,
@@ -96735,14 +96463,6 @@
             "valid_values": []
           },
           {
-            "name": "Subscription Level",
-            "key": "subscription_level",
-            "value": null,
-            "format": false,
-            "detail_spec": null,
-            "valid_values": []
-          },
-          {
             "name": "Support Level",
             "key": "support_level",
             "value": null,
@@ -96852,14 +96572,6 @@
           {
             "name": "Agreement Type",
             "key": "agreement_type",
-            "value": null,
-            "format": false,
-            "detail_spec": null,
-            "valid_values": []
-          },
-          {
-            "name": "Subscription Level",
-            "key": "subscription_level",
             "value": null,
             "format": false,
             "detail_spec": null,
@@ -97137,14 +96849,6 @@
             "valid_values": []
           },
           {
-            "name": "Subscription Level",
-            "key": "subscription_level",
-            "value": null,
-            "format": false,
-            "detail_spec": null,
-            "valid_values": []
-          },
-          {
             "name": "Support Level",
             "key": "support_level",
             "value": null,
@@ -97451,14 +97155,6 @@
           {
             "name": "Agreement Type",
             "key": "agreement_type",
-            "value": null,
-            "format": false,
-            "detail_spec": null,
-            "valid_values": []
-          },
-          {
-            "name": "Subscription Level",
-            "key": "subscription_level",
             "value": null,
             "format": false,
             "detail_spec": null,
@@ -97839,14 +97535,6 @@
             "valid_values": []
           },
           {
-            "name": "Subscription Level",
-            "key": "subscription_level",
-            "value": null,
-            "format": false,
-            "detail_spec": null,
-            "valid_values": []
-          },
-          {
             "name": "Support Level",
             "key": "support_level",
             "value": null,
@@ -98161,14 +97849,6 @@
           {
             "name": "Agreement Type",
             "key": "agreement_type",
-            "value": null,
-            "format": false,
-            "detail_spec": null,
-            "valid_values": []
-          },
-          {
-            "name": "Subscription Level",
-            "key": "subscription_level",
             "value": null,
             "format": false,
             "detail_spec": null,
@@ -119395,14 +119075,6 @@
             "valid_values": []
           },
           {
-            "name": "Expected Behavior",
-            "key": "expected_behavior",
-            "value": null,
-            "format": false,
-            "detail_spec": null,
-            "valid_values": []
-          },
-          {
             "name": "Situation",
             "key": "situation",
             "value": null,
@@ -119439,14 +119111,6 @@
           {
             "name": "Description",
             "key": "description",
-            "value": null,
-            "format": false,
-            "detail_spec": null,
-            "valid_values": []
-          },
-          {
-            "name": "Expected Behavior",
-            "key": "expected_behavior",
             "value": null,
             "format": false,
             "detail_spec": null,
@@ -119484,14 +119148,6 @@
             "valid_values": []
           },
           {
-            "name": "Expected Behavior",
-            "key": "expected_behavior",
-            "value": null,
-            "format": false,
-            "detail_spec": null,
-            "valid_values": []
-          },
-          {
             "name": "GUID",
             "key": "guid",
             "value": null,
@@ -119528,14 +119184,6 @@
           {
             "name": "Display Name",
             "key": "display_name",
-            "value": null,
-            "format": false,
-            "detail_spec": null,
-            "valid_values": []
-          },
-          {
-            "name": "Expected Behavior",
-            "key": "expected_behavior",
             "value": null,
             "format": false,
             "detail_spec": null,
@@ -119642,14 +119290,6 @@
             "valid_values": []
           },
           {
-            "name": "Expected Behavior",
-            "key": "expected_behavior",
-            "value": null,
-            "format": false,
-            "detail_spec": null,
-            "valid_values": []
-          },
-          {
             "name": "Situation",
             "key": "situation",
             "value": null,
@@ -119710,14 +119350,6 @@
           {
             "name": "Description",
             "key": "description",
-            "value": null,
-            "format": false,
-            "detail_spec": null,
-            "valid_values": []
-          },
-          {
-            "name": "Expected Behavior",
-            "key": "expected_behavior",
             "value": null,
             "format": false,
             "detail_spec": null,
@@ -119779,14 +119411,6 @@
             "valid_values": []
           },
           {
-            "name": "Expected Behavior",
-            "key": "expected_behavior",
-            "value": null,
-            "format": false,
-            "detail_spec": null,
-            "valid_values": []
-          },
-          {
             "name": "GUID",
             "key": "guid",
             "value": null,
@@ -119847,14 +119471,6 @@
           {
             "name": "Display Name",
             "key": "display_name",
-            "value": null,
-            "format": false,
-            "detail_spec": null,
-            "valid_values": []
-          },
-          {
-            "name": "Expected Behavior",
-            "key": "expected_behavior",
             "value": null,
             "format": false,
             "detail_spec": null,
@@ -120743,22 +120359,6 @@
             "valid_values": []
           },
           {
-            "name": "Requested Start Time",
-            "key": "requested_start_time",
-            "value": null,
-            "format": false,
-            "detail_spec": null,
-            "valid_values": []
-          },
-          {
-            "name": "Due Time",
-            "key": "due_time",
-            "value": null,
-            "format": false,
-            "detail_spec": null,
-            "valid_values": []
-          },
-          {
             "name": "Activity Status",
             "key": "activity_status",
             "value": null,
@@ -120817,22 +120417,6 @@
           {
             "name": "Priority",
             "key": "priority",
-            "value": null,
-            "format": false,
-            "detail_spec": null,
-            "valid_values": []
-          },
-          {
-            "name": "Requested Start Time",
-            "key": "requested_start_time",
-            "value": null,
-            "format": false,
-            "detail_spec": null,
-            "valid_values": []
-          },
-          {
-            "name": "Due Time",
-            "key": "due_time",
             "value": null,
             "format": false,
             "detail_spec": null,
@@ -120928,22 +120512,6 @@
               "ABANDONED",
               "OTHER"
             ]
-          },
-          {
-            "name": "Requested Start Time",
-            "key": "requested_start_time",
-            "value": null,
-            "format": false,
-            "detail_spec": null,
-            "valid_values": []
-          },
-          {
-            "name": "Due Time",
-            "key": "due_time",
-            "value": null,
-            "format": false,
-            "detail_spec": null,
-            "valid_values": []
           }
         ],
         "columns": [
@@ -121008,22 +120576,6 @@
               "ABANDONED",
               "OTHER"
             ]
-          },
-          {
-            "name": "Requested Start Time",
-            "key": "requested_start_time",
-            "value": null,
-            "format": false,
-            "detail_spec": null,
-            "valid_values": []
-          },
-          {
-            "name": "Due Time",
-            "key": "due_time",
-            "value": null,
-            "format": false,
-            "detail_spec": null,
-            "valid_values": []
           }
         ]
       }
@@ -121110,22 +120662,6 @@
             "valid_values": []
           },
           {
-            "name": "Requested Start Time",
-            "key": "requested_start_time",
-            "value": null,
-            "format": false,
-            "detail_spec": null,
-            "valid_values": []
-          },
-          {
-            "name": "Due Time",
-            "key": "due_time",
-            "value": null,
-            "format": false,
-            "detail_spec": null,
-            "valid_values": []
-          },
-          {
             "name": "Activity Status",
             "key": "activity_status",
             "value": null,
@@ -121208,22 +120744,6 @@
           {
             "name": "Priority",
             "key": "priority",
-            "value": null,
-            "format": false,
-            "detail_spec": null,
-            "valid_values": []
-          },
-          {
-            "name": "Requested Start Time",
-            "key": "requested_start_time",
-            "value": null,
-            "format": false,
-            "detail_spec": null,
-            "valid_values": []
-          },
-          {
-            "name": "Due Time",
-            "key": "due_time",
             "value": null,
             "format": false,
             "detail_spec": null,
@@ -121343,22 +120863,6 @@
               "ABANDONED",
               "OTHER"
             ]
-          },
-          {
-            "name": "Requested Start Time",
-            "key": "requested_start_time",
-            "value": null,
-            "format": false,
-            "detail_spec": null,
-            "valid_values": []
-          },
-          {
-            "name": "Due Time",
-            "key": "due_time",
-            "value": null,
-            "format": false,
-            "detail_spec": null,
-            "valid_values": []
           }
         ],
         "columns": [
@@ -121447,22 +120951,6 @@
               "ABANDONED",
               "OTHER"
             ]
-          },
-          {
-            "name": "Requested Start Time",
-            "key": "requested_start_time",
-            "value": null,
-            "format": false,
-            "detail_spec": null,
-            "valid_values": []
-          },
-          {
-            "name": "Due Time",
-            "key": "due_time",
-            "value": null,
-            "format": false,
-            "detail_spec": null,
-            "valid_values": []
           }
         ]
       }
@@ -121525,22 +121013,6 @@
             "valid_values": []
           },
           {
-            "name": "Requested Start Time",
-            "key": "requested_start_time",
-            "value": null,
-            "format": false,
-            "detail_spec": null,
-            "valid_values": []
-          },
-          {
-            "name": "Due Time",
-            "key": "due_time",
-            "value": null,
-            "format": false,
-            "detail_spec": null,
-            "valid_values": []
-          },
-          {
             "name": "Commented On Element",
             "key": "commented_on_element",
             "value": null,
@@ -121607,22 +121079,6 @@
           {
             "name": "Priority",
             "key": "priority",
-            "value": null,
-            "format": false,
-            "detail_spec": null,
-            "valid_values": []
-          },
-          {
-            "name": "Requested Start Time",
-            "key": "requested_start_time",
-            "value": null,
-            "format": false,
-            "detail_spec": null,
-            "valid_values": []
-          },
-          {
-            "name": "Due Time",
-            "key": "due_time",
             "value": null,
             "format": false,
             "detail_spec": null,
@@ -121728,22 +121184,6 @@
             ]
           },
           {
-            "name": "Requested Start Time",
-            "key": "requested_start_time",
-            "value": null,
-            "format": false,
-            "detail_spec": null,
-            "valid_values": []
-          },
-          {
-            "name": "Due Time",
-            "key": "due_time",
-            "value": null,
-            "format": false,
-            "detail_spec": null,
-            "valid_values": []
-          },
-          {
             "name": "Commented On Element",
             "key": "commented_on_element",
             "value": null,
@@ -121814,22 +121254,6 @@
               "ABANDONED",
               "OTHER"
             ]
-          },
-          {
-            "name": "Requested Start Time",
-            "key": "requested_start_time",
-            "value": null,
-            "format": false,
-            "detail_spec": null,
-            "valid_values": []
-          },
-          {
-            "name": "Due Time",
-            "key": "due_time",
-            "value": null,
-            "format": false,
-            "detail_spec": null,
-            "valid_values": []
           },
           {
             "name": "Commented On Element",
@@ -121924,22 +121348,6 @@
             "valid_values": []
           },
           {
-            "name": "Requested Start Time",
-            "key": "requested_start_time",
-            "value": null,
-            "format": false,
-            "detail_spec": null,
-            "valid_values": []
-          },
-          {
-            "name": "Due Time",
-            "key": "due_time",
-            "value": null,
-            "format": false,
-            "detail_spec": null,
-            "valid_values": []
-          },
-          {
             "name": "Commented On Element",
             "key": "commented_on_element",
             "value": null,
@@ -122030,22 +121438,6 @@
           {
             "name": "Priority",
             "key": "priority",
-            "value": null,
-            "format": false,
-            "detail_spec": null,
-            "valid_values": []
-          },
-          {
-            "name": "Requested Start Time",
-            "key": "requested_start_time",
-            "value": null,
-            "format": false,
-            "detail_spec": null,
-            "valid_values": []
-          },
-          {
-            "name": "Due Time",
-            "key": "due_time",
             "value": null,
             "format": false,
             "detail_spec": null,
@@ -122175,22 +121567,6 @@
             ]
           },
           {
-            "name": "Requested Start Time",
-            "key": "requested_start_time",
-            "value": null,
-            "format": false,
-            "detail_spec": null,
-            "valid_values": []
-          },
-          {
-            "name": "Due Time",
-            "key": "due_time",
-            "value": null,
-            "format": false,
-            "detail_spec": null,
-            "valid_values": []
-          },
-          {
             "name": "Commented On Element",
             "key": "commented_on_element",
             "value": null,
@@ -122285,22 +121661,6 @@
               "ABANDONED",
               "OTHER"
             ]
-          },
-          {
-            "name": "Requested Start Time",
-            "key": "requested_start_time",
-            "value": null,
-            "format": false,
-            "detail_spec": null,
-            "valid_values": []
-          },
-          {
-            "name": "Due Time",
-            "key": "due_time",
-            "value": null,
-            "format": false,
-            "detail_spec": null,
-            "valid_values": []
           },
           {
             "name": "Commented On Element",
@@ -122363,14 +121723,6 @@
             "valid_values": []
           },
           {
-            "name": "Expected Behavior",
-            "key": "expected_behavior",
-            "value": null,
-            "format": false,
-            "detail_spec": null,
-            "valid_values": []
-          },
-          {
             "name": "Situation",
             "key": "situation",
             "value": null,
@@ -122407,14 +121759,6 @@
           {
             "name": "Description",
             "key": "description",
-            "value": null,
-            "format": false,
-            "detail_spec": null,
-            "valid_values": []
-          },
-          {
-            "name": "Expected Behavior",
-            "key": "expected_behavior",
             "value": null,
             "format": false,
             "detail_spec": null,
@@ -122452,14 +121796,6 @@
             "valid_values": []
           },
           {
-            "name": "Expected Behavior",
-            "key": "expected_behavior",
-            "value": null,
-            "format": false,
-            "detail_spec": null,
-            "valid_values": []
-          },
-          {
             "name": "GUID",
             "key": "guid",
             "value": null,
@@ -122496,14 +121832,6 @@
           {
             "name": "Display Name",
             "key": "display_name",
-            "value": null,
-            "format": false,
-            "detail_spec": null,
-            "valid_values": []
-          },
-          {
-            "name": "Expected Behavior",
-            "key": "expected_behavior",
             "value": null,
             "format": false,
             "detail_spec": null,
@@ -122610,14 +121938,6 @@
             "valid_values": []
           },
           {
-            "name": "Expected Behavior",
-            "key": "expected_behavior",
-            "value": null,
-            "format": false,
-            "detail_spec": null,
-            "valid_values": []
-          },
-          {
             "name": "Situation",
             "key": "situation",
             "value": null,
@@ -122678,14 +121998,6 @@
           {
             "name": "Description",
             "key": "description",
-            "value": null,
-            "format": false,
-            "detail_spec": null,
-            "valid_values": []
-          },
-          {
-            "name": "Expected Behavior",
-            "key": "expected_behavior",
             "value": null,
             "format": false,
             "detail_spec": null,
@@ -122747,14 +122059,6 @@
             "valid_values": []
           },
           {
-            "name": "Expected Behavior",
-            "key": "expected_behavior",
-            "value": null,
-            "format": false,
-            "detail_spec": null,
-            "valid_values": []
-          },
-          {
             "name": "GUID",
             "key": "guid",
             "value": null,
@@ -122815,14 +122119,6 @@
           {
             "name": "Display Name",
             "key": "display_name",
-            "value": null,
-            "format": false,
-            "detail_spec": null,
-            "valid_values": []
-          },
-          {
-            "name": "Expected Behavior",
-            "key": "expected_behavior",
             "value": null,
             "format": false,
             "detail_spec": null,
@@ -122905,14 +122201,6 @@
             "valid_values": []
           },
           {
-            "name": "Expected Behavior",
-            "key": "expected_behavior",
-            "value": null,
-            "format": false,
-            "detail_spec": null,
-            "valid_values": []
-          },
-          {
             "name": "Situation",
             "key": "situation",
             "value": null,
@@ -122949,14 +122237,6 @@
           {
             "name": "Description",
             "key": "description",
-            "value": null,
-            "format": false,
-            "detail_spec": null,
-            "valid_values": []
-          },
-          {
-            "name": "Expected Behavior",
-            "key": "expected_behavior",
             "value": null,
             "format": false,
             "detail_spec": null,
@@ -122994,14 +122274,6 @@
             "valid_values": []
           },
           {
-            "name": "Expected Behavior",
-            "key": "expected_behavior",
-            "value": null,
-            "format": false,
-            "detail_spec": null,
-            "valid_values": []
-          },
-          {
             "name": "GUID",
             "key": "guid",
             "value": null,
@@ -123038,14 +122310,6 @@
           {
             "name": "Display Name",
             "key": "display_name",
-            "value": null,
-            "format": false,
-            "detail_spec": null,
-            "valid_values": []
-          },
-          {
-            "name": "Expected Behavior",
-            "key": "expected_behavior",
             "value": null,
             "format": false,
             "detail_spec": null,
@@ -123152,14 +122416,6 @@
             "valid_values": []
           },
           {
-            "name": "Expected Behavior",
-            "key": "expected_behavior",
-            "value": null,
-            "format": false,
-            "detail_spec": null,
-            "valid_values": []
-          },
-          {
             "name": "Situation",
             "key": "situation",
             "value": null,
@@ -123220,14 +122476,6 @@
           {
             "name": "Description",
             "key": "description",
-            "value": null,
-            "format": false,
-            "detail_spec": null,
-            "valid_values": []
-          },
-          {
-            "name": "Expected Behavior",
-            "key": "expected_behavior",
             "value": null,
             "format": false,
             "detail_spec": null,
@@ -123289,14 +122537,6 @@
             "valid_values": []
           },
           {
-            "name": "Expected Behavior",
-            "key": "expected_behavior",
-            "value": null,
-            "format": false,
-            "detail_spec": null,
-            "valid_values": []
-          },
-          {
             "name": "GUID",
             "key": "guid",
             "value": null,
@@ -123357,14 +122597,6 @@
           {
             "name": "Display Name",
             "key": "display_name",
-            "value": null,
-            "format": false,
-            "detail_spec": null,
-            "valid_values": []
-          },
-          {
-            "name": "Expected Behavior",
-            "key": "expected_behavior",
             "value": null,
             "format": false,
             "detail_spec": null,
@@ -205549,22 +204781,6 @@
             "valid_values": []
           },
           {
-            "name": "Requested Start Time",
-            "key": "requested_start_time",
-            "value": null,
-            "format": false,
-            "detail_spec": null,
-            "valid_values": []
-          },
-          {
-            "name": "Due Time",
-            "key": "due_time",
-            "value": null,
-            "format": false,
-            "detail_spec": null,
-            "valid_values": []
-          },
-          {
             "name": "Activity Status",
             "key": "activity_status",
             "value": null,
@@ -205623,22 +204839,6 @@
           {
             "name": "Priority",
             "key": "priority",
-            "value": null,
-            "format": false,
-            "detail_spec": null,
-            "valid_values": []
-          },
-          {
-            "name": "Requested Start Time",
-            "key": "requested_start_time",
-            "value": null,
-            "format": false,
-            "detail_spec": null,
-            "valid_values": []
-          },
-          {
-            "name": "Due Time",
-            "key": "due_time",
             "value": null,
             "format": false,
             "detail_spec": null,
@@ -205734,22 +204934,6 @@
               "ABANDONED",
               "OTHER"
             ]
-          },
-          {
-            "name": "Requested Start Time",
-            "key": "requested_start_time",
-            "value": null,
-            "format": false,
-            "detail_spec": null,
-            "valid_values": []
-          },
-          {
-            "name": "Due Time",
-            "key": "due_time",
-            "value": null,
-            "format": false,
-            "detail_spec": null,
-            "valid_values": []
           }
         ],
         "columns": [
@@ -205814,22 +204998,6 @@
               "ABANDONED",
               "OTHER"
             ]
-          },
-          {
-            "name": "Requested Start Time",
-            "key": "requested_start_time",
-            "value": null,
-            "format": false,
-            "detail_spec": null,
-            "valid_values": []
-          },
-          {
-            "name": "Due Time",
-            "key": "due_time",
-            "value": null,
-            "format": false,
-            "detail_spec": null,
-            "valid_values": []
           }
         ]
       }
@@ -205916,22 +205084,6 @@
             "valid_values": []
           },
           {
-            "name": "Requested Start Time",
-            "key": "requested_start_time",
-            "value": null,
-            "format": false,
-            "detail_spec": null,
-            "valid_values": []
-          },
-          {
-            "name": "Due Time",
-            "key": "due_time",
-            "value": null,
-            "format": false,
-            "detail_spec": null,
-            "valid_values": []
-          },
-          {
             "name": "Activity Status",
             "key": "activity_status",
             "value": null,
@@ -206014,22 +205166,6 @@
           {
             "name": "Priority",
             "key": "priority",
-            "value": null,
-            "format": false,
-            "detail_spec": null,
-            "valid_values": []
-          },
-          {
-            "name": "Requested Start Time",
-            "key": "requested_start_time",
-            "value": null,
-            "format": false,
-            "detail_spec": null,
-            "valid_values": []
-          },
-          {
-            "name": "Due Time",
-            "key": "due_time",
             "value": null,
             "format": false,
             "detail_spec": null,
@@ -206149,22 +205285,6 @@
               "ABANDONED",
               "OTHER"
             ]
-          },
-          {
-            "name": "Requested Start Time",
-            "key": "requested_start_time",
-            "value": null,
-            "format": false,
-            "detail_spec": null,
-            "valid_values": []
-          },
-          {
-            "name": "Due Time",
-            "key": "due_time",
-            "value": null,
-            "format": false,
-            "detail_spec": null,
-            "valid_values": []
           }
         ],
         "columns": [
@@ -206253,22 +205373,6 @@
               "ABANDONED",
               "OTHER"
             ]
-          },
-          {
-            "name": "Requested Start Time",
-            "key": "requested_start_time",
-            "value": null,
-            "format": false,
-            "detail_spec": null,
-            "valid_values": []
-          },
-          {
-            "name": "Due Time",
-            "key": "due_time",
-            "value": null,
-            "format": false,
-            "detail_spec": null,
-            "valid_values": []
           }
         ]
       }
@@ -232709,22 +231813,6 @@
             ]
           },
           {
-            "name": "Role Identifier",
-            "key": "role_identifier",
-            "value": null,
-            "format": false,
-            "detail_spec": null,
-            "valid_values": []
-          },
-          {
-            "name": "Role Type",
-            "key": "role_type",
-            "value": null,
-            "format": false,
-            "detail_spec": null,
-            "valid_values": []
-          },
-          {
             "name": "Scope",
             "key": "scope",
             "value": null,
@@ -232840,22 +231928,6 @@
               "Asset Management",
               "Other"
             ]
-          },
-          {
-            "name": "Role Identifier",
-            "key": "role_identifier",
-            "value": null,
-            "format": false,
-            "detail_spec": null,
-            "valid_values": []
-          },
-          {
-            "name": "Role Type",
-            "key": "role_type",
-            "value": null,
-            "format": false,
-            "detail_spec": null,
-            "valid_values": []
           },
           {
             "name": "Scope",
@@ -233021,22 +232093,6 @@
             ]
           },
           {
-            "name": "Role Identifier",
-            "key": "role_identifier",
-            "value": null,
-            "format": false,
-            "detail_spec": null,
-            "valid_values": []
-          },
-          {
-            "name": "Role Type",
-            "key": "role_type",
-            "value": null,
-            "format": false,
-            "detail_spec": null,
-            "valid_values": []
-          },
-          {
             "name": "Scope",
             "key": "scope",
             "value": null,
@@ -233160,22 +232216,6 @@
               "Asset Management",
               "Other"
             ]
-          },
-          {
-            "name": "Role Identifier",
-            "key": "role_identifier",
-            "value": null,
-            "format": false,
-            "detail_spec": null,
-            "valid_values": []
-          },
-          {
-            "name": "Role Type",
-            "key": "role_type",
-            "value": null,
-            "format": false,
-            "detail_spec": null,
-            "valid_values": []
           },
           {
             "name": "Scope",
@@ -233457,22 +232497,6 @@
             ]
           },
           {
-            "name": "Role Identifier",
-            "key": "role_identifier",
-            "value": null,
-            "format": false,
-            "detail_spec": null,
-            "valid_values": []
-          },
-          {
-            "name": "Role Type",
-            "key": "role_type",
-            "value": null,
-            "format": false,
-            "detail_spec": null,
-            "valid_values": []
-          },
-          {
             "name": "Scope",
             "key": "scope",
             "value": null,
@@ -233793,22 +232817,6 @@
               "Asset Management",
               "Other"
             ]
-          },
-          {
-            "name": "Role Identifier",
-            "key": "role_identifier",
-            "value": null,
-            "format": false,
-            "detail_spec": null,
-            "valid_values": []
-          },
-          {
-            "name": "Role Type",
-            "key": "role_type",
-            "value": null,
-            "format": false,
-            "detail_spec": null,
-            "valid_values": []
           },
           {
             "name": "Scope",
@@ -234195,22 +233203,6 @@
             ]
           },
           {
-            "name": "Role Identifier",
-            "key": "role_identifier",
-            "value": null,
-            "format": false,
-            "detail_spec": null,
-            "valid_values": []
-          },
-          {
-            "name": "Role Type",
-            "key": "role_type",
-            "value": null,
-            "format": false,
-            "detail_spec": null,
-            "valid_values": []
-          },
-          {
             "name": "Scope",
             "key": "scope",
             "value": null,
@@ -234539,22 +233531,6 @@
               "Asset Management",
               "Other"
             ]
-          },
-          {
-            "name": "Role Identifier",
-            "key": "role_identifier",
-            "value": null,
-            "format": false,
-            "detail_spec": null,
-            "valid_values": []
-          },
-          {
-            "name": "Role Type",
-            "key": "role_type",
-            "value": null,
-            "format": false,
-            "detail_spec": null,
-            "valid_values": []
           },
           {
             "name": "Scope",

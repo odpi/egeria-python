@@ -261,6 +261,7 @@ class NotificationSubscriberProperties(PyegeriaModel):
     description: str | None = None
     activity_status: str | None = None
     zone_membership: list[str] | None = None
+    last_notification: str | None = None
     effective_from: datetime | None = None
     effective_to: datetime | None = None
 
@@ -460,7 +461,18 @@ class InitialClassifications(PyegeriaModel):
     @model_serializer(mode="wrap")
     def serialize_model(self, handler):
         result = handler(self)
-        other_props = result.pop("other_props", None)
+        # When dumped with by_alias=True (the pattern used everywhere in
+        # this codebase), the handler's own output already uses the
+        # aliased key "otherProps" (PyegeriaModel's alias_generator=
+        # to_camel_case), not the field's Python name "other_props" -- a
+        # pop keyed on "other_props" alone silently never matched, so
+        # classification properties beyond "class" (e.g. Taxonomy's
+        # organizingPrinciple, CanonicalVocabulary's scope) were nested
+        # under a stray "otherProps"/"other_props" key the real Egeria DTO
+        # doesn't expect, and got silently dropped server-side. Confirmed
+        # live 2026-09-18 while fixing PYEGERIA_ISSUES.md's Glossary
+        # classification bug (Cluster B).
+        other_props = result.pop("otherProps", None) or result.pop("other_props", None)
         if other_props:
             result.update(other_props)
         return result
