@@ -182,6 +182,8 @@ class ReportProcessor(AsyncBaseCommandProcessor):
 
         props = set_element_prop_body("Report", qualified_name, attributes)
         props["additionalProperties"] = _report_additional_properties(attributes)
+        props["deployedImplementationType"] = attributes.get("Deployed Implementation Type", {}).get("value")
+        props["resourceName"] = attributes.get("Resource Name", {}).get("value")
 
         if self.as_is_element:
             guid = self.as_is_element["elementHeader"]["guid"]

@@ -136,7 +136,7 @@ class TermProcessor(AsyncBaseCommandProcessor):
         prop_body = set_element_prop_body(om_type or "GlossaryTerm", qualified_name, attributes)
         prop_body["aliases"] = attributes.get('Aliases', {}).get('value', None)
         prop_body["summary"] = attributes.get('Summary', {}).get('value', None)
-        prop_body["examples"] = attributes.get('Examples', {}).get('value', None)
+        prop_body["examples"] = attributes.get('Example', {}).get('value', None)
         prop_body["abbreviation"] = attributes.get('Abbreviation', {}).get('value', None)
         prop_body["usage"] = attributes.get('Usage', {}).get('value', None)
         prop_body["user_defined_status"] = attributes.get('UserDefinedStatus', {}).get('value', None)
@@ -468,6 +468,7 @@ class QuestionProcessor(AsyncBaseCommandProcessor):
         om_type = spec.get("OM_TYPE", "GlossaryTerm")
 
         prop_body = set_element_prop_body(om_type, qualified_name, attributes)
+        prop_body["examples"] = attributes.get('Example', {}).get('value', None)
         body = set_create_body(om_type, attributes)
         body["properties"] = prop_body
         body["initialClassifications"] = {"Question": {"class": "QuestionProperties"}}

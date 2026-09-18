@@ -23,14 +23,6 @@ ___
 >	**Description**: Type of agreement (e.g., service level agreement, licensing agreement, data sharing agreement).
 
 
-### Subscription Level
->	**Input Required**: False
-
->	**Attribute Type**: Simple
-
->	**Description**: Level or tier of the subscription (e.g., basic, premium, enterprise).
-
-
 ### Support Level
 >	**Input Required**: False
 

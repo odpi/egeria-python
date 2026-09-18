@@ -47,22 +47,6 @@ ___
 >	**Description**: An integer priority for the project.
 
 
-### Requested Start Time
->	**Input Required**: False
-
->	**Attribute Type**: Simple
-
->	**Description**: Requested start date/time for a Meeting, ToDo, or Review person action.
-
-
-### Due Time
->	**Input Required**: False
-
->	**Attribute Type**: Simple
-
->	**Description**: Due date/time for a Meeting, ToDo, or Review person action.
-
-
 ### Journal Entry
 >	**Input Required**: False
 

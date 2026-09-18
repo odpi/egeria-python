@@ -48,6 +48,12 @@ def _embedded_process_extra_properties(attributes: Dict[str, Any]) -> Dict[str, 
     priority = attributes.get("Priority", {}).get("value")
     if priority is not None and priority != "":
         extra["priority"] = priority
+    deployed_implementation_type = attributes.get("Deployed Implementation Type", {}).get("value")
+    if deployed_implementation_type:
+        extra["deployedImplementationType"] = deployed_implementation_type
+    resource_name = attributes.get("Resource Name", {}).get("value")
+    if resource_name:
+        extra["resourceName"] = resource_name
     return extra
 
 

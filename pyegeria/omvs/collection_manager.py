@@ -58,6 +58,7 @@ from pyegeria.core._server_client import ServerClient
 
 class CollectionProperties(ReferenceableProperties):
     class_: Annotated[Literal["CollectionProperties"], Field(alias="class")]
+    purpose: str | None = None
 
 
 class RootCollectionProperties(CollectionProperties):
@@ -143,6 +144,7 @@ class DigitalProductProperties(CollectionProperties):
     identifier: str | None = None
     introduction_date: datetime | None = None
     maturity: str | None = None
+    current_version: str | None = None
     service_life: str | None = None
     next_version_date: datetime | None = None
     withdrawal_date: datetime | None = None

@@ -63,6 +63,17 @@ class DataValueSpecificationProcessor(AsyncBaseCommandProcessor):
             "additionalProperties": attributes.get('Additional Properties', {}).get('value', {})
         }
 
+        # "In Data Value Specification"/"Specializes Data Value Specification"
+        # both describe the same DataValueHierarchy parent -- near-synonym
+        # descriptions in the compact spec, treated as aliases of one
+        # relationship (see PYEGERIA_ISSUES.md ISSUE-101 follow-up).
+        value_spec_parent_guids = set(attributes.get('In Data Value Specification', {}).get('guid_list', []))
+        if attributes.get('In Data Value Specification', {}).get('guid'):
+            value_spec_parent_guids.add(attributes['In Data Value Specification']['guid'])
+        value_spec_parent_guids |= set(attributes.get('Specializes Data Value Specification', {}).get('guid_list', []))
+        if attributes.get('Specializes Data Value Specification', {}).get('guid'):
+            value_spec_parent_guids.add(attributes['Specializes Data Value Specification']['guid'])
+
         if verb == "Update":
             guid = self.parsed_output.get("guid") or (self.as_is_element['elementHeader']['guid'] if self.as_is_element else None)
             if not guid:
@@ -71,6 +82,8 @@ class DataValueSpecificationProcessor(AsyncBaseCommandProcessor):
             self.last_body = body = {"class": "UpdateElementRequestBody", "properties": props}
             await self.client.data_designer._async_update_data_value_specification(guid, body)
             self.parsed_output["guid"] = guid
+
+            await self._sync_value_spec_parent(guid, value_spec_parent_guids, replace_all=True)
 
             if journal_entry:
                 try:
@@ -91,6 +104,8 @@ class DataValueSpecificationProcessor(AsyncBaseCommandProcessor):
             if guid:
                 self.parsed_output["guid"] = guid
 
+                await self._sync_value_spec_parent(guid, value_spec_parent_guids, replace_all=True, known_new=True)
+
                 if journal_entry:
                     try:
                         j_guid = await async_add_note_in_dr_e(self.client, qualified_name, display_name, journal_entry)
@@ -110,6 +125,22 @@ class DataValueSpecificationProcessor(AsyncBaseCommandProcessor):
             return await self.client.data_designer._async_get_data_value_specification_by_guid(guid)
         except PyegeriaException:
             return None
+
+    async def _sync_value_spec_parent(self, guid: str, to_be_guids: set, replace_all: bool, known_new: bool = False):
+        """Sync this element's DataValueHierarchy parent(s)."""
+        if known_new:
+            as_is = set()
+        else:
+            rel_els = await self.client.data_designer._async_get_data_value_specification_rel_elements(guid) or {}
+            as_is = set(rel_els.get("specialized_data_value_spec_guids", []))
+        sync_res = await self.sync_members(as_is, to_be_guids,
+                               lambda p: self.client.data_designer._async_link_specialized_data_value_specification(p, guid, None),
+                               lambda p: self.client.data_designer._async_detach_specialized_data_value_specification(p, guid, None),
+                               replace_all)
+        if sync_res.get("added") or sync_res.get("removed"):
+            self.add_related_result("Data Value Specification Sync", message=f"Added {len(sync_res['added'])}, Removed {len(sync_res['removed'])}")
+        if sync_res.get("errors"):
+            self.add_related_result("Data Value Specification Sync", status="failure", message="; ".join(sync_res["errors"]))
 
 class DataCollectionProcessor(AsyncBaseCommandProcessor):
     """
@@ -217,11 +248,11 @@ class DataStructureProcessor(AsyncBaseCommandProcessor):
         prop_body['namespace'] = attributes.get('Namespace', {}).get('value', None)
         
         # Collection memberships
-        data_spec_guids = attributes.get("In Data Specification", {}).get("guid_list", [])
-        data_dict_guids = attributes.get("In Data Dictionary", {}).get("guid_list", [])
-        to_be_guids = set((data_spec_guids if isinstance(data_spec_guids, list) else [data_spec_guids]) + 
-                          (data_dict_guids if isinstance(data_dict_guids, list) else [data_dict_guids]))
-        to_be_guids = {g for g in to_be_guids if g}
+        in_data_spec = attributes.get("In Data Specification", {})
+        data_spec_guids = in_data_spec.get("guid_list") or ([in_data_spec["guid"]] if in_data_spec.get("guid") else [])
+        in_data_dict = attributes.get("In Data Dictionary", {})
+        data_dict_guids = in_data_dict.get("guid_list") or ([in_data_dict["guid"]] if in_data_dict.get("guid") else [])
+        to_be_guids = {g for g in (data_spec_guids + data_dict_guids) if g}
 
         if verb == "Update":
             guid = self.parsed_output.get("guid") or (self.as_is_element['elementHeader']['guid'] if self.as_is_element else None)
@@ -324,12 +355,18 @@ class DataFieldProcessor(AsyncBaseCommandProcessor):
         
         # 2. Relationships
         data_struct_guids = set(attributes.get('In Data Structure', {}).get('guid_list', []))
-        parent_field_guids = set(attributes.get('Parent Data Field', {}).get('guid_list', []))
+        if attributes.get('In Data Structure', {}).get('guid'):
+            data_struct_guids.add(attributes['In Data Structure']['guid'])
+        parent_field_guids = set(attributes.get('In Data Field', {}).get('guid_list', []))
+        if attributes.get('In Data Field', {}).get('guid'):
+            parent_field_guids.add(attributes['In Data Field']['guid'])
         term_guids = set(attributes.get('Glossary Term', {}).get('guid_list', []))
         if attributes.get('Glossary Term', {}).get('guid'):
             term_guids.add(attributes['Glossary Term']['guid'])
         data_class_guid = attributes.get('Data Class', {}).get('guid')
         data_dict_guids = set(attributes.get('In Data Dictionary', {}).get('guid_list', []))
+        if attributes.get('In Data Dictionary', {}).get('guid'):
+            data_dict_guids.add(attributes['In Data Dictionary']['guid'])
 
         if verb == "Update":
             guid = self.parsed_output.get("guid") or (self.as_is_element['elementHeader']['guid'] if self.as_is_element else None)
@@ -341,7 +378,7 @@ class DataFieldProcessor(AsyncBaseCommandProcessor):
             await self.client.data_designer._async_update_data_field(guid, body)
             self.parsed_output["guid"] = guid
             
-            await self._sync_all_rels(guid, data_struct_guids, parent_field_guids, term_guids, data_class_guid, data_dict_guids, not merge_update)
+            await self._sync_all_rels(guid, data_struct_guids, parent_field_guids, term_guids, data_class_guid, data_dict_guids, not merge_update, attributes=attributes)
             
             if journal_entry:
                 try:
@@ -365,7 +402,7 @@ class DataFieldProcessor(AsyncBaseCommandProcessor):
                 self.parsed_output["guid"] = guid
                 # known_new=True: this GUID was just created, so it cannot have
                 # any existing relationships yet -- skip the as-is fetches.
-                await self._sync_all_rels(guid, data_struct_guids, parent_field_guids, term_guids, data_class_guid, data_dict_guids, replace_all=True, known_new=True)
+                await self._sync_all_rels(guid, data_struct_guids, parent_field_guids, term_guids, data_class_guid, data_dict_guids, replace_all=True, known_new=True, attributes=attributes)
 
                 if journal_entry:
                     try:
@@ -382,7 +419,7 @@ class DataFieldProcessor(AsyncBaseCommandProcessor):
         return self.command.raw_block
 
     async def _sync_all_rels(self, guid: str, ds_guids: set, parent_guids: set, term_guids: set, dc_guid: str, dict_guids: set,
-                              replace_all: bool, known_new: bool = False):
+                              replace_all: bool, known_new: bool = False, attributes: dict = None):
         """
         Unified relationship sync for Data Field.
 
@@ -397,9 +434,19 @@ class DataFieldProcessor(AsyncBaseCommandProcessor):
             rel_els = await self.client.data_designer._async_get_data_field_rel_elements(guid)
 
         # 1. Data Structures
+        attributes = attributes or {}
+        member_field_body = body_slimmer({
+            "class": "NewRelationshipRequestBody",
+            "properties": body_slimmer({
+                "class": "MemberDataFieldProperties",
+                "position": attributes.get('Position', {}).get('value'),
+                "minCardinality": attributes.get('Minimum Cardinality', {}).get('value'),
+                "maxCardinality": attributes.get('Maximum Cardinality', {}).get('value'),
+            }),
+        })
         as_is_ds = set(rel_els.get("data_structure_guids", []))
         sync_res = await self.sync_members(as_is_ds, ds_guids,
-                               lambda ds: self.client.data_designer._async_link_member_data_field(ds, guid, None),
+                               lambda ds: self.client.data_designer._async_link_member_data_field(ds, guid, member_field_body),
                                lambda ds: self.client.data_designer._async_detach_member_data_field(ds, guid, None),
                                replace_all)
         if sync_res.get("added") or sync_res.get("removed"):
@@ -497,7 +544,8 @@ class DataClassProcessor(AsyncBaseCommandProcessor):
             "specification": attributes.get('Specification', {}).get('value'),
             "specificationDetails": attributes.get('Specification Details', {}).get('value', {}),
             "dataType": attributes.get('Data Type', {}).get('value'),
-            "allowsDuplicateValues": attributes.get('Allow Duplicates', {}).get('value', True),
+            "allowsDuplicateValues": attributes.get('Allow Duplicate Values', {}).get('value', True),
+            "isCaseSensitive": attributes.get('Is Case Sensitive', {}).get('value'),
             "isNullable": attributes.get('Is Nullable', {}).get('value', True),
             "defaultValue": attributes.get('Default Value', {}).get('value'),
             "averageValue": attributes.get('Average Value', {}).get('value'),
@@ -518,6 +566,18 @@ class DataClassProcessor(AsyncBaseCommandProcessor):
         if attributes.get('Specializes Data Class', {}).get('guid'):
             specializes_dc_guids.add(attributes['Specializes Data Class']['guid'])
         data_dict_guids = set(attributes.get('In Data Dictionary', {}).get('guid_list', []))
+        if attributes.get('In Data Dictionary', {}).get('guid'):
+            data_dict_guids.add(attributes['In Data Dictionary']['guid'])
+        # "In Data Value Specification"/"Specializes Data Value Specification"
+        # both describe the same DataValueHierarchy parent -- near-synonym
+        # descriptions in the compact spec, treated as aliases of one
+        # relationship (see PYEGERIA_ISSUES.md ISSUE-101 follow-up).
+        value_spec_parent_guids = set(attributes.get('In Data Value Specification', {}).get('guid_list', []))
+        if attributes.get('In Data Value Specification', {}).get('guid'):
+            value_spec_parent_guids.add(attributes['In Data Value Specification']['guid'])
+        value_spec_parent_guids |= set(attributes.get('Specializes Data Value Specification', {}).get('guid_list', []))
+        if attributes.get('Specializes Data Value Specification', {}).get('guid'):
+            value_spec_parent_guids.add(attributes['Specializes Data Value Specification']['guid'])
 
         if verb == "Update":
             guid = self.parsed_output.get("guid") or (self.as_is_element['elementHeader']['guid'] if self.as_is_element else None)
@@ -527,8 +587,8 @@ class DataClassProcessor(AsyncBaseCommandProcessor):
             self.last_body = body = {"class": "UpdateElementRequestBody", "properties": props}
             await self.client.data_designer._async_update_data_value_specification(guid, body)
             self.parsed_output["guid"] = guid
-            
-            await self._sync_all_rels(guid, containing_dc_guids, term_guids, specializes_dc_guids, data_dict_guids, not merge_update)
+
+            await self._sync_all_rels(guid, containing_dc_guids, term_guids, specializes_dc_guids, data_dict_guids, not merge_update, value_spec_parent_guids=value_spec_parent_guids)
             
             if journal_entry:
                 try:
@@ -550,7 +610,7 @@ class DataClassProcessor(AsyncBaseCommandProcessor):
                 self.parsed_output["guid"] = guid
                 # known_new=True: this GUID was just created, so it cannot have
                 # any existing relationships yet -- skip the as-is fetches.
-                await self._sync_all_rels(guid, containing_dc_guids, term_guids, specializes_dc_guids, data_dict_guids, replace_all=True, known_new=True)
+                await self._sync_all_rels(guid, containing_dc_guids, term_guids, specializes_dc_guids, data_dict_guids, replace_all=True, known_new=True, value_spec_parent_guids=value_spec_parent_guids)
 
                 if journal_entry:
                     try:
@@ -567,7 +627,7 @@ class DataClassProcessor(AsyncBaseCommandProcessor):
         return self.command.raw_block
 
     async def _sync_all_rels(self, guid: str, cont_guids: set, term_guids: set, spec_guids: set, dict_guids: set,
-                              replace_all: bool, known_new: bool = False):
+                              replace_all: bool, known_new: bool = False, value_spec_parent_guids: set = None):
         """known_new=True skips both as-is fetches below (see DataFieldProcessor._sync_all_rels)."""
         rel_els = {} if known_new else (await self.client.data_designer._async_get_data_class_rel_elements(guid) or {})
 
@@ -621,6 +681,18 @@ class DataClassProcessor(AsyncBaseCommandProcessor):
         if sync_res.get("errors"):
             self.add_related_result("Data Dictionaries Sync", status="failure", message="; ".join(sync_res["errors"]))
 
+        # 5. Data Value Specification parent (DataValueHierarchy)
+        if value_spec_parent_guids is not None:
+            as_is_value_spec = set(rel_els.get("specialized_data_value_spec_guids", []))
+            sync_res = await self.sync_members(as_is_value_spec, value_spec_parent_guids,
+                                   lambda p: self.client.data_designer._async_link_specialized_data_value_specification(p, guid, None),
+                                   lambda p: self.client.data_designer._async_detach_specialized_data_value_specification(p, guid, None),
+                                   replace_all)
+            if sync_res.get("added") or sync_res.get("removed"):
+                self.add_related_result("Data Value Specification Sync", message=f"Added {len(sync_res['added'])}, Removed {len(sync_res['removed'])}")
+            if sync_res.get("errors"):
+                self.add_related_result("Data Value Specification Sync", status="failure", message="; ".join(sync_res["errors"]))
+
     async def fetch_element(self, guid: str) -> Optional[Dict[str, Any]]:
         try:
             return await self.client.data_designer._async_get_data_class_by_guid(guid)
@@ -644,6 +716,20 @@ class DataGrainProcessor(AsyncBaseCommandProcessor):
         om_type = spec.get("OM_TYPE")
 
         props_body = set_element_prop_body(om_type or "Data Grain", qualified_name, attributes)
+        props_body["grainStatement"] = attributes.get('Grain Statement', {}).get('value')
+        props_body["granularityBasis"] = attributes.get('Granularity Basis', {}).get('value')
+        props_body["interval"] = attributes.get('Interval', {}).get('value')
+
+        # "In Data Value Specification"/"Specializes Data Value Specification"
+        # both describe the same DataValueHierarchy parent -- near-synonym
+        # descriptions in the compact spec, treated as aliases of one
+        # relationship (see PYEGERIA_ISSUES.md ISSUE-101 follow-up).
+        value_spec_parent_guids = set(attributes.get('In Data Value Specification', {}).get('guid_list', []))
+        if attributes.get('In Data Value Specification', {}).get('guid'):
+            value_spec_parent_guids.add(attributes['In Data Value Specification']['guid'])
+        value_spec_parent_guids |= set(attributes.get('Specializes Data Value Specification', {}).get('guid_list', []))
+        if attributes.get('Specializes Data Value Specification', {}).get('guid'):
+            value_spec_parent_guids.add(attributes['Specializes Data Value Specification']['guid'])
 
         if verb == "Update":
             guid = self.parsed_output.get("guid") or (self.as_is_element['elementHeader']['guid'] if self.as_is_element else None)
@@ -654,6 +740,8 @@ class DataGrainProcessor(AsyncBaseCommandProcessor):
             body['properties'] = self.filter_update_properties(props_body, body.get('mergeUpdate', True))
             await self.client.data_designer._async_update_data_value_specification(guid, body)
             self.parsed_output["guid"] = guid
+
+            await self._sync_value_spec_parent(guid, value_spec_parent_guids, replace_all=True)
 
             if journal_entry:
                 try:
@@ -676,6 +764,8 @@ class DataGrainProcessor(AsyncBaseCommandProcessor):
             if guid:
                 self.parsed_output["guid"] = guid
 
+                await self._sync_value_spec_parent(guid, value_spec_parent_guids, replace_all=True, known_new=True)
+
                 if journal_entry:
                     try:
                         j_guid = await async_add_note_in_dr_e(self.client, qualified_name, display_name, journal_entry)
@@ -695,6 +785,23 @@ class DataGrainProcessor(AsyncBaseCommandProcessor):
             return await self.client.data_designer._async_get_data_value_specification_by_guid(guid, element_type="DataGrain")
         except PyegeriaException:
             return None
+
+    async def _sync_value_spec_parent(self, guid: str, to_be_guids: set, replace_all: bool, known_new: bool = False):
+        """Sync this element's DataValueHierarchy parent(s) -- shared by
+        DataGrainProcessor and DataValueSpecificationProcessor."""
+        if known_new:
+            as_is = set()
+        else:
+            rel_els = await self.client.data_designer._async_get_data_value_specification_rel_elements(guid) or {}
+            as_is = set(rel_els.get("specialized_data_value_spec_guids", []))
+        sync_res = await self.sync_members(as_is, to_be_guids,
+                               lambda p: self.client.data_designer._async_link_specialized_data_value_specification(p, guid, None),
+                               lambda p: self.client.data_designer._async_detach_specialized_data_value_specification(p, guid, None),
+                               replace_all)
+        if sync_res.get("added") or sync_res.get("removed"):
+            self.add_related_result("Data Value Specification Sync", message=f"Added {len(sync_res['added'])}, Removed {len(sync_res['removed'])}")
+        if sync_res.get("errors"):
+            self.add_related_result("Data Value Specification Sync", status="failure", message="; ".join(sync_res["errors"]))
 
 
 class LinkDataFieldProcessor(AsyncBaseCommandProcessor):

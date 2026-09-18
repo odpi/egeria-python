@@ -3662,6 +3662,25 @@
       "max_cardinality": 1,
       "level": "Domain",
       "Journal Entry": ""
+    },
+    "Agreement Item Id": {
+      "variable_name": "agreement_item_id",
+      "inUpdate": true,
+      "attr_labels": "",
+      "examples": "",
+      "default_value": "",
+      "valid_values": [],
+      "existing_element": "",
+      "description": "A user specified agreement item identifier.",
+      "generated": false,
+      "style": "Simple",
+      "user_specified": true,
+      "unique": false,
+      "input_required": false,
+      "min_cardinality": 0,
+      "max_cardinality": 1,
+      "level": "Domain",
+      "Journal Entry": ""
     }
   },
   "bundles": {
@@ -3822,6 +3841,15 @@
     "Security Access Control": {
       "inherits": "Governance Control Base",
       "own_attributes": []
+    },
+    "Agreement T&C Base": {
+      "inherits": "Link Command Base",
+      "own_attributes": [
+        "Agreement Item Id",
+        "Agreement Start Date",
+        "Agreement End Date",
+        "Usage Measurements"
+      ]
     }
   },
   "commands": {
@@ -4402,7 +4430,7 @@
         "Agreement Terms & Conditions"
       ],
       "family": "Governance Officer",
-      "description": "Links an agreement to terms and conditions definition with implementation details.",
+      "description": "Links an agreement to a terms and conditions definition with agreement-item-specific implementation details (item id, effective dates, usage measurements). Entitlements/Obligations/Restrictions live on the Terms and Conditions element itself, not on this relationship.",
       "verb": "Link",
       "upsert": false,
       "attach": false,
@@ -4411,8 +4439,8 @@
       "find_constraints": "",
       "extra_find": "",
       "extra_constraints": "",
-      "OM_TYPE": "CollectionMembership",
-      "bundle": "Collection Membership",
+      "OM_TYPE": "AgreementItem",
+      "bundle": "Agreement T&C Base",
       "custom_attributes": [
         "Terms & Conditions Id",
         "Agreement Name"

@@ -138,7 +138,7 @@ ___
 ### Interval
 >	**Input Required**: False
 
->	**Attribute Type**: Simple Float
+>	**Attribute Type**: Simple Int
 
 >	**Description**: The time interval in milliseconds between data captures for time-based data grains.
 

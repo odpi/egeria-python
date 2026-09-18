@@ -25,24 +25,6 @@ ___
 >	**Default Value**: All Domains
 
 
-### Role Identifier
->	**Input Required**: False
-
->	**Attribute Type**: Simple
-
->	**Description**: A user-assigned identifier for the solution role.
-
-
-### Role Type
->	**Input Required**: False
-
->	**Attribute Type**: Simple
-
->	**Description**: Type of the solution role. Currently must be GovernanceRole.
-
->	**Default Value**: GovernanceRole
-
-
 ### Title
 >	**Input Required**: False
 

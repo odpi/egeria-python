@@ -55,22 +55,6 @@ ___
 >	**Description**: The human-readable name of the digital product.
 
 
-### Product Status
->	**Input Required**: False
-
->	**Attribute Type**: Valid Value
-
->	**Description**: Lifecycle status of the digital product.
-
-
-### Product Type
->	**Input Required**: False
-
->	**Attribute Type**: Simple
-
->	**Description**: Type of digital product (e.g., Periodic Delta, On Demand, Snapshot).
-
-
 ### Service Life
 >	**Input Required**: False
 

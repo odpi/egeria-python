@@ -412,6 +412,7 @@ class GovernanceLinkProcessor(AsyncBaseCommandProcessor):
             "Certification": ("Certification Type", "Referenceable"),
             "License": ("License Type", "Referenceable"),
             "Agreement T&C": ("Agreement Name", ("Terms & Conditions Id", "Referenceable")),
+            "Associated List": ("Access Control", "Security List"),
             "Associated Group": ("Access Control", "Security Group"),
             "Monitored Resource": (("Notification Type", "Monitoring Control"), "Monitored Resource"),
             "Regulation Certification Type": ("Regulation", "Certification Type"),
@@ -567,8 +568,8 @@ class GovernanceLinkProcessor(AsyncBaseCommandProcessor):
                     "properties": {
                         "class": "AgreementItemProperties",
                         "agreementItemId": attributes.get("Agreement Item Id", {}).get("value"),
-                        "agreementStart": attributes.get("Start Date", {}).get("value"),
-                        "agreementEnd": attributes.get("End Date", {}).get("value"),
+                        "agreementStart": attributes.get("Agreement Start Date", {}).get("value"),
+                        "agreementEnd": attributes.get("Agreement End Date", {}).get("value"),
                         "entitlements": attributes.get("Entitlements", {}).get("value"),
                         "obligations": attributes.get("Obligations", {}).get("value"),
                         "restrictions": attributes.get("Restrictions", {}).get("value"),
@@ -578,6 +579,33 @@ class GovernanceLinkProcessor(AsyncBaseCommandProcessor):
                     },
                 })
                 new_rel_guid = await self.client._async_link_agreement_item(left_guid, right_guid, body)
+
+            elif object_type == "Associated List":
+                # AssociatedSecurityList (SecurityAccessControl -> SecurityList)
+                # has no dedicated SDK method or .http ground truth -- confirmed
+                # live via ValidMetadataManager._async_get_all_relationship_defs()
+                # that it's a real relationship (attribute: operationName) and
+                # that MetadataExpert._async_create_related_elements is the
+                # correct generic mechanism (already used in production by
+                # AsyncBaseCommandProcessor._sync_parent_relationship for the
+                # same reason: no bespoke wrapper exists). Do not route this
+                # through _async_link_peer_definitions like the neighboring
+                # "Associated Group"/"Regulation Certification Type" branch --
+                # that call is explicitly documented as valid only for
+                # GovernanceDriverLink/GovernancePolicyLink/GovernanceControlLink,
+                # and SecurityList is not a governance definition peer of
+                # SecurityAccessControl.
+                body = body_slimmer({
+                    "class": "NewRelatedElementsRequestBody",
+                    "typeName": "AssociatedSecurityList",
+                    "metadataElement1GUID": left_guid,
+                    "metadataElement2GUID": right_guid,
+                    "properties": {
+                        "class": "AssociatedSecurityListProperties",
+                        "operationName": attributes.get("Operation Name", {}).get("value"),
+                    },
+                })
+                new_rel_guid = await self.client.metadata_expert._async_create_related_elements(body)
 
             elif object_type in {"Associated Group", "Regulation Certification Type"}:
                 rel_map = {
@@ -664,6 +692,15 @@ class GovernanceLinkProcessor(AsyncBaseCommandProcessor):
 
             elif object_type == "Regulator":
                 await self.client._async_detach_regulator_from_regulation(left_guid, right_guid, body)
+
+            elif object_type == "Associated List":
+                # _async_detach_related_elements_in_store validates against
+                # OpenMetadataDeleteRequestBody (strict "class" literal) --
+                # not the DeleteRelationshipRequestBody `body` built above,
+                # which every other branch here uses.
+                await self.client.metadata_expert._async_detach_related_elements_in_store(
+                    left_guid, "AssociatedSecurityList", right_guid,
+                    {"class": "OpenMetadataDeleteRequestBody"})
 
             elif object_type in {"Associated Group", "Regulation Certification Type"}:
                 rel_map = {

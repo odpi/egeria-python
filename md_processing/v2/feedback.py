@@ -240,9 +240,9 @@ class ExternalReferenceProcessor(AsyncBaseCommandProcessor):
         if mapped_type == "RelatedMedia":
             prop_body.update({
                 "mediaType": attributes.get('Media Type', {}).get('value'),
-                "mediaTypeOtherId": attributes.get('Media Type Other ID', {}).get('value'),
+                "mediaTypeOtherId": attributes.get('Media Type Other Id', {}).get('value'),
                 "defaultMediaUsage": attributes.get('Default Media Usage', {}).get('value'),
-                "defaultMediaUsageOtherId": attributes.get('Default Media Usage Other ID', {}).get('value'),
+                "defaultMediaUsageOtherId": attributes.get('Default Media Usage Other Id', {}).get('value'),
                 "datePublished": attributes.get('Date Published', {}).get('value'),
                 "dateConnected": attributes.get('Date Connected', {}).get('value'),
                 "dateCreated": attributes.get('Date Created', {}).get('value'),
@@ -261,7 +261,7 @@ class ExternalReferenceProcessor(AsyncBaseCommandProcessor):
                 "publicationYear": attributes.get('Publication Year', {}).get('value'),
                 "publicationNumbers": attributes.get('Publication Numbers', {}).get('value'),
                 "defaultMediaUsage": attributes.get('Default Media Usage', {}).get('value'),
-                "defaultMediaUsageOtherId": attributes.get('Default Media Usage Other ID', {}).get('value'),
+                "defaultMediaUsageOtherId": attributes.get('Default Media Usage Other Id', {}).get('value'),
             })
         if verb == "Update":
             guid = self.parsed_output.get("guid") or (self.as_is_element['elementHeader']['guid'] if self.as_is_element else None)

@@ -1367,7 +1367,7 @@ class MyProfile(AssetMaker):
 
     async def _async_create_meeting(self, meeting_name: str, activity_status: str = "REQUESTED",
                                     description:Optional[str]=None, situation: Optional[str]=None,priority:Optional[int]=0,
-                                    qualified_name: Optional[str] = None) -> str:
+                                    qualified_name: Optional[str] = None, objective: Optional[str] = None) -> str:
         """Create a Meeting person action. Async version.
 
         Parameters
@@ -1385,6 +1385,10 @@ class MyProfile(AssetMaker):
         qualified_name : Optional[str], optional
             Use this exact qualified name instead of auto-generating one -
             see _async_create_my_todo's docstring for why this matters.
+        objective : Optional[str], optional
+            The objective of the meeting -- a real `MeetingProperties` field,
+            not shared by the other Person Action types (ToDo/Review/Note),
+            by default None
         Returns
         -------
         GUID
@@ -1413,6 +1417,7 @@ class MyProfile(AssetMaker):
                 "situation": situation,
                 "priority": priority,
                 "activityStatus": activity_status,
+                "objective": objective,
             },
             # See _async_create_my_todo's comment - these belong at the
             # ActionRequestBody level, not inside "properties".

@@ -579,25 +579,6 @@
       "level": "Basic",
       "Journal Entry": ""
     },
-    "Due Time": {
-      "variable_name": "due_time",
-      "inUpdate": true,
-      "attr_labels": "",
-      "examples": "",
-      "default_value": "",
-      "valid_values": [],
-      "existing_element": "",
-      "description": "Due date/time for a Meeting, ToDo, or Review person action.",
-      "generated": false,
-      "style": "Simple",
-      "user_specified": true,
-      "unique": false,
-      "input_required": false,
-      "min_cardinality": 0,
-      "max_cardinality": 1,
-      "level": "Domain",
-      "Journal Entry": ""
-    },
     "Effective From": {
       "variable_name": "effective_from",
       "inUpdate": true,
@@ -1630,25 +1611,6 @@
       "level": "Advanced",
       "Journal Entry": ""
     },
-    "Requested Start Time": {
-      "variable_name": "requested_start_time",
-      "inUpdate": true,
-      "attr_labels": "",
-      "examples": "",
-      "default_value": "",
-      "valid_values": [],
-      "existing_element": "",
-      "description": "Requested start date/time for a Meeting, ToDo, or Review person action.",
-      "generated": false,
-      "style": "Simple",
-      "user_specified": true,
-      "unique": false,
-      "input_required": false,
-      "min_cardinality": 0,
-      "max_cardinality": 1,
-      "level": "Domain",
-      "Journal Entry": ""
-    },
     "Resource Description": {
       "variable_name": "resource_description",
       "inUpdate": true,
@@ -2386,25 +2348,6 @@
       "level": "Domain",
       "Journal Entry": ""
     },
-    "Expected Behavior": {
-      "variable_name": "expected_behavior",
-      "inUpdate": true,
-      "attr_labels": "",
-      "examples": "",
-      "default_value": "",
-      "valid_values": [],
-      "existing_element": "",
-      "description": "Optionally descibe action to be taken.",
-      "generated": false,
-      "style": "Simple",
-      "user_specified": true,
-      "unique": false,
-      "input_required": false,
-      "min_cardinality": 0,
-      "max_cardinality": 1,
-      "level": "Domain",
-      "Journal Entry": ""
-    },
     "Informal Tag": {
       "variable_name": "informal_tag",
       "inUpdate": true,
@@ -2544,6 +2487,25 @@
       "max_cardinality": 1,
       "level": "Domain",
       "Journal Entry": ""
+    },
+    "Priority": {
+      "variable_name": "priority",
+      "inUpdate": true,
+      "attr_labels": "",
+      "examples": "",
+      "default_value": "",
+      "valid_values": [],
+      "existing_element": "",
+      "description": "An integer priority for the project.",
+      "generated": false,
+      "style": "Simple Int",
+      "user_specified": true,
+      "unique": false,
+      "input_required": false,
+      "min_cardinality": 0,
+      "max_cardinality": 1,
+      "level": "Domain",
+      "Journal Entry": ""
     }
   },
   "bundles": {
@@ -2630,9 +2592,7 @@
         "Situation",
         "Objective",
         "Priority",
-        "Activity Status",
-        "Requested Start Time",
-        "Due Time"
+        "Activity Status"
       ]
     },
     "Referenceable": {
@@ -2684,7 +2644,6 @@
       "own_attributes": [
         "Description",
         "Display Name",
-        "Expected Behavior",
         "GUID",
         "Qualified Name",
         "Situation"
