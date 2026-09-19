@@ -35,6 +35,7 @@ from pyegeria.models import (SearchStringRequestBody, FilterRequestBody, GetRequ
                              NewExternalIdRequestBody,
                              DeleteElementRequestBody, DeleteRelationshipRequestBody, DeleteClassificationRequestBody,
                              LevelIdentifierQueryBody, UpdatePropertiesRequestBody, MetadataSourceRequestBody,
+                             ReIdentifyRequestBody, ReTypeRequestBody, ReHomeRequestBody,
                              UpdateEffectivityDatesRequestBody, OpenMetadataDeleteRequestBody,
                              NewOpenMetadataElementRequestBody, NewRelatedElementsRequestBody,
                              FindPropertyNamesRequestBody, FindRequestBody,
@@ -68,6 +69,9 @@ from pyegeria.models.models import (
     LevelIdentifierQueryBody,
     UpdatePropertiesRequestBody,
     MetadataSourceRequestBody,
+    ReIdentifyRequestBody,
+    ReTypeRequestBody,
+    ReHomeRequestBody,
     UpdateEffectivityDatesRequestBody,
     OpenMetadataDeleteRequestBody,
     NewOpenMetadataElementRequestBody,
@@ -191,6 +195,9 @@ class ServerClient(BaseServerClient):
         self._level_identifier_query_body = TypeAdapter(LevelIdentifierQueryBody)
         self._update_properties_request_adapter = TypeAdapter(UpdatePropertiesRequestBody)
         self._metadata_source_request_adapter = TypeAdapter(MetadataSourceRequestBody)
+        self._re_identify_request_adapter = TypeAdapter(ReIdentifyRequestBody)
+        self._re_type_request_adapter = TypeAdapter(ReTypeRequestBody)
+        self._re_home_request_adapter = TypeAdapter(ReHomeRequestBody)
         self._update_effectivity_dates_request_adapter = TypeAdapter(UpdateEffectivityDatesRequestBody)
         self._open_metadata_delete_request_adapter = TypeAdapter(OpenMetadataDeleteRequestBody)
         self._new_open_metadata_element_request_adapter = TypeAdapter(NewOpenMetadataElementRequestBody)
@@ -6270,6 +6277,39 @@ class ServerClient(BaseServerClient):
         return validated_body
 
     @dynamic_catch
+    def validate_re_identify_request(self, body: Optional[dict | ReIdentifyRequestBody] = None) -> ReIdentifyRequestBody | None:
+        if isinstance(body, ReIdentifyRequestBody):
+            validated_body = body
+        elif isinstance(body, dict):
+            validated_body = self._validate_body(self._re_identify_request_adapter.validate_python, body)
+        else:
+            body = {"class": "ReIdentifyRequestBody"}
+            validated_body = self._validate_body(ReIdentifyRequestBody.model_validate, body)
+        return validated_body
+
+    @dynamic_catch
+    def validate_re_type_request(self, body: Optional[dict | ReTypeRequestBody] = None) -> ReTypeRequestBody | None:
+        if isinstance(body, ReTypeRequestBody):
+            validated_body = body
+        elif isinstance(body, dict):
+            validated_body = self._validate_body(self._re_type_request_adapter.validate_python, body)
+        else:
+            body = {"class": "ReTypeRequestBody"}
+            validated_body = self._validate_body(ReTypeRequestBody.model_validate, body)
+        return validated_body
+
+    @dynamic_catch
+    def validate_re_home_request(self, body: Optional[dict | ReHomeRequestBody] = None) -> ReHomeRequestBody | None:
+        if isinstance(body, ReHomeRequestBody):
+            validated_body = body
+        elif isinstance(body, dict):
+            validated_body = self._validate_body(self._re_home_request_adapter.validate_python, body)
+        else:
+            body = {"class": "ReHomeRequestBody"}
+            validated_body = self._validate_body(ReHomeRequestBody.model_validate, body)
+        return validated_body
+
+    @dynamic_catch
     def validate_update_effectivity_dates_request(self, body: Optional[dict | UpdateEffectivityDatesRequestBody] = None) -> UpdateEffectivityDatesRequestBody | None:
         if isinstance(body, UpdateEffectivityDatesRequestBody):
             validated_body = body
@@ -6338,6 +6378,21 @@ class ServerClient(BaseServerClient):
     @dynamic_catch
     async def _async_metadata_source_body_request(self, url: str, body: Optional[dict | MetadataSourceRequestBody] = None) -> None:
         validated_body = self.validate_metadata_source_request(body)
+        await self._async_make_request("POST", url, validated_body.model_dump(by_alias=True, exclude_none=True))
+
+    @dynamic_catch
+    async def _async_re_identify_body_request(self, url: str, body: Optional[dict | ReIdentifyRequestBody] = None) -> None:
+        validated_body = self.validate_re_identify_request(body)
+        await self._async_make_request("POST", url, validated_body.model_dump(by_alias=True, exclude_none=True))
+
+    @dynamic_catch
+    async def _async_re_type_body_request(self, url: str, body: Optional[dict | ReTypeRequestBody] = None) -> None:
+        validated_body = self.validate_re_type_request(body)
+        await self._async_make_request("POST", url, validated_body.model_dump(by_alias=True, exclude_none=True))
+
+    @dynamic_catch
+    async def _async_re_home_body_request(self, url: str, body: Optional[dict | ReHomeRequestBody] = None) -> None:
+        validated_body = self.validate_re_home_request(body)
         await self._async_make_request("POST", url, validated_body.model_dump(by_alias=True, exclude_none=True))
 
     @dynamic_catch

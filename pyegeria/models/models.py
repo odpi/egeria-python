@@ -565,6 +565,22 @@ class MetadataSourceRequestBody(RequestBody):
     class_: Annotated[Literal["MetadataSourceRequestBody"], Field(alias="class")]
 
 
+class ReIdentifyRequestBody(RequestBody):
+    class_: Annotated[Literal["ReIdentifyRequestBody"], Field(alias="class")]
+    new_guid: str | None = None
+
+
+class ReTypeRequestBody(RequestBody):
+    class_: Annotated[Literal["ReTypeRequestBody"], Field(alias="class")]
+    new_type_name: str | None = None
+
+
+class ReHomeRequestBody(RequestBody):
+    class_: Annotated[Literal["ReHomeRequestBody"], Field(alias="class")]
+    new_home_metadata_collection_id: str | None = None
+    new_home_metadata_collection_name: str | None = None
+
+
 class UpdateEffectivityDatesRequestBody(RequestBody):
     class_: Annotated[Literal["UpdateEffectivityDatesRequestBody"], Field(alias="class")]
     effective_from: datetime | None = None

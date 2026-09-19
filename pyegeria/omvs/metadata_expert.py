@@ -11,6 +11,7 @@ from typing import Any, Optional, Union, Dict, List
 from httpx import Response
 from pyegeria.models import (NewOpenMetadataElementRequestBody, TemplateRequestBody,
                              UpdatePropertiesRequestBody, MetadataSourceRequestBody,
+                             ReIdentifyRequestBody, ReTypeRequestBody, ReHomeRequestBody,
                              UpdateEffectivityDatesRequestBody, OpenMetadataDeleteRequestBody,
                              NewClassificationRequestBody, NewRelatedElementsRequestBody,
                              SearchStringRequestBody,
@@ -244,6 +245,121 @@ class MetadataExpert(ServerClient):
         """
         loop = asyncio.get_event_loop()
         return loop.run_until_complete(self._async_update_metadata_element_properties(metadata_element_guid, body))
+
+    @dynamic_catch
+    async def _async_reidentify_metadata_element(self, metadata_element_guid: str, body: Optional[dict | ReIdentifyRequestBody] = None) -> None:
+        """
+        Change the unique identifier of a metadata element. This is used if two different elements are discovered
+        to have the same unique identifier. The request is routed to the repository that is the home of the
+        element. Async version.
+
+        Parameters
+        ----------
+        metadata_element_guid : str
+            Current unique identifier of the metadata element.
+        body : dict | ReIdentifyRequestBody, optional
+            The new unique identifier for the metadata element.
+
+        Notes
+        -----
+        Sample JSON body:
+        {
+          "class" : "ReIdentifyRequestBody",
+          "externalSourceGUID" :  "",
+          "externalSourceName" : "",
+          "forLineage" : false,
+          "forDuplicateProcessing" : false,
+          "effectiveTime" : "2024-01-01T00:00:00.000+00:00",
+          "newGUID" : "new-guid-value"
+        }
+        """
+        url = f"{self.command_root}/metadata-elements/{metadata_element_guid}/re-identify"
+        await self._async_re_identify_body_request(url, body)
+
+    @dynamic_catch
+    def reidentify_metadata_element(self, metadata_element_guid: str, body: Optional[dict | ReIdentifyRequestBody] = None) -> None:
+        """
+        Change the unique identifier of a metadata element.
+        """
+        loop = asyncio.get_event_loop()
+        return loop.run_until_complete(self._async_reidentify_metadata_element(metadata_element_guid, body))
+
+    @dynamic_catch
+    async def _async_retype_metadata_element(self, metadata_element_guid: str, body: Optional[dict | ReTypeRequestBody] = None) -> None:
+        """
+        Change the type of a metadata element. Typically, this action is taken to move an element's type to either
+        a supertype (so the subtype can be deleted) or a new subtype (so additional properties can be added). The
+        request is routed to the repository that is the home of the element. Async version.
+
+        Parameters
+        ----------
+        metadata_element_guid : str
+            Unique identifier of the metadata element to update.
+        body : dict | ReTypeRequestBody, optional
+            The name of the new type for the metadata element.
+
+        Notes
+        -----
+        Sample JSON body:
+        {
+          "class" : "ReTypeRequestBody",
+          "externalSourceGUID" :  "",
+          "externalSourceName" : "",
+          "forLineage" : false,
+          "forDuplicateProcessing" : false,
+          "effectiveTime" : "2024-01-01T00:00:00.000+00:00",
+          "newTypeName" : "NewTypeName"
+        }
+        """
+        url = f"{self.command_root}/metadata-elements/{metadata_element_guid}/re-type"
+        await self._async_re_type_body_request(url, body)
+
+    @dynamic_catch
+    def retype_metadata_element(self, metadata_element_guid: str, body: Optional[dict | ReTypeRequestBody] = None) -> None:
+        """
+        Change the type of a metadata element.
+        """
+        loop = asyncio.get_event_loop()
+        return loop.run_until_complete(self._async_retype_metadata_element(metadata_element_guid, body))
+
+    @dynamic_catch
+    async def _async_rehome_metadata_element(self, metadata_element_guid: str, body: Optional[dict | ReHomeRequestBody] = None) -> None:
+        """
+        Change the home repository of a metadata element. This action is taken, for example, if the original home
+        repository becomes permanently unavailable, or if the user community updating this element moves to
+        working from a different repository in the open metadata repository cohort. Async version.
+
+        Parameters
+        ----------
+        metadata_element_guid : str
+            Unique identifier of the metadata element to update.
+        body : dict | ReHomeRequestBody, optional
+            Details of the new home metadata collection.
+
+        Notes
+        -----
+        Sample JSON body:
+        {
+          "class" : "ReHomeRequestBody",
+          "externalSourceGUID" :  "",
+          "externalSourceName" : "",
+          "forLineage" : false,
+          "forDuplicateProcessing" : false,
+          "effectiveTime" : "2024-01-01T00:00:00.000+00:00",
+          "newHomeMetadataCollectionId" : "new-home-collection-guid",
+          "newHomeMetadataCollectionName" : "New Home Collection Name"
+        }
+        """
+        url = f"{self.command_root}/metadata-elements/{metadata_element_guid}/re-home"
+        await self._async_re_home_body_request(url, body)
+
+    @dynamic_catch
+    def rehome_metadata_element(self, metadata_element_guid: str, body: Optional[dict | ReHomeRequestBody] = None) -> None:
+        """
+        Change the home repository of a metadata element.
+        """
+        loop = asyncio.get_event_loop()
+        return loop.run_until_complete(self._async_rehome_metadata_element(metadata_element_guid, body))
 
     @dynamic_catch
     async def _async_publish_metadata_element(self, metadata_element_guid: str, body: Optional[dict | MetadataSourceRequestBody] = None) -> None:
@@ -708,6 +824,121 @@ class MetadataExpert(ServerClient):
         """
         loop = asyncio.get_event_loop()
         return loop.run_until_complete(self._async_update_related_elements_properties(relationship_guid, body))
+
+    @dynamic_catch
+    async def _async_reidentify_related_elements(self, relationship_guid: str, body: Optional[dict | ReIdentifyRequestBody] = None) -> None:
+        """
+        Change the unique identifier of a relationship. This is used if two different relationships are discovered
+        to have the same unique identifier. The request is routed to the repository that is the home of the
+        relationship. Async version.
+
+        Parameters
+        ----------
+        relationship_guid : str
+            Current unique identifier of the relationship.
+        body : dict | ReIdentifyRequestBody, optional
+            The new unique identifier for the relationship.
+
+        Notes
+        -----
+        Sample JSON body:
+        {
+          "class" : "ReIdentifyRequestBody",
+          "externalSourceGUID" :  "",
+          "externalSourceName" : "",
+          "forLineage" : false,
+          "forDuplicateProcessing" : false,
+          "effectiveTime" : "2024-01-01T00:00:00.000+00:00",
+          "newGUID" : "new-guid-value"
+        }
+        """
+        url = f"{self.command_root}/related-elements/{relationship_guid}/re-identify"
+        await self._async_re_identify_body_request(url, body)
+
+    @dynamic_catch
+    def reidentify_related_elements(self, relationship_guid: str, body: Optional[dict | ReIdentifyRequestBody] = None) -> None:
+        """
+        Change the unique identifier of a relationship.
+        """
+        loop = asyncio.get_event_loop()
+        return loop.run_until_complete(self._async_reidentify_related_elements(relationship_guid, body))
+
+    @dynamic_catch
+    async def _async_retype_related_elements(self, relationship_guid: str, body: Optional[dict | ReTypeRequestBody] = None) -> None:
+        """
+        Change the type of a relationship. Typically, this action is taken to move a relationship's type to either
+        a supertype (so the subtype can be deleted) or a new subtype (so additional properties can be added). The
+        request is routed to the repository that is the home of the relationship. Async version.
+
+        Parameters
+        ----------
+        relationship_guid : str
+            Unique identifier of the relationship to update.
+        body : dict | ReTypeRequestBody, optional
+            The name of the new type for the relationship.
+
+        Notes
+        -----
+        Sample JSON body:
+        {
+          "class" : "ReTypeRequestBody",
+          "externalSourceGUID" :  "",
+          "externalSourceName" : "",
+          "forLineage" : false,
+          "forDuplicateProcessing" : false,
+          "effectiveTime" : "2024-01-01T00:00:00.000+00:00",
+          "newTypeName" : "NewTypeName"
+        }
+        """
+        url = f"{self.command_root}/related-elements/{relationship_guid}/re-type"
+        await self._async_re_type_body_request(url, body)
+
+    @dynamic_catch
+    def retype_related_elements(self, relationship_guid: str, body: Optional[dict | ReTypeRequestBody] = None) -> None:
+        """
+        Change the type of a relationship.
+        """
+        loop = asyncio.get_event_loop()
+        return loop.run_until_complete(self._async_retype_related_elements(relationship_guid, body))
+
+    @dynamic_catch
+    async def _async_rehome_related_elements(self, relationship_guid: str, body: Optional[dict | ReHomeRequestBody] = None) -> None:
+        """
+        Change the home repository of a relationship. This action is taken, for example, if the original home
+        repository becomes permanently unavailable, or if the user community updating this relationship moves to
+        working from a different repository in the open metadata repository cohort. Async version.
+
+        Parameters
+        ----------
+        relationship_guid : str
+            Unique identifier of the relationship to update.
+        body : dict | ReHomeRequestBody, optional
+            Details of the new home metadata collection.
+
+        Notes
+        -----
+        Sample JSON body:
+        {
+          "class" : "ReHomeRequestBody",
+          "externalSourceGUID" :  "",
+          "externalSourceName" : "",
+          "forLineage" : false,
+          "forDuplicateProcessing" : false,
+          "effectiveTime" : "2024-01-01T00:00:00.000+00:00",
+          "newHomeMetadataCollectionId" : "new-home-collection-guid",
+          "newHomeMetadataCollectionName" : "New Home Collection Name"
+        }
+        """
+        url = f"{self.command_root}/related-elements/{relationship_guid}/re-home"
+        await self._async_re_home_body_request(url, body)
+
+    @dynamic_catch
+    def rehome_related_elements(self, relationship_guid: str, body: Optional[dict | ReHomeRequestBody] = None) -> None:
+        """
+        Change the home repository of a relationship.
+        """
+        loop = asyncio.get_event_loop()
+        return loop.run_until_complete(self._async_rehome_related_elements(relationship_guid, body))
 
     @dynamic_catch
     async def _async_update_related_elements_effectivity(self, relationship_guid: str, body: Optional[dict | UpdateEffectivityDatesRequestBody] = None) -> None:
