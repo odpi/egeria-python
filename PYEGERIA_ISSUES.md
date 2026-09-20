@@ -1016,6 +1016,45 @@ they're holding real port materialization until this exists server-side
 
 ---
 
+### ISSUE-108: newly created relationships stay invisible to related-element queries for up to ~20 minutes after creation
+
+**Layer:** Egeria Server · **Status:** open · **Found:** 2026-09-20, reported by
+the user from a Dr.Egeria bulk load session (1,027 expected field-link
+relationships).
+
+**What:** a catalog walk run immediately after a load found only 876 of 1,027
+expected field links. A second walk 12 minutes later still showed 82
+structures short. A third walk, 20 minutes after the load, showed every link
+present. No errors were raised at any point in the load itself — the
+relationships were created successfully, they simply did not show up in
+related-element queries for a long window afterward, then all became visible
+at once with no further action taken.
+
+**Not yet root-caused.** This looks like the same family of symptom as the
+2026-08-15 Postgres-checkpoint/background-connector-load entry above (server
+falling behind under load, catching up later) rather than a paging defect
+like ISSUE-54 (which would not self-heal purely by waiting — ISSUE-54's
+bug is about tie-ordering across separately-executed pages, not about data
+not existing yet). But this has not been directly correlated with connector
+log activity or checkpoint timing the way that entry was — this is a fresh
+report, not yet independently reproduced or diagnosed by a pyegeria session.
+
+**Impact:** any workflow that verifies a bulk write immediately after
+issuing it (a post-load catalog walk, an integration test, an automated
+Dr.Egeria "did it work" check) can get a false-negative "missing" result
+that resolves itself given enough time — worth knowing before treating an
+immediate post-write verification gap as evidence of a real data-loss bug.
+
+**Candidate next step (not yet done):** reproduce with a smaller, timed
+sample (e.g. create N relationships, poll related-element queries at 1-minute
+intervals, log when each becomes visible) to get a real latency
+distribution instead of the three anecdotal checkpoints here, and check
+whether it correlates with the same background-connector/checkpoint load
+already documented above. Worth raising with the Egeria team directly, per
+the original report.
+
+---
+
 ## Open pyegeria items (including follow-ons blocked on an Egeria fix)
 
 Actionable in this repo. Some of these are fully blocked today — waiting
@@ -1767,6 +1806,72 @@ correctness rests on `claim`.
 
 **Blocks:** RE engine-host participation (design note §4.1, §5 step 8).
 Nothing else in RE is waiting on it.
+
+---
+
+### ISSUE-107: Dr.Egeria's create pre-check issues up to 4 redundant `guid-by-unique-name` lookups per command, multiplying an already-slow ambiguous-match server response
+
+**Layer:** Pyegeria · **Status:** fixed 2026-09-20 (partial — see below) ·
+**Found:** 2026-09-20, reported by the user from a Dr.Egeria bulk load: a
+subject-area file created ~25 folders sharing the same three Display Names
+("Prime Words", "Modifiers", "Class Words" across parent scopes), and files
+using those names went from ~6 seconds to 2+ minutes apiece — 35 of a
+56-minute load, by the user's measurement. Postgres itself was not the
+cause (27ms queries); ambiguous-name resolution was.
+
+**Root cause, confirmed by reading the code (not the client-side "validates
+every match" loop the report's phrasing suggested — no such loop exists in
+pyegeria):**
+- `md_processing/v2/processors.py`'s `resolve_element_guid()` calls the
+  SDK's `__async_get_guid__` **twice** per lookup (once scoped by
+  `tech_type`, once broader if the first comes back empty/ambiguous) —
+  lines 1413 and 1442.
+- `execute()`'s step 4a (line 647) runs an **independent, duplicate**
+  display-name check on top of the one already done inside `fetch_as_is()`
+  (line 638) — using the raw Display Name rather than the already-derived
+  qualified name.
+- Net: a single `Create` of a not-yet-cached, ambiguously-named element can
+  trigger up to 4 HTTP round-trips to the same `guid-by-unique-name`
+  endpoint. `__async_get_guid__` (`pyegeria/core/_server_client.py:224-321`)
+  POSTs once per call and returns whatever the server reports; the
+  ambiguous-match resolution itself (and its ~1s-per-candidate cost) is
+  server-side, not a Python loop — confirmed by reading the full call path.
+- **No fast-path existed for an explicit `Qualified Name`.** `fetch_as_is()`
+  already fast-paths an explicit `### GUID` (ISSUE-59's fix, lines
+  1519-1539) but had no equivalent for an unambiguous, user-supplied
+  qualified name — every Create paid the ambiguous-lookup cost even when
+  the file already fully disambiguated the target.
+
+**Fixed (this pass):** `execute()` (`md_processing/v2/processors.py`) now
+captures whether `Qualified Name` was explicitly authored in the markdown
+*before* step 1a's auto-derivation can inject a derived one under the same
+key (making the two indistinguishable by the time step 4a runs), and skips
+step 4a's duplicate-Display-Name lookup entirely when it was — an explicit
+qualified name already unambiguously identifies the target, and
+`fetch_as_is()` already looked that exact name up and found nothing, which
+is authoritative since no auto-derivation is involved for ISSUE-59's
+collision case to apply to. Covered by
+`tests/micro-tests/test_step4a_skip_with_explicit_qn.py`: one test confirms
+step 4a still runs (≥2 `resolve_element_guid` calls) when the qualified
+name is auto-derived, preserving ISSUE-59's protection; a second confirms
+exactly one call happens when it's explicit. Full `tests/micro-tests/`
+suite re-verified green after the change.
+
+**Not fixed in this pass:** the two-pass (`tech_type`-scoped / broad)
+redundancy inside `resolve_element_guid()` itself, and caching a "Multiple
+elements found for X" result within `self.context` so 25 Creates sharing a
+Display Name — none of them via an explicit Qualified Name — don't each
+independently re-trigger the same expensive ambiguous lookup. This is the
+higher-leverage fix for the reported 25x-repeated-name scenario
+specifically (where the files were using Display Name, not an explicit QN,
+per the original report), tracked here as still open.
+
+**Other similar patterns checked, none found:** two structurally similar
+helpers (`_server_client.py:734-772`, `classification_explorer.py:3428-
+3462`) and the legacy v1 path (`extraction_utils.py:416-502`) all do the
+same fail-fast "raise if `len(matches) > 1`" with no client-side loop — no
+matching perf anti-pattern found elsewhere in `pyegeria/core`,
+`pyegeria/omvs`, or `md_processing`.
 
 ---
 

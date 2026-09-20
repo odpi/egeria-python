@@ -347,7 +347,7 @@ class CollectionLinkProcessor(AsyncBaseCommandProcessor):
                     "class": "DigitalProductDependencyProperties",
                     "typeName": "DigitalProductDependency",
                     "label": attributes.get('Label', {}).get('value'),
-                    "description": attributes.get('Dependency Description', {}).get('value'),
+                    "description": attributes.get('Description', {}).get('value'),
                     "effectiveFrom": attributes.get('Effective From', {}).get('value'),
                     "effectiveTo": attributes.get('Effective To', {}).get('value')
                 }
