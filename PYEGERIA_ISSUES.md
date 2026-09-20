@@ -283,193 +283,7 @@ security context changes; (2) quickstart content: give `generalnpa` read access 
 elements its engine actions anchor to, or anchor those actions to elements the engine-host identity can
 read. Full draft: trellis session scratch `egeria-issue-engine-host-403-loop.md`.
 
-### ISSUE-93: `declassify_metadata_element` raises `AttributeError` when `body` is omitted, though the parameter is Optional — and the classification is silently left in place
-
-**Layer:** Pyegeria · **Status:** fixed (2026-09-13) · **Found:** 2026-09-08 (Resource Explorer, swapping a Project's kind classification during investigation reclassification).
-
-`MetadataExpert.declassify_metadata_element(metadata_element_guid, classification_name, body=None)`
-declares `body` as `Optional[dict | MetadataSourceRequestBody] = None`, but the
-implementation calls `.model_dump()` on it unconditionally. Omitting it raises:
-
-```
-AttributeError: 'NoneType' object has no attribute 'model_dump'
-```
-
-**Why this is worse than an ordinary signature bug:** the exception arrives from
-deep inside the client, so a caller that wraps the call defensively — which is
-reasonable, since a classification that is already absent should not be fatal —
-swallows it and *believes the classification was removed*. It was not. Measured
-live:
-
-```python
-kinds before: ['Task']
-declassify_metadata_element(guid, "Task")        # raises AttributeError
-kinds after:  ['Task']                            # unchanged
-```
-
-In our case the element then carried **two** kind classifications at once
-(`['Task', 'PersonalProject']`) — the new one added, the old one never removed —
-and a check that only asked "is the new classification present?" reported
-success. The wrong-but-plausible state was invisible until the element was read
-back for *both* names.
-
-**Working around it** — pass an explicit body:
-
-```python
-me.declassify_metadata_element(guid, "Task", {"class": "MetadataSourceRequestBody"})
-# kinds after: []
-```
-
-**Candidate fix:** default the body when `None`, matching the Optional
-declaration — the same shape the workaround passes:
-
-```python
-body = body or {"class": "MetadataSourceRequestBody"}
-```
-
-**Worth checking while in there:** `classify_metadata_element` and
-`reclassify_metadata_element` sit beside it with the same `Optional` body
-declaration. We pass a body to both so we have not hit them, but if they share
-the unconditional `.model_dump()` they have the same defect — and the
-declassify case shows the failure mode is silent at the caller, not loud.
-
-**Where seen:** `trellis/packages/resource-explorer/resource_explorer/surveyors/
-investigation_reclassifier.py::_move_kind_classification`, which now passes the
-body explicitly and additionally verifies that the OLD classification is gone
-rather than only that the new one is present.
-
 ---
-
-### ISSUE-92: `Project Type`'s description in `commands_project_compact.json` lists only 4 of its 6 `valid_values` — omits `Project` and `Experiment`, and the stale text is baked into 24 generated files
-
-**Layer:** Pyegeria · **Status:** fixed (2026-09-13) · **Found:** 2026-09-07 (Resource
-Explorer, designing investigation → Egeria Project classification mapping).
-
-`md_processing/data/compact_commands/commands_project_compact.json`, the
-`Project Type` attribute (`variable_name: project_type`):
-
-```json
-"valid_values": [
-  "Project", "Campaign", "Task", "PersonalProject", "StudyProject", "Experiment"
-],
-"description": "A string classifying the project. Supported values are Campaign, Task, PersonalProject and StudyProject."
-```
-
-`valid_values` has six entries; the description names four. `Project` (which
-is also this attribute's own `default_value`) and `Experiment` are both
-missing from the prose. The machine-readable list is correct — it matches
-Egeria 6's actual Project classifications in
-`OpenMetadataType.java` (0130): `CAMPAIGN_CLASSIFICATION`,
-`TASK_CLASSIFICATION`, `PERSONAL_PROJECT_CLASSIFICATION`,
-`STUDY_PROJECT_CLASSIFICATION`, `EXPERIMENT_CLASSIFICATION`. Only the
-description is behind.
-
-**Why it matters more than one stale string:** the description is what
-`gen_md_cmd_templates` and `gen_dr_help` render, so it has propagated. In
-this checkout, 25 files in the main tree carry the sentence verbatim — the
-one source JSON plus 24 generated artifacts:
-
-```
-md_processing/data/compact_commands/commands_project_compact.json   <- source
-md_processing/data/compact_commands_backup/commands_project_compact.json
-sample-data/templates/{basic,advanced}/Projects/*.md                (16)
-sample-data/egeria-inbox/dr-egeria-help-*.md                         (7)
-```
-
-The sharpest symptom: **`sample-data/templates/{basic,advanced}/Projects/Create_Experiment.md`
-tells the reader that `Experiment` is not a supported value** — on the
-template whose entire purpose is to create one. `Create_Project.md` has the
-same problem for `Project`. The generated help tables are self-contradictory
-in a single row, because they print the prose and the `valid_values` list
-side by side:
-
-```
-... Supported values are Campaign, Task, PersonalProject and StudyProject. | False | Project, Campaign, Task, PersonalProject, StudyProject, Experiment | Domain |
-```
-
-A reader who trusts the sentence over the column will never reach for
-`Experiment`, which is the one classification carrying its own defining
-attribute (`hypothesis`), so the omission suppresses a real capability
-rather than just reading untidily.
-
-**Where seen:** found while mapping Resource Explorer's investigation
-`project_classification` onto Egeria's Project classifications — the
-description was the first thing read, and it made `Experiment` look
-unsupported until `valid_values` and the Egeria type source were checked.
-
-**Candidate fix (one string, then regenerate):** edit the `description` in
-`commands_project_compact.json` to cover all six, ideally naming what each
-means rather than just listing them again — the `valid_values` array
-already lists them, so prose that only repeats the list adds nothing and
-will drift again the next time a value is added. Suggested:
-
-> "A string classifying the project. `Project` (the default) applies no
-> classification. `Campaign` is a long-term strategic initiative delivered
-> through multiple projects; `Task` a self-contained short activity;
-> `PersonalProject` an informal project an individual creates to organize
-> their own work; `StudyProject` a focused analysis of a topic, person,
-> object or situation; `Experiment` a project testing a hypothesis, which
-> is recorded in the `hypothesis` attribute."
-
-(Wording taken from the Egeria type definitions themselves so the two
-cannot disagree.)
-
-Then re-run `refresh_specs`, `gen_md_cmd_templates` and `gen_dr_help` per
-the Dr.Egeria command-sync flow and propagate the regenerated templates/help
-to `egeria-workspaces` and `egeria-advisor` — the 24 generated files above
-will not update on their own, and 16 of them ship as user-facing templates.
-
-**Worth checking while in there:** whether any other compact-command
-attribute has a `description` that enumerates its `valid_values` in prose.
-Any such pair is the same latent defect — two lists that must be edited
-together with nothing enforcing it. A cheap guard would be a spec-validation
-check that flags a `description` naming a subset of its own `valid_values`.
-
----
-
-### ISSUE-91: `pyegeria.core.mcp_server` imports `mcp.server.mcpserver` (mcp 2.x only) but `pyproject.toml` declares `mcp >=0.1` — any consumer that resolves mcp 1.x gets a server that dies at import
-
-**Layer:** pyegeria packaging · **Status:** fixed (2026-09-13) · **Found:** 2026-09-05 (Egeria Advisor dev startup on the M3 Max)
-
-Commit 2b39ba06 (2026-07-30, "migrate mcp_server.py to mcp 2.0.0's MCPServer") changed the
-server's import to:
-
-```python
-from mcp.server.mcpserver import MCPServer
-```
-
-That module exists only in `mcp >= 2.0.0` (1.x ships `mcp.server.fastmcp` instead). The
-dependency declaration was not updated and still reads `"mcp >=0.1"` — verified in the released
-6.1.5 wheel's METADATA (`Requires-Dist: mcp>=0.1`) and in the current `pyproject.toml` at 6.1.10.
-
-**How it shows up.** trellis pinned `mcp>=1.0.0` and its lock resolved mcp 1.29.0, which satisfies
-pyegeria's declared range. Launching the server then fails before it can speak MCP:
-
-```
-$ python -m pyegeria.core.mcp_server
-MCP import failed.
-  File ".../pyegeria/core/mcp_server.py", line 24, in <module>
-    from mcp.server.mcpserver import MCPServer
-ModuleNotFoundError: No module named 'mcp.server.mcpserver'
-```
-
-A client sees only "No response from MCP server" because the traceback goes to stderr and the
-process exits without writing a JSON-RPC frame. With mcp 2.1.1 installed the same command answers
-`initialize` normally (`serverInfo.name = "pyegeria-mcp"`).
-
-**Why it went unnoticed.** The quickstart containers run mcp 2.1.1 (pyegeria 6.1.9) and use their own
-`/app/mcp_server.py` mounted over SSE in `pyegeria_handler`, not this stdio module, so the
-egeria-workspaces path never exercised it. The egeria-python checkout's own venv also has mcp 2.0.0.
-
-**Proposed fix (backward compatible for callers).** In `pyproject.toml` declare `"mcp >=2.0"`. Nothing
-else needs to change: the import is already 2.x-only, so raising the floor only turns a runtime
-import crash into a resolver error at install time. If 1.x support is wanted instead, gate the
-import (`try: from mcp.server.mcpserver import MCPServer except ImportError: from mcp.server.fastmcp
-import FastMCP as MCPServer`) — but the 2.x API differs beyond the class name, so the floor bump is
-the honest option.
-
-**Consumer-side workaround applied in trellis (8441efb):** both packages now declare `mcp>=2.0.0`
-and the lock carries mcp 2.1.1, matching the quickstart containers.
 
 ### ISSUE-38 (PY-18): `count_relationships_between_elements("Exception")` (276) disagrees with `ClassificationExplorer.get_relationships("Exception")` (55)
 
@@ -1053,6 +867,108 @@ whether it correlates with the same background-connector/checkpoint load
 already documented above. Worth raising with the Egeria team directly, per
 the original report.
 
+**Update 2026-09-20 (peer check, no upstream issue filed yet):** checked
+`odpi/egeria`'s issue tracker directly — nothing filed for this symptom, so
+no response from the Egeria team via GitHub. Asked three peer sessions
+working against the same dev Egeria server:
+- **egeria-workspaces-fs-4a:** hasn't seen this specific symptom, no word
+  from the Egeria team either. Raised a speculative, explicitly-unconfirmed
+  lead worth checking: a chronic, still-open issue on `egeria-shared-kafka`
+  where the `GroupCoordinator` repeatedly times out writing to
+  `__consumer_offsets` (5000ms) and triggers a consumer-group rebalance
+  roughly every 90s (confirmed via broker logs 2026-09-03; root cause still
+  open, CPU/GC/Postgres-restarts/virtiofs I/O already ruled out; historically
+  "Information" severity, self-heals within seconds, not chased further
+  since it wasn't visibly causing downstream harm). If `qs-view-server`'s
+  related-element queries are backed by Kafka-driven indexing/event
+  propagation rather than a direct repository read, a chronic rebalance
+  storm could plausibly manifest as exactly this "relationship exists but
+  isn't visible to queries yet" lag. **Explicitly not a confirmed
+  correlation** — the timescales don't obviously line up (a recurring ~90s
+  self-healing blip vs. a one-shot ~20-minute resolution) — and the peer
+  offered to check Kafka broker logs around the original bulk-load window
+  for the same rebalance pattern if useful.
+- **Resource Explorer experimental UI:** no direct evidence either way —
+  today's two live writes against the same server (a Governance Action
+  Process Step upsert, and a native-survey `SurveyReport` lookup) both
+  checked either *immediately* after the write or only *after* polling to a
+  terminal status, never in the 1-20 minute gap this entry describes, so
+  neither confirms nor rules it out. Flagged that a background agent on
+  their side doing a related connection-refresh fix will trigger fresh
+  engine actions/relationships shortly and will report back if it surfaces
+  the same lag.
+- **Egeria-trellis backlog review:** also nothing from the Egeria team (no
+  channel to them; checked RE docs/Backlog/design notes for this exact
+  shape first — a checked "no", not a guess). Offered a different, measured
+  precedent on this same platform as a *pattern* to distinguish causes, not
+  a diagnosis: `packages/resource-explorer/docs/investigation-classification-and-zoning-design.md`
+  (~line 830) documents a privately-zoned element still readable by a
+  non-owner *six minutes* after the control was written (denial began at
+  seven), caused by the security connector's `refreshTimeInterval` (10 min)
+  reload — "read it back immediately, so it must be fine" was exactly the
+  misleading evidence there too. Their key diagnostic point: a
+  **fixed-wall-clock cause** (everything becomes visible at once, at a time
+  unrelated to load size — test with 50 links instead of 1,027 and see if
+  the delay is still ~20 min) and a **volume-proportional cause** (async
+  indexing/event-driven materialisation catching up, arriving in a stream)
+  look identical from a single observation but have different fixes; the
+  876→945(implied)→1,027 partial-recovery-at-12-minutes data point *mildly*
+  favours volume-proportional, but "two points don't make a curve." Also
+  worth checking directly: fetch one of the missing links by its own GUID
+  during the window — if that resolves but the relationship is still absent
+  from the related-element query, the write landed fine and only the
+  traversal/index path lags, narrowing which service is actually behind. If
+  this gets filed upstream, the volume-vs-fixed measurement is what turns
+  it into a real bug report instead of getting bounced as "eventual
+  consistency, working as intended."
+
+Two independent, unconfirmed leads now on record (Kafka rebalance storms;
+a refresh-interval-style cache) alongside a concrete diagnostic method
+(fixed-wall-clock vs. volume-proportional, plus the direct-GUID-fetch
+isolation check) for telling them apart before assuming either. Next real
+step is still reproducing with a smaller, timed, instrumented load using
+that method — not yet done.
+
+**Reproduction attempt, 2026-09-20 (small end of the curve, not reproduced):**
+after clearing with all 5 live peer sessions first (per `coordinate-shared-writes`),
+ran a timed, instrumented small-scale reproduction against `qs-view-server`:
+20 throwaway `Collection` elements created and each linked to a parent via
+`CollectionMembership` (not the original `MemberDataField`/"field link" type
+— a different relationship type, noted as a limitation below), polling
+`get_collection_members` every 30s for up to 20 minutes, with a direct-GUID
+isolation check ready for anything still missing at the deadline.
+
+**Result: all 20 relationships were visible on the very first poll, ~1.1s
+after the last one was created — no lag at all.** Cleanup (delete all 21
+fixture elements) verified two independent ways: a direct-GUID fetch on
+each (`404`/`OMAG-REPOSITORY-HANDLER-404-007`, confirmed real soft-delete,
+not an ISSUE-63-style silent no-op) and a broad `find_collections` search
+for the `test-fixture-issue108` prefix (0 results). The script itself was
+run from an ephemeral per-session scratch directory, not committed anywhere
+— reproduce via the same approach (create N Collections linked to a parent
+via `_async_add_to_collection`, poll `_async_get_collection_members`) if
+needed later; the approach, not the script file, is what's worth keeping.
+
+**Per Egeria-trellis backlog review's own framework, this is one point on
+the curve, not a refutation.** It's consistent with either "no bug under
+current load" or "the lag is genuinely volume-proportional and 20 elements
+is nowhere near the ~1,027-link scale that surfaced it originally" — the
+one data point this run *can't* distinguish those two. Also a real
+methodology gap versus the original report: this used `CollectionMembership`
+on plain `Collection` elements, not the `MemberDataField` "field link"
+relationship the original 1,027-link load actually exercised (ISSUE-102 is
+in the same `MemberDataField` neighborhood, worth checking together). Server
+load conditions also weren't recorded this run (no `ListAgents`/`:8810`
+snapshot taken alongside the timings, despite the earlier plan to do so —
+an execution gap, not a design one).
+
+**Candidate next step, still open:** a same-relationship-type
+(`MemberDataField`), same-order-of-magnitude (~200+) run, following the
+same peer-clearance and independent-verification discipline, is what would
+actually test the volume-proportional hypothesis — this run didn't attempt
+that scale on its own initiative, since committing to it wasn't part of
+what peers were asked to clear.
+
 ---
 
 ## Open pyegeria items (including follow-ons blocked on an Egeria fix)
@@ -1061,6 +977,237 @@ Actionable in this repo. Some of these are fully blocked today — waiting
 on an Egeria Server capability that doesn't exist yet — but the pyegeria/
 Dr.Egeria-side work each will need once that capability ships is written
 into the entry now, so it isn't rediscovered from scratch later.
+
+**Empty as of 2026-09-20's housekeeping pass** — every entry that had been
+sitting here was already `fixed`; see the "Housekeeping, 2026-09-20" note
+at the top of "Fixed / Resolved" below for where they went.
+
+---
+
+# Quick reference: which OMVS client class for which purpose
+
+| Need | Class | Notes |
+|---|---|---|
+| Business reference data (country/currency codes) | `ReferenceDataManager` | Does **not** cover specification properties (ISSUE-19, docs-only) |
+| Valid metadata values for a property name | `ReferenceDataManager` or `MetadataExpert` | `get_valid_metadata_values` lives on shared `ServerClient` base; no `as_of_time` support — Egeria endpoint doesn't expose it (ISSUE-18) |
+| Specification properties (placeholders, guards, action targets, etc.) | `SpecificationProperties` | `get_specification_property_by_type` now works with either PascalCase or `SCREAMING_SNAKE_CASE` input (ISSUE-17, fixed 2026-08-15); `find_specification_property` with `graph_query_depth=0` also available (ISSUE-15); `get_specification_property_by_guid` works too, `NameError` fixed (ISSUE-28, fixed 2026-08-05, re-verified 2026-08-15) |
+| `DataGrain` / `DataClass` listing | `find_data_value_specifications` / `get_data_value_specifications_by_name("*")` | Both fixed (ISSUE-1, ISSUE-2) |
+| `DataSpec` (Collection subtype) | `CollectionManager.find_collections(metadata_element_type="DataSpec")` | |
+| `DataStructure` / `DataField` | `DataDesigner.find_data_structures` / `find_data_fields` | |
+| Solution blueprints/components (any pyegeria version) | `SolutionArchitect.find_solution_blueprints/components(search_string="*")` | Avoid `find_all_*` variants on old versions (ISSUE-11) |
+| Note logs (list) | `find_note_logs("*", graph_query_depth=0)` | ISSUE-15 |
+| Note logs (entries) | `get_notes_for_note_log(guid, page_size=100)` | ISSUE-3 — never pass `metadata_element_type_name="NoteLog"` |
+| Collection members | `get_collection_members(collection_guid)` | ISSUE-8 — now returns members of any type, not just the collection's own type |
+| Comparing results across two runs/environments that don't match | — | Check whether the same user's credentials were used in both — governance zone visibility can legitimately change results per-user (ISSUE-29) before assuming a pyegeria bug |
+| Multi-classification search (`matchClassifications`, 2+ conditions) | `MetadataExpert.find_metadata_elements` | Fixed in Egeria server (ISSUE-35) |
+| Paging a `find_metadata_elements` result | Set `"startFrom"`/`"pageSize"` **in the body dict** | Fixed (ISSUE-34) — these are NOT separate parameters on this method anymore; passing them as kwargs is silently a no-op. Same for `"graphQueryDepth"`. |
+| Relationships for a single element by guid | `MetadataExpert.get_all_related_elements(guid)` | **Not** `get_metadata_element_by_guid` — that call never returns relationships, by design (ISSUE-37, not a bug) |
+| Project parent/child hierarchy (any linked project, not just hierarchy) | `ProjectManager.get_linked_projects(guid)` | Fixed (ISSUE-42) — was silently returning "No elements found" regardless of real data |
+
+---
+
+
+---
+
+# Appendix: Closed / Not-a-bug entries
+
+## Fixed / Resolved
+
+**Housekeeping, 2026-09-20:** the 14 entries below were moved here from
+"Open Egeria Server issues" and "Open pyegeria items" -- all were already
+marked `fixed` (or, for one duplicate ISSUE-91 report, corrected to `fixed`
+here) but had never been relocated out of the open sections. No content was
+changed beyond that one status correction and this note.
+
+### ISSUE-93: `declassify_metadata_element` raises `AttributeError` when `body` is omitted, though the parameter is Optional — and the classification is silently left in place
+
+**Layer:** Pyegeria · **Status:** fixed (2026-09-13) · **Found:** 2026-09-08 (Resource Explorer, swapping a Project's kind classification during investigation reclassification).
+
+`MetadataExpert.declassify_metadata_element(metadata_element_guid, classification_name, body=None)`
+declares `body` as `Optional[dict | MetadataSourceRequestBody] = None`, but the
+implementation calls `.model_dump()` on it unconditionally. Omitting it raises:
+
+```
+AttributeError: 'NoneType' object has no attribute 'model_dump'
+```
+
+**Why this is worse than an ordinary signature bug:** the exception arrives from
+deep inside the client, so a caller that wraps the call defensively — which is
+reasonable, since a classification that is already absent should not be fatal —
+swallows it and *believes the classification was removed*. It was not. Measured
+live:
+
+```python
+kinds before: ['Task']
+declassify_metadata_element(guid, "Task")        # raises AttributeError
+kinds after:  ['Task']                            # unchanged
+```
+
+In our case the element then carried **two** kind classifications at once
+(`['Task', 'PersonalProject']`) — the new one added, the old one never removed —
+and a check that only asked "is the new classification present?" reported
+success. The wrong-but-plausible state was invisible until the element was read
+back for *both* names.
+
+**Working around it** — pass an explicit body:
+
+```python
+me.declassify_metadata_element(guid, "Task", {"class": "MetadataSourceRequestBody"})
+# kinds after: []
+```
+
+**Candidate fix:** default the body when `None`, matching the Optional
+declaration — the same shape the workaround passes:
+
+```python
+body = body or {"class": "MetadataSourceRequestBody"}
+```
+
+**Worth checking while in there:** `classify_metadata_element` and
+`reclassify_metadata_element` sit beside it with the same `Optional` body
+declaration. We pass a body to both so we have not hit them, but if they share
+the unconditional `.model_dump()` they have the same defect — and the
+declassify case shows the failure mode is silent at the caller, not loud.
+
+**Where seen:** `trellis/packages/resource-explorer/resource_explorer/surveyors/
+investigation_reclassifier.py::_move_kind_classification`, which now passes the
+body explicitly and additionally verifies that the OLD classification is gone
+rather than only that the new one is present.
+
+---
+
+### ISSUE-92: `Project Type`'s description in `commands_project_compact.json` lists only 4 of its 6 `valid_values` — omits `Project` and `Experiment`, and the stale text is baked into 24 generated files
+
+**Layer:** Pyegeria · **Status:** fixed (2026-09-13) · **Found:** 2026-09-07 (Resource
+Explorer, designing investigation → Egeria Project classification mapping).
+
+`md_processing/data/compact_commands/commands_project_compact.json`, the
+`Project Type` attribute (`variable_name: project_type`):
+
+```json
+"valid_values": [
+  "Project", "Campaign", "Task", "PersonalProject", "StudyProject", "Experiment"
+],
+"description": "A string classifying the project. Supported values are Campaign, Task, PersonalProject and StudyProject."
+```
+
+`valid_values` has six entries; the description names four. `Project` (which
+is also this attribute's own `default_value`) and `Experiment` are both
+missing from the prose. The machine-readable list is correct — it matches
+Egeria 6's actual Project classifications in
+`OpenMetadataType.java` (0130): `CAMPAIGN_CLASSIFICATION`,
+`TASK_CLASSIFICATION`, `PERSONAL_PROJECT_CLASSIFICATION`,
+`STUDY_PROJECT_CLASSIFICATION`, `EXPERIMENT_CLASSIFICATION`. Only the
+description is behind.
+
+**Why it matters more than one stale string:** the description is what
+`gen_md_cmd_templates` and `gen_dr_help` render, so it has propagated. In
+this checkout, 25 files in the main tree carry the sentence verbatim — the
+one source JSON plus 24 generated artifacts:
+
+```
+md_processing/data/compact_commands/commands_project_compact.json   <- source
+md_processing/data/compact_commands_backup/commands_project_compact.json
+sample-data/templates/{basic,advanced}/Projects/*.md                (16)
+sample-data/egeria-inbox/dr-egeria-help-*.md                         (7)
+```
+
+The sharpest symptom: **`sample-data/templates/{basic,advanced}/Projects/Create_Experiment.md`
+tells the reader that `Experiment` is not a supported value** — on the
+template whose entire purpose is to create one. `Create_Project.md` has the
+same problem for `Project`. The generated help tables are self-contradictory
+in a single row, because they print the prose and the `valid_values` list
+side by side:
+
+```
+... Supported values are Campaign, Task, PersonalProject and StudyProject. | False | Project, Campaign, Task, PersonalProject, StudyProject, Experiment | Domain |
+```
+
+A reader who trusts the sentence over the column will never reach for
+`Experiment`, which is the one classification carrying its own defining
+attribute (`hypothesis`), so the omission suppresses a real capability
+rather than just reading untidily.
+
+**Where seen:** found while mapping Resource Explorer's investigation
+`project_classification` onto Egeria's Project classifications — the
+description was the first thing read, and it made `Experiment` look
+unsupported until `valid_values` and the Egeria type source were checked.
+
+**Candidate fix (one string, then regenerate):** edit the `description` in
+`commands_project_compact.json` to cover all six, ideally naming what each
+means rather than just listing them again — the `valid_values` array
+already lists them, so prose that only repeats the list adds nothing and
+will drift again the next time a value is added. Suggested:
+
+> "A string classifying the project. `Project` (the default) applies no
+> classification. `Campaign` is a long-term strategic initiative delivered
+> through multiple projects; `Task` a self-contained short activity;
+> `PersonalProject` an informal project an individual creates to organize
+> their own work; `StudyProject` a focused analysis of a topic, person,
+> object or situation; `Experiment` a project testing a hypothesis, which
+> is recorded in the `hypothesis` attribute."
+
+(Wording taken from the Egeria type definitions themselves so the two
+cannot disagree.)
+
+Then re-run `refresh_specs`, `gen_md_cmd_templates` and `gen_dr_help` per
+the Dr.Egeria command-sync flow and propagate the regenerated templates/help
+to `egeria-workspaces` and `egeria-advisor` — the 24 generated files above
+will not update on their own, and 16 of them ship as user-facing templates.
+
+**Worth checking while in there:** whether any other compact-command
+attribute has a `description` that enumerates its `valid_values` in prose.
+Any such pair is the same latent defect — two lists that must be edited
+together with nothing enforcing it. A cheap guard would be a spec-validation
+check that flags a `description` naming a subset of its own `valid_values`.
+
+---
+
+### ISSUE-91: `pyegeria.core.mcp_server` imports `mcp.server.mcpserver` (mcp 2.x only) but `pyproject.toml` declares `mcp >=0.1` — any consumer that resolves mcp 1.x gets a server that dies at import
+
+**Layer:** pyegeria packaging · **Status:** fixed (2026-09-13) · **Found:** 2026-09-05 (Egeria Advisor dev startup on the M3 Max)
+
+Commit 2b39ba06 (2026-07-30, "migrate mcp_server.py to mcp 2.0.0's MCPServer") changed the
+server's import to:
+
+```python
+from mcp.server.mcpserver import MCPServer
+```
+
+That module exists only in `mcp >= 2.0.0` (1.x ships `mcp.server.fastmcp` instead). The
+dependency declaration was not updated and still reads `"mcp >=0.1"` — verified in the released
+6.1.5 wheel's METADATA (`Requires-Dist: mcp>=0.1`) and in the current `pyproject.toml` at 6.1.10.
+
+**How it shows up.** trellis pinned `mcp>=1.0.0` and its lock resolved mcp 1.29.0, which satisfies
+pyegeria's declared range. Launching the server then fails before it can speak MCP:
+
+```
+$ python -m pyegeria.core.mcp_server
+MCP import failed.
+  File ".../pyegeria/core/mcp_server.py", line 24, in <module>
+    from mcp.server.mcpserver import MCPServer
+ModuleNotFoundError: No module named 'mcp.server.mcpserver'
+```
+
+A client sees only "No response from MCP server" because the traceback goes to stderr and the
+process exits without writing a JSON-RPC frame. With mcp 2.1.1 installed the same command answers
+`initialize` normally (`serverInfo.name = "pyegeria-mcp"`).
+
+**Why it went unnoticed.** The quickstart containers run mcp 2.1.1 (pyegeria 6.1.9) and use their own
+`/app/mcp_server.py` mounted over SSE in `pyegeria_handler`, not this stdio module, so the
+egeria-workspaces path never exercised it. The egeria-python checkout's own venv also has mcp 2.0.0.
+
+**Proposed fix (backward compatible for callers).** In `pyproject.toml` declare `"mcp >=2.0"`. Nothing
+else needs to change: the import is already 2.x-only, so raising the floor only turns a runtime
+import crash into a resolver error at install time. If 1.x support is wanted instead, gate the
+import (`try: from mcp.server.mcpserver import MCPServer except ImportError: from mcp.server.fastmcp
+import FastMCP as MCPServer`) — but the 2.x API differs beyond the class name, so the floor bump is
+the honest option.
+
+**Consumer-side workaround applied in trellis (8441efb):** both packages now declare `mcp>=2.0.0`
+and the lock carries mcp 2.1.1, matching the quickstart containers.
+
+---
 
 ### ISSUE-96: get_guid_for_name (and every other sync wrapper using asyncio.get_event_loop().run_until_complete(...)) breaks when a client instance is reused across threads — surfaces as a misleading CLIENT_ERROR_400 "unable to connect"
 
@@ -1127,9 +1274,11 @@ already used internally in mcp_server.py.
 
 Suggested fix (pyegeria): either make each sync wrapper use a per-thread session/loop (e.g. `threading.local()` holding the httpx.AsyncClient), or document that a client instance is single-thread-affine and raise a clear error — rather than the broad `except` in `_async_make_request` relabelling `RuntimeError: ... bound to a different event loop` as CLIENT_ERROR_400 'unable to connect', which is what cost the diagnosis. Caller-side mitigation used in Resource Explorer (dwolfson/trellis, `re/question-guid-client-per-thread`): one client per thread, constructed inside the thread that uses it — 0/104 failures after, 52/52 before.
 
+---
+
 ### ISSUE-91: `pyproject.toml` declares `mcp >=0.1`, but `pyegeria.core.mcp_server` needs `mcp>=2.0` — the declared floor lets a resolver install a version too old to import the module at all
 
-**Layer:** Pyegeria · **Status:** open · **Found:** 2026-09-06 (Egeria Advisor, containerized demo deployment rebuild against pyegeria 6.1.10).
+**Layer:** Pyegeria · **Status:** fixed (2026-09-13) -- duplicate report of the ISSUE-91 entry above (same number, same root cause, found a day later from a different angle: containerized demo deployment rather than dev startup). Confirmed current `pyproject.toml` declares `"mcp >=2.1.1"` · **Found:** 2026-09-06 (Egeria Advisor, containerized demo deployment rebuild against pyegeria 6.1.10).
 
 `pyproject.toml`'s `[project.dependencies]` declares `"mcp >=0.1"`, but
 `pyegeria/core/mcp_server.py` imports `from mcp.server.mcpserver import
@@ -1157,6 +1306,8 @@ independently verified against the `mcp` package's own changelog/git
 history here — the live import check above shows 2.0.0 works and the
 module path is absent from the 0.x/1.x line by inspection, but the exact
 first-working version wasn't pinned down.
+
+---
 
 ### ISSUE-87: `ClassificationExplorer.add_ownership_to_element`'s docstring sample body says `"class": "OwnerProperties"` — the method itself only accepts `"OwnershipProperties"`, so the documented body cannot be sent
 
@@ -1210,6 +1361,8 @@ here, so this is unlikely to be the only one. Separately, the validation error
 would be far more useful if it named the expected and supplied class names;
 `{"reason": "unexpected property class name"}` is a hard error to act on.
 
+---
+
 ### ISSUE-86: `exec_report_spec` (and `_exec_analytic_chart`, `_run_report_spec`) accept only `user`/`user_pass` — no way to run a report with a bearer token the caller already holds
 
 **Layer:** Pyegeria · **Status:** fixed 2026-09-05 (Pyegeria —
@@ -1259,6 +1412,8 @@ person who ran the report (`advisor/report_pipeline.py`, search "ISSUE-86").
 and thread it to the two builders; when given, `set_bearer_token(token)` instead of
 `create_egeria_bearer_token()`. Same for `run_report`/`describe_report` on the MCP side if they share
 the builder. Backward compatible: `user`/`user_pass` keep working when no token is given.
+
+---
 
 ### ISSUE-84: `SolutionArchitect.create_solution_blueprint`'s own docstring documents a `NewSolutionElementRequestBody` body (with `initialStatus`) for Draft-status creation — that class does not exist as a pydantic model, so the documented shape fails client-side validation before any HTTP call
 
@@ -1433,6 +1588,8 @@ platform after the wipe. The finding (`contentStatus` round-trips via `propertie
 separate request-body class needed) is a property of the API/fix, not of that instance, and
 is unaffected.
 
+---
+
 ### ISSUE-82: `pyegeria/omvs/valid_metadata.py` sends the literal query string `typeName=None` whenever `type_name` is Python `None` — breaks every Type-Name-omitted (global) Valid Metadata Value, in 12 of 14 methods across `ValidMetadataManager`
 
 **Status:** fixed and live-verified 2026-08-28 — all 12 affected methods
@@ -1545,6 +1702,8 @@ if type_name:
 **Nothing left open here.** Fixed, released (pyegeria 6.1.7), and live-verified
 end-to-end against the original real-world repro, not just unit-tested.
 
+---
+
 ### ISSUE-83: `AutomatedCuration.get_technology_type_elements(get_templates=True)` sends `skipClassifiedElements: [""]` (a list containing an empty string) instead of `[]` — Egeria rejects the empty classification name, so every Tech Catalog technology-type listing renders silently empty instead of erroring
 
 **Status:** fixed and live-verified 2026-09-02.
@@ -1597,6 +1756,8 @@ diff-confirmed byte-identical), then curled the actual production route —
 elements?display_name=PostgreSQL%20Relational%20Database` — which now
 returns the previously-missing asset as the first result, alongside the
 other 14 (15 total with templates included, vs. 14 without — consistent).
+
+---
 
 ### ISSUE-81: `migrate_question_specs.py` links Perspective↔Question via the wrong relationship type (`AssignmentScope`, not `ScopedBy`) — every bootstrap-migrated perspective silently relies on a filename-inference fallback instead
 
@@ -1704,6 +1865,8 @@ across every Question) will show whether it needs the same repair; write
 a small one-off script at that point rather than building one speculatively
 now for data that may not exist anywhere.
 
+---
+
 ### ISSUE-80: `find_report_specs_by_perspective`/`find_report_specs_by_question` are implemented and tested but not exposed anywhere
 
 **Status:** fixed 2026-09-05 (Pyegeria — `pyegeria/core/mcp_adapter.py`,
@@ -1745,6 +1908,8 @@ alongside the existing `find_report_specs` tool the MCP server already
 wires at startup via `load_egeria_report_specs`) and/or as a
 `hey_egeria cat show` subcommand. Low risk — additive, no changes needed
 to the functions themselves.
+
+---
 
 ### ISSUE-78: engine-host participation trio is implemented on `main` but absent from the released 6.0.18.4
 
@@ -1891,34 +2056,6 @@ matching perf anti-pattern found elsewhere in `pyegeria/core`,
 
 ---
 
-# Quick reference: which OMVS client class for which purpose
-
-| Need | Class | Notes |
-|---|---|---|
-| Business reference data (country/currency codes) | `ReferenceDataManager` | Does **not** cover specification properties (ISSUE-19, docs-only) |
-| Valid metadata values for a property name | `ReferenceDataManager` or `MetadataExpert` | `get_valid_metadata_values` lives on shared `ServerClient` base; no `as_of_time` support — Egeria endpoint doesn't expose it (ISSUE-18) |
-| Specification properties (placeholders, guards, action targets, etc.) | `SpecificationProperties` | `get_specification_property_by_type` now works with either PascalCase or `SCREAMING_SNAKE_CASE` input (ISSUE-17, fixed 2026-08-15); `find_specification_property` with `graph_query_depth=0` also available (ISSUE-15); `get_specification_property_by_guid` works too, `NameError` fixed (ISSUE-28, fixed 2026-08-05, re-verified 2026-08-15) |
-| `DataGrain` / `DataClass` listing | `find_data_value_specifications` / `get_data_value_specifications_by_name("*")` | Both fixed (ISSUE-1, ISSUE-2) |
-| `DataSpec` (Collection subtype) | `CollectionManager.find_collections(metadata_element_type="DataSpec")` | |
-| `DataStructure` / `DataField` | `DataDesigner.find_data_structures` / `find_data_fields` | |
-| Solution blueprints/components (any pyegeria version) | `SolutionArchitect.find_solution_blueprints/components(search_string="*")` | Avoid `find_all_*` variants on old versions (ISSUE-11) |
-| Note logs (list) | `find_note_logs("*", graph_query_depth=0)` | ISSUE-15 |
-| Note logs (entries) | `get_notes_for_note_log(guid, page_size=100)` | ISSUE-3 — never pass `metadata_element_type_name="NoteLog"` |
-| Collection members | `get_collection_members(collection_guid)` | ISSUE-8 — now returns members of any type, not just the collection's own type |
-| Comparing results across two runs/environments that don't match | — | Check whether the same user's credentials were used in both — governance zone visibility can legitimately change results per-user (ISSUE-29) before assuming a pyegeria bug |
-| Multi-classification search (`matchClassifications`, 2+ conditions) | `MetadataExpert.find_metadata_elements` | Fixed in Egeria server (ISSUE-35) |
-| Paging a `find_metadata_elements` result | Set `"startFrom"`/`"pageSize"` **in the body dict** | Fixed (ISSUE-34) — these are NOT separate parameters on this method anymore; passing them as kwargs is silently a no-op. Same for `"graphQueryDepth"`. |
-| Relationships for a single element by guid | `MetadataExpert.get_all_related_elements(guid)` | **Not** `get_metadata_element_by_guid` — that call never returns relationships, by design (ISSUE-37, not a bug) |
-| Project parent/child hierarchy (any linked project, not just hierarchy) | `ProjectManager.get_linked_projects(guid)` | Fixed (ISSUE-42) — was silently returning "No elements found" regardless of real data |
-
----
-
-
----
-
-# Appendix: Closed / Not-a-bug entries
-
-## Fixed / Resolved
 
 ### ISSUE-106: `InitialClassifications`'s `model_serializer` popped the wrong dict key (`other_props` instead of the aliased `otherProps`) — every classification property beyond `class` was silently dropped on every `initialClassifications` call across the whole SDK
 
