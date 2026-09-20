@@ -21,6 +21,14 @@ from md_processing.md_processing_utils.common_md_utils import (
     update_element_dictionary, get_element_dictionary, is_present, find_key_with_value
 )
 
+# ISSUE-107: sentinels for resolve_element_guid()'s per-batch query cache.
+# Distinct from None/a real result string so "not yet looked up" (_NOT_CACHED),
+# "looked up, found nothing" (a NO_ELEMENTS_FOUND-style string), and "looked
+# up, ambiguous" (_AMBIGUOUS) are never confused with each other.
+_NOT_CACHED = object()
+_AMBIGUOUS = object()
+
+
 class AsyncBaseCommandProcessor(ABC):
     """
     Base class for all v2 Dr.Egeria command processors.
@@ -1428,60 +1436,114 @@ class AsyncBaseCommandProcessor(ABC):
             return f"(Planned: {name_or_guid})"
         
         # 4. Check Egeria (Existence Check)
+        #
+        # ISSUE-107: each of the two passes below (WITH type constraint / WITHOUT)
+        # is a genuinely different server query, keyed here by (name_or_guid,
+        # effective_type). Both are cached in this batch's shared context so
+        # that repeated commands naming the same (possibly ambiguous) name --
+        # e.g. 25 Creates all sharing a Display Name -- pay the server-side
+        # lookup cost (dramatically higher when ambiguous: ~1s/candidate) once
+        # per distinct (name, type) pair for the whole batch, not once each.
+        # An ambiguous result is cached and replayed too (as an error on
+        # *this* instance's own parsed_output, since that side effect is
+        # per-command even when the underlying answer is shared).
         try:
+            query_cache = self.context.setdefault("_resolve_guid_query_cache", {})
+
+            def _report_ambiguous(pass_label: str) -> None:
+                msg = f"Multiple elements found for name '{name_or_guid}' ({pass_label}). Please use a unique Qualified Name."
+                logger.error(msg)
+                if "errors" not in self.parsed_output:
+                    self.parsed_output["errors"] = []
+                self.parsed_output["errors"].append(msg)
+
+            def _is_not_found_result(value: Any) -> bool:
+                return not value or (isinstance(value, str) and (value.startswith("No ") or " found" in value))
+
+            def _cache_if_not_found(key: tuple, value: Any) -> None:
+                # Only "not found" is cached, never a genuine single match: a
+                # real found guid could go stale within this batch if a later
+                # sibling command creates an element sharing this exact name
+                # (step 4a searches by raw Display Name, which the QN-keyed
+                # element dictionary in step 2 above can't already cover).
+                # "Not found" and "ambiguous" are also the two expensive cases
+                # this cache exists to avoid re-paying -- a single match is
+                # already the cheap path server-side.
+                if _is_not_found_result(value):
+                    query_cache[key] = value
+
             # Use SDK's strict name-to-GUID resolution
             # This checks QN, Display Name, Resource Name, and Identifier via repository-services.
             res = None
             unsupported_type_warnings = self.context.setdefault("_unsupported_lookup_types_warned", set())
-            try:
-                # Pass 1: Try WITH type constraint (fastest, avoids ambiguity)
-                res = await self.client.__async_get_guid__(qualified_name=name_or_guid, display_name=name_or_guid, property_name="displayName", tech_type=tech_type or None)
-            except PyegeriaException as e:
-                # Catch multiple matches error
-                if "Multiple elements found" in str(e):
-                    msg = f"Multiple elements found for name '{name_or_guid}' (Pass 1). Please use a unique Qualified Name."
-                    logger.error(msg)
-                    if "errors" not in self.parsed_output:
-                        self.parsed_output["errors"] = []
-                    self.parsed_output["errors"].append(msg)
-                    return None
-                if tech_type and self._is_unsupported_type_lookup_error(e):
-                    error_id = self._extract_egeria_error_id(e) or "unknown-error-id"
-                    if tech_type not in unsupported_type_warnings:
-                        unsupported_type_warnings.add(tech_type)
-                        self._add_warning(
-                            f"Type constraint '{tech_type}' from command find_constraints is not recognized by this Egeria server ({error_id}); retrying lookup without type filter."
+
+            # Pass 1: Try WITH type constraint (fastest, avoids ambiguity)
+            pass1_key = (name_or_guid, tech_type or None)
+            cached1 = query_cache.get(pass1_key, _NOT_CACHED)
+            if cached1 is _AMBIGUOUS:
+                logger.debug(f"resolve_element_guid: cache hit (ambiguous, Pass 1) for {pass1_key!r}")
+                _report_ambiguous("Pass 1, cached")
+                return None
+            elif cached1 is not _NOT_CACHED:
+                logger.debug(f"resolve_element_guid: cache hit for {pass1_key!r} -> {cached1!r}")
+                res = cached1
+            else:
+                try:
+                    res = await self.client.__async_get_guid__(qualified_name=name_or_guid, display_name=name_or_guid, property_name="displayName", tech_type=tech_type or None)
+                    _cache_if_not_found(pass1_key, res)
+                except PyegeriaException as e:
+                    # Catch multiple matches error
+                    if "Multiple elements found" in str(e):
+                        query_cache[pass1_key] = _AMBIGUOUS
+                        _report_ambiguous("Pass 1")
+                        return None
+                    if tech_type and self._is_unsupported_type_lookup_error(e):
+                        error_id = self._extract_egeria_error_id(e) or "unknown-error-id"
+                        if tech_type not in unsupported_type_warnings:
+                            unsupported_type_warnings.add(tech_type)
+                            self._add_warning(
+                                f"Type constraint '{tech_type}' from command find_constraints is not recognized by this Egeria server ({error_id}); retrying lookup without type filter."
+                            )
+                        logger.warning(
+                            f"Unsupported metadata type constraint '{tech_type}' while resolving '{name_or_guid}' ({error_id}). Falling back to untyped lookup."
                         )
-                    logger.warning(
-                        f"Unsupported metadata type constraint '{tech_type}' while resolving '{name_or_guid}' ({error_id}). Falling back to untyped lookup."
-                    )
-                else:
-                    logger.debug(f"SDK strict lookup (Pass 1) failed for '{name_or_guid}': {e}")
-                    if self.context.get("directive") == "validate":
-                        print_basic_exception(e)
-                
+                        # Not cached -- a server-capability failure, not a real answer.
+                    else:
+                        logger.debug(f"SDK strict lookup (Pass 1) failed for '{name_or_guid}': {e}")
+                        if self.context.get("directive") == "validate":
+                            print_basic_exception(e)
+                        # Not cached -- unexpected error, not a real answer.
+
             # Pass 2: If no result (or if type was invalid), try WITHOUT type constraint
             is_not_found = not res or (isinstance(res, str) and (res.startswith("No ") or " found" in res))
             if is_not_found and tech_type:
-                try:
-                    res = await self.client.__async_get_guid__(qualified_name=name_or_guid, display_name=name_or_guid, property_name="displayName")
-                except PyegeriaException as e:
-                    if "Multiple elements found" in str(e):
-                        msg = f"Multiple elements found for name '{name_or_guid}' (Pass 2). Please use a unique Qualified Name."
-                        logger.error(msg)
-                        if "errors" not in self.parsed_output:
-                            self.parsed_output["errors"] = []
-                        self.parsed_output["errors"].append(msg)
-                        return None
-                    logger.debug(f"SDK strict lookup (Pass 2) failed for '{name_or_guid}': {e}")
-                    if self.context.get("directive") == "validate":
-                        print_basic_exception(e)
+                pass2_key = (name_or_guid, None)
+                cached2 = query_cache.get(pass2_key, _NOT_CACHED)
+                if cached2 is _AMBIGUOUS:
+                    logger.debug(f"resolve_element_guid: cache hit (ambiguous, Pass 2) for {pass2_key!r}")
+                    _report_ambiguous("Pass 2, cached")
+                    return None
+                elif cached2 is not _NOT_CACHED:
+                    logger.debug(f"resolve_element_guid: cache hit for {pass2_key!r} -> {cached2!r}")
+                    res = cached2
+                else:
+                    try:
+                        res = await self.client.__async_get_guid__(qualified_name=name_or_guid, display_name=name_or_guid, property_name="displayName")
+                        _cache_if_not_found(pass2_key, res)
+                    except PyegeriaException as e:
+                        if "Multiple elements found" in str(e):
+                            query_cache[pass2_key] = _AMBIGUOUS
+                            _report_ambiguous("Pass 2")
+                            return None
+                        logger.debug(f"SDK strict lookup (Pass 2) failed for '{name_or_guid}': {e}")
+                        if self.context.get("directive") == "validate":
+                            print_basic_exception(e)
 
             # Ensure it's not a "not found" indicator string
             if res and isinstance(res, str) and not res.startswith("No ") and " found" not in res and not res.startswith("(Planned:"):
                 logger.debug(f"resolve_element_guid: SDK strict lookup for '{name_or_guid}' returned: {res}")
                 return res
-                
+
         except Exception as e:
             logger.debug(f"resolve_element_guid: Unexpected error resolving '{name_or_guid}': {e}")
             

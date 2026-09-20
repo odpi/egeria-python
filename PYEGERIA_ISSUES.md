@@ -1811,7 +1811,7 @@ Nothing else in RE is waiting on it.
 
 ### ISSUE-107: Dr.Egeria's create pre-check issues up to 4 redundant `guid-by-unique-name` lookups per command, multiplying an already-slow ambiguous-match server response
 
-**Layer:** Pyegeria · **Status:** fixed 2026-09-20 (partial — see below) ·
+**Layer:** Pyegeria · **Status:** fixed 2026-09-20 ·
 **Found:** 2026-09-20, reported by the user from a Dr.Egeria bulk load: a
 subject-area file created ~25 folders sharing the same three Display Names
 ("Prime Words", "Modifiers", "Class Words" across parent scopes), and files
@@ -1857,14 +1857,30 @@ name is auto-derived, preserving ISSUE-59's protection; a second confirms
 exactly one call happens when it's explicit. Full `tests/micro-tests/`
 suite re-verified green after the change.
 
-**Not fixed in this pass:** the two-pass (`tech_type`-scoped / broad)
-redundancy inside `resolve_element_guid()` itself, and caching a "Multiple
-elements found for X" result within `self.context` so 25 Creates sharing a
-Display Name — none of them via an explicit Qualified Name — don't each
-independently re-trigger the same expensive ambiguous lookup. This is the
-higher-leverage fix for the reported 25x-repeated-name scenario
-specifically (where the files were using Display Name, not an explicit QN,
-per the original report), tracked here as still open.
+**Fixed (second pass, same day):** `resolve_element_guid()`'s two internal
+passes (Pass 1 WITH the `tech_type` constraint, Pass 2 WITHOUT) each now
+check a per-batch query cache in `self.context` (`_resolve_guid_query_cache`,
+keyed by `(name_or_guid, effective_type)`) before hitting the server, and
+populate it afterward — but **only** for a "not found" or "ambiguous"
+outcome, deliberately never for a genuine single-match found `guid`: caching
+a found match risked going stale within a batch if a later sibling command
+creates an element sharing that exact Display Name (step 4a searches by raw
+Display Name, which the QN-keyed local element dictionary checked earlier
+in the same method can't already cover); a found match is also already the
+cheap server-side path, so there was nothing to gain by caching it. This is
+the actual fix for the reported 25x-repeated-Display-Name scenario: the
+first of the 25 "Prime Words" Creates pays the full ambiguous/not-found
+lookup cost (both passes, since neither cache key exists yet); the other 24
+each hit the cache and make zero calls to the server for that name. Ambiguous
+results are replayed per-instance too (each sibling's own `parsed_output`
+still gets the "Multiple elements found" error appended, even though the
+answer came from cache, since that side effect is per-command). Covered by
+`tests/micro-tests/test_resolve_guid_query_cache.py`: one test drives 5
+sibling Creates through a client that reports the shared probe name as
+ambiguous and asserts the client is only ever called once across all 5; a
+second does the same for a "not found" name and asserts exactly 2 calls
+total (Pass 1 + Pass 2, both only on the first sibling). Full
+`tests/micro-tests/` suite re-verified green.
 
 **Other similar patterns checked, none found:** two structurally similar
 helpers (`_server_client.py:734-772`, `classification_explorer.py:3428-
