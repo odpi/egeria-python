@@ -542,6 +542,21 @@ class AsyncBaseCommandProcessor(ABC):
         self.parsed_output = await self.parser.parse()
         attributes = self.parsed_output.get("attributes", {})
 
+        # ISSUE-107: capture whether 'Qualified Name' was explicitly authored
+        # in the markdown, before step 1a below can inject a *derived* one
+        # under the same key (which would make the two indistinguishable by
+        # the time step 4a runs). An explicit, user-supplied qualified name
+        # already unambiguously identifies the target -- step 4a's
+        # duplicate-Display-Name safety net exists to catch an *auto-derived*
+        # qualified name silently colliding with an existing element under a
+        # different one (ISSUE-59), which cannot happen when the user typed
+        # the qualified name themselves and fetch_as_is() already looked it
+        # up directly.
+        explicit_qn_attr = attributes.get("Qualified Name", {}).get("value")
+        self._user_supplied_qualified_name = bool(
+            explicit_qn_attr and str(explicit_qn_attr).strip()
+        )
+
         # ISSUE-77: the "Request ID" attribute (present on nearly every command
         # via the shared "Request Base" bundle) was parsed and validated but
         # never actually used anywhere -- self.context["request_id"] is always
@@ -641,7 +656,17 @@ class AsyncBaseCommandProcessor(ABC):
             self.as_is_element = None
 
         # 4a. Check for duplicate display_name if we are creating a new element
-        if not self.as_is_element and self.command.verb in ["Create", "Define", "Register", "Add", "Upsert"]:
+        # ISSUE-107: skip this when the user explicitly supplied a Qualified
+        # Name -- fetch_as_is() already looked that exact name up above and
+        # found nothing, which is authoritative (no auto-derivation involved,
+        # so there's nothing for this ambiguity check to catch). Skipping it
+        # avoids a redundant, expensive ambiguous-Display-Name lookup on
+        # every Create that already fully disambiguates its target.
+        if (
+            not self.as_is_element
+            and not self._user_supplied_qualified_name
+            and self.command.verb in ["Create", "Define", "Register", "Add", "Upsert"]
+        ):
             display_name = attributes.get("Display Name", {}).get("value")
             if display_name:
                 existing_guid = await self.resolve_element_guid(display_name, tech_type=self.egeria_type_name)

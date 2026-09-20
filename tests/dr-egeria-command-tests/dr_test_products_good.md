@@ -350,7 +350,7 @@ DigitalProduct::SalesForecast::Pipeline::1.2
 
 PDR::DigitalProduct::Sales-Forecast-Data-Feed::1.0
 
-### Dependency Description
+### Description
 
 The Sales Forecast Pipeline Product is listed and discoverable via the
 Sales Analytics Digital Product Catalog.

@@ -31,22 +31,6 @@ ___
 >	**Alternative Labels**: Wire Label
 
 
-### Dependency Description
->	**Input Required**: False
-
->	**Attribute Type**: Simple
-
->	**Description**: Description of the dependency between two digital products.
-
-
-### Dependency Description
->	**Input Required**: False
-
->	**Attribute Type**: Simple
-
->	**Description**: Description of the dependency between two digital products.
-
-
 ### Journal Entry
 >	**Input Required**: False
 
