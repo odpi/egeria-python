@@ -474,3 +474,23 @@ writeup, including why this looks like the same family of symptom as the
 paging defect like ISSUE-54, and the candidate next step for actually
 correlating it with connector/checkpoint activity instead of relying on
 these three anecdotal timing checkpoints.
+
+**Update 2026-09-20:** no upstream `odpi/egeria` issue filed yet, nothing
+from the Egeria team. Two independent, unconfirmed peer leads on record in
+`PYEGERIA_ISSUES.md`'s full entry: a chronic Kafka consumer-group rebalance
+storm on `egeria-shared-kafka` (~90s recurrence, self-heals in seconds —
+timescale doesn't obviously match a one-shot ~20min resolution, so
+speculative), and a `refreshTimeInterval`-style cache/connector reload
+precedent from a different but structurally similar RE investigation. Also
+recorded there: a concrete method for telling a fixed-wall-clock cause
+apart from a volume-proportional one (smaller timed load + direct-GUID
+isolation fetch) before assuming either — not yet run.
+
+**Update 2026-09-20, small-scale reproduction attempt: not reproduced.** 20
+throwaway `Collection` elements linked via `CollectionMembership` (not the
+original `MemberDataField` relationship type) were all visible in a
+related-element query within ~1.1s of creation — no lag at current load.
+One point on the curve, not a refutation: doesn't distinguish "no bug under
+current load" from "genuinely volume-proportional, 20 is far below the
+~1,027-link scale that surfaced it." A same-relationship-type, larger-scale
+run is the real next step. Full writeup in `PYEGERIA_ISSUES.md`.
