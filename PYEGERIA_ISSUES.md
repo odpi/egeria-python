@@ -1019,6 +1019,61 @@ marked `fixed` (or, for one duplicate ISSUE-91 report, corrected to `fixed`
 here) but had never been relocated out of the open sections. No content was
 changed beyond that one status correction and this note.
 
+---
+
+### ISSUE-109: `Link Product Dependency` was missing `ISC Qualified Name` — an earlier fix wrongly confirmed it as "correctly absent" against a stale local `.http` copy
+
+**Layer:** Pyegeria · **Status:** fixed 2026-09-21 · **Found:** 2026-09-20
+(user, reviewing a template fix), confirmed as a real gap 2026-09-21 after
+Mandy Chessell (Egeria team) questioned the earlier "not a bug" conclusion
+directly.
+
+**What happened, in order — worth recording because the failure mode is
+the interesting part, not just the fix:**
+1. 2026-09-20: fixing a duplicate `Dependency Description` attribute on
+   `Link Product Dependency`, the user separately asked why the template
+   had no `ISC Qualified Name` field. Checked the ground truth this repo's
+   own docs point to — `pyegeria/http clients/Egeria-api-product-manager.http`
+   — which showed `DigitalProductDependencyProperties` with only `label`/
+   `description`/`effectiveFrom`/`effectiveTo`. Concluded, and documented in
+   PR #376, that the field was **correctly absent** — not a bug.
+2. 2026-09-21: Mandy Chessell approved that PR's template change but asked
+   directly whether `ISC Qualified Name` was still unmapped. Re-checked
+   against the **current upstream `odpi/egeria` source** (not the local
+   `.http` copy) via `gh search code` +
+   `raw.githubusercontent.com/odpi/egeria/main/...`:
+   `DigitalProductDependencyProperties` now `extends LineageRelationshipProperties`
+   (which declares `iscQualifiedName`) rather than being a flat class with
+   only `label`/`description` — a real, upstream shape change the local
+   `.http` file predates. **The field genuinely exists server-side; the
+   original "not a bug" conclusion was wrong**, not because the reasoning
+   was bad, but because the ground truth it was checked against was stale.
+
+**Lesson:** this repo's own `.http` clients directory
+(`pyegeria/http clients/`) is explicitly gitignored and user-managed —
+nothing keeps it in sync with upstream automatically, and there is no
+signal when it goes stale. When a domain expert questions a "confirmed not
+a bug" conclusion, that is exactly the moment to re-check against
+`raw.githubusercontent.com/odpi/egeria/main/...` directly rather than
+re-trusting the same local copy that produced the wrong answer.
+
+**Fixed:** added `ISC Qualified Name` (`isc_qualified_name`, level
+`Advanced`) to the `Digital Product Dependency` bundle, copying the
+identical, pre-existing attribute definition from the Lineage Linker family
+rather than reinventing it (same name is already global-namespace-shared
+across compact JSON files — see the "Compact Attribute/Bundle Global
+Namespace" convention). Wired `iscQualifiedName` into the
+`DigitalProductDependencyProperties` body in
+`collection_manager_processor.py`'s `"Product Dependency"` branch.
+Regenerated templates confirm it now appears in the Advanced template only
+(matching its declared level — correctly absent from Basic). Covered by a
+new test,
+`test_link_product_dependency_sends_isc_qualified_name` in
+`tests/micro-tests/test_collection_link_multilink_guid.py`. Full
+`tests/micro-tests/` suite re-verified green.
+
+---
+
 ### ISSUE-93: `declassify_metadata_element` raises `AttributeError` when `body` is omitted, though the parameter is Optional — and the classification is silently left in place
 
 **Layer:** Pyegeria · **Status:** fixed (2026-09-13) · **Found:** 2026-09-08 (Resource Explorer, swapping a Project's kind classification during investigation reclassification).

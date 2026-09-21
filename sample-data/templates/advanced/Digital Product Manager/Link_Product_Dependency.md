@@ -139,4 +139,12 @@ ___
 >	**Default Value**: false
 
 
+### ISC Qualified Name
+>	**Input Required**: False
+
+>	**Attribute Type**: Simple
+
+>	**Description**: Qualified name of the Information Supply Chain this lineage relationship belongs to, if any.
+
+
 ___

@@ -2586,6 +2586,25 @@
       "max_cardinality": 1,
       "level": "Domain",
       "Journal Entry": ""
+    },
+    "ISC Qualified Name": {
+      "variable_name": "isc_qualified_name",
+      "inUpdate": true,
+      "attr_labels": "",
+      "examples": "",
+      "default_value": "",
+      "valid_values": [],
+      "existing_element": "",
+      "description": "Qualified name of the Information Supply Chain this lineage relationship belongs to, if any.",
+      "generated": false,
+      "style": "Simple",
+      "user_specified": true,
+      "unique": false,
+      "input_required": false,
+      "min_cardinality": 0,
+      "max_cardinality": 1,
+      "level": "Advanced",
+      "Journal Entry": ""
     }
   },
   "bundles": {
@@ -2766,6 +2785,7 @@
       "own_attributes": [
         "Digital Product 1",
         "Digital Product 2",
+        "ISC Qualified Name",
         "GUID"
       ]
     }

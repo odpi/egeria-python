@@ -35,7 +35,7 @@ dependencies = [
     "pydantic-settings >= 2.10.1",
     "pydevd-pycharm >=253.27642.35",
     "wcwidth",
-    "altair==6.2.2",
+    "altair==6.3.0",
     "mcp >=2.1.1",
     "markers>=0.3.0",
     "pytest-asyncio>=1.2.0",
