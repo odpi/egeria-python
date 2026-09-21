@@ -138,6 +138,26 @@ async def test_link_product_dependency_returns_and_displays_relationship_guid():
 
 
 @pytest.mark.asyncio
+async def test_link_product_dependency_sends_isc_qualified_name():
+    # Confirmed against current Egeria: DigitalProductDependencyProperties
+    # extends LineageRelationshipProperties, which carries iscQualifiedName.
+    # Raised by Mandy Chessell after approving the earlier template fix --
+    # the attribute was genuinely missing, not a false alarm.
+    client = _FakeClient()
+    p = _processor(client, "Link", "Product Dependency", {
+        "Digital Product 1": {"guid": "product-1-guid"},
+        "Digital Product 2": {"guid": "product-2-guid"},
+        "ISC Qualified Name": {"value": "InformationSupplyChain::SalesForecast::1.0"},
+    })
+
+    await p.apply_changes()
+
+    assert len(client.link_dependency_calls) == 1
+    _, _, body = client.link_dependency_calls[0]
+    assert body["properties"]["iscQualifiedName"] == "InformationSupplyChain::SalesForecast::1.0"
+
+
+@pytest.mark.asyncio
 async def test_detach_agreement_item_with_explicit_guid_uses_by_id():
     client = _FakeClient()
     p = _processor(client, "Detach", "Agreement Item", {
