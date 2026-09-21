@@ -348,6 +348,7 @@ class CollectionLinkProcessor(AsyncBaseCommandProcessor):
                     "typeName": "DigitalProductDependency",
                     "label": attributes.get('Label', {}).get('value'),
                     "description": attributes.get('Description', {}).get('value'),
+                    "iscQualifiedName": attributes.get('ISC Qualified Name', {}).get('value'),
                     "effectiveFrom": attributes.get('Effective From', {}).get('value'),
                     "effectiveTo": attributes.get('Effective To', {}).get('value')
                 }
