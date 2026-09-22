@@ -3424,7 +3424,12 @@ class AutomatedCuration(ServerClient):
     #   Initiate surveys
     #
 
-    async def _async_initiate_survey(self, survey_name: str, resource_guid: str) -> str:
+    async def _async_initiate_survey(
+            self,
+            survey_name: str,
+            resource_guid: str,
+            request_parameters: dict = None,
+    ) -> str:
         """Initiate a survey of a resource.
 
         Async version.
@@ -3435,6 +3440,9 @@ class AutomatedCuration(ServerClient):
             The name of the survey to initiate.
         resource_guid : str
             The GUID of the resource to be surveyed.
+        request_parameters : dict, optional
+            Survey-specific request parameters, e.g. `finalAnalysisStep`,
+            `ignoreAnalysisSteps`, `analysisLevel`.
 
         Returns
         -------
@@ -3463,26 +3471,36 @@ class AutomatedCuration(ServerClient):
                     "actionTargetGUID": resource_guid.strip(),
                 }
             ],
+            "requestParameters": request_parameters,
         }
-        response = await self._async_make_request("POST", url, body)
+        new_body = body_slimmer(body)
+        response = await self._async_make_request("POST", url, new_body)
         return response.json().get("guid", "Action not initiated")
 
-    def initiate_postgres_database_survey(self, postgres_database_guid: str) -> str:
+    def initiate_postgres_database_survey(
+            self, postgres_database_guid: str, request_parameters: dict = None
+    ) -> str:
         """Initiate a postgres database survey"""
         loop = asyncio.get_event_loop()
         response = loop.run_until_complete(
             self._async_initiate_survey(
-                "PostgreSQLSurvey::survey-postgres-database", postgres_database_guid
+                "PostgreSQLSurvey::survey-postgres-database",
+                postgres_database_guid,
+                request_parameters,
             )
         )
         return response
 
-    def initiate_postgres_server_survey(self, postgres_server_guid: str) -> str:
+    def initiate_postgres_server_survey(
+            self, postgres_server_guid: str, request_parameters: dict = None
+    ) -> str:
         """Initiate a postgres server survey"""
         loop = asyncio.get_event_loop()
         response = loop.run_until_complete(
             self._async_initiate_survey(
-                "PostgreSQLSurvey::survey-postgres-server", postgres_server_guid
+                "PostgreSQLSurvey::survey-postgres-server",
+                postgres_server_guid,
+                request_parameters,
             )
         )
         return response
@@ -3491,6 +3509,7 @@ class AutomatedCuration(ServerClient):
             self,
             file_folder_guid: str,
             survey_name: str = "FileSurvey::survey-folder",
+            request_parameters: dict = None,
     ) -> str:
         """Initiate a file folder survey - async version
 
@@ -3538,19 +3557,24 @@ class AutomatedCuration(ServerClient):
             self._async_initiate_survey(
                 survey_name,
                 file_folder_guid,
+                request_parameters,
             )
         )
         return response
 
-    def initiate_file_survey(self, file_guid: str) -> str:
+    def initiate_file_survey(self, file_guid: str, request_parameters: dict = None) -> str:
         """Initiate a file survey"""
         loop = asyncio.get_event_loop()
         response = loop.run_until_complete(
-            self._async_initiate_survey("FileSurvey::survey-data-file", file_guid)
+            self._async_initiate_survey(
+                "FileSurvey::survey-data-file", file_guid, request_parameters
+            )
         )
         return response
 
-    def initiate_kafka_server_survey(self, kafka_server_guid: str) -> str:
+    def initiate_kafka_server_survey(
+            self, kafka_server_guid: str, request_parameters: dict = None
+    ) -> str:
         """Initiate survey of a kafka server.
         Parameters
         ----------
@@ -3567,12 +3591,16 @@ class AutomatedCuration(ServerClient):
         loop = asyncio.get_event_loop()
         response = loop.run_until_complete(
             self._async_initiate_survey(
-                "ApacheKafkaSurvey::survey-kafka-server", kafka_server_guid
+                "ApacheKafkaSurvey::survey-kafka-server",
+                kafka_server_guid,
+                request_parameters,
             )
         )
         return response
 
-    def initiate_uc_server_survey(self, uc_server_guid: str) -> str:
+    def initiate_uc_server_survey(
+            self, uc_server_guid: str, request_parameters: dict = None
+    ) -> str:
         """Initiate survey of a Unity Catalog server. Async Version.
         Parameters
         ----------
@@ -3589,12 +3617,16 @@ class AutomatedCuration(ServerClient):
         loop = asyncio.get_event_loop()
         response = loop.run_until_complete(
             self._async_initiate_survey(
-                "UnityCatalogSurvey::survey-unity-catalog-server", uc_server_guid
+                "UnityCatalogSurvey::survey-unity-catalog-server",
+                uc_server_guid,
+                request_parameters,
             )
         )
         return response
 
-    def initiate_uc_schema_survey(self, uc_schema_guid: str) -> str:
+    def initiate_uc_schema_survey(
+            self, uc_schema_guid: str, request_parameters: dict = None
+    ) -> str:
         """Initiate survey of a Unity Catalog schema. Async Version.
         Parameters
         ----------
@@ -3612,7 +3644,9 @@ class AutomatedCuration(ServerClient):
         loop = asyncio.get_event_loop()
         response = loop.run_until_complete(
             self._async_initiate_survey(
-                "UnityCatalogSurvey::survey-unity-catalog-schema", uc_schema_guid
+                "UnityCatalogSurvey::survey-unity-catalog-schema",
+                uc_schema_guid,
+                request_parameters,
             )
         )
         return response
