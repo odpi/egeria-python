@@ -143,6 +143,84 @@ enough to track there too).
 
 ---
 
+### ISSUE-112: `AutomatedCurationRESTServices.saveClientSideSecret`/`deleteClientSideSecret` return a plain success `VoidResponse` when the resolved connector isn't a `YAMLSecretsFileConnector` — no error, no write, no indication anything was skipped
+
+**Layer:** Egeria Server (`automated-curation` OMVS) · **Status:** open ·
+**Found:** 2026-09-21, live-verifying Resource Explorer's own client-side
+secrets store end to end (`docs/design-notes/PROBES-2026-09-21.md` in the
+`trellis` repo). Confirmed against a local checkout of the Egeria server
+source matching the running platform's version (6.2-SNAPSHOT).
+
+**Root cause**
+(`open-metadata-implementation/view-server-generic-services/automated-curation/automated-curation-server/src/main/java/org/odpi/openmetadata/viewservices/automatedcuration/server/AutomatedCurationRESTServices.java`):
+
+```java
+// saveClientSideSecret, line 474 (deleteClientSideSecret has the identical
+// shape at line 545):
+Connector connector = connectedAssetClient.getConnectorForAsset(userId, secretsStoreGUID, auditLog);
+
+if (requestBody != null)
+{
+    if ((requestBody.getSecretsCollection() != null) && (requestBody.getSecretsCollection().getCollectionName() != null))
+    {
+        if (connector instanceof YAMLSecretsFileConnector yamlSecretsFileConnector)   // line 480
+        {
+            connector.start();
+            yamlSecretsFileConnector.saveSecretsCollection(...);
+            connector.disconnect();
+        }
+        // else: falls through silently -- no else branch, no error, no log
+    }
+    ...
+}
+```
+
+If the Asset's attached Connection resolves to a connector that is *not*
+an `instanceof YAMLSecretsFileConnector` — in particular, a Connection
+built with `connectorProviderClassName =
+"org.odpi.openmetadata.adapters.connectors.secretsstore.yaml.YAMLSecretsStoreProvider"`
+(the provider Egeria's own documentation page
+(https://egeria-project.org/connectors/secrets/yaml-file-secrets-store-connector/)
+and the Postgres content-pack templates show, which instantiates the
+read-only base class `YAMLSecretsStoreConnector`, not the
+`saveSecretsCollection`-implementing subclass `YAMLSecretsFileConnector`
+— see
+`open-metadata-implementation/adapters/open-connectors/secrets-store-connectors/yaml-secrets-store-connector/src/main/java/org/odpi/openmetadata/adapters/connectors/secretsstore/yaml/YAMLSecretsStoreProvider.java`
+vs. the sibling `YAMLSecretsFileProvider.java` in the same directory) —
+the `instanceof` check is false, the whole block is skipped, and the
+method falls through to returning a plain success `VoidResponse`. The
+caller sees `200 OK` / no exception and has no way to tell "the secret was
+saved" from "nothing happened."
+
+**Repro:** create a Connection whose `connectorType.connectorProviderClassName`
+is `YAMLSecretsStoreProvider` (not `YAMLSecretsFileProvider`), wrap it in an
+Asset (`AssetProperties`) linked via `ResourceConnection`/equivalent, then
+call `POST .../automated-curation/secrets-stores/{assetGuid}/client-side-secret/save`
+with a valid `SecretsCollectionRequestBody`. Response is `200`/success; the
+target `.omsecrets` file is not created or modified (confirmed via
+`docker exec <platform container> ls -la <secrets dir>` before/after — file
+size and mtime unchanged).
+
+**Impact:** this is exactly the shape Egeria's own client-side-secret
+documentation invites a caller into — the sample connection configuration
+shown on the docs page for embedding a `YAMLSecretsStoreConnector`
+*consumption*-side is not obviously the wrong provider for the *write*
+side too, since nothing in the docs distinguishes "read-only consumer" from
+"write-capable admin" connectors, and the API returns no signal that a
+write attempt silently no-op'd.
+
+**Suggested fix (for whoever owns this on the Egeria side — not actionable
+from pyegeria/RE):** either have `saveClientSideSecret`/
+`deleteClientSideSecret` raise an explicit error (e.g. an
+`InvalidParameterException` naming the resolved connector's actual class)
+when the connector is not a `YAMLSecretsFileConnector`, or have
+`getConnectorForAsset` itself validate connector capability before
+returning one for this endpoint. Not filed upstream yet — recording here
+per this repo's standing convention for Egeria server issues found from a
+downstream investigation.
+
+---
+
 ### ISSUE-102: `MemberDataField.minCardinality` silently persists as `maxCardinality`'s value regardless of what's actually sent — server-side, confirmed via a raw request bypassing every pyegeria/Dr.Egeria layer
 
 **Layer:** Egeria Server (repository/relationship-property persistence) · **Status:** open · **Found:** 2026-09-17, live-verifying a Dr.Egeria fix for `Position`/`Minimum Cardinality`/`Maximum Cardinality` on the field↔structure `MemberDataField` relationship (`qs-view-server`/`qs-metadata-store`, versionName `6.2-SNAPSHOT`).
@@ -978,9 +1056,104 @@ on an Egeria Server capability that doesn't exist yet — but the pyegeria/
 Dr.Egeria-side work each will need once that capability ships is written
 into the entry now, so it isn't rediscovered from scratch later.
 
-**Empty as of 2026-09-20's housekeeping pass** — every entry that had been
-sitting here was already `fixed`; see the "Housekeeping, 2026-09-20" note
-at the top of "Fixed / Resolved" below for where they went.
+---
+
+### ISSUE-111: `ConnectionMaker.link_connection_connector_type`/`link_connection_endpoint`/`link_asset_to_connection` silently create no relationship when `body` defaults to `None`
+
+**Layer:** Pyegeria · **Status:** open · **Found:** 2026-09-21, reported by a
+downstream user (Resource Explorer) while building a client-side secrets
+store: three separate `link_*` calls "succeeded" (no exception, no error
+response) yet none of the relationships existed afterward, discovered only
+because a later `save_client_side_secret` call failed with `Null
+connectorType property passed in connection <name>` against a Connection
+whose `link_connection_connector_type` had already returned cleanly.
+
+**Root cause, confirmed by reading `pyegeria/omvs/connection_maker.py`
+(pyegeria 6.1.15) and reproducing live against `qs-view-server`:**
+
+- `link_connection_connector_type(connection_guid, connector_type_guid,
+  body: Union[NewRelationshipRequestBody, dict] = None)` — line 950
+- `link_connection_endpoint(connection_guid, endpoint_guid, body=None)` —
+  line 966
+- `link_asset_to_connection(asset_guid, connection_guid, body=None)` — line
+  998
+
+All three forward `body` unchanged into
+`_async_new_relationship_request(url, [<RelationshipTypeName>], body)`
+(`pyegeria/core/_server_client.py:7254`), which POSTs whatever `body`
+resolves to — including a bare `None` — with **no client-side validation
+that a request body was actually required**. The server accepts the POST
+(no error surfaces to the caller) but creates no relationship. Confirmed
+live: calling any of the three with an explicit
+`body={"class": "NewRelationshipRequestBody"}` instead of the default
+succeeds and the relationship is genuinely created — the difference is
+solely whether *any* body is sent, not its content (an empty
+`NewRelationshipRequestBody` with no further fields is sufficient).
+
+**Repro (isolated, `ConnectionMaker` only, no Dr.Egeria/RE code in the
+path):**
+```python
+maker = ConnectionMaker(view_server, platform_url, user_id, user_pwd)
+maker.create_egeria_bearer_token(user_id, user_pwd)
+maker.link_connection_connector_type(connection_guid, connector_type_guid)  # body defaults to None
+# No exception. Relationship does NOT exist -- confirmed via
+# MetadataExpert.get_all_related_elements(connection_guid) showing no
+# ConnectionConnectorType relationship afterward.
+maker.link_connection_connector_type(
+    connection_guid, connector_type_guid,
+    body={"class": "NewRelationshipRequestBody"},
+)  # now genuinely creates it
+```
+
+**Suggested fix:** either (a) raise a client-side `PyegeriaInvalidParameterException`
+when `body is None` for these (and any other) `link_*`/`_async_new_relationship_request`-based
+methods that require a body server-side, rather than silently sending an
+empty POST, or (b) default `body` to `{"class": "NewRelationshipRequestBody"}`
+internally when the caller passes `None`, matching what a caller who wants
+"just link them, no extra relationship properties" actually intends. Not
+implemented here — logging per the standing rule (open pyegeria items get
+logged, not fixed in place from a downstream review pass). Worth auditing
+whether other `link_*`/`detach_*` methods across `ConnectionMaker` (and
+other OMVS classes built on the same `_async_new_relationship_request`
+helper) share this default-`None`-silently-no-ops shape — not checked
+beyond the three methods this investigation actually exercised.
+
+---
+
+### ISSUE-110: `initiate_*_survey` convenience wrappers can't pass `requestParameters` — `finalAnalysisStep`/`ignoreAnalysisSteps`/`analysisLevel` are unreachable through them
+
+**Layer:** Pyegeria · **Status:** open · **Found:** 2026-09-21, reported by a
+downstream user (Resource Explorer) while building a reachability probe that
+depends on controlling survey depth/analysis-step parameters.
+
+**Root cause, confirmed by reading `pyegeria/omvs/automated_curation.py`:**
+- `_async_initiate_gov_action_type()` (line 3327-ish) and
+  `initiate_gov_action_type()` (line 3375) both accept and forward a
+  `request_parameters` dict into the request body's `requestParameters`
+  field — this path is fine.
+- `_async_initiate_survey(survey_name, resource_guid)` (line 3427) is the
+  shared implementation behind **every** `initiate_*_survey` convenience
+  wrapper (`initiate_postgres_database_survey`, `initiate_file_folder_survey`,
+  `initiate_file_survey`, `initiate_kafka_server_survey`,
+  `initiate_uc_server_survey`, `initiate_uc_schema_survey`, etc., lines
+  3470-3609+). It hard-codes the POST body to only
+  `governanceActionTypeQualifiedName` + a single `serverToSurvey`
+  `actionTargets` entry (lines 3456-3466) — it takes no `request_parameters`
+  argument at all, and none of its callers can supply one.
+- Net effect: `finalAnalysisStep`, `ignoreAnalysisSteps`, `analysisLevel` (and
+  any other survey-specific request parameter) cannot be passed through any
+  of the `initiate_*_survey` wrappers — only by bypassing them and calling
+  `initiate_gov_action_type()` directly with the survey's own action-type
+  qualified name, which is why at least one caller
+  (`egeria_database_surveyor.py:528` in a downstream repo) already does that
+  instead of using the wrapper.
+
+**Suggested fix:** add an optional `request_parameters: dict = None` param
+to `_async_initiate_survey()` and thread it into the body (mirroring
+`_async_initiate_gov_action_type`'s `body_slimmer` pattern so `None` doesn't
+serialize), then add the same optional param to each `initiate_*_survey`
+wrapper. Not implemented yet — logging per the standing rule (open pyegeria
+items get logged here, not fixed in place from a review pass).
 
 ---
 
