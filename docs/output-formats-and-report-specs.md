@@ -514,25 +514,67 @@ client.aggregation_depth = 1  # Only look at immediate children of roles
 
 ### Writing Your Own Report Specs
 
-You can add/override report specs without changing pyegeria’s source by providing JSON files and loading them at runtime.
+You can add report specs without changing pyegeria’s source. List them in configuration: any number of JSON files and/or Python loader functions. pyegeria merges them into the report-spec registry.
 
 ### Where pyegeria looks for user specs
 
-`pyegeria/view/base_report_formats.py` supports loading JSON files from a user directory via:
+Every report-spec lookup (`select_report_spec`, `get_report_spec_match`, `list_report_specs`, `hey_egeria`, Dr.Egeria, Egeria Explorer) goes through `get_report_registry()` in `pyegeria/view/base_report_formats.py`. It merges four tiers:
 
-- Environment variable `PYEGERIA_USER_REPORT_SPECS_DIR` (preferred)
-- Fallback env var `PYEGERIA_USER_FORMAT_SETS_DIR`
+| Tier | Source |
+|---|---|
+| `BUILTINS` | `base_report_specs`, hand-maintained in `base_report_formats.py` |
+| `GENERATED` | `generated_format_sets`, written by `refresh_specs` |
+| `CONFIG` | Your files and loaders (below) |
+| `RUNTIME` | Anything registered in code with `register_report_specs(...)` |
 
-All `*.json` files in that directory are loaded and merged. Later files overwrite earlier keys on collision.
+**Adding your own files (the `CONFIG` tier).** List as many entries as you like, in either or both of these places:
 
-Load them early in your program:
+- `config.json`, under the key `"Pyegeria Report Spec Modules"` (a JSON list):
+  ```json
+  "Pyegeria Report Spec Modules": [
+    "pyegeria.view.analytic_demo_specs:get_analytic_demo_specs",
+    "~/my-specs/team-reports.json",
+    "~/my-specs/governance-reports.json",
+    "my_package.specs:load_specs"
+  ]
+  ```
+- The environment variable `PYEGERIA_REPORT_SPEC_MODULES`, as a comma-separated string. Its entries are added after the config.json list.
+
+- **The user report specs directory.** Every `*.json` file in it is loaded, in alphabetical order, after the list above. Subdirectories and non-JSON files are ignored. The directory is resolved in this order:
+  1. the `PYEGERIA_USER_REPORT_SPECS_DIR` env var (or the older `PYEGERIA_USER_FORMAT_SETS_DIR`);
+  2. config.json's `"Pyegeria User Report Specs Dir"`;
+  3. `~/.pyegeria/report_specs`.
+
+  If the directory doesn't exist, it's skipped quietly. A file that is also named explicitly in the list is loaded only once.
+
+Each list entry is one of:
+
+- **A path ending in `.json`** (`~` is expanded). The file holds a dictionary of FormatSets keyed by label; see [JSON structure for user specs](#json-structure-for-user-specs). `save_report_specs(...)` writes files in this shape.
+- **A loader reference**, `"pkg.mod:func"` or `"pkg.mod.func"`. The function is imported and called with no arguments, and must return a `FormatSetDict` or a plain `dict` of `FormatSet`s.
+
+Two older comma-separated env vars are still read, after the list above: `PYEGERIA_REPORT_FORMATS_JSON` (JSON paths only) and `PYEGERIA_REPORT_FORMATS_MODULES` (loaders only).
+
+**When entries are loaded.** The `CONFIG` tier loads automatically the first time anything calls `get_report_registry()`, so no consumer needs to register anything. It loads once per process. If you add or edit a file while a process is running, call `refresh_report_specs()` to reload. `load_user_report_specs()` does the same reload and also copies the directory's files into the legacy `report_specs` dict, for older code that reads that dict directly.
+
+**What happens when an entry is bad.** Each entry loads on its own, and a bad entry is skipped as a whole. Every other entry still loads, before and after it. An entry is skipped when:
+
+- its file doesn't exist or isn't valid report-spec JSON;
+- its module or function can't be imported, or the function raises an error;
+- it defines a label that another source already defined (an earlier `CONFIG` entry, a built-in, a generated spec, or a `RUNTIME` registration). Labels must be unique across the registry, so nothing is silently overridden. The first entry to claim a label keeps it.
+
+Each skip is logged as a warning (`Skipping report spec source JSON:<path>: <reason>`). `refresh_report_specs()` also returns the skips as a list of `(source, reason)` pairs, with an empty list meaning everything loaded. Use that to check your configuration:
 
 ```python
-from pyegeria.view.base_report_formats import load_user_report_specs
-load_user_report_specs()
+from pyegeria.view.base_report_formats import refresh_report_specs
+for source, reason in refresh_report_specs():
+    print(f"{source} was not loaded: {reason}")
 ```
 
-Tip: You can also export the built‑in specs, edit them, and re‑load from your directory:
+**Gotcha: `config.json` must be discoverable.** pyegeria only finds `config/config.json` if `PYEGERIA_CONFIG_DIRECTORY` (or `PYEGERIA_ROOT_PATH`) is set. Otherwise its `"Pyegeria Report Spec Modules"` and `"Pyegeria User Report Specs Dir"` settings are silently ignored. If you're not sure, use the env vars.
+
+**Changed behavior in the user specs directory.** Before, directory files could override a built-in spec, and a later file overwrote an earlier file's label. Neither is true any more, because the directory is now part of the `CONFIG` tier: a file that reuses an existing label is skipped with a warning. To change a built-in spec, save it under a new label. Also, before this fix the directory defaulted to `../`, the parent of the current working directory; it now defaults to `~/.pyegeria/report_specs`.
+
+Tip: You can also export the built‑in specs, edit them, and load the edited file as a `CONFIG` entry:
 
 ```python
 from pyegeria.view.base_report_formats import save_report_specs
@@ -565,7 +607,7 @@ User JSON files contain a dictionary of FormatSets keyed by label. The shape mir
 }
 ```
 
-Place this JSON file into your user specs directory and call `load_user_report_specs()`.
+Drop this file into your user report specs directory, or add its path to `"Pyegeria Report Spec Modules"` / `PYEGERIA_REPORT_SPEC_MODULES`, as described in [Where pyegeria looks for user specs](#where-pyegeria-looks-for-user-specs).
 
 ### Notes on keys and labels
 
@@ -925,7 +967,7 @@ All three chart formats are dispatched *before* the normal Format-row lookup (`e
 
 **Demo report specs** (`pyegeria/view/analytic_demo_specs.py`) — one real, executable `FormatSet` per registered analytic function, proving each is actually runnable as a report spec (not just documented in the registry). Named `Analytic Demo - <Heading>`, family `"Analytic Function Demo"`. Each spec's `description` states plainly whether the underlying function is generic or a fixed metric (pulled from the registry, not duplicated by hand).
 
-**Making extra report specs visible everywhere** — `get_report_registry()` auto-loads its `CONFIG` tier from `settings.Environment.pyegeria_report_spec_modules` (config.json's `"Pyegeria Report Spec Modules"` list) or the `PYEGERIA_REPORT_SPEC_MODULES` env var (comma-separated), the first time anything calls it — no explicit registration call needed in any consumer. Each entry is either a `.json` file path or a `"pkg.mod:func"`/`"pkg.mod.func"` loader callable returning a `FormatSetDict` (or plain dict of `FormatSet`s). `config/config.json` ships with `"Pyegeria Report Spec Modules": ["pyegeria.view.analytic_demo_specs:get_analytic_demo_specs"]` by default, so the demo specs above are visible to `dr_egeria`, `hey_egeria`, and any other pyegeria consumer without further setup — a consumer with no `config.json` of its own (e.g. a container with only the installed package) can set the `PYEGERIA_REPORT_SPEC_MODULES` env var instead. See `refresh_report_specs()`/`get_report_registry()` in `base_report_formats.py`.
+**Making extra report specs visible everywhere** — the demo specs are loaded through the registry's `CONFIG` tier. That tier takes any number of JSON files and loader functions, and one bad entry is skipped without affecting the rest; see [Where pyegeria looks for user specs](#where-pyegeria-looks-for-user-specs). `config/config.json` ships with `"Pyegeria Report Spec Modules": ["pyegeria.view.analytic_demo_specs:get_analytic_demo_specs"]` by default, so the demo specs above are visible to `dr_egeria`, `hey_egeria`, and any other pyegeria consumer without further setup — a consumer with no `config.json` of its own (e.g. a container with only the installed package) can set the `PYEGERIA_REPORT_SPEC_MODULES` env var instead. See `refresh_report_specs()`/`get_report_registry()` in `base_report_formats.py`.
 
 **Dashboard authoring** — a `Report` (a real Egeria asset naming a report spec plus default execution params, created via Dr.Egeria's `Create Report`) can be placed on a user-authored Dashboard Sheet (`Create Dashboard Sheet` / `Link Report to Dashboard Sheet`), alongside literal markdown text placements (`Add Text on Dashboard Sheet`) for section headers and explanations. See the "Report" family in `docs/dr_egeria_manual.md` and `pyegeria/view/_output_dashboard_sheet_models.py`.
 
