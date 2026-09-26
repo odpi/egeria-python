@@ -15,6 +15,7 @@ from typing import Dict, Any, Optional
 from loguru import logger
 
 from md_processing.v2.processors import AsyncBaseCommandProcessor
+from md_processing.v2.multilink import async_link_or_update, update_body
 from md_processing.md_processing_utils.common_md_utils import set_rel_request_body, set_delete_rel_request_body
 from pyegeria.core.utils import body_slimmer
 
@@ -138,7 +139,14 @@ class ActionProcessStepLinkProcessor(AsyncBaseCommandProcessor):
                     "mandatoryGuard": attributes.get('Mandatory Guard', {}).get('value', False),
                 }
                 self.last_body = body = body_slimmer(body)
-                new_rel_guid = await self.client._async_setup_next_action_process_step(step_guid, next_step_guid, body)
+                # Several next-step links between the same two steps are distinguished
+                # by guard, so a re-run updates the link with the same guard.
+                new_rel_guid, _ = await async_link_or_update(
+                    self.client, "NextGovernanceActionProcessStep", step_guid, next_step_guid,
+                    {"guard": body["properties"].get("guard")},
+                    create=lambda: self.client._async_setup_next_action_process_step(step_guid, next_step_guid, body),
+                    update=lambda g: self.client._async_update_next_action_process_step(
+                        g, update_body(body["properties"])))
                 logger.success(f"Linked {next_step_guid} as next process step after {step_guid}")
                 if new_rel_guid:
                     self.parsed_output["guid"] = new_rel_guid

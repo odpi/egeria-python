@@ -36,6 +36,7 @@ from typing import Any, Dict
 from loguru import logger
 
 from md_processing.v2.processors import AsyncBaseCommandProcessor
+from pyegeria.core.relationship_multiplicity import async_find_matching_relationship
 from md_processing.md_processing_utils.common_md_utils import (
     set_create_body, set_element_prop_body, update_element_dictionary,
 )
@@ -107,21 +108,8 @@ class SmartQueryLinkProcessor(AsyncBaseCommandProcessor):
                             f"via SmartQuery relationship {relationship_guid}")
             return f"\n\n## {verb} Saved Query to Results Set\n\nLinked {saved_query_guid} to {results_set_guid}."
         else:
-            found = await self.client.metadata_expert._async_find_relationships_between_elements(
-                {
-                    "class": "FindRelationshipRequestBody",
-                    "relationshipTypeName": "SmartQuery",
-                }
-            )
-            relationship_guid = None
-            for rel in (found if isinstance(found, list) else []):
-                if not isinstance(rel, dict):
-                    continue
-                end1 = rel.get("elementGUIDAtEnd1")
-                end2 = rel.get("elementGUIDAtEnd2")
-                if end1 == results_set_guid and end2 == saved_query_guid:
-                    relationship_guid = rel.get("relationshipGUID")
-                    break
+            relationship_guid = await async_find_matching_relationship(
+                self.client.metadata_expert, "SmartQuery", results_set_guid, saved_query_guid, {})
             if not relationship_guid:
                 raise ValueError(
                     f"No SmartQuery relationship found between Results Set {results_set_guid} "

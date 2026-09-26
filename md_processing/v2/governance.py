@@ -8,6 +8,7 @@ import json
 
 from pyegeria import EgeriaTech, PyegeriaException
 from md_processing.v2.processors import AsyncBaseCommandProcessor
+from md_processing.v2.multilink import async_link_or_update, update_body
 from md_processing.md_processing_utils.md_processing_constants import get_command_spec
 from md_processing.md_processing_utils.common_md_utils import (
     set_gov_prop_body, set_create_body, set_update_body, 
@@ -533,7 +534,13 @@ class GovernanceLinkProcessor(AsyncBaseCommandProcessor):
                         "effectiveTo": attributes.get("Effective To", {}).get("value"),
                     },
                 })
-                new_rel_guid = await self.client._async_add_certification_to_element(left_guid, right_guid, body)
+                # Certification's end 1 is the certified element and end 2 the
+                # CertificationType -- the reverse of this command's argument order.
+                new_rel_guid, _ = await async_link_or_update(
+                    self.client, "Certification", right_guid, left_guid,
+                    {"certificateId": body["properties"].get("certificateId")},
+                    create=lambda: self.client._async_add_certification_to_element(left_guid, right_guid, body),
+                    update=lambda g: self.client._async_update_certification(g, update_body(body["properties"])))
 
             elif object_type == "License":
                 body = body_slimmer({
@@ -560,7 +567,12 @@ class GovernanceLinkProcessor(AsyncBaseCommandProcessor):
                         "effectiveTo": attributes.get("Effective To", {}).get("value"),
                     },
                 })
-                new_rel_guid = await self.client._async_add_license_to_element(left_guid, right_guid, body)
+                # License's end 1 is the licensed element and end 2 the LicenseType.
+                new_rel_guid, _ = await async_link_or_update(
+                    self.client, "License", right_guid, left_guid,
+                    {"licenseId": body["properties"].get("licenseId")},
+                    create=lambda: self.client._async_add_license_to_element(left_guid, right_guid, body),
+                    update=lambda g: self.client._async_update_license(g, update_body(body["properties"])))
 
             elif object_type == "Agreement T&C":
                 body = body_slimmer({
@@ -578,7 +590,11 @@ class GovernanceLinkProcessor(AsyncBaseCommandProcessor):
                         "effectiveTo": attributes.get("Effective To", {}).get("value"),
                     },
                 })
-                new_rel_guid = await self.client._async_link_agreement_item(left_guid, right_guid, body)
+                new_rel_guid, _ = await async_link_or_update(
+                    self.client, "AgreementItem", left_guid, right_guid,
+                    {"agreementItemId": body["properties"].get("agreementItemId")},
+                    create=lambda: self.client._async_link_agreement_item(left_guid, right_guid, body),
+                    update=lambda g: self.client._async_update_agreement_item(g, update_body(body["properties"])))
 
             elif object_type == "Associated List":
                 # AssociatedSecurityList (SecurityAccessControl -> SecurityList)
@@ -605,7 +621,12 @@ class GovernanceLinkProcessor(AsyncBaseCommandProcessor):
                         "operationName": attributes.get("Operation Name", {}).get("value"),
                     },
                 })
-                new_rel_guid = await self.client.metadata_expert._async_create_related_elements(body)
+                # operationName is this type's only property, so an existing match
+                # is already identical -- reuse it; no update needed.
+                new_rel_guid, _ = await async_link_or_update(
+                    self.client, "AssociatedSecurityList", left_guid, right_guid,
+                    {"operationName": body["properties"].get("operationName")},
+                    create=lambda: self.client.metadata_expert._async_create_related_elements(body))
 
             elif object_type in {"Associated Group", "Regulation Certification Type"}:
                 rel_map = {

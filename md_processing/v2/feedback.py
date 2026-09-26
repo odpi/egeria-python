@@ -8,6 +8,7 @@ import json
 from pyegeria import EgeriaTech, PyegeriaException, COMMENT_TYPES
 from pyegeria.core._exceptions import PyegeriaInvalidParameterException
 from md_processing.v2.processors import AsyncBaseCommandProcessor
+from md_processing.v2.multilink import async_link_or_update, update_body
 from md_processing.md_processing_utils.common_md_utils import (
     set_element_prop_body, set_create_body, set_update_body, 
     update_element_dictionary, set_delete_request_body,
@@ -355,7 +356,13 @@ class FeedbackLinkProcessor(AsyncBaseCommandProcessor):
                                       attributes.get('Reference ID', {}).get('value') or \
                                       props.get('label')
                 body['properties'] = props
-                rel_guid = await self.client._async_link_external_reference(elem_guid, ref_guid, body=body_slimmer(body))
+                body = body_slimmer(body)
+                rel_guid, _ = await async_link_or_update(
+                    self.client, "ExternalReferenceLink", elem_guid, ref_guid,
+                    {"referenceId": body["properties"].get("referenceId")},
+                    create=lambda: self.client._async_link_external_reference(elem_guid, ref_guid, body=body),
+                    update=lambda g: self.client._async_update_external_reference_link(
+                        g, update_body(body["properties"])))
                 if rel_guid:
                     self.parsed_output["guid"] = rel_guid
             else:
@@ -386,7 +393,12 @@ class FeedbackLinkProcessor(AsyncBaseCommandProcessor):
                     "mediaUsageOtherId": attributes.get('Media Usage Other Id', {}).get('value'),
                 })
                 body['properties'] = props
-                rel_guid = await self.client._async_link_media_reference(elem_guid, ref_guid, body=body_slimmer(body))
+                body = body_slimmer(body)
+                rel_guid, _ = await async_link_or_update(
+                    self.client, "MediaReference", elem_guid, ref_guid,
+                    {"mediaId": body["properties"].get("mediaId")},
+                    create=lambda: self.client._async_link_media_reference(elem_guid, ref_guid, body=body),
+                    update=lambda g: self.client._async_update_media_reference(g, update_body(body["properties"])))
                 if rel_guid:
                     self.parsed_output["guid"] = rel_guid
             else:
@@ -414,7 +426,13 @@ class FeedbackLinkProcessor(AsyncBaseCommandProcessor):
                     "pages": attributes.get('Pages', {}).get('value'),
                 })
                 body['properties'] = props
-                rel_guid = await self.client._async_link_cited_document(elem_guid, ref_guid, body=body_slimmer(body))
+                body = body_slimmer(body)
+                rel_guid, _ = await async_link_or_update(
+                    self.client, "CitedDocumentLink", elem_guid, ref_guid,
+                    {"referenceId": body["properties"].get("referenceId")},
+                    create=lambda: self.client._async_link_cited_document(elem_guid, ref_guid, body=body),
+                    update=lambda g: self.client._async_update_cited_document_reference(
+                        g, update_body(body["properties"])))
                 if rel_guid:
                     self.parsed_output["guid"] = rel_guid
             else:

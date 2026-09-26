@@ -13,6 +13,7 @@ from md_processing.md_processing_utils.common_md_utils import (
     async_add_note_in_dr_e, set_object_classifications
 )
 from pyegeria.core.utils import body_slimmer
+from md_processing.v2.multilink import async_link_or_update, update_body
 
 
 class CollectionManagerProcessor(AsyncBaseCommandProcessor):
@@ -288,7 +289,13 @@ class CollectionLinkProcessor(AsyncBaseCommandProcessor):
                 # agreement/item pair, so the created relationship's own GUID is
                 # captured and surfaced here; it's the only reliable way to target
                 # this specific instance later via a "GUID" attribute on Detach.
-                rel_guid = await self.client._async_link_agreement_item(guid1, guid2, body)
+                # A re-run updates the item with the same agreementItemId instead
+                # of adding a duplicate.
+                rel_guid, _ = await async_link_or_update(
+                    self.client, "AgreementItem", guid1, guid2,
+                    {"agreementItemId": body['properties']['agreementItemId']},
+                    create=lambda: self.client._async_link_agreement_item(guid1, guid2, body),
+                    update=lambda g: self.client._async_update_agreement_item(g, update_body(body['properties'])))
                 if rel_guid:
                     self.parsed_output["guid"] = rel_guid
                     new_rel_guids.append(rel_guid)
@@ -312,9 +319,17 @@ class CollectionLinkProcessor(AsyncBaseCommandProcessor):
                     "effectiveTo": attributes.get("Effective To", {}).get("value")
                 }
                 # AgreementActor is MULTI_LINK -- same reasoning as AgreementItem above.
+                # Egeria has no AgreementActor update endpoint, so a re-run reuses the
+                # actor link with the same actorRole unchanged rather than duplicating it.
                 for guid_ac in actor_guids:
                     if guid_ac:
-                        rel_guid = await self.client._async_link_agreement_actor(guid_ag, guid_ac, body)
+                        rel_guid, created = await async_link_or_update(
+                            self.client, "AgreementActor", guid_ag, guid_ac,
+                            {"actorRole": body['properties']['actorRole']},
+                            create=lambda: self.client._async_link_agreement_actor(guid_ag, guid_ac, body))
+                        if not created:
+                            logger.warning(f"AgreementActor {rel_guid} already exists; its other properties "
+                                           f"were not changed (Egeria has no AgreementActor update)")
                         if rel_guid:
                             new_rel_guids.append(rel_guid)
                 if len(new_rel_guids) == 1:
@@ -353,8 +368,20 @@ class CollectionLinkProcessor(AsyncBaseCommandProcessor):
                     "effectiveTo": attributes.get('Effective To', {}).get('value')
                 }
                 # DigitalProductDependency is MULTI_LINK -- same reasoning as
-                # AgreementItem above.
-                rel_guid = await self.client._async_link_digital_product_dependency(guid1, guid2, body)
+                # AgreementItem above.  Because the server never merges a second
+                # instance, re-running the same markdown would add a duplicate of
+                # every dependency.  Target the existing instance instead: an explicit
+                # GUID if the command gives one, otherwise the dependency between the
+                # same two products with the same label and supply chain (a pair of
+                # products may legitimately have one dependency per chain under one label).
+                rel_guid, _ = await async_link_or_update(
+                    self.client, "DigitalProductDependency", guid1, guid2,
+                    {"label": body['properties']['label'],
+                     "iscQualifiedName": body['properties']['iscQualifiedName']},
+                    create=lambda: self.client._async_link_digital_product_dependency(guid1, guid2, body),
+                    update=lambda g: self.client._async_update_digital_product_dependency(
+                        g, update_body(body['properties'])),
+                    explicit_guid=(attributes.get('GUID') or {}).get('guid') or (attributes.get('GUID') or {}).get('value'))
                 if rel_guid:
                     self.parsed_output["guid"] = rel_guid
                     new_rel_guids.append(rel_guid)
