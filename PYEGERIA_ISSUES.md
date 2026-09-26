@@ -1058,6 +1058,128 @@ into the entry now, so it isn't rediscovered from scratch later.
 
 ---
 
+### ISSUE-114: `get_guid_for_name`'s miss-sentinel string ("No elements found") is truthy and repeatedly fools callers' existence checks — a caller guideline, not a candidate fix here
+
+**Layer:** caller guideline (pyegeria's return convention is working as
+designed; this documents it as a footgun rather than proposing a change) ·
+**Status:** open, doc-only · **Found:** 2026-09-22, live "Phase 1 done-test"
+verification in Resource Explorer (trellis repo) of the `data_class_match`
+Data Class bootstrap.
+
+**What:** `get_guid_for_name(name)` (and the equivalent method on every OMVS
+client that shares this convention — confirmed on `DataDesigner` and
+`ReferenceDataManager`) returns the literal string `"No elements found"` on
+a miss, not `None`, not `""`, and not an exception. That string is truthy
+in Python, so any caller that checks the result with a bare
+`if not guid`/`guid or default` reads a miss as "found" and skips the
+create it should have run.
+
+**Confirmed live impact:** Resource Explorer's
+`resource_explorer/surveyors/database/bootstrap_data_classes.py` used
+exactly that check (`if not data_class_guid: create(...)`) for all three of
+its lookups (`DataClass`, `ValidValuesSet`, `ValidValueDefinition`
+keywords). Running it against a platform holding zero Data Classes reported
+`Created Data Classes: 0, Skipped: 6` — every one of the six standard
+classes was silently treated as "already exists" and never created. A
+second, independently-introduced instance of the identical bug was found
+the same day in the same directory:
+`egeria_reference_catalog.py`'s `_find_existing()` used
+`str(client.get_guid_for_name(qualified_name) or "")`, which the sentinel
+string also defeats (`or ""` never fires on a truthy string).
+
+**This is not a new pyegeria defect** — it's the same sentinel-return
+convention already covered generally in this file's Quick Reference table
+and in several fixed entries (e.g. ISSUE-42's `get_linked_projects`), but
+this is the first entry pinning the specific "existence-check" failure mode
+by name, since `if not guid` / `guid or default` is an easy, natural-looking
+way to write that check and it silently does the wrong thing.
+
+**Caller-side fix applied (not a pyegeria change)**: both RE call sites now
+route the result through `survey_definition_reader._as_guid()`, which
+rejects the sentinel because it contains whitespace (`any(ch.isspace() ...)`
+), unlike a real GUID. `_as_guid` already existed and was already used
+correctly elsewhere in RE (`bootstrap.py`'s canary check,
+`survey_definition_reader.py` itself); these two call sites had each grown
+their own, incorrect, ad hoc check instead of reusing it. See trellis
+`re/data-class-seed-and-wiring` branch (bootstrap_data_classes.py,
+egeria_reference_catalog.py, tests/test_bootstrap_data_classes.py,
+tests/test_postgres_column_profile.py's
+`test_a_miss_reading_as_pyegerias_sentinel_string_still_creates`).
+
+**Candidate pyegeria-side improvement, NOT requested/applied here** — per
+this repo's standing convention, logging only: `get_guid_for_name` (and
+siblings sharing the convention) could raise a dedicated
+`ElementNotFoundError`/return `None` instead of the sentinel string, which
+would make `if not guid` correct instead of a trap. Not proposing this
+without the owner's approval, since existing callers across pyegeria and
+its consumers may already depend on the string return value.
+
+---
+
+### ISSUE-113: `NewElementRequestBody` has no `initial_status` field, so `initialStatus` is silently dropped on every create routed through it
+
+**Layer:** pyegeria · **Status:** open · **Found:** 2026-09-21, verifying
+Resource Explorer's multi-resource design doc's probe 4 (`egeria-support-
+for-multi-resource.md` §9, trellis repo): whether a client can create a
+governance element (DataClass, DataGrain, ValidValueSet, ...) directly in
+`DRAFT` status, as a lighter-weight alternative to an RFA-carried proposal.
+
+**What:** `DataDesigner.create_data_class({"class": "NewElementRequestBody",
+"initialStatus": "DRAFT", "properties": {...}})` returns success with a real
+guid. Reading that element back by guid
+(`MetadataExpert.get_metadata_element_by_guid`) shows `status: ACTIVE` — the
+requested `DRAFT` was silently discarded. The failure has no visible signal
+at create time; only a read-back exposes it.
+
+**Root cause, confirmed by reading pyegeria's own source, not guessed**:
+`_async_create_element_body_request` (`core/_server_client.py`) validates
+every dict body against the `NewElementRequestBody` Pydantic model
+(`models/models.py`) before serializing it to JSON. That model has fields
+for `anchor_guid`, `is_own_anchor`, `anchor_scope_guids`,
+`initial_classifications`, `parent_relationship_properties`, `properties`,
+`parent_guid`, `parent_relationship_type_name`, `parent_at_end_1` — no
+`initial_status` field at all. Every model inherits `PyegeriaModel`'s
+`model_config = ConfigDict(extra='ignore', ...)`, so an unrecognized dict key
+like `initialStatus` validates successfully and is dropped before a single
+byte reaches the server — the exact shape this repo's own `CLAUDE.md`
+documents for ISSUE-62 (`DeleteElementRequestBody` missing
+`cascadeDelete`/`deleteMethod`), one level up: this time on the far more
+widely-used creation path.
+
+**Not an Egeria server limitation** — `initialStatus` is a real,
+server-documented parameter for other creation endpoints:
+`collection_manager.py`'s own docstrings list valid values (`DRAFT,
+PREPARED, PROPOSED, APPROVED, REJECTED, APPROVED_CONCEPT, ...`) for the
+collection-creation calls that route through a body which *does* carry the
+field. `NewElementRequestBody` is simply missing it for the endpoints that
+use this shared model, including `create_data_class` and (by the same
+model) every other `_async_create_element_body_request` caller across the
+OMVS clients — this is not narrowly scoped to data classes.
+
+**Blast radius**: any caller anywhere in `pyegeria/omvs/` that needs to
+create an element with a non-default `initialStatus` (DRAFT, PROPOSED,
+APPROVED_CONCEPT, ...) via a method routing through
+`_async_create_element_body_request` is silently getting `ACTIVE` instead,
+with no error. Not audited here which other call sites pass `initialStatus`
+today and are similarly affected — worth a grep across this repo's own
+callers of `create_data_class`/`create_data_grain`/other `NewElementRequestBody`-based
+creates for `initialStatus` once this is fixed, to catch any that were
+silently no-op'ing.
+
+**Fix, once approved**: add `initial_status: str | None = None` to
+`NewElementRequestBody` (aliased to `initialStatus` via the existing
+`alias_generator`), matching how ISSUE-62's fix presumably added the missing
+`DeleteElementRequestBody` fields.
+
+**Not fixed here** — per this repo's standing convention, logged for
+approval before a downstream review pass fixes it in place. Full write-up
+with the live repro and the Resource Explorer design decision this blocks
+(the DRAFT-element governance-proposal path) is in
+`docs/design-notes/PROBES-2026-09-21.md`, "Probes 4 and 5, run live" section,
+in the trellis repo.
+
+---
+
 ### ISSUE-111: `ConnectionMaker.link_connection_connector_type`/`link_connection_endpoint`/`link_asset_to_connection` silently create no relationship when `body` defaults to `None`
 
 **Layer:** Pyegeria · **Status:** open · **Found:** 2026-09-21, reported by a
@@ -1122,7 +1244,7 @@ beyond the three methods this investigation actually exercised.
 
 ### ISSUE-110: `initiate_*_survey` convenience wrappers can't pass `requestParameters` — `finalAnalysisStep`/`ignoreAnalysisSteps`/`analysisLevel` are unreachable through them
 
-**Layer:** Pyegeria · **Status:** open · **Found:** 2026-09-21, reported by a
+**Layer:** Pyegeria · **Status:** fixed in #388 · **Found:** 2026-09-21, reported by a
 downstream user (Resource Explorer) while building a reachability probe that
 depends on controlling survey depth/analysis-step parameters.
 
