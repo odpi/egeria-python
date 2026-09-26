@@ -61,6 +61,7 @@ from typing import Any, Dict, Optional
 from loguru import logger
 
 from md_processing.v2.processors import AsyncBaseCommandProcessor
+from md_processing.v2.multilink import async_link_or_update, update_body
 
 
 def _v(attributes: Dict[str, Any], name: str, default=None):
@@ -174,12 +175,21 @@ class LineageLinkProcessor(AsyncBaseCommandProcessor):
             body = {"class": "NewRelationshipRequestBody", "properties": properties}
 
             if relationship_type == "DataFlow":
-                guid = await self.client._async_link_data_flow(element_one_guid, relationship_type, element_two_guid, body)
+                create = lambda: self.client._async_link_data_flow(element_one_guid, relationship_type, element_two_guid, body)
             else:
-                guid = await self.client._async_link_lineage(element_one_guid, relationship_type, element_two_guid, body)
+                create = lambda: self.client._async_link_lineage(element_one_guid, relationship_type, element_two_guid, body)
+
+            # One lineage relationship per supply chain and label between the same two
+            # elements, so a re-run updates the one with the same label and chain.
+            guid, created = await async_link_or_update(
+                self.client, relationship_type, element_one_guid, element_two_guid,
+                {"label": properties.get("label"), "iscQualifiedName": properties.get("iscQualifiedName")},
+                create=create,
+                update=lambda g: self.client._async_update_lineage(g, update_body(properties)))
 
             self.parsed_output["guid"] = guid
-            logger.success(f"Linked {relationship_type} relationship with GUID {guid}")
+            if created:
+                logger.success(f"Linked {relationship_type} relationship with GUID {guid}")
             return await self.render_result_markdown(guid)
 
         # Unlink / Detach / Remove

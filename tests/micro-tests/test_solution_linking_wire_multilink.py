@@ -81,15 +81,39 @@ async def test_create_new_solution_linking_wire_returns_and_displays_guid():
     assert "Created wire" in result
 
 
-@pytest.mark.asyncio
-async def test_relink_existing_labeled_wire_updates_in_place_not_create():
-    existing = [{
+def _existing_wire_envelope(label):
+    # The real shape _async_find_relationships_between_elements returns: the
+    # relationshipList envelope, properties in OMRS propertyValueMap form. An
+    # earlier fake returned a bare list of flat dicts, which let a lookup that
+    # could never match the real response pass this test.
+    return {"relationships": [{
         "elementGUIDAtEnd1": "comp-1-guid",
         "elementGUIDAtEnd2": "comp-2-guid",
         "relationshipGUID": EXISTING_WIRE_GUID,
-        "relationshipProperties": {"label": "unique-label-1"},
-    }]
-    client = _FakeClient(existing_wires=existing)
+        "relationshipProperties": {"propertyValueMap": {
+            "label": {"class": "PrimitiveTypePropertyValue", "typeName": "string", "primitiveValue": label}}},
+    }], "mermaidGraph": ""}
+
+
+@pytest.mark.asyncio
+async def test_relink_different_label_creates_new_wire():
+    client = _FakeClient(existing_wires=_existing_wire_envelope("other-label"))
+    p = SolutionLinkProcessor(client=cast(Any, client), command=_command("Link"), context={})
+    p.get_command_spec = lambda: {"OM_TYPE": "SolutionLinkingWire", "custom_attributes": ["Component1", "Component2"]}
+    p.parsed_output = {
+        "qualified_name": "SolutionLinkingWire::test::1",
+        "attributes": _base_attributes(label="unique-label-1"),
+    }
+
+    await p.apply_changes()
+
+    assert len(client.link_calls) == 1
+    assert client.update_calls == []
+
+
+@pytest.mark.asyncio
+async def test_relink_existing_labeled_wire_updates_in_place_not_create():
+    client = _FakeClient(existing_wires=_existing_wire_envelope("unique-label-1"))
     p = SolutionLinkProcessor(client=cast(Any, client), command=_command("Link"), context={})
     p.get_command_spec = lambda: {"OM_TYPE": "SolutionLinkingWire", "custom_attributes": ["Component1", "Component2"]}
     p.parsed_output = {

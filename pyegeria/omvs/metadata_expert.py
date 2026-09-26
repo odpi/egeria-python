@@ -3768,7 +3768,7 @@ class MetadataExpert(ServerClient):
         for_lineage: bool = None,
         for_duplicate_processing: bool = None,
         start_from: int = 0,
-        page_size: int = max_paging_size,
+        page_size: Optional[int] = None,
         timeout: int = default_timeout,
         mermaid_only: bool = False,
         **kwargs,
@@ -3786,8 +3786,12 @@ class MetadataExpert(ServerClient):
             - Normally false. Set true when the caller is part of a deduplication function
         start_from: int, default = 0
             - index of the list to start from (0 for start).
-        page_size
+        page_size: int, default is set by server
             - maximum number of elements to return.
+
+        for_lineage, for_duplicate_processing, start_from and page_size are sent as
+        the body fields forLineage/forDuplicateProcessing/startFrom/pageSize (this
+        endpoint pages in the body, not the URL); a value already in `body` wins.
         timeout: int, default = default_timeout
             - http request timeout for this request
         mermaid_only: bool, default is False
@@ -3848,6 +3852,12 @@ class MetadataExpert(ServerClient):
             f"{base_path(self, self.view_server)}/relationships/by-search-conditions"
         )
 
+        body = dict(body)
+        for field, value in (("forLineage", for_lineage), ("forDuplicateProcessing", for_duplicate_processing),
+                             ("startFrom", start_from or None), ("pageSize", page_size)):
+            if value is not None:
+                body.setdefault(field, value)
+
         response: Response = await self._async_make_request(
             "POST", url, body_slimmer(body), timeout=timeout
         )
@@ -3864,7 +3874,7 @@ class MetadataExpert(ServerClient):
         for_lineage: bool = None,
         for_duplicate_processing: bool = None,
         start_from: int = 0,
-        page_size: int = max_paging_size,
+        page_size: Optional[int] = None,
         timeout: int = default_timeout,
         mermaid_only: bool = False,
         **kwargs,

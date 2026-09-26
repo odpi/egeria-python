@@ -21,17 +21,24 @@ returned by `ValidMetadataManager.get_all_relationship_defs()`, with values:
 Confirmed live against a running server (2026-08-16): 21 MULTI_LINK types
 (DataFlow, ControlFlow, Certification, License, CatalogTarget, ... -- see
 `get_all_relationship_defs()` for the current authoritative list), 169
-UNI_LINK, 9 REVERSIBLE. Note SolutionLinkingWire is UNI_LINK in the live
-type registry despite being treated as multi-link by existing Dr.Egeria
-code (Egeria PR #9156) -- per user direction, `relationshipCategory` is
-the source of truth going forward for new/updated detection logic.
+UNI_LINK, 9 REVERSIBLE. SolutionLinkingWire was reported as UNI_LINK then
+because the 6.1 type patch set multiLink without updateMultiLink; a later
+Egeria types patch (updateSolutionLinkingWireRelationship) corrects it, and
+it is MULTI_LINK on current platforms, as is DigitalProductDependency.
+`relationshipCategory` is the source of truth for detection logic.
+
+Because a multi-link `Link` command can never rely on the server to reject
+or merge a second instance, re-running the same Dr.Egeria markdown would
+pile up duplicates.  `async_find_matching_relationship` locates the instance
+a command describes (same ends, same identifying properties) so the caller
+can update it in place instead.
 
 Only REVERSIBLE and MULTI_LINK are of practical interest to callers here;
 UNI_LINK is treated as "not multi-link" (`is_multi_link()` returns False).
 """
 from __future__ import annotations
 
-from typing import Optional
+from typing import Any, Optional
 
 # Cached per (platform_url, view_server) since relationship type defs are
 # effectively static for the lifetime of a session -- avoids a network
@@ -99,3 +106,70 @@ async def async_is_multi_link(client, relationship_type_name: str, refresh: bool
 def clear_relationship_category_cache() -> None:
     """Drop all cached relationshipCategory lookups. Mainly useful for tests."""
     _relationship_category_cache.clear()
+
+
+def _relationship_property(rel: dict, name: str) -> Any:
+    """Read a property from a relationship returned by find-relationships.
+
+    The by-search-conditions endpoint returns properties in OMRS instance form
+    (`relationshipProperties.propertyValueMap.<name>.primitiveValue`); other
+    endpoints return a flat bean (`relationshipProperties.<name>`).  Accept both.
+    """
+    props = rel.get("relationshipProperties") or rel.get("properties") or {}
+    value_map = props.get("propertyValueMap")
+    if isinstance(value_map, dict):
+        entry = value_map.get(name)
+        return entry.get("primitiveValue") if isinstance(entry, dict) else entry
+    return props.get(name)
+
+
+async def async_find_matching_relationship(client, relationship_type_name: str, end1_guid: str, end2_guid: str,
+                                           match_properties: dict[str, Any]) -> Optional[str]:
+    """Return the GUID of the relationship of this type between end1 and end2 whose identifying
+    properties all equal `match_properties`, or None if there is none.
+
+    Used by Dr.Egeria `Link` commands on MULTI_LINK types so that re-running a file updates the
+    instance it created rather than adding another.  A property whose expected value is None must
+    be absent (or null) on the relationship, so a dependency with no supply chain is not confused
+    with one that names a chain.  The search is narrowed on the server by the string-valued
+    properties, so it does not depend on paging through every relationship of the type.
+    With empty `match_properties`, any relationship of the type between the two ends matches.
+
+    Parameters
+    ----------
+    client
+        Any client with `_async_find_relationships_between_elements` (e.g. `EgeriaTech`).
+    relationship_type_name: str
+        e.g. "DigitalProductDependency", "SolutionLinkingWire".
+    end1_guid, end2_guid: str
+        GUIDs of the elements at end 1 and end 2, in that order.
+    match_properties: dict
+        Property name -> expected value, e.g. {"label": "...", "iscQualifiedName": "..."}.
+    """
+    if not end1_guid or not end2_guid:
+        return None
+    # Only strings narrow the server search; other values are still matched client-side below.
+    conditions = [
+        {"property": name, "operator": "EQ",
+         "value": {"class": "PrimitiveTypePropertyValue", "typeName": "string", "primitiveValue": value}}
+        for name, value in match_properties.items() if isinstance(value, str)
+    ]
+    body: dict[str, Any] = {"class": "FindRelationshipRequestBody", "relationshipTypeName": relationship_type_name}
+    if conditions:
+        body["searchProperties"] = {"class": "SearchProperties", "conditions": conditions, "matchCriteria": "ALL"}
+
+    found = await client._async_find_relationships_between_elements(body)
+    # The endpoint returns {"relationships": [...], "mermaidGraph": ...}; older code expected a bare list.
+    if isinstance(found, dict):
+        found = found.get("relationships") or []
+    if not isinstance(found, list):
+        return None
+
+    for rel in found:
+        if not isinstance(rel, dict):
+            continue
+        if rel.get("elementGUIDAtEnd1") != end1_guid or rel.get("elementGUIDAtEnd2") != end2_guid:
+            continue
+        if all(_relationship_property(rel, name) == value for name, value in match_properties.items()):
+            return rel.get("relationshipGUID")
+    return None

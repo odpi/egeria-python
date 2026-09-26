@@ -15,6 +15,7 @@ from md_processing.md_processing_utils.common_md_utils import (
     set_delete_request_body, set_delete_rel_request_body
 )
 from pyegeria.core.utils import body_slimmer
+from pyegeria.core.relationship_multiplicity import async_find_matching_relationship
 
 class BlueprintProcessor(AsyncBaseCommandProcessor):
     """
@@ -841,17 +842,12 @@ class SolutionLinkProcessor(AsyncBaseCommandProcessor):
                 # new one), and two wires with genuinely different labels both persist.
                 wire_guid = attributes.get('Wire GUID', {}).get('value')
                 if not wire_guid and label:
+                    # The find endpoint returns {"relationships": [...]} with properties in
+                    # propertyValueMap form; the helper handles both, and narrows the search
+                    # on the server by label so it does not depend on paging.
                     try:
-                        found = await self.client._async_find_relationships_between_elements(
-                            {"class": "FindRelationshipRequestBody", "relationshipTypeName": "SolutionLinkingWire"}
-                        )
-                        for rel in (found if isinstance(found, list) else []):
-                            if not isinstance(rel, dict):
-                                continue
-                            if rel.get("elementGUIDAtEnd1") == id1 and rel.get("elementGUIDAtEnd2") == id2 \
-                                    and rel.get("relationshipProperties", {}).get("label") == label:
-                                wire_guid = rel.get("relationshipGUID")
-                                break
+                        wire_guid = await async_find_matching_relationship(
+                            self.client, "SolutionLinkingWire", id1, id2, {"label": label})
                     except Exception as e:
                         logger.debug(f"Could not look up existing SolutionLinkingWire for {id1}->{id2} label={label!r}: {e}")
 

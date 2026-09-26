@@ -36,7 +36,10 @@ DEPENDENCY_REL_GUID = "product-dependency-rel-guid-0001"
 
 
 class _FakeClient:
-    def __init__(self):
+    def __init__(self, existing_relationships=None):
+        self.existing_relationships = existing_relationships
+        self.find_calls = []
+        self.update_dependency_calls = []
         self.link_item_calls = []
         self.link_actor_calls = []
         self.link_dependency_calls = []
@@ -57,6 +60,15 @@ class _FakeClient:
     async def _async_link_digital_product_dependency(self, guid1, guid2, body):
         self.link_dependency_calls.append((guid1, guid2, body))
         return DEPENDENCY_REL_GUID
+
+    async def _async_find_relationships_between_elements(self, body):
+        self.find_calls.append(body)
+        if not self.existing_relationships:
+            return "No elements returned"
+        return {"relationships": self.existing_relationships, "mermaidGraph": ""}
+
+    async def _async_update_digital_product_dependency(self, rel_guid, body):
+        self.update_dependency_calls.append((rel_guid, body))
 
     async def _async_detach_agreement_item(self, agreement_guid, item_guid, body):
         self.detach_item_calls.append((agreement_guid, item_guid, body))
@@ -155,6 +167,73 @@ async def test_link_product_dependency_sends_isc_qualified_name():
     assert len(client.link_dependency_calls) == 1
     _, _, body = client.link_dependency_calls[0]
     assert body["properties"]["iscQualifiedName"] == "InformationSupplyChain::SalesForecast::1.0"
+
+
+def _existing_dependency(guid, label, isc_qualified_name=None):
+    props = {"label": label}
+    if isc_qualified_name is not None:
+        props["iscQualifiedName"] = isc_qualified_name
+    return {
+        "relationshipGUID": guid,
+        "elementGUIDAtEnd1": "product-1-guid",
+        "elementGUIDAtEnd2": "product-2-guid",
+        "relationshipProperties": {"propertyValueMap": {
+            k: {"class": "PrimitiveTypePropertyValue", "typeName": "string", "primitiveValue": v}
+            for k, v in props.items()}},
+    }
+
+
+def _dependency_attributes(**extra):
+    return {
+        "Digital Product 1": {"guid": "product-1-guid"},
+        "Digital Product 2": {"guid": "product-2-guid"},
+        "Label": {"value": "feeds"},
+        "ISC Qualified Name": {"value": "InformationSupplyChain::A"},
+        **extra,
+    }
+
+
+@pytest.mark.asyncio
+async def test_relink_product_dependency_updates_existing_instead_of_duplicating():
+    client = _FakeClient(existing_relationships=[
+        _existing_dependency("existing-dep", "feeds", "InformationSupplyChain::A")])
+    p = _processor(client, "Link", "Product Dependency", _dependency_attributes())
+
+    result = await p.apply_changes()
+
+    assert client.link_dependency_calls == []
+    assert [g for g, _ in client.update_dependency_calls] == ["existing-dep"]
+    update_body = client.update_dependency_calls[0][1]
+    assert update_body["class"] == "UpdateRelationshipRequestBody"
+    assert update_body["mergeUpdate"] is True
+    assert update_body["properties"]["label"] == "feeds"
+    assert p.parsed_output["guid"] == "existing-dep"
+    assert "existing-dep" in result
+
+
+@pytest.mark.asyncio
+async def test_product_dependency_for_another_supply_chain_is_created():
+    client = _FakeClient(existing_relationships=[
+        _existing_dependency("chain-b-dep", "feeds", "InformationSupplyChain::B")])
+    p = _processor(client, "Link", "Product Dependency", _dependency_attributes())
+
+    await p.apply_changes()
+
+    assert len(client.link_dependency_calls) == 1
+    assert client.update_dependency_calls == []
+
+
+@pytest.mark.asyncio
+async def test_link_product_dependency_with_explicit_guid_updates_without_lookup():
+    client = _FakeClient()
+    p = _processor(client, "Link", "Product Dependency",
+                   _dependency_attributes(GUID={"value": DEPENDENCY_REL_GUID}))
+
+    await p.apply_changes()
+
+    assert client.find_calls == []
+    assert client.link_dependency_calls == []
+    assert [g for g, _ in client.update_dependency_calls] == [DEPENDENCY_REL_GUID]
 
 
 @pytest.mark.asyncio
