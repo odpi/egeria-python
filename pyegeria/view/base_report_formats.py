@@ -81,7 +81,7 @@ import os
 import re as _re
 from datetime import datetime, timezone
 from pathlib import Path
-from typing import List, Optional, Union
+from typing import Callable, List, Optional, Tuple, Union
 
 from loguru import logger
 
@@ -411,9 +411,19 @@ def combine_format_set_dicts(dict1: dict, dict2: dict) -> dict:
 
 # Get the configured value for the user format sets directory
 
-# USER_FORMAT_SETS_DIR = os.path.expanduser(settings.Environment.pyegeria_user_report_specs_dir)
-# Prefer new env var, fallback to old for backward compatibility
-USER_FORMAT_SETS_DIR = os.getenv("PYEGERIA_USER_REPORT_SPECS_DIR", os.getenv("PYEGERIA_USER_FORMAT_SETS_DIR", "../"))
+def _user_report_specs_dir() -> str:
+    """Env var (new name, then old) > config.json "Pyegeria User Report Specs Dir" > ~/.pyegeria/report_specs."""
+    configured = os.getenv("PYEGERIA_USER_REPORT_SPECS_DIR") or os.getenv("PYEGERIA_USER_FORMAT_SETS_DIR")
+    if not configured:
+        try:
+            from pyegeria.core.config import settings
+            configured = settings.Environment.pyegeria_user_report_specs_dir
+        except Exception:  # noqa: BLE001 -- settings may not be initialized in every context
+            configured = None
+    return os.path.expanduser(configured or "~/.pyegeria/report_specs")
+
+
+USER_FORMAT_SETS_DIR = _user_report_specs_dir()
 # Constants
 MD_SEPARATOR = "\n---\n\n"
 
@@ -3526,23 +3536,35 @@ def load_report_specs(file_path: str, merge: bool = True) -> None:
         raise
 
 
-def load_user_report_specs() -> None:
-    """
-    Load all user-defined format sets from the user format sets directory.
+def _user_report_spec_files() -> List[str]:
+    specs_dir = Path(_user_report_specs_dir())
+    if not specs_dir.is_dir():
+        logger.debug(f"User report specs directory {specs_dir} does not exist")
+        return []
+    return [str(p) for p in sorted(specs_dir.glob("*.json"))]
 
-    This function loads all JSON files in the user format sets directory and merges
-    the format sets with the existing format sets.
-    """
-    if not os.path.exists(USER_FORMAT_SETS_DIR):
-        logger.debug(f"User format sets directory {USER_FORMAT_SETS_DIR} does not exist")
-        return
 
-    # Load all JSON files in the directory
-    for file_path in Path(USER_FORMAT_SETS_DIR).glob("*.json"):
+def _load_user_specs_into_legacy_dict() -> None:
+    for file_path in _user_report_spec_files():
         try:
-            load_report_specs(str(file_path), merge=True)
+            load_report_specs(file_path, merge=True)
         except Exception as e:
             logger.error(f"Error loading format sets from {file_path}: {e}")
+
+
+def load_user_report_specs() -> List[Tuple[str, str]]:
+    """
+    Load every *.json file in the user report specs directory.
+
+    The directory's files are part of the registry's CONFIG tier, so this
+    reloads that tier (see `refresh_report_specs`) and returns its skipped
+    `(source, reason)` pairs. It also upserts the files into the legacy
+    `report_specs` dict for callers that still read it directly.
+    """
+    _load_user_specs_into_legacy_dict()
+    global _config_report_specs_loaded
+    _config_report_specs_loaded = True
+    return refresh_report_specs()
 
 
 def report_spec_markdown() -> str:
@@ -3592,7 +3614,7 @@ def report_spec_markdown() -> str:
 
 # Load user-defined format sets at module initialization
 try:
-    load_user_report_specs()
+    _load_user_specs_into_legacy_dict()
 except Exception as e:
     logger.error(f"Error loading user-defined format sets: {e}")
     for key, format_set in report_specs.items():
@@ -3647,7 +3669,11 @@ def _load_module_loader(m: str) -> FormatSetDict:
     return loaded if isinstance(loaded, FormatSetDict) else FormatSetDict(loaded)
 
 
-def refresh_report_specs() -> None:
+def _split_env_list(name: str) -> List[str]:
+    return [p.strip() for p in os.getenv(name, "").split(",") if p.strip()]
+
+
+def refresh_report_specs() -> List[Tuple[str, str]]:
     """Reload formats from configured JSON files and optional modules.
 
     Sources, in order:
@@ -3656,11 +3682,20 @@ def refresh_report_specs() -> None:
         PYEGERIA_REPORT_SPEC_MODULES as a comma-separated string) -- each
         entry is a JSON file path (ending ".json") or a "pkg.mod:func"/
         "pkg.mod.func" loader callable.
+      - Every *.json file in the user report specs directory, alphabetically
+        (PYEGERIA_USER_REPORT_SPECS_DIR / PYEGERIA_USER_FORMAT_SETS_DIR, else
+        config.json's "Pyegeria User Report Specs Dir", else
+        ~/.pyegeria/report_specs).
       - PYEGERIA_REPORT_FORMATS_JSON: comma-separated JSON file paths (older,
         still supported for backward compat).
       - PYEGERIA_REPORT_FORMATS_MODULES: comma-separated module callables
         (older, still supported for backward compat).
-    Collisions across sources will raise ReportFormatCollision.
+
+    Each entry is loaded independently: an entry that fails to load, or that
+    defines a label already present (in an earlier entry, or in the BUILTINS/
+    GENERATED/RUNTIME tiers), is skipped as a whole with a logged warning and
+    every other entry still loads. Returns the skipped entries as
+    `(source, reason)` pairs; an empty list means everything loaded.
     """
     global _CONFIG_REPORT_FORMATS
     _CONFIG_REPORT_FORMATS = FormatSetDict()
@@ -3670,35 +3705,41 @@ def refresh_report_specs() -> None:
         configured = list(settings.Environment.pyegeria_report_spec_modules or [])
     except Exception:  # noqa: BLE001 -- settings may not be initialized in every context
         configured = []
-    env_list = os.getenv("PYEGERIA_REPORT_SPEC_MODULES", "").strip()
-    if env_list:
-        configured.extend(p.strip() for p in env_list.split(",") if p.strip())
+    configured.extend(_split_env_list("PYEGERIA_REPORT_SPEC_MODULES"))
 
+    entries: List[Tuple[str, str, Callable[[str], FormatSetDict]]] = []
     for entry in configured:
         if entry.endswith(".json"):
-            loaded = _load_json_file(entry)
-            _add_with_collision_check(_CONFIG_REPORT_FORMATS, loaded, source=f"JSON:{entry}")
+            entries.append((f"JSON:{entry}", entry, _load_json_file))
         else:
-            loaded = _load_module_loader(entry)
-            _add_with_collision_check(_CONFIG_REPORT_FORMATS, loaded, source=f"MODULE:{entry}")
+            entries.append((f"MODULE:{entry}", entry, _load_module_loader))
+    entries.extend((f"JSON:{p}", p, _load_json_file) for p in _user_report_spec_files())
+    entries.extend((f"JSON:{p}", p, _load_json_file) for p in _split_env_list("PYEGERIA_REPORT_FORMATS_JSON"))
+    entries.extend((f"MODULE:{m}", m, _load_module_loader) for m in _split_env_list("PYEGERIA_REPORT_FORMATS_MODULES"))
 
-    json_paths = os.getenv("PYEGERIA_REPORT_FORMATS_JSON", "").strip()
-    if json_paths:
-        for raw in json_paths.split(","):
-            raw = raw.strip()
-            if not raw:
-                continue
-            loaded = _load_json_file(raw)
-            _add_with_collision_check(_CONFIG_REPORT_FORMATS, loaded, source=f"JSON:{raw}")
+    # A CONFIG label that duplicates another tier would make get_report_registry()
+    # itself raise, taking every report spec down with it -- reject it here instead.
+    other_tiers = set(base_report_specs.keys()) | set(generated_format_sets.keys()) | set(_RUNTIME_REPORT_FORMATS.keys())
 
-    modules = os.getenv("PYEGERIA_REPORT_FORMATS_MODULES", "").strip()
-    if modules:
-        for m in modules.split(","):
-            m = m.strip()
-            if not m:
+    skipped: List[Tuple[str, str]] = []
+    seen_json: set = set()
+    for source, entry, loader in entries:
+        if loader is _load_json_file:
+            resolved = Path(os.path.expanduser(entry)).resolve()
+            if resolved in seen_json:
                 continue
-            loaded = _load_module_loader(m)
-            _add_with_collision_check(_CONFIG_REPORT_FORMATS, loaded, source=f"MODULE:{m}")
+            seen_json.add(resolved)
+        try:
+            loaded = loader(entry)
+            clashes = sorted(set(loaded.keys()) & other_tiers)
+            if clashes:
+                raise ReportFormatCollision(
+                    f"Report format label(s) {clashes} already defined by a built-in, generated, or runtime spec")
+            _add_with_collision_check(_CONFIG_REPORT_FORMATS, loaded, source=source)
+        except Exception as exc:  # noqa: BLE001 -- one bad entry must not block the rest
+            logger.warning(f"Skipping report spec source {source}: {exc}")
+            skipped.append((source, str(exc)))
+    return skipped
 
 
 _config_report_specs_loaded = False
