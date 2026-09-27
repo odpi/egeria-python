@@ -179,14 +179,6 @@ ___
 >	**Description**: The qualified names of the information supply chains that this wire implements. From SolutionLinkingWire (0735).
 
 
-### ISC Qualified Names
->	**Input Required**: False
-
->	**Attribute Type**: Reference Name List
-
->	**Description**: The qualified names of the information supply chains that this wire implements. From SolutionLinkingWire (0735).
-
-
 ### Wire GUID
 >	**Input Required**: False
 

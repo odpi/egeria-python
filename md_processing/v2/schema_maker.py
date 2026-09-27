@@ -231,7 +231,8 @@ class SchemaLinkProcessor(AsyncBaseCommandProcessor):
 _CLASSIFICATION_SPECS = {
     "PrimaryKey": ("_async_add_primary_key_classification", "_async_remove_primary_key_classification",
                    "Relational Column GUID",
-                   {"name": "Primary Key Name", "keyPattern": "Primary Key Pattern"}),
+                   # PrimaryKeyProperties has displayName, not name (0534/0581).
+                   {"displayName": "Primary Key Name", "keyPattern": "Primary Key Pattern"}),
     "TypeEmbeddedAttribute": ("_async_add_type_embedded_attribute", "_async_remove_type_embedded_attribute",
                               "Schema Attribute GUID",
                               {"dataType": "Embedded Data Type", "defaultValue": "Embedded Default Value",

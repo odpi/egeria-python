@@ -1502,29 +1502,36 @@ class DataDesigner(ServerClient):
         specialized_data_value_specs_names = []
         specialized_data_value_specs_qnames = []
 
-        # terms
-        assigned_meanings = el_struct.get("assignedMeanings", {})
-        for meaning in assigned_meanings:
-            assigned_meanings_guids.append(meaning['relatedElement']['elementHeader']['guid'])
-            assigned_meanings_names.append(meaning['relatedElement']['properties']['displayName'])
-            assigned_meanings_qnames.append(meaning['relatedElement']['properties']['qualifiedName'])
+        def related(*keys: str) -> list[dict]:
+            """Related elements under the first of ``keys`` present in the element body.
 
-        # extract existing related data structure and data field elements
-        part_of_data_struct = el_struct.get("partOfDataStructures", None)
-        if part_of_data_struct:
-            for rel in part_of_data_struct:
-                related_element = rel["relatedElement"]
-                guid = related_element["elementHeader"]["guid"]
-                qualified_name = related_element["properties"].get("qualifiedName", "") or ""
-                display_name = related_element["properties"].get("displayName", "") or ""
-                data_structure_guids.append(guid)
-                data_structure_names.append(display_name)
-                data_structure_qnames.append(qualified_name)
-# Todo - check the logic here
-        # elif type == "DataField":
-        #     parent_guids.append(guid)
-        #     parent_names.append(display_name)
-        #     parent_qnames.append(qualified_name)
+            The keys are the relationship properties Egeria's AttributedElementConverterBase
+            fills in (types 0540/0580/0581); a uni-link side (e.g. superDataValueSpecification)
+            is a single dict rather than a list. Older key names are kept as fallbacks.
+            """
+            for key in keys:
+                value = el_struct.get(key)
+                if value:
+                    items = value if isinstance(value, list) else [value]
+                    return [item.get("relatedElement", {}) for item in items if isinstance(item, dict)]
+            return []
+
+        def collect(elements: list[dict], guids: list, names: list, qnames: list) -> None:
+            for rel_el in elements:
+                props = rel_el.get("properties", {}) or {}
+                guids.append(rel_el.get("elementHeader", {}).get("guid"))
+                names.append(props.get("displayName", "") or "")
+                qnames.append(props.get("qualifiedName", "") or "")
+
+        # glossary terms (SemanticDefinition)
+        collect(related("semanticDefinitions", "assignedMeanings"),
+                assigned_meanings_guids, assigned_meanings_names, assigned_meanings_qnames)
+
+        # data structures this data field is a member of (MemberDataField)
+        collect(related("partOfDataStructures"), data_structure_guids, data_structure_names, data_structure_qnames)
+
+        # parent data fields this data field is nested under (NestedDataField)
+        collect(related("parentDataFields"), parent_guids, parent_names, parent_qnames)
 
         member_of_collections = el_struct.get("memberOfCollections", {})
         for collection in member_of_collections:
@@ -1542,42 +1549,31 @@ class DataDesigner(ServerClient):
                     member_of_data_spec_names.append(name)
                     member_of_data_spec_qnames.append(qualifiedName)
 
-        member_data_fields = el_struct.get("containsDataFields", {})
-        for data_field in member_data_fields:
-            rel_el = data_field.get("relatedElement",{})
-            member_data_field_guids.append(rel_el["elementHeader"]["guid"])
-            member_data_field_names.append(rel_el["properties"]["displayName"])
-            member_data_field_qnames.append(rel_el["properties"]["qualifiedName"])
+        # data fields contained in this data structure (MemberDataField)
+        collect(related("containsDataFields"), member_data_field_guids, member_data_field_names,
+                member_data_field_qnames)
 
-        data_classes = el_struct.get("assignedDataClasses", {})
-        for data_class in data_classes:
-            data_class_guids.append(data_class['relatedElement']["elementHeader"]["guid"])
-            data_class_names.append(data_class['relatedElement']["properties"]["displayName"])
-            data_class_qnames.append(data_class['relatedElement']["properties"]["qualifiedName"])
+        # data classes / data value specifications that define this element's values (DataValueDefinition)
+        collect(related("dataValueSpecifications", "assignedDataClasses"),
+                data_class_guids, data_class_names, data_class_qnames)
 
-        assigned_data_value_specs = el_struct.get("assignedDataValueSpecifications", {})
-        for spec in assigned_data_value_specs:
-            assigned_data_value_specs_guids.append(spec['relatedElement']["elementHeader"]["guid"])
-            assigned_data_value_specs_names.append(spec['relatedElement']["properties"]["displayName"])
-            assigned_data_value_specs_qnames.append(spec['relatedElement']["properties"]["qualifiedName"])
+        # data value specifications assigned to this element (DataValueAssignment)
+        collect(related("assignedDataValueSpecifications"),
+                assigned_data_value_specs_guids, assigned_data_value_specs_names, assigned_data_value_specs_qnames)
 
-        nested_data_classes = el_struct.get("nestedDataClasses", {})
-        for nested_data_class in nested_data_classes:
-            nested_data_classes_guids.append(nested_data_class['relatedElement']["elementHeader"]["guid"])
-            nested_data_classes_names.append(nested_data_class['relatedElement']["properties"]["displayName"])
-            nested_data_classes_qnames.append(nested_data_class['relatedElement']["properties"]["qualifiedName"])
+        # data classes this data class is part of (DataClassComposition, parent side)
+        collect(related("partOfDataClasses", "nestedDataClasses"),
+                nested_data_classes_guids, nested_data_classes_names, nested_data_classes_qnames)
 
-        specialized_data_classes = el_struct.get("specializedDataClasses", {})
-        for nested_data_class in specialized_data_classes:
-            specialized_data_classes_guids.append(nested_data_class['relatedElement']["elementHeader"]["guid"])
-            specialized_data_classes_names.append(nested_data_class['relatedElement']["properties"]["displayName"])
-            specialized_data_classes_qnames.append(nested_data_class['relatedElement']["properties"]["qualifiedName"])
+        # legacy key only -- Egeria no longer has a separate data class specialization relationship;
+        # specialization is DataValueHierarchy (below)
+        collect(related("specializedDataClasses"),
+                specialized_data_classes_guids, specialized_data_classes_names, specialized_data_classes_qnames)
 
-        specialized_data_value_specs = el_struct.get("specializedDataValueSpecifications", {})
-        for spec in specialized_data_value_specs:
-            specialized_data_value_specs_guids.append(spec['relatedElement']["elementHeader"]["guid"])
-            specialized_data_value_specs_names.append(spec['relatedElement']["properties"]["displayName"])
-            specialized_data_value_specs_qnames.append(spec['relatedElement']["properties"]["qualifiedName"])
+        # the more general data value specification this one specializes (DataValueHierarchy, parent side)
+        collect(related("superDataValueSpecification", "specializedDataValueSpecifications"),
+                specialized_data_value_specs_guids, specialized_data_value_specs_names,
+                specialized_data_value_specs_qnames)
 
         mermaid = el_struct.get("mermaidGraph", {})
 
@@ -4049,40 +4045,6 @@ class DataDesigner(ServerClient):
         """Detach a child data class from its parent (DataClassComposition)."""
         loop = asyncio.get_event_loop()
         loop.run_until_complete(self._async_detach_nested_data_class(
-            parent_data_class_guid, child_data_class_guid, body, cascade_delete))
-
-    @dynamic_catch
-    async def _async_link_specialist_data_class(self, parent_data_class_guid: str, child_data_class_guid: str,
-                                                 body: Optional[dict | NewRelationshipRequestBody] = None) -> None:
-        """Link a specialized (child) data class to a parent via SpecializedDataClass relationship. Async version."""
-        url = (f"{self.ref_data_designer_command_base}/data-classes/{parent_data_class_guid}"
-               f"/specialized-data-classes/{child_data_class_guid}/attach")
-        await self._async_new_relationship_request(url, ["SpecializedDataClassProperties"], body)
-        logger.info(f"Specialized data class {child_data_class_guid} linked to parent {parent_data_class_guid}.")
-
-    @dynamic_catch
-    def link_specialist_data_class(self, parent_data_class_guid: str, child_data_class_guid: str,
-                                   body: Optional[dict | NewRelationshipRequestBody] = None) -> None:
-        """Link a specialized (child) data class to a parent via SpecializedDataClass relationship."""
-        loop = asyncio.get_event_loop()
-        loop.run_until_complete(
-            self._async_link_specialist_data_class(parent_data_class_guid, child_data_class_guid, body))
-
-    @dynamic_catch
-    async def _async_detach_specialist_data_class(self, parent_data_class_guid: str, child_data_class_guid: str,
-                                                   body: Optional[dict] = None, cascade_delete: bool = False) -> None:
-        """Detach a specialized (child) data class from its parent. Async version."""
-        url = (f"{self.ref_data_designer_command_base}/data-classes/{parent_data_class_guid}"
-               f"/specialized-data-classes/{child_data_class_guid}/detach")
-        await self._async_delete_relationship_request(url, body, cascade_delete)
-        logger.info(f"Specialized data class {child_data_class_guid} detached from parent {parent_data_class_guid}.")
-
-    @dynamic_catch
-    def detach_specialist_data_class(self, parent_data_class_guid: str, child_data_class_guid: str,
-                                     body: Optional[dict] = None, cascade_delete: bool = False) -> None:
-        """Detach a specialized (child) data class from its parent."""
-        loop = asyncio.get_event_loop()
-        loop.run_until_complete(self._async_detach_specialist_data_class(
             parent_data_class_guid, child_data_class_guid, body, cascade_delete))
 
     @dynamic_catch

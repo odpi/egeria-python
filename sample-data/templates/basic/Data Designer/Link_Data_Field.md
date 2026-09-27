@@ -1,7 +1,7 @@
 ___
 
 ## Link Data Field
-> Links or unlinks two data fields via the LinkedDataField relationship, with an optional relationship type name to describe the nature of the association (e.g. ForeignKey, DerivedFrom).
+> Link two data fields with a LinkedDataField relationship -- a relationship (or one end of a relationship) between the fields in the data's schema, such as a foreign key. Label is stored as the relationship's display name.
 
 ### Linked Data Field 1
 >	**Input Required**: True
@@ -37,12 +37,24 @@ ___
 >	**Description**: The open metadata type name of the relationship used in a LinkedDataField connection.
 
 
-### Link Relationship Type Name
+### Minimum Cardinality
 >	**Input Required**: False
 
->	**Attribute Type**: Simple
+>	**Attribute Type**: Simple Int
 
->	**Description**: The open metadata type name of the relationship used in a LinkedDataField connection.
+>	**Description**: The minimum number of times this field must appear in the containing data structure.
+
+>	**Default Value**: 1
+
+
+### Maximum Cardinality
+>	**Input Required**: False
+
+>	**Attribute Type**: Simple Int
+
+>	**Description**: The maximum number of times this field may appear in the containing data structure (-1 means unbounded).
+
+>	**Default Value**: 1
 
 
 ### Journal Entry
@@ -59,6 +71,16 @@ ___
 >	**Attribute Type**: Simple
 
 >	**Description**: A description.
+
+
+### Relationship End
+>	**Input Required**: False
+
+>	**Attribute Type**: Simple Int
+
+>	**Description**: Which end of the relationship named by Link Relationship Type Name this link represents: 0 = the whole relationship (e.g. a relational foreign key), 1 or 2 = one end of it (e.g. in a graph schema).
+
+>	**Default Value**: 0
 
 
 ___

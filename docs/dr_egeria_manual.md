@@ -235,7 +235,7 @@ Dr.Egeria organizes its commands into "families," each corresponding to a specif
 ### Core Families
 
 - **Glossary**: Manage business terms, categories, and their relationships (e.g., `Create Glossary`, `Create Term`, `Link Term to Category`).
-- **Data Designer**: Define data structures, fields, data classes, and value specifications (e.g., `Create Data Structure`, `Create Data Field`).
+- **Data Designer**: Define data structures, fields, data classes, and value specifications (e.g., `Create Data Structure`, `Create Data Field`), following Egeria's `0580 Data Dictionaries` / `0581 Data Field Implementation` models. Relationship commands cover each model relationship — `Link Data Field to Data Structure` (MemberDataField), `Link Nested Data Field` (NestedDataField), `Link Data Field` (LinkedDataField), `Link Data Value Definition`, `Link Schema Attribute Definition`, `Link Schema Type Definition`, `Link Certification Type to Data Structure` — and each also accepts `Detach`/`Unlink`/`Remove` to remove the relationship. `Classify Data Field as Primary Key` records which fields identify a record.
 - **Actor Manager**: Manage organizational metadata, including people, teams, organizations, and roles (e.g., `Create Person`, `Create Team`, `Create Organization`, `Create Person Role`). Supports linking team structures and role appointments.
 - **Project**: Manage projects and their dependencies or hierarchies (e.g., `Create Project`, `Link Project Dependency`).
 - **Collection Manager**: Manage various collections of elements, including Folders, Products, and Agreements (e.g., `Create Collection Folder`, `Create Digital Product`).

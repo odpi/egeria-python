@@ -10,9 +10,7 @@ from .glossary import GlossaryProcessor, TermProcessor, TermRelationshipProcesso
 from .data_designer import (
     DataCollectionProcessor, DataStructureProcessor, 
     DataFieldProcessor, DataClassProcessor,
-    DataGrainProcessor, LinkDataFieldProcessor, LinkFieldToStructureProcessor,
-    LinkDataValueDefinitionProcessor, LinkDataValueCompositionProcessor,
-    LinkDataClassCompositionProcessor, LinkCertificationTypeToStructureProcessor,
+    DataGrainProcessor, DataDesignerLinkProcessor, DataFieldPrimaryKeyProcessor,
     DataValueSpecificationProcessor
 )
 from .solution_architect import (

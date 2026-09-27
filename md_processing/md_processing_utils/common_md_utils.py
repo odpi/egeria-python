@@ -460,6 +460,14 @@ def set_collection_manager_body(object_type: str, qualified_name: str, attribute
             "usage": attributes.get('Usage', {}).get('value', None),
         })
 
+    # Handle Report Type (a DataSpec subtype, 0580)
+    if object_type in ["Report Type", "ReportType"]:
+        prop_bod.update({
+            "createdTime": attributes.get('Created Time', {}).get('value', None),
+            "lastModifiedTime": attributes.get('Last Modified Time', {}).get('value', None),
+            "lastModifier": attributes.get('Last Modifier', {}).get('value', None),
+        })
+
     # Handle Security subtypes
     if object_type in ["Security Group", "Security List", "Security Role", "SecurityGroup", "SecurityList", "SecurityRole"]:
         prop_bod['distinguishedName'] = attributes.get('Distinguished Name', {}).get('value', None)
@@ -563,7 +571,7 @@ def set_product_body(object_type: str, qualified_name: str, attributes: dict) ->
 
 def set_data_field_body(object_type: str, qualified_name: str, attributes: dict)->dict:
     prop_bod = set_element_prop_body(object_type, qualified_name, attributes)
-    prop_bod["namespacePath"] = attributes.get('Namespace', {}).get('value', None)
+    prop_bod["namespacePath"] = attributes.get('Namespace Path', {}).get('value', None)
     prop_bod["aliases"] = attributes.get('Aliases', {}).get('value', [])
     prop_bod["namePatterns"] = attributes.get('Name Patterns', {}).get('value', [])
     prop_bod["defaultValue"] = attributes.get('Default Value', {}).get('value', None)
@@ -576,6 +584,8 @@ def set_data_field_body(object_type: str, qualified_name: str, attributes: dict)
     prop_bod["precision"] = attributes.get('Precision', {}).get('value', None)
     prop_bod["orderedValues"] = attributes.get('Ordered Values', {}).get('value', None)
     prop_bod["sortOrder"] = attributes.get('Sort Order', {}).get('value', None)
+    prop_bod["isPartitionKey"] = attributes.get('Is Partition Key', {}).get('value', None)
+    prop_bod["partitionKeyPosition"] = attributes.get('Partition Key Position', {}).get('value', None)
     return prop_bod
 
 def set_update_status_body(object_type: str, attributes: dict)->dict:

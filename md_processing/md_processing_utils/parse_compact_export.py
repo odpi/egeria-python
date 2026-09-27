@@ -126,8 +126,14 @@ def expand_command(command: dict, bundles: dict, attr_defs: dict) -> dict:
         bundle_attr_names = []
         chain = []
 
-    # Add custom attributes
-    custom_attr_names = command.get("custom_attributes", [])
+    # Add custom attributes. An attribute named in more than one place (a custom
+    # attribute that is also in the bundle chain, or a bundle re-declaring an
+    # inherited attribute) is kept once, at its first position -- otherwise every
+    # consumer of the expanded spec (runtime specs, templates, help, report
+    # specs) lists it twice.
+    bundle_attr_names = list(dict.fromkeys(bundle_attr_names))
+    custom_attr_names = [a for a in dict.fromkeys(command.get("custom_attributes", []))
+                         if a not in bundle_attr_names]
     all_attr_names = bundle_attr_names + custom_attr_names
 
     # Resolve each attribute name to its full definition

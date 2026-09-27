@@ -245,7 +245,8 @@ class DataStructureProcessor(AsyncBaseCommandProcessor):
         om_type = spec.get("OM_TYPE")
 
         prop_body = set_element_prop_body(om_type or "Data Structure", qualified_name, attributes)
-        prop_body['namespace'] = attributes.get('Namespace', {}).get('value', None)
+        prop_body['namespacePath'] = attributes.get('Namespace Path', {}).get('value', None)
+        prop_body['namePatterns'] = attributes.get('Name Patterns', {}).get('value', None)
         
         # Collection memberships
         in_data_spec = attributes.get("In Data Specification", {})
@@ -437,12 +438,11 @@ class DataFieldProcessor(AsyncBaseCommandProcessor):
         attributes = attributes or {}
         member_field_body = body_slimmer({
             "class": "NewRelationshipRequestBody",
-            "properties": body_slimmer({
-                "class": "MemberDataFieldProperties",
-                "position": attributes.get('Position', {}).get('value'),
-                "minCardinality": attributes.get('Minimum Cardinality', {}).get('value'),
-                "maxCardinality": attributes.get('Maximum Cardinality', {}).get('value'),
-            }),
+            "properties": {"class": "MemberDataFieldProperties", **_part_of_props(attributes)},
+        })
+        nested_field_body = body_slimmer({
+            "class": "NewRelationshipRequestBody",
+            "properties": {"class": "NestedDataFieldProperties", **_part_of_props(attributes)},
         })
         as_is_ds = set(rel_els.get("data_structure_guids", []))
         sync_res = await self.sync_members(as_is_ds, ds_guids,
@@ -457,7 +457,7 @@ class DataFieldProcessor(AsyncBaseCommandProcessor):
         # 2. Parent Fields
         as_is_parents = set(rel_els.get("parent_guids", []))
         sync_res = await self.sync_members(as_is_parents, parent_guids,
-                               lambda p: self.client.data_designer._async_link_nested_data_field(p, guid, None),
+                               lambda p: self.client.data_designer._async_link_nested_data_field(p, guid, nested_field_body),
                                lambda p: self.client.data_designer._async_detach_nested_data_field(p, guid, None),
                                replace_all)
         if sync_res.get("added") or sync_res.get("removed"):
@@ -476,7 +476,7 @@ class DataFieldProcessor(AsyncBaseCommandProcessor):
         if sync_res.get("errors"):
             self.add_related_result("Semantic Definitions Sync", status="failure", message="; ".join(sync_res["errors"]))
 
-        # 4. Data Class
+        # 4. Data Class (DataValueDefinition)
         as_is_dc = set(rel_els.get("data_class_guids", []))
         to_be_dc = {dc_guid} if dc_guid else set()
         sync_res = await self.sync_members(as_is_dc, to_be_dc,
@@ -562,9 +562,6 @@ class DataClassProcessor(AsyncBaseCommandProcessor):
         term_guids = set(attributes.get('Glossary Term', {}).get('guid_list', []))
         if attributes.get('Glossary Term', {}).get('guid'):
             term_guids.add(attributes['Glossary Term']['guid'])
-        specializes_dc_guids = set(attributes.get('Specializes Data Class', {}).get('guid_list', []))
-        if attributes.get('Specializes Data Class', {}).get('guid'):
-            specializes_dc_guids.add(attributes['Specializes Data Class']['guid'])
         data_dict_guids = set(attributes.get('In Data Dictionary', {}).get('guid_list', []))
         if attributes.get('In Data Dictionary', {}).get('guid'):
             data_dict_guids.add(attributes['In Data Dictionary']['guid'])
@@ -588,7 +585,7 @@ class DataClassProcessor(AsyncBaseCommandProcessor):
             await self.client.data_designer._async_update_data_value_specification(guid, body)
             self.parsed_output["guid"] = guid
 
-            await self._sync_all_rels(guid, containing_dc_guids, term_guids, specializes_dc_guids, data_dict_guids, not merge_update, value_spec_parent_guids=value_spec_parent_guids)
+            await self._sync_all_rels(guid, containing_dc_guids, term_guids, data_dict_guids, not merge_update, value_spec_parent_guids=value_spec_parent_guids)
             
             if journal_entry:
                 try:
@@ -610,7 +607,7 @@ class DataClassProcessor(AsyncBaseCommandProcessor):
                 self.parsed_output["guid"] = guid
                 # known_new=True: this GUID was just created, so it cannot have
                 # any existing relationships yet -- skip the as-is fetches.
-                await self._sync_all_rels(guid, containing_dc_guids, term_guids, specializes_dc_guids, data_dict_guids, replace_all=True, known_new=True, value_spec_parent_guids=value_spec_parent_guids)
+                await self._sync_all_rels(guid, containing_dc_guids, term_guids, data_dict_guids, replace_all=True, known_new=True, value_spec_parent_guids=value_spec_parent_guids)
 
                 if journal_entry:
                     try:
@@ -626,7 +623,7 @@ class DataClassProcessor(AsyncBaseCommandProcessor):
 
         return self.command.raw_block
 
-    async def _sync_all_rels(self, guid: str, cont_guids: set, term_guids: set, spec_guids: set, dict_guids: set,
+    async def _sync_all_rels(self, guid: str, cont_guids: set, term_guids: set, dict_guids: set,
                               replace_all: bool, known_new: bool = False, value_spec_parent_guids: set = None):
         """known_new=True skips both as-is fetches below (see DataFieldProcessor._sync_all_rels)."""
         rel_els = {} if known_new else (await self.client.data_designer._async_get_data_class_rel_elements(guid) or {})
@@ -654,18 +651,7 @@ class DataClassProcessor(AsyncBaseCommandProcessor):
         if sync_res.get("errors"):
             self.add_related_result("Semantic Definitions Sync", status="failure", message="; ".join(sync_res["errors"]))
                                
-        # 3. Specializes
-        as_is_spec = set(rel_els.get("specialized_data_class_guids", []))
-        sync_res = await self.sync_members(as_is_spec, spec_guids,
-                               lambda dc: self.client.data_designer._async_link_specialist_data_class(dc, guid, None),
-                               lambda dc: self.client.data_designer._async_detach_specialist_data_class(dc, guid, None),
-                               replace_all)
-        if sync_res.get("added") or sync_res.get("removed"):
-            self.add_related_result("Specializes Classes Sync", message=f"Added {len(sync_res['added'])}, Removed {len(sync_res['removed'])}")
-        if sync_res.get("errors"):
-            self.add_related_result("Specializes Classes Sync", status="failure", message="; ".join(sync_res["errors"]))
-
-        # 4. Data Dictionaries
+        # 3. Data Dictionaries
         if known_new:
             as_is_dicts: set = set()
         else:
@@ -681,7 +667,7 @@ class DataClassProcessor(AsyncBaseCommandProcessor):
         if sync_res.get("errors"):
             self.add_related_result("Data Dictionaries Sync", status="failure", message="; ".join(sync_res["errors"]))
 
-        # 5. Data Value Specification parent (DataValueHierarchy)
+        # 4. Data Value Specification parent (DataValueHierarchy)
         if value_spec_parent_guids is not None:
             as_is_value_spec = set(rel_els.get("specialized_data_value_spec_guids", []))
             sync_res = await self.sync_members(as_is_value_spec, value_spec_parent_guids,
@@ -804,274 +790,85 @@ class DataGrainProcessor(AsyncBaseCommandProcessor):
             self.add_related_result("Data Value Specification Sync", status="failure", message="; ".join(sync_res["errors"]))
 
 
-class LinkDataFieldProcessor(AsyncBaseCommandProcessor):
+_LINK_VERBS = ("Link", "Attach", "Add")
+_DETACH_VERBS = ("Detach", "Unlink", "Remove")
+
+
+def _labeled_props(attributes: dict) -> dict:
+    """LabeledRelationshipProperties fields (label, description)."""
+    return {
+        "label": attributes.get('Label', {}).get('value'),
+        "description": attributes.get('Description', {}).get('value'),
+    }
+
+
+def _part_of_props(attributes: dict) -> dict:
+    """PartOfRelationshipProperties fields, shared by MemberDataField and NestedDataField."""
+    return {
+        "position": attributes.get('Position', {}).get('value'),
+        "minCardinality": attributes.get('Minimum Cardinality', {}).get('value'),
+        "maxCardinality": attributes.get('Maximum Cardinality', {}).get('value'),
+        "coverageCategory": attributes.get('Coverage Category', {}).get('value'),
+    }
+
+
+def _linked_data_field_props(attributes: dict) -> dict:
+    return {
+        "relationshipTypeName": attributes.get('Link Relationship Type Name', {}).get('value'),
+        "relationshipEnd": attributes.get('Relationship End', {}).get('value'),
+        "minCardinality": attributes.get('Minimum Cardinality', {}).get('value'),
+        "maxCardinality": attributes.get('Maximum Cardinality', {}).get('value'),
+        # LinkedDataFieldProperties has displayName rather than label.
+        "displayName": attributes.get('Label', {}).get('value'),
+        "description": attributes.get('Description', {}).get('value'),
+    }
+
+
+# OM_TYPE -> (end1 attribute, end2 attribute, link method, detach method, relationship properties builder).
+# Relationship ends and properties follow Egeria types 0540/0580/0581; each link/detach method takes
+# (end1_guid, end2_guid, body) in that order.
+DATA_DESIGNER_LINKS: Dict[str, tuple] = {
+    "MemberDataField": ("Data Structure", "Data Field",
+                        "_async_link_member_data_field", "_async_detach_member_data_field", _part_of_props),
+    "NestedDataField": ("Parent Data Field", "Nested Data Field",
+                        "_async_link_nested_data_field", "_async_detach_nested_data_field", _part_of_props),
+    "LinkedDataField": ("Linked Data Field 1", "Linked Data Field 2",
+                        "_async_link_linked_data_field", "_async_detach_linked_data_field", _linked_data_field_props),
+    "SchemaAttributeDefinition": ("Data Field", "Schema Attribute",
+                                  "_async_link_schema_attribute_definition",
+                                  "_async_detach_schema_attribute_definition", _labeled_props),
+    "SchemaTypeDefinition": ("Data Structure", "Schema Type",
+                             "_async_link_schema_type_definition",
+                             "_async_detach_schema_type_definition", _labeled_props),
+    "DataStructureDefinition": ("Certification Type", "Data Structure",
+                                "_async_link_certification_type_to_data_structure",
+                                "_async_detach_certification_type_from_data_structure", _labeled_props),
+    "DataValueDefinition": ("Element Id", "Data Value Specification",
+                            "_async_link_data_class_definition",
+                            "_async_detach_data_class_definition", _labeled_props),
+    "DataValueHierarchy": ("Data Value Specification", "Data Value Specification Child",
+                           "_async_link_specialized_data_value_specification",
+                           "_async_detach_specialized_data_value_specification", _labeled_props),
+    "DataClassComposition": ("Data Class", "Data Class Child",
+                             "_async_link_nested_data_class", "_async_detach_nested_data_class", _labeled_props),
+}
+
+
+class DataDesignerLinkProcessor(AsyncBaseCommandProcessor):
     """
-    Processor for Link Data Field commands.
+    Link/Detach processor for every Data Designer relationship command, driven by
+    the command's OM_TYPE through DATA_DESIGNER_LINKS.
+
+    Registering "Link X" also routes "Detach/Unlink/Remove X" here (LINK_VERBS
+    expansion), so apply_changes() branches on the verb -- the per-relationship
+    processors this replaced always linked, so a "Detach ..." command silently
+    created the relationship instead of removing it.
     """
-
-    def get_command_spec(self) -> Dict[str, Any]:
-        return get_command_spec("Link Data Field")
-
-    async def apply_changes(self) -> str:
-        attributes = self.parsed_output["attributes"]
-        field1_guid = attributes.get('Linked Data Field 1', {}).get('guid')
-        field2_guid = attributes.get('Linked Data Field 2', {}).get('guid')
-        rel_type = attributes.get('Link Relationship Type Name', {}).get('value')
-        description = attributes.get('Description', {}).get('value')
-
-        if not field1_guid or not field2_guid:
-            logger.error("Both Linked Data Field 1 and Linked Data Field 2 are required")
-            return self.command.raw_block
-
-        try:
-            # This command models the LinkedDataField relationship (a peer
-            # "related field" link, e.g. ForeignKey/DerivedFrom) - not
-            # NestedDataField (parent-child containment), which is a
-            # different relationship with its own "Link Data Field to Data
-            # Structure"-style command. Previously called
-            # _async_link_nested_data_field with a bolted-on
-            # "linkRelationshipTypeName" property that NestedDataFieldProperties
-            # doesn't define, silently mismatching this command's own name/
-            # OM_TYPE (LinkedDataField). Fixed 2026-08-21 now that
-            # DataDesigner has a bespoke _async_link_linked_data_field
-            # method (see .http ground truth: LinkedDataFieldProperties'
-            # real field is "relationshipTypeName", not
-            # "linkRelationshipTypeName").
-            body = {
-                "class": "NewRelationshipRequestBody",
-                "properties": {
-                    "class": "LinkedDataFieldProperties"
-                }
-            }
-            if rel_type:
-                body['properties']['relationshipTypeName'] = rel_type
-            if description:
-                body['properties']['description'] = description
-
-            await self.client.data_designer._async_link_linked_data_field(field1_guid, field2_guid, body)
-            logger.success(f"Linked Data Fields with relationship type '{rel_type or 'default'}'")
-            return "Link created successfully"
-        except Exception as e:
-            logger.error(f"Error linking data fields: {e}")
-            return self.command.raw_block
-
-    async def fetch_element(self, guid: str) -> Optional[Dict[str, Any]]:
-        return None
-
-
-class LinkFieldToStructureProcessor(AsyncBaseCommandProcessor):
-    """
-    Processor for Link Field to Structure commands (MemberDataField).
-    """
-
-
-    async def apply_changes(self) -> str:
-        attributes = self.parsed_output["attributes"]
-        field_guid = attributes.get('Data Field', {}).get('guid')
-        struct_guid = attributes.get('Data Structure', {}).get('guid')
-        description = attributes.get('Description', {}).get('value')
-
-        if not field_guid or not struct_guid:
-            logger.error("Both Data Field and Data Structure are required")
-            return self.command.raw_block
-
-        try:
-            body = {
-                "class": "NewRelationshipRequestBody",
-                "properties": {
-                    "class": "MemberDataFieldProperties"
-                }
-            }
-
-            await self.client.data_designer._async_link_member_data_field(struct_guid, field_guid, body)
-            logger.success(f"Linked Data Field to Data Structure")
-            return "Link created successfully"
-        except Exception as e:
-            logger.error(f"Error linking field to structure: {e}")
-            return self.command.raw_block
-
-    async def fetch_element(self, guid: str) -> Optional[Dict[str, Any]]:
-        return None
-
-
-class LinkDataValueDefinitionProcessor(AsyncBaseCommandProcessor):
-    """
-    Processor for Link Data Value Definition commands.
-    """
-
-
-    async def apply_changes(self) -> str:
-        attributes = self.parsed_output["attributes"]
-        spec_guid = attributes.get('Data Value Specification', {}).get('guid')
-        elem_guid = attributes.get('Element Id', {}).get('guid')
-        description = attributes.get('Description', {}).get('value')
-
-        if not spec_guid or not elem_guid:
-            logger.error("Both Data Value Specification and Element Id are required")
-            return self.command.raw_block
-
-        try:
-            body = {
-                "class": "NewRelationshipRequestBody",
-                "properties": {
-                    "class": "DataValueDefinitionProperties"
-                }
-            }
-
-            await self.client.data_designer._async_link_data_value_assignment(elem_guid, spec_guid, body)
-            logger.success(f"Linked Data Value Definition")
-            return "Link created successfully"
-        except Exception as e:
-            logger.error(f"Error linking data value definition: {e}")
-            return self.command.raw_block
-
-    async def fetch_element(self, guid: str) -> Optional[Dict[str, Any]]:
-        return None
-
-
-class LinkDataValueCompositionProcessor(AsyncBaseCommandProcessor):
-    """
-    Processor for Link Data Value Composition commands.
-    """
-
-    def get_command_spec(self) -> Dict[str, Any]:
-        return get_command_spec("Link Data Value Composition")
-
-    async def apply_changes(self) -> str:
-        attributes = self.parsed_output["attributes"]
-        parent_spec_guid = attributes.get('Data Value Specification', {}).get('guid')
-        child_spec_guid = attributes.get('Data Value Specification Child', {}).get('guid')
-        description = attributes.get('Description', {}).get('value')
-
-        if not parent_spec_guid or not child_spec_guid:
-            logger.error("Both Data Value Specification (parent) and Child are required")
-            return self.command.raw_block
-
-        try:
-            body = {
-                "class": "NewRelationshipRequestBody",
-                "properties": {
-                    "class": "DataValueHierarchyProperties"
-                }
-            }
-
-            await self.client.data_designer._async_link_specialized_data_value_specification(
-                parent_spec_guid, child_spec_guid, body)
-            logger.success(f"Linked Data Value Composition (parent to child)")
-            return "Link created successfully"
-        except Exception as e:
-            logger.error(f"Error linking data value composition: {e}")
-            return self.command.raw_block
-
-    async def fetch_element(self, guid: str) -> Optional[Dict[str, Any]]:
-        return None
-
-
-class LinkDataClassCompositionProcessor(AsyncBaseCommandProcessor):
-    """
-    Processor for Link Data Class Composition commands.
-    """
-
-    def get_command_spec(self) -> Dict[str, Any]:
-        return get_command_spec("Link Data Class Composition")
-
-    async def apply_changes(self) -> str:
-        attributes = self.parsed_output["attributes"]
-        parent_dc_guid = attributes.get('Data Class', {}).get('guid')
-        child_dc_guid = attributes.get('Data Class Child', {}).get('guid')
-        description = attributes.get('Description', {}).get('value')
-
-        if not parent_dc_guid or not child_dc_guid:
-            logger.error("Both Data Class (parent) and Child are required")
-            return self.command.raw_block
-
-        try:
-            body = {
-                "class": "NewRelationshipRequestBody",
-                "properties": {
-                    "class": "DataClassCompositionProperties"
-                }
-            }
-
-            await self.client.data_designer._async_link_nested_data_class(parent_dc_guid, child_dc_guid, body)
-            logger.success(f"Linked Data Class Composition (parent to child)")
-            return "Link created successfully"
-        except Exception as e:
-            logger.error(f"Error linking data class composition: {e}")
-            return self.command.raw_block
-
-    async def fetch_element(self, guid: str) -> Optional[Dict[str, Any]]:
-        return None
-
-
-
-
-class LinkCertificationTypeToStructureProcessor(AsyncBaseCommandProcessor):
-    """
-    Processor for Link Certification Type to Data Structure commands.
-    """
-
-    def get_command_spec(self) -> Dict[str, Any]:
-        return get_command_spec("Link Certification Type to Data Structure")
-
-    async def apply_changes(self) -> str:
-        attributes = self.parsed_output["attributes"]
-        struct_guid = attributes.get('Data Structure', {}).get('guid')
-        cert_type_guid = attributes.get('Certification Type', {}).get('guid')
-        description = attributes.get('Description', {}).get('value')
-
-        if not struct_guid or not cert_type_guid:
-            logger.error("Both Data Structure and Certification Type are required")
-            return self.command.raw_block
-
-        try:
-            body = {
-                "class": "NewRelationshipRequestBody",
-                "properties": {
-                    "class": "DataStructureDefinitionProperties"
-                }
-            }
-
-            await self.client.data_designer._async_link_certification_type_to_data_structure(
-                cert_type_guid, struct_guid, body)
-            logger.success(f"Linked Certification Type to Data Structure")
-            return "Link created successfully"
-        except Exception as e:
-            logger.error(f"Error linking certification type to structure: {e}")
-            return self.command.raw_block
-
-    async def fetch_element(self, guid: str) -> Optional[Dict[str, Any]]:
-        return None
-
-
-class LinkSchemaAttributeDefinitionProcessor(AsyncBaseCommandProcessor):
-    """
-    Processor for Link/Detach Schema Attribute Definition commands.
-
-    PYEGERIA_ISSUES.md ISSUE-48 previously blocked this on a bespoke Egeria
-    REST endpoint for the SchemaAttributeDefinition relationship (DataField
-    <-> SchemaAttribute) not existing -- confirmed live via the server's
-    full /v3/api-docs OpenAPI spec at the time, zero hits for this type.
-    That's no longer true: DataDesigner._async_link_schema_attribute_definition/
-    _async_detach_schema_attribute_definition (added 2026-08-21, verified
-    against a live 6.2-SNAPSHOT server's /v3/api-docs) now wrap the real
-    endpoint directly. Migrated off the generic MetadataExpert relationship
-    mechanism (Option 2 from ISSUE-48) to the bespoke wrapper (Option 1).
-
-    Detach no longer needs a relationship-GUID lookup first -- the bespoke
-    method takes the (data_field_guid, schema_attribute_guid) pair directly,
-    the same shape every other link/detach pair in this codebase uses.
-    """
-
-    def get_command_spec(self) -> Dict[str, Any]:
-        return get_command_spec(f"{self.command.verb} Schema Attribute Definition")
 
     def supports_target_element_lookup(self) -> bool:
-        # Relationship-only processor -- see GovernanceLinkProcessor's
-        # identical override (md_processing/v2/governance.py) for why this
-        # matters: without it, AsyncBaseCommandProcessor.execute()'s
-        # Create<->Update upsert-transition logic can silently rewrite the
-        # verb (ISSUE-68 follow-up).
+        # Relationship-only processor -- see GovernanceLinkProcessor
+        # (md_processing/v2/governance.py): without this, the base class's
+        # Create<->Update upsert transition can rewrite the verb (ISSUE-68).
         return False
 
     async def fetch_as_is(self) -> Optional[Dict[str, Any]]:
@@ -1079,34 +876,84 @@ class LinkSchemaAttributeDefinitionProcessor(AsyncBaseCommandProcessor):
 
     async def apply_changes(self) -> str:
         verb = self.command.verb
-        object_type = getattr(self, 'canonical_object_type', self.command.object_type)
+        object_type = getattr(self, 'canonical_object_type', None) or self.command.object_type
         attributes = self.parsed_output["attributes"]
+        om_type = (self.get_command_spec() or {}).get("OM_TYPE")
 
-        data_field_guid = attributes.get('Data Field', {}).get('guid')
-        schema_attribute_guid = attributes.get('Schema Attribute', {}).get('guid')
-        if not (data_field_guid and schema_attribute_guid):
-            missing = []
-            if not data_field_guid: missing.append("'Data Field'")
-            if not schema_attribute_guid: missing.append("'Schema Attribute'")
-            raise ValueError(f"Cannot {verb.lower()} Schema Attribute Definition: resolution failed for {', '.join(missing)}")
+        link_spec = DATA_DESIGNER_LINKS.get(om_type)
+        if not link_spec:
+            raise PyegeriaException(f"No Data Designer relationship mapping for OM_TYPE '{om_type}' ({object_type})")
+        end1_attr, end2_attr, link_method, detach_method, props_fn = link_spec
 
-        if verb in ["Link", "Attach", "Add"]:
-            body = {
-                "class": "NewRelationshipRequestBody",
-                "properties": {"class": "SchemaAttributeDefinitionProperties"},
-            }
-            await self.client.data_designer._async_link_schema_attribute_definition(
-                data_field_guid, schema_attribute_guid, body)
-            logger.success(f"Linked Data Field {data_field_guid} to Schema Attribute {schema_attribute_guid}")
-            return f"\n\n## {verb} {object_type}\n\nLinked {data_field_guid} to {schema_attribute_guid}"
+        end1_guid = attributes.get(end1_attr, {}).get('guid')
+        end2_guid = attributes.get(end2_attr, {}).get('guid')
+        if not (end1_guid and end2_guid):
+            missing = [f"'{a}'" for a, g in ((end1_attr, end1_guid), (end2_attr, end2_guid)) if not g]
+            raise ValueError(f"Cannot {verb.lower()} {object_type}: resolution failed for {', '.join(missing)}")
 
-        elif verb in ["Detach", "Unlink", "Remove"]:
-            await self.client.data_designer._async_detach_schema_attribute_definition(
-                data_field_guid, schema_attribute_guid)
-            logger.success(f"Detached Schema Attribute Definition between {data_field_guid} and {schema_attribute_guid}")
-            return f"\n\n## {verb} {object_type}\n\nDetached the SchemaAttributeDefinition relationship between {data_field_guid} and {schema_attribute_guid}"
+        client = self.client.data_designer
+        if verb in _DETACH_VERBS:
+            self.last_body = body = body_slimmer(set_delete_rel_request_body(om_type, attributes))
+            await getattr(client, detach_method)(end1_guid, end2_guid, body)
+            logger.success(f"Detached {om_type} between {end1_guid} and {end2_guid}")
+            return (f"\n\n## {verb} {object_type}\n\n"
+                    f"Detached the {om_type} relationship between {end1_guid} and {end2_guid}")
 
-        return self.command.raw_block
+        if verb not in _LINK_VERBS:
+            return self.command.raw_block
+
+        body = set_rel_request_body(om_type, attributes)
+        body["properties"] = {"class": f"{om_type}Properties", **props_fn(attributes)}
+        self.last_body = body = body_slimmer(body)
+        await getattr(client, link_method)(end1_guid, end2_guid, body)
+        logger.success(f"Linked {end1_guid} to {end2_guid} with {om_type}")
+        return f"\n\n## {verb} {object_type}\n\nLinked {end1_guid} to {end2_guid} ({om_type})"
+
+    async def fetch_element(self, guid: str) -> Optional[Dict[str, Any]]:
+        return None
+
+
+class DataFieldPrimaryKeyProcessor(AsyncBaseCommandProcessor):
+    """
+    Classify/Declassify a data field as a primary key. Egeria's archive patches
+    PrimaryKey (0534) so it may be attached to a DataField as well as a
+    RelationalColumn; the Schema Maker primary-key endpoint classifies whatever
+    GUID it is given, so it is reused here for data fields.
+    """
+
+    def supports_target_element_lookup(self) -> bool:
+        return False
+
+    async def fetch_as_is(self) -> Optional[Dict[str, Any]]:
+        return None
+
+    async def apply_changes(self) -> str:
+        verb = self.command.verb
+        object_type = getattr(self, 'canonical_object_type', None) or self.command.object_type
+        attributes = self.parsed_output["attributes"]
+        field_guid = attributes.get('Data Field', {}).get('guid')
+        if not field_guid:
+            raise ValueError(f"Cannot {verb.lower()} {object_type}: resolution failed for 'Data Field'")
+
+        if verb in ("Declassify", "Unset"):
+            await self.client.schema_maker._async_remove_primary_key_classification(field_guid)
+            logger.success(f"Removed PrimaryKey classification from data field {field_guid}")
+            return f"\n\n## {verb} {object_type}\n\nRemoved PrimaryKey classification from {field_guid}."
+
+        self.last_body = body = body_slimmer({
+            "class": "NewClassificationRequestBody",
+            "properties": {
+                "class": "PrimaryKeyProperties",
+                "displayName": attributes.get('Primary Key Name', {}).get('value'),
+                "keyPattern": attributes.get('Primary Key Pattern', {}).get('value'),
+            },
+        })
+        await self.client.schema_maker._async_add_primary_key_classification(field_guid, body)
+        logger.success(f"Classified data field {field_guid} as a primary key")
+        return f"\n\n## {verb} {object_type}\n\nApplied PrimaryKey classification to {field_guid}."
+
+    async def fetch_element(self, guid: str) -> Optional[Dict[str, Any]]:
+        return None
 
 
 class AssignDataValueSpecificationProcessor(AsyncBaseCommandProcessor):

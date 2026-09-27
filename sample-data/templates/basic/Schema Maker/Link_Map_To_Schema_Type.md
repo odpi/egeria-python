@@ -35,20 +35,4 @@ ___
 >	**Description**: Optional description of this relationship.
 
 
-### Link Label
->	**Input Required**: False
-
->	**Attribute Type**: Simple
-
->	**Description**: Optional label/name for this relationship.
-
-
-### Link Description
->	**Input Required**: False
-
->	**Attribute Type**: Simple
-
->	**Description**: Optional description of this relationship.
-
-
 ___

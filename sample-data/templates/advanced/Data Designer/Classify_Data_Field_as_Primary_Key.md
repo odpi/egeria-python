@@ -1,7 +1,7 @@
 ___
 
-## Link Schema Attribute Definition
-> Link a data field to the physical schema attribute (e.g. a TabularColumn) derived from it (SchemaAttributeDefinition relationship).
+## Classify Data Field as Primary Key
+> Record that a data field is (part of) the identifier for its records (PrimaryKey classification). Primary Key Name is stored as the classification's display name.
 
 ### Data Field
 >	**Input Required**: True
@@ -9,24 +9,6 @@ ___
 >	**Attribute Type**: Reference Name
 
 >	**Description**: A data field  name. Preferably a qualified name.
-
-
-### Schema Attribute
->	**Input Required**: True
-
->	**Attribute Type**: Reference Name
-
->	**Description**: A physical schema attribute (e.g. a TabularColumn). Preferably a qualified name.
-
-
-### Label
->	**Input Required**: False
-
->	**Attribute Type**: Simple
-
->	**Description**: A label used to identify or categorise a relationship link.
-
->	**Alternative Labels**: Wire Label
 
 
 ### Journal Entry
@@ -37,12 +19,24 @@ ___
 >	**Description**: A text entry into a journal.
 
 
-### Description
+### Primary Key Name
 >	**Input Required**: False
 
 >	**Attribute Type**: Simple
 
->	**Description**: A description.
+>	**Description**: Name of the primary key.
+
+
+### Primary Key Pattern
+>	**Input Required**: False
+
+>	**Attribute Type**: Valid Value
+
+>	**Description**: Key pattern for this primary key.
+
+>	**Valid Values**: LOCAL_KEY,RECYCLED_KEY,NATURAL_KEY,MIRROR_KEY,AGGREGATE_KEY,CALLERS_KEY,STABLE_KEY,OTHER
+
+>	**Default Value**: LOCAL_KEY
 
 
 ### Effective From
@@ -107,24 +101,6 @@ ___
 >	**Attribute Type**: Simple
 
 >	**Description**: A user provided or system generated request id for a conversation.
-
-
-### Anchor Scope IDs
->	**Input Required**: False
-
->	**Attribute Type**: Reference Name List
-
->	**Description**: A list of IDs that are anchor scopes for this element.
-
-
-### Make Anchor
->	**Input Required**: False
-
->	**Attribute Type**: Bool
-
->	**Description**: Is the element at end2 an anchor to end1?
-
->	**Default Value**: false
 
 
 ___

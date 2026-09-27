@@ -26,7 +26,7 @@ ___
 
 >	**Attribute Type**: Reference Name
 
->	**Description**: The parent data class in a relationship.
+>	**Description**: A data class. On Create Data Field, the data class that defines the field's values (DataValueDefinition relationship); on Link Data Class Composition, the parent data class.
 
 
 ### Journal Entry
