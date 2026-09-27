@@ -2318,7 +2318,7 @@
       "default_value": "",
       "valid_values": [],
       "existing_element": "DataClass",
-      "description": "The parent data class in a relationship.",
+      "description": "A data class. On Create Data Field, the data class that defines the field's values (DataValueDefinition relationship); on Link Data Class Composition, the parent data class.",
       "generated": false,
       "style": "Reference Name",
       "user_specified": true,
@@ -2327,7 +2327,7 @@
       "min_cardinality": 0,
       "max_cardinality": 1,
       "level": "Domain",
-      "Journal Entry": ""
+      "Journal Entry": "2026-09-26 -- aligned with Egeria types 0580/0581 (DataField/DataStructure and their relationships)."
     },
     "Data Class Child": {
       "variable_name": "data_class_child",
@@ -3081,18 +3081,22 @@
       "attr_labels": "",
       "examples": "",
       "default_value": "",
-      "valid_values": [],
+      "valid_values": [
+        "ASCENDING",
+        "DESCENDING",
+        "UNSORTED"
+      ],
       "existing_element": "",
-      "description": "The sort order for values in this field. Valid values from DataItemSortOrder enum: UNKNOWN, UNSORTED, ASCENDING, DESCENDING, OTHER.",
+      "description": "The sort order of the values stored in this data field (DataItemSortOrder enum).",
       "generated": false,
-      "style": "Simple",
+      "style": "Valid Value",
       "user_specified": true,
       "unique": false,
       "input_required": false,
       "min_cardinality": 0,
       "max_cardinality": 1,
       "level": "Domain",
-      "Journal Entry": ""
+      "Journal Entry": "2026-09-26 -- aligned with Egeria types 0580/0581 (DataField/DataStructure and their relationships)."
     },
     "Specializes Data Value Specification": {
       "variable_name": "specializes_data_value_specification",
@@ -3283,6 +3287,192 @@
       "max_cardinality": 1,
       "level": "Domain",
       "Journal Entry": ""
+    },
+    "Is Partition Key": {
+      "variable_name": "is_partition_key",
+      "inUpdate": true,
+      "attr_labels": "",
+      "examples": "",
+      "default_value": "false",
+      "valid_values": [],
+      "existing_element": "",
+      "description": "If true, this data field is part of the partition key for the data it describes.",
+      "generated": false,
+      "style": "Bool",
+      "user_specified": true,
+      "unique": false,
+      "input_required": false,
+      "min_cardinality": 0,
+      "max_cardinality": 1,
+      "level": "Basic",
+      "Journal Entry": "2026-09-26 -- aligned with Egeria types 0580/0581 (DataField/DataStructure and their relationships)."
+    },
+    "Partition Key Position": {
+      "variable_name": "partition_key_position",
+      "inUpdate": true,
+      "attr_labels": "",
+      "examples": "",
+      "default_value": "",
+      "valid_values": [],
+      "existing_element": "",
+      "description": "Position of this data field within the partition key (starting at 1). Only meaningful when Is Partition Key is true.",
+      "generated": false,
+      "style": "Simple Int",
+      "user_specified": true,
+      "unique": false,
+      "input_required": false,
+      "min_cardinality": 0,
+      "max_cardinality": 1,
+      "level": "Basic",
+      "Journal Entry": "2026-09-26 -- aligned with Egeria types 0580/0581 (DataField/DataStructure and their relationships)."
+    },
+    "Coverage Category": {
+      "variable_name": "coverage_category",
+      "inUpdate": true,
+      "attr_labels": "",
+      "examples": "",
+      "default_value": "",
+      "valid_values": [
+        "UNKNOWN",
+        "UNIQUE_IDENTIFIER",
+        "IDENTIFIER",
+        "CORE_DETAIL",
+        "EXTENDED_DETAIL"
+      ],
+      "existing_element": "",
+      "description": "How the values of the linked data field cover the domain of possible values (CoverageCategory enum).",
+      "generated": false,
+      "style": "Valid Value",
+      "user_specified": true,
+      "unique": false,
+      "input_required": false,
+      "min_cardinality": 0,
+      "max_cardinality": 1,
+      "level": "Basic",
+      "Journal Entry": "2026-09-26 -- aligned with Egeria types 0580/0581 (DataField/DataStructure and their relationships)."
+    },
+    "Relationship End": {
+      "variable_name": "relationship_end",
+      "inUpdate": true,
+      "attr_labels": "",
+      "examples": "",
+      "default_value": "0",
+      "valid_values": [],
+      "existing_element": "",
+      "description": "Which end of the relationship named by Link Relationship Type Name this link represents: 0 = the whole relationship (e.g. a relational foreign key), 1 or 2 = one end of it (e.g. in a graph schema).",
+      "generated": false,
+      "style": "Simple Int",
+      "user_specified": true,
+      "unique": false,
+      "input_required": false,
+      "min_cardinality": 0,
+      "max_cardinality": 1,
+      "level": "Basic",
+      "Journal Entry": "2026-09-26 -- aligned with Egeria types 0580/0581 (DataField/DataStructure and their relationships)."
+    },
+    "Parent Data Field": {
+      "variable_name": "parent_data_field",
+      "inUpdate": true,
+      "attr_labels": "",
+      "examples": "",
+      "default_value": "",
+      "valid_values": [],
+      "existing_element": "DataField",
+      "description": "The parent data field in a NestedDataField relationship.",
+      "generated": false,
+      "style": "Reference Name",
+      "user_specified": true,
+      "unique": false,
+      "input_required": false,
+      "min_cardinality": 0,
+      "max_cardinality": 1,
+      "level": "Basic",
+      "Journal Entry": "2026-09-26 -- aligned with Egeria types 0580/0581 (DataField/DataStructure and their relationships)."
+    },
+    "Nested Data Field": {
+      "variable_name": "nested_data_field",
+      "inUpdate": true,
+      "attr_labels": "",
+      "examples": "",
+      "default_value": "",
+      "valid_values": [],
+      "existing_element": "DataField",
+      "description": "The data field nested under the parent data field (NestedDataField relationship).",
+      "generated": false,
+      "style": "Reference Name",
+      "user_specified": true,
+      "unique": false,
+      "input_required": false,
+      "min_cardinality": 0,
+      "max_cardinality": 1,
+      "level": "Basic",
+      "Journal Entry": "2026-09-26 -- aligned with Egeria types 0580/0581 (DataField/DataStructure and their relationships)."
+    },
+    "Schema Type": {
+      "variable_name": "schema_type",
+      "inUpdate": true,
+      "attr_labels": "",
+      "examples": "",
+      "default_value": "",
+      "valid_values": [],
+      "existing_element": "SchemaType",
+      "description": "A physical schema type (e.g. a TabularSchemaType) equivalent to the data structure (SchemaTypeDefinition relationship).",
+      "generated": false,
+      "style": "Reference Name",
+      "user_specified": true,
+      "unique": false,
+      "input_required": false,
+      "min_cardinality": 0,
+      "max_cardinality": 1,
+      "level": "Basic",
+      "Journal Entry": "2026-09-26 -- aligned with Egeria types 0580/0581 (DataField/DataStructure and their relationships)."
+    },
+    "Primary Key Name": {
+      "variable_name": "primary_key_name",
+      "inUpdate": false,
+      "attr_labels": "",
+      "examples": "",
+      "default_value": "",
+      "valid_values": [],
+      "existing_element": "",
+      "description": "Name of the primary key.",
+      "generated": false,
+      "style": "Simple",
+      "user_specified": true,
+      "unique": false,
+      "input_required": false,
+      "min_cardinality": 0,
+      "max_cardinality": 1,
+      "level": "Basic",
+      "Journal Entry": "Added 2026-09-11 -- Schema Maker family relationship/classification endpoint attributes; see 'Create Schema Type' Journal Entry for family-wide notes."
+    },
+    "Primary Key Pattern": {
+      "variable_name": "primary_key_pattern",
+      "inUpdate": false,
+      "attr_labels": "",
+      "examples": "",
+      "default_value": "LOCAL_KEY",
+      "valid_values": [
+        "LOCAL_KEY",
+        "RECYCLED_KEY",
+        "NATURAL_KEY",
+        "MIRROR_KEY",
+        "AGGREGATE_KEY",
+        "CALLERS_KEY",
+        "STABLE_KEY",
+        "OTHER"
+      ],
+      "existing_element": "",
+      "description": "Key pattern for this primary key.",
+      "generated": false,
+      "style": "Valid Value",
+      "user_specified": true,
+      "unique": false,
+      "input_required": false,
+      "min_cardinality": 0,
+      "max_cardinality": 1,
+      "level": "Basic",
+      "Journal Entry": "Added 2026-09-11 -- Schema Maker family relationship/classification endpoint attributes; see 'Create Schema Type' Journal Entry for family-wide notes."
     }
   },
   "bundles": {
@@ -3418,7 +3608,6 @@
       "own_attributes": [
         "In Data Dictionary",
         "In Data Specification",
-        "In Data Structure",
         "Name Patterns",
         "Namespace Path"
       ]
@@ -3427,12 +3616,15 @@
       "inherits": "Authored Referenceable",
       "own_attributes": [
         "Aliases",
+        "Allow Duplicate Values",
+        "Coverage Category",
         "Data Class",
         "Data Type",
         "Default Value",
         "In Data Field",
         "In Data Structure",
         "Is Nullable",
+        "Is Partition Key",
         "Length",
         "Maximum Cardinality",
         "Minimum Cardinality",
@@ -3440,6 +3632,7 @@
         "Name Patterns",
         "Namespace Path",
         "Ordered Values",
+        "Partition Key Position",
         "Position",
         "Precision",
         "Sort Order",
@@ -3505,6 +3698,15 @@
       "own_attributes": [
         "Linked Data Field 1",
         "Valid Value Set"
+      ]
+    },
+    "Data Field Membership Base": {
+      "inherits": "Link Command Base",
+      "own_attributes": [
+        "Coverage Category",
+        "Maximum Cardinality",
+        "Minimum Cardinality",
+        "Position"
       ]
     }
   },
@@ -3590,11 +3792,8 @@
       "extra_constraints": "",
       "OM_TYPE": "DataStructure",
       "bundle": "Data Structure Base",
-      "custom_attributes": [
-        "In Data Dictionary",
-        "In Data Specification"
-      ],
-      "Journal Entry": ""
+      "custom_attributes": [],
+      "Journal Entry": "2026-09-26 -- aligned with Egeria types 0580/0581 (DataField/DataStructure and their relationships)."
     },
     "Create Data Field": {
       "display_name": "Data Field",
@@ -3612,27 +3811,8 @@
       "extra_constraints": "",
       "OM_TYPE": "DataField",
       "bundle": "Data Field Base",
-      "custom_attributes": [
-        "Aliases",
-        "Allow Duplicate Values",
-        "Data Class",
-        "Data Type",
-        "Default Value",
-        "In Data Field",
-        "In Data Structure",
-        "Is Nullable",
-        "Length",
-        "Maximum Cardinality",
-        "Minimum Cardinality",
-        "Minimum Length",
-        "Name Patterns",
-        "Ordered Values",
-        "Position",
-        "Precision",
-        "Sort Order",
-        "Units"
-      ],
-      "Journal Entry": ""
+      "custom_attributes": [],
+      "Journal Entry": "2026-09-26 -- aligned with Egeria types 0580/0581 (DataField/DataStructure and their relationships)."
     },
     "Create Data Class": {
       "display_name": "Data Class",
@@ -3700,10 +3880,10 @@
       "qn_prefix": "",
       "alternate_names": [],
       "family": "Data Designer",
-      "description": "Links or unlinks two data fields via the LinkedDataField relationship, with an optional relationship type name to describe the nature of the association (e.g. ForeignKey, DerivedFrom).",
+      "description": "Link two data fields with a LinkedDataField relationship -- a relationship (or one end of a relationship) between the fields in the data's schema, such as a foreign key. Label is stored as the relationship's display name.",
       "verb": "Link",
       "upsert": false,
-      "attach": false,
+      "attach": true,
       "level": "Basic",
       "find_method": "",
       "find_constraints": "",
@@ -3712,36 +3892,37 @@
       "OM_TYPE": "LinkedDataField",
       "bundle": "Data Field Link Base",
       "custom_attributes": [
-        "Link Relationship Type Name",
-        "Linked Data Field 1",
-        "Linked Data Field 2"
+        "Relationship End",
+        "Minimum Cardinality",
+        "Maximum Cardinality"
       ],
-      "Journal Entry": ""
+      "Journal Entry": "2026-09-26 -- aligned with Egeria types 0580/0581 (DataField/DataStructure and their relationships)."
     },
     "Link Data Field to Data Structure": {
       "display_name": "Link Data Field to Data Structure",
       "qn_prefix": "",
       "alternate_names": [
+        "Detach Data Field from Data Structure",
         "Link Data Field to Structure",
         "Link Field to Structure"
       ],
       "family": "Data Designer",
-      "description": "Links a data field to a data structure via the MemberDataField relationship.",
+      "description": "Add a data field to a data structure (MemberDataField relationship), optionally with its position, cardinality and coverage category within the structure.",
       "verb": "Link",
       "upsert": false,
-      "attach": false,
+      "attach": true,
       "level": "Basic",
       "find_method": "",
       "find_constraints": "",
       "extra_find": "",
       "extra_constraints": "",
       "OM_TYPE": "MemberDataField",
-      "bundle": "Link Command Base",
+      "bundle": "Data Field Membership Base",
       "custom_attributes": [
-        "Data Field",
-        "Data Structure"
+        "Data Structure",
+        "Data Field"
       ],
-      "Journal Entry": ""
+      "Journal Entry": "2026-09-26 -- aligned with Egeria types 0580/0581 (DataField/DataStructure and their relationships)."
     },
     "Assign Data Value Specification": {
       "display_name": "Assign Data Value Specification",
@@ -3816,7 +3997,9 @@
     "Link Certification Type to Data Structure": {
       "display_name": "Link Certification Type to Data Structure",
       "qn_prefix": "",
-      "alternate_names": [],
+      "alternate_names": [
+        "Detach Certification Type from Data Structure"
+      ],
       "family": "Data Designer",
       "description": "Link a data structure to a certification type. In defining a certification type,  this assigns the data structure to this type of certification.",
       "verb": "Link",
@@ -3898,11 +4081,11 @@
       "Journal Entry": ""
     },
     "Link Schema Attribute Definition": {
-      "display_name": "schema_attribute_definition",
+      "display_name": "Schema Attribute Definition",
       "qn_prefix": "",
       "alternate_names": [],
       "family": "Data Designer",
-      "description": "Link a logical Data Field to the physical Schema Attribute that implements it (e.g. a TabularColumn), or the reverse lookup. Implemented via the generic MetadataExpert relationship mechanism (typeName: SchemaAttributeDefinition) -- no bespoke Egeria REST endpoint exists for this relationship yet (PYEGERIA_ISSUES.md ISSUE-48); will be migrated to a dedicated wrapper once Egeria ships one.",
+      "description": "Link a data field to the physical schema attribute (e.g. a TabularColumn) derived from it (SchemaAttributeDefinition relationship).",
       "verb": "Link",
       "upsert": false,
       "attach": true,
@@ -3917,7 +4100,121 @@
         "Data Field",
         "Schema Attribute"
       ],
-      "Journal Entry": ""
+      "Journal Entry": "2026-09-26 -- aligned with Egeria types 0580/0581 (DataField/DataStructure and their relationships)."
+    },
+    "Link Nested Data Field": {
+      "display_name": "Nested Data Field",
+      "qn_prefix": "",
+      "alternate_names": [
+        "Link Data Field to Parent Data Field"
+      ],
+      "family": "Data Designer",
+      "description": "Nest a data field under a parent data field (NestedDataField relationship), optionally with its position, cardinality and coverage category within the parent.",
+      "verb": "Link",
+      "upsert": false,
+      "attach": true,
+      "level": "Basic",
+      "find_method": "",
+      "find_constraints": "",
+      "extra_find": "",
+      "extra_constraints": "",
+      "OM_TYPE": "NestedDataField",
+      "bundle": "Data Field Membership Base",
+      "custom_attributes": [
+        "Parent Data Field",
+        "Nested Data Field"
+      ],
+      "Journal Entry": "2026-09-26 -- aligned with Egeria types 0580/0581 (DataField/DataStructure and their relationships)."
+    },
+    "Link Schema Type Definition": {
+      "display_name": "Schema Type Definition",
+      "qn_prefix": "",
+      "alternate_names": [],
+      "family": "Data Designer",
+      "description": "Link a data structure to the equivalent physical schema type (SchemaTypeDefinition relationship).",
+      "verb": "Link",
+      "upsert": false,
+      "attach": true,
+      "level": "Basic",
+      "find_method": "",
+      "find_constraints": "",
+      "extra_find": "",
+      "extra_constraints": "",
+      "OM_TYPE": "SchemaTypeDefinition",
+      "bundle": "Link Command Base",
+      "custom_attributes": [
+        "Data Structure",
+        "Schema Type"
+      ],
+      "Journal Entry": "2026-09-26 -- aligned with Egeria types 0580/0581 (DataField/DataStructure and their relationships)."
+    },
+    "Link Data Value Definition": {
+      "display_name": "Data Value Definition",
+      "qn_prefix": "",
+      "alternate_names": [
+        "Link Data Class Definition"
+      ],
+      "family": "Data Designer",
+      "description": "Link an element, typically a data field, to the data value specification (such as a data class or data grain) that defines its values (DataValueDefinition relationship).",
+      "verb": "Link",
+      "upsert": false,
+      "attach": true,
+      "level": "Basic",
+      "find_method": "",
+      "find_constraints": "",
+      "extra_find": "",
+      "extra_constraints": "",
+      "OM_TYPE": "DataValueDefinition",
+      "bundle": "Link Command Base",
+      "custom_attributes": [
+        "Element Id",
+        "Data Value Specification"
+      ],
+      "Journal Entry": "2026-09-26 -- aligned with Egeria types 0580/0581 (DataField/DataStructure and their relationships)."
+    },
+    "Classify Data Field as Primary Key": {
+      "display_name": "Primary Key Data Field",
+      "qn_prefix": "",
+      "alternate_names": [],
+      "family": "Data Designer",
+      "description": "Record that a data field is (part of) the identifier for its records (PrimaryKey classification). Primary Key Name is stored as the classification's display name.",
+      "verb": "Classify",
+      "upsert": false,
+      "attach": true,
+      "level": "Basic",
+      "find_method": "",
+      "find_constraints": "",
+      "extra_find": "",
+      "extra_constraints": "",
+      "OM_TYPE": "PrimaryKey",
+      "bundle": "Request Base",
+      "custom_attributes": [
+        "Data Field",
+        "Primary Key Name",
+        "Primary Key Pattern"
+      ],
+      "Journal Entry": "2026-09-26 -- aligned with Egeria types 0580/0581 (DataField/DataStructure and their relationships)."
+    },
+    "Declassify Data Field as Primary Key": {
+      "display_name": "Primary Key Data Field",
+      "qn_prefix": "",
+      "alternate_names": [],
+      "family": "Data Designer",
+      "description": "Remove the PrimaryKey classification from a data field.",
+      "verb": "Declassify",
+      "upsert": false,
+      "attach": true,
+      "level": "Basic",
+      "find_method": "",
+      "find_constraints": "",
+      "extra_find": "",
+      "extra_constraints": "",
+      "OM_TYPE": "PrimaryKey",
+      "bundle": "Request Base",
+      "custom_attributes": [
+        "Data Field"
+      ],
+      "Journal Entry": "2026-09-26 -- aligned with Egeria types 0580/0581 (DataField/DataStructure and their relationships)."
     }
   }
 }

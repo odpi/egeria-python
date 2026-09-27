@@ -1,22 +1,26 @@
 ___
 
-## Unlink Semantic Definition
-> Remove a SemanticDefinition relationship (0370) from an element.
+## Link Data Value Definition
+> Link an element, typically a data field, to the data value specification (such as a data class or data grain) that defines its values (DataValueDefinition relationship).
+>
+>	**Alternative Names**: Link Data Class Definition
 
-### Target Element
+### Element Id
 >	**Input Required**: True
 
 >	**Attribute Type**: Reference Name
 
->	**Description**: Qualified name of the existing element being classified or linked.
+>	**Description**: The unique identifier (qualified name or GUID) of the element being referenced.
+
+>	**Alternative Labels**: Element Name; Member Id
 
 
-### Semantic Definition
+### Data Value Specification
 >	**Input Required**: True
 
 >	**Attribute Type**: Reference Name
 
->	**Description**: Qualified name of the glossary term providing the formal semantic definition (0370 SemanticDefinition).
+>	**Description**: The data value specification to use in a relationship. Preferable to use a qualified name.
 
 
 ### Label

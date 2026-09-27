@@ -515,30 +515,12 @@ ___
 >	**Description**: The source of the information.
 
 
-### Anchor Scope ID
->	**Input Required**: False
-
->	**Attribute Type**: Reference Name
-
->	**Description**: Anchor scope to restrict search.
-
->	**Alternative Labels**: Anchor Scope
-
-
 ### AsOfTime
 >	**Input Required**: False
 
 >	**Attribute Type**: Simple
 
 >	**Description**: An ISO-8601 string representing the time to view the state of the repository.
-
-
-### Effective Time
->	**Input Required**: False
-
->	**Attribute Type**: Simple
-
->	**Description**: The time at which an element must be effective in order to be returned by the request.
 
 
 ### Governance Zone Filter

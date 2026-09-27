@@ -1,25 +1,9 @@
 ___
 
-## Link Data Field to Data Structure
-> Add a data field to a data structure (MemberDataField relationship), optionally with its position, cardinality and coverage category within the structure.
+## Link Nested Data Field
+> Nest a data field under a parent data field (NestedDataField relationship), optionally with its position, cardinality and coverage category within the parent.
 >
->	**Alternative Names**: Detach Data Field from Data Structure; Link Data Field to Structure; Link Field to Structure
-
-### Data Structure
->	**Input Required**: True
-
->	**Attribute Type**: Reference Name
-
->	**Description**: A data structure name. Preferably a qualified name.
-
-
-### Data Field
->	**Input Required**: True
-
->	**Attribute Type**: Reference Name
-
->	**Description**: A data field  name. Preferably a qualified name.
-
+>	**Alternative Names**: Link Data Field to Parent Data Field
 
 ### Label
 >	**Input Required**: False
@@ -85,6 +69,22 @@ ___
 >	**Description**: How the values of the linked data field cover the domain of possible values (CoverageCategory enum).
 
 >	**Valid Values**: UNKNOWN,UNIQUE_IDENTIFIER,IDENTIFIER,CORE_DETAIL,EXTENDED_DETAIL
+
+
+### Parent Data Field
+>	**Input Required**: False
+
+>	**Attribute Type**: Reference Name
+
+>	**Description**: The parent data field in a NestedDataField relationship.
+
+
+### Nested Data Field
+>	**Input Required**: False
+
+>	**Attribute Type**: Reference Name
+
+>	**Description**: The data field nested under the parent data field (NestedDataField relationship).
 
 
 ___

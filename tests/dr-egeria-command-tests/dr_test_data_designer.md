@@ -10,7 +10,7 @@
 > always carry a user-specified Qualified Name. This allows reliable cross-referencing
 > within the document without needing system-generated GUIDs.
 >
-> Sort Order valid values: UNKNOWN, UNSORTED, ASCENDING, DESCENDING, OTHER
+> Sort Order valid values: ASCENDING, DESCENDING, UNSORTED
 > Content Status valid values: DRAFT, PREPARED, PROPOSED, APPROVED, REJECTED,
 >                               ACTIVE, DEPRECATED, OTHER
 

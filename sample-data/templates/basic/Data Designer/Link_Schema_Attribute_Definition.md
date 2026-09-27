@@ -1,7 +1,7 @@
 ___
 
 ## Link Schema Attribute Definition
-> Link a logical Data Field to the physical Schema Attribute that implements it (e.g. a TabularColumn), or the reverse lookup. Implemented via the generic MetadataExpert relationship mechanism (typeName: SchemaAttributeDefinition) -- no bespoke Egeria REST endpoint exists for this relationship yet (PYEGERIA_ISSUES.md ISSUE-48); will be migrated to a dedicated wrapper once Egeria ships one.
+> Link a data field to the physical schema attribute (e.g. a TabularColumn) derived from it (SchemaAttributeDefinition relationship).
 
 ### Data Field
 >	**Input Required**: True

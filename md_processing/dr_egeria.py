@@ -319,9 +319,7 @@ def setup_dispatcher(client: EgeriaTech) -> V2Dispatcher:
     # Data Designer
     from md_processing.v2.data_designer import (
         DataValueSpecificationProcessor, DataClassProcessor, DataStructureProcessor, DataFieldProcessor, DataGrainProcessor,
-        LinkDataFieldProcessor, LinkFieldToStructureProcessor, LinkDataValueDefinitionProcessor, LinkDataValueCompositionProcessor,
-        LinkDataClassCompositionProcessor, LinkCertificationTypeToStructureProcessor,
-        LinkSchemaAttributeDefinitionProcessor,
+        DataDesignerLinkProcessor, DataFieldPrimaryKeyProcessor,
         AssignDataValueSpecificationProcessor
     )
 
@@ -333,13 +331,16 @@ def setup_dispatcher(client: EgeriaTech) -> V2Dispatcher:
     reg("Create Data Value Specification", DataValueSpecificationProcessor)
     reg("Update Data Value Specification", DataValueSpecificationProcessor)
     reg("Create Data Grain", DataGrainProcessor)
-    reg("Link Data Field", LinkDataFieldProcessor)
-    reg("Link Field to Structure", LinkFieldToStructureProcessor)
-    reg("Link Data Value Definition", LinkDataValueDefinitionProcessor)
-    reg("Link Data Value Composition", LinkDataValueCompositionProcessor)
-    reg("Link Data Class Composition", LinkDataClassCompositionProcessor)
-    reg("Link Certification Type to Data Structure", LinkCertificationTypeToStructureProcessor)
-    reg("Link Schema Attribute Definition", LinkSchemaAttributeDefinitionProcessor)
+    # Relationship commands: one table-driven processor keyed by OM_TYPE
+    # (DATA_DESIGNER_LINKS). Each reg() also routes the Detach/Unlink/Remove
+    # phrasings, which the processor branches on.
+    for link_command in ("Link Data Field", "Link Data Field to Data Structure", "Link Nested Data Field",
+                         "Link Schema Attribute Definition", "Link Schema Type Definition",
+                         "Link Data Value Definition", "Link Data Value Composition",
+                         "Link Data Class Composition", "Link Certification Type to Data Structure"):
+        reg(link_command, DataDesignerLinkProcessor)
+    reg("Classify Data Field as Primary Key", DataFieldPrimaryKeyProcessor)
+    reg("Declassify Data Field as Primary Key", DataFieldPrimaryKeyProcessor)
     # "Assign Data Value Specification" (verb Attach/Link/Add) and "Detach
     # Data Value Specification from Element" (verb Detach/Unlink/Remove) both
     # route to the same AssignDataValueSpecificationProcessor, which branches

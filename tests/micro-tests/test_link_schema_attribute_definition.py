@@ -21,7 +21,7 @@ from typing import Any, cast
 import pytest
 
 from md_processing.v2.extraction import DrECommand
-from md_processing.v2.data_designer import LinkSchemaAttributeDefinitionProcessor
+from md_processing.v2.data_designer import DataDesignerLinkProcessor as LinkSchemaAttributeDefinitionProcessor
 
 DATA_FIELD_GUID = "aaaaaaaa-0000-0000-0000-000000000001"
 SCHEMA_ATTRIBUTE_GUID = "bbbbbbbb-0000-0000-0000-000000000002"
@@ -97,7 +97,10 @@ async def test_detach_calls_data_designer_directly_with_no_relationship_lookup()
 
     result = await p.apply_changes()
 
-    assert client.data_designer.detach_calls == [(DATA_FIELD_GUID, SCHEMA_ATTRIBUTE_GUID, None, False)]
+    assert len(client.data_designer.detach_calls) == 1
+    data_field_guid, schema_attribute_guid, body, cascade_delete = client.data_designer.detach_calls[0]
+    assert (data_field_guid, schema_attribute_guid, cascade_delete) == (DATA_FIELD_GUID, SCHEMA_ATTRIBUTE_GUID, False)
+    assert body["class"] == "DeleteRelationshipRequestBody"
     assert DATA_FIELD_GUID in result and SCHEMA_ATTRIBUTE_GUID in result
 
 

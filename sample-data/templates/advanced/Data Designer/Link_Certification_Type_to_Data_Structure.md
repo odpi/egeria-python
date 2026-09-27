@@ -2,6 +2,8 @@ ___
 
 ## Link Certification Type to Data Structure
 > Link a data structure to a certification type. In defining a certification type,  this assigns the data structure to this type of certification.
+>
+>	**Alternative Names**: Detach Certification Type from Data Structure
 
 ### Data Structure
 >	**Input Required**: True

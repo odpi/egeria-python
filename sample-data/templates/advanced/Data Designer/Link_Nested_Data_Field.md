@@ -1,23 +1,9 @@
 ___
 
-## Link Data Field
-> Link two data fields with a LinkedDataField relationship -- a relationship (or one end of a relationship) between the fields in the data's schema, such as a foreign key. Label is stored as the relationship's display name.
-
-### Linked Data Field 1
->	**Input Required**: True
-
->	**Attribute Type**: Reference Name
-
->	**Description**: The first data field in a LinkedDataField peer relationship.
-
-
-### Linked Data Field 2
->	**Input Required**: True
-
->	**Attribute Type**: Reference Name
-
->	**Description**: The second data field in a LinkedDataField peer relationship.
-
+## Link Nested Data Field
+> Nest a data field under a parent data field (NestedDataField relationship), optionally with its position, cardinality and coverage category within the parent.
+>
+>	**Alternative Names**: Link Data Field to Parent Data Field
 
 ### Label
 >	**Input Required**: False
@@ -29,12 +15,14 @@ ___
 >	**Alternative Labels**: Wire Label
 
 
-### Link Relationship Type Name
+### Maximum Cardinality
 >	**Input Required**: False
 
->	**Attribute Type**: Simple
+>	**Attribute Type**: Simple Int
 
->	**Description**: The open metadata type name of the relationship used in a LinkedDataField connection.
+>	**Description**: The maximum number of times this field may appear in the containing data structure (-1 means unbounded).
+
+>	**Default Value**: 1
 
 
 ### Minimum Cardinality
@@ -47,14 +35,14 @@ ___
 >	**Default Value**: 1
 
 
-### Maximum Cardinality
+### Position
 >	**Input Required**: False
 
 >	**Attribute Type**: Simple Int
 
->	**Description**: The maximum number of times this field may appear in the containing data structure (-1 means unbounded).
+>	**Description**: The ordinal position of the data field within its containing data structure.
 
->	**Default Value**: 1
+>	**Default Value**: 0
 
 
 ### Journal Entry
@@ -73,14 +61,30 @@ ___
 >	**Description**: A description.
 
 
-### Relationship End
+### Coverage Category
 >	**Input Required**: False
 
->	**Attribute Type**: Simple Int
+>	**Attribute Type**: Valid Value
 
->	**Description**: Which end of the relationship named by Link Relationship Type Name this link represents: 0 = the whole relationship (e.g. a relational foreign key), 1 or 2 = one end of it (e.g. in a graph schema).
+>	**Description**: How the values of the linked data field cover the domain of possible values (CoverageCategory enum).
 
->	**Default Value**: 0
+>	**Valid Values**: UNKNOWN,UNIQUE_IDENTIFIER,IDENTIFIER,CORE_DETAIL,EXTENDED_DETAIL
+
+
+### Parent Data Field
+>	**Input Required**: False
+
+>	**Attribute Type**: Reference Name
+
+>	**Description**: The parent data field in a NestedDataField relationship.
+
+
+### Nested Data Field
+>	**Input Required**: False
+
+>	**Attribute Type**: Reference Name
+
+>	**Description**: The data field nested under the parent data field (NestedDataField relationship).
 
 
 ### Effective From

@@ -29,14 +29,6 @@ ___
 >	**Description**: The data specification that contains this data structure.
 
 
-### In Data Structure
->	**Input Required**: False
-
->	**Attribute Type**: Reference Name
-
->	**Description**: The data structure that contains this data field (MemberDataField relationship).
-
-
 ### Name Patterns
 >	**Input Required**: False
 
@@ -51,22 +43,6 @@ ___
 >	**Attribute Type**: Simple
 
 >	**Description**: The namespace path that qualifies the element's name within a larger naming hierarchy.
-
-
-### In Data Dictionary
->	**Input Required**: False
-
->	**Attribute Type**: Reference Name
-
->	**Description**: The data dictionary that contains this data structure.
-
-
-### In Data Specification
->	**Input Required**: False
-
->	**Attribute Type**: Reference Name
-
->	**Description**: The data specification that contains this data structure.
 
 
 ### Journal Entry

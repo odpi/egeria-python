@@ -1,22 +1,14 @@
 ___
 
-## Unlink Semantic Definition
-> Remove a SemanticDefinition relationship (0370) from an element.
+## Link Schema Type Definition
+> Link a data structure to the equivalent physical schema type (SchemaTypeDefinition relationship).
 
-### Target Element
+### Data Structure
 >	**Input Required**: True
 
 >	**Attribute Type**: Reference Name
 
->	**Description**: Qualified name of the existing element being classified or linked.
-
-
-### Semantic Definition
->	**Input Required**: True
-
->	**Attribute Type**: Reference Name
-
->	**Description**: Qualified name of the glossary term providing the formal semantic definition (0370 SemanticDefinition).
+>	**Description**: A data structure name. Preferably a qualified name.
 
 
 ### Label
@@ -43,6 +35,14 @@ ___
 >	**Attribute Type**: Simple
 
 >	**Description**: A description.
+
+
+### Schema Type
+>	**Input Required**: False
+
+>	**Attribute Type**: Reference Name
+
+>	**Description**: A physical schema type (e.g. a TabularSchemaType) equivalent to the data structure (SchemaTypeDefinition relationship).
 
 
 ___

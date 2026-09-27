@@ -45,12 +45,4 @@ ___
 >	**Description**: A description.
 
 
-### Description
->	**Input Required**: False
-
->	**Attribute Type**: Simple
-
->	**Description**: A description.
-
-
 ___

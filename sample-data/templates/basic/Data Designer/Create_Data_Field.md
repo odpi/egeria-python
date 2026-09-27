@@ -13,12 +13,22 @@ ___
 >	**Alternative Labels**: "Term Name"
 
 
+### Allow Duplicate Values
+>	**Input Required**: False
+
+>	**Attribute Type**: Bool
+
+>	**Description**: If true, the data class allows duplicate values in the data field.
+
+>	**Default Value**: true
+
+
 ### Data Class
 >	**Input Required**: False
 
 >	**Attribute Type**: Reference Name
 
->	**Description**: The parent data class in a relationship.
+>	**Description**: A data class. On Create Data Field, the data class that defines the field's values (DataValueDefinition relationship); on Link Data Class Composition, the parent data class.
 
 
 ### Data Type
@@ -148,159 +158,11 @@ ___
 ### Sort Order
 >	**Input Required**: False
 
->	**Attribute Type**: Simple
+>	**Attribute Type**: Valid Value
 
->	**Description**: The sort order for values in this field. Valid values from DataItemSortOrder enum: UNKNOWN, UNSORTED, ASCENDING, DESCENDING, OTHER.
+>	**Description**: The sort order of the values stored in this data field (DataItemSortOrder enum).
 
-
-### Units
->	**Input Required**: False
-
->	**Attribute Type**: Simple
-
->	**Description**: The unit of measure for numeric values in this field or specification (e.g. metres, kg, USD).
-
-
-### Allow Duplicate Values
->	**Input Required**: False
-
->	**Attribute Type**: Bool
-
->	**Description**: If true, the data class allows duplicate values in the data field.
-
->	**Default Value**: true
-
-
-### Data Class
->	**Input Required**: False
-
->	**Attribute Type**: Reference Name
-
->	**Description**: The parent data class in a relationship.
-
-
-### Data Type
->	**Input Required**: False
-
->	**Attribute Type**: Simple
-
->	**Description**: The data type of the field or value specification (e.g. string, int, date, boolean).
-
->	**Valid Values**: string,int,long,date,boolean,char,byte,float,double,biginteger,bigdecimal,array<string>,array<int>,map<string,string>,map<string,boolean>,map<string,int>,map<string,long>,map<string,double>,map<string,date>,map<string,object>,short,map<string,array<string>>,other
-
->	**Default Value**: string
-
-
-### Default Value
->	**Input Required**: False
-
->	**Attribute Type**: Simple
-
->	**Description**: The default value assigned to this field or data class when no value is supplied.
-
-
-### In Data Field
->	**Input Required**: False
-
->	**Attribute Type**: Reference Name
-
->	**Description**: The data field that this element is nested within (NestedDataField relationship).
-
-
-### In Data Structure
->	**Input Required**: False
-
->	**Attribute Type**: Reference Name
-
->	**Description**: The data structure that contains this data field (MemberDataField relationship).
-
-
-### Is Nullable
->	**Input Required**: False
-
->	**Attribute Type**: Bool
-
->	**Description**: If true, the field may hold null values.
-
->	**Default Value**: true
-
-
-### Length
->	**Input Required**: False
-
->	**Attribute Type**: Simple Int
-
->	**Description**: The maximum number of characters or digits allowed in the field.
-
-
-### Maximum Cardinality
->	**Input Required**: False
-
->	**Attribute Type**: Simple Int
-
->	**Description**: The maximum number of times this field may appear in the containing data structure (-1 means unbounded).
-
->	**Default Value**: 1
-
-
-### Minimum Cardinality
->	**Input Required**: False
-
->	**Attribute Type**: Simple Int
-
->	**Description**: The minimum number of times this field must appear in the containing data structure.
-
->	**Default Value**: 1
-
-
-### Minimum Length
->	**Input Required**: False
-
->	**Attribute Type**: Simple Int
-
->	**Description**: The minimum number of characters or digits required in the field.
-
-
-### Name Patterns
->	**Input Required**: False
-
->	**Attribute Type**: Simple List
-
->	**Description**: Name patterns for naming standard rules.
-
-
-### Ordered Values
->	**Input Required**: False
-
->	**Attribute Type**: Bool
-
->	**Description**: If true, the values in this field are ordered (i.e. sequence matters).
-
-
-### Position
->	**Input Required**: False
-
->	**Attribute Type**: Simple Int
-
->	**Description**: The ordinal position of the data field within its containing data structure.
-
->	**Default Value**: 0
-
-
-### Precision
->	**Input Required**: False
-
->	**Attribute Type**: Simple Int
-
->	**Description**: The number of significant digits after the decimal point for numeric fields.
-
-
-### Sort Order
->	**Input Required**: False
-
->	**Attribute Type**: Simple
-
->	**Description**: The sort order for values in this field. Valid values from DataItemSortOrder enum: UNKNOWN, UNSORTED, ASCENDING, DESCENDING, OTHER.
+>	**Valid Values**: ASCENDING,DESCENDING,UNSORTED
 
 
 ### Units
@@ -375,16 +237,6 @@ ___
 >	**Alternative Labels**: Alias
 
 
-### Aliases
->	**Input Required**: False
-
->	**Attribute Type**: Simple List
-
->	**Description**: Alternative names for this  field, used in different systems or contexts.
-
->	**Alternative Labels**: Alias
-
-
 ### Search Keywords
 >	**Input Required**: False
 
@@ -429,6 +281,34 @@ ___
 >	**Attribute Type**: Simple List
 
 >	**Description**: The authors.
+
+
+### Coverage Category
+>	**Input Required**: False
+
+>	**Attribute Type**: Valid Value
+
+>	**Description**: How the values of the linked data field cover the domain of possible values (CoverageCategory enum).
+
+>	**Valid Values**: UNKNOWN,UNIQUE_IDENTIFIER,IDENTIFIER,CORE_DETAIL,EXTENDED_DETAIL
+
+
+### Is Partition Key
+>	**Input Required**: False
+
+>	**Attribute Type**: Bool
+
+>	**Description**: If true, this data field is part of the partition key for the data it describes.
+
+>	**Default Value**: false
+
+
+### Partition Key Position
+>	**Input Required**: False
+
+>	**Attribute Type**: Simple Int
+
+>	**Description**: Position of this data field within the partition key (starting at 1). Only meaningful when Is Partition Key is true.
 
 
 ___

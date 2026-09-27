@@ -75281,14 +75281,6 @@
             "valid_values": []
           },
           {
-            "name": "In Data Structure",
-            "key": "in_data_structure",
-            "value": null,
-            "format": false,
-            "detail_spec": null,
-            "valid_values": []
-          },
-          {
             "name": "Name Patterns",
             "key": "name_patterns",
             "value": null,
@@ -75398,14 +75390,6 @@
           {
             "name": "In Data Specification",
             "key": "in_data_specification",
-            "value": null,
-            "format": false,
-            "detail_spec": null,
-            "valid_values": []
-          },
-          {
-            "name": "In Data Structure",
-            "key": "in_data_structure",
             "value": null,
             "format": false,
             "detail_spec": null,
@@ -75573,14 +75557,6 @@
             "valid_values": []
           },
           {
-            "name": "In Data Structure",
-            "key": "in_data_structure",
-            "value": null,
-            "format": false,
-            "detail_spec": null,
-            "valid_values": []
-          },
-          {
             "name": "Name Patterns",
             "key": "name_patterns",
             "value": null,
@@ -75698,14 +75674,6 @@
           {
             "name": "In Data Specification",
             "key": "in_data_specification",
-            "value": null,
-            "format": false,
-            "detail_spec": null,
-            "valid_values": []
-          },
-          {
-            "name": "In Data Structure",
-            "key": "in_data_structure",
             "value": null,
             "format": false,
             "detail_spec": null,
@@ -75991,14 +75959,6 @@
             "valid_values": []
           },
           {
-            "name": "In Data Structure",
-            "key": "in_data_structure",
-            "value": null,
-            "format": false,
-            "detail_spec": null,
-            "valid_values": []
-          },
-          {
             "name": "Name Patterns",
             "key": "name_patterns",
             "value": null,
@@ -76313,14 +76273,6 @@
           {
             "name": "In Data Specification",
             "key": "in_data_specification",
-            "value": null,
-            "format": false,
-            "detail_spec": null,
-            "valid_values": []
-          },
-          {
-            "name": "In Data Structure",
-            "key": "in_data_structure",
             "value": null,
             "format": false,
             "detail_spec": null,
@@ -76709,14 +76661,6 @@
             "valid_values": []
           },
           {
-            "name": "In Data Structure",
-            "key": "in_data_structure",
-            "value": null,
-            "format": false,
-            "detail_spec": null,
-            "valid_values": []
-          },
-          {
             "name": "Name Patterns",
             "key": "name_patterns",
             "value": null,
@@ -77039,14 +76983,6 @@
           {
             "name": "In Data Specification",
             "key": "in_data_specification",
-            "value": null,
-            "format": false,
-            "detail_spec": null,
-            "valid_values": []
-          },
-          {
-            "name": "In Data Structure",
-            "key": "in_data_structure",
             "value": null,
             "format": false,
             "detail_spec": null,
@@ -77199,6 +77135,28 @@
             "valid_values": []
           },
           {
+            "name": "Allow Duplicate Values",
+            "key": "allows_duplicate_values",
+            "value": null,
+            "format": false,
+            "detail_spec": null,
+            "valid_values": []
+          },
+          {
+            "name": "Coverage Category",
+            "key": "coverage_category",
+            "value": null,
+            "format": false,
+            "detail_spec": null,
+            "valid_values": [
+              "UNKNOWN",
+              "UNIQUE_IDENTIFIER",
+              "IDENTIFIER",
+              "CORE_DETAIL",
+              "EXTENDED_DETAIL"
+            ]
+          },
+          {
             "name": "Data Class",
             "key": "data_class",
             "value": null,
@@ -77271,6 +77229,14 @@
             "valid_values": []
           },
           {
+            "name": "Is Partition Key",
+            "key": "is_partition_key",
+            "value": null,
+            "format": false,
+            "detail_spec": null,
+            "valid_values": []
+          },
+          {
             "name": "Length",
             "key": "length",
             "value": null,
@@ -77327,6 +77293,14 @@
             "valid_values": []
           },
           {
+            "name": "Partition Key Position",
+            "key": "partition_key_position",
+            "value": null,
+            "format": false,
+            "detail_spec": null,
+            "valid_values": []
+          },
+          {
             "name": "Position",
             "key": "position",
             "value": null,
@@ -77348,19 +77322,15 @@
             "value": null,
             "format": false,
             "detail_spec": null,
-            "valid_values": []
+            "valid_values": [
+              "ASCENDING",
+              "DESCENDING",
+              "UNSORTED"
+            ]
           },
           {
             "name": "Units",
             "key": "units",
-            "value": null,
-            "format": false,
-            "detail_spec": null,
-            "valid_values": []
-          },
-          {
-            "name": "Allow Duplicate Values",
-            "key": "allows_duplicate_values",
             "value": null,
             "format": false,
             "detail_spec": null,
@@ -77458,6 +77428,28 @@
             "valid_values": []
           },
           {
+            "name": "Allow Duplicate Values",
+            "key": "allows_duplicate_values",
+            "value": null,
+            "format": false,
+            "detail_spec": null,
+            "valid_values": []
+          },
+          {
+            "name": "Coverage Category",
+            "key": "coverage_category",
+            "value": null,
+            "format": false,
+            "detail_spec": null,
+            "valid_values": [
+              "UNKNOWN",
+              "UNIQUE_IDENTIFIER",
+              "IDENTIFIER",
+              "CORE_DETAIL",
+              "EXTENDED_DETAIL"
+            ]
+          },
+          {
             "name": "Data Class",
             "key": "data_class",
             "value": null,
@@ -77530,6 +77522,14 @@
             "valid_values": []
           },
           {
+            "name": "Is Partition Key",
+            "key": "is_partition_key",
+            "value": null,
+            "format": false,
+            "detail_spec": null,
+            "valid_values": []
+          },
+          {
             "name": "Length",
             "key": "length",
             "value": null,
@@ -77586,6 +77586,14 @@
             "valid_values": []
           },
           {
+            "name": "Partition Key Position",
+            "key": "partition_key_position",
+            "value": null,
+            "format": false,
+            "detail_spec": null,
+            "valid_values": []
+          },
+          {
             "name": "Position",
             "key": "position",
             "value": null,
@@ -77607,19 +77615,15 @@
             "value": null,
             "format": false,
             "detail_spec": null,
-            "valid_values": []
+            "valid_values": [
+              "ASCENDING",
+              "DESCENDING",
+              "UNSORTED"
+            ]
           },
           {
             "name": "Units",
             "key": "units",
-            "value": null,
-            "format": false,
-            "detail_spec": null,
-            "valid_values": []
-          },
-          {
-            "name": "Allow Duplicate Values",
-            "key": "allows_duplicate_values",
             "value": null,
             "format": false,
             "detail_spec": null,
@@ -77763,6 +77767,28 @@
             "valid_values": []
           },
           {
+            "name": "Allow Duplicate Values",
+            "key": "allows_duplicate_values",
+            "value": null,
+            "format": false,
+            "detail_spec": null,
+            "valid_values": []
+          },
+          {
+            "name": "Coverage Category",
+            "key": "coverage_category",
+            "value": null,
+            "format": false,
+            "detail_spec": null,
+            "valid_values": [
+              "UNKNOWN",
+              "UNIQUE_IDENTIFIER",
+              "IDENTIFIER",
+              "CORE_DETAIL",
+              "EXTENDED_DETAIL"
+            ]
+          },
+          {
             "name": "Data Class",
             "key": "data_class",
             "value": null,
@@ -77835,6 +77861,14 @@
             "valid_values": []
           },
           {
+            "name": "Is Partition Key",
+            "key": "is_partition_key",
+            "value": null,
+            "format": false,
+            "detail_spec": null,
+            "valid_values": []
+          },
+          {
             "name": "Length",
             "key": "length",
             "value": null,
@@ -77891,6 +77925,14 @@
             "valid_values": []
           },
           {
+            "name": "Partition Key Position",
+            "key": "partition_key_position",
+            "value": null,
+            "format": false,
+            "detail_spec": null,
+            "valid_values": []
+          },
+          {
             "name": "Position",
             "key": "position",
             "value": null,
@@ -77912,19 +77954,15 @@
             "value": null,
             "format": false,
             "detail_spec": null,
-            "valid_values": []
+            "valid_values": [
+              "ASCENDING",
+              "DESCENDING",
+              "UNSORTED"
+            ]
           },
           {
             "name": "Units",
             "key": "units",
-            "value": null,
-            "format": false,
-            "detail_spec": null,
-            "valid_values": []
-          },
-          {
-            "name": "Allow Duplicate Values",
-            "key": "allows_duplicate_values",
             "value": null,
             "format": false,
             "detail_spec": null,
@@ -78030,6 +78068,28 @@
             "valid_values": []
           },
           {
+            "name": "Allow Duplicate Values",
+            "key": "allows_duplicate_values",
+            "value": null,
+            "format": false,
+            "detail_spec": null,
+            "valid_values": []
+          },
+          {
+            "name": "Coverage Category",
+            "key": "coverage_category",
+            "value": null,
+            "format": false,
+            "detail_spec": null,
+            "valid_values": [
+              "UNKNOWN",
+              "UNIQUE_IDENTIFIER",
+              "IDENTIFIER",
+              "CORE_DETAIL",
+              "EXTENDED_DETAIL"
+            ]
+          },
+          {
             "name": "Data Class",
             "key": "data_class",
             "value": null,
@@ -78102,6 +78162,14 @@
             "valid_values": []
           },
           {
+            "name": "Is Partition Key",
+            "key": "is_partition_key",
+            "value": null,
+            "format": false,
+            "detail_spec": null,
+            "valid_values": []
+          },
+          {
             "name": "Length",
             "key": "length",
             "value": null,
@@ -78158,6 +78226,14 @@
             "valid_values": []
           },
           {
+            "name": "Partition Key Position",
+            "key": "partition_key_position",
+            "value": null,
+            "format": false,
+            "detail_spec": null,
+            "valid_values": []
+          },
+          {
             "name": "Position",
             "key": "position",
             "value": null,
@@ -78179,19 +78255,15 @@
             "value": null,
             "format": false,
             "detail_spec": null,
-            "valid_values": []
+            "valid_values": [
+              "ASCENDING",
+              "DESCENDING",
+              "UNSORTED"
+            ]
           },
           {
             "name": "Units",
             "key": "units",
-            "value": null,
-            "format": false,
-            "detail_spec": null,
-            "valid_values": []
-          },
-          {
-            "name": "Allow Duplicate Values",
-            "key": "allows_duplicate_values",
             "value": null,
             "format": false,
             "detail_spec": null,
@@ -78453,6 +78525,28 @@
             "valid_values": []
           },
           {
+            "name": "Allow Duplicate Values",
+            "key": "allows_duplicate_values",
+            "value": null,
+            "format": false,
+            "detail_spec": null,
+            "valid_values": []
+          },
+          {
+            "name": "Coverage Category",
+            "key": "coverage_category",
+            "value": null,
+            "format": false,
+            "detail_spec": null,
+            "valid_values": [
+              "UNKNOWN",
+              "UNIQUE_IDENTIFIER",
+              "IDENTIFIER",
+              "CORE_DETAIL",
+              "EXTENDED_DETAIL"
+            ]
+          },
+          {
             "name": "Data Class",
             "key": "data_class",
             "value": null,
@@ -78525,6 +78619,14 @@
             "valid_values": []
           },
           {
+            "name": "Is Partition Key",
+            "key": "is_partition_key",
+            "value": null,
+            "format": false,
+            "detail_spec": null,
+            "valid_values": []
+          },
+          {
             "name": "Length",
             "key": "length",
             "value": null,
@@ -78581,6 +78683,14 @@
             "valid_values": []
           },
           {
+            "name": "Partition Key Position",
+            "key": "partition_key_position",
+            "value": null,
+            "format": false,
+            "detail_spec": null,
+            "valid_values": []
+          },
+          {
             "name": "Position",
             "key": "position",
             "value": null,
@@ -78602,19 +78712,15 @@
             "value": null,
             "format": false,
             "detail_spec": null,
-            "valid_values": []
+            "valid_values": [
+              "ASCENDING",
+              "DESCENDING",
+              "UNSORTED"
+            ]
           },
           {
             "name": "Units",
             "key": "units",
-            "value": null,
-            "format": false,
-            "detail_spec": null,
-            "valid_values": []
-          },
-          {
-            "name": "Allow Duplicate Values",
-            "key": "allows_duplicate_values",
             "value": null,
             "format": false,
             "detail_spec": null,
@@ -78917,6 +79023,28 @@
             "valid_values": []
           },
           {
+            "name": "Allow Duplicate Values",
+            "key": "allows_duplicate_values",
+            "value": null,
+            "format": false,
+            "detail_spec": null,
+            "valid_values": []
+          },
+          {
+            "name": "Coverage Category",
+            "key": "coverage_category",
+            "value": null,
+            "format": false,
+            "detail_spec": null,
+            "valid_values": [
+              "UNKNOWN",
+              "UNIQUE_IDENTIFIER",
+              "IDENTIFIER",
+              "CORE_DETAIL",
+              "EXTENDED_DETAIL"
+            ]
+          },
+          {
             "name": "Data Class",
             "key": "data_class",
             "value": null,
@@ -78989,6 +79117,14 @@
             "valid_values": []
           },
           {
+            "name": "Is Partition Key",
+            "key": "is_partition_key",
+            "value": null,
+            "format": false,
+            "detail_spec": null,
+            "valid_values": []
+          },
+          {
             "name": "Length",
             "key": "length",
             "value": null,
@@ -79045,6 +79181,14 @@
             "valid_values": []
           },
           {
+            "name": "Partition Key Position",
+            "key": "partition_key_position",
+            "value": null,
+            "format": false,
+            "detail_spec": null,
+            "valid_values": []
+          },
+          {
             "name": "Position",
             "key": "position",
             "value": null,
@@ -79066,19 +79210,15 @@
             "value": null,
             "format": false,
             "detail_spec": null,
-            "valid_values": []
+            "valid_values": [
+              "ASCENDING",
+              "DESCENDING",
+              "UNSORTED"
+            ]
           },
           {
             "name": "Units",
             "key": "units",
-            "value": null,
-            "format": false,
-            "detail_spec": null,
-            "valid_values": []
-          },
-          {
-            "name": "Allow Duplicate Values",
-            "key": "allows_duplicate_values",
             "value": null,
             "format": false,
             "detail_spec": null,
@@ -79443,6 +79583,28 @@
             "valid_values": []
           },
           {
+            "name": "Allow Duplicate Values",
+            "key": "allows_duplicate_values",
+            "value": null,
+            "format": false,
+            "detail_spec": null,
+            "valid_values": []
+          },
+          {
+            "name": "Coverage Category",
+            "key": "coverage_category",
+            "value": null,
+            "format": false,
+            "detail_spec": null,
+            "valid_values": [
+              "UNKNOWN",
+              "UNIQUE_IDENTIFIER",
+              "IDENTIFIER",
+              "CORE_DETAIL",
+              "EXTENDED_DETAIL"
+            ]
+          },
+          {
             "name": "Data Class",
             "key": "data_class",
             "value": null,
@@ -79515,6 +79677,14 @@
             "valid_values": []
           },
           {
+            "name": "Is Partition Key",
+            "key": "is_partition_key",
+            "value": null,
+            "format": false,
+            "detail_spec": null,
+            "valid_values": []
+          },
+          {
             "name": "Length",
             "key": "length",
             "value": null,
@@ -79571,6 +79741,14 @@
             "valid_values": []
           },
           {
+            "name": "Partition Key Position",
+            "key": "partition_key_position",
+            "value": null,
+            "format": false,
+            "detail_spec": null,
+            "valid_values": []
+          },
+          {
             "name": "Position",
             "key": "position",
             "value": null,
@@ -79592,19 +79770,15 @@
             "value": null,
             "format": false,
             "detail_spec": null,
-            "valid_values": []
+            "valid_values": [
+              "ASCENDING",
+              "DESCENDING",
+              "UNSORTED"
+            ]
           },
           {
             "name": "Units",
             "key": "units",
-            "value": null,
-            "format": false,
-            "detail_spec": null,
-            "valid_values": []
-          },
-          {
-            "name": "Allow Duplicate Values",
-            "key": "allows_duplicate_values",
             "value": null,
             "format": false,
             "detail_spec": null,
@@ -79915,6 +80089,28 @@
             "valid_values": []
           },
           {
+            "name": "Allow Duplicate Values",
+            "key": "allows_duplicate_values",
+            "value": null,
+            "format": false,
+            "detail_spec": null,
+            "valid_values": []
+          },
+          {
+            "name": "Coverage Category",
+            "key": "coverage_category",
+            "value": null,
+            "format": false,
+            "detail_spec": null,
+            "valid_values": [
+              "UNKNOWN",
+              "UNIQUE_IDENTIFIER",
+              "IDENTIFIER",
+              "CORE_DETAIL",
+              "EXTENDED_DETAIL"
+            ]
+          },
+          {
             "name": "Data Class",
             "key": "data_class",
             "value": null,
@@ -79987,6 +80183,14 @@
             "valid_values": []
           },
           {
+            "name": "Is Partition Key",
+            "key": "is_partition_key",
+            "value": null,
+            "format": false,
+            "detail_spec": null,
+            "valid_values": []
+          },
+          {
             "name": "Length",
             "key": "length",
             "value": null,
@@ -80043,6 +80247,14 @@
             "valid_values": []
           },
           {
+            "name": "Partition Key Position",
+            "key": "partition_key_position",
+            "value": null,
+            "format": false,
+            "detail_spec": null,
+            "valid_values": []
+          },
+          {
             "name": "Position",
             "key": "position",
             "value": null,
@@ -80064,19 +80276,15 @@
             "value": null,
             "format": false,
             "detail_spec": null,
-            "valid_values": []
+            "valid_values": [
+              "ASCENDING",
+              "DESCENDING",
+              "UNSORTED"
+            ]
           },
           {
             "name": "Units",
             "key": "units",
-            "value": null,
-            "format": false,
-            "detail_spec": null,
-            "valid_values": []
-          },
-          {
-            "name": "Allow Duplicate Values",
-            "key": "allows_duplicate_values",
             "value": null,
             "format": false,
             "detail_spec": null,
