@@ -1725,7 +1725,7 @@ class DataDiscovery(ServerClient):
     async def _async_get_analysis_reports_by_name(self, name: str, start_from: int = 0, page_size: int = 100, **kwargs) -> list | str:
         """Get analysis reports by name. Async version."""
         url = f"{self.platform_url}/servers/{self.view_server}/api/open-metadata/data-discovery/analysis-reports/by-name"
-        return await self._async_get_name_request(url, _type="AnalysisReport", _gen_output=self._generate_annotation_output, name=name, start_from=start_from, page_size=page_size, **kwargs)
+        return await self._async_get_name_request(url, _type="AnalysisReport", _gen_output=self._generate_annotation_output, filter_string=name, start_from=start_from, page_size=page_size, **kwargs)
 
     def get_analysis_reports_by_name(self, name: str, start_from: int = 0, page_size: int = 100, **kwargs) -> list | str:
         """Get analysis reports by name."""
