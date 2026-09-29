@@ -879,6 +879,25 @@
       "max_cardinality": 1,
       "level": "Advanced",
       "Journal Entry": ""
+    },
+    "Deep Copy": {
+      "variable_name": "deep_copy",
+      "inUpdate": false,
+      "attr_labels": "",
+      "examples": "",
+      "default_value": "true",
+      "valid_values": [],
+      "existing_element": "",
+      "description": "If true (Egeria's default), the template's anchored attachments -- such as a connection and its endpoint -- are copied to the new element. Set to false to create only the top-level element.",
+      "generated": false,
+      "style": "Bool",
+      "user_specified": true,
+      "unique": false,
+      "input_required": false,
+      "min_cardinality": 0,
+      "max_cardinality": 1,
+      "level": "Advanced",
+      "Journal Entry": "2026-09-29 -- maps to TemplateRequestBody.deepCopy; pyegeria previously sent false by default."
     }
   },
   "bundles": {
@@ -920,7 +939,8 @@
         "Parent ID",
         "Parent Relationship Type Name",
         "Parent Relationship Attributes",
-        "Parent at End1"
+        "Parent at End1",
+        "Deep Copy"
       ],
       "Journal Entry": "Added 2026-09-11 -- Asset Maker family, wraps automated_curation.py's create-element-from-template methods. OM_TYPE is best-effort (not yet confirmed against a live server's type system); create-only (no Update) since the underlying OMVS methods have no update counterpart."
     },

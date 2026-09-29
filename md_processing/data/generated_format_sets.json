@@ -23688,6 +23688,14 @@
             "valid_values": []
           },
           {
+            "name": "Deep Copy",
+            "key": "deep_copy",
+            "value": null,
+            "format": false,
+            "detail_spec": null,
+            "valid_values": []
+          },
+          {
             "name": "Initial Status",
             "key": "initial_status",
             "value": null,
@@ -23773,6 +23781,14 @@
           {
             "name": "Effective Time",
             "key": "effective_time",
+            "value": null,
+            "format": false,
+            "detail_spec": null,
+            "valid_values": []
+          },
+          {
+            "name": "Deep Copy",
+            "key": "deep_copy",
             "value": null,
             "format": false,
             "detail_spec": null,
@@ -23890,6 +23906,14 @@
             "format": false,
             "detail_spec": null,
             "valid_values": []
+          },
+          {
+            "name": "Deep Copy",
+            "key": "deep_copy",
+            "value": null,
+            "format": false,
+            "detail_spec": null,
+            "valid_values": []
           }
         ],
         "columns": [
@@ -23977,6 +24001,14 @@
           {
             "name": "Effective Time",
             "key": "effective_time",
+            "value": null,
+            "format": false,
+            "detail_spec": null,
+            "valid_values": []
+          },
+          {
+            "name": "Deep Copy",
+            "key": "deep_copy",
             "value": null,
             "format": false,
             "detail_spec": null,
