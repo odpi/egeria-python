@@ -233,6 +233,16 @@ ___
 >	**Default Value**: true
 
 
+### Deep Copy
+>	**Input Required**: False
+
+>	**Attribute Type**: Bool
+
+>	**Description**: If true (Egeria's default), the template's anchored attachments -- such as a connection and its endpoint -- are copied to the new element. Set to false to create only the top-level element.
+
+>	**Default Value**: true
+
+
 ### Status
 >	**Input Required**: False
 

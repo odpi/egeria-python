@@ -535,7 +535,9 @@ class TemplateRequestBody(RequestBody):
     template_guid: str
     replacement_properties: dict[str, Any] | None = None
     placeholder_property_values: dict[str, Any] = {}
-    deep_copy: bool | None = False
+    # None (not False): omitted from the JSON so Egeria's own default (TemplateOptions.deepCopy = true)
+    # applies. False made every create-from-template skip the template's anchored attachments.
+    deep_copy: bool | None = None
     effective_from: datetime | None = None
     effective_to: datetime | None = None
     template_substitute: bool | None = False
@@ -598,7 +600,8 @@ class NewOpenMetadataElementRequestBody(RequestBody):
     type_name: str | None = None
     initial_classifications: Dict[str, InitialClassifications] | None = None
     anchor_guid: str | None = None
-    is_own_anchor: bool | None = False
+    # None: omitted so Egeria's AnchorOptions default (isOwnAnchor=true) applies.
+    is_own_anchor: bool | None = None
     effective_from: datetime | None = None
     effective_to: datetime | None = None
     properties: dict | None = None
@@ -691,9 +694,12 @@ class FilterRequestBody(ResultsRequestBody):
 class SearchStringRequestBody(ResultsRequestBody):
     class_: Annotated[Literal["SearchStringRequestBody"], Field(alias="class")]
     search_string: str | None = None
-    starts_with: bool = True
+    # None: omitted from the JSON so Egeria's SearchOptions defaults apply
+    # (startsWith=false, ignoreCase=true). Callers that want prefix or
+    # case-sensitive matching pass the value explicitly.
+    starts_with: bool | None = None
     ends_with: bool = False
-    ignore_case: bool = False
+    ignore_case: bool | None = None
 
 
 class FindRequestBody(ResultsRequestBody):
