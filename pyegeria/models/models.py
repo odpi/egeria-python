@@ -600,7 +600,8 @@ class NewOpenMetadataElementRequestBody(RequestBody):
     type_name: str | None = None
     initial_classifications: Dict[str, InitialClassifications] | None = None
     anchor_guid: str | None = None
-    is_own_anchor: bool | None = False
+    # None: omitted so Egeria's AnchorOptions default (isOwnAnchor=true) applies.
+    is_own_anchor: bool | None = None
     effective_from: datetime | None = None
     effective_to: datetime | None = None
     properties: dict | None = None
@@ -693,9 +694,12 @@ class FilterRequestBody(ResultsRequestBody):
 class SearchStringRequestBody(ResultsRequestBody):
     class_: Annotated[Literal["SearchStringRequestBody"], Field(alias="class")]
     search_string: str | None = None
-    starts_with: bool = True
+    # None: omitted from the JSON so Egeria's SearchOptions defaults apply
+    # (startsWith=false, ignoreCase=true). Callers that want prefix or
+    # case-sensitive matching pass the value explicitly.
+    starts_with: bool | None = None
     ends_with: bool = False
-    ignore_case: bool = False
+    ignore_case: bool | None = None
 
 
 class FindRequestBody(ResultsRequestBody):

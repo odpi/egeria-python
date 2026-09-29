@@ -76,3 +76,20 @@ async def test_create_element_maps_deep_copy(attributes, expected):
 
 async def _async_value(value):
     return value
+
+
+# The same rule for the other request models whose pyegeria defaults differed
+# from the Egeria beans they mirror: an unset value is left out, so Egeria's
+# default applies (AnchorOptions.isOwnAnchor=true, SearchOptions.startsWith=false,
+# SearchOptions.ignoreCase=true).
+@pytest.mark.parametrize("model_name, body, omitted", [
+    ("NewOpenMetadataElementRequestBody", {"class": "NewOpenMetadataElementRequestBody"}, ["isOwnAnchor"]),
+    ("SearchStringRequestBody", {"class": "SearchStringRequestBody", "searchString": "x"},
+     ["startsWith", "ignoreCase"]),
+])
+def test_unset_flags_are_left_to_egeria_defaults(model_name, body, omitted):
+    import pyegeria.models as models
+    sent = json.loads(TypeAdapter(getattr(models, model_name)).validate_python(body)
+                      .model_dump_json(exclude_none=True, by_alias=True))
+    for key in omitted:
+        assert key not in sent
