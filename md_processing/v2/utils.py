@@ -1,6 +1,7 @@
 """
 General utility functions for Dr.Egeria v2 processing.
 """
+import json
 import re
 from typing import Any, Optional, Type
 from enum import Enum
@@ -11,10 +12,27 @@ def parse_key_value(text: str) -> dict[str, Any]:
     - Markdown tables: | Key | Value |
     - Lists: * Key: Value or - Key = Value
     - Simple blocks: Key: Value (one per line)
+    - A JSON object: {"Key": "Value", ...}
+
+    Values are always returned as strings (callers treat the result as a
+    Map<String,String>). A non-string JSON value is JSON-encoded, so a caller
+    that needs its real type back (report.py's _coerce_analytic_value) can
+    json.loads it.
     """
     if not text:
         return {}
-        
+
+    # JSON object -- previously split on its first ':' like a "Key: Value" line,
+    # silently producing keys like '{"owner"'.
+    stripped = text.strip()
+    if stripped.startswith("{") and stripped.endswith("}"):
+        try:
+            parsed = json.loads(stripped)
+        except ValueError:
+            parsed = None
+        if isinstance(parsed, dict):
+            return {str(k): v if isinstance(v, str) else json.dumps(v) for k, v in parsed.items()}
+
     results = {}
     
     # Check for Markdown Table (| Key | Value |)
