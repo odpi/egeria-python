@@ -229,6 +229,7 @@ class ServerClient(BaseServerClient):
             qualified_name: Optional[str] = None,
             tech_type: Optional[str] = None,
             organization_name: Optional[str] = None,
+            for_lineage: bool = False,
     ) -> str:
         """Helper function to return a server_guid - one of server_guid, qualified_name or display_name should
         contain information. If all are None, an exception will be thrown. If all contain
@@ -241,6 +242,9 @@ class ServerClient(BaseServerClient):
 
         An InvalidParameter Exception is thrown if multiple matches
         are found for the given property name. If this occurs, use a qualified name for the property name.
+
+        Set for_lineage=True to also find elements only visible to lineage requests (e.g. ones classified
+        as Promise or Memento).
         Async version.
         """
         try:
@@ -256,7 +260,7 @@ class ServerClient(BaseServerClient):
                 "class": "FindPropertyNameProperties",
                 "propertyValue": qualified_name,
                 "propertyName": "qualifiedName",
-                "forLineage": False,
+                "forLineage": for_lineage,
                 "forDuplicateProcessing": False,
                 "effectiveTime": None,
             }
@@ -285,7 +289,7 @@ class ServerClient(BaseServerClient):
                     "class": "FindPropertyNameProperties",
                     "propertyValue": name,
                     "propertyName": property_name,
-                    "forLineage": False,
+                    "forLineage": for_lineage,
                     "forDuplicateProcessing": False,
                     "effectiveTime": None,
                 }
@@ -301,7 +305,7 @@ class ServerClient(BaseServerClient):
                     "class": "FindPropertyNameProperties",
                     "propertyValue": display_name,
                     "propertyName": property_name,
-                    "forLineage": False,
+                    "forLineage": for_lineage,
                     "forDuplicateProcessing": False,
                     "effectiveTime": None,
                 }

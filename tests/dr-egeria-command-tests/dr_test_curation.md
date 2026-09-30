@@ -27,6 +27,10 @@
 > None of the 2026-08-21 additions have dedicated regression coverage in
 > this file yet -- add cases here if you're touching that area.
 >
+> Promise (0010, added 2026-09-30) is covered by CT-63/CT-64. A promised
+> element is only visible to forLineage=true requests; CT-64 exercises the
+> lineage-aware Target Element lookup that Declassify Promise depends on.
+>
 > `--process` cleanup: this file creates two Data Dictionaries, one Glossary,
 > one Glossary Term, one Meeting, one ToDo, and one Review as persistent
 > elements. Delete them from the target server after the run if you don't
@@ -965,3 +969,34 @@ REQUESTED
 ### Description
 Created by dr_test_curation.md regression coverage.
 
+___
+
+# CT-63: Classify Promise
+
+## Classify Promise
+
+### Target Element
+DataDictionary::CurationTest::Target::1.0
+
+### Deployment Status
+UNDER_DEVELOPMENT
+
+### Start Time
+2026-09-30T00:00:00Z
+
+### Due Time
+2026-12-31T00:00:00Z
+
+### Additional Properties
+tracking_ticket: PROMISE-1
+
+___
+
+# CT-64: Declassify Promise
+
+## Declassify Promise
+
+### Target Element
+DataDictionary::CurationTest::Target::1.0
+
+___

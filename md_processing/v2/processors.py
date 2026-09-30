@@ -1389,6 +1389,12 @@ class AsyncBaseCommandProcessor(ABC):
 
         return None
 
+    def lookup_for_lineage(self) -> bool:
+        """Whether reference lookups for this command should include elements only visible to
+        lineage requests (forLineage=true) -- e.g. Declassify Promise, whose target is hidden
+        from normal queries once promised. Overridden per processor; default False."""
+        return False
+
     async def resolve_element_guid(self, name_or_guid: str, tech_type: Optional[str] = None) -> Optional[str]:
         """
         Resolves a name or GUID to a GUID using various strategies.
@@ -1478,7 +1484,11 @@ class AsyncBaseCommandProcessor(ABC):
             unsupported_type_warnings = self.context.setdefault("_unsupported_lookup_types_warned", set())
 
             # Pass 1: Try WITH type constraint (fastest, avoids ambiguity)
-            pass1_key = (name_or_guid, tech_type or None)
+            for_lineage = self.lookup_for_lineage()
+            # Lineage lookups see a different element set, so they get their own cache keys.
+            lineage_key = ("forLineage",) if for_lineage else ()
+            lineage_kwargs = {"for_lineage": True} if for_lineage else {}
+            pass1_key = (name_or_guid, tech_type or None, *lineage_key)
             cached1 = query_cache.get(pass1_key, _NOT_CACHED)
             if cached1 is _AMBIGUOUS:
                 logger.debug(f"resolve_element_guid: cache hit (ambiguous, Pass 1) for {pass1_key!r}")
@@ -1489,7 +1499,7 @@ class AsyncBaseCommandProcessor(ABC):
                 res = cached1
             else:
                 try:
-                    res = await self.client.__async_get_guid__(qualified_name=name_or_guid, display_name=name_or_guid, property_name="displayName", tech_type=tech_type or None)
+                    res = await self.client.__async_get_guid__(qualified_name=name_or_guid, display_name=name_or_guid, property_name="displayName", tech_type=tech_type or None, **lineage_kwargs)
                     _cache_if_not_found(pass1_key, res)
                 except PyegeriaException as e:
                     # Catch multiple matches error
@@ -1517,7 +1527,7 @@ class AsyncBaseCommandProcessor(ABC):
             # Pass 2: If no result (or if type was invalid), try WITHOUT type constraint
             is_not_found = not res or (isinstance(res, str) and (res.startswith("No ") or " found" in res))
             if is_not_found and tech_type:
-                pass2_key = (name_or_guid, None)
+                pass2_key = (name_or_guid, None, *lineage_key)
                 cached2 = query_cache.get(pass2_key, _NOT_CACHED)
                 if cached2 is _AMBIGUOUS:
                     logger.debug(f"resolve_element_guid: cache hit (ambiguous, Pass 2) for {pass2_key!r}")
@@ -1528,7 +1538,7 @@ class AsyncBaseCommandProcessor(ABC):
                     res = cached2
                 else:
                     try:
-                        res = await self.client.__async_get_guid__(qualified_name=name_or_guid, display_name=name_or_guid, property_name="displayName")
+                        res = await self.client.__async_get_guid__(qualified_name=name_or_guid, display_name=name_or_guid, property_name="displayName", **lineage_kwargs)
                         _cache_if_not_found(pass2_key, res)
                     except PyegeriaException as e:
                         if "Multiple elements found" in str(e):
