@@ -114,6 +114,11 @@ def test_parse_key_value():
     kv = parse_key_value(text_list)
     assert kv == {"x": "y", "z": "10"}
 
+    # JSON object: parsed as JSON, not split on its first ':' (which used to
+    # yield the key '{"owner"'). Non-string values come back JSON-encoded.
+    kv = parse_key_value('{"owner": "promise-test", "points": 12, "type_map": [["Terms", "GlossaryTerm"]]}')
+    assert kv == {"owner": "promise-test", "points": "12", "type_map": '[["Terms", "GlossaryTerm"]]'}
+
 @pytest.mark.asyncio
 async def test_extract_and_parse_integration():
     text = """
