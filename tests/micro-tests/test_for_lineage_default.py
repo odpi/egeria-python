@@ -73,9 +73,12 @@ class _Session:
 
 
 @pytest.mark.asyncio
-async def test_post_path_applies_default():
+async def test_post_path_applies_default(monkeypatch):
+    # No live server: skip the constructor's connection check, and use a port
+    # nothing listens on so any real network call would fail loudly.
+    monkeypatch.setattr(AssetCatalog, "check_connection", lambda self: "test")
     session = _Session()
-    client = AssetCatalog("view-server", "https://localhost:9443", "user", "pwd")
+    client = AssetCatalog("view-server", "https://localhost:1", "user", "pwd")
     client.session = session
 
     await client._async_make_request("POST", "https://x/y", '{"class": "GetRequestBody", "forLineage": false}')
