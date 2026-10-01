@@ -18,12 +18,10 @@ current_dir = Path(__file__).resolve().parent
 if str(current_dir) not in sys.path:
     sys.path.append(str(current_dir))
 
-from textual import on
 from textual.widgets import DataTable, Static
 from textual.containers import ScrollableContainer
 from pyegeria import exec_report_spec, PyegeriaException, print_basic_exception, load_app_config, settings
 from MyTeamScreen import MyTeam
-from ShopForDataScreen import ShopForDataScreen
 from StatusScreen import StatusScreen
 
 
@@ -44,8 +42,11 @@ class TeamRolesMixin:
             self.view_server = app_config.egeria_view_server or "qs-view-server"
             self.platform_url = app_config.egeria_platform_url or "https://127.0.0.1:9443"
 
-    @on(DataTable.RowSelected, "#roles_table")
     def handle_roles_table_row_selection(self, event: DataTable.RowSelected) -> Any:
+        """Show the team roster for a selected TeamLeader/TeamMember role.
+
+        Called from MyProfileApp's roles_table RowSelected handler.
+        """
         role_table = event.data_table
         selected_row_key = event.row_key
         selected_row_data = role_table.get_row(selected_row_key)
@@ -184,11 +185,9 @@ class TeamRolesMixin:
             self.log("Search for term screen completed successfully")
             self._show_main_screen()
         elif status == 201:
-            self.log("No matches found for search term")
-            self.push_screen(
-                ShopForDataScreen(),
-                callback=self.shop_for_data_callback,
-            )
+            self.log("Search for term: back to Shop for Data")
+            # Reopen through the handler so the catalog tables are reloaded, not left empty
+            self.call_later(self.handle_shop_for_data_option)
         else:
             self.log(f"Error in Search for term screen: {status}")
             error_category = "Search for Term"
