@@ -23,7 +23,6 @@ from textual.widgets import DataTable
 from pyegeria import Egeria, PyegeriaException
 
 from EditElementsScreens import (
-    EditProfileScreen,
     EditCollectionsScreen,
     EditCommunitiesScreen,
     EditIdentitiesScreen,
@@ -238,13 +237,19 @@ class ElementsCrudMixin:
         finally:
             client.close_session()
 
-    def show_comments(self, table_name: str, row_k: Any) -> None:
-        """Show comments for the selected table."""
-        self.log(f"Showing comments for table: {table_name}, row: {row_k}")
+    def show_comments(self, table_name: str | None = None, row_k: Any = None,
+                      selected_comment_guid: str | None = None) -> None:
+        """Show comments for the selected table row, or the responses to a selected comment.
+
+        When selected_comment_guid is given, the screen shows the comments attached to that
+        comment (its responses) and Ctrl+A adds a new response to it.
+        """
+        self.log(f"Showing comments for table: {table_name}, row: {row_k}, comment: {selected_comment_guid}")
         self.push_screen(
             ShowCommentsScreen(
                 table_name=table_name,
                 table_row=row_k,
+                selected_comment_guid=selected_comment_guid,
             ),
             callback=self.show_comments_callback,
         )
@@ -254,6 +259,11 @@ class ElementsCrudMixin:
         self.log(f"Return from ShowCommentsScreen: {return_c}")
         if return_c is None:
             self.log("No return from ShowCommentsScreen")
+            self._show_main_screen()
+        elif isinstance(return_c, list) and len(return_c) == 2 and return_c[0] == 250:
+            # User asked to respond to a comment: reopen the screen focused on that comment
+            self.show_comments(selected_comment_guid=return_c[1])
+        elif return_c == 200:
             self._show_main_screen()
         else:
             self.log(f"Unexpected return type from ShowCommentsScreen: {type(return_c)}")

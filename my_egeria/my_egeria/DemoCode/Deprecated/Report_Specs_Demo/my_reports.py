@@ -38,7 +38,7 @@ from textual.widgets import Static, Button, DataTable, Header, Footer, Input, Tr
 
 
 class MyApp(App):
-    CSS_PATH = "./my_reports.tcss"
+    CSS_PATH = "my_reports.tcss"
 
     BINDINGS = [
         ("q", "quit", "Quit"),

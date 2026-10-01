@@ -205,6 +205,7 @@ dev = [
     "pytest>=8.4.2",
     "wheel>=0.45.1",
     "my-egeria",
+    "textual-dev>=1.8.0",
 ]
 
 [build-system]

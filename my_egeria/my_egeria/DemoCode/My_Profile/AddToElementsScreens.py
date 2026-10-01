@@ -503,7 +503,7 @@ class AddBlogEntryScreen(ModalScreen):
             self.query_one("#blog_entry_name", Input).clear()
             self.query_one("#blog_entry_text", Input).clear()
             self.query_one("#blog_entry_situation", Input).clear()
-            self.query_one("#blog_entry_container", ScrollableContainer).refresh()
+            self.query_one("#blog_input_container", ScrollableContainer).refresh()
         return
 
     @on(Input.Changed)

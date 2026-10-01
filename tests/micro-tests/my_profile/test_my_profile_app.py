@@ -10,12 +10,13 @@
 
 from unittest.mock import MagicMock, AsyncMock, patch, PropertyMock
 import pytest
-from textual.widgets import OptionList, DataTable
+from textual.widgets import Button, OptionList, DataTable
 from textual.widgets._option_list import Option
 
 from my_profile_app import MyProfileApp
 from MainScreen import MainScreen
 from CreateProfileScreen import CreateProfileScreen
+from SplashScreen import SplashScreen
 from UserIdentitiesScreen import UserIdentitiesScreen
 from EditElementsScreens import EditProfileScreen
 from egeria_backend import at_least, is_int, nonempty_str
@@ -104,7 +105,26 @@ class TestMyProfileAppLifecycle:
 
         app = MyProfileApp()
         async with app.run_test() as pilot:
+            # Wait for the splash screen to be pushed. Match on type: the screen
+            # itself has no id (id="splash" is on its Header widget).
+            for _ in range(10):
+                if isinstance(app.screen, SplashScreen):
+                    break
+                await pilot.pause(0.1)
+            assert isinstance(app.screen, SplashScreen)
+
+            # "Continue to App" dismisses with None -> mainline's no-new-user branch
+            # (pressed directly: at the default 80x24 test size the button is off-screen)
+            app.screen.query_one("#continue", Button).press()
             await pilot.pause()
+
+            # Wait for the async task to finish and the callback to be processed
+            # and the new screen to be pushed.
+            for _ in range(50):
+                if isinstance(app.screen, CreateProfileScreen):
+                    break
+                await pilot.pause(0.1)
+
             assert isinstance(app.screen, CreateProfileScreen)
 
     @pytest.mark.asyncio

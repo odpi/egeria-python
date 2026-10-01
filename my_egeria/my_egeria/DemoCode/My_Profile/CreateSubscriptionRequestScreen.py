@@ -44,6 +44,7 @@ class CreateSubscriptionRequestScreen(ModalScreen):
 
     def compose(self) -> ComposeResult:
         yield Header(show_clock=True)
+        yield Static(classes="empty")
         yield ScrollableContainer(
             Static(f"Please provide the following input as appropriate:"),
             Static("Display Name should be short but descriptive, it will also be used to create the Qualified Name as well"),
