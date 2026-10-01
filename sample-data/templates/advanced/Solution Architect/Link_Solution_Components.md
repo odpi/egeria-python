@@ -1,7 +1,7 @@
 ___
 
 ## Link Solution Components
-> Links or unlinks two solution compoents.
+> Links or unlinks two solution components.
 
 ### Component1
 >	**Input Required**: True

@@ -25,6 +25,7 @@ from pyegeria.core._exceptions import (
     PyegeriaNotFoundException, PyegeriaUnauthorizedException
 )
 from pyegeria.core._globals import enable_ssl_check, max_paging_size
+from pyegeria.core._base_platform_client import _apply_for_lineage_default
 from pyegeria.core._validators import (
     validate_name,
     validate_server_name,
@@ -550,6 +551,7 @@ class BaseServerClient:
                 )
 
             elif request_type == "POST":
+                payload = _apply_for_lineage_default(payload)
                 if payload is None:
                     response = await self.session.post(
                         endpoint, headers=self.headers, timeout=timeout, params = params

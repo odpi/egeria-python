@@ -12,6 +12,8 @@ import inspect
 import json
 import os
 import threading
+from contextlib import contextmanager
+from contextvars import ContextVar
 
 import httpcore
 import httpx
@@ -32,6 +34,49 @@ from pyegeria.core._validators import (
     validate_user_id,
     _validate_url_path_safe,
 )
+
+# Elements classified as Promise (not yet delivered) or Memento (logically
+# deleted) are only returned to requests with forLineage=true. Inside a
+# `lineage_visible()` block, every JSON request body sent by any pyegeria client
+# is sent with forLineage=true, including bodies built internally by SDK helpers
+# (which otherwise default it to false). Dr.Egeria uses this so its editing
+# commands can see Promise-classified elements without the author setting
+# For Lineage on every command.
+_for_lineage_default: ContextVar[bool] = ContextVar("pyegeria_for_lineage_default", default=False)
+
+
+@contextmanager
+def lineage_visible(enabled: bool = True):
+    """Send every request body in this block with forLineage=true (when enabled is True)."""
+    token = _for_lineage_default.set(enabled)
+    try:
+        yield
+    finally:
+        _for_lineage_default.reset(token)
+
+
+def _apply_for_lineage_default(payload: str | dict | None) -> str | dict | None:
+    """Set forLineage=true on a request body when inside an enabled lineage_visible() block.
+
+    Only touches JSON objects that are request bodies (a "class" ending in
+    "RequestBody") or that already carry a forLineage field, so payloads that
+    don't take the option are sent unchanged.
+    """
+    if not _for_lineage_default.get() or payload is None:
+        return payload
+    body = payload
+    if isinstance(payload, str):
+        try:
+            body = json.loads(payload)
+        except ValueError:
+            return payload
+    if not isinstance(body, dict) or body.get("forLineage") is True:
+        return payload
+    body_class = body.get("class")
+    if "forLineage" not in body and not (isinstance(body_class, str) and body_class.endswith("RequestBody")):
+        return payload
+    body = {**body, "forLineage": True}
+    return json.dumps(body) if isinstance(payload, str) else body
 
 ...
 
@@ -546,6 +591,7 @@ class BasePlatformClient:
                 )
 
             elif request_type == "POST":
+                payload = _apply_for_lineage_default(payload)
                 if payload is None:
                     response = await self.session.post(
                         endpoint, headers=self.headers, timeout=timeout, params = params

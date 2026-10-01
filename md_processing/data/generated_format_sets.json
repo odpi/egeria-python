@@ -230034,6 +230034,33 @@
             ]
           },
           {
+            "name": "Deployment Status",
+            "key": "deployment_status",
+            "value": null,
+            "format": false,
+            "detail_spec": null,
+            "valid_values": [
+              "PROPOSED",
+              "UNDER_DEVELOPMENT",
+              "DEVELOPMENT_COMPLETE",
+              "APPROVED_FOR_DEPLOYMENT",
+              "REJECTED",
+              "STANDBY",
+              "ACTIVE",
+              "DISABLED",
+              "FAILED",
+              "OTHER"
+            ]
+          },
+          {
+            "name": "User Defined Deployment Status",
+            "key": "user_defined_deployment_status",
+            "value": null,
+            "format": false,
+            "detail_spec": null,
+            "valid_values": []
+          },
+          {
             "name": "Category",
             "key": "category",
             "value": null,
@@ -230171,6 +230198,33 @@
               "DEPRECATED",
               "OTHER"
             ]
+          },
+          {
+            "name": "Deployment Status",
+            "key": "deployment_status",
+            "value": null,
+            "format": false,
+            "detail_spec": null,
+            "valid_values": [
+              "PROPOSED",
+              "UNDER_DEVELOPMENT",
+              "DEVELOPMENT_COMPLETE",
+              "APPROVED_FOR_DEPLOYMENT",
+              "REJECTED",
+              "STANDBY",
+              "ACTIVE",
+              "DISABLED",
+              "FAILED",
+              "OTHER"
+            ]
+          },
+          {
+            "name": "User Defined Deployment Status",
+            "key": "user_defined_deployment_status",
+            "value": null,
+            "format": false,
+            "detail_spec": null,
+            "valid_values": []
           },
           {
             "name": "Category",
@@ -230331,6 +230385,33 @@
             "format": false,
             "detail_spec": null,
             "valid_values": []
+          },
+          {
+            "name": "Deployment Status",
+            "key": "deployment_status",
+            "value": null,
+            "format": false,
+            "detail_spec": null,
+            "valid_values": [
+              "PROPOSED",
+              "UNDER_DEVELOPMENT",
+              "DEVELOPMENT_COMPLETE",
+              "APPROVED_FOR_DEPLOYMENT",
+              "REJECTED",
+              "STANDBY",
+              "ACTIVE",
+              "DISABLED",
+              "FAILED",
+              "OTHER"
+            ]
+          },
+          {
+            "name": "User Defined Deployment Status",
+            "key": "user_defined_deployment_status",
+            "value": null,
+            "format": false,
+            "detail_spec": null,
+            "valid_values": []
           }
         ],
         "columns": [
@@ -230474,6 +230555,33 @@
           {
             "name": "Solution SubComponents",
             "key": "solution_sub_components",
+            "value": null,
+            "format": false,
+            "detail_spec": null,
+            "valid_values": []
+          },
+          {
+            "name": "Deployment Status",
+            "key": "deployment_status",
+            "value": null,
+            "format": false,
+            "detail_spec": null,
+            "valid_values": [
+              "PROPOSED",
+              "UNDER_DEVELOPMENT",
+              "DEVELOPMENT_COMPLETE",
+              "APPROVED_FOR_DEPLOYMENT",
+              "REJECTED",
+              "STANDBY",
+              "ACTIVE",
+              "DISABLED",
+              "FAILED",
+              "OTHER"
+            ]
+          },
+          {
+            "name": "User Defined Deployment Status",
+            "key": "user_defined_deployment_status",
             "value": null,
             "format": false,
             "detail_spec": null,
@@ -230854,6 +230962,33 @@
             "valid_values": []
           },
           {
+            "name": "Deployment Status",
+            "key": "deployment_status",
+            "value": null,
+            "format": false,
+            "detail_spec": null,
+            "valid_values": [
+              "PROPOSED",
+              "UNDER_DEVELOPMENT",
+              "DEVELOPMENT_COMPLETE",
+              "APPROVED_FOR_DEPLOYMENT",
+              "REJECTED",
+              "STANDBY",
+              "ACTIVE",
+              "DISABLED",
+              "FAILED",
+              "OTHER"
+            ]
+          },
+          {
+            "name": "User Defined Deployment Status",
+            "key": "user_defined_deployment_status",
+            "value": null,
+            "format": false,
+            "detail_spec": null,
+            "valid_values": []
+          },
+          {
             "name": "User Defined Status",
             "key": "user_defined_status",
             "value": null,
@@ -231200,6 +231335,33 @@
           {
             "name": "User Defined Content Status",
             "key": "user_defined_content_status",
+            "value": null,
+            "format": false,
+            "detail_spec": null,
+            "valid_values": []
+          },
+          {
+            "name": "Deployment Status",
+            "key": "deployment_status",
+            "value": null,
+            "format": false,
+            "detail_spec": null,
+            "valid_values": [
+              "PROPOSED",
+              "UNDER_DEVELOPMENT",
+              "DEVELOPMENT_COMPLETE",
+              "APPROVED_FOR_DEPLOYMENT",
+              "REJECTED",
+              "STANDBY",
+              "ACTIVE",
+              "DISABLED",
+              "FAILED",
+              "OTHER"
+            ]
+          },
+          {
+            "name": "User Defined Deployment Status",
+            "key": "user_defined_deployment_status",
             "value": null,
             "format": false,
             "detail_spec": null,
@@ -231555,6 +231717,33 @@
             "valid_values": []
           },
           {
+            "name": "Deployment Status",
+            "key": "deployment_status",
+            "value": null,
+            "format": false,
+            "detail_spec": null,
+            "valid_values": [
+              "PROPOSED",
+              "UNDER_DEVELOPMENT",
+              "DEVELOPMENT_COMPLETE",
+              "APPROVED_FOR_DEPLOYMENT",
+              "REJECTED",
+              "STANDBY",
+              "ACTIVE",
+              "DISABLED",
+              "FAILED",
+              "OTHER"
+            ]
+          },
+          {
+            "name": "User Defined Deployment Status",
+            "key": "user_defined_deployment_status",
+            "value": null,
+            "format": false,
+            "detail_spec": null,
+            "valid_values": []
+          },
+          {
             "name": "User Defined Status",
             "key": "user_defined_status",
             "value": null,
@@ -231909,6 +232098,33 @@
           {
             "name": "Solution SubComponents",
             "key": "solution_sub_components",
+            "value": null,
+            "format": false,
+            "detail_spec": null,
+            "valid_values": []
+          },
+          {
+            "name": "Deployment Status",
+            "key": "deployment_status",
+            "value": null,
+            "format": false,
+            "detail_spec": null,
+            "valid_values": [
+              "PROPOSED",
+              "UNDER_DEVELOPMENT",
+              "DEVELOPMENT_COMPLETE",
+              "APPROVED_FOR_DEPLOYMENT",
+              "REJECTED",
+              "STANDBY",
+              "ACTIVE",
+              "DISABLED",
+              "FAILED",
+              "OTHER"
+            ]
+          },
+          {
+            "name": "User Defined Deployment Status",
+            "key": "user_defined_deployment_status",
             "value": null,
             "format": false,
             "detail_spec": null,

@@ -16,7 +16,7 @@ ___
 
 >	**Attribute Type**: Simple
 
->	**Description**: Locally defined deployment status - used when Deployment Status is OTHER.
+>	**Description**: A locally defined deployment status - only used when Deployment Status is OTHER.
 
 
 ### Start Time
@@ -64,7 +64,7 @@ ___
 
 >	**Attribute Type**: Valid Value
 
->	**Description**: Progress toward delivering the promised real-world digital resource/artifact - one of an enumerated set of values (DeploymentStatus).
+>	**Description**: The deployment status of the element - one of an enumerated set of values (DeploymentStatus). On a Promise it tracks progress toward delivering the promised resource.
 
 >	**Valid Values**: PROPOSED,UNDER_DEVELOPMENT,DEVELOPMENT_COMPLETE,APPROVED_FOR_DEPLOYMENT,REJECTED,STANDBY,ACTIVE,DISABLED,FAILED,OTHER
 
