@@ -56,11 +56,17 @@ ModalScreen {
     grid-rows: auto auto 1fr auto;
 }
 
+/* Header and Footer are docked, so the grid holds only the title and the container */
+FeedbackScreen, FeedbackLogScreen {
+    grid-rows: auto 1fr;
+    background: $background;
+}
+
 ModalScreen > Header, ModalScreen > Footer {
     column-span: 3;
 }
 
-#edit_profile_title, #create_profile_title, #edit_teams_title, #edit_roles_title, #edit_communities_title, #edit_identities_title, #status_title, #generic_data_view_title, .span-3 {
+#edit_profile_title, #create_profile_title, #edit_teams_title, #edit_roles_title, #edit_communities_title, #edit_identities_title, #status_title, #generic_data_view_title, #feedback_title, #feedback_log_title, .span-3 {
     column-span: 3;
     text-align: center;
     background: darkblue;
@@ -93,6 +99,8 @@ ModalScreen > Header, ModalScreen > Footer {
 #status_container,
 #user_identities_container,
 #generic_data_view_container,
+#feedback_container,
+#feedback_log_container,
 #main_identities_container {
     column-span: 3;
     width: 100%;
@@ -107,6 +115,7 @@ ModalScreen > Header, ModalScreen > Footer {
 #digital_product_catalog_table,
 #glossary_table,
 #generic_data_view_table,
+#feedback_log_table,
 #projects_table,
 #roles_table,
 #teams_table,
@@ -129,8 +138,9 @@ ModalScreen > Header, ModalScreen > Footer {
 }
 
 Button {
-    background: greenyellow;
+    /*background: greenyellow;*/
     color: black;
+    border: solid white;
 }
 
 DataTable, TextArea, SelectionList, Tree, OptionList {
@@ -192,3 +202,43 @@ Input {
     height: 1fr;
     border: solid white;
 }
+#feedback_text {
+    width: 100%;
+    height: 10;
+    border: solid white;
+}
+#feedback_container Horizontal {
+    height: auto;
+}
+.SplashScreen {
+        align: center middle;              /* 1. Center the entire card on the screen */
+        background: rgba(0, 0, 0, 0.6);    /* Dim the 3x3 grid behind it */
+    }
+#splash-card {
+        background: $panel;
+        border: thick $accent;
+        padding: 2 4;
+        width: 80;
+        height: 24;
+        /* 2. Vertically pushes layout content down and horizontally centers items */
+        align: center bottom;
+    }
+#splash-text {
+    text-align: center;
+    width: 100%;
+    margin-bottom: 2;
+}
+
+#splash_buttons {
+    layout: horizontal;
+    align: center middle;
+    height: auto;
+    margin-bottom: 1;
+}
+
+#splash_buttons Button {
+    margin: 0 1;                       /* Space out the two buttons side by side */
+}
+.empty {
+        background: transparent; /* Invisible structural spacer */
+    }

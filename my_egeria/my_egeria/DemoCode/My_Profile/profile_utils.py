@@ -6,7 +6,31 @@
 """
 
 import re
+import sys
 from typing import Any
+
+# pyegeria's declared minimum (pyproject.toml); older pydantic ignores serialize_by_alias
+MIN_PYDANTIC_VERSION = "2.12.3"
+
+
+def check_request_serialization() -> str | None:
+    """Return an error message if pyegeria request bodies won't serialize the way Egeria expects.
+
+    Under an older pydantic, request bodies go out with Python field names
+    ("filter_string") rather than Egeria's ("filter"), so Egeria silently sees
+    empty parameters. This happens when the app is run by a Python other than
+    the project venv, e.g. a global `textual run`.
+    """
+    import pydantic
+    from pyegeria.models.models import FilterRequestBody
+
+    body = FilterRequestBody.model_validate({"class": "FilterRequestBody", "filter": "check"})
+    if '"filter":"check"' in body.model_dump_json(exclude_none=True):
+        return None
+    return (f"This Python ({sys.executable}) has pydantic {pydantic.VERSION}, but pyegeria needs "
+            f"pydantic >= {MIN_PYDANTIC_VERSION} - requests to Egeria would lose their parameters.\n"
+            "Run the app from the project venv instead: `source .venv/bin/activate` in the egeria-python "
+            "folder (then `textual run my_profile_app.py --dev`), or `uv run python my_profile_app.py`.")
 
 
 def truncate_at_sequence(data: Any, target: str = "specificationMermaidGraph") -> tuple[Any, bool]:

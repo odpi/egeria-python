@@ -11,6 +11,7 @@ from profile_utils import (
     clean_structure,
     bools_to_strings,
     extract_glossary_terms,
+    check_request_serialization,
 )
 
 
@@ -181,3 +182,20 @@ class TestExtractGlossaryTerms:
         terms = extract_glossary_terms(text)
         assert len(terms) == 2
         assert terms == ["Hospital Patient", "Medication Prescription"]
+
+
+class TestCheckRequestSerialization:
+    """Tests for check_request_serialization function."""
+
+    def test_project_environment_passes(self):
+        assert check_request_serialization() is None
+
+    def test_python_field_names_are_reported(self, monkeypatch):
+        # Simulate pydantic < 2.11, which ignores serialize_by_alias
+        from pyegeria.models.models import FilterRequestBody
+        monkeypatch.setattr(FilterRequestBody, "model_dump_json",
+                            lambda self, **kwargs: '{"class_":"FilterRequestBody","filter_string":"check"}')
+        message = check_request_serialization()
+        assert message is not None
+        assert "pydantic" in message
+        assert ".venv" in message

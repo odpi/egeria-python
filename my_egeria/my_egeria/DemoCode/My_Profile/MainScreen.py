@@ -19,6 +19,7 @@ class MainScreen(Screen):
 
     BINDINGS = [
         ("q", "app.quit", "Quit"),
+        ("ctrl+a", "add_comment","add comment to selected row"),
         ("ctrl+b", "bookmarks", "Manage Bookmarks"),
         ("ctrl+s", "show_comments", "Show Comments for Selected Row"),
         ("ctrl+t", "edit_table", "Edit Selected Table"),
@@ -58,6 +59,8 @@ class MainScreen(Screen):
                 Option("[] Subscriptions"),
                 Option("[] Technology Types"),
                 Option("[] User Bookmarks"),
+                Option("[] Leave Feedback"),
+                Option("[] Feedback Log"),
                 id="other_function_list"
             ),
             id="other_function_container"
@@ -180,6 +183,23 @@ class MainScreen(Screen):
             self.app.show_comments(table_name, row_k)
         else:
             self.notify("Please select a row and table to show comments.", timeout=5, severity="warning")
+
+    async def action_add_comment(self):
+        """ Add a comment to the selected table and row """
+        table_name, row_k = self.get_current_table_and_row()
+        if table_name and row_k:
+            self.selected_table = table_name
+            self.selected_row = row_k
+            add_comment_return = self.app.add_comment(table_name, row_k)
+            if add_comment_return:
+                if add_comment_return == 200:
+                    self.log("Successfully added comment")
+                    return
+                else:
+                    self.log("Failed to add comment.")
+                    self.notify("Failed to add comment.", timeout=20, severity="error")
+        else:
+            self.notify("Please select a row and table to add a comment.", timeout=5, severity="warning")
 
     async def action_add_to_table(self):
         """ Add to the selected table.
