@@ -69,6 +69,14 @@ ___
 >	**Description**: Solution sub-components of this component. In current approach the parent does not specify sub-components; components specify their parents instead.
 
 
+### User Defined Deployment Status
+>	**Input Required**: False
+
+>	**Attribute Type**: Simple
+
+>	**Description**: A locally defined deployment status - only used when Deployment Status is OTHER.
+
+
 ### Journal Entry
 >	**Input Required**: False
 
@@ -167,6 +175,16 @@ ___
 >	**Attribute Type**: Simple List
 
 >	**Description**: The authors.
+
+
+### Deployment Status
+>	**Input Required**: False
+
+>	**Attribute Type**: Valid Value
+
+>	**Description**: The deployment status of the element - one of an enumerated set of values (DeploymentStatus). On a Promise it tracks progress toward delivering the promised resource.
+
+>	**Valid Values**: PROPOSED,UNDER_DEVELOPMENT,DEVELOPMENT_COMPLETE,APPROVED_FOR_DEPLOYMENT,REJECTED,STANDBY,ACTIVE,DISABLED,FAILED,OTHER
 
 
 ### Effective From

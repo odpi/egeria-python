@@ -2862,7 +2862,7 @@
         "OTHER"
       ],
       "existing_element": "",
-      "description": "Progress toward delivering the promised real-world digital resource/artifact - one of an enumerated set of values (DeploymentStatus).",
+      "description": "The deployment status of the element - one of an enumerated set of values (DeploymentStatus). On a Promise it tracks progress toward delivering the promised resource.",
       "generated": false,
       "style": "Valid Value",
       "user_specified": true,
@@ -2871,7 +2871,7 @@
       "min_cardinality": 0,
       "max_cardinality": 1,
       "level": "Basic",
-      "Journal Entry": "Added 2026-09-30 -- Promise classification (0010), Classification Explorer setElementAsPromise."
+      "Journal Entry": "2026-10-01: shared definition -- used by Curation (Classify Promise) and Solution Architect (Solution Component, Egeria 0730 deploymentStatus/userDefinedDeploymentStatus). Keep identical in both files (global attribute namespace)."
     },
     "User Defined Deployment Status": {
       "variable_name": "user_defined_deployment_status",
@@ -2881,7 +2881,7 @@
       "default_value": "",
       "valid_values": [],
       "existing_element": "",
-      "description": "Locally defined deployment status - used when Deployment Status is OTHER.",
+      "description": "A locally defined deployment status - only used when Deployment Status is OTHER.",
       "generated": false,
       "style": "Simple",
       "user_specified": true,
@@ -2890,7 +2890,7 @@
       "min_cardinality": 0,
       "max_cardinality": 1,
       "level": "Domain",
-      "Journal Entry": "Added 2026-09-30 -- Promise classification (0010), Classification Explorer setElementAsPromise."
+      "Journal Entry": "2026-10-01: shared definition -- used by Curation (Classify Promise) and Solution Architect (Solution Component, Egeria 0730 deploymentStatus/userDefinedDeploymentStatus). Keep identical in both files (global attribute namespace)."
     },
     "Start Time": {
       "variable_name": "start_time",

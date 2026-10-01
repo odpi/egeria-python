@@ -319,9 +319,13 @@ class CurationClassifyProcessor(AsyncBaseCommandProcessor):
     async def fetch_as_is(self) -> Optional[Dict[str, Any]]:
         return None
 
-    def lookup_for_lineage(self) -> bool:
+    def effective_for_lineage(self) -> bool:
+        # Declassify Promise must always see its (hidden) target, even if the
+        # author explicitly set For Lineage to false.
         class_spec = CLASSIFICATION_METHODS.get(self.get_command_spec().get("OM_TYPE"))
-        return bool(class_spec and class_spec.declassify_for_lineage and self.command.verb == "Declassify")
+        if class_spec and class_spec.declassify_for_lineage and self.command.verb == "Declassify":
+            return True
+        return super().effective_for_lineage()
 
     async def apply_changes(self) -> str:
         verb = self.command.verb

@@ -36,6 +36,7 @@ if disable_ssl_warnings:
     disable_warnings(InsecureRequestWarning)
 from pyegeria.core._globals import (GovernanceDomains)
 from pyegeria.core._server_client import ServerClient
+from pyegeria.core._base_platform_client import lineage_visible
 from pyegeria.core._exceptions import (
     PyegeriaException,
     PyegeriaAPIException,
@@ -125,6 +126,7 @@ __all__ = [
     "EgeriaConfig",
     "EgeriaCat",
     "ServerClient",
+    "lineage_visible",
     # Exceptions
     "PyegeriaException",
     "PyegeriaAPIException",
