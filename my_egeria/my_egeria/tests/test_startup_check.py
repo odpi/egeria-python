@@ -27,3 +27,12 @@ def test_check_connection_no_pyegeria(monkeypatch):
     ok, msg = check_connection()
     assert not ok
     assert "pyegeria import failed" in msg
+
+
+def test_validate_envs_derives_old_names_from_documented_ones():
+    # The README documents EGERIA_VIEW_SERVER / EGERIA_PLATFORM_URL (with defaults);
+    # importing startup_check fills in the EGERIA_SERVER / EGERIA_BASE_URL it validates.
+    assert os.environ.get("EGERIA_SERVER")
+    assert os.environ.get("EGERIA_BASE_URL")
+    ok, _ = validate_envs()
+    assert ok

@@ -15,6 +15,11 @@ os.environ.setdefault("EGERIA_USER", "erinoverview")
 os.environ.setdefault("EGERIA_USER_PASSWORD", "secret")
 os.environ.setdefault("EGERIA_VIEW_SERVER", "qs-view-server")
 os.environ.setdefault("EGERIA_PLATFORM_URL", "https://localhost:9443")
+# config.REQUIRED_ENVS still uses the older names; derive them from the documented
+# ones (and their defaults) so the app starts as the README describes. An explicit
+# EGERIA_SERVER / EGERIA_BASE_URL still wins.
+os.environ.setdefault("EGERIA_SERVER", os.environ["EGERIA_VIEW_SERVER"])
+os.environ.setdefault("EGERIA_BASE_URL", os.environ["EGERIA_PLATFORM_URL"])
 
 from typing import Tuple
 from my_egeria.config import (

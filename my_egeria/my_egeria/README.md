@@ -17,7 +17,7 @@ The `my-egeria` Textual TUI application's package root — see the parent
 | `styles/` | Textual CSS. |
 | `tests/` | Tests for this app. |
 | `error_popup_app.py`, `startup_check.py` | Startup/error-handling helpers. |
-| `serve.py` | Browser-mode serving (`textual serve`) — see `serve_my_egeria`/`serve_my_profile` entry points in the root `pyproject.toml`. |
+| `serve.py` | Browser-mode serving via the `textual-serve` library — see the `serve_my_egeria`/`serve_my_profile` entry points in the root `pyproject.toml`. |
 | `DemoCode/` | Standalone demo scripts and experimental/deprecated code, not part of the main app (own subfolders per demo topic — Data Products, Journals, My Profile, Report Specs, Technology Type, plus `Deprecated/` and `Experimental Code/`). |
 
 `DemoCode/` is a scratch/demo area, not maintained to the same standard as

@@ -202,7 +202,8 @@ class TeamRolesMixin:
             self.term_details = exec_report_spec(
                 format_set_name="Glossary-Terms",
                 output_format="JSON",
-                params={"search_string": self.target_term, "filter_string": self.target_term},
+                params={"search_string": self.target_term, "filter_string": self.target_term,
+                        "graph_query_depth": 0},  # term properties only
                 view_server=self.view_server,
                 view_url=self.platform_url,
                 user=self.user_name,

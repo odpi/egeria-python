@@ -11,10 +11,13 @@ to host my_egeria Textual apps as browser-accessible tools via the portal.
 
 ## How it works
 
-`textual serve` turns any Textual app into a browser app — each WebSocket
+`serve_my_profile` / `serve_my_egeria` use the `textual-serve` library (installed
+with pyegeria) to turn the Textual app into a browser app — each WebSocket
 connection gets its own isolated app instance. The portal button simply links
 to the app's URL (new tab or iframe). No code difference between terminal and
-browser modes; the same installed app serves both.
+browser modes; the same installed app serves both. Behind a proxy, set
+`MY_EGERIA_PUBLIC_URL` (or `MY_PROFILE_PUBLIC_URL`) to the URL browsers use, so
+the page's asset and WebSocket URLs are same-origin.
 
 ---
 
@@ -89,7 +92,7 @@ prompts the user for credentials in the browser. No portal changes needed.
 
 ### Option B — Per-session process spawning (proper multi-user)
 The portal's login flow calls a small management API that:
-1. Spawns `textual serve --port <dynamic-port> serve_my_profile` with the
+1. Spawns `serve_my_profile` with `MY_PROFILE_PORT=<dynamic-port>` and the
    authenticated user's credentials as env vars.
 2. Returns the URL to the portal, which opens it.
 3. Cleans up (kills the process) on session logout / timeout.
@@ -115,7 +118,7 @@ location /my-profile/ {
 }
 ```
 
-The WebSocket upgrade headers are **required** — textual serve uses WebSockets.
+The WebSocket upgrade headers are **required** — textual-serve uses WebSockets.
 
 The portal button then links to `/my-profile/` instead of `localhost:8020`.
 
@@ -146,8 +149,9 @@ The compose service above uses `python:3.12-slim`. In practice, use a shared
 base image that has `pyegeria` (and therefore `my_egeria`) already installed:
 
 ```dockerfile
-FROM python:3.12-slim
-RUN pip install pyegeria          # installs my_egeria and all entry points
+FROM python:3.13-slim             # not 3.14: Textual fails on 3.14 (textual/rlock.py)
+RUN pip install pyegeria          # installs my_egeria, textual, textual-serve and all entry points
+CMD ["serve_my_profile"]
 ```
 
 Or reuse the existing `Dockerfile-jupyter` / `Dockerfile-egeria-platform`
