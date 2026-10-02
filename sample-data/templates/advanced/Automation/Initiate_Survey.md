@@ -1,32 +1,22 @@
 ___
 
-## Link First Process Step
-> Links a governance action process to its first governance action process step, so processing begins there when the process is triggered. There can be only one first process step per process.
+## Initiate Survey
+> Run a survey of a resource. The action target name the survey expects is read from the survey type; set Action Target Name only to override it.
 
-### Governance Action Process
+### Survey Type
 >	**Input Required**: True
 
 >	**Attribute Type**: Reference Name
 
->	**Description**: The governance action process, identified by its qualified name, display name or GUID.
+>	**Description**: The survey to run: the qualified name of its governance action type, e.g. PostgreSQLSurvey::survey-postgres-database or FileSurvey::survey-folder.
 
 
-### Governance Action Process Step
+### Resource to Survey
 >	**Input Required**: True
 
 >	**Attribute Type**: Reference Name
 
->	**Description**: The governance action process step to link.
-
-
-### Label
->	**Input Required**: False
-
->	**Attribute Type**: Simple
-
->	**Description**: A label used to identify or categorise a relationship link.
-
->	**Alternative Labels**: Wire Label
+>	**Description**: The element describing the resource to survey (a server, database, folder, file, ...).
 
 
 ### Journal Entry
@@ -37,20 +27,12 @@ ___
 >	**Description**: A text entry into a journal.
 
 
-### Description
+### Action Target Name
 >	**Input Required**: False
 
 >	**Attribute Type**: Simple
 
->	**Description**: A description.
-
-
-### Guard
->	**Input Required**: False
-
->	**Attribute Type**: Simple
-
->	**Description**: Informational value passed to the process step; the step's behaviour may vary depending on the guard it receives.
+>	**Description**: The name an element is given when it is passed as an action target to a governance service.
 
 
 ### Request Parameters
@@ -127,24 +109,6 @@ ___
 >	**Attribute Type**: Simple
 
 >	**Description**: A user provided or system generated request id for a conversation.
-
-
-### Anchor Scope IDs
->	**Input Required**: False
-
->	**Attribute Type**: Reference Name List
-
->	**Description**: A list of IDs that are anchor scopes for this element.
-
-
-### Make Anchor
->	**Input Required**: False
-
->	**Attribute Type**: Bool
-
->	**Description**: Is the element at end2 an anchor to end1?
-
->	**Default Value**: false
 
 
 ___

@@ -8,7 +8,7 @@ ___
 
 >	**Attribute Type**: Reference Name
 
->	**Description**: The governance action type to link to a governance engine executor.
+>	**Description**: The governance action type, identified by its qualified name, display name or GUID.
 
 >	**Alternative Labels**: Action Type
 
@@ -60,7 +60,7 @@ ___
 
 >	**Attribute Type**: Dictionary
 
->	**Description**: Parameters to pass to the governance service when this step executes.
+>	**Description**: Name: value parameters passed to the governance service(s) that run.
 
 >	| Parameter Name | Parameter Value |
 >	|---|---|

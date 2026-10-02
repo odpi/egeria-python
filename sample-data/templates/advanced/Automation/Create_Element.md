@@ -1,7 +1,7 @@
 ___
 
 ## Create Element
-> Create a new metadata element by instantiating an Open Metadata catalog template (the generic, low-level mechanism behind every other Asset Maker command). Advanced use only -- prefer one of the specific 'Create <Type> Element' commands when the element type has one.
+> Create a new metadata element by instantiating an Open Metadata catalog template (the generic, low-level mechanism behind every Asset Maker 'Create <Type> Element' command). Advanced use only -- prefer one of the specific 'Create <Type> Element' commands when the element type has one.
 
 ### Element Type Name
 >	**Input Required**: True

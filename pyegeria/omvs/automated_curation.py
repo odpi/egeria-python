@@ -3244,12 +3244,15 @@ class AutomatedCuration(ServerClient):
         )
 
         url = f"{self.ref_curation_command_base}/governance-action-processes/initiate"
+        # Field names per InitiateGovernanceActionProcessRequestBody (Egeria ignores
+        # unknown fields, so the previous "requestSourceGUIDs"/"startTime" were
+        # silently dropped -- the request sources and start time never applied).
         body = {
-            "class": "GovernanceActionProcessRequestBody",
+            "class": "InitiateGovernanceActionProcessRequestBody",
             "processQualifiedName": action_type_qualified_name,
-            "requestSourceGUIDs": request_source_guids,
+            "actionSourceGUIDs": request_source_guids,
             "actionTargets": action_targets,
-            "startTime": int(start_time.timestamp() * 1000),
+            "startDate": int(start_time.timestamp() * 1000),
             "requestParameters": request_parameters,
             "originatorServiceName": orig_service_name,
             "originatorEngineName": orig_engine_name,
@@ -3361,7 +3364,9 @@ class AutomatedCuration(ServerClient):
         body = {
             "class": "InitiateGovernanceActionTypeRequestBody",
             "governanceActionTypeQualifiedName": action_type_qualified_name,
-            "requestSourceGUIDs": request_source_guids,
+            # InitiateGovernanceActionTypeRequestBody's field is actionSourceGUIDs;
+            # "requestSourceGUIDs" was silently ignored by Egeria.
+            "actionSourceGUIDs": request_source_guids,
             "actionTargets": action_targets,
             "startDate": start,
             "requestParameters": request_parameters,
@@ -3424,11 +3429,28 @@ class AutomatedCuration(ServerClient):
     #   Initiate surveys
     #
 
+    async def _async_get_supported_action_target_names(self, action_type_qualified_name: str) -> list[str]:
+        """Return the action target names a governance action type declares it accepts
+        (its specification's supportedActionTarget entries), or [] if they can't be read."""
+        try:
+            guid = await self.__async_get_guid__(qualified_name=action_type_qualified_name)
+            if not guid or guid == NO_ELEMENTS_FOUND:
+                return []
+            url = (f"{self.platform_url}/servers/{self.view_server}/api/open-metadata/"
+                   f"classification-explorer/elements/{guid}")
+            response = await self._async_make_request("POST", url, {"class": "GetRequestBody"})
+            spec = (response.json().get("element") or {}).get("specification") or {}
+            return [t.get("name") for t in spec.get("supportedActionTarget") or [] if t.get("name")]
+        except Exception as e:
+            logger.debug(f"Could not read supported action targets for {action_type_qualified_name}: {e}")
+            return []
+
     async def _async_initiate_survey(
             self,
             survey_name: str,
             resource_guid: str,
             request_parameters: dict = None,
+            action_target_name: Optional[str] = None,
     ) -> str:
         """Initiate a survey of a resource.
 
@@ -3443,6 +3465,10 @@ class AutomatedCuration(ServerClient):
         request_parameters : dict, optional
             Survey-specific request parameters, e.g. `finalAnalysisStep`,
             `ignoreAnalysisSteps`, `analysisLevel`.
+        action_target_name : str, optional
+            The action target name the survey expects for the resource. If not given, it is read
+            from the survey type's declared supportedActionTarget (e.g. "postgresDatabase",
+            "fileToSurvey"); if that is missing or ambiguous, "serverToSurvey" is used.
 
         Returns
         -------
@@ -3459,6 +3485,13 @@ class AutomatedCuration(ServerClient):
         For more information see: https://egeria-project.org/concepts/survey-action-service
         """
 
+        if not action_target_name:
+            # Each survey type expects its own target name; a single hardcoded name
+            # ("serverToSurvey") was wrong for e.g. database and folder surveys.
+            # "*" means the survey accepts any name (e.g. the Kafka server survey).
+            supported = [n for n in await self._async_get_supported_action_target_names(survey_name) if n != "*"]
+            action_target_name = supported[0] if len(supported) == 1 else "serverToSurvey"
+
         url = f"{self.ref_curation_command_base}/governance-action-types/initiate"
 
         body = {
@@ -3467,7 +3500,7 @@ class AutomatedCuration(ServerClient):
             "actionTargets": [
                 {
                     "class": "NewActionTarget",
-                    "actionTargetName": "serverToSurvey",
+                    "actionTargetName": action_target_name,
                     "actionTargetGUID": resource_guid.strip(),
                 }
             ],
