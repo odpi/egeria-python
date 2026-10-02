@@ -217,8 +217,8 @@ class MainScreen(Screen):
 
     def action_bookmarks(self):
         """ Manages BookMarks for the currently logged in user
-            Note - to add a new bookmark you must first have found and copied
-            the GUID of the item you want to bookmark to the clipboard
-            as you will need to know it during the add processing"""
-        self.app.show_my_bookmarks()
+            If a table row is selected, its GUID is pre-filled as the target of a new bookmark"""
+        table_name, row_k = self.get_current_table_and_row()
+        table = self.query_one("#" + table_name, DataTable) if table_name else None
+        self.app.show_my_bookmarks(self.app.get_row_guid(table, row_k))
 

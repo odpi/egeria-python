@@ -9,6 +9,7 @@ contributors who need more depth than the top-level `README.md`/`CLAUDE.md`/
 
 | File | Covers |
 |---|---|
+| `developer_guide_pyegeria_textual.md` | Developer Guide for Python programmers new to Egeria and Textual — step-by-step examples (`examples/developer_guide/`), then My Profile, Dr.Egeria and hey_egeria as case studies. Screenshots in `images/developer-guide/`. |
 | `dr_egeria_manual.md` | The Dr.Egeria user manual — command reference, markdown authoring conventions, attribute styles. |
 | `my_profile_app_manual.md` | The My Profile App user manual — configuration, dashboard overview, keyboard shortcuts. |
 | `My-Egeria-Doc.md` | In-depth architecture, workflow flows, and sequence diagrams for My Profile / MyEgeria. |

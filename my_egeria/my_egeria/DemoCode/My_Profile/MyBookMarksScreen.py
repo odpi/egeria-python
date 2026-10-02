@@ -9,7 +9,7 @@ from textual import on
 from textual.app import ComposeResult
 from textual.containers import ScrollableContainer, Container, Horizontal
 from textual.screen import ModalScreen
-from textual.widgets import DataTable, Header, Static, Footer, Placeholder, Input, Button
+from textual.widgets import DataTable, Header, Static, Footer, Input, Button
 from pyegeria import (load_app_config,
                       settings,
                       print_basic_exception,
@@ -27,7 +27,7 @@ class MyBookMarksScreen(ModalScreen):
 
     CSS_PATH = "my_profile.tcss"
 
-    def __init__(self, my_bookmarks, *args, **kwargs):
+    def __init__(self, my_bookmarks, *args, target_guid: str | None = None, **kwargs):
         super().__init__(id="bookmark_screen", *args, **kwargs)
         self.title = "Egeria"
         self.sub_title = "My Bookmarks"
@@ -39,18 +39,21 @@ class MyBookMarksScreen(ModalScreen):
         self.view_server = app_config.egeria_view_server or "qs-view-server"
         self.platform_url = app_config.egeria_platform_url or "https://127.0.0.1:9443"
         self.my_bookmarks_data = my_bookmarks
+        # GUID of the row selected on the main screen, if any, used to pre-fill a new bookmark
+        self.target_guid = target_guid or ""
 
     def on_mount(self) -> None:
-        self.my_bookmark_table: DataTable = DataTable(id="my_bookmark_table")
-        self.my_bookmark_table.zebra_stripes=True
-        self.my_bookmark_table.cursor_type="row"
-        self.my_bookmark_table.add_columns("", "", "")
+        self.my_bookmark_table = self.query_one("#my_bookmark_table", DataTable)
+        self.my_bookmark_table.zebra_stripes = True
+        self.my_bookmark_table.cursor_type = "row"
+        self.my_bookmark_table.add_columns("Name", "Type", "GUID")
         self.log(f"Bookmark Data:{self.my_bookmarks_data}")
-        if self.my_bookmarks_data == None:
+        if not self.my_bookmarks_data:
             self.my_bookmark_table.add_row("No Bookmarks found for", self.user_name, "")
         else:
+            # Each entry is [display name, type name, GUID of the bookmarked element]
             for entry in self.my_bookmarks_data:
-                self.my_bookmark_table.add_row(entry[0], entry[1], entry[2])
+                self.my_bookmark_table.add_row(entry[0], entry[1], entry[2], key=entry[2])
 
     def compose(self) -> ComposeResult:
         yield Header(show_clock=True)
@@ -60,59 +63,67 @@ class MyBookMarksScreen(ModalScreen):
             id="bookmarks_table_container",
         )
         yield Container(
-            Placeholder(id="bookmark_guid"),
+            Static("Ctrl+N to add a bookmark, Ctrl+R to delete the highlighted bookmark", id="bookmark_guid"),
             id="action_bookmark_container"
         )
         yield Footer()
 
-    @on(DataTable.RowHighlighted, "#my_bookmarks_table")
-    def handle_row_highlighted(self, event: DataTable.RowHighlighted) -> None:
-        """ Handle the case where the user just highlights the row """
-        self.row_key = event.row_key
-
-    @on(DataTable.RowSelected, "#my_bookmarks_table")
-    def handle_row_selected(self, event: DataTable.RowSelected) -> None:
-        """ Handle the case where the user selects the row """
-        self.row_key = event.row_key
+    def selected_bookmark_guid(self) -> str:
+        """ GUID of the bookmark highlighted in the table, or "" if there isn't one """
+        table = self.query_one("#my_bookmark_table", DataTable)
+        if not self.my_bookmarks_data or not 0 <= table.cursor_row < table.row_count:
+            return ""
+        return table.coordinate_to_cell_key(table.cursor_coordinate).row_key.value or ""
 
     def action_quit(self) -> None:
         """ The user elects to quit the bookmarks function """
+        self.dismiss(200)
+
+    @on(Button.Pressed, "#quit_add_bookmark")
+    @on(Button.Pressed, "#quit_delete_bookmark")
+    def handle_quit_button(self, event: Button.Pressed) -> None:
         self.dismiss(200)
 
     def action_new_bookmark(self) -> None:
         """ The user wants to add a bookmark"""
         input_container = self.query_one("#action_bookmark_container", Container)
         input_container.remove_children()
-        input_container.mount(Input(placeholder="GUID of the target of the bookmark", id="add_bookmark_guid"))
+        input_container.mount(Input(value=self.target_guid,
+                                    placeholder="GUID of the target of the bookmark",
+                                    id="add_bookmark_guid"))
         input_container.mount(Horizontal(
                 Button("Add New Bookmark", id="add_new_bookmark", variant="primary"),
                 Button("Quit", id="quit_add_bookmark", variant="warning")))
 
     @on(Button.Pressed, "#add_new_bookmark")
     def handle_add_new_bookmark(self, event: Button.Pressed) -> None:
-        input_guid = self.query_one("#add_bookmark_guid", Input).value
-        if input_guid:
-            self.app.add_my_bookmark(input_guid)
-        else:
+        input_guid = self.query_one("#add_bookmark_guid", Input).value.strip()
+        if not input_guid:
             self.notify("You must provide the GUID of the item you want to bookmark before you press the button!",
                         timeout=10,
                         severity="warning")
+            return
+        self.app.add_my_bookmark(input_guid)
         self.dismiss(200)
 
     def action_remove_bookmark(self) -> None:
-        """ The user wants to delete a bookmark"""
+        """ The user wants to delete a bookmark, the highlighted bookmark's GUID is pre-filled """
         input_container = self.query_one("#action_bookmark_container", Container)
         input_container.remove_children()
-        input_container.mount(Input(placeholder="GUID of the bookmark to delete", id="del_bookmark_guid"))
-        input_container.mount(Button("Delete Bookmark", id="delete_bookmark", variant="primary"))
+        input_container.mount(Input(value=self.selected_bookmark_guid(),
+                                    placeholder="GUID of the bookmark to delete",
+                                    id="del_bookmark_guid"))
+        input_container.mount(Horizontal(
+                Button("Delete Bookmark", id="delete_bookmark", variant="primary"),
+                Button("Quit", id="quit_delete_bookmark", variant="warning")))
 
     @on(Button.Pressed, "#delete_bookmark")
-    def handle_add_new_bookmark(self, event: Button.Pressed) -> None:
-        input_guid = self.query_one("#del_bookmark_guid", Input).value
-        if input_guid:
-            self.app.add_my_bookmark(input_guid)
-        else:
+    def handle_delete_bookmark(self, event: Button.Pressed) -> None:
+        input_guid = self.query_one("#del_bookmark_guid", Input).value.strip()
+        if not input_guid:
             self.notify("You must provide the GUID of the bookmark you want to delete before you press the button!",
                         timeout=10,
                         severity="warning")
+            return
+        self.app.delete_my_bookmark(input_guid)
         self.dismiss(200)
