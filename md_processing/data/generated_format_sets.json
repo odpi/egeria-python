@@ -23455,592 +23455,6 @@
     "get_additional_props": null,
     "question_spec": null
   },
-  "Element-DrE-Basic": {
-    "target_type": "Element",
-    "heading": "Element-DrE-Basic Attributes",
-    "description": "Auto-generated format for Element (Create, Basic).",
-    "aliases": [],
-    "annotations": {},
-    "family": "Asset Maker",
-    "formats": [
-      {
-        "types": [
-          "LIST"
-        ],
-        "attributes": [
-          {
-            "name": "Template GUID",
-            "key": "template_guid",
-            "value": null,
-            "format": false,
-            "detail_spec": null,
-            "valid_values": []
-          },
-          {
-            "name": "Placeholder Property Values",
-            "key": "placeholder_property_values",
-            "value": null,
-            "format": false,
-            "detail_spec": null,
-            "valid_values": []
-          },
-          {
-            "name": "Template Properties",
-            "key": "template_properties",
-            "value": null,
-            "format": false,
-            "detail_spec": null,
-            "valid_values": []
-          }
-        ],
-        "columns": [
-          {
-            "name": "Template GUID",
-            "key": "template_guid",
-            "value": null,
-            "format": false,
-            "detail_spec": null,
-            "valid_values": []
-          },
-          {
-            "name": "Placeholder Property Values",
-            "key": "placeholder_property_values",
-            "value": null,
-            "format": false,
-            "detail_spec": null,
-            "valid_values": []
-          },
-          {
-            "name": "Template Properties",
-            "key": "template_properties",
-            "value": null,
-            "format": false,
-            "detail_spec": null,
-            "valid_values": []
-          }
-        ]
-      },
-      {
-        "types": [
-          "ALL"
-        ],
-        "attributes": [
-          {
-            "name": "Template GUID",
-            "key": "template_guid",
-            "value": null,
-            "format": false,
-            "detail_spec": null,
-            "valid_values": []
-          },
-          {
-            "name": "Placeholder Property Values",
-            "key": "placeholder_property_values",
-            "value": null,
-            "format": false,
-            "detail_spec": null,
-            "valid_values": []
-          },
-          {
-            "name": "Template Properties",
-            "key": "template_properties",
-            "value": null,
-            "format": false,
-            "detail_spec": null,
-            "valid_values": []
-          }
-        ],
-        "columns": [
-          {
-            "name": "Template GUID",
-            "key": "template_guid",
-            "value": null,
-            "format": false,
-            "detail_spec": null,
-            "valid_values": []
-          },
-          {
-            "name": "Placeholder Property Values",
-            "key": "placeholder_property_values",
-            "value": null,
-            "format": false,
-            "detail_spec": null,
-            "valid_values": []
-          },
-          {
-            "name": "Template Properties",
-            "key": "template_properties",
-            "value": null,
-            "format": false,
-            "detail_spec": null,
-            "valid_values": []
-          }
-        ]
-      }
-    ],
-    "action": {
-      "function": "MetadataExpert.find_metadata_elements_with_string",
-      "required_params": [
-        "search_string"
-      ],
-      "optional_params": [
-        "sequencing_order",
-        "sequencing_property",
-        "page_size",
-        "start_from",
-        "starts_with",
-        "ends_with",
-        "ignore_case",
-        "classification_names",
-        "metadata_element_subtypes",
-        "metadata_element_type"
-      ],
-      "spec_params": {},
-      "analytic_function": null,
-      "analytic_spec_params": {}
-    },
-    "get_additional_props": null,
-    "question_spec": null
-  },
-  "Element-DrE-Advanced": {
-    "target_type": "Element",
-    "heading": "Element-DrE-Advanced Attributes",
-    "description": "Auto-generated format for Element (Create, Advanced).",
-    "aliases": [],
-    "annotations": {},
-    "family": "Asset Maker",
-    "formats": [
-      {
-        "types": [
-          "LIST"
-        ],
-        "attributes": [
-          {
-            "name": "Element Type Name",
-            "key": "type_name",
-            "value": null,
-            "format": false,
-            "detail_spec": null,
-            "valid_values": []
-          },
-          {
-            "name": "Template GUID",
-            "key": "template_guid",
-            "value": null,
-            "format": false,
-            "detail_spec": null,
-            "valid_values": []
-          },
-          {
-            "name": "Placeholder Property Values",
-            "key": "placeholder_property_values",
-            "value": null,
-            "format": false,
-            "detail_spec": null,
-            "valid_values": []
-          },
-          {
-            "name": "Template Properties",
-            "key": "template_properties",
-            "value": null,
-            "format": false,
-            "detail_spec": null,
-            "valid_values": []
-          },
-          {
-            "name": "Generic Initial Classifications",
-            "key": "initial_classifications",
-            "value": null,
-            "format": false,
-            "detail_spec": null,
-            "valid_values": []
-          },
-          {
-            "name": "Is Own Anchor",
-            "key": "is_own_anchor",
-            "value": null,
-            "format": false,
-            "detail_spec": null,
-            "valid_values": []
-          },
-          {
-            "name": "Effective From",
-            "key": "effective_from",
-            "value": null,
-            "format": false,
-            "detail_spec": null,
-            "valid_values": []
-          },
-          {
-            "name": "Effective To",
-            "key": "effective_to",
-            "value": null,
-            "format": false,
-            "detail_spec": null,
-            "valid_values": []
-          },
-          {
-            "name": "Effective Time",
-            "key": "effective_time",
-            "value": null,
-            "format": false,
-            "detail_spec": null,
-            "valid_values": []
-          },
-          {
-            "name": "Deep Copy",
-            "key": "deep_copy",
-            "value": null,
-            "format": false,
-            "detail_spec": null,
-            "valid_values": []
-          },
-          {
-            "name": "Initial Status",
-            "key": "initial_status",
-            "value": null,
-            "format": false,
-            "detail_spec": null,
-            "valid_values": [
-              "ACTIVE",
-              "DRAFT",
-              "PREPARED",
-              "PROPOSED",
-              "APPROVED",
-              "REJECTED",
-              "DEPRECATED",
-              "OTHER"
-            ]
-          }
-        ],
-        "columns": [
-          {
-            "name": "Element Type Name",
-            "key": "type_name",
-            "value": null,
-            "format": false,
-            "detail_spec": null,
-            "valid_values": []
-          },
-          {
-            "name": "Template GUID",
-            "key": "template_guid",
-            "value": null,
-            "format": false,
-            "detail_spec": null,
-            "valid_values": []
-          },
-          {
-            "name": "Placeholder Property Values",
-            "key": "placeholder_property_values",
-            "value": null,
-            "format": false,
-            "detail_spec": null,
-            "valid_values": []
-          },
-          {
-            "name": "Template Properties",
-            "key": "template_properties",
-            "value": null,
-            "format": false,
-            "detail_spec": null,
-            "valid_values": []
-          },
-          {
-            "name": "Generic Initial Classifications",
-            "key": "initial_classifications",
-            "value": null,
-            "format": false,
-            "detail_spec": null,
-            "valid_values": []
-          },
-          {
-            "name": "Is Own Anchor",
-            "key": "is_own_anchor",
-            "value": null,
-            "format": false,
-            "detail_spec": null,
-            "valid_values": []
-          },
-          {
-            "name": "Effective From",
-            "key": "effective_from",
-            "value": null,
-            "format": false,
-            "detail_spec": null,
-            "valid_values": []
-          },
-          {
-            "name": "Effective To",
-            "key": "effective_to",
-            "value": null,
-            "format": false,
-            "detail_spec": null,
-            "valid_values": []
-          },
-          {
-            "name": "Effective Time",
-            "key": "effective_time",
-            "value": null,
-            "format": false,
-            "detail_spec": null,
-            "valid_values": []
-          },
-          {
-            "name": "Deep Copy",
-            "key": "deep_copy",
-            "value": null,
-            "format": false,
-            "detail_spec": null,
-            "valid_values": []
-          },
-          {
-            "name": "Initial Status",
-            "key": "initial_status",
-            "value": null,
-            "format": false,
-            "detail_spec": null,
-            "valid_values": [
-              "ACTIVE",
-              "DRAFT",
-              "PREPARED",
-              "PROPOSED",
-              "APPROVED",
-              "REJECTED",
-              "DEPRECATED",
-              "OTHER"
-            ]
-          }
-        ]
-      },
-      {
-        "types": [
-          "ALL"
-        ],
-        "attributes": [
-          {
-            "name": "Element Type Name",
-            "key": "type_name",
-            "value": null,
-            "format": false,
-            "detail_spec": null,
-            "valid_values": []
-          },
-          {
-            "name": "Template GUID",
-            "key": "template_guid",
-            "value": null,
-            "format": false,
-            "detail_spec": null,
-            "valid_values": []
-          },
-          {
-            "name": "Placeholder Property Values",
-            "key": "placeholder_property_values",
-            "value": null,
-            "format": false,
-            "detail_spec": null,
-            "valid_values": []
-          },
-          {
-            "name": "Template Properties",
-            "key": "template_properties",
-            "value": null,
-            "format": false,
-            "detail_spec": null,
-            "valid_values": []
-          },
-          {
-            "name": "Initial Status",
-            "key": "initial_status",
-            "value": null,
-            "format": false,
-            "detail_spec": null,
-            "valid_values": [
-              "ACTIVE",
-              "DRAFT",
-              "PREPARED",
-              "PROPOSED",
-              "APPROVED",
-              "REJECTED",
-              "DEPRECATED",
-              "OTHER"
-            ]
-          },
-          {
-            "name": "Generic Initial Classifications",
-            "key": "initial_classifications",
-            "value": null,
-            "format": false,
-            "detail_spec": null,
-            "valid_values": []
-          },
-          {
-            "name": "Is Own Anchor",
-            "key": "is_own_anchor",
-            "value": null,
-            "format": false,
-            "detail_spec": null,
-            "valid_values": []
-          },
-          {
-            "name": "Effective From",
-            "key": "effective_from",
-            "value": null,
-            "format": false,
-            "detail_spec": null,
-            "valid_values": []
-          },
-          {
-            "name": "Effective To",
-            "key": "effective_to",
-            "value": null,
-            "format": false,
-            "detail_spec": null,
-            "valid_values": []
-          },
-          {
-            "name": "Effective Time",
-            "key": "effective_time",
-            "value": null,
-            "format": false,
-            "detail_spec": null,
-            "valid_values": []
-          },
-          {
-            "name": "Deep Copy",
-            "key": "deep_copy",
-            "value": null,
-            "format": false,
-            "detail_spec": null,
-            "valid_values": []
-          }
-        ],
-        "columns": [
-          {
-            "name": "Element Type Name",
-            "key": "type_name",
-            "value": null,
-            "format": false,
-            "detail_spec": null,
-            "valid_values": []
-          },
-          {
-            "name": "Template GUID",
-            "key": "template_guid",
-            "value": null,
-            "format": false,
-            "detail_spec": null,
-            "valid_values": []
-          },
-          {
-            "name": "Placeholder Property Values",
-            "key": "placeholder_property_values",
-            "value": null,
-            "format": false,
-            "detail_spec": null,
-            "valid_values": []
-          },
-          {
-            "name": "Template Properties",
-            "key": "template_properties",
-            "value": null,
-            "format": false,
-            "detail_spec": null,
-            "valid_values": []
-          },
-          {
-            "name": "Initial Status",
-            "key": "initial_status",
-            "value": null,
-            "format": false,
-            "detail_spec": null,
-            "valid_values": [
-              "ACTIVE",
-              "DRAFT",
-              "PREPARED",
-              "PROPOSED",
-              "APPROVED",
-              "REJECTED",
-              "DEPRECATED",
-              "OTHER"
-            ]
-          },
-          {
-            "name": "Generic Initial Classifications",
-            "key": "initial_classifications",
-            "value": null,
-            "format": false,
-            "detail_spec": null,
-            "valid_values": []
-          },
-          {
-            "name": "Is Own Anchor",
-            "key": "is_own_anchor",
-            "value": null,
-            "format": false,
-            "detail_spec": null,
-            "valid_values": []
-          },
-          {
-            "name": "Effective From",
-            "key": "effective_from",
-            "value": null,
-            "format": false,
-            "detail_spec": null,
-            "valid_values": []
-          },
-          {
-            "name": "Effective To",
-            "key": "effective_to",
-            "value": null,
-            "format": false,
-            "detail_spec": null,
-            "valid_values": []
-          },
-          {
-            "name": "Effective Time",
-            "key": "effective_time",
-            "value": null,
-            "format": false,
-            "detail_spec": null,
-            "valid_values": []
-          },
-          {
-            "name": "Deep Copy",
-            "key": "deep_copy",
-            "value": null,
-            "format": false,
-            "detail_spec": null,
-            "valid_values": []
-          }
-        ]
-      }
-    ],
-    "action": {
-      "function": "MetadataExpert.find_metadata_elements_with_string",
-      "required_params": [
-        "search_string"
-      ],
-      "optional_params": [
-        "sequencing_order",
-        "sequencing_property",
-        "page_size",
-        "start_from",
-        "starts_with",
-        "ends_with",
-        "ignore_case",
-        "classification_names",
-        "metadata_element_subtypes",
-        "metadata_element_type"
-      ],
-      "spec_params": {},
-      "analytic_function": null,
-      "analytic_spec_params": {}
-    },
-    "get_additional_props": null,
-    "question_spec": null
-  },
   "Secrets-Store-Element-DrE-Basic": {
     "target_type": "Secrets Store Element",
     "heading": "Secrets-Store-Element-DrE-Basic Attributes",
@@ -30145,6 +29559,592 @@
           {
             "name": "Version Identifier",
             "key": "version_identifier",
+            "value": null,
+            "format": false,
+            "detail_spec": null,
+            "valid_values": []
+          }
+        ]
+      }
+    ],
+    "action": {
+      "function": "MetadataExpert.find_metadata_elements_with_string",
+      "required_params": [
+        "search_string"
+      ],
+      "optional_params": [
+        "sequencing_order",
+        "sequencing_property",
+        "page_size",
+        "start_from",
+        "starts_with",
+        "ends_with",
+        "ignore_case",
+        "classification_names",
+        "metadata_element_subtypes",
+        "metadata_element_type"
+      ],
+      "spec_params": {},
+      "analytic_function": null,
+      "analytic_spec_params": {}
+    },
+    "get_additional_props": null,
+    "question_spec": null
+  },
+  "Element-DrE-Basic": {
+    "target_type": "Element",
+    "heading": "Element-DrE-Basic Attributes",
+    "description": "Auto-generated format for Element (Create, Basic).",
+    "aliases": [],
+    "annotations": {},
+    "family": "Automation",
+    "formats": [
+      {
+        "types": [
+          "LIST"
+        ],
+        "attributes": [
+          {
+            "name": "Template GUID",
+            "key": "template_guid",
+            "value": null,
+            "format": false,
+            "detail_spec": null,
+            "valid_values": []
+          },
+          {
+            "name": "Placeholder Property Values",
+            "key": "placeholder_property_values",
+            "value": null,
+            "format": false,
+            "detail_spec": null,
+            "valid_values": []
+          },
+          {
+            "name": "Template Properties",
+            "key": "template_properties",
+            "value": null,
+            "format": false,
+            "detail_spec": null,
+            "valid_values": []
+          }
+        ],
+        "columns": [
+          {
+            "name": "Template GUID",
+            "key": "template_guid",
+            "value": null,
+            "format": false,
+            "detail_spec": null,
+            "valid_values": []
+          },
+          {
+            "name": "Placeholder Property Values",
+            "key": "placeholder_property_values",
+            "value": null,
+            "format": false,
+            "detail_spec": null,
+            "valid_values": []
+          },
+          {
+            "name": "Template Properties",
+            "key": "template_properties",
+            "value": null,
+            "format": false,
+            "detail_spec": null,
+            "valid_values": []
+          }
+        ]
+      },
+      {
+        "types": [
+          "ALL"
+        ],
+        "attributes": [
+          {
+            "name": "Template GUID",
+            "key": "template_guid",
+            "value": null,
+            "format": false,
+            "detail_spec": null,
+            "valid_values": []
+          },
+          {
+            "name": "Placeholder Property Values",
+            "key": "placeholder_property_values",
+            "value": null,
+            "format": false,
+            "detail_spec": null,
+            "valid_values": []
+          },
+          {
+            "name": "Template Properties",
+            "key": "template_properties",
+            "value": null,
+            "format": false,
+            "detail_spec": null,
+            "valid_values": []
+          }
+        ],
+        "columns": [
+          {
+            "name": "Template GUID",
+            "key": "template_guid",
+            "value": null,
+            "format": false,
+            "detail_spec": null,
+            "valid_values": []
+          },
+          {
+            "name": "Placeholder Property Values",
+            "key": "placeholder_property_values",
+            "value": null,
+            "format": false,
+            "detail_spec": null,
+            "valid_values": []
+          },
+          {
+            "name": "Template Properties",
+            "key": "template_properties",
+            "value": null,
+            "format": false,
+            "detail_spec": null,
+            "valid_values": []
+          }
+        ]
+      }
+    ],
+    "action": {
+      "function": "MetadataExpert.find_metadata_elements_with_string",
+      "required_params": [
+        "search_string"
+      ],
+      "optional_params": [
+        "sequencing_order",
+        "sequencing_property",
+        "page_size",
+        "start_from",
+        "starts_with",
+        "ends_with",
+        "ignore_case",
+        "classification_names",
+        "metadata_element_subtypes",
+        "metadata_element_type"
+      ],
+      "spec_params": {},
+      "analytic_function": null,
+      "analytic_spec_params": {}
+    },
+    "get_additional_props": null,
+    "question_spec": null
+  },
+  "Element-DrE-Advanced": {
+    "target_type": "Element",
+    "heading": "Element-DrE-Advanced Attributes",
+    "description": "Auto-generated format for Element (Create, Advanced).",
+    "aliases": [],
+    "annotations": {},
+    "family": "Automation",
+    "formats": [
+      {
+        "types": [
+          "LIST"
+        ],
+        "attributes": [
+          {
+            "name": "Element Type Name",
+            "key": "type_name",
+            "value": null,
+            "format": false,
+            "detail_spec": null,
+            "valid_values": []
+          },
+          {
+            "name": "Template GUID",
+            "key": "template_guid",
+            "value": null,
+            "format": false,
+            "detail_spec": null,
+            "valid_values": []
+          },
+          {
+            "name": "Placeholder Property Values",
+            "key": "placeholder_property_values",
+            "value": null,
+            "format": false,
+            "detail_spec": null,
+            "valid_values": []
+          },
+          {
+            "name": "Template Properties",
+            "key": "template_properties",
+            "value": null,
+            "format": false,
+            "detail_spec": null,
+            "valid_values": []
+          },
+          {
+            "name": "Generic Initial Classifications",
+            "key": "initial_classifications",
+            "value": null,
+            "format": false,
+            "detail_spec": null,
+            "valid_values": []
+          },
+          {
+            "name": "Is Own Anchor",
+            "key": "is_own_anchor",
+            "value": null,
+            "format": false,
+            "detail_spec": null,
+            "valid_values": []
+          },
+          {
+            "name": "Effective From",
+            "key": "effective_from",
+            "value": null,
+            "format": false,
+            "detail_spec": null,
+            "valid_values": []
+          },
+          {
+            "name": "Effective To",
+            "key": "effective_to",
+            "value": null,
+            "format": false,
+            "detail_spec": null,
+            "valid_values": []
+          },
+          {
+            "name": "Effective Time",
+            "key": "effective_time",
+            "value": null,
+            "format": false,
+            "detail_spec": null,
+            "valid_values": []
+          },
+          {
+            "name": "Deep Copy",
+            "key": "deep_copy",
+            "value": null,
+            "format": false,
+            "detail_spec": null,
+            "valid_values": []
+          },
+          {
+            "name": "Initial Status",
+            "key": "initial_status",
+            "value": null,
+            "format": false,
+            "detail_spec": null,
+            "valid_values": [
+              "ACTIVE",
+              "DRAFT",
+              "PREPARED",
+              "PROPOSED",
+              "APPROVED",
+              "REJECTED",
+              "DEPRECATED",
+              "OTHER"
+            ]
+          }
+        ],
+        "columns": [
+          {
+            "name": "Element Type Name",
+            "key": "type_name",
+            "value": null,
+            "format": false,
+            "detail_spec": null,
+            "valid_values": []
+          },
+          {
+            "name": "Template GUID",
+            "key": "template_guid",
+            "value": null,
+            "format": false,
+            "detail_spec": null,
+            "valid_values": []
+          },
+          {
+            "name": "Placeholder Property Values",
+            "key": "placeholder_property_values",
+            "value": null,
+            "format": false,
+            "detail_spec": null,
+            "valid_values": []
+          },
+          {
+            "name": "Template Properties",
+            "key": "template_properties",
+            "value": null,
+            "format": false,
+            "detail_spec": null,
+            "valid_values": []
+          },
+          {
+            "name": "Generic Initial Classifications",
+            "key": "initial_classifications",
+            "value": null,
+            "format": false,
+            "detail_spec": null,
+            "valid_values": []
+          },
+          {
+            "name": "Is Own Anchor",
+            "key": "is_own_anchor",
+            "value": null,
+            "format": false,
+            "detail_spec": null,
+            "valid_values": []
+          },
+          {
+            "name": "Effective From",
+            "key": "effective_from",
+            "value": null,
+            "format": false,
+            "detail_spec": null,
+            "valid_values": []
+          },
+          {
+            "name": "Effective To",
+            "key": "effective_to",
+            "value": null,
+            "format": false,
+            "detail_spec": null,
+            "valid_values": []
+          },
+          {
+            "name": "Effective Time",
+            "key": "effective_time",
+            "value": null,
+            "format": false,
+            "detail_spec": null,
+            "valid_values": []
+          },
+          {
+            "name": "Deep Copy",
+            "key": "deep_copy",
+            "value": null,
+            "format": false,
+            "detail_spec": null,
+            "valid_values": []
+          },
+          {
+            "name": "Initial Status",
+            "key": "initial_status",
+            "value": null,
+            "format": false,
+            "detail_spec": null,
+            "valid_values": [
+              "ACTIVE",
+              "DRAFT",
+              "PREPARED",
+              "PROPOSED",
+              "APPROVED",
+              "REJECTED",
+              "DEPRECATED",
+              "OTHER"
+            ]
+          }
+        ]
+      },
+      {
+        "types": [
+          "ALL"
+        ],
+        "attributes": [
+          {
+            "name": "Element Type Name",
+            "key": "type_name",
+            "value": null,
+            "format": false,
+            "detail_spec": null,
+            "valid_values": []
+          },
+          {
+            "name": "Template GUID",
+            "key": "template_guid",
+            "value": null,
+            "format": false,
+            "detail_spec": null,
+            "valid_values": []
+          },
+          {
+            "name": "Placeholder Property Values",
+            "key": "placeholder_property_values",
+            "value": null,
+            "format": false,
+            "detail_spec": null,
+            "valid_values": []
+          },
+          {
+            "name": "Template Properties",
+            "key": "template_properties",
+            "value": null,
+            "format": false,
+            "detail_spec": null,
+            "valid_values": []
+          },
+          {
+            "name": "Initial Status",
+            "key": "initial_status",
+            "value": null,
+            "format": false,
+            "detail_spec": null,
+            "valid_values": [
+              "ACTIVE",
+              "DRAFT",
+              "PREPARED",
+              "PROPOSED",
+              "APPROVED",
+              "REJECTED",
+              "DEPRECATED",
+              "OTHER"
+            ]
+          },
+          {
+            "name": "Generic Initial Classifications",
+            "key": "initial_classifications",
+            "value": null,
+            "format": false,
+            "detail_spec": null,
+            "valid_values": []
+          },
+          {
+            "name": "Is Own Anchor",
+            "key": "is_own_anchor",
+            "value": null,
+            "format": false,
+            "detail_spec": null,
+            "valid_values": []
+          },
+          {
+            "name": "Effective From",
+            "key": "effective_from",
+            "value": null,
+            "format": false,
+            "detail_spec": null,
+            "valid_values": []
+          },
+          {
+            "name": "Effective To",
+            "key": "effective_to",
+            "value": null,
+            "format": false,
+            "detail_spec": null,
+            "valid_values": []
+          },
+          {
+            "name": "Effective Time",
+            "key": "effective_time",
+            "value": null,
+            "format": false,
+            "detail_spec": null,
+            "valid_values": []
+          },
+          {
+            "name": "Deep Copy",
+            "key": "deep_copy",
+            "value": null,
+            "format": false,
+            "detail_spec": null,
+            "valid_values": []
+          }
+        ],
+        "columns": [
+          {
+            "name": "Element Type Name",
+            "key": "type_name",
+            "value": null,
+            "format": false,
+            "detail_spec": null,
+            "valid_values": []
+          },
+          {
+            "name": "Template GUID",
+            "key": "template_guid",
+            "value": null,
+            "format": false,
+            "detail_spec": null,
+            "valid_values": []
+          },
+          {
+            "name": "Placeholder Property Values",
+            "key": "placeholder_property_values",
+            "value": null,
+            "format": false,
+            "detail_spec": null,
+            "valid_values": []
+          },
+          {
+            "name": "Template Properties",
+            "key": "template_properties",
+            "value": null,
+            "format": false,
+            "detail_spec": null,
+            "valid_values": []
+          },
+          {
+            "name": "Initial Status",
+            "key": "initial_status",
+            "value": null,
+            "format": false,
+            "detail_spec": null,
+            "valid_values": [
+              "ACTIVE",
+              "DRAFT",
+              "PREPARED",
+              "PROPOSED",
+              "APPROVED",
+              "REJECTED",
+              "DEPRECATED",
+              "OTHER"
+            ]
+          },
+          {
+            "name": "Generic Initial Classifications",
+            "key": "initial_classifications",
+            "value": null,
+            "format": false,
+            "detail_spec": null,
+            "valid_values": []
+          },
+          {
+            "name": "Is Own Anchor",
+            "key": "is_own_anchor",
+            "value": null,
+            "format": false,
+            "detail_spec": null,
+            "valid_values": []
+          },
+          {
+            "name": "Effective From",
+            "key": "effective_from",
+            "value": null,
+            "format": false,
+            "detail_spec": null,
+            "valid_values": []
+          },
+          {
+            "name": "Effective To",
+            "key": "effective_to",
+            "value": null,
+            "format": false,
+            "detail_spec": null,
+            "valid_values": []
+          },
+          {
+            "name": "Effective Time",
+            "key": "effective_time",
+            "value": null,
+            "format": false,
+            "detail_spec": null,
+            "valid_values": []
+          },
+          {
+            "name": "Deep Copy",
+            "key": "deep_copy",
             "value": null,
             "format": false,
             "detail_spec": null,

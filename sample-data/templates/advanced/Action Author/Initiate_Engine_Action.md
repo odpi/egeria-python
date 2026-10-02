@@ -124,7 +124,7 @@ ___
 
 >	**Attribute Type**: Dictionary
 
->	**Description**: Parameters to pass to the governance service when this step executes.
+>	**Description**: Name: value parameters passed to the governance service(s) that run.
 
 >	| Parameter Name | Parameter Value |
 >	|---|---|
@@ -404,7 +404,7 @@ ___
 
 >	**Attribute Type**: Reference Name List
 
->	**Description**: Elements that triggered/requested this engine action.
+>	**Description**: Elements that caused or requested the action.
 
 
 ### Received Guards

@@ -116,3 +116,47 @@ def extract_glossary_terms(text: str) -> list[str]:
     pattern = r"GlossaryTerm::([^,\']+)"
     matches = re.findall(pattern, text)
     return [match.strip() for match in matches]
+
+
+def element_summary(element: Any) -> dict[str, str]:
+    """Flatten a raw (JSON-format) Egeria element into the fields the app's tables show.
+
+    Accepts either an element itself or a relationship result that wraps one in
+    'relatedElement' (as collection-member queries may return).
+    """
+    if not isinstance(element, dict):
+        return {}
+    inner = element.get("relatedElement") if isinstance(element.get("relatedElement"), dict) else element
+    header = inner.get("elementHeader") or {}
+    props = inner.get("properties") or {}
+    versions = header.get("versions") or {}
+    element_type = header.get("type") or {}
+    return {
+        "guid": str(header.get("guid") or ""),
+        "name": str(props.get("displayName") or props.get("name") or props.get("qualifiedName") or ""),
+        "description": str(props.get("description") or ""),
+        "qualified_name": str(props.get("qualifiedName") or ""),
+        "type": str(element_type.get("typeName") or ""),
+        "created_by": str(versions.get("createdBy") or ""),
+    }
+
+
+def row_identity(table: Any, row_key: Any) -> tuple[str, str]:
+    """(GUID, qualified name) of a DataTable row, read from its columns; either may be "".
+
+    A GUID column is one labelled "GUID" or ending " GUID" (e.g. "Collection GUID").
+    """
+    guid = qualified_name = ""
+    try:
+        values = table.get_row(row_key)
+    except Exception:
+        return "", ""
+    for index, column in enumerate(table.columns.values()):
+        if index >= len(values):
+            break
+        label = column.label.plain.strip()
+        if not guid and (label == "GUID" or label.endswith(" GUID")):
+            guid = str(values[index] or "").strip()
+        elif not qualified_name and label == "Qualified Name":
+            qualified_name = str(values[index] or "").strip()
+    return guid, qualified_name

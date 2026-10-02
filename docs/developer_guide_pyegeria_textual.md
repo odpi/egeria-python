@@ -526,11 +526,11 @@ All files are in
 
 | File(s) | Role |
 |---|---|
-| `my_profile_app.py` | The `App` subclass, `MyProfileApp`: startup, loading the profile, filling the main tables, and the shared actions (comments, bookmarks). |
+| `my_profile_app.py` | The `App` subclass, `MyProfileApp`: startup, loading the profile, filling the main tables, and shared actions such as comments. |
 | `MainScreen.py` | The main dashboard screen: its layout, and keeping track of which table and row are selected. |
 | `*Screen.py`, `*Screens.py` | One class per screen or dialog: `SplashScreen`, `ShopForDataScreen`, `MyBookMarksScreen`, `AddCommentScreen`, the `Edit*`/`Add*` screens, and so on. |
-| `*_handler.py` | **Mixins**, each holding one feature area's logic: `shop_for_data_handler.py`, `tech_types_handler.py`, `team_roles_handler.py`, `elements_crud_handler.py`, `feedback_handler.py`. |
-| `profile_utils.py` | Plain functions with no UI code: data clean-up and the environment check. |
+| `*_handler.py` | **Mixins**, each holding one feature area's logic: `shop_for_data_handler.py`, `tech_types_handler.py`, `team_roles_handler.py`, `elements_crud_handler.py`, `feedback_handler.py`, `bookmarks_handler.py`. |
+| `profile_utils.py` | Plain functions with no UI code: data clean-up, flattening Egeria elements (`element_summary`), reading a row's GUID and qualified name (`row_identity`), and the environment check. |
 | `my_profile.tcss` | All the Textual CSS for the app. |
 | `RETURN_CODES.md` | The catalogue of numeric codes that screens pass back through `dismiss()`. |
 
@@ -539,7 +539,8 @@ Two design choices keep `my_profile_app.py` manageable.
 **Feature logic lives in mixins.** The app class is assembled from them:
 
 ```python
-class MyProfileApp(App, TechTypesMixin, ShopForDataMixin, TeamRolesMixin, ElementsCrudMixin, FeedbackMixin):
+class MyProfileApp(App, TechTypesMixin, ShopForDataMixin, TeamRolesMixin, ElementsCrudMixin, FeedbackMixin,
+                   BookmarksMixin):
 ```
 
 Each mixin adds the methods for one feature. For example, `ShopForDataMixin` adds
@@ -654,8 +655,8 @@ That is the second of the two standard worker patterns, so you now have both:
 ### 7.5 Acting on the selected row
 
 My Profile lets the user act on "the selected row" from several places: add a comment
-(Ctrl+A), show comments (Ctrl+S), edit (Ctrl+T) and bookmark (Ctrl+B). Two problems need
-solving.
+(Ctrl+A), show comments (Ctrl+S), edit (Ctrl+T), bookmark it (Ctrl+K) and open bookmarks with
+its GUID ready to add (Ctrl+B). Two problems need solving.
 
 **Which row is selected?** `MainScreen` records the table and row whenever the user
 highlights, selects or focuses one, by handling `DataTable.RowHighlighted`,
@@ -680,48 +681,47 @@ recorded selection:
 ```
 
 **What is that row's GUID?** The tables don't all use the GUID as the row key, so the app
-finds it by column heading instead. Any heading that ends in "GUID" counts, which also covers
-"Collection GUID". Some tables, such as Shop for Data's glossary table (built from the
-`Glossaries` report spec, which has no GUID column), have no GUID column at all. For those, the
-app looks the GUID up from the row's qualified name with `get_element_guid_by_unique_name`:
+finds it by column heading instead. `profile_utils.row_identity(table, row_key)` returns the
+row's GUID (from a column headed "GUID", or ending " GUID" such as "Collection GUID") and its
+qualified name. Some tables, such as Shop for Data's glossary table (built from the
+`Glossaries` report spec, which has no GUID column), only have the qualified name. For those,
+`BookmarksMixin.get_row_guid` asks Egeria for the GUID:
 
 ```python
-    def get_row_guid(self, table: DataTable | None, row_key) -> str | None:
+    def get_row_guid(self, table: Any, row_key: Any) -> str | None:
         if table is None or row_key is None:
             return None
+        guid, qualified_name = row_identity(table, row_key)
+        if guid or not qualified_name:
+            return guid or None
+        client = None
         try:
-            columns = {column.label.plain: key for key, column in table.columns.items()}
-            for heading, key in columns.items():
-                if heading.endswith("GUID"):
-                    guid = str(table.get_cell(row_key, key) or "").strip()
-                    return guid or None
-            if "Qualified Name" not in columns:
-                return None
-            qualified_name = str(table.get_cell(row_key, columns["Qualified Name"]) or "").strip()
-        except Exception as e:
-            ...
-            return None
+            client = self._bookmarks_client()
+            resolved = client.get_guid_for_name(qualified_name)
+            # "No elements found" is returned, rather than an exception, when nothing matches
+            return resolved if isinstance(resolved, str) and resolved and "No " not in resolved else None
         ...
-        eclient = Egeria(self.view_server, self.platform_url, self.user_name, self.user_password)
-        eclient.create_egeria_bearer_token(self.user_name, self.user_password)
-        guid = eclient.get_element_guid_by_unique_name(qualified_name)
 ```
 
 Because `get_row_guid` takes the table itself, not a table name on one particular screen, any
-screen can use it. Both `MainScreen.action_bookmarks` and `ShopForDataScreen.action_bookmarks`
-reduce to: find the table and row, then
-`self.app.show_my_bookmarks(self.app.get_row_guid(table, row_key))`. The bookmark screen
-receives the GUID as `target_guid` and pre-fills its input with it, just as Step 3 did:
+screen can use it, and each key binding is a few lines:
+
+- **Ctrl+K** on the main screen, or **k** on Shop for Data, calls
+  `self.app.bookmark_table_row(table, row_key)`, which bookmarks the row straight away.
+- **Ctrl+B** calls `self.app.show_my_bookmarks(self.app.get_row_guid(table, row_key))`. The
+  bookmark screen receives the GUID as `target_guid` and pre-fills its input with it, just as
+  Step 3 did:
 
 ![Bookmark screen, opened with Ctrl+B from the Shop for Data glossary table, with the GUID filled in](images/developer-guide/my_profile_bookmark_prefilled.svg)
 
-**The lesson:** put "how do I identify the selected element" in one app-level helper, and make
+**The lesson:** put "how do I identify the selected element" in one shared helper, and make
 each screen's key binding a few lines that call it.
 
 **Where the bookmarks are kept.** Egeria has no special "bookmark" type, so My Profile uses
 ordinary building blocks. Each user has a private collection with the qualified name
 `Bookmarks::<user id>`, and each bookmark is a member of that collection. The collection is
-created the first time the user adds a bookmark. A single `create_collection` call also
+created the first time the user adds a bookmark, by `BookmarksMixin` in `bookmarks_handler.py`.
+A single `create_collection` call also
 *anchors* it to the user's profile and links it there with a `ResourceList` relationship:
 
 ```python
@@ -734,24 +734,24 @@ created the first time the user adds a bookmark. A single `create_collection` ca
             "parentAtEnd1": True,
             "parentRelationshipProperties": {
                 "class": "ResourceListProperties",
-                "resourceUse": self.BOOKMARKS_RESOURCE_USE,
+                "resourceUse": BOOKMARKS_RESOURCE_USE,
                 "resourceUseDescription": f"Private bookmarks for {self.user_name}",
             },
             "properties": {
                 "class": "CollectionProperties",
-                "qualifiedName": qualified_name,
-                "displayName": f"Bookmarks for {self.user_name}",
+                "qualifiedName": bookmarks_qualified_name(self.user_name),
+                "displayName": BOOKMARKS_DISPLAY_NAME,
                 ...
             },
         }
-        guid = eclient.create_collection(body=body)
+        guid = client.create_collection(body=body)
 ```
 
 After that, bookmarking is plain collection membership:
 `add_to_collection(collection_guid, element_guid)`, `get_collection_members(collection_guid)`
 and `remove_from_collection(collection_guid, element_guid)`. Because the qualified name is
 predictable, the app finds the collection again with
-`get_element_guid_by_unique_name("Bookmarks::<user id>")`, and
+`get_collections_by_name("Bookmarks::<user id>")`, and
 `get_attached_collections(profile_guid)` finds it from the profile side. The same approach
 suits any per-user list (reading lists, watched items): a well-known qualified name, anchored
 to and linked from the profile.

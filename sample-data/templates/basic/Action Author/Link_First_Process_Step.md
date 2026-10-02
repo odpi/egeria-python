@@ -8,7 +8,7 @@ ___
 
 >	**Attribute Type**: Reference Name
 
->	**Description**: The governance action process to link.
+>	**Description**: The governance action process, identified by its qualified name, display name or GUID.
 
 
 ### Governance Action Process Step
@@ -58,7 +58,7 @@ ___
 
 >	**Attribute Type**: Dictionary
 
->	**Description**: Parameters to pass to the governance service when this step executes.
+>	**Description**: Name: value parameters passed to the governance service(s) that run.
 
 >	| Parameter Name | Parameter Value |
 >	|---|---|

@@ -1,32 +1,16 @@
 ___
 
-## Link First Process Step
-> Links a governance action process to its first governance action process step, so processing begins there when the process is triggered. There can be only one first process step per process.
+## Initiate Governance Action Type
+> Run a single governance action type: Egeria starts one engine action for it, passing the Action Targets and Request Parameters to its governance service.
 
-### Governance Action Process
+### Governance Action Type
 >	**Input Required**: True
 
 >	**Attribute Type**: Reference Name
 
->	**Description**: The governance action process, identified by its qualified name, display name or GUID.
+>	**Description**: The governance action type, identified by its qualified name, display name or GUID.
 
-
-### Governance Action Process Step
->	**Input Required**: True
-
->	**Attribute Type**: Reference Name
-
->	**Description**: The governance action process step to link.
-
-
-### Label
->	**Input Required**: False
-
->	**Attribute Type**: Simple
-
->	**Description**: A label used to identify or categorise a relationship link.
-
->	**Alternative Labels**: Wire Label
+>	**Alternative Labels**: Action Type
 
 
 ### Journal Entry
@@ -37,20 +21,16 @@ ___
 >	**Description**: A text entry into a journal.
 
 
-### Description
+### Action Targets
 >	**Input Required**: False
 
->	**Attribute Type**: Simple
+>	**Attribute Type**: Dictionary
 
->	**Description**: A description.
+>	**Description**: Elements passed to the governance service(s), one 'action target name: element' pair per line; each element is a qualified name, display name or GUID.
 
-
-### Guard
->	**Input Required**: False
-
->	**Attribute Type**: Simple
-
->	**Description**: Informational value passed to the process step; the step's behaviour may vary depending on the guard it receives.
+>	| Parameter Name | Parameter Value |
+>	|---|---|
+>	| example_key | example_value |
 
 
 ### Request Parameters
@@ -129,22 +109,12 @@ ___
 >	**Description**: A user provided or system generated request id for a conversation.
 
 
-### Anchor Scope IDs
+### Request Source Elements
 >	**Input Required**: False
 
 >	**Attribute Type**: Reference Name List
 
->	**Description**: A list of IDs that are anchor scopes for this element.
-
-
-### Make Anchor
->	**Input Required**: False
-
->	**Attribute Type**: Bool
-
->	**Description**: Is the element at end2 an anchor to end1?
-
->	**Default Value**: false
+>	**Description**: Elements that caused or requested the action.
 
 
 ___

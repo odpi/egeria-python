@@ -19,7 +19,8 @@ from pyegeria import Egeria, load_app_config, settings, PyegeriaException
 class SplashScreen(ModalScreen):
     """ SplashScreen for my_profile_app """
 
-    BINDINGS = [("escape", "app.pop_screen", "Exit")]
+    # Escape must dismiss (not pop) the screen, so that MyProfileApp.mainline still runs
+    BINDINGS = [("escape", "continue_to_app", "Continue")]
 
     CSS_PATH = "my_profile.tcss"
 
@@ -60,6 +61,9 @@ class SplashScreen(ModalScreen):
             )
         # yield Static(classes="empty")
         yield Footer()
+
+    def action_continue_to_app(self):
+        self.dismiss()
 
     @on(Button.Pressed, "#continue")
     def handle_continue(self):

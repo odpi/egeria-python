@@ -319,24 +319,17 @@ class TestShopForDataSamplingIntegration:
         assert rows[1][0] == "REC-2"
         assert "Value: Val-2" in rows[1][1]
 
-    @pytest.mark.live_capable
     @pytest.mark.asyncio
-    async def test_generic_data_view_callback_subscribe(self, backend):
-        """Calls create_digital_subscription — a real write when running live."""
-        mock_pm_cls = backend.patch("shop_for_data_handler.ProductManager")
-        if not backend.live:
-            mock_pm = MagicMock()
-            mock_pm_cls.return_value = mock_pm
-
-        app = DummyShopForDataApp(backend)
+    async def test_generic_data_view_callback_subscribe(self):
+        """Subscribe from the sample view opens the same request form as the other paths."""
+        from CreateSubscriptionRequestScreen import CreateSubscriptionRequestScreen
+        app = DummyShopForDataApp()
+        app.selected_item = "guid-prod-1"
+        app.push_screen = AsyncMock()
         await app.generic_data_view_callback([211, "Product 1", "DP::Product1"])
-
-        if backend.live:
-            # The real client is built inside the handler, so only the class
-            # construction is observable through the wrapping mock.
-            assert mock_pm_cls.called
-        else:
-            mock_pm.create_digital_subscription.assert_called_once_with("DP::Product1")
+        screen = app.push_screen.call_args.args[0]
+        assert isinstance(screen, CreateSubscriptionRequestScreen)
+        assert app.push_screen.call_args.kwargs["callback"] == app.create_subscription_callback
 
     @pytest.mark.asyncio
     async def test_generic_data_view_callback_quit(self):
