@@ -6,6 +6,7 @@
 """
 
 import sys
+import time
 import asyncio
 from pathlib import Path
 from typing import Any
@@ -916,33 +917,65 @@ class ShopForDataMixin():
             or ""
         ) if isinstance(result, dict) else (self.selected_item if hasattr(self, "selected_item") else "")
 
+        self._create_subscription(display_name, description, identifier, status, item_guid)
+
+    def _create_subscription(self, display_name: str, description: str, identifier: str,
+                             status: str, item_guid: str) -> str | None:
+        """Create a digital subscription to item_guid, owned by the current user.
+
+        The subscription is linked to the item (AgreementItem) and to the user's profile
+        (DigitalSubscriber). Returns the subscription GUID, or None if it couldn't be created.
+        """
+        display_name = display_name or f"Subscription to {item_guid}"
         body = {
             "class": "NewElementRequestBody",
             "isOwnAnchor": True,
-            "anchorScopeGUID": None,
-            "parentGUID": None,
-            "parentRelationshipTypeName": "CollectionMembership",
-            "parentAtEnd1": False,
             "properties": {
                 "class": "DigitalSubscriptionProperties",
-                "qualifiedName": "DigitalSubscription::" + display_name,
-                "displayName": display_name or "display name",
+                "qualifiedName": f"DigitalSubscription::{self.user_name}::{display_name}::{int(time.time())}",
+                "displayName": display_name,
                 "description": description,
-                "contentStatus": "ACTIVE",
+                "contentStatus": status or "DRAFT",
                 "identifier": identifier,
                 "supportLevel": "Community"
                 }
             }
-
+        s_client = None
         try:
             s_client = ProductManager(self.view_server, self.platform_url, self.user_name, self.user_password)
             s_client.create_egeria_bearer_token(self.user_name, self.user_password)
-            res = s_client.create_digital_subscription(body)
-            self.app.log(f"Created digital subscription successfully: {res}")
-            self.app.notify(f"Created digital subscription for {display_name or item_guid}")
+            subscription_guid = s_client.create_digital_subscription(body)
+            self.app.log(f"Created digital subscription successfully: {subscription_guid}")
         except Exception as e:
             self.app.log(f"Error creating digital subscription in callback: {e}")
-            self.app.notify(f"Error creating digital subscription: {e}")
+            self.app.notify(f"Error creating digital subscription: {e}", severity="error")
+            if s_client:
+                s_client.close_session()
+            return None
+
+        problems = []
+        try:
+            if item_guid:
+                s_client.link_agreement_item(agreement_guid=subscription_guid, agreement_item_guid=item_guid)
+            else:
+                problems.append("no item was selected")
+            user_guid = getattr(self, "user_GUID", "")
+            if user_guid:
+                s_client.link_subscriber(subscriber_guid=user_guid, subscription_guid=subscription_guid)
+            else:
+                problems.append("your profile GUID is unknown")
+        except Exception as e:
+            self.app.log(f"Error linking digital subscription {subscription_guid}: {e}")
+            problems.append(str(e))
+        finally:
+            s_client.close_session()
+
+        if problems:
+            self.app.notify(f"Created digital subscription {display_name}, but could not link it: "
+                            f"{'; '.join(problems)}", severity="warning")
+        else:
+            self.app.notify(f"Created digital subscription {display_name}")
+        return subscription_guid
 
     async def request_to_subscribe_data_source(
         self,
@@ -1174,15 +1207,9 @@ class ShopForDataMixin():
                 else (result[1] if len(result) > 1 and result[1] else self.selected_item)
             )
             self.app.log(f"Subscribing to data element from sample view: {element_qname}")
-            try:
-                s_client = ProductManager(self.view_server, self.platform_url, self.user_name, self.user_password)
-                s_client.create_egeria_bearer_token(self.user_name, self.user_password)
-                s_client.create_digital_subscription(element_qname)
-                self.app.notify(f"Created digital subscription for {element_qname}")
-            except Exception as e:
-                self.app.log(f"Error creating digital subscription: {e}")
-                self.app.notify(f"Error creating digital subscription: {e}")
-                await self.app.push_screen(CreateSubscriptionRequestScreen(self.selected_item), callback=self.create_subscription_callback)
+            # Same request form as the other subscribe paths, so the subscription is named and linked
+            await self.app.push_screen(CreateSubscriptionRequestScreen(self.selected_item),
+                                       callback=self.create_subscription_callback)
         elif isinstance(result, int) and result == 210:
             self.show_main_screen()
         else:

@@ -10,8 +10,6 @@ from pathlib import Path
 from typing import Any
 import asyncio
 
-from textual.containers import ScrollableContainer
-
 # Add the project root to sys.path to allow running this script from any directory
 root_path = Path(__file__).resolve().parents[4]
 if str(root_path) not in sys.path:
@@ -81,16 +79,19 @@ from profile_utils import (
     bools_to_strings,
     extract_glossary_terms,
     check_request_serialization,
+    element_summary,
 )
 from tech_types_handler import TechTypesMixin
 from shop_for_data_handler import ShopForDataMixin
 from team_roles_handler import TeamRolesMixin
 from elements_crud_handler import ElementsCrudMixin
 from feedback_handler import FeedbackMixin, FEEDBACK_LOG_OWNER
+from bookmarks_handler import BookmarksMixin, bookmarks_qualified_name
 from MyBookMarksScreen import MyBookMarksScreen
 
 
-class MyProfileApp(App, TechTypesMixin, ShopForDataMixin, TeamRolesMixin, ElementsCrudMixin, FeedbackMixin):
+class MyProfileApp(App, TechTypesMixin, ShopForDataMixin, TeamRolesMixin, ElementsCrudMixin, FeedbackMixin,
+                   BookmarksMixin):
     """My Profile App.
 
     Retrieves a user's profile from Egeria and displays current work items.
@@ -232,6 +233,10 @@ class MyProfileApp(App, TechTypesMixin, ShopForDataMixin, TeamRolesMixin, Elemen
                 self._load_task.cancel()
             self.user_name = splash_return[0]
             self.user_password = splash_return[1]
+            # Screens read the user from pyegeria's (cached) settings, so record the
+            # switch there too, or their Egeria calls would still run as the old user
+            settings.User_Profile.user_name = self.user_name
+            settings.User_Profile.user_pwd = self.user_password
             self.refresh_bindings()
             await self._load_or_create_profile()
         else:
@@ -361,6 +366,8 @@ class MyProfileApp(App, TechTypesMixin, ShopForDataMixin, TeamRolesMixin, Elemen
 
         self.log(f"my_todos_data: {self.my_todos_data}")
 
+        self.my_collections = self._load_my_collections()
+
         # User GUID — resolve self-scoped
         self.user_GUID = ""
         if isinstance(self.user_profile, dict) and self.user_profile.get("GUID"):
@@ -404,6 +411,25 @@ class MyProfileApp(App, TechTypesMixin, ShopForDataMixin, TeamRolesMixin, Elemen
             self.user_identity = self.user_identities
         else:
             self.user_identity = self.user_identities.get("User-Identities") or []
+
+    def _load_my_collections(self) -> list[dict[str, str]]:
+        """Collections created by the current user, other than their bookmarks collection."""
+        eclient = None
+        try:
+            eclient = Egeria(view_server=self.view_server, platform_url=self.platform_url,
+                             user_id=self.user_name, user_pwd=self.user_password)
+            eclient.create_egeria_bearer_token(self.user_name, self.user_password)
+            response = eclient.find_collections(search_string="*", output_format="JSON")
+        except PyegeriaException as e:
+            self.log(f"Error retrieving My Collections: {e!s}")
+            return []
+        finally:
+            if eclient:
+                eclient.close_session()
+        bookmarks_qn = bookmarks_qualified_name(self.user_name)
+        return [summary for summary in (element_summary(e) for e in (response if isinstance(response, list) else []))
+                if summary.get("created_by") == self.user_name and summary.get("guid")
+                and summary.get("qualified_name") != bookmarks_qn]
 
     def new_profile_return(self, result: int) -> None:
         """This function handles either the return from the create new profile screen or
@@ -526,6 +552,9 @@ class MyProfileApp(App, TechTypesMixin, ShopForDataMixin, TeamRolesMixin, Elemen
         self.my_collections_table.add_columns("Collection Name", "Collection Description", "Collection GUID")
         self.my_collections_table.zebra_stripes = True
         self.my_collections_table.cursor_type = "row"
+        for collection in getattr(self, "my_collections", []):
+            self.my_collections_table.add_row(
+                collection["name"], collection["description"], collection["guid"])
 
         # Populate rows
         if self.projects_table:
@@ -651,9 +680,18 @@ class MyProfileApp(App, TechTypesMixin, ShopForDataMixin, TeamRolesMixin, Elemen
             await self.action_view_feedback_log()
 
     def status_callback(self, status_callback_rc: Any) -> None:
-        """Callback routine from the status screen."""
+        """Callback routine from the status screen: the user has read the message, so carry on."""
         self.log(f"Status screen returned: {status_callback_rc}")
-        self.exit(status_callback_rc)
+        self.show_main_screen()
+
+    @on(DataTable.RowSelected, "#roles_table")
+    def _on_roles_row_selected(self, event: DataTable.RowSelected) -> None:
+        """Open the team roster for a TeamLeader/TeamMember role.
+
+        Registered here rather than on TeamRolesMixin: Textual only collects @on
+        handlers from its own classes, so a decorator on the plain mixin never fires.
+        """
+        self.handle_roles_table_row_selection(event)
 
     def show_main_screen(self) -> None:
         """Show or switch back to the main screen by unwinding the screen stack."""
@@ -728,143 +766,6 @@ class MyProfileApp(App, TechTypesMixin, ShopForDataMixin, TeamRolesMixin, Elemen
                 self.digital_product_catalog_table.loading=False
         return 200
 
-    def show_my_bookmarks(self) -> None:
-        """ Access Egeria to retrieve all bookmarks for the current user """
-        eclient = Egeria(self.view_server,
-                         self.platform_url,
-                         self.user_name,
-                         self.user_password)
-
-        # Acquire a bearer token for authentication
-        token = eclient.create_egeria_bearer_token(self.user_name, self.user_password)
-        try:
-
-            # Retrieve bookmarks for current user
-            # my_bookmarks = eclient.get_favorite_things(user_id=self.user_name)
-            # --- API call (show at minimum the required params; document optional ones) ---
-            body = {
-                "class": "SearchStringRequestBody",
-                "searchString": "*",
-                "graph_query_depth": 0,
-            }
-            response = eclient.find_locations(
-                search_string="*",
-                starts_with=False,
-                ends_with=True,  # default is False
-                ignore_case=True,  # default is True
-                metadata_element_type_name=None,  # optional; e.g. 'LocationProperties'
-                metadata_element_subtypes=[],
-                include_only_relationships=[],  # list of relationship types to include in the search results
-                skip_relationships=[],  # list of relationship types to exclude from the search results
-                graph_query_depth=0,  # default is 3; max depth for recursive query (0 = no recursion)
-                as_of_time=None,
-                start_from=1,  # offset into result set (default: 1); use -1 for "all"
-                page_size=100,  # number of items to return per call
-                sequencing_order="ASC",  # optional; e.g. 'DESC'
-                sequencing_property="",  # optional; e.g. 'qualifiedName' or a custom property name
-                output_format='DICT',  # default is json; other options: csv, xml
-                report_spec=None,
-                body=body  # the full request body for search string requests (optional)
-            )
-
-            # --- Output rendering ---
-            if isinstance(response, list):
-                self.log(f"Found {len(response)} items")
-                self.log(f"Response: {response}")
-                my_bookmarks = response[0].get("Data") or ""
-            elif isinstance(response, dict):
-                my_bookmarks = response.get("Data") or ""
-            elif isinstance(response, str):
-                self.log(f"Response: {response}")
-                self.notify(f"Response from get bookmarks:")
-                my_bookmarks = None
-            else:
-                self.log(f"Response unknown: {type(response)}, {response}")
-                my_bookmarks = None
-
-        #unless there is an errror returned from Egeria
-        except PyegeriaException as e:
-            print(f"An error occurred interacting with Egeria: {e}")
-            self.notify(f"An error occurred interacting with Egeria: {e}")
-            return
-
-        finally:
-            # 4. Canonical pattern to cleanly terminate the connection session
-            if 'eclient' in locals():
-                eclient.close_session()
-
-        self.push_screen(MyBookMarksScreen(my_bookmarks))
-
-        return
-
-    def add_my_bookmark(self, target_guid) -> None:
-        """ Add a bookmark for the user, input is the GUID of the item to bookmark """
-        self.asset_guid = target_guid
-        eclient = Egeria(self.view_server,
-                         self.platform_url,
-                         self.user_name,
-                         self.user_password)
-
-        # 2. Acquire a bearer token for authentication
-        token = eclient.create_egeria_bearer_token(self.user_name, self.user_password)
-        try:
-
-
-            self.log(f"Adding asset {self.asset_guid} to {self.user_name}'s Favorite Things Collection...")
-
-            # 3. Attach the asset to the user's bookmark collection
-            # In pyegeria, this maps directly to the underlying My Profile Open Metadata View Service
-            bookmark_relationship = eclient.add_asset_to_favorites(
-                user_id=self.user_name,
-                asset_guid=self.asset_guid
-            )
-
-            self.log("Successfully bookmarked item!")
-            self.log(f"Relationship Guid: {bookmark_relationship.get('guid')}")
-            self.notify(f"Successfully bookmarked item! Relationship Guid: {bookmark_relationship.get('guid')}")
-
-        except PyegeriaException as e:
-            print(f"An error occurred interacting with Egeria: {e}")
-
-        finally:
-            # 4. Canonical pattern to cleanly terminate the connection session
-            if 'eclient' in locals():
-                eclient.close_session()
-
-    def delete_my_bookmark(self, target_guid) -> None:
-        """ Delete a bookmark for the user, input is the GUID of the bookmark to delete  """
-        self.asset_guid = target_guid
-        eclient = Egeria(self.view_server,
-                         self.platform_url,
-                         self.user_name,
-                         self.user_password)
-
-        # 2. Acquire a bearer token for authentication
-        token = eclient.create_egeria_bearer_token(self.user_name, self.user_password)
-        try:
-
-
-            self.log(f"Adding asset {self.asset_guid} to {self.user_name}'s Favorite Things Collection...")
-
-            # 3. Attach the asset to the user's bookmark collection
-            # In pyegeria, this maps directly to the underlying My Profile Open Metadata View Service
-            eclient.remove_asset_from_favorites(
-                user_id=self.user_name,
-                asset_guid=self.asset_guid
-            )
-
-            self.log("Successfully deleted bookmark!")
-            self.log(f"Relationship Guid: {self.asset_guid}")
-            self.notify(f"Successfully deleted bookmark! Guid: {self.asset_guid}")
-
-        except PyegeriaException as e:
-            print(f"An error occurred interacting with Egeria: {e}")
-
-        finally:
-            # 4. Canonical pattern to cleanly terminate the connection session
-            if 'eclient' in locals():
-                eclient.close_session()
-
     def add_comment(self, table_name, table_row):
         self.table_name = table_name
         self.table_row = table_row
@@ -919,15 +820,15 @@ class MyProfileApp(App, TechTypesMixin, ShopForDataMixin, TeamRolesMixin, Elemen
     def add_comment_callback(self, comment_content):
         """ Process feedback from thew add comment functions and then return to main screen"""
         # If the return is an integer, then either success or failure, return to main screen
-        self.log(f"Return from Add Comment Screen: {comment_content}, length: {len(comment_content)}")
-        if isinstance(comment_content, int):
-            self.switch_screen(MainScreen())
+        self.log(f"Return from Add Comment Screen: {comment_content}")
+        # An integer return is cancel/quit (200) or no element selected (400); the
+        # main screen is already showing once AddCommentScreen has dismissed
+        if not isinstance(comment_content, (list, tuple)):
             return
         # Check that all required data has been returned (Comment, Type, and the GUID of the element the comment applies to)
         if len(comment_content) != 3:
             self.notify("Return from Add Comment Screen incomplete, please retry", severity="error", timeout=30)
             self.log(f"Return from Add Comment Screen: {comment_content}, length: {len(comment_content)}")
-            self.switch_screen(MainScreen())
             return
         # We have 3 return data items so extract them to individual variables
         self.comment = comment_content[0]
@@ -937,9 +838,9 @@ class MyProfileApp(App, TechTypesMixin, ShopForDataMixin, TeamRolesMixin, Elemen
         if not self.comment or not self.type or not self.element_guid:
             self.notify("A row must be selected and Both comment text and comment type are required!")
             self.log(f"One or more element missing: {comment_content}, length: {len(comment_content)}")
-            self.switch_screen(MainScreen())
             return
         # We have all the required data, then try to create the Egeria client
+        eclient = None
         try:
             eclient = Egeria(self.view_server,
                             self.platform_url,
@@ -965,16 +866,13 @@ class MyProfileApp(App, TechTypesMixin, ShopForDataMixin, TeamRolesMixin, Elemen
             )
             self.log(f"Comment successfully added! New Comment GUID: {response}")
             self.notify(f"Comment successfully added! New Comment GUID: {response}")
-            container = (self.query_one("#show_comments_container", ScrollableContainer))
-            container.remove_children()
         except Exception as e:
             self.log(f"Failed to add comment: {e}")
-            self.notify(f"Failed to add comment: {e} \n Please try again.")
+            self.notify(f"Failed to add comment: {e} \n Please try again.", severity="error")
             return
         finally:
             if eclient:
                 eclient.close_session()
-        self.switch_screen(MainScreen())
         return(200)
 
     # Compatibility wrappers delegating to profile_utils
@@ -1003,6 +901,10 @@ class MyProfileApp(App, TechTypesMixin, ShopForDataMixin, TeamRolesMixin, Elemen
         eclient.close_session()
         return guid
 
+def main() -> None:
+    """Entry point for the my_profile console script."""
+    MyProfileApp().run()
+
+
 if __name__ == "__main__":
-    app = MyProfileApp()
-    app.run()
+    main()

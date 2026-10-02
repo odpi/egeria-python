@@ -1316,6 +1316,36 @@ changed beyond that one status correction and this note.
 
 ---
 
+### ISSUE-115: `MyProfile.get_my_resources` always failed — its rendering hint `"Resource"` was sent as `metadataElementTypeName`
+
+**Layer:** Pyegeria · **Status:** fixed 2026-10-02 · **Found:** 2026-10-02
+(while looking for a profile-scoped way to list a user's collections for
+the My Profile app's bookmarks).
+
+**What:** every call failed with a 400 —
+`OMAG-COMMON-400-018 The type name Resource passed on method getEntityTypeGUID
+of service Open Metadata Store Services is not recognized`. `_async_get_my_resources`
+passed `_type="Resource"` to `_async_get_results_body_request`, whose default
+`filter_results_by_type=True` copies `_type` into the default request body as
+`metadataElementTypeName`. `Resource` is not an Egeria type. The ground truth
+(`Egeria-api-my-profile.http`, `getMyResources` →
+`POST .../my-profile/assigned-resources`) sends a plain `ResultsRequestBody`
+with no type filter, and the resources linked to a profile through
+`ResourceList` can be of any type (Collections, for example).
+
+**Why it went unnoticed:** `tests/functional-tests/test_my_profile.py::test_get_my_resources`
+catches `PyegeriaException` and only prints "failed as expected or due to
+env", so the 400 never failed the test.
+
+**Fixed:** pass `filter_results_by_type=False`, keeping `"Resource"` as a
+rendering hint only — the same fix as `get_collection_members`
+(`collection_manager.py`). Verified live: Gary Geeke's profile now returns its
+`ResourceList`-linked `Bookmarks::garygeeke` collection in JSON, DICT and LIST
+formats. Covered by `tests/micro-tests/test_my_profile_get_my_resources_body.py`,
+which captures the outgoing body (fails without the fix).
+
+---
+
 ### ISSUE-109: `Link Product Dependency` was missing `ISC Qualified Name` — an earlier fix wrongly confirmed it as "correctly absent" against a stale local `.http` copy
 
 **Layer:** Pyegeria · **Status:** fixed 2026-09-21 · **Found:** 2026-09-20

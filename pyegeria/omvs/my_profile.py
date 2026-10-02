@@ -825,6 +825,11 @@ class MyProfile(AssetMaker):
     ) -> list | str:
         """Return the list of assigned resources linked to the user's profile. Async version."""
         url = f"{self.my_profile_command_root}/assigned-resources?includeUserIds=true&includeRoles=true"
+        # filter_results_by_type=False: "Resource" is only a rendering hint, not an
+        # Egeria type. Sent as metadataElementTypeName it made every call fail with
+        # OMAG-COMMON-400-018 "type name Resource ... is not recognized"; the
+        # endpoint's .http example sends no type filter, and the resources linked to
+        # a profile (via ResourceList) are of any type, e.g. Collections. ISSUE-115.
         return await self._async_get_results_body_request(
             url,
             _type="Resource",
@@ -835,6 +840,7 @@ class MyProfile(AssetMaker):
             output_format=output_format,
             report_spec=report_spec,
             body=body,
+            filter_results_by_type=False,
             **kwargs,
         )
 

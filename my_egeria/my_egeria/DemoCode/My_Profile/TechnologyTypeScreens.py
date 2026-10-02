@@ -22,7 +22,7 @@ from textual.widgets._option_list import Option
 class TechnologyTypeOptionsScreen(ModalScreen):
     """ Modal screen to display a technology type's templates and processes."""
     BINDINGS = [("q", "dismiss", "Quit"),
-                ("b", "back", "Go_Back"),
+                ("b", "go_back", "Go_Back"),
                 # ("ctl+s", "Select", "tech_type_option_select")
                 ]
 
@@ -262,8 +262,7 @@ class TechnologyTypeOptionsScreen(ModalScreen):
 class TechnologyTypeProcessesScreen(ModalScreen[Any]):
     """Modal screen to display technology type processes in Egeria."""
     BINDINGS = [("q", "quit", "Quit"),
-                ("b", "back", "Go back"),
-                ("ctl+e", "expand", "Toggle Twisties")]
+                ("b", "quit", "Go back")]
 
     CSS_PATH = "my_profile.tcss"
 
@@ -292,6 +291,9 @@ class TechnologyTypeProcessesScreen(ModalScreen[Any]):
         self.tech_type_processes = tech_type_processes
         self.full_process = None
         self.selected_process = None
+        self.selected_t_process = None
+        # Input widget id -> the request parameter name it collects
+        self.parameter_names: dict[str, str] = {}
 
     async def on_mount(self) -> None:
         """ On Mount function of the Technology_Type_Templatess screen."""
@@ -353,6 +355,8 @@ class TechnologyTypeProcessesScreen(ModalScreen[Any]):
                                 placeholder_text.styles.height = 8
 
                                 placeholder_input = Input(id=f"{safe_name}_placeholder_input", placeholder="Enter value here")
+                                # Remember the real parameter name: the CSS-safe id can't be turned back into it
+                                self.parameter_names[placeholder_input.id] = name or safe_name
                                 self.log(f"Placeholder: {placeholder_text.text}\n {placeholder_input}")
 
                                 # Mount the TextArea and the associated Input field into the ScrollableContainer
@@ -390,7 +394,7 @@ class TechnologyTypeProcessesScreen(ModalScreen[Any]):
         save_input_data:dict = {}
         for input_widget in self.query("Input"):
             self.log(f"Input widget: {input_widget.id}, value: {input_widget.value}")
-            save_input_data.update({input_widget.id: input_widget.value})
+            save_input_data.update({self.parameter_names.get(input_widget.id, input_widget.id): input_widget.value})
         self.log(f"Save input data: {save_input_data}")
         self.dismiss(["input", save_input_data, self.full_process])
 
@@ -404,7 +408,7 @@ class TechnologyTypesScreen(ModalScreen):
     """Modal screen to display technology types in Egeria."""
     BINDINGS = [("q", "dismiss(200)", "Quit"),
                 ("g", "go_back", "Back"),
-                ("ctl+e", "expand", "Toggle Twisties")]
+                ("ctrl+e", "expand", "Toggle Twisties")]
 
     CSS_PATH = "my_profile.tcss"
 
@@ -540,8 +544,7 @@ class TechnologyTypesScreen(ModalScreen):
 class TechnologyTypeTemplatesScreen(ModalScreen[Any]):
     """Modal screen to display technology type templates in Egeria."""
     BINDINGS = [("q", "dismiss(200)", "Quit"),
-                ("b", "back", "Go back"),
-                ("ctl+e", "expand", "Toggle Twisties")]
+                ("b", "quit", "Go back")]
 
     CSS_PATH = "my_profile.tcss"
 

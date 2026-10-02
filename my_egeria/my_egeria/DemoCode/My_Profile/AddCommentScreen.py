@@ -36,6 +36,8 @@ class AddCommentScreen(ModalScreen):
         self.platform_url = (app_config.egeria_platform_url or "https://127.0.0.1:9443")
         self.user_name = app_user.user_name or "garygeeke"
         self.user_password = app_user.user_pwd or "secret"
+        self.comment = ""
+        self.comment_type = ""
 
     def on_mount(self):
         self.title = "Egeria - My Profile"
@@ -67,6 +69,9 @@ class AddCommentScreen(ModalScreen):
 
     @on(Button.Pressed, "#add_comment_button")
     def handle_button_pressed(self):
+        self.action_add_comment()
+
+    def action_add_comment(self):
         if self.comment and self.comment_type:
             self.comment_data = [self.comment, self.comment_type, self.element_guid]
             self.log(f"Comment data: {self.comment_data} being returned from screen")
