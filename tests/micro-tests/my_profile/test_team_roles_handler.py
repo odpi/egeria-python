@@ -178,11 +178,12 @@ class TestTeamRolesMixin:
         assert app.shown_main_screen is True
 
     def test_search_for_term_callback_201_shop_for_data(self):
+        """Going back reopens Shop for Data through its handler, so the tables reload."""
         app = DummyTeamRolesApp()
+        app.handle_shop_for_data_option = MagicMock()
+        app.call_later = MagicMock()
         app.search_for_term_callback(201)
-        assert len(app.pushed_screens) == 1
-        screen, cb = app.pushed_screens[0]
-        assert isinstance(screen, ShopForDataScreen)
+        app.call_later.assert_called_once_with(app.handle_shop_for_data_option)
 
     def test_search_for_term_callback_error(self):
         app = DummyTeamRolesApp()

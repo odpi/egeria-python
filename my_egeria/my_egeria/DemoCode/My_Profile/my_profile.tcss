@@ -102,7 +102,7 @@ ModalScreen > Header, ModalScreen > Footer {
 #feedback_container,
 #feedback_log_container,
 #main_identities_container {
-    column-span: 3;
+    column-span: 2;
     width: 100%;
     height: 100%;
 }

@@ -41,10 +41,12 @@ class TechTypesMixin:
         self.log(f"Tech Type Response: {self.tech_type_response} | {self.tech_type_list}")
         if self.tech_type_response == []:
             self.log("No technology types found.")
-            self.exit(200)
+            self.notify("No technology types are defined in Egeria", timeout=10, severity="warning")
+            return
         elif len(self.tech_type_response) == 3 and int(self.tech_type_response) >= 400:
             self.log("Error fetching technology types.")
             self.exit(int(self.tech_type_response))
+            return
         self.log("Technology types fetched successfully.")
         self.log("Displaying technology types...")
         await self.push_screen(
@@ -367,8 +369,11 @@ class TechTypesMixin:
         if isinstance(self.input_data, dict):
             for input_key, input_value in self.input_data.items():
                 self.log(f"Processing input value: {input_key} with value: {input_value}")
-                input_fix1 = input_key.replace("_", " ")
-                input_fix2 = input_fix1.replace(" placeholder input", "").replace(" process input", "")
+                # Keys are real parameter names; only a raw widget id needs converting back
+                input_fix2 = input_key
+                for suffix in ("_placeholder_input", "_process_input"):
+                    if input_fix2.endswith(suffix):
+                        input_fix2 = input_fix2[: -len(suffix)].replace("_", " ")
                 self.log(f"Process input key after cleaning: {input_fix2}")
                 my_process_property_values.append({
                     "class": "SupportedRequestParameter",
@@ -389,19 +394,32 @@ class TechTypesMixin:
         self.log(f"Original input: {self.result}")
         self.log(f"full process: {self.full_process}")
 
-        additional_properties = self.full_process.get("additionalProperties", {}) if isinstance(self.full_process, dict) else {}
-        template_guid = additional_properties.get("templateGUID") if isinstance(additional_properties, dict) else None
+        process_qualified_name = self.full_process.get("qualifiedName") if isinstance(self.full_process, dict) else None
+        if not process_qualified_name:
+            self.push_screen(StatusScreen("Governance Action Process: the selected process has no qualified name, "
+                                          "so it cannot be started"), callback=self.status_callback)
+            return 418
+        # Only send parameters the user actually filled in
+        request_parameters = {p["name"]: p["value"] for p in my_process_property_values if p["value"]}
 
-        request_body: dict = {
-            "displayName": self.full_process.get("displayName") if isinstance(self.full_process, dict) else None,
-            "description": self.full_process.get("description") if isinstance(self.full_process, dict) else None,
-            "additionalProperties": {
-                "templateGUID": template_guid
-            },
-            "specification": {
-                "supportedRequestParameter": my_process_property_values
-            }
-        }
+        try:
+            tokendata = self.autoc.create_egeria_bearer_token(self.user_name, self.user_password)
+            client = AutomatedCuration(self.view_server, self.platform_url, self.user_name, self.user_password, tokendata)
+            process_guid = client.initiate_gov_action_process(
+                action_type_qualified_name=process_qualified_name,
+                request_parameters=request_parameters or None,
+            )
+        except Exception as e:
+            self.log(f"Exception in initiate_gov_action_process: {e}")
+            message = print_basic_exception(e) if isinstance(e, PyegeriaException) else str(e)
+            self.push_screen(StatusScreen(f"Error starting governance action process\n{message}"),
+                             callback=self.status_callback)
+            return 420
+
+        self.log(f"Started process {process_qualified_name}: {process_guid}")
+        self.push_screen(StatusScreen(f"Governance action process started with GUID: '{process_guid}'"),
+                         callback=self.status_callback)
+        return 200
 
     def tech_type_processes_details(self, tech_type: Any, selected_t_option_selected: Any) -> Any:
         """Retrieve process data for Technology Type Processes screen."""

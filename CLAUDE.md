@@ -185,6 +185,7 @@ calls, so verb and body shape stay correct by construction.
 ## Commits
 
 - Always use `git commit -s` to sign off commits. This appends `Signed-off-by: Dan Wolfson <dan.wolfson@pdr-associates.com>` — DCO is enforced on this repo and unsigned commits will be rejected.
+- This rule is strictly enforced for all automated and manual commits.
 - Do **not** add `Co-Authored-By:` lines to commit messages.
 
 ---
