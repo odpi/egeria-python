@@ -143,7 +143,7 @@ enough to track there too).
 
 ---
 
-### ISSUE-115: Cascade delete that takes the soft-delete (Memento) path fails partway with `OMAG-REPOSITORY-HANDLER-400-010` unless `forLineage=true` — leaves the asset live and an anchored element already soft-deleted
+### ISSUE-117: Cascade delete that takes the soft-delete (Memento) path fails partway with `OMAG-REPOSITORY-HANDLER-400-010` unless `forLineage=true` — leaves the asset live and an anchored element already soft-deleted
 
 **Layer:** Egeria Server · **Status:** open, workaround known, not yet
 reported upstream · **Found:** 2026-10-02, live test of Dr.Egeria's
