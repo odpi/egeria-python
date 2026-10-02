@@ -1,32 +1,30 @@
 ___
 
-## Link First Process Step
-> Links a governance action process to its first governance action process step, so processing begins there when the process is triggered. There can be only one first process step per process.
+## Initiate Subscription
+> Take out a subscription to a digital product by running the product's subscription process for the chosen subscription type. The process creates the subscription, its license and the data delivery to the destination. Unlike Create Digital Subscription, which only records a subscription element, this provisions it.
 
-### Governance Action Process
+### Subscription Type
 >	**Input Required**: True
 
 >	**Attribute Type**: Reference Name
 
->	**Description**: The governance action process, identified by its qualified name, display name or GUID.
+>	**Description**: The subscription type to take out: a digital product's subscribing action process, ProvisioningActionProcess::<product name>::Create Subscription::<subscription type>.
 
 
-### Governance Action Process Step
+### Subscription Requester
 >	**Input Required**: True
 
 >	**Attribute Type**: Reference Name
 
->	**Description**: The governance action process step to link.
+>	**Description**: The actor (person, team, ...) requesting the subscription.
 
 
-### Label
->	**Input Required**: False
+### Destination Data Set
+>	**Input Required**: True
 
->	**Attribute Type**: Simple
+>	**Attribute Type**: Reference Name
 
->	**Description**: A label used to identify or categorise a relationship link.
-
->	**Alternative Labels**: Wire Label
+>	**Description**: The asset the subscribed data is delivered to.
 
 
 ### Journal Entry
@@ -35,22 +33,6 @@ ___
 >	**Attribute Type**: Simple
 
 >	**Description**: A text entry into a journal.
-
-
-### Description
->	**Input Required**: False
-
->	**Attribute Type**: Simple
-
->	**Description**: A description.
-
-
-### Guard
->	**Input Required**: False
-
->	**Attribute Type**: Simple
-
->	**Description**: Informational value passed to the process step; the step's behaviour may vary depending on the guard it receives.
 
 
 ### Request Parameters
@@ -127,24 +109,6 @@ ___
 >	**Attribute Type**: Simple
 
 >	**Description**: A user provided or system generated request id for a conversation.
-
-
-### Anchor Scope IDs
->	**Input Required**: False
-
->	**Attribute Type**: Reference Name List
-
->	**Description**: A list of IDs that are anchor scopes for this element.
-
-
-### Make Anchor
->	**Input Required**: False
-
->	**Attribute Type**: Bool
-
->	**Description**: Is the element at end2 an anchor to end1?
-
->	**Default Value**: false
 
 
 ___

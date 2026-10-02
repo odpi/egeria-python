@@ -49,6 +49,8 @@ from md_processing.v2 import (
     EmbeddedProcessProcessor, InitiateEngineActionProcessor, CancelEngineActionProcessor,
     LineageLinkProcessor, UpdateLineageRelationshipProcessor,
     AssetMakerProcessor,
+    InitiateGovernanceActionProcessProcessor, InitiateGovernanceActionTypeProcessor, InitiateSurveyProcessor,
+    InitiateSubscriptionProcessor, CancelSubscriptionProcessor,
     SchemaElementProcessor, SchemaTemplateProcessor, SchemaLinkProcessor, SchemaClassificationProcessor,
 )
 
@@ -405,8 +407,16 @@ def setup_dispatcher(client: EgeriaTech) -> V2Dispatcher:
         reg(f"Update {_lineage_type}", UpdateLineageRelationshipProcessor)
     reg("Unlink Lineage Relationship", LineageLinkProcessor)
 
-    # Asset Maker (Automated Curation's create-from-template surface)
+    # Automation (running governance engines; Create Element moved here from
+    # Asset Maker 2026-10-02 but still uses the generic create-from-template path)
+    reg("Initiate Governance Action Process", InitiateGovernanceActionProcessProcessor)
+    reg("Initiate Governance Action Type", InitiateGovernanceActionTypeProcessor)
+    reg("Initiate Survey", InitiateSurveyProcessor)
+    reg("Initiate Subscription", InitiateSubscriptionProcessor)
+    reg("Cancel Subscription", CancelSubscriptionProcessor)
     reg("Create Element", AssetMakerProcessor)
+
+    # Asset Maker (Automated Curation's create-from-template surface)
     reg("Create Secrets Store Element", AssetMakerProcessor)
     reg("Create Kafka Server Element", AssetMakerProcessor)
     reg("Create CSV Data File Element", AssetMakerProcessor)
