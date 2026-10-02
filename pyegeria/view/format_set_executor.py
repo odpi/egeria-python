@@ -361,6 +361,28 @@ def _merge_signature_params(func: Any, params: Dict[str, Any], call_params: Dict
     return merged
 
 
+# Request options every find/get method understands but report specs don't list in
+# their required/optional params. exec_report_spec only copies declared params, so
+# without this a caller's graph_query_depth was silently dropped and every call ran
+# at the SDK default depth of 3 -- the dominant cost of list calls (ISSUE-15).
+_PASS_THROUGH_REQUEST_OPTIONS = ("graph_query_depth",)
+
+
+def _add_request_options(func: Any, params: Dict[str, Any], call_params: Dict[str, Any]) -> Dict[str, Any]:
+    """Forward _PASS_THROUGH_REQUEST_OPTIONS from the caller's params when the method accepts them."""
+    try:
+        sig = inspect.signature(func)
+    except Exception:
+        return call_params
+    accepts_kwargs = any(p.kind == inspect.Parameter.VAR_KEYWORD for p in sig.parameters.values())
+    merged = dict(call_params)
+    for key in _PASS_THROUGH_REQUEST_OPTIONS:
+        value = (params or {}).get(key)
+        if value is not None and key not in merged and (key in sig.parameters or accepts_kwargs):
+            merged[key] = value
+    return merged
+
+
 def _validate_report_spec_params(report_spec, params):
     """Validate that required parameters are present in the provided params dictionary."""
     missing_params = [param for param in report_spec.required_params if param not in params]
@@ -851,6 +873,7 @@ def exec_report_spec(
                 f"Method '{method_name}' not found in client class '{client_class.__name__}'."
             )
 
+        call_params = _add_request_options(func, params, call_params)
         result = func(**call_params)
 
         if not result or result == NO_ELEMENTS_FOUND:

@@ -133,7 +133,8 @@ class SelectionOverviewScreen(ModalScreen):
         try:
             self.glossary_term_data = exec_report_spec(format_set_name="Glossary-Terms",
                                                   output_format="MD",
-                                                  params={"search_string": self.term_GUID, "filter_string": self.term_GUID},
+                                                  params={"search_string": self.term_GUID, "filter_string": self.term_GUID,
+                                                          "graph_query_depth": 0},  # term properties only
                                                   view_server=self.view_server,
                                                   view_url=self.platform_url,
                                                   user=self.user_name,
@@ -173,7 +174,8 @@ class SelectionOverviewScreen(ModalScreen):
             self.digital_product_data = exec_report_spec(format_set_name="Digital-Products-MyE",
                                                         output_format="MD",
                                                         params={"search_string": self.digital_product_GUID,
-                                                               "filter_string": self.digital_product_GUID},
+                                                               "filter_string": self.digital_product_GUID,
+                                                               "graph_query_depth": 1},  # shows members and assigned actors
                                                         view_server=self.view_server,
                                                         view_url=self.platform_url,
                                                         user=self.user_name,
@@ -217,7 +219,8 @@ class SelectionOverviewScreen(ModalScreen):
             self.data_dictionary_data = exec_report_spec(format_set_name="Data-Dictionaries",
                                                          output_format="MD",
                                                          params={"search_string": self.data_dictionary_GUID,
-                                                                 "filter_string": self.data_dictionary_GUID},
+                                                                 "filter_string": self.data_dictionary_GUID,
+                                                                 "graph_query_depth": 0},  # properties only
                                                          view_server=self.view_server,
                                                          view_url=self.platform_url,
                                                          user=self.user_name,
@@ -253,7 +256,8 @@ class SelectionOverviewScreen(ModalScreen):
             self.business_domain_data = exec_report_spec(format_set_name="BusinessCapabilities",
                                                          output_format="DICT",
                                                          params={"search_string": self.business_domain_GUID,
-                                                                 "filter_string": self.business_domain_GUID},
+                                                                 "filter_string": self.business_domain_GUID,
+                                                                 "graph_query_depth": 1},  # shows Containing Members / Member Of
                                                          view_server=self.view_server,
                                                          view_url=self.platform_url,
                                                          user=self.user_name,
@@ -318,7 +322,8 @@ class SelectionOverviewScreen(ModalScreen):
             self.root_collection_data = exec_report_spec(format_set_name="Collections",
                                                          output_format="MD",
                                                          params={"search_string": self.root_collection_GUID,
-                                                                 "filter_string": self.root_collection_GUID},
+                                                                 "filter_string": self.root_collection_GUID,
+                                                                 "graph_query_depth": 0},  # properties only
                                                          view_server=self.view_server,
                                                          view_url=self.platform_url,
                                                          user=self.user_name,

@@ -22,9 +22,21 @@ lists only what is **new** and what egeria-workspaces must add/change.
 | Listen port env | `MY_EGERIA_PORT` (default `8021`) |
 
 Both entry points are installed by `pip install pyegeria` (no separate package).
-`serve_my_egeria` runs `textual serve` against the app; each browser WebSocket
+`serve_my_egeria` serves the app with the `textual-serve` library (a pyegeria
+dependency — no `textual` CLI or `textual-dev` needed); each browser WebSocket
 connection gets its own isolated app instance — no code difference between
 terminal and browser modes.
+
+**Requires a pyegeria release with the 2026-10 packaging fix.** Earlier wheels
+installed the app one level too deep (`site-packages/my_egeria/my_egeria/...`), so
+the `my_egeria`, `my_profile`, `serve_my_egeria` and `serve_my_profile` commands
+failed in every pip install. The app now installs as the top-level `my_egeria`
+package (`site-packages/my_egeria/...`). Anything that launched the app by **file
+path** under the old nested layout must switch to the entry points.
+
+**Use Python 3.13, not 3.14.** Textual (6.1.0 through the current 8.2.8) fails on
+Python 3.14 with `assert task is not None` in `textual/rlock.py`; My Profile hits
+it at startup. Build the image on `python:3.13-slim`.
 
 ### Port allocation (current)
 
@@ -42,8 +54,9 @@ terminal and browser modes.
 
 The image used for the Textual app services must have a pyegeria build that
 includes the `serve_my_egeria` entry point and the `my_egeria_app` module rename.
-If the image pins an older pyegeria, bump it. No new dependencies were added
-(`textual`, `textual-serve`, `textual-web` were already required).
+If the image pins an older pyegeria, bump it. Do not pin an older `textual`;
+let pyegeria's own dependency choose it. No extra packages are needed: `textual`
+and `textual-serve` come with pyegeria.
 
 ### 2. Add a compose service (quickstart)
 
@@ -115,14 +128,16 @@ file. They must be present in the `my-egeria` service environment:
 | `EGERIA_VIEW_SERVER`   | `qs-view-server`                    | View server name                |
 | `EGERIA_USER`          | `erinoverview`                      | Active persona (quickstart)     |
 | `EGERIA_USER_PASSWORD` | `secret`                            | Password (quickstart)           |
-| `MY_EGERIA_HOST`       | `0.0.0.0`                           | Listen host for textual serve   |
-| `MY_EGERIA_PORT`       | `8021`                              | Listen port for textual serve   |
+| `MY_EGERIA_HOST`       | `0.0.0.0`                           | Listen host for textual-serve   |
+| `MY_EGERIA_PORT`       | `8021`                              | Listen port for textual-serve   |
+| `MY_EGERIA_PUBLIC_URL` | `https://<site>/my-egeria`          | URL browsers use when behind a proxy, so page and WebSocket URLs are same-origin. `MY_PROFILE_PUBLIC_URL` is the My Profile equivalent; `MY_EGERIA_PUBLIC_URL` is used for either app if the app's own is not set. |
 
 ---
 
 ## Verifying the hand-off
 
-1. **Terminal:** `my_egeria` launches the TUI.
+1. **Terminal:** `my_egeria` launches the TUI (the startup check now uses the
+   same `EGERIA_*` variables and defaults as the table below).
 2. **Local browser:** `MY_EGERIA_PORT=8021 serve_my_egeria`, then open
    `http://localhost:8021/`.
 3. **Through the portal:** the `/my-egeria/` route loads the app and the
@@ -137,8 +152,9 @@ If the app loads but cannot reach Egeria, recheck `EGERIA_PLATFORM_URL` /
 ## Notes / gotchas
 
 - The app module was renamed `my_egeria.my_egeria` → `my_egeria.my_egeria_app`.
-  egeria-workspaces should **not** reference the module path directly — only the
-  `serve_my_egeria` / `my_egeria` entry points, which are stable.
+  egeria-workspaces should **not** reference the module path or a file path
+  directly — only the `serve_my_egeria` / `serve_my_profile` / `my_egeria` entry
+  points, which are stable. (The packaging fix above moved the installed files.)
 - If you template the compose service, keep one `MY_*_PORT` per app; only
   `MY_EGERIA_HOST` is shared.
 - "Adding more apps" recipe lives in `EGERIA_WORKSPACES_INTEGRATION.md`

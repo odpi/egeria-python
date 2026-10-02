@@ -68,7 +68,8 @@ class TestBookmarksMixin:
             {"relatedElement": _element("asset-2", "Churn Model", "Asset")},
         ]
         rows = DummyApp().list_my_bookmarks()
-        client.get_collection_members.assert_called_once_with(collection_guid="bm-coll-guid", output_format="JSON")
+        client.get_collection_members.assert_called_once_with(collection_guid="bm-coll-guid", output_format="JSON",
+                                                               graph_query_depth=0)
         assert rows == [("Sales Data", "DataSet", "asset-1"), ("Churn Model", "Asset", "asset-2")]
 
     def test_list_ignores_same_name_collection_with_other_qualified_name(self, client):
