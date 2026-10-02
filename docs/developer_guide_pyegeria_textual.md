@@ -124,7 +124,7 @@ source .venv/bin/activate
 **Using pyegeria in your own project** instead:
 
 ```bash
-pip install pyegeria textual textual-dev
+pip install pyegeria textual textual-dev   # textual-dev only for the dev console and `textual run`
 ```
 
 ### Tell pyegeria where Egeria is
@@ -308,6 +308,37 @@ pyegeria has hundreds of methods. To explore them:
 - The source is organised one file per view service in `pyegeria/omvs/`.
 - The REST calls behind each method are recorded in `.http` files under
   `pyegeria/http clients/`, which is useful when you need to see exactly what is sent.
+
+### Ask only for the relationships you need: `graph_query_depth`
+
+Every pyegeria `find_*`/`get_*` call sends a `graph_query_depth` that tells Egeria how many
+levels of related elements to compute for each result. **The default is 3**, which is rich but
+expensive, and the cost grows with the number of results. Measured on the quickstart server
+while tuning the My Profile app:
+
+| Call | Default depth (3) | Depth 0 |
+|---|---|---|
+| List of 13 glossaries | timed out at 90 s | 0.3 s |
+| List of 100 collections (My Profile startup) | about 70 s | 0.6 s |
+| Members of a 7-element collection | timed out at 30 s | 0.3 s |
+
+Choose the depth from what your screen actually shows:
+
+- **Lists and tables of names, descriptions, GUIDs** (header and properties only): use
+  **`graph_query_depth=0`**.
+- **A detail view of one selected element that shows its related elements** (a glossary's
+  folders, a collection's members): fetch **just that element at depth 1** when it is
+  selected, rather than loading the whole list at depth 1.
+- **Some views need more.** In My Profile, the profile's Teams, Communities and Projects and a
+  team's individual members disappear below depth 2.
+
+Pass it as a keyword: `client.find_glossaries("*", graph_query_depth=0)`. Through
+`exec_report_spec`, put it in `params` (`params={"search_string": "*", "graph_query_depth": 0}`);
+this is forwarded to the method from pyegeria 6.1.26. Earlier versions silently dropped it.
+A `params=` keyword on an SDK method itself is **not** a way to pass it: it is ignored.
+
+To check a lower depth is safe, run the call at both depths with `output_format="JSON"` (or the
+`DICT` your screen uses) and compare the fields your code reads.
 
 ---
 
@@ -960,8 +991,11 @@ python examples/developer_guide/capture_screenshots.py
 - **Results are empty, or a column is missing.** The report spec doesn't define that column,
   or `graph_query_depth` is too low for related data. Try `output_format="JSON"` to see
   everything Egeria returned.
-- **Slow responses or time-outs.** Use `graph_query_depth=0` unless you need relationships,
+- **Slow responses or time-outs.** Use `graph_query_depth=0` unless you need relationships
+  (see [Ask only for the relationships you need](#ask-only-for-the-relationships-you-need-graph_query_depth)),
   and `page_size` to limit how many results come back.
+- **`assert task is not None` in `textual/rlock.py`.** You are on Python 3.14, which Textual
+  does not yet support. Use Python 3.13.
 - **"Parameter ... is null" from Egeria when the parameter was set.** Your program is running
   under a different Python than your venv. Check `which python` and `which textual`.
 - **An action does nothing.** Check for two `@on` handlers with the same method name in one

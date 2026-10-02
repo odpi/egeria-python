@@ -268,9 +268,13 @@ class MyProfileApp(App, TechTypesMixin, ShopForDataMixin, TeamRolesMixin, Elemen
         try:
             self.my_profile_inst = MyProfile(self.view_server, self.platform_url, self.user_name, self.user_password)
             self.my_profile_inst.create_egeria_bearer_token(self.user_name, self.user_password)
-            self.my_profile_data = await self.my_profile_inst._async_get_my_profile(
-                report_spec="My-User-MD",
-                output_format="DICT",
+            # Fetch the profile once and format it locally for each view (My-User-MD here,
+            # User-Identities in _process_profile_data) instead of fetching it per view.
+            self.my_profile_raw = await self.my_profile_inst._async_get_my_profile(output_format="JSON")
+            self.my_profile_data = (
+                self.my_profile_inst._generate_my_profile_output(
+                    self.my_profile_raw, "My", "MyProfile", "DICT", "My-User-MD")
+                if isinstance(self.my_profile_raw, dict) else self.my_profile_raw
             )
             self.log(f"retrieve profile result: {self.my_profile_data}")
         except PyegeriaException as e:
@@ -342,10 +346,11 @@ class MyProfileApp(App, TechTypesMixin, ShopForDataMixin, TeamRolesMixin, Elemen
 
         # User Identities
         try:
-            self.user_identities = self.my_profile_inst.get_my_profile(
-                report_spec="User-Identities",
-                params={"graph_query_depth": 0},
-                output_format="DICT",
+            raw = getattr(self, "my_profile_raw", None)
+            self.user_identities = (
+                self.my_profile_inst._generate_my_profile_output(raw, "My", "MyProfile", "DICT", "User-Identities")
+                if isinstance(raw, dict)
+                else self.my_profile_inst.get_my_profile(report_spec="User-Identities", output_format="DICT")
             )
             self.log(f"User-Identities: {self.user_identities}, type: {type(self.user_identities)}")
         except PyegeriaException as e:
@@ -356,7 +361,7 @@ class MyProfileApp(App, TechTypesMixin, ShopForDataMixin, TeamRolesMixin, Elemen
         try:
             self.my_todos_data = self.my_profile_inst.get_my_to_dos(
                 report_spec="My-User-ToDos",
-                params={"graph_query_depth": 0},
+                graph_query_depth=0,  # the to-do table shows properties only
                 output_format="DICT",
             )
             self.log(f"My To-Dos: {self.my_todos_data}, type: {type(self.my_todos_data)}")
@@ -419,7 +424,8 @@ class MyProfileApp(App, TechTypesMixin, ShopForDataMixin, TeamRolesMixin, Elemen
             eclient = Egeria(view_server=self.view_server, platform_url=self.platform_url,
                              user_id=self.user_name, user_pwd=self.user_password)
             eclient.create_egeria_bearer_token(self.user_name, self.user_password)
-            response = eclient.find_collections(search_string="*", output_format="JSON")
+            # Depth 0: only header/properties are summarised (~70s at the default depth 3 vs <1s).
+            response = eclient.find_collections(search_string="*", output_format="JSON", graph_query_depth=0)
         except PyegeriaException as e:
             self.log(f"Error retrieving My Collections: {e!s}")
             return []

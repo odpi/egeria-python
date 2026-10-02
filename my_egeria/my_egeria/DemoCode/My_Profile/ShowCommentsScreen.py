@@ -86,7 +86,7 @@ class ShowCommentsScreen(ModalScreen):
             comments_list = exec_report_spec(
                 format_set_name="Comment-by-Element",
                 output_format="DICT",
-                params={"element_guid": element_guid},
+                params={"element_guid": element_guid, "graph_query_depth": 0},  # comment properties only
                 view_server=self.view_server,
                 view_url=self.platform_url,
                 user=self.user_name,

@@ -3,7 +3,7 @@
 
 [project]
 name = "pyegeria"
-version = "6.1.25"
+version = "6.1.26"
 license = 'Apache-2.0'
 license-files = ["LICENSE"]
 authors = [{name = "Dan Wolfson", email = "dan.wolfson@pdr-associates.com"},]
@@ -138,7 +138,7 @@ dependencies = [
     # my_egeria TUI apps — terminal mode
     my_egeria = "my_egeria.main:main"
     my_profile = "my_egeria.DemoCode.My_Profile.my_profile_app:main"
-    # my_egeria TUI apps — browser mode (textual serve); env: MY_EGERIA_HOST, MY_EGERIA_PORT, MY_PROFILE_PORT
+    # my_egeria TUI apps — local browser mode (textual-serve); env: MY_EGERIA_HOST, MY_EGERIA_PORT, MY_PROFILE_PORT
     serve_my_egeria = "my_egeria.serve:serve_my_egeria"
     serve_my_profile = "my_egeria.serve:serve_my_profile"
 
@@ -213,8 +213,16 @@ requires = ["setuptools>=42", "wheel"]
 build-backend = "setuptools.build_meta"
 
 [tool.setuptools.packages.find]
+# my_egeria's real package lives at my_egeria/my_egeria (my_egeria/ is a uv workspace
+# member). Searching from both roots installs it as the top-level `my_egeria` package,
+# which its console scripts and its own `from my_egeria.<module>` imports require;
+# searching only from "." shipped it as my_egeria/my_egeria/..., so `my_egeria`,
+# `my_profile`, `serve_my_egeria` and `serve_my_profile` failed in every PyPI install.
+# namespaces = false stops "." also picking up the outer my_egeria/ directory.
+where = [".", "my_egeria"]
 include = ["pyegeria", "pyegeria.*", "commands", "commands.*", "md_processing", "md_processing.*", "my_egeria", "my_egeria.*"]
 exclude = ["tests", "config"]
+namespaces = false
 
 [tool.setuptools.package-data]
 "md_processing" = [

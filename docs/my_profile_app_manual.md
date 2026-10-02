@@ -76,15 +76,19 @@ my_profile                 # installed console script, runs from any directory
 # or, from the app folder:
 cd my_egeria/my_egeria/DemoCode/My_Profile
 python my_profile_app.py
-# or, with the Textual developer console available:
+# or, with the Textual developer console (needs textual-dev, a dev dependency):
 textual run --dev my_profile_app.py
 ```
+
+Use Python 3.13: Textual currently fails on Python 3.14 (an assertion in `textual/rlock.py` at startup).
 
 To serve the app in a web browser instead of a terminal:
 
 ```bash
-serve_my_profile          # textual serve on $MY_EGERIA_HOST:$MY_PROFILE_PORT (default 0.0.0.0:8020)
+serve_my_profile          # textual-serve on $MY_EGERIA_HOST:$MY_PROFILE_PORT (default 0.0.0.0:8020)
 ```
+
+Behind a reverse proxy, set `MY_PROFILE_PUBLIC_URL` (or `MY_EGERIA_PUBLIC_URL`) to the URL browsers use, e.g. `https://localhost:8843/my-egeria`, so the page's asset and WebSocket URLs are same-origin.
 
 ## The Splash Screen and Changing User
 

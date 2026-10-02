@@ -1379,6 +1379,62 @@ changed beyond that one status correction and this note.
 
 ---
 
+### ISSUE-118: the pyegeria wheel installed `my_egeria` one level too deep, so `my_egeria`, `my_profile`, `serve_my_egeria` and `serve_my_profile` failed in every pip install
+
+**Layer:** Pyegeria (packaging) · **Status:** fixed 2026-10-02 · **Found:**
+2026-10-02, preparing to serve the new My Profile app from the Egeria-Workspaces portal.
+
+**What:** `[tool.setuptools.packages.find]` searched only from the repo root, so the
+app's real package (`my_egeria/my_egeria/`, inside the `my_egeria/` uv workspace
+member) shipped as `site-packages/my_egeria/my_egeria/...`. The four console scripts
+point at `my_egeria.main`, `my_egeria.serve`, `my_egeria.DemoCode...`, and the app's
+own code imports `from my_egeria.<module>`, so none of it resolved outside this repo's
+dev venv (where the workspace member is installed editable). The portal survived only
+because its own script launched `my_profile_app.py` by **file path**, found with a glob
+for the nested layout.
+
+**Fixed:** `where = [".", "my_egeria"]` with `namespaces = false`, so the inner
+package installs as the top-level `my_egeria`. Two folders that had only shipped as
+namespace packages (`pyegeria/config`, `commands/deprecated`) gained an
+`__init__.py`. A clean-build comparison showed the wheel is otherwise identical: the
+same 480 files, with `my_egeria/...` now top-level, plus the two new `__init__.py`.
+`my_profile.tcss` now ships too, so the portal Dockerfile's manual copy is unnecessary.
+**Downstream impact:** anything launching the app by the old nested file path must
+switch to the entry points (`serve_my_profile` etc.).
+
+**Related, same day:** `serve_my_egeria`/`serve_my_profile` shelled out to the
+`textual serve` command, which comes from `textual-dev` (a dev-only dependency), so
+they also failed in a plain install. They now use the `textual-serve` library
+directly, and honour `MY_EGERIA_PUBLIC_URL`/`MY_PROFILE_PUBLIC_URL` for proxied
+deployments.
+
+---
+
+### ISSUE-119: `exec_report_spec` silently dropped a caller's `graph_query_depth`, so report-spec calls always ran at depth 3
+
+**Layer:** Pyegeria · **Status:** fixed 2026-10-02 · **Found:** 2026-10-02,
+performance review of the My Profile and MyEgeria apps.
+
+**What:** the synchronous `exec_report_spec` copies only a report spec's declared
+`required_params`/`optional_params` into the call, and no spec declares
+`graph_query_depth`. So `params={"search_string": "*", "graph_query_depth": 0}`
+reached Egeria at the SDK default depth of 3, with no warning. The My Profile app asked for
+depth 0 in about ten places and got none of it. Live, at the effective depth 3: the
+13-glossary list and the root-collection list timed out at 90 s, the data
+dictionaries took about 39 s and the product catalogue 42 s. At depth 0 they take
+0.3–0.8 s. (The async path already forwarded it via `_merge_signature_params`.)
+
+**Fixed:** `graph_query_depth` is now forwarded when the caller supplies it and the
+target method accepts it (as a named parameter or `**kwargs`). This is deliberately narrower than the
+async path, which forwards *every* caller param to `**kwargs` methods. Other
+undeclared params are still not forwarded. Test:
+`tests/micro-tests/test_exec_report_spec_graph_query_depth.py`. **Watch for:**
+callers that asked for depth 0 but needed related elements were working only *because*
+of this bug. My Profile's glossary folders and root-collection members were two such
+cases, fixed in the same change by fetching the selected element at depth 1.
+
+---
+
 ### ISSUE-116: `get_my_actors` always failed and `get_my_user_identities`/`get_my_roles` always returned nothing — same type-filter defect as ISSUE-115, hidden by tests that swallowed errors
 
 **Layer:** Pyegeria · **Status:** fixed 2026-10-02 · **Found:** 2026-10-02
@@ -8034,6 +8090,22 @@ deployment-timing issue, not a code defect — see ISSUE-12, below.
 ---
 
 ## Not a bug / n/a
+
+### ISSUE-120: Textual apps (My Profile, MyEgeria) crash on Python 3.14 with `assert task is not None` in `textual/rlock.py`
+
+**Layer:** not pyegeria (Textual / Python 3.14) · **Status:** n/a, workaround: use
+Python 3.13 · **Found:** 2026-10-02, testing the new My Profile app for the portal
+image (`python:3.14-slim`).
+
+**What:** Textual's `RLock.acquire` asserts `asyncio.current_task()` is not None,
+which fails under Python 3.14. Reproduced with the new My Profile app on both Textual
+6.1.0 (the portal's pin) and 8.2.8, the latest release, on 3.14. Both start cleanly on 3.13.
+Textual's current `main` still has the same code. The older My Profile apparently
+didn't reach that path; the new parallel profile loading does. The same failure is
+noted in `.github/workflows/release.yml`, which pins CI to Python 3.13 for this reason.
+**Action:** build Textual app images on Python 3.13; revisit when Textual supports 3.14.
+
+---
 
 ### ISSUE-88: no `GovernanceZone` create or lookup anywhere in pyegeria — a zone can be *referenced* by every search and classification, but not made
 

@@ -61,6 +61,7 @@ class ViewSubscriptionsScreen(ModalScreen):
                 search_string="*",
                 metadata_element_type_name="DigitalSubscription",
                 output_format="JSON",
+                graph_query_depth=0,  # only header/properties are used
             )
         except PyegeriaException as e:
             print_basic_exception(e)

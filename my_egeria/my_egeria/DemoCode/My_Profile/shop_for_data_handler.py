@@ -131,6 +131,31 @@ class ShopForDataMixin():
             return [item for item in raw_data if isinstance(item, dict)]
         return []
 
+    def _fetch_one(self, report_spec: str, qualified_name: str, graph_query_depth: int = 1) -> dict[str, Any] | None:
+        """Fetch one element's row at the given depth, matched on its exact qualified name.
+
+        The list tables load at graph_query_depth=0 (fast, properties only); detail views
+        that show related elements (glossary folders, collection members) fetch just the
+        selected element at depth 1 instead.
+        """
+        try:
+            result = exec_report_spec(
+                format_set_name=report_spec,
+                output_format="DICT",
+                params={"search_string": qualified_name, "graph_query_depth": graph_query_depth},
+                view_server=self.view_server,
+                view_url=self.platform_url,
+                user=self.user_name,
+                user_pass=self.user_password,
+            )
+        except Exception as e:
+            self.app.log(f"Error retrieving {report_spec} details for {qualified_name}: {e!s}")
+            return None
+        for row in self._extract_report_data(result):
+            if row.get("Qualified Name") == qualified_name:
+                return row
+        return None
+
     async def handle_shop_for_data_option(self) -> Any:
         """Push new Screen, Show Glossaries, Digital Product Catalogs, Data Dictionaries and
         Business Domains, allow the user to select from one of the 4 categories and use that selection to
@@ -575,7 +600,7 @@ class ShopForDataMixin():
                 output_format="DICT",
                 params={"search_string": self.domain_qualified_name,
                         "filter_string": self.domain_qualified_name,
-                        "graph_query_depth": 0
+                        "graph_query_depth": 1
                         },
                 view_server=self.view_server,
                 view_url=self.platform_url,
@@ -655,7 +680,7 @@ class ShopForDataMixin():
                 output_format="DICT",
                 params={"search_string": self.catalog_qualified_name,
                         "filter_string": self.catalog_qualified_name,
-                        "graph_query_depth": 0},
+                        "graph_query_depth": 1},
                 view_server=self.view_server,
                 view_url=self.platform_url,
                 user=self.user_name,
@@ -731,6 +756,7 @@ class ShopForDataMixin():
                                     search_string=membership_qname,
                                     start_from=0,
                                     page_size=1,
+                                    graph_query_depth=0,  # only the GUID of the first row is used
                                     output_format="DICT",
                                 )
                                 self.app.log(f"Dataset metadata retrieved: {data_set_metadata}")
@@ -772,7 +798,9 @@ class ShopForDataMixin():
 
         glossary_tree: Tree = Tree(label=self.glossary_display_name, id="glossary_details_tree")
 
-        for glossary_instance in self.glossary_data_extract:
+        # Folders are related elements: absent from the depth-0 list, so fetch this glossary at depth 1.
+        selected = self._fetch_one("Glossaries", target_qualified_name)
+        for glossary_instance in ([selected] if selected else self.glossary_data_extract):
             if glossary_instance.get("Qualified Name") == target_qualified_name:
                 self.glossary_folders = glossary_instance.get("Folders") or None
                 self.app.log(f"glossary_folders: {self.glossary_folders}")
@@ -840,7 +868,9 @@ class ShopForDataMixin():
         self.root_collection_qualified_name = target_qualified_name
         collection_branch = member_tree.root.add(self.root_collection_qualified_name, expand=True)
         self.app.log(f"self_collections: {self.collections}")
-        collection = self.collections[0] if isinstance(self.collections, list) and len(self.collections) > 0 else {}
+        # Containing Members are related elements: absent from the depth-0 list, so fetch the
+        # selected collection at depth 1 (this also works for any row, not just the first).
+        collection = self._fetch_one("BasicCollections", target_qualified_name) or {}
         self.app.log(f"collection: {collection}")
         if target_qualified_name == collection.get("Qualified Name"):
             root_collection_contains: str = collection.get("Containing Members") or ""
@@ -1155,6 +1185,7 @@ class ShopForDataMixin():
                     search_string=element_qname,
                     start_from=0,
                     page_size=1,
+                    graph_query_depth=0,  # only the GUID of the first row is used
                     output_format="DICT",
                 )
                 if (not data_set_metadata or data_set_metadata == "No elements found") and element_name:
@@ -1162,6 +1193,7 @@ class ShopForDataMixin():
                         search_string=element_name,
                         start_from=0,
                         page_size=1,
+                        graph_query_depth=0,  # only the GUID of the first row is used
                         output_format="DICT",
                     )
                 if isinstance(data_set_metadata, list) and len(data_set_metadata) > 0 and data_set_metadata != "No elements found":

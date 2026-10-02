@@ -49,7 +49,7 @@ class BookmarksMixin:
     def _find_bookmarks_collection(self, client: Egeria) -> str | None:
         """GUID of the user's bookmarks collection, or None if it doesn't exist yet."""
         qualified_name = bookmarks_qualified_name(self.user_name)
-        response = client.get_collections_by_name(name=qualified_name, output_format="JSON")
+        response = client.get_collections_by_name(name=qualified_name, output_format="JSON", graph_query_depth=0)
         for element in response if isinstance(response, list) else []:
             summary = element_summary(element)
             if summary.get("qualified_name") == qualified_name and summary.get("guid"):
@@ -99,7 +99,9 @@ class BookmarksMixin:
         return guid
 
     def _bookmark_rows(self, client: Egeria, collection_guid: str) -> list[tuple[str, str, str]]:
-        response = client.get_collection_members(collection_guid=collection_guid, output_format="JSON")
+        # Depth 0: rows show name/type/guid only (a 30s timeout at the default depth 3 vs ~0.3s).
+        response = client.get_collection_members(collection_guid=collection_guid, output_format="JSON",
+                                                 graph_query_depth=0)
         rows = []
         for element in response if isinstance(response, list) else []:
             summary = element_summary(element)
