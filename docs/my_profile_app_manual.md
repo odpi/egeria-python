@@ -17,6 +17,7 @@ The **My Profile App** is a Textual-based terminal user interface (TUI) applicat
     - [Communities and Roles](#communities-and-roles)
     - [Actions and Work Items](#actions-and-work-items)
     - [Catalog and Shopping for Data](#catalog-and-shopping-for-data)
+    - [Bookmarks](#bookmarks)
     - [Technology Type Explorer](#technology-type-explorer)
 6. [Keyboard Shortcuts](#keyboard-shortcuts)
 7. [Troubleshooting](#troubleshooting)
@@ -113,6 +114,14 @@ The Actions table provides a real-time view of your responsibilities. You can tr
 
 The **Shop for Data** function allows you to browse registered catalogs, dictionaries, and glossaries. You can explore the metadata hierarchy and find assets relevant to your work.
 
+### Bookmarks
+
+Bookmarks let you keep a personal list of elements you want to come back to. They are stored in Egeria as members of a private collection, `Bookmarks::<your user id>`. The collection is attached to your profile through a `ResourceList` relationship with resource use "Bookmarks", and is created automatically the first time you add a bookmark.
+
+- **Open bookmarks** with `Ctrl+B` (or **User Bookmarks** in Other Functions). If a row is highlighted in a table on the main screen or the Shop for Data screen, its GUID is picked up for you. Tables without a GUID column, such as the glossary table, have the GUID looked up from the row's qualified name.
+- **Add a bookmark** with `Ctrl+N`. The GUID box is pre-filled with the highlighted row's GUID, and you can edit it or paste another one. Then press **Add New Bookmark**.
+- **Delete a bookmark** by highlighting it in the bookmarks table and pressing `Ctrl+R`. The GUID box is pre-filled with that bookmark's GUID. Then press **Delete Bookmark**. This removes the element from your bookmarks collection; the element itself is not deleted.
+
 ### Technology Type Explorer
 
 The **Technology Types** explorer provides a deep dive into the technical metadata registered in Egeria. You can browse technology types, templates, and associated processes, helping you understand the technical landscape of your metadata environment.
@@ -125,6 +134,8 @@ The application supports the following global keyboard shortcuts:
 | --- | --- |
 | `q` | Quit the application |
 | `r` | Refresh data from the Egeria server |
+| `Ctrl+B` | Open bookmarks, picking up the highlighted row's GUID (main and Shop for Data screens) |
+| `Ctrl+N` / `Ctrl+R` | Add / delete a bookmark (on the bookmarks screen) |
 | `Ctrl+C` | Force quit (standard terminal shortcut) |
 
 ## Troubleshooting
