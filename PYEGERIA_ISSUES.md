@@ -1316,6 +1316,55 @@ changed beyond that one status correction and this note.
 
 ---
 
+### ISSUE-116: `get_my_actors` always failed and `get_my_user_identities`/`get_my_roles` always returned nothing — same type-filter defect as ISSUE-115, hidden by tests that swallowed errors
+
+**Layer:** Pyegeria · **Status:** fixed 2026-10-02 · **Found:** 2026-10-02
+(removing the `except PyegeriaException: print(...)` pattern from
+`tests/functional-tests/test_my_profile.py` after ISSUE-115).
+
+**What:** like `get_my_resources`, three more `MyProfile` queries passed a
+rendering hint to `_async_get_results_body_request`, which sent it as
+`metadataElementTypeName`. None of the endpoints' `.http` examples send a type
+filter. Checked live for erinoverview, garygeeke and peterprofile, with and
+without the filter:
+
+| Method | `_type` | With the filter | Without |
+|---|---|---|---|
+| `get_my_actors` | `ActorProfile` | `OMAG-REPOSITORY-HANDLER-404-001` "... is of type UserIdentity rather than type ActorProfile" | UserIdentity + PersonRole + GovernanceRole elements |
+| `get_my_user_identities` | `UserIdentity` | no elements (even though every result is a UserIdentity) | the user's UserIdentity |
+| `get_my_roles` | `GovernanceRole` | no elements (even for users with GovernanceRoles) | PersonRole + GovernanceRole elements |
+
+The last two failed silently: "No elements found" looked like a legitimate
+empty result.
+
+**Fixed:** `filter_results_by_type=False` on all three, as for ISSUE-115.
+`tests/micro-tests/test_my_profile_no_type_filter.py` (renamed from
+`test_my_profile_get_my_resources_body.py`) now covers all four endpoints
+offline.
+
+**Test file rewritten:** `tests/functional-tests/test_my_profile.py` no longer
+catches `PyegeriaException`, and asserts non-empty results where every demo
+persona has data. Besides this defect, the old file's swallowed errors hid:
+- three tests calling `MyProfile.get_to_do`/`get_to_dos_by_type`/`update_to_do`,
+  which no longer exist (`AttributeError`, caught and printed). Replaced by
+  to-do lifecycle tests using `create_my_todo`, `get_asset_by_guid`,
+  `update_asset` and `delete_asset`.
+- two tests using hard-coded actor/sponsor GUIDs absent from a fresh quick start.
+  They now create their own to-do/action and query by the user's profile GUID.
+- `test_create_my_todo`'s teardown (ISSUE-45) never deleted anything: its
+  `{"class": "OpenMetadataDeleteRequestBody"}` body fails pyegeria validation,
+  so every run leaked a ToDo. To-dos are now deleted with `delete_asset`.
+
+**Noted, not changed:** `AssetMaker.get_assigned_actions`/
+`get_actions_for_sponsor`/`get_actions_for_requester` default
+`activity_status_list` to `["IN_PROGRESS"]`, so a newly created (`REQUESTED`)
+action is not returned unless callers pass the statuses explicitly. The `.http`
+example uses `["REQUESTED", "WAITING", "IN_PROGRESS"]`, as does `MyProfile`'s
+own `get_my_assigned_actions`. Changing the default would change behaviour for
+existing callers, so the tests pass the list explicitly instead.
+
+---
+
 ### ISSUE-115: `MyProfile.get_my_resources` always failed — its rendering hint `"Resource"` was sent as `metadataElementTypeName`
 
 **Layer:** Pyegeria · **Status:** fixed 2026-10-02 · **Found:** 2026-10-02
@@ -1341,8 +1390,10 @@ env", so the 400 never failed the test.
 rendering hint only — the same fix as `get_collection_members`
 (`collection_manager.py`). Verified live: Gary Geeke's profile now returns its
 `ResourceList`-linked `Bookmarks::garygeeke` collection in JSON, DICT and LIST
-formats. Covered by `tests/micro-tests/test_my_profile_get_my_resources_body.py`,
-which captures the outgoing body (fails without the fix).
+formats. Covered by `tests/micro-tests/test_my_profile_no_type_filter.py`
+(originally `test_my_profile_get_my_resources_body.py`), which captures the
+outgoing body (fails without the fix). Removing the swallowed-error pattern
+from the functional tests then found three more instances: ISSUE-116.
 
 ---
 
