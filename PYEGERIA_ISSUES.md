@@ -1190,6 +1190,43 @@ lacks `deleteMethod`, `permittedSynchronization`, `connectionName` and
 
 ---
 
+### ISSUE-121: `core/mcp_adapter.py` writes the caller's user name and plaintext password to stderr and the log on every report call
+
+**Layer:** pyegeria (credential leak in diagnostics) · **Status:** open,
+logged only, not fixed (per the gaps-tracking rule, awaiting explicit
+approval) · **Found:** 2026-10-03, read-only security sweep by the Resource
+Explorer coordinator session; no value was read or recorded.
+
+**What:** the report-execution entry point in `pyegeria/core/mcp_adapter.py`
+(the function whose docstring covers the `token` / `user` / `user_pass`
+fallback, around lines 170-180) builds a "Format set" diagnostic string that
+includes `user` and `user_pass`, then emits it twice: once with
+`print(..., file=sys.stderr)` and once with `logger.info(...)`. Both run
+before the settings fallback, so whatever the caller passed, and for the
+fallback path the configured profile, is written in clear text on every call.
+The log sink is loguru, so the password also lands in any rotated debug-log
+file (this repo's untracked `debug_log.*.zip` archives are the kind of file
+that would carry it) and in anything that captures the MCP server's stderr.
+
+**Severity (owner, 2026-10-03):** low for the current demo/dev systems; it becomes a real problem the moment anyone runs this against a production Egeria with real accounts.
+
+**Why it matters:** the password reaches files and terminals that are
+routinely attached to issues, zipped and shared. Rotating the credential
+does not remove the copies already written.
+
+**Candidate fix (not applied):** drop `user_pass` from both statements, and
+never log `token`. Log `user` only if the owner wants it. Rotate any
+Egeria account whose password was used through this adapter, and treat
+existing `debug_log.*` archives as containing it. A regression test should
+capture stderr and the log sink for a call with a sentinel password and
+assert the sentinel is absent.
+
+**Related:** the same sweep found two hard-coded database passwords in
+untracked Airflow DAG files in egeria-workspaces-fs; that is tracked in that
+repo, not here.
+
+---
+
 ### ISSUE-114: `get_guid_for_name`'s miss-sentinel string ("No elements found") is truthy and repeatedly fools callers' existence checks — a caller guideline, not a candidate fix here
 
 **Layer:** caller guideline (pyegeria's return convention is working as
