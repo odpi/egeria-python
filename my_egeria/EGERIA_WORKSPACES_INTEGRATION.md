@@ -16,7 +16,9 @@ with pyegeria) to turn the Textual app into a browser app — each WebSocket
 connection gets its own isolated app instance. The portal button simply links
 to the app's URL (new tab or iframe). No code difference between terminal and
 browser modes; the same installed app serves both. Behind a proxy, set
-`MY_EGERIA_PUBLIC_URL` (or `MY_PROFILE_PUBLIC_URL`) to the URL browsers use, so
+`MY_EGERIA_PUBLIC_URL` (or `MY_PROFILE_PUBLIC_URL`) to where the app is published (e.g.
+`https://<site>/my-egeria`). Only its path and default scheme are used: the host follows
+each browser's own address, so one setting works whatever hostname users arrive by, and
 the page's asset and WebSocket URLs are same-origin.
 
 ---

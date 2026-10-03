@@ -130,7 +130,7 @@ file. They must be present in the `my-egeria` service environment:
 | `EGERIA_USER_PASSWORD` | `secret`                            | Password (quickstart)           |
 | `MY_EGERIA_HOST`       | `0.0.0.0`                           | Listen host for textual-serve   |
 | `MY_EGERIA_PORT`       | `8021`                              | Listen port for textual-serve   |
-| `MY_EGERIA_PUBLIC_URL` | `https://<site>/my-egeria`          | URL browsers use when behind a proxy, so page and WebSocket URLs are same-origin. `MY_PROFILE_PUBLIC_URL` is the My Profile equivalent; `MY_EGERIA_PUBLIC_URL` is used for either app if the app's own is not set. |
+| `MY_EGERIA_PUBLIC_URL` | `https://<site>/my-egeria`          | Where the app is published behind a proxy. Only its **path** (and default scheme) is used: the host follows each browser's own address (from `X-Forwarded-Host`/`Host`), so one setting works for localhost, the machine name and a demo hostname. `MY_PROFILE_PUBLIC_URL` is the My Profile equivalent; `MY_EGERIA_PUBLIC_URL` is used for either app if the app's own is not set. |
 
 ---
 

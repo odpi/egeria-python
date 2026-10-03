@@ -88,7 +88,7 @@ To serve the app in a web browser instead of a terminal:
 serve_my_profile          # textual-serve on $MY_EGERIA_HOST:$MY_PROFILE_PORT (default 0.0.0.0:8020)
 ```
 
-Behind a reverse proxy, set `MY_PROFILE_PUBLIC_URL` (or `MY_EGERIA_PUBLIC_URL`) to the URL browsers use, e.g. `https://localhost:8843/my-egeria`, so the page's asset and WebSocket URLs are same-origin.
+Behind a reverse proxy, set `MY_PROFILE_PUBLIC_URL` (or `MY_EGERIA_PUBLIC_URL`) to where the app is published, e.g. `https://localhost:8843/my-egeria`. Only its path (and default scheme) is used: the host in the page's asset and WebSocket URLs follows the address each browser actually used, so the same setting works from `localhost`, the machine's name or a demo hostname.
 
 ## The Splash Screen and Changing User
 
