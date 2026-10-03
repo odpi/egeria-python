@@ -143,6 +143,69 @@ enough to track there too).
 
 ---
 
+### ISSUE-117: Cascade delete that takes the soft-delete (Memento) path fails partway with `OMAG-REPOSITORY-HANDLER-400-010` unless `forLineage=true` — leaves the asset live and an anchored element already soft-deleted
+
+**Layer:** Egeria Server · **Status:** open, workaround known, not yet
+reported upstream · **Found:** 2026-10-02, live test of Dr.Egeria's
+Automation family (`Initiate Subscription` / `Cancel Subscription`, PR #414),
+cleaning up the throwaway destination data set afterwards.
+
+**What:** Cascade-deleting an asset (`AssetMaker._async_delete_asset(guid,
+{"class": "DeleteElementRequestBody", "cascadeDelete": True})`, which sends
+`forLineage: false`) failed with:
+
+```
+OMAG-REPOSITORY-HANDLER-400-010 A Endpoint entity with unique identifier 9646fd06-... has been
+retrieved by method getEntityByGUID from service deleteMetadataElementInStore but it is not visible
+to the caller erinoverview: ... with classifications [Anchors, Memento] and call parameters of
+forLineage=false and forDuplicateProcessing=false
+```
+
+**The failure is not atomic.** The Endpoint's Memento classification was
+applied by `erinoverview` via `deleteMetadataElementInStore` at 15:47:47 UTC,
+the same second the failing call returned. So the call soft-deleted the
+anchored Endpoint, then re-read it without lineage visibility, couldn't see
+it, and errored. That left a half-done delete: the asset (CSVFile) and its
+Connection still live, and the Endpoint soft-deleted.
+
+**When it happens:** only when the delete takes the *soft-delete* path.
+Reproduced the same day:
+- **Fresh asset** (a new CSV Data File element, created and immediately
+  cascade-deleted with the identical call): succeeds and **purges**
+  everything. The element, its Connection and its Endpoint are gone even
+  with `forLineage=true`.
+- **Asset used as a subscription destination** (an action target of the
+  subscription process's engine actions): the delete **soft-deletes**
+  (Memento, `archiveMethod: deleteMetadataElementInStore`), consistent with
+  Egeria keeping elements that lineage relationships point at. This is the
+  case that fails partway.
+
+So the likely defect is that the soft-delete cascade re-reads anchored
+elements it has just Memento'd using the caller's `forLineage=false`. That
+cause is inferred from the error and the timestamps, not confirmed in Egeria's
+source; the exact trigger for choosing soft-delete over purge (engine-action
+action-target relationships here) is also inferred.
+
+**Workaround (confirmed):** repeat the delete with `forLineage: true` in the
+body (`{"class": "DeleteElementRequestBody", "cascadeDelete": True,
+"forLineage": True}`). It completes, and the asset, Connection and Endpoint
+all end up soft-deleted. Dr.Egeria's editing commands already send
+`forLineage=true` by default (`lineage_visible()`, 6.1.25); direct SDK
+callers don't.
+
+**Possible pyegeria follow-on (not done):** have the `_async_delete_*`
+wrappers send `forLineage=true` when `cascadeDelete` is set. That would avoid
+this failure mode for SDK callers. It needs a decision first, since it also
+changes what a cascade can see: Memento'd anchored elements are hidden
+today.
+
+**Upstream:** worth raising against Egeria with the evidence above. The
+reproduction is to run a subscription process with a fresh asset as
+`destinationDataSet`, cancel it, then cascade-delete the asset with
+`forLineage=false`.
+
+---
+
 ### ISSUE-112: `AutomatedCurationRESTServices.saveClientSideSecret`/`deleteClientSideSecret` return a plain success `VoidResponse` when the resolved connector isn't a `YAMLSecretsFileConnector` — no error, no write, no indication anything was skipped
 
 **Layer:** Egeria Server (`automated-curation` OMVS) · **Status:** open ·
