@@ -47,6 +47,12 @@ class CatalogTargetProperties(ReferenceableProperties):
     """Properties for Catalog Target relationships"""
     catalogTargetName: str | None = None
     metadataSourceQualifiedName: str | None = None
+    connectionName: str | None = None
+    metadataCollectionQualifiedName: str | None = None
+    # One of BOTH_DIRECTIONS, FROM_THIRD_PARTY, TO_THIRD_PARTY (Egeria PermittedSynchronization)
+    permittedSynchronization: str | None = None
+    # One of LOOK_FOR_LINEAGE, ARCHIVE, SOFT_DELETE, PURGE (see DeleteMethod)
+    deleteMethod: str | None = None
     templates: dict | None = None
     configurationProperties: dict | None = None
 
@@ -1369,7 +1375,8 @@ class AssetMaker(ServerClient):
         return await self._async_get_guid_request(
             url,
             _type="CatalogTarget",
-            _gen_output=self._generate_referenceable_output,
+            _gen_output=self._generate_catalog_target_output,
+            filter_results_by_type=False,  # CatalogTarget is a relationship type, not an element type
             graph_query_depth=graph_query_depth,
             output_format=output_format,
             report_spec=report_spec,
@@ -1479,6 +1486,7 @@ class AssetMaker(ServerClient):
             url,
             _type="CatalogTarget",
             _gen_output=self._generate_referenceable_output,
+            filter_results_by_type=False,  # CatalogTarget is a relationship type, not an element type
             graph_query_depth=graph_query_depth,
             start_from=start_from,
             page_size=page_size,
@@ -6798,6 +6806,59 @@ class AssetMaker(ServerClient):
                 **kwargs
             )
         )
+
+    def _generate_catalog_target_output(
+        self,
+        elements: list | dict,
+        filter_string: Optional[str] = None,
+        element_type_name: Optional[str] = None,
+        output_format: str = "DICT",
+        report_spec: dict | str | None = None,
+        **kwargs
+    ):
+        """Format a single CatalogTarget *relationship* (ISSUE-122).
+
+        get_catalog_target returns a relationship (relationshipGUID / relationshipProperties /
+        elementAtEnd1 / elementAtEnd2), not an element, so the element formatters return an
+        all-blank record for it. `report_spec` is not applied: no spec describes a relationship.
+        """
+        rel = elements[0] if isinstance(elements, list) and elements else elements
+        if not isinstance(rel, dict):
+            return rel
+
+        def _end(n: int) -> dict:
+            # The ends are element stubs (guid / uniqueName / type), not full elements --
+            # confirmed live 2026-10-04; there is no `properties` block to read names from.
+            end = rel.get(f"elementAtEnd{n}") or {}
+            return {
+                "guid": rel.get(f"elementGUIDAtEnd{n}") or end.get("guid", ""),
+                "type": (end.get("type") or {}).get("typeName", ""),
+                "name": end.get("uniqueName", ""),
+            }
+
+        end1, end2 = _end(1), _end(2)
+        props = (rel.get("relationshipProperties") or {}).get("propertiesAsStrings") or {}
+        row = {
+            "GUID": rel.get("relationshipGUID", ""),
+            "Type Name": (rel.get("relationshipType") or rel.get("type") or {}).get("typeName", "CatalogTarget"),
+            "Catalog Target Name": props.get("catalogTargetName", ""),
+            "Integration Connector GUID": end1["guid"],
+            "Integration Connector": end1["name"],
+            "Target Element GUID": end2["guid"],
+            "Target Element": end2["name"],
+            "Target Element Type": end2["type"],
+            "Relationship Properties": props,
+        }
+        if output_format.upper() == "DICT":
+            return [row]
+        lines = ["## Catalog Target", ""]
+        for k, v in row.items():
+            if k == "Relationship Properties":
+                lines += [f"### {k}", "| Parameter Name | Parameter Value |", "| :--- | :--- |"]
+                lines += [f"| {pk} | {pv} |" for pk, pv in v.items()]
+            else:
+                lines += [f"### {k}", str(v), ""]
+        return "\n".join(lines) + "\n"
 
     def _generate_referenceable_output(
         self,
