@@ -6827,13 +6827,13 @@ class AssetMaker(ServerClient):
             return rel
 
         def _end(n: int) -> dict:
+            # The ends are element stubs (guid / uniqueName / type), not full elements --
+            # confirmed live 2026-10-04; there is no `properties` block to read names from.
             end = rel.get(f"elementAtEnd{n}") or {}
-            props = end.get("properties") or {}
             return {
-                "guid": rel.get(f"elementGUIDAtEnd{n}") or (end.get("elementHeader") or {}).get("guid", ""),
-                "type": ((end.get("elementHeader") or end).get("type") or {}).get("typeName", ""),
-                "displayName": props.get("displayName", ""),
-                "qualifiedName": props.get("qualifiedName", ""),
+                "guid": rel.get(f"elementGUIDAtEnd{n}") or end.get("guid", ""),
+                "type": (end.get("type") or {}).get("typeName", ""),
+                "name": end.get("uniqueName", ""),
             }
 
         end1, end2 = _end(1), _end(2)
@@ -6843,9 +6843,9 @@ class AssetMaker(ServerClient):
             "Type Name": (rel.get("relationshipType") or rel.get("type") or {}).get("typeName", "CatalogTarget"),
             "Catalog Target Name": props.get("catalogTargetName", ""),
             "Integration Connector GUID": end1["guid"],
-            "Integration Connector": end1["displayName"] or end1["qualifiedName"],
+            "Integration Connector": end1["name"],
             "Target Element GUID": end2["guid"],
-            "Target Element": end2["displayName"] or end2["qualifiedName"],
+            "Target Element": end2["name"],
             "Target Element Type": end2["type"],
             "Relationship Properties": props,
         }

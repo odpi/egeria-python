@@ -73,16 +73,17 @@ def test_catalog_target_properties_keeps_relationship_fields():
         assert key in dumped
 
 
-# Trimmed from a live get_catalog_target response (2026-10-04): a relationship, not an element.
+# Trimmed from a live get_catalog_target response (2026-10-04): a relationship, not an element;
+# its ends are element stubs (guid / uniqueName / type), with no `properties` block.
 _REL = {
     "relationshipGUID": "rel-1",
     "relationshipType": {"typeName": "CatalogTarget"},
     "relationshipProperties": {"propertiesAsStrings": {"catalogTargetName": "tgt"}},
     "elementGUIDAtEnd1": "conn-1",
-    "elementAtEnd1": {"type": {"typeName": "IntegrationConnector"},
-                      "properties": {"displayName": "JDBC Cataloguer"}},
+    "elementAtEnd1": {"guid": "conn-1", "type": {"typeName": "IntegrationConnector"},
+                      "uniqueName": "JDBC Cataloguer"},
     "elementGUIDAtEnd2": "asset-1",
-    "elementAtEnd2": {"type": {"typeName": "Asset"}, "properties": {"qualifiedName": "q-asset"}},
+    "elementAtEnd2": {"guid": "asset-1", "type": {"typeName": "Asset"}, "uniqueName": "q-asset"},
 }
 
 

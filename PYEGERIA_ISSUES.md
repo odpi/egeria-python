@@ -1135,8 +1135,10 @@ not-found by GUID): list JSON/DICT/MD and single JSON work. **Second defect foun
 by that run:** `get_catalog_target` DICT/MD output was an all-blank record, because
 the endpoint returns a *relationship* (`relationshipGUID`, `elementAtEnd1/2`) and the
 element formatter has nothing to read. Added `_generate_catalog_target_output` for
-the single get; it is verified against a stubbed copy of the live shape only, not
-re-run live. The daemon's log during the ~1s window was not inspected.
+the single get and verified it live in a second throwaway run (also removed,
+not-found by GUID): the relationship's two ends are element stubs
+(`guid`/`uniqueName`/`type`, no `properties`), so names come from `uniqueName`.
+The daemon's log during the ~1s windows was not inspected.
 
 Original report follows.
 
