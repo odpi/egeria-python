@@ -1119,6 +1119,73 @@ on an Egeria Server capability that doesn't exist yet — but the pyegeria/
 Dr.Egeria-side work each will need once that capability ships is written
 into the entry now, so it isn't rediscovered from scratch later.
 
+### ISSUE-122: `AssetMaker.get_catalog_targets` / `get_catalog_target` send `metadataElementTypeName="CatalogTarget"` (a relationship type) — server rejects with OMAG-COMMON-400-019, surfaced as SERVER_ERROR_500
+
+**Status: fixed on branch `fix/issue-122-catalog-target-type` (2026-10-04), pending PR/merge**
+(logged 2026-10-04 by the Resource Explorer design session; found read-only while
+checking which catalog targets the PostgreSQL cataloguers hold).
+
+**Fix + live verification (2026-10-04):** both methods now pass
+`filter_results_by_type=False`; `_async_get_guid_request` gained that flag
+(default `True`, mirroring `_async_get_results_body_request`).
+`CatalogTargetProperties` gained `connectionName`, `metadataCollectionQualifiedName`,
+`permittedSynchronization`, `deleteMethod`. Verified live with one throwaway Asset +
+one CatalogTarget on the JDBC cataloguer (both removed afterwards; confirmed
+not-found by GUID): list JSON/DICT/MD and single JSON work. **Second defect found
+by that run:** `get_catalog_target` DICT/MD output was an all-blank record, because
+the endpoint returns a *relationship* (`relationshipGUID`, `elementAtEnd1/2`) and the
+element formatter has nothing to read. Added `_generate_catalog_target_output` for
+the single get; it is verified against a stubbed copy of the live shape only, not
+re-run live. The daemon's log during the ~1s window was not inspected.
+
+Original report follows.
+
+Both methods pass `_type="CatalogTarget"` into the generic results/guid request
+helpers, which put it in the request body as `metadataElementTypeName`
+(`pyegeria/omvs/asset_maker.py:1371` in `_async_get_catalog_target`, `:1480` in
+`_async_get_catalog_targets`, present at 6.1.27). `CatalogTarget` is the
+*relationship* type between an integration connector and its target, not an
+element type, so the view server answers:
+
+```
+OMAG-COMMON-400-019 ... CatalogTarget ... is not a sub-type of OpenMetadataRoot
+```
+
+which pyegeria surfaces as `SERVER_ERROR_500`. The call therefore always fails
+as shipped; nobody can list a connector's catalog targets through this client.
+
+**How to trigger:**
+```python
+am = AssetMaker("qs-view-server", "https://localhost:9443", user, pw)
+am.create_egeria_bearer_token(user, pw)
+am.get_catalog_targets("70dcd0b7-9f06-48ad-ad44-ae4d7a7762aa")   # JDBC cataloguer
+# -> PyegeriaException SERVER_ERROR_500 wrapping OMAG-COMMON-400-019
+```
+
+**Working alternative (confirmed live 2026-10-04):** supply a body with no
+element type, so the helper does not inject `CatalogTarget`:
+```python
+am.get_catalog_targets(
+    "70dcd0b7-9f06-48ad-ad44-ae4d7a7762aa",
+    body={"class": "ResultsRequestBody", "graphQueryDepth": 0},
+)
+# -> "No elements found"  (zero targets on this platform)
+```
+The same applies to `get_catalog_target(relationship_guid)`.
+
+**Likely fix (not made):** drop the `_type="CatalogTarget"` argument in both
+methods (or pass the element type the caller wants, default none), since the
+endpoint already scopes to catalog targets by URL. Not verified: the
+per-target response shape of a non-empty result (no targets exist on the dev
+platform to read), and whether `_generate_referenceable_output` handles the
+relationship-plus-element shape the server returns.
+
+Related: Resource Explorer's `evidence/CATALOGUE-LEVER-FINDINGS.md` §4–5
+(trellis repo), which also notes `CatalogTargetProperties` (`asset_maker.py:46-51`)
+lacks `deleteMethod`, `permittedSynchronization`, `connectionName` and
+`metadataCollectionQualifiedName`, which the Java relationship accepts.
+
+
 ---
 
 ### ISSUE-114: `get_guid_for_name`'s miss-sentinel string ("No elements found") is truthy and repeatedly fools callers' existence checks — a caller guideline, not a candidate fix here

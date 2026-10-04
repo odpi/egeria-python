@@ -6638,8 +6638,13 @@ class ServerClient(BaseServerClient):
                                       body: Optional[dict | GetRequestBody | ResultsRequestBody] = None,
                                       max_mermaid_node_count=10,
                                       body_model: type[GetRequestBody | ResultsRequestBody] = GetRequestBody,
+                                      filter_results_by_type: bool = True,
                                       **kwargs) -> Any:
         """Retrieve an element by GUID.
+
+        Set `filter_results_by_type=False` when `_type` is only a rendering hint (or names a
+        relationship type, which the server rejects as a metadataElementTypeName), so it is
+        not sent in the default request body.
 
         `body_model` selects the request-body class to send. It defaults to
         GetRequestBody, which is what nearly every endpoint reached through
@@ -6659,7 +6664,7 @@ class ServerClient(BaseServerClient):
             _type = _type.replace(" ", "")
             body = {
                 "class": body_model.__name__,
-                "metadataElementTypeName": _type,
+                "metadataElementTypeName": _type if filter_results_by_type else None,
                 "includeOnlyRelationships": include_only_relationships,
                 "skipRelationships": skip_relationships,
                 "graphQueryDepth": graph_query_depth,
