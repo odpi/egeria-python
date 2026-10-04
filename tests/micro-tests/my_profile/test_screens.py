@@ -566,7 +566,14 @@ class TestViewSubscriptionsScreen:
             self._subscription("sub-1", "Sales Feed", "garygeeke", "PROPOSED"),
             self._subscription("sub-2", "Not Mine", "erinoverview"),
         ]
-        app = ScreenTestHostApp(ViewSubscriptionsScreen)
+        def screen_for_garygeeke():
+            # The screen takes its user from settings (EGERIA_USER); pin it so the
+            # "own subscriptions" filter doesn't depend on the developer's environment.
+            screen = ViewSubscriptionsScreen()
+            screen.user_name = "garygeeke"
+            return screen
+
+        app = ScreenTestHostApp(screen_for_garygeeke)
         async with app.run_test() as pilot:
             await pilot.pause()
             assert client.find_collections.call_args.kwargs["metadata_element_type_name"] == "DigitalSubscription"
