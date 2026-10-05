@@ -1177,6 +1177,43 @@ Agreement.
 
 ---
 
+### ISSUE-123: `overview_metrics.count_elements` (and `_find`/`_element_count`) return `0`/`[]` on any failure — a failed measurement is indistinguishable from a real zero
+
+**Layer:** Pyegeria · **Status:** open · **Found:** 2026-10-04, while
+making the portal's Egeria Overview stop showing confident numbers during
+an outage · **GitHub:** odpi/egeria-python#424
+
+**Root cause, from reading `pyegeria/view/overview_metrics.py` (6.1.28):**
+
+- `_find(mgr, body, page_size)` wraps `find_metadata_elements` in a bare
+  `except Exception` and returns `[]`, logging only at `debug`.
+- `_element_count(mgr, body, as_of)` tries the native count; if it is
+  unsupported *or raises*, it falls back to `len(_find(...))` — so a failed
+  query becomes `0`.
+- `count_elements(...)`'s docstring states "0 on any failure (never
+  raises)". The callers `people_counts`, `usage_context_counts` and
+  `counts_by_type` inherit the same behaviour.
+
+**Effect:** a dashboard cannot tell "there are 0 elements" from "Egeria
+timed out / returned 401 / 500". An outage or auth failure renders as a
+confident `0`. A fallback count that returns exactly the page size is also
+only a lower bound, not a total, and is not flagged.
+
+**Proposed fix:** return `None` on failure (or add a strict variant, e.g.
+`count_elements(..., strict=True)` / `try_count_elements`, that raises or
+returns `None`), keeping today's behaviour behind an explicit opt-in if
+existing callers rely on it. Apply the same to `_find`/`_element_count` and
+propagate `None` through `people_counts`, `usage_context_counts` and
+`counts_by_type`. Log failures above `debug`. Flag a capped fallback count
+as a lower bound.
+
+**Workaround in egeria-workspaces:** the portal's Overview handler calls
+`find_metadata_elements` directly and returns `None` for failed or capped
+queries, rendering "Not measured" instead of `0` (odpi/egeria-workspaces
+#601, #607).
+
+---
+
 ### ISSUE-122: `AssetMaker.get_catalog_targets` / `get_catalog_target` send `metadataElementTypeName="CatalogTarget"` (a relationship type) — server rejects with OMAG-COMMON-400-019, surfaced as SERVER_ERROR_500
 
 **Status: fixed on branch `fix/issue-122-catalog-target-type` (2026-10-04), pending PR/merge**
