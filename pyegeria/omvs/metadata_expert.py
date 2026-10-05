@@ -4487,6 +4487,13 @@ class MetadataExpert(ServerClient):
         Update a type definition that was added through the API. The patch names the version it applies to
         and carries only what changes. Async version.
 
+        .. warning::
+           Against Egeria as of 2026-10-05 (including its main branch) every patch is rejected by the server
+           with OMRS-REPOSITORY-400-069, "mandatory field updatedBy set to null": the server builds the patch
+           with a converter that is never given the calling user. Nothing a client sends can supply it. See
+           PYEGERIA_ISSUES.md, ISSUE-124. This method matches the documented API and will work once that
+           is fixed upstream.
+
         Parameters
         ----------
         body : dict | OpenMetadataTypeDefPatch
@@ -4543,6 +4550,12 @@ class MetadataExpert(ServerClient):
         """
         Delete an enum definition that was added through the API. This fails while any type definition has an
         attribute of this type. Async version.
+
+        .. warning::
+           Observed live (2026-10-05) to fail with a 500, OMRS-CONTENT-MANAGER-500-001 "unknown TypeDef", even
+           after the only type using the enum had been deleted and while the enum was still listed by
+           ``get_attribute_types``: an enum added through the API could not be removed again. Delete enum
+           definitions only if you can live with that. See PYEGERIA_ISSUES.md, ISSUE-125.
 
         Parameters
         ----------
