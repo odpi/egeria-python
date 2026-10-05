@@ -2066,3 +2066,66 @@ class ProductManager(CollectionManager):
         """Generate the ODPS document that describes a digital product."""
         loop = asyncio.get_event_loop()
         return loop.run_until_complete(self._async_generate_data_product(digital_product_guid))
+
+    @dynamic_catch
+    async def _async_get_governance_action_processes_by_name(
+        self,
+        name: str,
+        body: Optional[dict] = None,
+        start_from: int = 0,
+        page_size: int = 0,
+        output_format: str = "JSON",
+        report_spec: Optional[str | dict] = None,
+        **kwargs,
+    ) -> list | str:
+        """Retrieve the governance action processes with a matching qualified or display name, from the Product
+        Catalog view service (`/product-catalog/governance-definitions/by-name`). A digital product's
+        subscription types are such processes -- qualified name
+        `ProvisioningActionProcess::<product>::Create Subscription::<type>` -- so this finds the process that
+        Dr.Egeria's `Initiate Subscription` runs. Async version.
+
+        There is no separate Product Catalog client: the view service is the read-only side of the product
+        manager's, so this lives here, with its own URL.
+
+        Parameters
+        ----------
+        name : str
+            Qualified or display name to match.
+        body : dict, optional
+            A full FilterRequestBody; supersedes `name`.
+        start_from, page_size : int
+            Paging.
+        output_format : str, default="JSON"
+            One of "JSON", "DICT", "MD", "FORM", "REPORT", or "MERMAID".
+        report_spec : str | dict, optional
+            The desired output columns/fields.
+
+        Returns
+        -------
+        list | str
+            The matching governance action processes, or NO_ELEMENTS_FOUND.
+        """
+        url = (f"{self.platform_url}/servers/{self.view_server}/api/open-metadata/"
+               f"product-catalog/governance-definitions/by-name")
+        return await self._async_get_name_request(
+            url, _type="GovernanceActionProcess", _gen_output=self._generate_referenceable_output,
+            filter_string=name, start_from=start_from, page_size=page_size,
+            output_format=output_format, report_spec=report_spec, body=body, **kwargs)
+
+    @dynamic_catch
+    def get_governance_action_processes_by_name(
+        self,
+        name: str,
+        body: Optional[dict] = None,
+        start_from: int = 0,
+        page_size: int = 0,
+        output_format: str = "JSON",
+        report_spec: Optional[str | dict] = None,
+        **kwargs,
+    ) -> list | str:
+        """Retrieve the governance action processes with a matching qualified or display name (for example a
+        digital product's subscription types)."""
+        loop = asyncio.get_event_loop()
+        return loop.run_until_complete(self._async_get_governance_action_processes_by_name(
+            name, body=body, start_from=start_from, page_size=page_size, output_format=output_format,
+            report_spec=report_spec, **kwargs))

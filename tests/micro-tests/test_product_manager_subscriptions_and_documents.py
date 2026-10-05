@@ -170,3 +170,19 @@ async def test_as_text_reaches_the_http_layer_as_text_plain(monkeypatch):
     await client._async_make_request("POST", "https://localhost:1/x", YAML_DOC)
 
     assert seen == ["text/plain", "application/json"]
+
+
+@pytest.mark.asyncio
+async def test_governance_action_processes_by_name_uses_the_product_catalog_url(monkeypatch):
+    calls: list = []
+    client = _client(calls, {"elements": [{"elementHeader": {"guid": "gap-1"}}]}, monkeypatch)
+
+    result = await client._async_get_governance_action_processes_by_name(
+        "ProvisioningActionProcess::Hospital Data::Create Subscription::EVAL")
+
+    assert result == [{"elementHeader": {"guid": "gap-1"}}]
+    assert calls[0]["method"] == "POST"
+    assert calls[0]["url"].endswith("/api/open-metadata/product-catalog/governance-definitions/by-name")
+    assert calls[0]["body"]["filter"] == "ProvisioningActionProcess::Hospital Data::Create Subscription::EVAL"
+    # a filter by name, not by an element type (a wrong type name is rejected by the server)
+    assert "metadataElementTypeName" not in calls[0]["body"]
