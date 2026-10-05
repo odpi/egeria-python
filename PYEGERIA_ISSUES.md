@@ -1302,6 +1302,12 @@ unused, announced to the cohort. Harmless but visible in type listings. A retry 
 is worthwhile (the .http says API-defined types survive a restart when the repository is persistent, so the content
 manager may then know it by GUID).
 
+**Re-tested 2026-10-05 after the platform was rebuilt and restarted** (image built 14:19Z from egeria main
+`449ad06894`, `egeria-main` restarted 14:39Z): the enum survived the restart and is still listed, and
+`delete_enum_def` fails with the identical `OMRS-CONTENT-MANAGER-500-001`. So a restart does not repopulate the
+GUID map; the persisted type is loaded without being registered under its GUID (or the delete looks in the wrong
+map). The retry-after-restart idea above is closed.
+
 **Workaround:** none through the API. Avoid creating throwaway enums on a shared platform.
 
 ---
