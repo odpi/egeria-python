@@ -1276,6 +1276,12 @@ id and has no `setUpdatedBy` call, while `OMRSMetadataCollection.updateTypeDef` 
 Not a pyegeria defect: the SDK sends the documented body. Fix belongs upstream (pass `userId` to the converter and
 set it).
 
+**Re-tested 2026-10-05 after the platform was rebuilt and restarted** (image built 14:19Z from egeria main
+`449ad06894`): a throwaway entity type (primitive attribute only) was added and patched with one new attribute.
+The server rejected the patch with the identical `OMRS-REPOSITORY-400-069 ... updatedBy set to null`
+(`TypeDefPatch{... applyToVersion=1, updateToVersion=2, newVersionName=2.0, updatedBy=null ...}`). The type was
+then deleted and verified gone. **Confirmed still present on the rebuilt platform.**
+
 **Effect here:** `update_type_def` is correct but unusable against current Egeria; its docstring says so.
 
 ---
