@@ -286,7 +286,7 @@ downstream investigation.
 
 ### ISSUE-102: `MemberDataField.minCardinality` silently persists as `maxCardinality`'s value regardless of what's actually sent — server-side, confirmed via a raw request bypassing every pyegeria/Dr.Egeria layer
 
-**Layer:** Egeria Server (repository/relationship-property persistence) · **Status:** open · **Found:** 2026-09-17, live-verifying a Dr.Egeria fix for `Position`/`Minimum Cardinality`/`Maximum Cardinality` on the field↔structure `MemberDataField` relationship (`qs-view-server`/`qs-metadata-store`, versionName `6.2-SNAPSHOT`).
+**Layer:** Egeria Server (repository/relationship-property persistence) · **Status:** NO LONGER REPRODUCES on the 2026-10-05 rebuilt platform (see the re-test below) · **Found:** 2026-09-17, live-verifying a Dr.Egeria fix for `Position`/`Minimum Cardinality`/`Maximum Cardinality` on the field↔structure `MemberDataField` relationship (`qs-view-server`/`qs-metadata-store`, versionName `6.2-SNAPSHOT`).
 
 Confirmed with the type system's own definition
 (`ValidMetadataManager._async_get_all_relationship_defs()`, filtered to
@@ -294,6 +294,26 @@ Confirmed with the type system's own definition
 `minCardinality`, `maxCardinality` — all plain `int`, `AT_MOST_ONE`
 cardinality, no documented interdependency between `minCardinality` and
 `maxCardinality`.
+
+**Re-tested 2026-10-05 on the rebuilt platform** (Egeria image built 14:19Z from main `449ad06894`,
+`egeria-main` restarted 14:39Z). One throwaway `DataStructure` and four `DataField`s were linked with
+`MemberDataField` and each relationship was read back via the endpoints lookup
+(`get_metadata_element_relationships`). **All four stored correctly** (`position` always right):
+
+| sent (min, max) | stored (min, max) |
+|---|---|
+| 1, 5 | 1, 5 |
+| 2, 7 | 2, 7 |
+| 0, 5 | 0, 5 |
+| 3, *omitted* | 3, 0 |
+
+Everything was deleted child-first and verified gone. **The bug no longer reproduces.** The cause of the fix is not
+known: a source comparison of the bean (`MemberDataFieldProperties`/`PartOfRelationshipProperties`), the read
+converter and the relationship builder between 2026-09-15 and `449ad06894` found no change, so either the fix is
+in code that was not inspected or the build that showed the bug on 2026-09-17 was older than that baseline. Worth
+asking the Egeria team which change fixed it before closing this for good. Side observation, separate from this
+bug: an omitted `maxCardinality` is stored as `0` (the bean default), below a supplied minimum; the bean's own
+documentation says `-1` means unlimited.
 
 **Repro (isolated with a raw SDK call — no Dr.Egeria markdown, no pyegeria
 body-construction logic in the path beyond `EgeriaTech.data_designer`):**
