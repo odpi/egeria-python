@@ -1250,10 +1250,25 @@ lacks `deleteMethod`, `permittedSynchronization`, `connectionName` and
 
 ### ISSUE-121: `core/mcp_adapter.py` writes the caller's user name and plaintext password to stderr and the log on every report call
 
-**Layer:** pyegeria (credential leak in diagnostics) · **Status:** open,
-logged only, not fixed (per the gaps-tracking rule, awaiting explicit
-approval) · **Found:** 2026-10-03, read-only security sweep by the Resource
+**Layer:** pyegeria (credential leak in diagnostics) · **Status:** fixed on
+branch `fix/issue-121-mcp-adapter-no-password-logging` (2026-10-05), pending
+PR/merge · **Found:** 2026-10-03, read-only security sweep by the Resource
 Explorer coordinator session; no value was read or recorded.
+
+**Correction to the original report (2026-10-05, from reading the code):**
+there were **three** leak sites in **two** functions, not two in one --
+`_execute_egeria_call_blocking` printed the string to stderr, and `run_report`
+both printed it to stderr and `logger.info`'d it. And the fallback path did
+**not** leak the configured profile's password: the string is built before the
+settings fallback, so it logged `None` there; only a password a caller passed
+explicitly was written. **Fix:** one `_describe_call()` helper used by all three
+sites; it keeps report/params/server/user and states the *kind* of credential
+(`bearer token` / `explicit user/password` / `defaults from settings`), never the
+value. Regression tests (`test_mcp_adapter_no_secret_logging.py`) assert a
+sentinel password and token appear in neither stderr nor a loguru sink, and fail
+on the old code. **Not done by code:** any `debug_log.*` archive written before
+this fix may already hold a password, and rotating a real credential used
+through this adapter is still the owner's call.
 
 **What:** the report-execution entry point in `pyegeria/core/mcp_adapter.py`
 (the function whose docstring covers the `token` / `user` / `user_pass`
