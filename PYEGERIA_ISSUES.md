@@ -1119,6 +1119,49 @@ on an Egeria Server capability that doesn't exist yet — but the pyegeria/
 Dr.Egeria-side work each will need once that capability ships is written
 into the entry now, so it isn't rediscovered from scratch later.
 
+### ISSUE-126: `ProductManager` and `DigitalBusiness` never set `collection_command_root`, so every inherited `CollectionManager` method that uses it raises `AttributeError`
+
+**Layer:** pyegeria · **Status:** open, logged only, not fixed (awaiting approval) · **Found:** 2026-10-05,
+live cleanup of a throwaway data contract (PR #427's live check).
+
+**What:** `ProductManager.__init__` and `DigitalBusiness.__init__` call `ServerClient.__init__` directly instead
+of `CollectionManager.__init__` (`GlossaryManager` does it correctly). `CollectionManager.__init__` is what sets
+`self.collection_command_root`, which 27 of `CollectionManager`'s methods use, so on those two subclasses all of
+them fail:
+
+```python
+pm = ProductManager(view_server, platform_url, user, pwd)
+pm.delete_collection(guid, cascade=True)
+# AttributeError: 'ProductManager' object has no attribute 'collection_command_root'
+```
+
+**Fix (not made):** call `CollectionManager.__init__` from both constructors, or set the attribute. A test that
+constructs each `CollectionManager` subclass and asserts the attribute exists would have caught it.
+
+---
+
+### ISSUE-127: `CollectionManager.delete_collection(cascade=True)` silently never sends `cascadeDelete` -- same shape as ISSUE-62
+
+**Layer:** pyegeria · **Status:** open, logged only, not fixed (awaiting approval) · **Found:** 2026-10-05, found
+by capturing the request body while diagnosing a failed cleanup.
+
+**What:** `_async_delete_collection` always pre-fills `body = {"class": "DeleteElementRequestBody"}` when none is
+given and hands that dict to `_async_delete_element_request(url, body, cascade)`.
+`validate_delete_element_request` applies `cascade_delete` only in its *no body* branch, so with that pre-filled dict
+the flag is discarded. Captured: `delete_collection("g", cascade=True)` posts
+`{'class': 'DeleteElementRequestBody', 'forLineage': False, 'forDuplicateProcessing': False}` with no
+`cascadeDelete`. `MetadataExpert.delete_metadata_element(cascade_delete=True)` does send it.
+
+**Fix (not made):** do not pre-fill the body (pass `None` so the helper applies the flag), or put `cascadeDelete` in
+the pre-filled dict. Worth grepping for other callers that pre-fill a default dict *and* pass a cascade flag.
+
+**Related, an Egeria quirk found alongside:** even with `cascadeDelete: true`, Egeria refused to delete a
+`DataStructure` that still had a member `DataField` (`OMAG-GENERIC-HANDLERS-403-005 ... validateNoMemberDataFields`),
+so a data contract imported by `import_data_contract*` has to be removed child-first: DataField, DataStructure,
+Agreement.
+
+---
+
 ### ISSUE-122: `AssetMaker.get_catalog_targets` / `get_catalog_target` send `metadataElementTypeName="CatalogTarget"` (a relationship type) — server rejects with OMAG-COMMON-400-019, surfaced as SERVER_ERROR_500
 
 **Status: fixed on branch `fix/issue-122-catalog-target-type` (2026-10-04), pending PR/merge**
@@ -1192,10 +1235,25 @@ lacks `deleteMethod`, `permittedSynchronization`, `connectionName` and
 
 ### ISSUE-121: `core/mcp_adapter.py` writes the caller's user name and plaintext password to stderr and the log on every report call
 
-**Layer:** pyegeria (credential leak in diagnostics) · **Status:** open,
-logged only, not fixed (per the gaps-tracking rule, awaiting explicit
-approval) · **Found:** 2026-10-03, read-only security sweep by the Resource
+**Layer:** pyegeria (credential leak in diagnostics) · **Status:** fixed on
+branch `fix/issue-121-mcp-adapter-no-password-logging` (2026-10-05), pending
+PR/merge · **Found:** 2026-10-03, read-only security sweep by the Resource
 Explorer coordinator session; no value was read or recorded.
+
+**Correction to the original report (2026-10-05, from reading the code):**
+there were **three** leak sites in **two** functions, not two in one --
+`_execute_egeria_call_blocking` printed the string to stderr, and `run_report`
+both printed it to stderr and `logger.info`'d it. And the fallback path did
+**not** leak the configured profile's password: the string is built before the
+settings fallback, so it logged `None` there; only a password a caller passed
+explicitly was written. **Fix:** one `_describe_call()` helper used by all three
+sites; it keeps report/params/server/user and states the *kind* of credential
+(`bearer token` / `explicit user/password` / `defaults from settings`), never the
+value. Regression tests (`test_mcp_adapter_no_secret_logging.py`) assert a
+sentinel password and token appear in neither stderr nor a loguru sink, and fail
+on the old code. **Not done by code:** any `debug_log.*` archive written before
+this fix may already hold a password, and rotating a real credential used
+through this adapter is still the owner's call.
 
 **What:** the report-execution entry point in `pyegeria/core/mcp_adapter.py`
 (the function whose docstring covers the `token` / `user` / `user_pass`
