@@ -34,6 +34,11 @@ STANDARD_VERBS = {
     # row, and every downstream definition/link claiming the never-created
     # valid value fails with an unrelated-looking message instead.
     "Setup", "Clear", "Set",
+    # Digital Products family: "Import Data Contract" / "Import Data Product" (catalog an
+    # ODCS / ODPS document) and "Publish Data Contract" / "Publish Data Product" (send one to an
+    # integration daemon). Without these the `## Import ...` / `## Publish ...` headings never match
+    # cmd_header_rx and silently fall through as prose -- no error, no summary row.
+    "Import", "Publish",
 }
 
 # Commands that appear as a single word (no separate verb) and map to canonical verb+object

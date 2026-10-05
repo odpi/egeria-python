@@ -493,8 +493,12 @@ class BaseServerClient:
             *,
             timeout: int = None,
             _retry_on_auth: bool = True,
+            as_text: bool = False,
     ) -> Response | str:
         """Make an asynchronous request to the Egeria API.
+
+        `as_text=True` sends a str payload as `text/plain` (using `self.text_headers`) rather than
+        the default `application/json`, for endpoints that take a raw document (YAML or JSON) string.
 
         Parameters
         ----------
@@ -563,7 +567,7 @@ class BaseServerClient:
                 elif type(payload) is str:
                     response = await self.session.post(
                         endpoint,
-                        headers=self.headers,
+                        headers=self.text_headers if as_text else self.headers,
                         content=payload,
                         timeout=timeout,
                         params=params
@@ -617,7 +621,7 @@ class BaseServerClient:
                 if new_token and new_token != "FAILED":
                     return await self._async_make_request(
                         request_type, endpoint, payload, is_json, params,
-                        timeout=timeout, _retry_on_auth=False,
+                        timeout=timeout, _retry_on_auth=False, as_text=as_text,
                     )
 
             additional_info = {"userid": self.user_id}

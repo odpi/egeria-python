@@ -17,6 +17,7 @@ from pyegeria.models.models import (
     DeleteRequestBody,
     DeleteElementRequestBody,
     DeleteRelationshipRequestBody,
+    NewSubscriptionTypeRequestBody,
     DeleteClassificationRequestBody,
     InitialClassifications,
     NewElementRequestBody,
