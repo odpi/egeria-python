@@ -4404,6 +4404,11 @@ class MetadataExpert(ServerClient):
         Add a new enum definition, which can then be used as the type of attributes in new type definitions.
         Async version.
 
+        .. warning::
+           An enum added through the API cannot be removed again: ``delete_enum_def`` currently fails against
+           Egeria with a 500 "unknown TypeDef" (an Egeria server bug, ISSUE-125, reproduced on Egeria main
+           449ad06894, and the enum survives a restart). Do not create throwaway enums on a shared platform.
+
         Parameters
         ----------
         body : dict | OpenMetadataEnumDef
@@ -4433,7 +4438,8 @@ class MetadataExpert(ServerClient):
 
     @dynamic_catch
     def add_enum_def(self, body: dict | OpenMetadataEnumDef) -> str | dict:
-        """Add a new enum definition, which can then be used as the type of attributes in new type definitions."""
+        """Add a new enum definition, which can then be used as the type of attributes in new type definitions.
+        Note: it cannot be removed again through the API (ISSUE-125); see the async version's warning."""
         loop = asyncio.get_event_loop()
         return loop.run_until_complete(self._async_add_enum_def(body))
 
@@ -4442,6 +4448,10 @@ class MetadataExpert(ServerClient):
         """
         Add a new type definition for an entity, relationship or classification. Links to other types - the
         supertype, attribute types, relationship ends - only need the name of the type. Async version.
+
+        .. note::
+           Verified against a live server for entity types (with primitive and enum attributes). Relationship and
+           classification definitions go through the same code and models but have not been exercised live.
 
         Parameters
         ----------
