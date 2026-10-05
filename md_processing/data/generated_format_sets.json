@@ -99901,6 +99901,708 @@
     "get_additional_props": null,
     "question_spec": null
   },
+  "Subscription-Type-DrE-Basic": {
+    "target_type": "Subscription Type",
+    "heading": "Subscription-Type-DrE-Basic Attributes",
+    "description": "Auto-generated format for Subscription Type (Create, Basic).",
+    "aliases": [],
+    "annotations": {},
+    "family": "Digital Product Manager",
+    "formats": [
+      {
+        "types": [
+          "LIST"
+        ],
+        "attributes": [
+          {
+            "name": "Display Name",
+            "key": "display_name",
+            "value": null,
+            "format": false,
+            "detail_spec": null,
+            "valid_values": []
+          },
+          {
+            "name": "Digital Product",
+            "key": "digital_product",
+            "value": null,
+            "format": false,
+            "detail_spec": null,
+            "valid_values": []
+          },
+          {
+            "name": "Subscription Kind",
+            "key": "subscription_kind",
+            "value": null,
+            "format": false,
+            "detail_spec": null,
+            "valid_values": [
+              "ONE_TIME",
+              "PERIODIC",
+              "ONGOING_UPDATE"
+            ]
+          },
+          {
+            "name": "Description",
+            "key": "description",
+            "value": null,
+            "format": false,
+            "detail_spec": null,
+            "valid_values": []
+          },
+          {
+            "name": "Subscription Notification Interval",
+            "key": "subscription_notification_interval",
+            "value": null,
+            "format": false,
+            "detail_spec": null,
+            "valid_values": []
+          },
+          {
+            "name": "Monitored Resources",
+            "key": "monitored_resources",
+            "value": null,
+            "format": false,
+            "detail_spec": null,
+            "valid_values": []
+          }
+        ],
+        "columns": [
+          {
+            "name": "Display Name",
+            "key": "display_name",
+            "value": null,
+            "format": false,
+            "detail_spec": null,
+            "valid_values": []
+          },
+          {
+            "name": "Digital Product",
+            "key": "digital_product",
+            "value": null,
+            "format": false,
+            "detail_spec": null,
+            "valid_values": []
+          },
+          {
+            "name": "Subscription Kind",
+            "key": "subscription_kind",
+            "value": null,
+            "format": false,
+            "detail_spec": null,
+            "valid_values": [
+              "ONE_TIME",
+              "PERIODIC",
+              "ONGOING_UPDATE"
+            ]
+          },
+          {
+            "name": "Description",
+            "key": "description",
+            "value": null,
+            "format": false,
+            "detail_spec": null,
+            "valid_values": []
+          },
+          {
+            "name": "Subscription Notification Interval",
+            "key": "subscription_notification_interval",
+            "value": null,
+            "format": false,
+            "detail_spec": null,
+            "valid_values": []
+          },
+          {
+            "name": "Monitored Resources",
+            "key": "monitored_resources",
+            "value": null,
+            "format": false,
+            "detail_spec": null,
+            "valid_values": []
+          }
+        ]
+      },
+      {
+        "types": [
+          "ALL"
+        ],
+        "attributes": [
+          {
+            "name": "Digital Product",
+            "key": "digital_product",
+            "value": null,
+            "format": false,
+            "detail_spec": null,
+            "valid_values": []
+          },
+          {
+            "name": "Subscription Kind",
+            "key": "subscription_kind",
+            "value": null,
+            "format": false,
+            "detail_spec": null,
+            "valid_values": [
+              "ONE_TIME",
+              "PERIODIC",
+              "ONGOING_UPDATE"
+            ]
+          },
+          {
+            "name": "Display Name",
+            "key": "display_name",
+            "value": null,
+            "format": false,
+            "detail_spec": null,
+            "valid_values": []
+          },
+          {
+            "name": "Description",
+            "key": "description",
+            "value": null,
+            "format": false,
+            "detail_spec": null,
+            "valid_values": []
+          },
+          {
+            "name": "Subscription Notification Interval",
+            "key": "subscription_notification_interval",
+            "value": null,
+            "format": false,
+            "detail_spec": null,
+            "valid_values": []
+          },
+          {
+            "name": "Monitored Resources",
+            "key": "monitored_resources",
+            "value": null,
+            "format": false,
+            "detail_spec": null,
+            "valid_values": []
+          }
+        ],
+        "columns": [
+          {
+            "name": "Digital Product",
+            "key": "digital_product",
+            "value": null,
+            "format": false,
+            "detail_spec": null,
+            "valid_values": []
+          },
+          {
+            "name": "Subscription Kind",
+            "key": "subscription_kind",
+            "value": null,
+            "format": false,
+            "detail_spec": null,
+            "valid_values": [
+              "ONE_TIME",
+              "PERIODIC",
+              "ONGOING_UPDATE"
+            ]
+          },
+          {
+            "name": "Display Name",
+            "key": "display_name",
+            "value": null,
+            "format": false,
+            "detail_spec": null,
+            "valid_values": []
+          },
+          {
+            "name": "Description",
+            "key": "description",
+            "value": null,
+            "format": false,
+            "detail_spec": null,
+            "valid_values": []
+          },
+          {
+            "name": "Subscription Notification Interval",
+            "key": "subscription_notification_interval",
+            "value": null,
+            "format": false,
+            "detail_spec": null,
+            "valid_values": []
+          },
+          {
+            "name": "Monitored Resources",
+            "key": "monitored_resources",
+            "value": null,
+            "format": false,
+            "detail_spec": null,
+            "valid_values": []
+          }
+        ]
+      }
+    ],
+    "action": null,
+    "get_additional_props": null,
+    "question_spec": null
+  },
+  "Subscription-Type-DrE-Advanced": {
+    "target_type": "Subscription Type",
+    "heading": "Subscription-Type-DrE-Advanced Attributes",
+    "description": "Auto-generated format for Subscription Type (Create, Advanced).",
+    "aliases": [],
+    "annotations": {},
+    "family": "Digital Product Manager",
+    "formats": [
+      {
+        "types": [
+          "LIST"
+        ],
+        "attributes": [
+          {
+            "name": "Display Name",
+            "key": "display_name",
+            "value": null,
+            "format": false,
+            "detail_spec": null,
+            "valid_values": []
+          },
+          {
+            "name": "Effective From",
+            "key": "effective_from",
+            "value": null,
+            "format": false,
+            "detail_spec": null,
+            "valid_values": []
+          },
+          {
+            "name": "Effective Time",
+            "key": "effective_time",
+            "value": null,
+            "format": false,
+            "detail_spec": null,
+            "valid_values": []
+          },
+          {
+            "name": "Effective To",
+            "key": "effective_to",
+            "value": null,
+            "format": false,
+            "detail_spec": null,
+            "valid_values": []
+          },
+          {
+            "name": "Digital Product",
+            "key": "digital_product",
+            "value": null,
+            "format": false,
+            "detail_spec": null,
+            "valid_values": []
+          },
+          {
+            "name": "Subscription Kind",
+            "key": "subscription_kind",
+            "value": null,
+            "format": false,
+            "detail_spec": null,
+            "valid_values": [
+              "ONE_TIME",
+              "PERIODIC",
+              "ONGOING_UPDATE"
+            ]
+          },
+          {
+            "name": "Description",
+            "key": "description",
+            "value": null,
+            "format": false,
+            "detail_spec": null,
+            "valid_values": []
+          },
+          {
+            "name": "Identifier",
+            "key": "identifier",
+            "value": null,
+            "format": false,
+            "detail_spec": null,
+            "valid_values": []
+          },
+          {
+            "name": "Subscription Notification Interval",
+            "key": "subscription_notification_interval",
+            "value": null,
+            "format": false,
+            "detail_spec": null,
+            "valid_values": []
+          },
+          {
+            "name": "Monitored Resources",
+            "key": "monitored_resources",
+            "value": null,
+            "format": false,
+            "detail_spec": null,
+            "valid_values": []
+          },
+          {
+            "name": "Subscription Manager",
+            "key": "subscription_manager",
+            "value": null,
+            "format": false,
+            "detail_spec": null,
+            "valid_values": []
+          },
+          {
+            "name": "Subscription License Type",
+            "key": "subscription_license_type",
+            "value": null,
+            "format": false,
+            "detail_spec": null,
+            "valid_values": []
+          },
+          {
+            "name": "Subscription Service Level Objective",
+            "key": "subscription_service_level_objective",
+            "value": null,
+            "format": false,
+            "detail_spec": null,
+            "valid_values": []
+          }
+        ],
+        "columns": [
+          {
+            "name": "Display Name",
+            "key": "display_name",
+            "value": null,
+            "format": false,
+            "detail_spec": null,
+            "valid_values": []
+          },
+          {
+            "name": "Effective From",
+            "key": "effective_from",
+            "value": null,
+            "format": false,
+            "detail_spec": null,
+            "valid_values": []
+          },
+          {
+            "name": "Effective Time",
+            "key": "effective_time",
+            "value": null,
+            "format": false,
+            "detail_spec": null,
+            "valid_values": []
+          },
+          {
+            "name": "Effective To",
+            "key": "effective_to",
+            "value": null,
+            "format": false,
+            "detail_spec": null,
+            "valid_values": []
+          },
+          {
+            "name": "Digital Product",
+            "key": "digital_product",
+            "value": null,
+            "format": false,
+            "detail_spec": null,
+            "valid_values": []
+          },
+          {
+            "name": "Subscription Kind",
+            "key": "subscription_kind",
+            "value": null,
+            "format": false,
+            "detail_spec": null,
+            "valid_values": [
+              "ONE_TIME",
+              "PERIODIC",
+              "ONGOING_UPDATE"
+            ]
+          },
+          {
+            "name": "Description",
+            "key": "description",
+            "value": null,
+            "format": false,
+            "detail_spec": null,
+            "valid_values": []
+          },
+          {
+            "name": "Identifier",
+            "key": "identifier",
+            "value": null,
+            "format": false,
+            "detail_spec": null,
+            "valid_values": []
+          },
+          {
+            "name": "Subscription Notification Interval",
+            "key": "subscription_notification_interval",
+            "value": null,
+            "format": false,
+            "detail_spec": null,
+            "valid_values": []
+          },
+          {
+            "name": "Monitored Resources",
+            "key": "monitored_resources",
+            "value": null,
+            "format": false,
+            "detail_spec": null,
+            "valid_values": []
+          },
+          {
+            "name": "Subscription Manager",
+            "key": "subscription_manager",
+            "value": null,
+            "format": false,
+            "detail_spec": null,
+            "valid_values": []
+          },
+          {
+            "name": "Subscription License Type",
+            "key": "subscription_license_type",
+            "value": null,
+            "format": false,
+            "detail_spec": null,
+            "valid_values": []
+          },
+          {
+            "name": "Subscription Service Level Objective",
+            "key": "subscription_service_level_objective",
+            "value": null,
+            "format": false,
+            "detail_spec": null,
+            "valid_values": []
+          }
+        ]
+      },
+      {
+        "types": [
+          "ALL"
+        ],
+        "attributes": [
+          {
+            "name": "Effective From",
+            "key": "effective_from",
+            "value": null,
+            "format": false,
+            "detail_spec": null,
+            "valid_values": []
+          },
+          {
+            "name": "Effective Time",
+            "key": "effective_time",
+            "value": null,
+            "format": false,
+            "detail_spec": null,
+            "valid_values": []
+          },
+          {
+            "name": "Effective To",
+            "key": "effective_to",
+            "value": null,
+            "format": false,
+            "detail_spec": null,
+            "valid_values": []
+          },
+          {
+            "name": "Digital Product",
+            "key": "digital_product",
+            "value": null,
+            "format": false,
+            "detail_spec": null,
+            "valid_values": []
+          },
+          {
+            "name": "Subscription Kind",
+            "key": "subscription_kind",
+            "value": null,
+            "format": false,
+            "detail_spec": null,
+            "valid_values": [
+              "ONE_TIME",
+              "PERIODIC",
+              "ONGOING_UPDATE"
+            ]
+          },
+          {
+            "name": "Display Name",
+            "key": "display_name",
+            "value": null,
+            "format": false,
+            "detail_spec": null,
+            "valid_values": []
+          },
+          {
+            "name": "Description",
+            "key": "description",
+            "value": null,
+            "format": false,
+            "detail_spec": null,
+            "valid_values": []
+          },
+          {
+            "name": "Identifier",
+            "key": "identifier",
+            "value": null,
+            "format": false,
+            "detail_spec": null,
+            "valid_values": []
+          },
+          {
+            "name": "Subscription Notification Interval",
+            "key": "subscription_notification_interval",
+            "value": null,
+            "format": false,
+            "detail_spec": null,
+            "valid_values": []
+          },
+          {
+            "name": "Monitored Resources",
+            "key": "monitored_resources",
+            "value": null,
+            "format": false,
+            "detail_spec": null,
+            "valid_values": []
+          },
+          {
+            "name": "Subscription Manager",
+            "key": "subscription_manager",
+            "value": null,
+            "format": false,
+            "detail_spec": null,
+            "valid_values": []
+          },
+          {
+            "name": "Subscription License Type",
+            "key": "subscription_license_type",
+            "value": null,
+            "format": false,
+            "detail_spec": null,
+            "valid_values": []
+          },
+          {
+            "name": "Subscription Service Level Objective",
+            "key": "subscription_service_level_objective",
+            "value": null,
+            "format": false,
+            "detail_spec": null,
+            "valid_values": []
+          }
+        ],
+        "columns": [
+          {
+            "name": "Effective From",
+            "key": "effective_from",
+            "value": null,
+            "format": false,
+            "detail_spec": null,
+            "valid_values": []
+          },
+          {
+            "name": "Effective Time",
+            "key": "effective_time",
+            "value": null,
+            "format": false,
+            "detail_spec": null,
+            "valid_values": []
+          },
+          {
+            "name": "Effective To",
+            "key": "effective_to",
+            "value": null,
+            "format": false,
+            "detail_spec": null,
+            "valid_values": []
+          },
+          {
+            "name": "Digital Product",
+            "key": "digital_product",
+            "value": null,
+            "format": false,
+            "detail_spec": null,
+            "valid_values": []
+          },
+          {
+            "name": "Subscription Kind",
+            "key": "subscription_kind",
+            "value": null,
+            "format": false,
+            "detail_spec": null,
+            "valid_values": [
+              "ONE_TIME",
+              "PERIODIC",
+              "ONGOING_UPDATE"
+            ]
+          },
+          {
+            "name": "Display Name",
+            "key": "display_name",
+            "value": null,
+            "format": false,
+            "detail_spec": null,
+            "valid_values": []
+          },
+          {
+            "name": "Description",
+            "key": "description",
+            "value": null,
+            "format": false,
+            "detail_spec": null,
+            "valid_values": []
+          },
+          {
+            "name": "Identifier",
+            "key": "identifier",
+            "value": null,
+            "format": false,
+            "detail_spec": null,
+            "valid_values": []
+          },
+          {
+            "name": "Subscription Notification Interval",
+            "key": "subscription_notification_interval",
+            "value": null,
+            "format": false,
+            "detail_spec": null,
+            "valid_values": []
+          },
+          {
+            "name": "Monitored Resources",
+            "key": "monitored_resources",
+            "value": null,
+            "format": false,
+            "detail_spec": null,
+            "valid_values": []
+          },
+          {
+            "name": "Subscription Manager",
+            "key": "subscription_manager",
+            "value": null,
+            "format": false,
+            "detail_spec": null,
+            "valid_values": []
+          },
+          {
+            "name": "Subscription License Type",
+            "key": "subscription_license_type",
+            "value": null,
+            "format": false,
+            "detail_spec": null,
+            "valid_values": []
+          },
+          {
+            "name": "Subscription Service Level Objective",
+            "key": "subscription_service_level_objective",
+            "value": null,
+            "format": false,
+            "detail_spec": null,
+            "valid_values": []
+          }
+        ]
+      }
+    ],
+    "action": null,
+    "get_additional_props": null,
+    "question_spec": null
+  },
   "External-Reference-DrE-Basic": {
     "target_type": "External Reference",
     "heading": "External-Reference-DrE-Basic Attributes",

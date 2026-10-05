@@ -924,3 +924,19 @@ class OpenMetadataRootElement(PyegeriaModel):
 # --- Overall Payload Type ---
 # The entire JSON is a list of OpenMetadataRootElement
 OpenMetadataPayload = list[OpenMetadataRootElement]
+
+
+class NewSubscriptionTypeRequestBody(RequestBody):
+    """Optional body for ProductManager's create_*_subscription methods. Every field is optional:
+    the server defaults the subscription manager to the Baudot one from the content pack, the
+    identifier per subscription kind, and the licence type / service level objective to those the
+    digital product is governed by."""
+    class_: Annotated[Literal["NewSubscriptionTypeRequestBody"], Field(alias="class")]
+    subscription_manager_guid: str | None = None
+    identifier: str | None = None
+    display_name: str | None = None
+    description: str | None = None
+    license_type_guid: str | None = None
+    service_level_objective_guid: str | None = None
+    notification_interval: int | None = None  # minutes
+    monitored_resource_guids: list[str] | None = Field(None, alias="monitoredResourceGUIDs")

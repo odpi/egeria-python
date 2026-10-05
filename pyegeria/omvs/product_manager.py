@@ -20,7 +20,9 @@ from pyegeria.models import (
     DeleteRelationshipRequestBody,
     UpdateRelationshipRequestBody,
     DeleteElementRequestBody,
+    NewSubscriptionTypeRequestBody,
 )
+from pyegeria.core._globals import NO_ELEMENTS_FOUND
 from pyegeria.core.utils import dynamic_catch, body_slimmer
 from loguru import logger
 
@@ -1801,3 +1803,329 @@ class ProductManager(CollectionManager):
         """Detach one specific DigitalProductDependency relationship, identified by its own relationship GUID."""
         loop = asyncio.get_event_loop()
         loop.run_until_complete(self._async_detach_digital_product_dependency_by_id(digital_product_dependency_relationship_guid, body))
+
+    #
+    # Subscription types, and Open Data Contract / Product Standard (ODCS / ODPS) documents.
+    #
+
+    async def _async_new_subscription_type(self, digital_product_guid: str, kind: str,
+                                           body: Optional[dict | NewSubscriptionTypeRequestBody]) -> Optional[str]:
+        """POST a (optional) NewSubscriptionTypeRequestBody to .../subscription-types/{kind}; return the GUID of
+        the governance action process that creates a subscription of this type."""
+        url = (f"{self.product_manager_command_root}/digital-products/"
+               f"{digital_product_guid}/subscription-types/{kind}")
+        payload = None
+        if isinstance(body, NewSubscriptionTypeRequestBody):
+            payload = body.model_dump_json(indent=2, exclude_none=True)
+        elif isinstance(body, dict):
+            validated = self._validate_body(NewSubscriptionTypeRequestBody.model_validate,
+                                            {"class": "NewSubscriptionTypeRequestBody", **body})
+            payload = validated.model_dump_json(indent=2, exclude_none=True)
+        response = await self._async_make_request("POST", url, payload)
+        guid = response.json().get("guid")
+        logger.info(f"Added {kind} subscription type to {digital_product_guid}: {guid}")
+        return guid
+
+    @dynamic_catch
+    async def _async_create_one_time_subscription(
+        self, digital_product_guid: str, body: Optional[dict | NewSubscriptionTypeRequestBody] = None
+    ) -> Optional[str]:
+        """Add a one-time subscription type to a digital product: subscribers receive a single notification, and
+        so a single delivery of the product's data (typically to evaluate it). Async version.
+
+        Parameters
+        ----------
+        digital_product_guid : str
+            The digital product.
+        body : dict | NewSubscriptionTypeRequestBody, optional
+            Every field is optional: subscriptionManagerGUID defaults to the Baudot subscription manager;
+            identifier to ONE-TIME-SUBSCRIPTION; licenseTypeGUID and serviceLevelObjectiveGUID to those the
+            product is governed by.
+
+        Returns
+        -------
+        str | None
+            The GUID of the governance action process that creates a subscription of this type.
+
+        Notes
+        -----
+        Sample JSON body:
+        ```json
+        {
+          "class" : "NewSubscriptionTypeRequestBody",
+          "identifier" : "EVALUATION-SUBSCRIPTION",
+          "displayName" : "Evaluation subscription",
+          "description" : "Delivers the data once to allow an evaluation of the product data."
+        }
+        ```
+        """
+        return await self._async_new_subscription_type(digital_product_guid, "one-time", body)
+
+    @dynamic_catch
+    def create_one_time_subscription(
+        self, digital_product_guid: str, body: Optional[dict | NewSubscriptionTypeRequestBody] = None
+    ) -> Optional[str]:
+        """Add a one-time subscription type to a digital product. Returns the GUID of the governance action
+        process that creates a subscription of this type."""
+        loop = asyncio.get_event_loop()
+        return loop.run_until_complete(self._async_create_one_time_subscription(digital_product_guid, body))
+
+    @dynamic_catch
+    async def _async_create_periodic_subscription(
+        self, digital_product_guid: str, body: Optional[dict | NewSubscriptionTypeRequestBody] = None
+    ) -> Optional[str]:
+        """Add a periodic subscription type to a digital product: subscribers receive a notification, and so a
+        delivery of the product's data, every `notificationInterval` minutes. A product offering more than one
+        periodic subscription type (daily and weekly, say) needs a distinct `identifier` for each. Async version.
+
+        Returns
+        -------
+        str | None
+            The GUID of the governance action process that creates a subscription of this type.
+
+        Notes
+        -----
+        Sample JSON body:
+        ```json
+        {
+          "class" : "NewSubscriptionTypeRequestBody",
+          "identifier" : "DAILY-REFRESH-SUBSCRIPTION",
+          "displayName" : "Daily refresh subscription",
+          "description" : "Delivers the data once a day.",
+          "notificationInterval" : 1440
+        }
+        ```
+        """
+        return await self._async_new_subscription_type(digital_product_guid, "periodic", body)
+
+    @dynamic_catch
+    def create_periodic_subscription(
+        self, digital_product_guid: str, body: Optional[dict | NewSubscriptionTypeRequestBody] = None
+    ) -> Optional[str]:
+        """Add a periodic subscription type to a digital product. Returns the GUID of the governance action
+        process that creates a subscription of this type."""
+        loop = asyncio.get_event_loop()
+        return loop.run_until_complete(self._async_create_periodic_subscription(digital_product_guid, body))
+
+    @dynamic_catch
+    async def _async_create_ongoing_update_subscription(
+        self, digital_product_guid: str, body: Optional[dict | NewSubscriptionTypeRequestBody] = None
+    ) -> Optional[str]:
+        """Add an ongoing-update subscription type to a digital product: subscribers receive a notification, and
+        so a delivery of the product's data, whenever one of the `monitoredResourceGUIDs` changes - but no more
+        often than every `notificationInterval` minutes. The monitored resource is typically the product's
+        asset. Async version.
+
+        Returns
+        -------
+        str | None
+            The GUID of the governance action process that creates a subscription of this type.
+
+        Notes
+        -----
+        Sample JSON body:
+        ```json
+        {
+          "class" : "NewSubscriptionTypeRequestBody",
+          "identifier" : "ONGOING-UPDATE-SUBSCRIPTION",
+          "displayName" : "Ongoing update subscription",
+          "description" : "Delivers data updates within an hour of receiving the new data.",
+          "monitoredResourceGUIDs" : [ "add asset guid here" ],
+          "notificationInterval" : 10
+        }
+        ```
+        """
+        return await self._async_new_subscription_type(digital_product_guid, "ongoing-update", body)
+
+    @dynamic_catch
+    def create_ongoing_update_subscription(
+        self, digital_product_guid: str, body: Optional[dict | NewSubscriptionTypeRequestBody] = None
+    ) -> Optional[str]:
+        """Add an ongoing-update subscription type to a digital product. Returns the GUID of the governance
+        action process that creates a subscription of this type."""
+        loop = asyncio.get_event_loop()
+        return loop.run_until_complete(self._async_create_ongoing_update_subscription(digital_product_guid, body))
+
+    async def _async_post_document(self, url: str, document: str | dict) -> Optional[str]:
+        """POST a data contract / data product document and return the "guid" the server answers with, if any.
+        A str (YAML or JSON text) is sent as text/plain; a dict (the ODCS / ODPS bean) as JSON."""
+        if isinstance(document, str):
+            response = await self._async_make_request("POST", url, document, as_text=True)
+        elif isinstance(document, dict):
+            response = await self._async_make_request("POST", url, document)
+        else:
+            raise ValueError("document must be a str (YAML or JSON text) or a dict")
+        payload = response.json()
+        return payload.get("guid") if isinstance(payload, dict) else None
+
+    @dynamic_catch
+    async def _async_publish_data_contract_string(self, integration_daemon_guid: str, document: str) -> None:
+        """Send an Open Data Contract Standard (ODCS) data contract, as YAML or JSON text, to an integration
+        daemon, which passes it on to its Bitol listeners. Async version."""
+        url = (f"{self.product_manager_command_root}/integration-daemons/"
+               f"{integration_daemon_guid}/data-contracts/publish-document-string")
+        await self._async_post_document(url, document)
+
+    @dynamic_catch
+    def publish_data_contract_string(self, integration_daemon_guid: str, document: str) -> None:
+        """Send an ODCS data contract (YAML or JSON text) to an integration daemon for its Bitol listeners."""
+        loop = asyncio.get_event_loop()
+        return loop.run_until_complete(self._async_publish_data_contract_string(integration_daemon_guid, document))
+
+    @dynamic_catch
+    async def _async_publish_data_product_string(self, integration_daemon_guid: str, document: str) -> None:
+        """Send an Open Data Product Standard (ODPS) data product, as YAML or JSON text, to an integration
+        daemon, which passes it on to its Bitol listeners. Async version."""
+        url = (f"{self.product_manager_command_root}/integration-daemons/"
+               f"{integration_daemon_guid}/data-products/publish-document-string")
+        await self._async_post_document(url, document)
+
+    @dynamic_catch
+    def publish_data_product_string(self, integration_daemon_guid: str, document: str) -> None:
+        """Send an ODPS data product (YAML or JSON text) to an integration daemon for its Bitol listeners."""
+        loop = asyncio.get_event_loop()
+        return loop.run_until_complete(self._async_publish_data_product_string(integration_daemon_guid, document))
+
+    @dynamic_catch
+    async def _async_import_data_contract_string(self, document: str) -> Optional[str]:
+        """Catalog an ODCS data contract, supplied as YAML or JSON text, directly in open metadata as an
+        Agreement classified as a DataSharingAgreement. Returns the new agreement's GUID. Async version."""
+        url = f"{self.product_manager_command_root}/data-contracts/import-document-string"
+        return await self._async_post_document(url, document)
+
+    @dynamic_catch
+    def import_data_contract_string(self, document: str) -> Optional[str]:
+        """Catalog an ODCS data contract (YAML or JSON text) as a DataSharingAgreement. Returns its GUID."""
+        loop = asyncio.get_event_loop()
+        return loop.run_until_complete(self._async_import_data_contract_string(document))
+
+    @dynamic_catch
+    async def _async_import_data_contract(self, data_contract: dict) -> Optional[str]:
+        """Catalog an ODCS data contract bean (a dict with apiVersion, kind, id, name, version, status, ...)
+        directly in open metadata as an Agreement classified as a DataSharingAgreement. Returns the new
+        agreement's GUID. Async version."""
+        url = f"{self.product_manager_command_root}/data-contracts/import-document"
+        return await self._async_post_document(url, data_contract)
+
+    @dynamic_catch
+    def import_data_contract(self, data_contract: dict) -> Optional[str]:
+        """Catalog an ODCS data contract bean as a DataSharingAgreement. Returns its GUID."""
+        loop = asyncio.get_event_loop()
+        return loop.run_until_complete(self._async_import_data_contract(data_contract))
+
+    @dynamic_catch
+    async def _async_import_data_product_string(self, document: str) -> Optional[str]:
+        """Catalog an ODPS data product, supplied as YAML or JSON text, directly in open metadata as a
+        DigitalProduct. Returns the new product's GUID. Async version."""
+        url = f"{self.product_manager_command_root}/data-products/import-document-string"
+        return await self._async_post_document(url, document)
+
+    @dynamic_catch
+    def import_data_product_string(self, document: str) -> Optional[str]:
+        """Catalog an ODPS data product (YAML or JSON text) as a DigitalProduct. Returns its GUID."""
+        loop = asyncio.get_event_loop()
+        return loop.run_until_complete(self._async_import_data_product_string(document))
+
+    @dynamic_catch
+    async def _async_import_data_product(self, data_product: dict) -> Optional[str]:
+        """Catalog an ODPS data product bean (a dict with apiVersion, kind, id, name, version, status, ...)
+        directly in open metadata as a DigitalProduct. Returns the new product's GUID. Async version."""
+        url = f"{self.product_manager_command_root}/data-products/import-document"
+        return await self._async_post_document(url, data_product)
+
+    @dynamic_catch
+    def import_data_product(self, data_product: dict) -> Optional[str]:
+        """Catalog an ODPS data product bean as a DigitalProduct. Returns its GUID."""
+        loop = asyncio.get_event_loop()
+        return loop.run_until_complete(self._async_import_data_product(data_product))
+
+    @dynamic_catch
+    async def _async_generate_data_contract(self, agreement_guid: str) -> dict | str:
+        """Generate the ODCS document that describes an agreement (typically one classified as a
+        DataSharingAgreement). Returns the document as a dict, or NO_ELEMENTS_FOUND. Async version."""
+        url = f"{self.product_manager_command_root}/agreements/{agreement_guid}/data-contract-document"
+        response = await self._async_make_request("GET", url)
+        return response.json().get("dataContract") or NO_ELEMENTS_FOUND
+
+    @dynamic_catch
+    def generate_data_contract(self, agreement_guid: str) -> dict | str:
+        """Generate the ODCS document that describes an agreement."""
+        loop = asyncio.get_event_loop()
+        return loop.run_until_complete(self._async_generate_data_contract(agreement_guid))
+
+    @dynamic_catch
+    async def _async_generate_data_product(self, digital_product_guid: str) -> dict | str:
+        """Generate the ODPS document that describes a digital product, including the contracts referenced by
+        its ports. Returns the document as a dict, or NO_ELEMENTS_FOUND. Async version."""
+        url = f"{self.product_manager_command_root}/digital-products/{digital_product_guid}/data-product-document"
+        response = await self._async_make_request("GET", url)
+        return response.json().get("dataProduct") or NO_ELEMENTS_FOUND
+
+    @dynamic_catch
+    def generate_data_product(self, digital_product_guid: str) -> dict | str:
+        """Generate the ODPS document that describes a digital product."""
+        loop = asyncio.get_event_loop()
+        return loop.run_until_complete(self._async_generate_data_product(digital_product_guid))
+
+    @dynamic_catch
+    async def _async_get_governance_action_processes_by_name(
+        self,
+        name: str,
+        body: Optional[dict] = None,
+        start_from: int = 0,
+        page_size: int = 0,
+        output_format: str = "JSON",
+        report_spec: Optional[str | dict] = None,
+        **kwargs,
+    ) -> list | str:
+        """Retrieve the governance action processes with a matching qualified or display name, from the Product
+        Catalog view service (`/product-catalog/governance-definitions/by-name`). A digital product's
+        subscription types are such processes -- qualified name
+        `ProvisioningActionProcess::<product>::Create Subscription::<type>` -- so this finds the process that
+        Dr.Egeria's `Initiate Subscription` runs. Async version.
+
+        There is no separate Product Catalog client: the view service is the read-only side of the product
+        manager's, so this lives here, with its own URL.
+
+        Parameters
+        ----------
+        name : str
+            Qualified or display name to match.
+        body : dict, optional
+            A full FilterRequestBody; supersedes `name`.
+        start_from, page_size : int
+            Paging.
+        output_format : str, default="JSON"
+            One of "JSON", "DICT", "MD", "FORM", "REPORT", or "MERMAID".
+        report_spec : str | dict, optional
+            The desired output columns/fields.
+
+        Returns
+        -------
+        list | str
+            The matching governance action processes, or NO_ELEMENTS_FOUND.
+        """
+        url = (f"{self.platform_url}/servers/{self.view_server}/api/open-metadata/"
+               f"product-catalog/governance-definitions/by-name")
+        return await self._async_get_name_request(
+            url, _type="GovernanceActionProcess", _gen_output=self._generate_referenceable_output,
+            filter_string=name, start_from=start_from, page_size=page_size,
+            output_format=output_format, report_spec=report_spec, body=body, **kwargs)
+
+    @dynamic_catch
+    def get_governance_action_processes_by_name(
+        self,
+        name: str,
+        body: Optional[dict] = None,
+        start_from: int = 0,
+        page_size: int = 0,
+        output_format: str = "JSON",
+        report_spec: Optional[str | dict] = None,
+        **kwargs,
+    ) -> list | str:
+        """Retrieve the governance action processes with a matching qualified or display name (for example a
+        digital product's subscription types)."""
+        loop = asyncio.get_event_loop()
+        return loop.run_until_complete(self._async_get_governance_action_processes_by_name(
+            name, body=body, start_from=start_from, page_size=page_size, output_format=output_format,
+            report_spec=report_spec, **kwargs))
