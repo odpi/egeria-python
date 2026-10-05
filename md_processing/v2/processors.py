@@ -9,14 +9,14 @@ from abc import ABC, abstractmethod
 from typing import Any, Awaitable, Callable, Dict, List, Optional, Union
 from loguru import logger
 
-from pyegeria import EgeriaTech, PyegeriaException, PyegeriaTimeoutException, NO_ELEMENTS_FOUND, print_basic_exception
+from pyegeria import EgeriaTech, PyegeriaException, PyegeriaTimeoutException, NO_ELEMENTS_FOUND, print_basic_exception, lineage_visible
 from pyegeria.core.utils import make_format_set_name_from_type
 from pyegeria.view.base_report_formats import select_report_spec
 from pyegeria.view.output_formatter import generate_output, format_for_markdown_table, populate_columns_from_properties
 
 from md_processing.v2.extraction import DrECommand
 from md_processing.v2.parsing import AttributeFirstParser
-from md_processing.md_processing_utils.md_processing_constants import get_command_spec, resolve_command_spec
+from md_processing.md_processing_utils.md_processing_constants import get_command_spec, resolve_command_spec, VIEW_VERBS
 from md_processing.md_processing_utils.common_md_utils import (
     update_element_dictionary, get_element_dictionary, is_present, find_key_with_value
 )
@@ -538,11 +538,44 @@ class AsyncBaseCommandProcessor(ABC):
             logger.error(f"Error syncing parent relationship for {guid}: {e}")
             self.add_related_result("Parent Relationship", guid=guid, status="failure", message=str(e))
 
+    def effective_for_lineage(self) -> bool:
+        """Whether this command's requests are sent with forLineage=true.
+
+        An explicit "For Lineage" value in the command wins. Otherwise editing
+        commands default to True, so elements classified as Promise (visible
+        only to lineage requests) can still be found and changed without the
+        author adding For Lineage to every command; report commands (View/
+        List/Run) default to False. Read from the raw command text, not the
+        parsed attributes, because parsing itself already issues lookups.
+        """
+        raw = self.command.attributes.get("For Lineage") if isinstance(self.command.attributes, dict) else None
+        if raw is not None and str(raw).strip():
+            return str(raw).strip().lower() in {"true", "yes", "1", "on"}
+        return self.command.verb not in VIEW_VERBS
+
+    @staticmethod
+    def _ignore_memento(element: Optional[Dict[str, Any]]) -> Optional[Dict[str, Any]]:
+        """Treat a logically deleted (Memento-classified) element as not found.
+
+        Editing commands run with forLineage=true so Promise-classified elements
+        are visible, but that also exposes Memento elements, which must not be
+        updated or turn a Create into an Update.
+        """
+        if isinstance(element, dict) and (element.get("elementHeader") or {}).get("memento"):
+            logger.info(f"Ignoring logically deleted (Memento) element "
+                        f"{element['elementHeader'].get('guid')} -- treating it as not found")
+            return None
+        return element
+
     async def execute(self) -> Dict[str, Any]:
         """
         Orchestrate the command execution flow.
         Returns a dictionary containing the output markdown and execution metadata.
         """
+        with lineage_visible(self.effective_for_lineage()):
+            return await self._execute()
+
+    async def _execute(self) -> Dict[str, Any]:
         directive = self.context.get("directive", "process")
         
         # 1. Parse attributes using the spec-agnostic parser
@@ -612,7 +645,7 @@ class AsyncBaseCommandProcessor(ABC):
 
         # 1b. Handle 'display' directive
         if directive == "display":
-            self.as_is_element = await self.fetch_as_is()
+            self.as_is_element = self._ignore_memento(await self.fetch_as_is())
             if self.as_is_element:
                 output = await self.render_result_markdown(self.as_is_element.get('elementHeader', {}).get('guid'))
             else:
@@ -659,7 +692,7 @@ class AsyncBaseCommandProcessor(ABC):
         # We do this BEFORE recording in planned_elements to avoid self-shadowing 
         # (where an element sees itself in 'planned' and skips the Egeria lookup)
         if self.supports_target_element_lookup():
-            self.as_is_element = await self.fetch_as_is()
+            self.as_is_element = self._ignore_memento(await self.fetch_as_is())
         else:
             self.as_is_element = None
 
@@ -1389,6 +1422,12 @@ class AsyncBaseCommandProcessor(ABC):
 
         return None
 
+    def lookup_for_lineage(self) -> bool:
+        """Whether this command's reference lookups include elements only visible to lineage
+        requests. Same as effective_for_lineage(); used to keep lineage and non-lineage
+        lookups in separate cache entries, since they can return different results."""
+        return self.effective_for_lineage()
+
     async def resolve_element_guid(self, name_or_guid: str, tech_type: Optional[str] = None) -> Optional[str]:
         """
         Resolves a name or GUID to a GUID using various strategies.
@@ -1478,7 +1517,12 @@ class AsyncBaseCommandProcessor(ABC):
             unsupported_type_warnings = self.context.setdefault("_unsupported_lookup_types_warned", set())
 
             # Pass 1: Try WITH type constraint (fastest, avoids ambiguity)
-            pass1_key = (name_or_guid, tech_type or None)
+            for_lineage = self.lookup_for_lineage()
+            # Lineage lookups see a different element set, so they get their own cache keys.
+            # (The forLineage flag itself is applied to the lookup's request body by
+            # lineage_visible(), set around execute().)
+            lineage_key = ("forLineage",) if for_lineage else ()
+            pass1_key = (name_or_guid, tech_type or None, *lineage_key)
             cached1 = query_cache.get(pass1_key, _NOT_CACHED)
             if cached1 is _AMBIGUOUS:
                 logger.debug(f"resolve_element_guid: cache hit (ambiguous, Pass 1) for {pass1_key!r}")
@@ -1517,7 +1561,7 @@ class AsyncBaseCommandProcessor(ABC):
             # Pass 2: If no result (or if type was invalid), try WITHOUT type constraint
             is_not_found = not res or (isinstance(res, str) and (res.startswith("No ") or " found" in res))
             if is_not_found and tech_type:
-                pass2_key = (name_or_guid, None)
+                pass2_key = (name_or_guid, None, *lineage_key)
                 cached2 = query_cache.get(pass2_key, _NOT_CACHED)
                 if cached2 is _AMBIGUOUS:
                     logger.debug(f"resolve_element_guid: cache hit (ambiguous, Pass 2) for {pass2_key!r}")

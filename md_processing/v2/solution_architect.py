@@ -197,6 +197,8 @@ class ComponentProcessor(AsyncBaseCommandProcessor):
         prop_body.update({
             "solutionComponentType": attributes.get('Solution Component Type', {}).get('value'),
             "plannedDeployedImplementationType": attributes.get('Planned Deployed Implementation Type', {}).get('value'),
+            "deploymentStatus": attributes.get('Deployment Status', {}).get('value'),
+            "userDefinedDeploymentStatus": attributes.get('User Defined Deployment Status', {}).get('value'),
             "canonicalName": attributes.get('Canonical Name', {}).get('value'),
         })
 

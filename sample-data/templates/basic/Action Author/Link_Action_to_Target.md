@@ -52,7 +52,7 @@ ___
 
 >	**Attribute Type**: Simple
 
->	**Description**: The name to give this element when it is passed as an action target to the governance service.
+>	**Description**: The name an element is given when it is passed as an action target to a governance service.
 
 
 ___

@@ -6,6 +6,8 @@
 
 """
 
+from typing import Any
+
 from pyegeria import load_app_config, settings
 from textual import on
 from textual.app import ComposeResult
@@ -21,6 +23,9 @@ class ShopForDataScreen(Screen):
                 ("s", "sample_data_source", "Sample data source"),
                 ("u", "subscribe_to_data_source", "Subscribe"),
                 ("ctrl+s", "subscribe_to_data_source", "Subscribe"),
+                ("t", "search_for_term", "Search Glossary Terms"),
+                ("k", "bookmark_row", "Bookmark"),
+                ("ctrl+b", "bookmarks", "Bookmarks"),
                 ("b", "back", "Go back")]
 
     CSS_PATH = "my_profile.tcss"
@@ -193,6 +198,29 @@ class ShopForDataScreen(Screen):
         self.cursor_row_highlighted = event.cursor_row
         self.data_table_highlighted = event.data_table.id
         self.log(f"Table {self.data_table_highlighted} Row highlighted: {self.row_highlighted}, cursor: {self.cursor_row_highlighted}")
+
+    def _highlighted_table_and_row(self) -> tuple[DataTable | None, Any]:
+        """ The focused (or last highlighted) table and the row under its cursor, if any """
+        table = self.focused if isinstance(self.focused, DataTable) else None
+        if table is None and getattr(self, "data_table_highlighted", None):
+            table = self.query_one(f"#{self.data_table_highlighted}", DataTable)
+        if table is None or table.row_count == 0:
+            return table, None
+        return table, table.coordinate_to_cell_key(table.cursor_coordinate).row_key
+
+    def action_bookmarks(self) -> None:
+        """ Manages BookMarks for the currently logged in user
+            The GUID of the highlighted row, if any, is pre-filled as the target of a new bookmark"""
+        table, row_key = self._highlighted_table_and_row()
+        self.app.show_my_bookmarks(self.app.get_row_guid(table, row_key))
+
+    def action_bookmark_row(self) -> None:
+        """ Add the element in the highlighted row to the user's bookmarks """
+        table, row_key = self._highlighted_table_and_row()
+        if row_key is None:
+            self.notify("Please highlight a row to bookmark.", timeout=5, severity="warning")
+            return
+        self.app.bookmark_table_row(table, row_key)
 
     def action_back(self) -> None:
         """ The back option in the footer has been selected. Dismiss the screen."""

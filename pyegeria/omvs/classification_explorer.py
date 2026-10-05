@@ -13466,6 +13466,73 @@ class ClassificationExplorer(ServerClient):
         loop = asyncio.get_event_loop()
         loop.run_until_complete(self._async_clear_element_as_metamodel_instance(element_guid, body))
 
+    @dynamic_catch
+    async def _async_set_element_as_promise(self, element_guid: str,
+                                            body: Optional[dict | NewClassificationRequestBody] = None) -> None:
+        """Classify an element as a Promise - a placeholder for a real-world digital resource/artifact that has
+        not yet been delivered. Once classified, the element is only returned to lineage requests
+        (forLineage=true). Async version.
+
+        https://egeria-project.org/types/0/0010-Base-Model/#promise-classification
+
+        Sample body:
+
+        {
+          "class" : "NewClassificationRequestBody",
+          "properties": {
+            "class": "PromiseProperties",
+            "deploymentStatus": "UNDER_DEVELOPMENT",
+            "userDefinedDeploymentStatus": "add status here",
+            "startTime": "isoTimestamp",
+            "dueTime": "isoTimestamp",
+            "lastReviewTime": "isoTimestamp",
+            "completionTime": "isoTimestamp",
+            "additionalProperties": {"property1Name" : "property1Value"},
+            "effectiveFrom": "isoTimestamp",
+            "effectiveTo": "isoTimestamp"
+          },
+          "externalSourceGUID": "add guid here",
+          "externalSourceName": "add qualified name here",
+          "effectiveTime" : "isoTimestamp",
+          "forLineage" : false,
+          "forDuplicateProcessing" : false
+        }
+        """
+        url = f"{self.classification_command_root}/elements/{element_guid}/promise"
+        if body is None:
+            body = {"class": "NewClassificationRequestBody", "properties": {"class": "PromiseProperties"}}
+        await self._async_new_classification_request(url, prop=["PromiseProperties"], body=body)
+        logger.info(f"Added Promise classification to {element_guid}")
+
+    @dynamic_catch
+    def set_element_as_promise(self, element_guid: str,
+                               body: Optional[dict | NewClassificationRequestBody] = None) -> None:
+        """Classify an element as a Promise - a placeholder for a real-world digital resource/artifact that has
+        not yet been delivered. Once classified, the element is only returned to lineage requests (forLineage=true).
+        See _async_set_element_as_promise for a sample body."""
+        loop = asyncio.get_event_loop()
+        loop.run_until_complete(self._async_set_element_as_promise(element_guid, body))
+
+    @dynamic_catch
+    async def _async_clear_element_as_promise(self, element_guid: str,
+                                              body: Optional[dict | DeleteClassificationRequestBody] = None) -> None:
+        """Remove the Promise classification from an element - typically because the promised resource has now
+        been delivered. Egeria requires forLineage=true on this request (the promised element is otherwise
+        invisible), so the default body sets it; a caller-supplied body must set it too. Async version."""
+        url = f"{self.classification_command_root}/elements/{element_guid}/promise/remove"
+        if body is None:
+            body = {"class": "DeleteClassificationRequestBody", "forLineage": True}
+        await self._async_delete_classification_request(url, body)
+        logger.info(f"Removed Promise classification from {element_guid}")
+
+    @dynamic_catch
+    def clear_element_as_promise(self, element_guid: str,
+                                 body: Optional[dict | DeleteClassificationRequestBody] = None) -> None:
+        """Remove the Promise classification from an element - typically because the promised resource has now
+        been delivered. The default body sets forLineage=true, which Egeria requires for this request."""
+        loop = asyncio.get_event_loop()
+        loop.run_until_complete(self._async_clear_element_as_promise(element_guid, body))
+
 
 if __name__ == "__main__":
     print("Main-Classification Manager")

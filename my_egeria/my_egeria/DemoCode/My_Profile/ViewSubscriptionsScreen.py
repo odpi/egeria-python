@@ -2,31 +2,24 @@
    PDX-License-Identifier: Apache-2.0
    Copyright Contributors to the ODPi Egeria project.
 
-   This file provides a user screen to allow the user to add todos to my_egeria.
+   This file provides a screen listing the current user's digital subscriptions.
 
 """
 
-import pwd
-from datetime import datetime
-from typing import Any
-
-import optional
-from textual import on
 from textual.app import ComposeResult
-from textual.containers import ScrollableContainer, Horizontal
+from textual.containers import ScrollableContainer
 from textual.screen import ModalScreen
-from textual.widgets import DataTable, OptionList, Header, Static, Footer, Input, Button, Switch
-from textual.widgets._option_list import Option
+from textual.widgets import DataTable, Header, Static, Footer
 
 from pyegeria import Egeria, PyegeriaException, load_app_config, settings, print_basic_exception
+from profile_utils import element_summary
 
 
 class ViewSubscriptionsScreen(ModalScreen):
-    """View Subscription Screen for the current user in My Profile App."""
+    """View the digital subscriptions created by the current user."""
 
     BINDINGS = [
-        ("q", "app.quit", "Quit"),
-        ("ctrl+a", "add_new_todo", "Add New Todo")
+        ("q", "quit", "Quit"),
         ]
 
     CSS_PATH = "my_profile.tcss"
@@ -44,40 +37,48 @@ class ViewSubscriptionsScreen(ModalScreen):
     def compose(self) -> ComposeResult:
         yield Header(show_clock=True)
         yield ScrollableContainer(
-            Static("View Subscriptions for logged in User", id="view_subsciptions_static"),
+            Static("Your digital subscriptions. Press q to return.", id="view_subsciptions_static"),
+            DataTable(id="subscriptions_table", zebra_stripes=True, cursor_type="row"),
             id="view-subscriptions_container",
         )
         yield Footer()
 
     def on_mount(self):
+        table = self.query_one("#subscriptions_table", DataTable)
+        table.add_columns("Name", "Status", "Description", "GUID")
+        for row in self.get_my_subscriptions():
+            table.add_row(*row)
+        if table.row_count == 0:
+            self.notify("You have no digital subscriptions", timeout=5)
 
-        eclient=Egeria(self.view_server,
-                       self.platform_url,
-                       self.user_name,
-                       self.user_password
-                       )
-        token = eclient.create_egeria_bearer_token(self.user_name, self.user_password)  # uses env vars; or pass (user, password) explicitly
-
+    def get_my_subscriptions(self) -> list[tuple[str, str, str, str]]:
+        """(name, status, description, GUID) for each DigitalSubscription the user created."""
+        eclient = None
         try:
-            # --- API call (show at minimum the required params; document optional ones) ---
+            eclient = Egeria(self.view_server, self.platform_url, self.user_name, self.user_password)
+            eclient.create_egeria_bearer_token(self.user_name, self.user_password)
             subscriptions = eclient.find_collections(
                 search_string="*",
-                metadata_element_type="DigitalSubscription"
+                metadata_element_type_name="DigitalSubscription",
+                output_format="JSON",
+                graph_query_depth=0,  # only header/properties are used
             )
-
-            # --- Output rendering ---
-            if isinstance(subscriptions, list):
-                self.log(f"Found {len(subscriptions)} subscription items")
-                self.log(f"Subscriptions: {subscriptions}")
-            elif isinstance(subscriptions, str):
-                self.log(f"Response from get subscriptions: {subscriptions}")
-                self.notify(f"Response from get subscriptions: {subscriptions}")
-            else:
-                self.log(f"Unrecognized Response from get subscriptions: {subscriptions}")
-                self.notify("Unrecognized Response from get subscriptions: {subscriptions}")
-
         except PyegeriaException as e:
             print_basic_exception(e)
-            self.notify(f"Pyegeria error response from get subscriptions: {e}")
+            self.notify(f"Could not retrieve your subscriptions: {e}", timeout=10, severity="error")
+            return []
         finally:
-            eclient.close_session()
+            if eclient:
+                eclient.close_session()
+
+        rows = []
+        for element in subscriptions if isinstance(subscriptions, list) else []:
+            summary = element_summary(element)
+            if summary.get("created_by") != self.user_name or not summary.get("guid"):
+                continue
+            status = str((element.get("properties") or {}).get("contentStatus") or "")
+            rows.append((summary["name"], status, summary["description"], summary["guid"]))
+        return rows
+
+    def action_quit(self):
+        self.dismiss(200)

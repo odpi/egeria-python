@@ -8,6 +8,7 @@
 import sys
 from pathlib import Path
 from typing import Any
+import asyncio
 
 # Add the project root to sys.path to allow running this script from any directory
 root_path = Path(__file__).resolve().parents[4]
@@ -28,8 +29,9 @@ from pyegeria import (
 )
 from textual import on
 from textual.app import App, ComposeResult
+from textual.binding import Binding
 from textual.widgets import DataTable, OptionList, Header, Footer
-
+from SplashScreen import SplashScreen
 from CreateProfileScreen import CreateProfileScreen
 from EditElementsScreens import (
     EditProfileScreen,
@@ -70,35 +72,46 @@ from AddToElementsScreens import (
 )
 from ViewSubscriptionsScreen import ViewSubscriptionsScreen
 from GenericDataViewScreen import GenericDataViewScreen, DataViewScreen
-
+from AddCommentScreen import AddCommentScreen
 from profile_utils import (
     truncate_at_sequence,
     clean_structure,
     bools_to_strings,
     extract_glossary_terms,
+    check_request_serialization,
+    element_summary,
 )
 from tech_types_handler import TechTypesMixin
 from shop_for_data_handler import ShopForDataMixin
 from team_roles_handler import TeamRolesMixin
 from elements_crud_handler import ElementsCrudMixin
+from feedback_handler import FeedbackMixin, FEEDBACK_LOG_OWNER
+from bookmarks_handler import BookmarksMixin, bookmarks_qualified_name
 from MyBookMarksScreen import MyBookMarksScreen
 
 
-class MyProfileApp(App, TechTypesMixin, ShopForDataMixin, TeamRolesMixin, ElementsCrudMixin):
+class MyProfileApp(App, TechTypesMixin, ShopForDataMixin, TeamRolesMixin, ElementsCrudMixin, FeedbackMixin,
+                   BookmarksMixin):
     """My Profile App.
 
     Retrieves a user's profile from Egeria and displays current work items.
     If no profile is found, offers a UI to create one.
     """
 
+    # The feedback bindings are priority bindings: Textual ignores ordinary App bindings
+    # while a ModalScreen is active, and most screens in this app are modal. Priority also
+    # means ctrl+f wins over the Input/TextArea "delete word right" binding on the same key.
     BINDINGS = [
         ("q", "quit", "Quit"),
         ("r", "refresh", "Refresh Data"),
+        Binding("ctrl+f", "feedback", "Feedback", priority=True),
+        Binding("f3", "view_feedback_log", "Feedback Log", priority=True),
     ]
 
     CSS_PATH = "my_profile.tcss"
 
     SCREENS = {
+        "splash": SplashScreen,
         "main": MainScreen,
         "create_profile": CreateProfileScreen,
         "edit_profile": EditProfileScreen,
@@ -122,6 +135,7 @@ class MyProfileApp(App, TechTypesMixin, ShopForDataMixin, TeamRolesMixin, Elemen
         "create_subscription": CreateSubscriptionRequestScreen,
         "my_team": MyTeam,
         "show_comments": ShowCommentsScreen,
+        "add_comment": AddCommentScreen,
         "add_role": AddRoleScreen,
         "add_project": AddProjectScreen,
         "add_community": AddCommunityScreen,
@@ -185,76 +199,116 @@ class MyProfileApp(App, TechTypesMixin, ShopForDataMixin, TeamRolesMixin, Elemen
         self.digital_glossary_data_extract = None
         self.team_members: list[list] = []
         self.max_mermaid_node_count = 0  # This is to tell egeria we dont want mermaid graphs in the response packet.
-        self.graph_query_depth = 0  # This tell egeria not to include relationships in the response packet
+        self.graph_query_depth = 0  # This tells egeria not to include relationships in the response packet
         self.user_GUID = ""
         self.user_data = {}
         self.user_identities = []
         self.user_identity = []
 
     def compose(self) -> ComposeResult:
-        yield Header()
+        yield Header(show_clock=True)
         yield Footer()
 
-    async def on_mount(self) -> None:
-        """Load profile; if missing, prompt to create it; then populate tables."""
-        await self.push_screen("main")
-        await self._load_or_create_profile()
-        await self._populate_tables()
+    def check_action(self, action: str, parameters: tuple[object, ...]) -> bool | None:
+        """Only show the feedback log binding to the log's owner."""
+        if action == "view_feedback_log":
+            return self.user_name == FEEDBACK_LOG_OWNER
+        return True
 
-    async def _load_or_create_profile(self) -> None:
+    async def on_mount(self) -> None:
+        """Mount the main screen, start loading profile data in parallel, and display the splash screen."""
+        environment_error = check_request_serialization()
+        if environment_error:
+            self.exit(430, return_code=1, message=environment_error)
+            return
+        await self.push_screen("main")
+        self._load_task = asyncio.create_task(self._load_profile_and_populate())
+        await self.push_screen("splash", callback=self.mainline)
+
+    async def mainline(self, splash_return: Any = None) -> None:
+        """Process any return values from the splash screen, then
+        ensure user profile is loaded and tables are populated."""
+        if isinstance(splash_return, list):
+            if hasattr(self, "_load_task") and not self._load_task.done():
+                self._load_task.cancel()
+            self.user_name = splash_return[0]
+            self.user_password = splash_return[1]
+            # Screens read the user from pyegeria's (cached) settings, so record the
+            # switch there too, or their Egeria calls would still run as the old user
+            settings.User_Profile.user_name = self.user_name
+            settings.User_Profile.user_pwd = self.user_password
+            self.refresh_bindings()
+            await self._load_or_create_profile()
+        else:
+            # Splash screen finished (timeout or dismissed)
+            if hasattr(self, "_load_task"):
+                try:
+                    profile_found = await self._load_task
+                except asyncio.CancelledError:
+                    return
+                except Exception as e:
+                    self.log(f"Error in parallel initial load: {e}")
+                    profile_found = False
+
+                if not profile_found and (not hasattr(self, "my_profile_data") or not self.my_profile_data):
+                    self.log("No profile found. Prompting to create one...")
+                    await self.push_screen(
+                        CreateProfileScreen(
+                            user=self.user_name,
+                            password=self.user_password,
+                            view_server=self.view_server,
+                            platform_url=self.platform_url,
+                        ),
+                        callback=self.new_profile_return,
+                    )
+
+    async def _load_profile_and_populate(self) -> bool:
+        """Retrieve the user's profile and populate UI tables in parallel.
+        Returns True if profile exists and tables were populated, False if profile is missing."""
         try:
             self.my_profile_inst = MyProfile(self.view_server, self.platform_url, self.user_name, self.user_password)
             self.my_profile_inst.create_egeria_bearer_token(self.user_name, self.user_password)
-            self.my_profile_data = await self.my_profile_inst._async_get_my_profile(
-                report_spec="My-User-MD",
-                output_format="DICT",
+            # Fetch the profile once and format it locally for each view (My-User-MD here,
+            # User-Identities in _process_profile_data) instead of fetching it per view.
+            self.my_profile_raw = await self.my_profile_inst._async_get_my_profile(output_format="JSON")
+            self.my_profile_data = (
+                self.my_profile_inst._generate_my_profile_output(
+                    self.my_profile_raw, "My", "MyProfile", "DICT", "My-User-MD")
+                if isinstance(self.my_profile_raw, dict) else self.my_profile_raw
             )
             self.log(f"retrieve profile result: {self.my_profile_data}")
         except PyegeriaException as e:
             self.log(f"Error retrieving profile: {e!s}")
             print_basic_exception(e)
             self.exit(402)
-            return
+            return False
 
-        if self.my_profile_data == []:
-            self.log("Error retrieving profile. Prompting to create one...")
-            self.log("To create a profile you must have a valid userid in the system, please contact your system administrator to create one if needed")
+        if not self.my_profile_data:
+            self.log("No profile found for user.")
+            return False
+
+        self._process_profile_data(self.my_profile_data)
+        await self._populate_tables()
+        return True
+
+    async def _load_or_create_profile(self) -> None:
+        """Load user profile; if missing, prompt to create it."""
+        profile_found = await self._load_profile_and_populate()
+        if not profile_found and (not hasattr(self, "my_profile_data") or not self.my_profile_data):
+            self.log("No profile found. Prompting to create one...")
             await self.push_screen(
-                CreateProfileScreen(),
+                CreateProfileScreen(
+                    user=self.user_name,
+                    password=self.user_password,
+                    view_server=self.view_server,
+                    platform_url=self.platform_url,
+                ),
                 callback=self.new_profile_return,
             )
-        else:
-            self.new_profile_return(200)
 
-    def new_profile_return(self, result: int) -> None:
-        """This function handles either the return from the create new profile screen or
-        when the user already has a profile continue processing."""
-        self.log(f"Profile creation result: {result}")
-        if not result or result != 200:
-            self.log(f"Profile creation cancelled/failed; return: {result}, exiting.")
-            self.exit(403)
-            return
-
-        self.result = result
-
-        # Retry after creation if necessary
-        try:
-            self.user_profile_struct = self.my_profile_inst.get_my_profile(
-                output_format="DICT",
-                report_spec="My-User-MD",
-            )
-            self.log(f"Profile retrieved successfully: {self.user_profile_struct}")
-            self.show_main_screen()
-        except PyegeriaException as e2:
-            self.log(f"Error retrieving user profile: {e2!s}")
-            self.exit(412)
-            return
-
-        if not self.user_profile_struct or self.user_profile_struct == []:
-            self.log("Error retrieving user profile. Exiting.")
-            self.exit(413)
-            return
-
+    def _process_profile_data(self, profile_struct: list[dict]) -> None:
+        """Parse raw profile structure and extract individual elements."""
+        self.user_profile_struct = profile_struct
         # clear the target data structures.
         self.my_blogs_data = [{}]
         self.my_journal_data = [{}]
@@ -292,10 +346,11 @@ class MyProfileApp(App, TechTypesMixin, ShopForDataMixin, TeamRolesMixin, Elemen
 
         # User Identities
         try:
-            self.user_identities = self.my_profile_inst.get_my_profile(
-                report_spec="User-Identities",
-                params={"graph_query_depth": 0},
-                output_format="DICT",
+            raw = getattr(self, "my_profile_raw", None)
+            self.user_identities = (
+                self.my_profile_inst._generate_my_profile_output(raw, "My", "MyProfile", "DICT", "User-Identities")
+                if isinstance(raw, dict)
+                else self.my_profile_inst.get_my_profile(report_spec="User-Identities", output_format="DICT")
             )
             self.log(f"User-Identities: {self.user_identities}, type: {type(self.user_identities)}")
         except PyegeriaException as e:
@@ -306,7 +361,7 @@ class MyProfileApp(App, TechTypesMixin, ShopForDataMixin, TeamRolesMixin, Elemen
         try:
             self.my_todos_data = self.my_profile_inst.get_my_to_dos(
                 report_spec="My-User-ToDos",
-                params={"graph_query_depth": 0},
+                graph_query_depth=0,  # the to-do table shows properties only
                 output_format="DICT",
             )
             self.log(f"My To-Dos: {self.my_todos_data}, type: {type(self.my_todos_data)}")
@@ -315,6 +370,8 @@ class MyProfileApp(App, TechTypesMixin, ShopForDataMixin, TeamRolesMixin, Elemen
             self.my_todos_data = {}
 
         self.log(f"my_todos_data: {self.my_todos_data}")
+
+        self.my_collections = self._load_my_collections()
 
         # User GUID — resolve self-scoped
         self.user_GUID = ""
@@ -360,7 +417,59 @@ class MyProfileApp(App, TechTypesMixin, ShopForDataMixin, TeamRolesMixin, Elemen
         else:
             self.user_identity = self.user_identities.get("User-Identities") or []
 
-    async def _populate_tables(self) -> Any:
+    def _load_my_collections(self) -> list[dict[str, str]]:
+        """Collections created by the current user, other than their bookmarks collection."""
+        eclient = None
+        try:
+            eclient = Egeria(view_server=self.view_server, platform_url=self.platform_url,
+                             user_id=self.user_name, user_pwd=self.user_password)
+            eclient.create_egeria_bearer_token(self.user_name, self.user_password)
+            # Depth 0: only header/properties are summarised (~70s at the default depth 3 vs <1s).
+            response = eclient.find_collections(search_string="*", output_format="JSON", graph_query_depth=0)
+        except PyegeriaException as e:
+            self.log(f"Error retrieving My Collections: {e!s}")
+            return []
+        finally:
+            if eclient:
+                eclient.close_session()
+        bookmarks_qn = bookmarks_qualified_name(self.user_name)
+        return [summary for summary in (element_summary(e) for e in (response if isinstance(response, list) else []))
+                if summary.get("created_by") == self.user_name and summary.get("guid")
+                and summary.get("qualified_name") != bookmarks_qn]
+
+    def new_profile_return(self, result: int) -> None:
+        """This function handles either the return from the create new profile screen or
+        when the user already has a profile continue processing."""
+        self.log(f"Profile creation result: {result}")
+        if not result or result != 200:
+            self.log(f"Profile creation cancelled/failed; return: {result}, exiting.")
+            self.exit(403)
+            return
+
+        self.result = result
+
+        # Retry after creation if necessary
+        try:
+            self.user_profile_struct = self.my_profile_inst.get_my_profile(
+                output_format="DICT",
+                report_spec="My-User-MD",
+            )
+            self.log(f"Profile retrieved successfully: {self.user_profile_struct}")
+            self.show_main_screen()
+        except PyegeriaException as e2:
+            self.log(f"Error retrieving user profile: {e2!s}")
+            self.exit(412)
+            return
+
+        if not self.user_profile_struct or self.user_profile_struct == []:
+            self.log("Error retrieving user profile. Exiting.")
+            self.exit(413)
+            return
+
+        self._process_profile_data(self.user_profile_struct)
+        self._populate_tables_sync()
+
+    def _populate_tables_sync(self) -> Any:
         """Populates tables from normalized profile data."""
         main_screen = self.get_screen("main")
 
@@ -388,67 +497,70 @@ class MyProfileApp(App, TechTypesMixin, ShopForDataMixin, TeamRolesMixin, Elemen
             self.projects_table.add_columns("Status or Type", "Name", "Description", "GUID")
             self.projects_table.zebra_stripes = True
             self.projects_table.cursor_type = "row"
-            self.projects_table.loading=True
+            self.projects_table.loading = True
 
         if self.communities_table:
             self.communities_table.clear(columns=True)
             self.communities_table.add_columns("Assignment Type", "Community Name", "Description", "GUID")
             self.communities_table.zebra_stripes = True
             self.communities_table.cursor_type = "row"
-            self.communities_table.loading=True
+            self.communities_table.loading = True
 
         self.digital_product_catalog_table: DataTable = DataTable(id="digital_product_catalog_table")
         self.digital_product_catalog_table.add_columns("Digital Product Catalog Name", "Description", "Qualified Name", "GUID")
         self.digital_product_catalog_table.cursor_type = "row"
         self.digital_product_catalog_table.zebra_stripes = True
-        self.digital_product_catalog_table.loading=True
+        self.digital_product_catalog_table.loading = True
 
         self.roles_table.clear(columns=True)
         self.roles_table.add_columns("Role Name", "Role Type", "Description", "GUID")
         self.roles_table.zebra_stripes = True
         self.roles_table.cursor_type = "row"
-        self.roles_table.loading=True
+        self.roles_table.loading = True
 
         self.teams_table.clear(columns=True)
         self.teams_table.add_columns("Assignment Type", "Team Name", "Description", "GUID")
         self.teams_table.zebra_stripes = True
         self.teams_table.cursor_type = "row"
-        self.teams_table.loading=True
+        self.teams_table.loading = True
 
         self.blogs_table.clear(columns=True)
         self.blogs_table.add_columns("Blog Title", "Date", "Text", "GUID")
         self.blogs_table.zebra_stripes = True
         self.blogs_table.cursor_type = "row"
-        self.blogs_table.loading=True
+        self.blogs_table.loading = True
 
         self.journal_table.clear(columns=True)
         self.journal_table.add_columns("Journal Entry", "Date", "Text", "GUID")
         self.journal_table.zebra_stripes = True
         self.journal_table.cursor_type = "row"
-        self.journal_table.loading=True
+        self.journal_table.loading = True
 
         self.todos_table.clear(columns=True)
         self.todos_table.add_columns("To-Do Name", "Activity Status", "Description", "GUID")
         self.todos_table.zebra_stripes = True
         self.todos_table.cursor_type = "row"
-        self.todos_table.loading=True
+        self.todos_table.loading = True
 
         self.user_identity_table.clear(columns=True)
         self.user_identity_table.add_columns("Display Name", "User ID", "Distinguished Name", "GUID")
         self.user_identity_table.zebra_stripes = True
         self.user_identity_table.cursor_type = "row"
-        self.user_identity_table.loading=True
+        self.user_identity_table.loading = True
 
         self.associations_table.clear(columns=True)
         self.associations_table.add_columns("Status or Type", "Name", "Description", "GUID")
         self.associations_table.zebra_stripes = True
         self.associations_table.cursor_type = "row"
-        self.associations_table.loading=True
+        self.associations_table.loading = True
 
         self.my_collections_table.clear(columns=True)
         self.my_collections_table.add_columns("Collection Name", "Collection Description", "Collection GUID")
         self.my_collections_table.zebra_stripes = True
         self.my_collections_table.cursor_type = "row"
+        for collection in getattr(self, "my_collections", []):
+            self.my_collections_table.add_row(
+                collection["name"], collection["description"], collection["guid"])
 
         # Populate rows
         if self.projects_table:
@@ -459,7 +571,7 @@ class MyProfileApp(App, TechTypesMixin, ShopForDataMixin, TeamRolesMixin, Elemen
                     str(p.get("Description", "")),
                     str(p.get("GUID", p.get("guid", ""))),
                 )
-            self.projects_table.loading=False
+            self.projects_table.loading = False
         if self.communities_table:
             for c in self.communities if isinstance(self.communities, list) else []:
                 self.communities_table.add_row(
@@ -468,7 +580,7 @@ class MyProfileApp(App, TechTypesMixin, ShopForDataMixin, TeamRolesMixin, Elemen
                     str(c.get("Description", "")),
                     str(c.get("GUID", c.get("guid", ""))),
                 )
-            self.communities_table.loading=False
+            self.communities_table.loading = False
         for r in self.roles if isinstance(self.roles, list) else []:
             self.roles_table.add_row(
                 str(r.get("Name", "")),
@@ -476,7 +588,7 @@ class MyProfileApp(App, TechTypesMixin, ShopForDataMixin, TeamRolesMixin, Elemen
                 str(r.get("Description", "")),
                 str(r.get("GUID", r.get("guid", ""))),
             )
-        self.roles_table.loading=False
+        self.roles_table.loading = False
         for t in self.teams if isinstance(self.teams, list) else []:
             self.teams_table.add_row(
                 str(t.get("Assignment Type", "")),
@@ -484,15 +596,15 @@ class MyProfileApp(App, TechTypesMixin, ShopForDataMixin, TeamRolesMixin, Elemen
                 str(t.get("Description", "")),
                 str(t.get("GUID", t.get("guid", ""))),
             )
-        self.teams_table.loading=False
+        self.teams_table.loading = False
         for b in self.blogs if isinstance(self.blogs, list) else []:
             self.blogs_table.add_row(
                 str(b.get("qualifiedName", "")),
                 str(b.get("time", "")),
                 str(b.get("text", "")),
                 str(b.get("GUID", "")),
-                )
-        self.blogs_table.loading=False
+            )
+        self.blogs_table.loading = False
         for j in self.journal if isinstance(self.journal, list) else []:
             self.journal_table.add_row(
                 str(j.get("qualifiedName", "")),
@@ -500,7 +612,7 @@ class MyProfileApp(App, TechTypesMixin, ShopForDataMixin, TeamRolesMixin, Elemen
                 str(j.get("text", "")),
                 str(j.get("GUID", j.get("guid", ""))),
             )
-        self.journal_table.loading=False
+        self.journal_table.loading = False
         for td in self.todos if isinstance(self.todos, list) else []:
             self.todos_table.add_row(
                 str(td.get("Name", "")),
@@ -508,7 +620,7 @@ class MyProfileApp(App, TechTypesMixin, ShopForDataMixin, TeamRolesMixin, Elemen
                 str(td.get("Description", "")),
                 str(td.get("GUID", td.get("guid", ""))),
             )
-        self.todos_table.loading=False
+        self.todos_table.loading = False
         for ui in self.user_identity if isinstance(self.user_identity, list) else []:
             self.user_identity_table.add_row(
                 str(ui.get("Display Name", "")),
@@ -516,7 +628,7 @@ class MyProfileApp(App, TechTypesMixin, ShopForDataMixin, TeamRolesMixin, Elemen
                 str(ui.get("Distinguished Name", "")),
                 str(ui.get("GUID", ui.get("guid", ""))),
             )
-        self.user_identity_table.loading=False
+        self.user_identity_table.loading = False
         for c in self.communities if isinstance(self.communities, list) else []:
             self.associations_table.add_row(
                 str(c.get("Assignment Type", "")),
@@ -524,7 +636,10 @@ class MyProfileApp(App, TechTypesMixin, ShopForDataMixin, TeamRolesMixin, Elemen
                 str(c.get("Description", "")),
                 str(c.get("GUID", c.get("guid", ""))),
             )
-        self.associations_table.loading=False
+        self.associations_table.loading = False
+
+    async def _populate_tables(self) -> Any:
+        return self._populate_tables_sync()
 
     def action_quit(self) -> Any:
         self.exit(200)
@@ -565,11 +680,24 @@ class MyProfileApp(App, TechTypesMixin, ShopForDataMixin, TeamRolesMixin, Elemen
             self.show_my_bookmarks()
         elif selected_option == "Subscriptions":
             await self.push_screen(ViewSubscriptionsScreen(), callback=self.view_subscriptions_callback)
+        elif selected_option == "Leave Feedback":
+            await self.action_feedback()
+        elif selected_option == "Feedback Log":
+            await self.action_view_feedback_log()
 
     def status_callback(self, status_callback_rc: Any) -> None:
-        """Callback routine from the status screen."""
+        """Callback routine from the status screen: the user has read the message, so carry on."""
         self.log(f"Status screen returned: {status_callback_rc}")
-        self.exit(status_callback_rc)
+        self.show_main_screen()
+
+    @on(DataTable.RowSelected, "#roles_table")
+    def _on_roles_row_selected(self, event: DataTable.RowSelected) -> None:
+        """Open the team roster for a TeamLeader/TeamMember role.
+
+        Registered here rather than on TeamRolesMixin: Textual only collects @on
+        handlers from its own classes, so a decorator on the plain mixin never fires.
+        """
+        self.handle_roles_table_row_selection(event)
 
     def show_main_screen(self) -> None:
         """Show or switch back to the main screen by unwinding the screen stack."""
@@ -644,142 +772,114 @@ class MyProfileApp(App, TechTypesMixin, ShopForDataMixin, TeamRolesMixin, Elemen
                 self.digital_product_catalog_table.loading=False
         return 200
 
-    def show_my_bookmarks(self) -> None:
-        """ Access Egeria to retrieve all bookmarks for the current user """
-        eclient = Egeria(self.view_server,
-                         self.platform_url,
-                         self.user_name,
-                         self.user_password)
-
-        # Acquire a bearer token for authentication
-        token = eclient.create_egeria_bearer_token(self.user_name, self.user_password)
+    def add_comment(self, table_name, table_row):
+        self.table_name = table_name
+        self.table_row = table_row
+        main_screen = self.get_screen("main")
         try:
+            table = main_screen.query_one("#"+self.table_name, DataTable)
+            table_row = table.get_row(self.table_row)
+            target_heading = "GUID"
+            column_key = None
+            # find the column containing the GUID
+            for key, column in table.columns.items():
+                if column.label.plain == target_heading:
+                    self.log(f"GUID column found: {column.label.plain}")
+                    column_key = key
+                    break
 
-            # Retrieve bookmarks for current user
-            # my_bookmarks = eclient.get_favorite_things(user_id=self.user_name)
-            # --- API call (show at minimum the required params; document optional ones) ---
-            body = {
-                "class": "SearchStringRequestBody",
-                "searchString": "*",
-                "graph_query_depth": 0,
-            }
-            response = eclient.find_locations(
-                search_string="*",
-                starts_with=False,
-                ends_with=True,  # default is False
-                ignore_case=True,  # default is True
-                metadata_element_type_name=None,  # optional; e.g. 'LocationProperties'
-                metadata_element_subtypes=[],
-                include_only_relationships=[],  # list of relationship types to include in the search results
-                skip_relationships=[],  # list of relationship types to exclude from the search results
-                graph_query_depth=0,  # default is 3; max depth for recursive query (0 = no recursion)
-                as_of_time=None,
-                start_from=1,  # offset into result set (default: 1); use -1 for "all"
-                page_size=100,  # number of items to return per call
-                sequencing_order="ASC",  # optional; e.g. 'DESC'
-                sequencing_property="",  # optional; e.g. 'qualifiedName' or a custom property name
-                output_format='DICT',  # default is json; other options: csv, xml
-                report_spec=None,
-                body=body  # the full request body for search string requests (optional)
-            )
-
-            # --- Output rendering ---
-            if isinstance(response, list):
-                self.log(f"Found {len(response)} items")
-                self.log(f"Response: {response}")
-                my_bookmarks = response[0].get("Data") or ""
-            elif isinstance(response, dict):
-                my_bookmarks = response.get("Data") or ""
-            elif isinstance(response, str):
-                self.log(f"Response: {response}")
-                self.notify(f"Response from get bookmarks:")
-                my_bookmarks = None
+            if column_key:
+                # If GUID is found, use the row and column to get the selected row's GUID
+                self.log(f"GUID found in table: row: {table_row}, column: {column_key}")
             else:
-                self.log(f"Response unknown: {type(response)}, {response}")
-                my_bookmarks = None
+                # No GUID in table so look for Qualified Name to use instead
+                target_heading = "Qualified Name"
+                column_key = None
+                for key, column in table.columns.items():
+                    if column.label.plain == target_heading:
+                        self.log(f"Qualified Name column found: {column.label.plain}")
+                        column_key = key
+                        break
 
-        #unless there is an errror returned from Egeria
+            if column_key:
+                self.log (f"Row_key is : {self.table_row}")
+                self.log(f"Column key is: {column_key}")
+                row_id = table.get_cell(self.table_row, column_key)
+                self.log(f"Row ID is: {row_id}")
+            else:
+                self.notify(f"Error retrieving row from table to add comment, no GUID or Qualified Name column found", severity="error", timeout=30)
+                self.log(f"Column_key is: {column_key} not valid to access Egeria")
+                return (400)
+
+            if row_id == "":
+                self.log(f"Row ID is: {row_id}, not valid to access Egeria")
+                return (400)
+
         except PyegeriaException as e:
-            print(f"An error occurred interacting with Egeria: {e}")
-            self.notify(f"An error occurred interacting with Egeria: {e}")
+            self.notify(f"Error retrieving row from table to add comment: {e}", severity="error", timeout=30)
+            return(400)
+
+        self.push_screen(AddCommentScreen(table_name = self.table_name,
+                                            element_guid = row_id),
+                                            callback = self.add_comment_callback)
+
+    def add_comment_callback(self, comment_content):
+        """ Process feedback from thew add comment functions and then return to main screen"""
+        # If the return is an integer, then either success or failure, return to main screen
+        self.log(f"Return from Add Comment Screen: {comment_content}")
+        # An integer return is cancel/quit (200) or no element selected (400); the
+        # main screen is already showing once AddCommentScreen has dismissed
+        if not isinstance(comment_content, (list, tuple)):
             return
-
-        finally:
-            # 4. Canonical pattern to cleanly terminate the connection session
-            if 'eclient' in locals():
-                eclient.close_session()
-
-        self.push_screen(MyBookMarksScreen(my_bookmarks))
-
-        return
-
-    def add_my_bookmark(self, target_guid) -> None:
-        """ Add a bookmark for the user, input is the GUID of the item to bookmark """
-        self.asset_guid = target_guid
-        eclient = Egeria(self.view_server,
-                         self.platform_url,
-                         self.user_name,
-                         self.user_password)
-
-        # 2. Acquire a bearer token for authentication
-        token = eclient.create_egeria_bearer_token(self.user_name, self.user_password)
+        # Check that all required data has been returned (Comment, Type, and the GUID of the element the comment applies to)
+        if len(comment_content) != 3:
+            self.notify("Return from Add Comment Screen incomplete, please retry", severity="error", timeout=30)
+            self.log(f"Return from Add Comment Screen: {comment_content}, length: {len(comment_content)}")
+            return
+        # We have 3 return data items so extract them to individual variables
+        self.comment = comment_content[0]
+        self.type = comment_content[1]
+        self.element_guid = comment_content[2]
+        # Make sure we really have all the required data
+        if not self.comment or not self.type or not self.element_guid:
+            self.notify("A row must be selected and Both comment text and comment type are required!")
+            self.log(f"One or more element missing: {comment_content}, length: {len(comment_content)}")
+            return
+        # We have all the required data, then try to create the Egeria client
+        eclient = None
         try:
-
-
-            self.log(f"Adding asset {self.asset_guid} to {self.user_name}'s Favorite Things Collection...")
-
-            # 3. Attach the asset to the user's bookmark collection
-            # In pyegeria, this maps directly to the underlying My Profile Open Metadata View Service
-            bookmark_relationship = eclient.add_asset_to_favorites(
-                user_id=self.user_name,
-                asset_guid=self.asset_guid
-            )
-
-            self.log("Successfully bookmarked item!")
-            self.log(f"Relationship Guid: {bookmark_relationship.get('guid')}")
-            self.notify(f"Successfully bookmarked item! Relationship Guid: {bookmark_relationship.get('guid')}")
-
+            eclient = Egeria(self.view_server,
+                            self.platform_url,
+                            self.user_name,
+                            self.user_password)
+            eclient.create_egeria_bearer_token(self.user_name, self.user_password)
         except PyegeriaException as e:
-            print(f"An error occurred interacting with Egeria: {e}")
-
-        finally:
-            # 4. Canonical pattern to cleanly terminate the connection session
-            if 'eclient' in locals():
-                eclient.close_session()
-
-    def delete_my_bookmark(self, target_guid) -> None:
-        """ Delete a bookmark for the user, input is the GUID of the bookmark to delete  """
-        self.asset_guid = target_guid
-        eclient = Egeria(self.view_server,
-                         self.platform_url,
-                         self.user_name,
-                         self.user_password)
-
-        # 2. Acquire a bearer token for authentication
-        token = eclient.create_egeria_bearer_token(self.user_name, self.user_password)
+            self.log(f"Error creating Egeria client: {e}")
+            self.notify(
+                "Unable to connect to the Egeria Server, please check the server is running and your credentials and try again",
+                timeout=10,
+                severity="error")
+            return
+        # If we get here, we have a valid Egeria client, so try to add the comment
         try:
-
-
-            self.log(f"Adding asset {self.asset_guid} to {self.user_name}'s Favorite Things Collection...")
-
-            # 3. Attach the asset to the user's bookmark collection
-            # In pyegeria, this maps directly to the underlying My Profile Open Metadata View Service
-            eclient.remove_asset_from_favorites(
-                user_id=self.user_name,
-                asset_guid=self.asset_guid
+            # Add comment to selected element
+            self.comment_type = self.type.upper()
+            self.log(f"Adding comment to element: {self.element_guid}, values: {self.comment}, {self.comment_type}")
+            response = eclient.add_comment_to_element(
+                element_guid=self.element_guid,
+                comment=self.comment,
+                comment_type=self.comment_type
             )
-
-            self.log("Successfully deleted bookmark!")
-            self.log(f"Relationship Guid: {self.asset_guid}")
-            self.notify(f"Successfully deleted bookmark! Guid: {self.asset_guid}")
-
-        except PyegeriaException as e:
-            print(f"An error occurred interacting with Egeria: {e}")
-
+            self.log(f"Comment successfully added! New Comment GUID: {response}")
+            self.notify(f"Comment successfully added! New Comment GUID: {response}")
+        except Exception as e:
+            self.log(f"Failed to add comment: {e}")
+            self.notify(f"Failed to add comment: {e} \n Please try again.", severity="error")
+            return
         finally:
-            # 4. Canonical pattern to cleanly terminate the connection session
-            if 'eclient' in locals():
+            if eclient:
                 eclient.close_session()
+        return(200)
 
     # Compatibility wrappers delegating to profile_utils
     def clean_structure(self, data: Any, target: str = "specificationMermaidGraph") -> Any:
@@ -807,6 +907,10 @@ class MyProfileApp(App, TechTypesMixin, ShopForDataMixin, TeamRolesMixin, Elemen
         eclient.close_session()
         return guid
 
+def main() -> None:
+    """Entry point for the my_profile console script."""
+    MyProfileApp().run()
+
+
 if __name__ == "__main__":
-    app = MyProfileApp()
-    app.run()
+    main()

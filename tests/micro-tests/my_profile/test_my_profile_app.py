@@ -10,12 +10,13 @@
 
 from unittest.mock import MagicMock, AsyncMock, patch, PropertyMock
 import pytest
-from textual.widgets import OptionList, DataTable
+from textual.widgets import Button, OptionList, DataTable
 from textual.widgets._option_list import Option
 
 from my_profile_app import MyProfileApp
 from MainScreen import MainScreen
 from CreateProfileScreen import CreateProfileScreen
+from SplashScreen import SplashScreen
 from UserIdentitiesScreen import UserIdentitiesScreen
 from EditElementsScreens import EditProfileScreen
 from egeria_backend import at_least, is_int, nonempty_str
@@ -41,7 +42,29 @@ def stub_profile_client(backend, profile_data, identities, todos):
         identities,  # for User-Identities lookup
     ]
     mock_mp.get_my_to_dos.return_value = todos
+    # The My Collections lookup goes through the Egeria facade, not MyProfile
+    mock_egeria = MagicMock()
+    mock_egeria.find_collections.return_value = SAMPLE_COLLECTIONS
+    backend.always_fake("my_profile_app.Egeria", returns=mock_egeria)
     return backend.always_fake("my_profile_app.MyProfile", returns=mock_mp)
+
+
+def _collection(guid, name, created_by, qualified_name=None):
+    return {
+        "elementHeader": {"guid": guid, "type": {"typeName": "Collection"},
+                          "versions": {"createdBy": created_by}},
+        "properties": {"displayName": name, "description": f"{name} description",
+                       "qualifiedName": qualified_name or f"Collection::{name}"},
+    }
+
+
+# Raw (JSON-format) find_collections results: only the first is the user's own,
+# non-bookmarks collection, so My Collections should show exactly one row.
+SAMPLE_COLLECTIONS = [
+    _collection("coll-guid-mine", "Clinical Trials", "garygeeke"),
+    _collection("coll-guid-other", "Someone Else's", "erinoverview"),
+    _collection("coll-guid-bookmarks", "My Bookmarks", "garygeeke", "Bookmarks::garygeeke"),
+]
 
 
 class TestMyProfileAppLifecycle:
@@ -83,6 +106,8 @@ class TestMyProfileAppLifecycle:
 
             main_screen = app.get_screen("main")
             for table_id, fake_rows in (
+                ("#projects_table", 1),
+                ("#my_collections_table", 1),
                 ("#roles_table", 1),
                 ("#teams_table", 1),
                 ("#todos_table", 1),
@@ -104,7 +129,48 @@ class TestMyProfileAppLifecycle:
 
         app = MyProfileApp()
         async with app.run_test() as pilot:
+            # Wait for the splash screen to be pushed. Match on type: the screen
+            # itself has no id (id="splash" is on its Header widget).
+            for _ in range(10):
+                if isinstance(app.screen, SplashScreen):
+                    break
+                await pilot.pause(0.1)
+            assert isinstance(app.screen, SplashScreen)
+
+            # "Continue to App" dismisses with None -> mainline's no-new-user branch
+            # (pressed directly: at the default 80x24 test size the button is off-screen)
+            app.screen.query_one("#continue", Button).press()
             await pilot.pause()
+
+            # Wait for the async task to finish and the callback to be processed
+            # and the new screen to be pushed.
+            for _ in range(50):
+                if isinstance(app.screen, CreateProfileScreen):
+                    break
+                await pilot.pause(0.1)
+
+            assert isinstance(app.screen, CreateProfileScreen)
+
+    @pytest.mark.asyncio
+    async def test_splash_escape_still_prompts_create_profile(self, backend):
+        """Escape on the splash screen must dismiss it (running mainline), not pop it."""
+        mock_mp = MagicMock()
+        mock_mp.create_egeria_bearer_token.return_value = "token"
+        mock_mp._async_get_my_profile = AsyncMock(return_value=[])
+        backend.always_fake("my_profile_app.MyProfile", returns=mock_mp)
+
+        app = MyProfileApp()
+        async with app.run_test() as pilot:
+            for _ in range(10):
+                if isinstance(app.screen, SplashScreen):
+                    break
+                await pilot.pause(0.1)
+            assert isinstance(app.screen, SplashScreen)
+            await pilot.press("escape")
+            for _ in range(50):
+                if isinstance(app.screen, CreateProfileScreen):
+                    break
+                await pilot.pause(0.1)
             assert isinstance(app.screen, CreateProfileScreen)
 
     @pytest.mark.asyncio
@@ -191,10 +257,88 @@ class TestMyProfileAppActionsAndOptions:
             assert isinstance(call_args[0], screen_cls)
 
     def test_status_callback(self):
+        """Closing a status screen returns to the main screen; it must not end the app."""
         app = MyProfileApp()
         app.exit = MagicMock()
+        app.show_main_screen = MagicMock()
         app.status_callback(200)
-        app.exit.assert_called_once_with(200)
+        app.exit.assert_not_called()
+        app.show_main_screen.assert_called_once()
+
+    @pytest.mark.asyncio
+    async def test_change_user_updates_settings_for_screens(self):
+        """After Change User, screens that read pyegeria settings must see the new user."""
+        from pyegeria import settings
+        from AddToElementsScreens import AddTodoScreen
+        saved = (settings.User_Profile.user_name, settings.User_Profile.user_pwd)
+        app = MyProfileApp()
+        app._load_or_create_profile = AsyncMock()
+        app.refresh_bindings = MagicMock()
+        try:
+            await app.mainline(["erinoverview", "erin-pwd"])
+            assert (app.user_name, app.user_password) == ("erinoverview", "erin-pwd")
+            screen = AddTodoScreen("todos_table", "user-guid-123")
+            assert (screen.user_name, screen.user_password) == ("erinoverview", "erin-pwd")
+            app._load_or_create_profile.assert_awaited_once()
+        finally:
+            settings.User_Profile.user_name, settings.User_Profile.user_pwd = saved
+
+    @pytest.mark.asyncio
+    async def test_ctrl_k_bookmarks_selected_row(
+        self, backend, sample_profile_data, sample_user_identities, sample_todos_data
+    ):
+        stub_profile_client(backend, sample_profile_data, sample_user_identities, sample_todos_data)
+        app = MyProfileApp()
+        app.bookmark_table_row = MagicMock(return_value=True)
+        async with app.run_test(size=(180, 50)) as pilot:
+            for _ in range(20):
+                if isinstance(app.screen, SplashScreen):
+                    break
+                await pilot.pause(0.1)
+            app.screen.query_one("#continue", Button).press()
+            await pilot.pause(0.3)
+            main = app.get_screen("main")
+            table = main.query_one("#roles_table", DataTable)
+            table.focus()
+            await pilot.pause()
+            await pilot.press("ctrl+k")
+            await pilot.pause()
+            app.bookmark_table_row.assert_called_once()
+            called_table, row_key = app.bookmark_table_row.call_args.args
+            assert called_table is table and row_key is not None
+
+    def test_roles_row_selection_is_registered(self):
+        """The roles_table RowSelected handler must be one Textual actually dispatches."""
+        handlers = MyProfileApp._decorated_handlers.get(DataTable.RowSelected, [])
+        assert any(method.__name__ == "_on_roles_row_selected" for method, _ in handlers)
+
+    def test_roles_row_selected_delegates_to_mixin(self):
+        app = MyProfileApp()
+        app.handle_roles_table_row_selection = MagicMock()
+        event = MagicMock()
+        app._on_roles_row_selected(event)
+        app.handle_roles_table_row_selection.assert_called_once_with(event)
+
+    @pytest.mark.parametrize("returned", [200, 400, None])
+    def test_add_comment_callback_ignores_cancel(self, returned):
+        """Cancel/quit/no-selection returns are not errors and make no Egeria call."""
+        app = MyProfileApp()
+        with patch("my_profile_app.Egeria") as mock_egeria:
+            assert app.add_comment_callback(returned) is None
+            mock_egeria.assert_not_called()
+
+    def test_add_comment_callback_success(self):
+        app = MyProfileApp()
+        app.notify = MagicMock()
+        with patch("my_profile_app.Egeria") as mock_egeria:
+            client = mock_egeria.return_value
+            client.add_comment_to_element.return_value = "comment-guid-1"
+            assert app.add_comment_callback(["Nice", "question", "elem-guid-1"]) == 200
+            client.add_comment_to_element.assert_called_once_with(
+                element_guid="elem-guid-1", comment="Nice", comment_type="QUESTION")
+            client.close_session.assert_called_once()
+            # No "Failed to add comment" notice after a successful add
+            assert all("Failed" not in str(c) for c in app.notify.call_args_list)
 
     def test_show_main_screen(self):
         app = MyProfileApp()

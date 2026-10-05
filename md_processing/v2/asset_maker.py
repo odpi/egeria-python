@@ -65,6 +65,7 @@ class AssetMakerProcessor(AsyncBaseCommandProcessor):
                 "parentRelationshipTypeName": _v(attributes, "Parent Relationship Type Name"),
                 "parentRelationshipProperties": _v(attributes, "Parent Relationship Attributes"),
                 "parentAtEnd1": _v(attributes, "Parent at End1", True),
+                "deepCopy": _v(attributes, "Deep Copy"),
             }
             guid = await client._async_create_elem_from_template(body)
             display_name = f"{_v(attributes, 'Element Type Name')} element"

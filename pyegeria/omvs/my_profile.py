@@ -672,6 +672,11 @@ class MyProfile(AssetMaker):
     ) -> list | str:
         """Return the list of actors linked to the user's profile. Async version."""
         url = f"{self.my_profile_command_root}/actors"
+        # filter_results_by_type=False: "ActorProfile" is only a rendering hint. The
+        # endpoint's .http example sends no type filter, and sending one made every
+        # call fail (OMAG-REPOSITORY-HANDLER-404-001 "... is of type UserIdentity
+        # rather than type ActorProfile"); the actors linked to a profile are user
+        # identities and roles, not ActorProfiles. ISSUE-116.
         return await self._async_get_results_body_request(
             url,
             _type="ActorProfile",
@@ -682,6 +687,7 @@ class MyProfile(AssetMaker):
             output_format=output_format,
             report_spec=report_spec,
             body=body,
+            filter_results_by_type=False,
             **kwargs,
         )
 
@@ -723,6 +729,10 @@ class MyProfile(AssetMaker):
     ) -> list | str:
         """Return the list of user identities linked to the user's profile. Async version."""
         url = f"{self.my_profile_command_root}/actors/user-identities"
+        # filter_results_by_type=False: "UserIdentity" is only a rendering hint. The
+        # endpoint's .http example sends no type filter, and with one the server
+        # silently returned no elements, even though every result is a
+        # UserIdentity. ISSUE-116.
         return await self._async_get_results_body_request(
             url,
             _type="UserIdentity",
@@ -733,6 +743,7 @@ class MyProfile(AssetMaker):
             output_format=output_format,
             report_spec=report_spec,
             body=body,
+            filter_results_by_type=False,
             **kwargs,
         )
 
@@ -774,6 +785,10 @@ class MyProfile(AssetMaker):
     ) -> list | str:
         """Return the list of assigned roles linked to the user's profile. Async version."""
         url = f"{self.my_profile_command_root}/actors/assigned-roles"
+        # filter_results_by_type=False: "GovernanceRole" is only a rendering hint. The
+        # endpoint's .http example sends no type filter, and with one the server
+        # silently returned no elements, even for users with GovernanceRoles. The
+        # roles linked to a profile include PersonRoles too. ISSUE-116.
         return await self._async_get_results_body_request(
             url,
             _type="GovernanceRole",
@@ -784,6 +799,7 @@ class MyProfile(AssetMaker):
             output_format=output_format,
             report_spec=report_spec,
             body=body,
+            filter_results_by_type=False,
             **kwargs,
         )
 
@@ -825,6 +841,11 @@ class MyProfile(AssetMaker):
     ) -> list | str:
         """Return the list of assigned resources linked to the user's profile. Async version."""
         url = f"{self.my_profile_command_root}/assigned-resources?includeUserIds=true&includeRoles=true"
+        # filter_results_by_type=False: "Resource" is only a rendering hint, not an
+        # Egeria type. Sent as metadataElementTypeName it made every call fail with
+        # OMAG-COMMON-400-018 "type name Resource ... is not recognized"; the
+        # endpoint's .http example sends no type filter, and the resources linked to
+        # a profile (via ResourceList) are of any type, e.g. Collections. ISSUE-115.
         return await self._async_get_results_body_request(
             url,
             _type="Resource",
@@ -835,6 +856,7 @@ class MyProfile(AssetMaker):
             output_format=output_format,
             report_spec=report_spec,
             body=body,
+            filter_results_by_type=False,
             **kwargs,
         )
 

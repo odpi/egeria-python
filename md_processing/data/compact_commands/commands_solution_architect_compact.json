@@ -3168,6 +3168,55 @@
       "max_cardinality": 1,
       "level": "Domain",
       "Journal Entry": "Added 2026-09-13 -- ImplementedBy relationship (0737) support, requested by the user: Solution Architect had no command for governance_officer's linkDesignToImplementation/detachDesignFromImplementation, and Create Information Supply Chain had no way to record implementation elements. Confirmed live 2026-09-13 that 'Link Information Supply Chain Child' already correctly uses CollectionMembership (not ImplementedBy) -- no fix needed there. Detach/Unlink/Attach/Add/Remove variants are auto-derived by build_command_variants() from this one 'Link' definition, matching every other Solution Architect link command -- no separate Detach compact entry needed."
+    },
+    "Deployment Status": {
+      "variable_name": "deployment_status",
+      "inUpdate": true,
+      "attr_labels": "",
+      "examples": "",
+      "default_value": "",
+      "valid_values": [
+        "PROPOSED",
+        "UNDER_DEVELOPMENT",
+        "DEVELOPMENT_COMPLETE",
+        "APPROVED_FOR_DEPLOYMENT",
+        "REJECTED",
+        "STANDBY",
+        "ACTIVE",
+        "DISABLED",
+        "FAILED",
+        "OTHER"
+      ],
+      "existing_element": "",
+      "description": "The deployment status of the element - one of an enumerated set of values (DeploymentStatus). On a Promise it tracks progress toward delivering the promised resource.",
+      "generated": false,
+      "style": "Valid Value",
+      "user_specified": true,
+      "unique": false,
+      "input_required": false,
+      "min_cardinality": 0,
+      "max_cardinality": 1,
+      "level": "Basic",
+      "Journal Entry": "2026-10-01: shared definition -- used by Curation (Classify Promise) and Solution Architect (Solution Component, Egeria 0730 deploymentStatus/userDefinedDeploymentStatus). Keep identical in both files (global attribute namespace)."
+    },
+    "User Defined Deployment Status": {
+      "variable_name": "user_defined_deployment_status",
+      "inUpdate": true,
+      "attr_labels": "",
+      "examples": "",
+      "default_value": "",
+      "valid_values": [],
+      "existing_element": "",
+      "description": "A locally defined deployment status - only used when Deployment Status is OTHER.",
+      "generated": false,
+      "style": "Simple",
+      "user_specified": true,
+      "unique": false,
+      "input_required": false,
+      "min_cardinality": 0,
+      "max_cardinality": 1,
+      "level": "Domain",
+      "Journal Entry": "2026-10-01: shared definition -- used by Curation (Classify Promise) and Solution Architect (Solution Component, Egeria 0730 deploymentStatus/userDefinedDeploymentStatus). Keep identical in both files (global attribute namespace)."
     }
   },
   "bundles": {
@@ -3333,7 +3382,9 @@
         "In Solution Components",
         "Planned Deployed Implementation Type",
         "Solution Component Type",
-        "Solution SubComponents"
+        "Solution SubComponents",
+        "Deployment Status",
+        "User Defined Deployment Status"
       ]
     },
     "Solution Role Base": {
@@ -3478,7 +3529,7 @@
       "qn_prefix": "",
       "alternate_names": [],
       "family": "Solution Architect",
-      "description": "Links or unlinks two solution compoents.",
+      "description": "Links or unlinks two solution components.",
       "verb": "Link",
       "upsert": false,
       "attach": false,
@@ -3677,7 +3728,7 @@
       "qn_prefix": "",
       "alternate_names": [],
       "family": "Solution Architect",
-      "description": "Links a child compoent to a parent component.",
+      "description": "Links a child component to a parent component.",
       "verb": "Link",
       "upsert": false,
       "attach": false,

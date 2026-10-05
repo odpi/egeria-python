@@ -335,6 +335,37 @@ class TestShopForDataMixin:
         })
         assert any("Subscription created" in msg for msg in app.log_messages)
 
+    def test_create_subscription_links_item_and_subscriber(self):
+        app = DummyShopApp()
+        app.user_GUID = "profile-guid-1"
+        app.notify = MagicMock()
+        with patch("shop_for_data_handler.ProductManager") as mock_pm_cls:
+            client = mock_pm_cls.return_value
+            client.create_digital_subscription.return_value = "sub-guid-1"
+            app.create_subscription_callback({
+                "guid": "item-guid-123", "displayName": "Sales Feed", "Status": "PROPOSED",
+                "description": "Daily", "identifier": "SF1",
+            })
+            body = client.create_digital_subscription.call_args.args[0]
+            assert body["properties"]["contentStatus"] == "PROPOSED"
+            assert body["properties"]["displayName"] == "Sales Feed"
+            client.link_agreement_item.assert_called_once_with(
+                agreement_guid="sub-guid-1", agreement_item_guid="item-guid-123")
+            client.link_subscriber.assert_called_once_with(
+                subscriber_guid="profile-guid-1", subscription_guid="sub-guid-1")
+            client.close_session.assert_called_once()
+
+    def test_create_subscription_reports_failed_link(self):
+        app = DummyShopApp()
+        app.user_GUID = "profile-guid-1"
+        app.notify = MagicMock()
+        with patch("shop_for_data_handler.ProductManager") as mock_pm_cls:
+            client = mock_pm_cls.return_value
+            client.create_digital_subscription.return_value = "sub-guid-1"
+            client.link_agreement_item.side_effect = Exception("not a GUID")
+            assert app._create_subscription("Feed", "", "", "DRAFT", "Some::QName") == "sub-guid-1"
+            assert app.notify.call_args.kwargs.get("severity") == "warning"
+
     @pytest.mark.live_capable
     @pytest.mark.asyncio
     async def test_shop_for_data_callback_direct_subscribe(self, backend):

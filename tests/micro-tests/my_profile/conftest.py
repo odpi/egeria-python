@@ -221,7 +221,6 @@ def live_template_placeholders(backend, live_catalog_template):
         values[f"{name.replace(' ', '_')}_placeholder_input"] = value
     return values
 
-
 @pytest.fixture
 def sample_profile_data():
     """Sample full profile dictionary returned from Egeria."""

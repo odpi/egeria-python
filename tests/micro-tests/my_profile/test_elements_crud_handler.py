@@ -64,6 +64,12 @@ class DummyApp(ElementsCrudMixin):
     def switch_screen(self, screen_id):
         self.switched_screens.append(screen_id)
 
+    def call_later(self, callback, *args, **kwargs):
+        self.called_later = getattr(self, "called_later", []) + [callback]
+
+    async def action_refresh(self):
+        pass
+
 
 class TestElementsCrudMixinCallbacks:
     """Tests for ElementsCrudMixin callbacks and screen transitions."""
@@ -245,20 +251,40 @@ class TestElementsCrudMixinAddAndComments:
         "callback_name",
         [
             "add_role_callback",
-            "add_association_callback",
             "add_project_callback",
             "add_community_callback",
             "add_team_callback",
             "add_blog_entry_callback",
             "add_journal_entry_callback",
             "add_todo_callback",
+            "add_collection_callback",
+            "add_user_identity_callback",
         ],
     )
-    def test_add_callbacks_switch_main(self, callback_name):
+    def test_add_callbacks_return_to_main_and_refresh(self, callback_name):
         app = DummyApp()
-        cb = getattr(app, callback_name)
-        cb("new-guid-123")
-        assert "main" in app.switched_screens
+        getattr(app, callback_name)(200)
+        assert app.shown_main_screen is True
+        assert app.called_later == [app.action_refresh]
+
+    @pytest.mark.parametrize(
+        "choice,expected_screen_cls,expected_callback",
+        [
+            ("project", AddProjectScreen, "add_project_callback"),
+            ("community", AddCommunityScreen, "add_community_callback"),
+        ],
+    )
+    def test_add_association_callback_opens_chosen_screen(self, choice, expected_screen_cls, expected_callback):
+        app = DummyApp()
+        app.add_association_callback(choice)
+        screen, callback = app.pushed_screens[0]
+        assert isinstance(screen, expected_screen_cls)
+        assert callback == getattr(app, expected_callback)
+
+    def test_add_association_callback_quit(self):
+        app = DummyApp()
+        app.add_association_callback(200)
+        assert app.pushed_screens == []
 
     def test_show_comments_and_callback(self):
         app = DummyApp()

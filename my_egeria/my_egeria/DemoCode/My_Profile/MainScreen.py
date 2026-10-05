@@ -19,7 +19,9 @@ class MainScreen(Screen):
 
     BINDINGS = [
         ("q", "app.quit", "Quit"),
+        ("ctrl+a", "add_comment","add comment to selected row"),
         ("ctrl+b", "bookmarks", "Manage Bookmarks"),
+        ("ctrl+k", "bookmark_row", "Bookmark Selected Row"),
         ("ctrl+s", "show_comments", "Show Comments for Selected Row"),
         ("ctrl+t", "edit_table", "Edit Selected Table"),
     ]
@@ -58,6 +60,8 @@ class MainScreen(Screen):
                 Option("[] Subscriptions"),
                 Option("[] Technology Types"),
                 Option("[] User Bookmarks"),
+                Option("[] Leave Feedback"),
+                Option("[] Feedback Log"),
                 id="other_function_list"
             ),
             id="other_function_container"
@@ -86,6 +90,11 @@ class MainScreen(Screen):
             Static("User Identity"),
             DataTable(id="user_identity_table"),
             id="main_identities_container"
+        )
+        yield ScrollableContainer(
+            Static("Projects"),
+            DataTable(id="projects_table"),
+            id="main_projects_container"
         )
 
         yield Footer(id="main_footer")
@@ -181,6 +190,23 @@ class MainScreen(Screen):
         else:
             self.notify("Please select a row and table to show comments.", timeout=5, severity="warning")
 
+    async def action_add_comment(self):
+        """ Add a comment to the selected table and row """
+        table_name, row_k = self.get_current_table_and_row()
+        if table_name and row_k:
+            self.selected_table = table_name
+            self.selected_row = row_k
+            add_comment_return = self.app.add_comment(table_name, row_k)
+            if add_comment_return:
+                if add_comment_return == 200:
+                    self.log("Successfully added comment")
+                    return
+                else:
+                    self.log("Failed to add comment.")
+                    self.notify("Failed to add comment.", timeout=20, severity="error")
+        else:
+            self.notify("Please select a row and table to add a comment.", timeout=5, severity="warning")
+
     async def action_add_to_table(self):
         """ Add to the selected table.
 
@@ -195,10 +221,18 @@ class MainScreen(Screen):
         else:
             self.notify("Please select a table to add to.", timeout=5, severity="warning")
 
+    def action_bookmark_row(self):
+        """ Add the element in the selected row to the user's bookmarks """
+        table_name, row_k = self.get_current_table_and_row()
+        if not (table_name and row_k):
+            self.notify("Please select a row to bookmark.", timeout=5, severity="warning")
+            return
+        self.app.bookmark_table_row(self.query_one(f"#{table_name}", DataTable), row_k)
+
     def action_bookmarks(self):
         """ Manages BookMarks for the currently logged in user
-            Note - to add a new bookmark you must first have found and copied
-            the GUID of the item you want to bookmark to the clipboard
-            as you will need to know it during the add processing"""
-        self.app.show_my_bookmarks()
+            If a table row is selected, its GUID is pre-filled as the target of a new bookmark"""
+        table_name, row_k = self.get_current_table_and_row()
+        table = self.query_one("#" + table_name, DataTable) if table_name else None
+        self.app.show_my_bookmarks(self.app.get_row_guid(table, row_k))
 

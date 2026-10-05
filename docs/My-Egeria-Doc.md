@@ -1,908 +1,564 @@
-# Egeria User Guide: My Profile Application
+<!-- SPDX-License-Identifier: CC-BY-4.0 -->
+<!-- Copyright Contributors to the ODPi Egeria project. -->
 
-The **My Profile Application** (`my_profile_app.py`) is an interactive terminal-based user interface (TUI) powered by Egeria. It is designed for business users, data citizens, data analysts, team leaders, and governance professionals to manage personal governance profiles, track daily activities, collaborate on governance artifacts, and discover organizational data assets.
+# My Profile Application: Reference Guide
 
----
+This guide explains how the **My Profile Application** (`my_profile_app.py`) is put together: its screens, the handler mixins behind them, the Egeria calls each flow makes, and the codes screens use to talk to the app. To learn how to *use* the app (configuration, starting it, keys), see the [My Profile App User Manual](my_profile_app_manual.md).
 
-## Target Audience & User Personas
-
-This application is tailored for business roles within an organization that uses Egeria as its open metadata and governance platform:
-
-- **Business Analysts & Data Citizens**: Search glossaries, explore business terms, browse digital data catalogs, and subscribe to data assets.
-- **Team Leaders & Project Managers**: View team membership, oversee project assignments, manage governance roles, and track team activities.
-- **Governance Officers & Stewards**: Add and manage governance to-dos, document insights via blogs and journals, comment on metadata elements, and trigger automated catalog templates.
-
-> **Note:** Modification screens (`EditElementsScreens.py`) are currently under construction and are not covered in this guide.
+All source files named here are in `my_egeria/my_egeria/DemoCode/My_Profile/`.
 
 ---
 
-## Getting Started & Profile Initialization
+## Source Layout
 
-### Application Startup & Authentication
+| File | Contents |
+| :--- | :--- |
+| `my_profile_app.py` | `MyProfileApp`: startup, profile loading, table population, menu dispatch, comments-from-main |
+| `MainScreen.py` | The dashboard: tables, Other Functions menu, row-selection tracking |
+| `SplashScreen.py` | Welcome card and Change User |
+| `CreateProfileScreen.py` | First-time profile creation |
+| `elements_crud_handler.py` | `ElementsCrudMixin`: add/edit/delete routing, comments screen routing |
+| `AddToElementsScreens.py` | `BaseAddScreen` and every Add screen |
+| `EditElementsScreens.py` | `BaseEditScreen`, `ConfirmDeleteScreen`, per-table edit screens, `EditProfileScreen` |
+| `AddCommentScreen.py`, `ShowCommentsScreen.py` | Commenting on a row; viewing and replying to comment threads |
+| `feedback_handler.py`, `FeedbackScreens.py` | `FeedbackMixin`, `FeedbackScreen`, `FeedbackLogScreen` |
+| `shop_for_data_handler.py` | `ShopForDataMixin`: catalog loading, overview trees, sampling, subscriptions |
+| `ShopForDataScreen.py`, `SelectionOverviewScreen.py`, `GenericDataViewScreen.py`, `CreateSubscriptionRequestScreen.py`, `SearchForTermScreen.py` | Shop for Data screens |
+| `ViewSubscriptionsScreen.py` | Subscriptions menu entry |
+| `tech_types_handler.py`, `TechnologyTypeScreens.py` | `TechTypesMixin` and the technology type screens |
+| `team_roles_handler.py`, `MyTeamScreen.py` | `TeamRolesMixin` and the team roster screen |
+| `bookmarks_handler.py`, `MyBookMarksScreen.py` | `BookmarksMixin` (bookmarks kept in a personal collection) and the bookmarks screen |
+| `UserIdentitiesScreen.py` | Read-only user identity table |
+| `StatusScreen.py` | Result message with copy-GUID |
+| `profile_utils.py` | Environment check and data clean-up helpers |
+| `my_profile.tcss` | Layout and theme |
+| `RETURN_CODES.md`, `catalog_api_calls.md` | Return-code list and Shop for Data API notes |
 
-When the application launches, it automatically loads configuration settings and establishes a secure connection to the Egeria View Server:
+---
 
-1. **Configuration & Credentials**: Loads application environment settings and user credentials (`user_name`, `user_password`, `egeria_view_server`, `egeria_platform_url`).
-2. **Profile Retrieval**: Calls Egeria via `MyProfile._async_get_my_profile()` using the `My-User-MD` specification.
-3. **Karma Points & Reputation**: Calculates and displays the user's active **Karma Points**, recognizing contributions to the metadata ecosystem.
-4. **Table Population**: Asynchronously populates the main dashboard tables (Associations, Roles, Teams, Blogs, Journal, To-Dos, User Identity, and Collections).
+## Application Structure
 
-### First-Time User: Profile Creation
+```mermaid
+classDiagram
+    class App
+    class MyProfileApp {
+        SCREENS
+        BINDINGS: q, r, ctrl+f, f3
+        on_mount()
+        mainline(splash_return)
+        _load_profile_and_populate()
+        _process_profile_data()
+        _populate_tables()
+        handle_option_selected()
+        add_comment() / add_comment_callback()
+        _load_my_collections()
+        check_action()
+    }
+    class TechTypesMixin
+    class ShopForDataMixin
+    class TeamRolesMixin
+    class ElementsCrudMixin
+    class FeedbackMixin
+    class BookmarksMixin {
+        show_my_bookmarks()
+        list_my_bookmarks()
+        add_my_bookmark() / delete_my_bookmark()
+    }
+    App <|-- MyProfileApp
+    TechTypesMixin <|-- MyProfileApp
+    ShopForDataMixin <|-- MyProfileApp
+    TeamRolesMixin <|-- MyProfileApp
+    ElementsCrudMixin <|-- MyProfileApp
+    FeedbackMixin <|-- MyProfileApp
+    BookmarksMixin <|-- MyProfileApp
+```
 
-If no existing profile is found for your account in Egeria (`my_profile_data == []`), the application automatically launches the **Create Profile** modal dialog (`CreateProfileScreen.py`).
+- **App bindings:**
+  - `q` quits with `200`.
+  - `r` re-runs the profile load and table population.
+  - `ctrl+f` (feedback) and `f3` (feedback log) are *priority* bindings. Textual ignores ordinary App bindings while a modal screen is active, and priority bindings get round that.
+- **`check_action`** hides and disables `view_feedback_log` unless the current user is the feedback owner (`garygeeke`).
+- **Screen registration:** most screens are registered by name in `SCREENS`. `EditCollectionsScreen`, `AddCollectionScreen`, `AddUserIdentityScreen`, `FeedbackScreen`, `FeedbackLogScreen` and `ConfirmDeleteScreen` are pushed as instances instead.
+- **Mixins and `@on`:** the mixins are plain Python classes, not Textual message pumps. Textual only collects `@on(...)`-decorated handlers from classes built with its own metaclass, so an `@on` handler defined on a mixin is never dispatched. Put any `@on` handler on `MyProfileApp` itself and have it delegate to the mixin, as `_on_roles_row_selected` does. Handlers found by name (`on_worker_state_changed`, `action_*`) and callbacks passed to `push_screen` work on mixins.
+- **Entry point:** `main()` runs the app. It is the target of the `my_profile` console script.
 
-| Field | Description | Example / Format |
+---
+
+## Startup and Profile Loading
+
+```mermaid
+flowchart TD
+    START(["Launch"]) --> CHECK_ENV{"pydantic &gt;= 2.12.3?"}
+    CHECK_ENV -- "No" --> EXIT430(["exit(430)"])
+    CHECK_ENV -- "Yes" --> PUSH_MAIN["push_screen('main')"]
+    PUSH_MAIN --> TASK["start task: _load_profile_and_populate()"]
+    PUSH_MAIN --> SPLASH["push_screen('splash', callback=mainline)"]
+    SPLASH -- "Continue to App: dismiss()" --> MAINLINE{"mainline(result)"}
+    SPLASH -- "Change User: dismiss([user, pwd])" --> MAINLINE
+    MAINLINE -- "list (user changed)" --> RELOAD["cancel task, set user,<br/>refresh_bindings(),<br/>_load_or_create_profile()"]
+    MAINLINE -- "None" --> AWAIT["await task"]
+    TASK --> GET["MyProfile._async_get_my_profile('My-User-MD', DICT)"]
+    GET -- "PyegeriaException" --> EXIT402(["exit(402)"])
+    GET --> PROC["_process_profile_data()<br/>• get_my_profile('User-Identities')<br/>• get_my_to_dos('My-User-ToDos')<br/>• resolve user GUID (fallback: 'Actor-Profiles')"]
+    PROC --> POP["_populate_tables()"]
+    AWAIT --> FOUND{"Profile found?"}
+    RELOAD --> FOUND
+    FOUND -- "Yes" --> DASH["Main dashboard"]
+    FOUND -- "No" --> CPS["CreateProfileScreen<br/>callback=new_profile_return"]
+    CPS -- "200" --> REREAD["re-read 'My-User-MD', populate"] --> DASH
+    CPS -- "not 200" --> EXIT403(["exit(403)"])
+```
+
+- **Parallel loading.** The profile load starts as soon as the app mounts, while the splash screen is still showing. If the user switches account, the background task is cancelled and the load is repeated for the new user.
+- **Escape on the splash screen** dismisses it, the same as **Continue to App**. It must dismiss rather than `pop_screen`, because `pop_screen` discards the pushed screen's callback, so `mainline` (and the missing-profile check) would never run.
+- **Change User** also writes the new user and password into pyegeria's cached `settings.User_Profile`. Screens read the user from there, so every screen opened afterwards runs its Egeria calls as the new user.
+- **Change User check.** The splash screen builds an `Egeria` client from the new credentials and closes it again, but it does not request a token. Bad credentials are therefore only found when the profile load fails.
+- **What `_process_profile_data` extracts** from the first `My-User-MD` record:
+  - Contribution Record, which supplies the Karma Points;
+  - Projects, Teams, Communities and Roles;
+  - Note Logs, split into blogs and journal by their `class`.
+
+### Create Profile
+
+`CreateProfileScreen` builds a `NewElementRequestBody` from its fields and calls `MyProfile.add_my_profile(body)`:
+- the qualified name is made from "Person", the employee ID, the country and the given and family names;
+- `initials` is set to `"PAT"` and `employeeType` to `"Full-Time"`.
+
+It returns `200` on success and `401` on failure.
+
+---
+
+## Main Screen Data Sources
+
+| Table id | Source | Notes |
 | :--- | :--- | :--- |
-| `Courtesy Title` | Preferred formal title | `Dr.`, `Ms.`, `Mr.` |
-| `Given Names` | First / given names | `Gary` |
-| `Family Name` | Surname / last name | `Geeke` |
-| `Preferred Name` | Preferred display name | `Gary Geeke` |
-| `Pronouns` | Personal pronouns | `he/him`, `they/them` |
-| `Job Title` | Professional role in organization | `Lead Data Architect` |
-| `Description` | Brief summary of role and responsibilities | `Responsible for enterprise data modeling` |
-| `Employee ID` | Organization employee identifier | `EMP-10492` |
-| `Preferred Language` | Language for system interactions | `en-US` |
-| `Resident Country` | Country of employment / residence | `United Kingdom` |
-| `Time Zone` | Working time zone | `Europe/London` |
+| `associations_table` | Communities from `My-User-MD` | |
+| `my_collections_table` | `Egeria.find_collections("*", JSON)`, keeping those whose `elementHeader.versions.createdBy` is the current user, minus the bookmarks collection (`_load_my_collections`) | |
+| `roles_table` | Roles from `My-User-MD` | |
+| `teams_table` | Teams from `My-User-MD` | |
+| `blogs_table`, `journal_table` | Note Logs from `My-User-MD` | |
+| `todos_table` | `MyProfile.get_my_to_dos(report_spec="My-User-ToDos")` | |
+| `user_identity_table` | `MyProfile.get_my_profile(report_spec="User-Identities")` | |
 
-Click **Create Profile** or submit the form. Egeria creates your `Person` entity and anchors your user profile. If you cancel or encounter an issue, press `q` to dismiss.
+| `projects_table` | Projects from `My-User-MD` | |
 
----
+`communities_table` is not on the main screen (communities show in User Associations); `_populate_tables_sync` skips any table that isn't composed.
 
-### Startup & Profile Architecture Flows
+`MainScreen` tracks the selected table and row through focus, highlight, select and cell events. It uses them for `ctrl+t` (edit table), `ctrl+a` (add comment) and `ctrl+s` (show comments).
 
-#### Component & Flow Map
+### Other Functions menu dispatch (`handle_option_selected`)
 
-```mermaid
-flowchart TD
-    %% App Startup and Profile Loading
-    subgraph ClientApp ["Textual Application (my_profile_app.py)"]
-        START(["Application Launch"])
-        ONMOUNT["on_mount()<br/>• push_screen('main')"]
-        LOAD["_load_or_create_profile()<br/>• Create Bearer Token<br/>• _async_get_my_profile('My-User-MD')"]
-        CHECK{"Profile<br/>Found?"}
-        POPULATE["_populate_tables()<br/>• Populate 8 Tables<br/>• Compute Karma Points"]
-        MAIN["Main Dashboard Active"]
-    end
-
-    subgraph Modals ["Profile Creation Modal"]
-        CPS["CreateProfileScreen<br/>(CreateProfileScreen.py)<br/>• Input Personal & Contact Details"]
-        SUBMIT["Submit Profile Action<br/>• action_create_profile()"]
-    end
-
-    subgraph EgeriaOMVS ["Egeria Pyegeria Client"]
-        MP["MyProfile Client<br/>(pyegeria.omvs.my_profile)"]
-        GET_P["get_my_profile(report_spec='My-User-MD')"]
-        CREATE_P["create_actor_profile(body)"]
-    end
-
-    START --> ONMOUNT --> LOAD
-    LOAD --> MP --> GET_P
-    GET_P -- "Profile data returned" --> CHECK
-    CHECK -- "Yes (Data Present)" --> POPULATE --> MAIN
-    CHECK -- "No (Empty List)" --> CPS
-    CPS --> SUBMIT -- "dismiss(200 / payload)" --> CREATE_P
-    CREATE_P --> POPULATE
-```
-
-#### Sequence & Data Exchange
-
-```mermaid
-sequenceDiagram
-    autonumber
-    actor User
-    participant App as MyProfileApp<br/>(my_profile_app.py)
-    participant Modal as CreateProfileScreen<br/>(CreateProfileScreen.py)
-    participant MP as MyProfile<br/>(pyegeria.omvs)
-
-    User->>App: Launch Application
-    App->>App: load_app_config() (Settings & Credentials)
-    App->>App: push_screen("main")
-    App->>MP: create_egeria_bearer_token(user, password)
-    App->>MP: _async_get_my_profile(report_spec="My-User-MD", output_format="DICT")
-
-    alt Profile Exists
-        MP-->>App: Return User Profile Dict & Contribution Records
-        App->>App: Calculate Karma Points & extract profile entities
-        App->>App: _populate_tables() (Associations, Roles, Teams, Blogs, etc.)
-        App-->>User: Display Populated Main Dashboard
-    else Profile Missing (First-Time User)
-        MP-->>App: Return empty dataset []
-        App->>Modal: push_screen(CreateProfileScreen(), callback=new_profile_return)
-        Modal-->>User: Display Profile Creation Form
-        User->>Modal: Enter personal details & submit
-        Modal->>MP: create_actor_profile(body) / create_person_profile()
-        MP-->>Modal: Profile Created (200 OK)
-        Modal->>App: dismiss(200)
-        App->>App: _populate_tables()
-        App-->>User: Display Populated Main Dashboard
-    end
-```
+| Option | Action |
+| :--- | :--- |
+| User Identities | `UserIdentitiesScreen(karma_points, user_identities)` |
+| Catalogs/Shop for Data | `handle_shop_for_data_option()` |
+| Edit Profile | `EditProfileScreen(karma_points, user_profile, user_GUID)` |
+| Subscriptions | `ViewSubscriptionsScreen()` |
+| Technology Types | `handle_technology_types_option()` |
+| User Bookmarks | `show_my_bookmarks()` |
+| Leave Feedback | `action_feedback()` |
+| Feedback Log | `action_view_feedback_log()` (owner only) |
 
 ---
 
-## Main Dashboard Layout & Workspace Structure
+## Element Management (Add, Edit, Delete)
 
-The main dashboard (`MainScreen.py`) organizes all user-relevant metadata into clean, scrollable containers:
+Three routing tables in `elements_crud_handler.py` drive everything, all keyed by the main-screen table id:
 
-```mermaid
-flowchart TB
-    subgraph Dashboard ["Main Dashboard (MainScreen.py)"]
-        HEADER["Header: Egeria - My Profile | User: &lt;user_name&gt; (Karma Points: &lt;points&gt;)"]
-        
-        subgraph TopRow ["Top Grid Container"]
-            ASSOC["User Associations Container<br/>• Community & project ties<br/>• #associations_table"]
-            COLL["My Collections Container<br/>• Personal asset collections<br/>• #my_collections_table"]
-        end
-
-        subgraph MidRow ["Middle Grid Container"]
-            OTHER["Other Functions Menu<br/>• [1] User Identities<br/>• [2] Catalogs/Shop for Data<br/>• [3] Technology Types"]
-            ROLES["Assigned Roles Container<br/>• Governance & business roles<br/>• #roles_table (Drill-down to Teams)"]
-        end
-
-        subgraph LowerRow ["Lower Grid Container"]
-            TEAMS["Teams Container<br/>• Departments & Squads<br/>• #teams_table"]
-            ACTIVITIES["Activities & Note Logs<br/>• Blogs: #blogs_table<br/>• Journal: #journal_table<br/>• To-Dos: #todos_table"]
-        end
-
-        subgraph BottomRow ["Identity Container"]
-            IDENTITY["User Identity Container<br/>• Distinguished names across repositories<br/>• #user_identity_table"]
-        end
-
-        FOOTER["Footer: Global Keyboard Shortcuts & Status Indicators"]
-        
-        HEADER --- TopRow
-        TopRow --- MidRow
-        MidRow --- LowerRow
-        LowerRow --- BottomRow
-        BottomRow --- FOOTER
-    end
-```
-
-### Dashboard Data Sections
-
-- **User Associations**: Displays communities, initiatives, and working groups the user is associated with.
-- **My Collections**: Lists personal asset collections and pinned resource groupings.
-- **Roles**: Shows formal roles assigned to the user (e.g., `TeamLeader`, `DataSteward`, `BusinessAnalyst`).
-- **Teams**: Displays departments, squads, and operational units where the user is a member.
-- **Activities (Blogs, Journal, To-Dos)**:
-  - **Blogs**: Published articles and knowledge-sharing entries.
-  - **Journal**: Private or internal work log entries with timestamps.
-  - **To-Dos**: Assigned action items, tasks, and governance workflows with activity statuses.
-- **User Identity**: Identity mappings linking user accounts to directory services and repository platforms.
-- **Other Functions**: Quick-access navigation menu to specialized workspaces.
-
----
-
-## Keyboard Navigation & Global Shortcuts
-
-The My Profile application provides rapid keyboard-driven navigation:
-
-| Key Binding | Action | Scope | Description |
+| Table id | Edit screen | Add screen | Delete call |
 | :--- | :--- | :--- | :--- |
-| `q` | **Quit** | Global | Exits the application or dismisses the current modal window. |
-| `r` | **Refresh Data** | Global | Reloads profile data, activities, and tables from Egeria. |
-| `ctrl+s` | **Show Comments** | Main Screen | Opens the comment thread for the currently highlighted table row. |
-| `ctrl+t` | **Add To-Do** | Main Screen | Opens the quick-creation dialog for a new To-Do item. |
-| `ctrl+b` | **Add Blog** | Main Screen | Opens the creation dialog for a new Blog post. |
-| `ctrl+j` | **Add Journal** | Main Screen | Opens the creation dialog for a new Journal entry. |
-| `ctrl+c` | **Add Association** | Main Screen | Links the profile to a Community or Project. |
-| `ctrl+r` | **Add Role** | Main Screen | Creates and assigns a new governance role. |
-| `ctrl+g` | **Add Team** | Main Screen | Creates a new Team structure. |
-| `ctrl+m` | **Add Collection**| Main Screen | Creates a new asset collection. |
-| `ctrl+e` | **Toggle Twisties**| Trees | Expands or collapses all nodes in hierarchical trees. |
-| `Escape` / `b` | **Back / Exit** | Modals | Closes the current modal dialog and returns to the previous screen. |
+| `associations_table` | `EditAssociationsScreen` | `AddAssociationScreen` | `delete_community` |
+| `blogs_table` | `EditBlogsScreen` | `AddBlogEntryScreen` | `delete_metadata_element` |
+| `communities_table` | `EditCommunitiesScreen` | `AddCommunityScreen` | `delete_community` |
+| `journal_table` | `EditJournalScreen` | `AddJournalEntryScreen` | `delete_metadata_element` |
+| `my_collections_table` | `EditCollectionsScreen` | `AddCollectionScreen` | `delete_collection` |
+| `projects_table` | `EditProjectsScreen` | `AddProjectScreen` | `delete_project` |
+| `roles_table` | `EditRolesScreen` | `AddRoleScreen` | `delete_actor_role` |
+| `teams_table` | `EditTeamsScreen` | `AddTeamScreen` | `delete_actor_profile` |
+| `todos_table` | `EditTodosScreen` | `AddTodoScreen` | `delete_metadata_element` |
+| `user_identity_table` | `EditIdentitiesScreen` | `AddUserIdentityScreen` | `delete_user_identity` |
 
----
+These are `EDIT_TABLE_ROUTES`, `ADD_TABLE_ROUTES` and `DELETE_METHODS`. Blogs, journal entries and to-dos have no bespoke SDK delete, so they use the generic `delete_metadata_element`. It takes only a GUID, so it cannot get the element's type wrong.
 
-## Managing User Activities & Adding Elements
+### Edit screens (`BaseEditScreen`)
 
-The application includes dedicated quick-entry dialogs (`AddToElementsScreens.py` managed via `elements_crud_handler.py`) to create new items without needing complex scripts:
+- **On mount:** each subclass names its `SOURCE_TABLE`, and the screen copies that table's columns and rows from the main screen.
+- **`a` (add row):** calls `app.add_to_tables(SOURCE_TABLE, row)`, which pushes the Add screen from `ADD_TABLE_ROUTES`.
+- **`d` (delete row):** takes the GUID from the row's last column and pushes `ConfirmDeleteScreen`. If the user confirms, it calls `app.delete_element(SOURCE_TABLE, guid)`, which looks up `DELETE_METHODS` and calls Egeria. The row is removed only if that returns `True`.
+- **`Escape`:** dismisses with `[(row_key, row_values), ...]`. The table's edit callback then writes those rows back to the main table through `_write_back_rows()`.
 
-### 1. Adding a To-Do Item (`ctrl+t`)
-- **Fields**:
-  - `Name of Todo`: Clear summary of the required task.
-  - `Description of Todo`: Detailed instructions or requirements.
-  - `Priority of Todo`: Priority indicator (e.g., `High`, `Medium`, `Low`).
-  - `Link Todo to your profile?`: Toggle switch (defaults to `True`) to anchor the task to your active profile.
-- **Behavior**: New To-Dos are automatically created with status `REQUESTED` and linked directly to your Egeria profile.
+### Add screens
 
-### 2. Adding a Blog Entry (`ctrl+b`)
-- **Fields**:
-  - `Blog Title`: Title for the knowledge post.
-  - `Qualified Name`: Unique system identifier for the blog entry.
-  - `Blog Entry Text`: Detailed markdown or plain-text body of the post.
-  - `Link to Blog?`: Switch to associate the entry with an existing blog channel.
+The newer Add screens subclass **`BaseAddScreen`**. A subclass declares its form and implements only the Egeria calls:
 
-### 3. Adding a Journal Entry (`ctrl+j`)
-- **Fields**:
-  - `Journal Name`: Title or identifier for the journal log.
-  - `Journal Entry Text`: Detailed notes or work summary.
-  - `Link to Profile`: Automatically anchors the entry with the current timestamp.
+```python
+class AddCollectionScreen(BaseAddScreen):
+    SCREEN_ID = "add_collection_screen"
+    ELEMENT_NAME = "Collection"
+    FIELDS = [("collection_name", "Name of Collection", True), ...]   # (input id, label, required)
+    LINK_LABEL = None             # set to show a "link to my profile" switch
 
-### 4. Adding a Community (`AddCommunityScreen`)
-- **Fields**:
-  - `Community Name`: Display name for the community of practice.
-  - `Community Description`: Mission and purpose of the community.
-  - `Community Category`: Functional group or business area.
-  - `Assignment Type`: User membership level (e.g., `Leader`, `Member`, `Contributor`).
-  - `Community Mission`: Strategic objectives.
-
-### 5. Adding a Project (`AddProjectScreen`)
-- **Fields**:
-  - `Project Name`: Name of the project or initiative.
-  - `Project Description`: Goals and deliverables.
-  - `Project Category`: Type of project (e.g., `Governance`, `Data Migration`, `Analytics`).
-  - `Project Status`: Initial project state (e.g., `PROPOSED`, `ACTIVE`).
-  - `Start Date` / `End Date`: Planned execution timeline.
-
-### 6. Adding a Role (`ctrl+r`)
-- **Fields**:
-  - `Role Name`: Functional title (e.g., `Data Steward - Finance`).
-  - `Role Type`: Egeria role type specification.
-  - `Role Description`: Responsibilities and delegation authority.
-  - `Scope`: Department, business domain, or organizational unit.
-  - `Appointed Actor`: Target user or profile appointed to the role.
-
----
-
-### Element Management & CRUD Architecture Flows
-
-#### Component & Flow Map
-
-```mermaid
-flowchart TD
-    subgraph Trigger ["User Action on MainScreen"]
-        KEY["Shortcut Keys:<br/>• ctrl+t (Todo)<br/>• ctrl+b (Blog)<br/>• ctrl+j (Journal)<br/>• ctrl+c (Association)<br/>• ctrl+r (Role)<br/>• ctrl+g (Team)<br/>• ctrl+m (Collection)"]
-    end
-
-    subgraph Handler ["Elements CRUD Handler (elements_crud_handler.py)"]
-        ADD_ROUTER["add_to_tables(selected_table)<br/>• Matches ADD_TABLE_ROUTES"]
-        CALLBACKS["Add Callbacks:<br/>• add_todo_callback()<br/>• add_blog_entry_callback()<br/>• add_journal_entry_callback()<br/>• add_role_callback()<br/>• add_team_callback()"]
-        DEL["delete_element(source_table, guid)<br/>• Matches DELETE_METHODS"]
-    end
-
-    subgraph Screens ["Add / Edit Dialogs (AddToElementsScreens.py)"]
-        MODALS["Modal Screen Instances:<br/>• AddTodoScreen<br/>• AddBlogEntryScreen<br/>• AddJournalEntryScreen<br/>• AddRoleScreen<br/>• AddTeamScreen<br/>• AddProjectScreen<br/>• AddCommunityScreen"]
-    end
-
-    subgraph EgeriaOMVS ["Egeria OMVS Engine"]
-        OMVS["Egeria Core & MyProfile Services<br/>• create_actor_role()<br/>• create_community()<br/>• create_project()<br/>• create_collection()<br/>• delete_metadata_element()"]
-    end
-
-    KEY --> ADD_ROUTER
-    ADD_ROUTER -- "push_screen(screen_cls(table, guid))" --> MODALS
-    MODALS -- "User submits form<br/>dismiss(result_dict)" --> CALLBACKS
-    CALLBACKS -- "Persist Changes" --> OMVS
-    OMVS -- "Switch Screen" --> ADD_ROUTER
-    DEL -- "delete_actor_role() / delete_metadata_element()" --> OMVS
+    def create_element(self, client, values) -> str: ...   # returns the new GUID
+    def link_element(self, client, guid) -> None: ...      # only needed if LINK_LABEL is set
 ```
 
-#### Sequence & Data Exchange
+`BaseAddScreen` provides:
+- connection settings;
+- the form layout;
+- required-field validation, which names the missing fields;
+- the `Egeria` client lifecycle, including bearer token, session close and error notices;
+- the optional link to the user's profile, skipped with a warning if the profile GUID is unknown;
+- clearing the form after a successful add (a failed add keeps the input so it can be corrected);
+- the Add, Quit and `ctrl+a` controls.
+
+The screen stays open for repeated adds and dismisses with `200`.
+
+| Add screen | Base | Egeria calls |
+| :--- | :--- | :--- |
+| `AddCollectionScreen` | `BaseAddScreen` | `create_collection(display_name, description, category)` |
+| `AddUserIdentityScreen` | `BaseAddScreen` | `create_user_identity(body)` with `UserIdentityProperties`; `link_identity_to_profile(identity_guid, profile_guid)` |
+| `AddTodoScreen` | `BaseAddScreen` | `create_my_todo(todo_name, description, priority, activity_status="REQUESTED")` |
+| `AddBlogEntryScreen` | `BaseAddScreen` | `blog_my_activity(body)` with `BlogEntryProperties` (attached to the user's blog) |
+| `AddJournalEntryScreen` | `BaseAddScreen` | `journal_my_activity(body)` with `JournalEntryProperties` (attached to the user's journal) |
+| `AddProjectScreen` | `BaseAddScreen` | `create_project(...)`; link: `add_to_project_team(project_guid, actor_guid=profile GUID)` |
+| `AddCommunityScreen` | `BaseAddScreen` | `create_community(body)` with `CommunityProperties` |
+| `AddRoleScreen` | `BaseAddScreen` | `create_actor_role(body)` with `PersonRoleProperties`; link: `link_person_role_to_profile(role_guid, profile_guid)` |
+| `AddTeamScreen` | `BaseAddScreen` | `create_actor_profile(body)` with `TeamProperties`; join: `create_actor_role` (a `TeamMember` role), `link_person_role_to_profile(role, profile)`, `link_assignment_scope(team, role)` |
+| `AddAssociationScreen` | `ModalScreen` | None: a chooser that dismisses with `"project"` or `"community"`. `add_association_callback` then pushes `AddProjectScreen` or `AddCommunityScreen`. |
+
+`BaseAddScreen.validate(values)` lets a subclass reject values before any Egeria call. To-Do checks that its priority is a whole number; Project checks its kind and its `YYYY-MM-DD` dates.
+
+Team membership in Egeria is a `TeamMember` role (a PersonRole subtype) appointed to the person and scoped to the team by an `AssignmentScope` relationship. This is the same model Dr.Egeria's `Link Team Membership` uses. `link_element()` can read the form values through `self.last_values`. Communities have no "link to me" step, because pyegeria has no community-membership call.
+
+When any Add screen closes, its `add_*_callback` calls `_after_add()`. That pops back to the main screen, which drops the edit screen's stale rows, and schedules `action_refresh()` so the new element appears.
 
 ```mermaid
 sequenceDiagram
     autonumber
     actor User
-    participant Main as MainScreen<br/>(MainScreen.py)
-    participant Handler as elements_crud_handler.py<br/>(ElementsCrudMixin)
-    participant Modal as AddToElementsScreens.py<br/>(e.g., AddTodoScreen)
-    participant OMVS as Egeria Backend<br/>(pyegeria client)
+    participant Main as MainScreen
+    participant Crud as ElementsCrudMixin
+    participant Edit as Edit screen (BaseEditScreen)
+    participant Add as Add screen
+    participant Egeria as pyegeria Egeria client
 
-    User->>Main: Press Shortcut (e.g., 'ctrl+t' for To-Do)
-    Main->>Handler: add_to_tables("todos_table", selected_row)
-    Handler->>Handler: Resolve route via ADD_TABLE_ROUTES["todos_table"]
-    Handler->>Modal: push_screen(AddTodoScreen("todos_table", user_GUID), callback=add_todo_callback)
-    Modal-->>User: Display Entry Form (Name, Description, Priority, Link Switch)
-    User->>Modal: Fill form and press Add Button
-    Modal->>OMVS: Create entity / anchor to user profile
-    OMVS-->>Modal: Return created element response
-    Modal->>Handler: dismiss(result_dict)
-    Handler->>Handler: add_todo_callback(result)
-    Handler->>Main: switch_screen("main")
-    Main-->>User: Updated Main Dashboard with New Row
-```
-
----
-
-## Collaboration & Element Comments
-
-Egeria supports collaborative feedback on any metadata element across the dashboard via `ShowCommentsScreen.py`:
-
-```mermaid
-flowchart TB
-    subgraph CommentUI ["Show Comments Screen Layout (ShowCommentsScreen.py)"]
-        HEADER["Header: Show Comments for Selected Element (Table: roles_table)"]
-        
-        subgraph ThreadPane ["Discussion Thread Viewer"]
-            C1["[Comment 1] Question: Should this role oversee raw feeds? (Author: Peter)"]
-            C2["[Comment 2] Answer: Yes, raw feeds fall under ingestion. (Author: Gary)"]
-        end
-
-        subgraph EntryPane ["Add Comment Container"]
-            INPUT["Comment Input Field: [ Enter comment text... ]"]
-            SELECT["Comment Type Selector: [ Question | Answer | Suggestion | Requirement ]"]
-            SUBMIT_BTN["[ Add Comment (ctrl+a) ]"]
-        end
-
-        FOOTER["Footer: [ctrl+a] Add Comment | [b] Back | [q] Quit"]
-
-        HEADER --- ThreadPane
-        ThreadPane --- EntryPane
-        EntryPane --- FOOTER
+    User->>Main: select table, ctrl+t
+    Main->>Crud: edit_tables(table)
+    Crud->>Edit: push_screen(EDIT_TABLE_ROUTES[table])
+    alt add a row ('a')
+        Edit->>Crud: add_to_tables(table, row)
+        Crud->>Add: push_screen(ADD_TABLE_ROUTES[table](table, user_GUID))
+        User->>Add: fill form, Add
+        Add->>Egeria: create (and optionally link to profile)
+        Egeria-->>Add: new GUID
+        User->>Add: Quit
+        Add->>Crud: dismiss(200) → add_*_callback → _after_add()
+        Crud->>Main: pop to main, action_refresh()
+    else delete a row ('d')
+        Edit->>User: ConfirmDeleteScreen
+        User->>Edit: Delete
+        Edit->>Crud: delete_element(table, guid)
+        Crud->>Egeria: DELETE_METHODS[table](guid)
+        Egeria-->>Crud: ok / PyegeriaException
+        Crud-->>Edit: True / False (row removed only on True)
     end
+    User->>Edit: Escape
+    Edit->>Crud: dismiss(rows) → _write_back_rows(table, rows)
+    Crud->>Main: main screen
 ```
 
-### Viewing Comments
-1. Highlight any row in any table (e.g., Roles, Projects, Teams, Collections).
-2. Press `ctrl+s`.
-3. The system extracts the element's unique `GUID` or `Qualified Name` and retrieves all attached discussion threads using Egeria's `Comment-by-Element` service.
+### Edit Profile
 
-### Adding a Comment
-1. In the comments view, press `ctrl+a` or navigate to the input container.
-2. Enter your comment text.
-3. Specify a valid **Comment Type**:
-   - `Question`: Ask for clarification or metadata details.
-   - `Answer`: Provide a resolution to an open question.
-   - `Suggestion`: Propose enhancements or governance adjustments.
-   - `Requirement`: Specify mandatory compliance or data quality conditions.
-4. Click **Add**. The comment is immediately attached to the element in Egeria.
+`EditProfileScreen` pre-fills the person properties and calls `Egeria.update_actor_profile(user_GUID, UpdateElementRequestBody{PersonProperties})`. It returns `200` on success and `401` on failure.
+
+Its `ctrl+c`, `ctrl+i`, `ctrl+r` and `ctrl+t` keys return `"community"`, `"identity"`, `"role"` or `"team"`. `edit_profile_callback` then opens the matching edit screen.
 
 ---
 
-### Collaboration & Comments Architecture Flows
+## Comments and Threaded Responses
 
-#### Component & Flow Map
+There are two ways to comment.
+
+**1. From the main screen (`ctrl+a`).**
+1. `app.add_comment(table, row)` finds the row's GUID column, falling back to a "Qualified Name" column.
+2. It pushes `AddCommentScreen`, which dismisses with `[comment, type, guid]`.
+3. `add_comment_callback` calls `Egeria.add_comment_to_element(guid, comment, TYPE)`.
+
+**2. From the comments screen (`ctrl+s`).** `ShowCommentsScreen` handles both viewing comments and replying to them:
 
 ```mermaid
 flowchart TD
-    subgraph Main ["Main Dashboard Table Selection"]
-        SELECT_ROW["User highlights row on table<br/>(Roles, Teams, Collections, etc.)"]
-        TRIGGER["Press 'ctrl+s' (Show Comments)"]
-    end
-
-    subgraph Handler ["Elements Handler (elements_crud_handler.py)"]
-        SHOW["show_comments(table_name, row_k)<br/>• Extracts row GUID / Qualified Name"]
-        CALLBACK["show_comments_callback(return_c)<br/>• Restores Main Screen on exit"]
-    end
-
-    subgraph Screen ["Comments Modal Screen (ShowCommentsScreen.py)"]
-        INIT["on_mount()<br/>• Fetch existing comments from Egeria"]
-        VIEW["Display Discussion Thread Viewer"]
-        ADD["action_add_comment()<br/>• Captures text & comment type<br/>• Calls Egeria add_comment()"]
-    end
-
-    subgraph Egeria ["Egeria OMVS Client"]
-        FETCH_C["MyProfile / OpenMetadataStore<br/>• get_attached_comments(element_guid)"]
-        POST_C["create_comment_and_link(body)"]
-    end
-
-    SELECT_ROW --> TRIGGER --> SHOW
-    SHOW -- "push_screen(ShowCommentsScreen)" --> INIT
-    INIT --> FETCH_C --> VIEW
-    VIEW -- "User enters comment + 'ctrl+a'" --> ADD
-    ADD --> POST_C -- "Comment attached" --> INIT
-    VIEW -- "Press 'b' / 'q' (dismiss)" --> CALLBACK --> Main
+    MAIN["MainScreen: select row, ctrl+s"] --> SHOW["show_comments(table, row)"]
+    SHOW --> SCS["ShowCommentsScreen(table, row,<br/>selected_comment_guid=None)"]
+    SCS --> LOAD["exec_report_spec('Comment-by-Element',<br/>element_guid = row GUID or comment GUID)"]
+    LOAD --> LIST["Comment table: Comment, GUID, Qualified Name, Name"]
+    LIST -- "ctrl+a" --> ADD["inline comment + type inputs →<br/>EgeriaTech.add_comment_to_element()"]
+    ADD -- "dismiss(200)" --> CB
+    LIST -- "ctrl+r on a comment" --> RESP["dismiss([250, comment_guid])"]
+    RESP --> CB["show_comments_callback"]
+    CB -- "[250, guid]" --> SHOW2["show_comments(selected_comment_guid=guid)"]
+    SHOW2 --> SCS
+    CB -- "200 / None" --> MAIN
 ```
 
-#### Sequence & Data Exchange
+A response is a comment whose anchor is another comment. Each `ctrl+r` re-opens the screen with the selected comment as its target, so threads can nest to any depth. `q` on the comments screen calls `app.pop_screen`.
+
+---
+
+## Feedback Mechanism
+
+`FeedbackMixin` lets any user leave feedback from any screen.
 
 ```mermaid
 sequenceDiagram
     autonumber
     actor User
-    participant Main as MainScreen<br/>(MainScreen.py)
-    participant Handler as elements_crud_handler.py<br/>(ElementsCrudMixin)
-    participant Comments as ShowCommentsScreen<br/>(ShowCommentsScreen.py)
-    participant OMVS as Egeria OMVS Engine
+    participant App as MyProfileApp (FeedbackMixin)
+    participant FS as FeedbackScreen
+    participant Egeria as Egeria (note logs)
 
-    User->>Main: Highlight row and press 'ctrl+s'
-    Main->>Handler: show_comments(table_name, row_key)
-    Handler->>Comments: push_screen(ShowCommentsScreen(table_name, row_key), callback=show_comments_callback)
-    Comments->>OMVS: Retrieve attached comments for element GUID
-    OMVS-->>Comments: Return comment list [{text, type, author, timestamp}]
-    Comments-->>User: Render existing comment threads
-    User->>Comments: Type new comment, select type ('Question'), press 'ctrl+a'
-    Comments->>OMVS: create_comment_and_link(element_guid, comment_body)
-    OMVS-->>Comments: Confirmation (Comment Attached)
-    Comments->>Comments: Refresh comment list in thread viewer
-    User->>Comments: Press 'b' (Back)
-    Comments->>Handler: dismiss(None)
-    Handler->>Main: _show_main_screen()
+    User->>App: ctrl+f (any screen) or "Leave Feedback"
+    App->>App: record current screen class and sub-title
+    App->>FS: push_screen(FeedbackScreen(screen, title))
+    User->>FS: category + text, Submit (ctrl+s)
+    FS-->>App: {screen, screen_title, category, text}
+    App->>Egeria: _async_get_note_logs_by_name("NoteLog::garygeeke::My-Profile-App-Feedback")
+    alt log missing
+        App->>Egeria: _async_create_note_log(...)
+    end
+    App->>Egeria: _async_create_note(log_guid, note body)
 ```
 
----
+Each note records:
+- `qualifiedName`: `Note::{log_guid}::{user}::{timestamp}`
+- `displayName`: `"{category} - {screen}"`
+- `description`: the feedback text
+- `additionalProperties`: `category`, `screen`, `screenTitle`, `submittedBy` and `submittedAt`
 
-## Team & Role Exploration
+**Viewing the log.** `F3` or "Feedback Log" reads the notes with `_async_get_notes_for_note_log`, sorts them newest first and shows them in `FeedbackLogScreen`.
 
-The **My Team** view (`MyTeamScreen.py` & `team_roles_handler.py`) enables managers and team leads to explore their organizational structure directly from the dashboard:
-
-1. **Role Selection**: In the **Roles** table on the main screen, highlight and select any role marked with `TeamLeader` or `TeamMember`.
-2. **Dynamic Member Resolution**: The system queries Egeria for the associated department or team structure.
-3. **Team Roster Display**:
-   - **Header**: Shows Team Display Name, Qualified Name, Category, and Description.
-   - **Roster Table**: Lists all team members, their individual assigned roles, and their personal `GUID`s.
-4. **Navigation**: Press `b` to return to the main dashboard or `q` to dismiss.
+**Privacy.** Only the owner (`FEEDBACK_LOG_OWNER = "garygeeke"`) can open the log. The app enforces this, not Egeria.
 
 ---
 
-### Team & Role Exploration Architecture Flows
+## Team and Role Exploration
 
-#### Component & Flow Map
+When a row in the Roles table is selected, `MyProfileApp._on_roles_row_selected` calls `TeamRolesMixin.handle_roles_table_row_selection`:
+1. For a role whose name or type contains `TeamLeader` or `TeamMember`, it calls `find_team_members()`.
+2. `find_team_members()` takes the text after the first `::` in the role name and runs `exec_report_spec("Team-Members")`.
+3. The handler then pushes `MyTeam(members, properties)`.
+
+`MyTeam` shows the team name, qualified name, category and description, and a Name / Role / GUID table. `q` returns `"200"` and `b` returns `"201"`.
+
+---
+
+## Shop for Data and Catalog Exploration
 
 ```mermaid
 flowchart TD
-    subgraph Main ["Main Dashboard Roles Table"]
-        SELECT_ROLE["User selects row in #roles_table"]
-    end
-
-    subgraph Handler ["Team & Roles Handler (team_roles_handler.py)"]
-        EVAL{"Role contains<br/>'TeamLeader' or<br/>'TeamMember'?"}
-        FIND["find_team_members(role_name)<br/>• Extracts Department identifier<br/>• Executes TeamMembers report spec"]
-        PARSE["Parse team properties &<br/>member list (Individual, Role, GUID)"]
-        CALLBACK["my_team_callback(result)<br/>• Returns to Main Screen"]
-    end
-
-    subgraph Screen ["Team Roster View (MyTeamScreen.py)"]
-        DISPLAY["Display Team Header Details &<br/>Roster DataTable (#team_members_table)"]
-    end
-
-    subgraph Egeria ["Egeria OMVS Client"]
-        SPEC["exec_report_spec('TeamMembers')<br/>or ActorProfile Queries"]
-    end
-
-    SELECT_ROLE --> EVAL
-    EVAL -- "No" --> EXIT_NOOP["Return 201 (No-op)"]
-    EVAL -- "Yes" --> FIND
-    FIND --> SPEC --> PARSE
-    PARSE -- "push_screen(MyTeam(team_members, properties))" --> DISPLAY
-    DISPLAY -- "Press 'b' / 'q' (dismiss)" --> CALLBACK
+    MENU["Other Functions → Catalogs/Shop for Data"] --> HSO["handle_shop_for_data_option()"]
+    HSO --> SFDS["push ShopForDataScreen<br/>(5 tables, loading spinners)"]
+    HSO --> W["5 thread workers → exec_report_spec:<br/>• Glossaries<br/>• Digital-Product-Catalog-MyE<br/>• Data-Dictionaries<br/>• BusinessCapabilities<br/>• BasicCollections ('RootCollection')"]
+    W --> WSC["on_worker_state_changed() fills tables"]
+    SFDS -- "Enter on row:<br/>[category, qname, ...]" --> CB["shop_for_data_callback"]
+    SFDS -- "s: [212, ...]" --> CB
+    SFDS -- "u / ctrl+s: [211, ...]" --> CB
+    CB -- "category" --> BUILD["build_*_details() → tree"]
+    BUILD --> SOS["SelectionOverviewScreen"]
+    CB -- "212" --> SAMPLE["request_to_sample_data_source()"] --> GDV["GenericDataViewScreen"]
+    CB -- "211" --> SUB["request_to_subscribe_data_source()"] --> CSRS["CreateSubscriptionRequestScreen"]
+    SFDS -- "t: [201]" --> CB
+    CB -- "201" --> SFT["SearchForTermScreen"]
+    SOS -- "s: [211, node, parent]" --> OC["overview_callback"] --> CSRS
+    GDV -- "s: [211, name, qname]" --> GDVC["generic_data_view_callback"] --> CSRS
+    CSRS -- "dict" --> CSC["create_subscription_callback → _create_subscription()<br/>• create_digital_subscription(body)<br/>• link_agreement_item(sub, item)<br/>• link_subscriber(profile, sub)"]
 ```
 
-#### Sequence & Data Exchange
+### Detail builders
+
+| Category | Data used | Tree |
+| :--- | :--- | :--- |
+| dictionary | `Data-Dictionaries` | Grouped by subject area |
+| domain | `BusinessCapabilities` | Containing members / member of |
+| catalog | `Digital-Product-Catalog` | Products. For each digital product it also calls `find_tabular_data_sets(page_size=1)` and `get_tabular_data_set(max_row_count=10, output_format="MD")` to get sample data. |
+| glossary | Pre-fetched "Folders" | Folders |
+| collection | Pre-fetched root collections | First collection only |
+
+### Selection overview
+
+`SelectionOverviewScreen` shows details for the selected tree node:
+
+| Node type | Report spec | Output format |
+| :--- | :--- | :--- |
+| glossary | `Glossary-Terms` | MD |
+| catalog | `Digital-Products-MyE` | MD, plus sample data |
+| dictionary | `Data-Dictionaries` | MD |
+| domain | `BusinessCapabilities` | DICT, shown in a text area |
+| collection | `Collections` | MD |
+
+`q` returns `210`, `b` returns `200` and `s` returns `[211, node, parent]`.
+
+### Sampling
+
+Only digital products have real sample data. For other rows the sample view shows the element's attributes as Key/Value pairs. `GenericDataViewScreen` can parse several formats: tabular data set reports, `{"data": [...]}`, `dataRecords`/`columnDescriptions`, dicts, lists and strings.
+
+### Subscriptions
+
+- **Form result.** `CreateSubscriptionRequestScreen` returns `{externalSourceGUID, guid, GUID, displayName, description, identifier, Status}`. An invalid status becomes `DRAFT`.
+- **Creating the subscription.** All three subscribe paths (shop table, overview, sample view) open `CreateSubscriptionRequestScreen`. Its result goes to `create_subscription_callback`, which calls `_create_subscription()`. That:
+  1. calls `ProductManager.create_digital_subscription(body)` with `DigitalSubscriptionProperties`; `contentStatus` is the status from the form, and the qualified name includes the user and a timestamp, so names can repeat;
+  2. calls `link_agreement_item(subscription, item)` to link the subscription to the chosen item;
+  3. calls `link_subscriber(profile, subscription)` to link the user's profile as subscriber.
+  If a link fails, the subscription is kept and the user gets a warning naming what couldn't be linked.
+- **Viewing subscriptions.** `ViewSubscriptionsScreen` calls `Egeria.find_collections(search_string="*", metadata_element_type_name="DigitalSubscription", JSON)`. It lists those the user created: name, status, description and GUID.
+
+### Glossary term search
+
+`SearchForTermScreen` runs `exec_report_spec("Glossary-Terms", output_format="MD", search_string=term)` and renders the Markdown. `t` on `ShopForDataScreen` returns `[201]`, which opens it. Going back from it (`g`, result `201`) re-runs `handle_shop_for_data_option()`, so the catalog tables are reloaded rather than shown empty.
+
+---
+
+## Technology Types
 
 ```mermaid
 sequenceDiagram
     autonumber
     actor User
-    participant Main as MainScreen<br/>(MainScreen.py)
-    participant Handler as team_roles_handler.py<br/>(TeamRolesMixin)
-    participant TeamScreen as MyTeamScreen<br/>(MyTeamScreen.py)
-    participant Egeria as Egeria View Server
-
-    User->>Main: Select a TeamLeader / TeamMember role in #roles_table
-    Main->>Handler: handle_roles_table_row_selection(event)
-    Handler->>Handler: Validate role type & extract department key
-    Handler->>Egeria: exec_report_spec("TeamMembers", params={dept_key})
-    Egeria-->>Handler: Return team metadata & members list
-    Handler->>Handler: Assemble team_properties & team_members roster
-    Handler->>TeamScreen: push_screen(MyTeam(members, properties, leader), callback=my_team_callback)
-    TeamScreen-->>User: Display Team Header, Description & Member Table
-    User->>TeamScreen: Inspect members and press 'b' (Back)
-    TeamScreen->>Handler: dismiss(result)
-    Handler->>Main: Return focus to MainScreen
-```
-
----
-
-## Data Shopping & Catalog Explorer
-
-The **Catalogs / Shop for Data** workspace (`ShopForDataScreen.py`, `SelectionOverviewScreen.py`, `SearchForTermScreen.py`, `GenericDataViewScreen.py`, and `CreateSubscriptionRequestScreen.py`) is a discovery hub for data assets:
-
-```mermaid
-flowchart TB
-    subgraph ShopScreenUI ["Shopping for Data Layout (ShopForDataScreen.py)"]
-        HEADER["Header: Shopping for Data | Select Category or Search Terms"]
-        
-        subgraph SplitView ["Catalog Navigation Pane"]
-            TREE["Data Hierarchy Tree<br/>• Customer 360 Product Family<br/>  • Daily Customer Churn Score<br/>  • Verified Customer Profiles"]
-            DETAILS["Metadata & Specifications Pane<br/>• Title & Display Name<br/>• Owner & SLA Details<br/>• Technical Attributes"]
-        end
-
-        subgraph SamplePane ["Sample Data Preview Pane"]
-            SAMPLE_TABLE["Data Sample Table: | CustID | Status | Tier | Activity |"]
-        end
-
-        FOOTER["Footer: [s] Subscribe to Data Source | [d] View Data Sample | [b] Back | [q] Quit"]
-
-        HEADER --- SplitView
-        SplitView --- SamplePane
-        SamplePane --- FOOTER
-    end
-```
-
-### 1. Selecting a Data Source Category
-Selecting **Catalogs/Shop for Data** from the *Other Functions* menu presents 5 data categories:
-- **Glossaries**: Authoritative business terminology, definitions, and hierarchies.
-- **Digital Product Catalogs**: Packaged data products and product families.
-- **Data Dictionaries**: Structural data dictionaries and schema definitions.
-- **Business Domains**: Enterprise business capabilities and domain mappings.
-- **Root Collections**: Asset collections and curated resource groups.
-
-### 2. Interactive Selection & Hierarchical Tree
-Selecting any item opens the **Selection Overview Screen**:
-- **Navigation Tree**: Browse categories, nested products, and sub-assets. Press `ctrl+e` to expand or collapse all branches.
-- **Metadata Details**: Displays rich Markdown-formatted descriptions, ownership metadata, and technical attributes.
-- **Data Samples**: Displays sample records for digital products to verify fitness for use before requesting access.
-
-### 3. Searching for Glossary Terms (`SearchForTermScreen`)
-- Access keyword-based term discovery.
-- Enter search terms to find matching glossary definitions across the entire catalog.
-- Displays comprehensive term definitions, status, examples, and relationships.
-
----
-
-### Catalog Discovery & Exploration Architecture Flows
-
-#### Component & Flow Map
-
-```mermaid
-flowchart TD
-    subgraph Menu ["Main Dashboard Menu"]
-        SELECT_SHOP["Other Functions -> [2] Catalogs/Shop for Data"]
-    end
-
-    subgraph Handler ["Shop For Data Handler (shop_for_data_handler.py)"]
-        HANDLE_OPT["handle_shop_for_data_option()<br/>• Launches 5 Background Workers"]
-        WORKERS["Textual Background Workers:<br/>• glossary_group (get_glossary_data)<br/>• product_group (get_digital_product_data)<br/>• dictionary_group (get_data_dictionary_data)<br/>• domain_group (get_business_domain_data)<br/>• root_group (get_root_collection_data)"]
-        STATE_CHANGE["on_worker_state_changed()<br/>• Populates 5 DataTables asynchronously"]
-        CALLBACK["shop_for_data_callback(result)<br/>• Dispatches to Overview / Sample / Subscribe"]
-    end
-
-    subgraph Screens ["Exploration Screens"]
-        SFDS["ShopForDataScreen<br/>(ShopForDataScreen.py)"]
-        SEARCH["SearchForTermScreen<br/>(SearchForTermScreen.py)"]
-        OVERVIEW["SelectionOverviewScreen<br/>(SelectionOverviewScreen.py)"]
-        DATAVIEW["GenericDataViewScreen<br/>(GenericDataViewScreen.py)"]
-    end
-
-    subgraph EgeriaOMVS ["Egeria Pyegeria Client"]
-        REPORTS["exec_report_spec():<br/>• Glossaries / GlossaryTerms<br/>• DigitalProductCatalog<br/>• DataDictionaries<br/>• BusinessCapabilities<br/>• RootCollections"]
-    end
-
-    SELECT_SHOP --> HANDLE_OPT
-    HANDLE_OPT --> WORKERS
-    WORKERS --> REPORTS
-    REPORTS -- "Worker Results" --> STATE_CHANGE
-    STATE_CHANGE --> SFDS
-    SFDS -- "Select Category Row" --> CALLBACK
-    CALLBACK -- "Code 200 (Category Selected)" --> OVERVIEW
-    CALLBACK -- "Code 201 (Search Terms)" --> SEARCH
-    CALLBACK -- "Code 212 (Sample Data)" --> DATAVIEW
-```
-
-#### Sequence & Data Exchange
-
-```mermaid
-sequenceDiagram
-    autonumber
-    actor User
-    participant Main as MainScreen<br/>(MainScreen.py)
-    participant Handler as shop_for_data_handler.py<br/>(ShopForDataMixin)
-    participant ShopScreen as ShopForDataScreen<br/>(ShopForDataScreen.py)
-    participant OverviewScreen as SelectionOverviewScreen<br/>(SelectionOverviewScreen.py)
-    participant Egeria as Egeria OMVS Engine
-
-    User->>Main: Select "Catalogs/Shop for Data" from Other Functions
-    Main->>Handler: handle_shop_for_data_option()
-    Handler->>ShopScreen: push_screen(ShopForDataScreen(), callback=shop_for_data_callback)
-    Handler->>Handler: Launch 5 parallel background worker threads
-    par Background Workers Loading
-        Handler->>Egeria: Fetch Glossaries
-        Handler->>Egeria: Fetch Digital Product Catalogs
-        Handler->>Egeria: Fetch Data Dictionaries
-        Handler->>Egeria: Fetch Business Domains
-        Handler->>Egeria: Fetch Root Collections
-    end
-    Egeria-->>Handler: Worker results returned asynchronously
-    Handler->>ShopScreen: on_worker_state_changed() -> populate tables & disable spinners
-    ShopScreen-->>User: Display category tables with loaded elements
-    User->>ShopScreen: Select a data product row (Enter)
-    ShopScreen->>Handler: dismiss([200, row_key, cursor_row, table_id, row_values])
-    Handler->>OverviewScreen: push_screen(SelectionOverviewScreen(item_guid, tree_data))
-    OverviewScreen-->>User: Display interactive hierarchy tree & metadata details
-```
-
----
-
-### 4. Subscribing to Data Assets (`CreateSubscriptionRequestScreen`)
-
-Users can subscribe to data sources and products either directly from the **Shop For Data** table, through the **Selection Overview** tree, or after viewing a **Data Sample**.
-
-#### Subscription Interaction Paths:
-1. **Direct Subscribe from Shop For Data Table**: Highlight a row in the Digital Product Catalog (or other data table) on `ShopForDataScreen` and press `u` or `ctrl+s`.
-2. **Subscribe from Selection Overview**: While inspecting an item tree in `SelectionOverviewScreen`, press `s`.
-3. **Subscribe from Sample Data View**: While viewing a data sample preview in `GenericDataViewScreen`, press `s`.
-
-#### Subscription Form & Submission:
-1. The **Create Subscription Request** modal (`CreateSubscriptionRequestScreen.py`) opens pre-populated with the target item's GUID.
-2. Enter a **Display Name**, optional **Description**, and **Identifier**.
-3. Select an initial **Status** (`DRAFT`, `PROPOSED`, `ACTIVE`).
-4. Submit the form (`c` / Submit). The handler constructs a `NewAgreementRequestBody` containing `DigitalSubscriptionProperties` and calls Egeria's `ProductManager.create_digital_subscription()`.
-
----
-
-### Subscription Architecture & Data Flows
-
-#### Component & Flow Map
-
-```mermaid
-flowchart TD
-    %% Entry Screens
-    subgraph Screens ["User Interface Screens (my_profile / Textual)"]
-        SFDS["ShopForDataScreen<br/>(ShopForDataScreen.py)"]
-        SOS["SelectionOverviewScreen<br/>(SelectionOverviewScreen.py)"]
-        GDVS["GenericDataViewScreen<br/>(GenericDataViewScreen.py)"]
-        CSRS["CreateSubscriptionRequestScreen<br/>(CreateSubscriptionRequestScreen.py)"]
-    end
-
-    subgraph Handler ["Shop For Data Handler (shop_for_data_handler.py)"]
-        SFDC["shop_for_data_callback(result)<br/>• Evaluates selection_type"]
-        RTSDS["request_to_subscribe_data_source(...)<br/>• Extracts row_values/GUID<br/>• Sets self.selected_item = element_guid"]
-        OC["overview_callback(r_code)<br/>• Handles r_code == 211<br/>• Uses self.selected_item & self.selected_tree"]
-        DDSC["display_data_sample_callback(result)<br/>• Handles result[0] == 211"]
-        CSC["create_subscription_callback(result)<br/>• Builds NewAgreementRequestBody<br/>• Calls Egeria ProductManager"]
-    end
-
-    subgraph EgeriaOMVS ["Egeria Pyegeria Client"]
-        PM["ProductManager (pyegeria.omvs.product_manager)<br/>create_digital_subscription(body)"]
-    end
-
-    %% Flow 1: Direct Subscribe from ShopForDataScreen
-    SFDS -- "Key: 'u' / 'ctrl+s'<br/>action_subscribe_to_data_source()<br/>dismiss([211, row_key, cursor_row, table_id, row_values])" --> SFDC
-    SFDC -- "if selection_type == 211<br/>Passes row_values & table_id" --> RTSDS
-    RTSDS -- "Extracts: element_guid, element_name<br/>push_screen(CreateSubscriptionRequestScreen(guid))" --> CSRS
-
-    %% Flow 2: Subscribe from Overview Screen
-    SOS -- "Key: 's'<br/>action_subscribe()<br/>dismiss([211, node_GUID, tree_selected])" --> OC
-    OC -- "if r_code == 211<br/>push_screen(CreateSubscriptionRequestScreen(self.selected_item))" --> CSRS
-
-    %% Flow 3: Subscribe from Data Sample View Screen
-    GDVS -- "Key: 's'<br/>action_subscribe()<br/>dismiss([211, name, qualified_name])" --> DDSC
-    DDSC -- "if result[0] == 211<br/>push_screen(CreateSubscriptionRequestScreen(self.selected_item))" --> CSRS
-
-    %% Modal Submission & Egeria API Call
-    CSRS -- "Submit Button / Action<br/>dismiss({<br/>  'displayName': str,<br/>  'description': str,<br/>  'identifier': str,<br/>  'Status': 'DRAFT',<br/>  'guid': str,<br/>  'externalSourceGUID': str<br/>})" --> CSC
-
-    CSC -- "POST NewAgreementRequestBody<br/>{<br/>  'class': 'NewAgreementRequestBody',<br/>  'properties': 'DigitalSubscriptionProperties',<br/>  'externalSourceGUID': item_guid,<br/>  'externalSourceName': display_name<br/>}" --> PM
-```
-
-#### Sequence & Data Exchange
-
-```mermaid
-sequenceDiagram
-    autonumber
-    actor User
-    participant Screen as Active Screen<br/>(ShopForData / Overview / DataView)
-    participant Handler as shop_for_data_handler.py<br/>(ShopForDataMixin)
-    participant Modal as CreateSubscriptionRequestScreen.py
-    participant PM as ProductManager<br/>(pyegeria.omvs)
-
-    %% Trigger
-    User->>Screen: Press Subscribe ('u', 'ctrl+s', or 's')
-    Screen->>Handler: dismiss([211, ...row / GUID data...])
-
-    %% Handler processing
-    alt Direct from ShopForDataScreen
-        Handler->>Handler: request_to_subscribe_data_source(row_values)
-        Note over Handler: Extracts GUID from row column 3 or 2<br/>Validates not a placeholder ('No ...')<br/>Sets self.selected_item = element_guid
-    else From SelectionOverviewScreen
-        Handler->>Handler: overview_callback(r_code=211)
-        Note over Handler: Uses self.selected_item from tree selection
-    else From GenericDataViewScreen
-        Handler->>Handler: display_data_sample_callback(result)
-        Note over Handler: Uses self.selected_item from previous sample call
-    end
-
-    %% Modal Display
-    Handler->>Modal: push_screen(CreateSubscriptionRequestScreen(self.selected_item))
-    Modal->>User: Display Form (Display Name, Description, Identifier, Status)
-    User->>Modal: Enters details and presses Submit
-    Modal->>Handler: dismiss(result: dict)
-    Note over Modal,Handler: Result Dict: {displayName, description, identifier, Status, guid, externalSourceGUID}
-
-    %% Egeria Request
-    Handler->>Handler: create_subscription_callback(result)
-    Note over Handler: Constructs NewAgreementRequestBody<br/>with DigitalSubscriptionProperties
-    Handler->>PM: create_digital_subscription(body)
-    PM-->>Handler: Return subscription response
-    Handler-->>User: app.notify("Created digital subscription...")
-```
-
----
-
-## Technology Types & Governance Automation
-
-The **Technology Types** suite (`TechnologyTypeScreens.py` & `tech_types_handler.py`) allows business and technical users to explore supported technologies and execute automated governance actions:
-
-```mermaid
-flowchart TB
-    subgraph TechUI ["Technology Types Workspace Layout"]
-        HEADER["Header: Technology Type Details: PostgreSQL Database"]
-        
-        subgraph OptionsSplit ["Option Selection Containers"]
-            TEMPLATES["Available Templates Container<br/>• [1] Standard Relational DB Schema<br/>• [2] Audited Secure DB Instance<br/>• Button: [ Select Template ]"]
-            PROCESSES["Available Processes Container<br/>• [1] Scan Schema & Profile Assets<br/>• [2] Classify Confidential Data<br/>• Button: [ Select Process ]"]
-        end
-
-        subgraph ParamForm ["Dynamic Parameter Configuration Form"]
-            PARAMS["Host: [ db.prod.internal.net ] | Port: [ 5432 ] | Database: [ analytics_prod ]"]
-            SUBMIT_ACTION["Button: [ Submit Action ]"]
-        end
-
-        FOOTER["Footer: [b] Back | [q] Quit"]
-
-        HEADER --- OptionsSplit
-        OptionsSplit --- ParamForm
-        ParamForm --- FOOTER
-    end
-```
-
-1. **Technology Types Hierarchy**: Navigate through technologies (e.g., Databases, Data Lakes, Kafka Topics, Cloud Storage).
-2. **Templates & Processes Discovery**:
-   - **Catalog Templates**: Reusable asset templates that preconfigure connectors, classifications, and relationships.
-   - **Governance Action Processes**: Pre-built governance workflows (such as profiling, lineage extraction, and quality verification).
-3. **Dynamic Parameter Forms**:
-   - Selecting a template or process dynamically builds an input form based on its required request parameters.
-   - Each parameter shows its **Name**, **Data Type**, **Description**, **Example Value**, and whether it is **Required**.
-4. **Execution**: Fill in the parameter values and click **Submit Action** to trigger the automated governance pipeline in Egeria.
-
----
-
-### Technology Types & Automation Architecture Flows
-
-#### Component & Flow Map
-
-```mermaid
-flowchart TD
-    subgraph Menu ["Main Dashboard Menu"]
-        SELECT_TT["Other Functions -> [3] Technology Types"]
-    end
-
-    subgraph Handler ["Tech Types Handler (tech_types_handler.py)"]
-        FETCH_TT["handle_technology_types_option()<br/>• Fetches all technology types"]
-        CALLBACK_TT["tech_type_callback(result)<br/>• AutomatedCuration.get_tech_type_detail()"]
-        OPT_CALLBACK["tech_type_options_callback(choice)<br/>• Routes to Templates or Processes"]
-        ACTION_EXEC["execute_tech_type_action()<br/>• Creates catalog template or<br/>triggers governance action process"]
-    end
-
-    subgraph Screens ["Technology Screens (TechnologyTypeScreens.py)"]
-        TTS["TechnologyTypesScreen<br/>• Interactive Technology Tree"]
-        TTOS["TechnologyTypeOptionsScreen<br/>• Choose Templates vs Processes"]
-        TTTS["TechnologyTypeTemplatesScreen<br/>• Dynamic Template Parameter Form"]
-        TTPS["TechnologyTypeProcessesScreen<br/>• Dynamic Process Parameter Form"]
-        STATUS["StatusScreen<br/>• Displays outcome & copy GUID"]
-    end
-
-    subgraph Egeria ["Egeria AutomatedCuration Service"]
-        AC["AutomatedCuration Client<br/>(pyegeria.omvs.automated_curation)"]
-    end
-
-    SELECT_TT --> FETCH_TT --> TTS
-    TTS -- "Select Tech Node" --> CALLBACK_TT
-    CALLBACK_TT --> AC --> TTOS
-    TTOS -- "Select Templates" --> TTTS
-    TTOS -- "Select Processes" --> TTPS
-    TTTS -- "Submit Parameter Form" --> ACTION_EXEC
-    TTPS -- "Submit Parameter Form" --> ACTION_EXEC
-    ACTION_EXEC --> AC --> STATUS
-```
-
-#### Sequence & Data Exchange
-
-```mermaid
-sequenceDiagram
-    autonumber
-    actor User
-    participant Main as MainScreen<br/>(MainScreen.py)
-    participant Handler as tech_types_handler.py<br/>(TechTypesMixin)
+    participant App as TechTypesMixin
     participant TTS as TechnologyTypesScreen
     participant TTOS as TechnologyTypeOptionsScreen
-    participant Form as Parameter Form Screen<br/>(Templates / Processes)
-    participant Status as StatusScreen<br/>(StatusScreen.py)
-    participant AC as AutomatedCuration<br/>(pyegeria.omvs)
+    participant Form as Templates / Processes screen
+    participant AC as AutomatedCuration
+    participant Status as StatusScreen
 
-    User->>Main: Select "Technology Types" from Other Functions
-    Main->>Handler: handle_technology_types_option()
-    Handler->>TTS: push_screen(TechnologyTypesScreen(tech_types_list))
-    TTS-->>User: Display Technology Types Tree (Databases, Queues, Storage)
-    User->>TTS: Select specific technology (e.g. PostgreSQL)
-    TTS->>Handler: dismiss(selected_tech_node_guid)
-    Handler->>AC: get_tech_type_detail(filter_string=node_guid)
-    AC-->>Handler: Return templates & governance processes metadata
-    Handler->>TTOS: push_screen(TechnologyTypeOptionsScreen(templates, processes))
-    TTOS-->>User: Display option to choose Template or Governance Process
-    User->>TTOS: Choose "Standard Relational DB Template"
-    TTOS->>Handler: dismiss("template")
-    Handler->>Form: push_screen(TechnologyTypeTemplatesScreen(template_spec))
-    Form-->>User: Render dynamically generated parameter inputs (Host, Port, DB)
-    User->>Form: Enter values and press Submit Action
-    Form->>Handler: dismiss(parameter_values_dict)
-    Handler->>AC: create_catalog_template_instance(request_body)
-    AC-->>Handler: Action Completed with Element GUID
-    Handler->>Status: push_screen(StatusScreen(success_message, guid))
-    Status-->>User: Display Confirmation & Copy GUID Option ('c')
+    User->>App: Other Functions → Technology Types
+    App->>AC: _async_get_tech_type_hierarchy(filter_string="*")
+    App->>TTS: push(tree of displayName / subTypes)
+    User->>TTS: select a type
+    TTS-->>App: label
+    App->>AC: get_tech_type_detail(filter_string=label, JSON)
+    App->>TTOS: push(templates, processes)
+    User->>TTOS: Select Template / Select Process
+    TTOS-->>App: ["template" | "process", name]
+    App->>Form: push(placeholders / request parameters)
+    User->>Form: fill values, Submit
+    Form-->>App: ["input", {field: value}, spec]
+    alt template
+        App->>AC: create_elem_from_template(TemplateRequestBody)
+        App->>Status: push(result message)
+    else process
+        App->>AC: initiate_gov_action_process(process qualifiedName, request_parameters)
+        App->>Status: push(process GUID)
+    end
 ```
 
----
-
-## User Identities & Account Mappings
-
-The **User Identities Screen** (`UserIdentitiesScreen.py`) gives users full visibility into their mapped security and directory credentials across the enterprise:
-
-- Accessible via **Other Functions -> User Identities**.
-- Displays a structured table containing:
-  - **Display Name**: Identity moniker.
-  - **User ID**: System account identifier.
-  - **Distinguished Name (DN)**: LDAP / Active Directory full path.
-  - **Category & Type Name**: Identity classification.
-  - **Metadata Collection Name & ID**: Home repository where the identity originates.
-  - **GUID**: Unique identifier in Egeria.
+- **Template validity dates.** Template requests use the fixed dates `effectiveFrom: 2026-01-01` and `effectiveTo: 2030-12-31`.
+- **After the status screen** closes, `status_callback` returns to the main screen.
+- **Process parameters.** `TechnologyTypeProcessesScreen` records each input's real parameter name (`parameter_names`), so names containing spaces or underscores are sent unchanged. Only non-empty values are sent. A process with no `qualifiedName` can't be started; the user is told why.
+- **No technology types.** If the hierarchy comes back empty, the user gets a notice and stays on the main screen.
+- **Fetch failure.** If the hierarchy can't be fetched, the app exits with `416`.
 
 ---
 
-## Status Reporting & Clipboard Integration
+## Bookmarks
 
-All operations that create or modify metadata communicate outcomes through the **Status Screen** (`StatusScreen.py`):
+pyegeria has no favourites API, so `BookmarksMixin` (`bookmarks_handler.py`) keeps a user's bookmarks as the members of a personal collection. Its qualified name is `Collection::<user>::Bookmarks` and its display name is "My Bookmarks".
 
-- **Status Message Area**: Displays structured feedback, success confirmation, or backend diagnostic information.
-- **Copy GUID to Clipboard (`c` key)**: When an element is created or retrieved, pressing `c` extracts its `GUID` and copies it directly to your system clipboard for use in other tools, CLI commands, or documentation.
-- **Completion Actions**: Press `Enter` to continue, `b` to report a bad result, or `q` to dismiss.
+| Function | What it does |
+| :--- | :--- |
+| `list_my_bookmarks()` | `get_collections_by_name(qualified name)` → `get_collection_members(guid, JSON)` → `(name, type, GUID)` rows; `[]` if the collection doesn't exist yet, `None` if Egeria can't be reached |
+| `show_my_bookmarks()` | Pushes `MyBookMarksScreen(rows)` |
+| `add_my_bookmark(guid)` | Creates the collection on first use (`create_collection`), then `add_to_collection(collection, guid)` |
+| `delete_my_bookmark(guid)` | `remove_from_collection(collection, guid)` |
+| `bookmark_table_row(table, row_key)` | Reads the row's GUID column (labelled `GUID` or ending ` GUID`) with `profile_utils.row_identity()`. If there's no GUID, it resolves the row's `Qualified Name` with `get_guid_for_name`. Then it calls `add_my_bookmark`. Used by `ctrl+k` on `MainScreen` and `k` on `ShopForDataScreen`. |
+
+`MyBookMarksScreen` lists the rows:
+- `ctrl+n` adds a bookmark by GUID;
+- `d` removes the highlighted bookmark;
+- `q` closes the screen.
+
+After each change it re-reads the list through the app. The lookup matches on the exact qualified name, so another user's "My Bookmarks" collection is never used. `profile_utils.element_summary()` flattens raw JSON elements for both bookmarks and My Collections, including member results wrapped in `relatedElement`.
 
 ---
 
-## Summary of Business User Workflows
+## Status Screen
 
-The following master workflow diagram provides a complete architectural overview of all navigation paths, operational modes, and subsystem integrations available within the My Profile application:
+`StatusScreen(message)` shows a read-only message:
+- `c` copies the first `'...'`-quoted substring (normally a GUID) to the clipboard with pyegeria's `copy_to_clipboard`;
+- `q` and `Enter` return `200`;
+- `b` returns `400`.
 
-```mermaid
-flowchart TD
-    %% Master User Workflow
-    LAUNCH(["Launch My Profile Application"])
-    
-    subgraph InitPhase ["Application Initialization & Authentication"]
-        CONFIG["Load Config & Connect View Server"]
-        CHECK_PROF{"User Profile<br/>Found in Egeria?"}
-        CREATE_MODAL["CreateProfileScreen<br/>• Enter Personal & Contact Info"]
-        POP_TABLES["Populate Dashboard & Compute Karma Points"]
-    end
+The app's `status_callback` then returns to the main screen.
 
-    subgraph CoreHub ["Main Dashboard Command Center (MainScreen.py)"]
-        MAIN_SCREEN["Main Dashboard View<br/>• Associations, Collections, Roles, Teams<br/>• Activities: Blogs, Journal, To-Dos<br/>• User Identities & Karma Points"]
-    end
+---
 
-    subgraph Subsystems ["Functional Workspaces & Handlers"]
-        CRUD["Activities & Elements Management<br/>(elements_crud_handler.py)<br/>• Add/Edit To-Dos (ctrl+t)<br/>• Add/Edit Blogs (ctrl+b)<br/>• Add/Edit Journal (ctrl+j)<br/>• Add Roles & Communities"]
-        COMMENTS["Collaboration Threads<br/>(ShowCommentsScreen.py)<br/>• Highlight Row + ctrl+s<br/>• Add Question/Answer (ctrl+a)"]
-        TEAM_VIEW["Team & Organization Explorer<br/>(team_roles_handler.py)<br/>• Select TeamLeader / TeamMember<br/>• View Roster & Member GUIDs"]
-        SHOP["Catalogs / Shop for Data<br/>(shop_for_data_handler.py)<br/>• Browse 5 Category Catalogs<br/>• Search Terms & Sample Data<br/>• Subscribe to Data Source (ctrl+s/u)"]
-        TECH["Technology Types & Automation<br/>(tech_types_handler.py)<br/>• Browse Tech Hierarchy<br/>• Trigger Catalog Templates<br/>• Run Governance Action Processes"]
-        IDENTITIES["User Identities Viewer<br/>• Directory Mappings & DNs"]
-    end
+## Report Specs and Clients
 
-    subgraph Outcome ["Outcome & Status Integration"]
-        STATUS_SCREEN["Status Screen (StatusScreen.py)<br/>• Operational Feedback & Error Diagnostics<br/>• Copy Result GUID to Clipboard ('c')"]
-    end
+| Report spec | Used by |
+| :--- | :--- |
+| `My-User-MD` | Profile load and reload |
+| `User-Identities` | User identity table |
+| `My-User-ToDos` | To-dos table |
+| `Actor-Profiles` | User GUID fallback |
+| `Comment-by-Element` | Comments screen |
+| `Team-Members` | Team roster |
+| `Glossaries`, `Digital-Product-Catalog-MyE`, `Data-Dictionaries`, `BusinessCapabilities`, `BasicCollections` | Shop for Data tables |
+| `Digital-Product-Catalog` | Catalog tree |
+| `Digital-Products-MyE`, `Collections`, `Glossary-Terms` | Overview details and term search |
 
-    LAUNCH --> CONFIG --> CHECK_PROF
-    CHECK_PROF -- "No" --> CREATE_MODAL --> POP_TABLES
-    CHECK_PROF -- "Yes" --> POP_TABLES
-    POP_TABLES --> MAIN_SCREEN
+| Client | Used for |
+| :--- | :--- |
+| `MyProfile` | Profile, identities, to-dos, `add_my_profile` |
+| `Egeria` | Element create, link and delete; comments from main; bookmarks; feedback note logs; tabular data; `update_actor_profile`; `find_collections` |
+| `EgeriaTech` | Comments screen |
+| `AutomatedCuration` | Technology types |
+| `ProductManager` | Digital subscriptions |
 
-    MAIN_SCREEN -- "Shortcuts (ctrl+t, ctrl+b, ctrl+j...)" --> CRUD
-    MAIN_SCREEN -- "Shortcut (ctrl+s on row)" --> COMMENTS
-    MAIN_SCREEN -- "Select Role Row" --> TEAM_VIEW
-    MAIN_SCREEN -- "Other Functions -> [2] Shop for Data" --> SHOP
-    MAIN_SCREEN -- "Other Functions -> [3] Tech Types" --> TECH
-    MAIN_SCREEN -- "Other Functions -> [1] User Identities" --> IDENTITIES
+Report specs are run with `exec_report_spec(...)`.
 
-    CRUD --> STATUS_SCREEN
-    COMMENTS --> MAIN_SCREEN
-    TEAM_VIEW --> MAIN_SCREEN
-    SHOP --> STATUS_SCREEN
-    TECH --> STATUS_SCREEN
-    IDENTITIES --> MAIN_SCREEN
-    STATUS_SCREEN --> MAIN_SCREEN
-```
+---
 
-The **My Profile Application** provides a unified, keyboard-friendly command center for all your daily Egeria data stewardship and governance responsibilities. Use it to keep your activities current, discover organizational data, collaborate with team members, and drive automated governance across your enterprise.
+## Screen Return Codes
+
+Screens tell the app what to do next through their `dismiss(...)` value:
+
+| Code | Meaning |
+| :--- | :--- |
+| `200` | Done / back |
+| `201` | Alternative navigation |
+| `210` | Quit to main |
+| `211` | Subscribe |
+| `212` | Sample data |
+| `250` | Show responses to a comment |
+
+Failures use codes from the `4xx` range, and some of them exit the app. The [user manual](my_profile_app_manual.md#exit-and-return-codes) lists the common ones, and `RETURN_CODES.md` has the full list.
+
+---
+
+## Testing
+
+The suite in `tests/micro-tests/my_profile/` has one module per handler and screen group.
+
+**Fake mode (default).** Tests run against in-memory fakes. An autouse fixture blocks real HTTP, so any un-mocked Egeria call fails the test. Mark a test `@pytest.mark.allow_network` to opt out.
+
+**Live mode (`PYEG_LIVE_EGERIA=1`).**
+- `egeria_backend.py` swaps the fakes for mocks that wrap the real SDK. Call assertions therefore hold in both modes; only assertions about returned data differ.
+- Connection details come from `PYEG_PLATFORM_URL`, `PYEG_SERVER_NAME`, `PYEG_USER_ID` and `PYEG_USER_PWD`.
+- Live mode writes to the server: it creates subscriptions and template elements, and may create a profile.
+
+**Running the whole app in a test.** Tests that run `MyProfileApp.run_test()` stub the profile client with `stub_profile_client()`.
+
+**Add screens.** `test_screens.py::TestBaseAddScreen` covers the `BaseAddScreen` flow: required-field checks, create, link or no link, and keeping the form after a failed create.
+
+---
+
+## Known Gaps
+
+The user-visible limitations are listed in the [user manual](my_profile_app_manual.md#known-limitations). Other internal gaps:
+
+- `get_data_product_catalog_table`, `get_guid_for_qualified_name`, `display_glossary_term_details`, `tech_type_processes_details`, `unpack_egeria_data` and `display_selected_data_specification` are defined but never called.
+- Bookmarks, My Collections, team joining, subscription links and starting processes have only been tested against fakes; they haven't yet been run against a live Egeria server.
+
+---
+License: [CC BY 4.0](https://creativecommons.org/licenses/by/4.0/),
+Copyright Contributors to the ODPi Egeria project.

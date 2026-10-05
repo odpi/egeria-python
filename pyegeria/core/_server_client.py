@@ -229,6 +229,7 @@ class ServerClient(BaseServerClient):
             qualified_name: Optional[str] = None,
             tech_type: Optional[str] = None,
             organization_name: Optional[str] = None,
+            for_lineage: bool = False,
     ) -> str:
         """Helper function to return a server_guid - one of server_guid, qualified_name or display_name should
         contain information. If all are None, an exception will be thrown. If all contain
@@ -241,6 +242,9 @@ class ServerClient(BaseServerClient):
 
         An InvalidParameter Exception is thrown if multiple matches
         are found for the given property name. If this occurs, use a qualified name for the property name.
+
+        Set for_lineage=True to also find elements only visible to lineage requests (e.g. ones classified
+        as Promise or Memento).
         Async version.
         """
         try:
@@ -256,7 +260,7 @@ class ServerClient(BaseServerClient):
                 "class": "FindPropertyNameProperties",
                 "propertyValue": qualified_name,
                 "propertyName": "qualifiedName",
-                "forLineage": False,
+                "forLineage": for_lineage,
                 "forDuplicateProcessing": False,
                 "effectiveTime": None,
             }
@@ -285,7 +289,7 @@ class ServerClient(BaseServerClient):
                     "class": "FindPropertyNameProperties",
                     "propertyValue": name,
                     "propertyName": property_name,
-                    "forLineage": False,
+                    "forLineage": for_lineage,
                     "forDuplicateProcessing": False,
                     "effectiveTime": None,
                 }
@@ -301,7 +305,7 @@ class ServerClient(BaseServerClient):
                     "class": "FindPropertyNameProperties",
                     "propertyValue": display_name,
                     "propertyName": property_name,
-                    "forLineage": False,
+                    "forLineage": for_lineage,
                     "forDuplicateProcessing": False,
                     "effectiveTime": None,
                 }
@@ -6634,8 +6638,13 @@ class ServerClient(BaseServerClient):
                                       body: Optional[dict | GetRequestBody | ResultsRequestBody] = None,
                                       max_mermaid_node_count=10,
                                       body_model: type[GetRequestBody | ResultsRequestBody] = GetRequestBody,
+                                      filter_results_by_type: bool = True,
                                       **kwargs) -> Any:
         """Retrieve an element by GUID.
+
+        Set `filter_results_by_type=False` when `_type` is only a rendering hint (or names a
+        relationship type, which the server rejects as a metadataElementTypeName), so it is
+        not sent in the default request body.
 
         `body_model` selects the request-body class to send. It defaults to
         GetRequestBody, which is what nearly every endpoint reached through
@@ -6655,7 +6664,7 @@ class ServerClient(BaseServerClient):
             _type = _type.replace(" ", "")
             body = {
                 "class": body_model.__name__,
-                "metadataElementTypeName": _type,
+                "metadataElementTypeName": _type if filter_results_by_type else None,
                 "includeOnlyRelationships": include_only_relationships,
                 "skipRelationships": skip_relationships,
                 "graphQueryDepth": graph_query_depth,

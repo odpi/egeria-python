@@ -1,7 +1,7 @@
 ___
 
 ## Create Element
-> Create a new metadata element by instantiating an Open Metadata catalog template (the generic, low-level mechanism behind every other Asset Maker command). Advanced use only -- prefer one of the specific 'Create <Type> Element' commands when the element type has one.
+> Create a new metadata element by instantiating an Open Metadata catalog template (the generic, low-level mechanism behind every Asset Maker 'Create <Type> Element' command). Advanced use only -- prefer one of the specific 'Create <Type> Element' commands when the element type has one.
 
 ### Element Type Name
 >	**Input Required**: True
@@ -229,6 +229,16 @@ ___
 >	**Attribute Type**: Bool
 
 >	**Description**: A flag indicating if the parent is at end1 of the relationship
+
+>	**Default Value**: true
+
+
+### Deep Copy
+>	**Input Required**: False
+
+>	**Attribute Type**: Bool
+
+>	**Description**: If true (Egeria's default), the template's anchored attachments -- such as a connection and its endpoint -- are copied to the new element. Set to false to create only the top-level element.
 
 >	**Default Value**: true
 

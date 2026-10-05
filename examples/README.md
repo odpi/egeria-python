@@ -17,6 +17,7 @@ examples/<script>.py` after adjusting connection settings (or via a local
 | `GeoSpatial Products Example.py` | Digital product catalog example. |
 | `format_sets_save_load_example.py`, `output_formats_example.py` | Saving/loading custom report `FormatSet`s and generating output in different formats. |
 | `extract_attribute_test.py` | Small standalone parser/extraction check. |
+| `developer_guide/` | The step-by-step pyegeria + Textual examples from `docs/developer_guide_pyegeria_textual.md` (own `README.md`). |
 
 Subdirectories:
 - `doc_samples/` — worked examples referenced from `docs/output-formats-and-report-specs.md`.

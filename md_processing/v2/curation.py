@@ -13,8 +13,11 @@ point classifications (0435: Control/Verification/Enforcement/Execution/
 Policy Administration/Policy Decision/Policy Enforcement/Policy Information/
 Policy Management/Policy Retrieval Point), 6 metamodel/classification-
 explorer markers (0463: Incomplete, ObjectIdentifier, ReferenceData,
-MobileResource, InstanceMetadata, MetamodelInstance), and ProjectKind (0130)/
-CollectionKind (0021).
+MobileResource, InstanceMetadata, MetamodelInstance), ProjectKind (0130)/
+CollectionKind (0021), and Promise (0010 -- a placeholder for a not-yet-delivered
+resource; the promised element is only visible to forLineage=true requests, so
+Declassify Promise resolves its Target Element and sends its clear request with
+forLineage=true, see ClassificationSpec.declassify_for_lineage).
 
 CurationLinkProcessor -- Link/Unlink/Attach/Detach relationship commands
 for: Semantic Assignment, Semantic Definition, Scoped By, Peer Duplicate,
@@ -88,6 +91,10 @@ class ClassificationSpec:
     update_method: Optional[str] = None
     level_field: Optional[str] = None  # e.g. "severityLevel" -- reads "Level Identifier"
     fields: Dict[str, str] = dc_field(default_factory=dict)  # attribute name -> property name
+    # True when the classified element is hidden from normal queries (e.g. Promise), so
+    # Declassify must both resolve its Target Element and send the clear request with
+    # forLineage=true -- Egeria rejects/cannot see it otherwise.
+    declassify_for_lineage: bool = False
 
 
 # Shared governance-classification fields (Impact/Confidence/Confidentiality/Criticality/Retention)
@@ -236,6 +243,17 @@ CLASSIFICATION_METHODS: Dict[str, ClassificationSpec] = {
     "NamingStandardsVocabulary": ClassificationSpec(
         "_async_set_glossary_as_naming_standards_vocabulary", "_async_clear_glossary_as_naming_standards_vocabulary",
         "NamingStandardsVocabularyProperties"),
+    # Promise (0010) -- added 2026-09-30 once ClassificationExplorer's setElementAsPromise/
+    # clearElementAsPromise shipped upstream. A promised element is only returned to
+    # lineage requests, hence declassify_for_lineage. Not yet verified against a live server.
+    "Promise": ClassificationSpec(
+        "_async_set_element_as_promise", "_async_clear_element_as_promise", "PromiseProperties",
+        fields={"Deployment Status": "deploymentStatus",
+                "User Defined Deployment Status": "userDefinedDeploymentStatus",
+                "Start Time": "startTime", "Due Time": "dueTime",
+                "Last Review Time": "lastReviewTime", "Completion Time": "completionTime",
+                "Additional Properties": "additionalProperties"},
+        declassify_for_lineage=True),
 }
 
 # OM_TYPEs in CLASSIFICATION_METHODS whose set/clear methods live on a client other than
@@ -301,6 +319,14 @@ class CurationClassifyProcessor(AsyncBaseCommandProcessor):
     async def fetch_as_is(self) -> Optional[Dict[str, Any]]:
         return None
 
+    def effective_for_lineage(self) -> bool:
+        # Declassify Promise must always see its (hidden) target, even if the
+        # author explicitly set For Lineage to false.
+        class_spec = CLASSIFICATION_METHODS.get(self.get_command_spec().get("OM_TYPE"))
+        if class_spec and class_spec.declassify_for_lineage and self.command.verb == "Declassify":
+            return True
+        return super().effective_for_lineage()
+
     async def apply_changes(self) -> str:
         verb = self.command.verb
         object_type = self.canonical_object_type or self.command.object_type
@@ -319,6 +345,8 @@ class CurationClassifyProcessor(AsyncBaseCommandProcessor):
 
         if verb == "Declassify":
             body = {"class": "DeleteClassificationRequestBody", **_audit_fields(attributes)}
+            if class_spec.declassify_for_lineage:
+                body["forLineage"] = True
             await getattr(client, class_spec.clear_method)(element_guid, body)
             logger.success(f"Declassified {object_type} on {element_guid}")
             return f"\n\n## {verb} {object_type}\n\nRemoved {om_type} classification from {element_guid}."

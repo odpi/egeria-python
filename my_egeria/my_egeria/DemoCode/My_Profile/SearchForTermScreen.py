@@ -18,7 +18,7 @@ from pyegeria import load_app_config, settings, PyegeriaException, exec_report_s
 class SearchForTermScreen(ModalScreen):
 
     BINDINGS = [("q", "quit", "Quit"),
-                ("g", "go back", "Go back"),
+                ("g", "go_back", "Go back"),
                 ]
 
     CSS_PATH = "my_profile.tcss"
@@ -103,7 +103,8 @@ class SearchForTermScreen(ModalScreen):
         try:
             self.search_result = exec_report_spec(format_set_name="Glossary-Terms",
                                              output_format="MD",
-                                              params={"search_string": search_term, "filter_string": search_term},
+                                              params={"search_string": search_term, "filter_string": search_term,
+                                                      "graph_query_depth": 0},  # term properties only
                                               view_server=self.view_server,
                                               view_url=self.platform_url,
                                               user=self.user,

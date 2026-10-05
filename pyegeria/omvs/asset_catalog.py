@@ -451,6 +451,7 @@ class AssetCatalog(ServerClient):
         page_size: int = 0,
         graph_query_depth: int = 5,
         max_mermaid_node_count: int = 10,
+        for_lineage: Optional[bool] = None,
         output_format: str = "DICT",
         report_spec: str | dict = "Common-Mermaid",
         **kwargs,
@@ -483,6 +484,9 @@ class AssetCatalog(ServerClient):
             How many hops of the lineage graph to traverse.
         max_mermaid_node_count : int, default 5
             Maximum number of nodes to include in the generated mermaid graph.
+        for_lineage : bool, optional
+            Set True to include elements only visible to lineage requests (e.g. ones classified as
+            Promise or Memento). If not specified, Egeria's default (False) applies.
         output_format : str, default "DICT"
             The desired output format.
         report_spec : str | dict, default "Common-Mermaid"
@@ -529,6 +533,7 @@ class AssetCatalog(ServerClient):
             "pageSize": page_size,
             "graphQueryDepth": graph_query_depth,
             "maxMermaidNodeCount": max_mermaid_node_count,
+            "forLineage": for_lineage,
         }
 
         response = await self._async_make_request("POST", url, body_slimmer(body))
@@ -559,6 +564,7 @@ class AssetCatalog(ServerClient):
         page_size: int = 0,
         graph_query_depth: int = 5,
         max_mermaid_node_count: int = 10,
+        for_lineage: Optional[bool] = None,
         output_format: str = "DICT",
         report_spec: str | dict = "Common-Mermaid",
         **kwargs,
@@ -589,6 +595,9 @@ class AssetCatalog(ServerClient):
             How many hops of the lineage graph to traverse.
         max_mermaid_node_count : int, default 5
             Maximum number of nodes to include in the generated mermaid graph.
+        for_lineage : bool, optional
+            Set True to include elements only visible to lineage requests (e.g. ones classified as
+            Promise or Memento). If not specified, Egeria's default (False) applies.
         output_format : str, default "DICT"
             The desired output format.
         report_spec : str | dict, default "Common-Mermaid"
@@ -621,6 +630,7 @@ class AssetCatalog(ServerClient):
                 page_size=page_size,
                 graph_query_depth=graph_query_depth,
                 max_mermaid_node_count=max_mermaid_node_count,
+                for_lineage=for_lineage,
                 output_format=output_format,
                 report_spec=report_spec,
                 **kwargs,
@@ -641,6 +651,7 @@ class AssetCatalog(ServerClient):
         page_size: int = 0,
         graph_query_depth: int = 5,
         max_mermaid_node_count: int = 10,
+        for_lineage: Optional[bool] = None,
     ) -> str:
         """Return the asset lineage including a mermaid markdown string.
 
@@ -668,6 +679,9 @@ class AssetCatalog(ServerClient):
             How many hops of the lineage graph to traverse.
         max_mermaid_node_count : int, default 5
             Maximum number of nodes to include in the generated mermaid graph.
+        for_lineage : bool, optional
+            Set True to include elements only visible to lineage requests (e.g. ones classified as
+            Promise or Memento). If not specified, Egeria's default (False) applies.
 
         Returns
         -------
@@ -694,6 +708,7 @@ class AssetCatalog(ServerClient):
             page_size=page_size,
             graph_query_depth=graph_query_depth,
             max_mermaid_node_count=max_mermaid_node_count,
+            for_lineage=for_lineage,
             output_format="JSON",
         )
         return asset_graph.get("mermaidGraph")

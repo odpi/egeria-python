@@ -1,7 +1,7 @@
 ___
 
 ## Link SubComponent
-> Links a child compoent to a parent component.
+> Links a child component to a parent component.
 
 ### Component1
 >	**Input Required**: True

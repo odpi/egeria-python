@@ -23,7 +23,6 @@ from textual.widgets import DataTable
 from pyegeria import Egeria, PyegeriaException
 
 from EditElementsScreens import (
-    EditProfileScreen,
     EditCollectionsScreen,
     EditCommunitiesScreen,
     EditIdentitiesScreen,
@@ -238,13 +237,19 @@ class ElementsCrudMixin:
         finally:
             client.close_session()
 
-    def show_comments(self, table_name: str, row_k: Any) -> None:
-        """Show comments for the selected table."""
-        self.log(f"Showing comments for table: {table_name}, row: {row_k}")
+    def show_comments(self, table_name: str | None = None, row_k: Any = None,
+                      selected_comment_guid: str | None = None) -> None:
+        """Show comments for the selected table row, or the responses to a selected comment.
+
+        When selected_comment_guid is given, the screen shows the comments attached to that
+        comment (its responses) and Ctrl+A adds a new response to it.
+        """
+        self.log(f"Showing comments for table: {table_name}, row: {row_k}, comment: {selected_comment_guid}")
         self.push_screen(
             ShowCommentsScreen(
                 table_name=table_name,
                 table_row=row_k,
+                selected_comment_guid=selected_comment_guid,
             ),
             callback=self.show_comments_callback,
         )
@@ -254,6 +259,11 @@ class ElementsCrudMixin:
         self.log(f"Return from ShowCommentsScreen: {return_c}")
         if return_c is None:
             self.log("No return from ShowCommentsScreen")
+            self._show_main_screen()
+        elif isinstance(return_c, list) and len(return_c) == 2 and return_c[0] == 250:
+            # User asked to respond to a comment: reopen the screen focused on that comment
+            self.show_comments(selected_comment_guid=return_c[1])
+        elif return_c == 200:
             self._show_main_screen()
         else:
             self.log(f"Unexpected return type from ShowCommentsScreen: {type(return_c)}")
@@ -274,62 +284,58 @@ class ElementsCrudMixin:
         await self.push_screen(screen_cls(self.selected_table, self.user_GUID),
                                callback=getattr(self, callback_name))
 
-    def add_role_callback(self, result: Any) -> None:
-        """Called from AddRoleScreen when user adds a role."""
-        if result:
-            self.log(f"Added role {result}")
-            self.switch_screen("main")
+    def _after_add(self, kind: str, result: Any) -> None:
+        """Return to the main screen once an Add screen closes, and re-read the profile.
+
+        Popping back to main (rather than returning to the edit screen the Add screen
+        was opened from) also drops that edit screen's now-stale copy of the rows.
+        """
+        self.log(f"Add {kind} screen closed with: {result}")
+        self._show_main_screen()
+        self.call_later(self.action_refresh)
 
     def add_association_callback(self, result: Any) -> None:
-        """Called from AddAssociationScreen when user adds an association."""
-        if result:
-            self.log(f"Added association {result}")
-            self.switch_screen("main")
+        """Called from AddAssociationScreen with the kind of association to add."""
+        self.log(f"Add association chose: {result}")
+        if result == "project":
+            self.push_screen(AddProjectScreen("projects_table", self.user_GUID),
+                             callback=self.add_project_callback)
+        elif result == "community":
+            self.push_screen(AddCommunityScreen("communities_table", self.user_GUID),
+                             callback=self.add_community_callback)
+
+    def add_role_callback(self, result: Any) -> None:
+        """Called when AddRoleScreen closes."""
+        self._after_add("role", result)
 
     def add_project_callback(self, result: Any) -> None:
-        """Called from AddProjectScreen when user adds a project."""
-        if result:
-            self.log(f"Added project {result}")
-            self.switch_screen("main")
+        """Called when AddProjectScreen closes."""
+        self._after_add("project", result)
 
     def add_community_callback(self, result: Any) -> None:
-        """Called from AddCommunityScreen when user adds a community."""
-        if result:
-            self.log(f"Added community {result}")
-            self.switch_screen("main")
+        """Called when AddCommunityScreen closes."""
+        self._after_add("community", result)
 
     def add_team_callback(self, result: Any) -> None:
-        """Called from AddTeamScreen when user adds a team."""
-        if result:
-            self.log(f"Added team {result}")
-            self.switch_screen("main")
+        """Called when AddTeamScreen closes."""
+        self._after_add("team", result)
 
     def add_blog_entry_callback(self, result: Any) -> None:
-        """Called from AddBlogEntryScreen when user adds a blog entry."""
-        if result:
-            self.log(f"Added blog entry {result}")
-            self.switch_screen("main")
+        """Called when AddBlogEntryScreen closes."""
+        self._after_add("blog entry", result)
 
     def add_journal_entry_callback(self, result: Any) -> None:
-        """Called from AddJournalEntryScreen when user adds a journal entry."""
-        if result:
-            self.log(f"Added journal entry {result}")
-            self.switch_screen("main")
+        """Called when AddJournalEntryScreen closes."""
+        self._after_add("journal entry", result)
 
     def add_todo_callback(self, result: Any) -> None:
-        """Called from AddTodoScreen when user adds a todo."""
-        if result:
-            self.log(f"Added todo {result}")
-            self.switch_screen("main")
+        """Called when AddTodoScreen closes."""
+        self._after_add("todo", result)
 
     def add_collection_callback(self, result: Any) -> None:
-        """Called from AddCollectionScreen when user adds a collection."""
-        if result:
-            self.log(f"Added collection {result}")
-            self.switch_screen("main")
+        """Called when AddCollectionScreen closes."""
+        self._after_add("collection", result)
 
     def add_user_identity_callback(self, result: Any) -> None:
-        """Called from AddUserIdentityScreen when user adds a user identity."""
-        if result:
-            self.log(f"Added user identity {result}")
-            self.switch_screen("main")
+        """Called when AddUserIdentityScreen closes."""
+        self._after_add("user identity", result)

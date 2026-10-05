@@ -143,6 +143,69 @@ enough to track there too).
 
 ---
 
+### ISSUE-117: Cascade delete that takes the soft-delete (Memento) path fails partway with `OMAG-REPOSITORY-HANDLER-400-010` unless `forLineage=true` — leaves the asset live and an anchored element already soft-deleted
+
+**Layer:** Egeria Server · **Status:** open, workaround known, not yet
+reported upstream · **Found:** 2026-10-02, live test of Dr.Egeria's
+Automation family (`Initiate Subscription` / `Cancel Subscription`, PR #414),
+cleaning up the throwaway destination data set afterwards.
+
+**What:** Cascade-deleting an asset (`AssetMaker._async_delete_asset(guid,
+{"class": "DeleteElementRequestBody", "cascadeDelete": True})`, which sends
+`forLineage: false`) failed with:
+
+```
+OMAG-REPOSITORY-HANDLER-400-010 A Endpoint entity with unique identifier 9646fd06-... has been
+retrieved by method getEntityByGUID from service deleteMetadataElementInStore but it is not visible
+to the caller erinoverview: ... with classifications [Anchors, Memento] and call parameters of
+forLineage=false and forDuplicateProcessing=false
+```
+
+**The failure is not atomic.** The Endpoint's Memento classification was
+applied by `erinoverview` via `deleteMetadataElementInStore` at 15:47:47 UTC,
+the same second the failing call returned. So the call soft-deleted the
+anchored Endpoint, then re-read it without lineage visibility, couldn't see
+it, and errored. That left a half-done delete: the asset (CSVFile) and its
+Connection still live, and the Endpoint soft-deleted.
+
+**When it happens:** only when the delete takes the *soft-delete* path.
+Reproduced the same day:
+- **Fresh asset** (a new CSV Data File element, created and immediately
+  cascade-deleted with the identical call): succeeds and **purges**
+  everything. The element, its Connection and its Endpoint are gone even
+  with `forLineage=true`.
+- **Asset used as a subscription destination** (an action target of the
+  subscription process's engine actions): the delete **soft-deletes**
+  (Memento, `archiveMethod: deleteMetadataElementInStore`), consistent with
+  Egeria keeping elements that lineage relationships point at. This is the
+  case that fails partway.
+
+So the likely defect is that the soft-delete cascade re-reads anchored
+elements it has just Memento'd using the caller's `forLineage=false`. That
+cause is inferred from the error and the timestamps, not confirmed in Egeria's
+source; the exact trigger for choosing soft-delete over purge (engine-action
+action-target relationships here) is also inferred.
+
+**Workaround (confirmed):** repeat the delete with `forLineage: true` in the
+body (`{"class": "DeleteElementRequestBody", "cascadeDelete": True,
+"forLineage": True}`). It completes, and the asset, Connection and Endpoint
+all end up soft-deleted. Dr.Egeria's editing commands already send
+`forLineage=true` by default (`lineage_visible()`, 6.1.25); direct SDK
+callers don't.
+
+**Possible pyegeria follow-on (not done):** have the `_async_delete_*`
+wrappers send `forLineage=true` when `cascadeDelete` is set. That would avoid
+this failure mode for SDK callers. It needs a decision first, since it also
+changes what a cascade can see: Memento'd anchored elements are hidden
+today.
+
+**Upstream:** worth raising against Egeria with the evidence above. The
+reproduction is to run a subscription process with a fresh asset as
+`destinationDataSet`, cancel it, then cascade-delete the asset with
+`forLineage=false`.
+
+---
+
 ### ISSUE-112: `AutomatedCurationRESTServices.saveClientSideSecret`/`deleteClientSideSecret` return a plain success `VoidResponse` when the resolved connector isn't a `YAMLSecretsFileConnector` — no error, no write, no indication anything was skipped
 
 **Layer:** Egeria Server (`automated-curation` OMVS) · **Status:** open ·
@@ -1056,6 +1119,75 @@ on an Egeria Server capability that doesn't exist yet — but the pyegeria/
 Dr.Egeria-side work each will need once that capability ships is written
 into the entry now, so it isn't rediscovered from scratch later.
 
+### ISSUE-122: `AssetMaker.get_catalog_targets` / `get_catalog_target` send `metadataElementTypeName="CatalogTarget"` (a relationship type) — server rejects with OMAG-COMMON-400-019, surfaced as SERVER_ERROR_500
+
+**Status: fixed on branch `fix/issue-122-catalog-target-type` (2026-10-04), pending PR/merge**
+(logged 2026-10-04 by the Resource Explorer design session; found read-only while
+checking which catalog targets the PostgreSQL cataloguers hold).
+
+**Fix + live verification (2026-10-04):** both methods now pass
+`filter_results_by_type=False`; `_async_get_guid_request` gained that flag
+(default `True`, mirroring `_async_get_results_body_request`).
+`CatalogTargetProperties` gained `connectionName`, `metadataCollectionQualifiedName`,
+`permittedSynchronization`, `deleteMethod`. Verified live with one throwaway Asset +
+one CatalogTarget on the JDBC cataloguer (both removed afterwards; confirmed
+not-found by GUID): list JSON/DICT/MD and single JSON work. **Second defect found
+by that run:** `get_catalog_target` DICT/MD output was an all-blank record, because
+the endpoint returns a *relationship* (`relationshipGUID`, `elementAtEnd1/2`) and the
+element formatter has nothing to read. Added `_generate_catalog_target_output` for
+the single get and verified it live in a second throwaway run (also removed,
+not-found by GUID): the relationship's two ends are element stubs
+(`guid`/`uniqueName`/`type`, no `properties`), so names come from `uniqueName`.
+The daemon's log during the ~1s windows was not inspected.
+
+Original report follows.
+
+Both methods pass `_type="CatalogTarget"` into the generic results/guid request
+helpers, which put it in the request body as `metadataElementTypeName`
+(`pyegeria/omvs/asset_maker.py:1371` in `_async_get_catalog_target`, `:1480` in
+`_async_get_catalog_targets`, present at 6.1.27). `CatalogTarget` is the
+*relationship* type between an integration connector and its target, not an
+element type, so the view server answers:
+
+```
+OMAG-COMMON-400-019 ... CatalogTarget ... is not a sub-type of OpenMetadataRoot
+```
+
+which pyegeria surfaces as `SERVER_ERROR_500`. The call therefore always fails
+as shipped; nobody can list a connector's catalog targets through this client.
+
+**How to trigger:**
+```python
+am = AssetMaker("qs-view-server", "https://localhost:9443", user, pw)
+am.create_egeria_bearer_token(user, pw)
+am.get_catalog_targets("70dcd0b7-9f06-48ad-ad44-ae4d7a7762aa")   # JDBC cataloguer
+# -> PyegeriaException SERVER_ERROR_500 wrapping OMAG-COMMON-400-019
+```
+
+**Working alternative (confirmed live 2026-10-04):** supply a body with no
+element type, so the helper does not inject `CatalogTarget`:
+```python
+am.get_catalog_targets(
+    "70dcd0b7-9f06-48ad-ad44-ae4d7a7762aa",
+    body={"class": "ResultsRequestBody", "graphQueryDepth": 0},
+)
+# -> "No elements found"  (zero targets on this platform)
+```
+The same applies to `get_catalog_target(relationship_guid)`.
+
+**Likely fix (not made):** drop the `_type="CatalogTarget"` argument in both
+methods (or pass the element type the caller wants, default none), since the
+endpoint already scopes to catalog targets by URL. Not verified: the
+per-target response shape of a non-empty result (no targets exist on the dev
+platform to read), and whether `_generate_referenceable_output` handles the
+relationship-plus-element shape the server returns.
+
+Related: Resource Explorer's `evidence/CATALOGUE-LEVER-FINDINGS.md` §4–5
+(trellis repo), which also notes `CatalogTargetProperties` (`asset_maker.py:46-51`)
+lacks `deleteMethod`, `permittedSynchronization`, `connectionName` and
+`metadataCollectionQualifiedName`, which the Java relationship accepts.
+
+
 ---
 
 ### ISSUE-114: `get_guid_for_name`'s miss-sentinel string ("No elements found") is truthy and repeatedly fools callers' existence checks — a caller guideline, not a candidate fix here
@@ -1313,6 +1445,143 @@ items get logged here, not fixed in place from a review pass).
 marked `fixed` (or, for one duplicate ISSUE-91 report, corrected to `fixed`
 here) but had never been relocated out of the open sections. No content was
 changed beyond that one status correction and this note.
+
+---
+
+### ISSUE-118: the pyegeria wheel installed `my_egeria` one level too deep, so `my_egeria`, `my_profile`, `serve_my_egeria` and `serve_my_profile` failed in every pip install
+
+**Layer:** Pyegeria (packaging) · **Status:** fixed 2026-10-02 · **Found:**
+2026-10-02, preparing to serve the new My Profile app from the Egeria-Workspaces portal.
+
+**What:** `[tool.setuptools.packages.find]` searched only from the repo root, so the
+app's real package (`my_egeria/my_egeria/`, inside the `my_egeria/` uv workspace
+member) shipped as `site-packages/my_egeria/my_egeria/...`. The four console scripts
+point at `my_egeria.main`, `my_egeria.serve`, `my_egeria.DemoCode...`, and the app's
+own code imports `from my_egeria.<module>`, so none of it resolved outside this repo's
+dev venv (where the workspace member is installed editable). The portal survived only
+because its own script launched `my_profile_app.py` by **file path**, found with a glob
+for the nested layout.
+
+**Fixed:** `where = [".", "my_egeria"]` with `namespaces = false`, so the inner
+package installs as the top-level `my_egeria`. Two folders that had only shipped as
+namespace packages (`pyegeria/config`, `commands/deprecated`) gained an
+`__init__.py`. A clean-build comparison showed the wheel is otherwise identical: the
+same 480 files, with `my_egeria/...` now top-level, plus the two new `__init__.py`.
+`my_profile.tcss` now ships too, so the portal Dockerfile's manual copy is unnecessary.
+**Downstream impact:** anything launching the app by the old nested file path must
+switch to the entry points (`serve_my_profile` etc.).
+
+**Related, same day:** `serve_my_egeria`/`serve_my_profile` shelled out to the
+`textual serve` command, which comes from `textual-dev` (a dev-only dependency), so
+they also failed in a plain install. They now use the `textual-serve` library
+directly, and honour `MY_EGERIA_PUBLIC_URL`/`MY_PROFILE_PUBLIC_URL` for proxied
+deployments.
+
+---
+
+### ISSUE-119: `exec_report_spec` silently dropped a caller's `graph_query_depth`, so report-spec calls always ran at depth 3
+
+**Layer:** Pyegeria · **Status:** fixed 2026-10-02 · **Found:** 2026-10-02,
+performance review of the My Profile and MyEgeria apps.
+
+**What:** the synchronous `exec_report_spec` copies only a report spec's declared
+`required_params`/`optional_params` into the call, and no spec declares
+`graph_query_depth`. So `params={"search_string": "*", "graph_query_depth": 0}`
+reached Egeria at the SDK default depth of 3, with no warning. The My Profile app asked for
+depth 0 in about ten places and got none of it. Live, at the effective depth 3: the
+13-glossary list and the root-collection list timed out at 90 s, the data
+dictionaries took about 39 s and the product catalogue 42 s. At depth 0 they take
+0.3–0.8 s. (The async path already forwarded it via `_merge_signature_params`.)
+
+**Fixed:** `graph_query_depth` is now forwarded when the caller supplies it and the
+target method accepts it (as a named parameter or `**kwargs`). This is deliberately narrower than the
+async path, which forwards *every* caller param to `**kwargs` methods. Other
+undeclared params are still not forwarded. Test:
+`tests/micro-tests/test_exec_report_spec_graph_query_depth.py`. **Watch for:**
+callers that asked for depth 0 but needed related elements were working only *because*
+of this bug. My Profile's glossary folders and root-collection members were two such
+cases, fixed in the same change by fetching the selected element at depth 1.
+
+---
+
+### ISSUE-116: `get_my_actors` always failed and `get_my_user_identities`/`get_my_roles` always returned nothing — same type-filter defect as ISSUE-115, hidden by tests that swallowed errors
+
+**Layer:** Pyegeria · **Status:** fixed 2026-10-02 · **Found:** 2026-10-02
+(removing the `except PyegeriaException: print(...)` pattern from
+`tests/functional-tests/test_my_profile.py` after ISSUE-115).
+
+**What:** like `get_my_resources`, three more `MyProfile` queries passed a
+rendering hint to `_async_get_results_body_request`, which sent it as
+`metadataElementTypeName`. None of the endpoints' `.http` examples send a type
+filter. Checked live for erinoverview, garygeeke and peterprofile, with and
+without the filter:
+
+| Method | `_type` | With the filter | Without |
+|---|---|---|---|
+| `get_my_actors` | `ActorProfile` | `OMAG-REPOSITORY-HANDLER-404-001` "... is of type UserIdentity rather than type ActorProfile" | UserIdentity + PersonRole + GovernanceRole elements |
+| `get_my_user_identities` | `UserIdentity` | no elements (even though every result is a UserIdentity) | the user's UserIdentity |
+| `get_my_roles` | `GovernanceRole` | no elements (even for users with GovernanceRoles) | PersonRole + GovernanceRole elements |
+
+The last two failed silently: "No elements found" looked like a legitimate
+empty result.
+
+**Fixed:** `filter_results_by_type=False` on all three, as for ISSUE-115.
+`tests/micro-tests/test_my_profile_no_type_filter.py` (renamed from
+`test_my_profile_get_my_resources_body.py`) now covers all four endpoints
+offline.
+
+**Test file rewritten:** `tests/functional-tests/test_my_profile.py` no longer
+catches `PyegeriaException`, and asserts non-empty results where every demo
+persona has data. Besides this defect, the old file's swallowed errors hid:
+- three tests calling `MyProfile.get_to_do`/`get_to_dos_by_type`/`update_to_do`,
+  which no longer exist (`AttributeError`, caught and printed). Replaced by
+  to-do lifecycle tests using `create_my_todo`, `get_asset_by_guid`,
+  `update_asset` and `delete_asset`.
+- two tests using hard-coded actor/sponsor GUIDs absent from a fresh quick start.
+  They now create their own to-do/action and query by the user's profile GUID.
+- `test_create_my_todo`'s teardown (ISSUE-45) never deleted anything: its
+  `{"class": "OpenMetadataDeleteRequestBody"}` body fails pyegeria validation,
+  so every run leaked a ToDo. To-dos are now deleted with `delete_asset`.
+
+**Noted, not changed:** `AssetMaker.get_assigned_actions`/
+`get_actions_for_sponsor`/`get_actions_for_requester` default
+`activity_status_list` to `["IN_PROGRESS"]`, so a newly created (`REQUESTED`)
+action is not returned unless callers pass the statuses explicitly. The `.http`
+example uses `["REQUESTED", "WAITING", "IN_PROGRESS"]`, as does `MyProfile`'s
+own `get_my_assigned_actions`. Changing the default would change behaviour for
+existing callers, so the tests pass the list explicitly instead.
+
+---
+
+### ISSUE-115: `MyProfile.get_my_resources` always failed — its rendering hint `"Resource"` was sent as `metadataElementTypeName`
+
+**Layer:** Pyegeria · **Status:** fixed 2026-10-02 · **Found:** 2026-10-02
+(while looking for a profile-scoped way to list a user's collections for
+the My Profile app's bookmarks).
+
+**What:** every call failed with a 400 —
+`OMAG-COMMON-400-018 The type name Resource passed on method getEntityTypeGUID
+of service Open Metadata Store Services is not recognized`. `_async_get_my_resources`
+passed `_type="Resource"` to `_async_get_results_body_request`, whose default
+`filter_results_by_type=True` copies `_type` into the default request body as
+`metadataElementTypeName`. `Resource` is not an Egeria type. The ground truth
+(`Egeria-api-my-profile.http`, `getMyResources` →
+`POST .../my-profile/assigned-resources`) sends a plain `ResultsRequestBody`
+with no type filter, and the resources linked to a profile through
+`ResourceList` can be of any type (Collections, for example).
+
+**Why it went unnoticed:** `tests/functional-tests/test_my_profile.py::test_get_my_resources`
+catches `PyegeriaException` and only prints "failed as expected or due to
+env", so the 400 never failed the test.
+
+**Fixed:** pass `filter_results_by_type=False`, keeping `"Resource"` as a
+rendering hint only — the same fix as `get_collection_members`
+(`collection_manager.py`). Verified live: Gary Geeke's profile now returns its
+`ResourceList`-linked `Bookmarks::garygeeke` collection in JSON, DICT and LIST
+formats. Covered by `tests/micro-tests/test_my_profile_no_type_filter.py`
+(originally `test_my_profile_get_my_resources_body.py`), which captures the
+outgoing body (fails without the fix). Removing the swallowed-error pattern
+from the functional tests then found three more instances: ISSUE-116.
 
 ---
 
@@ -7890,6 +8159,22 @@ deployment-timing issue, not a code defect — see ISSUE-12, below.
 ---
 
 ## Not a bug / n/a
+
+### ISSUE-120: Textual apps (My Profile, MyEgeria) crash on Python 3.14 with `assert task is not None` in `textual/rlock.py`
+
+**Layer:** not pyegeria (Textual / Python 3.14) · **Status:** n/a, workaround: use
+Python 3.13 · **Found:** 2026-10-02, testing the new My Profile app for the portal
+image (`python:3.14-slim`).
+
+**What:** Textual's `RLock.acquire` asserts `asyncio.current_task()` is not None,
+which fails under Python 3.14. Reproduced with the new My Profile app on both Textual
+6.1.0 (the portal's pin) and 8.2.8, the latest release, on 3.14. Both start cleanly on 3.13.
+Textual's current `main` still has the same code. The older My Profile apparently
+didn't reach that path; the new parallel profile loading does. The same failure is
+noted in `.github/workflows/release.yml`, which pins CI to Python 3.13 for this reason.
+**Action:** build Textual app images on Python 3.13; revisit when Textual supports 3.14.
+
+---
 
 ### ISSUE-88: no `GovernanceZone` create or lookup anywhere in pyegeria — a zone can be *referenced* by every search and classification, but not made
 

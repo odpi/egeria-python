@@ -28,6 +28,8 @@ from AddToElementsScreens import (
     AddJournalEntryScreen,
     AddTodoScreen,
     AddAssociationScreen,
+    AddCollectionScreen,
+    AddUserIdentityScreen,
 )
 from EditElementsScreens import (
     EditProfileScreen,
@@ -49,6 +51,7 @@ from TechnologyTypeScreens import (
 )
 from SelectionOverviewScreen import SelectionOverviewScreen
 from ShopForDataScreen import ShopForDataScreen
+from ViewSubscriptionsScreen import ViewSubscriptionsScreen
 
 
 class ScreenTestHostApp(App):
@@ -303,12 +306,289 @@ class TestAddToElementsScreens:
             (AddJournalEntryScreen, "journal_table"),
             (AddTodoScreen, "todos_table"),
             (AddAssociationScreen, "associations_table"),
+            (AddCollectionScreen, "my_collections_table"),
+            (AddUserIdentityScreen, "user_identity_table"),
         ],
     )
     async def test_add_screens_mount_and_cancel(self, screen_cls, table_id):
         app = ScreenTestHostApp(lambda: screen_cls(table_id, "user-guid-123"))
         async with app.run_test() as pilot:
             app.target_screen.dismiss(200)
+            await pilot.pause()
+            assert app.dismissed_result == 200
+
+
+class TestBaseAddScreen:
+    """Tests for the BaseAddScreen-driven add screens (Collection, User Identity)."""
+
+    @pytest.fixture
+    def mock_egeria(self):
+        with patch("AddToElementsScreens.Egeria") as mock_egeria:
+            # MagicMock doesn't auto-create dunder-style attributes, so supply this one
+            mock_egeria.return_value.__create_qualified_name__ = MagicMock(
+                side_effect=lambda type_name, name: f"{type_name}::{name}")
+            yield mock_egeria
+
+    @staticmethod
+    def _fill(screen, values):
+        for field_id, value in values.items():
+            screen.query_one(f"#{field_id}", Input).value = value
+
+    @pytest.mark.asyncio
+    async def test_missing_required_field_does_not_call_egeria(self, mock_egeria):
+        app = ScreenTestHostApp(lambda: AddCollectionScreen("my_collections_table", "user-guid-123"))
+        async with app.run_test() as pilot:
+            self._fill(app.target_screen, {"collection_name": "My Collection"})
+            app.target_screen.action_add_element()
+            await pilot.pause()
+            mock_egeria.assert_not_called()
+
+    @pytest.mark.asyncio
+    async def test_add_collection(self, mock_egeria):
+        client = mock_egeria.return_value
+        client.create_collection.return_value = "coll-guid-1"
+        app = ScreenTestHostApp(lambda: AddCollectionScreen("my_collections_table", "user-guid-123"))
+        async with app.run_test() as pilot:
+            screen = app.target_screen
+            self._fill(screen, {"collection_name": "My Collection",
+                                "collection_description": "Things I use"})
+            # press() rather than pilot.click(): the button sits below the test terminal's visible area
+            screen.query_one("#add_button", Button).press()
+            await pilot.pause()
+            client.create_collection.assert_called_once_with(
+                display_name="My Collection", description="Things I use", category=None)
+            client.close_session.assert_called_once()
+            assert screen.created_guids == ["coll-guid-1"]
+            # The form is cleared after a successful add
+            assert screen.query_one("#collection_name", Input).value == ""
+
+    @pytest.mark.asyncio
+    async def test_add_user_identity_and_link(self, mock_egeria):
+        client = mock_egeria.return_value
+        client.create_user_identity.return_value = "uid-guid-1"
+        app = ScreenTestHostApp(lambda: AddUserIdentityScreen("user_identity_table", "user-guid-123"))
+        async with app.run_test() as pilot:
+            self._fill(app.target_screen, {"user_identity_user_id": "erinoverview"})
+            app.target_screen.action_add_element()
+            await pilot.pause()
+            props = client.create_user_identity.call_args.kwargs["body"]["properties"]
+            assert props["class"] == "UserIdentityProperties"
+            assert props["userId"] == "erinoverview"
+            assert props["displayName"] == "erinoverview"
+            client.link_identity_to_profile.assert_called_once_with(
+                user_identity_guid="uid-guid-1", actor_profile_guid="user-guid-123")
+
+    @pytest.mark.asyncio
+    async def test_add_user_identity_without_link(self, mock_egeria):
+        client = mock_egeria.return_value
+        client.create_user_identity.return_value = "uid-guid-1"
+        app = ScreenTestHostApp(lambda: AddUserIdentityScreen("user_identity_table", "user-guid-123"))
+        async with app.run_test() as pilot:
+            self._fill(app.target_screen, {"user_identity_user_id": "erinoverview"})
+            app.target_screen.query_one("#link_to_profile").value = False
+            await pilot.pause()
+            app.target_screen.action_add_element()
+            await pilot.pause()
+            client.create_user_identity.assert_called_once()
+            client.link_identity_to_profile.assert_not_called()
+
+    @pytest.mark.asyncio
+    async def test_failed_create_keeps_form(self, mock_egeria):
+        from pyegeria import PyegeriaException
+        client = mock_egeria.return_value
+        client.create_collection.side_effect = PyegeriaException("Create failed")
+        app = ScreenTestHostApp(lambda: AddCollectionScreen("my_collections_table", "user-guid-123"))
+        async with app.run_test() as pilot:
+            screen = app.target_screen
+            self._fill(screen, {"collection_name": "My Collection",
+                                "collection_description": "Things I use"})
+            screen.action_add_element()
+            await pilot.pause()
+            assert screen.created_guids == []
+            assert screen.query_one("#collection_name", Input).value == "My Collection"
+            client.close_session.assert_called_once()
+
+
+class TestMigratedAddScreens:
+    """The Add screens built on BaseAddScreen call the right Egeria methods."""
+
+    @pytest.fixture
+    def mock_egeria(self):
+        with patch("AddToElementsScreens.Egeria") as mock_egeria:
+            client = mock_egeria.return_value
+            client.__create_qualified_name__ = MagicMock(
+                side_effect=lambda type_name, name: f"{type_name}::{name}")
+            client.make_feedback_qn = MagicMock(
+                side_effect=lambda kind, src, name: f"{kind}::{src}::{name}")
+            yield mock_egeria
+
+    async def _add(self, screen_cls, table_id, values, link=None):
+        app = ScreenTestHostApp(lambda: screen_cls(table_id, "user-guid-123"))
+        async with app.run_test() as pilot:
+            screen = app.target_screen
+            for field_id, value in values.items():
+                screen.query_one(f"#{field_id}", Input).value = value
+            if link is not None:
+                screen.query_one("#link_to_profile").value = link
+                await pilot.pause()
+            screen.action_add_element()
+            await pilot.pause()
+            return screen
+
+    @pytest.mark.asyncio
+    async def test_add_todo(self, mock_egeria):
+        await self._add(AddTodoScreen, "todos_table",
+                        {"todo_name": "Review", "todo_description": "Review specs", "todo_priority": "2"})
+        mock_egeria.return_value.create_my_todo.assert_called_once_with(
+            todo_name="Review", description="Review specs", priority=2, activity_status="REQUESTED")
+
+    @pytest.mark.asyncio
+    async def test_add_todo_rejects_bad_priority(self, mock_egeria):
+        await self._add(AddTodoScreen, "todos_table",
+                        {"todo_name": "Review", "todo_description": "Review specs", "todo_priority": "High"})
+        mock_egeria.assert_not_called()
+
+    @pytest.mark.asyncio
+    async def test_add_blog_entry(self, mock_egeria):
+        await self._add(AddBlogEntryScreen, "blogs_table",
+                        {"blog_entry_name": "Day 1", "blog_entry_text": "Started"})
+        body = mock_egeria.return_value.blog_my_activity.call_args.kwargs["body"]
+        assert body["properties"]["class"] == "BlogEntryProperties"
+        assert body["properties"]["displayName"] == "Day 1"
+        assert body["properties"]["description"] == "Started"
+
+    @pytest.mark.asyncio
+    async def test_add_journal_entry(self, mock_egeria):
+        await self._add(AddJournalEntryScreen, "journal_table",
+                        {"journal_entry_title": "Notes", "journal_entry_text": "Text"})
+        body = mock_egeria.return_value.journal_my_activity.call_args.kwargs["body"]
+        assert body["properties"]["class"] == "JournalEntryProperties"
+
+    @pytest.mark.asyncio
+    async def test_add_community(self, mock_egeria):
+        await self._add(AddCommunityScreen, "communities_table",
+                        {"community_display_name": "Data Club", "community_description": "Chat"})
+        body = mock_egeria.return_value.create_community.call_args.kwargs["body"]
+        assert body["properties"]["class"] == "CommunityProperties"
+        assert body["properties"]["qualifiedName"] == "Community::Data Club"
+
+    @pytest.mark.asyncio
+    async def test_add_project_and_join_team(self, mock_egeria):
+        client = mock_egeria.return_value
+        client.create_project.return_value = "proj-guid-1"
+        await self._add(AddProjectScreen, "projects_table",
+                        {"project_name": "Clinical", "project_description": "Trial data",
+                         "project_classification": "Campaign", "project_start_date": "2026-10-01"})
+        kwargs = client.create_project.call_args.kwargs
+        assert kwargs["classification_name"] == "Campaign"
+        assert kwargs["start_date"] == "2026-10-01"
+        client.add_to_project_team.assert_called_once_with(project_guid="proj-guid-1", actor_guid="user-guid-123")
+
+    @pytest.mark.asyncio
+    async def test_add_project_rejects_bad_date(self, mock_egeria):
+        await self._add(AddProjectScreen, "projects_table",
+                        {"project_name": "Clinical", "project_description": "Trial data",
+                         "project_start_date": "01/10/2026"})
+        mock_egeria.assert_not_called()
+
+    @pytest.mark.asyncio
+    async def test_add_role_and_appoint(self, mock_egeria):
+        client = mock_egeria.return_value
+        client.create_actor_role.return_value = "role-guid-1"
+        await self._add(AddRoleScreen, "roles_table",
+                        {"role_name": "Steward", "role_description": "Looks after data"})
+        body = client.create_actor_role.call_args.kwargs["body"]
+        assert body["properties"]["typeName"] == "PersonRole"
+        client.link_person_role_to_profile.assert_called_once_with(
+            person_role_guid="role-guid-1", person_profile_guid="user-guid-123")
+
+    @pytest.mark.asyncio
+    async def test_add_role_without_appointment(self, mock_egeria):
+        client = mock_egeria.return_value
+        await self._add(AddRoleScreen, "roles_table",
+                        {"role_name": "Steward", "role_description": "Looks after data"}, link=False)
+        client.create_actor_role.assert_called_once()
+        client.link_person_role_to_profile.assert_not_called()
+
+    @pytest.mark.asyncio
+    async def test_add_team_and_join(self, mock_egeria):
+        client = mock_egeria.return_value
+        client.create_actor_profile.return_value = "team-guid-1"
+        client.create_actor_role.return_value = "member-role-guid-1"
+        await self._add(AddTeamScreen, "teams_table",
+                        {"team_name": "Platform", "team_description": "Runs Egeria"})
+        body = client.create_actor_profile.call_args.kwargs["body"]
+        assert body["properties"]["class"] == "TeamProperties"
+        assert body["properties"]["typeName"] == "Team"
+        role_body = client.create_actor_role.call_args.kwargs["body"]
+        assert role_body["properties"]["typeName"] == "TeamMember"
+        client.link_person_role_to_profile.assert_called_once_with(
+            person_role_guid="member-role-guid-1", person_profile_guid="user-guid-123")
+        client.link_assignment_scope.assert_called_once_with(
+            scope_element_guid="team-guid-1", actor_guid="member-role-guid-1")
+
+    @pytest.mark.asyncio
+    async def test_add_team_without_joining(self, mock_egeria):
+        client = mock_egeria.return_value
+        await self._add(AddTeamScreen, "teams_table",
+                        {"team_name": "Platform", "team_description": "Runs Egeria"}, link=False)
+        client.create_actor_profile.assert_called_once()
+        client.create_actor_role.assert_not_called()
+        client.link_assignment_scope.assert_not_called()
+
+    @pytest.mark.asyncio
+    @pytest.mark.parametrize("button_id,expected", [
+        ("#choose_project_button", "project"),
+        ("#choose_community_button", "community"),
+    ])
+    async def test_association_chooser(self, button_id, expected):
+        app = ScreenTestHostApp(lambda: AddAssociationScreen("associations_table", "user-guid-123"))
+        async with app.run_test() as pilot:
+            app.target_screen.query_one(button_id, Button).press()
+            await pilot.pause()
+            assert app.dismissed_result == expected
+
+
+class TestViewSubscriptionsScreen:
+    """The Subscriptions screen lists the current user's own digital subscriptions."""
+
+    @staticmethod
+    def _subscription(guid, name, created_by, status="ACTIVE"):
+        return {"elementHeader": {"guid": guid, "type": {"typeName": "DigitalSubscription"},
+                                  "versions": {"createdBy": created_by}},
+                "properties": {"displayName": name, "description": f"{name} desc", "contentStatus": status}}
+
+    @pytest.mark.asyncio
+    @patch("ViewSubscriptionsScreen.Egeria")
+    async def test_lists_own_subscriptions(self, mock_egeria):
+        client = mock_egeria.return_value
+        client.find_collections.return_value = [
+            self._subscription("sub-1", "Sales Feed", "garygeeke", "PROPOSED"),
+            self._subscription("sub-2", "Not Mine", "erinoverview"),
+        ]
+        def screen_for_garygeeke():
+            # The screen takes its user from settings (EGERIA_USER); pin it so the
+            # "own subscriptions" filter doesn't depend on the developer's environment.
+            screen = ViewSubscriptionsScreen()
+            screen.user_name = "garygeeke"
+            return screen
+
+        app = ScreenTestHostApp(screen_for_garygeeke)
+        async with app.run_test() as pilot:
+            await pilot.pause()
+            assert client.find_collections.call_args.kwargs["metadata_element_type_name"] == "DigitalSubscription"
+            table = app.target_screen.query_one("#subscriptions_table", DataTable)
+            assert table.row_count == 1
+            assert table.get_row_at(0) == ["Sales Feed", "PROPOSED", "Sales Feed desc", "sub-1"]
+            client.close_session.assert_called_once()
+
+    @pytest.mark.asyncio
+    @patch("ViewSubscriptionsScreen.Egeria")
+    async def test_quit_closes_screen_not_app(self, mock_egeria):
+        mock_egeria.return_value.find_collections.return_value = "No elements found"
+        app = ScreenTestHostApp(ViewSubscriptionsScreen)
+        async with app.run_test() as pilot:
+            await pilot.press("q")
             await pilot.pause()
             assert app.dismissed_result == 200
 
@@ -471,6 +751,22 @@ class TestShopForDataAndOverviewScreens:
             )
             await pilot.pause()
             assert app.dismissed_result == ["catalog", "Cat::Prod1", "Prod1", "guid-prod-999"]
+
+    @pytest.mark.asyncio
+    async def test_shop_for_data_screen_bookmark_highlighted_row(self):
+        t2 = DataTable(id="digital_product_catalog_table")
+        app = ScreenTestHostApp(lambda: ShopForDataScreen(digital_product_catalog_table=t2))
+        app.bookmark_table_row = MagicMock(return_value=True)
+        async with app.run_test() as pilot:
+            target = app.target_screen.query_one("#digital_product_catalog_table", DataTable)
+            target.add_columns("Name", "Desc", "QN", "GUID")
+            row_key = target.add_row("Prod1", "Desc1", "Cat::Prod1", "guid-prod-999")
+            target.focus()
+            target.move_cursor(row=0)
+            await pilot.pause()
+            await pilot.press("k")
+            await pilot.pause()
+            app.bookmark_table_row.assert_called_once_with(target, row_key)
 
     @pytest.mark.asyncio
     async def test_shop_for_data_screen_default_config(self):

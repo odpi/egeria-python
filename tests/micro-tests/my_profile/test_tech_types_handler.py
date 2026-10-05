@@ -9,7 +9,7 @@
 """
 
 import re
-from unittest.mock import MagicMock, AsyncMock
+from unittest.mock import MagicMock, AsyncMock, patch
 import pytest
 
 from tech_types_handler import TechTypesMixin
@@ -94,9 +94,13 @@ class TestTechTypesMixin:
         app = DummyTechTypesApp(backend)
         backend.patch_object(TechTypesMixin, "fetch_technology_types", AsyncMock())
         app.tech_type_response = []
+        app.notify = MagicMock()
 
         await app.handle_technology_types_option()
-        assert app.exit_code == 200
+        # No types is not an error: say so and stay in the app
+        assert app.exit_code is None
+        assert app.pushed_screens == []
+        app.notify.assert_called_once()
 
     @pytest.mark.asyncio
     async def test_handle_technology_types_option_error(self, backend):
@@ -300,6 +304,38 @@ class TestTechTypesMixin:
                 "additionalProperties": {"templateGUID": "tmpl-1"},
             },
         ]
-        app.tech_type_processes_callback(input_result)
+        # No qualifiedName on the process: it cannot be started, and the user is told
+        rc = app.tech_type_processes_callback(input_result)
         assert app.input_data == {"target_server_process_input": "srv1"}
         assert app.full_process["displayName"] == "Provision Server"
+        assert rc == 418
+        assert isinstance(app.pushed_screens[0][0], StatusScreen)
+
+    def test_tech_type_processes_callback_starts_process(self):
+        app = DummyTechTypesApp()
+        app.autoc = MagicMock()
+        with patch("tech_types_handler.AutomatedCuration") as mock_ac_cls:
+            mock_ac_cls.return_value.initiate_gov_action_process.return_value = "proc-guid-1"
+            rc = app.tech_type_processes_callback([
+                "input",
+                {"target_server_process_input": "srv1", "unused_process_input": "", "max_retries": "3"},
+                {"displayName": "Provision Server", "qualifiedName": "GAP::Provision-Server"},
+            ])
+            mock_ac_cls.return_value.initiate_gov_action_process.assert_called_once_with(
+                action_type_qualified_name="GAP::Provision-Server",
+                request_parameters={"target server": "srv1", "max_retries": "3"},
+            )
+        assert rc == 200
+        screen, _ = app.pushed_screens[0]
+        assert "proc-guid-1" in screen.status_message
+
+    def test_tech_type_processes_callback_start_fails(self):
+        app = DummyTechTypesApp()
+        app.autoc = MagicMock()
+        with patch("tech_types_handler.AutomatedCuration") as mock_ac_cls:
+            mock_ac_cls.return_value.initiate_gov_action_process.side_effect = PyegeriaException("no engine")
+            rc = app.tech_type_processes_callback([
+                "input", {}, {"displayName": "Provision Server", "qualifiedName": "GAP::Provision-Server"},
+            ])
+        assert rc == 420
+        assert "Error starting" in app.pushed_screens[0][0].status_message
