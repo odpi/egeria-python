@@ -1339,7 +1339,7 @@ explains: the failure does not depend on what was loaded at startup.
 
 ### ISSUE-122: `AssetMaker.get_catalog_targets` / `get_catalog_target` send `metadataElementTypeName="CatalogTarget"` (a relationship type) — server rejects with OMAG-COMMON-400-019, surfaced as SERVER_ERROR_500
 
-**Status: fixed on branch `fix/issue-122-catalog-target-type` (2026-10-04), pending PR/merge**
+**Status: FIXED and released.** Merged in #421 (`f2532bbd`, 2026-10-04) and shipped in **pyegeria 6.1.28** (and 6.1.29); present in the portal image's installed copy. Re-verified read-only on 2026-10-05 against the rebuilt platform: `get_catalog_targets` on the JDBC cataloguer returns "No elements found" in JSON, DICT and MD with no server error (it always answered `SERVER_ERROR_500` before the fix). The non-empty case was verified live on 2026-10-04, including the second defect found then (a blank DICT/MD record for the single get) and the `CatalogTargetProperties` field additions.
 (logged 2026-10-04 by the Resource Explorer design session; found read-only while
 checking which catalog targets the PostgreSQL cataloguers hold).
 
