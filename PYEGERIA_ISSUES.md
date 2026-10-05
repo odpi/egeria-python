@@ -1121,8 +1121,14 @@ into the entry now, so it isn't rediscovered from scratch later.
 
 ### ISSUE-126: `ProductManager` and `DigitalBusiness` never set `collection_command_root`, so every inherited `CollectionManager` method that uses it raises `AttributeError`
 
-**Layer:** pyegeria · **Status:** open, logged only, not fixed (awaiting approval) · **Found:** 2026-10-05,
-live cleanup of a throwaway data contract (PR #427's live check).
+**Layer:** pyegeria · **Status:** fixed on branch `fix/issue-126-127-collection-manager-subclasses`
+(2026-10-05), pending PR/merge · **Found:** 2026-10-05, live cleanup of a throwaway data contract (PR #427's
+live check).
+
+**Fix + scope (2026-10-05):** both constructors now call `CollectionManager.__init__`, as `GlossaryManager`
+does; that also restores `metadata_expert_command_root`, which the SmartQuery relationship methods use. An AST scan of all 91 classes in
+`pyegeria/omvs/` found no other subclass whose `__init__` skips its base's, and
+`test_every_omvs_subclass_runs_its_base_constructor` now fails if one ever does.
 
 **What:** `ProductManager.__init__` and `DigitalBusiness.__init__` call `ServerClient.__init__` directly instead
 of `CollectionManager.__init__` (`GlossaryManager` does it correctly). `CollectionManager.__init__` is what sets
@@ -1142,8 +1148,17 @@ constructs each `CollectionManager` subclass and asserts the attribute exists wo
 
 ### ISSUE-127: `CollectionManager.delete_collection(cascade=True)` silently never sends `cascadeDelete` -- same shape as ISSUE-62
 
-**Layer:** pyegeria · **Status:** open, logged only, not fixed (awaiting approval) · **Found:** 2026-10-05, found
-by capturing the request body while diagnosing a failed cleanup.
+**Layer:** pyegeria · **Status:** fixed on branch `fix/issue-126-127-collection-manager-subclasses`
+(2026-10-05), pending PR/merge · **Found:** 2026-10-05, found by capturing the request body while diagnosing a
+failed cleanup.
+
+**Fix + scope (2026-10-05):** a scan of all 42 callers of `_async_delete_element_request` found exactly two
+that pre-fill a default body *and* pass a cascade flag: `CollectionManager._async_delete_collection` and
+`ProductManager._async_delete_digital_product` (so `delete_digital_product(cascade=True)` was never cascading
+either -- the live check's own product cleanup included). Both now pass `None` so the helper applies the flag.
+`delete_digital_product`'s docstring sample also used the wrong key (`cascadedDelete`); corrected. The helper
+itself is unchanged: a caller that passes an explicit body dict *and* `cascade=True` still gets the body's
+value, which is documented behaviour ("body supersedes").
 
 **What:** `_async_delete_collection` always pre-fills `body = {"class": "DeleteElementRequestBody"}` when none is
 given and hands that dict to `_async_delete_element_request(url, body, cascade)`.

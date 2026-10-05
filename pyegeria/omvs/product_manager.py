@@ -92,7 +92,7 @@ class ProductManager(CollectionManager):
         user_pwd: Optional[str] = None,
         token: Optional[str] = None,
         timeout: int = None):
-        ServerClient.__init__(self, view_server, platform_url, user_id, user_pwd, token, timeout=timeout)
+        CollectionManager.__init__(self, view_server, platform_url, user_id, user_pwd, token, timeout=timeout)
         self.view_server = self.server_name
         self.platform_url = self.platform_url
         self.user_id = self.user_id
@@ -322,12 +322,12 @@ class ProductManager(CollectionManager):
         ```json
         {
           "class": "DeleteElementRequestBody",
-          "cascadedDelete": false
+          "cascadeDelete": false
         }
         ```
         """
-        if body is None:
-            body = {"class": "DeleteElementRequestBody"}
+        # No default body here: _async_delete_element_request applies `cascade` only when it builds the body
+        # itself, so a pre-filled dict made `cascade=True` a silent no-op (ISSUE-127).
         url = f"{self.product_manager_command_root}/collections/{digital_product_guid}/delete"
         await self._async_delete_element_request(url, body, cascade)
         logger.info(f"Deleted digital product {digital_product_guid} with cascade {cascade}")
@@ -364,7 +364,7 @@ class ProductManager(CollectionManager):
         ```json
         {
           "class": "DeleteElementRequestBody",
-          "cascadedDelete": false
+          "cascadeDelete": false
         }
         ```
         """
