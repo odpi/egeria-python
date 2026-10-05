@@ -204,6 +204,8 @@ reproduction is to run a subscription process with a fresh asset as
 `destinationDataSet`, cancel it, then cascade-delete the asset with
 `forLineage=false`.
 
+**Egeria team response, relayed 2026-10-05 (source `oak2026` fb3d6fce53; **fixes are in two unmerged PRs, so no build contains them, and nothing was tested against a live platform**):** valid. The cause is the `qualifiedName` rename *after* the Memento classification in `archiveBeanInRepository` (the re-read uses `forLineage=false`, so the Memento'd element is invisible and the first member, the Endpoint, fails 400-010). Also a silent defect: the top-level archived asset is never renamed. Fix: a two-pass archive (collect, then archive deepest-first, renaming before the Memento), internal reads with `forLineage=true`, the top-level asset renamed, and retries that finish a half-done archive.
+
 ---
 
 ### ISSUE-112: `AutomatedCurationRESTServices.saveClientSideSecret`/`deleteClientSideSecret` return a plain success `VoidResponse` when the resolved connector isn't a `YAMLSecretsFileConnector` — no error, no write, no indication anything was skipped
@@ -281,6 +283,8 @@ when the connector is not a `YAMLSecretsFileConnector`, or have
 returning one for this endpoint. Not filed upstream yet — recording here
 per this repo's standing convention for Egeria server issues found from a
 downstream investigation.
+
+**Egeria team response, relayed 2026-10-05 (source `oak2026` fb3d6fce53; **fixes are in two unmerged PRs, so no build contains them, and nothing was tested against a live platform**):** valid. A store whose connector cannot write secrets collections will get a 400 `OMAG-COMMON-400-034` naming the operation, asset and connector class; only `YAMLSecretsFileConnector` supports save and delete (`SecretsStoreConnector` gains `isSecretsCollectionUpdateSupported()`, others reject with `OCF-CONNECTOR-400-012`).
 
 ---
 
@@ -362,6 +366,8 @@ but its stored value cannot be trusted independently of `Maximum
 Cardinality` until this is resolved server-side — nothing further is
 fixable in this repo for that specific symptom.
 
+**Egeria team response, relayed 2026-10-05 (source `oak2026` fb3d6fce53; **fixes are in two unmerged PRs, so no build contains them, and nothing was tested against a live platform**):** NOT reproduced in Egeria (builder and converter round trip returns `position=3, min=1, max=5`; lower layers not traced). They asked for the exact request, the raw response and the read-back endpoint. Ours: request `NewRelationshipRequestBody` with `properties` `{class: MemberDataFieldProperties, position: 3, minCardinality: 1, maxCardinality: 5}` via `DataDesigner._async_link_member_data_field`; the original raw response was not captured. On the 2026-10-05 rebuilt platform it does not reproduce for us either (see the re-test above).
+
 ---
 
 ### ISSUE-95: No catalog template registered for the "Apache Kafka Server" technology type — `Create Kafka Server Element` (Asset Maker) fails with a 400 on `qs-view-server`
@@ -404,6 +410,9 @@ re-prompting the user or caching a password, which is what a bearer token exists
 **Ask:** a property such as `authentication.token.lifetime=3600` (seconds, default unchanged), read at
 start and applied when a token is issued; optionally a refresh operation that returns a new token for a
 valid unexpired one. Full draft issue text: trellis session scratch `egeria-issue-token-lifetime.md`.
+
+**Correction, 2026-10-05 (Egeria team; confirmed in `RSAGenerator`):** the statement above that an empty `rsa.key-id` is why the signing key is regenerated is wrong. `RSAGenerator.generateRSAKeyPair(keyId)` always makes a fresh key pair and only uses the id as a label, so **no setting makes tokens survive a restart**; persisting the key is planned for the next release. Also: the lifetime property now exists, `bearerTokenTimeout` in HOURS (default 1), added in `a1f228d4a9` (2026-09-19); there is still no refresh operation.
+
 
 ### ISSUE-90: [fixed?] `qs-engine-host` retries `startMissedEngineActions` forever when one incomplete engine action's anchor is unreadable by the engine-host user
 
@@ -466,6 +475,8 @@ read. Full draft: trellis session scratch `egeria-issue-engine-host-403-loop.md`
   quickstart content does carry elements an ordinary user cannot read, which is the precondition this entry
   hypothesised; whether any engine action anchors to one is not shown.
 - **Status:** still open, latent. Not reproduced here; not shown fixed.
+
+**Egeria team response, relayed 2026-10-05 (source `oak2026` fb3d6fce53; **fixes are in two unmerged PRs, so no build contains them, and nothing was tested against a live platform**):** valid. `startMissedEngineActions` runs every 5 s per engine; `getActiveEngineActions` reads every action target and requester, so one target anchored to an element the engine's user cannot read (zone) throws, the outer `catch` ends the sweep, and newest-first paging brings the bad page back. The sweep is also unfiltered by engine, a likely contributor to the idle CPU (unmeasured). Fixes: unreadable actions filtered out, one-time error logging, anchor message argument order fixed, an engine-scoped sweep (new `.../governance-engines/{guid}/approved-engine-actions`), and anchor-refused search results filtered instead of logged as unauthorized.
 
 ---
 
@@ -946,6 +957,8 @@ holdup.
 `SurveyReport`/`EngineAction` pairs, left in place as reproduction
 evidence for both dates — not yet deleted.
 
+**Update 2026-10-05 -- probably a pyegeria bug, fixed on our side:** the Egeria team asked us to check that pyegeria did not send `deepCopy:false`. It did: `TemplateRequestBody.deep_copy` defaulted to `False` from 2026-01-09 until fixed on 2026-09-29 (#399, first released in v6.1.23), the model is serialised with `exclude_none` (which keeps `False`), and `create_folder_element_from_template` builds its body without `deepCopy`. Egeria then copies only the top-level element and none of the template's anchored attachments, so no `ResourceConnection`, which is exactly a null `assetConnector`. The Egeria team also points to `e01426db86` (2026-08-30, PostgreSQL supertype-chain repair after the 08-27 `ResourceConnection` re-parenting). **To confirm:** create a folder from the template with current pyegeria, check it has a `ResourceConnection`, then survey it.
+
 ---
 
 ### ISSUE-85: No REST endpoint exists to create a `SolutionPort` element — only attach/detach/delegation relationships are exposed
@@ -1162,6 +1175,9 @@ on an Egeria Server capability that doesn't exist yet — but the pyegeria/
 Dr.Egeria-side work each will need once that capability ships is written
 into the entry now, so it isn't rediscovered from scratch later.
 
+**Egeria team response, relayed 2026-10-05 (source `oak2026` fb3d6fce53; **fixes are in two unmerged PRs, so no build contains them, and nothing was tested against a live platform**):** not validated; no cache found. Best lead: a client clock ahead of the server's, with `effectiveFrom` set from it (related-element queries silently hide a relationship whose `effectiveFrom` is later than the server's "now"). They need, for one link still missing at ~12 minutes: its `effectiveFrom` and `createTime`, the server clock then, and whether the loader sets `effectiveFrom`. **Our facts:** pyegeria sets no `effectiveFrom`/`effectiveTo`/`effectiveTime` by default (model defaults are `None`; no clock call is tied to any `effective*` field; Dr.Egeria forwards an "Effective From" only if typed). Host and container clocks agree within 1 s on 2026-10-05; the 2026-09-20 load's values are unavailable.
+
+
 ### ISSUE-126: `ProductManager` and `DigitalBusiness` never set `collection_command_root`, so every inherited `CollectionManager` method that uses it raises `AttributeError`
 
 **Layer:** pyegeria · **Status:** fixed on branch `fix/issue-126-127-collection-manager-subclasses`
@@ -1284,6 +1300,8 @@ then deleted and verified gone. **Confirmed still present on the rebuilt platfor
 
 **Effect here:** `update_type_def` is correct but unusable against current Egeria; its docstring says so.
 
+**Egeria team response, relayed 2026-10-05 (source `oak2026` fb3d6fce53; **fixes are in two unmerged PRs, so no build contains them, and nothing was tested against a live platform**):** valid, and `updateTime` was missing as well as `updatedBy` (our analysis was right but incomplete). `getTypeDefPatch` will take the user and set both; new `DynamicTypeFVT`.
+
 ---
 
 ### ISSUE-125: `deleteEnumDef` answers 500 "unknown TypeDef" for an enum the server lists -- an enum added through the API cannot be removed
@@ -1298,23 +1316,24 @@ TypeDef 118441be-... from qs-metadata-store on behalf of method deleteAttributeT
 Yet `ValidMetadataManager.get_attribute_types()` still lists the enum, so the server knows it by one route and
 not the other.
 
-**From Egeria's source:** `OMRSRepositoryContentManager.getAttributeTypeDef(sourceName, guid, methodName)`
-throws `BAD_TYPEDEF` when the GUID is not in `knownAttributeTypeDefGUIDs`. Hypothesis, not traced: an enum added
-at runtime is registered in the name-keyed map but not that GUID-keyed one, or deleting the type that uses it
-drops the GUID entry.
+**Cause (Egeria team, confirmed in source at `449ad06894` on 2026-10-05):** `OMRSRepositoryContentValidator.java:877`
+calls `repositoryContentManager.getAttributeTypeDef(sourceName, guidParameterName, guid, methodName)`, but that
+4-argument overload is `(sourceName, attributeTypeDefGUID, attributeTypeDefName, methodName)`. The "GUID" passed is the
+parameter-NAME string and the "name" is the real GUID, which is why the error prints our real GUID as the unknown
+TypeDef. Every `deleteAttributeTypeDef` through the local repository fails (as do `reIdentifyAttributeTypeDef` and the
+enterprise equivalents). **My earlier hypothesis here (a GUID map populated in only one place) was wrong.**
 
 **Left on the shared dev platform:** enum `PyegeriaTmpCuisineType` (`118441be-6e03-4442-96c6-e431f75fcb3f`),
-unused, announced to the cohort. Harmless but visible in type listings. A retry after the platform's next restart
-is worthwhile (the .http says API-defined types survive a restart when the repository is persistent, so the content
-manager may then know it by GUID).
+unused, announced to the cohort. Harmless but visible in type listings. Per the Egeria team it is deletable only after a build containing the fix is deployed.
 
 **Re-tested 2026-10-05 after the platform was rebuilt and restarted** (image built 14:19Z from egeria main
 `449ad06894`, `egeria-main` restarted 14:39Z): the enum survived the restart and is still listed, and
-`delete_enum_def` fails with the identical `OMRS-CONTENT-MANAGER-500-001`. So a restart does not repopulate the
-GUID map; the persisted type is loaded without being registered under its GUID (or the delete looks in the wrong
-map). The retry-after-restart idea above is closed.
+`delete_enum_def` fails with the identical `OMRS-CONTENT-MANAGER-500-001`. So a restart does not help, which the argument-order bug above
+explains: the failure does not depend on what was loaded at startup.
 
 **Workaround:** none through the API. Avoid creating throwaway enums on a shared platform.
+
+**Egeria team response, relayed 2026-10-05 (source `oak2026` fb3d6fce53; **fixes are in two unmerged PRs, so no build contains them, and nothing was tested against a live platform**):** valid; fix in source on `oak2026`, pending merge to `main`.
 
 ---
 
