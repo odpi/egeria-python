@@ -104,6 +104,21 @@ def describe_report(name: str, output_type: str = "DICT") -> Dict[str, Any]:
     return meta
 
 
+def _describe_call(report: str, params: Optional[Dict[str, Any]], view_server: Optional[str],
+                   view_url: Optional[str], user: Optional[str], user_pass: Optional[str],
+                   token: Optional[str]) -> str:
+    """Diagnostic text for a report call. ISSUE-121: never includes the password or token --
+    only which kind of credential the caller supplied."""
+    if token is not None:
+        credentials = "bearer token"
+    elif user_pass is not None:
+        credentials = "explicit user/password"
+    else:
+        credentials = "defaults from settings"
+    return (f"Format set: {report}\nparams: {json.dumps(params)}\nview_server: {view_server}\n"
+            f"view_url: {view_url}\nuser: {user}\ncredentials: {credentials}")
+
+
 def _execute_egeria_call_blocking(
         *,
         report: str,
@@ -124,9 +139,7 @@ def _execute_egeria_call_blocking(
     `user`/`user_pass` service account.
     """
 
-    print(
-        f"Format set: {report}\nparams: {json.dumps(params)}\nview_server: {view_server}\nview_url: {view_url}\nuser: {user}\nuser_pass: {user_pass}",
-        file=sys.stderr)
+    print(_describe_call(report, params, view_server, view_url, user, user_pass, token), file=sys.stderr)
     # Lazy import of settings to avoid circulars when optional args are None
     # from pyegeria.config import settings as _settings
     from pyegeria.core.config import settings as _settings
@@ -171,10 +184,11 @@ def run_report(
     account. `user`/`user_pass` remain fully backward compatible when
     `token` is not given.
     """
-    print(f"Format set: {report}\nparams: {json.dumps(params)}\nview_server: {view_server}\nview_url: {view_url}\nuser: {user}\nuser_pass: {user_pass}", file=sys.stderr)
+    description = _describe_call(report, params, view_server, view_url, user, user_pass, token)
+    print(description, file=sys.stderr)
     # Lazy import of settings to avoid circulars when optional args are None
     from pyegeria.core.config import settings as _settings
-    logger.info(f"Format set: {report}\nparams: {json.dumps(params)}\nview_server: {view_server}\nview_url: {view_url}\nuser: {user}\nuser_pass: {user_pass}")
+    logger.info(description)
     return exec_report_spec(
         format_set_name=report,
         output_format="DICT",
