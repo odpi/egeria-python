@@ -444,6 +444,29 @@ security context changes; (2) quickstart content: give `generalnpa` read access 
 elements its engine actions anchor to, or anchor those actions to elements the engine-host identity can
 read. Full draft: trellis session scratch `egeria-issue-engine-host-403-loop.md`.
 
+**Re-tested 2026-10-05 on the rebuilt platform** (image built 14:19Z from Egeria main `449ad06894`;
+`egeria-main` restarted 14:39Z; checked 32 minutes later, read-only):
+
+- **Not reproduced.** Zero `ENGINE-HOST-SERVICES-2002`, zero `startMissedEngineActions` and zero
+  `OMAG-SERVER-SECURITY-403-007` in the platform log since the restart; the engine host is refreshing its governance
+  engines normally. CPU is calm: the platform container about 50% of one core and Postgres about 30%, against 200-330%
+  and 500-750% in the original report.
+- **But the trigger was absent, so this proves little.** Only two engine actions are active: a `REQUESTED` PostgreSQL
+  survey and the `IN_PROGRESS` `EgeriaWatchdog`. `startMissedEngineActions` only processes `APPROVED` actions (read in
+  `GovernanceEngineHandler`), so it had nothing to retry. As this entry already said, the loop depends on start-up
+  history; a clean run cannot distinguish "fixed" from "not triggered".
+- **The code is unchanged where it matters.** Between 2026-09-15 and `449ad06894` the only change to
+  `startMissedEngineActions` is `logException` becoming `logMessage` in the per-action `catch`. The outer `catch` that
+  aborts the whole pass on a failed page fetch is untouched, so an `APPROVED` action with an unreadable anchor would
+  still loop.
+- **Unreadable anchors do exist on this platform.** 381 `OPEN-METADATA-SECURITY-0011` "not authorized to issue operation
+  Read" messages in 32 minutes, all for user `erinoverview`, across 11 elements anchored to a `DigitalProduct` (6) or a
+  `DigitalProductFamily` (5), arriving in bursts of 20 that match page-sized searches, not a steady background loop.
+  None were for `generalnpa`, and the element from the original report (`a0baa4da-...`) is not among them. So the
+  quickstart content does carry elements an ordinary user cannot read, which is the precondition this entry
+  hypothesised; whether any engine action anchors to one is not shown.
+- **Status:** still open, latent. Not reproduced here; not shown fixed.
+
 ---
 
 ### ISSUE-38 (PY-18): `count_relationships_between_elements("Exception")` (276) disagrees with `ClassificationExplorer.get_relationships("Exception")` (55)
