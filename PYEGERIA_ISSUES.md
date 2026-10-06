@@ -311,6 +311,8 @@ cardinality, no documented interdependency between `minCardinality` and
 | 0, 5 | 0, 5 |
 | 3, *omitted* | 3, 0 |
 
+**Raw capture for the Egeria team, 2026-10-06 (about 02:00Z):** at their request, one more throwaway `DataStructure` + `DataField` were linked with the exact request `NewRelationshipRequestBody{properties: MemberDataFieldProperties{position 3, minCardinality 1, maxCardinality 5}}` (answer `VoidResponse`), and the relationship was read back through the endpoints lookup (`OpenMetadataRelationshipListResponse`): `minCardinality` "1", `maxCardinality` "5". Still no repro, now with the raw request, raw response and read-back captured (kept locally, session scratchpad `live_102_raw.out`; the team's three asks are met). Deleted child-first, verified gone by GUID.
+
 Everything was deleted child-first and verified gone. **The bug no longer reproduces.** The cause of the fix is not
 known: a source comparison of the bean (`MemberDataFieldProperties`/`PartOfRelationshipProperties`), the read
 converter and the relationship builder between 2026-09-15 and `449ad06894` found no change, so either the fix is
@@ -730,6 +732,8 @@ native counting only for **element** counts.
 ---
 
 ### ISSUE-79: native survey against a template-created `FileFolder` asset fails server-side — `assetConnector` is null in `BasicFolderConnector.getFile()`
+
+**Live check 2026-10-06 (about 02:00Z, current pyegeria 6.1.29 code, rebuilt platform): the `deepCopy:false` default WAS the cause of the missing connection.** `create_folder_element_from_template` now sends a request with no `deepCopy` key (keys sent: allowRetrieve, class, forDuplicateProcessing, forLineage, isOwnAnchor, parentAtEnd1, placeholderPropertyValues, templateGUID, templateSubstitute), and the new folder read back through the classification explorer **has 1 connection** (`ResourceConnection` present). Folder deleted (cascade) and verified gone by GUID. **Not run: the survey itself** (a survey creates elements owned by the survey identity that an ordinary user may not be able to delete), so "the survey now completes" is still unproven; the original `assetConnector`-null failure was the symptom of no connection, which is now shown not to occur. Whether the Egeria-side repair (`e01426db86`) also matters is untested. Script: `live_79.py` stage A (stage B `--survey` is opt-in).
 
 **Update 2026-08-30, from the Egeria team (Mandy Chessell).** The entry
 stays in "Open Egeria Server issues" — the reported failure is not
