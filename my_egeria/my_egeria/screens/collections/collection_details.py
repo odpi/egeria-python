@@ -10,7 +10,7 @@ This module provides services for the Collections related functions of my_egeria
 
 from textual.widgets import Static, DataTable, Button, Input
 from textual.containers import Vertical, Horizontal
-from my_egeria.DemoCode.Deprecated.services.collection_service import CollectionService
+from my_egeria.services.collection_service import CollectionService
 from ..base_screen import BaseScreen
 
 

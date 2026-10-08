@@ -13,8 +13,8 @@ from textual.widgets import Header, Footer, Static
 from textual.app import ComposeResult
 from textual import on
 from textual.containers import Container
-from my_egeria.DemoCode.Deprecated.utils.config import get_global_config
-from my_egeria.DemoCode.Deprecated.utils.egeria_client import EgeriaTechClientManager
+from my_egeria.utils.config import get_global_config
+from my_egeria.utils.egeria_client import EgeriaTechClientManager
 from my_egeria.con_services.egeria_connection import EgeriaConnectionService
 
 class BaseScreen(Screen):

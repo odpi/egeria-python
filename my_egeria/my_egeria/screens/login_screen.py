@@ -13,7 +13,7 @@ from textual.containers import Container, Vertical
 from textual.message import Message
 from textual.widgets import Static, Input, Button
 from .base_screen import BaseScreen
-from my_egeria.con_services.egeria_connection import connect_to_egeria
+from ..con_services.egeria_connection import connect_to_egeria
 
 
 class LoginScreen(BaseScreen):

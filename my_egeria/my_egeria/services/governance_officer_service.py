@@ -10,8 +10,8 @@ This module provides services for the Governance Officer related functions of my
 
 from typing import Optional
 from .base_service import BaseService
-from my_egeria.DemoCode.Deprecated.utils.egeria_client import EgeriaTechClientManager
-from my_egeria.DemoCode.Deprecated.utils.config import EgeriaConfig
+from my_egeria.utils.egeria_client import EgeriaTechClientManager
+from my_egeria.utils.config import EgeriaConfig
 
 class GovernanceOfficerService(BaseService):
     def __init__(self, config):

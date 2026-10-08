@@ -9,6 +9,7 @@ This module provides the main Screen for the Governance Officer related function
 """
 from ..base_screen import BaseScreen
 from textual.widgets import Button, Tree, Static, Input
+from my_egeria.utils.config import EgeriaConfig, get_global_config
 from textual import on
 from textual.containers import Container, Horizontal
 

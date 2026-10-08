@@ -10,11 +10,11 @@ The `my-egeria` Textual TUI application's package root — see the parent
 |---|---|
 | `main.py` | Entry point (`uv run my-egeria` / `python -m my_egeria.main`). |
 | `my_egeria_app.py` | The main Textual `App` class. |
-| `DemoCode/Deprecated/screens` | Textual screens, one per feature area (`GovernanceOfficer`, `ProductManager`, `ProjectManager`, `collections`, `glossary`, `platform`). |
-| `DemoCode/Deprecated/widgets` | Reusable Textual widgets shared across screens. |
-| `DemoCode/Deprecated/services`, `con_services/` | Backend service layer wrapping pyegeria SDK calls for the screens/widgets to use. |
-| `DemoCode/Deprecated/utils` | Shared helpers. |
-| `DemoCode/Deprecated/styles` | Textual CSS. |
+| `screens/` | Textual screens, one per feature area (`GovernanceOfficer`, `ProductManager`, `ProjectManager`, `collections`, `glossary`, `platform`). |
+| `widgets/` | Reusable Textual widgets shared across screens. |
+| `services/`, `con_services/` | Backend service layer wrapping pyegeria SDK calls for the screens/widgets to use. |
+| `utils/` | Shared helpers. |
+| `styles/` | Textual CSS. |
 | `tests/` | Tests for this app. |
 | `error_popup_app.py`, `startup_check.py` | Startup/error-handling helpers. |
 | `serve.py` | Browser-mode serving via the `textual-serve` library — see the `serve_my_egeria`/`serve_my_profile` entry points in the root `pyproject.toml`. |

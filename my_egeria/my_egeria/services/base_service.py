@@ -9,8 +9,8 @@ This module provides services for the functions of my_egeria module.
 """
 
 from typing import Any, List, Dict, Optional, Tuple
-from my_egeria.DemoCode.Deprecated.utils.egeria_client import EgeriaTechClientManager
-from my_egeria.DemoCode.Deprecated.utils.config import EgeriaConfig, get_global_config
+from my_egeria.utils.egeria_client import EgeriaTechClientManager
+from my_egeria.utils.config import EgeriaConfig, get_global_config
 from os import getenv
 
 class BaseService:

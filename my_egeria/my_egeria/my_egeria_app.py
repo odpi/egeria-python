@@ -8,8 +8,11 @@
 """
 
 import os
+from typing import Any
 
 from textual import on
+
+from . import utils
 
 # Set safe defaults BEFORE importing anything that might import pyegeria
 os.environ.setdefault("EGERIA_USER", "erinoverview")
@@ -19,25 +22,26 @@ os.environ.setdefault("EGERIA_PLATFORM_URL", "https://localhost:9443")
 
 from textual.app import App, ComposeResult
 from textual.widgets import Footer
-from my_egeria.DemoCode.Deprecated.screens import LoginScreen
-from my_egeria.DemoCode.Deprecated.screens.main_menu import MainMenuScreen
-from my_egeria.DemoCode.Deprecated.screens.glossary import GlossaryBrowserScreen
-from my_egeria.DemoCode.Deprecated.screens.collections.collection_browser import CollectionBrowserScreen
-from my_egeria.DemoCode.Deprecated.screens.collections.collection_members_screen import CollectionMemberScreen
-from my_egeria.DemoCode.Deprecated.screens.collections.collection_details import CollectionDetailsScreen
-from my_egeria.DemoCode.Deprecated.screens.collections import AddCollectionScreen
-from my_egeria.DemoCode.Deprecated.screens.collections.delete_collection import DeleteCollectionScreen
-from my_egeria.DemoCode.Deprecated.screens.glossary.glossary_list_screen import GlossaryListScreen
-from my_egeria.DemoCode.Deprecated.screens.glossary.term_details import TermDetailsScreen
-from my_egeria.DemoCode.Deprecated.screens.glossary.term_list_screen import TermListScreen
-from my_egeria.DemoCode.Deprecated.screens.GovernanceOfficer.governance_officer_browser import GovernanceOfficerBrowserScreen
-from my_egeria.DemoCode.Deprecated.screens.GovernanceOfficer import AddGovernanceDefinitionScreen
-from my_egeria.DemoCode.Deprecated.screens.GovernanceOfficer import DeleteGovernanceDefinitionScreen
-from my_egeria.DemoCode.Deprecated.screens.GovernanceOfficer.marketplace_tree import MarketPlaceTree
-from my_egeria.DemoCode.Deprecated.screens.ProductManager.product_manager_browser import ProductManagerBrowser
-from my_egeria.DemoCode.Deprecated.utils.egeria_client import close_all_managers
-from my_egeria.DemoCode.Deprecated.screens.splash_screen import SplashScreen  # your existing splash screen
-
+from my_egeria.screens.login_screen import LoginScreen
+from my_egeria.screens.main_menu import MainMenuScreen
+from my_egeria.screens.glossary.glossary_browser import GlossaryBrowserScreen
+from my_egeria.screens.collections.collection_browser import CollectionBrowserScreen
+from my_egeria.screens.collections.collection_members_screen import CollectionMemberScreen
+from my_egeria.screens.collections.collection_details import CollectionDetailsScreen
+from my_egeria.screens.collections.add_collection import AddCollectionScreen
+from my_egeria.screens.collections.delete_collection import DeleteCollectionScreen
+from my_egeria.screens.glossary.glossary_list_screen import GlossaryListScreen
+from my_egeria.screens.glossary.term_details import TermDetailsScreen
+from my_egeria.screens.glossary.term_list_screen import TermListScreen
+from my_egeria.screens.GovernanceOfficer.governance_officer_browser import GovernanceOfficerBrowserScreen
+from my_egeria.screens.GovernanceOfficer.add_governance_definition import AddGovernanceDefinitionScreen
+from my_egeria.screens.GovernanceOfficer.delete_governance_definition import DeleteGovernanceDefinitionScreen
+from my_egeria.screens.GovernanceOfficer.marketplace_tree import MarketPlaceTree
+from my_egeria.screens.ProductManager.product_manager_browser import ProductManagerBrowser
+from my_egeria.utils.egeria_client import close_all_managers
+from my_egeria.utils.config import EgeriaConfig
+from my_egeria.screens.splash_screen import SplashScreen  # your existing splash screen
+from my_egeria.services.term_service import get_terms_for_glossary
 
 class MyEgeria(App):
     """Main app class of my_egeria."""

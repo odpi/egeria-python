@@ -13,7 +13,7 @@ from textual.widgets import Button, Input, Static
 from textual.containers import Container, Vertical, Horizontal
 # from textual.geometry import Coordinate  # remove unused/unsupported import
 from ..base_screen import BaseScreen
-from my_egeria.DemoCode.Deprecated.services.collection_service import CollectionService
+from my_egeria.services.collection_service import CollectionService
 from .add_collection import AddCollectionScreen
 from .delete_collection import DeleteCollectionScreen
 import asyncio

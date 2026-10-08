@@ -12,8 +12,8 @@ from textual.widgets import Static, Button
 from textual.containers import Container, Vertical
 from textual import events
 from my_egeria.con_services.egeria_connection import EgeriaConnectionService
-from my_egeria.DemoCode.Deprecated.widgets.popup import show_popup_and_exit
-from my_egeria.DemoCode.Deprecated.screens.base_screen import BaseScreen
+from my_egeria.widgets.popup import show_popup_and_exit
+from my_egeria.screens.base_screen import BaseScreen
 
 
 class MainMenuScreen(BaseScreen):

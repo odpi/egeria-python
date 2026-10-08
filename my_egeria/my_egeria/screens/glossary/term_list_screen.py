@@ -10,7 +10,8 @@ This module provides services for the Glossary related functions of my_egeria mo
 
 from textual.widgets import Static
 from textual.containers import Vertical
-from my_egeria.DemoCode.Deprecated.services.term_service import get_terms_for_glossary
+from my_egeria.widgets.editable_table import EditableDataTable
+from my_egeria.services.term_service import get_terms_for_glossary
 from ..base_screen import BaseScreen
 
 

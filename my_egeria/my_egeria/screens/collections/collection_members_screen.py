@@ -14,7 +14,7 @@ from textual.widgets import Static, DataTable, Button
 from textual.app import ComposeResult
 from textual import on
 
-from my_egeria.DemoCode.Deprecated.services.collection_service import CollectionService
+from my_egeria.services.collection_service import CollectionService
 # from utils.egeria_client import EgeriaTechClientManager
 # import os
 from ..base_screen import BaseScreen

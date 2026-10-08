@@ -113,10 +113,10 @@ class MyNetworkApp(App):
         try:
             eclient = Egeria(self.view_server, self.platform_url, self.user_name, self.user_password)
             token = eclient.create_egeria_bearer_token(self.user_name, self.user_password)
-            peers = eclient.get_relationships(
-                relationship_type="Peer",
-                output_format="JSON",
-                page_size=30)
+            peers = eclient.exec_report_spec(
+                format_set_name="My-User-Peers",
+                output_format="DICT",
+                )
             self.log(f"Peers: {peers}")
         except PyegeriaException as e:
             self.log(f"Error creating peer relationship: {e}")

@@ -10,7 +10,7 @@ This module provides services for the Collections related functions of my_egeria
 import asyncio
 from typing import Any, Dict, List, Optional
 from .base_service import BaseService
-from my_egeria.DemoCode.Deprecated.utils.config import EgeriaConfig
+from my_egeria.utils.config import EgeriaConfig
 
 class CollectionService(BaseService):
     """Wrapper around pyegeria collection functions with token-managed client."""

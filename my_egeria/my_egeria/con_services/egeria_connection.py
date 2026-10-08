@@ -10,8 +10,8 @@ This module provides services for the Egeria Connection related functions of my_
 from __future__ import annotations
 from typing import Optional
 
-from my_egeria.DemoCode.Deprecated.utils import get_global_config
-from my_egeria.DemoCode.Deprecated.utils import preflight_origin
+from ..utils.config import get_global_config
+from ..utils.egeria_client import preflight_origin
 
 class EgeriaConnectionService:
     """Checks if Egeria is reachable and authenticates."""

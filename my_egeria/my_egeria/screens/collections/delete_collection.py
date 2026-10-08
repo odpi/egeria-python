@@ -14,7 +14,7 @@ from textual.message import Message
 from textual.containers import Container, Vertical, Horizontal
 from textual.widgets import Static, Button
 from ..base_screen import BaseScreen
-from my_egeria.DemoCode.Deprecated.services.collection_service import CollectionService
+from my_egeria.services.collection_service import CollectionService
 from typing import Dict, Any
 
 def parse_kv_pairs(text: str) -> Dict[str, Any]:

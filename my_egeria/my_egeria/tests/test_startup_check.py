@@ -10,7 +10,7 @@
 
 import os
 import pytest
-from my_egeria.startup_check import validate_envs, check_connection
+from ..startup_check import validate_envs, check_connection
 
 
 def test_validate_envs_missing(monkeypatch):

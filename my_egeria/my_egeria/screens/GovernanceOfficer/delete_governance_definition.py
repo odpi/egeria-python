@@ -9,8 +9,8 @@ This module implements the Delete Governance Definition functions of my_egeria m
 """
 from textual.messages import Message
 from typing import Dict, Any
-from my_egeria.DemoCode.Deprecated.screens.base_screen import BaseScreen
-from my_egeria.DemoCode.Deprecated.services.governance_officer_service import GovernanceOfficerService
+from my_egeria.screens.base_screen import BaseScreen
+from my_egeria.services.governance_officer_service import GovernanceOfficerService
 from textual.containers import Container, Vertical, Horizontal
 from textual.widgets import Static, Button
 import asyncio

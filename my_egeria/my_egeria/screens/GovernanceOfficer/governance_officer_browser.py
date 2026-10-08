@@ -13,12 +13,12 @@ from textual.widgets import Button, Input, Static, Tree
 from textual.containers import Container, Vertical, Horizontal
 from ..base_screen import BaseScreen
 from .marketplace_tree import MarketPlaceTree
-from my_egeria.DemoCode.Deprecated.services.governance_officer_service import GovernanceOfficerService
+from my_egeria.services.governance_officer_service import GovernanceOfficerService
 from .add_governance_definition import AddGovernanceDefinitionScreen
 from .delete_governance_definition import DeleteGovernanceDefinitionScreen
 import asyncio
 from textual import on
-from my_egeria.DemoCode.Deprecated.utils.config import get_global_config
+from my_egeria.utils.config import EgeriaConfig, get_global_config
 
 
 # ... existing imports ...

@@ -11,8 +11,8 @@ This module provides services for the Platform related functions of my_egeria mo
 from textual.widgets import Static, DataTable
 from textual.app import ComposeResult
 from textual.containers import Container
-from my_egeria.DemoCode.Deprecated.utils.config import get_global_config
-from my_egeria.DemoCode.Deprecated.utils.egeria_client import EgeriaTechClientManager
+from my_egeria.utils.config import get_global_config
+from my_egeria.utils.egeria_client import EgeriaTechClientManager
 from ..base_screen import BaseScreen
 
 

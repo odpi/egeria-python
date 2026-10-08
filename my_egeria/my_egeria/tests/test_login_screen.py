@@ -8,7 +8,11 @@
 
 """
 
+import pytest
+from unittest.mock import patch
 from textual.app import App
+from textual.widgets import Input, Button
+from my_egeria.screens.login_screen import LoginScreen
 
 
 class LoginApp(App):

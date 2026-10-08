@@ -5,9 +5,10 @@ This module provides services for the Product Manager related functions of my_eg
 
 
 """
-from typing import Optional
+import asyncio
+from typing import Any, Dict, List, Optional
 from .base_service import BaseService
-from my_egeria.DemoCode.Deprecated.utils.config import EgeriaConfig
+from my_egeria.utils.config import EgeriaConfig
 
 class ProductManagerService(BaseService):
     """Wrapper around pyegeria collection functions with token-managed client."""

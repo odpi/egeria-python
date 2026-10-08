@@ -10,9 +10,9 @@ This module provides services for the Screen related functions of my_egeria modu
 
 from textual.widgets import DataTable
 from textual.containers import Container
-from my_egeria.DemoCode.Deprecated.services.project_manager_service import ProjectManagerService
+from my_egeria.services.project_manager_service import ProjectManagerService
 from .base_screen import BaseScreen
-from my_egeria.DemoCode.Deprecated.widgets.back_button import BackButton
+from my_egeria.widgets.back_button import BackButton
 
 class ProjectScreen(BaseScreen):
     CSS_PATH = ["/styles/common.css", "/styles/project_screen.css"]
