@@ -14,8 +14,8 @@ from textual import on
 from textual.containers import Container
 
 from .base_screen import BaseScreen
-from my_egeria.utils.config import get_global_config
-from my_egeria.utils.egeria_client import EgeriaTechClientManager
+from my_egeria.DemoCode.Deprecated.utils.config import get_global_config
+from my_egeria.DemoCode.Deprecated.utils.egeria_client import EgeriaTechClientManager
 
 
 class GovernanceScreen(BaseScreen):

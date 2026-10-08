@@ -9,8 +9,7 @@ This module provides services for the Glossary related functions of my_egeria mo
 """
 
 from ..base_screen import BaseScreen
-from my_egeria.widgets.editable_table import EditableDataTable, CellEdited
-from my_egeria.widgets.ok_popup import OkPopup
+
 
 class TermDetailsScreen(BaseScreen):
 

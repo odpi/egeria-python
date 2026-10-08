@@ -15,7 +15,7 @@ import logging
 import asyncio
 from typing import Any, Dict, List, Optional
 from .base_service import BaseService
-from my_egeria.utils.config import EgeriaConfig
+from my_egeria.DemoCode.Deprecated.utils.config import EgeriaConfig
 
 
 # Hook for tests to inject a mock client

@@ -10,8 +10,8 @@ This module provides services for the Glossary related functions of my_egeria mo
 
 from textual.widgets import Static, DataTable, Input, Button
 from textual.containers import Horizontal, Vertical, Container
-from my_egeria.screens.base_screen import BaseScreen
-from my_egeria.services.glossary_service import GlossaryService
+from my_egeria.DemoCode.Deprecated.screens.base_screen import BaseScreen
+from my_egeria.DemoCode.Deprecated.services.glossary_service import GlossaryService
 from .term_details import TermDetailsScreen
 import asyncio
 

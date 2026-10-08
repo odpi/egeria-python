@@ -13,8 +13,8 @@ from textual.widgets import DataTable
 from textual.containers import Container
 from textual import events
 
-from my_egeria.services.platform_service import PlatformServices
-from my_egeria.widgets.popup import show_popup_and_exit
+from my_egeria.DemoCode.Deprecated.services.platform_service import PlatformServices
+from my_egeria.DemoCode.Deprecated.widgets.popup import show_popup_and_exit
 
 
 class PlatformServicesScreen(Screen):

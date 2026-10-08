@@ -17,9 +17,9 @@ from textual.containers import Container, Vertical, Horizontal
 from textual.widgets import Static, Input, Button, Pretty, OptionList, Footer, Header
 # from .governance_officer_browser import GovernanceOfficerBrowserScreen
 from ..base_screen import BaseScreen
-from my_egeria.services.governance_officer_service import GovernanceOfficerService
+from my_egeria.DemoCode.Deprecated.services.governance_officer_service import GovernanceOfficerService
 from typing import Dict, Any
-from my_egeria.utils.config import EgeriaConfig
+
 
 def parse_kv_pairs(text: str) -> Dict[str, Any]:
     """

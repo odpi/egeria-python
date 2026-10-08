@@ -7,7 +7,7 @@ This module provides the browser for the Project MNanager related functions of m
 """
 # from textual.geometry import Coordinate  # remove unused/unsupported import
 from ..base_screen import BaseScreen
-from my_egeria.services.project_manager_service import ProjectManagerService
+from my_egeria.DemoCode.Deprecated.services.project_manager_service import ProjectManagerService
 # from .collection_details import CollectionDetailsScreen
 # from .add_collection import AddCollectionScreen
 # from .delete_collection import DeleteCollectionScreen

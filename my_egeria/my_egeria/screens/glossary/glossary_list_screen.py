@@ -10,9 +10,9 @@ This module provides services for the Glossary related functions of my_egeria mo
 
 from textual.widgets import Static
 from textual.containers import Vertical
-from my_egeria.widgets.editable_table import EditableDataTable
-from my_egeria.services.glossary_service import GlossaryService
-from my_egeria.screens.base_screen import BaseScreen
+from my_egeria.DemoCode.Deprecated.widgets.editable_table import EditableDataTable
+from my_egeria.DemoCode.Deprecated.services.glossary_service import GlossaryService
+from my_egeria.DemoCode.Deprecated.screens.base_screen import BaseScreen
 
 class GlossaryListScreen(BaseScreen):
     CSS_PATH = ["../styles/common.css", "/styles/glossary_list_screen.css"]

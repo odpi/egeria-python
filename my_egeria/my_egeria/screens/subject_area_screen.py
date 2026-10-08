@@ -11,8 +11,8 @@ This module provides services for the Screen related functions of my_egeria modu
 from textual.screen import Screen
 from textual.widgets import DataTable, Header, Footer
 from textual.containers import Container
-from my_egeria.widgets.back_button import BackButton
-from my_egeria.services.subject_area_service import SubjectAreaService
+from my_egeria.DemoCode.Deprecated.widgets.back_button import BackButton
+from my_egeria.DemoCode.Deprecated.services.subject_area_service import SubjectAreaService
 
 
 class SubjectAreaScreen(Screen):

@@ -51,5 +51,8 @@
     "Egeria Home Glossary Name": "Egeria-Markdown",
     "Egeria Local Qualifier": "myLocal",
     "Egeria Usage Level": "Basic"
-  }
+  },
+  "Pyegeria Report Spec Modules": [
+    "~/my_report_specs/my_profile_report_specs.json"
+  ]
 }

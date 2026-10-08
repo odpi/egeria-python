@@ -1,0 +1,47 @@
+{
+  "//_comment1": "PDX-License-Identifier: Apache-2.0",
+  "//_comment2": "Copyright Contributors to the ODPi Egeria project.",
+  "//_comment3": "                                                  ",
+  "//_comment4": " This file provides the custom report specs for My Profile Textual App. ",
+  "//_comment5": " Author: Peter A Coldicott ",
+
+  "My-User-Peers": {
+    "target_type": "Peer",
+    "heading": "Peers",
+    "description": "Detailed Peer Connections",
+    "family": "MyProfile",
+    "formats": [
+      {
+        "types": [
+          "LIST",
+          "REPORT",
+          "DICT",
+          "TABLE"
+        ],
+        "attributes": [
+          {
+            "name": "Label",
+            "key": "label"
+          },
+          {
+            "name": "Qualified Name",
+            "key": "uniqueName"
+          },
+          {
+            "name": "Scope",
+            "key": "scope"
+          },
+          {
+            "name": "Description",
+            "key": "relationshipProperties.description"
+          },
+          {
+            "name": "GUID",
+            "key": "guid",
+            "format": "True"
+          }
+        ]
+      }
+    ]
+  }
+}

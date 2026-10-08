@@ -7,7 +7,7 @@ This module provides services for the Screen related functions of my_egeria modu
 
 
 """
-from my_egeria.services.base_service import BaseService
+from my_egeria.DemoCode.Deprecated.services.base_service import BaseService
 
 
 class SubjectAreaService(BaseService):

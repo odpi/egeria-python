@@ -6,7 +6,7 @@
 """
 
 from textual.app import App
-from my_egeria.screens.error_popup_screen import ErrorPopup
+from my_egeria.DemoCode.Deprecated.screens import ErrorPopup
 
 
 class ErrorPopupApp (App):

@@ -9,7 +9,6 @@
 """
 
 from textual.app import App
-from my_egeria.screens.glossary.term_details import TermDetailsScreen
 
 
 class TestApp(App):

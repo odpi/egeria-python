@@ -71,8 +71,11 @@ class MyNetworkApp(App):
         self.log(f"User PWD: {self.user_password}")
         self.users_found: DataTable = DataTable(id="users_found")
         self.my_network: DataTable = DataTable(id="my_network")
+        self.my_user_contact_details: DataTable = DataTable(id="my_user_contact_details")
+        self.my_user_communities: DataTable = DataTable(id="my_user_communities")
         self.nickname = ""
         self.description = ""
+        self.selected_network_member = None
 
     def on_mount(self) -> None:
         """Perform actions when the application is mounted."""
@@ -112,7 +115,6 @@ class MyNetworkApp(App):
             token = eclient.create_egeria_bearer_token(self.user_name, self.user_password)
             peers = eclient.get_relationships(
                 relationship_type="Peer",
-                # source_guid=self.user_GUID,
                 output_format="JSON",
                 page_size=30)
             self.log(f"Peers: {peers}")
@@ -126,15 +128,18 @@ class MyNetworkApp(App):
         for peer in peers:
             self.log(f"Peer: {peer}")
             self.my_network.add_row(peer.get("Label"),
-                                    peer.get("Display Name"),
-                                    peer.get("GUID"),
+                                    peer.get("uniqueName"),
+                                    peer.get("guid"),
                                     peer.get("Qualified Name"),
-                                    peer.get("Description"))
+                                    peer.get("relationshipProperties", "description"))
             continue
         self.my_network.refresh()
         container=self.query_one("#users_network_container", ScrollableContainer)
-        container.remove_children()
+        container.remove_children("#users_network_placeholder")
         container.mount(self.my_network)
+        container.mount(Button(label="User Details", id="user_details1", variant="primary"))
+        container.refresh()
+        self.my_network.refresh()
         return
 
     def compose(self) -> ComposeResult:
@@ -270,11 +275,113 @@ class MyNetworkApp(App):
                                      self.selected_GUID,
                                      body
                                      )
+            self.notify(f"Peer person linked successfully")
         except PyegeriaException as e:
             self.log(f"Error linking peer person: {e}")
             self.notify(f"Error linking peer person: {e}")
         finally:
+            # clear input fields
+            self.query_one("#nickname_input", Input).clear()
+            self.query_one("#description_input", Input).clear()
+            # reset display to allow another search
+            self.query_one("#users_input_container", ScrollableContainer).remove_children()
+            self.query_one("#users_network_container", ScrollableContainer).remove_children()
+            self.query_one("#users_input_container").mount(
+                Static("Search for user, enter the (partial) name to search for and press return:"),
+                Input(placeholder="Name", id="user_search_input")
+            )
+            self.query_one("#users_network_container").mount(
+                Static("Peer person network"),
+                self.my_network,
+                Button(label="User Details", id="user_details2", variant="primary")
+            )
             return
+
+    @on(DataTable.RowHighlighted, "#user_network_table")
+    def handle_network_member_selected(self,event: DataTable.RowHighlighted):
+        self.log(f"Row highlighted: {event.row_key}")
+        self.selected_network_member = event.row_key
+
+    @on(DataTable.RowSelected, "#user_network_table")
+    def handle_network_member_selected(self, event: DataTable.RowSelected):
+        self.log(f"Row selected: {event.row_key}")
+        self.selected_network_member = event.row_key
+
+    @on(Button.Pressed, "#user_details1")
+    def handle_user_details_1_button(self, event: Button.Pressed):
+        if self.selected_network_member:
+            selected_row_data = self.my_network.get_row(self.selected_network_member)
+            self.show_user_details(selected_row_data)
+            return
+        else:
+            self.notify(f"Please select a network member to view details before using the Button.", severity="warning", timeout=10)
+            return
+
+    @on(Button.Pressed, "#user_details2")
+    def handle_user_details_2_button(self, event: Button.Pressed):
+        if self.selected_network_member:
+            selected_row_data = self.my_network.get_row(self.selected_network_member)
+            self.show_user_details(selected_row_data)
+            return
+        else:
+            self.notify(f"Please select a network member to view details before using the Button.", severity="warning",
+                        timeout=10)
+            return
+
+    def show_user_details(self, selected_row_data):
+        """ Show both contact details and community membership details for the selected network member."""
+        self.selected_network_member = selected_row_data
+        self.user_GUID = selected_row_data[2]
+        self.user_qname = selected_row_data[3]
+        self.user_nickname = selected_row_data[0]
+        #clear and set up the datatables
+        self.my_user_contact_details.clear(columns=True)
+        self.my_user_contact_details.add_columns("Name", "Method Type", "Contact Type", "Service", "Value", "GUID")
+        self.my_user_contact_details.cursor_type = "row"
+        self.my_user_contact_details.zebra_stripes=True
+        self.my_user_communities.clear(columns=True)
+        self.my_user_communities.add_columns("Name", "Assignment Type", "Description", "GUID")
+        self.my_user_communities.cursor_type = "row"
+        self.my_user_communities.zebra_stripes=True
+        # retrieve the users contact information
+        try:
+            eclient=Egeria(
+                self.view_server,
+                self.platform_url,
+                self.user_name,
+                self.user_password)
+            token=eclient.create_egeria_bearer_token(self.user_name, self.user_password)
+            self.user_contact_details = exec_report_spec(
+                                        format_set_name="My-User-Contact-Detail")
+            self.log(f"Retrieved user contact details: {self.user_contact_details}")
+        except Exception as e:
+            self.notify(f"Error retrieving user contact details: {str(e)}", severity="error", timeout=10)
+            return
+        try:
+            self.user_communities = exec_report_spec(
+                                        format_set_name="My-User-Communities-Detail")
+            self.log(f"Retrieved user community memberships: {self.user_communities}")
+        except Exception as e:
+            self.notify(f"Error retrieving user community memberships: {str(e)}", severity="error", timeout=10)
+            return
+        finally:
+            if eclient:
+                eclient.close_session()
+        if isinstance(self.user_contact_details, list):
+            for contact in self.user_contact_details:
+                self.my_user_contact_details.add_row(contact.get("Name"),
+                                                     contact.get("Method Type"),
+                                                     contact.get("Contact Type"),
+                                                     contact.get("Service"),
+                                                     contact.get("Value"),
+                                                     contact.get("GUID"))
+        if isinstance(self.user_communities, list):
+            for community in self.user_communities:
+                self.my_user_communities.add_row(community.get("Name"),
+                                                 community.get("Assignment Type"),
+                                                 community.get("Desacription"),
+                                                 community.get("GUID"))
+        return
 
 def main() -> None:
     """Entry point for the my_profile console script."""
