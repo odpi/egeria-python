@@ -28,7 +28,8 @@
     "Pyegeria Publishing Root": "http://localhost:8085/outbox",
     "Pyegeria User Report Specs Dir": "~/.pyegeria/report_specs",
     "Pyegeria Report Spec Modules": [
-      "pyegeria.view.analytic_demo_specs:get_analytic_demo_specs"
+      "pyegeria.view.analytic_demo_specs:get_analytic_demo_specs",
+      "~/my_report_specs/my_profile_report_specs.json"
     ]
   },
   "feature_x_enabled": false,
@@ -52,7 +53,5 @@
     "Egeria Local Qualifier": "myLocal",
     "Egeria Usage Level": "Basic"
   },
-  "Pyegeria Report Spec Modules": [
-    "~/my_report_specs/my_profile_report_specs.json"
-  ]
+
 }

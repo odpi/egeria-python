@@ -113,7 +113,7 @@ class MyNetworkApp(App):
         try:
             eclient = Egeria(self.view_server, self.platform_url, self.user_name, self.user_password)
             token = eclient.create_egeria_bearer_token(self.user_name, self.user_password)
-            peers = eclient.exec_report_spec(
+            peers = exec_report_spec(
                 format_set_name="My-User-Peers",
                 output_format="DICT",
                 )

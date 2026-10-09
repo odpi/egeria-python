@@ -1,10 +1,4 @@
 {
-  "//_comment1": "PDX-License-Identifier: Apache-2.0",
-  "//_comment2": "Copyright Contributors to the ODPi Egeria project.",
-  "//_comment3": "                                                  ",
-  "//_comment4": " This file provides the custom report specs for My Profile Textual App. ",
-  "//_comment5": " Author: Peter A Coldicott ",
-
   "My-User-Peers": {
     "target_type": "Peer",
     "heading": "Peers",
@@ -42,6 +36,10 @@
           }
         ]
       }
-    ]
+    ],
+    "action": {
+      "function": "classification_manager.get_elements",
+      "metadataElementTypeName": ["Peer", "PeerProperties"]
+    }
   }
 }
