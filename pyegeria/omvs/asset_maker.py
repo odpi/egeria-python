@@ -2480,6 +2480,118 @@ class AssetMaker(ServerClient):
             self._async_detach_data_set_content(data_set_guid, data_content_asset_guid, body)
         )
 
+    # DataSetContent is a multi-link relationship: the same data set and content may be linked more than once
+    # (for example, once for each information supply chain). The two methods below therefore address ONE
+    # relationship by its own unique identifier, rather than by the two linked elements.
+
+    @dynamic_catch
+    async def _async_update_data_set_content(
+        self,
+        data_set_content_guid: str,
+        body: dict | UpdateRelationshipRequestBody | None = None,
+    ) -> None:
+        """Update the properties of one DataSetContent relationship. Async version.
+
+        Parameters
+        ----------
+        data_set_content_guid: str
+            Unique identifier of the DataSetContent relationship (not of the data set or the content).
+        body: dict | UpdateRelationshipRequestBody, optional
+            The properties to update.
+
+        Returns
+        -------
+        None
+
+        Raises
+        ------
+        PyegeriaException
+            One of the pyegeria exceptions will be raised if there are issues in communications, message format, or
+            Egeria errors.
+
+        Notes
+        -----
+        Sample body:
+        {
+          "class" : "UpdateRelationshipRequestBody",
+          "mergeUpdate": true,
+          "properties": {
+            "class": "DataSetContentProperties",
+            "queryId": "add id that is used on overall formula",
+            "query": "add query",
+            "queryType": "add query type",
+            "iscQualifiedName": "add qualified name"
+          }
+        }
+        """
+        url = f"{self.asset_command_root}/data-set-content/{data_set_content_guid}/update"
+        await self._async_update_relationship_request(url, ["DataSetContentProperties"], body)
+
+    @dynamic_catch
+    def update_data_set_content(
+        self,
+        data_set_content_guid: str,
+        body: dict | UpdateRelationshipRequestBody | None = None,
+    ) -> None:
+        """Update the properties of one DataSetContent relationship.
+
+        Parameters
+        ----------
+        data_set_content_guid: str
+            Unique identifier of the DataSetContent relationship (not of the data set or the content).
+        body: dict | UpdateRelationshipRequestBody, optional
+            The properties to update.
+        """
+        loop = asyncio.get_event_loop()
+        loop.run_until_complete(self._async_update_data_set_content(data_set_content_guid, body))
+
+    @dynamic_catch
+    async def _async_detach_data_set_content_relationship(
+        self,
+        data_set_content_guid: str,
+        body: dict | DeleteRelationshipRequestBody | None = None,
+    ) -> None:
+        """Remove one DataSetContent relationship, leaving any others between the same elements in place.
+        Async version.
+
+        Parameters
+        ----------
+        data_set_content_guid: str
+            Unique identifier of the DataSetContent relationship (not of the data set or the content).
+        body: dict | DeleteRelationshipRequestBody, optional
+            Additional parameters for the delete operation.
+
+        Returns
+        -------
+        None
+
+        Raises
+        ------
+        PyegeriaException
+            One of the pyegeria exceptions will be raised if there are issues in communications, message format, or
+            Egeria errors.
+        """
+        url = f"{self.asset_command_root}/data-set-content/{data_set_content_guid}/detach"
+        await self._async_delete_relationship_request(url, body)
+
+    @dynamic_catch
+    def detach_data_set_content_relationship(
+        self,
+        data_set_content_guid: str,
+        body: dict | DeleteRelationshipRequestBody | None = None,
+    ) -> None:
+        """Remove one DataSetContent relationship, leaving any others between the same elements in place.
+
+        Parameters
+        ----------
+        data_set_content_guid: str
+            Unique identifier of the DataSetContent relationship (not of the data set or the content).
+        body: dict | DeleteRelationshipRequestBody, optional
+            Additional parameters for the delete operation.
+        """
+        loop = asyncio.get_event_loop()
+        loop.run_until_complete(self._async_detach_data_set_content_relationship(data_set_content_guid, body))
+
     #
     # Report Methods
     #

@@ -7,6 +7,7 @@ connectorTypes and endpoints.
 """
 
 from pyegeria.core._server_client import ServerClient
+from pyegeria.core.utils import dynamic_catch
 from pyegeria.models.models import (
     NewElementRequestBody,
     UpdateElementRequestBody,
@@ -1010,6 +1011,46 @@ class ConnectionMaker(ServerClient):
     def detach_asset_from_connection(self, asset_guid: str, connection_guid: str, body: Union[DeleteRelationshipRequestBody, dict] = None):
         loop = asyncio.get_event_loop()
         return loop.run_until_complete(self._async_detach_asset_from_connection(asset_guid, connection_guid, body))
+
+    # Generalisation of link_asset_to_connection / detach_asset_from_connection: any element that has a digital
+    # resource (not only an asset) can be attached to the connection that accesses that resource.
+
+    @dynamic_catch
+    async def _async_link_resource_to_connection(self, element_guid: str, connection_guid: str, body: Union[NewRelationshipRequestBody, dict] = None):
+        """Attach an element to the connection that accesses its digital resource. Async version.
+
+        Sample body:
+        {
+          "class" : "NewRelationshipRequestBody",
+          "properties": {
+            "class": "ResourceConnectionProperties",
+            "label": "add label here",
+            "description": "add description here",
+            "effectiveFrom": "2024-01-01T00:00:00.000+00:00",
+            "effectiveTo": "2024-12-31T23:59:59.999+00:00"
+          }
+        }
+        """
+        url = f"{self.base_url}/elements/{element_guid}/connections/{connection_guid}/attach"
+        await self._async_new_relationship_request(url, ["ResourceConnectionProperties"], body)
+
+    @dynamic_catch
+    def link_resource_to_connection(self, element_guid: str, connection_guid: str, body: Union[NewRelationshipRequestBody, dict] = None):
+        """Attach an element to the connection that accesses its digital resource."""
+        loop = asyncio.get_event_loop()
+        return loop.run_until_complete(self._async_link_resource_to_connection(element_guid, connection_guid, body))
+
+    @dynamic_catch
+    async def _async_detach_resource_from_connection(self, element_guid: str, connection_guid: str, body: Union[DeleteRelationshipRequestBody, dict] = None):
+        """Detach an element from the connection that accesses its digital resource. Async version."""
+        url = f"{self.base_url}/elements/{element_guid}/connections/{connection_guid}/detach"
+        await self._async_delete_relationship_request(url, body)
+
+    @dynamic_catch
+    def detach_resource_from_connection(self, element_guid: str, connection_guid: str, body: Union[DeleteRelationshipRequestBody, dict] = None):
+        """Detach an element from the connection that accesses its digital resource."""
+        loop = asyncio.get_event_loop()
+        return loop.run_until_complete(self._async_detach_resource_from_connection(element_guid, connection_guid, body))
 
     async def _async_link_endpoint_to_it_asset(self, asset_guid: str, endpoint_guid: str, body: Union[NewRelationshipRequestBody, dict] = None):
         url = f"{self.base_url}/assets/{asset_guid}/endpoints/{endpoint_guid}/attach"

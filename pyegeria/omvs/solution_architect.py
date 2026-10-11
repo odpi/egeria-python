@@ -672,14 +672,6 @@ class SolutionArchitect(ServerClient):
                 parent_qnames.append(comp['relatedElement']['properties'].get("qualifiedName", ""))
                 parent_names.append(comp['relatedElement']['properties'].get('displayName', ""))
 
-        sub_components = el_struct.get("subComponents", {})
-        if sub_components:
-            for sub_component in sub_components:
-                sub_component_guids.append(sub_component['elementHeader']['guid'])
-                sub_component_qnames.append(sub_component['properties'].get("qualifiedName", ""))
-                sub_component_names.append(sub_component['properties'].get('displayName', ""))
-
-
         mermaid = el_struct.get("mermaidGraph", {})
 
         return {"in_components_guids": parent_guids,
@@ -5183,10 +5175,6 @@ class SolutionArchitect(ServerClient):
             for comp in sub_components:
                 guid = comp['relatedElement']['elementHeader'].get('guid', None)
                 sub_component_guids.append(guid)
-
-        sub_components = response.get("subComponents",{})
-        for sub_component in sub_components:
-            sub_component_guids.append(sub_component["elementHeader"]["guid"])
 
         parent_components = response.get('usedInSolutionComponents', None)
         if parent_components is not None:

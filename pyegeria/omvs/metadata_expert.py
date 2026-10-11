@@ -17,7 +17,8 @@ from pyegeria.models import (NewOpenMetadataElementRequestBody, TemplateRequestB
                              SearchStringRequestBody,
                              FilterRequestBody, GetRequestBody, ResultsRequestBody,
                              SearchStringRequestBody as SearchStringBody, DeleteElementRequestBody,
-                             DeleteRelationshipRequestBody)
+                             DeleteRelationshipRequestBody,
+                             OpenMetadataEnumDef, OpenMetadataTypeDef, OpenMetadataTypeDefPatch)
 from pyegeria.core.utils import body_slimmer, dynamic_catch
 from pyegeria.core._server_client import ServerClient, max_paging_size
 from pyegeria.core._globals import default_timeout, NO_ELEMENTS_FOUND
@@ -4375,3 +4376,209 @@ class MetadataExpert(ServerClient):
         """Retrieve the list of valid property comparison operators."""
         loop = asyncio.get_event_loop()
         return loop.run_until_complete(self._async_get_property_comparison_operator_list())
+
+    #
+    # Maintain the open metadata types that are defined through the API. These are validated against the types
+    # already defined, stored in the metadata access store's local repository, and announced to the rest of the
+    # cohort. Types from the open metadata archives cannot be changed this way. (Egeria-api-metadata-expert.http)
+    #
+
+    async def _async_type_def_request(self, url: str, body: dict | Any, model: type,
+                                      params: dict | None = None) -> Any:
+        """POST a type-definition body (validated through `model`, with undeclared bean fields passed
+        through) and return the response's "guid" if it has one, else the whole response payload."""
+        if isinstance(body, model):
+            validated = body
+        elif isinstance(body, dict):
+            validated = self._validate_body(model.model_validate, body)
+        else:
+            raise ValueError(f"body must be a dict or {model.__name__}")
+        response = await self._async_make_request(
+            "POST", url, validated.model_dump_json(indent=2, exclude_none=True), params=params)
+        payload = response.json()
+        return payload.get("guid", payload) if isinstance(payload, dict) else payload
+
+    @dynamic_catch
+    async def _async_add_enum_def(self, body: dict | OpenMetadataEnumDef) -> str | dict:
+        """
+        Add a new enum definition, which can then be used as the type of attributes in new type definitions.
+        Async version.
+
+        .. warning::
+           An enum added through the API cannot be removed again: ``delete_enum_def`` currently fails against
+           Egeria with a 500 "unknown TypeDef" (an Egeria server bug, ISSUE-125, reproduced on Egeria main
+           449ad06894, and the enum survives a restart). Do not create throwaway enums on a shared platform.
+
+        Parameters
+        ----------
+        body : dict | OpenMetadataEnumDef
+            The enum definition.
+
+        Returns
+        -------
+        str | dict
+            The unique identifier (GUID) of the new enum definition, or the raw response if it carries none.
+
+        Notes
+        -----
+        Sample JSON body:
+        {
+          "class" : "OpenMetadataEnumDef",
+          "name" : "CuisineType",
+          "description" : "The style of cooking that a recipe belongs to.",
+          "elementDefs" : [
+            { "ordinal" : 0, "value" : "Unclassified", "description" : "The cuisine has not been recorded." },
+            { "ordinal" : 99, "value" : "Other", "description" : "Another cuisine." }
+          ],
+          "defaultValue" : { "ordinal" : 0, "value" : "Unclassified", "description" : "..." }
+        }
+        """
+        url = f"{self.command_root}/open-metadata-attribute-types/enum-defs"
+        return await self._async_type_def_request(url, body, OpenMetadataEnumDef)
+
+    @dynamic_catch
+    def add_enum_def(self, body: dict | OpenMetadataEnumDef) -> str | dict:
+        """Add a new enum definition, which can then be used as the type of attributes in new type definitions.
+        Note: it cannot be removed again through the API (ISSUE-125); see the async version's warning."""
+        loop = asyncio.get_event_loop()
+        return loop.run_until_complete(self._async_add_enum_def(body))
+
+    @dynamic_catch
+    async def _async_add_type_def(self, body: dict | OpenMetadataTypeDef) -> str | dict:
+        """
+        Add a new type definition for an entity, relationship or classification. Links to other types - the
+        supertype, attribute types, relationship ends - only need the name of the type. Async version.
+
+        .. note::
+           Verified against a live server for entity types (with primitive and enum attributes). Relationship and
+           classification definitions go through the same code and models but have not been exercised live.
+
+        Parameters
+        ----------
+        body : dict | OpenMetadataTypeDef
+            The type definition; `class` is OpenMetadataEntityDef, OpenMetadataRelationshipDef or
+            OpenMetadataClassificationDef.
+
+        Returns
+        -------
+        str | dict
+            The unique identifier (GUID) of the new type definition, or the raw response if it carries none.
+
+        Notes
+        -----
+        Sample JSON body:
+        {
+          "class" : "OpenMetadataEntityDef",
+          "name" : "Recipe",
+          "description" : "A description of how to prepare a dish.",
+          "superType" : { "name" : "Referenceable" },
+          "attributeDefinitions" : [
+            { "attributeName" : "cuisine",
+              "attributeType" : { "class" : "OpenMetadataEnumDef", "name" : "CuisineType" },
+              "attributeDescription" : "The style of cooking." },
+            { "attributeName" : "servings",
+              "attributeType" : { "class" : "OpenMetadataPrimitiveDef", "name" : "int" },
+              "attributeDescription" : "The number of people the recipe serves." }
+          ]
+        }
+        """
+        url = f"{self.command_root}/open-metadata-types"
+        return await self._async_type_def_request(url, body, OpenMetadataTypeDef)
+
+    @dynamic_catch
+    def add_type_def(self, body: dict | OpenMetadataTypeDef) -> str | dict:
+        """Add a new type definition for an entity, relationship or classification."""
+        loop = asyncio.get_event_loop()
+        return loop.run_until_complete(self._async_add_type_def(body))
+
+    @dynamic_catch
+    async def _async_update_type_def(self, body: dict | OpenMetadataTypeDefPatch) -> None:
+        """
+        Update a type definition that was added through the API. The patch names the version it applies to
+        and carries only what changes. Async version.
+
+        .. warning::
+           Against Egeria as of 2026-10-05 (including its main branch) every patch is rejected by the server
+           with OMRS-REPOSITORY-400-069, "mandatory field updatedBy set to null": the server builds the patch
+           with a converter that is never given the calling user. Nothing a client sends can supply it. See
+           PYEGERIA_ISSUES.md, ISSUE-124. This method matches the documented API and will work once that
+           is fixed upstream.
+
+        Parameters
+        ----------
+        body : dict | OpenMetadataTypeDefPatch
+            The patch.
+
+        Notes
+        -----
+        Sample JSON body:
+        {
+          "class" : "OpenMetadataTypeDefPatch",
+          "typeDefGUID" : "add guid here",
+          "typeDefName" : "Recipe",
+          "applyToVersion" : 1,
+          "attributeDefinitions" : [
+            { "attributeName" : "preparationTimeMinutes",
+              "attributeType" : { "class" : "OpenMetadataPrimitiveDef", "name" : "int" },
+              "attributeDescription" : "How long the recipe takes to prepare." }
+          ]
+        }
+        """
+        url = f"{self.command_root}/open-metadata-types/update"
+        await self._async_type_def_request(url, body, OpenMetadataTypeDefPatch)
+
+    @dynamic_catch
+    def update_type_def(self, body: dict | OpenMetadataTypeDefPatch) -> None:
+        """Update a type definition that was added through the API."""
+        loop = asyncio.get_event_loop()
+        return loop.run_until_complete(self._async_update_type_def(body))
+
+    @dynamic_catch
+    async def _async_delete_type_def(self, type_def_guid: str, type_def_name: str) -> None:
+        """
+        Delete a type definition that was added through the API. This fails while there are any instances of
+        the type, including soft-deleted ones, or while another type definition refers to it. Async version.
+
+        Parameters
+        ----------
+        type_def_guid : str
+            Unique identifier of the type definition.
+        type_def_name : str
+            Name of the type definition (the server checks it against the GUID).
+        """
+        url = f"{self.command_root}/open-metadata-types/guid/{type_def_guid}/delete"
+        await self._async_make_request("POST", url, params={"typeDefName": type_def_name})
+
+    @dynamic_catch
+    def delete_type_def(self, type_def_guid: str, type_def_name: str) -> None:
+        """Delete a type definition that was added through the API."""
+        loop = asyncio.get_event_loop()
+        return loop.run_until_complete(self._async_delete_type_def(type_def_guid, type_def_name))
+
+    @dynamic_catch
+    async def _async_delete_enum_def(self, enum_def_guid: str, enum_def_name: str) -> None:
+        """
+        Delete an enum definition that was added through the API. This fails while any type definition has an
+        attribute of this type. Async version.
+
+        .. warning::
+           Observed live (2026-10-05) to fail with a 500, OMRS-CONTENT-MANAGER-500-001 "unknown TypeDef", even
+           after the only type using the enum had been deleted and while the enum was still listed by
+           ``get_attribute_types``: an enum added through the API could not be removed again. Delete enum
+           definitions only if you can live with that. See PYEGERIA_ISSUES.md, ISSUE-125.
+
+        Parameters
+        ----------
+        enum_def_guid : str
+            Unique identifier of the enum definition.
+        enum_def_name : str
+            Name of the enum definition (the server checks it against the GUID).
+        """
+        url = f"{self.command_root}/open-metadata-attribute-types/enum-defs/guid/{enum_def_guid}/delete"
+        await self._async_make_request("POST", url, params={"enumDefName": enum_def_name})
+
+    @dynamic_catch
+    def delete_enum_def(self, enum_def_guid: str, enum_def_name: str) -> None:
+        """Delete an enum definition that was added through the API."""
+        loop = asyncio.get_event_loop()
+        return loop.run_until_complete(self._async_delete_enum_def(enum_def_guid, enum_def_name))

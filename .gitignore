@@ -175,6 +175,7 @@ dmypy.json
 /debug_log
 /data/
 /pyegeria/http clients/
+/pyegeria/http-clients/
 /outbox/
 /.ai-sandbox/
 /convert_defaults.py
