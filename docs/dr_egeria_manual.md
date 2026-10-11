@@ -15,6 +15,9 @@ Dr.Egeria is a Markdown-based processing engine for Egeria. It allows users to i
     - [Reference Resolution](#reference-resolution)
 4. [Supported Command Families](#supported-command-families)
 5. [CLI Utility: dr_egeria](#cli-utility-dr_egeria)
+    - [Running a folder: dr_egeria_folder](#running-a-folder-dr_egeria_folder)
+    - [The `_batch.json` manifest](#the-_batchjson-manifest)
+    - [Automatic loading in the Egeria Portal](#automatic-loading-in-the-egeria-portal)
 6. [Python API](#python-api)
     - [process_md_file (synchronous)](#process_md_file-synchronous)
     - [process_md_file_v2 (async)](#process_md_file_v2-async)
@@ -290,6 +293,11 @@ Dr.Egeria organizes its commands into "families," each corresponding to a specif
   - `Initiate Subscription`: take out a subscription to a digital product by running its subscription type (`ProvisioningActionProcess::<product>::Create Subscription::<type>`) with a `Subscription Requester` and `Destination Data Set`. This provisions the subscription, unlike `Create Digital Subscription`, which only records the element.
   - `Cancel Subscription`: run the cancel process Egeria attached to the subscription when it was provisioned (found through its resource list).
   - `Create Element`: the generic create-from-template command, moved here from Asset Maker.
+- **Digital Products: subscription types and Bitol documents** (added 2026-10-05): Commands in the Digital Product Manager family that wrap `pyegeria/omvs/product_manager.py` (processors in `md_processing/v2/product_manager.py`). None is a create-or-update of a named element, so there is no `Update` form; each is safe to re-run.
+  - `Create Subscription Type`: add a one-time, periodic or ongoing-update subscription type to a `Digital Product`. Set `Subscription Kind` to `ONE_TIME`, `PERIODIC` (needs `Subscription Notification Interval`, in **minutes**) or `ONGOING_UPDATE` (also needs `Monitored Resources`, typically the product's asset). Egeria creates the product's notification type and the governance action process that `Initiate Subscription` runs to provision a subscription of this type; re-running reconciles an existing type rather than duplicating it. `Subscription Manager`, `Subscription License Type` and `Subscription Service Level Objective` default to the Baudot subscription manager and to those the product is governed by.
+  - `Import Data Contract` / `Import Data Product`: catalog an Open Data Contract Standard (ODCS) / Open Data Product Standard (ODPS) document as a `DataSharingAgreement` / a `DigitalProduct`. Re-importing the same version updates it; a new version creates new elements; a document with no `id` is skipped (reported as a failure).
+  - `Publish Data Contract` / `Publish Data Product`: send such a document to an `Integration Daemon`, which passes it to the connectors that registered a Bitol listener (Advanced).
+  - The document is read from the file named in `Document File` (YAML or JSON), resolved relative to the markdown file being processed, rather than written inline: YAML routinely contains `---` and `#` lines, which the extractor treats as horizontal rules and headings.
 - **Schema Maker** (added 2026-09-11): The `pyegeria/omvs/schema_maker.py` surface — `Create`/`Update Schema Type` and `Create`/`Update Schema Attribute` (both upsert-capable, live-verified), `Create Schema Type From Template`/`Create Schema Attribute From Template`, 15 `Link`/`Detach` relationship command pairs (Nested Schema Attribute, Attribute for Schema, Foreign Key, External Schema Type, Map From/To Schema Type, Graph Edge, Query Target, Schema, Relational DB Schema, API Operations/Header/Request/Response, Schema Type Option — `Link Nested Schema Attribute` live-verified), and 3 `Add`/`Remove` classification pairs (Primary Key, Type Embedded Attribute, Calculated Value) on a schema attribute/column. Effectivity dates, Anchor ID, and Anchor Scope IDs are Advanced-level; everything else is Basic.
 
 #### `Create Report`'s two Dictionary attributes, worked examples
@@ -395,7 +403,77 @@ dr_egeria [OPTIONS] [INPUT_FILE]
 - `--advanced`: Enables advanced usage level, exposing additional attributes in templates and validation.
 - `--summary-only`: Suppresses per-command diagnostic output, showing only the final summary table.
 - `--debug`: Prints every Egeria API request URL and body to the console for troubleshooting.
-- `--server`, `--url`, `--userid`: Connection details for the Egeria platform.
+- `--server`, `--url`: Connection details for the Egeria platform.
+- `--userid`, `--user_pass`: The Egeria user to run as, and its password. They override `EGERIA_USER` and `EGERIA_USER_PASSWORD`. Elements the file creates are attributed to this user.
+
+### Running a folder: dr_egeria_folder
+
+`dr_egeria_folder` runs every Dr.Egeria file in a folder and its subfolders, in order, and prints a summary table at the end. It keeps going after a failure and exits with status 1 if any file failed.
+
+```bash
+dr_egeria_folder "coco-workbooks/0. data-governance-program" --validate   # check only (the default)
+dr_egeria_folder "coco-workbooks/0. data-governance-program" --process    # make the changes
+```
+
+It takes the same options as `dr_egeria`, plus:
+
+- `--results-file PATH`: also write the per-file report to `PATH`.
+- `--no-manifest-userids`: ignore `userid` settings in `_batch.json` and run every file as `--userid`.
+
+Before running, it lists each file with the user it will run as, and prints any ordering warnings (see below). The order and the run-as users come from the folder's `_batch.json` files. The Egeria Portal's automatic loading reads the same files with the same rules, so a folder runs the same way from either.
+
+### The `_batch.json` manifest
+
+An optional `_batch.json` in a folder controls how that folder's files run. Every field is optional.
+
+| Field | Meaning |
+| --- | --- |
+| `files` | Run order. An entry is a file (`"glossary.md"`), a file in a subfolder (`"sub/x.md"`), or a whole subfolder (`"sub/"`), which runs at that position in its own order. An entry can also be an object, `{"file": "risk-register.md", "userid": "juleskeeper"}`, to set its run-as user. |
+| `exclude` | Files or subfolders never to run, such as prose documents beside the command files |
+| `userid` | The Egeria user this folder's files run as; subfolders inherit it |
+| `displayName`, `description`, `canary`, `defaultEnabled`, `idempotent` | Used only by the Egeria Portal (see below) |
+
+Discovery rules:
+
+- **Unlisted content still runs.** Anything not in `files` runs after the listed items: `.md` files alphabetically, then subfolders alphabetically. Each is reported as a warning, because its position was defaulted rather than chosen. With no `_batch.json`, everything runs in that alphabetical order.
+- **Always skipped,** unless named in `files`: `README.md`, and the subfolders `dr-egeria-outbox`, `egeria-outbox`, `logs`, `data`, `templates`, `__pycache__`, `.ipynb_checkpoints` and any folder starting with `.`. The outbox folders hold Dr.Egeria's processed copies of earlier runs; those still contain live commands.
+- **Stale entries are skipped.** An entry that no longer exists is skipped with a warning.
+- **Each file runs once.** A file reachable twice, for example listed directly and also through its folder, runs once.
+
+**Run-as user.** The nearest declaration wins: the file's own entry, then the `userid` of the `_batch.json` in its folder, then the setting passed down from parent folders. A file with no declared user runs as `--userid`. Passwords never go in `_batch.json`. For a user named in a manifest, the password comes from `EGERIA_BOOTSTRAP_PASSWORD_<USERID>` (userid in upper case, e.g. `EGERIA_BOOTSTRAP_PASSWORD_JULESKEEPER`), else `--user_pass`.
+
+Example, following the step order in a README that mixes files and subfolders:
+
+```json
+{
+  "userid": "erinoverview",
+  "files": [
+    "strategic-supply-chain-analysis.md",
+    "extending-the-systems-inventory/",
+    {"file": "mapping-the-systems/", "userid": "peterprofile"},
+    "data-field-naming/",
+    "strategic-digital-products/",
+    "solution-design.md",
+    {"file": "software-development-governance-program.md", "userid": "pollytasker"}
+  ],
+  "exclude": ["founders-briefing-script.md", "strategic-supply-chain-system-matches.md"]
+}
+```
+
+If a folder's README describes a load order, put that order in `files`: neither `dr_egeria_folder` nor the Portal reads READMEs.
+
+### Automatic loading in the Egeria Portal
+
+The Egeria Portal in [egeria-workspaces](https://github.com/odpi/egeria-workspaces) loads folders of Dr.Egeria files automatically. Each folder under its `dr-egeria-inbox` is a batch, run with the `_batch.json` rules above. The Portal adds:
+
+- **Auto-heal.** A `canary` names one element the batch creates, e.g. `{"type": "Glossary", "name": "Employee Glossary"}`. If that element goes missing, for example after Egeria is reset, the Portal re-runs the batch.
+- **Cross-folder order.** A `_folder_order.json` in `dr-egeria-inbox` lists batch names to run first, in order.
+- **Batch ownership.** A subfolder that has its own symlink in `dr-egeria-inbox` runs as its own batch, and its parent skips it.
+- **An admin panel** to enable batches, run them on demand, and see each file's run-as user, run status and ordering warnings.
+
+Adding a file to a batch that is already loaded does not run it automatically. Run the batch from the admin panel, or run the folder with `dr_egeria_folder --process`.
+
+The user guide is `DR_EGERIA_AUTO_LOADING_GUIDE.md` at the root of egeria-workspaces.
 
 ---
 

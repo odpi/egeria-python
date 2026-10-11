@@ -85,7 +85,7 @@ class DigitalBusiness(CollectionManager):
         user_pwd: Optional[str] = None,
         token: Optional[str] = None,
         timeout: int = None):
-        ServerClient.__init__(self, view_server, platform_url, user_id, user_pwd, token, timeout=timeout)
+        CollectionManager.__init__(self, view_server, platform_url, user_id, user_pwd, token, timeout=timeout)
         self.view_server = self.server_name
         self.platform_url = self.platform_url
         self.user_id = self.user_id
@@ -473,7 +473,7 @@ class DigitalBusiness(CollectionManager):
         url = f"{self.digital_business_command_root}/collections/by-name"
         params = {
             "filter_string": name,
-            "metadata_element_type": metadata_element_type_name,
+            "metadata_element_type_name": metadata_element_type_name,
             "metadata_element_subtypes": metadata_element_subtypes,
             "include_only_relationships": include_only_relationships,
             "skip_relationships": skip_relationships,

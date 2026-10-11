@@ -844,7 +844,7 @@ class CollectionManager(ServerClient):
         url = str(HttpUrl(f"{self.collection_command_root}/by-name"))
         params = {
             "filter_string": name,
-            "metadata_element_type": metadata_element_type_name,
+            "metadata_element_type_name": metadata_element_type_name,
             "metadata_element_subtypes": metadata_element_subtypes,
             "include_only_relationships": include_only_relationships,
             "skip_relationships": skip_relationships,
@@ -6567,8 +6567,8 @@ class CollectionManager(ServerClient):
 
 
         """
-        if body is None:
-            body = {"class": "DeleteElementRequestBody"}
+        # No default body here: _async_delete_element_request applies `cascade` only when it builds the body
+        # itself, so a pre-filled dict made `cascade=True` a silent no-op (ISSUE-127).
         url = f"{self.collection_command_root}/{collection_guid}/delete"
         await self._async_delete_element_request(url, body, cascade)
         logger.info(f"Deleted collection {collection_guid} with cascade {cascade}")

@@ -924,3 +924,62 @@ class OpenMetadataRootElement(PyegeriaModel):
 # --- Overall Payload Type ---
 # The entire JSON is a list of OpenMetadataRootElement
 OpenMetadataPayload = list[OpenMetadataRootElement]
+
+
+class NewSubscriptionTypeRequestBody(RequestBody):
+    """Optional body for ProductManager's create_*_subscription methods. Every field is optional:
+    the server defaults the subscription manager to the Baudot one from the content pack, the
+    identifier per subscription kind, and the licence type / service level objective to those the
+    digital product is governed by."""
+    class_: Annotated[Literal["NewSubscriptionTypeRequestBody"], Field(alias="class")]
+    subscription_manager_guid: str | None = None
+    identifier: str | None = None
+    display_name: str | None = None
+    description: str | None = None
+    license_type_guid: str | None = None
+    service_level_objective_guid: str | None = None
+    notification_interval: int | None = None  # minutes
+    monitored_resource_guids: list[str] | None = Field(None, alias="monitoredResourceGUIDs")
+
+
+# ---------------------------------------------------------------------------
+# Open metadata type definitions (MetadataExpert add/update/delete type defs).
+#
+# These mirror Egeria's OpenMetadataEnumDef / OpenMetadataTypeDef / OpenMetadataTypeDefPatch
+# beans, which are deep graphs (attribute definitions, relationship ends, enum elements,
+# links to other types by name). Only the fields the .http ground truth documents are
+# declared; extra="allow" lets everything else in the bean (relationshipAttributes, endDefs,
+# propagationRule, validEntityDefs, ...) pass through unchanged rather than being silently
+# dropped by PyegeriaModel's extra="ignore" -- see the CLAUDE.md gotcha on request models.
+# ---------------------------------------------------------------------------
+class OpenMetadataEnumDef(PyegeriaModel):
+    model_config = ConfigDict(extra='allow')
+    class_: Annotated[Literal["OpenMetadataEnumDef"], Field(alias="class")]
+    name: str
+    description: str | None = None
+    element_defs: list[dict[str, Any]] | None = None
+    default_value: dict[str, Any] | None = None
+
+
+class OpenMetadataTypeDef(PyegeriaModel):
+    """An entity, relationship or classification type definition (the bean's concrete subclass is
+    chosen by `class`). Links to other types - supertype, attribute types, relationship ends -
+    only need the name of the type."""
+    model_config = ConfigDict(extra='allow')
+    class_: Annotated[Literal["OpenMetadataEntityDef", "OpenMetadataRelationshipDef",
+                              "OpenMetadataClassificationDef"], Field(alias="class")]
+    name: str
+    description: str | None = None
+    super_type: dict[str, Any] | None = None
+    attribute_definitions: list[dict[str, Any]] | None = None
+
+
+class OpenMetadataTypeDefPatch(PyegeriaModel):
+    """Carries only what changes in a type definition that was added through the API."""
+    model_config = ConfigDict(extra='allow')
+    class_: Annotated[Literal["OpenMetadataTypeDefPatch"], Field(alias="class")]
+    type_def_guid: str
+    type_def_name: str
+    apply_to_version: int
+    description: str | None = None
+    attribute_definitions: list[dict[str, Any]] | None = None

@@ -271,12 +271,13 @@ class GovernanceOfficer(ServerClient):
 
         # Extract sub components
         sub_comp_md = ""
-        sub_components = element.get('subComponents', None)
+        # Egeria returns children as nestedSolutionComponents (SolutionComposition); there is no
+        # subComponents field in any REST response (ISSUE-133).
+        sub_components = element.get('nestedSolutionComponents', None)
         if sub_components:
             for sub_component in sub_components:
-                sub_comp_prop = sub_component['properties']
+                sub_comp_prop = sub_component['relatedElement']['properties']
                 sub_comp_name = sub_comp_prop.get("displayName", None)
-                sub_comp_desc = sub_comp_prop.get("description", None)
                 sub_comp_md += f" {sub_comp_name}"
 
         comp_graph = element.get('mermaidGraph', None)

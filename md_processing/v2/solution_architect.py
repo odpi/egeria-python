@@ -384,10 +384,6 @@ class ComponentProcessor(AsyncBaseCommandProcessor):
         for comp in response.get('nestedSolutionComponents', []):
             res["sub_component_guids"].append(comp['relatedElement']['elementHeader'].get('guid'))
 
-        # subComponents
-        for comp in response.get('subComponents', []):
-            res["sub_component_guids"].append(comp['elementHeader'].get('guid'))
-
         # usedInSolutionComponents (Parents)
         for comp in response.get('usedInSolutionComponents', []):
             res["parent_component_guids"].append(comp['relatedElement']['elementHeader'].get('guid'))

@@ -47,4 +47,7 @@ from .automation import (
     InitiateGovernanceActionProcessProcessor, InitiateGovernanceActionTypeProcessor, InitiateSurveyProcessor,
     InitiateSubscriptionProcessor, CancelSubscriptionProcessor,
 )
+from .product_manager import (
+    SubscriptionTypeProcessor, BitolDocumentProcessor,
+)
 from .schema_maker import SchemaElementProcessor, SchemaTemplateProcessor, SchemaLinkProcessor, SchemaClassificationProcessor
