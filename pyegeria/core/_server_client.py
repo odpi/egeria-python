@@ -6589,6 +6589,13 @@ class ServerClient(BaseServerClient):
                                       body: Optional[dict | FilterRequestBody] = None,
                                       max_mermaid_node_count=10, **kwargs) -> Any:
 
+        # _async_find_request spells this argument `metadata_element_type`; a wrapper copied from a find_*
+        # sibling passed that spelling here, where it fell into **kwargs and FilterRequestBody silently
+        # dropped it, so the by-name search ran unfiltered by type (ISSUE-131). Accept both.
+        legacy_type_name = kwargs.pop("metadata_element_type", None)
+        if metadata_element_type_name is None:
+            metadata_element_type_name = legacy_type_name
+
         if isinstance(body, FilterRequestBody):
             validated_body = body
         elif isinstance(body, dict):
