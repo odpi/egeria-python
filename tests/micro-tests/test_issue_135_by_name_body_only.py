@@ -78,3 +78,90 @@ async def test_name_only_call_is_unchanged(cls, method, monkeypatch):
     await getattr(client, f"_async_{method}")("Erin")
 
     assert calls[0]["filter"] == "Erin"
+
+
+# --- Wrappers that already defaulted `name` but mishandled a body-only call -----------------
+
+from pyegeria.omvs.automated_curation import AutomatedCuration
+
+SA_WRAPPERS = [
+    "_async_get_info_supply_chain_by_name",
+    "_async_get_solution_blueprints_by_name",
+    "_async_get_solution_components_by_name",
+    "_async_get_solution_roles_by_name",
+]
+
+
+def _capture_with_url(cls, monkeypatch):
+    monkeypatch.setattr(cls, "check_connection", lambda self: "test")
+    client = cls("view-server", "https://localhost:1", "user", "pwd")
+    calls: list = []
+
+    async def fake_make_request(method, url, payload=None, *args, **kwargs):
+        calls.append({"url": url, "body": json.loads(payload) if isinstance(payload, str) else payload})
+        return _Response()
+
+    client._async_make_request = fake_make_request
+    return client, calls
+
+
+@pytest.mark.asyncio
+@pytest.mark.parametrize("method", SA_WRAPPERS)
+async def test_solution_architect_body_only_keeps_the_filter_and_the_callers_dict(method, monkeypatch):
+    client, calls = _capture_with_url(SolutionArchitect, monkeypatch)
+    body = {"class": "FilterRequestBody", "filter": "Probe"}
+
+    await getattr(client, method)(body=body)
+
+    assert calls[0]["body"]["filter"] == "Probe"
+    assert body == {"class": "FilterRequestBody", "filter": "Probe"}  # not mutated
+
+
+@pytest.mark.asyncio
+@pytest.mark.parametrize("method", SA_WRAPPERS)
+async def test_solution_architect_name_still_sets_the_filter(method, monkeypatch):
+    client, calls = _capture_with_url(SolutionArchitect, monkeypatch)
+
+    await getattr(client, method)("Erin", body={"class": "FilterRequestBody", "filter": "Probe"})
+
+    assert calls[0]["body"]["filter"] == "Erin"
+
+
+@pytest.mark.asyncio
+@pytest.mark.parametrize("method", SA_WRAPPERS)
+async def test_solution_architect_paging_goes_in_the_body(method, monkeypatch):
+    """Egeria's SolutionArchitectResource/ActorManagerResource read paging from the body only."""
+    client, calls = _capture_with_url(SolutionArchitect, monkeypatch)
+
+    await getattr(client, method)("Erin", start_from=5, page_size=7)
+
+    assert calls[0]["body"]["startFrom"] == 5 and calls[0]["body"]["pageSize"] == 7
+    assert "startFrom" not in calls[0]["url"] and "pageSize" not in calls[0]["url"]
+
+
+@pytest.mark.asyncio
+@pytest.mark.parametrize("method", SA_WRAPPERS)
+async def test_solution_architect_body_paging_is_not_overridden(method, monkeypatch):
+    client, calls = _capture_with_url(SolutionArchitect, monkeypatch)
+
+    await getattr(client, method)(body={"class": "FilterRequestBody", "filter": "P", "pageSize": 3})
+
+    assert calls[0]["body"]["pageSize"] == 3
+
+
+@pytest.mark.asyncio
+async def test_engine_actions_by_name_accepts_a_body_only_call(monkeypatch):
+    client, calls = _capture_with_url(AutomatedCuration, monkeypatch)
+
+    await client._async_get_engine_actions_by_name(body={"class": "FilterRequestBody", "filter": "Probe"})
+
+    assert calls[0]["body"]["filter"] == "Probe"
+
+
+@pytest.mark.asyncio
+async def test_engine_actions_by_name_sends_its_type_filter(monkeypatch):
+    client, calls = _capture_with_url(AutomatedCuration, monkeypatch)
+
+    await client._async_get_engine_actions_by_name("Erin")
+
+    assert calls[0]["body"]["metadataElementTypeName"] == "EngineAction"
