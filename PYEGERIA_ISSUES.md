@@ -166,7 +166,7 @@ that the setting is debug-only and must not be used by applications that act on 
 
 ### ISSUE-133: Egeria 6.2 returns a solution component's children as `nestedSolutionComponents`; one pyegeria formatter still reads only `subComponents`
 
-**Layer:** pyegeria · **Status:** fixed in #439 (2026-10-10), pending merge · **Found:** 2026-10-10, reported by the Resource Explorer session
+**Layer:** pyegeria · **Status:** fixed in #439, released in 6.2.1 (2026-10-10) · **Found:** 2026-10-10, reported by the Resource Explorer session
 (`SolutionArchitect.get_solution_component_by_guid` JSON on 6.2); confirmed from Egeria source.
 
 **What:** Egeria's REST element (`AttributedMetadataElement.java` ~387) carries child components as
@@ -223,7 +223,7 @@ annotations); do not choose by majority or by what the code already sends.
 
 ### ISSUE-131: 13 `*_by_name` wrappers pass `metadata_element_type=`, but `_async_get_name_request` reads `metadata_element_type_name`, so the type filter is silently dropped
 
-**Layer:** pyegeria · **Status:** fixed in #439 (2026-10-10), pending merge · **Found:** 2026-10-10, while building Resource Explorer's actor-graph lookups (`get_user_identities_by_name`, `get_actor_profiles_by_name`).
+**Layer:** pyegeria · **Status:** fixed in #439, released in 6.2.1 (2026-10-10) · **Found:** 2026-10-10, while building Resource Explorer's actor-graph lookups (`get_user_identities_by_name`, `get_actor_profiles_by_name`).
 
 **What:** wrappers such as `ActorManager._async_get_user_identities_by_name` (`pyegeria/omvs/actor_manager.py` ~4195) build `params = {"metadata_element_type": metadata_element_type_name, ...}` and call `self._async_get_name_request(url, **params)`. The base method (`pyegeria/core/_server_client.py` ~6581) takes `metadata_element_type_name` and writes it to `"metadataElementTypeName"`, so the wrapper's key falls into `**kwargs` and never reaches the request body. The by-name searches run unfiltered by type.
 
