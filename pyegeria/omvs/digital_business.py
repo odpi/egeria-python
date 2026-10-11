@@ -473,7 +473,7 @@ class DigitalBusiness(CollectionManager):
         url = f"{self.digital_business_command_root}/collections/by-name"
         params = {
             "filter_string": name,
-            "metadata_element_type": metadata_element_type_name,
+            "metadata_element_type_name": metadata_element_type_name,
             "metadata_element_subtypes": metadata_element_subtypes,
             "include_only_relationships": include_only_relationships,
             "skip_relationships": skip_relationships,
