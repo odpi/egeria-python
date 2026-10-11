@@ -483,23 +483,23 @@ class SchemaMaker(ServerClient):
         return loop.run_until_complete(self._async_create_schema_attribute_from_template(body))
 
     @dynamic_catch
-    async def _async_get_schema_types_by_name(self, name: str, start_from: int = 0, page_size: int = 100, **kwargs) -> list | str:
+    async def _async_get_schema_types_by_name(self, name: str | None = None, start_from: int = 0, page_size: int = 100, **kwargs) -> list | str:
         """Get schema types by name. Async version."""
         url = f"{self.platform_url}/servers/{self.view_server}/api/open-metadata/schema-maker/schema-types/by-name"
         return await self._async_get_name_request(url, _type="SchemaType", _gen_output=self._generate_schema_output, filter_string=name, start_from=start_from, page_size=page_size, **kwargs)
 
-    def get_schema_types_by_name(self, name: str, start_from: int = 0, page_size: int = 100, **kwargs) -> list | str:
+    def get_schema_types_by_name(self, name: str | None = None, start_from: int = 0, page_size: int = 100, **kwargs) -> list | str:
         """Get schema types by name."""
         loop = asyncio.get_event_loop()
         return loop.run_until_complete(self._async_get_schema_types_by_name(name, start_from, page_size, **kwargs))
 
     @dynamic_catch
-    async def _async_get_schema_attributes_by_name(self, name: str, start_from: int = 0, page_size: int = 100, **kwargs) -> list | str:
+    async def _async_get_schema_attributes_by_name(self, name: str | None = None, start_from: int = 0, page_size: int = 100, **kwargs) -> list | str:
         """Get schema attributes by name. Async version."""
         url = f"{self.platform_url}/servers/{self.view_server}/api/open-metadata/schema-maker/schema-attributes/by-name"
         return await self._async_get_name_request(url, _type="SchemaAttribute", _gen_output=self._generate_schema_output, filter_string=name, start_from=start_from, page_size=page_size, **kwargs)
 
-    def get_schema_attributes_by_name(self, name: str, start_from: int = 0, page_size: int = 100, **kwargs) -> list | str:
+    def get_schema_attributes_by_name(self, name: str | None = None, start_from: int = 0, page_size: int = 100, **kwargs) -> list | str:
         """Get schema attributes by name."""
         loop = asyncio.get_event_loop()
         return loop.run_until_complete(self._async_get_schema_attributes_by_name(name, start_from, page_size, **kwargs))

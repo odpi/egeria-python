@@ -2897,7 +2897,9 @@ class AutomatedCuration(ServerClient):
         if name is None and "filter_string" in kwargs:
             name = kwargs.pop("filter_string")
 
-        validate_name(name)
+        # A supplied body supersedes the name (as documented), so only require a name without one (ISSUE-135).
+        if body is None:
+            validate_name(name)
 
         url = f"{self.ref_curation_command_base}/assets/by-name"
 
@@ -2905,7 +2907,7 @@ class AutomatedCuration(ServerClient):
 
         params = {
             'filter_string': name,
-            'metadata_element_type': metadata_element_type,
+            'metadata_element_type_name': metadata_element_type,
             'metadata_element_subtypes': metadata_element_subtypes,
             'include_only_relationships': include_only_relationships,
             'skip_relationships': skip_relationships,

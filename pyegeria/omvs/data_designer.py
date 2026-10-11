@@ -2892,7 +2892,7 @@ class DataDesigner(ServerClient):
         return response
 
     @dynamic_catch
-    async def _async_get_data_fields_by_name(self, filter_string: str, classification_names: Optional[list[str]] = None,
+    async def _async_get_data_fields_by_name(self, filter_string: str | None = None, classification_names: Optional[list[str]] = None,
                                              body: Optional[dict | FilterRequestBody] = None, start_from: int = 0,
                                              page_size: int = 0,
                                              graph_query_depth: int = 3, output_format: str = 'JSON',
@@ -2956,7 +2956,7 @@ class DataDesigner(ServerClient):
         return response
 
     @dynamic_catch
-    def get_data_fields_by_name(self, filter_string: str, classification_names: Optional[list[str]] = None, body: dict = None,
+    def get_data_fields_by_name(self, filter_string: str | None = None, classification_names: Optional[list[str]] = None, body: dict = None,
                                 start_from: int = 0,
                                 page_size: int = max_paging_size, graph_query_depth: int = 3, output_format: str = 'JSON',
                                 report_spec: str | dict = None, **kwargs) -> list | str:
@@ -3025,7 +3025,8 @@ class DataDesigner(ServerClient):
             self._async_get_data_field_by_guid(guid, element_type, body, graph_query_depth, output_format, report_spec, **kwargs))
 
     @dynamic_catch
-    async def _async_get_data_value_specifications_by_name(self, filter_string: str, classification_names: list[str],
+    async def _async_get_data_value_specifications_by_name(self, filter_string: str | None = None,
+                                                           classification_names: Optional[list[str]] = None,
                                                            body: Optional[dict | FilterRequestBody] = None, start_from: int = 0,
                                                            page_size: int = 0,
                                                            graph_query_depth: int = 3, output_format: str = 'JSON',
@@ -3088,7 +3089,7 @@ class DataDesigner(ServerClient):
         return response
 
     @dynamic_catch
-    def get_data_value_specifications_by_name(self, filter_string: str, classification_names: Optional[list[str]] = None, body: dict = None,
+    def get_data_value_specifications_by_name(self, filter_string: str | None = None, classification_names: Optional[list[str]] = None, body: dict = None,
                                               start_from: int = 0,
                                               page_size: int = max_paging_size, graph_query_depth: int = 3, output_format: str = 'JSON',
                                               report_spec: str | dict = None, **kwargs) -> list | str:

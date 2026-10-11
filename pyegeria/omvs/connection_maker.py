@@ -125,7 +125,7 @@ class ConnectionMaker(ServerClient):
 
     async def _async_get_connections_by_name(
         self,
-        name: str,
+        name: str | None = None,
         metadata_element_subtypes: list[str] | None = None,
         include_only_relationships: list[str] | None = None,
         skip_relationships: list[str] | None = None,
@@ -157,7 +157,7 @@ class ConnectionMaker(ServerClient):
 
     def get_connections_by_name(
         self,
-        name: str,
+        name: str | None = None,
         metadata_element_subtypes: list[str] | None = None,
         include_only_relationships: list[str] | None = None,
         skip_relationships: list[str] | None = None,
@@ -363,7 +363,7 @@ class ConnectionMaker(ServerClient):
 
     async def _async_get_connector_types_by_name(
         self,
-        name: str,
+        name: str | None = None,
         metadata_element_subtypes: list[str] | None = None,
         include_only_relationships: list[str] | None = None,
         skip_relationships: list[str] | None = None,
@@ -395,7 +395,7 @@ class ConnectionMaker(ServerClient):
 
     def get_connector_types_by_name(
         self,
-        name: str,
+        name: str | None = None,
         metadata_element_subtypes: list[str] | None = None,
         include_only_relationships: list[str] | None = None,
         skip_relationships: list[str] | None = None,
@@ -664,7 +664,7 @@ class ConnectionMaker(ServerClient):
 
     async def _async_get_endpoints_by_name(
         self,
-        name: str,
+        name: str | None = None,
         metadata_element_subtypes: list[str] | None = None,
         include_only_relationships: list[str] | None = None,
         skip_relationships: list[str] | None = None,
@@ -696,7 +696,7 @@ class ConnectionMaker(ServerClient):
 
     def get_endpoints_by_name(
         self,
-        name: str,
+        name: str | None = None,
         metadata_element_subtypes: list[str] | None = None,
         include_only_relationships: list[str] | None = None,
         skip_relationships: list[str] | None = None,
