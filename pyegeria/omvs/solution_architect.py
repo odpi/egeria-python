@@ -6686,7 +6686,7 @@ class SolutionArchitect(ServerClient):
             output_format, report_spec, **kwargs))
 
     @dynamic_catch
-    async def _async_get_concept_model_elements_by_name(self, name: str,
+    async def _async_get_concept_model_elements_by_name(self, name: str | None = None,
                                                          body: Optional[dict | SearchStringRequestBody] = None,
                                                          start_from: int = 0, page_size: int = max_paging_size,
                                                          output_format: str = "JSON", report_spec: str | dict | None = None,
@@ -6699,7 +6699,7 @@ class SolutionArchitect(ServerClient):
             output_format=output_format, report_spec=report_spec, **kwargs)
 
     @dynamic_catch
-    def get_concept_model_elements_by_name(self, name: str,
+    def get_concept_model_elements_by_name(self, name: str | None = None,
                                            body: Optional[dict | SearchStringRequestBody] = None,
                                            start_from: int = 0, page_size: int = max_paging_size,
                                            output_format: str = "JSON", report_spec: str | dict | None = None,

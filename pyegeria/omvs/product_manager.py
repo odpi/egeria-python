@@ -2070,7 +2070,7 @@ class ProductManager(CollectionManager):
     @dynamic_catch
     async def _async_get_governance_action_processes_by_name(
         self,
-        name: str,
+        name: str | None = None,
         body: Optional[dict] = None,
         start_from: int = 0,
         page_size: int = 0,
@@ -2115,7 +2115,7 @@ class ProductManager(CollectionManager):
     @dynamic_catch
     def get_governance_action_processes_by_name(
         self,
-        name: str,
+        name: str | None = None,
         body: Optional[dict] = None,
         start_from: int = 0,
         page_size: int = 0,
