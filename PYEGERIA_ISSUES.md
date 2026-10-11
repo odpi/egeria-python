@@ -178,7 +178,7 @@ Dr.Egeria callers to match. Add a micro-test that checks the URL and the request
 
 ### ISSUE-135: 14 `*_by_name` wrappers required `name` even though they accept `body`, so a body-only call raised `TypeError`
 
-**Layer:** pyegeria · **Status:** fixed in #445 (2026-10-10), pending merge · **Found:**
+**Layer:** pyegeria · **Status:** fixed in #445 (merged 2026-10-11), not yet released · **Found:**
 2026-10-10, reported by the Resource Explorer session (`ActorManager.get_actor_profiles_by_name` on 6.1.15; still
 present in 6.2.1).
 
