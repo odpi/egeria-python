@@ -307,7 +307,7 @@ pyegeria has hundreds of methods. To explore them:
   one method's parameters.
 - The source is organised one file per view service in `pyegeria/omvs/`.
 - The REST calls behind each method are recorded in `.http` files under
-  `pyegeria/http clients/`, which is useful when you need to see exactly what is sent.
+  `pyegeria/http-clients/`, which is useful when you need to see exactly what is sent.
 
 ### Ask only for the relationships you need: `graph_query_depth`
 

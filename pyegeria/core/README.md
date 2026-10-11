@@ -24,6 +24,6 @@ builds on, plus shared config/exception/validation infrastructure.
 **Gotcha** (see the root `CLAUDE.md`): a request-body Pydantic model in
 `pyegeria/models/models.py` missing a field silently drops it rather than
 erroring, since every model inherits `PyegeriaModel`'s `extra='ignore'`.
-Check a model's fields against the real body in `pyegeria/http clients/
+Check a model's fields against the real body in `pyegeria/http-clients/
 Egeria-api-*.http` before assuming "it validated without error" means a
 field will actually be sent.

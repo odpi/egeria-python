@@ -1,6 +1,6 @@
 # OMVS Audit Report
 
-Ground truth: `pyegeria/http clients` (40 collections)
+Ground truth: `pyegeria/http-clients` (40 collections)
 Subject: `pyegeria/omvs` (44 modules)
 
 | Result | Count |

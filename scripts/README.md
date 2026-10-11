@@ -7,7 +7,7 @@ Standalone maintenance/audit scripts that aren't part of the installed
 package or the pytest suite.
 
 - `omvs_audit.py` — cross-checks every `_async_*` method in
-  `pyegeria/omvs/*.py` against its ground-truth `pyegeria/http clients/*.http`
+  `pyegeria/omvs/*.py` against its reference `pyegeria/http-clients/*.http`
   file (URL, HTTP verb, request-body class) and reports MISSING/VERB
   MISMATCH/PATH MISMATCH/BODY MISMATCH/ELSEWHERE/LINT findings (see
   `omvs_audit_report.md` at the repo root for the latest run's output).
