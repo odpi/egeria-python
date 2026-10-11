@@ -166,7 +166,7 @@ that the setting is debug-only and must not be used by applications that act on 
 
 ### ISSUE-133: Egeria 6.2 returns a solution component's children as `nestedSolutionComponents`; one pyegeria formatter still reads only `subComponents`
 
-**Layer:** pyegeria · **Status:** open, not fixed · **Found:** 2026-10-10, reported by the Resource Explorer session
+**Layer:** pyegeria · **Status:** fixed in #439 (2026-10-10), pending merge · **Found:** 2026-10-10, reported by the Resource Explorer session
 (`SolutionArchitect.get_solution_component_by_guid` JSON on 6.2); confirmed from Egeria source.
 
 **What:** Egeria's REST element (`AttributedMetadataElement.java` ~387) carries child components as
@@ -176,14 +176,15 @@ Java archive builders, not in any REST response. A caller reading `subComponents
 
 **pyegeria readers:**
 - `pyegeria/omvs/governance_officer.py` ~274 (`_extract_solution_components_properties`) reads **only**
-  `subComponents`, so its sub-components column is always empty. This is the real bug.
+  `subComponents`, so its sub-components column would always be empty. It turned out to have no callers
+  (`SolutionArchitect` has its own method of the same name), so no live output was affected.
 - `solution_architect.py` ~609 and ~5181, and `md_processing/v2/solution_architect.py` ~384, already read
   `nestedSolutionComponents`. Each also has a leftover `subComponents` fallback (~675, ~5187, ~388) that never
   matches. These do no harm, but they use the old flat shape (`elementHeader` directly, not `relatedElement`), so they
   would mis-parse if the field ever came back.
 
-**Fix (not made):** make `governance_officer.py` read `nestedSolutionComponents` (through `relatedElement`), and
-remove the three dead `subComponents` fallbacks.
+**Fixed in #439:** `governance_officer.py` reads `nestedSolutionComponents` (through `relatedElement`), and the
+three dead `subComponents` fallbacks are removed. Micro-tests in `tests/micro-tests/test_issue_131_133.py`.
 
 ---
 
@@ -222,7 +223,7 @@ annotations); do not choose by majority or by what the code already sends.
 
 ### ISSUE-131: 13 `*_by_name` wrappers pass `metadata_element_type=`, but `_async_get_name_request` reads `metadata_element_type_name`, so the type filter is silently dropped
 
-**Layer:** pyegeria · **Status:** open, not fixed · **Found:** 2026-10-10, while building Resource Explorer's actor-graph lookups (`get_user_identities_by_name`, `get_actor_profiles_by_name`).
+**Layer:** pyegeria · **Status:** fixed in #439 (2026-10-10), pending merge · **Found:** 2026-10-10, while building Resource Explorer's actor-graph lookups (`get_user_identities_by_name`, `get_actor_profiles_by_name`).
 
 **What:** wrappers such as `ActorManager._async_get_user_identities_by_name` (`pyegeria/omvs/actor_manager.py` ~4195) build `params = {"metadata_element_type": metadata_element_type_name, ...}` and call `self._async_get_name_request(url, **params)`. The base method (`pyegeria/core/_server_client.py` ~6581) takes `metadata_element_type_name` and writes it to `"metadataElementTypeName"`, so the wrapper's key falls into `**kwargs` and never reaches the request body. The by-name searches run unfiltered by type.
 
@@ -239,7 +240,7 @@ annotations); do not choose by majority or by what the code already sends.
 
 **Effect:** callers relying on the type filter get elements of other types. Resource Explorer works round it by passing a full `FilterRequestBody` with `metadataElementTypeName`.
 
-**Fix (not made):** make `_async_get_name_request` accept both spellings (pop `metadata_element_type` from `kwargs` when `metadata_element_type_name` is unset). That fixes all 13 at once and stops the mismatch recurring. Renaming the key in the 13 wrappers is worth doing too, but is secondary. Same family as ISSUE-62, ISSUE-127 and ISSUE-129: an argument accepted and silently dropped.
+**Fixed in #439:** `_async_get_name_request` accepts both spellings (`metadata_element_type_name` wins if both are given), and the 13 wrappers now use `metadata_element_type_name`. The 14 `find_*` wrappers are unchanged. Micro-tests in `tests/micro-tests/test_issue_131_133.py` capture the request body for each wrapper. Same family as ISSUE-62, ISSUE-127 and ISSUE-129: an argument accepted and silently dropped.
 
 ---
 
