@@ -143,6 +143,39 @@ enough to track there too).
 
 ---
 
+### ISSUE-136: `get_notes_for_note_log` filters by type `Action`, so a NoteLog's Notes don't come back; `get_note_by_guid` calls an endpoint that doesn't exist
+
+**Layer:** pyegeria · **Status:** open · **Found:** 2026-10-11, reported by the Resource Explorer session (6.2.1,
+from a live read and the source); `get_note_by_guid` found while checking the sibling methods.
+
+**What:**
+- `get_notes_for_note_log(note_log_guid, metadata_element_type_name="Action", ...)` (`core/_server_client.py`, async
+  and sync). With no body, `_async_get_results_body_request` (`filter_results_by_type=True`) puts
+  `metadataElementTypeName: "Action"` into the request, so the retrieve on
+  `feedback-manager/note-logs/{noteLogGUID}/notes/retrieve` is restricted to `Action` elements. The Notes in the log
+  are type `Note` (`OpenMetadataType.NOTE`), so they are filtered out. The default looks copied from an action
+  method; the docstrings say so too ("default is \"Action\"").
+- `get_note_by_guid(guid, metadata_element_type_name="Action", ...)` has the same default, and its URL is
+  `feedback-manager/assets/{guid}/retrieve`. `FeedbackManagerResource.java` has no such mapping, and no
+  single-Note retrieve at all (the only Note read is `/note-logs/{noteLogGUID}/notes/retrieve`). So every call
+  fails. Dr.Egeria's `Create/Update Note` and the journal-entry paths (`md_processing/v2/feedback.py`) call it to
+  render the result after a successful write, so those commands would report an error even though the write worked
+  (not yet confirmed live).
+
+**Siblings checked:** the other feedback reads with a type default use the right type, and each type name exists in
+`OpenMetadataType.java`: `get_attached_comments` (`Comment`), `get_note_logs_by_name` / `get_attached_note_logs`
+(`NoteLog`), `get_tags_by_name` / `get_attached_tags` (`InformalTag`), `get_attached_likes` (`Like`),
+`get_attached_ratings` (`Rating`), `get_search_keyword_by_keyword` (`SearchKeyword`).
+
+**Workaround:** pass `metadata_element_type_name="Note"` to `get_notes_for_note_log` (what RE does), or pass a body.
+No workaround for `get_note_by_guid`; use a generic element read (e.g. a `MetadataExpert` get-by-guid) instead.
+
+**Proposed fix:** default `get_notes_for_note_log` to `"Note"` in both versions and fix the docstrings. Point
+`get_note_by_guid` at a generic by-GUID element retrieve (and default it to `"Note"`), or remove it, and switch the
+Dr.Egeria callers to match. Add a micro-test that checks the URL and the request body.
+
+---
+
 ### ISSUE-135: 14 `*_by_name` wrappers required `name` even though they accept `body`, so a body-only call raised `TypeError`
 
 **Layer:** pyegeria · **Status:** fixed in #445 (2026-10-10), pending merge · **Found:**
