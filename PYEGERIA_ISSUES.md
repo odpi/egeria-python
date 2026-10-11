@@ -143,6 +143,180 @@ enough to track there too).
 
 ---
 
+### ISSUE-134: With `PYEGERIA_ENABLE_LOGGER_CATCH` on, `@dynamic_catch` turns every failure into a `None` return, indistinguishable from "nothing found"
+
+**Layer:** pyegeria · **Status:** open, not fixed · **Found:** 2026-10-10, reported by the Resource Explorer
+session; confirmed from code.
+
+**What:** `dynamic_catch` (`pyegeria/core/utils.py` ~439) returns `logger.catch(func)` when
+`app_settings.Debug.enable_logger_catch` is true (`PYEGERIA_ENABLE_LOGGER_CATCH`, `config.py` ~315). loguru's
+`catch` defaults to `reraise=False`, so any exception -- 401, 500, timeout, validation error -- is logged and the
+method returns `None`. Checked with loguru 0.7.3: both a sync and an `async def` function return `None`. It applies
+to all ~1,657 `@dynamic_catch` methods in `pyegeria/omvs/`. The choice is also made once, at import time, so
+changing the setting afterwards has no effect.
+
+**Effect:** a caller cannot tell a failed read from an empty one; a `None` can render as "no results". Same family as
+ISSUE-123 (a failed measurement indistinguishable from a real zero). Resource Explorer now treats `None` from a
+wrapped method as "unreadable", never as "no result".
+
+**Fix (not made):** pass `reraise=True` to `logger.catch` (keeps the logging, restores the exception), or document
+that the setting is debug-only and must not be used by applications that act on results.
+
+---
+
+### ISSUE-133: Egeria 6.2 returns a solution component's children as `nestedSolutionComponents`; one pyegeria formatter still reads only `subComponents`
+
+**Layer:** pyegeria · **Status:** fixed in #439 (2026-10-10), pending merge · **Found:** 2026-10-10, reported by the Resource Explorer session
+(`SolutionArchitect.get_solution_component_by_guid` JSON on 6.2); confirmed from Egeria source.
+
+**What:** Egeria's REST element (`AttributedMetadataElement.java` ~387) carries child components as
+`nestedSolutionComponents` (the `SolutionComposition` relationship, 0730), each a `RelatedMetadataElementSummary`
+(`relatedElement.elementHeader.guid`). It has no `subComponents` field; `subComponents` appears in Egeria only in
+Java archive builders, not in any REST response. A caller reading `subComponents` sees no children.
+
+**pyegeria readers:**
+- `pyegeria/omvs/governance_officer.py` ~274 (`_extract_solution_components_properties`) reads **only**
+  `subComponents`, so its sub-components column would always be empty. It turned out to have no callers
+  (`SolutionArchitect` has its own method of the same name), so no live output was affected.
+- `solution_architect.py` ~609 and ~5181, and `md_processing/v2/solution_architect.py` ~384, already read
+  `nestedSolutionComponents`. Each also has a leftover `subComponents` fallback (~675, ~5187, ~388) that never
+  matches. These do no harm, but they use the old flat shape (`elementHeader` directly, not `relatedElement`), so they
+  would mis-parse if the field ever came back.
+
+**Fixed in #439:** `governance_officer.py` reads `nestedSolutionComponents` (through `relatedElement`), and the
+three dead `subComponents` fallbacks are removed. Micro-tests in `tests/micro-tests/test_issue_131_133.py`.
+
+---
+
+### ISSUE-132: `DeleteElementRequestBody` serializes the cascade flag as `cascadeDelete`; Egeria's field is `cascadedDelete` and unknown fields are ignored, so no pyegeria cascade delete has ever cascaded
+
+**Layer:** pyegeria · **Status:** open, on hold: an Egeria fix for cascade delete is coming (owner, 2026-10-10). Wait
+for it, live-test cascade delete against it, then decide the pyegeria change; the fix below may change once the
+Egeria side lands. Confirmed from Egeria source, not yet live-tested · **Found:**
+2026-10-10, while checking ISSUE-129's server contract against Egeria source instead of the `.http` files.
+
+**What:** `pyegeria/models/models.py` `DeleteElementRequestBody.cascade_delete` accepts both spellings on input but
+serializes as `serialization_alias="cascadeDelete"`. The comment there records that the `.http` files were split
+about 50/50 and that the choice was unverified (ISSUE-62). Egeria source settles it (`egeria-v6/egeria` at
+`af400039c2`, 2026-10-06): `DeleteElementRequestBody` -> `DeleteRequestBody` -> `DeleteOptions`
+(`open-metadata-framework/.../search/DeleteOptions.java`), whose field is `cascadedDelete` with
+`getCascadedDelete()`/`setCascadedDelete()`. It is unchanged since 2025-08-04. The class is
+`@JsonAutoDetect(getterVisibility=PUBLIC_ONLY, fieldVisibility=NONE)` and `@JsonIgnoreProperties(ignoreUnknown=true)`,
+with no `@JsonProperty`/`@JsonAlias`, so the JSON name is `cascadedDelete` and `cascadeDelete` is silently ignored.
+
+**Effect:** every pyegeria delete that uses `DeleteElementRequestBody` with cascade on (the ISSUE-62 fix,
+`validate_delete_element_request`, ISSUE-127's fix in #429, `MetadataExpert.delete_metadata_element(cascade_delete=True)`)
+sends a flag Egeria discards, so it deletes without cascading. A caller-supplied dict using the correct
+`cascadedDelete` key is also re-serialized as `cascadeDelete`, so even that does not work. The models module's own
+`DeleteRequestBody.cascaded_delete` already uses the right name.
+
+**Fix (not made):** change the serialization alias to `cascadedDelete` (keep both spellings accepted on input), and
+fix the 19 `"cascadeDelete"` references in `_server_client.py`, `product_manager.py`, `actor_manager.py`,
+`valid_metadata.py`, `metadata_expert.py` and `reference_data.py` (several are docstring samples). Then live-test one
+cascade delete, and re-test ISSUE-127's `DataStructure` refusal. The `.http` files using `cascadedDelete` are correct;
+the ones using `cascadeDelete` are the ones in error (worth reporting to Egeria).
+
+**Lesson:** where the `.http` files disagree with each other, read the Java DTO (getter/setter names plus Jackson
+annotations); do not choose by majority or by what the code already sends.
+
+---
+
+### ISSUE-131: 13 `*_by_name` wrappers pass `metadata_element_type=`, but `_async_get_name_request` reads `metadata_element_type_name`, so the type filter is silently dropped
+
+**Layer:** pyegeria · **Status:** fixed in #439 (2026-10-10), pending merge · **Found:** 2026-10-10, while building Resource Explorer's actor-graph lookups (`get_user_identities_by_name`, `get_actor_profiles_by_name`).
+
+**What:** wrappers such as `ActorManager._async_get_user_identities_by_name` (`pyegeria/omvs/actor_manager.py` ~4195) build `params = {"metadata_element_type": metadata_element_type_name, ...}` and call `self._async_get_name_request(url, **params)`. The base method (`pyegeria/core/_server_client.py` ~6581) takes `metadata_element_type_name` and writes it to `"metadataElementTypeName"`, so the wrapper's key falls into `**kwargs` and never reaches the request body. The by-name searches run unfiltered by type.
+
+**Scope (checked 2026-10-10):** `grep -rn '"metadata_element_type": metadata_element_type_name' pyegeria` matches 27 lines, but only 13 are broken. The other 14 are `find_*` wrappers that call `_async_find_request`, whose parameter really is `metadata_element_type` (`_server_client.py` ~6468), so they are correct; do not change them. The 13 broken ones are all the `*_by_name` wrappers that call `_async_get_name_request`:
+- `actor_manager.py`: `get_actor_profiles_by_name`, `get_actor_roles_by_name`, `get_user_identities_by_name`, `get_contribution_records_by_name`, `get_contact_details_by_name`, `get_perspectives_by_name`, `get_skills_by_name`
+- `collection_manager.py`: `get_collections_by_name`
+- `digital_business.py`: `get_business_capabilities_by_name`
+- `location_arena.py`: `get_locations_by_name`
+- `runtime_manager.py`: `get_metadata_repository_cohorts_by_name`
+- `subject_area.py`: `get_subject_areas_by_name`
+- `time_keeper.py`: `get_context_events_by_name`
+
+**Root cause:** the two base helpers spell the same argument differently (`_async_find_request(metadata_element_type=...)` vs `_async_get_name_request(metadata_element_type_name=...)`), so a wrapper copied from a `find_*` sibling silently loses the filter.
+
+**Effect:** callers relying on the type filter get elements of other types. Resource Explorer works round it by passing a full `FilterRequestBody` with `metadataElementTypeName`.
+
+**Fixed in #439:** `_async_get_name_request` accepts both spellings (`metadata_element_type_name` wins if both are given), and the 13 wrappers now use `metadata_element_type_name`. The 14 `find_*` wrappers are unchanged. Micro-tests in `tests/micro-tests/test_issue_131_133.py` capture the request body for each wrapper. Same family as ISSUE-62, ISSUE-127 and ISSUE-129: an argument accepted and silently dropped.
+
+---
+
+### ISSUE-130: The YAML secrets store's user directory caches a user forever, so editing an existing user needs a platform restart
+
+**Layer:** Egeria server (`YAMLSecretsStoreConnector`) · **Status:** open, reported to the Egeria lead · **Found:** 2026-10-09, while adding Resource Explorer's own account (`resourceexplorernpa`).
+
+**What:** `getUser(userId)` returns the entry from `userAccountMap` if it is already there. `refreshSecrets()` re-reads the YAML file every `refreshTimeInterval` minutes, but `userAccountMap` (and `securityAccessControlMap`) are created only on the first load (when `secretsStoreFile == null`) and are never cleared afterwards. Re-reading the file only helps users the cache has never seen; the comment says "this may be a new user".
+
+**Seen:** the account was first added without its `secrets` block, and the first token request cached it. After the password was added (and matched the servers file), `/api/token` still answered 401 for more than 10 minutes. It worked straight after a platform restart.
+
+**Effect:** any change to an existing user (password, status, named-list membership) needs a platform restart.
+
+**Fix (Egeria):** clear or rebuild `userAccountMap` and `securityAccessControlMap` in `refreshSecrets()`.
+
+---
+
+### ISSUE-129: `MetadataExpert.get_related_metadata_elements` (and two sibling relationship queries) accept paging, direction and lineage arguments but never send them
+
+**Layer:** pyegeria · **Status:** open, not fixed · **Found:** 2026-10-09, in a code review of Resource Explorer's
+6.2 composition read (`blueprint_materializer.sub_component_guids`).
+
+**What:** `_async_get_related_metadata_elements` (`pyegeria/omvs/metadata_expert.py` ~2886-2964) builds the URL from
+`guid` and `relationship_type` only, and posts `body_slimmer(body)`. `starting_at_end`, `start_from`, `page_size`,
+`for_lineage` and `for_duplicate_processing` are documented and silently dropped. So the server's default page size
+decides how many relationships come back, both ends of the relationship are returned whatever `starting_at_end` says,
+and Memento-classified elements are handled by the server default rather than the caller's `for_lineage`. A caller
+that guards "a full page means I cannot tell if there are more" is guarding a value that never reached Egeria. Same
+shape as ISSUE-62 and ISSUE-127.
+
+**Same bug in two siblings (checked 2026-10-10):** `_async_get_all_metadata_element_relationships` (~3056,
+`linked-by-any-type`) and `_async_get_metadata_element_relationships` (~3233, `linked-by-type`) also accept
+`start_from` and `page_size` and send neither. They also accept `starting_at_end`, but Egeria's endpoints for
+these two take no such parameter (both ends are fixed by the URL), so that argument is meaningless there and
+should be removed rather than wired up.
+
+**Workaround (RE):** put `startFrom`/`pageSize` in the `ResultsRequestBody` itself and filter entries by end.
+
+**Server contract (verified 2026-10-10 against Egeria source, `egeria-v6/egeria` at `af400039c2`, 2026-10-06 --
+not just the `.http` file):** `MetadataExpertResource.java` declares `startingAtEnd` as
+`@RequestParam(required = false, defaultValue = "0") int` on `/related-elements/{elementGUID}/any-type` and
+`/related-elements/{elementGUID}/type/{relationshipTypeName}`, and `MetadataExpertRESTServices` passes it through, so
+the `?startingAtEnd=` query parameter is current, not a leftover. The two `linked-by-*` endpoints take only a
+`ResultsRequestBody`. `ResultsRequestBody` extends `QueryOptions` -> `PagingOptions` (`startFrom`, `pageSize`) ->
+`GetOptions` -> `BasicOptions` (`forLineage`, `forDuplicateProcessing`, `effectiveTime`), so the other four
+arguments belong in the body.
+
+**Fix (not made):** in the two `related-elements` methods, add `?startingAtEnd={starting_at_end}` to the URL
+(`_async_get_all_related_metadata_elements`, ~2800-2808, already does this and is the pattern to copy), and put
+`startFrom`/`pageSize`/`forLineage`/`forDuplicateProcessing` in the body. In the two `linked-by-*` methods, put
+paging in the body and drop `starting_at_end`. Only add body fields the caller's body does not already set, so
+"body supersedes" (which ISSUE-127 relies on) still holds; the `page_size` default is `max_paging_size`, so
+overwriting would silently change callers who set it in the body.
+
+---
+
+### ISSUE-128: Retention cannot be set on Egeria 6.2: the server registers the Jackson subtype as `RetentionProperties.class` (typo), and pyegeria only allows `RetentionClassificationProperties`
+
+**Status:** open, found 2026-10-09 by Resource Explorer's first Retention publish on Egeria 6.2. **Layer:** Egeria server (a type registration typo). **Decision (owner, 2026-10-09):** wait for the Egeria fix; no pyegeria workaround. Retention publishing stays blocked until then.
+
+**What (all proven live on 6.2, with raw HTTP POSTs to `classification-explorer/elements/{guid}/retention` on a throwaway asset):**
+- `"class": "RetentionClassificationProperties"` is refused with `InvalidTypeIdException`. This is what pyegeria documents and whitelists, and it worked on the pre-6.2 server (processors.py comment, 2026-08-03).
+- `"class": "RetentionProperties"` (the `.http` ground truth) is also refused with `InvalidTypeIdException`.
+- `"class": "RetentionProperties.class"` gets **HTTP 200**, and the classification reads back with `retentionBasis` 2 and the notes.
+- The server's known-type list in the error has 96 ids. The only Retention entry is literally `RetentionProperties.class`. That looks like an `@JsonSubTypes.Type(name = "RetentionProperties.class")` typo in Egeria's `ClassificationProperties`.
+- pyegeria's `validate_new_classification_request` whitelist (`prop=["RetentionClassificationProperties"]`) refuses anything else client-side, so no Retention can be set through pyegeria on 6.2.
+
+(An earlier version of this entry said 6.2 knows `RetentionProperties`. That was a misread of the error text, corrected the same day.)
+
+**Where seen:** Resource Explorer's Curate classifications step on two repository assets. Both were refused, so nothing was written. Confidentiality, Criticality, Confidence and Impact property classes are registered normally.
+
+**Candidate fix:**
+1. **Egeria:** correct the subtype name to `RetentionProperties`, matching the `.http` file. Report it to Mandy.
+2. **pyegeria, after Egeria's fix:** change the whitelist and docstring to `RetentionProperties`, the `.http` name. No workaround for the typo, by the owner's decision.
+3. Re-check `md_processing/v2/processors.py` and `v2/curation.py`, which both pin `RetentionClassificationProperties`.
+
 ### ISSUE-117: Cascade delete that takes the soft-delete (Memento) path fails partway with `OMAG-REPOSITORY-HANDLER-400-010` unless `forLineage=true` — leaves the asset live and an anchored element already soft-deleted
 
 **Layer:** Egeria Server · **Status:** open, workaround known, not yet
@@ -1184,8 +1358,7 @@ into the entry now, so it isn't rediscovered from scratch later.
 
 ### ISSUE-126: `ProductManager` and `DigitalBusiness` never set `collection_command_root`, so every inherited `CollectionManager` method that uses it raises `AttributeError`
 
-**Layer:** pyegeria · **Status:** fixed on branch `fix/issue-126-127-collection-manager-subclasses`
-(2026-10-05), pending PR/merge · **Found:** 2026-10-05, live cleanup of a throwaway data contract (PR #427's
+**Layer:** pyegeria · **Status:** fixed, merged to `main` in #429 (`68279835`) · **Found:** 2026-10-05, live cleanup of a throwaway data contract (PR #427's
 live check).
 
 **Fix + scope (2026-10-05):** both constructors now call `CollectionManager.__init__`, as `GlossaryManager`
@@ -1204,15 +1377,13 @@ pm.delete_collection(guid, cascade=True)
 # AttributeError: 'ProductManager' object has no attribute 'collection_command_root'
 ```
 
-**Fix (not made):** call `CollectionManager.__init__` from both constructors, or set the attribute. A test that
-constructs each `CollectionManager` subclass and asserts the attribute exists would have caught it.
+**Fixed in #429:** see "Fix + scope" above.
 
 ---
 
 ### ISSUE-127: `CollectionManager.delete_collection(cascade=True)` silently never sends `cascadeDelete` -- same shape as ISSUE-62
 
-**Layer:** pyegeria · **Status:** fixed on branch `fix/issue-126-127-collection-manager-subclasses`
-(2026-10-05), pending PR/merge · **Found:** 2026-10-05, found by capturing the request body while diagnosing a
+**Layer:** pyegeria · **Status:** partly fixed in #429 (`68279835`); cascade still blocked by ISSUE-132 · **Found:** 2026-10-05, found by capturing the request body while diagnosing a
 failed cleanup.
 
 **Fix + scope (2026-10-05):** a scan of all 42 callers of `_async_delete_element_request` found exactly two
@@ -1230,8 +1401,11 @@ the flag is discarded. Captured: `delete_collection("g", cascade=True)` posts
 `{'class': 'DeleteElementRequestBody', 'forLineage': False, 'forDuplicateProcessing': False}` with no
 `cascadeDelete`. `MetadataExpert.delete_metadata_element(cascade_delete=True)` does send it.
 
-**Fix (not made):** do not pre-fill the body (pass `None` so the helper applies the flag), or put `cascadeDelete` in
-the pre-filled dict. Worth grepping for other callers that pre-fill a default dict *and* pass a cascade flag.
+**Fixed in #429, but cascade still does not reach Egeria -- see ISSUE-132.** #429 made the flag reach the request
+body, but under the name `cascadeDelete`. Egeria's real field is `cascadedDelete`, and it ignores unknown fields, so
+the flag is still dropped, now on the server side. #429's docstring "correction" from `cascadedDelete` to
+`cascadeDelete` was also the wrong way round. The `DataStructure` refusal described below is probably this bug
+rather than an Egeria quirk; re-test once ISSUE-132 is fixed.
 
 **Related, an Egeria quirk found alongside:** even with `cascadeDelete: true`, Egeria refused to delete a
 `DataStructure` that still had a member `DataField` (`OMAG-GENERIC-HANDLERS-403-005 ... validateNoMemberDataFields`),
