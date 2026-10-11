@@ -3468,7 +3468,7 @@ class RuntimeManager(ServerClient):
         url = f"{self.runtime_command_root}/metadata-repository-cohorts/by-name"
         params = {
             "filter_string": name,
-            "metadata_element_type": metadata_element_type_name,
+            "metadata_element_type_name": metadata_element_type_name,
             "metadata_element_subtypes": metadata_element_subtypes,
             "graph_query_depth": graph_query_depth,
             "start_from": start_from,
