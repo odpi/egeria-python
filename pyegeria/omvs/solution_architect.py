@@ -2026,8 +2026,7 @@ class SolutionArchitect(ServerClient):
             name = kwargs.pop("filter_string")
 
         add_impl = str(add_implementation).lower()
-        possible_query_params = query_string(
-            [("addImplementation", add_impl), ("startFrom", start_from), ("pageSize", page_size)])
+        possible_query_params = query_string([("addImplementation", add_impl)])
 
         if body is None:
             body = {
@@ -2035,7 +2034,14 @@ class SolutionArchitect(ServerClient):
                 "filter": name,
                 }
         else:
-            body["filter"] = name
+            # Copy, so the caller's dict is not changed, and keep the body's own filter on a body-only call
+            # (ISSUE-135).
+            body = dict(body)
+            if name is not None:
+                body["filter"] = name
+        # The server reads paging from the body only; it ignores startFrom/pageSize query parameters.
+        body.setdefault("startFrom", start_from)
+        body.setdefault("pageSize", page_size)
 
         url = (f"{self.solution_architect_command_root}/information-supply-chains/by-name"
                f"{possible_query_params}")
@@ -3472,7 +3478,14 @@ class SolutionArchitect(ServerClient):
                 "filter": name,
                 }
         else:
-            body["filter"] = name
+            # Copy, so the caller's dict is not changed, and keep the body's own filter on a body-only call
+            # (ISSUE-135).
+            body = dict(body)
+            if name is not None:
+                body["filter"] = name
+        # The server reads paging from the body only; it ignores startFrom/pageSize query parameters.
+        body.setdefault("startFrom", start_from)
+        body.setdefault("pageSize", page_size)
 
         url = f"{self.solution_architect_command_root}/solution-blueprints/by-name"
 
@@ -4925,7 +4938,6 @@ class SolutionArchitect(ServerClient):
         if name is None and "filter_string" in kwargs:
             name = kwargs.pop("filter_string")
 
-        possible_query_params = query_string([("startFrom", start_from), ("pageSize", page_size)])
 
         if body is None:
             body = {
@@ -4933,10 +4945,16 @@ class SolutionArchitect(ServerClient):
                 "filter": name,
                 }
         else:
-            body["filter"] = name
+            # Copy, so the caller's dict is not changed, and keep the body's own filter on a body-only call
+            # (ISSUE-135).
+            body = dict(body)
+            if name is not None:
+                body["filter"] = name
+        # The server reads paging from the body only; it ignores startFrom/pageSize query parameters.
+        body.setdefault("startFrom", start_from)
+        body.setdefault("pageSize", page_size)
 
-        url = (f"{self.solution_architect_command_root}/solution-components/by-name"
-               f"{possible_query_params}")
+        url = f"{self.solution_architect_command_root}/solution-components/by-name"
         response: Response = await self._async_make_request("POST", url, body_slimmer(body), **kwargs)
         element = response.json().get("elements", NO_ELEMENTS_FOUND)
         if element == NO_ELEMENTS_FOUND:
@@ -6373,7 +6391,6 @@ class SolutionArchitect(ServerClient):
         if name is None and "filter_string" in kwargs:
             name = kwargs.pop("filter_string")
 
-        possible_query_params = query_string([("startFrom", start_from), ("pageSize", page_size)])
 
         if body is None:
             body = {
@@ -6381,10 +6398,16 @@ class SolutionArchitect(ServerClient):
                 "filter": name,
                 }
         else:
-            body["filter"] = name
+            # Copy, so the caller's dict is not changed, and keep the body's own filter on a body-only call
+            # (ISSUE-135).
+            body = dict(body)
+            if name is not None:
+                body["filter"] = name
+        # The server reads paging from the body only; it ignores startFrom/pageSize query parameters.
+        body.setdefault("startFrom", start_from)
+        body.setdefault("pageSize", page_size)
 
-        url = (f"{self.solution_architect_command_root}/solution-roles/by-name"
-               f"{possible_query_params}")
+        url = f"{self.solution_architect_command_root}/solution-roles/by-name"
         response: Response = await self._async_make_request("POST", url, body_slimmer(body), **kwargs)
         element = response.json().get("elements", NO_ELEMENTS_FOUND)
         if element == NO_ELEMENTS_FOUND:
@@ -6686,7 +6709,7 @@ class SolutionArchitect(ServerClient):
             output_format, report_spec, **kwargs))
 
     @dynamic_catch
-    async def _async_get_concept_model_elements_by_name(self, name: str,
+    async def _async_get_concept_model_elements_by_name(self, name: str | None = None,
                                                          body: Optional[dict | SearchStringRequestBody] = None,
                                                          start_from: int = 0, page_size: int = max_paging_size,
                                                          output_format: str = "JSON", report_spec: str | dict | None = None,
@@ -6699,7 +6722,7 @@ class SolutionArchitect(ServerClient):
             output_format=output_format, report_spec=report_spec, **kwargs)
 
     @dynamic_catch
-    def get_concept_model_elements_by_name(self, name: str,
+    def get_concept_model_elements_by_name(self, name: str | None = None,
                                            body: Optional[dict | SearchStringRequestBody] = None,
                                            start_from: int = 0, page_size: int = max_paging_size,
                                            output_format: str = "JSON", report_spec: str | dict | None = None,

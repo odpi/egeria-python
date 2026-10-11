@@ -906,7 +906,7 @@ class ActorManager(ServerClient):
     @dynamic_catch
     async def _async_get_actor_profiles_by_name(
         self,
-        name: str,
+        name: str | None = None,
         metadata_element_type_name: str | None = "ActorProfile",
         metadata_element_subtypes: list[str] | None = None,
         include_only_relationships: list[str] | None = None,
@@ -976,7 +976,7 @@ class ActorManager(ServerClient):
 
     def get_actor_profiles_by_name(
         self,
-        name: str,
+        name: str | None = None,
         metadata_element_type_name: str | None = "ActorProfile",
         metadata_element_subtypes: list[str] | None = None,
         include_only_relationships: list[str] | None = None,
@@ -2467,7 +2467,7 @@ class ActorManager(ServerClient):
     @dynamic_catch
     async def _async_get_actor_roles_by_name(
         self,
-        name: str,
+        name: str | None = None,
         metadata_element_type_name: str | None = "ActorRole",
         metadata_element_subtypes: list[str] | None = None,
         include_only_relationships: list[str] | None = None,
@@ -2537,7 +2537,7 @@ class ActorManager(ServerClient):
 
     def get_actor_roles_by_name(
         self,
-        name: str,
+        name: str | None = None,
         metadata_element_type_name: str | None = "ActorRole",
         metadata_element_subtypes: list[str] | None = None,
         include_only_relationships: list[str] | None = None,

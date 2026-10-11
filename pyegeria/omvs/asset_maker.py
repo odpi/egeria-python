@@ -559,7 +559,7 @@ class AssetMaker(ServerClient):
     @dynamic_catch
     async def _async_get_assets_by_name(
         self,
-        filter_string: str,
+        filter_string: str | None = None,
         metadata_element_type_name: str | None = "Asset",
         metadata_element_subtypes: list[str] | None = None,
         include_only_classified_elements: list[str] | None = None,
@@ -654,7 +654,7 @@ class AssetMaker(ServerClient):
     @dynamic_catch
     def get_assets_by_name(
         self,
-        filter_string: str,
+        filter_string: str | None = None,
         metadata_element_type_name: str | None = "Asset",
         metadata_element_subtypes: list[str] | None = None,
         include_only_classified_elements: list[str] | None = None,
@@ -5920,7 +5920,7 @@ class AssetMaker(ServerClient):
     @dynamic_catch
     async def _async_get_software_capabilities_by_name(
         self,
-        name: str,
+        name: str | None = None,
         metadata_element_type_name: str | None = "SoftwareCapability",
         graph_query_depth: int = 3,
         start_from: int = 0,
@@ -5980,7 +5980,7 @@ class AssetMaker(ServerClient):
     @dynamic_catch
     def get_software_capabilities_by_name(
         self,
-        name: str,
+        name: str | None = None,
         metadata_element_type_name: str | None = "SoftwareCapability",
         graph_query_depth: int = 3,
         start_from: int = 0,
