@@ -6,7 +6,7 @@ Static contract checks for MetadataExpert endpoint templates.
 
 This test compares URL templates built in `pyegeria/omvs/metadata_expert.py`
 with endpoint templates declared in
-`pyegeria/http clients/Egeria-api-metadata-expert.http`.
+`pyegeria/http-clients/Egeria-api-metadata-expert.http`.
 
 Behavior:
 - Path mismatches fail the test.
@@ -22,7 +22,12 @@ from typing import Dict, List, Set, Tuple
 
 ROOT = Path(__file__).resolve().parents[2]
 EXPERT_FILE = ROOT / "pyegeria" / "omvs" / "metadata_expert.py"
-HTTP_CONTRACT_FILE = ROOT / "pyegeria" / "http clients" / "Egeria-api-metadata-expert.http"
+# The collection folder was renamed from "http clients" to "http-clients"; fall back to the old name.
+HTTP_CONTRACT_FILE = next(
+    (p for p in (ROOT / "pyegeria" / d / "Egeria-api-metadata-expert.http" for d in ("http-clients", "http clients"))
+     if p.exists()),
+    ROOT / "pyegeria" / "http-clients" / "Egeria-api-metadata-expert.http",
+)
 
 # Optional tolerance: do not fail on query mismatches, only list them.
 TOLERATE_QUERY_MISMATCH = True

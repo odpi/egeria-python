@@ -140,13 +140,23 @@ that's the complete change.
 ## Auditing the OMVS clients against the `.http` ground truth
 
 `scripts/omvs_audit.py` reconciles every `_async_*` method in `pyegeria/omvs/`
-against the `.http` collections, which are the ground truth for URLs, verbs,
+against the `.http` collections, which are the reference for URLs, verbs,
 and request-body classes.
 
+**The `.http` files are not fully trustworthy.** They are maintained by hand,
+can lag the server, and sometimes disagree with each other (e.g. half use
+`cascadeDelete`, half `cascadedDelete`). When a decision depends on a detail
+-- query parameter vs body field, or the exact JSON field name -- confirm it in
+Egeria's Java source: the view service's `*Resource.java` Spring class
+(`@RequestParam` vs `@RequestBody`) and the request DTO's getter/setter names
+and Jackson annotations (`@JsonIgnoreProperties(ignoreUnknown=true)` means a
+misspelled field is silently ignored by the server). A local checkout is at
+`~/localGit/egeria-v6/egeria`. Checking this way found ISSUE-132.
+
 ```bash
-# pyegeria/http clients/ is GITIGNORED — absent in fresh worktrees.
+# pyegeria/http-clients/ is GITIGNORED — absent in fresh worktrees.
 # Point the script at a checkout that has it:
-export PYEGERIA_HTTP_DIR="/path/to/egeria-python/pyegeria/http clients"
+export PYEGERIA_HTTP_DIR="/path/to/egeria-python/pyegeria/http-clients"
 
 python scripts/omvs_audit.py --quiet              # full audit -> omvs_audit_report.md
 python scripts/omvs_audit.py --service location-arena   # one service
@@ -209,12 +219,12 @@ Changes to `pyegeria/` (SDK API, config, report formatting) can break both.
 - `_base_platform_client.py` → `_base_server_client.py` → `_server_client.py`: layered HTTP stack
 - `config.py`: Pydantic-settings config; precedence = explicit args > OS env > `.env` > `config.json` > defaults
 - `utils.py`: shared helpers (`body_slimmer`, `make_format_set_name_from_type`, etc.)
-- **Gotcha — a request-body Pydantic model (`pyegeria/models/models.py`) missing a field silently drops it, not an error.** Every model inherits `PyegeriaModel`'s `extra='ignore'`, so a caller-supplied dict (or a raw no-body-provided construction in `_server_client.py`'s `validate_delete_*_request`-style helpers) with a field the model doesn't declare validates successfully and just vanishes before serialization — no exception, no warning. Confirmed live impact: `DeleteElementRequestBody` had neither `cascadeDelete` nor `deleteMethod` for a long time despite both being real, documented fields on the actual Egeria DTO (`.http` ground truth) — every caller passing `cascade_delete=True` through `_async_delete_element_request` had silently been sending it as unset (PYEGERIA_ISSUES.md ISSUE-62). When adding/using a request-body model, check its fields against the real body in `pyegeria/http clients/Egeria-api-*.http` rather than assuming "it validated without error" means the field will actually be sent.
+- **Gotcha — a request-body Pydantic model (`pyegeria/models/models.py`) missing a field silently drops it, not an error.** Every model inherits `PyegeriaModel`'s `extra='ignore'`, so a caller-supplied dict (or a raw no-body-provided construction in `_server_client.py`'s `validate_delete_*_request`-style helpers) with a field the model doesn't declare validates successfully and just vanishes before serialization — no exception, no warning. Confirmed live impact: `DeleteElementRequestBody` had neither a cascade field nor `deleteMethod` for a long time — every caller passing `cascade_delete=True` through `_async_delete_element_request` had silently been sending it as unset (PYEGERIA_ISSUES.md ISSUE-62). The same thing happens on the server side: Egeria's DTOs ignore unknown fields too, so a misspelled name is dropped there. The ISSUE-62 fix chose `cascadeDelete` from the `.http` files, but Egeria's real field is `cascadedDelete` (`DeleteOptions.java`), so cascade still never reached the server (ISSUE-132, on hold for an Egeria fix). When adding/using a request-body model, check its fields against the Egeria Java DTO (or at least `pyegeria/http-clients/Egeria-api-*.http`, knowing it can be wrong) rather than assuming "it validated without error" means the field will actually be sent and read.
 
 **`pyegeria/omvs/`** — 40+ service-specific clients (one file per OMVS)
 - Every public method has an `_async_*` implementation and a sync wrapper calling `asyncio.get_event_loop().run_until_complete(...)`.
 - All public methods decorated with `@dynamic_catch`.
-- Ground truth for API URLs and request bodies is in `pyegeria/http clients/Egeria-api-*.http` — check these files before constructing URLs.
+- The reference for API URLs and request bodies is `pyegeria/http-clients/Egeria-api-*.http` — check these files before constructing URLs, and confirm anything decision-critical against Egeria's Java source (see "Auditing the OMVS clients" above).
 
 **`pyegeria/egeria_tech_client.py`** — `EgeriaTech` facade
 - Uses `__getattr__` to lazily proxy attribute access across all OMVS subclients; do not eagerly instantiate.

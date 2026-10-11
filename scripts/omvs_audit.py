@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 """Audit pyegeria's OMVS clients against the Egeria .http collections.
 
-The .http files under ``pyegeria/http clients/`` are the ground truth for REST
+The .http files under ``pyegeria/http-clients/`` are the ground truth for REST
 URLs, verbs, and request-body classes (see CLAUDE.md). This script reconciles
 every ``_async_*`` method in ``pyegeria/omvs/*.py`` against them and reports:
 
@@ -30,7 +30,7 @@ verification rather than failing the run.
 Exit status is 1 when any confirmed defect (verb/path/body mismatch or lint)
 is found, so this can gate CI.
 
-Note: ``pyegeria/http clients/`` is gitignored. It must be present locally or
+Note: ``pyegeria/http-clients/`` is gitignored. It must be present locally or
 the audit cannot run - the script fails loudly rather than reporting a clean
 sheet against zero inputs.
 """
@@ -50,7 +50,10 @@ import urllib.request
 from collections import defaultdict
 from dataclasses import dataclass, field
 
-HTTP_DIR = "pyegeria/http clients"
+# The collection folder was renamed from "http clients" to "http-clients"; fall back to
+# the old name for checkouts that still have it.
+HTTP_DIR = next((d for d in ("pyegeria/http-clients", "pyegeria/http clients") if os.path.isdir(d)),
+                "pyegeria/http-clients")
 OMVS_DIR = "pyegeria/omvs"
 SERVER_CLIENT = "pyegeria/core/_server_client.py"
 BASE_PLATFORM_CLIENT = "pyegeria/core/_base_platform_client.py"

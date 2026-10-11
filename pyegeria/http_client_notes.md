@@ -1,6 +1,6 @@
-# Notes on pyegeria vs. the `http clients/` example collection
+# Notes on pyegeria vs. the `http-clients/` example collection
 
-The `pyegeria/http clients/*.http` files are periodically replaced wholesale with a fresh
+The `pyegeria/http-clients/*.http` files are periodically replaced wholesale with a fresh
 copy from an Egeria distribution (`egeria-platform-*/assembly/opt/http-client-collections`),
 so any comments added directly inside those files get wiped out on the next copy. This file
 holds the same kind of note durably, outside that directory.
