@@ -169,12 +169,19 @@ already had. Tests: `tests/micro-tests/test_issue_135_by_name_body_only.py`.
 (e.g. `metadataElementTypeName: "ActorProfile"`) is not added to it, so a body without `metadataElementTypeName`
 searches all types.
 
-**Related, not fixed (found while testing):** five `*_by_name` wrappers that already default `name` still mishandle
-a body-only call:
-- `SolutionArchitect.get_solution_roles_by_name`, `get_solution_blueprints_by_name`, `get_solution_components_by_name`
-  and `get_info_supply_chain_by_name` do `body["filter"] = name`, which overwrites the caller's filter (with `None`
-  when no name is given) and mutates the caller's dict. They also send paging as URL query parameters.
-- `AutomatedCuration.get_engine_actions_by_name` rejects a missing `name` with `VALIDATION_ERROR_1`.
+**Also fixed in #445 (found while testing):** five `*_by_name` wrappers that already defaulted `name` still
+mishandled a body-only call:
+- `SolutionArchitect.get_info_supply_chain_by_name`, `get_solution_blueprints_by_name`,
+  `get_solution_components_by_name` and `get_solution_roles_by_name` did `body["filter"] = name`, which overwrote
+  the caller's filter with `None` on a body-only call and mutated the caller's dict. They now copy the body and set
+  `filter` only when a name is given (a given name still wins). They also sent paging as URL query parameters, which
+  Egeria ignores: in Egeria source (`SolutionArchitectResource.java`, `ActorManagerResource.java`) the only query
+  parameter on these endpoints is `addImplementation`, on information supply chains. Paging now goes in the body,
+  without overriding values the body sets.
+- `AutomatedCuration.get_engine_actions_by_name` rejected a missing `name` (`VALIDATION_ERROR_1`) even with a body,
+  contrary to its docstring. It now requires a name only when no body is given. It also passed its type filter under
+  the old `metadata_element_type` key; it was a 14th ISSUE-131 case that the original grep missed (single quotes),
+  already covered by the 6.2.1 helper fix, and now uses the canonical key.
 
 ---
 
