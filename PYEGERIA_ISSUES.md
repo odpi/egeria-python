@@ -151,7 +151,6 @@ content was changed. The numbered section list above describes the
 **At a glance** — 7 open pyegeria items, 7 awaiting re-test, 7 open Egeria Server issues.
 
 **Open pyegeria items**
-- ISSUE-148: AssetMaker action/process queries default `activity_status_list` to `["IN_PROGRESS"]`, which silently drops JournalEntries and any other Action with no activity status
 - ISSUE-146: Deleting a journal entry fails with OMAG-REPOSITORY-HANDLER-400-008, and pyegeria's `remove_note` reaches the delete only through the generic Asset Maker service
 - ISSUE-140: The executor charts any dict with two or more top-level numbers, regardless of the result's state
 - ISSUE-139: The executor renders no result envelope, and the Vega bar chart has no subtitle, so a not-established result has nowhere to say so on a chart
@@ -189,20 +188,6 @@ into the entry now, so it isn't rediscovered from scratch later.
 
 ---
 
-### ISSUE-148: AssetMaker action/process queries default `activity_status_list` to `["IN_PROGRESS"]`, which silently drops JournalEntries and any other Action with no activity status
-
-**Layer:** pyegeria (`pyegeria/omvs/asset_maker.py`) · **Status:** open, logged only (no fix without the owner's go-ahead) · **Found:** 2026-10-13 by the egeria-workspaces-fs session (Resource Locator) on pyegeria 6.2.0 in quickstart-pyegeria-web.
-
-**What:** for resource `4e53842e`, which has an Actions link to JournalEntry `8bec72e4` (see ISSUE-146), `get_actions_for_sponsor` with the default returns 0 elements. Passing `activity_status_list=None` or `[]` returns 1. There is no error and no warning. A JournalEntry has no activity status, so an `IN_PROGRESS` filter can never match it. The same goes for completed, waiting or failed actions.
-
-**Where:** 7 public methods default to `["IN_PROGRESS"]`, as do their `_async_` versions:
-`find_processes`, `get_processes_by_category`, `get_action_targets`, `get_actions_for_action_target`, `get_assigned_actions`, `get_actions_for_sponsor` and `get_actions_for_requester`. All are in `asset_maker.py`, around lines 3881-5210.
-
-**Why it matters:** a caller who doesn't know about the filter gets "No elements found", and that looks the same as "this element has no actions". The absence is reported as an answer.
-
-**Candidate fix (needs a decision):** default to `None`, so no status filter is applied and the server returns everything, and let callers ask for `["IN_PROGRESS"]` explicitly. This changes behaviour for existing callers that relied on the filter (for example, To-Do views that expect only open work), so check the callers in egeria-workspaces-fs, trellis and `commands/` first. Then add a micro-test that captures the request body for each method.
-
----
 
 ### ISSUE-146: Deleting a journal entry fails with OMAG-REPOSITORY-HANDLER-400-008, and pyegeria's `remove_note` reaches the delete only through the generic Asset Maker service
 
@@ -1575,6 +1560,31 @@ they're holding real port materialization until this exists server-side
 
 Sorted newest-first by `ISSUE-#` (2026-10-12). ISSUE-91 has two entries
 (the same defect reported twice); both are kept, next to each other.
+
+---
+
+### ISSUE-148: AssetMaker action/process queries default `activity_status_list` to `["IN_PROGRESS"]`, which silently drops JournalEntries and any other Action with no activity status
+
+**Layer:** pyegeria (`pyegeria/omvs/asset_maker.py`) · **Status:** fixed 2026-10-13 · **Found:** 2026-10-13 by the egeria-workspaces-fs session (Resource Locator) on pyegeria 6.2.0 in quickstart-pyegeria-web.
+
+**What:** for resource `4e53842e`, which has an Actions link to JournalEntry `8bec72e4` (see ISSUE-146), `get_actions_for_sponsor` with the default returns 0 elements. Passing `activity_status_list=None` or `[]` returns 1. There is no error and no warning. A JournalEntry has no activity status, so an `IN_PROGRESS` filter can never match it. The same goes for completed, waiting or failed actions.
+
+**Where:** 7 public methods default to `["IN_PROGRESS"]`, as do their `_async_` versions:
+`find_processes`, `get_processes_by_category`, `get_action_targets`, `get_actions_for_action_target`, `get_assigned_actions`, `get_actions_for_sponsor` and `get_actions_for_requester`. All are in `asset_maker.py`, around lines 3881-5210.
+
+**Why it matters:** a caller who doesn't know about the filter gets "No elements found", and that looks the same as "this element has no actions". The absence is reported as an answer.
+
+**Candidate fix (needs a decision):** default to `None`, so no status filter is applied and the server returns everything, and let callers ask for `["IN_PROGRESS"]` explicitly. This changes behaviour for existing callers that relied on the filter (for example, To-Do views that expect only open work), so check the callers in egeria-workspaces-fs, trellis and `commands/` first. Then add a micro-test that captures the request body for each method.
+
+**Fixed 2026-10-13 (owner's go-ahead, after all four live sessions confirmed no caller relies on the default):**
+all 14 signatures (7 sync, 7 async) now take `activity_status_list: Optional[list[str]] = None`, and the
+docstrings say "no filter". `_async_find_processes` had defaulted to `[]` while the sync `find_processes`
+defaulted to `["IN_PROGRESS"]`, so the same query had returned different results depending on which
+version was called. Callers checked: egeria-workspaces-fs `tech_catalog_handler` (passes `[]`) and
+`resource_browser_handler` (passes `None`), egeria-python `commands/` (passes its own filter); trellis has none.
+**This is a behaviour change, so it must go in the 6.2.3 release notes** (see BACKLOG.md). Test:
+`tests/micro-tests/test_issue_148_activity_status_default.py`, which checks that the default sends no
+`activityStatusList` and that an explicit filter is still sent.
 
 ---
 
