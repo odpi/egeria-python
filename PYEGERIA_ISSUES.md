@@ -227,9 +227,50 @@ Person. So the refusal comes from the delete touching the anchor's graph, most
 likely the LatestChange update on the anchor, or a provenance check across
 elements that share the anchor, not from a direct link.
 
-**pyegeria clean-up:** point `remove_note` at `asset-maker/assets/{guid}/delete`
-so the route is explicit, and describe it as an Action delete in the
-docstring.
+**Delete-path trace (2026-10-13, Egeria source, read-only):** the asset delete
+(`AssetMakerResource.deleteAsset` → `AssetHandler.deleteAsset`) and the Metadata
+Expert delete (`MetadataExpertResource` → `MetadataExpertRESTServices`) both call
+`OpenMetadataClient.deleteMetadataElementInStore`, then the same
+`MetadataElementHandler` → `OpenMetadataAPIGenericHandler.deleteBeanInRepository`
+code. Neither does any extra checking, so switching routes cannot avoid 400-008.
+The error is thrown only by `RepositoryErrorHandler.validateProvenance`, when
+the delete removes an entity or relationship whose provenance is not
+LOCAL_COHORT and the request carries no `externalSourceGUID`. That happens in
+`removeRelationship` for each relationship on the note and in `removeEntity`
+for the note itself. No anchor (LatestChange) update was found on the delete
+path, which corrects "Why it fails" above. But the error names UserIdentity
+`ff983b64`, which is not linked to the note, so the exact instance is still
+unexplained. Untried options are to pass the content pack's metadata-collection
+id as `externalSourceGUID`, or to use `deleteMethod: ARCHIVE`, which goes
+through a different handler.
+
+**Note-privacy findings (egeria-workspaces-fs session, 2026-10-13, with owner
+approval):** a second test JournalEntry, `8bec72e4-6da6-40a4-943e-d81e2173ec9b`,
+was created on Erin's profile (`10dc7da9`) and cannot be deleted either until a
+working delete exists.
+- `POST my-profile/journal-my-activity` ignores `initialClassifications` and
+  stamps only ZoneMembership `['erinoverview']`.
+- `POST classification-explorer/elements/{guid}/zone-membership` with
+  `['resource-explorer-private','erinoverview']` makes the entry private.
+  erinoverview can read it. peterprofile and garygeeke get 403
+  `OPEN-METADATA-SECURITY-403-020` by GUID, and 0 hits from
+  `feedback-manager/assets/by-search-string`.
+- The journal's NoteLog (`f780511a`) stays at `['erinoverview']`, so other
+  users can see that the log exists but not the hidden entries.
+- The owner chose a temporary workaround for the Resource Locator: call
+  `add_zone_membership(['resource-explorer-private', user])` straight after
+  `journal-my-activity`. Review it once Egeria's journal fix lands.
+
+**pyegeria clean-up:** make the `remove_note` route explicit and describe it as
+an Action delete in the docstring. The owner chose the Metadata Expert delete
+(`metadata-expert/metadata-elements/{guid}/delete`) for now. Per the trace
+above, this is a clarity change, not a fix for 400-008.
+
+**Re-test after Egeria's delete fixes are published:** the owner said
+(2026-10-13) that Egeria is working on delete issues now. Once that work is
+published, re-test `remove_note` on `8bec72e4` (plain delete, then `ARCHIVE` if
+needed). Tell the egeria-workspaces-fs session before deleting anything on
+Erin's profile. `fef83ed5` stays.
 
 ---
 
