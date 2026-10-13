@@ -219,6 +219,15 @@ and Erin's identity is owned by the content pack, so the local delete is
 refused. If so, no journal entry for a content-pack user can be deleted. That
 is for the Egeria team.
 
+**Anchor read (peer, read-only):** JournalEntry `fef83ed5` has anchorGUID
+`10dc7da9`, Erin's Person profile. Its `actionSource` is ActionRequester →
+Person `10dc7da9`, and `presentInNoteLogs` is AttachedNoteLogEntry → NoteLog
+`f780511a` (MyJournal). No relationship from the entry reaches UserIdentity
+`ff983b64`, which the error names. That identity is anchored to the same
+Person. So the refusal comes from the delete touching the anchor's graph, most
+likely the LatestChange update on the anchor, or a provenance check across
+elements that share the anchor, not from a direct link.
+
 **pyegeria clean-up:** point `remove_note` at `asset-maker/assets/{guid}/delete`
 so the route is explicit, and describe it as an Action delete in the
 docstring.
