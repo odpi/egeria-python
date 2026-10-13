@@ -9,7 +9,6 @@ import sys
 from datetime import datetime, timezone
 from pathlib import Path
 from typing import Any
-import asyncio
 
 from textual import on
 from textual.app import App, ComposeResult
@@ -25,6 +24,9 @@ if str(root_path) not in sys.path:
 current_dir = Path(__file__).resolve().parent
 if str(current_dir) not in sys.path:
     sys.path.append(str(current_dir))
+
+import os
+os.environ.setdefault("PYEGERIA_CONFIG_DIRECTORY", str(root_path / "config"))
 
 from pyegeria import (
     load_app_config,
@@ -56,7 +58,7 @@ class MyNetworkApp(App):
         self.title = "My_Network"
         self.sub_title = "Egeria network of contacts for the current user"
         self.description = "Display the user's network of (Egeria) contacts."
-        load_app_config()
+
         app_config = settings.Environment
         self.log(f"Application Config: {app_config}")
         app_user = settings.User_Profile
@@ -79,11 +81,11 @@ class MyNetworkApp(App):
 
     def on_mount(self) -> None:
         """Perform actions when the application is mounted."""
-        self.my_network.add_column("Nickname", key="nickname")
-        self.my_network.add_column("User ID", key="user_id")
-        self.my_network.add_column("GUID", key="guid")
+        self.my_network.add_column("Label", key="label")
+        self.my_network.add_column("Scope", key="scope")
+        self.my_network.add_column("GUID", key="GUID")
         self.my_network.add_column("Qualified Name", key="qualified_name")
-        self.my_network.add_column("Notes", key="notes")
+        self.my_network.add_column("Description", key="description")
         self.my_network.cursor_type="row"
         self.my_network.zebra_stripes=True
         try:
@@ -116,7 +118,9 @@ class MyNetworkApp(App):
             peers = exec_report_spec(
                 format_set_name="My-User-Peers",
                 output_format="DICT",
-                )
+                params={"element_guid": self.user_GUID},
+                token = token
+            )
             self.log(f"Peers: {peers}")
         except PyegeriaException as e:
             self.log(f"Error creating peer relationship: {e}")
@@ -125,13 +129,13 @@ class MyNetworkApp(App):
         finally:
             if eclient:
                 eclient.close_session()
-        for peer in peers:
+        for peer in peers.get("data", []):
             self.log(f"Peer: {peer}")
             self.my_network.add_row(peer.get("Label"),
-                                    peer.get("uniqueName"),
-                                    peer.get("guid"),
+                                    peer.get("Scope"),
+                                    peer.get("GUID"),
                                     peer.get("Qualified Name"),
-                                    peer.get("relationshipProperties", "description"))
+                                    peer.get("Description"))
             continue
         self.my_network.refresh()
         container=self.query_one("#users_network_container", ScrollableContainer)

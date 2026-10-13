@@ -29,7 +29,7 @@
     "Pyegeria User Report Specs Dir": "~/.pyegeria/report_specs",
     "Pyegeria Report Spec Modules": [
       "pyegeria.view.analytic_demo_specs:get_analytic_demo_specs",
-      "~/my_report_specs/my_profile_report_specs.json"
+      "/Users/petercoldicott/PycharmProjects/egeria/egeria-workspaces/egeria-python/my_report_specs/my_profile_report_specs.json"
     ]
   },
   "feature_x_enabled": false,
@@ -43,7 +43,7 @@
     "console_logging_level": "ERROR",
     "enable_logging": true,
     "file_logging_level": "WARNING",
-    "log_directory": "/Users/dwolfson/localGit/egeria-v5-3/egeria-python/logs",
+    "log_directory": "/Users/petercoldicott/PycharmProjects/egeria/egeria-workspaces/egeria-python/logs",
     "logging_console_format": "<green>{time:YYYY-MM-DD HH:mm:ss.SSS}</green> | <level>{level: <8}</level> | <cyan>{name}</cyan>:<cyan>{line}</cyan> - <level>{message}</level>",
     "logging_file_format": "{time:YYYY-MM-DD HH:mm:ss} | {level} | {module}-{function}:{line}-{message}-{extra}"
   },
@@ -52,6 +52,5 @@
     "Egeria Home Glossary Name": "Egeria-Markdown",
     "Egeria Local Qualifier": "myLocal",
     "Egeria Usage Level": "Basic"
-  },
-
+  }
 }

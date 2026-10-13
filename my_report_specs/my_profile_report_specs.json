@@ -38,8 +38,12 @@
       }
     ],
     "action": {
-      "function": "classification_manager.get_elements",
-      "metadataElementTypeName": ["Peer", "PeerProperties"]
+      "function": "ClassificationExplorer.get_related_elements",
+      "required_params": ["element_guid"],
+      "spec_params": { "relationship_type": "ResourceList",
+                        "property_value": "Catalog Resource",
+                        "property_names" : ["resourceUse"]
+      }
     }
   }
 }
