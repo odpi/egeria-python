@@ -1405,6 +1405,35 @@ Sorted newest-first by `ISSUE-#` (2026-10-12). ISSUE-91 has two entries
 
 ---
 
+### ISSUE-142: Every Egeria error with relatedHTTPCode 401/403 was raised as "User not authorized", including 403 errors that are not about authorization
+
+**Layer:** Pyegeria · **Status:** fixed 2026-10-13 · **Found:** 2026-10-13, reported by the egeria-workspaces-fs Resource Browser session during a live work-list test.
+
+**What:** `CollectionManager.delete_collection` on a WorkingSet that still had
+members (cascade off) failed with Egeria's
+`OMAG-GENERIC-HANDLERS-403-005` -- an `InvalidParameterException` saying the
+element still has a dependent. Egeria wraps it with `relatedHTTPCode` 403.
+pyegeria's `_async_make_request` (`pyegeria/core/_base_server_client.py`)
+mapped any wrapped 401 or 403 to `PyegeriaUnauthorizedException` without
+looking at `exceptionClassName`, so the caller saw
+"AUTHORIZATION_ERROR_401 User not authorized received for user - ``". The
+real cause was hidden, the caller looked unauthenticated, and the user name
+was blank, because the exception was built with the JSON response as
+`additional_info`, which has no `userid`.
+
+**Fix:** a wrapped 401/403 is raised as `PyegeriaUnauthorizedException` only
+when `exceptionClassName` is `UserNotAuthorizedException`, or when it is a 401
+with no exception class. Any other 403 is raised as `PyegeriaAPIException`,
+carrying Egeria's own message. The user id is now passed, so the message names
+the user. Test: `tests/micro-tests/test_issue_142_403_not_always_unauthorized.py`.
+
+**Also checked, not affected:** in 6.2, `CollectionMembershipProperties`
+takes `confidence`; `expectedConfidence` is silently dropped. pyegeria already
+sends `confidence` (`collection_manager.py`,
+`md_processing/v2/collection_manager_processor.py`).
+
+---
+
 ### ISSUE-141: `ActionParameter.function` is a required string, so analytic-only specs must pass `""`, and the Advisor's validator then warns "No Action Function"
 
 **Layer:** pyegeria (report spec models) · **Status:** fixed 2026-10-12 on branch `docs/issue-136` (PR pending), not yet released · **Found:** 2026-10-12, reported by the Resource Explorer PR/CI session from trellis-analytics (trellis PR #622, `trellis_analytics/portal.py`), which works around it today.

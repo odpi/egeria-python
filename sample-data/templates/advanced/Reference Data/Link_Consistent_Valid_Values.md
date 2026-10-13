@@ -1,54 +1,22 @@
 ___
 
-## Setup Valid Metadata Map Value
-> Create or update the valid value for a name/value pair that can be stored in a particular open metadata map-valued property.
+## Link Consistent Valid Values
+> Links two valid values that are consistent with each other (used together) (ConsistentValidValues relationship).
 
-### Metadata Property Name
+### Valid Value 1
 >	**Input Required**: True
 
->	**Attribute Type**: Simple
+>	**Attribute Type**: Reference Name
 
->	**Description**: The open metadata property name the valid value is set up for.
+>	**Description**: The first valid value in the relationship.
 
 
-### Map Name
+### Valid Value 2
 >	**Input Required**: True
 
->	**Attribute Type**: Simple
+>	**Attribute Type**: Reference Name
 
->	**Description**: The name of the map entry, for a map-valued property.
-
-
-### Preferred Value
->	**Input Required**: True
-
->	**Attribute Type**: Simple
-
->	**Description**: The valid/preferred value being set up for the property (or map name/value).
-
-
-### Type Name
->	**Input Required**: False
-
->	**Attribute Type**: Simple
-
->	**Description**: The open metadata type name the valid value applies to; leave unset to apply to all types.
-
-
-### Metadata Display Name
->	**Input Required**: False
-
->	**Attribute Type**: Simple
-
->	**Description**: Display name for the valid metadata value.
-
-
-### Metadata Description
->	**Input Required**: False
-
->	**Attribute Type**: Simple
-
->	**Description**: Description of the valid metadata value.
+>	**Description**: The second valid value in the relationship.
 
 
 ### Journal Entry

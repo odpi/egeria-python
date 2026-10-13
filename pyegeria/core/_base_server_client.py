@@ -37,6 +37,22 @@ from pyegeria.core._validators import (
 ...
 
 
+
+def _is_authorization_failure(json_response: dict) -> bool:
+    """Whether an Egeria-wrapped error is really an authorization failure.
+
+    Egeria also uses relatedHTTPCode 403 for errors that have nothing to do
+    with authorization -- e.g. OMAG-GENERIC-HANDLERS-403-005, an
+    InvalidParameterException for deleting an element that still has
+    dependents (ISSUE-142). Only a UserNotAuthorizedException, or a 401 with
+    no exception class, is treated as one.
+    """
+    exception_class = str(json_response.get("exceptionClassName") or "")
+    if exception_class:
+        return exception_class.endswith("UserNotAuthorizedException")
+    return json_response.get("relatedHTTPCode") == 401
+
+
 class BaseServerClient:
     """
     An abstract class used to establish connectivity for an Egeria Client
@@ -649,8 +665,9 @@ class BaseServerClient:
                         return response
                     elif related_http_code == 404:
                         raise PyegeriaNotFoundException(response, context, additional_info=json_response)
-                    elif related_http_code in (401, 403):
-                        raise PyegeriaUnauthorizedException(response, context, additional_info=json_response)
+                    elif related_http_code in (401, 403) and _is_authorization_failure(json_response):
+                        raise PyegeriaUnauthorizedException(
+                            response, context, additional_info={**json_response, "userid": self.user_id})
                     else:
                         raise PyegeriaAPIException(response, context, additional_info=json_response)
 

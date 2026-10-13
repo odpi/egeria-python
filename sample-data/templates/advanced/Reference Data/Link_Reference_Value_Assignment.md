@@ -21,12 +21,28 @@ ___
 >	**Description**: The valid value definition supplying the reference/tag value (ReferenceValueAssignment relationship).
 
 
+### Notes
+>	**Input Required**: False
+
+>	**Attribute Type**: Simple
+
+>	**Description**: Notes and observations about the element.
+
+
 ### Journal Entry
 >	**Input Required**: False
 
 >	**Attribute Type**: Simple
 
 >	**Description**: A text entry into a journal.
+
+
+### Attribute Name
+>	**Input Required**: False
+
+>	**Attribute Type**: Simple
+
+>	**Description**: The attribute of the element that the reference value applies to.
 
 
 ### Effective From
@@ -91,6 +107,38 @@ ___
 >	**Attribute Type**: Simple
 
 >	**Description**: A user provided or system generated request id for a conversation.
+
+
+### Confidence
+>	**Input Required**: False
+
+>	**Attribute Type**: Simple Int
+
+>	**Description**: A percent confidence in the proposed adding of the member.
+
+
+### Steward
+>	**Input Required**: False
+
+>	**Attribute Type**: Simple
+
+>	**Description**: The identifier of the steward responsible for the element.
+
+
+### Steward Type Name
+>	**Input Required**: False
+
+>	**Attribute Type**: Simple
+
+>	**Description**: The type name of the steward element.
+
+
+### Steward Property Name
+>	**Input Required**: False
+
+>	**Attribute Type**: Simple
+
+>	**Description**: Property name used to identify the type of the steward.
 
 
 ___

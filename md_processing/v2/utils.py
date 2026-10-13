@@ -6,6 +6,68 @@ import re
 from typing import Any, Optional, Type
 from enum import Enum
 
+_TABLE_SEPARATOR = re.compile(r'^:?-{3,}:?$')
+
+
+def parse_table(text: str) -> list[dict[str, Optional[str]]]:
+    """
+    Parse a markdown table into one dict per row, keyed by the header row's
+    column names (the "Table" attribute style).
+
+        | Value   | Display Name | Default |
+        |---------|--------------|---------|
+        | PENDING | Pending      | true    |
+
+    gives [{"Value": "PENDING", "Display Name": "Pending", "Default": "true"}].
+    Empty cells are None. A literal pipe inside a cell is written as \\|.
+    Commas are ordinary text. Rows with no non-empty cell are skipped; a row
+    with more cells than the header keeps only the first len(header) cells.
+    Text that is not a table gives [].
+    """
+    if not text:
+        return []
+
+    def cells(line: str) -> list[str]:
+        line = line.strip()
+        if line.startswith('|'):
+            line = line[1:]
+        if line.endswith('|') and not line.endswith('\\|'):
+            line = line[:-1]
+        parts = re.split(r'(?<!\\)\|', line)
+        return [p.strip().replace('\\|', '|') for p in parts]
+
+    lines = [l for l in text.splitlines() if l.strip().startswith('|')]
+    if len(lines) < 2:
+        return []
+    header = cells(lines[0])
+    rows = []
+    for line in lines[1:]:
+        values = cells(line)
+        if all(_TABLE_SEPARATOR.match(v) for v in values if v) and any(values):
+            continue
+        row = {col: (values[i] if i < len(values) and values[i] != "" else None)
+               for i, col in enumerate(header) if col}
+        if any(v is not None for v in row.values()):
+            rows.append(row)
+    return rows
+
+
+def parse_line_list(text: str) -> list[str]:
+    """
+    Split on new lines only (the "Line List" attribute style), stripping a
+    leading markdown bullet. Unlike "Simple List", commas and semicolons are
+    part of the value, so "Washington, D.C." stays one item.
+    """
+    if not text:
+        return []
+    items = []
+    for line in text.splitlines():
+        item = re.sub(r'^\s*[\-\*\+]\s+', '', line).strip()
+        if item:
+            items.append(item)
+    return items
+
+
 def parse_key_value(text: str) -> dict[str, Any]:
     """
     Parses key-value pairs from various markdown formats:

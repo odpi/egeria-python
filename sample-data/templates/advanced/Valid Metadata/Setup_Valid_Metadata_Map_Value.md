@@ -1,7 +1,7 @@
 ___
 
-## Clear Valid Metadata Map Name
-> Remove a valid map name value for a property.
+## Setup Valid Metadata Map Value
+> Create or update the valid value for a name/value pair that can be stored in a particular open metadata map-valued property.
 
 ### Metadata Property Name
 >	**Input Required**: True
@@ -11,12 +11,12 @@ ___
 >	**Description**: The open metadata property name the valid value is set up for.
 
 
-### Preferred Value
+### Map Name
 >	**Input Required**: True
 
 >	**Attribute Type**: Simple
 
->	**Description**: The valid/preferred value being set up for the property (or map name/value).
+>	**Description**: The name of the map entry, for a map-valued property.
 
 
 ### Type Name
@@ -25,6 +25,30 @@ ___
 >	**Attribute Type**: Simple
 
 >	**Description**: The open metadata type name the valid value applies to; leave unset to apply to all types.
+
+
+### Preferred Value
+>	**Input Required**: False
+
+>	**Attribute Type**: Simple
+
+>	**Description**: The preferred value -- the value itself, as stored and exchanged. For Setup/Clear Valid Metadata commands, the value being set up for the property (or map name/value); required there unless a Metadata Value Table is given.
+
+
+### Metadata Display Name
+>	**Input Required**: False
+
+>	**Attribute Type**: Simple
+
+>	**Description**: Display name for the valid metadata value.
+
+
+### Metadata Description
+>	**Input Required**: False
+
+>	**Attribute Type**: Simple
+
+>	**Description**: Description of the valid metadata value.
 
 
 ### Journal Entry

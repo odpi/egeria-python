@@ -31,6 +31,16 @@ ___
 >	**Description**: A text entry into a journal.
 
 
+### Strict Requirement
+>	**Input Required**: False
+
+>	**Attribute Type**: Bool
+
+>	**Description**: If true, the element must use one of the set's values; if false, the values are suggestions (strictRequirement on ValidValuesAssignment).
+
+>	**Default Value**: true
+
+
 ### Effective From
 >	**Input Required**: False
 

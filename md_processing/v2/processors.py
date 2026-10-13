@@ -847,7 +847,7 @@ class AsyncBaseCommandProcessor(ABC):
                         # heuristic on "Name" wrongly flagged it as a reference
                         # candidate, and every one of its plain string values then
                         # failed resolution.
-                        and spec_style not in ["Simple", "Simple List", "List", "NameList", "Enum", "Valid Value", "ValidValue", "Dictionary", "KeyValue", "Enumeration", "Integer", "Boolean", "Simple Int", "Simple Float", "Bool"]
+                        and spec_style not in ["Simple", "Simple List", "List", "NameList", "Enum", "Valid Value", "ValidValue", "Dictionary", "KeyValue", "Enumeration", "Integer", "Boolean", "Simple Int", "Simple Float", "Bool", "Table", "Line List"]
                     )
 
                 # More precise check: if it's already got a GUID or guid_list, don't re-resolve.

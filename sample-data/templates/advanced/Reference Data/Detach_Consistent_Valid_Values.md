@@ -1,30 +1,22 @@
 ___
 
-## Clear Valid Metadata Value
-> Remove a valid value for a property.
+## Detach Consistent Valid Values
+> Removes the ConsistentValidValues relationship.
 
-### Metadata Property Name
+### Valid Value 1
 >	**Input Required**: True
 
->	**Attribute Type**: Simple
+>	**Attribute Type**: Reference Name
 
->	**Description**: The open metadata property name the valid value is set up for.
+>	**Description**: The first valid value in the relationship.
 
 
-### Preferred Value
+### Valid Value 2
 >	**Input Required**: True
 
->	**Attribute Type**: Simple
+>	**Attribute Type**: Reference Name
 
->	**Description**: The valid/preferred value being set up for the property (or map name/value).
-
-
-### Type Name
->	**Input Required**: False
-
->	**Attribute Type**: Simple
-
->	**Description**: The open metadata type name the valid value applies to; leave unset to apply to all types.
+>	**Description**: The second valid value in the relationship.
 
 
 ### Journal Entry

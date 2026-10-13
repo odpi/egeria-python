@@ -45,7 +45,7 @@ from md_processing.v2 import (
     AddTextOnDashboardSheetProcessor, ReportProcessor,
     SavedQueryProcessor, SmartQueryLinkProcessor,
     CurationClassifyProcessor, CurationLinkProcessor, CLASSIFICATION_METHODS,
-    ReferenceDataLinkProcessor, ValidMetadataValueProcessor,
+    ReferenceDataLinkProcessor, ValidMetadataValueProcessor, ReferenceDataElementProcessor, ValidValueLinkProcessor,
     EmbeddedProcessProcessor, InitiateEngineActionProcessor, CancelEngineActionProcessor,
     LineageLinkProcessor, UpdateLineageRelationshipProcessor,
     AssetMakerProcessor,
@@ -536,6 +536,18 @@ def setup_dispatcher(client: EgeriaTech) -> V2Dispatcher:
     reg("Link Specification Property Assignment", ReferenceDataLinkProcessor)
     reg("Detach Specification Property Assignment", ReferenceDataLinkProcessor)
 
+    # Reference Data authoring: sets and values, and the relationships between
+    # valid values (member, consistent, associated, mapped, implementation).
+    reg("Create Reference Data Set", ReferenceDataElementProcessor)
+    reg("Update Reference Data Set", ReferenceDataElementProcessor)
+    reg("Create Reference Data Value", ReferenceDataElementProcessor)
+    reg("Update Reference Data Value", ReferenceDataElementProcessor)
+    for noun in ("Valid Value Member", "Consistent Valid Values", "Associated Valid Values",
+                 "Mapped Valid Values", "Valid Value Implementation"):
+        reg(f"Link {noun}", ValidValueLinkProcessor)
+        reg(f"Detach {noun}", ValidValueLinkProcessor)
+
+    # Valid Metadata family (the allowed values of Egeria's own properties).
     reg("Setup Valid Metadata Value", ValidMetadataValueProcessor)
     reg("Clear Valid Metadata Value", ValidMetadataValueProcessor)
     reg("Setup Valid Metadata Map Name", ValidMetadataValueProcessor)
