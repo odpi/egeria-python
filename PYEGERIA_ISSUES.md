@@ -151,7 +151,7 @@ content was changed. The numbered section list above describes the
 **At a glance** — 7 open pyegeria items, 7 awaiting re-test, 7 open Egeria Server issues.
 
 **Open pyegeria items**
-- ISSUE-146: `remove_note` posts an Asset Maker asset delete, and Egeria has no endpoint to delete a single note or journal entry
+- ISSUE-146: Deleting a journal entry fails with OMAG-REPOSITORY-HANDLER-400-008, and pyegeria's `remove_note` reaches the delete only through the generic Asset Maker service
 - ISSUE-145: Dr.Egeria sends `agreementType` and other `agreement*` fields that Egeria's `AgreementProperties` does not have
 - ISSUE-140: The executor charts any dict with two or more top-level numbers, regardless of the result's state
 - ISSUE-139: The executor renders no result envelope, and the Vega bar chart has no subtitle, so a not-established result has nowhere to say so on a chart
@@ -188,34 +188,40 @@ into the entry now, so it isn't rediscovered from scratch later.
 
 ---
 
-### ISSUE-146: `remove_note` posts an Asset Maker asset delete, and Egeria has no endpoint to delete a single note or journal entry
+### ISSUE-146: Deleting a journal entry fails with OMAG-REPOSITORY-HANDLER-400-008, and pyegeria's `remove_note` reaches the delete only through the generic Asset Maker service
 
-**Layer:** Pyegeria + Egeria Server · **Status:** open · **Found:** 2026-10-13, reported by the egeria-workspaces-fs Resource Browser session from a live private-journal test.
+**Layer:** Egeria Server (pyegeria clean-up) · **Status:** open · **Found:** 2026-10-13, reported by the egeria-workspaces-fs Resource Browser session from a live private-journal test.
 
-**What:** `_async_remove_note` (`pyegeria/core/_server_client.py`) posts to
-`feedback-manager/assets/{note_guid}/delete`. `FeedbackManagerResource` has no
-such endpoint. The request is served by `AssetMakerResource`
-(`/assets/{assetGUID}/delete`), a generic view service that answers under any
-view-service URL marker, so the note was deleted as if it were an asset. Called
-as erinoverview on a JournalEntry created by `MyProfile.journal_my_activity`,
-it failed with `OMAG-REPOSITORY-HANDLER-400-008`:
+**What:** as erinoverview, `_async_remove_note` (`pyegeria/core/_server_client.py`)
+was called on a JournalEntry created by `MyProfile.journal_my_activity`. It
+failed with `OMAG-REPOSITORY-HANDLER-400-008` (`LOCAL_CANNOT_CHANGE_EXTERNAL`):
 `deleteMetadataElementInStore` cannot modify Erin's UserIdentity (`ff983b64`),
 which has Content Pack provenance ("Coco Pharmaceuticals Combination"). The
-delete apparently reached the UserIdentity through the entry's
-`actionSource` relationship. The peer verified that nothing was removed. The
-entry and its relationships are intact, and Erin's Person still has 1 identity,
+peer verified that nothing was removed. The entry keeps its `actionSource` and
+`presentInNoteLogs` relationships, and Erin's Person still has 1 identity,
 1 contact detail, 8 roles and 15 scopes. Test entry `fef83ed5` is still on
 Erin's profile, waiting for the owner's decision.
 
-**Egeria side:** as of Egeria main `af400039c2`, the Feedback Manager can
-remove a whole note log (`note-logs/{noteLogGUID}/remove`), but has no endpoint
-to delete one note. My Profile has `journal-my-activity`, and no matching
-remove. So there may be no supported way to delete a single note or journal
-entry.
+**The route is right:** in 6.2, notes are Actions. The type chain is
+JournalEntry → Notification → Action → Process → Asset. Egeria main
+(`af400039c2`) has no note, notification or action delete endpoint.
+`AssetHandler.createNoteLogEntry` has no matching remove, and My Profile has
+`journal-my-activity` with no matching remove. The only delete for an Action is
+the generic `/assets/{assetGUID}/delete` (`AssetMakerResource`), which is what
+`remove_note`'s `feedback-manager/assets/{guid}/delete` reaches, because
+generic view services answer under any URL marker. Feedback Manager can only
+remove a whole note log (`note-logs/{noteLogGUID}/remove`).
 
-**Next:** ask the Egeria team whether a note delete is planned. Until then,
-`remove_note` should either be withdrawn or call a supported route, and must
-not issue an asset delete.
+**Why it fails (likely, not verified):** `AssetHandler.createAction` anchors the
+entry to its action source, linked by `ActionRequester`. For a journal entry
+that is the caller's profile. Deleting an anchored element updates its anchor,
+and Erin's identity is owned by the content pack, so the local delete is
+refused. If so, no journal entry for a content-pack user can be deleted. That
+is for the Egeria team.
+
+**pyegeria clean-up:** point `remove_note` at `asset-maker/assets/{guid}/delete`
+so the route is explicit, and describe it as an Action delete in the
+docstring.
 
 ---
 
