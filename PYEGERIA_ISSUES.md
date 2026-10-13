@@ -148,7 +148,7 @@ content was changed. The numbered section list above describes the
 
 # Open Issues
 
-**At a glance** — 6 open pyegeria items, 7 awaiting re-test, 6 open Egeria Server issues.
+**At a glance** — 5 open pyegeria items, 7 awaiting re-test, 6 open Egeria Server issues.
 
 **Open pyegeria items**
 - ISSUE-140: The executor charts any dict with two or more top-level numbers, regardless of the result's state
@@ -156,7 +156,6 @@ content was changed. The numbered section list above describes the
 - ISSUE-138: Analytic params are JSON-only, and only parameters named `mgr`/`ce`/`expert`/`client` are bound as clients, so a routine taking a reader object can't be named by its own dotted path
 - ISSUE-132: `DeleteElementRequestBody` serializes the cascade flag as `cascadeDelete`; Egeria's field is `cascadedDelete` and unknown fields are ignored, so no pyegeria cascade delete has ever cascaded
 - ISSUE-127: `CollectionManager.delete_collection(cascade=True)` silently never sends `cascadeDelete` -- same shape as ISSUE-62
-- ISSUE-123: `overview_metrics.count_elements` (and `_find`/`_element_count`) return `0`/`[]` on any failure — a failed measurement is indistinguishable from a real zero
 
 **Awaiting re-test**
 - ISSUE-125: `deleteEnumDef` answers 500 "unknown TypeDef" for an enum the server lists -- an enum added through the API cannot be removed
@@ -300,43 +299,6 @@ rather than an Egeria quirk; re-test once ISSUE-132 is fixed.
 `DataStructure` that still had a member `DataField` (`OMAG-GENERIC-HANDLERS-403-005 ... validateNoMemberDataFields`),
 so a data contract imported by `import_data_contract*` has to be removed child-first: DataField, DataStructure,
 Agreement.
-
----
-
-### ISSUE-123: `overview_metrics.count_elements` (and `_find`/`_element_count`) return `0`/`[]` on any failure — a failed measurement is indistinguishable from a real zero
-
-**Layer:** Pyegeria · **Status:** open · **Found:** 2026-10-04, while
-making the portal's Egeria Overview stop showing confident numbers during
-an outage · **GitHub:** odpi/egeria-python#424
-
-**Root cause, from reading `pyegeria/view/overview_metrics.py` (6.1.28):**
-
-- `_find(mgr, body, page_size)` wraps `find_metadata_elements` in a bare
-  `except Exception` and returns `[]`, logging only at `debug`.
-- `_element_count(mgr, body, as_of)` tries the native count; if it is
-  unsupported *or raises*, it falls back to `len(_find(...))` — so a failed
-  query becomes `0`.
-- `count_elements(...)`'s docstring states "0 on any failure (never
-  raises)". The callers `people_counts`, `usage_context_counts` and
-  `counts_by_type` inherit the same behaviour.
-
-**Effect:** a dashboard cannot tell "there are 0 elements" from "Egeria
-timed out / returned 401 / 500". An outage or auth failure renders as a
-confident `0`. A fallback count that returns exactly the page size is also
-only a lower bound, not a total, and is not flagged.
-
-**Proposed fix:** return `None` on failure (or add a strict variant, e.g.
-`count_elements(..., strict=True)` / `try_count_elements`, that raises or
-returns `None`), keeping today's behaviour behind an explicit opt-in if
-existing callers rely on it. Apply the same to `_find`/`_element_count` and
-propagate `None` through `people_counts`, `usage_context_counts` and
-`counts_by_type`. Log failures above `debug`. Flag a capped fallback count
-as a lower bound.
-
-**Workaround in egeria-workspaces:** the portal's Overview handler calls
-`find_metadata_elements` directly and returns `None` for failed or capped
-queries, rendering "Not measured" instead of `0` (odpi/egeria-workspaces
-#601, #607).
 
 ---
 
@@ -1765,6 +1727,59 @@ pm.delete_collection(guid, cascade=True)
 ```
 
 **Fixed in #429:** see "Fix + scope" above.
+
+---
+
+### ISSUE-123: `overview_metrics.count_elements` (and `_find`/`_element_count`) return `0`/`[]` on any failure — a failed measurement is indistinguishable from a real zero
+
+**Layer:** Pyegeria · **Status:** fixed 2026-10-12 (opt-in `strict=True`) · **Found:** 2026-10-04, while
+making the portal's Egeria Overview stop showing confident numbers during
+an outage · **GitHub:** odpi/egeria-python#424
+
+**Root cause, from reading `pyegeria/view/overview_metrics.py` (6.1.28):**
+
+- `_find(mgr, body, page_size)` wraps `find_metadata_elements` in a bare
+  `except Exception` and returns `[]`, logging only at `debug`.
+- `_element_count(mgr, body, as_of)` tries the native count; if it is
+  unsupported *or raises*, it falls back to `len(_find(...))` — so a failed
+  query becomes `0`.
+- `count_elements(...)`'s docstring states "0 on any failure (never
+  raises)". The callers `people_counts`, `usage_context_counts` and
+  `counts_by_type` inherit the same behaviour.
+
+**Effect:** a dashboard cannot tell "there are 0 elements" from "Egeria
+timed out / returned 401 / 500". An outage or auth failure renders as a
+confident `0`. A fallback count that returns exactly the page size is also
+only a lower bound, not a total, and is not flagged.
+
+**Proposed fix:** return `None` on failure (or add a strict variant, e.g.
+`count_elements(..., strict=True)` / `try_count_elements`, that raises or
+returns `None`), keeping today's behaviour behind an explicit opt-in if
+existing callers rely on it. Apply the same to `_find`/`_element_count` and
+propagate `None` through `people_counts`, `usage_context_counts` and
+`counts_by_type`. Log failures above `debug`. Flag a capped fallback count
+as a lower bound.
+
+**Workaround in egeria-workspaces:** the portal's Overview handler calls
+`find_metadata_elements` directly and returns `None` for failed or capped
+queries, rendering "Not measured" instead of `0` (odpi/egeria-workspaces
+#601, #607).
+
+**Fixed 2026-10-12 — opt-in strict variant (owner's choice):** the default
+is unchanged, so existing callers still get `0`. Pass `strict=True` to
+`count_elements`, `count_elements_by_property`, `counts_by_type`,
+`people_counts` or `usage_context_counts` to get `None` whenever the count is
+not known:
+- the fallback `find_metadata_elements` query raised, or answered with
+  something that is neither a list nor pyegeria's miss string;
+- the fallback returned a full page (`DEFAULT_CAP`), which is only a lower
+  bound.
+
+A native count is trusted as is, even above the cap. A real zero (an empty
+list, or the "No elements found" string) is still `0`. Each `None` logs a
+warning saying why. `strict` is also declared on those five analytic-registry
+entries, so a report spec can pass it. Test:
+`tests/micro-tests/test_issue_123_strict_counts.py`.
 
 ---
 

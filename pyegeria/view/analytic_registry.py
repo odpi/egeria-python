@@ -140,6 +140,12 @@ def _as_of(description: str = "ISO-8601 asOfTime for a point-in-time value (None
     return AnalyticParam(name="as_of", type="str", description=description)
 
 
+def _strict() -> AnalyticParam:
+    return AnalyticParam(name="strict", type="bool", default=False,
+                         description="Return None instead of 0 when a count could not be measured "
+                                     "(query failed, or the fallback hit the page-size cap). ISSUE-123.")
+
+
 # ── Built-ins -- every analytic function already proven live via the Overview
 # dashboard's /api/overview/* endpoints (overview_handler.py), just not yet
 # reachable from a Dr.Egeria report spec. ──────────────────────────────────
@@ -154,6 +160,7 @@ _BUILTINS: Dict[str, AnalyticFunctionSpec] = {
             AnalyticParam(name="type_name", type="str",
                           description="Open metadata type to count, e.g. GlossaryTerm, DigitalProduct. Omit for any type."),
             _as_of(),
+            _strict(),
             AnalyticParam(name="classifications", type="list[str]",
                           description="Match ANY of these classification names."),
         ],
@@ -169,6 +176,7 @@ _BUILTINS: Dict[str, AnalyticFunctionSpec] = {
             AnalyticParam(name="type_map", type="list[tuple[str, str]]", required=True,
                           description="(label, type_name) pairs to count, e.g. [('Data Stores', 'DataStore'), ...]."),
             _as_of(),
+            _strict(),
         ],
     ),
     "governed_coverage": AnalyticFunctionSpec(
@@ -225,7 +233,7 @@ _BUILTINS: Dict[str, AnalyticFunctionSpec] = {
         returns="dict (persons, teams, organizations, itProfiles, communities)",
         generic=False,
         binding_note="Fixed to Person/Team/Organization/ITProfile/Community -- not a parameter.",
-        params=[_as_of()],
+        params=[_as_of(), _strict()],
     ),
     "feedback_summary": AnalyticFunctionSpec(
         name="feedback_summary",
@@ -246,7 +254,7 @@ _BUILTINS: Dict[str, AnalyticFunctionSpec] = {
         returns="dict (informationSupplyChains, blueprints)",
         generic=False,
         binding_note="Fixed to InformationSupplyChain and SolutionBlueprint -- not a parameter.",
-        params=[_as_of()],
+        params=[_as_of(), _strict()],
     ),
     "semantic_grounding": AnalyticFunctionSpec(
         name="semantic_grounding",
@@ -371,6 +379,7 @@ _BUILTINS: Dict[str, AnalyticFunctionSpec] = {
             AnalyticParam(name="property_value", type="str", required=True,
                           description="Value to match the property against, e.g. ACTIVE."),
             _as_of(),
+            _strict(),
         ],
     ),
     "contextualised_coverage": AnalyticFunctionSpec(
