@@ -148,7 +148,7 @@ content was changed. The numbered section list above describes the
 
 # Open Issues
 
-**At a glance** — 5 open pyegeria items, 7 awaiting re-test, 6 open Egeria Server issues.
+**At a glance** — 5 open pyegeria items, 7 awaiting re-test, 7 open Egeria Server issues.
 
 **Open pyegeria items**
 - ISSUE-140: The executor charts any dict with two or more top-level numbers, regardless of the result's state
@@ -167,6 +167,7 @@ content was changed. The numbered section list above describes the
 - ISSUE-38 (PY-18): `count_relationships_between_elements("Exception")` (276) disagrees with `ClassificationExplorer.get_relationships("Exception")` (55)
 
 **Open Egeria Server issues**
+- ISSUE-143: `includeOnlyRelationships: ["PersonRoleAppointment"]` returns no relationships for a Person, although the unfiltered read has its role appointments
 - ISSUE-130: The YAML secrets store's user directory caches a user forever, so editing an existing user needs a platform restart
 - ISSUE-128: Retention cannot be set on Egeria 6.2: the server registers the Jackson subtype as `RetentionProperties.class` (typo), and pyegeria only allows `RetentionClassificationProperties`
 - ISSUE-108: newly created relationships stay invisible to related-element queries for up to ~20 minutes after creation
@@ -1078,6 +1079,43 @@ repo. Where an entry has a known pyegeria/Dr.Egeria follow-on once the
 Egeria side lands, it's noted inline (also cross-referenced from the
 "Open pyegeria items" section below where the follow-on is substantial
 enough to track there too).
+
+---
+
+### ISSUE-143: `includeOnlyRelationships: ["PersonRoleAppointment"]` returns no relationships for a Person, although the unfiltered read has its role appointments
+
+**Layer:** Egeria Server (not pyegeria) · **Status:** open, not yet reported to the Egeria team · **Found:** 2026-10-13, reported by the egeria-workspaces-fs Resource Browser session; reproduced read-only the same day.
+
+**What:** reading a Person with a `GetRequestBody` whose
+`includeOnlyRelationships` is `["PersonRoleAppointment"]` returns the element
+with no relationships at all. The same read with no filter returns 8
+`performsRoles` entries, each with relationship type `PersonRoleAppointment`.
+Other filters on the same Person work.
+
+**Reproduction** (Person `10dc7da9-e9e1-471f-9afd-46a7ff414cb7`, Erin Overview,
+as erinoverview on qs-view-server;
+`ClassificationExplorer.get_element_by_guid(guid, graph_query_depth=1,
+output_format="JSON", body={"class": "GetRequestBody", "graphQueryDepth": 1,
+"includeOnlyRelationships": [...]})`):
+
+| Filter | Relationship keys returned |
+|---|---|
+| none | performsRoles 8, assignmentScope 15, requestedActions 11, contactDetails 1, userIdentities 1, contributionRecord 1 |
+| `["ContactThrough"]` | contactDetails 1 |
+| `["AssignmentScope"]` | assignmentScope 15 |
+| `["PersonRoleAppointment"]` | none |
+
+A spy on the request confirmed pyegeria sends the body exactly as given, so
+the filtering happens in Egeria.
+
+**Likely cause (not confirmed):** Egeria's relationship filter
+(`OpenMetadataHandlerBase`, around line 478) keeps a relationship when
+`propertyHelper.isTypeOf(rel, name)`, which should match. But `performsRoles` is
+filled in a separate step (`OpenMetadataHandlerBase`, around line 1282), so the
+role appointments may be dropped or never fetched once a filter is set.
+
+**Workaround:** read the Person without `includeOnlyRelationships` and take
+`performsRoles` from the result. The Resource Browser already does this.
 
 ---
 
