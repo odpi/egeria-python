@@ -163,6 +163,13 @@ def _json_list(raw) -> list:
 
 def _find(mgr, body: dict, page_size: int = DEFAULT_CAP) -> list:
     """Run a FindRequestBody, always returning a (possibly empty) list. Never raises."""
+    return _find_or_none(mgr, body, page_size) or []
+
+
+def _find_or_none(mgr, body: dict, page_size: int = DEFAULT_CAP) -> Optional[list]:
+    """Run a FindRequestBody: a list of elements, [] when nothing matched (a list
+    or pyegeria's "No elements found" string), or None when the query failed or
+    answered with something else. Never raises."""
     try:
         # find_metadata_elements sends body exactly as given (no injected
         # defaults) -- graphQueryDepth/startFrom/pageSize all belong in the
@@ -173,15 +180,26 @@ def _find(mgr, body: dict, page_size: int = DEFAULT_CAP) -> list:
         # them as parameters at all, to avoid this drifting stale again).
         b = {**body, "graphQueryDepth": 0, "startFrom": 0, "pageSize": page_size}
         raw = mgr.find_metadata_elements(b)
-        return [el for el in (raw if isinstance(raw, list) else []) if isinstance(el, dict)]
     except Exception as exc:  # noqa: BLE001 -- best-effort, degrade don't fail
         logger.debug(f"overview_metrics _find failed for {body.get('metadataElementTypeName')!r}: {exc}")
-        return []
+        return None
+    if isinstance(raw, list):
+        return [el for el in raw if isinstance(el, dict)]
+    if isinstance(raw, str):
+        return []  # pyegeria's miss sentinel
+    logger.debug(f"overview_metrics _find: unexpected result for {body.get('metadataElementTypeName')!r}: "
+                 f"{type(raw).__name__}")
+    return None
 
 
-def _element_count(mgr, body: dict, as_of: Optional[str] = None) -> int:
+def _element_count(mgr, body: dict, as_of: Optional[str] = None, strict: bool = False) -> Optional[int]:
     """Count elements matching a FindRequestBody -- native when available, else
-    len(find_metadata_elements(...))."""
+    len(find_metadata_elements(...)).
+
+    strict=False: 0 when the fallback query fails (the historical behaviour).
+    strict=True: None when the count is not known -- the fallback query failed,
+    or it returned a full page (DEFAULT_CAP), which is only a lower bound.
+    """
     b = dict(body)
     if as_of:
         b["asOfTime"] = as_of
@@ -193,7 +211,18 @@ def _element_count(mgr, body: dict, as_of: Optional[str] = None) -> int:
                 return c
         except Exception as exc:  # noqa: BLE001 -- old server: mark unsupported, fall back
             _disable_native(mgr, exc)
-    return len(_find(mgr, b))
+    if not strict:
+        return len(_find(mgr, b))
+    found = _find_or_none(mgr, b)
+    if found is None:
+        logger.warning(f"overview_metrics: count of {body.get('metadataElementTypeName') or 'elements'!r} "
+                       f"not measured -- the query failed")
+        return None
+    if len(found) >= DEFAULT_CAP:
+        logger.warning(f"overview_metrics: count of {body.get('metadataElementTypeName') or 'elements'!r} "
+                       f"not measured -- the fallback hit the {DEFAULT_CAP} cap, so {len(found)} is only a lower bound")
+        return None
+    return len(found)
 
 
 def count_elements(
@@ -201,11 +230,16 @@ def count_elements(
     type_name: Optional[str] = None,
     as_of: Optional[str] = None,
     classifications: Optional[Sequence[str]] = None,
-) -> int:
+    strict: bool = False,
+) -> Optional[int]:
     """
     Count ACTIVE elements, optionally of a given type and/or matching ANY of
     the given classifications. Uses native `count_metadata_elements` when the
     client + server support it, else `len(find_metadata_elements(...))`.
+
+    By default a failed query counts as 0, so an outage looks like an empty
+    catalog. Pass strict=True to get None instead whenever the number is not
+    known (ISSUE-123).
 
     Parameters
     ----------
@@ -214,10 +248,12 @@ def count_elements(
     as_of : ISO-8601 asOfTime for a point-in-time count (None = now)
     classifications : classification names to match ANY of -- keep to a
         single call's worth (some connectors mishandle 2+ ANY conditions)
+    strict : when True, return None if the query failed, or if the fallback
+        count hit DEFAULT_CAP (a lower bound, not a total)
 
     Returns
     -------
-    int -- 0 on any failure (never raises)
+    int -- 0 on any failure (never raises); with strict=True, Optional[int]
     """
     body: Dict[str, Any] = {"class": "FindRequestBody", "limitResultsByStatus": ["ACTIVE"]}
     if type_name:
@@ -227,7 +263,7 @@ def count_elements(
             "class": "SearchClassifications", "matchCriteria": "ANY",
             "conditions": [{"name": n} for n in classifications],
         }
-    return _element_count(mgr, body, as_of)
+    return _element_count(mgr, body, as_of, strict)
 
 
 def count_elements_by_property(
@@ -236,7 +272,8 @@ def count_elements_by_property(
     property_name: str,
     property_value: str,
     as_of: Optional[str] = None,
-) -> int:
+    strict: bool = False,
+) -> Optional[int]:
     """
     Count ACTIVE elements of a given type whose named string property equals
     a given value -- e.g. counting DigitalProduct elements by deploymentStatus
@@ -253,10 +290,11 @@ def count_elements_by_property(
     property_name : the element property to match (e.g. "deploymentStatus")
     property_value : the exact string value to match
     as_of : ISO-8601 asOfTime for a point-in-time count (None = now)
+    strict : as for count_elements -- None instead of 0 when not measured
 
     Returns
     -------
-    int -- 0 on any failure (never raises)
+    int -- 0 on any failure (never raises); with strict=True, Optional[int]
     """
     body: Dict[str, Any] = {
         "class": "FindRequestBody",
@@ -272,7 +310,7 @@ def count_elements_by_property(
             }],
         },
     }
-    return _element_count(mgr, body, as_of)
+    return _element_count(mgr, body, as_of, strict)
 
 
 def count_relationships(ce, relationship_type: str, as_of: Optional[str] = None, expert=None) -> Optional[int]:
@@ -322,16 +360,18 @@ def count_relationships(ce, relationship_type: str, as_of: Optional[str] = None,
         return None
 
 
-def counts_by_type(mgr, type_map: Sequence[Tuple[str, str]], as_of: Optional[str] = None) -> List[Dict[str, Any]]:
+def counts_by_type(mgr, type_map: Sequence[Tuple[str, str]], as_of: Optional[str] = None,
+                   strict: bool = False) -> List[Dict[str, Any]]:
     """
     Per-type counts for a set of (label, type_name) pairs -- e.g. the assets-
     by-type composition breakdown. Unknown/wrong types just yield 0 rather
-    than failing the whole call.
+    than failing the whole call. With strict=True, a count that could not be
+    measured is None (see count_elements).
 
     Returns a list of {"label": ..., "type": ..., "count": ...} dicts, in the
     order given.
     """
-    return [{"label": label, "type": type_name, "count": count_elements(mgr, type_name, as_of)}
+    return [{"label": label, "type": type_name, "count": count_elements(mgr, type_name, as_of, strict=strict)}
             for label, type_name in type_map]
 
 
@@ -1031,7 +1071,7 @@ def _update_time(el: dict):
         return None
 
 
-def people_counts(mgr, as_of: Optional[str] = None) -> Dict[str, int]:
+def people_counts(mgr, as_of: Optional[str] = None, strict: bool = False) -> Dict[str, Optional[int]]:
     """
     Person / Team / Organization / ITProfile / Community counts via native
     element counts (sub-second where an older find-and-bucket approach would
@@ -1041,14 +1081,15 @@ def people_counts(mgr, as_of: Optional[str] = None) -> Dict[str, int]:
     raw count is the authoritative repository count.
 
     Returns {"persons": int, "teams": int, "organizations": int,
-    "itProfiles": int, "communities": int}.
+    "itProfiles": int, "communities": int}. With strict=True, a count that
+    could not be measured is None (see count_elements).
     """
     return {
-        "persons": count_elements(mgr, "Person", as_of),
-        "teams": count_elements(mgr, "Team", as_of),
-        "organizations": count_elements(mgr, "Organization", as_of),
-        "itProfiles": count_elements(mgr, "ITProfile", as_of),
-        "communities": count_elements(mgr, "Community", as_of),
+        "persons": count_elements(mgr, "Person", as_of, strict=strict),
+        "teams": count_elements(mgr, "Team", as_of, strict=strict),
+        "organizations": count_elements(mgr, "Organization", as_of, strict=strict),
+        "itProfiles": count_elements(mgr, "ITProfile", as_of, strict=strict),
+        "communities": count_elements(mgr, "Community", as_of, strict=strict),
     }
 
 
@@ -1073,17 +1114,18 @@ def feedback_summary(ce, as_of: Optional[str] = None) -> Dict[str, Any]:
     return {"byType": by_type, "total": sum(by_type.values())}
 
 
-def usage_context_counts(mgr, as_of: Optional[str] = None) -> Dict[str, int]:
+def usage_context_counts(mgr, as_of: Optional[str] = None, strict: bool = False) -> Dict[str, Optional[int]]:
     """
     InformationSupplyChain and SolutionBlueprint counts -- what puts assets
     in a *usage context* ("this store feeds the Clinical Trial supply
     chain", "this component realises the Sales blueprint").
 
-    Returns {"informationSupplyChains": int, "blueprints": int}.
+    Returns {"informationSupplyChains": int, "blueprints": int}. With
+    strict=True, a count that could not be measured is None (see count_elements).
     """
     return {
-        "informationSupplyChains": count_elements(mgr, "InformationSupplyChain", as_of),
-        "blueprints": count_elements(mgr, "SolutionBlueprint", as_of),
+        "informationSupplyChains": count_elements(mgr, "InformationSupplyChain", as_of, strict=strict),
+        "blueprints": count_elements(mgr, "SolutionBlueprint", as_of, strict=strict),
     }
 
 
