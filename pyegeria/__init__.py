@@ -53,7 +53,7 @@ from pyegeria.core._exceptions import (
 )
 from pyegeria.core.config import settings
 
-from pyegeria.core.utils import body_slimmer
+from pyegeria.core.utils import body_slimmer, guid_or_none
 from pyegeria.core.clipboard import copy_to_clipboard, get_from_clipboard
 # OMVS Clients - Promoted to package level for ease of use
 from pyegeria.omvs.action_author import ActionAuthor
@@ -220,6 +220,7 @@ __all__ = [
     "init_logging",
     "exec_report_spec",
     "body_slimmer",
+    "guid_or_none",
     "copy_to_clipboard",
     "get_from_clipboard",
     "print_basic_exception",

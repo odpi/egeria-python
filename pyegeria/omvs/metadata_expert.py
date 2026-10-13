@@ -27,6 +27,21 @@ def base_path(client: ServerClient, view_server: str):
     return f"{client.platform_url}/servers/{view_server}/api/open-metadata/metadata-expert"
 
 
+def _with_query_options(body: dict | None, **options) -> dict:
+    """Copy keyword arguments the caller passed separately into a ResultsRequestBody dict.
+
+    Only fields the body does not already set are added, and None values are skipped,
+    so a field set in the body always wins (ISSUE-129).
+    """
+    if body is not None and not isinstance(body, dict):
+        body = body.model_dump(by_alias=True, exclude_none=True)
+    merged = dict(body) if body else {"class": "ResultsRequestBody"}
+    for key, value in options.items():
+        if value is not None and key not in merged:
+            merged[key] = value
+    return merged
+
+
 @dynamic_catch
 def process_related_element_list(
     response: Response, mermaid_only: bool, relationship_list: bool = False
@@ -2955,7 +2970,10 @@ class MetadataExpert(ServerClient):
 
         url = (
             f"{base_path(self, self.view_server)}/related-elements/{guid}/type/{relationship_type}"
+            f"?startingAtEnd={starting_at_end}"
         )
+        body = _with_query_options(body, startFrom=start_from, pageSize=page_size, forLineage=for_lineage,
+                                  forDuplicateProcessing=for_duplicate_processing)
 
         response: Response = await self._async_make_request(
             "POST", url, body_slimmer(body), timeout=timeout
@@ -3081,7 +3099,7 @@ class MetadataExpert(ServerClient):
         for_duplicate_processing: bool, default is set by server
             - Normally false. Set true when the caller is part of a deduplication function
         starting_at_end: int, default = 0
-            - Relationship end to start from.
+            - Ignored: this endpoint fixes both ends in the URL. Kept so existing calls still work.
         start_from: int, default = 0
             - index of the list to start from (0 for start).
         page_size
@@ -3128,6 +3146,8 @@ class MetadataExpert(ServerClient):
             f"{base_path(self, self.view_server)}/metadata-elements/{end1_guid}/linked-by-any-type/"
             f"to-elements/{end2_guid}"
         )
+        body = _with_query_options(body, startFrom=start_from, pageSize=page_size, forLineage=for_lineage,
+                                  forDuplicateProcessing=for_duplicate_processing)
 
         response: Response = await self._async_make_request(
             "POST", url, body_slimmer(body), timeout=timeout
@@ -3165,7 +3185,7 @@ class MetadataExpert(ServerClient):
         for_duplicate_processing: bool, default is set by server
             - Normally false. Set true when the caller is part of a deduplication function
         starting_at_end: int, default = 0
-            - Relationship end to start from.
+            - Ignored: this endpoint fixes both ends in the URL. Kept so existing calls still work.
         start_from: int, default = 0
             - index of the list to start from (0 for start).
         page_size
@@ -3256,7 +3276,7 @@ class MetadataExpert(ServerClient):
         for_duplicate_processing: bool, default is set by server
             - Normally false. Set true when the caller is part of a deduplication function
         starting_at_end: int, default = 0
-            - Relationship end to start from.
+            - Ignored: this endpoint fixes both ends in the URL. Kept so existing calls still work.
         start_from: int, default = 0
             - index of the list to start from (0 for start).
         page_size
@@ -3302,6 +3322,8 @@ class MetadataExpert(ServerClient):
             f"{base_path(self, self.view_server)}/metadata-elements/{end1_guid}/linked-by-type/"
             f"{relationship_type}/to-elements/{end2_guid}"
         )
+        body = _with_query_options(body, startFrom=start_from, pageSize=page_size, forLineage=for_lineage,
+                                  forDuplicateProcessing=for_duplicate_processing)
 
         response: Response = await self._async_make_request(
             "POST", url, body_slimmer(body), timeout=timeout
@@ -3342,7 +3364,7 @@ class MetadataExpert(ServerClient):
         for_duplicate_processing: bool, default is set by server
             - Normally false. Set true when the caller is part of a deduplication function
         starting_at_end: int, default = 0
-            - Relationship end to start from.
+            - Ignored: this endpoint fixes both ends in the URL. Kept so existing calls still work.
         start_from: int, default = 0
             - index of the list to start from (0 for start).
         page_size

@@ -111,18 +111,23 @@ def _resolve_analytic_function(func_decl: str):
 _ANALYTIC_CLIENT_PARAM_NAMES = {"mgr", "ce", "expert", "client"}
 
 
-def _bind_client_args(func, client: Any) -> list:
-    """Return the positional args to pass before **kwargs: one copy of `client`
-    per leading parameter named like a client (mgr/ce/expert/client)."""
-    args = []
+def _count_client_params(func) -> int:
+    """Number of leading parameters named like a client (mgr/ce/expert/client)."""
+    count = 0
     for name, param in inspect.signature(func).parameters.items():
         if name in _ANALYTIC_CLIENT_PARAM_NAMES and param.kind in (
             inspect.Parameter.POSITIONAL_ONLY, inspect.Parameter.POSITIONAL_OR_KEYWORD,
         ):
-            args.append(client)
+            count += 1
         else:
             break
-    return args
+    return count
+
+
+def _bind_client_args(func, client: Any) -> list:
+    """Return the positional args to pass before **kwargs: one copy of `client`
+    per leading parameter named like a client (mgr/ce/expert/client)."""
+    return [client] * _count_client_params(func)
 
 
 def run_analytic_action(
@@ -197,13 +202,16 @@ def _run_analytic_function(
     call_params.update({k: v for k, v in params.items() if v not in (None, "")})
 
     func = _resolve_analytic_function(func_decl)
+    n_clients = _count_client_params(func)
+    if n_clients == 0:
+        # The routine takes no client, so don't connect to Egeria or mint a token (ISSUE-137).
+        return func(**call_params)
+    client = EgeriaTech(view_server, view_url, user_id=user, user_pwd=user_pass)
     if token:
-        client = EgeriaTech(view_server, view_url, user_id=user, user_pwd=user_pass)
         client.set_bearer_token(token)
     else:
-        client = EgeriaTech(view_server, view_url, user_id=user, user_pwd=user_pass)
         client.create_egeria_bearer_token()
-    return func(*_bind_client_args(func, client), **call_params)
+    return func(*([client] * n_clients), **call_params)
 
 
 def _resolve_action_target_client(egeria_client: EgeriaTech, client_class: type) -> Any:

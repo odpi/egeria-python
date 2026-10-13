@@ -68,7 +68,7 @@ import json
 import os
 from pathlib import Path
 from typing import Dict, List, Optional, Union, Any
-from pydantic import BaseModel, Field, validator, root_validator
+from pydantic import BaseModel, Field, model_validator, validator, root_validator
 from loguru import logger
 __all__ = [
     'Column',
@@ -237,7 +237,7 @@ class ActionParameter(BaseModel):
     here as more analytic functions are added.
 
     Attributes:
-        function: The (find) function to call
+        function: The (find) function to call. Optional when analytic_function is set.
         required_params: Parameters that are required from the user, for `function`
         optional_params: Parameters that are optional from the user, for `function`
         spec_params: Parameters that are fixed for this action, for `function`
@@ -246,7 +246,7 @@ class ActionParameter(BaseModel):
             (from `extra_constraints`) -- layered under whatever arbitrary
             parameters the caller supplies at execution time.
     """
-    function: str
+    function: Optional[str] = None
     required_params: List[str] = Field(default_factory=list)
     optional_params: Optional[List[str]] = Field(default_factory=list)
     spec_params: Dict[str, Any] = Field(default_factory=dict)
@@ -260,6 +260,16 @@ class ActionParameter(BaseModel):
             if 'required_params' not in values and 'user_params' in values:
                 values['required_params'] = values.pop('user_params')
         return values
+
+    @model_validator(mode="after")
+    def _needs_a_function(self):
+        """`function` may be omitted only when `analytic_function` is set (ISSUE-141).
+
+        An explicit empty string is still accepted, as it was when `function` was required.
+        """
+        if self.function is None and not self.analytic_function:
+            raise ValueError("ActionParameter needs a function or an analytic_function")
+        return self
 
 
 class QuestionSpec(BaseModel):

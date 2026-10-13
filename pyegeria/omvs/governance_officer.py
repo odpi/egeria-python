@@ -372,8 +372,7 @@ class GovernanceOfficer(ServerClient):
               "property1" : "propertyValue1",
               "property2" : "propertyValue2"
             }
-          },
-          "initialStatus": "DRAFT"
+          }
         }
 
         Generic governance Body structure with Parent:
@@ -418,8 +417,7 @@ class GovernanceOfficer(ServerClient):
             },
             "effectiveFrom": "{{$isoTimestamp}}",
             "effectiveTo": "{{$isoTimestamp}}"
-          },
-          "initialStatus": "DRAFT"
+          }
         }
 
        """
@@ -500,8 +498,7 @@ class GovernanceOfficer(ServerClient):
               "property1" : "propertyValue1",
               "property2" : "propertyValue2"
             }
-          },
-          "initialStatus": "DRAFT"
+          }
         }
 
         Body structure with Parent:
@@ -546,8 +543,7 @@ class GovernanceOfficer(ServerClient):
             },
             "effectiveFrom": "{{$isoTimestamp}}",
             "effectiveTo": "{{$isoTimestamp}}"
-          },
-          "initialStatus": "DRAFT"
+          }
         }
 
 

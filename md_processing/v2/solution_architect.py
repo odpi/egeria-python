@@ -197,7 +197,6 @@ class ComponentProcessor(AsyncBaseCommandProcessor):
         prop_body.update({
             "solutionComponentType": attributes.get('Solution Component Type', {}).get('value'),
             "plannedDeployedImplementationType": attributes.get('Planned Deployed Implementation Type', {}).get('value'),
-            "deploymentStatus": attributes.get('Deployment Status', {}).get('value'),
             "userDefinedDeploymentStatus": attributes.get('User Defined Deployment Status', {}).get('value'),
             "canonicalName": attributes.get('Canonical Name', {}).get('value'),
         })
@@ -250,7 +249,6 @@ class ComponentProcessor(AsyncBaseCommandProcessor):
             body = body_slimmer({
                 "class": "NewElementRequestBody",
                 "properties": prop_body,
-                "initialStatus": attributes.get('Status', {}).get('value', 'ACTIVE')
             })
             # Anchor/Parent logic
             body["anchorGUID"] = attributes.get('Anchor ID', {}).get('guid')

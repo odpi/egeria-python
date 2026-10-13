@@ -356,7 +356,7 @@ class DataDiscovery(ServerClient):
         None
         """
         url = f"{self.platform_url}/servers/{self.view_server}/api/open-metadata/data-discovery/survey-reports/{survey_report_guid}/new-annotations/{annotation_guid}/attach"
-        await self._async_new_relationship_request(url, ["SurveyReportAnnotationRelationship"], body)
+        await self._async_new_relationship_request(url, ["ReportedAnnotationProperties"], body)
 
     def attach_annotation_to_report(
         self,
@@ -456,7 +456,7 @@ class DataDiscovery(ServerClient):
         None
         """
         url = f"{self.platform_url}/servers/{self.view_server}/api/open-metadata/data-discovery/elements/{element_guid}/associated-annotations/{annotation_guid}/attach"
-        await self._async_new_relationship_request(url, ["AnnotationDescribedElementRelationship"], body)
+        await self._async_new_relationship_request(url, ["AssociatedAnnotationProperties"], body)
 
     def link_annotation_to_described_element(
         self,
@@ -529,7 +529,7 @@ class DataDiscovery(ServerClient):
         None
         """
         url = f"{self.platform_url}/servers/{self.view_server}/api/open-metadata/data-discovery/annotations/{predecessor_guid}/later-annotations/{annotation_guid}/attach"
-        await self._async_new_relationship_request(url, ["AnnotationPredecessorRelationship"], body)
+        await self._async_new_relationship_request(url, ["AnnotationExtensionProperties"], body)
 
     def link_annotation_to_its_predecessor(
         self,
@@ -629,7 +629,7 @@ class DataDiscovery(ServerClient):
         None
         """
         url = f"{self.platform_url}/servers/{self.view_server}/api/open-metadata/data-discovery/annotations/{annotation_guid}/resource-profile-data-assets/{element_guid}/attach"
-        await self._async_new_relationship_request(url, ["ResourceProfileDataRelationship"], body)
+        await self._async_new_relationship_request(url, ["ResourceProfileDataProperties"], body)
 
     def link_resource_profile_data(
         self,
@@ -729,7 +729,7 @@ class DataDiscovery(ServerClient):
         None
         """
         url = f"{self.platform_url}/servers/{self.view_server}/api/open-metadata/data-discovery/annotations/{annotation_guid}/matched-elements/{element_guid}/attach"
-        await self._async_new_relationship_request(url, ["AnnotationMatchRelationship"], body)
+        await self._async_new_relationship_request(url, ["AnnotationMatchProperties"], body)
 
     def link_annotation_match(
         self,
@@ -1785,7 +1785,7 @@ class DataDiscovery(ServerClient):
     async def _async_link_request_for_action_target(self, annotation_guid: str, element_guid: str, body: Optional[dict | NewRelationshipRequestBody] = None) -> None:
         """Link a request for action target. Async version."""
         url = f"{self.platform_url}/servers/{self.view_server}/api/open-metadata/data-discovery/annotations/{annotation_guid}/request-for-action-targets/{element_guid}/attach"
-        await self._async_new_relationship_request(url, ["RequestForActionProperties"], body)
+        await self._async_new_relationship_request(url, ["RequestForActionTargetProperties"], body)
 
     def link_request_for_action_target(self, annotation_guid: str, element_guid: str, body: Optional[dict | NewRelationshipRequestBody] = None) -> None:
         """Link a request for action target."""

@@ -1045,8 +1045,8 @@ class GlossaryManager(CollectionManager):
                         "examples": examples,
                         "usage": usage,
                         "publishVersionIdentifier": version,
+                        "contentStatus": status,
                         },
-                    "initialStatus": status,
                     })
                 resp = await self._async_make_request("POST", create_url, create_body)
                 term_guid = resp.json().get("guid", NO_GUID_RETURNED)
@@ -1221,7 +1221,8 @@ class GlossaryManager(CollectionManager):
                 examples = props.get("examples", "---") or "---"
                 usage = props.get("usage", "---") or "---"
                 version = props.get("publishVersionIdentifier", "---") or "---"
-                status = term.get("elementHeader", {}).get("status", "DRAFT")
+                # A term's status is its contentStatus; Egeria removed initialStatus (ISSUE-113).
+                status = props.get("contentStatus") or term.get("elementHeader", {}).get("status", "DRAFT")
 
                 csv_writer.writerow(
                     {
@@ -1340,7 +1341,7 @@ class GlossaryManager(CollectionManager):
                     "class": "GlossaryTermProperties",
                     "qualifiedName": qualified_name,
                     "displayName": new_display_name,
-                    "status": term_status,
+                    "contentStatus": term_status,
                     "versionIdentifier": version_id,
                 },
             }

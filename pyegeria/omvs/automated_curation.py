@@ -602,7 +602,6 @@ class AutomatedCuration(ServerClient):
         The full description of the body is shown below:
            {
              "typeName" : "",
-             "initialStatus" : "",
              "initialClassifications" : "",
              "anchorGUID" : "",
              "isOwnAnchor" : "",
@@ -650,7 +649,6 @@ class AutomatedCuration(ServerClient):
          The full description of the body is shown below:
              {
                "typeName" : "",
-               "initialStatus" : "",
                "initialClassifications" : "",
                "anchorGUID" : "",
                "isOwnAnchor" : "",

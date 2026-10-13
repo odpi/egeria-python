@@ -138,6 +138,24 @@ def test_chart_path_threads_token(monkeypatch):
     assert client.token == "user-token"
 
 
+def test_analytic_routine_without_client_param_builds_no_client(monkeypatch):
+    """ISSUE-137: a routine that takes no mgr/ce/expert/client parameter must not
+    cause an EgeriaTech to be built or a token minted -- an unreachable view_url
+    must not stop it running."""
+    _patch_analytic_path(monkeypatch)
+
+    def _local_only(window=0):
+        return {"count": 7, "window": window}
+
+    monkeypatch.setattr(fse, "_resolve_analytic_function", lambda decl: _local_only)
+    result = fse.exec_report_spec(
+        "Anything", output_format="DICT", view_server="vs", view_url="https://unreachable",
+        user="svc", user_pass="svc-pw", params={"window": 2},
+    )
+    assert result == {"kind": "json", "data": {"count": 7, "window": 2}}
+    assert _RecordingClient.instances == []
+
+
 # --- MCP adapter passthrough --------------------------------------------------
 
 def test_mcp_run_report_forwards_token(monkeypatch):

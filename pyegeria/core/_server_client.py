@@ -3422,7 +3422,7 @@ class ServerClient(BaseServerClient):
             starts_with: bool = True, ends_with: bool = False,
             ignore_case: bool = True,
             anchor_domain: Optional[str] = None,
-            metadata_element_type: Optional[str] = "Action",
+            metadata_element_type: Optional[str] = "Note",
             metadata_element_subtypes: Optional[list[str]] = None,
             skip_relationships: Optional[list[str]] = None,
             include_only_relationships: Optional[list[str]] = None,
@@ -3566,7 +3566,7 @@ class ServerClient(BaseServerClient):
         # Filter out None values, but keep search_string even if None (it's required)
         params = {k: v for k, v in params.items() if v is not None or k == 'search_string'}
         
-        response = await self._async_find_request(url, _type=metadata_element_type or "Action", _gen_output=self._generate_feedback_output,
+        response = await self._async_find_request(url, _type=metadata_element_type or "Note", _gen_output=self._generate_feedback_output,
                                                   **params)
         return response
 
@@ -3625,7 +3625,7 @@ class ServerClient(BaseServerClient):
     async def _async_get_note_by_guid(
             self,
             guid: str,
-            metadata_element_type_name: str | None = "Action",
+            metadata_element_type_name: str | None = "Note",
             graph_query_depth: int = 3,
             output_format: str = "JSON",
             report_spec: Optional[str | dict] = None,
@@ -3640,7 +3640,7 @@ class ServerClient(BaseServerClient):
         guid: str
             - unique identifier for the note object.
         metadata_element_type_name : str, optional
-            - type name for the note object (default is "Action").
+            - type name for the note object (default is "Note").
         body
             - optional effective time
 
@@ -3667,7 +3667,7 @@ class ServerClient(BaseServerClient):
     def get_note_by_guid(
             self,
             guid: str,
-            metadata_element_type_name: str | None = "Action",
+            metadata_element_type_name: str | None = "Note",
             graph_query_depth: int = 3,
             output_format: str = "JSON",
             report_spec: Optional[str | dict] = None,
@@ -3682,7 +3682,7 @@ class ServerClient(BaseServerClient):
         guid: str
              - unique identifier of the requested metadata element
         metadata_element_type_name : str, optional
-            - type name for the note object (default is "Action").
+            - type name for the note object (default is "Note").
         body: dict | GetRequestBody
             - optional details of the request.
         output_format: str, default = "JSON"
@@ -3707,7 +3707,7 @@ class ServerClient(BaseServerClient):
     async def _async_get_notes_for_note_log(
             self,
             note_log_guid: str,
-            metadata_element_type_name: str | None = "Action",
+            metadata_element_type_name: str | None = "Note",
             graph_query_depth: int = 3,
             start_from: int = 0, page_size: int = 0,
             output_format: str = "JSON",
@@ -3722,6 +3722,9 @@ class ServerClient(BaseServerClient):
         ----------
         note_log_guid: str
              - id of the note log to retrieve notes for.
+        metadata_element_type_name : str, optional
+            - type of log entry to return (default is "Note"). A note log can also hold other
+              Notification entries; pass "Notification" to get every entry.
         body: dict | ResultsRequestBody
             - optional details of the request.
         output_format: str, default = "JSON"
@@ -3753,7 +3756,7 @@ class ServerClient(BaseServerClient):
     def get_notes_for_note_log(
             self,
             note_log_guid: str,
-            metadata_element_type_name: str | None = "Action",
+            metadata_element_type_name: str | None = "Note",
             graph_query_depth: int = 3,
             start_from: int = 0, page_size: int = 0,
             output_format: str = "JSON",
@@ -3768,6 +3771,9 @@ class ServerClient(BaseServerClient):
          ----------
          note_log_guid: str
               - note_log id to find notes for.
+         metadata_element_type_name : str, optional
+             - type of log entry to return (default is "Note"). A note log can also hold other
+               Notification entries; pass "Notification" to get every entry.
          body: dict | ResultsRequestBody
              - optional details of the request.
          output_format: str, default = "JSON"

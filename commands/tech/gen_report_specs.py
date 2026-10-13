@@ -379,20 +379,17 @@ def build_format_sets_from_commands(
             extra_constraints = _safe_parse_constraints(cmd_obj.get("extra_constraints"))
             action = None
             if find_method or extra_find:
-                # `function` is a required (non-Optional) field on ActionParameter,
-                # but a command can legitimately have only an analytic_function and
-                # no find_method at all (e.g. a dedicated "View Growth"-style command
-                # with no element-listing path) -- an empty string is a valid, if
-                # unused, value; exec_report_spec's SERIES path never reads it.
+                # A command can have only an analytic_function and no find_method
+                # (e.g. a "View Growth"-style command with no element-listing path);
+                # `function` is then left unset (ISSUE-141).
                 action = ActionParameter(
-                    function=find_method or "",
+                    function=find_method or None,
                     required_params=["search_string"] if find_method else [],
                     optional_params=OPTIONAL_SEARCH_PARAMS if find_method else [],
                     spec_params=constraints or {},
+                    analytic_function=extra_find or None,
+                    analytic_spec_params=(extra_constraints or {}) if extra_find else {},
                 )
-                if extra_find:
-                    action.analytic_function = extra_find
-                    action.analytic_spec_params = extra_constraints or {}
 
             formats = _build_generated_formats(columns, default_types=default_types)
             if not formats:

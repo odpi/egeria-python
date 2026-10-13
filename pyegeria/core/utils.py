@@ -60,6 +60,29 @@ def print_guid_list(guids):
 
 
 
+def guid_or_none(result: Any) -> str | None:
+    """Return `result` if it is a GUID, else None.
+
+    Lookups such as `get_guid_for_name` signal a miss with a sentinel string
+    ("No elements found", "No guid returned", ...). The sentinel is truthy, so
+    `if not guid` and `guid or default` read a miss as found (ISSUE-114). Pass
+    the result through this helper first::
+
+        guid = guid_or_none(client.get_guid_for_name(qualified_name))
+        if guid is None:
+            guid = client.create_...(...)
+
+    A GUID is a non-empty string with no whitespace; every sentinel has spaces.
+    Anything else (None, "", a list, a dict) also gives None.
+    """
+    if not isinstance(result, str):
+        return None
+    result = result.strip()
+    if not result or any(ch.isspace() for ch in result):
+        return None
+    return result
+
+
 def body_slimmer(body: dict) -> dict:
     """body_slimmer is a little function to remove unused keys from a dict
     and recursively slim embedded dicts
@@ -438,7 +461,10 @@ def parse_to_dict(input_str: str) -> dict | None:
 
 def dynamic_catch(func: T) -> T:
     if getattr(app_settings.Debug, "enable_logger_catch", False):
-        return logger.catch(func)  # Apply the logger.catch decorator
+        # reraise=True: log the exception with loguru's full traceback, then let it propagate.
+        # Without it a failure returns None, which callers read as "nothing found" (ISSUE-134).
+        # Pass options first: logger.catch(func, reraise=True) silently drops the keyword.
+        return logger.catch(reraise=True)(func)
     else:
         return func  # Return the function unwrapped
 
