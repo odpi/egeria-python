@@ -214777,6 +214777,4882 @@
     "get_additional_props": null,
     "question_spec": null
   },
+  "Reference-Data-Set-DrE-Basic": {
+    "target_type": "Reference Data Set",
+    "heading": "Reference-Data-Set-DrE-Basic Attributes",
+    "description": "Auto-generated format for Reference Data Set (Create, Basic).",
+    "aliases": [],
+    "annotations": {},
+    "family": "Reference Data",
+    "formats": [
+      {
+        "types": [
+          "LIST"
+        ],
+        "attributes": [
+          {
+            "name": "Display Name",
+            "key": "display_name",
+            "value": null,
+            "format": false,
+            "detail_spec": null,
+            "valid_values": []
+          },
+          {
+            "name": "Qualified Name",
+            "key": "qualified_name",
+            "value": null,
+            "format": false,
+            "detail_spec": null,
+            "valid_values": []
+          },
+          {
+            "name": "GUID",
+            "key": "guid",
+            "value": null,
+            "format": false,
+            "detail_spec": null,
+            "valid_values": []
+          },
+          {
+            "name": "Description",
+            "key": "description",
+            "value": null,
+            "format": false,
+            "detail_spec": null,
+            "valid_values": []
+          },
+          {
+            "name": "Legal",
+            "key": "legal",
+            "value": null,
+            "format": false,
+            "detail_spec": null,
+            "valid_values": []
+          },
+          {
+            "name": "Authors",
+            "key": "authors",
+            "value": null,
+            "format": false,
+            "detail_spec": null,
+            "valid_values": []
+          },
+          {
+            "name": "Preferred Value",
+            "key": "preferred_value",
+            "value": null,
+            "format": false,
+            "detail_spec": null,
+            "valid_values": []
+          },
+          {
+            "name": "Data Type",
+            "key": "data_type",
+            "value": null,
+            "format": false,
+            "detail_spec": null,
+            "valid_values": [
+              "string",
+              "int",
+              "long",
+              "date",
+              "boolean",
+              "char",
+              "byte",
+              "float",
+              "double",
+              "biginteger",
+              "bigdecimal",
+              "array<string>",
+              "array<int>",
+              "map<string,string>",
+              "map<string,boolean>",
+              "map<string,int>",
+              "map<string,long>",
+              "map<string,double>",
+              "map<string,date>",
+              "map<string,object>",
+              "short",
+              "map<string,array<string>>",
+              "other"
+            ]
+          },
+          {
+            "name": "Usage",
+            "key": "usage",
+            "value": null,
+            "format": false,
+            "detail_spec": null,
+            "valid_values": []
+          },
+          {
+            "name": "Scope",
+            "key": "scope",
+            "value": null,
+            "format": false,
+            "detail_spec": null,
+            "valid_values": []
+          },
+          {
+            "name": "Namespace Path",
+            "key": "namespace_path",
+            "value": null,
+            "format": false,
+            "detail_spec": null,
+            "valid_values": []
+          },
+          {
+            "name": "Is Case Sensitive",
+            "key": "is_case_sensitive",
+            "value": null,
+            "format": false,
+            "detail_spec": null,
+            "valid_values": []
+          },
+          {
+            "name": "Members",
+            "key": "members",
+            "value": null,
+            "format": false,
+            "detail_spec": null,
+            "valid_values": []
+          },
+          {
+            "name": "Values",
+            "key": "values",
+            "value": null,
+            "format": false,
+            "detail_spec": null,
+            "valid_values": []
+          },
+          {
+            "name": "Value Table",
+            "key": "value_table",
+            "value": null,
+            "format": false,
+            "detail_spec": null,
+            "valid_values": []
+          },
+          {
+            "name": "Default Member",
+            "key": "default_member",
+            "value": null,
+            "format": false,
+            "detail_spec": null,
+            "valid_values": []
+          },
+          {
+            "name": "Version Identifier",
+            "key": "version_identifier",
+            "value": null,
+            "format": false,
+            "detail_spec": null,
+            "valid_values": []
+          },
+          {
+            "name": "Content Status",
+            "key": "content_status",
+            "value": null,
+            "format": false,
+            "detail_spec": null,
+            "valid_values": [
+              "DRAFT",
+              "PREPARED",
+              "PROPOSED",
+              "APPROVED",
+              "REJECTED",
+              "ACTIVE",
+              "DEPRECATED",
+              "OTHER"
+            ]
+          },
+          {
+            "name": "Category",
+            "key": "category",
+            "value": null,
+            "format": false,
+            "detail_spec": null,
+            "valid_values": []
+          }
+        ],
+        "columns": [
+          {
+            "name": "Display Name",
+            "key": "display_name",
+            "value": null,
+            "format": false,
+            "detail_spec": null,
+            "valid_values": []
+          },
+          {
+            "name": "Qualified Name",
+            "key": "qualified_name",
+            "value": null,
+            "format": false,
+            "detail_spec": null,
+            "valid_values": []
+          },
+          {
+            "name": "GUID",
+            "key": "guid",
+            "value": null,
+            "format": false,
+            "detail_spec": null,
+            "valid_values": []
+          },
+          {
+            "name": "Description",
+            "key": "description",
+            "value": null,
+            "format": false,
+            "detail_spec": null,
+            "valid_values": []
+          },
+          {
+            "name": "Legal",
+            "key": "legal",
+            "value": null,
+            "format": false,
+            "detail_spec": null,
+            "valid_values": []
+          },
+          {
+            "name": "Authors",
+            "key": "authors",
+            "value": null,
+            "format": false,
+            "detail_spec": null,
+            "valid_values": []
+          },
+          {
+            "name": "Preferred Value",
+            "key": "preferred_value",
+            "value": null,
+            "format": false,
+            "detail_spec": null,
+            "valid_values": []
+          },
+          {
+            "name": "Data Type",
+            "key": "data_type",
+            "value": null,
+            "format": false,
+            "detail_spec": null,
+            "valid_values": [
+              "string",
+              "int",
+              "long",
+              "date",
+              "boolean",
+              "char",
+              "byte",
+              "float",
+              "double",
+              "biginteger",
+              "bigdecimal",
+              "array<string>",
+              "array<int>",
+              "map<string,string>",
+              "map<string,boolean>",
+              "map<string,int>",
+              "map<string,long>",
+              "map<string,double>",
+              "map<string,date>",
+              "map<string,object>",
+              "short",
+              "map<string,array<string>>",
+              "other"
+            ]
+          },
+          {
+            "name": "Usage",
+            "key": "usage",
+            "value": null,
+            "format": false,
+            "detail_spec": null,
+            "valid_values": []
+          },
+          {
+            "name": "Scope",
+            "key": "scope",
+            "value": null,
+            "format": false,
+            "detail_spec": null,
+            "valid_values": []
+          },
+          {
+            "name": "Namespace Path",
+            "key": "namespace_path",
+            "value": null,
+            "format": false,
+            "detail_spec": null,
+            "valid_values": []
+          },
+          {
+            "name": "Is Case Sensitive",
+            "key": "is_case_sensitive",
+            "value": null,
+            "format": false,
+            "detail_spec": null,
+            "valid_values": []
+          },
+          {
+            "name": "Members",
+            "key": "members",
+            "value": null,
+            "format": false,
+            "detail_spec": null,
+            "valid_values": []
+          },
+          {
+            "name": "Values",
+            "key": "values",
+            "value": null,
+            "format": false,
+            "detail_spec": null,
+            "valid_values": []
+          },
+          {
+            "name": "Value Table",
+            "key": "value_table",
+            "value": null,
+            "format": false,
+            "detail_spec": null,
+            "valid_values": []
+          },
+          {
+            "name": "Default Member",
+            "key": "default_member",
+            "value": null,
+            "format": false,
+            "detail_spec": null,
+            "valid_values": []
+          },
+          {
+            "name": "Version Identifier",
+            "key": "version_identifier",
+            "value": null,
+            "format": false,
+            "detail_spec": null,
+            "valid_values": []
+          },
+          {
+            "name": "Content Status",
+            "key": "content_status",
+            "value": null,
+            "format": false,
+            "detail_spec": null,
+            "valid_values": [
+              "DRAFT",
+              "PREPARED",
+              "PROPOSED",
+              "APPROVED",
+              "REJECTED",
+              "ACTIVE",
+              "DEPRECATED",
+              "OTHER"
+            ]
+          },
+          {
+            "name": "Category",
+            "key": "category",
+            "value": null,
+            "format": false,
+            "detail_spec": null,
+            "valid_values": []
+          }
+        ]
+      },
+      {
+        "types": [
+          "ALL"
+        ],
+        "attributes": [
+          {
+            "name": "Category",
+            "key": "category",
+            "value": null,
+            "format": false,
+            "detail_spec": null,
+            "valid_values": []
+          },
+          {
+            "name": "Description",
+            "key": "description",
+            "value": null,
+            "format": false,
+            "detail_spec": null,
+            "valid_values": []
+          },
+          {
+            "name": "Display Name",
+            "key": "display_name",
+            "value": null,
+            "format": false,
+            "detail_spec": null,
+            "valid_values": []
+          },
+          {
+            "name": "GUID",
+            "key": "guid",
+            "value": null,
+            "format": false,
+            "detail_spec": null,
+            "valid_values": []
+          },
+          {
+            "name": "Legal",
+            "key": "legal",
+            "value": null,
+            "format": false,
+            "detail_spec": null,
+            "valid_values": []
+          },
+          {
+            "name": "Qualified Name",
+            "key": "qualified_name",
+            "value": null,
+            "format": false,
+            "detail_spec": null,
+            "valid_values": []
+          },
+          {
+            "name": "URL",
+            "key": "url",
+            "value": null,
+            "format": false,
+            "detail_spec": null,
+            "valid_values": []
+          },
+          {
+            "name": "Version Identifier",
+            "key": "version_identifier",
+            "value": null,
+            "format": false,
+            "detail_spec": null,
+            "valid_values": []
+          },
+          {
+            "name": "Authors",
+            "key": "authors",
+            "value": null,
+            "format": false,
+            "detail_spec": null,
+            "valid_values": []
+          },
+          {
+            "name": "Content Status",
+            "key": "content_status",
+            "value": null,
+            "format": false,
+            "detail_spec": null,
+            "valid_values": [
+              "DRAFT",
+              "PREPARED",
+              "PROPOSED",
+              "APPROVED",
+              "REJECTED",
+              "ACTIVE",
+              "DEPRECATED",
+              "OTHER"
+            ]
+          },
+          {
+            "name": "Preferred Value",
+            "key": "preferred_value",
+            "value": null,
+            "format": false,
+            "detail_spec": null,
+            "valid_values": []
+          },
+          {
+            "name": "Data Type",
+            "key": "data_type",
+            "value": null,
+            "format": false,
+            "detail_spec": null,
+            "valid_values": [
+              "string",
+              "int",
+              "long",
+              "date",
+              "boolean",
+              "char",
+              "byte",
+              "float",
+              "double",
+              "biginteger",
+              "bigdecimal",
+              "array<string>",
+              "array<int>",
+              "map<string,string>",
+              "map<string,boolean>",
+              "map<string,int>",
+              "map<string,long>",
+              "map<string,double>",
+              "map<string,date>",
+              "map<string,object>",
+              "short",
+              "map<string,array<string>>",
+              "other"
+            ]
+          },
+          {
+            "name": "Usage",
+            "key": "usage",
+            "value": null,
+            "format": false,
+            "detail_spec": null,
+            "valid_values": []
+          },
+          {
+            "name": "Scope",
+            "key": "scope",
+            "value": null,
+            "format": false,
+            "detail_spec": null,
+            "valid_values": []
+          },
+          {
+            "name": "Namespace Path",
+            "key": "namespace_path",
+            "value": null,
+            "format": false,
+            "detail_spec": null,
+            "valid_values": []
+          },
+          {
+            "name": "Is Case Sensitive",
+            "key": "is_case_sensitive",
+            "value": null,
+            "format": false,
+            "detail_spec": null,
+            "valid_values": []
+          },
+          {
+            "name": "Members",
+            "key": "members",
+            "value": null,
+            "format": false,
+            "detail_spec": null,
+            "valid_values": []
+          },
+          {
+            "name": "Values",
+            "key": "values",
+            "value": null,
+            "format": false,
+            "detail_spec": null,
+            "valid_values": []
+          },
+          {
+            "name": "Value Table",
+            "key": "value_table",
+            "value": null,
+            "format": false,
+            "detail_spec": null,
+            "valid_values": []
+          },
+          {
+            "name": "Default Member",
+            "key": "default_member",
+            "value": null,
+            "format": false,
+            "detail_spec": null,
+            "valid_values": []
+          }
+        ],
+        "columns": [
+          {
+            "name": "Category",
+            "key": "category",
+            "value": null,
+            "format": false,
+            "detail_spec": null,
+            "valid_values": []
+          },
+          {
+            "name": "Description",
+            "key": "description",
+            "value": null,
+            "format": false,
+            "detail_spec": null,
+            "valid_values": []
+          },
+          {
+            "name": "Display Name",
+            "key": "display_name",
+            "value": null,
+            "format": false,
+            "detail_spec": null,
+            "valid_values": []
+          },
+          {
+            "name": "GUID",
+            "key": "guid",
+            "value": null,
+            "format": false,
+            "detail_spec": null,
+            "valid_values": []
+          },
+          {
+            "name": "Legal",
+            "key": "legal",
+            "value": null,
+            "format": false,
+            "detail_spec": null,
+            "valid_values": []
+          },
+          {
+            "name": "Qualified Name",
+            "key": "qualified_name",
+            "value": null,
+            "format": false,
+            "detail_spec": null,
+            "valid_values": []
+          },
+          {
+            "name": "URL",
+            "key": "url",
+            "value": null,
+            "format": false,
+            "detail_spec": null,
+            "valid_values": []
+          },
+          {
+            "name": "Version Identifier",
+            "key": "version_identifier",
+            "value": null,
+            "format": false,
+            "detail_spec": null,
+            "valid_values": []
+          },
+          {
+            "name": "Authors",
+            "key": "authors",
+            "value": null,
+            "format": false,
+            "detail_spec": null,
+            "valid_values": []
+          },
+          {
+            "name": "Content Status",
+            "key": "content_status",
+            "value": null,
+            "format": false,
+            "detail_spec": null,
+            "valid_values": [
+              "DRAFT",
+              "PREPARED",
+              "PROPOSED",
+              "APPROVED",
+              "REJECTED",
+              "ACTIVE",
+              "DEPRECATED",
+              "OTHER"
+            ]
+          },
+          {
+            "name": "Preferred Value",
+            "key": "preferred_value",
+            "value": null,
+            "format": false,
+            "detail_spec": null,
+            "valid_values": []
+          },
+          {
+            "name": "Data Type",
+            "key": "data_type",
+            "value": null,
+            "format": false,
+            "detail_spec": null,
+            "valid_values": [
+              "string",
+              "int",
+              "long",
+              "date",
+              "boolean",
+              "char",
+              "byte",
+              "float",
+              "double",
+              "biginteger",
+              "bigdecimal",
+              "array<string>",
+              "array<int>",
+              "map<string,string>",
+              "map<string,boolean>",
+              "map<string,int>",
+              "map<string,long>",
+              "map<string,double>",
+              "map<string,date>",
+              "map<string,object>",
+              "short",
+              "map<string,array<string>>",
+              "other"
+            ]
+          },
+          {
+            "name": "Usage",
+            "key": "usage",
+            "value": null,
+            "format": false,
+            "detail_spec": null,
+            "valid_values": []
+          },
+          {
+            "name": "Scope",
+            "key": "scope",
+            "value": null,
+            "format": false,
+            "detail_spec": null,
+            "valid_values": []
+          },
+          {
+            "name": "Namespace Path",
+            "key": "namespace_path",
+            "value": null,
+            "format": false,
+            "detail_spec": null,
+            "valid_values": []
+          },
+          {
+            "name": "Is Case Sensitive",
+            "key": "is_case_sensitive",
+            "value": null,
+            "format": false,
+            "detail_spec": null,
+            "valid_values": []
+          },
+          {
+            "name": "Members",
+            "key": "members",
+            "value": null,
+            "format": false,
+            "detail_spec": null,
+            "valid_values": []
+          },
+          {
+            "name": "Values",
+            "key": "values",
+            "value": null,
+            "format": false,
+            "detail_spec": null,
+            "valid_values": []
+          },
+          {
+            "name": "Value Table",
+            "key": "value_table",
+            "value": null,
+            "format": false,
+            "detail_spec": null,
+            "valid_values": []
+          },
+          {
+            "name": "Default Member",
+            "key": "default_member",
+            "value": null,
+            "format": false,
+            "detail_spec": null,
+            "valid_values": []
+          }
+        ]
+      }
+    ],
+    "action": {
+      "function": "ReferenceDataManager.find_valid_value_definitions",
+      "required_params": [
+        "search_string"
+      ],
+      "optional_params": [
+        "sequencing_order",
+        "sequencing_property",
+        "page_size",
+        "start_from",
+        "starts_with",
+        "ends_with",
+        "ignore_case",
+        "classification_names",
+        "metadata_element_subtypes",
+        "metadata_element_type"
+      ],
+      "spec_params": {
+        "metadata_element_type": "ReferenceDataSet"
+      },
+      "analytic_function": null,
+      "analytic_spec_params": {}
+    },
+    "get_additional_props": null,
+    "question_spec": null
+  },
+  "Reference-Data-Set-DrE-Advanced": {
+    "target_type": "Reference Data Set",
+    "heading": "Reference-Data-Set-DrE-Advanced Attributes",
+    "description": "Auto-generated format for Reference Data Set (Create, Advanced).",
+    "aliases": [],
+    "annotations": {},
+    "family": "Reference Data",
+    "formats": [
+      {
+        "types": [
+          "LIST"
+        ],
+        "attributes": [
+          {
+            "name": "Display Name",
+            "key": "display_name",
+            "value": null,
+            "format": false,
+            "detail_spec": null,
+            "valid_values": []
+          },
+          {
+            "name": "Qualified Name",
+            "key": "qualified_name",
+            "value": null,
+            "format": false,
+            "detail_spec": null,
+            "valid_values": []
+          },
+          {
+            "name": "GUID",
+            "key": "guid",
+            "value": null,
+            "format": false,
+            "detail_spec": null,
+            "valid_values": []
+          },
+          {
+            "name": "Effective From",
+            "key": "effective_from",
+            "value": null,
+            "format": false,
+            "detail_spec": null,
+            "valid_values": []
+          },
+          {
+            "name": "Effective Time",
+            "key": "effective_time",
+            "value": null,
+            "format": false,
+            "detail_spec": null,
+            "valid_values": []
+          },
+          {
+            "name": "Effective To",
+            "key": "effective_to",
+            "value": null,
+            "format": false,
+            "detail_spec": null,
+            "valid_values": []
+          },
+          {
+            "name": "Glossary Term",
+            "key": "glossary_term",
+            "value": null,
+            "format": false,
+            "detail_spec": null,
+            "valid_values": []
+          },
+          {
+            "name": "Is Own Anchor",
+            "key": "is_own_anchor",
+            "value": null,
+            "format": false,
+            "detail_spec": null,
+            "valid_values": []
+          },
+          {
+            "name": "Zone Membership",
+            "key": "zone_membership",
+            "value": null,
+            "format": false,
+            "detail_spec": null,
+            "valid_values": []
+          },
+          {
+            "name": "Additional Properties",
+            "key": "additional_properties",
+            "value": null,
+            "format": false,
+            "detail_spec": null,
+            "valid_values": []
+          },
+          {
+            "name": "Confidence Classification",
+            "key": "confidence_classification",
+            "value": null,
+            "format": false,
+            "detail_spec": null,
+            "valid_values": [
+              "UNCLASSIFIED",
+              "AD_HOC",
+              "TRANSACTIONAL",
+              "AUTHORITATIVE",
+              "DERIVED",
+              "OBSOLETE",
+              "OTHER"
+            ]
+          },
+          {
+            "name": "Confidentiality Classification",
+            "key": "confidentiality_classification",
+            "value": null,
+            "format": false,
+            "detail_spec": null,
+            "valid_values": [
+              "UNCLASSIFIED",
+              "INTERNAL",
+              "CONFIDENTIAL",
+              "SENSITIVE",
+              "RESTRICTED",
+              "OTHER"
+            ]
+          },
+          {
+            "name": "Criticality Classification",
+            "key": "criticality_classification",
+            "value": null,
+            "format": false,
+            "detail_spec": null,
+            "valid_values": [
+              "UNCLASSIFIED",
+              "MARGINAL",
+              "IMPORTANT",
+              "CRITICAL",
+              "CATASTROPHIC",
+              "OTHER"
+            ]
+          },
+          {
+            "name": "Description",
+            "key": "description",
+            "value": null,
+            "format": false,
+            "detail_spec": null,
+            "valid_values": []
+          },
+          {
+            "name": "Identifier",
+            "key": "identifier",
+            "value": null,
+            "format": false,
+            "detail_spec": null,
+            "valid_values": []
+          },
+          {
+            "name": "Impact Classification",
+            "key": "impact_classification",
+            "value": null,
+            "format": false,
+            "detail_spec": null,
+            "valid_values": [
+              "UNCLASSIFIED",
+              "LOW",
+              "MEDIUM",
+              "HIGH",
+              "OTHER"
+            ]
+          },
+          {
+            "name": "Legal",
+            "key": "legal",
+            "value": null,
+            "format": false,
+            "detail_spec": null,
+            "valid_values": []
+          },
+          {
+            "name": "Policy Management Point",
+            "key": "policy_management_point",
+            "value": null,
+            "format": false,
+            "detail_spec": null,
+            "valid_values": []
+          },
+          {
+            "name": "Retention Classification",
+            "key": "retention_classification",
+            "value": null,
+            "format": false,
+            "detail_spec": null,
+            "valid_values": [
+              "UNCLASSIFIED",
+              "TEMPORARY",
+              "PROJECT_LIFETIME",
+              "TEAM_LIFETIME",
+              "CONTRACT_LIFETIME",
+              "REGULATED_LIFETIME",
+              "TIMEBOXED_LIFETIME",
+              "OTHER"
+            ]
+          },
+          {
+            "name": "Security Tags",
+            "key": "security_tags",
+            "value": null,
+            "format": false,
+            "detail_spec": null,
+            "valid_values": []
+          },
+          {
+            "name": "Authors",
+            "key": "authors",
+            "value": null,
+            "format": false,
+            "detail_spec": null,
+            "valid_values": []
+          },
+          {
+            "name": "Preferred Value",
+            "key": "preferred_value",
+            "value": null,
+            "format": false,
+            "detail_spec": null,
+            "valid_values": []
+          },
+          {
+            "name": "Data Type",
+            "key": "data_type",
+            "value": null,
+            "format": false,
+            "detail_spec": null,
+            "valid_values": [
+              "string",
+              "int",
+              "long",
+              "date",
+              "boolean",
+              "char",
+              "byte",
+              "float",
+              "double",
+              "biginteger",
+              "bigdecimal",
+              "array<string>",
+              "array<int>",
+              "map<string,string>",
+              "map<string,boolean>",
+              "map<string,int>",
+              "map<string,long>",
+              "map<string,double>",
+              "map<string,date>",
+              "map<string,object>",
+              "short",
+              "map<string,array<string>>",
+              "other"
+            ]
+          },
+          {
+            "name": "Usage",
+            "key": "usage",
+            "value": null,
+            "format": false,
+            "detail_spec": null,
+            "valid_values": []
+          },
+          {
+            "name": "Scope",
+            "key": "scope",
+            "value": null,
+            "format": false,
+            "detail_spec": null,
+            "valid_values": []
+          },
+          {
+            "name": "Namespace Path",
+            "key": "namespace_path",
+            "value": null,
+            "format": false,
+            "detail_spec": null,
+            "valid_values": []
+          },
+          {
+            "name": "Is Case Sensitive",
+            "key": "is_case_sensitive",
+            "value": null,
+            "format": false,
+            "detail_spec": null,
+            "valid_values": []
+          },
+          {
+            "name": "Ordinal",
+            "key": "ordinal",
+            "value": null,
+            "format": false,
+            "detail_spec": null,
+            "valid_values": []
+          },
+          {
+            "name": "Members",
+            "key": "members",
+            "value": null,
+            "format": false,
+            "detail_spec": null,
+            "valid_values": []
+          },
+          {
+            "name": "Values",
+            "key": "values",
+            "value": null,
+            "format": false,
+            "detail_spec": null,
+            "valid_values": []
+          },
+          {
+            "name": "Value Table",
+            "key": "value_table",
+            "value": null,
+            "format": false,
+            "detail_spec": null,
+            "valid_values": []
+          },
+          {
+            "name": "Default Member",
+            "key": "default_member",
+            "value": null,
+            "format": false,
+            "detail_spec": null,
+            "valid_values": []
+          },
+          {
+            "name": "Classifications",
+            "key": "classifications",
+            "value": null,
+            "format": false,
+            "detail_spec": null,
+            "valid_values": null
+          },
+          {
+            "name": "Anchor Scope Name",
+            "key": "anchor_scope_guid",
+            "value": null,
+            "format": false,
+            "detail_spec": null,
+            "valid_values": null
+          },
+          {
+            "name": "Supplementary Properties",
+            "key": "supplementary_properties",
+            "value": null,
+            "format": false,
+            "detail_spec": null,
+            "valid_values": null
+          },
+          {
+            "name": "Version Identifier",
+            "key": "version_identifier",
+            "value": null,
+            "format": false,
+            "detail_spec": null,
+            "valid_values": []
+          },
+          {
+            "name": "Status",
+            "key": "status",
+            "value": null,
+            "format": false,
+            "detail_spec": null,
+            "valid_values": []
+          },
+          {
+            "name": "Content Status",
+            "key": "content_status",
+            "value": null,
+            "format": false,
+            "detail_spec": null,
+            "valid_values": [
+              "DRAFT",
+              "PREPARED",
+              "PROPOSED",
+              "APPROVED",
+              "REJECTED",
+              "ACTIVE",
+              "DEPRECATED",
+              "OTHER"
+            ]
+          },
+          {
+            "name": "User Defined Content Status",
+            "key": "user_defined_content_status",
+            "value": null,
+            "format": false,
+            "detail_spec": null,
+            "valid_values": []
+          },
+          {
+            "name": "User Defined Status",
+            "key": "user_defined_status",
+            "value": null,
+            "format": false,
+            "detail_spec": null,
+            "valid_values": null
+          },
+          {
+            "name": "Category",
+            "key": "category",
+            "value": null,
+            "format": false,
+            "detail_spec": null,
+            "valid_values": []
+          }
+        ],
+        "columns": [
+          {
+            "name": "Display Name",
+            "key": "display_name",
+            "value": null,
+            "format": false,
+            "detail_spec": null,
+            "valid_values": []
+          },
+          {
+            "name": "Qualified Name",
+            "key": "qualified_name",
+            "value": null,
+            "format": false,
+            "detail_spec": null,
+            "valid_values": []
+          },
+          {
+            "name": "GUID",
+            "key": "guid",
+            "value": null,
+            "format": false,
+            "detail_spec": null,
+            "valid_values": []
+          },
+          {
+            "name": "Effective From",
+            "key": "effective_from",
+            "value": null,
+            "format": false,
+            "detail_spec": null,
+            "valid_values": []
+          },
+          {
+            "name": "Effective Time",
+            "key": "effective_time",
+            "value": null,
+            "format": false,
+            "detail_spec": null,
+            "valid_values": []
+          },
+          {
+            "name": "Effective To",
+            "key": "effective_to",
+            "value": null,
+            "format": false,
+            "detail_spec": null,
+            "valid_values": []
+          },
+          {
+            "name": "Glossary Term",
+            "key": "glossary_term",
+            "value": null,
+            "format": false,
+            "detail_spec": null,
+            "valid_values": []
+          },
+          {
+            "name": "Is Own Anchor",
+            "key": "is_own_anchor",
+            "value": null,
+            "format": false,
+            "detail_spec": null,
+            "valid_values": []
+          },
+          {
+            "name": "Zone Membership",
+            "key": "zone_membership",
+            "value": null,
+            "format": false,
+            "detail_spec": null,
+            "valid_values": []
+          },
+          {
+            "name": "Additional Properties",
+            "key": "additional_properties",
+            "value": null,
+            "format": false,
+            "detail_spec": null,
+            "valid_values": []
+          },
+          {
+            "name": "Confidence Classification",
+            "key": "confidence_classification",
+            "value": null,
+            "format": false,
+            "detail_spec": null,
+            "valid_values": [
+              "UNCLASSIFIED",
+              "AD_HOC",
+              "TRANSACTIONAL",
+              "AUTHORITATIVE",
+              "DERIVED",
+              "OBSOLETE",
+              "OTHER"
+            ]
+          },
+          {
+            "name": "Confidentiality Classification",
+            "key": "confidentiality_classification",
+            "value": null,
+            "format": false,
+            "detail_spec": null,
+            "valid_values": [
+              "UNCLASSIFIED",
+              "INTERNAL",
+              "CONFIDENTIAL",
+              "SENSITIVE",
+              "RESTRICTED",
+              "OTHER"
+            ]
+          },
+          {
+            "name": "Criticality Classification",
+            "key": "criticality_classification",
+            "value": null,
+            "format": false,
+            "detail_spec": null,
+            "valid_values": [
+              "UNCLASSIFIED",
+              "MARGINAL",
+              "IMPORTANT",
+              "CRITICAL",
+              "CATASTROPHIC",
+              "OTHER"
+            ]
+          },
+          {
+            "name": "Description",
+            "key": "description",
+            "value": null,
+            "format": false,
+            "detail_spec": null,
+            "valid_values": []
+          },
+          {
+            "name": "Identifier",
+            "key": "identifier",
+            "value": null,
+            "format": false,
+            "detail_spec": null,
+            "valid_values": []
+          },
+          {
+            "name": "Impact Classification",
+            "key": "impact_classification",
+            "value": null,
+            "format": false,
+            "detail_spec": null,
+            "valid_values": [
+              "UNCLASSIFIED",
+              "LOW",
+              "MEDIUM",
+              "HIGH",
+              "OTHER"
+            ]
+          },
+          {
+            "name": "Legal",
+            "key": "legal",
+            "value": null,
+            "format": false,
+            "detail_spec": null,
+            "valid_values": []
+          },
+          {
+            "name": "Policy Management Point",
+            "key": "policy_management_point",
+            "value": null,
+            "format": false,
+            "detail_spec": null,
+            "valid_values": []
+          },
+          {
+            "name": "Retention Classification",
+            "key": "retention_classification",
+            "value": null,
+            "format": false,
+            "detail_spec": null,
+            "valid_values": [
+              "UNCLASSIFIED",
+              "TEMPORARY",
+              "PROJECT_LIFETIME",
+              "TEAM_LIFETIME",
+              "CONTRACT_LIFETIME",
+              "REGULATED_LIFETIME",
+              "TIMEBOXED_LIFETIME",
+              "OTHER"
+            ]
+          },
+          {
+            "name": "Security Tags",
+            "key": "security_tags",
+            "value": null,
+            "format": false,
+            "detail_spec": null,
+            "valid_values": []
+          },
+          {
+            "name": "Authors",
+            "key": "authors",
+            "value": null,
+            "format": false,
+            "detail_spec": null,
+            "valid_values": []
+          },
+          {
+            "name": "Preferred Value",
+            "key": "preferred_value",
+            "value": null,
+            "format": false,
+            "detail_spec": null,
+            "valid_values": []
+          },
+          {
+            "name": "Data Type",
+            "key": "data_type",
+            "value": null,
+            "format": false,
+            "detail_spec": null,
+            "valid_values": [
+              "string",
+              "int",
+              "long",
+              "date",
+              "boolean",
+              "char",
+              "byte",
+              "float",
+              "double",
+              "biginteger",
+              "bigdecimal",
+              "array<string>",
+              "array<int>",
+              "map<string,string>",
+              "map<string,boolean>",
+              "map<string,int>",
+              "map<string,long>",
+              "map<string,double>",
+              "map<string,date>",
+              "map<string,object>",
+              "short",
+              "map<string,array<string>>",
+              "other"
+            ]
+          },
+          {
+            "name": "Usage",
+            "key": "usage",
+            "value": null,
+            "format": false,
+            "detail_spec": null,
+            "valid_values": []
+          },
+          {
+            "name": "Scope",
+            "key": "scope",
+            "value": null,
+            "format": false,
+            "detail_spec": null,
+            "valid_values": []
+          },
+          {
+            "name": "Namespace Path",
+            "key": "namespace_path",
+            "value": null,
+            "format": false,
+            "detail_spec": null,
+            "valid_values": []
+          },
+          {
+            "name": "Is Case Sensitive",
+            "key": "is_case_sensitive",
+            "value": null,
+            "format": false,
+            "detail_spec": null,
+            "valid_values": []
+          },
+          {
+            "name": "Ordinal",
+            "key": "ordinal",
+            "value": null,
+            "format": false,
+            "detail_spec": null,
+            "valid_values": []
+          },
+          {
+            "name": "Members",
+            "key": "members",
+            "value": null,
+            "format": false,
+            "detail_spec": null,
+            "valid_values": []
+          },
+          {
+            "name": "Values",
+            "key": "values",
+            "value": null,
+            "format": false,
+            "detail_spec": null,
+            "valid_values": []
+          },
+          {
+            "name": "Value Table",
+            "key": "value_table",
+            "value": null,
+            "format": false,
+            "detail_spec": null,
+            "valid_values": []
+          },
+          {
+            "name": "Default Member",
+            "key": "default_member",
+            "value": null,
+            "format": false,
+            "detail_spec": null,
+            "valid_values": []
+          },
+          {
+            "name": "Classifications",
+            "key": "classifications",
+            "value": null,
+            "format": false,
+            "detail_spec": null,
+            "valid_values": null
+          },
+          {
+            "name": "Anchor Scope Name",
+            "key": "anchor_scope_guid",
+            "value": null,
+            "format": false,
+            "detail_spec": null,
+            "valid_values": null
+          },
+          {
+            "name": "Supplementary Properties",
+            "key": "supplementary_properties",
+            "value": null,
+            "format": false,
+            "detail_spec": null,
+            "valid_values": null
+          },
+          {
+            "name": "Version Identifier",
+            "key": "version_identifier",
+            "value": null,
+            "format": false,
+            "detail_spec": null,
+            "valid_values": []
+          },
+          {
+            "name": "Status",
+            "key": "status",
+            "value": null,
+            "format": false,
+            "detail_spec": null,
+            "valid_values": []
+          },
+          {
+            "name": "Content Status",
+            "key": "content_status",
+            "value": null,
+            "format": false,
+            "detail_spec": null,
+            "valid_values": [
+              "DRAFT",
+              "PREPARED",
+              "PROPOSED",
+              "APPROVED",
+              "REJECTED",
+              "ACTIVE",
+              "DEPRECATED",
+              "OTHER"
+            ]
+          },
+          {
+            "name": "User Defined Content Status",
+            "key": "user_defined_content_status",
+            "value": null,
+            "format": false,
+            "detail_spec": null,
+            "valid_values": []
+          },
+          {
+            "name": "User Defined Status",
+            "key": "user_defined_status",
+            "value": null,
+            "format": false,
+            "detail_spec": null,
+            "valid_values": null
+          },
+          {
+            "name": "Category",
+            "key": "category",
+            "value": null,
+            "format": false,
+            "detail_spec": null,
+            "valid_values": []
+          }
+        ]
+      },
+      {
+        "types": [
+          "ALL"
+        ],
+        "attributes": [
+          {
+            "name": "Effective From",
+            "key": "effective_from",
+            "value": null,
+            "format": false,
+            "detail_spec": null,
+            "valid_values": []
+          },
+          {
+            "name": "Effective Time",
+            "key": "effective_time",
+            "value": null,
+            "format": false,
+            "detail_spec": null,
+            "valid_values": []
+          },
+          {
+            "name": "Effective To",
+            "key": "effective_to",
+            "value": null,
+            "format": false,
+            "detail_spec": null,
+            "valid_values": []
+          },
+          {
+            "name": "Glossary Term",
+            "key": "glossary_term",
+            "value": null,
+            "format": false,
+            "detail_spec": null,
+            "valid_values": []
+          },
+          {
+            "name": "Is Own Anchor",
+            "key": "is_own_anchor",
+            "value": null,
+            "format": false,
+            "detail_spec": null,
+            "valid_values": []
+          },
+          {
+            "name": "Status",
+            "key": "status",
+            "value": null,
+            "format": false,
+            "detail_spec": null,
+            "valid_values": []
+          },
+          {
+            "name": "Zone Membership",
+            "key": "zone_membership",
+            "value": null,
+            "format": false,
+            "detail_spec": null,
+            "valid_values": []
+          },
+          {
+            "name": "Additional Properties",
+            "key": "additional_properties",
+            "value": null,
+            "format": false,
+            "detail_spec": null,
+            "valid_values": []
+          },
+          {
+            "name": "Category",
+            "key": "category",
+            "value": null,
+            "format": false,
+            "detail_spec": null,
+            "valid_values": []
+          },
+          {
+            "name": "Confidence Classification",
+            "key": "confidence_classification",
+            "value": null,
+            "format": false,
+            "detail_spec": null,
+            "valid_values": [
+              "UNCLASSIFIED",
+              "AD_HOC",
+              "TRANSACTIONAL",
+              "AUTHORITATIVE",
+              "DERIVED",
+              "OBSOLETE",
+              "OTHER"
+            ]
+          },
+          {
+            "name": "Confidentiality Classification",
+            "key": "confidentiality_classification",
+            "value": null,
+            "format": false,
+            "detail_spec": null,
+            "valid_values": [
+              "UNCLASSIFIED",
+              "INTERNAL",
+              "CONFIDENTIAL",
+              "SENSITIVE",
+              "RESTRICTED",
+              "OTHER"
+            ]
+          },
+          {
+            "name": "Criticality Classification",
+            "key": "criticality_classification",
+            "value": null,
+            "format": false,
+            "detail_spec": null,
+            "valid_values": [
+              "UNCLASSIFIED",
+              "MARGINAL",
+              "IMPORTANT",
+              "CRITICAL",
+              "CATASTROPHIC",
+              "OTHER"
+            ]
+          },
+          {
+            "name": "Description",
+            "key": "description",
+            "value": null,
+            "format": false,
+            "detail_spec": null,
+            "valid_values": []
+          },
+          {
+            "name": "Display Name",
+            "key": "display_name",
+            "value": null,
+            "format": false,
+            "detail_spec": null,
+            "valid_values": []
+          },
+          {
+            "name": "GUID",
+            "key": "guid",
+            "value": null,
+            "format": false,
+            "detail_spec": null,
+            "valid_values": []
+          },
+          {
+            "name": "Identifier",
+            "key": "identifier",
+            "value": null,
+            "format": false,
+            "detail_spec": null,
+            "valid_values": []
+          },
+          {
+            "name": "Impact Classification",
+            "key": "impact_classification",
+            "value": null,
+            "format": false,
+            "detail_spec": null,
+            "valid_values": [
+              "UNCLASSIFIED",
+              "LOW",
+              "MEDIUM",
+              "HIGH",
+              "OTHER"
+            ]
+          },
+          {
+            "name": "Legal",
+            "key": "legal",
+            "value": null,
+            "format": false,
+            "detail_spec": null,
+            "valid_values": []
+          },
+          {
+            "name": "Policy Management Point",
+            "key": "policy_management_point",
+            "value": null,
+            "format": false,
+            "detail_spec": null,
+            "valid_values": []
+          },
+          {
+            "name": "Qualified Name",
+            "key": "qualified_name",
+            "value": null,
+            "format": false,
+            "detail_spec": null,
+            "valid_values": []
+          },
+          {
+            "name": "Retention Classification",
+            "key": "retention_classification",
+            "value": null,
+            "format": false,
+            "detail_spec": null,
+            "valid_values": [
+              "UNCLASSIFIED",
+              "TEMPORARY",
+              "PROJECT_LIFETIME",
+              "TEAM_LIFETIME",
+              "CONTRACT_LIFETIME",
+              "REGULATED_LIFETIME",
+              "TIMEBOXED_LIFETIME",
+              "OTHER"
+            ]
+          },
+          {
+            "name": "Security Tags",
+            "key": "security_tags",
+            "value": null,
+            "format": false,
+            "detail_spec": null,
+            "valid_values": []
+          },
+          {
+            "name": "URL",
+            "key": "url",
+            "value": null,
+            "format": false,
+            "detail_spec": null,
+            "valid_values": []
+          },
+          {
+            "name": "Version Identifier",
+            "key": "version_identifier",
+            "value": null,
+            "format": false,
+            "detail_spec": null,
+            "valid_values": []
+          },
+          {
+            "name": "Authors",
+            "key": "authors",
+            "value": null,
+            "format": false,
+            "detail_spec": null,
+            "valid_values": []
+          },
+          {
+            "name": "Content Status",
+            "key": "content_status",
+            "value": null,
+            "format": false,
+            "detail_spec": null,
+            "valid_values": [
+              "DRAFT",
+              "PREPARED",
+              "PROPOSED",
+              "APPROVED",
+              "REJECTED",
+              "ACTIVE",
+              "DEPRECATED",
+              "OTHER"
+            ]
+          },
+          {
+            "name": "User Defined Content Status",
+            "key": "user_defined_content_status",
+            "value": null,
+            "format": false,
+            "detail_spec": null,
+            "valid_values": []
+          },
+          {
+            "name": "Preferred Value",
+            "key": "preferred_value",
+            "value": null,
+            "format": false,
+            "detail_spec": null,
+            "valid_values": []
+          },
+          {
+            "name": "Data Type",
+            "key": "data_type",
+            "value": null,
+            "format": false,
+            "detail_spec": null,
+            "valid_values": [
+              "string",
+              "int",
+              "long",
+              "date",
+              "boolean",
+              "char",
+              "byte",
+              "float",
+              "double",
+              "biginteger",
+              "bigdecimal",
+              "array<string>",
+              "array<int>",
+              "map<string,string>",
+              "map<string,boolean>",
+              "map<string,int>",
+              "map<string,long>",
+              "map<string,double>",
+              "map<string,date>",
+              "map<string,object>",
+              "short",
+              "map<string,array<string>>",
+              "other"
+            ]
+          },
+          {
+            "name": "Usage",
+            "key": "usage",
+            "value": null,
+            "format": false,
+            "detail_spec": null,
+            "valid_values": []
+          },
+          {
+            "name": "Scope",
+            "key": "scope",
+            "value": null,
+            "format": false,
+            "detail_spec": null,
+            "valid_values": []
+          },
+          {
+            "name": "Namespace Path",
+            "key": "namespace_path",
+            "value": null,
+            "format": false,
+            "detail_spec": null,
+            "valid_values": []
+          },
+          {
+            "name": "Is Case Sensitive",
+            "key": "is_case_sensitive",
+            "value": null,
+            "format": false,
+            "detail_spec": null,
+            "valid_values": []
+          },
+          {
+            "name": "Ordinal",
+            "key": "ordinal",
+            "value": null,
+            "format": false,
+            "detail_spec": null,
+            "valid_values": []
+          },
+          {
+            "name": "Members",
+            "key": "members",
+            "value": null,
+            "format": false,
+            "detail_spec": null,
+            "valid_values": []
+          },
+          {
+            "name": "Values",
+            "key": "values",
+            "value": null,
+            "format": false,
+            "detail_spec": null,
+            "valid_values": []
+          },
+          {
+            "name": "Value Table",
+            "key": "value_table",
+            "value": null,
+            "format": false,
+            "detail_spec": null,
+            "valid_values": []
+          },
+          {
+            "name": "Default Member",
+            "key": "default_member",
+            "value": null,
+            "format": false,
+            "detail_spec": null,
+            "valid_values": []
+          },
+          {
+            "name": "User Defined Status",
+            "key": "user_defined_status",
+            "value": null,
+            "format": false,
+            "detail_spec": null,
+            "valid_values": null
+          },
+          {
+            "name": "Classifications",
+            "key": "classifications",
+            "value": null,
+            "format": false,
+            "detail_spec": null,
+            "valid_values": null
+          },
+          {
+            "name": "Anchor Scope Name",
+            "key": "anchor_scope_guid",
+            "value": null,
+            "format": false,
+            "detail_spec": null,
+            "valid_values": null
+          },
+          {
+            "name": "Supplementary Properties",
+            "key": "supplementary_properties",
+            "value": null,
+            "format": false,
+            "detail_spec": null,
+            "valid_values": null
+          }
+        ],
+        "columns": [
+          {
+            "name": "Effective From",
+            "key": "effective_from",
+            "value": null,
+            "format": false,
+            "detail_spec": null,
+            "valid_values": []
+          },
+          {
+            "name": "Effective Time",
+            "key": "effective_time",
+            "value": null,
+            "format": false,
+            "detail_spec": null,
+            "valid_values": []
+          },
+          {
+            "name": "Effective To",
+            "key": "effective_to",
+            "value": null,
+            "format": false,
+            "detail_spec": null,
+            "valid_values": []
+          },
+          {
+            "name": "Glossary Term",
+            "key": "glossary_term",
+            "value": null,
+            "format": false,
+            "detail_spec": null,
+            "valid_values": []
+          },
+          {
+            "name": "Is Own Anchor",
+            "key": "is_own_anchor",
+            "value": null,
+            "format": false,
+            "detail_spec": null,
+            "valid_values": []
+          },
+          {
+            "name": "Status",
+            "key": "status",
+            "value": null,
+            "format": false,
+            "detail_spec": null,
+            "valid_values": []
+          },
+          {
+            "name": "Zone Membership",
+            "key": "zone_membership",
+            "value": null,
+            "format": false,
+            "detail_spec": null,
+            "valid_values": []
+          },
+          {
+            "name": "Additional Properties",
+            "key": "additional_properties",
+            "value": null,
+            "format": false,
+            "detail_spec": null,
+            "valid_values": []
+          },
+          {
+            "name": "Category",
+            "key": "category",
+            "value": null,
+            "format": false,
+            "detail_spec": null,
+            "valid_values": []
+          },
+          {
+            "name": "Confidence Classification",
+            "key": "confidence_classification",
+            "value": null,
+            "format": false,
+            "detail_spec": null,
+            "valid_values": [
+              "UNCLASSIFIED",
+              "AD_HOC",
+              "TRANSACTIONAL",
+              "AUTHORITATIVE",
+              "DERIVED",
+              "OBSOLETE",
+              "OTHER"
+            ]
+          },
+          {
+            "name": "Confidentiality Classification",
+            "key": "confidentiality_classification",
+            "value": null,
+            "format": false,
+            "detail_spec": null,
+            "valid_values": [
+              "UNCLASSIFIED",
+              "INTERNAL",
+              "CONFIDENTIAL",
+              "SENSITIVE",
+              "RESTRICTED",
+              "OTHER"
+            ]
+          },
+          {
+            "name": "Criticality Classification",
+            "key": "criticality_classification",
+            "value": null,
+            "format": false,
+            "detail_spec": null,
+            "valid_values": [
+              "UNCLASSIFIED",
+              "MARGINAL",
+              "IMPORTANT",
+              "CRITICAL",
+              "CATASTROPHIC",
+              "OTHER"
+            ]
+          },
+          {
+            "name": "Description",
+            "key": "description",
+            "value": null,
+            "format": false,
+            "detail_spec": null,
+            "valid_values": []
+          },
+          {
+            "name": "Display Name",
+            "key": "display_name",
+            "value": null,
+            "format": false,
+            "detail_spec": null,
+            "valid_values": []
+          },
+          {
+            "name": "GUID",
+            "key": "guid",
+            "value": null,
+            "format": false,
+            "detail_spec": null,
+            "valid_values": []
+          },
+          {
+            "name": "Identifier",
+            "key": "identifier",
+            "value": null,
+            "format": false,
+            "detail_spec": null,
+            "valid_values": []
+          },
+          {
+            "name": "Impact Classification",
+            "key": "impact_classification",
+            "value": null,
+            "format": false,
+            "detail_spec": null,
+            "valid_values": [
+              "UNCLASSIFIED",
+              "LOW",
+              "MEDIUM",
+              "HIGH",
+              "OTHER"
+            ]
+          },
+          {
+            "name": "Legal",
+            "key": "legal",
+            "value": null,
+            "format": false,
+            "detail_spec": null,
+            "valid_values": []
+          },
+          {
+            "name": "Policy Management Point",
+            "key": "policy_management_point",
+            "value": null,
+            "format": false,
+            "detail_spec": null,
+            "valid_values": []
+          },
+          {
+            "name": "Qualified Name",
+            "key": "qualified_name",
+            "value": null,
+            "format": false,
+            "detail_spec": null,
+            "valid_values": []
+          },
+          {
+            "name": "Retention Classification",
+            "key": "retention_classification",
+            "value": null,
+            "format": false,
+            "detail_spec": null,
+            "valid_values": [
+              "UNCLASSIFIED",
+              "TEMPORARY",
+              "PROJECT_LIFETIME",
+              "TEAM_LIFETIME",
+              "CONTRACT_LIFETIME",
+              "REGULATED_LIFETIME",
+              "TIMEBOXED_LIFETIME",
+              "OTHER"
+            ]
+          },
+          {
+            "name": "Security Tags",
+            "key": "security_tags",
+            "value": null,
+            "format": false,
+            "detail_spec": null,
+            "valid_values": []
+          },
+          {
+            "name": "URL",
+            "key": "url",
+            "value": null,
+            "format": false,
+            "detail_spec": null,
+            "valid_values": []
+          },
+          {
+            "name": "Version Identifier",
+            "key": "version_identifier",
+            "value": null,
+            "format": false,
+            "detail_spec": null,
+            "valid_values": []
+          },
+          {
+            "name": "Authors",
+            "key": "authors",
+            "value": null,
+            "format": false,
+            "detail_spec": null,
+            "valid_values": []
+          },
+          {
+            "name": "Content Status",
+            "key": "content_status",
+            "value": null,
+            "format": false,
+            "detail_spec": null,
+            "valid_values": [
+              "DRAFT",
+              "PREPARED",
+              "PROPOSED",
+              "APPROVED",
+              "REJECTED",
+              "ACTIVE",
+              "DEPRECATED",
+              "OTHER"
+            ]
+          },
+          {
+            "name": "User Defined Content Status",
+            "key": "user_defined_content_status",
+            "value": null,
+            "format": false,
+            "detail_spec": null,
+            "valid_values": []
+          },
+          {
+            "name": "Preferred Value",
+            "key": "preferred_value",
+            "value": null,
+            "format": false,
+            "detail_spec": null,
+            "valid_values": []
+          },
+          {
+            "name": "Data Type",
+            "key": "data_type",
+            "value": null,
+            "format": false,
+            "detail_spec": null,
+            "valid_values": [
+              "string",
+              "int",
+              "long",
+              "date",
+              "boolean",
+              "char",
+              "byte",
+              "float",
+              "double",
+              "biginteger",
+              "bigdecimal",
+              "array<string>",
+              "array<int>",
+              "map<string,string>",
+              "map<string,boolean>",
+              "map<string,int>",
+              "map<string,long>",
+              "map<string,double>",
+              "map<string,date>",
+              "map<string,object>",
+              "short",
+              "map<string,array<string>>",
+              "other"
+            ]
+          },
+          {
+            "name": "Usage",
+            "key": "usage",
+            "value": null,
+            "format": false,
+            "detail_spec": null,
+            "valid_values": []
+          },
+          {
+            "name": "Scope",
+            "key": "scope",
+            "value": null,
+            "format": false,
+            "detail_spec": null,
+            "valid_values": []
+          },
+          {
+            "name": "Namespace Path",
+            "key": "namespace_path",
+            "value": null,
+            "format": false,
+            "detail_spec": null,
+            "valid_values": []
+          },
+          {
+            "name": "Is Case Sensitive",
+            "key": "is_case_sensitive",
+            "value": null,
+            "format": false,
+            "detail_spec": null,
+            "valid_values": []
+          },
+          {
+            "name": "Ordinal",
+            "key": "ordinal",
+            "value": null,
+            "format": false,
+            "detail_spec": null,
+            "valid_values": []
+          },
+          {
+            "name": "Members",
+            "key": "members",
+            "value": null,
+            "format": false,
+            "detail_spec": null,
+            "valid_values": []
+          },
+          {
+            "name": "Values",
+            "key": "values",
+            "value": null,
+            "format": false,
+            "detail_spec": null,
+            "valid_values": []
+          },
+          {
+            "name": "Value Table",
+            "key": "value_table",
+            "value": null,
+            "format": false,
+            "detail_spec": null,
+            "valid_values": []
+          },
+          {
+            "name": "Default Member",
+            "key": "default_member",
+            "value": null,
+            "format": false,
+            "detail_spec": null,
+            "valid_values": []
+          },
+          {
+            "name": "User Defined Status",
+            "key": "user_defined_status",
+            "value": null,
+            "format": false,
+            "detail_spec": null,
+            "valid_values": null
+          },
+          {
+            "name": "Classifications",
+            "key": "classifications",
+            "value": null,
+            "format": false,
+            "detail_spec": null,
+            "valid_values": null
+          },
+          {
+            "name": "Anchor Scope Name",
+            "key": "anchor_scope_guid",
+            "value": null,
+            "format": false,
+            "detail_spec": null,
+            "valid_values": null
+          },
+          {
+            "name": "Supplementary Properties",
+            "key": "supplementary_properties",
+            "value": null,
+            "format": false,
+            "detail_spec": null,
+            "valid_values": null
+          }
+        ]
+      }
+    ],
+    "action": {
+      "function": "ReferenceDataManager.find_valid_value_definitions",
+      "required_params": [
+        "search_string"
+      ],
+      "optional_params": [
+        "sequencing_order",
+        "sequencing_property",
+        "page_size",
+        "start_from",
+        "starts_with",
+        "ends_with",
+        "ignore_case",
+        "classification_names",
+        "metadata_element_subtypes",
+        "metadata_element_type"
+      ],
+      "spec_params": {
+        "metadata_element_type": "ReferenceDataSet"
+      },
+      "analytic_function": null,
+      "analytic_spec_params": {}
+    },
+    "get_additional_props": null,
+    "question_spec": null
+  },
+  "Reference-Data-Value-DrE-Basic": {
+    "target_type": "Reference Data Value",
+    "heading": "Reference-Data-Value-DrE-Basic Attributes",
+    "description": "Auto-generated format for Reference Data Value (Create, Basic).",
+    "aliases": [],
+    "annotations": {},
+    "family": "Reference Data",
+    "formats": [
+      {
+        "types": [
+          "LIST"
+        ],
+        "attributes": [
+          {
+            "name": "Display Name",
+            "key": "display_name",
+            "value": null,
+            "format": false,
+            "detail_spec": null,
+            "valid_values": []
+          },
+          {
+            "name": "Qualified Name",
+            "key": "qualified_name",
+            "value": null,
+            "format": false,
+            "detail_spec": null,
+            "valid_values": []
+          },
+          {
+            "name": "GUID",
+            "key": "guid",
+            "value": null,
+            "format": false,
+            "detail_spec": null,
+            "valid_values": []
+          },
+          {
+            "name": "Description",
+            "key": "description",
+            "value": null,
+            "format": false,
+            "detail_spec": null,
+            "valid_values": []
+          },
+          {
+            "name": "Legal",
+            "key": "legal",
+            "value": null,
+            "format": false,
+            "detail_spec": null,
+            "valid_values": []
+          },
+          {
+            "name": "Authors",
+            "key": "authors",
+            "value": null,
+            "format": false,
+            "detail_spec": null,
+            "valid_values": []
+          },
+          {
+            "name": "Preferred Value",
+            "key": "preferred_value",
+            "value": null,
+            "format": false,
+            "detail_spec": null,
+            "valid_values": []
+          },
+          {
+            "name": "Data Type",
+            "key": "data_type",
+            "value": null,
+            "format": false,
+            "detail_spec": null,
+            "valid_values": [
+              "string",
+              "int",
+              "long",
+              "date",
+              "boolean",
+              "char",
+              "byte",
+              "float",
+              "double",
+              "biginteger",
+              "bigdecimal",
+              "array<string>",
+              "array<int>",
+              "map<string,string>",
+              "map<string,boolean>",
+              "map<string,int>",
+              "map<string,long>",
+              "map<string,double>",
+              "map<string,date>",
+              "map<string,object>",
+              "short",
+              "map<string,array<string>>",
+              "other"
+            ]
+          },
+          {
+            "name": "Usage",
+            "key": "usage",
+            "value": null,
+            "format": false,
+            "detail_spec": null,
+            "valid_values": []
+          },
+          {
+            "name": "Scope",
+            "key": "scope",
+            "value": null,
+            "format": false,
+            "detail_spec": null,
+            "valid_values": []
+          },
+          {
+            "name": "Namespace Path",
+            "key": "namespace_path",
+            "value": null,
+            "format": false,
+            "detail_spec": null,
+            "valid_values": []
+          },
+          {
+            "name": "Is Case Sensitive",
+            "key": "is_case_sensitive",
+            "value": null,
+            "format": false,
+            "detail_spec": null,
+            "valid_values": []
+          },
+          {
+            "name": "In Reference Data Set",
+            "key": "in_reference_data_set",
+            "value": null,
+            "format": false,
+            "detail_spec": null,
+            "valid_values": []
+          },
+          {
+            "name": "Is Default Member",
+            "key": "is_default_member",
+            "value": null,
+            "format": false,
+            "detail_spec": null,
+            "valid_values": []
+          },
+          {
+            "name": "Member Ordinal",
+            "key": "member_ordinal",
+            "value": null,
+            "format": false,
+            "detail_spec": null,
+            "valid_values": []
+          },
+          {
+            "name": "Version Identifier",
+            "key": "version_identifier",
+            "value": null,
+            "format": false,
+            "detail_spec": null,
+            "valid_values": []
+          },
+          {
+            "name": "Content Status",
+            "key": "content_status",
+            "value": null,
+            "format": false,
+            "detail_spec": null,
+            "valid_values": [
+              "DRAFT",
+              "PREPARED",
+              "PROPOSED",
+              "APPROVED",
+              "REJECTED",
+              "ACTIVE",
+              "DEPRECATED",
+              "OTHER"
+            ]
+          },
+          {
+            "name": "Category",
+            "key": "category",
+            "value": null,
+            "format": false,
+            "detail_spec": null,
+            "valid_values": []
+          }
+        ],
+        "columns": [
+          {
+            "name": "Display Name",
+            "key": "display_name",
+            "value": null,
+            "format": false,
+            "detail_spec": null,
+            "valid_values": []
+          },
+          {
+            "name": "Qualified Name",
+            "key": "qualified_name",
+            "value": null,
+            "format": false,
+            "detail_spec": null,
+            "valid_values": []
+          },
+          {
+            "name": "GUID",
+            "key": "guid",
+            "value": null,
+            "format": false,
+            "detail_spec": null,
+            "valid_values": []
+          },
+          {
+            "name": "Description",
+            "key": "description",
+            "value": null,
+            "format": false,
+            "detail_spec": null,
+            "valid_values": []
+          },
+          {
+            "name": "Legal",
+            "key": "legal",
+            "value": null,
+            "format": false,
+            "detail_spec": null,
+            "valid_values": []
+          },
+          {
+            "name": "Authors",
+            "key": "authors",
+            "value": null,
+            "format": false,
+            "detail_spec": null,
+            "valid_values": []
+          },
+          {
+            "name": "Preferred Value",
+            "key": "preferred_value",
+            "value": null,
+            "format": false,
+            "detail_spec": null,
+            "valid_values": []
+          },
+          {
+            "name": "Data Type",
+            "key": "data_type",
+            "value": null,
+            "format": false,
+            "detail_spec": null,
+            "valid_values": [
+              "string",
+              "int",
+              "long",
+              "date",
+              "boolean",
+              "char",
+              "byte",
+              "float",
+              "double",
+              "biginteger",
+              "bigdecimal",
+              "array<string>",
+              "array<int>",
+              "map<string,string>",
+              "map<string,boolean>",
+              "map<string,int>",
+              "map<string,long>",
+              "map<string,double>",
+              "map<string,date>",
+              "map<string,object>",
+              "short",
+              "map<string,array<string>>",
+              "other"
+            ]
+          },
+          {
+            "name": "Usage",
+            "key": "usage",
+            "value": null,
+            "format": false,
+            "detail_spec": null,
+            "valid_values": []
+          },
+          {
+            "name": "Scope",
+            "key": "scope",
+            "value": null,
+            "format": false,
+            "detail_spec": null,
+            "valid_values": []
+          },
+          {
+            "name": "Namespace Path",
+            "key": "namespace_path",
+            "value": null,
+            "format": false,
+            "detail_spec": null,
+            "valid_values": []
+          },
+          {
+            "name": "Is Case Sensitive",
+            "key": "is_case_sensitive",
+            "value": null,
+            "format": false,
+            "detail_spec": null,
+            "valid_values": []
+          },
+          {
+            "name": "In Reference Data Set",
+            "key": "in_reference_data_set",
+            "value": null,
+            "format": false,
+            "detail_spec": null,
+            "valid_values": []
+          },
+          {
+            "name": "Is Default Member",
+            "key": "is_default_member",
+            "value": null,
+            "format": false,
+            "detail_spec": null,
+            "valid_values": []
+          },
+          {
+            "name": "Member Ordinal",
+            "key": "member_ordinal",
+            "value": null,
+            "format": false,
+            "detail_spec": null,
+            "valid_values": []
+          },
+          {
+            "name": "Version Identifier",
+            "key": "version_identifier",
+            "value": null,
+            "format": false,
+            "detail_spec": null,
+            "valid_values": []
+          },
+          {
+            "name": "Content Status",
+            "key": "content_status",
+            "value": null,
+            "format": false,
+            "detail_spec": null,
+            "valid_values": [
+              "DRAFT",
+              "PREPARED",
+              "PROPOSED",
+              "APPROVED",
+              "REJECTED",
+              "ACTIVE",
+              "DEPRECATED",
+              "OTHER"
+            ]
+          },
+          {
+            "name": "Category",
+            "key": "category",
+            "value": null,
+            "format": false,
+            "detail_spec": null,
+            "valid_values": []
+          }
+        ]
+      },
+      {
+        "types": [
+          "ALL"
+        ],
+        "attributes": [
+          {
+            "name": "Category",
+            "key": "category",
+            "value": null,
+            "format": false,
+            "detail_spec": null,
+            "valid_values": []
+          },
+          {
+            "name": "Description",
+            "key": "description",
+            "value": null,
+            "format": false,
+            "detail_spec": null,
+            "valid_values": []
+          },
+          {
+            "name": "Display Name",
+            "key": "display_name",
+            "value": null,
+            "format": false,
+            "detail_spec": null,
+            "valid_values": []
+          },
+          {
+            "name": "GUID",
+            "key": "guid",
+            "value": null,
+            "format": false,
+            "detail_spec": null,
+            "valid_values": []
+          },
+          {
+            "name": "Legal",
+            "key": "legal",
+            "value": null,
+            "format": false,
+            "detail_spec": null,
+            "valid_values": []
+          },
+          {
+            "name": "Qualified Name",
+            "key": "qualified_name",
+            "value": null,
+            "format": false,
+            "detail_spec": null,
+            "valid_values": []
+          },
+          {
+            "name": "URL",
+            "key": "url",
+            "value": null,
+            "format": false,
+            "detail_spec": null,
+            "valid_values": []
+          },
+          {
+            "name": "Version Identifier",
+            "key": "version_identifier",
+            "value": null,
+            "format": false,
+            "detail_spec": null,
+            "valid_values": []
+          },
+          {
+            "name": "Authors",
+            "key": "authors",
+            "value": null,
+            "format": false,
+            "detail_spec": null,
+            "valid_values": []
+          },
+          {
+            "name": "Content Status",
+            "key": "content_status",
+            "value": null,
+            "format": false,
+            "detail_spec": null,
+            "valid_values": [
+              "DRAFT",
+              "PREPARED",
+              "PROPOSED",
+              "APPROVED",
+              "REJECTED",
+              "ACTIVE",
+              "DEPRECATED",
+              "OTHER"
+            ]
+          },
+          {
+            "name": "Preferred Value",
+            "key": "preferred_value",
+            "value": null,
+            "format": false,
+            "detail_spec": null,
+            "valid_values": []
+          },
+          {
+            "name": "Data Type",
+            "key": "data_type",
+            "value": null,
+            "format": false,
+            "detail_spec": null,
+            "valid_values": [
+              "string",
+              "int",
+              "long",
+              "date",
+              "boolean",
+              "char",
+              "byte",
+              "float",
+              "double",
+              "biginteger",
+              "bigdecimal",
+              "array<string>",
+              "array<int>",
+              "map<string,string>",
+              "map<string,boolean>",
+              "map<string,int>",
+              "map<string,long>",
+              "map<string,double>",
+              "map<string,date>",
+              "map<string,object>",
+              "short",
+              "map<string,array<string>>",
+              "other"
+            ]
+          },
+          {
+            "name": "Usage",
+            "key": "usage",
+            "value": null,
+            "format": false,
+            "detail_spec": null,
+            "valid_values": []
+          },
+          {
+            "name": "Scope",
+            "key": "scope",
+            "value": null,
+            "format": false,
+            "detail_spec": null,
+            "valid_values": []
+          },
+          {
+            "name": "Namespace Path",
+            "key": "namespace_path",
+            "value": null,
+            "format": false,
+            "detail_spec": null,
+            "valid_values": []
+          },
+          {
+            "name": "Is Case Sensitive",
+            "key": "is_case_sensitive",
+            "value": null,
+            "format": false,
+            "detail_spec": null,
+            "valid_values": []
+          },
+          {
+            "name": "In Reference Data Set",
+            "key": "in_reference_data_set",
+            "value": null,
+            "format": false,
+            "detail_spec": null,
+            "valid_values": []
+          },
+          {
+            "name": "Is Default Member",
+            "key": "is_default_member",
+            "value": null,
+            "format": false,
+            "detail_spec": null,
+            "valid_values": []
+          },
+          {
+            "name": "Member Ordinal",
+            "key": "member_ordinal",
+            "value": null,
+            "format": false,
+            "detail_spec": null,
+            "valid_values": []
+          }
+        ],
+        "columns": [
+          {
+            "name": "Category",
+            "key": "category",
+            "value": null,
+            "format": false,
+            "detail_spec": null,
+            "valid_values": []
+          },
+          {
+            "name": "Description",
+            "key": "description",
+            "value": null,
+            "format": false,
+            "detail_spec": null,
+            "valid_values": []
+          },
+          {
+            "name": "Display Name",
+            "key": "display_name",
+            "value": null,
+            "format": false,
+            "detail_spec": null,
+            "valid_values": []
+          },
+          {
+            "name": "GUID",
+            "key": "guid",
+            "value": null,
+            "format": false,
+            "detail_spec": null,
+            "valid_values": []
+          },
+          {
+            "name": "Legal",
+            "key": "legal",
+            "value": null,
+            "format": false,
+            "detail_spec": null,
+            "valid_values": []
+          },
+          {
+            "name": "Qualified Name",
+            "key": "qualified_name",
+            "value": null,
+            "format": false,
+            "detail_spec": null,
+            "valid_values": []
+          },
+          {
+            "name": "URL",
+            "key": "url",
+            "value": null,
+            "format": false,
+            "detail_spec": null,
+            "valid_values": []
+          },
+          {
+            "name": "Version Identifier",
+            "key": "version_identifier",
+            "value": null,
+            "format": false,
+            "detail_spec": null,
+            "valid_values": []
+          },
+          {
+            "name": "Authors",
+            "key": "authors",
+            "value": null,
+            "format": false,
+            "detail_spec": null,
+            "valid_values": []
+          },
+          {
+            "name": "Content Status",
+            "key": "content_status",
+            "value": null,
+            "format": false,
+            "detail_spec": null,
+            "valid_values": [
+              "DRAFT",
+              "PREPARED",
+              "PROPOSED",
+              "APPROVED",
+              "REJECTED",
+              "ACTIVE",
+              "DEPRECATED",
+              "OTHER"
+            ]
+          },
+          {
+            "name": "Preferred Value",
+            "key": "preferred_value",
+            "value": null,
+            "format": false,
+            "detail_spec": null,
+            "valid_values": []
+          },
+          {
+            "name": "Data Type",
+            "key": "data_type",
+            "value": null,
+            "format": false,
+            "detail_spec": null,
+            "valid_values": [
+              "string",
+              "int",
+              "long",
+              "date",
+              "boolean",
+              "char",
+              "byte",
+              "float",
+              "double",
+              "biginteger",
+              "bigdecimal",
+              "array<string>",
+              "array<int>",
+              "map<string,string>",
+              "map<string,boolean>",
+              "map<string,int>",
+              "map<string,long>",
+              "map<string,double>",
+              "map<string,date>",
+              "map<string,object>",
+              "short",
+              "map<string,array<string>>",
+              "other"
+            ]
+          },
+          {
+            "name": "Usage",
+            "key": "usage",
+            "value": null,
+            "format": false,
+            "detail_spec": null,
+            "valid_values": []
+          },
+          {
+            "name": "Scope",
+            "key": "scope",
+            "value": null,
+            "format": false,
+            "detail_spec": null,
+            "valid_values": []
+          },
+          {
+            "name": "Namespace Path",
+            "key": "namespace_path",
+            "value": null,
+            "format": false,
+            "detail_spec": null,
+            "valid_values": []
+          },
+          {
+            "name": "Is Case Sensitive",
+            "key": "is_case_sensitive",
+            "value": null,
+            "format": false,
+            "detail_spec": null,
+            "valid_values": []
+          },
+          {
+            "name": "In Reference Data Set",
+            "key": "in_reference_data_set",
+            "value": null,
+            "format": false,
+            "detail_spec": null,
+            "valid_values": []
+          },
+          {
+            "name": "Is Default Member",
+            "key": "is_default_member",
+            "value": null,
+            "format": false,
+            "detail_spec": null,
+            "valid_values": []
+          },
+          {
+            "name": "Member Ordinal",
+            "key": "member_ordinal",
+            "value": null,
+            "format": false,
+            "detail_spec": null,
+            "valid_values": []
+          }
+        ]
+      }
+    ],
+    "action": {
+      "function": "ReferenceDataManager.find_valid_value_definitions",
+      "required_params": [
+        "search_string"
+      ],
+      "optional_params": [
+        "sequencing_order",
+        "sequencing_property",
+        "page_size",
+        "start_from",
+        "starts_with",
+        "ends_with",
+        "ignore_case",
+        "classification_names",
+        "metadata_element_subtypes",
+        "metadata_element_type"
+      ],
+      "spec_params": {
+        "metadata_element_type": "ReferenceDataValue"
+      },
+      "analytic_function": null,
+      "analytic_spec_params": {}
+    },
+    "get_additional_props": null,
+    "question_spec": null
+  },
+  "Reference-Data-Value-DrE-Advanced": {
+    "target_type": "Reference Data Value",
+    "heading": "Reference-Data-Value-DrE-Advanced Attributes",
+    "description": "Auto-generated format for Reference Data Value (Create, Advanced).",
+    "aliases": [],
+    "annotations": {},
+    "family": "Reference Data",
+    "formats": [
+      {
+        "types": [
+          "LIST"
+        ],
+        "attributes": [
+          {
+            "name": "Display Name",
+            "key": "display_name",
+            "value": null,
+            "format": false,
+            "detail_spec": null,
+            "valid_values": []
+          },
+          {
+            "name": "Qualified Name",
+            "key": "qualified_name",
+            "value": null,
+            "format": false,
+            "detail_spec": null,
+            "valid_values": []
+          },
+          {
+            "name": "GUID",
+            "key": "guid",
+            "value": null,
+            "format": false,
+            "detail_spec": null,
+            "valid_values": []
+          },
+          {
+            "name": "Effective From",
+            "key": "effective_from",
+            "value": null,
+            "format": false,
+            "detail_spec": null,
+            "valid_values": []
+          },
+          {
+            "name": "Effective Time",
+            "key": "effective_time",
+            "value": null,
+            "format": false,
+            "detail_spec": null,
+            "valid_values": []
+          },
+          {
+            "name": "Effective To",
+            "key": "effective_to",
+            "value": null,
+            "format": false,
+            "detail_spec": null,
+            "valid_values": []
+          },
+          {
+            "name": "Glossary Term",
+            "key": "glossary_term",
+            "value": null,
+            "format": false,
+            "detail_spec": null,
+            "valid_values": []
+          },
+          {
+            "name": "Is Own Anchor",
+            "key": "is_own_anchor",
+            "value": null,
+            "format": false,
+            "detail_spec": null,
+            "valid_values": []
+          },
+          {
+            "name": "Zone Membership",
+            "key": "zone_membership",
+            "value": null,
+            "format": false,
+            "detail_spec": null,
+            "valid_values": []
+          },
+          {
+            "name": "Additional Properties",
+            "key": "additional_properties",
+            "value": null,
+            "format": false,
+            "detail_spec": null,
+            "valid_values": []
+          },
+          {
+            "name": "Confidence Classification",
+            "key": "confidence_classification",
+            "value": null,
+            "format": false,
+            "detail_spec": null,
+            "valid_values": [
+              "UNCLASSIFIED",
+              "AD_HOC",
+              "TRANSACTIONAL",
+              "AUTHORITATIVE",
+              "DERIVED",
+              "OBSOLETE",
+              "OTHER"
+            ]
+          },
+          {
+            "name": "Confidentiality Classification",
+            "key": "confidentiality_classification",
+            "value": null,
+            "format": false,
+            "detail_spec": null,
+            "valid_values": [
+              "UNCLASSIFIED",
+              "INTERNAL",
+              "CONFIDENTIAL",
+              "SENSITIVE",
+              "RESTRICTED",
+              "OTHER"
+            ]
+          },
+          {
+            "name": "Criticality Classification",
+            "key": "criticality_classification",
+            "value": null,
+            "format": false,
+            "detail_spec": null,
+            "valid_values": [
+              "UNCLASSIFIED",
+              "MARGINAL",
+              "IMPORTANT",
+              "CRITICAL",
+              "CATASTROPHIC",
+              "OTHER"
+            ]
+          },
+          {
+            "name": "Description",
+            "key": "description",
+            "value": null,
+            "format": false,
+            "detail_spec": null,
+            "valid_values": []
+          },
+          {
+            "name": "Identifier",
+            "key": "identifier",
+            "value": null,
+            "format": false,
+            "detail_spec": null,
+            "valid_values": []
+          },
+          {
+            "name": "Impact Classification",
+            "key": "impact_classification",
+            "value": null,
+            "format": false,
+            "detail_spec": null,
+            "valid_values": [
+              "UNCLASSIFIED",
+              "LOW",
+              "MEDIUM",
+              "HIGH",
+              "OTHER"
+            ]
+          },
+          {
+            "name": "Legal",
+            "key": "legal",
+            "value": null,
+            "format": false,
+            "detail_spec": null,
+            "valid_values": []
+          },
+          {
+            "name": "Policy Management Point",
+            "key": "policy_management_point",
+            "value": null,
+            "format": false,
+            "detail_spec": null,
+            "valid_values": []
+          },
+          {
+            "name": "Retention Classification",
+            "key": "retention_classification",
+            "value": null,
+            "format": false,
+            "detail_spec": null,
+            "valid_values": [
+              "UNCLASSIFIED",
+              "TEMPORARY",
+              "PROJECT_LIFETIME",
+              "TEAM_LIFETIME",
+              "CONTRACT_LIFETIME",
+              "REGULATED_LIFETIME",
+              "TIMEBOXED_LIFETIME",
+              "OTHER"
+            ]
+          },
+          {
+            "name": "Security Tags",
+            "key": "security_tags",
+            "value": null,
+            "format": false,
+            "detail_spec": null,
+            "valid_values": []
+          },
+          {
+            "name": "Authors",
+            "key": "authors",
+            "value": null,
+            "format": false,
+            "detail_spec": null,
+            "valid_values": []
+          },
+          {
+            "name": "Preferred Value",
+            "key": "preferred_value",
+            "value": null,
+            "format": false,
+            "detail_spec": null,
+            "valid_values": []
+          },
+          {
+            "name": "Data Type",
+            "key": "data_type",
+            "value": null,
+            "format": false,
+            "detail_spec": null,
+            "valid_values": [
+              "string",
+              "int",
+              "long",
+              "date",
+              "boolean",
+              "char",
+              "byte",
+              "float",
+              "double",
+              "biginteger",
+              "bigdecimal",
+              "array<string>",
+              "array<int>",
+              "map<string,string>",
+              "map<string,boolean>",
+              "map<string,int>",
+              "map<string,long>",
+              "map<string,double>",
+              "map<string,date>",
+              "map<string,object>",
+              "short",
+              "map<string,array<string>>",
+              "other"
+            ]
+          },
+          {
+            "name": "Usage",
+            "key": "usage",
+            "value": null,
+            "format": false,
+            "detail_spec": null,
+            "valid_values": []
+          },
+          {
+            "name": "Scope",
+            "key": "scope",
+            "value": null,
+            "format": false,
+            "detail_spec": null,
+            "valid_values": []
+          },
+          {
+            "name": "Namespace Path",
+            "key": "namespace_path",
+            "value": null,
+            "format": false,
+            "detail_spec": null,
+            "valid_values": []
+          },
+          {
+            "name": "Is Case Sensitive",
+            "key": "is_case_sensitive",
+            "value": null,
+            "format": false,
+            "detail_spec": null,
+            "valid_values": []
+          },
+          {
+            "name": "Ordinal",
+            "key": "ordinal",
+            "value": null,
+            "format": false,
+            "detail_spec": null,
+            "valid_values": []
+          },
+          {
+            "name": "In Reference Data Set",
+            "key": "in_reference_data_set",
+            "value": null,
+            "format": false,
+            "detail_spec": null,
+            "valid_values": []
+          },
+          {
+            "name": "Is Default Member",
+            "key": "is_default_member",
+            "value": null,
+            "format": false,
+            "detail_spec": null,
+            "valid_values": []
+          },
+          {
+            "name": "Member Ordinal",
+            "key": "member_ordinal",
+            "value": null,
+            "format": false,
+            "detail_spec": null,
+            "valid_values": []
+          },
+          {
+            "name": "Classifications",
+            "key": "classifications",
+            "value": null,
+            "format": false,
+            "detail_spec": null,
+            "valid_values": null
+          },
+          {
+            "name": "Anchor Scope Name",
+            "key": "anchor_scope_guid",
+            "value": null,
+            "format": false,
+            "detail_spec": null,
+            "valid_values": null
+          },
+          {
+            "name": "Supplementary Properties",
+            "key": "supplementary_properties",
+            "value": null,
+            "format": false,
+            "detail_spec": null,
+            "valid_values": null
+          },
+          {
+            "name": "Version Identifier",
+            "key": "version_identifier",
+            "value": null,
+            "format": false,
+            "detail_spec": null,
+            "valid_values": []
+          },
+          {
+            "name": "Status",
+            "key": "status",
+            "value": null,
+            "format": false,
+            "detail_spec": null,
+            "valid_values": []
+          },
+          {
+            "name": "Content Status",
+            "key": "content_status",
+            "value": null,
+            "format": false,
+            "detail_spec": null,
+            "valid_values": [
+              "DRAFT",
+              "PREPARED",
+              "PROPOSED",
+              "APPROVED",
+              "REJECTED",
+              "ACTIVE",
+              "DEPRECATED",
+              "OTHER"
+            ]
+          },
+          {
+            "name": "User Defined Content Status",
+            "key": "user_defined_content_status",
+            "value": null,
+            "format": false,
+            "detail_spec": null,
+            "valid_values": []
+          },
+          {
+            "name": "User Defined Status",
+            "key": "user_defined_status",
+            "value": null,
+            "format": false,
+            "detail_spec": null,
+            "valid_values": null
+          },
+          {
+            "name": "Category",
+            "key": "category",
+            "value": null,
+            "format": false,
+            "detail_spec": null,
+            "valid_values": []
+          }
+        ],
+        "columns": [
+          {
+            "name": "Display Name",
+            "key": "display_name",
+            "value": null,
+            "format": false,
+            "detail_spec": null,
+            "valid_values": []
+          },
+          {
+            "name": "Qualified Name",
+            "key": "qualified_name",
+            "value": null,
+            "format": false,
+            "detail_spec": null,
+            "valid_values": []
+          },
+          {
+            "name": "GUID",
+            "key": "guid",
+            "value": null,
+            "format": false,
+            "detail_spec": null,
+            "valid_values": []
+          },
+          {
+            "name": "Effective From",
+            "key": "effective_from",
+            "value": null,
+            "format": false,
+            "detail_spec": null,
+            "valid_values": []
+          },
+          {
+            "name": "Effective Time",
+            "key": "effective_time",
+            "value": null,
+            "format": false,
+            "detail_spec": null,
+            "valid_values": []
+          },
+          {
+            "name": "Effective To",
+            "key": "effective_to",
+            "value": null,
+            "format": false,
+            "detail_spec": null,
+            "valid_values": []
+          },
+          {
+            "name": "Glossary Term",
+            "key": "glossary_term",
+            "value": null,
+            "format": false,
+            "detail_spec": null,
+            "valid_values": []
+          },
+          {
+            "name": "Is Own Anchor",
+            "key": "is_own_anchor",
+            "value": null,
+            "format": false,
+            "detail_spec": null,
+            "valid_values": []
+          },
+          {
+            "name": "Zone Membership",
+            "key": "zone_membership",
+            "value": null,
+            "format": false,
+            "detail_spec": null,
+            "valid_values": []
+          },
+          {
+            "name": "Additional Properties",
+            "key": "additional_properties",
+            "value": null,
+            "format": false,
+            "detail_spec": null,
+            "valid_values": []
+          },
+          {
+            "name": "Confidence Classification",
+            "key": "confidence_classification",
+            "value": null,
+            "format": false,
+            "detail_spec": null,
+            "valid_values": [
+              "UNCLASSIFIED",
+              "AD_HOC",
+              "TRANSACTIONAL",
+              "AUTHORITATIVE",
+              "DERIVED",
+              "OBSOLETE",
+              "OTHER"
+            ]
+          },
+          {
+            "name": "Confidentiality Classification",
+            "key": "confidentiality_classification",
+            "value": null,
+            "format": false,
+            "detail_spec": null,
+            "valid_values": [
+              "UNCLASSIFIED",
+              "INTERNAL",
+              "CONFIDENTIAL",
+              "SENSITIVE",
+              "RESTRICTED",
+              "OTHER"
+            ]
+          },
+          {
+            "name": "Criticality Classification",
+            "key": "criticality_classification",
+            "value": null,
+            "format": false,
+            "detail_spec": null,
+            "valid_values": [
+              "UNCLASSIFIED",
+              "MARGINAL",
+              "IMPORTANT",
+              "CRITICAL",
+              "CATASTROPHIC",
+              "OTHER"
+            ]
+          },
+          {
+            "name": "Description",
+            "key": "description",
+            "value": null,
+            "format": false,
+            "detail_spec": null,
+            "valid_values": []
+          },
+          {
+            "name": "Identifier",
+            "key": "identifier",
+            "value": null,
+            "format": false,
+            "detail_spec": null,
+            "valid_values": []
+          },
+          {
+            "name": "Impact Classification",
+            "key": "impact_classification",
+            "value": null,
+            "format": false,
+            "detail_spec": null,
+            "valid_values": [
+              "UNCLASSIFIED",
+              "LOW",
+              "MEDIUM",
+              "HIGH",
+              "OTHER"
+            ]
+          },
+          {
+            "name": "Legal",
+            "key": "legal",
+            "value": null,
+            "format": false,
+            "detail_spec": null,
+            "valid_values": []
+          },
+          {
+            "name": "Policy Management Point",
+            "key": "policy_management_point",
+            "value": null,
+            "format": false,
+            "detail_spec": null,
+            "valid_values": []
+          },
+          {
+            "name": "Retention Classification",
+            "key": "retention_classification",
+            "value": null,
+            "format": false,
+            "detail_spec": null,
+            "valid_values": [
+              "UNCLASSIFIED",
+              "TEMPORARY",
+              "PROJECT_LIFETIME",
+              "TEAM_LIFETIME",
+              "CONTRACT_LIFETIME",
+              "REGULATED_LIFETIME",
+              "TIMEBOXED_LIFETIME",
+              "OTHER"
+            ]
+          },
+          {
+            "name": "Security Tags",
+            "key": "security_tags",
+            "value": null,
+            "format": false,
+            "detail_spec": null,
+            "valid_values": []
+          },
+          {
+            "name": "Authors",
+            "key": "authors",
+            "value": null,
+            "format": false,
+            "detail_spec": null,
+            "valid_values": []
+          },
+          {
+            "name": "Preferred Value",
+            "key": "preferred_value",
+            "value": null,
+            "format": false,
+            "detail_spec": null,
+            "valid_values": []
+          },
+          {
+            "name": "Data Type",
+            "key": "data_type",
+            "value": null,
+            "format": false,
+            "detail_spec": null,
+            "valid_values": [
+              "string",
+              "int",
+              "long",
+              "date",
+              "boolean",
+              "char",
+              "byte",
+              "float",
+              "double",
+              "biginteger",
+              "bigdecimal",
+              "array<string>",
+              "array<int>",
+              "map<string,string>",
+              "map<string,boolean>",
+              "map<string,int>",
+              "map<string,long>",
+              "map<string,double>",
+              "map<string,date>",
+              "map<string,object>",
+              "short",
+              "map<string,array<string>>",
+              "other"
+            ]
+          },
+          {
+            "name": "Usage",
+            "key": "usage",
+            "value": null,
+            "format": false,
+            "detail_spec": null,
+            "valid_values": []
+          },
+          {
+            "name": "Scope",
+            "key": "scope",
+            "value": null,
+            "format": false,
+            "detail_spec": null,
+            "valid_values": []
+          },
+          {
+            "name": "Namespace Path",
+            "key": "namespace_path",
+            "value": null,
+            "format": false,
+            "detail_spec": null,
+            "valid_values": []
+          },
+          {
+            "name": "Is Case Sensitive",
+            "key": "is_case_sensitive",
+            "value": null,
+            "format": false,
+            "detail_spec": null,
+            "valid_values": []
+          },
+          {
+            "name": "Ordinal",
+            "key": "ordinal",
+            "value": null,
+            "format": false,
+            "detail_spec": null,
+            "valid_values": []
+          },
+          {
+            "name": "In Reference Data Set",
+            "key": "in_reference_data_set",
+            "value": null,
+            "format": false,
+            "detail_spec": null,
+            "valid_values": []
+          },
+          {
+            "name": "Is Default Member",
+            "key": "is_default_member",
+            "value": null,
+            "format": false,
+            "detail_spec": null,
+            "valid_values": []
+          },
+          {
+            "name": "Member Ordinal",
+            "key": "member_ordinal",
+            "value": null,
+            "format": false,
+            "detail_spec": null,
+            "valid_values": []
+          },
+          {
+            "name": "Classifications",
+            "key": "classifications",
+            "value": null,
+            "format": false,
+            "detail_spec": null,
+            "valid_values": null
+          },
+          {
+            "name": "Anchor Scope Name",
+            "key": "anchor_scope_guid",
+            "value": null,
+            "format": false,
+            "detail_spec": null,
+            "valid_values": null
+          },
+          {
+            "name": "Supplementary Properties",
+            "key": "supplementary_properties",
+            "value": null,
+            "format": false,
+            "detail_spec": null,
+            "valid_values": null
+          },
+          {
+            "name": "Version Identifier",
+            "key": "version_identifier",
+            "value": null,
+            "format": false,
+            "detail_spec": null,
+            "valid_values": []
+          },
+          {
+            "name": "Status",
+            "key": "status",
+            "value": null,
+            "format": false,
+            "detail_spec": null,
+            "valid_values": []
+          },
+          {
+            "name": "Content Status",
+            "key": "content_status",
+            "value": null,
+            "format": false,
+            "detail_spec": null,
+            "valid_values": [
+              "DRAFT",
+              "PREPARED",
+              "PROPOSED",
+              "APPROVED",
+              "REJECTED",
+              "ACTIVE",
+              "DEPRECATED",
+              "OTHER"
+            ]
+          },
+          {
+            "name": "User Defined Content Status",
+            "key": "user_defined_content_status",
+            "value": null,
+            "format": false,
+            "detail_spec": null,
+            "valid_values": []
+          },
+          {
+            "name": "User Defined Status",
+            "key": "user_defined_status",
+            "value": null,
+            "format": false,
+            "detail_spec": null,
+            "valid_values": null
+          },
+          {
+            "name": "Category",
+            "key": "category",
+            "value": null,
+            "format": false,
+            "detail_spec": null,
+            "valid_values": []
+          }
+        ]
+      },
+      {
+        "types": [
+          "ALL"
+        ],
+        "attributes": [
+          {
+            "name": "Effective From",
+            "key": "effective_from",
+            "value": null,
+            "format": false,
+            "detail_spec": null,
+            "valid_values": []
+          },
+          {
+            "name": "Effective Time",
+            "key": "effective_time",
+            "value": null,
+            "format": false,
+            "detail_spec": null,
+            "valid_values": []
+          },
+          {
+            "name": "Effective To",
+            "key": "effective_to",
+            "value": null,
+            "format": false,
+            "detail_spec": null,
+            "valid_values": []
+          },
+          {
+            "name": "Glossary Term",
+            "key": "glossary_term",
+            "value": null,
+            "format": false,
+            "detail_spec": null,
+            "valid_values": []
+          },
+          {
+            "name": "Is Own Anchor",
+            "key": "is_own_anchor",
+            "value": null,
+            "format": false,
+            "detail_spec": null,
+            "valid_values": []
+          },
+          {
+            "name": "Status",
+            "key": "status",
+            "value": null,
+            "format": false,
+            "detail_spec": null,
+            "valid_values": []
+          },
+          {
+            "name": "Zone Membership",
+            "key": "zone_membership",
+            "value": null,
+            "format": false,
+            "detail_spec": null,
+            "valid_values": []
+          },
+          {
+            "name": "Additional Properties",
+            "key": "additional_properties",
+            "value": null,
+            "format": false,
+            "detail_spec": null,
+            "valid_values": []
+          },
+          {
+            "name": "Category",
+            "key": "category",
+            "value": null,
+            "format": false,
+            "detail_spec": null,
+            "valid_values": []
+          },
+          {
+            "name": "Confidence Classification",
+            "key": "confidence_classification",
+            "value": null,
+            "format": false,
+            "detail_spec": null,
+            "valid_values": [
+              "UNCLASSIFIED",
+              "AD_HOC",
+              "TRANSACTIONAL",
+              "AUTHORITATIVE",
+              "DERIVED",
+              "OBSOLETE",
+              "OTHER"
+            ]
+          },
+          {
+            "name": "Confidentiality Classification",
+            "key": "confidentiality_classification",
+            "value": null,
+            "format": false,
+            "detail_spec": null,
+            "valid_values": [
+              "UNCLASSIFIED",
+              "INTERNAL",
+              "CONFIDENTIAL",
+              "SENSITIVE",
+              "RESTRICTED",
+              "OTHER"
+            ]
+          },
+          {
+            "name": "Criticality Classification",
+            "key": "criticality_classification",
+            "value": null,
+            "format": false,
+            "detail_spec": null,
+            "valid_values": [
+              "UNCLASSIFIED",
+              "MARGINAL",
+              "IMPORTANT",
+              "CRITICAL",
+              "CATASTROPHIC",
+              "OTHER"
+            ]
+          },
+          {
+            "name": "Description",
+            "key": "description",
+            "value": null,
+            "format": false,
+            "detail_spec": null,
+            "valid_values": []
+          },
+          {
+            "name": "Display Name",
+            "key": "display_name",
+            "value": null,
+            "format": false,
+            "detail_spec": null,
+            "valid_values": []
+          },
+          {
+            "name": "GUID",
+            "key": "guid",
+            "value": null,
+            "format": false,
+            "detail_spec": null,
+            "valid_values": []
+          },
+          {
+            "name": "Identifier",
+            "key": "identifier",
+            "value": null,
+            "format": false,
+            "detail_spec": null,
+            "valid_values": []
+          },
+          {
+            "name": "Impact Classification",
+            "key": "impact_classification",
+            "value": null,
+            "format": false,
+            "detail_spec": null,
+            "valid_values": [
+              "UNCLASSIFIED",
+              "LOW",
+              "MEDIUM",
+              "HIGH",
+              "OTHER"
+            ]
+          },
+          {
+            "name": "Legal",
+            "key": "legal",
+            "value": null,
+            "format": false,
+            "detail_spec": null,
+            "valid_values": []
+          },
+          {
+            "name": "Policy Management Point",
+            "key": "policy_management_point",
+            "value": null,
+            "format": false,
+            "detail_spec": null,
+            "valid_values": []
+          },
+          {
+            "name": "Qualified Name",
+            "key": "qualified_name",
+            "value": null,
+            "format": false,
+            "detail_spec": null,
+            "valid_values": []
+          },
+          {
+            "name": "Retention Classification",
+            "key": "retention_classification",
+            "value": null,
+            "format": false,
+            "detail_spec": null,
+            "valid_values": [
+              "UNCLASSIFIED",
+              "TEMPORARY",
+              "PROJECT_LIFETIME",
+              "TEAM_LIFETIME",
+              "CONTRACT_LIFETIME",
+              "REGULATED_LIFETIME",
+              "TIMEBOXED_LIFETIME",
+              "OTHER"
+            ]
+          },
+          {
+            "name": "Security Tags",
+            "key": "security_tags",
+            "value": null,
+            "format": false,
+            "detail_spec": null,
+            "valid_values": []
+          },
+          {
+            "name": "URL",
+            "key": "url",
+            "value": null,
+            "format": false,
+            "detail_spec": null,
+            "valid_values": []
+          },
+          {
+            "name": "Version Identifier",
+            "key": "version_identifier",
+            "value": null,
+            "format": false,
+            "detail_spec": null,
+            "valid_values": []
+          },
+          {
+            "name": "Authors",
+            "key": "authors",
+            "value": null,
+            "format": false,
+            "detail_spec": null,
+            "valid_values": []
+          },
+          {
+            "name": "Content Status",
+            "key": "content_status",
+            "value": null,
+            "format": false,
+            "detail_spec": null,
+            "valid_values": [
+              "DRAFT",
+              "PREPARED",
+              "PROPOSED",
+              "APPROVED",
+              "REJECTED",
+              "ACTIVE",
+              "DEPRECATED",
+              "OTHER"
+            ]
+          },
+          {
+            "name": "User Defined Content Status",
+            "key": "user_defined_content_status",
+            "value": null,
+            "format": false,
+            "detail_spec": null,
+            "valid_values": []
+          },
+          {
+            "name": "Preferred Value",
+            "key": "preferred_value",
+            "value": null,
+            "format": false,
+            "detail_spec": null,
+            "valid_values": []
+          },
+          {
+            "name": "Data Type",
+            "key": "data_type",
+            "value": null,
+            "format": false,
+            "detail_spec": null,
+            "valid_values": [
+              "string",
+              "int",
+              "long",
+              "date",
+              "boolean",
+              "char",
+              "byte",
+              "float",
+              "double",
+              "biginteger",
+              "bigdecimal",
+              "array<string>",
+              "array<int>",
+              "map<string,string>",
+              "map<string,boolean>",
+              "map<string,int>",
+              "map<string,long>",
+              "map<string,double>",
+              "map<string,date>",
+              "map<string,object>",
+              "short",
+              "map<string,array<string>>",
+              "other"
+            ]
+          },
+          {
+            "name": "Usage",
+            "key": "usage",
+            "value": null,
+            "format": false,
+            "detail_spec": null,
+            "valid_values": []
+          },
+          {
+            "name": "Scope",
+            "key": "scope",
+            "value": null,
+            "format": false,
+            "detail_spec": null,
+            "valid_values": []
+          },
+          {
+            "name": "Namespace Path",
+            "key": "namespace_path",
+            "value": null,
+            "format": false,
+            "detail_spec": null,
+            "valid_values": []
+          },
+          {
+            "name": "Is Case Sensitive",
+            "key": "is_case_sensitive",
+            "value": null,
+            "format": false,
+            "detail_spec": null,
+            "valid_values": []
+          },
+          {
+            "name": "Ordinal",
+            "key": "ordinal",
+            "value": null,
+            "format": false,
+            "detail_spec": null,
+            "valid_values": []
+          },
+          {
+            "name": "In Reference Data Set",
+            "key": "in_reference_data_set",
+            "value": null,
+            "format": false,
+            "detail_spec": null,
+            "valid_values": []
+          },
+          {
+            "name": "Is Default Member",
+            "key": "is_default_member",
+            "value": null,
+            "format": false,
+            "detail_spec": null,
+            "valid_values": []
+          },
+          {
+            "name": "Member Ordinal",
+            "key": "member_ordinal",
+            "value": null,
+            "format": false,
+            "detail_spec": null,
+            "valid_values": []
+          },
+          {
+            "name": "User Defined Status",
+            "key": "user_defined_status",
+            "value": null,
+            "format": false,
+            "detail_spec": null,
+            "valid_values": null
+          },
+          {
+            "name": "Classifications",
+            "key": "classifications",
+            "value": null,
+            "format": false,
+            "detail_spec": null,
+            "valid_values": null
+          },
+          {
+            "name": "Anchor Scope Name",
+            "key": "anchor_scope_guid",
+            "value": null,
+            "format": false,
+            "detail_spec": null,
+            "valid_values": null
+          },
+          {
+            "name": "Supplementary Properties",
+            "key": "supplementary_properties",
+            "value": null,
+            "format": false,
+            "detail_spec": null,
+            "valid_values": null
+          }
+        ],
+        "columns": [
+          {
+            "name": "Effective From",
+            "key": "effective_from",
+            "value": null,
+            "format": false,
+            "detail_spec": null,
+            "valid_values": []
+          },
+          {
+            "name": "Effective Time",
+            "key": "effective_time",
+            "value": null,
+            "format": false,
+            "detail_spec": null,
+            "valid_values": []
+          },
+          {
+            "name": "Effective To",
+            "key": "effective_to",
+            "value": null,
+            "format": false,
+            "detail_spec": null,
+            "valid_values": []
+          },
+          {
+            "name": "Glossary Term",
+            "key": "glossary_term",
+            "value": null,
+            "format": false,
+            "detail_spec": null,
+            "valid_values": []
+          },
+          {
+            "name": "Is Own Anchor",
+            "key": "is_own_anchor",
+            "value": null,
+            "format": false,
+            "detail_spec": null,
+            "valid_values": []
+          },
+          {
+            "name": "Status",
+            "key": "status",
+            "value": null,
+            "format": false,
+            "detail_spec": null,
+            "valid_values": []
+          },
+          {
+            "name": "Zone Membership",
+            "key": "zone_membership",
+            "value": null,
+            "format": false,
+            "detail_spec": null,
+            "valid_values": []
+          },
+          {
+            "name": "Additional Properties",
+            "key": "additional_properties",
+            "value": null,
+            "format": false,
+            "detail_spec": null,
+            "valid_values": []
+          },
+          {
+            "name": "Category",
+            "key": "category",
+            "value": null,
+            "format": false,
+            "detail_spec": null,
+            "valid_values": []
+          },
+          {
+            "name": "Confidence Classification",
+            "key": "confidence_classification",
+            "value": null,
+            "format": false,
+            "detail_spec": null,
+            "valid_values": [
+              "UNCLASSIFIED",
+              "AD_HOC",
+              "TRANSACTIONAL",
+              "AUTHORITATIVE",
+              "DERIVED",
+              "OBSOLETE",
+              "OTHER"
+            ]
+          },
+          {
+            "name": "Confidentiality Classification",
+            "key": "confidentiality_classification",
+            "value": null,
+            "format": false,
+            "detail_spec": null,
+            "valid_values": [
+              "UNCLASSIFIED",
+              "INTERNAL",
+              "CONFIDENTIAL",
+              "SENSITIVE",
+              "RESTRICTED",
+              "OTHER"
+            ]
+          },
+          {
+            "name": "Criticality Classification",
+            "key": "criticality_classification",
+            "value": null,
+            "format": false,
+            "detail_spec": null,
+            "valid_values": [
+              "UNCLASSIFIED",
+              "MARGINAL",
+              "IMPORTANT",
+              "CRITICAL",
+              "CATASTROPHIC",
+              "OTHER"
+            ]
+          },
+          {
+            "name": "Description",
+            "key": "description",
+            "value": null,
+            "format": false,
+            "detail_spec": null,
+            "valid_values": []
+          },
+          {
+            "name": "Display Name",
+            "key": "display_name",
+            "value": null,
+            "format": false,
+            "detail_spec": null,
+            "valid_values": []
+          },
+          {
+            "name": "GUID",
+            "key": "guid",
+            "value": null,
+            "format": false,
+            "detail_spec": null,
+            "valid_values": []
+          },
+          {
+            "name": "Identifier",
+            "key": "identifier",
+            "value": null,
+            "format": false,
+            "detail_spec": null,
+            "valid_values": []
+          },
+          {
+            "name": "Impact Classification",
+            "key": "impact_classification",
+            "value": null,
+            "format": false,
+            "detail_spec": null,
+            "valid_values": [
+              "UNCLASSIFIED",
+              "LOW",
+              "MEDIUM",
+              "HIGH",
+              "OTHER"
+            ]
+          },
+          {
+            "name": "Legal",
+            "key": "legal",
+            "value": null,
+            "format": false,
+            "detail_spec": null,
+            "valid_values": []
+          },
+          {
+            "name": "Policy Management Point",
+            "key": "policy_management_point",
+            "value": null,
+            "format": false,
+            "detail_spec": null,
+            "valid_values": []
+          },
+          {
+            "name": "Qualified Name",
+            "key": "qualified_name",
+            "value": null,
+            "format": false,
+            "detail_spec": null,
+            "valid_values": []
+          },
+          {
+            "name": "Retention Classification",
+            "key": "retention_classification",
+            "value": null,
+            "format": false,
+            "detail_spec": null,
+            "valid_values": [
+              "UNCLASSIFIED",
+              "TEMPORARY",
+              "PROJECT_LIFETIME",
+              "TEAM_LIFETIME",
+              "CONTRACT_LIFETIME",
+              "REGULATED_LIFETIME",
+              "TIMEBOXED_LIFETIME",
+              "OTHER"
+            ]
+          },
+          {
+            "name": "Security Tags",
+            "key": "security_tags",
+            "value": null,
+            "format": false,
+            "detail_spec": null,
+            "valid_values": []
+          },
+          {
+            "name": "URL",
+            "key": "url",
+            "value": null,
+            "format": false,
+            "detail_spec": null,
+            "valid_values": []
+          },
+          {
+            "name": "Version Identifier",
+            "key": "version_identifier",
+            "value": null,
+            "format": false,
+            "detail_spec": null,
+            "valid_values": []
+          },
+          {
+            "name": "Authors",
+            "key": "authors",
+            "value": null,
+            "format": false,
+            "detail_spec": null,
+            "valid_values": []
+          },
+          {
+            "name": "Content Status",
+            "key": "content_status",
+            "value": null,
+            "format": false,
+            "detail_spec": null,
+            "valid_values": [
+              "DRAFT",
+              "PREPARED",
+              "PROPOSED",
+              "APPROVED",
+              "REJECTED",
+              "ACTIVE",
+              "DEPRECATED",
+              "OTHER"
+            ]
+          },
+          {
+            "name": "User Defined Content Status",
+            "key": "user_defined_content_status",
+            "value": null,
+            "format": false,
+            "detail_spec": null,
+            "valid_values": []
+          },
+          {
+            "name": "Preferred Value",
+            "key": "preferred_value",
+            "value": null,
+            "format": false,
+            "detail_spec": null,
+            "valid_values": []
+          },
+          {
+            "name": "Data Type",
+            "key": "data_type",
+            "value": null,
+            "format": false,
+            "detail_spec": null,
+            "valid_values": [
+              "string",
+              "int",
+              "long",
+              "date",
+              "boolean",
+              "char",
+              "byte",
+              "float",
+              "double",
+              "biginteger",
+              "bigdecimal",
+              "array<string>",
+              "array<int>",
+              "map<string,string>",
+              "map<string,boolean>",
+              "map<string,int>",
+              "map<string,long>",
+              "map<string,double>",
+              "map<string,date>",
+              "map<string,object>",
+              "short",
+              "map<string,array<string>>",
+              "other"
+            ]
+          },
+          {
+            "name": "Usage",
+            "key": "usage",
+            "value": null,
+            "format": false,
+            "detail_spec": null,
+            "valid_values": []
+          },
+          {
+            "name": "Scope",
+            "key": "scope",
+            "value": null,
+            "format": false,
+            "detail_spec": null,
+            "valid_values": []
+          },
+          {
+            "name": "Namespace Path",
+            "key": "namespace_path",
+            "value": null,
+            "format": false,
+            "detail_spec": null,
+            "valid_values": []
+          },
+          {
+            "name": "Is Case Sensitive",
+            "key": "is_case_sensitive",
+            "value": null,
+            "format": false,
+            "detail_spec": null,
+            "valid_values": []
+          },
+          {
+            "name": "Ordinal",
+            "key": "ordinal",
+            "value": null,
+            "format": false,
+            "detail_spec": null,
+            "valid_values": []
+          },
+          {
+            "name": "In Reference Data Set",
+            "key": "in_reference_data_set",
+            "value": null,
+            "format": false,
+            "detail_spec": null,
+            "valid_values": []
+          },
+          {
+            "name": "Is Default Member",
+            "key": "is_default_member",
+            "value": null,
+            "format": false,
+            "detail_spec": null,
+            "valid_values": []
+          },
+          {
+            "name": "Member Ordinal",
+            "key": "member_ordinal",
+            "value": null,
+            "format": false,
+            "detail_spec": null,
+            "valid_values": []
+          },
+          {
+            "name": "User Defined Status",
+            "key": "user_defined_status",
+            "value": null,
+            "format": false,
+            "detail_spec": null,
+            "valid_values": null
+          },
+          {
+            "name": "Classifications",
+            "key": "classifications",
+            "value": null,
+            "format": false,
+            "detail_spec": null,
+            "valid_values": null
+          },
+          {
+            "name": "Anchor Scope Name",
+            "key": "anchor_scope_guid",
+            "value": null,
+            "format": false,
+            "detail_spec": null,
+            "valid_values": null
+          },
+          {
+            "name": "Supplementary Properties",
+            "key": "supplementary_properties",
+            "value": null,
+            "format": false,
+            "detail_spec": null,
+            "valid_values": null
+          }
+        ]
+      }
+    ],
+    "action": {
+      "function": "ReferenceDataManager.find_valid_value_definitions",
+      "required_params": [
+        "search_string"
+      ],
+      "optional_params": [
+        "sequencing_order",
+        "sequencing_property",
+        "page_size",
+        "start_from",
+        "starts_with",
+        "ends_with",
+        "ignore_case",
+        "classification_names",
+        "metadata_element_subtypes",
+        "metadata_element_type"
+      ],
+      "spec_params": {
+        "metadata_element_type": "ReferenceDataValue"
+      },
+      "analytic_function": null,
+      "analytic_spec_params": {}
+    },
+    "get_additional_props": null,
+    "question_spec": null
+  },
   "Report-DrE-Basic": {
     "target_type": "Report",
     "heading": "Report-DrE-Basic Attributes",

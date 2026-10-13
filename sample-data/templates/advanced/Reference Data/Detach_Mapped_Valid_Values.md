@@ -1,46 +1,30 @@
 ___
 
-## Setup Valid Metadata Value
-> Create or update the valid value for a particular open metadata property name.
+## Detach Mapped Valid Values
+> Removes the ValidValuesMapping relationship.
 
-### Metadata Property Name
+### Valid Value 1
 >	**Input Required**: True
 
->	**Attribute Type**: Simple
+>	**Attribute Type**: Reference Name
 
->	**Description**: The open metadata property name the valid value is set up for.
+>	**Description**: The first valid value in the relationship.
 
 
-### Preferred Value
+### Valid Value 2
 >	**Input Required**: True
 
->	**Attribute Type**: Simple
+>	**Attribute Type**: Reference Name
 
->	**Description**: The valid/preferred value being set up for the property (or map name/value).
+>	**Description**: The second valid value in the relationship.
 
 
-### Type Name
+### Notes
 >	**Input Required**: False
 
 >	**Attribute Type**: Simple
 
->	**Description**: The open metadata type name the valid value applies to; leave unset to apply to all types.
-
-
-### Metadata Display Name
->	**Input Required**: False
-
->	**Attribute Type**: Simple
-
->	**Description**: Display name for the valid metadata value.
-
-
-### Metadata Description
->	**Input Required**: False
-
->	**Attribute Type**: Simple
-
->	**Description**: Description of the valid metadata value.
+>	**Description**: Notes and observations about the element.
 
 
 ### Journal Entry
@@ -49,6 +33,14 @@ ___
 >	**Attribute Type**: Simple
 
 >	**Description**: A text entry into a journal.
+
+
+### Association Description
+>	**Input Required**: False
+
+>	**Attribute Type**: Simple
+
+>	**Description**: Description of how the two valid values map to each other.
 
 
 ### Effective From
@@ -113,6 +105,38 @@ ___
 >	**Attribute Type**: Simple
 
 >	**Description**: A user provided or system generated request id for a conversation.
+
+
+### Confidence
+>	**Input Required**: False
+
+>	**Attribute Type**: Simple Int
+
+>	**Description**: A percent confidence in the proposed adding of the member.
+
+
+### Steward
+>	**Input Required**: False
+
+>	**Attribute Type**: Simple
+
+>	**Description**: The identifier of the steward responsible for the element.
+
+
+### Steward Type Name
+>	**Input Required**: False
+
+>	**Attribute Type**: Simple
+
+>	**Description**: The type name of the steward element.
+
+
+### Steward Property Name
+>	**Input Required**: False
+
+>	**Attribute Type**: Simple
+
+>	**Description**: Property name used to identify the type of the steward.
 
 
 ___

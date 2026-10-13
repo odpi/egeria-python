@@ -21,12 +21,28 @@ ___
 >	**Description**: The valid value definition supplying the reference/tag value (ReferenceValueAssignment relationship).
 
 
+### Notes
+>	**Input Required**: False
+
+>	**Attribute Type**: Simple
+
+>	**Description**: Notes and observations about the element.
+
+
 ### Journal Entry
 >	**Input Required**: False
 
 >	**Attribute Type**: Simple
 
 >	**Description**: A text entry into a journal.
+
+
+### Attribute Name
+>	**Input Required**: False
+
+>	**Attribute Type**: Simple
+
+>	**Description**: The attribute of the element that the reference value applies to.
 
 
 ___

@@ -13,7 +13,7 @@ from md_processing.md_processing_utils.md_processing_constants import get_comman
 import md_processing.md_processing_utils.md_processing_constants as md_constants
 from md_processing.md_processing_utils.common_md_utils import normalize_value
 from .extraction import DrECommand
-from .utils import parse_key_value
+from .utils import parse_key_value, parse_line_list, parse_table
 
 class AttributeFirstParser:
     """
@@ -256,6 +256,17 @@ class AttributeFirstParser:
             
         elif style == "Dictionary" or style == "KeyValue":
             return parse_key_value(value)
+
+        elif style == "Table":
+            rows = parse_table(value)
+            if value and not rows:
+                msg = f"'{details.get('name', 'attribute')}' expects a markdown table with a header row; none found"
+                if msg not in self.warnings:
+                    self.warnings.append(msg)
+            return rows
+
+        elif style == "Line List":
+            return parse_line_list(value)
             
         elif style in {"Enum", "Enumeration"}:
             v = value

@@ -1,7 +1,7 @@
 // Dr.Egeria Spec Editor -- vanilla JS, no build step, no framework.
 
 const STYLE_OPTIONS = [
-  "Simple", "Simple Int", "Simple Float", "Simple List", "Bool", "Enum",
+  "Simple", "Simple Int", "Simple Float", "Simple List", "Line List", "Table", "Bool", "Enum",
   "Valid Value", "QN", "GUID", "Reference Name", "Reference Name List",
   "Dictionary", "Named DICT",
 ];
