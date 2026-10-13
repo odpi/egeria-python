@@ -92839,14 +92839,6 @@
             "valid_values": []
           },
           {
-            "name": "Agreement Type",
-            "key": "agreement_type",
-            "value": null,
-            "format": false,
-            "detail_spec": null,
-            "valid_values": []
-          },
-          {
             "name": "Version Identifier",
             "key": "version_identifier",
             "value": null,
@@ -92932,14 +92924,6 @@
           {
             "name": "Purpose",
             "key": "purpose",
-            "value": null,
-            "format": false,
-            "detail_spec": null,
-            "valid_values": []
-          },
-          {
-            "name": "Agreement Type",
-            "key": "agreement_type",
             "value": null,
             "format": false,
             "detail_spec": null,
@@ -93081,14 +93065,6 @@
             "format": false,
             "detail_spec": null,
             "valid_values": []
-          },
-          {
-            "name": "Agreement Type",
-            "key": "agreement_type",
-            "value": null,
-            "format": false,
-            "detail_spec": null,
-            "valid_values": []
           }
         ],
         "columns": [
@@ -93184,14 +93160,6 @@
           {
             "name": "Purpose",
             "key": "purpose",
-            "value": null,
-            "format": false,
-            "detail_spec": null,
-            "valid_values": []
-          },
-          {
-            "name": "Agreement Type",
-            "key": "agreement_type",
             "value": null,
             "format": false,
             "detail_spec": null,
@@ -93453,14 +93421,6 @@
             "valid_values": []
           },
           {
-            "name": "Agreement Type",
-            "key": "agreement_type",
-            "value": null,
-            "format": false,
-            "detail_spec": null,
-            "valid_values": []
-          },
-          {
             "name": "Classifications",
             "key": "classifications",
             "value": null,
@@ -93751,14 +93711,6 @@
           {
             "name": "Purpose",
             "key": "purpose",
-            "value": null,
-            "format": false,
-            "detail_spec": null,
-            "valid_values": []
-          },
-          {
-            "name": "Agreement Type",
-            "key": "agreement_type",
             "value": null,
             "format": false,
             "detail_spec": null,
@@ -94123,14 +94075,6 @@
             "valid_values": []
           },
           {
-            "name": "Agreement Type",
-            "key": "agreement_type",
-            "value": null,
-            "format": false,
-            "detail_spec": null,
-            "valid_values": []
-          },
-          {
             "name": "User Defined Status",
             "key": "user_defined_status",
             "value": null,
@@ -94429,14 +94373,6 @@
           {
             "name": "Purpose",
             "key": "purpose",
-            "value": null,
-            "format": false,
-            "detail_spec": null,
-            "valid_values": []
-          },
-          {
-            "name": "Agreement Type",
-            "key": "agreement_type",
             "value": null,
             "format": false,
             "detail_spec": null,
@@ -96435,16 +96371,16 @@
             "valid_values": []
           },
           {
-            "name": "Agreement Type",
-            "key": "agreement_type",
+            "name": "Support Level",
+            "key": "support_level",
             "value": null,
             "format": false,
             "detail_spec": null,
             "valid_values": []
           },
           {
-            "name": "Support Level",
-            "key": "support_level",
+            "name": "Service Levels",
+            "key": "service_levels",
             "value": null,
             "format": false,
             "detail_spec": null,
@@ -96542,16 +96478,16 @@
             "valid_values": []
           },
           {
-            "name": "Agreement Type",
-            "key": "agreement_type",
+            "name": "Support Level",
+            "key": "support_level",
             "value": null,
             "format": false,
             "detail_spec": null,
             "valid_values": []
           },
           {
-            "name": "Support Level",
-            "key": "support_level",
+            "name": "Service Levels",
+            "key": "service_levels",
             "value": null,
             "format": false,
             "detail_spec": null,
@@ -96695,16 +96631,16 @@
             "valid_values": []
           },
           {
-            "name": "Agreement Type",
-            "key": "agreement_type",
+            "name": "Support Level",
+            "key": "support_level",
             "value": null,
             "format": false,
             "detail_spec": null,
             "valid_values": []
           },
           {
-            "name": "Support Level",
-            "key": "support_level",
+            "name": "Service Levels",
+            "key": "service_levels",
             "value": null,
             "format": false,
             "detail_spec": null,
@@ -96810,16 +96746,16 @@
             "valid_values": []
           },
           {
-            "name": "Agreement Type",
-            "key": "agreement_type",
+            "name": "Support Level",
+            "key": "support_level",
             "value": null,
             "format": false,
             "detail_spec": null,
             "valid_values": []
           },
           {
-            "name": "Support Level",
-            "key": "support_level",
+            "name": "Service Levels",
+            "key": "service_levels",
             "value": null,
             "format": false,
             "detail_spec": null,
@@ -97081,16 +97017,16 @@
             "valid_values": []
           },
           {
-            "name": "Agreement Type",
-            "key": "agreement_type",
+            "name": "Support Level",
+            "key": "support_level",
             "value": null,
             "format": false,
             "detail_spec": null,
             "valid_values": []
           },
           {
-            "name": "Support Level",
-            "key": "support_level",
+            "name": "Service Levels",
+            "key": "service_levels",
             "value": null,
             "format": false,
             "detail_spec": null,
@@ -97393,16 +97329,16 @@
             "valid_values": []
           },
           {
-            "name": "Agreement Type",
-            "key": "agreement_type",
+            "name": "Support Level",
+            "key": "support_level",
             "value": null,
             "format": false,
             "detail_spec": null,
             "valid_values": []
           },
           {
-            "name": "Support Level",
-            "key": "support_level",
+            "name": "Service Levels",
+            "key": "service_levels",
             "value": null,
             "format": false,
             "detail_spec": null,
@@ -97767,16 +97703,16 @@
             "valid_values": []
           },
           {
-            "name": "Agreement Type",
-            "key": "agreement_type",
+            "name": "Support Level",
+            "key": "support_level",
             "value": null,
             "format": false,
             "detail_spec": null,
             "valid_values": []
           },
           {
-            "name": "Support Level",
-            "key": "support_level",
+            "name": "Service Levels",
+            "key": "service_levels",
             "value": null,
             "format": false,
             "detail_spec": null,
@@ -98087,16 +98023,16 @@
             "valid_values": []
           },
           {
-            "name": "Agreement Type",
-            "key": "agreement_type",
+            "name": "Support Level",
+            "key": "support_level",
             "value": null,
             "format": false,
             "detail_spec": null,
             "valid_values": []
           },
           {
-            "name": "Support Level",
-            "key": "support_level",
+            "name": "Service Levels",
+            "key": "service_levels",
             "value": null,
             "format": false,
             "detail_spec": null,
@@ -98233,14 +98169,6 @@
             "valid_values": []
           },
           {
-            "name": "Agreement Type",
-            "key": "agreement_type",
-            "value": null,
-            "format": false,
-            "detail_spec": null,
-            "valid_values": []
-          },
-          {
             "name": "Version Identifier",
             "key": "version_identifier",
             "value": null,
@@ -98326,14 +98254,6 @@
           {
             "name": "Purpose",
             "key": "purpose",
-            "value": null,
-            "format": false,
-            "detail_spec": null,
-            "valid_values": []
-          },
-          {
-            "name": "Agreement Type",
-            "key": "agreement_type",
             "value": null,
             "format": false,
             "detail_spec": null,
@@ -98475,14 +98395,6 @@
             "format": false,
             "detail_spec": null,
             "valid_values": []
-          },
-          {
-            "name": "Agreement Type",
-            "key": "agreement_type",
-            "value": null,
-            "format": false,
-            "detail_spec": null,
-            "valid_values": []
           }
         ],
         "columns": [
@@ -98578,14 +98490,6 @@
           {
             "name": "Purpose",
             "key": "purpose",
-            "value": null,
-            "format": false,
-            "detail_spec": null,
-            "valid_values": []
-          },
-          {
-            "name": "Agreement Type",
-            "key": "agreement_type",
             "value": null,
             "format": false,
             "detail_spec": null,
@@ -98849,14 +98753,6 @@
             "valid_values": []
           },
           {
-            "name": "Agreement Type",
-            "key": "agreement_type",
-            "value": null,
-            "format": false,
-            "detail_spec": null,
-            "valid_values": []
-          },
-          {
             "name": "Classifications",
             "key": "classifications",
             "value": null,
@@ -99147,14 +99043,6 @@
           {
             "name": "Purpose",
             "key": "purpose",
-            "value": null,
-            "format": false,
-            "detail_spec": null,
-            "valid_values": []
-          },
-          {
-            "name": "Agreement Type",
-            "key": "agreement_type",
             "value": null,
             "format": false,
             "detail_spec": null,
@@ -99519,14 +99407,6 @@
             "valid_values": []
           },
           {
-            "name": "Agreement Type",
-            "key": "agreement_type",
-            "value": null,
-            "format": false,
-            "detail_spec": null,
-            "valid_values": []
-          },
-          {
             "name": "User Defined Status",
             "key": "user_defined_status",
             "value": null,
@@ -99825,14 +99705,6 @@
           {
             "name": "Purpose",
             "key": "purpose",
-            "value": null,
-            "format": false,
-            "detail_spec": null,
-            "valid_values": []
-          },
-          {
-            "name": "Agreement Type",
-            "key": "agreement_type",
             "value": null,
             "format": false,
             "detail_spec": null,

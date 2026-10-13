@@ -152,7 +152,6 @@ content was changed. The numbered section list above describes the
 
 **Open pyegeria items**
 - ISSUE-146: Deleting a journal entry fails with OMAG-REPOSITORY-HANDLER-400-008, and pyegeria's `remove_note` reaches the delete only through the generic Asset Maker service
-- ISSUE-145: Dr.Egeria sends `agreementType` and other `agreement*` fields that Egeria's `AgreementProperties` does not have
 - ISSUE-140: The executor charts any dict with two or more top-level numbers, regardless of the result's state
 - ISSUE-139: The executor renders no result envelope, and the Vega bar chart has no subtitle, so a not-established result has nowhere to say so on a chart
 - ISSUE-138: Analytic params are JSON-only, and only parameters named `mgr`/`ce`/`expert`/`client` are bound as clients, so a routine taking a reader object can't be named by its own dotted path
@@ -231,26 +230,6 @@ elements that share the anchor, not from a direct link.
 **pyegeria clean-up:** point `remove_note` at `asset-maker/assets/{guid}/delete`
 so the route is explicit, and describe it as an Action delete in the
 docstring.
-
----
-
-### ISSUE-145: Dr.Egeria sends `agreementType` and other `agreement*` fields that Egeria's `AgreementProperties` does not have
-
-**Layer:** Dr.Egeria · **Status:** open · **Found:** 2026-10-13, during the ISSUE-144 status-field sweep.
-
-**What:** `set_element_prop_body()` (`md_processing/md_processing_utils/common_md_utils.py`)
-adds `agreementType`, `agreementStatus`, `agreementIdentifier`,
-`agreementStatusIdentifier` and `agreementVersionIdentifier` for Agreement and
-Digital Subscription bodies. In Egeria 6.2, `AgreementProperties` declares no
-fields of its own; it extends `CollectionProperties`, and no `agreement*`
-property exists anywhere in the Egeria source. Egeria silently ignores all five.
-Only `Agreement Type` is defined in the Digital Products compact spec and used
-by commands, so a written Agreement Type is lost. The other four have no
-attribute definitions, so they are always None.
-
-**Decision needed:** where Agreement Type should go. `category` (from
-`ReferenceableProperties`) is the likely home, or the attribute could be
-retired. The four unused keys can be removed either way.
 
 ---
 
@@ -1508,6 +1487,37 @@ they're holding real port materialization until this exists server-side
 
 Sorted newest-first by `ISSUE-#` (2026-10-12). ISSUE-91 has two entries
 (the same defect reported twice); both are kept, next to each other.
+
+---
+
+### ISSUE-145: Dr.Egeria sends `agreementType` and other `agreement*` fields that Egeria's `AgreementProperties` does not have
+
+**Layer:** Dr.Egeria · **Status:** fixed 2026-10-13 · **Found:** 2026-10-13, during the ISSUE-144 status-field sweep.
+
+**What:** `set_element_prop_body()` (`md_processing/md_processing_utils/common_md_utils.py`)
+adds `agreementType`, `agreementStatus`, `agreementIdentifier`,
+`agreementStatusIdentifier` and `agreementVersionIdentifier` for Agreement and
+Digital Subscription bodies. In Egeria 6.2, `AgreementProperties` declares no
+fields of its own; it extends `CollectionProperties`, and no `agreement*`
+property exists anywhere in the Egeria source. Egeria silently ignores all five.
+Only `Agreement Type` is defined in the Digital Products compact spec and used
+by commands, so a written Agreement Type is lost. The other four have no
+attribute definitions, so they are always None.
+
+**Decision needed:** where Agreement Type should go. `category` (from
+`ReferenceableProperties`) is the likely home, or the attribute could be
+retired. The four unused keys can be removed either way.
+
+**Fixed 2026-10-13 (owner's decision: retire Agreement Type, add Service Levels):**
+the `Agreement Type` attribute is deleted from the Digital Products compact spec
+(`Agreement Base` now has no attributes of its own; Purpose carries intent, per the
+owner, since AgreementType is deprecated in Egeria). The five `agreement*` keys and
+the also-undeclared `subscriberType`/`subscriberId` keys are removed from
+`set_collection_manager_body()`. `Digital Subscription Base` gains a `Service Levels`
+Dictionary attribute next to `Support Level`, matching `DigitalSubscriptionProperties`
+(`supportLevel: String`, `serviceLevels: Map<String,String>`); both are sent by
+`set_element_prop_body()`. `dr_test_products_good.md` no longer uses Agreement Type or the
+undefined `Subscription Level`.
 
 ---
 

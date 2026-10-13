@@ -15,14 +15,6 @@ ___
 >	**Alternative Labels**: "Term Name"
 
 
-### Agreement Type
->	**Input Required**: False
-
->	**Attribute Type**: Simple
-
->	**Description**: Type of agreement (e.g., service level agreement, licensing agreement, data sharing agreement).
-
-
 ### Support Level
 >	**Input Required**: False
 
@@ -137,6 +129,18 @@ ___
 >	**Attribute Type**: Simple List
 
 >	**Description**: The authors.
+
+
+### Service Levels
+>	**Input Required**: False
+
+>	**Attribute Type**: Dictionary
+
+>	**Description**: Service levels promised by the subscription, as name/value pairs (e.g., availability: 99.9%, responseTime: 4 hours).
+
+>	| Parameter Name | Parameter Value |
+>	|---|---|
+>	| example_key | example_value |
 
 
 ___
