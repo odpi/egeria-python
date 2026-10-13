@@ -3361,6 +3361,11 @@ class ServerClient(BaseServerClient):
 
         All the relationships to referenceables are lost.
 
+        In Egeria 6.2 notes (including journal entries) are Actions, and no note
+        delete endpoint exists, so this uses the generic Metadata Expert element
+        delete until Egeria adds one (ISSUE-146). The URL is built from the
+        platform root because MetadataExpert overrides command_root.
+
         Parameters
         ----------
 
@@ -3378,7 +3383,8 @@ class ServerClient(BaseServerClient):
         ------
         PyegeriaException
         """
-        url = f"{self.command_root}feedback-manager/assets/{note_guid}/delete"
+        url = (f"{self.platform_url}/servers/{self.server_name}/api/open-metadata/"
+               f"metadata-expert/metadata-elements/{note_guid}/delete")
         await self._async_delete_element_request(url, body)
 
     @dynamic_catch

@@ -5,6 +5,20 @@ Status: `open` · `in-progress` · `done` · `deferred`
 
 ---
 
+## 🟡 Medium Priority — Re-test deletes when the new Egeria release lands
+
+**Status:** open, blocked on Egeria (its delete fixes are in progress upstream)
+**Added:** 2026-10-13
+
+Once the Egeria release with the delete fixes is published and the local quickstart is redeployed:
+
+1. **ISSUE-146:** re-test `remove_note`, which now posts to `metadata-expert/metadata-elements/{guid}/delete`, against test JournalEntry `8bec72e4-6da6-40a4-943e-d81e2173ec9b` on Erin's profile (`10dc7da9`). Try a plain delete first, then `deleteMethod: ARCHIVE` if it still fails with `OMAG-REPOSITORY-HANDLER-400-008`. Tell the egeria-workspaces-fs session before deleting anything on Erin's profile. Keep `fef83ed5` (owner's decision).
+2. **Other delete issues** to re-check at the same time: ISSUE-117 (Memento cascade delete), ISSUE-125 (`deleteEnumDef`) and ISSUE-132 (`cascadedDelete` field name).
+   Also ISSUE-147, the valid-metadata clears: re-run the ISSUE-147 sequence (setup then clear for a value, a map name and a map value on a made-up property). Expect no 400-011 error after a successful clear, and expect the map value to actually be removed.
+3. Update each `PYEGERIA_ISSUES.md` entry with the result, then do the held 6.2.3 release. The owner wants outstanding issues fixed before releasing.
+
+---
+
 ## 🟠 High Priority — Missing/absent catalog templates crash or silently proceed in `_async_get_template_guid_for_technology_type` callers — needs discussion
 
 **Status:** open (partial fix landed 2026-07-27)

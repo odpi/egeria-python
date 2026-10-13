@@ -148,9 +148,10 @@ content was changed. The numbered section list above describes the
 
 # Open Issues
 
-**At a glance** — 5 open pyegeria items, 7 awaiting re-test, 7 open Egeria Server issues.
+**At a glance** — 7 open pyegeria items, 7 awaiting re-test, 7 open Egeria Server issues.
 
 **Open pyegeria items**
+- ISSUE-146: Deleting a journal entry fails with OMAG-REPOSITORY-HANDLER-400-008, and pyegeria's `remove_note` reaches the delete only through the generic Asset Maker service
 - ISSUE-140: The executor charts any dict with two or more top-level numbers, regardless of the result's state
 - ISSUE-139: The executor renders no result envelope, and the Vega bar chart has no subtitle, so a not-established result has nowhere to say so on a chart
 - ISSUE-138: Analytic params are JSON-only, and only parameters named `mgr`/`ce`/`expert`/`client` are bound as clients, so a routine taking a reader object can't be named by its own dotted path
@@ -167,6 +168,7 @@ content was changed. The numbered section list above describes the
 - ISSUE-38 (PY-18): `count_relationships_between_elements("Exception")` (276) disagrees with `ClassificationExplorer.get_relationships("Exception")` (55)
 
 **Open Egeria Server issues**
+- ISSUE-147: Every valid-metadata clear call answers OPEN-METADATA-400-011 "not found", even after a successful delete; clear-map-value deletes nothing; clear-map-name leaves the map's value set behind
 - ISSUE-143: `includeOnlyRelationships: ["PersonRoleAppointment"]` returns no relationships for a Person, although the unfiltered read has its role appointments
 - ISSUE-130: The YAML secrets store's user directory caches a user forever, so editing an existing user needs a platform restart
 - ISSUE-128: Retention cannot be set on Egeria 6.2: the server registers the Jackson subtype as `RetentionProperties.class` (typo), and pyegeria only allows `RetentionClassificationProperties`
@@ -183,6 +185,93 @@ Actionable in this repo. Some of these are fully blocked today — waiting
 on an Egeria Server capability that doesn't exist yet — but the pyegeria/
 Dr.Egeria-side work each will need once that capability ships is written
 into the entry now, so it isn't rediscovered from scratch later.
+
+---
+
+### ISSUE-146: Deleting a journal entry fails with OMAG-REPOSITORY-HANDLER-400-008, and pyegeria's `remove_note` reaches the delete only through the generic Asset Maker service
+
+**Layer:** Egeria Server (pyegeria clean-up) · **Status:** open · **Found:** 2026-10-13, reported by the egeria-workspaces-fs Resource Browser session from a live private-journal test.
+
+**What:** as erinoverview, `_async_remove_note` (`pyegeria/core/_server_client.py`)
+was called on a JournalEntry created by `MyProfile.journal_my_activity`. It
+failed with `OMAG-REPOSITORY-HANDLER-400-008` (`LOCAL_CANNOT_CHANGE_EXTERNAL`):
+`deleteMetadataElementInStore` cannot modify Erin's UserIdentity (`ff983b64`),
+which has Content Pack provenance ("Coco Pharmaceuticals Combination"). The
+peer verified that nothing was removed. The entry keeps its `actionSource` and
+`presentInNoteLogs` relationships, and Erin's Person still has 1 identity,
+1 contact detail, 8 roles and 15 scopes. Test entry `fef83ed5` is still on
+Erin's profile, waiting for the owner's decision.
+
+**The route is right:** in 6.2, notes are Actions. The type chain is
+JournalEntry → Notification → Action → Process → Asset. Egeria main
+(`af400039c2`) has no note, notification or action delete endpoint.
+`AssetHandler.createNoteLogEntry` has no matching remove, and My Profile has
+`journal-my-activity` with no matching remove. The only delete for an Action is
+the generic `/assets/{assetGUID}/delete` (`AssetMakerResource`), which is what
+`remove_note`'s `feedback-manager/assets/{guid}/delete` reaches, because
+generic view services answer under any URL marker. Feedback Manager can only
+remove a whole note log (`note-logs/{noteLogGUID}/remove`).
+
+**Why it fails (likely, not verified):** `AssetHandler.createAction` anchors the
+entry to its action source, linked by `ActionRequester`. For a journal entry
+that is the caller's profile. Deleting an anchored element updates its anchor,
+and Erin's identity is owned by the content pack, so the local delete is
+refused. If so, no journal entry for a content-pack user can be deleted. That
+is for the Egeria team.
+
+**Anchor read (peer, read-only):** JournalEntry `fef83ed5` has anchorGUID
+`10dc7da9`, Erin's Person profile. Its `actionSource` is ActionRequester →
+Person `10dc7da9`, and `presentInNoteLogs` is AttachedNoteLogEntry → NoteLog
+`f780511a` (MyJournal). No relationship from the entry reaches UserIdentity
+`ff983b64`, which the error names. That identity is anchored to the same
+Person. So the refusal comes from the delete touching the anchor's graph, most
+likely the LatestChange update on the anchor, or a provenance check across
+elements that share the anchor, not from a direct link.
+
+**Delete-path trace (2026-10-13, Egeria source, read-only):** the asset delete
+(`AssetMakerResource.deleteAsset` → `AssetHandler.deleteAsset`) and the Metadata
+Expert delete (`MetadataExpertResource` → `MetadataExpertRESTServices`) both call
+`OpenMetadataClient.deleteMetadataElementInStore`, then the same
+`MetadataElementHandler` → `OpenMetadataAPIGenericHandler.deleteBeanInRepository`
+code. Neither does any extra checking, so switching routes cannot avoid 400-008.
+The error is thrown only by `RepositoryErrorHandler.validateProvenance`, when
+the delete removes an entity or relationship whose provenance is not
+LOCAL_COHORT and the request carries no `externalSourceGUID`. That happens in
+`removeRelationship` for each relationship on the note and in `removeEntity`
+for the note itself. No anchor (LatestChange) update was found on the delete
+path, which corrects "Why it fails" above. But the error names UserIdentity
+`ff983b64`, which is not linked to the note, so the exact instance is still
+unexplained. Untried options are to pass the content pack's metadata-collection
+id as `externalSourceGUID`, or to use `deleteMethod: ARCHIVE`, which goes
+through a different handler.
+
+**Note-privacy findings (egeria-workspaces-fs session, 2026-10-13, with owner
+approval):** a second test JournalEntry, `8bec72e4-6da6-40a4-943e-d81e2173ec9b`,
+was created on Erin's profile (`10dc7da9`) and cannot be deleted either until a
+working delete exists.
+- `POST my-profile/journal-my-activity` ignores `initialClassifications` and
+  stamps only ZoneMembership `['erinoverview']`.
+- `POST classification-explorer/elements/{guid}/zone-membership` with
+  `['resource-explorer-private','erinoverview']` makes the entry private.
+  erinoverview can read it. peterprofile and garygeeke get 403
+  `OPEN-METADATA-SECURITY-403-020` by GUID, and 0 hits from
+  `feedback-manager/assets/by-search-string`.
+- The journal's NoteLog (`f780511a`) stays at `['erinoverview']`, so other
+  users can see that the log exists but not the hidden entries.
+- The owner chose a temporary workaround for the Resource Locator: call
+  `add_zone_membership(['resource-explorer-private', user])` straight after
+  `journal-my-activity`. Review it once Egeria's journal fix lands.
+
+**pyegeria clean-up:** make the `remove_note` route explicit and describe it as
+an Action delete in the docstring. The owner chose the Metadata Expert delete
+(`metadata-expert/metadata-elements/{guid}/delete`) for now. Per the trace
+above, this is a clarity change, not a fix for 400-008.
+
+**Re-test after Egeria's delete fixes are published:** the owner said
+(2026-10-13) that Egeria is working on delete issues now. Once that work is
+published, re-test `remove_note` on `8bec72e4` (plain delete, then `ARCHIVE` if
+needed). Tell the egeria-workspaces-fs session before deleting anything on
+Erin's profile. `fef83ed5` stays.
 
 ---
 
@@ -1082,6 +1171,36 @@ enough to track there too).
 
 ---
 
+### ISSUE-147: Every valid-metadata clear call answers OPEN-METADATA-400-011 "not found", even after a successful delete; clear-map-value deletes nothing; clear-map-name leaves the map's value set behind
+
+**Layer:** Egeria Server (`ValidMetadataValueHandler`) · **Status:** open · **Found:** 2026-10-13. The first live run of the Valid Metadata commands showed it (the error text wasn't captured then). Re-tested the same day with the full responses captured.
+
+**Re-test:** run once on qs-view-server as erinoverview, with all four live sessions clearing it first. It used made-up properties `pyegeriaClearRetest` and `pyegeriaClearRetestMap` (typeName `Asset`) and called the SDK methods in `pyegeria/omvs/valid_metadata.py`. The Dr.Egeria `Clear Valid Metadata *` commands call the same methods (`md_processing/v2/reference_data.py:198-242`).
+
+| Call | Response | Actual effect |
+|---|---|---|
+| `clear_valid_metadata_value(alpha)`, set up just before | 400-011 "value alpha ... is not found" | **alpha removed** (gone from the list afterwards) |
+| same call again (alpha already gone) | 400-011 | nothing to remove |
+| `clear_valid_metadata_value(beta)` | 400-011 | **beta removed** |
+| `clear_valid_metadata_map_value(mapOne, v1)` | 400-011 "value v1 ... is not found" | **nothing removed**: `get_valid_metadata_map_value` still returns v1 |
+| `clear_valid_metadata_map_name(mapTwo)` | 400-011 | **mapTwo removed** |
+| `clear_valid_metadata_map_name(mapOne)`, with v1 under it | 400-011 | the mapOne name value is removed, but the map's value set "mapOne" (holding v1) stays in `get_valid_metadata_values` |
+
+Request ids: `ec9052e7` and `3975182d` (alpha), `38759736` (beta), `475e68f1` (map value), `407c0e17` and `07886f29` (map names). pyegeria surfaces each one as `SERVER_ERROR_500` wrapping `relatedHTTPCode` 400 `InvalidParameterException`.
+
+**Cause (Egeria source, `af400039c2`, `frameworks/open-metadata-framework/.../handlers/ValidMetadataValueHandler.java`):**
+1. **No `return` after the delete (lines ~541-680).** In all three `clear*` methods, `if (validValueGUID != null) deleteMetadataElementInStore(...)` is followed unconditionally by the audit log and `throw new InvalidParameterException(VALID_METADATA_MISSING ...)`. So every call throws, whether or not it deleted anything. The "not found" error is the method's normal exit.
+2. **Map name dropped in `clearValidMetadataMapValue`.** It calls `getValidValueGUID(userId, typeName, propertyName, null, preferredValue)`, passing `null` where `mapName` belongs. It therefore searches for `v1` as a plain value of the property, finds nothing, and deletes nothing.
+3. **`clearValidMetadataMapName` deletes only the name's own value.** It doesn't touch the per-map value set created by `setup-map-value` (the "Set of valid values for the mapOne map name ..." element) or its members. Whether that should cascade is Egeria's call.
+
+**Effect on Dr.Egeria:** `Clear Valid Metadata Value` and `Clear Valid Metadata Map Name` report failure although the clear worked. `Clear Valid Metadata Map Value` reports failure and really did fail.
+
+**Leftovers on qs-view-server:** the map value set "mapOne" with member v1 under `pyegeriaClearRetestMap`/`Asset`, plus whatever per-property container elements setup creates (`Egeria:ValidMetadataValue::pyegeriaClearRetest-Asset` and `...pyegeriaClearRetestMap-Asset`). These are test elements, not content-pack elements. RE's blueprint materializer treats `Egeria:ValidMetadataValue:` qualifiedNames as content-pack origin, but only for SolutionComponents, so they don't affect it.
+
+**pyegeria follow-on (not done, needs the owner's go-ahead):** Dr.Egeria's clear processor could treat 400-011 from `clear-value`/`clear-map-name` as success when a follow-up read confirms the value is gone. Otherwise, wait for the Egeria fix and re-test (see the BACKLOG.md delete re-test item).
+
+---
+
 ### ISSUE-143: `includeOnlyRelationships: ["PersonRoleAppointment"]` returns no relationships for a Person, although the unfiltered read has its role appointments
 
 **Layer:** Egeria Server (not pyegeria) · **Status:** open, not yet reported to the Egeria team · **Found:** 2026-10-13, reported by the egeria-workspaces-fs Resource Browser session; reproduced read-only the same day.
@@ -1440,6 +1559,75 @@ they're holding real port materialization until this exists server-side
 
 Sorted newest-first by `ISSUE-#` (2026-10-12). ISSUE-91 has two entries
 (the same defect reported twice); both are kept, next to each other.
+
+---
+
+### ISSUE-145: Dr.Egeria sends `agreementType` and other `agreement*` fields that Egeria's `AgreementProperties` does not have
+
+**Layer:** Dr.Egeria · **Status:** fixed 2026-10-13 · **Found:** 2026-10-13, during the ISSUE-144 status-field sweep.
+
+**What:** `set_element_prop_body()` (`md_processing/md_processing_utils/common_md_utils.py`)
+adds `agreementType`, `agreementStatus`, `agreementIdentifier`,
+`agreementStatusIdentifier` and `agreementVersionIdentifier` for Agreement and
+Digital Subscription bodies. In Egeria 6.2, `AgreementProperties` declares no
+fields of its own; it extends `CollectionProperties`, and no `agreement*`
+property exists anywhere in the Egeria source. Egeria silently ignores all five.
+Only `Agreement Type` is defined in the Digital Products compact spec and used
+by commands, so a written Agreement Type is lost. The other four have no
+attribute definitions, so they are always None.
+
+**Decision needed:** where Agreement Type should go. `category` (from
+`ReferenceableProperties`) is the likely home, or the attribute could be
+retired. The four unused keys can be removed either way.
+
+**Fixed 2026-10-13 (owner's decision: retire Agreement Type, add Service Levels):**
+the `Agreement Type` attribute is deleted from the Digital Products compact spec
+(`Agreement Base` now has no attributes of its own; Purpose carries intent, per the
+owner, since AgreementType is deprecated in Egeria). The five `agreement*` keys and
+the also-undeclared `subscriberType`/`subscriberId` keys are removed from
+`set_collection_manager_body()`. `Digital Subscription Base` gains a `Service Levels`
+Dictionary attribute next to `Support Level`, matching `DigitalSubscriptionProperties`
+(`supportLevel: String`, `serviceLevels: Map<String,String>`); both are sent by
+`set_element_prop_body()`. `dr_test_products_good.md` no longer uses Agreement Type or the
+undefined `Subscription Level`.
+
+---
+
+### ISSUE-144: Dr.Egeria's `Link Semantic Assignment` sent the assignment status as `status`, which Egeria silently ignores
+
+**Layer:** Dr.Egeria · **Status:** fixed 2026-10-13 · **Found:** 2026-10-13, reported by the egeria-workspaces-fs Resource Browser session from a live test.
+
+**What:** Egeria's `SemanticAssignmentProperties` holds the assignment status
+in `termAssignmentStatus`, an enum (`TermAssignmentStatus`). `CurationLinkProcessor`
+(`md_processing/v2/curation.py`) sent `"status"`. Egeria ignores unknown fields,
+so a status written in a Dr.Egeria document never reached the server, and
+read back empty. The sample body in the
+`ClassificationExplorer._async_setup_semantic_assignment` docstring, which
+comes from the `.http` file, had the same mistake. `SemanticAssignmentQueryProperties`,
+used by `get_meanings` and `get_semantic_assignees`, really does use `status`.
+Those samples are correct. The Resource Browser session confirmed live that
+`termAssignmentStatus: "PROPOSED"` is stored and returned.
+
+**Fix:** the processor sends `termAssignmentStatus`. `Governance Status`
+resolves to the governance `statusIdentifier` code (e.g. 3), which uses the
+same codes as `TermAssignmentStatus`, so the value is converted to the enum
+constant name (3 becomes `VALIDATED`). A display name is upper-cased. The two
+docstring samples are corrected. Test:
+`tests/micro-tests/test_issue_144_term_assignment_status.py`.
+
+**Sweep of other status fields Dr.Egeria sends, checked against the Egeria
+Java DTOs (including superclasses):** correct as sent are
+`DataValueAssignmentProperties.assignmentStatus`, `ProjectProperties.projectStatus`,
+`CollectionMembershipProperties.membershipStatus`/`userDefinedStatus`,
+`SolutionComponentProperties.userDefinedDeploymentStatus`,
+`PromiseProperties.deploymentStatus`/`userDefinedDeploymentStatus`,
+`NotificationSubscriberProperties.activityStatus`,
+`UsedInContextProperties.termRelationshipStatus` (from
+`GlossaryTermRelationshipProperties`), the governance classifications'
+`statusIdentifier` (ISSUE-22), `contentStatus` on schema types and attributes
+(inherited from `AuthoredReferenceableProperties`), and the element-level
+`contentStatus`/`activityStatus`/`deploymentStatus` mapping (ISSUE-113). The
+one further mismatch found, the `agreement*` fields, is logged as ISSUE-145.
 
 ---
 

@@ -184,8 +184,8 @@ ___
 
 # DP-05: Create Agreement — generic
 
-> Creates a generic Agreement collection. Agreement Type exercises
-> the family-specific attribute.
+> Creates a generic Agreement collection. Agreement has no properties of its own
+> beyond Collection's (Agreement Type was retired, ISSUE-145); Purpose carries intent.
 
 ## Create Agreement
 
@@ -197,10 +197,6 @@ Sales Forecast Data Access Agreement
 
 Generic agreement governing access to Sales Forecast data products by
 internal business units.
-
-### Agreement Type
-
-DataAccessAgreement
 
 ### Purpose
 
@@ -238,10 +234,6 @@ Sales Forecast — Finance Data Sharing Agreement
 Data sharing agreement between the Sales Analytics team and the Finance department
 for access to Q1 2026 Sales Forecast outputs for budget reconciliation.
 
-### Agreement Type
-
-DataSharingAgreement
-
 ### Purpose
 
 Govern the sharing of Sales Forecast data with Finance for budget reconciliation.
@@ -264,7 +256,7 @@ ___
 
 # DP-07: Create Digital Subscription
 
-> Creates a DigitalSubscription agreement. Exercises Subscription Level and Support Level
+> Creates a DigitalSubscription agreement. Exercises Support Level and Service Levels
 > from Digital Subscription Base.
 
 ## Create Digital Subscription
@@ -278,17 +270,13 @@ Finance Team — Sales Forecast Subscription
 Premium subscription for the Finance team to access the Sales Forecast Pipeline Product,
 with business-hours support and daily data refresh.
 
-### Subscription Level
-
-Premium
-
 ### Support Level
 
 BusinessHours
 
-### Agreement Type
+### Service Levels
 
-DigitalSubscription
+{"availability": "99.5%", "refreshFrequency": "daily"}
 
 ### Purpose
 
