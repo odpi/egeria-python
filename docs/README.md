@@ -14,7 +14,7 @@ contributors who need more depth than the top-level `README.md`/`CLAUDE.md`/
 | `my_profile_app_manual.md` | The My Profile App user manual — configuration, starting the app, change user, every screen and key, comments, feedback, return codes, known limitations, running the tests. |
 | `My-Egeria-Doc.md` | My Profile App reference guide — source layout, mixin structure, routing tables, Egeria calls and report specs per flow, flow and sequence diagrams. |
 | `output-formats-and-report-specs.md` | How `generate_output()`/report specs work: `FormatSet`/`Format`/`Column`/`ActionParameter` models, analytic functions, chart output formats. |
-| `reference-data-and-valid-metadata-mechanisms.md` | Reference data (`ReferenceDataManager`) vs. valid metadata values — what each mechanism is for and when to use which. |
+| `reference-data-and-valid-metadata-mechanisms.md` | Reference data (business value lists) vs. valid metadata values (allowed values of Egeria's own properties): the types, pyegeria methods, Dr.Egeria Reference Data and Valid Metadata families, and live-verified behaviour. |
 | `parameter_cleanup_plan.md` | Working notes from an in-progress parameter-naming/consistency audit across OMVS clients. |
 | `user_programming.md` | Notes on programmatic (non-CLI) use of pyegeria. |
 
