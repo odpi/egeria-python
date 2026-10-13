@@ -14,6 +14,7 @@ from pyegeria import settings, ServerClient, PyegeriaException
 from pyegeria.core.utils import (camel_to_title_case)
 from pyegeria.core._globals import DEBUG_LEVEL, GovernanceDomains, resolve_enum
 from md_processing.md_processing_utils.message_constants import message_types
+from md_processing.md_processing_utils.element_status import element_status_properties
 
 # Constants
 EGERIA_METADATA_STORE = os.environ.get("EGERIA_METADATA_STORE", "active-metadata-store")
@@ -303,7 +304,6 @@ def set_create_body(object_type: str, attributes: dict)->dict:
         "parentAtEnd1": attributes.get('Parent at End1', {}).get('value', True),
         "anchorScopeGUID": attributes.get('Anchor Scope ID', {}).get('guid', None),
         "properties": "",
-        "initialStatus": attributes.get('Status', {}).get('value', "ACTIVE"),
         "initialClassifications": {}}
 
     return body
@@ -394,7 +394,7 @@ def set_element_prop_body(object_type: str, qualified_name: str, attributes: dic
     prop_name = _to_egeria_type_name(object_type)
     display_name = attributes.get('Display Name', {}).get('value', None)
 
-    return {
+    body = {
         "class": prop_name + "Properties",
         "typeName": prop_name,
         "displayName": attributes.get('Display Name', {}).get('value', None),
@@ -404,7 +404,6 @@ def set_element_prop_body(object_type: str, qualified_name: str, attributes: dic
         "identifier": attributes.get('Identifier', {}).get('value', None),
         "url": attributes.get('URL', {}).get('value', None),
         "authors": attributes.get('Authors', {}).get('value', []),
-        "contentStatus": attributes.get('Content Status', {}).get('value', None) or attributes.get('Status', {}).get('value', None),
         "userDefinedContentStatus": attributes.get('User Defined Content Status', {}).get('value', None),
         "versionIdentifier": attributes.get('Version Identifier', {}).get('value', None),
         "effectiveFrom": attributes.get('Effective From', {}).get('value', None),
@@ -415,6 +414,9 @@ def set_element_prop_body(object_type: str, qualified_name: str, attributes: dic
         "serviceLevels": attributes.get('Service Levels', {}).get('value', None),
         "legal": attributes.get('Legal', {}).get('value', None),
         }
+    # contentStatus / activityStatus / deploymentStatus, whichever this type has (ISSUE-113).
+    body.update(element_status_properties(body["class"], attributes))
+    return body
 
 def set_collection_manager_body(object_type: str, qualified_name: str, attributes: dict) -> dict:
     """

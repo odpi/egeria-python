@@ -48,13 +48,18 @@ class AssetMakerProcessor(AsyncBaseCommandProcessor):
 
         if command_key == "Element" and not om_type:
             # Generic 'Create Element' -- the raw TemplateRequestBody surface.
+            # Egeria dropped initialStatus (ISSUE-113); the copy keeps the template's
+            # own status, which Template Properties can override.
+            status = attributes.get("Initial Status") or {}
+            if status.get("value") and not status.get("is_default"):
+                logger.warning("'Initial Status' ignored: Egeria no longer accepts it. Set contentStatus "
+                               "(or the type's own status) in Template Properties instead.")
             body = {
                 "class": "TemplateRequestBody",
                 "typeName": _v(attributes, "Element Type Name"),
                 "templateGUID": _v(attributes, "Template GUID"),
                 "placeholderPropertyValues": _v(attributes, "Placeholder Property Values") or {},
                 "replacementProperties": _v(attributes, "Template Properties"),
-                "initialStatus": _v(attributes, "Initial Status"),
                 "initialClassifications": _v(attributes, "Generic Initial Classifications"),
                 "anchorGUID": _guid(attributes, "Anchor ID"),
                 "isOwnAnchor": _v(attributes, "Is Own Anchor", True),

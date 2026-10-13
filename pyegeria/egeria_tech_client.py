@@ -253,6 +253,9 @@ class EgeriaTech:
         action_params["output_format"] = "JSON"
 
         func_name = spec.action.function
+        if not func_name:
+            return [{"attribute_path": "Error",
+                     "data_type": f"Report spec '{report_spec_name}' has only an analytic function; no element schema to discover."}]
         if "." in func_name:
             # E.g., 'GovernanceOfficer.find_governance_definitions' -> method_name
             _, method_name = func_name.split(".", 1)

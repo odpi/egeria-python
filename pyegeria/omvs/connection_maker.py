@@ -950,7 +950,7 @@ class ConnectionMaker(ServerClient):
 
     async def _async_link_connection_connector_type(self, connection_guid: str, connector_type_guid: str, body: Union[NewRelationshipRequestBody, dict] = None):
         url = f"{self.base_url}/connections/{connection_guid}/connector-types/{connector_type_guid}/attach"
-        await self._async_new_relationship_request(url, ["ConnectionConnectorType"], body)
+        await self._async_new_relationship_request(url, ["ConnectionConnectorTypeProperties"], body)
 
     def link_connection_connector_type(self, connection_guid: str, connector_type_guid: str, body: Union[NewRelationshipRequestBody, dict] = None):
         loop = asyncio.get_event_loop()
@@ -966,7 +966,7 @@ class ConnectionMaker(ServerClient):
 
     async def _async_link_connection_endpoint(self, connection_guid: str, endpoint_guid: str, body: Union[NewRelationshipRequestBody, dict] = None):
         url = f"{self.base_url}/connections/{connection_guid}/endpoints/{endpoint_guid}/attach"
-        await self._async_new_relationship_request(url, ["ConnectionEndpoint"], body)
+        await self._async_new_relationship_request(url, ["ConnectToEndpointProperties"], body)
 
     def link_connection_endpoint(self, connection_guid: str, endpoint_guid: str, body: Union[NewRelationshipRequestBody, dict] = None):
         loop = asyncio.get_event_loop()
@@ -982,7 +982,7 @@ class ConnectionMaker(ServerClient):
 
     async def _async_link_embedded_connection(self, connection_guid: str, embedded_connection_guid: str, body: Union[NewRelationshipRequestBody, dict] = None):
         url = f"{self.base_url}/connections/{connection_guid}/embedded-connections/{embedded_connection_guid}/attach"
-        await self._async_new_relationship_request(url, ["EmbeddedConnection"], body)
+        await self._async_new_relationship_request(url, ["EmbeddedConnectionProperties"], body)
 
     def link_embedded_connection(self, connection_guid: str, embedded_connection_guid: str, body: Union[NewRelationshipRequestBody, dict] = None):
         loop = asyncio.get_event_loop()
@@ -998,7 +998,7 @@ class ConnectionMaker(ServerClient):
 
     async def _async_link_asset_to_connection(self, asset_guid: str, connection_guid: str, body: Union[NewRelationshipRequestBody, dict] = None):
         url = f"{self.base_url}/assets/{asset_guid}/connections/{connection_guid}/attach"
-        await self._async_new_relationship_request(url, ["AssetConnection"], body)
+        await self._async_new_relationship_request(url, ["ResourceConnectionProperties"], body)
 
     def link_asset_to_connection(self, asset_guid: str, connection_guid: str, body: Union[NewRelationshipRequestBody, dict] = None):
         loop = asyncio.get_event_loop()
@@ -1054,7 +1054,7 @@ class ConnectionMaker(ServerClient):
 
     async def _async_link_endpoint_to_it_asset(self, asset_guid: str, endpoint_guid: str, body: Union[NewRelationshipRequestBody, dict] = None):
         url = f"{self.base_url}/assets/{asset_guid}/endpoints/{endpoint_guid}/attach"
-        await self._async_new_relationship_request(url, ["ITAssetEndpoint"], body)
+        await self._async_new_relationship_request(url, ["ServerEndpointProperties"], body)
 
     def link_endpoint_to_it_asset(self, asset_guid: str, endpoint_guid: str, body: Union[NewRelationshipRequestBody, dict] = None):
         loop = asyncio.get_event_loop()

@@ -127,7 +127,7 @@ def create_term(server, url, userid, password, glossary_name, term_name, summary
             "anchorScopeGUID" : glossary_guid,
             "isOwnAnchor": True,
             "parentAtEnd1": True,
-            "elementProperties": {
+            "properties": {
                 "class": "GlossaryTermProperties",
                 "qualifiedName": qualified_name,
                 "displayName": term_name,
@@ -137,8 +137,8 @@ def create_term(server, url, userid, password, glossary_name, term_name, summary
                 "examples": examples,
                 "usage": usage,
                 "publishVersionIdentifier": version,
+                "contentStatus": status,
             },
-            "initialStatus": status,
         }
 
         term_guid = m_client.create_glossary_term(body_slimmer(body)

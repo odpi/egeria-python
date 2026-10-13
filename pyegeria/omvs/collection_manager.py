@@ -4332,14 +4332,12 @@ class CollectionManager(ServerClient):
           "externalSourceName": "add qualified name here",
           "effectiveTime" : "{{$isoTimestamp}}",
           "forLineage" : false,
-          "forDuplicateProcessing" : false,
-          "initialStatus" : "ACTIVE"
+          "forDuplicateProcessing" : false
         }
 
-        The valid values for initialStatus are: DRAFT, PREPARED, PROPOSED, APPROVED, REJECTED, APPROVED_CONCEPT,
-        UNDER_DEVELOPMENT, DEVELOPMENT_COMPLETE, APPROVED_FOR_DEPLOYMENT, ACTIVE, DISABLED, DEPRECATED,
-        OTHER.  If using OTHER, set the userDefinedStatus with the status value you want. If not specified, will
-        default to ACTIVE.
+        Egeria no longer accepts initialStatus (removed 2025-12-15). Set a lifecycle status with
+        `contentStatus` in `properties`: DRAFT, PREPARED, PROPOSED, APPROVED, REJECTED, ACTIVE, DEPRECATED,
+        OBSOLETE or OTHER (with OTHER, also set `userDefinedContentStatus`).
         """
         url = f"{self.collection_command_root}"
         return await self._async_create_element_body_request(url, ["DigitalProductProperties"], body)
@@ -4457,10 +4455,9 @@ class CollectionManager(ServerClient):
           }
         }
 
-        The valid values for initialStatus are: DRAFT, PREPARED, PROPOSED, APPROVED, REJECTED, APPROVED_CONCEPT,
-        UNDER_DEVELOPMENT, DEVELOPMENT_COMPLETE, APPROVED_FOR_DEPLOYMENT, ACTIVE, DISABLED, DEPRECATED,
-        OTHER.  If using OTHER, set the userDefinedStatus with the status value you want. If not specified, will
-        default to ACTIVE.
+        Egeria no longer accepts initialStatus (removed 2025-12-15). Set a lifecycle status with
+        `contentStatus` in `properties`: DRAFT, PREPARED, PROPOSED, APPROVED, REJECTED, ACTIVE, DEPRECATED,
+        OBSOLETE or OTHER (with OTHER, also set `userDefinedContentStatus`).
         """
         url = f"{self.collection_command_root}"
         return await self._async_create_element_body_request(url, "DigitalProductCatalogProperties", body)
@@ -4506,10 +4503,9 @@ class CollectionManager(ServerClient):
               }
             }
 
-            The valid values for initialStatus are: DRAFT, PREPARED, PROPOSED, APPROVED, REJECTED, APPROVED_CONCEPT,
-            UNDER_DEVELOPMENT, DEVELOPMENT_COMPLETE, APPROVED_FOR_DEPLOYMENT, ACTIVE, DISABLED, DEPRECATED,
-            OTHER.  If using OTHER, set the userDefinedStatus with the status value you want. If not specified, will
-            default to ACTIVE.
+            Egeria no longer accepts initialStatus (removed 2025-12-15). Set a lifecycle status with
+            `contentStatus` in `properties`: DRAFT, PREPARED, PROPOSED, APPROVED, REJECTED, ACTIVE,
+            DEPRECATED, OBSOLETE or OTHER (with OTHER, also set `userDefinedContentStatus`).
             """
 
         return asyncio.get_event_loop().run_until_complete(
@@ -4702,14 +4698,12 @@ class CollectionManager(ServerClient):
           "externalSourceName": "add qualified name here",
           "effectiveTime" : "{{$isoTimestamp}}",
           "forLineage" : false,
-          "forDuplicateProcessing" : false,
-          "initialStatus" : "ACTIVE"
+          "forDuplicateProcessing" : false
         }
 
-        The valid values for initialStatus are: DRAFT, PREPARED, PROPOSED, APPROVED, REJECTED, APPROVED_CONCEPT,
-        UNDER_DEVELOPMENT, DEVELOPMENT_COMPLETE, APPROVED_FOR_DEPLOYMENT, ACTIVE, DISABLED, DEPRECATED,
-        OTHER.  If using OTHER, set the userDefinedStatus with the status value you want. If not specified, will
-        default to ACTIVE.
+        Egeria no longer accepts initialStatus (removed 2025-12-15). Set a lifecycle status with
+        `contentStatus` in `properties`: DRAFT, PREPARED, PROPOSED, APPROVED, REJECTED, ACTIVE, DEPRECATED,
+        OBSOLETE or OTHER (with OTHER, also set `userDefinedContentStatus`).
         """
         url = f"{self.collection_command_root}"
         return await self._async_create_element_body_request(url, "AgreementProperties", body)
@@ -4769,14 +4763,12 @@ class CollectionManager(ServerClient):
               "externalSourceName": "add qualified name here",
               "effectiveTime" : "{{$isoTimestamp}}",
               "forLineage" : false,
-              "forDuplicateProcessing" : false,
-              "initialStatus" : "ACTIVE"
+              "forDuplicateProcessing" : false
             }
 
-            The valid values for initialStatus are: DRAFT, PREPARED, PROPOSED, APPROVED, REJECTED, APPROVED_CONCEPT,
-            UNDER_DEVELOPMENT, DEVELOPMENT_COMPLETE, APPROVED_FOR_DEPLOYMENT, ACTIVE, DISABLED, DEPRECATED,
-            OTHER.  If using OTHER, set the userDefinedStatus with the status value you want. If not specified, will
-            default to ACTIVE.
+            Egeria no longer accepts initialStatus (removed 2025-12-15). Set a lifecycle status with
+            `contentStatus` in `properties`: DRAFT, PREPARED, PROPOSED, APPROVED, REJECTED, ACTIVE,
+            DEPRECATED, OBSOLETE or OTHER (with OTHER, also set `userDefinedContentStatus`).
             """
 
         return asyncio.get_event_loop().run_until_complete(
@@ -4831,7 +4823,6 @@ class CollectionManager(ServerClient):
     #           "property2Name" : "property2Value"
     #         }
     #       },
-    #       "initialStatus" : "ACTIVE",
     #       "externalSourceGUID": "add guid here",
     #       "externalSourceName": "add qualified name here",
     #       "effectiveTime" : "{{$isoTimestamp}}",
@@ -4839,10 +4830,9 @@ class CollectionManager(ServerClient):
     #       "forDuplicateProcessing" : false
     #     }
     #
-    #     The valid values for initialStatus are: DRAFT, PREPARED, PROPOSED, APPROVED, REJECTED, APPROVED_CONCEPT,
-    #     UNDER_DEVELOPMENT, DEVELOPMENT_COMPLETE, APPROVED_FOR_DEPLOYMENT, ACTIVE, DISABLED, DEPRECATED,
-    #     OTHER.  If using OTHER, set the userDefinedStatus with the status value you want. If not specified, will
-    #     default to ACTIVE.
+    #     Egeria no longer accepts initialStatus (removed 2025-12-15). Set a lifecycle status with
+    #     `contentStatus` in `properties`: DRAFT, PREPARED, PROPOSED, APPROVED, REJECTED, ACTIVE, DEPRECATED,
+    #     OBSOLETE or OTHER (with OTHER, also set `userDefinedContentStatus`).
     #     """
     #
     #     url = f"{self.collection_command_root}/data-sharing-agreement"
@@ -4906,14 +4896,12 @@ class CollectionManager(ServerClient):
     #           "externalSourceName": "add qualified name here",
     #           "effectiveTime" : "{{$isoTimestamp}}",
     #           "forLineage" : false,
-    #           "forDuplicateProcessing" : false,
-    #           "initialStatus" : "ACTIVE"
+    #           "forDuplicateProcessing" : false
     #         }
     #
-    #         The valid values for initialStatus are: DRAFT, PREPARED, PROPOSED, APPROVED, REJECTED, APPROVED_CONCEPT,
-    #         UNDER_DEVELOPMENT, DEVELOPMENT_COMPLETE, APPROVED_FOR_DEPLOYMENT, ACTIVE, DISABLED, DEPRECATED,
-    #         OTHER.  If using OTHER, set the userDefinedStatus with the status value you want. If not specified, will
-    #         default to ACTIVE.
+    #         Egeria no longer accepts initialStatus (removed 2025-12-15). Set a lifecycle status with
+    #         `contentStatus` in `properties`: DRAFT, PREPARED, PROPOSED, APPROVED, REJECTED, ACTIVE,
+    #         DEPRECATED, OBSOLETE or OTHER (with OTHER, also set `userDefinedContentStatus`).
     #         """
     #
     #     return asyncio.get_event_loop().run_until_complete(
@@ -5737,8 +5725,9 @@ class CollectionManager(ServerClient):
         The DigitalSubscription is a type of Agreement and so can have lifecycle states.
         Note: the three dates: introductionDate, nextVersionDate and withdrawDate must be valid dates if specified,
         otherwise you will get a 400 error response.
-        The valid values for initialStatus are: DRAFT, PREPARED, PROPOSED, APPROVED, REJECTED
-        ACTIVE, DEPRECATED, OTHER.  If using OTHER, set the userDefinedStatus with the statu value you want.
+        Egeria no longer accepts initialStatus (removed 2025-12-15). Set a lifecycle status with
+        `contentStatus` in `properties`: DRAFT, PREPARED, PROPOSED, APPROVED, REJECTED, ACTIVE, DEPRECATED,
+        OBSOLETE or OTHER (with OTHER, also set `userDefinedContentStatus`).
 
         {
           "class" : "NewAgreementRequestBody",
@@ -5764,7 +5753,6 @@ class CollectionManager(ServerClient):
               "property2Name" : "property2Value"
              }
            },
-           "initialStatus" : "OTHER",
            "externalSourceGUID": "add guid here",
            "externalSourceName": "add qualified name here",
            "effectiveTime" : "{{$isoTimestamp}}",
@@ -5808,8 +5796,9 @@ class CollectionManager(ServerClient):
         The DigitalSubscription is a type of Agreement and so can have lifecycle states.
         Note: the three dates: introductionDate, nextVersionDate and withdrawDate must be valid dates if specified,
         otherwise you will get a 400 error response.
-        The valid values for initialStatus are: DRAFT, PREPARED, PROPOSED, APPROVED, REJECTED
-        ACTIVE, DEPRECATED, OTHER.  If using OTHER, set the userDefinedStatus with the statu value you want.
+        Egeria no longer accepts initialStatus (removed 2025-12-15). Set a lifecycle status with
+        `contentStatus` in `properties`: DRAFT, PREPARED, PROPOSED, APPROVED, REJECTED, ACTIVE, DEPRECATED,
+        OBSOLETE or OTHER (with OTHER, also set `userDefinedContentStatus`).
 
         {
           "class" : "NewAgreementRequestBody",
@@ -5835,7 +5824,6 @@ class CollectionManager(ServerClient):
               "property2Name" : "property2Value"
              }
            },
-           "initialStatus" : "OTHER",
            "externalSourceGUID": "add guid here",
            "externalSourceName": "add qualified name here",
            "effectiveTime" : "{{$isoTimestamp}}",

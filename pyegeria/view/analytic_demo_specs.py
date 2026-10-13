@@ -75,7 +75,7 @@ def _demo(
         # never matches the data.
         formats=[Format(types=types, attributes=[])],
         action=ActionParameter(
-            function="", analytic_function=spec.function, analytic_spec_params=demo_params,
+            analytic_function=spec.function, analytic_spec_params=demo_params,
         ),
     )
 
