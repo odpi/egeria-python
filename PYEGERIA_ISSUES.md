@@ -148,9 +148,10 @@ content was changed. The numbered section list above describes the
 
 # Open Issues
 
-**At a glance** — 5 open pyegeria items, 7 awaiting re-test, 7 open Egeria Server issues.
+**At a glance** — 6 open pyegeria items, 7 awaiting re-test, 7 open Egeria Server issues.
 
 **Open pyegeria items**
+- ISSUE-145: Dr.Egeria sends `agreementType` and other `agreement*` fields that Egeria's `AgreementProperties` does not have
 - ISSUE-140: The executor charts any dict with two or more top-level numbers, regardless of the result's state
 - ISSUE-139: The executor renders no result envelope, and the Vega bar chart has no subtitle, so a not-established result has nowhere to say so on a chart
 - ISSUE-138: Analytic params are JSON-only, and only parameters named `mgr`/`ce`/`expert`/`client` are bound as clients, so a routine taking a reader object can't be named by its own dotted path
@@ -183,6 +184,26 @@ Actionable in this repo. Some of these are fully blocked today — waiting
 on an Egeria Server capability that doesn't exist yet — but the pyegeria/
 Dr.Egeria-side work each will need once that capability ships is written
 into the entry now, so it isn't rediscovered from scratch later.
+
+---
+
+### ISSUE-145: Dr.Egeria sends `agreementType` and other `agreement*` fields that Egeria's `AgreementProperties` does not have
+
+**Layer:** Dr.Egeria · **Status:** open · **Found:** 2026-10-13, during the ISSUE-144 status-field sweep.
+
+**What:** `set_element_prop_body()` (`md_processing/md_processing_utils/common_md_utils.py`)
+adds `agreementType`, `agreementStatus`, `agreementIdentifier`,
+`agreementStatusIdentifier` and `agreementVersionIdentifier` for Agreement and
+Digital Subscription bodies. In Egeria 6.2, `AgreementProperties` declares no
+fields of its own; it extends `CollectionProperties`, and no `agreement*`
+property exists anywhere in the Egeria source. Egeria silently ignores all five.
+Only `Agreement Type` is defined in the Digital Products compact spec and used
+by commands, so a written Agreement Type is lost. The other four have no
+attribute definitions, so they are always None.
+
+**Decision needed:** where Agreement Type should go. `category` (from
+`ReferenceableProperties`) is the likely home, or the attribute could be
+retired. The four unused keys can be removed either way.
 
 ---
 
@@ -1440,6 +1461,44 @@ they're holding real port materialization until this exists server-side
 
 Sorted newest-first by `ISSUE-#` (2026-10-12). ISSUE-91 has two entries
 (the same defect reported twice); both are kept, next to each other.
+
+---
+
+### ISSUE-144: Dr.Egeria's `Link Semantic Assignment` sent the assignment status as `status`, which Egeria silently ignores
+
+**Layer:** Dr.Egeria · **Status:** fixed 2026-10-13 · **Found:** 2026-10-13, reported by the egeria-workspaces-fs Resource Browser session from a live test.
+
+**What:** Egeria's `SemanticAssignmentProperties` holds the assignment status
+in `termAssignmentStatus`, an enum (`TermAssignmentStatus`). `CurationLinkProcessor`
+(`md_processing/v2/curation.py`) sent `"status"`. Egeria ignores unknown fields,
+so a status written in a Dr.Egeria document never reached the server, and
+read back empty. The sample body in the
+`ClassificationExplorer._async_setup_semantic_assignment` docstring, which
+comes from the `.http` file, had the same mistake. `SemanticAssignmentQueryProperties`,
+used by `get_meanings` and `get_semantic_assignees`, really does use `status`.
+Those samples are correct. The Resource Browser session confirmed live that
+`termAssignmentStatus: "PROPOSED"` is stored and returned.
+
+**Fix:** the processor sends `termAssignmentStatus`. `Governance Status`
+resolves to the governance `statusIdentifier` code (e.g. 3), which uses the
+same codes as `TermAssignmentStatus`, so the value is converted to the enum
+constant name (3 becomes `VALIDATED`). A display name is upper-cased. The two
+docstring samples are corrected. Test:
+`tests/micro-tests/test_issue_144_term_assignment_status.py`.
+
+**Sweep of other status fields Dr.Egeria sends, checked against the Egeria
+Java DTOs (including superclasses):** correct as sent are
+`DataValueAssignmentProperties.assignmentStatus`, `ProjectProperties.projectStatus`,
+`CollectionMembershipProperties.membershipStatus`/`userDefinedStatus`,
+`SolutionComponentProperties.userDefinedDeploymentStatus`,
+`PromiseProperties.deploymentStatus`/`userDefinedDeploymentStatus`,
+`NotificationSubscriberProperties.activityStatus`,
+`UsedInContextProperties.termRelationshipStatus` (from
+`GlossaryTermRelationshipProperties`), the governance classifications'
+`statusIdentifier` (ISSUE-22), `contentStatus` on schema types and attributes
+(inherited from `AuthoredReferenceableProperties`), and the element-level
+`contentStatus`/`activityStatus`/`deploymentStatus` mapping (ISSUE-113). The
+one further mismatch found, the `agreement*` fields, is logged as ISSUE-145.
 
 ---
 
