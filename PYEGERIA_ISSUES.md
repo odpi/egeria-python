@@ -246,6 +246,11 @@ into the entry now, so it isn't rediscovered from scratch later.
 1. `Create Governance Action Process` should be able to create the process subtypes (`SurveyingActionProcess`, `CataloguingActionProcess`, ...), e.g. via a `Process Type` attribute validated against the 0462 subtypes. Today it always creates the plain supertype.
 2. A process step needs its `GovernanceActionExecutor` link and its manifest `additionalProperties`. Check that `Link Action to Action Executor` accepts a `GovernanceActionProcessStep` (a subtype of `GovernanceActionType`) as its subject. It should, but this hasn't been live-verified (see the Action Author note in CLAUDE.md).
 3. Declaring the engine side may need `SupportedGovernanceService` / governance-engine commands, if Dr.Egeria doesn't already have them. Check before building.
+
+**Requirements proposed by RE's expansion-design session (2026-10-13; it found no contradiction with the direction; pending the owner's review):**
+1. **One declaration, idempotent.** The manifest's qualifiers must live on the `GovernanceActionType` itself (`supportedRequestParameters` or `additionalProperties`), so Egeria, the Portal and RE all read the same declaration. That means question ids, perspectives, `purpose` (from the existing `VALID_PURPOSES` set) and `family`. Declaring is idempotent by qualifiedName: declaring twice updates, and never creates a second type. Dr.Egeria's upsert (Create→Update by qualified name) already behaves this way.
+2. **Label synchronous values differently from recorded ones.** On a screen, a value computed now must be labelled "computed now · not recorded", and a stored result "last recorded <age>". A reader must never mistake a synchronous draw for a governed measurement. (The envelope gives the state and `measured_at`; the "recorded or not" label is the caller's, from which path it used.)
+3. **State the credential tier.** User-written steps stay on the resource's read-only tier (owner ruling, 2026-10-07). A `GovernanceActionType` declared for one must say so, with a property naming the tier (e.g. `credential_tier: read_only`). Otherwise Egeria would schedule it like any engine action.
 ---
 
 
