@@ -189,7 +189,7 @@ into the entry now, so it isn't rediscovered from scratch later.
 
 ### ISSUE-150: Dr.Egeria commands for an Analytic Function's Egeria declaration: a GovernanceActionType that Resource Explorer runs as an engine host, plus a synchronous path that bypasses Egeria
 
-**Layer:** Dr.Egeria (commands over existing Action Author / governance commands) · **Status:** open, direction agreed with the owner 2026-10-13 ("a good start; we may need to review and change"), not yet built · **Found:** 2026-10-13, handed off by the Resource Explorer PR/CI session. Source: trellis `docs/extensibility-walking-skeleton-brief.md` §2c, §3a, §8. Egeria references: [Governance Action Processes (0462)](https://egeria-project.org/types/4/0462-Governance-Action-Processes/), [Survey Action Engine](https://egeria-project.org/concepts/survey-action-engine/).
+**Layer:** Dr.Egeria (commands over existing Action Author / governance commands) · **Status:** open, direction agreed with the owner 2026-10-13 and **confirmed by Mandy 2026-10-14**, not yet built · **Found:** 2026-10-13, handed off by the Resource Explorer PR/CI session. Source: trellis `docs/extensibility-walking-skeleton-brief.md` §2c, §3a, §8. Egeria references: [Governance Action Processes (0462)](https://egeria-project.org/types/4/0462-Governance-Action-Processes/), [Survey Action Engine](https://egeria-project.org/concepts/survey-action-engine/).
 
 **Background (Egeria's model):**
 - A `GovernanceActionType` is a template for **one** action. Initiating it creates one Engine Action.
@@ -256,6 +256,19 @@ into the entry now, so it isn't rediscovered from scratch later.
 1. **One declaration, idempotent.** The manifest's qualifiers must live on the `GovernanceActionType` itself (`supportedRequestParameters` or `additionalProperties`), so Egeria, the Portal and RE all read the same declaration. That means question ids, perspectives, `purpose` (from the existing `VALID_PURPOSES` set) and `family`. Declaring is idempotent by qualifiedName: declaring twice updates, and never creates a second type. Dr.Egeria's upsert (Create→Update by qualified name) already behaves this way.
 2. **Label synchronous values differently from recorded ones.** On a screen, a value computed now must be labelled "computed now · not recorded", and a stored result "last recorded <age>". A reader must never mistake a synchronous draw for a governed measurement. (The envelope gives the state and `measured_at`; the "recorded or not" label is the caller's, from which path it used.)
 3. **State the credential tier.** User-written steps stay on the resource's read-only tier (owner ruling, 2026-10-07). A `GovernanceActionType` declared for one must say so, with a property naming the tier (e.g. `credential_tier: read_only`). **Owner: an informational key, not a control.** Egeria schedules Engine Actions the same way regardless, and never hands a step its resource credentials. The engine host does: RE's wrapper enforces read-only from the step's manifest (`StepManifest.credential_tier`). The key on the declaration is for governance visibility (whoever reviews or approves the type can see it), and for any other engine host that might run the step later. The design session confirmed this when asked (2026-10-13). It withdrew its "control" reading: the only reader other than RE's wrapper would be a second engine host, which enforces the tier itself. An Egeria-side approval step or governance rule that reads the tier would be new design nobody has asked for.
+
+**Mandy's answer (2026-10-14, via the owner and the RE PR/CI session); the declaration direction is confirmed, no longer provisional:**
+- **Engine type:** `SurveyActionEngine` for surveys. RE may also expose services through a `GovernanceActionEngine` (general) or a `WatchdogActionEngine` (monitoring).
+- **What to create:** a `GovernanceService` definition for each service, plus the `GovernanceActionExecutor` relationship to the `GovernanceEngine` element.
+- **requestType:** the value the engine advertises, and the value it's passed when asked to execute. RE dispatches on it.
+- **Guards:** standard survey guards are best practice, not mandatory.
+- **Coming in a few days:** more engine-host internal APIs, including the per-engine approved-actions listing, will be exposed as View Server REST calls once her current fixes are done. pyegeria will need wrappers for them (BACKLOG.md).
+- Refs: [Survey Action Engine](https://egeria-project.org/concepts/survey-action-engine/), [0461 Governance Engines](https://egeria-project.org/types/4/0461-Governance-Engines/), [0462 Governance Action Processes](https://egeria-project.org/types/4/0462-Governance-Action-Processes/).
+
+**What exists today for the engine side (gap 3, checked 2026-10-14):**
+- The SDK can link a service to an engine: `AssetMaker` `governance-engines/{guid}/supported-governance-services/{guid}/attach`, plus `update`/`detach` (`asset_maker.py` ~1693-1813 and ~6586-6803).
+- Dr.Egeria has **no** commands to create a `GovernanceEngine` (or its `SurveyActionEngine`/`GovernanceActionEngine`/`WatchdogActionEngine` subtypes) or a `GovernanceService`, and none for the supported-service link. Only `Link Action to Action Executor` exists (Action Author).
+- These are the Dr.Egeria commands to add: `Create Governance Engine` (with an engine-type attribute), `Create Governance Service`, and `Link Governance Service to Engine` (with requestType). Check the 0461 types and the `.http` files for the create endpoints before building.
 ---
 
 
