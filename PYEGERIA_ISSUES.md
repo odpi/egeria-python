@@ -151,7 +151,7 @@ content was changed. The numbered section list above describes the
 **At a glance** — 7 open pyegeria items, 7 awaiting re-test, 7 open Egeria Server issues.
 
 **Open pyegeria items**
-- ISSUE-150: No Dr.Egeria commands for an Analytic Function's Egeria declaration (create/update/retire, join a family Collection, view); the element type is an open question for the Egeria leads
+- ISSUE-150: Dr.Egeria commands for an Analytic Function's Egeria declaration: a GovernanceActionType Resource Explorer runs as an engine host, plus a synchronous path that bypasses Egeria (direction agreed, not built)
 - ISSUE-146: Deleting a journal entry fails with OMAG-REPOSITORY-HANDLER-400-008, and pyegeria's `remove_note` reaches the delete only through the generic Asset Maker service
 - ISSUE-132: `DeleteElementRequestBody` serializes the cascade flag as `cascadeDelete`; Egeria's field is `cascadedDelete` and unknown fields are ignored, so no pyegeria cascade delete has ever cascaded
 - ISSUE-127: `CollectionManager.delete_collection(cascade=True)` silently never sends `cascadeDelete` -- same shape as ISSUE-62
@@ -187,29 +187,50 @@ into the entry now, so it isn't rediscovered from scratch later.
 ---
 
 
-### ISSUE-150: No Dr.Egeria commands for an Analytic Function's Egeria declaration (create/update/retire, join a family Collection, view); the element type is an open question for the Egeria leads
+### ISSUE-150: Dr.Egeria commands for an Analytic Function's Egeria declaration: a GovernanceActionType that Resource Explorer runs as an engine host, plus a synchronous path that bypasses Egeria
 
-**Layer:** Dr.Egeria (new command family) · **Status:** open, design blocked on the element type · **Found:** 2026-10-13, handed off by the Resource Explorer PR/CI session on the owner's instruction ("kick off the other items ... hand off egeria-python items to the agent there"). Source: trellis `docs/extensibility-walking-skeleton-brief.md` §3a (the table row "create, update, retire the declaration in Egeria; join a family Collection") and §2c.
+**Layer:** Dr.Egeria (commands over existing Action Author / governance commands) · **Status:** open, direction agreed with the owner 2026-10-13 ("a good start; we may need to review and change"), not yet built · **Found:** 2026-10-13, handed off by the Resource Explorer PR/CI session. Source: trellis `docs/extensibility-walking-skeleton-brief.md` §2c, §3a, §8. Egeria references: [Governance Action Processes (0462)](https://egeria-project.org/types/4/0462-Governance-Action-Processes/), [Survey Action Engine](https://egeria-project.org/concepts/survey-action-engine/).
 
-**What's wanted:** a Dr.Egeria family for the Egeria side of the Analytic Library. The local registry answers "what can run here"; Egeria answers "what exists and who declared it".
-- `Create Analytic Function`, `Update Analytic Function`;
-- `Retire Analytic Function`: retirement is a **status**, never a delete;
-- `Link Analytic Function to Family`: a family is an Egeria `Collection`, the same word as `FormatSet.family`;
-- `View Analytic Functions [family]`.
-`trellis-analytics declare <name>` generates the Dr.Egeria document from the manifest, so the attribute names must line up with ISSUE-149's fields. The brief's skeleton scope is `Create Analytic Function` only; the other four follow once a second function exists.
+**Background (Egeria's model):**
+- A `GovernanceActionType` is a template for **one** action. Initiating it creates one Engine Action.
+- A `GovernanceActionProcessStep` is a subtype of `GovernanceActionType` that exists only inside a process. Its flow links (`GovernanceActionProcessFlow`, `NextGovernanceActionProcessStep`) carry guards and mandatory guards. Each step that fires becomes its own Engine Action.
+- Both reach their code through `GovernanceActionExecutor` (a governance engine plus a `requestType`).
+- Surveys use the `SurveyingActionProcess` subtype. Survey action services write annotations into a Survey Report linked to the asset.
 
-**Open design question (do not hard-wire before the owner or Mandy answer):** brief §2c proposes a `GovernanceActionType`-shaped declaration, "the same family the survey definitions use", so a Survey Definition can reference a user step the way it references RE's built-in steps. Brief §8 asks the Egeria leads whether `GovernanceActionType` is right for a step Egeria does not run. Candidates:
-1. **`GovernanceActionType`.** It fits Survey Definition references, and `GovernanceProcessor` already handles this family. But it implies an engine-host executor the step doesn't have.
-2. **A `DeployedSoftwareComponent`/`SoftwareCapability`-style Asset**, created through `AssetMaker._async_create_asset` (the pattern `Create Report` uses). It's neutral about who runs the code, but Survey Definitions can't reference it as a step today.
-3. **A plain `Referenceable` subtype with `additionalProperties`.** It's the smallest, but it leaves `kind`/`source`/`version` untyped.
-Whichever is chosen, retirement maps to a status update (the element header status, or `deploymentStatus` for an Asset), never a delete.
+**Direction (owner, 2026-10-13):** use Egeria's designed governance-action infrastructure, not a bypass; it may need changing, but it should be used. Resource Explorer **is an engine host** and can present itself to Egeria as one. The owner's concern is timing: running an action or process is asynchronous and possibly long-running, while an analytic function often has to answer synchronously during a screen draw or report generation. So declaring a function is kept separate from running it:
 
-**Work once the type is decided:**
-- compact-spec family via the Spec Editor API;
-- processor and dispatcher registration (`register_governance_processors()` is family-name-gated, so a new family name must be added there if option 1 is chosen);
-- `refresh_specs`;
-- a regression doc in `tests/dr-egeria-command-tests/`;
-- a live round on a throwaway function, after a peer round.
+1. **Declaration (in Egeria):** a `GovernanceActionType` per function.
+   - A `GovernanceActionExecutor` links it to Resource Explorer's governance engine, with the function's name as the `requestType`.
+   - It carries the ISSUE-149 manifest fields: `kind`, `version`, `source`, `resource_types`, `annotation_type`, `family`, `tags`.
+   - It joins its family `Collection`.
+   - Retirement is a status change, never a delete.
+
+   Within a survey it is used as a `GovernanceActionProcessStep` in a `SurveyingActionProcess`. A single run can be wrapped as a one-step process if a uniform "everything runs as a process" shape is wanted.
+2. **Asynchronous run (through Egeria):** initiate the type, or a process containing it, and an Engine Action is created. Resource Explorer, as an engine host, claims it and runs it, using `engine-actions/{guid}/claim`, `status/update`, `completion-status` and the active-claimed listing. Results are stored as annotations carrying their envelope, and Egeria keeps the run record. This path is for surveys and anything slow or scheduled. Mandy's per-engine "approved, unclaimed" engine-action listing (2026-10-05, governance-context-service only so far; see ISSUE-151) is what such an engine host polls.
+3. **Synchronous run (no Egeria round-trip):** a screen or report calls the installed implementation directly, as a report spec's `analytic_function` already does through `exec_report_spec` (ISSUE-137/138/139/140/149 made this path work for trellis routines).
+   - Egeria is not on the hot path; the declaration only identifies which function and version is meant.
+   - **Synchronous runs are not recorded in Egeria** (owner: lineage doesn't make sense for what is drawn on a screen). Diagnostic logging at most; still to discuss.
+
+**How a screen uses it:** for each function, one of three choices:
+- compute now (cheap functions);
+- read the last stored result (expensive functions; the envelope's `measured_at` says how old it is);
+- request an asynchronous refresh that the next draw picks up.
+
+"Routine versus step" therefore becomes a property of each function (is it cheap enough to compute on read?), possibly a manifest field, not two kinds of element.
+
+**Keeping the two paths honest:** the code run synchronously must be the code the declaration names, at the same version, that Resource Explorer's engine runs. trellis's planned `trellis-analytics drift` (installed vs declared) checks this. The envelope's `producer_version` lets readers tell versions apart.
+
+**Dr.Egeria work this implies (to be confirmed with the RE sessions):**
+- Mostly convenience over existing commands: `Create Governance Action Type`, `Link Action to Action Executor` (`GovernanceActionExecutor`), `Link First/Next Process Step`, and family-collection membership.
+- Plus the manifest attributes. Where these live on the element (`additionalProperties`, or real properties if Egeria adds them) is still to decide.
+- Possibly a `Create/Update/Retire Analytic Function` alias family that sets all of this in one document, which `trellis-analytics declare` would generate. And `View Analytic Functions [family]`.
+- The Action Author processors (`ActionExecutorTargetLinkProcessor`, `ActionProcessStepLinkProcessor`) already handle the links. `register_governance_processors()` is family-name-gated, so a new family name must be added there.
+
+**Open points:**
+- Whether Egeria needs changes, for example to let a synchronous-safe flag or the manifest fields be first-class properties.
+- Whether a single run is always wrapped as a one-step process.
+- Whether routines that are only ever computed synchronously need a declaration at all, beyond the Report element (`Create Report`).
+- Diagnostic logging for synchronous runs.
 
 ---
 
