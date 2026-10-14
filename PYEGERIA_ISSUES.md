@@ -232,6 +232,20 @@ into the entry now, so it isn't rediscovered from scratch later.
 - Whether routines that are only ever computed synchronously need a declaration at all, beyond the Report element (`Create Report`).
 - Diagnostic logging for synchronous runs.
 
+
+**Resource Explorer's answers (RE PR/CI session, 2026-10-13):**
+- **(a) The direction matches RE's engine-host design** (trellis branch `re/design-engine-host`, `packages/resource-explorer/docs/design-notes/DESIGN-RE-ENGINE-HOST-BY-EQUIVALENCE.md`). Its first slice (E1) is exactly the declaration above: an RE governance engine, a `SupportedGovernanceService` whose requestType names the trellis step, and a `GovernanceActionType` with a `GovernanceActionExecutor` to that engine plus `producedGuards`. RE claims and completes Engine Actions.
+  - Owner decisions recorded there: the engine runs as RE's service account. An action on a resource in a private investigation is left unclaimed by the unattended host and run attended, as the owner. RE may claim and hold future-dated actions.
+  - RE polls `get_active_engine_actions()` today, filtered client-side to its engine and APPROVED (or `find_engine_actions`, see ISSUE-151). Mandy's per-engine "approved, unclaimed" listing exists only on the metadata server's governance-context service, so RE is asking her to expose it on the View Server.
+  - Questions open with Mandy: the engine subtype (`SurveyActionEngine`?); whether a GovernanceService whose connector class nothing can load is acceptable; and where guards come from (standard survey guards, or declared by the step from the envelope).
+- **(b) RE's survey definitions today** are Dr.Egeria `Create Governance Action Process` (`GovActionProcess::<Survey>`) plus `Create Governance Action Process Step` (`GovActionProcessStep::<Survey>::<step>`), linked with First/Next Process Step. They are plain `GovernanceActionProcess`, not `SurveyingActionProcess`: Dr.Egeria's command has `OM_TYPE` `GovernanceActionProcess` and offers no subtype choice. The steps carry **no executor**; RE's own executor reads `executes_at`/`re_analysis_step`/`supported_technology_type` from `additionalProperties`. That is why Egeria can't dispatch any RE step today. Moving the steps onto an executor is part of RE's engine-host slice.
+- **(c) Manifest fields go in `additionalProperties` for now,** with stable keys named exactly like the `AnalyticFunctionSpec` fields (`kind`, `source`, `version`, `envelope`, `annotation_type`, `resource_types`, `family`, `tags`). This matches the owner's interim ruling for annotations. Asking Egeria for real properties is a later item, once a few functions exist.
+- **Synchronous runs not recorded:** agreed. RE's OpenLineage run events (branch `re/openlineage-run-events`, off by default) cover only step runs inside RE's survey executor, so a screen-draw run never reaches them.
+
+**Dr.Egeria gaps this exposes (part of this issue's work):**
+1. `Create Governance Action Process` should be able to create the process subtypes (`SurveyingActionProcess`, `CataloguingActionProcess`, ...), e.g. via a `Process Type` attribute validated against the 0462 subtypes. Today it always creates the plain supertype.
+2. A process step needs its `GovernanceActionExecutor` link and its manifest `additionalProperties`. Check that `Link Action to Action Executor` accepts a `GovernanceActionProcessStep` (a subtype of `GovernanceActionType`) as its subject. It should, but this hasn't been live-verified (see the Action Author note in CLAUDE.md).
+3. Declaring the engine side may need `SupportedGovernanceService` / governance-engine commands, if Dr.Egeria doesn't already have them. Check before building.
 ---
 
 
