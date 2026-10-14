@@ -259,7 +259,7 @@ into the entry now, so it isn't rediscovered from scratch later.
 
 **Mandy's answer (2026-10-14, via the owner and the RE PR/CI session); the declaration direction is confirmed, no longer provisional:**
 - **Engine type:** `SurveyActionEngine` for surveys. RE may also expose services through a `GovernanceActionEngine` (general) or a `WatchdogActionEngine` (monitoring).
-- **What to create:** a `GovernanceService` definition for each service, plus the `GovernanceActionExecutor` relationship to the `GovernanceEngine` element.
+- **What to create:** a governance service definition for each service, of the subtype matching the engine: a **`SurveyActionService`** for a `SurveyActionEngine` (survey steps), a `GovernanceActionService` for a `GovernanceActionEngine`. Plus the `GovernanceActionExecutor` relationship to the engine element. (Owner's correction, 2026-10-14: not a plain `GovernanceService`.)
 - **requestType:** the value the engine advertises, and the value it's passed when asked to execute. RE dispatches on it.
 - **Guards:** standard survey guards are best practice, not mandatory.
 - **Coming in a few days:** more engine-host internal APIs, including the per-engine approved-actions listing, will be exposed as View Server REST calls once her current fixes are done. pyegeria will need wrappers for them (BACKLOG.md).
@@ -267,8 +267,8 @@ into the entry now, so it isn't rediscovered from scratch later.
 
 **What exists today for the engine side (gap 3, checked 2026-10-14):**
 - The SDK can link a service to an engine: `AssetMaker` `governance-engines/{guid}/supported-governance-services/{guid}/attach`, plus `update`/`detach` (`asset_maker.py` ~1693-1813 and ~6586-6803).
-- Dr.Egeria has **no** commands to create a `GovernanceEngine` (or its `SurveyActionEngine`/`GovernanceActionEngine`/`WatchdogActionEngine` subtypes) or a `GovernanceService`, and none for the supported-service link. Only `Link Action to Action Executor` exists (Action Author).
-- These are the Dr.Egeria commands to add: `Create Governance Engine` (with an engine-type attribute), `Create Governance Service`, and `Link Governance Service to Engine` (with requestType). Check the 0461 types and the `.http` files for the create endpoints before building.
+- Dr.Egeria has **no** commands to create a `GovernanceEngine` (or its `SurveyActionEngine`/`GovernanceActionEngine`/`WatchdogActionEngine` subtypes) or a governance service (`SurveyActionService`/`GovernanceActionService`/...), and none for the supported-service link. Only `Link Action to Action Executor` exists (Action Author).
+- These are the Dr.Egeria commands to add: `Create Governance Engine` (with an engine-type attribute), `Create Governance Service` (with a service-type attribute matching the engine: `SurveyActionService` for survey steps), and `Link Governance Service to Engine` (with requestType). Check the 0461 types and the `.http` files for the create endpoints before building.
 ---
 
 
