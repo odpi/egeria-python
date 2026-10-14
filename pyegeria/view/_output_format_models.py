@@ -245,6 +245,10 @@ class ActionParameter(BaseModel):
         analytic_spec_params: Parameters fixed for this action, for `analytic_function`
             (from `extra_constraints`) -- layered under whatever arbitrary
             parameters the caller supplies at execution time.
+        analytic_binders: Parameter name -> dotted path of a factory that builds that
+            argument (e.g. a reader object) for `analytic_function` (ISSUE-138). The
+            factory's own parameters are filled from the call params by name, so a
+            routine that takes a non-JSON object can be named by its own dotted path.
     """
     function: Optional[str] = None
     required_params: List[str] = Field(default_factory=list)
@@ -252,6 +256,7 @@ class ActionParameter(BaseModel):
     spec_params: Dict[str, Any] = Field(default_factory=dict)
     analytic_function: Optional[str] = None
     analytic_spec_params: Dict[str, Any] = Field(default_factory=dict)
+    analytic_binders: Dict[str, str] = Field(default_factory=dict)
 
     @root_validator(pre=True)
     def _migrate_legacy_user_params(cls, values):

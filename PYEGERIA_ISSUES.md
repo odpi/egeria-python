@@ -152,11 +152,7 @@ content was changed. The numbered section list above describes the
 
 **Open pyegeria items**
 - ISSUE-150: No Dr.Egeria commands for an Analytic Function's Egeria declaration (create/update/retire, join a family Collection, view); the element type is an open question for the Egeria leads
-- ISSUE-149: `AnalyticFunctionSpec` lacks the manifest fields trellis-analytics needs (`kind`, `source`, `version`, `envelope`, `annotation_type`, `resource_types`), so trellis subclasses carry them
 - ISSUE-146: Deleting a journal entry fails with OMAG-REPOSITORY-HANDLER-400-008, and pyegeria's `remove_note` reaches the delete only through the generic Asset Maker service
-- ISSUE-140: The executor charts any dict with two or more top-level numbers, regardless of the result's state
-- ISSUE-139: The executor renders no result envelope, and the Vega bar chart has no subtitle, so a not-established result has nowhere to say so on a chart
-- ISSUE-138: Analytic params are JSON-only, and only parameters named `mgr`/`ce`/`expert`/`client` are bound as clients, so a routine taking a reader object can't be named by its own dotted path
 - ISSUE-132: `DeleteElementRequestBody` serializes the cascade flag as `cascadeDelete`; Egeria's field is `cascadedDelete` and unknown fields are ignored, so no pyegeria cascade delete has ever cascaded
 - ISSUE-127: `CollectionManager.delete_collection(cascade=True)` silently never sends `cascadeDelete` -- same shape as ISSUE-62
 
@@ -217,37 +213,6 @@ Whichever is chosen, retirement maps to a status update (the element header stat
 
 ---
 
-### ISSUE-149: `AnalyticFunctionSpec` lacks the manifest fields trellis-analytics needs (`kind`, `source`, `version`, `envelope`, `annotation_type`, `resource_types`), so trellis subclasses carry them
-
-**Layer:** pyegeria (`pyegeria/view/analytic_registry.py`) · **Status:** open · **Found:** 2026-10-13, handed off by the Resource Explorer PR/CI session on the owner's instruction. Source: trellis brief §2a and `packages/trellis-analytics/src/trellis_analytics/manifest.py`. RE runs pyegeria 6.2.2.
-
-**What:** trellis-analytics' `RoutineManifest`/`StepManifest` subclass `AnalyticFunctionSpec` only to add fields the base should carry:
-- `kind`;
-- `source`;
-- `version`;
-- `envelope: bool` (the result carries a state envelope; see ISSUE-139/140);
-- `annotation_type` (a step's result type, empty for a routine);
-- `resource_types: list[str]`.
-
-The Portal's "Analytic Functions" tab groups by `family`, then `kind`, then `source`.
-
-**Proposed change:** add all six as optional fields with defaults (`kind="routine"`, `source=""`, `version=""`, `envelope=False`, `annotation_type=""`, `resource_types=[]`), so every existing registry entry and spec still validates unchanged. Once a pyegeria release carries them, trellis-analytics drops its own copies.
-
-**Points to settle before building:**
-- The handoff lists `kind` as `routine | step | spec`, but trellis's `Kind` is `Literal["routine", "step"]`. Decide whether `spec` is a third kind or a different axis (a report spec is the presentation flavour, brief §2d).
-- trellis's manifest also carries `family` and `tags`, which the handoff doesn't list. `FormatSet` already has `family`; decide whether `AnalyticFunctionSpec` should get them too, rather than leaving trellis to carry them.
-- `source` values in trellis are `ods | egeria | resource`. Decide between a `Literal` (strict) and `str` (open, so a user step can name a new source).
-
-**Related:** ISSUE-138 (non-client param binding), ISSUE-139/140 (envelope rendering), ISSUE-150 (the Egeria declaration, which should take its attribute names from these fields).
-
-**Answers (RE PR/CI session, 2026-10-13, citing the owner's 2026-10-07 organisation ruling; to be confirmed by the owner before building):**
-- `kind`: `routine | step` only. "spec" was a slip: a spec is a `FormatSet`, not an `AnalyticFunctionSpec`. This matches trellis-analytics' `Kind` (`manifest.py:14`).
-- `family` and `tags`: add both, optional. `family` has the same word and meaning as `FormatSet.family`; in Egeria a family is a `Collection`.
-- `source`: an open `str`, not a `Literal`. Document the known values (`ods`, `egeria`). The owner's rule for value lists is "suggestive everywhere": an unknown value warns, never rejects.
-- The Advisor side of ISSUE-141 is already done in trellis (`packages/egeria-advisor/tests/unit/test_report_spec_parser.py:263-267`).
-- Once a pyegeria release carries these fields, trellis-analytics drops its own copies. Tell the RE PR/CI session the version.
-
----
 
 
 ### ISSUE-146: Deleting a journal entry fails with OMAG-REPOSITORY-HANDLER-400-008, and pyegeria's `remove_note` reaches the delete only through the generic Asset Maker service
@@ -337,56 +302,8 @@ Erin's profile. `fef83ed5` stays.
 
 ---
 
-### ISSUE-140: The executor charts any dict with two or more top-level numbers, regardless of the result's state
 
-**Layer:** pyegeria (format_set_executor) · **Status:** open, logged only (no fix without the owner's explicit go-ahead) · **Found:** 2026-10-12, reported by the Resource Explorer PR/CI session from trellis-analytics (trellis PR #622, `trellis_analytics/portal.py`), which works around it today.
 
-**What:** BAR/SERIES output is drawn whenever the result dict has two or
-more numeric top-level keys, whether or not the result says it was
-measured. A `not_established` result that happens to carry numbers would be
-charted as real zeros/values.
-
-**Where seen:** trellis `portal.py` is safe only because its adapter omits
-numbers for non-measured states.
-
-**Candidate fix:** honour an envelope state (see ISSUE-139): draw no chart
-unless the state is `measured`, and show the state word instead.
-
----
-
-### ISSUE-139: The executor renders no result envelope, and the Vega bar chart has no subtitle, so a not-established result has nowhere to say so on a chart
-
-**Layer:** pyegeria (format_set_executor output rendering) · **Status:** open, logged only (no fix without the owner's explicit go-ahead) · **Found:** 2026-10-12, reported by the Resource Explorer PR/CI session from trellis-analytics (trellis PR #622, `trellis_analytics/portal.py`), which works around it today.
-
-**What:** a routine's result state (`measured` / `nothing_found` /
-`not_established` / `not_applicable`, plus a reason) has nowhere to go on a
-chart; it survives only in the DICT output. A tile can therefore show a
-chart with no indication that the numbers were not established.
-
-**Where seen:** trellis `tests/test_portal_tile.py` pins the absence, so that
-test will fail once this is fixed.
-
-**Candidate fix:** render an optional `envelope`/`subtitle` field from the
-result into the Vega spec's `title.subtitle`, and into every output type.
-
----
-
-### ISSUE-138: Analytic params are JSON-only, and only parameters named `mgr`/`ce`/`expert`/`client` are bound as clients, so a routine taking a reader object can't be named by its own dotted path
-
-**Layer:** pyegeria (format_set_executor, analytic_registry) · **Status:** open, logged only (no fix without the owner's explicit go-ahead) · **Found:** 2026-10-12, reported by the Resource Explorer PR/CI session from trellis-analytics (trellis PR #622, `trellis_analytics/portal.py`), which works around it today.
-
-**What:** a routine whose first parameter is a reader object (e.g.
-`OdsReader`) cannot be named directly by its dotted path; the spec has to
-point at an adapter that constructs the reader from JSON params.
-
-**Where seen:** trellis `trellis_analytics.portal.curation_coverage_tile` (the
-adapter), used instead of `trellis_analytics.routines.curation_coverage`.
-
-**Candidate fix:** a binding hook (e.g. `AnalyticFunctionSpec.binders`) or a
-declared factory per parameter type, so non-client objects can be
-constructed from params.
-
----
 
 ### ISSUE-132: `DeleteElementRequestBody` serializes the cascade flag as `cascadeDelete`; Egeria's field is `cascadedDelete` and unknown fields are ignored, so no pyegeria cascade delete has ever cascaded
 
@@ -1621,6 +1538,97 @@ they're holding real port materialization until this exists server-side
 
 Sorted newest-first by `ISSUE-#` (2026-10-12). ISSUE-91 has two entries
 (the same defect reported twice); both are kept, next to each other.
+
+---
+
+### ISSUE-149: `AnalyticFunctionSpec` lacks the manifest fields trellis-analytics needs (`kind`, `source`, `version`, `envelope`, `annotation_type`, `resource_types`), so trellis subclasses carry them
+
+**Layer:** pyegeria (`pyegeria/view/analytic_registry.py`) · **Status:** fixed 2026-10-13 · **Found:** 2026-10-13, handed off by the Resource Explorer PR/CI session on the owner's instruction. Source: trellis brief §2a and `packages/trellis-analytics/src/trellis_analytics/manifest.py`. RE runs pyegeria 6.2.2.
+
+**What:** trellis-analytics' `RoutineManifest`/`StepManifest` subclass `AnalyticFunctionSpec` only to add fields the base should carry:
+- `kind`;
+- `source`;
+- `version`;
+- `envelope: bool` (the result carries a state envelope; see ISSUE-139/140);
+- `annotation_type` (a step's result type, empty for a routine);
+- `resource_types: list[str]`.
+
+The Portal's "Analytic Functions" tab groups by `family`, then `kind`, then `source`.
+
+**Proposed change:** add all six as optional fields with defaults (`kind="routine"`, `source=""`, `version=""`, `envelope=False`, `annotation_type=""`, `resource_types=[]`), so every existing registry entry and spec still validates unchanged. Once a pyegeria release carries them, trellis-analytics drops its own copies.
+
+**Points to settle before building:**
+- The handoff lists `kind` as `routine | step | spec`, but trellis's `Kind` is `Literal["routine", "step"]`. Decide whether `spec` is a third kind or a different axis (a report spec is the presentation flavour, brief §2d).
+- trellis's manifest also carries `family` and `tags`, which the handoff doesn't list. `FormatSet` already has `family`; decide whether `AnalyticFunctionSpec` should get them too, rather than leaving trellis to carry them.
+- `source` values in trellis are `ods | egeria | resource`. Decide between a `Literal` (strict) and `str` (open, so a user step can name a new source).
+
+**Related:** ISSUE-138 (non-client param binding), ISSUE-139/140 (envelope rendering), ISSUE-150 (the Egeria declaration, which should take its attribute names from these fields).
+
+**Answers (RE PR/CI session, 2026-10-13, citing the owner's 2026-10-07 organisation ruling; to be confirmed by the owner before building):**
+- `kind`: `routine | step` only. "spec" was a slip: a spec is a `FormatSet`, not an `AnalyticFunctionSpec`. This matches trellis-analytics' `Kind` (`manifest.py:14`).
+- `family` and `tags`: add both, optional. `family` has the same word and meaning as `FormatSet.family`; in Egeria a family is a `Collection`.
+- `source`: an open `str`, not a `Literal`. Document the known values (`ods`, `egeria`). The owner's rule for value lists is "suggestive everywhere": an unknown value warns, never rejects.
+- The Advisor side of ISSUE-141 is already done in trellis (`packages/egeria-advisor/tests/unit/test_report_spec_parser.py:263-267`).
+- Once a pyegeria release carries these fields, trellis-analytics drops its own copies. Tell the RE PR/CI session the version.
+
+**Fixed 2026-10-13 (owner's go-ahead; design answers as recorded above):** `AnalyticFunctionSpec` gains `kind: Literal["routine","step"]="routine"`, `source: str=""` (an unknown value logs a warning; known values are in `KNOWN_ANALYTIC_SOURCES` = ods, egeria, resource), `version`, `envelope: bool=False`, `annotation_type`, `resource_types`, `family` and `tags`, all with defaults. All 23 built-in registry entries still load, and trellis's `RoutineManifest`/`StepManifest` subclasses validate unchanged against the new base (checked locally). Once this ships, trellis-analytics can drop its own copies. Tests: as for ISSUE-138.
+
+---
+
+### ISSUE-140: The executor charts any dict with two or more top-level numbers, regardless of the result's state
+
+**Layer:** pyegeria (format_set_executor) · **Status:** fixed 2026-10-13 · **Found:** 2026-10-12, reported by the Resource Explorer PR/CI session from trellis-analytics (trellis PR #622, `trellis_analytics/portal.py`), which works around it today.
+
+**What:** BAR/SERIES output is drawn whenever the result dict has two or
+more numeric top-level keys, whether or not the result says it was
+measured. A `not_established` result that happens to carry numbers would be
+charted as real zeros/values.
+
+**Where seen:** trellis `portal.py` is safe only because its adapter omits
+numbers for non-measured states.
+
+**Candidate fix:** honour an envelope state (see ISSUE-139): draw no chart
+unless the state is `measured`, and show the state word instead.
+
+**Fixed 2026-10-13:** with an envelope present, SERIES/BAR/PIE draw a chart only when the state is `measured`; otherwise they return the data plus the envelope. Note that `nothing_found` is not charted either, while trellis's tile adapter currently charts `measured` and `nothing_found` (`_CHARTED`). With this fix a nothing_found tile shows the state instead of a chart of zeros. Results without an envelope are charted exactly as before. Tests: as for ISSUE-138.
+
+---
+
+### ISSUE-139: The executor renders no result envelope, and the Vega bar chart has no subtitle, so a not-established result has nowhere to say so on a chart
+
+**Layer:** pyegeria (format_set_executor output rendering) · **Status:** fixed 2026-10-13 · **Found:** 2026-10-12, reported by the Resource Explorer PR/CI session from trellis-analytics (trellis PR #622, `trellis_analytics/portal.py`), which works around it today.
+
+**What:** a routine's result state (`measured` / `nothing_found` /
+`not_established` / `not_applicable`, plus a reason) has nowhere to go on a
+chart; it survives only in the DICT output. A tile can therefore show a
+chart with no indication that the numbers were not established.
+
+**Where seen:** trellis `tests/test_portal_tile.py` pins the absence, so that
+test will fail once this is fixed.
+
+**Candidate fix:** render an optional `envelope`/`subtitle` field from the
+result into the Vega spec's `title.subtitle`, and into every output type.
+
+**Fixed 2026-10-13:** `_result_envelope` reads a state from `state`/`state_reason`/`subtitle`, `resultState`/`resultStateReason`, a nested `envelope` dict, or an object's `.envelope` (`result_state`/`result_state_reason`). Every analytic output (DICT/JSON/empty/chart) then carries `"envelope": {state, reason, subtitle}`, and charts get `title: {text, subtitle}`. Pydantic results are returned as plain data. **trellis's `tests/test_portal_tile.py:75` pins the old absence of a subtitle, so it will fail once trellis takes this release, as expected.** Tests: as for ISSUE-138.
+
+---
+
+### ISSUE-138: Analytic params are JSON-only, and only parameters named `mgr`/`ce`/`expert`/`client` are bound as clients, so a routine taking a reader object can't be named by its own dotted path
+
+**Layer:** pyegeria (format_set_executor, analytic_registry) · **Status:** fixed 2026-10-13 · **Found:** 2026-10-12, reported by the Resource Explorer PR/CI session from trellis-analytics (trellis PR #622, `trellis_analytics/portal.py`), which works around it today.
+
+**What:** a routine whose first parameter is a reader object (e.g.
+`OdsReader`) cannot be named directly by its dotted path; the spec has to
+point at an adapter that constructs the reader from JSON params.
+
+**Where seen:** trellis `trellis_analytics.portal.curation_coverage_tile` (the
+adapter), used instead of `trellis_analytics.routines.curation_coverage`.
+
+**Candidate fix:** a binding hook (e.g. `AnalyticFunctionSpec.binders`) or a
+declared factory per parameter type, so non-client objects can be
+constructed from params.
+
+**Fixed 2026-10-13:** `ActionParameter.analytic_binders` maps a parameter name to a factory's dotted path (`pkg.mod.Factory` or `pkg.mod:Factory`). `_apply_analytic_binders` (format_set_executor.py) calls the factory with the call params its signature names, consuming them unless the routine also takes them, and passes the result to the routine by name. trellis can then name `trellis_analytics.routines.curation_coverage` directly, with `analytic_binders={"ods": "trellis_analytics.readers.ods.OdsReader"}` and the caller passing `url`. Tests: `tests/micro-tests/test_issue_138_140_149_analytic_envelope.py`. Documented in `docs/output-formats-and-report-specs.md`.
 
 ---
 
