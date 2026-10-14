@@ -247,10 +247,15 @@ into the entry now, so it isn't rediscovered from scratch later.
 2. A process step needs its `GovernanceActionExecutor` link and its manifest `additionalProperties`. Check that `Link Action to Action Executor` accepts a `GovernanceActionProcessStep` (a subtype of `GovernanceActionType`) as its subject. It should, but this hasn't been live-verified (see the Action Author note in CLAUDE.md).
 3. Declaring the engine side may need `SupportedGovernanceService` / governance-engine commands, if Dr.Egeria doesn't already have them. Check before building.
 
-**Requirements proposed by RE's expansion-design session (2026-10-13; it found no contradiction with the direction; pending the owner's review):**
+**Owner's answers on these gaps (2026-10-13):**
+1. Process subtypes: create new Dr.Egeria commands for the other process types where needed.
+2. Executor on a process step: yes, it needs live testing.
+3. Engine-side commands: yes, likely needed.
+
+**Requirements proposed by RE's expansion-design session (2026-10-13; it found no contradiction with the direction). Owner's review, the same day: 1 and 2 accepted; 3 kept as an informational key only:**
 1. **One declaration, idempotent.** The manifest's qualifiers must live on the `GovernanceActionType` itself (`supportedRequestParameters` or `additionalProperties`), so Egeria, the Portal and RE all read the same declaration. That means question ids, perspectives, `purpose` (from the existing `VALID_PURPOSES` set) and `family`. Declaring is idempotent by qualifiedName: declaring twice updates, and never creates a second type. Dr.Egeria's upsert (Create→Update by qualified name) already behaves this way.
 2. **Label synchronous values differently from recorded ones.** On a screen, a value computed now must be labelled "computed now · not recorded", and a stored result "last recorded <age>". A reader must never mistake a synchronous draw for a governed measurement. (The envelope gives the state and `measured_at`; the "recorded or not" label is the caller's, from which path it used.)
-3. **State the credential tier.** User-written steps stay on the resource's read-only tier (owner ruling, 2026-10-07). A `GovernanceActionType` declared for one must say so, with a property naming the tier (e.g. `credential_tier: read_only`). Otherwise Egeria would schedule it like any engine action.
+3. **State the credential tier.** User-written steps stay on the resource's read-only tier (owner ruling, 2026-10-07). A `GovernanceActionType` declared for one must say so, with a property naming the tier (e.g. `credential_tier: read_only`). **Owner: an informational key, not a control.** Egeria schedules Engine Actions the same way regardless, and never hands a step its resource credentials. The engine host does: RE's wrapper enforces read-only from the step's manifest (`StepManifest.credential_tier`). The key on the declaration is for governance visibility (whoever reviews or approves the type can see it), and for any other engine host that might run the step later.
 ---
 
 
