@@ -239,6 +239,13 @@ The Portal's "Analytic Functions" tab groups by `family`, then `kind`, then `sou
 
 **Related:** ISSUE-138 (non-client param binding), ISSUE-139/140 (envelope rendering), ISSUE-150 (the Egeria declaration, which should take its attribute names from these fields).
 
+**Answers (RE PR/CI session, 2026-10-13, citing the owner's 2026-10-07 organisation ruling; to be confirmed by the owner before building):**
+- `kind`: `routine | step` only. "spec" was a slip: a spec is a `FormatSet`, not an `AnalyticFunctionSpec`. This matches trellis-analytics' `Kind` (`manifest.py:14`).
+- `family` and `tags`: add both, optional. `family` has the same word and meaning as `FormatSet.family`; in Egeria a family is a `Collection`.
+- `source`: an open `str`, not a `Literal`. Document the known values (`ods`, `egeria`). The owner's rule for value lists is "suggestive everywhere": an unknown value warns, never rejects.
+- The Advisor side of ISSUE-141 is already done in trellis (`packages/egeria-advisor/tests/unit/test_report_spec_parser.py:263-267`).
+- Once a pyegeria release carries these fields, trellis-analytics drops its own copies. Tell the RE PR/CI session the version.
+
 ---
 
 
