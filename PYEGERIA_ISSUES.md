@@ -151,7 +151,6 @@ content was changed. The numbered section list above describes the
 **At a glance** — 7 open pyegeria items, 7 awaiting re-test, 7 open Egeria Server issues.
 
 **Open pyegeria items**
-- ISSUE-151: `AutomatedCuration.get_engine_actions()` calls `automated-curation/engine-actions`, which the View Server doesn't have (404, reported as "unable to connect"); `find_engine_actions("*")` is the working list-all
 - ISSUE-150: No Dr.Egeria commands for an Analytic Function's Egeria declaration (create/update/retire, join a family Collection, view); the element type is an open question for the Egeria leads
 - ISSUE-149: `AnalyticFunctionSpec` lacks the manifest fields trellis-analytics needs (`kind`, `source`, `version`, `envelope`, `annotation_type`, `resource_types`), so trellis subclasses carry them
 - ISSUE-146: Deleting a journal entry fails with OMAG-REPOSITORY-HANDLER-400-008, and pyegeria's `remove_note` reaches the delete only through the generic Asset Maker service
@@ -191,38 +190,6 @@ into the entry now, so it isn't rediscovered from scratch later.
 
 ---
 
-### ISSUE-151: `AutomatedCuration.get_engine_actions()` calls `automated-curation/engine-actions`, which the View Server doesn't have (404, reported as "unable to connect"); `find_engine_actions("*")` is the working list-all
-
-**Layer:** pyegeria (`pyegeria/omvs/automated_curation.py`) · **Status:** open, logged only (no fix without the owner's word) · **Found:** 2026-10-13 by RE's engine-host design work (the RE PR/CI session confirmed it live on pyegeria 6.2.2). Cause confirmed from Egeria source, and re-checked live read-only, by this session.
-
-**What:** `_async_get_engine_actions` (~line 2628) posts, through `_async_get_name_request`, to
-`{ref_curation_command_base}/engine-actions`. That path doesn't exist. On qs-view-server it answers HTTP 404, which pyegeria surfaces as `PyegeriaClientException` `CLIENT_ERROR_400` with "unable to connect to the Egeria platform". That message is misleading: the platform is reachable, and only the path is wrong. `print_engine_actions()` (~line 5351) calls it, so that fails too.
-
-**Diagnosis: (b), the View Server has no such endpoint.** It isn't a wrong verb or a wrong path for an endpoint that exists. `AutomatedCurationResource.java` (Egeria `af400039c2`, `view-server-generic-services/automated-curation/automated-curation-spring/...`) maps these engine-action routes:
-- `GET /engine-actions/active` (line 435);
-- `GET /governance-engines/{guid}/engine-actions/active-claimed` (line 529);
-- `POST /engine-actions/{guid}/cancel`, `/claim`, `/status/update`, `/completion-status` (lines 406, 498, 469, 591);
-- `POST /engine-actions/action-targets/update` (562);
-- `POST /governance-engines/{name}/engine-actions/initiate` (321).
-
-There is no list-all, and no plain `/engine-actions`. `Egeria-api-automated-curation.http` has no such call either.
-
-**Working routes today (checked live, read-only, 2026-10-13):**
-- **Every engine action:** `find_engine_actions("*")`. It posts to `automated-curation/assets/by-search-string` with `metadata_element_type="EngineAction"`, because in 6.2 EngineAction is an Asset (EngineAction → Action → Process → Asset). It returned a full page of 50, all `COMPLETED`.
-- **Only the active ones:** `get_active_engine_actions()`, which returned 1.
-- AssetMaker's `find_processes(metadata_element_type="EngineAction")` also works, and since ISSUE-148 it applies no status filter by default.
-
-**Candidate fixes (needs the owner's choice):**
-1. Re-implement `get_engine_actions` as a thin wrapper over `find_engine_actions("*")`, keeping its signature and paging. `print_engine_actions` then works unchanged. (Preferred: callers keep working.)
-2. Deprecate it with a clear error naming `find_engine_actions`.
-
-Either way, add a micro-test that pins the URL.
-
-**Related, for when Egeria exposes it:** Mandy added a per-engine "approved, unclaimed" engine-action listing on 2026-10-05, but only on the metadata server's `governance-context-service`, not on the View Server, so pyegeria can't reach it through a view service today. RE will ask the Egeria leads to expose it on Automated Curation. Once it's there, add a wrapper next to `get_active_claimed_engine_actions` (same per-engine shape). Until then, approximate it client-side with `find_engine_actions` plus an activity-status filter.
-
-**Side note (separate, not fixed here):** a 404 reported as "unable to connect" is the same family as the other misleading error labels (compare ISSUE-142). A 404 from a reachable platform should say "endpoint not found".
-
----
 
 ### ISSUE-150: No Dr.Egeria commands for an Analytic Function's Egeria declaration (create/update/retire, join a family Collection, view); the element type is an open question for the Egeria leads
 
@@ -1654,6 +1621,47 @@ they're holding real port materialization until this exists server-side
 
 Sorted newest-first by `ISSUE-#` (2026-10-12). ISSUE-91 has two entries
 (the same defect reported twice); both are kept, next to each other.
+
+---
+
+### ISSUE-151: `AutomatedCuration.get_engine_actions()` calls `automated-curation/engine-actions`, which the View Server doesn't have (404, reported as "unable to connect"); `find_engine_actions("*")` is the working list-all
+
+**Layer:** pyegeria (`pyegeria/omvs/automated_curation.py`) · **Status:** fixed 2026-10-13 (method removed) · **Found:** 2026-10-13 by RE's engine-host design work (the RE PR/CI session confirmed it live on pyegeria 6.2.2). Cause confirmed from Egeria source, and re-checked live read-only, by this session.
+
+**What:** `_async_get_engine_actions` (~line 2628) posts, through `_async_get_name_request`, to
+`{ref_curation_command_base}/engine-actions`. That path doesn't exist. On qs-view-server it answers HTTP 404, which pyegeria surfaces as `PyegeriaClientException` `CLIENT_ERROR_400` with "unable to connect to the Egeria platform". That message is misleading: the platform is reachable, and only the path is wrong. `print_engine_actions()` (~line 5351) calls it, so that fails too.
+
+**Diagnosis: (b), the View Server has no such endpoint.** It isn't a wrong verb or a wrong path for an endpoint that exists. `AutomatedCurationResource.java` (Egeria `af400039c2`, `view-server-generic-services/automated-curation/automated-curation-spring/...`) maps these engine-action routes:
+- `GET /engine-actions/active` (line 435);
+- `GET /governance-engines/{guid}/engine-actions/active-claimed` (line 529);
+- `POST /engine-actions/{guid}/cancel`, `/claim`, `/status/update`, `/completion-status` (lines 406, 498, 469, 591);
+- `POST /engine-actions/action-targets/update` (562);
+- `POST /governance-engines/{name}/engine-actions/initiate` (321).
+
+There is no list-all, and no plain `/engine-actions`. `Egeria-api-automated-curation.http` has no such call either.
+
+**Working routes today (checked live, read-only, 2026-10-13):**
+- **Every engine action:** `find_engine_actions("*")`. It posts to `automated-curation/assets/by-search-string` with `metadata_element_type="EngineAction"`, because in 6.2 EngineAction is an Asset (EngineAction → Action → Process → Asset). It returned a full page of 50, all `COMPLETED`.
+- **Only the active ones:** `get_active_engine_actions()`, which returned 1.
+- AssetMaker's `find_processes(metadata_element_type="EngineAction")` also works, and since ISSUE-148 it applies no status filter by default.
+
+**Candidate fixes (needs the owner's choice):**
+1. Re-implement `get_engine_actions` as a thin wrapper over `find_engine_actions("*")`, keeping its signature and paging. `print_engine_actions` then works unchanged. (Preferred: callers keep working.)
+2. Deprecate it with a clear error naming `find_engine_actions`.
+
+Either way, add a micro-test that pins the URL.
+
+**Related, for when Egeria exposes it:** Mandy added a per-engine "approved, unclaimed" engine-action listing on 2026-10-05, but only on the metadata server's `governance-context-service`, not on the View Server, so pyegeria can't reach it through a view service today. RE will ask the Egeria leads to expose it on Automated Curation. Once it's there, add a wrapper next to `get_active_claimed_engine_actions` (same per-engine shape). Until then, approximate it client-side with `find_engine_actions` plus an activity-status filter.
+
+**Side note (separate, not fixed here):** a 404 reported as "unable to connect" is the same family as the other misleading error labels (compare ISSUE-142). A 404 from a reachable platform should say "endpoint not found".
+
+**Fixed 2026-10-13 (owner: "remove it and let people use find_engine_actions"):**
+`get_engine_actions` / `_async_get_engine_actions` are removed. Before removing them, callers were searched in
+egeria-python, egeria-workspaces-fs and trellis. The only callers were in egeria-python: `print_engine_actions`,
+one functional test and a docs checklist line. `print_engine_actions` now calls `find_engine_actions("*")`.
+The functional test is now `test_find_all_engine_actions`. Test:
+`tests/micro-tests/test_issue_151_engine_actions_list_all.py`. **This is a public API removal, so it must go in
+the 6.2.3 release notes** (see BACKLOG.md).
 
 ---
 

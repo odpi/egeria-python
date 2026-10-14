@@ -397,7 +397,9 @@ class TestAutomatedCuration:
         finally:
             a_client.close_session()
 
-    def test_get_engine_actions(self):
+    def test_find_all_engine_actions(self):
+        # get_engine_actions was removed (ISSUE-151): the View Server has no list-all
+        # endpoint, so find_engine_actions("*") is the list-all.
         try:
             a_client = AutomatedCuration(
                 self.good_view_server_2,
@@ -409,7 +411,7 @@ class TestAutomatedCuration:
 
 
             start_time = time.perf_counter()
-            response = a_client.get_engine_actions(request_id="test-id")
+            response = a_client.find_engine_actions("*")
             duration = time.perf_counter() - start_time
             print(f"\n\tDuration was {duration} seconds")
             print(f"The type of response is: {type(response)}")

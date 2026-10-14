@@ -17,6 +17,7 @@ Once the Egeria release with the delete fixes is published and the local quickst
    Also ISSUE-147, the valid-metadata clears: re-run the ISSUE-147 sequence (setup then clear for a value, a map name and a map value on a made-up property). Expect no 400-011 error after a successful clear, and expect the map value to actually be removed.
 3. Update each `PYEGERIA_ISSUES.md` entry with the result, then do the held 6.2.3 release. The owner wants outstanding issues fixed before releasing.
    **The 6.2.3 release notes must list this behaviour change:** ISSUE-148. `AssetMaker.find_processes`, `get_processes_by_category`, `get_action_targets`, `get_actions_for_action_target`, `get_assigned_actions`, `get_actions_for_sponsor` and `get_actions_for_requester` now default `activity_status_list` to `None` (no filter) instead of `["IN_PROGRESS"]`. A caller that relied on getting only in-progress actions by default now also gets completed, cancelled and status-less actions (e.g. journal entries), so it should pass `["IN_PROGRESS"]` explicitly.
+   **Also list this API removal:** ISSUE-151. `AutomatedCuration.get_engine_actions()` is removed, because the View Server has no list-all endpoint for it (it always got a 404). Use `find_engine_actions("*")` instead.
 
 ---
 
