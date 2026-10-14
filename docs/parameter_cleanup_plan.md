@@ -340,7 +340,7 @@ async def _async_get_xxx_by_guid(
   - **Planned**: TODO
 - [ ] `get_create_csv_data_file_element_from_template(self, file_name, file_type, file_path_name, version_identifier, file_encoding='UTF-8', file_extension='csv', file_system_name=None, description=None)`
   - **Planned**: TODO
-- [ ] `get_engine_actions(self, start_from=0, page_size=0, output_format='JSON', report_spec='EngineAction', body=None)`
+- [x] ~~`get_engine_actions(...)`~~ removed (ISSUE-151): no View Server endpoint; use `find_engine_actions("*")`
   - **Planned**: TODO
 - [x] `get_engine_actions_by_name(self, name, start_from=0, page_size=0, output_format='JSON', report_spec='EngineAction', body=None)`
   - **Planned**: Standard Get By Name Pattern

@@ -151,10 +151,8 @@ content was changed. The numbered section list above describes the
 **At a glance** — 7 open pyegeria items, 7 awaiting re-test, 7 open Egeria Server issues.
 
 **Open pyegeria items**
+- ISSUE-150: Dr.Egeria commands for an Analytic Function's Egeria declaration: a GovernanceActionType Resource Explorer runs as an engine host, plus a synchronous path that bypasses Egeria (direction agreed, not built)
 - ISSUE-146: Deleting a journal entry fails with OMAG-REPOSITORY-HANDLER-400-008, and pyegeria's `remove_note` reaches the delete only through the generic Asset Maker service
-- ISSUE-140: The executor charts any dict with two or more top-level numbers, regardless of the result's state
-- ISSUE-139: The executor renders no result envelope, and the Vega bar chart has no subtitle, so a not-established result has nowhere to say so on a chart
-- ISSUE-138: Analytic params are JSON-only, and only parameters named `mgr`/`ce`/`expert`/`client` are bound as clients, so a routine taking a reader object can't be named by its own dotted path
 - ISSUE-132: `DeleteElementRequestBody` serializes the cascade flag as `cascadeDelete`; Egeria's field is `cascadedDelete` and unknown fields are ignored, so no pyegeria cascade delete has ever cascaded
 - ISSUE-127: `CollectionManager.delete_collection(cascade=True)` silently never sends `cascadeDelete` -- same shape as ISSUE-62
 
@@ -187,6 +185,75 @@ Dr.Egeria-side work each will need once that capability ships is written
 into the entry now, so it isn't rediscovered from scratch later.
 
 ---
+
+
+### ISSUE-150: Dr.Egeria commands for an Analytic Function's Egeria declaration: a GovernanceActionType that Resource Explorer runs as an engine host, plus a synchronous path that bypasses Egeria
+
+**Layer:** Dr.Egeria (commands over existing Action Author / governance commands) · **Status:** open, direction agreed with the owner 2026-10-13 ("a good start; we may need to review and change"), not yet built · **Found:** 2026-10-13, handed off by the Resource Explorer PR/CI session. Source: trellis `docs/extensibility-walking-skeleton-brief.md` §2c, §3a, §8. Egeria references: [Governance Action Processes (0462)](https://egeria-project.org/types/4/0462-Governance-Action-Processes/), [Survey Action Engine](https://egeria-project.org/concepts/survey-action-engine/).
+
+**Background (Egeria's model):**
+- A `GovernanceActionType` is a template for **one** action. Initiating it creates one Engine Action.
+- A `GovernanceActionProcessStep` is a subtype of `GovernanceActionType` that exists only inside a process. Its flow links (`GovernanceActionProcessFlow`, `NextGovernanceActionProcessStep`) carry guards and mandatory guards. Each step that fires becomes its own Engine Action.
+- Both reach their code through `GovernanceActionExecutor` (a governance engine plus a `requestType`).
+- Surveys use the `SurveyingActionProcess` subtype. Survey action services write annotations into a Survey Report linked to the asset.
+
+**Direction (owner, 2026-10-13):** use Egeria's designed governance-action infrastructure, not a bypass; it may need changing, but it should be used. Resource Explorer **is an engine host** and can present itself to Egeria as one. The owner's concern is timing: running an action or process is asynchronous and possibly long-running, while an analytic function often has to answer synchronously during a screen draw or report generation. So declaring a function is kept separate from running it:
+
+1. **Declaration (in Egeria):** a `GovernanceActionType` per function.
+   - A `GovernanceActionExecutor` links it to Resource Explorer's governance engine, with the function's name as the `requestType`.
+   - It carries the ISSUE-149 manifest fields: `kind`, `version`, `source`, `resource_types`, `annotation_type`, `family`, `tags`.
+   - It joins its family `Collection`.
+   - Retirement is a status change, never a delete.
+
+   Within a survey it is used as a `GovernanceActionProcessStep` in a `SurveyingActionProcess`. A single run can be wrapped as a one-step process if a uniform "everything runs as a process" shape is wanted.
+2. **Asynchronous run (through Egeria):** initiate the type, or a process containing it, and an Engine Action is created. Resource Explorer, as an engine host, claims it and runs it, using `engine-actions/{guid}/claim`, `status/update`, `completion-status` and the active-claimed listing. Results are stored as annotations carrying their envelope, and Egeria keeps the run record. This path is for surveys and anything slow or scheduled. Mandy's per-engine "approved, unclaimed" engine-action listing (2026-10-05, governance-context-service only so far; see ISSUE-151) is what such an engine host polls.
+3. **Synchronous run (no Egeria round-trip):** a screen or report calls the installed implementation directly, as a report spec's `analytic_function` already does through `exec_report_spec` (ISSUE-137/138/139/140/149 made this path work for trellis routines).
+   - Egeria is not on the hot path; the declaration only identifies which function and version is meant.
+   - **Synchronous runs are not recorded in Egeria** (owner: lineage doesn't make sense for what is drawn on a screen). Diagnostic logging at most; still to discuss.
+
+**How a screen uses it:** for each function, one of three choices:
+- compute now (cheap functions);
+- read the last stored result (expensive functions; the envelope's `measured_at` says how old it is);
+- request an asynchronous refresh that the next draw picks up.
+
+"Routine versus step" therefore becomes a property of each function (is it cheap enough to compute on read?), possibly a manifest field, not two kinds of element.
+
+**Keeping the two paths honest:** the code run synchronously must be the code the declaration names, at the same version, that Resource Explorer's engine runs. trellis's planned `trellis-analytics drift` (installed vs declared) checks this. The envelope's `producer_version` lets readers tell versions apart.
+
+**Dr.Egeria work this implies (to be confirmed with the RE sessions):**
+- Mostly convenience over existing commands: `Create Governance Action Type`, `Link Action to Action Executor` (`GovernanceActionExecutor`), `Link First/Next Process Step`, and family-collection membership.
+- Plus the manifest attributes. Where these live on the element (`additionalProperties`, or real properties if Egeria adds them) is still to decide.
+- Possibly a `Create/Update/Retire Analytic Function` alias family that sets all of this in one document, which `trellis-analytics declare` would generate. And `View Analytic Functions [family]`.
+- The Action Author processors (`ActionExecutorTargetLinkProcessor`, `ActionProcessStepLinkProcessor`) already handle the links. `register_governance_processors()` is family-name-gated, so a new family name must be added there.
+
+**Open points:**
+- Whether Egeria needs changes, for example to let a synchronous-safe flag or the manifest fields be first-class properties.
+- Whether a single run is always wrapped as a one-step process.
+- Whether routines that are only ever computed synchronously need a declaration at all, beyond the Report element (`Create Report`).
+- Diagnostic logging for synchronous runs.
+
+
+**Resource Explorer's answers (RE PR/CI session, 2026-10-13):**
+- **(a) The direction matches RE's engine-host design** (trellis branch `re/design-engine-host`, `packages/resource-explorer/docs/design-notes/DESIGN-RE-ENGINE-HOST-BY-EQUIVALENCE.md`). Its first slice (E1) is exactly the declaration above: an RE governance engine, a `SupportedGovernanceService` whose requestType names the trellis step, and a `GovernanceActionType` with a `GovernanceActionExecutor` to that engine plus `producedGuards`. RE claims and completes Engine Actions.
+  - Owner decisions recorded there: the engine runs as RE's service account. An action on a resource in a private investigation is left unclaimed by the unattended host and run attended, as the owner. RE may claim and hold future-dated actions.
+  - RE polls `get_active_engine_actions()` today, filtered client-side to its engine and APPROVED (or `find_engine_actions`, see ISSUE-151). Mandy's per-engine "approved, unclaimed" listing exists only on the metadata server's governance-context service, so RE is asking her to expose it on the View Server.
+  - Questions open with Mandy: the engine subtype (`SurveyActionEngine`?); whether a GovernanceService whose connector class nothing can load is acceptable; and where guards come from (standard survey guards, or declared by the step from the envelope).
+- **(b) RE's survey definitions today** are Dr.Egeria `Create Governance Action Process` (`GovActionProcess::<Survey>`) plus `Create Governance Action Process Step` (`GovActionProcessStep::<Survey>::<step>`), linked with First/Next Process Step. They are plain `GovernanceActionProcess`, not `SurveyingActionProcess`: Dr.Egeria's command has `OM_TYPE` `GovernanceActionProcess` and offers no subtype choice. The steps carry **no executor**; RE's own executor reads `executes_at`/`re_analysis_step`/`supported_technology_type` from `additionalProperties`. That is why Egeria can't dispatch any RE step today. Moving the steps onto an executor is part of RE's engine-host slice.
+- **(c) Manifest fields go in `additionalProperties` for now,** with stable keys named exactly like the `AnalyticFunctionSpec` fields (`kind`, `source`, `version`, `envelope`, `annotation_type`, `resource_types`, `family`, `tags`). This matches the owner's interim ruling for annotations. Asking Egeria for real properties is a later item, once a few functions exist.
+- **Synchronous runs not recorded:** agreed. RE's OpenLineage run events (branch `re/openlineage-run-events`, off by default) cover only step runs inside RE's survey executor, so a screen-draw run never reaches them.
+
+**Dr.Egeria gaps this exposes (part of this issue's work):**
+1. `Create Governance Action Process` should be able to create the process subtypes (`SurveyingActionProcess`, `CataloguingActionProcess`, ...), e.g. via a `Process Type` attribute validated against the 0462 subtypes. Today it always creates the plain supertype.
+2. A process step needs its `GovernanceActionExecutor` link and its manifest `additionalProperties`. Check that `Link Action to Action Executor` accepts a `GovernanceActionProcessStep` (a subtype of `GovernanceActionType`) as its subject. It should, but this hasn't been live-verified (see the Action Author note in CLAUDE.md).
+3. Declaring the engine side may need `SupportedGovernanceService` / governance-engine commands, if Dr.Egeria doesn't already have them. Check before building.
+
+**Requirements proposed by RE's expansion-design session (2026-10-13; it found no contradiction with the direction; pending the owner's review):**
+1. **One declaration, idempotent.** The manifest's qualifiers must live on the `GovernanceActionType` itself (`supportedRequestParameters` or `additionalProperties`), so Egeria, the Portal and RE all read the same declaration. That means question ids, perspectives, `purpose` (from the existing `VALID_PURPOSES` set) and `family`. Declaring is idempotent by qualifiedName: declaring twice updates, and never creates a second type. Dr.Egeria's upsert (Create→Update by qualified name) already behaves this way.
+2. **Label synchronous values differently from recorded ones.** On a screen, a value computed now must be labelled "computed now · not recorded", and a stored result "last recorded <age>". A reader must never mistake a synchronous draw for a governed measurement. (The envelope gives the state and `measured_at`; the "recorded or not" label is the caller's, from which path it used.)
+3. **State the credential tier.** User-written steps stay on the resource's read-only tier (owner ruling, 2026-10-07). A `GovernanceActionType` declared for one must say so, with a property naming the tier (e.g. `credential_tier: read_only`). Otherwise Egeria would schedule it like any engine action.
+---
+
+
 
 ### ISSUE-146: Deleting a journal entry fails with OMAG-REPOSITORY-HANDLER-400-008, and pyegeria's `remove_note` reaches the delete only through the generic Asset Maker service
 
@@ -275,56 +342,8 @@ Erin's profile. `fef83ed5` stays.
 
 ---
 
-### ISSUE-140: The executor charts any dict with two or more top-level numbers, regardless of the result's state
 
-**Layer:** pyegeria (format_set_executor) · **Status:** open, logged only (no fix without the owner's explicit go-ahead) · **Found:** 2026-10-12, reported by the Resource Explorer PR/CI session from trellis-analytics (trellis PR #622, `trellis_analytics/portal.py`), which works around it today.
 
-**What:** BAR/SERIES output is drawn whenever the result dict has two or
-more numeric top-level keys, whether or not the result says it was
-measured. A `not_established` result that happens to carry numbers would be
-charted as real zeros/values.
-
-**Where seen:** trellis `portal.py` is safe only because its adapter omits
-numbers for non-measured states.
-
-**Candidate fix:** honour an envelope state (see ISSUE-139): draw no chart
-unless the state is `measured`, and show the state word instead.
-
----
-
-### ISSUE-139: The executor renders no result envelope, and the Vega bar chart has no subtitle, so a not-established result has nowhere to say so on a chart
-
-**Layer:** pyegeria (format_set_executor output rendering) · **Status:** open, logged only (no fix without the owner's explicit go-ahead) · **Found:** 2026-10-12, reported by the Resource Explorer PR/CI session from trellis-analytics (trellis PR #622, `trellis_analytics/portal.py`), which works around it today.
-
-**What:** a routine's result state (`measured` / `nothing_found` /
-`not_established` / `not_applicable`, plus a reason) has nowhere to go on a
-chart; it survives only in the DICT output. A tile can therefore show a
-chart with no indication that the numbers were not established.
-
-**Where seen:** trellis `tests/test_portal_tile.py` pins the absence, so that
-test will fail once this is fixed.
-
-**Candidate fix:** render an optional `envelope`/`subtitle` field from the
-result into the Vega spec's `title.subtitle`, and into every output type.
-
----
-
-### ISSUE-138: Analytic params are JSON-only, and only parameters named `mgr`/`ce`/`expert`/`client` are bound as clients, so a routine taking a reader object can't be named by its own dotted path
-
-**Layer:** pyegeria (format_set_executor, analytic_registry) · **Status:** open, logged only (no fix without the owner's explicit go-ahead) · **Found:** 2026-10-12, reported by the Resource Explorer PR/CI session from trellis-analytics (trellis PR #622, `trellis_analytics/portal.py`), which works around it today.
-
-**What:** a routine whose first parameter is a reader object (e.g.
-`OdsReader`) cannot be named directly by its dotted path; the spec has to
-point at an adapter that constructs the reader from JSON params.
-
-**Where seen:** trellis `trellis_analytics.portal.curation_coverage_tile` (the
-adapter), used instead of `trellis_analytics.routines.curation_coverage`.
-
-**Candidate fix:** a binding hook (e.g. `AnalyticFunctionSpec.binders`) or a
-declared factory per parameter type, so non-client objects can be
-constructed from params.
-
----
 
 ### ISSUE-132: `DeleteElementRequestBody` serializes the cascade flag as `cascadeDelete`; Egeria's field is `cascadedDelete` and unknown fields are ignored, so no pyegeria cascade delete has ever cascaded
 
@@ -1562,6 +1581,163 @@ Sorted newest-first by `ISSUE-#` (2026-10-12). ISSUE-91 has two entries
 
 ---
 
+### ISSUE-149: `AnalyticFunctionSpec` lacks the manifest fields trellis-analytics needs (`kind`, `source`, `version`, `envelope`, `annotation_type`, `resource_types`), so trellis subclasses carry them
+
+**Layer:** pyegeria (`pyegeria/view/analytic_registry.py`) · **Status:** fixed 2026-10-13 · **Found:** 2026-10-13, handed off by the Resource Explorer PR/CI session on the owner's instruction. Source: trellis brief §2a and `packages/trellis-analytics/src/trellis_analytics/manifest.py`. RE runs pyegeria 6.2.2.
+
+**What:** trellis-analytics' `RoutineManifest`/`StepManifest` subclass `AnalyticFunctionSpec` only to add fields the base should carry:
+- `kind`;
+- `source`;
+- `version`;
+- `envelope: bool` (the result carries a state envelope; see ISSUE-139/140);
+- `annotation_type` (a step's result type, empty for a routine);
+- `resource_types: list[str]`.
+
+The Portal's "Analytic Functions" tab groups by `family`, then `kind`, then `source`.
+
+**Proposed change:** add all six as optional fields with defaults (`kind="routine"`, `source=""`, `version=""`, `envelope=False`, `annotation_type=""`, `resource_types=[]`), so every existing registry entry and spec still validates unchanged. Once a pyegeria release carries them, trellis-analytics drops its own copies.
+
+**Points to settle before building:**
+- The handoff lists `kind` as `routine | step | spec`, but trellis's `Kind` is `Literal["routine", "step"]`. Decide whether `spec` is a third kind or a different axis (a report spec is the presentation flavour, brief §2d).
+- trellis's manifest also carries `family` and `tags`, which the handoff doesn't list. `FormatSet` already has `family`; decide whether `AnalyticFunctionSpec` should get them too, rather than leaving trellis to carry them.
+- `source` values in trellis are `ods | egeria | resource`. Decide between a `Literal` (strict) and `str` (open, so a user step can name a new source).
+
+**Related:** ISSUE-138 (non-client param binding), ISSUE-139/140 (envelope rendering), ISSUE-150 (the Egeria declaration, which should take its attribute names from these fields).
+
+**Answers (RE PR/CI session, 2026-10-13, citing the owner's 2026-10-07 organisation ruling; to be confirmed by the owner before building):**
+- `kind`: `routine | step` only. "spec" was a slip: a spec is a `FormatSet`, not an `AnalyticFunctionSpec`. This matches trellis-analytics' `Kind` (`manifest.py:14`).
+- `family` and `tags`: add both, optional. `family` has the same word and meaning as `FormatSet.family`; in Egeria a family is a `Collection`.
+- `source`: an open `str`, not a `Literal`. Document the known values (`ods`, `egeria`). The owner's rule for value lists is "suggestive everywhere": an unknown value warns, never rejects.
+- The Advisor side of ISSUE-141 is already done in trellis (`packages/egeria-advisor/tests/unit/test_report_spec_parser.py:263-267`).
+- Once a pyegeria release carries these fields, trellis-analytics drops its own copies. Tell the RE PR/CI session the version.
+
+**Fixed 2026-10-13 (owner's go-ahead; design answers as recorded above):** `AnalyticFunctionSpec` gains `kind: Literal["routine","step"]="routine"`, `source: str=""` (an unknown value logs a warning; known values are in `KNOWN_ANALYTIC_SOURCES` = ods, egeria, resource), `version`, `envelope: bool=False`, `annotation_type`, `resource_types`, `family` and `tags`, all with defaults. All 23 built-in registry entries still load, and trellis's `RoutineManifest`/`StepManifest` subclasses validate unchanged against the new base (checked locally). Once this ships, trellis-analytics can drop its own copies. Tests: as for ISSUE-138.
+
+---
+
+### ISSUE-140: The executor charts any dict with two or more top-level numbers, regardless of the result's state
+
+**Layer:** pyegeria (format_set_executor) · **Status:** fixed 2026-10-13 · **Found:** 2026-10-12, reported by the Resource Explorer PR/CI session from trellis-analytics (trellis PR #622, `trellis_analytics/portal.py`), which works around it today.
+
+**What:** BAR/SERIES output is drawn whenever the result dict has two or
+more numeric top-level keys, whether or not the result says it was
+measured. A `not_established` result that happens to carry numbers would be
+charted as real zeros/values.
+
+**Where seen:** trellis `portal.py` is safe only because its adapter omits
+numbers for non-measured states.
+
+**Candidate fix:** honour an envelope state (see ISSUE-139): draw no chart
+unless the state is `measured`, and show the state word instead.
+
+**Fixed 2026-10-13:** with an envelope present, SERIES/BAR/PIE draw a chart only when the state is `measured` or `nothing_found` (`CHARTABLE_STATES`); for `not_established` and `not_applicable` they return the data plus the envelope. Results without an envelope are charted exactly as before. **Amended the same day at the requester's request (RE PR/CI session):** the candidate fix above said "measured only", but `nothing_found` is an established answer. The routine read the record and the count really is zero, so a chart of real zeros is honest, and trellis's tile already charts it (`_CHARTED`). Only unknown numbers must never be charted. Tests: as for ISSUE-138.
+
+---
+
+### ISSUE-139: The executor renders no result envelope, and the Vega bar chart has no subtitle, so a not-established result has nowhere to say so on a chart
+
+**Layer:** pyegeria (format_set_executor output rendering) · **Status:** fixed 2026-10-13 · **Found:** 2026-10-12, reported by the Resource Explorer PR/CI session from trellis-analytics (trellis PR #622, `trellis_analytics/portal.py`), which works around it today.
+
+**What:** a routine's result state (`measured` / `nothing_found` /
+`not_established` / `not_applicable`, plus a reason) has nowhere to go on a
+chart; it survives only in the DICT output. A tile can therefore show a
+chart with no indication that the numbers were not established.
+
+**Where seen:** trellis `tests/test_portal_tile.py` pins the absence, so that
+test will fail once this is fixed.
+
+**Candidate fix:** render an optional `envelope`/`subtitle` field from the
+result into the Vega spec's `title.subtitle`, and into every output type.
+
+**Fixed 2026-10-13:** `_result_envelope` reads a state from `state`/`state_reason`/`subtitle`, `resultState`/`resultStateReason`, a nested `envelope` dict, or an object's `.envelope` (`result_state`/`result_state_reason`). Every analytic output (DICT/JSON/empty/chart) then carries `"envelope": {state, reason, subtitle}`, and charts get `title: {text, subtitle}`. Pydantic results are returned as plain data. **trellis's `tests/test_portal_tile.py:75` pins the old absence of a subtitle, so it will fail once trellis takes this release, as expected.** Tests: as for ISSUE-138.
+
+---
+
+### ISSUE-138: Analytic params are JSON-only, and only parameters named `mgr`/`ce`/`expert`/`client` are bound as clients, so a routine taking a reader object can't be named by its own dotted path
+
+**Layer:** pyegeria (format_set_executor, analytic_registry) · **Status:** fixed 2026-10-13 · **Found:** 2026-10-12, reported by the Resource Explorer PR/CI session from trellis-analytics (trellis PR #622, `trellis_analytics/portal.py`), which works around it today.
+
+**What:** a routine whose first parameter is a reader object (e.g.
+`OdsReader`) cannot be named directly by its dotted path; the spec has to
+point at an adapter that constructs the reader from JSON params.
+
+**Where seen:** trellis `trellis_analytics.portal.curation_coverage_tile` (the
+adapter), used instead of `trellis_analytics.routines.curation_coverage`.
+
+**Candidate fix:** a binding hook (e.g. `AnalyticFunctionSpec.binders`) or a
+declared factory per parameter type, so non-client objects can be
+constructed from params.
+
+**Fixed 2026-10-13:** `ActionParameter.analytic_binders` maps a parameter name to a factory's dotted path (`pkg.mod.Factory` or `pkg.mod:Factory`). `_apply_analytic_binders` (format_set_executor.py) calls the factory with the call params its signature names, consuming them unless the routine also takes them, and passes the result to the routine by name. trellis can then name `trellis_analytics.routines.curation_coverage` directly, with `analytic_binders={"ods": "trellis_analytics.readers.ods.OdsReader"}` and the caller passing `url`. Tests: `tests/micro-tests/test_issue_138_140_149_analytic_envelope.py`. Documented in `docs/output-formats-and-report-specs.md`.
+
+---
+
+### ISSUE-151: `AutomatedCuration.get_engine_actions()` calls `automated-curation/engine-actions`, which the View Server doesn't have (404, reported as "unable to connect"); `find_engine_actions("*")` is the working list-all
+
+**Layer:** pyegeria (`pyegeria/omvs/automated_curation.py`) · **Status:** fixed 2026-10-13 (method removed) · **Found:** 2026-10-13 by RE's engine-host design work (the RE PR/CI session confirmed it live on pyegeria 6.2.2). Cause confirmed from Egeria source, and re-checked live read-only, by this session.
+
+**What:** `_async_get_engine_actions` (~line 2628) posts, through `_async_get_name_request`, to
+`{ref_curation_command_base}/engine-actions`. That path doesn't exist. On qs-view-server it answers HTTP 404, which pyegeria surfaces as `PyegeriaClientException` `CLIENT_ERROR_400` with "unable to connect to the Egeria platform". That message is misleading: the platform is reachable, and only the path is wrong. `print_engine_actions()` (~line 5351) calls it, so that fails too.
+
+**Diagnosis: (b), the View Server has no such endpoint.** It isn't a wrong verb or a wrong path for an endpoint that exists. `AutomatedCurationResource.java` (Egeria `af400039c2`, `view-server-generic-services/automated-curation/automated-curation-spring/...`) maps these engine-action routes:
+- `GET /engine-actions/active` (line 435);
+- `GET /governance-engines/{guid}/engine-actions/active-claimed` (line 529);
+- `POST /engine-actions/{guid}/cancel`, `/claim`, `/status/update`, `/completion-status` (lines 406, 498, 469, 591);
+- `POST /engine-actions/action-targets/update` (562);
+- `POST /governance-engines/{name}/engine-actions/initiate` (321).
+
+There is no list-all, and no plain `/engine-actions`. `Egeria-api-automated-curation.http` has no such call either.
+
+**Working routes today (checked live, read-only, 2026-10-13):**
+- **Every engine action:** `find_engine_actions("*")`. It posts to `automated-curation/assets/by-search-string` with `metadata_element_type="EngineAction"`, because in 6.2 EngineAction is an Asset (EngineAction → Action → Process → Asset). It returned a full page of 50, all `COMPLETED`.
+- **Only the active ones:** `get_active_engine_actions()`, which returned 1.
+- AssetMaker's `find_processes(metadata_element_type="EngineAction")` also works, and since ISSUE-148 it applies no status filter by default.
+
+**Candidate fixes (needs the owner's choice):**
+1. Re-implement `get_engine_actions` as a thin wrapper over `find_engine_actions("*")`, keeping its signature and paging. `print_engine_actions` then works unchanged. (Preferred: callers keep working.)
+2. Deprecate it with a clear error naming `find_engine_actions`.
+
+Either way, add a micro-test that pins the URL.
+
+**Related, for when Egeria exposes it:** Mandy added a per-engine "approved, unclaimed" engine-action listing on 2026-10-05, but only on the metadata server's `governance-context-service`, not on the View Server, so pyegeria can't reach it through a view service today. RE will ask the Egeria leads to expose it on Automated Curation. Once it's there, add a wrapper next to `get_active_claimed_engine_actions` (same per-engine shape). Until then, approximate it client-side with `find_engine_actions` plus an activity-status filter.
+
+**Side note (separate, not fixed here):** a 404 reported as "unable to connect" is the same family as the other misleading error labels (compare ISSUE-142). A 404 from a reachable platform should say "endpoint not found".
+
+**Fixed 2026-10-13 (owner: "remove it and let people use find_engine_actions"):**
+`get_engine_actions` / `_async_get_engine_actions` are removed. Before removing them, callers were searched in
+egeria-python, egeria-workspaces-fs and trellis. The only callers were in egeria-python: `print_engine_actions`,
+one functional test and a docs checklist line. `print_engine_actions` now calls `find_engine_actions("*")`.
+The functional test is now `test_find_all_engine_actions`. Test:
+`tests/micro-tests/test_issue_151_engine_actions_list_all.py`. **This is a public API removal, so it must go in
+the 6.2.3 release notes** (see BACKLOG.md).
+
+---
+
+### ISSUE-148: AssetMaker action/process queries default `activity_status_list` to `["IN_PROGRESS"]`, which silently drops JournalEntries and any other Action with no activity status
+
+**Layer:** pyegeria (`pyegeria/omvs/asset_maker.py`) · **Status:** fixed 2026-10-13 · **Found:** 2026-10-13 by the egeria-workspaces-fs session (Resource Locator) on pyegeria 6.2.0 in quickstart-pyegeria-web.
+
+**What:** for resource `4e53842e`, which has an Actions link to JournalEntry `8bec72e4` (see ISSUE-146), `get_actions_for_sponsor` with the default returns 0 elements. Passing `activity_status_list=None` or `[]` returns 1. There is no error and no warning. A JournalEntry has no activity status, so an `IN_PROGRESS` filter can never match it. The same goes for completed, waiting or failed actions.
+
+**Where:** 7 public methods default to `["IN_PROGRESS"]`, as do their `_async_` versions:
+`find_processes`, `get_processes_by_category`, `get_action_targets`, `get_actions_for_action_target`, `get_assigned_actions`, `get_actions_for_sponsor` and `get_actions_for_requester`. All are in `asset_maker.py`, around lines 3881-5210.
+
+**Why it matters:** a caller who doesn't know about the filter gets "No elements found", and that looks the same as "this element has no actions". The absence is reported as an answer.
+
+**Candidate fix (needs a decision):** default to `None`, so no status filter is applied and the server returns everything, and let callers ask for `["IN_PROGRESS"]` explicitly. This changes behaviour for existing callers that relied on the filter (for example, To-Do views that expect only open work), so check the callers in egeria-workspaces-fs, trellis and `commands/` first. Then add a micro-test that captures the request body for each method.
+
+**Fixed 2026-10-13 (owner's go-ahead, after all four live sessions confirmed no caller relies on the default):**
+all 14 signatures (7 sync, 7 async) now take `activity_status_list: Optional[list[str]] = None`, and the
+docstrings say "no filter". `_async_find_processes` had defaulted to `[]` while the sync `find_processes`
+defaulted to `["IN_PROGRESS"]`, so the same query had returned different results depending on which
+version was called. Callers checked: egeria-workspaces-fs `tech_catalog_handler` (passes `[]`) and
+`resource_browser_handler` (passes `None`), egeria-python `commands/` (passes its own filter); trellis has none.
+**This is a behaviour change, so it must go in the 6.2.3 release notes** (see BACKLOG.md). Test:
+`tests/micro-tests/test_issue_148_activity_status_default.py`, which checks that the default sends no
+`activityStatusList` and that an explicit filter is still sent.
+
+---
+
 ### ISSUE-145: Dr.Egeria sends `agreementType` and other `agreement*` fields that Egeria's `AgreementProperties` does not have
 
 **Layer:** Dr.Egeria · **Status:** fixed 2026-10-13 · **Found:** 2026-10-13, during the ISSUE-144 status-field sweep.
@@ -1662,7 +1838,7 @@ sends `confidence` (`collection_manager.py`,
 
 ### ISSUE-141: `ActionParameter.function` is a required string, so analytic-only specs must pass `""`, and the Advisor's validator then warns "No Action Function"
 
-**Layer:** pyegeria (report spec models) · **Status:** fixed 2026-10-12 on branch `docs/issue-136` (PR pending), not yet released · **Found:** 2026-10-12, reported by the Resource Explorer PR/CI session from trellis-analytics (trellis PR #622, `trellis_analytics/portal.py`), which works around it today.
+**Layer:** pyegeria (report spec models) · **Status:** fixed 2026-10-12 in #446, released in 6.2.2 · **Found:** 2026-10-12, reported by the Resource Explorer PR/CI session from trellis-analytics (trellis PR #622, `trellis_analytics/portal.py`), which works around it today.
 
 **Fixed 2026-10-12:** `function` is now `Optional[str] = None`, and a model
 validator rejects an action with neither `function` nor `analytic_function`. An
@@ -1689,7 +1865,7 @@ and teach the validator the same rule.
 
 ### ISSUE-137: `exec_report_spec` always builds an `EgeriaTech` client and mints a token, even for an analytic routine that needs no Egeria
 
-**Layer:** pyegeria (format_set_executor) · **Status:** fixed 2026-10-12 on branch `docs/issue-136` (PR pending), not yet released · **Found:** 2026-10-12, reported by the Resource Explorer PR/CI session from trellis-analytics (trellis PR #622, `trellis_analytics/portal.py`), which works around it today.
+**Layer:** pyegeria (format_set_executor) · **Status:** fixed 2026-10-12 in #446, released in 6.2.2 · **Found:** 2026-10-12, reported by the Resource Explorer PR/CI session from trellis-analytics (trellis PR #622, `trellis_analytics/portal.py`), which works around it today.
 
 **Fixed 2026-10-12:** `_run_analytic_function` counts the routine's leading
 client parameters (`_count_client_params`) and builds and authenticates an

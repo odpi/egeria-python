@@ -3781,7 +3781,7 @@ class AssetMaker(ServerClient):
     async def _async_find_processes(
         self,
         search_string: str = "*",
-        activity_status_list: list[str] = [],
+        activity_status_list: Optional[list[str]] = None,
         starts_with: bool = True,
         ends_with: bool = False,
         ignore_case: bool = True,
@@ -3814,7 +3814,7 @@ class AssetMaker(ServerClient):
         ----------
         search_string: str, default = "*"
             - search string for process properties
-        activity_status_list: list[str], default = []
+        activity_status_list: list[str], default = None (no filter: every activity status, including none)
             - optional activity status list to filter by
         starts_with: bool, default = True
         ends_with: bool, default = False
@@ -3881,7 +3881,7 @@ class AssetMaker(ServerClient):
     def find_processes(
         self,
         search_string: str = "*",
-        activity_status_list: list[str] = ["IN_PROGRESS"],
+        activity_status_list: Optional[list[str]] = None,
         starts_with: bool = True,
         ends_with: bool = False,
         ignore_case: bool = True,
@@ -3914,7 +3914,7 @@ class AssetMaker(ServerClient):
         ----------
         search_string: str, default = "*"
             - the search string to use to find matching processes
-        activity_status_list: list[str], default = ["IN_PROGRESS"]
+        activity_status_list: list[str], default = None (no filter: every activity status, including none)
             - optional activity status list to filter by
         starts_with: bool, default = True
             - if True, the search string must match the start of the property value
@@ -3988,7 +3988,7 @@ class AssetMaker(ServerClient):
     async def _async_get_processes_by_category(
         self,
         category: str,
-        activity_status_list: list[str] = ["IN_PROGRESS"],
+        activity_status_list: Optional[list[str]] = None,
         graph_query_depth: int = 3,
         start_from: int = 0,
         page_size: int = 0,
@@ -4003,7 +4003,7 @@ class AssetMaker(ServerClient):
         Parameters
         ----------
         category: str
-        activity_status_list: list[str], default = ["IN_PROGRESS"]
+        activity_status_list: list[str], default = None (no filter: every activity status, including none)
         graph_query_depth: int, default = 3
             - depth for relationship traversal
         start_from: int, default = 0
@@ -4048,7 +4048,7 @@ class AssetMaker(ServerClient):
     def get_processes_by_category(
         self,
         category: str,
-        activity_status_list: list[str] = ["IN_PROGRESS"],
+        activity_status_list: Optional[list[str]] = None,
         graph_query_depth: int = 3,
         start_from: int = 0,
         page_size: int = 0,
@@ -4064,7 +4064,7 @@ class AssetMaker(ServerClient):
         ----------
         category: str
             - category name to filter by
-        activity_status_list: list[str], default = ["IN_PROGRESS"]
+        activity_status_list: list[str], default = None (no filter: every activity status, including none)
             - optional activity status list to filter by
         graph_query_depth: int, default = 3
             - depth for relationship traversal
@@ -4526,7 +4526,7 @@ class AssetMaker(ServerClient):
     async def _async_get_action_targets(
         self,
         action_guid: str,
-        activity_status_list: list[str] = ["IN_PROGRESS"],
+        activity_status_list: Optional[list[str]] = None,
         graph_query_depth: int = 3,
         start_from: int = 0,
         page_size: int = 0,
@@ -4544,7 +4544,7 @@ class AssetMaker(ServerClient):
         Parameters
         ----------
         action_guid: str
-        activity_status_list: list[str], default = ["IN_PROGRESS"]
+        activity_status_list: list[str], default = None (no filter: every activity status, including none)
         graph_query_depth: int, default = 3
             - depth for relationship traversal
         body: dict | ActivityStatusRequestBody, optional
@@ -4577,7 +4577,7 @@ class AssetMaker(ServerClient):
     def get_action_targets(
         self,
         action_guid: str,
-        activity_status_list: list[str] = ["IN_PROGRESS"],
+        activity_status_list: Optional[list[str]] = None,
         graph_query_depth: int = 3,
         start_from: int = 0,
         page_size: int = 0,
@@ -4595,7 +4595,7 @@ class AssetMaker(ServerClient):
         Parameters
         ----------
         action_guid: str
-        activity_status_list: list[str], default = ["IN_PROGRESS"]
+        activity_status_list: list[str], default = None (no filter: every activity status, including none)
         graph_query_depth: int, default = 3
             - depth for relationship traversal
         start_from: int, default = 0
@@ -4641,7 +4641,7 @@ class AssetMaker(ServerClient):
     async def _async_get_actions_for_action_target(
         self,
         metadata_element_guid: str,
-        activity_status_list: list[str] = ["IN_PROGRESS"],
+        activity_status_list: Optional[list[str]] = None,
         graph_query_depth: int = 3,
         start_from: int = 0,
         page_size: int = 0,
@@ -4659,7 +4659,7 @@ class AssetMaker(ServerClient):
         Parameters
         ----------
         metadata_element_guid: str
-        activity_status_list: list[str], default = ["IN_PROGRESS"]
+        activity_status_list: list[str], default = None (no filter: every activity status, including none)
         graph_query_depth: int, default = 3
             - depth for relationship traversal
         body: dict | ActivityStatusRequestBody, optional
@@ -4692,7 +4692,7 @@ class AssetMaker(ServerClient):
     def get_actions_for_action_target(
         self,
         metadata_element_guid: str,
-        activity_status_list: list[str] = ["IN_PROGRESS"],
+        activity_status_list: Optional[list[str]] = None,
         graph_query_depth: int = 3,
         start_from: int = 0,
         page_size: int = 0,
@@ -4710,7 +4710,7 @@ class AssetMaker(ServerClient):
         Parameters
         ----------
         metadata_element_guid: str
-        activity_status_list: list[str], default = ["IN_PROGRESS"]
+        activity_status_list: list[str], default = None (no filter: every activity status, including none)
         graph_query_depth: int, default = 3
             - depth for relationship traversal
         start_from: int, default = 0
@@ -4925,7 +4925,7 @@ class AssetMaker(ServerClient):
     async def _async_get_assigned_actions(
         self,
         actor_guid: str,
-        activity_status_list: list[str] = ["IN_PROGRESS"],
+        activity_status_list: Optional[list[str]] = None,
         graph_query_depth: int = 3,
         start_from: int = 0,
         page_size: int = 0,
@@ -4943,7 +4943,7 @@ class AssetMaker(ServerClient):
         Parameters
         ----------
         actor_guid: str
-        activity_status_list: list[str], default = ["IN_PROGRESS"]
+        activity_status_list: list[str], default = None (no filter: every activity status, including none)
         graph_query_depth: int, default = 3
             - depth for relationship traversal
         body: dict | ActivityStatusRequestBody, optional
@@ -4976,7 +4976,7 @@ class AssetMaker(ServerClient):
     def get_assigned_actions(
         self,
         actor_guid: str,
-        activity_status_list: list[str] = ["IN_PROGRESS"],
+        activity_status_list: Optional[list[str]] = None,
         graph_query_depth: int = 3,
         start_from: int = 0,
         page_size: int = 0,
@@ -4994,7 +4994,7 @@ class AssetMaker(ServerClient):
         Parameters
         ----------
         actor_guid: str
-        activity_status_list: list[str], default = ["IN_PROGRESS"]
+        activity_status_list: list[str], default = None (no filter: every activity status, including none)
         graph_query_depth: int, default = 3
             - depth for relationship traversal
         start_from: int, default = 0
@@ -5040,7 +5040,7 @@ class AssetMaker(ServerClient):
     async def _async_get_actions_for_sponsor(
         self,
         metadata_element_guid: str,
-        activity_status_list: list[str] = ["IN_PROGRESS"],
+        activity_status_list: Optional[list[str]] = None,
         graph_query_depth: int = 3,
         start_from: int = 0,
         page_size: int = 0,
@@ -5058,7 +5058,7 @@ class AssetMaker(ServerClient):
         Parameters
         ----------
         metadata_element_guid: str
-        activity_status_list: list[str], default = ["IN_PROGRESS"]
+        activity_status_list: list[str], default = None (no filter: every activity status, including none)
         graph_query_depth: int, default = 3
             - depth for relationship traversal
         body: dict | ActivityStatusRequestBody, optional
@@ -5091,7 +5091,7 @@ class AssetMaker(ServerClient):
     def get_actions_for_sponsor(
         self,
         metadata_element_guid: str,
-        activity_status_list: list[str] = ["IN_PROGRESS"],
+        activity_status_list: Optional[list[str]] = None,
         graph_query_depth: int = 3,
         start_from: int = 0,
         page_size: int = 0,
@@ -5109,7 +5109,7 @@ class AssetMaker(ServerClient):
         Parameters
         ----------
         metadata_element_guid: str
-        activity_status_list: list[str], default = ["IN_PROGRESS"]
+        activity_status_list: list[str], default = None (no filter: every activity status, including none)
         graph_query_depth: int, default = 3
             - depth for relationship traversal
         start_from: int, default = 0
@@ -5155,7 +5155,7 @@ class AssetMaker(ServerClient):
     async def _async_get_actions_for_requester(
         self,
         metadata_element_guid: str,
-        activity_status_list: list[str] = ["IN_PROGRESS"],
+        activity_status_list: Optional[list[str]] = None,
         graph_query_depth: int = 3,
         start_from: int = 0,
         page_size: int = 0,
@@ -5173,7 +5173,7 @@ class AssetMaker(ServerClient):
         Parameters
         ----------
         metadata_element_guid: str
-        activity_status_list: list[str], default = ["IN_PROGRESS"]
+        activity_status_list: list[str], default = None (no filter: every activity status, including none)
         graph_query_depth: int, default = 3
             - depth for relationship traversal
         body: dict | ActivityStatusRequestBody, optional
@@ -5206,7 +5206,7 @@ class AssetMaker(ServerClient):
     def get_actions_for_requester(
         self,
         metadata_element_guid: str,
-        activity_status_list: list[str] = ["IN_PROGRESS"],
+        activity_status_list: Optional[list[str]] = None,
         graph_query_depth: int = 3,
         start_from: int = 0,
         page_size: int = 0,
@@ -5224,7 +5224,7 @@ class AssetMaker(ServerClient):
         Parameters
         ----------
         metadata_element_guid: str
-        activity_status_list: list[str], default = ["IN_PROGRESS"]
+        activity_status_list: list[str], default = None (no filter: every activity status, including none)
         graph_query_depth: int, default = 3
             - depth for relationship traversal
         start_from: int, default = 0

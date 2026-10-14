@@ -39,15 +39,16 @@ from __future__ import annotations
 
 import os
 from pathlib import Path
-from typing import Any, Dict, List, Optional, Union
+from typing import Any, Dict, List, Literal, Optional, Union
 
 from loguru import logger
-from pydantic import BaseModel, Field
+from pydantic import BaseModel, Field, field_validator
 
 __all__ = [
     'AnalyticParam',
     'AnalyticFunctionSpec',
     'AnalyticActionSpec',
+    'KNOWN_ANALYTIC_SOURCES',
     'AnalyticRegistryCollision',
     'refresh_analytic_functions',
     'get_analytic_registry',
@@ -56,6 +57,11 @@ __all__ = [
     'unregister_analytic_function',
     'clear_runtime_analytic_functions',
 ]
+
+
+# Known values for AnalyticFunctionSpec.source (ISSUE-149). Suggestive, not a closed list:
+# ods = the operational data store, egeria = Egeria metadata, resource = the resource itself.
+KNOWN_ANALYTIC_SOURCES = {"ods", "egeria", "resource"}
 
 
 class AnalyticParam(BaseModel):
@@ -129,6 +135,27 @@ class AnalyticFunctionSpec(BaseModel):
     binding_note: str = ""
     params: List[AnalyticParam] = Field(default_factory=list)
     action: Optional[AnalyticActionSpec] = None
+
+    # Manifest fields (ISSUE-149), all optional so every existing entry is unchanged.
+    # trellis-analytics' RoutineManifest/StepManifest subclass this class and used to
+    # carry these themselves.
+    kind: Literal["routine", "step"] = "routine"  # routine: runs in the caller; step: a survey-style step
+    source: str = ""  # where the data comes from; known values in KNOWN_ANALYTIC_SOURCES
+    version: str = ""  # the producer's version, stamped on every result
+    envelope: bool = False  # the result carries a state envelope (measured / nothing_found / ...)
+    annotation_type: str = ""  # a step's result type, e.g. ResourceMeasureAnnotation; empty for a routine
+    resource_types: List[str] = Field(default_factory=list)  # e.g. ["database"]
+    family: str = ""  # same word and meaning as FormatSet.family; in Egeria a family is a Collection
+    tags: List[str] = Field(default_factory=list)
+
+    @field_validator("source")
+    @classmethod
+    def _suggest_known_source(cls, value: str) -> str:
+        """Value lists are suggestive: an unknown source warns, never rejects."""
+        if value and value not in KNOWN_ANALYTIC_SOURCES:
+            logger.warning(f"Analytic source '{value}' is not one of the known values "
+                           f"{sorted(KNOWN_ANALYTIC_SOURCES)}; keeping it.")
+        return value
 
 
 class AnalyticFunctionDict(Dict[str, AnalyticFunctionSpec]):

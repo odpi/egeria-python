@@ -165,6 +165,89 @@ def run_analytic_action(
     return analytic_func(raw_result, *fetch_clients, **(analytic_kwargs or {}))
 
 
+def _apply_analytic_binders(func, binders: Dict[str, str], call_params: Dict[str, Any]) -> Dict[str, Any]:
+    """Build non-JSON arguments for an analytic function from its call params (ISSUE-138).
+
+    `binders` maps a parameter name of `func` to the dotted path of a factory
+    (e.g. `{"ods": "trellis_analytics.readers.ods.OdsReader"}`). Each factory is
+    called with the call params its own signature names; those params are
+    consumed unless `func` also takes them. A param the caller already supplied
+    under the bound name wins over the factory.
+    """
+    if not binders:
+        return call_params
+    params = dict(call_params)
+    func_params = set(inspect.signature(func).parameters)
+    for target, factory_decl in binders.items():
+        if target in params:
+            continue
+        factory = _resolve_analytic_function(factory_decl.replace(":", "."))
+        factory_sig = inspect.signature(factory)
+        accepts_any = any(p.kind is inspect.Parameter.VAR_KEYWORD for p in factory_sig.parameters.values())
+        names = set(params) if accepts_any else set(factory_sig.parameters) & set(params)
+        kwargs = {n: params[n] for n in names}
+        for n in names:
+            if n not in func_params:
+                params.pop(n)
+        params[target] = factory(**kwargs)
+    return params
+
+
+# Result-state envelope (ISSUE-139/140). A routine that reports how sure it is
+# carries one of these states; only an established answer (measured, or
+# nothing_found = a real zero) has numbers worth charting.
+ENVELOPE_STATES = ("measured", "nothing_found", "not_established", "not_applicable")
+CHARTABLE_STATES = ("measured", "nothing_found")
+
+
+def _result_envelope(result: Any) -> Optional[Dict[str, str]]:
+    """Read a result's state envelope, or None if it has none.
+
+    Recognised shapes: a dict with `state` (and optional `state_reason`/`subtitle`),
+    a dict with `resultState`/`resultStateReason` (the additionalProperties carrier),
+    a dict with a nested `envelope` dict in either style, or an object whose
+    `envelope` attribute has `result_state`/`result_state_reason`.
+    """
+    def _from_mapping(m: Dict[str, Any]) -> Optional[Dict[str, str]]:
+        state = m.get("state", m.get("resultState", m.get("result_state")))
+        if state is None:
+            return None
+        state = str(getattr(state, "value", state))
+        if state not in ENVELOPE_STATES:
+            return None
+        reason = str(m.get("state_reason", m.get("resultStateReason", m.get("result_state_reason", ""))) or "")
+        subtitle = m.get("subtitle") or (state.replace("_", " ") + (f" \u00b7 {reason}" if reason else ""))
+        return {"state": state, "reason": reason, "subtitle": str(subtitle)}
+
+    if isinstance(result, dict):
+        found = _from_mapping(result)
+        if found:
+            return found
+        nested = result.get("envelope")
+        if isinstance(nested, dict):
+            return _from_mapping(nested)
+        return None
+    env = getattr(result, "envelope", None)
+    if env is not None and not isinstance(env, bool):
+        if isinstance(env, dict):
+            return _from_mapping(env)
+        return _from_mapping({"result_state": getattr(env, "result_state", None),
+                              "result_state_reason": getattr(env, "result_state_reason", "")})
+    return None
+
+
+def _jsonable(result: Any) -> Any:
+    """A pydantic result (e.g. a routine's own result model) as plain data."""
+    dump = getattr(result, "model_dump", None)
+    return dump(mode="json") if callable(dump) else result
+
+
+def _with_envelope(out: Dict[str, Any], envelope: Optional[Dict[str, str]]) -> Dict[str, Any]:
+    if envelope:
+        out["envelope"] = envelope
+    return out
+
+
 def _run_analytic_function(
     action: dict, *, params: Dict[str, Any],
     view_server: str, view_url: str, user: str, user_pass: str,
@@ -202,6 +285,7 @@ def _run_analytic_function(
     call_params.update({k: v for k, v in params.items() if v not in (None, "")})
 
     func = _resolve_analytic_function(func_decl)
+    call_params = _apply_analytic_binders(func, action.get("analytic_binders") or {}, call_params)
     n_clients = _count_client_params(func)
     if n_clients == 0:
         # The routine takes no client, so don't connect to Egeria or mint a token (ISSUE-137).
@@ -659,37 +743,51 @@ def _exec_analytic_chart(
         action, params=params, view_server=view_server, view_url=view_url,
         user=user, user_pass=user_pass, token=token,
     )
+    envelope = _result_envelope(result)
+    result = _jsonable(result)
     if not result:
-        return {"kind": "empty"}
+        return _with_envelope({"kind": "empty"}, envelope)
+    # Chart only an established answer (ISSUE-140): measured, or nothing_found (a real
+    # zero). For not_established / not_applicable the numbers aren't known, so return
+    # the data and the state, never a chart whose zeros would read as an answer.
+    if envelope and envelope["state"] not in CHARTABLE_STATES:
+        return _with_envelope({"kind": "json", "data": result}, envelope)
 
     try:
         heading = get_report_spec_heading(format_set_name) or str(format_set_name)
     except Exception:  # noqa: BLE001 -- registry lookup quirks shouldn't block chart rendering
         heading = str(format_set_name)
 
+    def _chart_out(chart):
+        if not chart:
+            return _with_envelope({"kind": "json", "data": result}, envelope)
+        if envelope:  # the state rides on the chart itself (ISSUE-139)
+            chart["title"] = {"text": chart.get("title") or heading, "subtitle": envelope["subtitle"]}
+        return _with_envelope({"kind": "json", "data": chart}, envelope)
+
     if chart_kind == "line":
         if not isinstance(result, list) or not all(isinstance(pt, dict) for pt in result):
-            return {"kind": "json", "data": result}
+            return _with_envelope({"kind": "json", "data": result}, envelope)
         x_field = "label" if any("label" in pt for pt in result) else "date"
         y_fields = sorted({
             k for pt in result for k, v in pt.items()
             if k not in ("label", "date") and isinstance(v, (int, float)) and not isinstance(v, bool)
         })
         if not y_fields:
-            return {"kind": "json", "data": result}
+            return _with_envelope({"kind": "json", "data": result}, envelope)
         chart = generate_vega_line_chart(
             result, x_field=x_field, y_fields=y_fields,
             title=heading, x_label=x_field.capitalize(), y_label="Count",
         )
-        return {"kind": "json", "data": chart} if chart else {"kind": "json", "data": result}
+        return _chart_out(chart)
 
     # bar / pie -- both need a plain {category: numeric_value} mapping
     cat_values = _as_category_value_dict(result)
     if not cat_values:
-        return {"kind": "json", "data": result}
+        return _with_envelope({"kind": "json", "data": result}, envelope)
     chart = (generate_vega_bar_chart(cat_values, title=heading) if chart_kind == "bar"
              else generate_vega_pie_chart(cat_values, title=heading))
-    return {"kind": "json", "data": chart} if chart else {"kind": "json", "data": result}
+    return _chart_out(chart)
 
 
 def _as_category_value_dict(result: Any) -> Optional[Dict[str, Union[int, float]]]:
@@ -748,6 +846,11 @@ def exec_report_spec(
     - {"kind":"json","data": <list|dict|any>}
     - {"kind":"text","mime": "text/markdown"|"text/html","content": str}
     - {"kind":"unknown","raw": any}
+
+    An analytic result that carries a state envelope (ISSUE-139) also gets
+    `"envelope": {"state", "reason", "subtitle"}` on any of these shapes. For
+    SERIES/BAR/PIE the subtitle is put on the chart, and no chart is drawn
+    unless the state is `measured` or `nothing_found` (ISSUE-140).
 
     ISSUE-86: `token`, when given, authenticates the client(s) built here with
     `set_bearer_token(token)` instead of minting a fresh token from
@@ -836,9 +939,11 @@ def exec_report_spec(
             action, params=params, view_server=view_server, view_url=view_url,
             user=user, user_pass=user_pass, token=token,
         )
+        envelope = _result_envelope(result)
+        result = _jsonable(result)
         if result is None or result == [] or result == {}:
-            return {"kind": "empty"}
-        return {"kind": "json", "data": result}
+            return _with_envelope({"kind": "empty"}, envelope)
+        return _with_envelope({"kind": "json", "data": result}, envelope)
 
     required_params = action.get("required_params", action.get("user_params", [])) or []
     optional_params = action.get("optional_params", []) or []
