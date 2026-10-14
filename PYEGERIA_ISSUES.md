@@ -151,6 +151,8 @@ content was changed. The numbered section list above describes the
 **At a glance** — 7 open pyegeria items, 7 awaiting re-test, 7 open Egeria Server issues.
 
 **Open pyegeria items**
+- ISSUE-150: No Dr.Egeria commands for an Analytic Function's Egeria declaration (create/update/retire, join a family Collection, view); the element type is an open question for the Egeria leads
+- ISSUE-149: `AnalyticFunctionSpec` lacks the manifest fields trellis-analytics needs (`kind`, `source`, `version`, `envelope`, `annotation_type`, `resource_types`), so trellis subclasses carry them
 - ISSUE-146: Deleting a journal entry fails with OMAG-REPOSITORY-HANDLER-400-008, and pyegeria's `remove_note` reaches the delete only through the generic Asset Maker service
 - ISSUE-140: The executor charts any dict with two or more top-level numbers, regardless of the result's state
 - ISSUE-139: The executor renders no result envelope, and the Vega bar chart has no subtitle, so a not-established result has nowhere to say so on a chart
@@ -185,6 +187,57 @@ Actionable in this repo. Some of these are fully blocked today — waiting
 on an Egeria Server capability that doesn't exist yet — but the pyegeria/
 Dr.Egeria-side work each will need once that capability ships is written
 into the entry now, so it isn't rediscovered from scratch later.
+
+---
+
+### ISSUE-150: No Dr.Egeria commands for an Analytic Function's Egeria declaration (create/update/retire, join a family Collection, view); the element type is an open question for the Egeria leads
+
+**Layer:** Dr.Egeria (new command family) · **Status:** open, design blocked on the element type · **Found:** 2026-10-13, handed off by the Resource Explorer PR/CI session on the owner's instruction ("kick off the other items ... hand off egeria-python items to the agent there"). Source: trellis `docs/extensibility-walking-skeleton-brief.md` §3a (the table row "create, update, retire the declaration in Egeria; join a family Collection") and §2c.
+
+**What's wanted:** a Dr.Egeria family for the Egeria side of the Analytic Library. The local registry answers "what can run here"; Egeria answers "what exists and who declared it".
+- `Create Analytic Function`, `Update Analytic Function`;
+- `Retire Analytic Function`: retirement is a **status**, never a delete;
+- `Link Analytic Function to Family`: a family is an Egeria `Collection`, the same word as `FormatSet.family`;
+- `View Analytic Functions [family]`.
+`trellis-analytics declare <name>` generates the Dr.Egeria document from the manifest, so the attribute names must line up with ISSUE-149's fields. The brief's skeleton scope is `Create Analytic Function` only; the other four follow once a second function exists.
+
+**Open design question (do not hard-wire before the owner or Mandy answer):** brief §2c proposes a `GovernanceActionType`-shaped declaration, "the same family the survey definitions use", so a Survey Definition can reference a user step the way it references RE's built-in steps. Brief §8 asks the Egeria leads whether `GovernanceActionType` is right for a step Egeria does not run. Candidates:
+1. **`GovernanceActionType`.** It fits Survey Definition references, and `GovernanceProcessor` already handles this family. But it implies an engine-host executor the step doesn't have.
+2. **A `DeployedSoftwareComponent`/`SoftwareCapability`-style Asset**, created through `AssetMaker._async_create_asset` (the pattern `Create Report` uses). It's neutral about who runs the code, but Survey Definitions can't reference it as a step today.
+3. **A plain `Referenceable` subtype with `additionalProperties`.** It's the smallest, but it leaves `kind`/`source`/`version` untyped.
+Whichever is chosen, retirement maps to a status update (the element header status, or `deploymentStatus` for an Asset), never a delete.
+
+**Work once the type is decided:**
+- compact-spec family via the Spec Editor API;
+- processor and dispatcher registration (`register_governance_processors()` is family-name-gated, so a new family name must be added there if option 1 is chosen);
+- `refresh_specs`;
+- a regression doc in `tests/dr-egeria-command-tests/`;
+- a live round on a throwaway function, after a peer round.
+
+---
+
+### ISSUE-149: `AnalyticFunctionSpec` lacks the manifest fields trellis-analytics needs (`kind`, `source`, `version`, `envelope`, `annotation_type`, `resource_types`), so trellis subclasses carry them
+
+**Layer:** pyegeria (`pyegeria/view/analytic_registry.py`) · **Status:** open · **Found:** 2026-10-13, handed off by the Resource Explorer PR/CI session on the owner's instruction. Source: trellis brief §2a and `packages/trellis-analytics/src/trellis_analytics/manifest.py`. RE runs pyegeria 6.2.2.
+
+**What:** trellis-analytics' `RoutineManifest`/`StepManifest` subclass `AnalyticFunctionSpec` only to add fields the base should carry:
+- `kind`;
+- `source`;
+- `version`;
+- `envelope: bool` (the result carries a state envelope; see ISSUE-139/140);
+- `annotation_type` (a step's result type, empty for a routine);
+- `resource_types: list[str]`.
+
+The Portal's "Analytic Functions" tab groups by `family`, then `kind`, then `source`.
+
+**Proposed change:** add all six as optional fields with defaults (`kind="routine"`, `source=""`, `version=""`, `envelope=False`, `annotation_type=""`, `resource_types=[]`), so every existing registry entry and spec still validates unchanged. Once a pyegeria release carries them, trellis-analytics drops its own copies.
+
+**Points to settle before building:**
+- The handoff lists `kind` as `routine | step | spec`, but trellis's `Kind` is `Literal["routine", "step"]`. Decide whether `spec` is a third kind or a different axis (a report spec is the presentation flavour, brief §2d).
+- trellis's manifest also carries `family` and `tags`, which the handoff doesn't list. `FormatSet` already has `family`; decide whether `AnalyticFunctionSpec` should get them too, rather than leaving trellis to carry them.
+- `source` values in trellis are `ods | egeria | resource`. Decide between a `Literal` (strict) and `str` (open, so a user step can name a new source).
+
+**Related:** ISSUE-138 (non-client param binding), ISSUE-139/140 (envelope rendering), ISSUE-150 (the Egeria declaration, which should take its attribute names from these fields).
 
 ---
 
@@ -1688,7 +1741,7 @@ sends `confidence` (`collection_manager.py`,
 
 ### ISSUE-141: `ActionParameter.function` is a required string, so analytic-only specs must pass `""`, and the Advisor's validator then warns "No Action Function"
 
-**Layer:** pyegeria (report spec models) · **Status:** fixed 2026-10-12 on branch `docs/issue-136` (PR pending), not yet released · **Found:** 2026-10-12, reported by the Resource Explorer PR/CI session from trellis-analytics (trellis PR #622, `trellis_analytics/portal.py`), which works around it today.
+**Layer:** pyegeria (report spec models) · **Status:** fixed 2026-10-12 in #446, released in 6.2.2 · **Found:** 2026-10-12, reported by the Resource Explorer PR/CI session from trellis-analytics (trellis PR #622, `trellis_analytics/portal.py`), which works around it today.
 
 **Fixed 2026-10-12:** `function` is now `Optional[str] = None`, and a model
 validator rejects an action with neither `function` nor `analytic_function`. An
@@ -1715,7 +1768,7 @@ and teach the validator the same rule.
 
 ### ISSUE-137: `exec_report_spec` always builds an `EgeriaTech` client and mints a token, even for an analytic routine that needs no Egeria
 
-**Layer:** pyegeria (format_set_executor) · **Status:** fixed 2026-10-12 on branch `docs/issue-136` (PR pending), not yet released · **Found:** 2026-10-12, reported by the Resource Explorer PR/CI session from trellis-analytics (trellis PR #622, `trellis_analytics/portal.py`), which works around it today.
+**Layer:** pyegeria (format_set_executor) · **Status:** fixed 2026-10-12 in #446, released in 6.2.2 · **Found:** 2026-10-12, reported by the Resource Explorer PR/CI session from trellis-analytics (trellis PR #622, `trellis_analytics/portal.py`), which works around it today.
 
 **Fixed 2026-10-12:** `_run_analytic_function` counts the routine's leading
 client parameters (`_count_client_params`) and builds and authenticates an
