@@ -194,8 +194,10 @@ def _apply_analytic_binders(func, binders: Dict[str, str], call_params: Dict[str
 
 
 # Result-state envelope (ISSUE-139/140). A routine that reports how sure it is
-# carries one of these states; only `measured` has numbers worth charting.
+# carries one of these states; only an established answer (measured, or
+# nothing_found = a real zero) has numbers worth charting.
 ENVELOPE_STATES = ("measured", "nothing_found", "not_established", "not_applicable")
+CHARTABLE_STATES = ("measured", "nothing_found")
 
 
 def _result_envelope(result: Any) -> Optional[Dict[str, str]]:
@@ -745,9 +747,10 @@ def _exec_analytic_chart(
     result = _jsonable(result)
     if not result:
         return _with_envelope({"kind": "empty"}, envelope)
-    # Only a measured result has numbers worth drawing (ISSUE-140): for any other
-    # state return the data and the state, never a chart of zeros or guesses.
-    if envelope and envelope["state"] != "measured":
+    # Chart only an established answer (ISSUE-140): measured, or nothing_found (a real
+    # zero). For not_established / not_applicable the numbers aren't known, so return
+    # the data and the state, never a chart whose zeros would read as an answer.
+    if envelope and envelope["state"] not in CHARTABLE_STATES:
         return _with_envelope({"kind": "json", "data": result}, envelope)
 
     try:
@@ -847,7 +850,7 @@ def exec_report_spec(
     An analytic result that carries a state envelope (ISSUE-139) also gets
     `"envelope": {"state", "reason", "subtitle"}` on any of these shapes. For
     SERIES/BAR/PIE the subtitle is put on the chart, and no chart is drawn
-    unless the state is `measured` (ISSUE-140).
+    unless the state is `measured` or `nothing_found` (ISSUE-140).
 
     ISSUE-86: `token`, when given, authenticates the client(s) built here with
     `set_bearer_token(token)` instead of minting a fresh token from

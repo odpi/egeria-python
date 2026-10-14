@@ -52,6 +52,14 @@ def not_established() -> dict:
     return {"state": "not_established", "state_reason": "could not open the ODS", "Published": 0, "Blocked": 0}
 
 
+def nothing_found() -> dict:
+    return {"state": "nothing_found", "Published": 0, "Not yet published": 0}
+
+
+def not_applicable() -> dict:
+    return {"state": "not_applicable", "state_reason": "not a database", "Published": 0, "Other": 0}
+
+
 def plain_counts() -> dict:
     return {"A": 1, "B": 2}
 
@@ -63,7 +71,7 @@ def model_result() -> CoverageResult:
 @pytest.fixture(autouse=True)
 def fake_module(monkeypatch):
     mod = types.ModuleType(MOD)
-    for f in (Reader, read_with, measured, not_established, plain_counts, model_result):
+    for f in (Reader, read_with, measured, not_established, nothing_found, not_applicable, plain_counts, model_result):
         setattr(mod, f.__name__, f)
     monkeypatch.setitem(sys.modules, MOD, mod)
 
@@ -112,6 +120,19 @@ def test_not_established_draws_no_chart(monkeypatch):
     assert "$schema" not in out["data"]
     assert out["envelope"] == {"state": "not_established", "reason": "could not open the ODS",
                                "subtitle": "not established · could not open the ODS"}
+
+
+def test_nothing_found_is_charted_as_real_zeros(monkeypatch):
+    _use_spec(monkeypatch, {"analytic_function": f"{MOD}.nothing_found"})
+    out = fse.exec_report_spec("tile", output_format="BAR")
+    assert "$schema" in out["data"]
+    assert out["data"]["title"]["subtitle"] == "nothing found"
+
+
+def test_not_applicable_draws_no_chart(monkeypatch):
+    _use_spec(monkeypatch, {"analytic_function": f"{MOD}.not_applicable"})
+    out = fse.exec_report_spec("tile", output_format="BAR")
+    assert "$schema" not in out["data"] and out["envelope"]["state"] == "not_applicable"
 
 
 def test_dict_output_carries_envelope(monkeypatch):

@@ -1590,7 +1590,7 @@ numbers for non-measured states.
 **Candidate fix:** honour an envelope state (see ISSUE-139): draw no chart
 unless the state is `measured`, and show the state word instead.
 
-**Fixed 2026-10-13:** with an envelope present, SERIES/BAR/PIE draw a chart only when the state is `measured`; otherwise they return the data plus the envelope. Note that `nothing_found` is not charted either, while trellis's tile adapter currently charts `measured` and `nothing_found` (`_CHARTED`). With this fix a nothing_found tile shows the state instead of a chart of zeros. Results without an envelope are charted exactly as before. Tests: as for ISSUE-138.
+**Fixed 2026-10-13:** with an envelope present, SERIES/BAR/PIE draw a chart only when the state is `measured` or `nothing_found` (`CHARTABLE_STATES`); for `not_established` and `not_applicable` they return the data plus the envelope. Results without an envelope are charted exactly as before. **Amended the same day at the requester's request (RE PR/CI session):** the candidate fix above said "measured only", but `nothing_found` is an established answer. The routine read the record and the count really is zero, so a chart of real zeros is honest, and trellis's tile already charts it (`_CHARTED`). Only unknown numbers must never be charted. Tests: as for ISSUE-138.
 
 ---
 

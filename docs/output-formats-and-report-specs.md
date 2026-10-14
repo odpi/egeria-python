@@ -960,7 +960,7 @@ All three chart formats are dispatched *before* the normal Format-row lookup (`e
 **Result state (the envelope).** A routine can say how sure it is by returning a state with its result: `measured`, `nothing_found`, `not_established` or `not_applicable`, plus a reason. The executor recognises a dict with `state`/`state_reason` (and an optional ready-made `subtitle`), a dict with `resultState`/`resultStateReason`, a nested `envelope` dict in either style, or an object whose `envelope` attribute has `result_state`/`result_state_reason`. When it finds one:
 - every output shape gets `"envelope": {"state", "reason", "subtitle"}` beside `kind`/`data`;
 - a chart gets the subtitle on it (`title: {"text", "subtitle"}`);
-- **no chart is drawn unless the state is `measured`**. For any other state the caller gets the data and the state, so a not-established result can't be drawn as real zeros.
+- **a chart is drawn only for an established answer: `measured`, or `nothing_found`** (the routine read the record and the count really is zero, so a chart of zeros is honest). For `not_established` and `not_applicable` the numbers aren't known, so the caller gets the data and the state instead; zeros there would read as an answer.
 A result without an envelope is returned exactly as before. A result that is a pydantic model is returned as plain data (`model_dump`). See ISSUE-139/140.
 
 **Building non-JSON arguments (`analytic_binders`).** Report-spec params are JSON, and only leading parameters named `mgr`/`ce`/`expert`/`client` get an Egeria client. To name a routine that takes some other object (e.g. a reader) by its own dotted path, map the parameter to a factory:
