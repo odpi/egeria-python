@@ -88,10 +88,11 @@ from elements_crud_handler import ElementsCrudMixin
 from feedback_handler import FeedbackMixin, FEEDBACK_LOG_OWNER
 from bookmarks_handler import BookmarksMixin, bookmarks_qualified_name
 from MyBookMarksScreen import MyBookMarksScreen
+from network_handler import NetworkMixin
 
 
 class MyProfileApp(App, TechTypesMixin, ShopForDataMixin, TeamRolesMixin, ElementsCrudMixin, FeedbackMixin,
-                   BookmarksMixin):
+                   BookmarksMixin, NetworkMixin):
     """My Profile App.
 
     Retrieves a user's profile from Egeria and displays current work items.
@@ -678,6 +679,8 @@ class MyProfileApp(App, TechTypesMixin, ShopForDataMixin, TeamRolesMixin, Elemen
             )
         elif selected_option == "User Bookmarks":
             self.show_my_bookmarks()
+        elif selected_option == "My Network":
+            self.show_my_network()
         elif selected_option == "Subscriptions":
             await self.push_screen(ViewSubscriptionsScreen(), callback=self.view_subscriptions_callback)
         elif selected_option == "Leave Feedback":

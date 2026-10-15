@@ -13,8 +13,10 @@ from typing import Any
 from textual import on
 from textual.app import App, ComposeResult
 from textual.binding import Binding
-from textual.containers import ScrollableContainer
-from textual.widgets import Header, Footer, Static, Placeholder, Input, DataTable, Button
+from textual.containers import ScrollableContainer, Grid
+from textual.css.query import NoMatches
+from textual.screen import ModalScreen
+from textual.widgets import Header, Footer, Static, Placeholder, Input, DataTable, Button, Label
 
 # Add the project root to sys.path to allow running this script from any directory
 root_path = Path(__file__).resolve().parents[4]
@@ -36,6 +38,61 @@ from pyegeria import (
     print_basic_exception,
     exec_report_spec, Egeria,
 )
+
+class ConfirmRemoveScreen(ModalScreen[bool]):
+    """Modal dialog asking the user to confirm removing a peer from their network.
+       Dismisses with True if the user confirms, False otherwise."""
+
+    DEFAULT_CSS = """
+    ConfirmRemoveScreen {
+        align: center middle;
+    }
+    #confirm_dialog {
+        grid-size: 2;
+        grid-gutter: 1 2;
+        grid-rows: 1fr 3;
+        padding: 0 1;
+        width: 60;
+        height: 11;
+        border: thick $background 80%;
+        background: $surface;
+    }
+    #confirm_question {
+        column-span: 2;
+        height: 1fr;
+        width: 1fr;
+        content-align: center middle;
+    }
+    #confirm_dialog Button {
+        width: 100%;
+    }
+    """
+
+    BINDINGS = [("escape", "cancel", "Cancel")]
+
+    def __init__(self, question: str) -> None:
+        super().__init__()
+        self.question = question
+
+    def compose(self) -> ComposeResult:
+        yield Grid(
+            Label(self.question, id="confirm_question"),
+            Button("Remove", variant="error", id="confirm_remove"),
+            Button("Cancel", variant="primary", id="confirm_cancel"),
+            id="confirm_dialog",
+        )
+
+    @on(Button.Pressed, "#confirm_remove")
+    def handle_confirm(self, event: Button.Pressed) -> None:
+        self.dismiss(True)
+
+    @on(Button.Pressed, "#confirm_cancel")
+    def handle_cancel(self, event: Button.Pressed) -> None:
+        self.dismiss(False)
+
+    def action_cancel(self) -> None:
+        self.dismiss(False)
+
 
 class MyNetworkApp(App):
     """My Network App.
@@ -78,16 +135,21 @@ class MyNetworkApp(App):
         self.nickname = ""
         self.description = ""
         self.selected_network_member = None
+        self.peer_qname = None,
+        self.peer_dname = None,
+        self.peer_fname = None,
+        self.peer_pronouns = None,
+        self.peer_guid = None,
+        self.peer_description = None
+        # GUID of the peer whose details are currently displayed (get_peer_data resets self.peer_guid)
+        self.details_peer_guid = None
 
     def on_mount(self) -> None:
         """Perform actions when the application is mounted."""
-        self.my_network.add_column("Label", key="label")
-        self.my_network.add_column("Scope", key="scope")
-        self.my_network.add_column("GUID", key="GUID")
-        self.my_network.add_column("Qualified Name", key="qualified_name")
-        self.my_network.add_column("Description", key="description")
+        self.my_network.add_columns("Qualified Name", "Display Name", "Full Name", "Pronouns", "GUID", "Description")
         self.my_network.cursor_type="row"
         self.my_network.zebra_stripes=True
+        error_flag = 0
         try:
             eclient = Egeria(self.view_server, self.platform_url, self.user_name, self.user_password)
             token=eclient.create_egeria_bearer_token(self.user_name, self.user_password)
@@ -96,31 +158,39 @@ class MyNetworkApp(App):
         except PyegeriaException as e:
             self.log(f"Error: {e}")
             self.notify(f"Error, unable to retrieve user profile: {e}", severity="error", timeout=20)
-            self.exit(400)
+            error_flag = 1
         finally:
             if eclient:
                 eclient.close_session()
-        if self.my_profile:
-            if isinstance(self.my_profile, list):
-                self.user_GUID = self.my_profile[0].get("GUID") or None
-            else:
-                self.notify(f"User profile is not a list: {self.my_profile}", severity="error", timeout=20)
+            if error_flag == 1:
+            # Use the error_flag to see if there was an error and if so exit
                 self.exit(400)
+        if isinstance(self.my_profile, list):
+            self.user_GUID = self.my_profile[0].get("GUID") or None
         else:
-            self.notify(f"User profile not found: {self.user_name}", severity="error", timeout=20)
+            self.notify(f"User profile is not a list: {self.my_profile}", severity="error", timeout=20)
             self.exit(400)
+        self.get_peer_data()
+        return
 
+
+    def get_peer_data(self):
+        # clear out DataTable
+        self.my_network.clear()
         # Get existing peer relationship list
-
         try:
             eclient = Egeria(self.view_server, self.platform_url, self.user_name, self.user_password)
             token = eclient.create_egeria_bearer_token(self.user_name, self.user_password)
-            peers = exec_report_spec(
-                format_set_name="My-User-Peers",
-                output_format="DICT",
-                params={"element_guid": self.user_GUID},
-                token = token
-            )
+            open_metadata_type_name = "Referenceable"
+            relationship_type = "Peer"
+            body = {
+                "class": "ResultsRequestBody",
+                "metadataElementTypeName": open_metadata_type_name,
+                "includeOnlyRelationships": ["ContactThrough"]
+            }
+            peers = eclient.get_related_elements(element_guid=self.user_GUID,
+                                                 relationship_type=relationship_type,
+                                                 body=body)
             self.log(f"Peers: {peers}")
         except PyegeriaException as e:
             self.log(f"Error creating peer relationship: {e}")
@@ -129,22 +199,61 @@ class MyNetworkApp(App):
         finally:
             if eclient:
                 eclient.close_session()
-        for peer in peers.get("data", []):
-            self.log(f"Peer: {peer}")
-            self.my_network.add_row(peer.get("Label"),
-                                    peer.get("Scope"),
-                                    peer.get("GUID"),
-                                    peer.get("Qualified Name"),
-                                    peer.get("Description"))
-            continue
+        if peers != "No elements found":
+            for peer in peers:
+                self.log(f"Peer: {peer}")
+                peer_properties = peer.get("properties", None)
+                self.log(f"Peer Properties: {peer_properties}")
+                peer_related_by = peer.get("relatedBy", None)
+                self.log(f"Peer Related By: {peer_related_by}")
+                peer_relationship_properties = peer.get("relationshipProperties", None)
+                self.log(f"Peer Relationship Properties: {peer_relationship_properties}")
+                if peer_properties is not None:
+                    if peer_properties.get("class") == "PersonProperties" and peer_properties.get("typeName") == "Person":
+                        self.peer_qname = peer_properties.get("qualifiedName")
+                        self.peer_dname = peer_properties.get("displayName")
+                        self.peer_fname = peer_properties.get("fullName")
+                        self.peer_pronouns = peer_properties.get("pronouns")
+                    # the peer's own GUID is in its elementHeader - relatedBy describes the Peer relationship
+                    self.peer_guid = (peer.get("elementHeader") or {}).get("guid")
+                    if peer_relationship_properties is not None:
+                        self.peer_description = peer_relationship_properties.get("description")
+                    self.my_network.add_row(self.peer_qname,
+                                            self.peer_dname,
+                                            self.peer_fname,
+                                            self.peer_pronouns,
+                                            self.peer_guid,
+                                            self.peer_description)
+                    self.my_network.cursor_type = "row"
+                    # reset variables
+                    self.peer_qname = None
+                    self.peer_dname = None
+                    self.peer_fname = None
+                    self.peer_pronouns = None
+                    self.peer_guid = None
+                    self.peer_description = None
+                    continue
+                continue
+        else:
+            self.notify(f"No peers found for user: {self.user_name}", timeout=15, severity="error")
         self.my_network.refresh()
         container=self.query_one("#users_network_container", ScrollableContainer)
         container.remove_children("#users_network_placeholder")
         container.mount(self.my_network)
-        container.mount(Button(label="User Details", id="user_details1", variant="primary"))
-        container.refresh()
-        self.my_network.refresh()
-        return
+        try:
+            self.query_one("#user_details1", Button)
+        except NoMatches:
+            self.log("Button 1 not found")
+            try: self.query_one("#user_details2", Button)
+            except NoMatches:
+                self.log("Button 2 not found")
+                container.mount(Button(label="User Details", id="user_details1", variant="primary"))
+        try:
+            self.query_one("#remove_peer_button", Button)
+        except NoMatches:
+            container.mount(Button(label="Remove from Network", id="remove_peer_button", variant="error"))
+        # container.refresh()
+        # self.my_network.refresh()
 
     def compose(self) -> ComposeResult:
         yield Header(show_clock=True)
@@ -156,6 +265,7 @@ class MyNetworkApp(App):
             Static("Search for user, enter the (partial) name to search for and press return:"),
             Input(placeholder="Name", id="user_search_input"),
             id="users_input_container")
+        yield ScrollableContainer(id="user_details_container")
         yield Footer()
 
     @on(Input.Submitted, "#user_search_input")
@@ -215,7 +325,7 @@ class MyNetworkApp(App):
         return user_found
 
     @on(DataTable.RowSelected, "#users_found")
-    def on_users_found_row_selected(self, event: DataTable.RowSelected) -> None:
+    def handle_users_found_row_selected(self, event: DataTable.RowSelected) -> None:
         self.log(f"User selected: {event.row_key}")
         self.row_selected = event.row_key
         row_data = self.users_found.get_row(self.row_selected)
@@ -254,7 +364,6 @@ class MyNetworkApp(App):
         """Handle the submission of the link peer button.
            Since there is no validity check and both NickName and Description are optional
            we link the peer person without further upfront validation """
-        self.my_network.add_row(self.nickname, self.selected_user_id, self.selected_GUID, self.selected_qualified_name)
         #add link to peer
         self.log(f"Owner GUID: {self.user_GUID} Peer selected GUID: {self.selected_GUID}")
         now = datetime.now(timezone.utc).isoformat(timespec="milliseconds")
@@ -293,51 +402,111 @@ class MyNetworkApp(App):
             self.query_one("#users_input_container").mount(
                 Static("Search for user, enter the (partial) name to search for and press return:"),
                 Input(placeholder="Name", id="user_search_input")
-            )
+                )
             self.query_one("#users_network_container").mount(
                 Static("Peer person network"),
-                self.my_network,
-                Button(label="User Details", id="user_details2", variant="primary")
-            )
+                self.my_network
+                )
+            # update the data table to display the updated list of peers
+            # (get_peer_data also mounts the User Details button if it isn't already present)
+            self.get_peer_data()
             return
 
-    @on(DataTable.RowHighlighted, "#user_network_table")
-    def handle_network_member_selected(self,event: DataTable.RowHighlighted):
+    @on(DataTable.RowHighlighted, "#my_network")
+    def handle_network_member_highlighted(self,event: DataTable.RowHighlighted):
         self.log(f"Row highlighted: {event.row_key}")
         self.selected_network_member = event.row_key
+        return
 
-    @on(DataTable.RowSelected, "#user_network_table")
+    @on(DataTable.RowSelected, "#my_network")
     def handle_network_member_selected(self, event: DataTable.RowSelected):
         self.log(f"Row selected: {event.row_key}")
         self.selected_network_member = event.row_key
+        return
 
     @on(Button.Pressed, "#user_details1")
     def handle_user_details_1_button(self, event: Button.Pressed):
         if self.selected_network_member:
             selected_row_data = self.my_network.get_row(self.selected_network_member)
+            self.log(f"Selected row data: {selected_row_data}")
             self.show_user_details(selected_row_data)
             return
         else:
             self.notify(f"Please select a network member to view details before using the Button.", severity="warning", timeout=10)
             return
 
-    @on(Button.Pressed, "#user_details2")
-    def handle_user_details_2_button(self, event: Button.Pressed):
-        if self.selected_network_member:
-            selected_row_data = self.my_network.get_row(self.selected_network_member)
-            self.show_user_details(selected_row_data)
+    @on(Button.Pressed, "#remove_peer_button")
+    def handle_remove_peer_button(self, event: Button.Pressed):
+        """Remove the Peer relationship between the current user and the highlighted network member."""
+        if not self.selected_network_member:
+            self.notify(f"Please select a network member to remove before using the Button.", severity="warning", timeout=10)
             return
-        else:
-            self.notify(f"Please select a network member to view details before using the Button.", severity="warning",
-                        timeout=10)
+        selected_row_data = self.my_network.get_row(self.selected_network_member)
+        self.log(f"Selected row data for removal: {selected_row_data}")
+        peer_dname = selected_row_data[1]
+        peer_guid = selected_row_data[4]
+        if not peer_guid:
+            self.notify(f"No GUID found for network member {peer_dname}", severity="error", timeout=10)
             return
+
+        def confirm_removal(confirmed: bool | None) -> None:
+            if confirmed:
+                self.remove_peer(peer_guid, peer_dname)
+            else:
+                self.notify(f"{peer_dname} was not removed from your network", severity="information", timeout=5)
+
+        self.push_screen(ConfirmRemoveScreen(f"Remove {peer_dname} from your network?"), confirm_removal)
+        return
+
+    def remove_peer(self, peer_guid: str, peer_dname: str) -> None:
+        """Unlink the peer from the current user's profile and refresh the network display."""
+        body = {
+            "class": "DeleteRelationshipRequestBody"
+        }
+        self.log(f"Unlinking peer person: body {body} Owner GUID: {self.user_GUID} and Peer GUID: {peer_guid}")
+        eclient = None
+        try:
+            eclient = Egeria(self.view_server,
+                             self.platform_url,
+                             self.user_name,
+                             self.user_password)
+            token = eclient.create_egeria_bearer_token(self.user_name, self.user_password)
+            # same GUID order as link_peer_person: owner first, peer second
+            eclient.unlink_peer_person(self.user_GUID,
+                                       peer_guid,
+                                       body
+                                       )
+            self.notify(f"{peer_dname} removed from your network")
+        except PyegeriaException as e:
+            self.log(f"Error unlinking peer person: {e}")
+            self.notify(f"Error removing {peer_dname} from your network: {e}", severity="error", timeout=15)
+            return
+        finally:
+            if eclient:
+                eclient.close_session()
+        # the removed row's key is no longer valid, so clear the selection before reloading the peers
+        self.selected_network_member = None
+        # hide the details panel if it is showing the peer that was just removed
+        if self.details_peer_guid == peer_guid:
+            self.query_one("#user_details_container", ScrollableContainer).display = False
+            self.details_peer_guid = None
+        self.get_peer_data()
+        return
 
     def show_user_details(self, selected_row_data):
         """ Show both contact details and community membership details for the selected network member."""
-        self.selected_network_member = selected_row_data
-        self.user_GUID = selected_row_data[2]
-        self.user_qname = selected_row_data[3]
-        self.user_nickname = selected_row_data[0]
+        # keep the peer's details separate from self.user_GUID, which is the logged-in user's own profile GUID
+        self.log(f"Selected row data: {selected_row_data}")
+        self.peer_qname = selected_row_data[0]
+        self.peer_dname = selected_row_data[1]
+        self.peer_fname = selected_row_data[2]
+        self.peer_pronouns = selected_row_data[3]
+        self.peer_guid = selected_row_data[4]
+        self.peer_description = selected_row_data[5]
+        self.log(f"Peer details: GUID={self.peer_guid}, qname={self.peer_qname}, full_name={self.peer_fname}, display_name={self.peer_dname}, pronouns={self.peer_pronouns}, description={self.peer_description}")
+        if not self.peer_guid:
+            self.notify(f"No GUID found for network member {self.peer_dname}", severity="error", timeout=10)
+            return
         #clear and set up the datatables
         self.my_user_contact_details.clear(columns=True)
         self.my_user_contact_details.add_columns("Name", "Method Type", "Contact Type", "Service", "Value", "GUID")
@@ -347,7 +516,9 @@ class MyNetworkApp(App):
         self.my_user_communities.add_columns("Name", "Assignment Type", "Description", "GUID")
         self.my_user_communities.cursor_type = "row"
         self.my_user_communities.zebra_stripes=True
-        # retrieve the users contact information
+        # retrieve the peer's profile and extract contact methods and communities using the
+        # My-User report spec (whose detail specs are My-User-Contact-Detail / My-User-Communities-Detail)
+        eclient = None
         try:
             eclient=Egeria(
                 self.view_server,
@@ -355,36 +526,53 @@ class MyNetworkApp(App):
                 self.user_name,
                 self.user_password)
             token=eclient.create_egeria_bearer_token(self.user_name, self.user_password)
-            self.user_contact_details = exec_report_spec(
-                                        format_set_name="My-User-Contact-Detail")
-            self.log(f"Retrieved user contact details: {self.user_contact_details}")
+            peer_profile = eclient.get_actor_profile_by_guid(self.peer_guid, output_format="JSON")
+            peer_details = eclient._generate_my_profile_output(peer_profile, output_format="DICT",
+                                                               report_spec="My-User")
+            self.log(f"Retrieved peer profile details: {peer_details}")
         except Exception as e:
-            self.notify(f"Error retrieving user contact details: {str(e)}", severity="error", timeout=10)
-            return
-        try:
-            self.user_communities = exec_report_spec(
-                                        format_set_name="My-User-Communities-Detail")
-            self.log(f"Retrieved user community memberships: {self.user_communities}")
-        except Exception as e:
-            self.notify(f"Error retrieving user community memberships: {str(e)}", severity="error", timeout=10)
+            self.notify(f"Error retrieving details for {self.peer_dname}: {str(e)}", severity="error", timeout=10)
             return
         finally:
             if eclient:
                 eclient.close_session()
-        if isinstance(self.user_contact_details, list):
-            for contact in self.user_contact_details:
-                self.my_user_contact_details.add_row(contact.get("Name"),
-                                                     contact.get("Method Type"),
-                                                     contact.get("Contact Type"),
-                                                     contact.get("Service"),
-                                                     contact.get("Value"),
-                                                     contact.get("GUID"))
-        if isinstance(self.user_communities, list):
-            for community in self.user_communities:
-                self.my_user_communities.add_row(community.get("Name"),
-                                                 community.get("Assignment Type"),
-                                                 community.get("Desacription"),
-                                                 community.get("GUID"))
+        if isinstance(peer_details, list) and peer_details:
+            peer_details = peer_details[0]
+        if not isinstance(peer_details, dict):
+            self.notify(f"No profile details found for {self.peer_dname}", severity="warning", timeout=10)
+            return
+        self.user_contact_details = peer_details.get("Contact Methods") or []
+        self.user_communities = peer_details.get("Communities") or []
+        self.log(f"User details: {self.user_contact_details}")
+        self.log(f"User communities: {self.user_communities}")
+        for contact in self.user_contact_details:
+            self.my_user_contact_details.add_row(contact.get("name"),
+                                                 contact.get("contactMethodType"),
+                                                 contact.get("contactType"),
+                                                 contact.get("contactMethodService"),
+                                                 contact.get("contactMethodValue"),
+                                                 contact.get("guid"))
+        for community in self.user_communities:
+            self.my_user_communities.add_row(community.get("name"),
+                                             community.get("assignmentType"),
+                                             community.get("description"),
+                                             community.get("guid"))
+        # display the tables, mounting them the first time through
+        container = self.query_one("#user_details_container", ScrollableContainer)
+        container.display = True
+        self.details_peer_guid = self.peer_guid
+        try:
+            container.query_one("#user_details_heading", Static).update(f"Details for {self.peer_dname}")
+        except NoMatches:
+            container.mount(Static(f"Details for {self.peer_dname}", id="user_details_heading"),
+                            Static("Contact Methods:"),
+                            self.my_user_contact_details,
+                            Static("Communities:"),
+                            self.my_user_communities)
+        if not self.user_contact_details:
+            self.notify(f"No contact methods found for {self.peer_dname}", severity="information", timeout=10)
+        if not self.user_communities:
+            self.notify(f"No community memberships found for {self.peer_dname}", severity="information", timeout=10)
         return
 
 def main() -> None:

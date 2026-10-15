@@ -72,7 +72,7 @@
         }
       }
     },
-    "contactDetails": [
+    "contactDetails":[
       {
         "class": "RelatedMetadataElementSummary",
         "relationshipHeader": {

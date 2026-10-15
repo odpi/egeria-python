@@ -6,33 +6,19 @@
     "family": "MyProfile",
     "formats": [
       {
-        "types": [
-          "LIST",
-          "REPORT",
-          "DICT",
-          "TABLE"
-        ],
+        "types": ["LIST", "REPORT", "DICT", "TABLE"],
         "attributes": [
           {
-            "name": "Label",
-            "key": "label"
+            "name": "Peer",
+            "key": "relatedBy.relationshipHeader.type.typeName"
           },
           {
-            "name": "Qualified Name",
-            "key": "uniqueName"
+            "name": "guid",
+            "key": "elementHeader.guid"
           },
           {
-            "name": "Scope",
-            "key": "scope"
-          },
-          {
-            "name": "Description",
-            "key": "relationshipProperties.description"
-          },
-          {
-            "name": "GUID",
-            "key": "guid",
-            "format": "True"
+            "name": "peerProperties",
+            "key": "relatedBy.relationshipProperties.class"
           }
         ]
       }
@@ -40,9 +26,8 @@
     "action": {
       "function": "ClassificationExplorer.get_related_elements",
       "required_params": ["element_guid"],
-      "spec_params": { "relationship_type": "ResourceList",
-                        "property_value": "Catalog Resource",
-                        "property_names" : ["resourceUse"]
+      "spec_params": {
+        "relationship_type": "Peer"
       }
     }
   }
