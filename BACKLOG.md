@@ -5,6 +5,32 @@ Status: `open` · `in-progress` · `done` · `deferred`
 
 ---
 
+## 🟡 Medium Priority — Wrap Mandy's new engine-host View Server endpoints
+
+**Status:** open, waiting on Egeria (expected "in a few days" from 2026-10-14)
+**Added:** 2026-10-14
+
+Mandy will expose more engine-host internal APIs as View Server REST calls once her current fixes are done. That includes the per-engine "approved, unclaimed" engine-action listing, which today exists only on the metadata server's governance-context service. RE needs them to act as an engine host (ISSUE-150). When they land, check the refreshed `.http` files and Egeria's `AutomatedCurationResource` (or wherever they're added), then:
+- add `AutomatedCuration` wrappers, e.g. next to `get_active_claimed_engine_actions`;
+- add micro-tests that pin the URLs;
+- tell the RE PR/CI session the pyegeria version.
+
+---
+
+## 🟡 Medium Priority — Re-test deletes when the new Egeria release lands
+
+**Status:** open, blocked on Egeria (its delete fixes are in progress upstream)
+**Added:** 2026-10-13
+
+Once the Egeria release with the delete fixes is published and the local quickstart is redeployed:
+
+1. **ISSUE-146:** re-test `remove_note`, which now posts to `metadata-expert/metadata-elements/{guid}/delete`, against test JournalEntry `8bec72e4-6da6-40a4-943e-d81e2173ec9b` on Erin's profile (`10dc7da9`). Try a plain delete first, then `deleteMethod: ARCHIVE` if it still fails with `OMAG-REPOSITORY-HANDLER-400-008`. Tell the egeria-workspaces-fs session before deleting anything on Erin's profile. Keep `fef83ed5` (owner's decision).
+2. **Other delete issues** to re-check at the same time: ISSUE-117 (Memento cascade delete), ISSUE-125 (`deleteEnumDef`) and ISSUE-132 (`cascadedDelete` field name).
+   Also ISSUE-147, the valid-metadata clears: re-run the ISSUE-147 sequence (setup then clear for a value, a map name and a map value on a made-up property). Expect no 400-011 error after a successful clear, and expect the map value to actually be removed.
+3. Update each `PYEGERIA_ISSUES.md` entry with the result, and include any fixes in the next release after 6.2.3. (Owner, 2026-10-13: 6.2.3 ships now with the completed fixes instead of waiting for these re-tests, which are all blocked on Egeria. 6.2.3's release notes list the ISSUE-148 behaviour change and the ISSUE-151 API removal.)
+
+---
+
 ## 🟠 High Priority — Missing/absent catalog templates crash or silently proceed in `_async_get_template_guid_for_technology_type` callers — needs discussion
 
 **Status:** open (partial fix landed 2026-07-27)

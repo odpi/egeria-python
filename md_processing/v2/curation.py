@@ -71,6 +71,21 @@ def _guid(attributes: dict, name: str):
     return attributes.get(name, {}).get("guid")
 
 
+# TermAssignmentStatus (SemanticAssignment) shares its codes with the governance
+# classification statusIdentifier, which is what "Governance Status" resolves to;
+# but the relationship field is an enum, so send the constant name (ISSUE-144).
+_TERM_ASSIGNMENT_STATUS = {0: "DISCOVERED", 1: "PROPOSED", 2: "IMPORTED", 3: "VALIDATED",
+                           4: "DEPRECATED", 5: "OBSOLETE", 99: "OTHER"}
+
+
+def _term_assignment_status(value):
+    if value is None or value == "":
+        return None
+    if isinstance(value, int) or (isinstance(value, str) and value.strip().isdigit()):
+        return _TERM_ASSIGNMENT_STATUS.get(int(value))
+    return str(value).strip().upper()
+
+
 def _audit_fields(attributes: dict) -> dict:
     return {
         "externalSourceGUID": attributes.get("External Source GUID", {}).get("guid"),
@@ -414,7 +429,7 @@ class CurationLinkProcessor(AsyncBaseCommandProcessor):
                     "class": "SemanticAssignmentProperties",
                     "expression": _v(attributes, "Semantic Expression"),
                     "confidence": _v(attributes, "Confidence Level"),
-                    "status": _v(attributes, "Governance Status"),
+                    "termAssignmentStatus": _term_assignment_status(_v(attributes, "Governance Status")),
                     "steward": _v(attributes, "Steward"),
                     "source": _v(attributes, "Source"),
                 }

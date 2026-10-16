@@ -13,14 +13,6 @@ ___
 >	**Alternative Labels**: "Term Name"
 
 
-### Agreement Type
->	**Input Required**: False
-
->	**Attribute Type**: Simple
-
->	**Description**: Type of agreement (e.g., service level agreement, licensing agreement, data sharing agreement).
-
-
 ### Journal Entry
 >	**Input Required**: False
 

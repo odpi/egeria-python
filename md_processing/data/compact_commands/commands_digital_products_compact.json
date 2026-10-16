@@ -2245,25 +2245,6 @@
       "level": "Domain",
       "Journal Entry": ""
     },
-    "Agreement Type": {
-      "variable_name": "agreement_type",
-      "inUpdate": true,
-      "attr_labels": "",
-      "examples": "",
-      "default_value": "",
-      "valid_values": [],
-      "existing_element": "",
-      "description": "Type of agreement (e.g., service level agreement, licensing agreement, data sharing agreement).",
-      "generated": false,
-      "style": "Simple",
-      "user_specified": true,
-      "unique": false,
-      "input_required": false,
-      "min_cardinality": 0,
-      "max_cardinality": 1,
-      "level": "Domain",
-      "Journal Entry": ""
-    },
     "Contract Id": {
       "variable_name": "contract_id",
       "inUpdate": true,
@@ -2780,6 +2761,24 @@
       "max_cardinality": 1,
       "level": "Basic",
       "Journal Entry": "Added 2026-10-05 -- product-manager subscription types and ODCS/ODPS documents."
+    },
+    "Service Levels": {
+      "variable_name": "service_levels",
+      "inUpdate": true,
+      "attr_labels": "",
+      "examples": "",
+      "default_value": "",
+      "valid_values": [],
+      "existing_element": "",
+      "description": "Service levels promised by the subscription, as name/value pairs (e.g., availability: 99.9%, responseTime: 4 hours).",
+      "generated": false,
+      "style": "Dictionary",
+      "user_specified": true,
+      "unique": false,
+      "input_required": false,
+      "min_cardinality": 0,
+      "max_cardinality": 1,
+      "level": "Basic"
     }
   },
   "bundles": {
@@ -2916,14 +2915,13 @@
     },
     "Agreement Base": {
       "inherits": "Collection Base",
-      "own_attributes": [
-        "Agreement Type"
-      ]
+      "own_attributes": []
     },
     "Digital Subscription Base": {
       "inherits": "Agreement Base",
       "own_attributes": [
-        "Support Level"
+        "Support Level",
+        "Service Levels"
       ]
     },
     "Agreement Item": {

@@ -957,11 +957,39 @@ A `FormatSet` can declare either path, or both (in which case the analytic path 
 
 All three chart formats are dispatched *before* the normal Format-row lookup (`exec_report_spec`), since no `FormatSet` needs to declare a `SERIES`/`BAR`/`PIE` `Format` row for this to work — only `DICT`/`JSON` (or whatever find-path formats it also supports) need a declared row.
 
+**Result state (the envelope).** A routine can say how sure it is by returning a state with its result: `measured`, `nothing_found`, `not_established` or `not_applicable`, plus a reason. The executor recognises a dict with `state`/`state_reason` (and an optional ready-made `subtitle`), a dict with `resultState`/`resultStateReason`, a nested `envelope` dict in either style, or an object whose `envelope` attribute has `result_state`/`result_state_reason`. When it finds one:
+- every output shape gets `"envelope": {"state", "reason", "subtitle"}` beside `kind`/`data`;
+- a chart gets the subtitle on it (`title: {"text", "subtitle"}`);
+- **a chart is drawn only for an established answer: `measured`, or `nothing_found`** (the routine read the record and the count really is zero, so a chart of zeros is honest). For `not_established` and `not_applicable` the numbers aren't known, so the caller gets the data and the state instead; zeros there would read as an answer.
+A result without an envelope is returned exactly as before. A result that is a pydantic model is returned as plain data (`model_dump`). See ISSUE-139/140.
+
+**Building non-JSON arguments (`analytic_binders`).** Report-spec params are JSON, and only leading parameters named `mgr`/`ce`/`expert`/`client` get an Egeria client. To name a routine that takes some other object (e.g. a reader) by its own dotted path, map the parameter to a factory:
+
+```python
+ActionParameter(
+    analytic_function="trellis_analytics.routines.curation_coverage",
+    analytic_binders={"ods": "trellis_analytics.readers.ods.OdsReader"},
+    analytic_spec_params={"resource_type": "database"},
+)
+```
+
+Here `OdsReader(url)` takes `url`, so the caller passes `url` and the routine receives the built reader as `ods`. The factory is called with the call params its own signature names, and those params are consumed unless the routine also takes them. A routine with no client parameter still connects to nothing (ISSUE-137, ISSUE-138).
+
 **`analytic_spec_params` are defaults, not pins.** Unlike the find path's `spec_params` (always fixed — a caller-supplied value for the same key is silently overridden), `analytic_spec_params` set a *default* that a caller-supplied value for the same key overrides. This is what lets a report spec like the demo "Element Count by Type" (which pins `type_name: "GlossaryTerm"` as its default) actually be re-pointed at a different type at run time instead of being permanently locked to the demo's own default.
 
 **The analytic function registry** (`pyegeria/view/analytic_registry.py`) is a separate, hand-written catalog of every analytic function available to point `analytic_function` at — `AnalyticFunctionSpec` entries carry `function` (dotted import path), `description`, `returns` (result shape), `params`, and a `generic: bool` flag with a `binding_note`:
 - `generic=True` — what the function counts/aggregates is itself a parameter (e.g. `count_elements(type_name=...)`), freely retargetable at any element type via `analytic_spec_params`.
 - `generic=False` — the vocabulary is hardcoded in the function body (e.g. `governed_coverage` always counts a fixed set of governance classifications); a report spec can still point at it, but always gets that one fixed metric.
+
+**Manifest fields (ISSUE-149).** `AnalyticFunctionSpec` also carries optional fields for analytic libraries such as trellis-analytics. All have defaults, so existing entries are unchanged:
+- `kind`: `routine` (runs in the caller's process, the default) or `step` (a survey-style step);
+- `source`: where the data comes from, as free text. Known values are `ods`, `egeria` and `resource`; any other value logs a warning and is kept;
+- `version`;
+- `envelope: bool` (the result carries a state, see above);
+- `annotation_type` (a step's result type);
+- `resource_types`;
+- `family`: the same word and meaning as `FormatSet.family`; in Egeria a family is a Collection;
+- `tags`.
 
 `get_analytic_registry()` combines a `BUILTINS` tier (the 10 `overview_metrics` functions shipped today) with optional `CONFIG`/`RUNTIME` tiers, mirroring `base_report_formats.py`'s report-spec registry shape.
 

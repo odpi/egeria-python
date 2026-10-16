@@ -148,32 +148,32 @@ content was changed. The numbered section list above describes the
 
 # Open Issues
 
-**At a glance** — 5 open pyegeria items, 7 awaiting re-test, 7 open Egeria Server issues.
+**At a glance** — 7 open pyegeria items, 7 awaiting re-test, 7 open Egeria Server issues.
 
 **Open pyegeria items**
-- ISSUE-140: The executor charts any dict with two or more top-level numbers, regardless of the result's state
-- ISSUE-139: The executor renders no result envelope, and the Vega bar chart has no subtitle, so a not-established result has nowhere to say so on a chart
-- ISSUE-138: Analytic params are JSON-only, and only parameters named `mgr`/`ce`/`expert`/`client` are bound as clients, so a routine taking a reader object can't be named by its own dotted path
+- ISSUE-150: Dr.Egeria commands for an Analytic Function's Egeria declaration: a GovernanceActionType Resource Explorer runs as an engine host, plus a synchronous path that bypasses Egeria (direction agreed, not built)
+- ISSUE-146: Deleting a journal entry fails with OMAG-REPOSITORY-HANDLER-400-008, and pyegeria's `remove_note` reaches the delete only through the generic Asset Maker service
 - ISSUE-132: `DeleteElementRequestBody` serializes the cascade flag as `cascadeDelete`; Egeria's field is `cascadedDelete` and unknown fields are ignored, so no pyegeria cascade delete has ever cascaded
 - ISSUE-127: `CollectionManager.delete_collection(cascade=True)` silently never sends `cascadeDelete` -- same shape as ISSUE-62
+- ISSUE-85: No REST endpoint exists to create a `SolutionPort` element — only attach/detach/delegation relationships are exposed
 
 **Awaiting re-test**
 - ISSUE-125: `deleteEnumDef` answers 500 "unknown TypeDef" for an enum the server lists -- an enum added through the API cannot be removed
 - ISSUE-124: `updateTypeDef` (Metadata Expert `open-metadata-types/update`) can never succeed -- the server builds the patch without `updatedBy`, which the repository services require
 - ISSUE-117: Cascade delete that takes the soft-delete (Memento) path fails partway with `OMAG-REPOSITORY-HANDLER-400-010` unless `forLineage=true` — leaves the asset live and an anchored element already soft-deleted
 - ISSUE-112: `AutomatedCurationRESTServices.saveClientSideSecret`/`deleteClientSideSecret` return a plain success `VoidResponse` when the resolved connector isn't a `YAMLSecretsFileConnector` — no error, no write, no indication anything was skipped
+- ISSUE-95: No catalog template registered for the "Apache Kafka Server" technology type — `Create Kafka Server Element` (Asset Maker) fails with a 400 on `qs-view-server`
 - ISSUE-90: [fixed?] `qs-engine-host` retries `startMissedEngineActions` forever when one incomplete engine action's anchor is unreadable by the engine-host user
+- ISSUE-89: No configurable bearer-token lifetime in `application.properties` — platform tokens are fixed at 3600 s, and the signing key is random per restart
 - ISSUE-79: native survey against a template-created `FileFolder` asset fails server-side — `assetConnector` is null in `BasicFolderConnector.getFile()`
 - ISSUE-38 (PY-18): `count_relationships_between_elements("Exception")` (276) disagrees with `ClassificationExplorer.get_relationships("Exception")` (55)
 
 **Open Egeria Server issues**
+- ISSUE-147: Every valid-metadata clear call answers OPEN-METADATA-400-011 "not found", even after a successful delete; clear-map-value deletes nothing; clear-map-name leaves the map's value set behind
 - ISSUE-143: `includeOnlyRelationships: ["PersonRoleAppointment"]` returns no relationships for a Person, although the unfiltered read has its role appointments
 - ISSUE-130: The YAML secrets store's user directory caches a user forever, so editing an existing user needs a platform restart
 - ISSUE-128: Retention cannot be set on Egeria 6.2: the server registers the Jackson subtype as `RetentionProperties.class` (typo), and pyegeria only allows `RetentionClassificationProperties`
 - ISSUE-108: newly created relationships stay invisible to related-element queries for up to ~20 minutes after creation
-- ISSUE-95: No catalog template registered for the "Apache Kafka Server" technology type — `Create Kafka Server Element` (Asset Maker) fails with a 400 on `qs-view-server`
-- ISSUE-89: No configurable bearer-token lifetime in `application.properties` — platform tokens are fixed at 3600 s, and the signing key is random per restart
-- ISSUE-85: No REST endpoint exists to create a `SolutionPort` element — only attach/detach/delegation relationships are exposed
 
 ---
 
@@ -186,56 +186,250 @@ into the entry now, so it isn't rediscovered from scratch later.
 
 ---
 
-### ISSUE-140: The executor charts any dict with two or more top-level numbers, regardless of the result's state
+### ISSUE-85: No REST endpoint exists to create a `SolutionPort` element — only attach/detach/delegation relationships are exposed
 
-**Layer:** pyegeria (format_set_executor) · **Status:** open, logged only (no fix without the owner's explicit go-ahead) · **Found:** 2026-10-12, reported by the Resource Explorer PR/CI session from trellis-analytics (trellis PR #622, `trellis_analytics/portal.py`), which works around it today.
+**Status:** open, now a pyegeria gap (Egeria added the endpoints 2026-09-06) 
+consumer (trellis/Resource Explorer, designing a `PortMaterializer` for
+architecture-recovery proposals) hitting the same shape of gap ISSUE-84
+turned out not to be: this time the `.http` ground truth's absence really
+does match the live server, not a stale/incomplete `.http` file.
 
-**What:** BAR/SERIES output is drawn whenever the result dict has two or
-more numeric top-level keys, whether or not the result says it was
-measured. A `not_established` result that happens to carry numbers would be
-charted as real zeros/values.
+**Confirmed at every layer:**
+- `pyegeria/omvs/solution_architect.py`: `link_solution_component_port`
+  (attach an *existing* port to a component), `link_solution_port_delegation`
+  (port-to-port delegation), and both detach counterparts exist. No
+  `create_solution_port`/`_async_create_solution_port` anywhere.
+- `Egeria-api-solution-architect.http`: only `.../solution-components/
+  {guid}/solution-ports/{guid}/attach|detach` and `.../solution-ports/
+  {guid}/port-delegations/{guid}/attach|detach`. No `POST .../solution-ports`
+  create path.
+- `md_processing/data/compact_commands/commands_solution_architect_compact.json`:
+  only `Link Solution Component Port`/`Link Solution Port Delegation`. No
+  `Create Solution Port` command.
+- `pyegeria/models/models.py`: no `SolutionPortProperties` model at all —
+  so even the generic fallback route has nothing typed to build a body
+  against.
 
-**Where seen:** trellis `portal.py` is safe only because its adapter omits
-numbers for non-measured states.
+**Live-verified not just a stale-`.http`-file case** (the precedent this
+repo already has for that shape of false alarm — see the multi-link audit
+above, where 3 of 4 similarly-unwrapped relationship types turned out to
+have zero real endpoint on live-server inspection while others did):
+`dwolfson-1b`/trellis fetched the full live OpenAPI spec directly
+(`GET /v3/api-docs`, 2.39MB) and searched every path containing "port" —
+30 POST paths matched, every one of them attach/detach (component-port,
+port-delegation, even a generic process-ports attach under a different
+`{urlMarker}` service). Zero creation endpoints anywhere in the spec.
+This confirms the `.http` ground truth exactly; not a documentation gap.
 
-**Candidate fix:** honour an envelope state (see ISSUE-139): draw no chart
-unless the state is `measured`, and show the state word instead.
+**The generic fallback exists but isn't usable without guessing:**
+`/servers/{serverName}/api/open-metadata/{urlMarker}/metadata-elements`
+(`MetadataExpert.create_metadata_element`,
+`NewOpenMetadataElementRequestBody`) is real and live-confirmed present,
+with a top-level `type_name` field that could carry `"SolutionPort"`. But
+per this file's own `pyegeria/models/models.py` gotcha, that endpoint's
+`properties` field needs the verbose nested `ElementProperties`/
+`propertyValueMap` shape server-side, not the flat dict every bespoke
+wrapper uses — and with no `SolutionPortProperties` model to check
+property names against, building that body means hand-guessing what
+properties a `SolutionPort` actually takes. Consistent with this repo's
+established practice (see the multi-link audit's "left unbuilt rather
+than guessing at undocumented URLs or building against the awkward
+generic path speculatively") — not attempted.
+
+**Nothing to fix in pyegeria until Egeria adds a real create endpoint.**
+Once one exists, the follow-on work is small and well-precedented: a
+`create_solution_port`/`_async_create_solution_port` wrapper in
+`SolutionArchitect` following the exact pattern ISSUE-84 just corrected
+(`NewElementRequestBody` + `contentStatus` inside `properties`, no
+fictional separate request-body class), plus a `Create Solution Port`
+Dr.Egeria compact command — the family's registration plumbing in
+`register_solution_architect_processors()` (`md_processing/dr_egeria.py`)
+already handles this shape of addition with no new routing logic needed.
+
+**Not blocking anything urgent** on the trellis/Resource Explorer side —
+they're holding real port materialization until this exists server-side
+(tracked as their own Backlog item 8), or until a workaround surfaces.
+
+
+**Egeria side addressed (2026-10-05 check, carried over from the retired `docs/egeria-open-bugs-2026-10-05.md`):** at `449ad06894`, Solution Architect has `createSolutionPort` and `createSolutionPortFromTemplate`, with endpoints `POST /solution-ports`, `/solution-ports/from-template`, `/solution-ports/{guid}/update`, `.../delete`, `/by-name`, `/by-search-string` and `.../retrieve`. They first appear in commit `571034df11` (2026-09-06). The running platform answers `POST /solution-ports/by-name` with 200. **Remaining (pyegeria):** the `.http` snapshot lists none of these, and `pyegeria/omvs/solution_architect.py` has no `create_solution_port` (or update, delete, find). Add them, ideally with Dr.Egeria support.
+---
+
+
+### ISSUE-150: Dr.Egeria commands for an Analytic Function's Egeria declaration: a GovernanceActionType that Resource Explorer runs as an engine host, plus a synchronous path that bypasses Egeria
+
+**Layer:** Dr.Egeria (commands over existing Action Author / governance commands) · **Status:** open, direction agreed with the owner 2026-10-13 and **confirmed by Mandy 2026-10-14**, not yet built · **Found:** 2026-10-13, handed off by the Resource Explorer PR/CI session. Source: trellis `docs/extensibility-walking-skeleton-brief.md` §2c, §3a, §8. Egeria references: [Governance Action Processes (0462)](https://egeria-project.org/types/4/0462-Governance-Action-Processes/), [Survey Action Engine](https://egeria-project.org/concepts/survey-action-engine/).
+
+**Background (Egeria's model):**
+- A `GovernanceActionType` is a template for **one** action. Initiating it creates one Engine Action.
+- A `GovernanceActionProcessStep` is a subtype of `GovernanceActionType` that exists only inside a process. Its flow links (`GovernanceActionProcessFlow`, `NextGovernanceActionProcessStep`) carry guards and mandatory guards. Each step that fires becomes its own Engine Action.
+- Both reach their code through `GovernanceActionExecutor` (a governance engine plus a `requestType`).
+- Surveys use the `SurveyingActionProcess` subtype. Survey action services write annotations into a Survey Report linked to the asset.
+
+**Direction (owner, 2026-10-13):** use Egeria's designed governance-action infrastructure, not a bypass; it may need changing, but it should be used. Resource Explorer **is an engine host** and can present itself to Egeria as one. The owner's concern is timing: running an action or process is asynchronous and possibly long-running, while an analytic function often has to answer synchronously during a screen draw or report generation. So declaring a function is kept separate from running it:
+
+1. **Declaration (in Egeria):** a `GovernanceActionType` per function.
+   - A `GovernanceActionExecutor` links it to Resource Explorer's governance engine, with the function's name as the `requestType`.
+   - It carries the ISSUE-149 manifest fields: `kind`, `version`, `source`, `resource_types`, `annotation_type`, `family`, `tags`.
+   - It joins its family `Collection`.
+   - Retirement is a status change, never a delete.
+
+   Within a survey it is used as a `GovernanceActionProcessStep` in a `SurveyingActionProcess`. A single run can be wrapped as a one-step process if a uniform "everything runs as a process" shape is wanted.
+2. **Asynchronous run (through Egeria):** initiate the type, or a process containing it, and an Engine Action is created. Resource Explorer, as an engine host, claims it and runs it, using `engine-actions/{guid}/claim`, `status/update`, `completion-status` and the active-claimed listing. Results are stored as annotations carrying their envelope, and Egeria keeps the run record. This path is for surveys and anything slow or scheduled. Mandy's per-engine "approved, unclaimed" engine-action listing (2026-10-05, governance-context-service only so far; see ISSUE-151) is what such an engine host polls.
+3. **Synchronous run (no Egeria round-trip):** a screen or report calls the installed implementation directly, as a report spec's `analytic_function` already does through `exec_report_spec` (ISSUE-137/138/139/140/149 made this path work for trellis routines).
+   - Egeria is not on the hot path; the declaration only identifies which function and version is meant.
+   - **Synchronous runs are not recorded in Egeria** (owner: lineage doesn't make sense for what is drawn on a screen). Diagnostic logging at most; still to discuss.
+
+**How a screen uses it:** for each function, one of three choices:
+- compute now (cheap functions);
+- read the last stored result (expensive functions; the envelope's `measured_at` says how old it is);
+- request an asynchronous refresh that the next draw picks up.
+
+"Routine versus step" therefore becomes a property of each function (is it cheap enough to compute on read?), possibly a manifest field, not two kinds of element.
+
+**Keeping the two paths honest:** the code run synchronously must be the code the declaration names, at the same version, that Resource Explorer's engine runs. trellis's planned `trellis-analytics drift` (installed vs declared) checks this. The envelope's `producer_version` lets readers tell versions apart.
+
+**Dr.Egeria work this implies (to be confirmed with the RE sessions):**
+- Mostly convenience over existing commands: `Create Governance Action Type`, `Link Action to Action Executor` (`GovernanceActionExecutor`), `Link First/Next Process Step`, and family-collection membership.
+- Plus the manifest attributes. Where these live on the element (`additionalProperties`, or real properties if Egeria adds them) is still to decide.
+- Possibly a `Create/Update/Retire Analytic Function` alias family that sets all of this in one document, which `trellis-analytics declare` would generate. And `View Analytic Functions [family]`.
+- The Action Author processors (`ActionExecutorTargetLinkProcessor`, `ActionProcessStepLinkProcessor`) already handle the links. `register_governance_processors()` is family-name-gated, so a new family name must be added there.
+
+**Open points:**
+- Whether Egeria needs changes, for example to let a synchronous-safe flag or the manifest fields be first-class properties.
+- Whether a single run is always wrapped as a one-step process.
+- Whether routines that are only ever computed synchronously need a declaration at all, beyond the Report element (`Create Report`).
+- Diagnostic logging for synchronous runs.
+
+
+**Resource Explorer's answers (RE PR/CI session, 2026-10-13):**
+- **(a) The direction matches RE's engine-host design** (trellis branch `re/design-engine-host`, `packages/resource-explorer/docs/design-notes/DESIGN-RE-ENGINE-HOST-BY-EQUIVALENCE.md`). Its first slice (E1) is exactly the declaration above: an RE governance engine, a `SupportedGovernanceService` whose requestType names the trellis step, and a `GovernanceActionType` with a `GovernanceActionExecutor` to that engine plus `producedGuards`. RE claims and completes Engine Actions.
+  - Owner decisions recorded there: the engine runs as RE's service account. An action on a resource in a private investigation is left unclaimed by the unattended host and run attended, as the owner. RE may claim and hold future-dated actions.
+  - RE polls `get_active_engine_actions()` today, filtered client-side to its engine and APPROVED (or `find_engine_actions`, see ISSUE-151). Mandy's per-engine "approved, unclaimed" listing exists only on the metadata server's governance-context service, so RE is asking her to expose it on the View Server.
+  - Questions open with Mandy: the engine subtype (`SurveyActionEngine`?); whether a GovernanceService whose connector class nothing can load is acceptable; and where guards come from (standard survey guards, or declared by the step from the envelope).
+- **(b) RE's survey definitions today** are Dr.Egeria `Create Governance Action Process` (`GovActionProcess::<Survey>`) plus `Create Governance Action Process Step` (`GovActionProcessStep::<Survey>::<step>`), linked with First/Next Process Step. They are plain `GovernanceActionProcess`, not `SurveyingActionProcess`: Dr.Egeria's command has `OM_TYPE` `GovernanceActionProcess` and offers no subtype choice. The steps carry **no executor**; RE's own executor reads `executes_at`/`re_analysis_step`/`supported_technology_type` from `additionalProperties`. That is why Egeria can't dispatch any RE step today. Moving the steps onto an executor is part of RE's engine-host slice.
+- **(c) Manifest fields go in `additionalProperties` for now,** with stable keys named exactly like the `AnalyticFunctionSpec` fields (`kind`, `source`, `version`, `envelope`, `annotation_type`, `resource_types`, `family`, `tags`). This matches the owner's interim ruling for annotations. Asking Egeria for real properties is a later item, once a few functions exist.
+- **Synchronous runs not recorded:** agreed. RE's OpenLineage run events (branch `re/openlineage-run-events`, off by default) cover only step runs inside RE's survey executor, so a screen-draw run never reaches them.
+
+**Dr.Egeria gaps this exposes (part of this issue's work):**
+1. `Create Governance Action Process` should be able to create the process subtypes (`SurveyingActionProcess`, `CataloguingActionProcess`, ...), e.g. via a `Process Type` attribute validated against the 0462 subtypes. Today it always creates the plain supertype.
+2. A process step needs its `GovernanceActionExecutor` link and its manifest `additionalProperties`. Check that `Link Action to Action Executor` accepts a `GovernanceActionProcessStep` (a subtype of `GovernanceActionType`) as its subject. It should, but this hasn't been live-verified (see the Action Author note in CLAUDE.md).
+3. Declaring the engine side may need `SupportedGovernanceService` / governance-engine commands, if Dr.Egeria doesn't already have them. Check before building.
+
+**Owner's answers on these gaps (2026-10-13):**
+1. Process subtypes: create new Dr.Egeria commands for the other process types where needed.
+2. Executor on a process step: yes, it needs live testing.
+3. Engine-side commands: yes, likely needed.
+
+**Requirements proposed by RE's expansion-design session (2026-10-13; it found no contradiction with the direction). Owner's review, the same day: 1 and 2 accepted; 3 kept as an informational key only:**
+1. **One declaration, idempotent.** The manifest's qualifiers must live on the `GovernanceActionType` itself (`supportedRequestParameters` or `additionalProperties`), so Egeria, the Portal and RE all read the same declaration. That means question ids, perspectives, `purpose` (from the existing `VALID_PURPOSES` set) and `family`. Declaring is idempotent by qualifiedName: declaring twice updates, and never creates a second type. Dr.Egeria's upsert (Create→Update by qualified name) already behaves this way.
+2. **Label synchronous values differently from recorded ones.** On a screen, a value computed now must be labelled "computed now · not recorded", and a stored result "last recorded <age>". A reader must never mistake a synchronous draw for a governed measurement. (The envelope gives the state and `measured_at`; the "recorded or not" label is the caller's, from which path it used.)
+3. **State the credential tier.** User-written steps stay on the resource's read-only tier (owner ruling, 2026-10-07). A `GovernanceActionType` declared for one must say so, with a property naming the tier (e.g. `credential_tier: read_only`). **Owner: an informational key, not a control.** Egeria schedules Engine Actions the same way regardless, and never hands a step its resource credentials. The engine host does: RE's wrapper enforces read-only from the step's manifest (`StepManifest.credential_tier`). The key on the declaration is for governance visibility (whoever reviews or approves the type can see it), and for any other engine host that might run the step later. The design session confirmed this when asked (2026-10-13). It withdrew its "control" reading: the only reader other than RE's wrapper would be a second engine host, which enforces the tier itself. An Egeria-side approval step or governance rule that reads the tier would be new design nobody has asked for.
+
+**Mandy's answer (2026-10-14, via the owner and the RE PR/CI session); the declaration direction is confirmed, no longer provisional:**
+- **Engine type:** `SurveyActionEngine` for surveys. RE may also expose services through a `GovernanceActionEngine` (general) or a `WatchdogActionEngine` (monitoring).
+- **What to create:** a governance service definition for each service, of the subtype matching the engine: a **`SurveyActionService`** for a `SurveyActionEngine` (survey steps), a `GovernanceActionService` for a `GovernanceActionEngine`. Plus the `GovernanceActionExecutor` relationship to the engine element. (Owner's correction, 2026-10-14: not a plain `GovernanceService`.)
+- **requestType:** the value the engine advertises, and the value it's passed when asked to execute. RE dispatches on it.
+- **Guards:** standard survey guards are best practice, not mandatory.
+- **Coming in a few days:** more engine-host internal APIs, including the per-engine approved-actions listing, will be exposed as View Server REST calls once her current fixes are done. pyegeria will need wrappers for them (BACKLOG.md).
+- Refs: [Survey Action Engine](https://egeria-project.org/concepts/survey-action-engine/), [0461 Governance Engines](https://egeria-project.org/types/4/0461-Governance-Engines/), [0462 Governance Action Processes](https://egeria-project.org/types/4/0462-Governance-Action-Processes/).
+
+**What exists today for the engine side (gap 3, checked 2026-10-14):**
+- The SDK can link a service to an engine: `AssetMaker` `governance-engines/{guid}/supported-governance-services/{guid}/attach`, plus `update`/`detach` (`asset_maker.py` ~1693-1813 and ~6586-6803).
+- Dr.Egeria has **no** commands to create a `GovernanceEngine` (or its `SurveyActionEngine`/`GovernanceActionEngine`/`WatchdogActionEngine` subtypes) or a governance service (`SurveyActionService`/`GovernanceActionService`/...), and none for the supported-service link. Only `Link Action to Action Executor` exists (Action Author).
+- These are the Dr.Egeria commands to add: `Create Governance Engine` (with an engine-type attribute), `Create Governance Service` (with a service-type attribute matching the engine: `SurveyActionService` for survey steps), and `Link Governance Service to Engine` (with requestType). Check the 0461 types and the `.http` files for the create endpoints before building.
+---
+
+
+
+### ISSUE-146: Deleting a journal entry fails with OMAG-REPOSITORY-HANDLER-400-008, and pyegeria's `remove_note` reaches the delete only through the generic Asset Maker service
+
+**Layer:** Egeria Server (pyegeria clean-up) · **Status:** open · **Found:** 2026-10-13, reported by the egeria-workspaces-fs Resource Browser session from a live private-journal test.
+
+**What:** as erinoverview, `_async_remove_note` (`pyegeria/core/_server_client.py`)
+was called on a JournalEntry created by `MyProfile.journal_my_activity`. It
+failed with `OMAG-REPOSITORY-HANDLER-400-008` (`LOCAL_CANNOT_CHANGE_EXTERNAL`):
+`deleteMetadataElementInStore` cannot modify Erin's UserIdentity (`ff983b64`),
+which has Content Pack provenance ("Coco Pharmaceuticals Combination"). The
+peer verified that nothing was removed. The entry keeps its `actionSource` and
+`presentInNoteLogs` relationships, and Erin's Person still has 1 identity,
+1 contact detail, 8 roles and 15 scopes. Test entry `fef83ed5` is still on
+Erin's profile, waiting for the owner's decision.
+
+**The route is right:** in 6.2, notes are Actions. The type chain is
+JournalEntry → Notification → Action → Process → Asset. Egeria main
+(`af400039c2`) has no note, notification or action delete endpoint.
+`AssetHandler.createNoteLogEntry` has no matching remove, and My Profile has
+`journal-my-activity` with no matching remove. The only delete for an Action is
+the generic `/assets/{assetGUID}/delete` (`AssetMakerResource`), which is what
+`remove_note`'s `feedback-manager/assets/{guid}/delete` reaches, because
+generic view services answer under any URL marker. Feedback Manager can only
+remove a whole note log (`note-logs/{noteLogGUID}/remove`).
+
+**Why it fails (likely, not verified):** `AssetHandler.createAction` anchors the
+entry to its action source, linked by `ActionRequester`. For a journal entry
+that is the caller's profile. Deleting an anchored element updates its anchor,
+and Erin's identity is owned by the content pack, so the local delete is
+refused. If so, no journal entry for a content-pack user can be deleted. That
+is for the Egeria team.
+
+**Anchor read (peer, read-only):** JournalEntry `fef83ed5` has anchorGUID
+`10dc7da9`, Erin's Person profile. Its `actionSource` is ActionRequester →
+Person `10dc7da9`, and `presentInNoteLogs` is AttachedNoteLogEntry → NoteLog
+`f780511a` (MyJournal). No relationship from the entry reaches UserIdentity
+`ff983b64`, which the error names. That identity is anchored to the same
+Person. So the refusal comes from the delete touching the anchor's graph, most
+likely the LatestChange update on the anchor, or a provenance check across
+elements that share the anchor, not from a direct link.
+
+**Delete-path trace (2026-10-13, Egeria source, read-only):** the asset delete
+(`AssetMakerResource.deleteAsset` → `AssetHandler.deleteAsset`) and the Metadata
+Expert delete (`MetadataExpertResource` → `MetadataExpertRESTServices`) both call
+`OpenMetadataClient.deleteMetadataElementInStore`, then the same
+`MetadataElementHandler` → `OpenMetadataAPIGenericHandler.deleteBeanInRepository`
+code. Neither does any extra checking, so switching routes cannot avoid 400-008.
+The error is thrown only by `RepositoryErrorHandler.validateProvenance`, when
+the delete removes an entity or relationship whose provenance is not
+LOCAL_COHORT and the request carries no `externalSourceGUID`. That happens in
+`removeRelationship` for each relationship on the note and in `removeEntity`
+for the note itself. No anchor (LatestChange) update was found on the delete
+path, which corrects "Why it fails" above. But the error names UserIdentity
+`ff983b64`, which is not linked to the note, so the exact instance is still
+unexplained. Untried options are to pass the content pack's metadata-collection
+id as `externalSourceGUID`, or to use `deleteMethod: ARCHIVE`, which goes
+through a different handler.
+
+**Note-privacy findings (egeria-workspaces-fs session, 2026-10-13, with owner
+approval):** a second test JournalEntry, `8bec72e4-6da6-40a4-943e-d81e2173ec9b`,
+was created on Erin's profile (`10dc7da9`) and cannot be deleted either until a
+working delete exists.
+- `POST my-profile/journal-my-activity` ignores `initialClassifications` and
+  stamps only ZoneMembership `['erinoverview']`.
+- `POST classification-explorer/elements/{guid}/zone-membership` with
+  `['resource-explorer-private','erinoverview']` makes the entry private.
+  erinoverview can read it. peterprofile and garygeeke get 403
+  `OPEN-METADATA-SECURITY-403-020` by GUID, and 0 hits from
+  `feedback-manager/assets/by-search-string`.
+- The journal's NoteLog (`f780511a`) stays at `['erinoverview']`, so other
+  users can see that the log exists but not the hidden entries.
+- The owner chose a temporary workaround for the Resource Locator: call
+  `add_zone_membership(['resource-explorer-private', user])` straight after
+  `journal-my-activity`. Review it once Egeria's journal fix lands.
+
+**pyegeria clean-up:** make the `remove_note` route explicit and describe it as
+an Action delete in the docstring. The owner chose the Metadata Expert delete
+(`metadata-expert/metadata-elements/{guid}/delete`) for now. Per the trace
+above, this is a clarity change, not a fix for 400-008.
+
+**Re-test after Egeria's delete fixes are published:** the owner said
+(2026-10-13) that Egeria is working on delete issues now. Once that work is
+published, re-test `remove_note` on `8bec72e4` (plain delete, then `ARCHIVE` if
+needed). Tell the egeria-workspaces-fs session before deleting anything on
+Erin's profile. `fef83ed5` stays.
 
 ---
 
-### ISSUE-139: The executor renders no result envelope, and the Vega bar chart has no subtitle, so a not-established result has nowhere to say so on a chart
 
-**Layer:** pyegeria (format_set_executor output rendering) · **Status:** open, logged only (no fix without the owner's explicit go-ahead) · **Found:** 2026-10-12, reported by the Resource Explorer PR/CI session from trellis-analytics (trellis PR #622, `trellis_analytics/portal.py`), which works around it today.
 
-**What:** a routine's result state (`measured` / `nothing_found` /
-`not_established` / `not_applicable`, plus a reason) has nowhere to go on a
-chart; it survives only in the DICT output. A tile can therefore show a
-chart with no indication that the numbers were not established.
-
-**Where seen:** trellis `tests/test_portal_tile.py` pins the absence, so that
-test will fail once this is fixed.
-
-**Candidate fix:** render an optional `envelope`/`subtitle` field from the
-result into the Vega spec's `title.subtitle`, and into every output type.
-
----
-
-### ISSUE-138: Analytic params are JSON-only, and only parameters named `mgr`/`ce`/`expert`/`client` are bound as clients, so a routine taking a reader object can't be named by its own dotted path
-
-**Layer:** pyegeria (format_set_executor, analytic_registry) · **Status:** open, logged only (no fix without the owner's explicit go-ahead) · **Found:** 2026-10-12, reported by the Resource Explorer PR/CI session from trellis-analytics (trellis PR #622, `trellis_analytics/portal.py`), which works around it today.
-
-**What:** a routine whose first parameter is a reader object (e.g.
-`OdsReader`) cannot be named directly by its dotted path; the spec has to
-point at an adapter that constructs the reader from JSON params.
-
-**Where seen:** trellis `trellis_analytics.portal.curation_coverage_tile` (the
-adapter), used instead of `trellis_analytics.routines.curation_coverage`.
-
-**Candidate fix:** a binding hook (e.g. `AnalyticFunctionSpec.binders`) or a
-declared factory per parameter type, so non-client objects can be
-constructed from params.
-
----
 
 ### ISSUE-132: `DeleteElementRequestBody` serializes the cascade flag as `cascadeDelete`; Egeria's field is `cascadedDelete` and unknown fields are ignored, so no pyegeria cascade delete has ever cascaded
 
@@ -1082,6 +1276,36 @@ enough to track there too).
 
 ---
 
+### ISSUE-147: Every valid-metadata clear call answers OPEN-METADATA-400-011 "not found", even after a successful delete; clear-map-value deletes nothing; clear-map-name leaves the map's value set behind
+
+**Layer:** Egeria Server (`ValidMetadataValueHandler`) · **Status:** open · **Found:** 2026-10-13. The first live run of the Valid Metadata commands showed it (the error text wasn't captured then). Re-tested the same day with the full responses captured.
+
+**Re-test:** run once on qs-view-server as erinoverview, with all four live sessions clearing it first. It used made-up properties `pyegeriaClearRetest` and `pyegeriaClearRetestMap` (typeName `Asset`) and called the SDK methods in `pyegeria/omvs/valid_metadata.py`. The Dr.Egeria `Clear Valid Metadata *` commands call the same methods (`md_processing/v2/reference_data.py:198-242`).
+
+| Call | Response | Actual effect |
+|---|---|---|
+| `clear_valid_metadata_value(alpha)`, set up just before | 400-011 "value alpha ... is not found" | **alpha removed** (gone from the list afterwards) |
+| same call again (alpha already gone) | 400-011 | nothing to remove |
+| `clear_valid_metadata_value(beta)` | 400-011 | **beta removed** |
+| `clear_valid_metadata_map_value(mapOne, v1)` | 400-011 "value v1 ... is not found" | **nothing removed**: `get_valid_metadata_map_value` still returns v1 |
+| `clear_valid_metadata_map_name(mapTwo)` | 400-011 | **mapTwo removed** |
+| `clear_valid_metadata_map_name(mapOne)`, with v1 under it | 400-011 | the mapOne name value is removed, but the map's value set "mapOne" (holding v1) stays in `get_valid_metadata_values` |
+
+Request ids: `ec9052e7` and `3975182d` (alpha), `38759736` (beta), `475e68f1` (map value), `407c0e17` and `07886f29` (map names). pyegeria surfaces each one as `SERVER_ERROR_500` wrapping `relatedHTTPCode` 400 `InvalidParameterException`.
+
+**Cause (Egeria source, `af400039c2`, `frameworks/open-metadata-framework/.../handlers/ValidMetadataValueHandler.java`):**
+1. **No `return` after the delete (lines ~541-680).** In all three `clear*` methods, `if (validValueGUID != null) deleteMetadataElementInStore(...)` is followed unconditionally by the audit log and `throw new InvalidParameterException(VALID_METADATA_MISSING ...)`. So every call throws, whether or not it deleted anything. The "not found" error is the method's normal exit.
+2. **Map name dropped in `clearValidMetadataMapValue`.** It calls `getValidValueGUID(userId, typeName, propertyName, null, preferredValue)`, passing `null` where `mapName` belongs. It therefore searches for `v1` as a plain value of the property, finds nothing, and deletes nothing.
+3. **`clearValidMetadataMapName` deletes only the name's own value.** It doesn't touch the per-map value set created by `setup-map-value` (the "Set of valid values for the mapOne map name ..." element) or its members. Whether that should cascade is Egeria's call.
+
+**Effect on Dr.Egeria:** `Clear Valid Metadata Value` and `Clear Valid Metadata Map Name` report failure although the clear worked. `Clear Valid Metadata Map Value` reports failure and really did fail.
+
+**Leftovers on qs-view-server:** the map value set "mapOne" with member v1 under `pyegeriaClearRetestMap`/`Asset`, plus whatever per-property container elements setup creates (`Egeria:ValidMetadataValue::pyegeriaClearRetest-Asset` and `...pyegeriaClearRetestMap-Asset`). These are test elements, not content-pack elements. RE's blueprint materializer treats `Egeria:ValidMetadataValue:` qualifiedNames as content-pack origin, but only for SolutionComponents, so they don't affect it.
+
+**pyegeria follow-on (not done, needs the owner's go-ahead):** Dr.Egeria's clear processor could treat 400-011 from `clear-value`/`clear-map-name` as success when a follow-up read confirms the value is gone. Otherwise, wait for the Egeria fix and re-test (see the BACKLOG.md delete re-test item).
+
+---
+
 ### ISSUE-143: `includeOnlyRelationships: ["PersonRoleAppointment"]` returns no relationships for a Person, although the unfiltered read has its role appointments
 
 **Layer:** Egeria Server (not pyegeria) · **Status:** open, not yet reported to the Egeria team · **Found:** 2026-10-13, reported by the egeria-workspaces-fs Resource Browser session; reproduced read-only the same day.
@@ -1300,116 +1524,8 @@ what peers were asked to clear.
 
 ---
 
-### ISSUE-95: No catalog template registered for the "Apache Kafka Server" technology type — `Create Kafka Server Element` (Asset Maker) fails with a 400 on `qs-view-server`
 
-**Layer:** Egeria Server (deployment/archive content) · **Status:** open, being investigated by the user (2026-09-11) · **Found:** 2026-09-11, live-verifying the new Asset Maker Dr.Egeria family (#354)
 
-`AutomatedCuration._async_get_template_guid_for_technology_type("Apache Kafka Server")`
-returns `None` on `qs-view-server` — no catalog template is registered for
-that technology type on this server — so `Create Kafka Server Element`'s
-underlying `_async_create_kafka_server_element_from_template` posts a body
-with `templateGUID: null` and gets back `VALIDATION_ERROR_1` ("Request body
-failed validation"). Not a pyegeria code defect: every other Asset Maker
-technology type tried resolved a real template GUID on the same server
-(CSV Data File, PostgreSQL Server, File System Directory, YAML File Secrets
-Collection, Unity Catalog Server) — this one is specific to the Kafka
-technology type's archive content on this deployment. `Create Kafka Server
-Element` itself is otherwise correct (parses/validates cleanly; the failure
-is entirely server-side at execution).
-
-**Ask:** confirm whether the Apache Kafka Server catalog template is
-expected to ship with quickstart's default archive content, and if so, why
-it's missing here — or add it to whichever archive/content-pack is meant to
-carry it.
-
----
-
-### ISSUE-89: No configurable bearer-token lifetime in `application.properties` — platform tokens are fixed at 3600 s, and the signing key is random per restart
-
-**Layer:** Egeria Server · **Status:** open · **Found:** 2026-09-04 (trellis-auth token contract)
-
-With `authentication.mode=token`, every token minted by the platform decodes to `exp - iat = 3600`
-(observed on `omag-server-platform-6.2-SNAPSHOT`, quickstart, `authentication.source=platform`).
-`application.properties` exposes `authentication.mode`, `authentication.source` and `rsa.key-id`, and
-nothing that controls the lifetime; with `rsa.key-id` empty the signing key is regenerated at start, so
-every token also dies on a platform restart. Client applications that hold a platform token on the
-user's behalf (Portal, Egeria Advisor, Resource Explorer — which now carry the Egeria bearer token in
-their session and never the password) cannot offer a session longer than an hour without either
-re-prompting the user or caching a password, which is what a bearer token exists to avoid.
-
-**Ask:** a property such as `authentication.token.lifetime=3600` (seconds, default unchanged), read at
-start and applied when a token is issued; optionally a refresh operation that returns a new token for a
-valid unexpired one. Full draft issue text: trellis session scratch `egeria-issue-token-lifetime.md`.
-
-**Correction, 2026-10-05 (Egeria team; confirmed in `RSAGenerator`):** the statement above that an empty `rsa.key-id` is why the signing key is regenerated is wrong. `RSAGenerator.generateRSAKeyPair(keyId)` always makes a fresh key pair and only uses the id as a label, so **no setting makes tokens survive a restart**; persisting the key is planned for the next release. Also: the lifetime property now exists, `bearerTokenTimeout` in HOURS (default 1), added in `a1f228d4a9` (2026-09-19); there is still no refresh operation.
-
----
-
-### ISSUE-85: No REST endpoint exists to create a `SolutionPort` element — only attach/detach/delegation relationships are exposed
-
-**Status:** open, confirmed Egeria-side gap 2026-09-03. Found by a
-consumer (trellis/Resource Explorer, designing a `PortMaterializer` for
-architecture-recovery proposals) hitting the same shape of gap ISSUE-84
-turned out not to be: this time the `.http` ground truth's absence really
-does match the live server, not a stale/incomplete `.http` file.
-
-**Confirmed at every layer:**
-- `pyegeria/omvs/solution_architect.py`: `link_solution_component_port`
-  (attach an *existing* port to a component), `link_solution_port_delegation`
-  (port-to-port delegation), and both detach counterparts exist. No
-  `create_solution_port`/`_async_create_solution_port` anywhere.
-- `Egeria-api-solution-architect.http`: only `.../solution-components/
-  {guid}/solution-ports/{guid}/attach|detach` and `.../solution-ports/
-  {guid}/port-delegations/{guid}/attach|detach`. No `POST .../solution-ports`
-  create path.
-- `md_processing/data/compact_commands/commands_solution_architect_compact.json`:
-  only `Link Solution Component Port`/`Link Solution Port Delegation`. No
-  `Create Solution Port` command.
-- `pyegeria/models/models.py`: no `SolutionPortProperties` model at all —
-  so even the generic fallback route has nothing typed to build a body
-  against.
-
-**Live-verified not just a stale-`.http`-file case** (the precedent this
-repo already has for that shape of false alarm — see the multi-link audit
-above, where 3 of 4 similarly-unwrapped relationship types turned out to
-have zero real endpoint on live-server inspection while others did):
-`dwolfson-1b`/trellis fetched the full live OpenAPI spec directly
-(`GET /v3/api-docs`, 2.39MB) and searched every path containing "port" —
-30 POST paths matched, every one of them attach/detach (component-port,
-port-delegation, even a generic process-ports attach under a different
-`{urlMarker}` service). Zero creation endpoints anywhere in the spec.
-This confirms the `.http` ground truth exactly; not a documentation gap.
-
-**The generic fallback exists but isn't usable without guessing:**
-`/servers/{serverName}/api/open-metadata/{urlMarker}/metadata-elements`
-(`MetadataExpert.create_metadata_element`,
-`NewOpenMetadataElementRequestBody`) is real and live-confirmed present,
-with a top-level `type_name` field that could carry `"SolutionPort"`. But
-per this file's own `pyegeria/models/models.py` gotcha, that endpoint's
-`properties` field needs the verbose nested `ElementProperties`/
-`propertyValueMap` shape server-side, not the flat dict every bespoke
-wrapper uses — and with no `SolutionPortProperties` model to check
-property names against, building that body means hand-guessing what
-properties a `SolutionPort` actually takes. Consistent with this repo's
-established practice (see the multi-link audit's "left unbuilt rather
-than guessing at undocumented URLs or building against the awkward
-generic path speculatively") — not attempted.
-
-**Nothing to fix in pyegeria until Egeria adds a real create endpoint.**
-Once one exists, the follow-on work is small and well-precedented: a
-`create_solution_port`/`_async_create_solution_port` wrapper in
-`SolutionArchitect` following the exact pattern ISSUE-84 just corrected
-(`NewElementRequestBody` + `contentStatus` inside `properties`, no
-fictional separate request-body class), plus a `Create Solution Port`
-Dr.Egeria compact command — the family's registration plumbing in
-`register_solution_architect_processors()` (`md_processing/dr_egeria.py`)
-already handles this shape of addition with no new routing logic needed.
-
-**Not blocking anything urgent** on the trellis/Resource Explorer side —
-they're holding real port materialization until this exists server-side
-(tracked as their own Backlog item 8), or until a workaround surfaces.
-
----
 
 # Quick reference: which OMVS client class for which purpose
 
@@ -1440,6 +1556,232 @@ they're holding real port materialization until this exists server-side
 
 Sorted newest-first by `ISSUE-#` (2026-10-12). ISSUE-91 has two entries
 (the same defect reported twice); both are kept, next to each other.
+
+---
+
+### ISSUE-149: `AnalyticFunctionSpec` lacks the manifest fields trellis-analytics needs (`kind`, `source`, `version`, `envelope`, `annotation_type`, `resource_types`), so trellis subclasses carry them
+
+**Layer:** pyegeria (`pyegeria/view/analytic_registry.py`) · **Status:** fixed 2026-10-13 · **Found:** 2026-10-13, handed off by the Resource Explorer PR/CI session on the owner's instruction. Source: trellis brief §2a and `packages/trellis-analytics/src/trellis_analytics/manifest.py`. RE runs pyegeria 6.2.2.
+
+**What:** trellis-analytics' `RoutineManifest`/`StepManifest` subclass `AnalyticFunctionSpec` only to add fields the base should carry:
+- `kind`;
+- `source`;
+- `version`;
+- `envelope: bool` (the result carries a state envelope; see ISSUE-139/140);
+- `annotation_type` (a step's result type, empty for a routine);
+- `resource_types: list[str]`.
+
+The Portal's "Analytic Functions" tab groups by `family`, then `kind`, then `source`.
+
+**Proposed change:** add all six as optional fields with defaults (`kind="routine"`, `source=""`, `version=""`, `envelope=False`, `annotation_type=""`, `resource_types=[]`), so every existing registry entry and spec still validates unchanged. Once a pyegeria release carries them, trellis-analytics drops its own copies.
+
+**Points to settle before building:**
+- The handoff lists `kind` as `routine | step | spec`, but trellis's `Kind` is `Literal["routine", "step"]`. Decide whether `spec` is a third kind or a different axis (a report spec is the presentation flavour, brief §2d).
+- trellis's manifest also carries `family` and `tags`, which the handoff doesn't list. `FormatSet` already has `family`; decide whether `AnalyticFunctionSpec` should get them too, rather than leaving trellis to carry them.
+- `source` values in trellis are `ods | egeria | resource`. Decide between a `Literal` (strict) and `str` (open, so a user step can name a new source).
+
+**Related:** ISSUE-138 (non-client param binding), ISSUE-139/140 (envelope rendering), ISSUE-150 (the Egeria declaration, which should take its attribute names from these fields).
+
+**Answers (RE PR/CI session, 2026-10-13, citing the owner's 2026-10-07 organisation ruling; to be confirmed by the owner before building):**
+- `kind`: `routine | step` only. "spec" was a slip: a spec is a `FormatSet`, not an `AnalyticFunctionSpec`. This matches trellis-analytics' `Kind` (`manifest.py:14`).
+- `family` and `tags`: add both, optional. `family` has the same word and meaning as `FormatSet.family`; in Egeria a family is a `Collection`.
+- `source`: an open `str`, not a `Literal`. Document the known values (`ods`, `egeria`). The owner's rule for value lists is "suggestive everywhere": an unknown value warns, never rejects.
+- The Advisor side of ISSUE-141 is already done in trellis (`packages/egeria-advisor/tests/unit/test_report_spec_parser.py:263-267`).
+- Once a pyegeria release carries these fields, trellis-analytics drops its own copies. Tell the RE PR/CI session the version.
+
+**Fixed 2026-10-13 (owner's go-ahead; design answers as recorded above):** `AnalyticFunctionSpec` gains `kind: Literal["routine","step"]="routine"`, `source: str=""` (an unknown value logs a warning; known values are in `KNOWN_ANALYTIC_SOURCES` = ods, egeria, resource), `version`, `envelope: bool=False`, `annotation_type`, `resource_types`, `family` and `tags`, all with defaults. All 23 built-in registry entries still load, and trellis's `RoutineManifest`/`StepManifest` subclasses validate unchanged against the new base (checked locally). Once this ships, trellis-analytics can drop its own copies. Tests: as for ISSUE-138.
+
+---
+
+### ISSUE-140: The executor charts any dict with two or more top-level numbers, regardless of the result's state
+
+**Layer:** pyegeria (format_set_executor) · **Status:** fixed 2026-10-13 · **Found:** 2026-10-12, reported by the Resource Explorer PR/CI session from trellis-analytics (trellis PR #622, `trellis_analytics/portal.py`), which works around it today.
+
+**What:** BAR/SERIES output is drawn whenever the result dict has two or
+more numeric top-level keys, whether or not the result says it was
+measured. A `not_established` result that happens to carry numbers would be
+charted as real zeros/values.
+
+**Where seen:** trellis `portal.py` is safe only because its adapter omits
+numbers for non-measured states.
+
+**Candidate fix:** honour an envelope state (see ISSUE-139): draw no chart
+unless the state is `measured`, and show the state word instead.
+
+**Fixed 2026-10-13:** with an envelope present, SERIES/BAR/PIE draw a chart only when the state is `measured` or `nothing_found` (`CHARTABLE_STATES`); for `not_established` and `not_applicable` they return the data plus the envelope. Results without an envelope are charted exactly as before. **Amended the same day at the requester's request (RE PR/CI session):** the candidate fix above said "measured only", but `nothing_found` is an established answer. The routine read the record and the count really is zero, so a chart of real zeros is honest, and trellis's tile already charts it (`_CHARTED`). Only unknown numbers must never be charted. Tests: as for ISSUE-138.
+
+---
+
+### ISSUE-139: The executor renders no result envelope, and the Vega bar chart has no subtitle, so a not-established result has nowhere to say so on a chart
+
+**Layer:** pyegeria (format_set_executor output rendering) · **Status:** fixed 2026-10-13 · **Found:** 2026-10-12, reported by the Resource Explorer PR/CI session from trellis-analytics (trellis PR #622, `trellis_analytics/portal.py`), which works around it today.
+
+**What:** a routine's result state (`measured` / `nothing_found` /
+`not_established` / `not_applicable`, plus a reason) has nowhere to go on a
+chart; it survives only in the DICT output. A tile can therefore show a
+chart with no indication that the numbers were not established.
+
+**Where seen:** trellis `tests/test_portal_tile.py` pins the absence, so that
+test will fail once this is fixed.
+
+**Candidate fix:** render an optional `envelope`/`subtitle` field from the
+result into the Vega spec's `title.subtitle`, and into every output type.
+
+**Fixed 2026-10-13:** `_result_envelope` reads a state from `state`/`state_reason`/`subtitle`, `resultState`/`resultStateReason`, a nested `envelope` dict, or an object's `.envelope` (`result_state`/`result_state_reason`). Every analytic output (DICT/JSON/empty/chart) then carries `"envelope": {state, reason, subtitle}`, and charts get `title: {text, subtitle}`. Pydantic results are returned as plain data. **trellis's `tests/test_portal_tile.py:75` pins the old absence of a subtitle, so it will fail once trellis takes this release, as expected.** Tests: as for ISSUE-138.
+
+---
+
+### ISSUE-138: Analytic params are JSON-only, and only parameters named `mgr`/`ce`/`expert`/`client` are bound as clients, so a routine taking a reader object can't be named by its own dotted path
+
+**Layer:** pyegeria (format_set_executor, analytic_registry) · **Status:** fixed 2026-10-13 · **Found:** 2026-10-12, reported by the Resource Explorer PR/CI session from trellis-analytics (trellis PR #622, `trellis_analytics/portal.py`), which works around it today.
+
+**What:** a routine whose first parameter is a reader object (e.g.
+`OdsReader`) cannot be named directly by its dotted path; the spec has to
+point at an adapter that constructs the reader from JSON params.
+
+**Where seen:** trellis `trellis_analytics.portal.curation_coverage_tile` (the
+adapter), used instead of `trellis_analytics.routines.curation_coverage`.
+
+**Candidate fix:** a binding hook (e.g. `AnalyticFunctionSpec.binders`) or a
+declared factory per parameter type, so non-client objects can be
+constructed from params.
+
+**Fixed 2026-10-13:** `ActionParameter.analytic_binders` maps a parameter name to a factory's dotted path (`pkg.mod.Factory` or `pkg.mod:Factory`). `_apply_analytic_binders` (format_set_executor.py) calls the factory with the call params its signature names, consuming them unless the routine also takes them, and passes the result to the routine by name. trellis can then name `trellis_analytics.routines.curation_coverage` directly, with `analytic_binders={"ods": "trellis_analytics.readers.ods.OdsReader"}` and the caller passing `url`. Tests: `tests/micro-tests/test_issue_138_140_149_analytic_envelope.py`. Documented in `docs/output-formats-and-report-specs.md`.
+
+---
+
+### ISSUE-151: `AutomatedCuration.get_engine_actions()` calls `automated-curation/engine-actions`, which the View Server doesn't have (404, reported as "unable to connect"); `find_engine_actions("*")` is the working list-all
+
+**Layer:** pyegeria (`pyegeria/omvs/automated_curation.py`) · **Status:** fixed 2026-10-13 (method removed) · **Found:** 2026-10-13 by RE's engine-host design work (the RE PR/CI session confirmed it live on pyegeria 6.2.2). Cause confirmed from Egeria source, and re-checked live read-only, by this session.
+
+**What:** `_async_get_engine_actions` (~line 2628) posts, through `_async_get_name_request`, to
+`{ref_curation_command_base}/engine-actions`. That path doesn't exist. On qs-view-server it answers HTTP 404, which pyegeria surfaces as `PyegeriaClientException` `CLIENT_ERROR_400` with "unable to connect to the Egeria platform". That message is misleading: the platform is reachable, and only the path is wrong. `print_engine_actions()` (~line 5351) calls it, so that fails too.
+
+**Diagnosis: (b), the View Server has no such endpoint.** It isn't a wrong verb or a wrong path for an endpoint that exists. `AutomatedCurationResource.java` (Egeria `af400039c2`, `view-server-generic-services/automated-curation/automated-curation-spring/...`) maps these engine-action routes:
+- `GET /engine-actions/active` (line 435);
+- `GET /governance-engines/{guid}/engine-actions/active-claimed` (line 529);
+- `POST /engine-actions/{guid}/cancel`, `/claim`, `/status/update`, `/completion-status` (lines 406, 498, 469, 591);
+- `POST /engine-actions/action-targets/update` (562);
+- `POST /governance-engines/{name}/engine-actions/initiate` (321).
+
+There is no list-all, and no plain `/engine-actions`. `Egeria-api-automated-curation.http` has no such call either.
+
+**Working routes today (checked live, read-only, 2026-10-13):**
+- **Every engine action:** `find_engine_actions("*")`. It posts to `automated-curation/assets/by-search-string` with `metadata_element_type="EngineAction"`, because in 6.2 EngineAction is an Asset (EngineAction → Action → Process → Asset). It returned a full page of 50, all `COMPLETED`.
+- **Only the active ones:** `get_active_engine_actions()`, which returned 1.
+- AssetMaker's `find_processes(metadata_element_type="EngineAction")` also works, and since ISSUE-148 it applies no status filter by default.
+
+**Candidate fixes (needs the owner's choice):**
+1. Re-implement `get_engine_actions` as a thin wrapper over `find_engine_actions("*")`, keeping its signature and paging. `print_engine_actions` then works unchanged. (Preferred: callers keep working.)
+2. Deprecate it with a clear error naming `find_engine_actions`.
+
+Either way, add a micro-test that pins the URL.
+
+**Related, for when Egeria exposes it:** Mandy added a per-engine "approved, unclaimed" engine-action listing on 2026-10-05, but only on the metadata server's `governance-context-service`, not on the View Server, so pyegeria can't reach it through a view service today. RE will ask the Egeria leads to expose it on Automated Curation. Once it's there, add a wrapper next to `get_active_claimed_engine_actions` (same per-engine shape). Until then, approximate it client-side with `find_engine_actions` plus an activity-status filter.
+
+**Side note (separate, not fixed here):** a 404 reported as "unable to connect" is the same family as the other misleading error labels (compare ISSUE-142). A 404 from a reachable platform should say "endpoint not found".
+
+**Fixed 2026-10-13 (owner: "remove it and let people use find_engine_actions"):**
+`get_engine_actions` / `_async_get_engine_actions` are removed. Before removing them, callers were searched in
+egeria-python, egeria-workspaces-fs and trellis. The only callers were in egeria-python: `print_engine_actions`,
+one functional test and a docs checklist line. `print_engine_actions` now calls `find_engine_actions("*")`.
+The functional test is now `test_find_all_engine_actions`. Test:
+`tests/micro-tests/test_issue_151_engine_actions_list_all.py`. **This is a public API removal, so it must go in
+the 6.2.3 release notes** (see BACKLOG.md).
+
+---
+
+### ISSUE-148: AssetMaker action/process queries default `activity_status_list` to `["IN_PROGRESS"]`, which silently drops JournalEntries and any other Action with no activity status
+
+**Layer:** pyegeria (`pyegeria/omvs/asset_maker.py`) · **Status:** fixed 2026-10-13 · **Found:** 2026-10-13 by the egeria-workspaces-fs session (Resource Locator) on pyegeria 6.2.0 in quickstart-pyegeria-web.
+
+**What:** for resource `4e53842e`, which has an Actions link to JournalEntry `8bec72e4` (see ISSUE-146), `get_actions_for_sponsor` with the default returns 0 elements. Passing `activity_status_list=None` or `[]` returns 1. There is no error and no warning. A JournalEntry has no activity status, so an `IN_PROGRESS` filter can never match it. The same goes for completed, waiting or failed actions.
+
+**Where:** 7 public methods default to `["IN_PROGRESS"]`, as do their `_async_` versions:
+`find_processes`, `get_processes_by_category`, `get_action_targets`, `get_actions_for_action_target`, `get_assigned_actions`, `get_actions_for_sponsor` and `get_actions_for_requester`. All are in `asset_maker.py`, around lines 3881-5210.
+
+**Why it matters:** a caller who doesn't know about the filter gets "No elements found", and that looks the same as "this element has no actions". The absence is reported as an answer.
+
+**Candidate fix (needs a decision):** default to `None`, so no status filter is applied and the server returns everything, and let callers ask for `["IN_PROGRESS"]` explicitly. This changes behaviour for existing callers that relied on the filter (for example, To-Do views that expect only open work), so check the callers in egeria-workspaces-fs, trellis and `commands/` first. Then add a micro-test that captures the request body for each method.
+
+**Fixed 2026-10-13 (owner's go-ahead, after all four live sessions confirmed no caller relies on the default):**
+all 14 signatures (7 sync, 7 async) now take `activity_status_list: Optional[list[str]] = None`, and the
+docstrings say "no filter". `_async_find_processes` had defaulted to `[]` while the sync `find_processes`
+defaulted to `["IN_PROGRESS"]`, so the same query had returned different results depending on which
+version was called. Callers checked: egeria-workspaces-fs `tech_catalog_handler` (passes `[]`) and
+`resource_browser_handler` (passes `None`), egeria-python `commands/` (passes its own filter); trellis has none.
+**This is a behaviour change, so it must go in the 6.2.3 release notes** (see BACKLOG.md). Test:
+`tests/micro-tests/test_issue_148_activity_status_default.py`, which checks that the default sends no
+`activityStatusList` and that an explicit filter is still sent.
+
+---
+
+### ISSUE-145: Dr.Egeria sends `agreementType` and other `agreement*` fields that Egeria's `AgreementProperties` does not have
+
+**Layer:** Dr.Egeria · **Status:** fixed 2026-10-13 · **Found:** 2026-10-13, during the ISSUE-144 status-field sweep.
+
+**What:** `set_element_prop_body()` (`md_processing/md_processing_utils/common_md_utils.py`)
+adds `agreementType`, `agreementStatus`, `agreementIdentifier`,
+`agreementStatusIdentifier` and `agreementVersionIdentifier` for Agreement and
+Digital Subscription bodies. In Egeria 6.2, `AgreementProperties` declares no
+fields of its own; it extends `CollectionProperties`, and no `agreement*`
+property exists anywhere in the Egeria source. Egeria silently ignores all five.
+Only `Agreement Type` is defined in the Digital Products compact spec and used
+by commands, so a written Agreement Type is lost. The other four have no
+attribute definitions, so they are always None.
+
+**Decision needed:** where Agreement Type should go. `category` (from
+`ReferenceableProperties`) is the likely home, or the attribute could be
+retired. The four unused keys can be removed either way.
+
+**Fixed 2026-10-13 (owner's decision: retire Agreement Type, add Service Levels):**
+the `Agreement Type` attribute is deleted from the Digital Products compact spec
+(`Agreement Base` now has no attributes of its own; Purpose carries intent, per the
+owner, since AgreementType is deprecated in Egeria). The five `agreement*` keys and
+the also-undeclared `subscriberType`/`subscriberId` keys are removed from
+`set_collection_manager_body()`. `Digital Subscription Base` gains a `Service Levels`
+Dictionary attribute next to `Support Level`, matching `DigitalSubscriptionProperties`
+(`supportLevel: String`, `serviceLevels: Map<String,String>`); both are sent by
+`set_element_prop_body()`. `dr_test_products_good.md` no longer uses Agreement Type or the
+undefined `Subscription Level`.
+
+---
+
+### ISSUE-144: Dr.Egeria's `Link Semantic Assignment` sent the assignment status as `status`, which Egeria silently ignores
+
+**Layer:** Dr.Egeria · **Status:** fixed 2026-10-13 · **Found:** 2026-10-13, reported by the egeria-workspaces-fs Resource Browser session from a live test.
+
+**What:** Egeria's `SemanticAssignmentProperties` holds the assignment status
+in `termAssignmentStatus`, an enum (`TermAssignmentStatus`). `CurationLinkProcessor`
+(`md_processing/v2/curation.py`) sent `"status"`. Egeria ignores unknown fields,
+so a status written in a Dr.Egeria document never reached the server, and
+read back empty. The sample body in the
+`ClassificationExplorer._async_setup_semantic_assignment` docstring, which
+comes from the `.http` file, had the same mistake. `SemanticAssignmentQueryProperties`,
+used by `get_meanings` and `get_semantic_assignees`, really does use `status`.
+Those samples are correct. The Resource Browser session confirmed live that
+`termAssignmentStatus: "PROPOSED"` is stored and returned.
+
+**Fix:** the processor sends `termAssignmentStatus`. `Governance Status`
+resolves to the governance `statusIdentifier` code (e.g. 3), which uses the
+same codes as `TermAssignmentStatus`, so the value is converted to the enum
+constant name (3 becomes `VALIDATED`). A display name is upper-cased. The two
+docstring samples are corrected. Test:
+`tests/micro-tests/test_issue_144_term_assignment_status.py`.
+
+**Sweep of other status fields Dr.Egeria sends, checked against the Egeria
+Java DTOs (including superclasses):** correct as sent are
+`DataValueAssignmentProperties.assignmentStatus`, `ProjectProperties.projectStatus`,
+`CollectionMembershipProperties.membershipStatus`/`userDefinedStatus`,
+`SolutionComponentProperties.userDefinedDeploymentStatus`,
+`PromiseProperties.deploymentStatus`/`userDefinedDeploymentStatus`,
+`NotificationSubscriberProperties.activityStatus`,
+`UsedInContextProperties.termRelationshipStatus` (from
+`GlossaryTermRelationshipProperties`), the governance classifications'
+`statusIdentifier` (ISSUE-22), `contentStatus` on schema types and attributes
+(inherited from `AuthoredReferenceableProperties`), and the element-level
+`contentStatus`/`activityStatus`/`deploymentStatus` mapping (ISSUE-113). The
+one further mismatch found, the `agreement*` fields, is logged as ISSUE-145.
 
 ---
 
@@ -1474,7 +1816,7 @@ sends `confidence` (`collection_manager.py`,
 
 ### ISSUE-141: `ActionParameter.function` is a required string, so analytic-only specs must pass `""`, and the Advisor's validator then warns "No Action Function"
 
-**Layer:** pyegeria (report spec models) · **Status:** fixed 2026-10-12 on branch `docs/issue-136` (PR pending), not yet released · **Found:** 2026-10-12, reported by the Resource Explorer PR/CI session from trellis-analytics (trellis PR #622, `trellis_analytics/portal.py`), which works around it today.
+**Layer:** pyegeria (report spec models) · **Status:** fixed 2026-10-12 in #446, released in 6.2.2 · **Found:** 2026-10-12, reported by the Resource Explorer PR/CI session from trellis-analytics (trellis PR #622, `trellis_analytics/portal.py`), which works around it today.
 
 **Fixed 2026-10-12:** `function` is now `Optional[str] = None`, and a model
 validator rejects an action with neither `function` nor `analytic_function`. An
@@ -1501,7 +1843,7 @@ and teach the validator the same rule.
 
 ### ISSUE-137: `exec_report_spec` always builds an `EgeriaTech` client and mints a token, even for an analytic routine that needs no Egeria
 
-**Layer:** pyegeria (format_set_executor) · **Status:** fixed 2026-10-12 on branch `docs/issue-136` (PR pending), not yet released · **Found:** 2026-10-12, reported by the Resource Explorer PR/CI session from trellis-analytics (trellis PR #622, `trellis_analytics/portal.py`), which works around it today.
+**Layer:** pyegeria (format_set_executor) · **Status:** fixed 2026-10-12 in #446, released in 6.2.2 · **Found:** 2026-10-12, reported by the Resource Explorer PR/CI session from trellis-analytics (trellis PR #622, `trellis_analytics/portal.py`), which works around it today.
 
 **Fixed 2026-10-12:** `_run_analytic_function` counts the routine's leading
 client parameters (`_count_client_params`) and builds and authenticates an
@@ -2161,6 +2503,55 @@ if guid is None:
 Also added to the Quick reference table. Test:
 `tests/micro-tests/test_issue_114_guid_or_none.py`.
 
+---
+
+### ISSUE-95: No catalog template registered for the "Apache Kafka Server" technology type — `Create Kafka Server Element` (Asset Maker) fails with a 400 on `qs-view-server`
+
+**Layer:** Egeria Server (deployment/archive content) · **Status:** awaiting re-test (addressed on the Egeria side, confirmed live 2026-10-05) · **Found:** 2026-09-11, live-verifying the new Asset Maker Dr.Egeria family (#354)
+
+`AutomatedCuration._async_get_template_guid_for_technology_type("Apache Kafka Server")`
+returns `None` on `qs-view-server` — no catalog template is registered for
+that technology type on this server — so `Create Kafka Server Element`'s
+underlying `_async_create_kafka_server_element_from_template` posts a body
+with `templateGUID: null` and gets back `VALIDATION_ERROR_1` ("Request body
+failed validation"). Not a pyegeria code defect: every other Asset Maker
+technology type tried resolved a real template GUID on the same server
+(CSV Data File, PostgreSQL Server, File System Directory, YAML File Secrets
+Collection, Unity Catalog Server) — this one is specific to the Kafka
+technology type's archive content on this deployment. `Create Kafka Server
+Element` itself is otherwise correct (parses/validates cleanly; the failure
+is entirely server-side at execution).
+
+**Ask:** confirm whether the Apache Kafka Server catalog template is
+expected to ship with quickstart's default archive content, and if so, why
+it's missing here — or add it to whichever archive/content-pack is meant to
+carry it.
+
+
+**Addressed on the Egeria side (2026-10-05 check, carried over from the retired `docs/egeria-open-bugs-2026-10-05.md`):** the running platform resolves a template. `get_template_guid_for_technology_type("Apache Kafka Server")` returns `5e1ff810-5418-43f7-b7c4-e6e062f9aff7`, and Egeria source `449ad06894` ships `ApacheKafkaContentPack.omarchive`. It looks like a content-pack loading matter, not a code defect. **Remaining:** re-test `Create Kafka Server Element` live.
+---
+
+### ISSUE-89: No configurable bearer-token lifetime in `application.properties` — platform tokens are fixed at 3600 s, and the signing key is random per restart
+
+**Layer:** Egeria Server · **Status:** awaiting re-test (addressed in Egeria source 2026-09-19; not verified on the dev platform) · **Found:** 2026-09-04 (trellis-auth token contract)
+
+With `authentication.mode=token`, every token minted by the platform decodes to `exp - iat = 3600`
+(observed on `omag-server-platform-6.2-SNAPSHOT`, quickstart, `authentication.source=platform`).
+`application.properties` exposes `authentication.mode`, `authentication.source` and `rsa.key-id`, and
+nothing that controls the lifetime; with `rsa.key-id` empty the signing key is regenerated at start, so
+every token also dies on a platform restart. Client applications that hold a platform token on the
+user's behalf (Portal, Egeria Advisor, Resource Explorer — which now carry the Egeria bearer token in
+their session and never the password) cannot offer a session longer than an hour without either
+re-prompting the user or caching a password, which is what a bearer token exists to avoid.
+
+**Ask:** a property such as `authentication.token.lifetime=3600` (seconds, default unchanged), read at
+start and applied when a token is issued; optionally a refresh operation that returns a new token for a
+valid unexpired one. Full draft issue text: trellis session scratch `egeria-issue-token-lifetime.md`.
+
+**Correction, 2026-10-05 (Egeria team; confirmed in `RSAGenerator`):** the statement above that an empty `rsa.key-id` is why the signing key is regenerated is wrong. `RSAGenerator.generateRSAKeyPair(keyId)` always makes a fresh key pair and only uses the id as a label, so **no setting makes tokens survive a restart**; persisting the key is planned for the next release. Also: the lifetime property now exists, `bearerTokenTimeout` in HOURS (default 1), added in `a1f228d4a9` (2026-09-19); there is still no refresh operation.
+
+
+**Addressed in Egeria source (2026-10-05 check, carried over from the retired `docs/egeria-open-bugs-2026-10-05.md`):** commit `a1f228d4a9` (2026-09-19, "Add control of bearer token timeout") added `bearerTokenTimeout`, read by `TokenService`, in **hours** (default 1; the request asked for seconds). It is in `application.properties` and `container.application.properties`. **Not covered:** a token refresh operation. The signing key also changes on every restart: `rsa.key-id` does **not** prevent that (confirmed in `RSAGenerator.generateRSAKeyPair`: it always makes a fresh key pair and uses the id only as a label), and the Egeria team plans to persist the signing key in the next release. **Remaining:** verify on a platform built after 2026-09-19.
 ---
 
 ### ISSUE-113: `NewElementRequestBody` has no `initial_status` field, so `initialStatus` is silently dropped on every create routed through it
