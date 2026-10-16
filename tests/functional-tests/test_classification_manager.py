@@ -590,14 +590,14 @@ def test_get_all_related_elements():
 def test_get_related_elements():
     # metadata_element_type = 'CertificationType'
     # element_guid = '2ce8d10d-08a2-4fca-b0c2-1d5a335d00fc'
-    element_guid = "79bd39ed-6048-4731-85c4-3cde50f99a30"
+    element_guid = "acca7cf3-40d4-40fd-9922-5c74075e9651"
     # metadata_element_type = "Organization"
     # metadata_element_type = "CSVFile"
     # metadata_element_type = "InformationSupplyChain"
     open_metadata_type_name = "Referenceable"
     # element_guid = "8dca6e76-d454-4344-9c93-faa837a1a898"
     # relationship_type = "DataContentForDataSet"
-    relationship_type = "Peer"
+    relationship_type = "CollectionMembership"
     # relationship_type = "InformationSupplyChainComposition"
     c_client = ClassificationExplorer(view_server, platform_url)
     try:
@@ -605,7 +605,6 @@ def test_get_related_elements():
         body = {
             "class": "ResultsRequestBody",
             "metadataElementTypeName": open_metadata_type_name,
-            "includeOnlyRelationships": ["ContactThrough"]
         }
         response = c_client.get_related_elements(
             element_guid, relationship_type, body=body
