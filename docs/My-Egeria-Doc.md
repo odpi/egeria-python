@@ -28,6 +28,7 @@ All source files named here are in `my_egeria/my_egeria/DemoCode/My_Profile/`.
 | `tech_types_handler.py`, `TechnologyTypeScreens.py` | `TechTypesMixin` and the technology type screens |
 | `team_roles_handler.py`, `MyTeamScreen.py` | `TeamRolesMixin` and the team roster screen |
 | `bookmarks_handler.py`, `MyBookMarksScreen.py` | `BookmarksMixin` (bookmarks kept in a personal collection) and the bookmarks screen |
+| `network_handler.py`, `MyNetworkScreen.py` | `NetworkMixin` (peers linked by `Peer` relationships), `MyNetworkScreen` and `ConfirmRemovePeerScreen` |
 | `UserIdentitiesScreen.py` | Read-only user identity table |
 | `StatusScreen.py` | Result message with copy-GUID |
 | `profile_utils.py` | Environment check and data clean-up helpers |
@@ -64,6 +65,13 @@ classDiagram
         list_my_bookmarks()
         add_my_bookmark() / delete_my_bookmark()
     }
+    class NetworkMixin {
+        show_my_network()
+        list_my_peers()
+        search_people()
+        link_peer() / unlink_peer()
+        get_peer_details()
+    }
     App <|-- MyProfileApp
     TechTypesMixin <|-- MyProfileApp
     ShopForDataMixin <|-- MyProfileApp
@@ -71,6 +79,7 @@ classDiagram
     ElementsCrudMixin <|-- MyProfileApp
     FeedbackMixin <|-- MyProfileApp
     BookmarksMixin <|-- MyProfileApp
+    NetworkMixin <|-- MyProfileApp
 ```
 
 - **App bindings:**
@@ -156,6 +165,7 @@ It returns `200` on success and `401` on failure.
 | Subscriptions | `ViewSubscriptionsScreen()` |
 | Technology Types | `handle_technology_types_option()` |
 | User Bookmarks | `show_my_bookmarks()` |
+| My Network | `show_my_network()` |
 | Leave Feedback | `action_feedback()` |
 | Feedback Log | `action_view_feedback_log()` (owner only) |
 
@@ -481,6 +491,61 @@ After each change it re-reads the list through the app. The lookup matches on th
 
 ---
 
+## My Network
+
+A user's network is the set of people linked to their profile by a `Peer` relationship. `NetworkMixin` (`network_handler.py`) makes the Egeria calls; `MyNetworkScreen` only drives it through `self.app`. Each call builds a fresh `Egeria` client with a bearer token (`_network_client()`) and closes its session afterwards.
+
+```mermaid
+sequenceDiagram
+    autonumber
+    actor User
+    participant App as NetworkMixin
+    participant MNS as MyNetworkScreen
+    participant Confirm as ConfirmRemovePeerScreen
+    participant EG as Egeria
+
+    User->>App: Other Functions → My Network
+    App->>EG: get_related_elements(user_GUID, "Peer")
+    App->>MNS: push(peer rows)
+    opt view details (v)
+        MNS->>App: get_peer_details(peer GUID)
+        App->>EG: get_actor_profile_by_guid(JSON)
+        App->>App: _generate_my_profile_output(DICT, "My-User")
+        App-->>MNS: (contact methods, communities)
+    end
+    opt add (search, select, Add to Network)
+        MNS->>App: search_people(name)
+        App->>EG: find_actor_profiles(DICT, "User-Identities", page_size=10)
+        App-->>MNS: (name, GUID, qualified name) rows
+        MNS->>App: link_peer(GUID, nickname, description)
+        App->>EG: link_peer_person(user_GUID, GUID, PeerProperties)
+        MNS->>App: list_my_peers()
+    end
+    opt remove (d)
+        MNS->>Confirm: push(peer name)
+        Confirm-->>MNS: True / False
+        MNS->>App: unlink_peer(GUID)
+        App->>EG: unlink_peer_person(user_GUID, GUID)
+        MNS->>App: list_my_peers()
+    end
+```
+
+| Function | What it does |
+| :--- | :--- |
+| `show_my_network()` | Refuses (with a notice) if `user_GUID` isn't set yet, i.e. the profile hasn't loaded; otherwise pushes `MyNetworkScreen(list_my_peers())` |
+| `list_my_peers()` | `get_related_elements(user_GUID, "Peer")`, keeping only elements whose properties are `PersonProperties`. Returns `(qualified name, display name, full name, pronouns, GUID, description)` rows; the GUID comes from the peer's `elementHeader` and the description from `relationshipProperties`. `[]` when Egeria answers "No elements found", `None` if Egeria can't be reached |
+| `search_people(search_string)` | `find_actor_profiles(..., ignore_case=True, report_spec="User-Identities", page_size=10)` → `(display name, GUID, qualified name)` rows, excluding the current user. The screen also drops anyone already in the network |
+| `link_peer(guid, nickname, description)` | `link_peer_person(user_GUID, guid, NewRelationshipRequestBody)` with `PeerProperties` (`peer_relationship_name` = nickname, `description`) |
+| `unlink_peer(guid)` | `unlink_peer_person(user_GUID, guid, DeleteRelationshipRequestBody)`, using the same GUID order as `link_peer_person` |
+| `get_peer_details(guid)` | `get_actor_profile_by_guid(guid, JSON)`, then `_generate_my_profile_output(..., report_spec="My-User")`. Returns the `Contact Methods` and `Communities` lists, or `None` with a notice if there are no details |
+
+- **Removing only unlinks.** The peer's profile is never changed. If the details panel is showing the person just removed, it is hidden.
+- **Refresh.** After a successful add or remove the screen re-reads the network with `list_my_peers()`.
+- **Errors.** Every Egeria failure is reported with `notify(...)` and the screen stays open; none of them exit the app.
+- **Return code.** `MyNetworkScreen` dismisses with `200` on `q`; `my_network_callback` just logs it.
+
+---
+
 ## Status Screen
 
 `StatusScreen(message)` shows a read-only message:
@@ -497,7 +562,8 @@ The app's `status_callback` then returns to the main screen.
 | Report spec | Used by |
 | :--- | :--- |
 | `My-User-MD` | Profile load and reload |
-| `User-Identities` | User identity table |
+| `User-Identities` | User identity table; My Network people search |
+| `My-User` | My Network peer details (contact methods, communities) |
 | `My-User-ToDos` | To-dos table |
 | `Actor-Profiles` | User GUID fallback |
 | `Comment-by-Element` | Comments screen |
@@ -509,7 +575,7 @@ The app's `status_callback` then returns to the main screen.
 | Client | Used for |
 | :--- | :--- |
 | `MyProfile` | Profile, identities, to-dos, `add_my_profile` |
-| `Egeria` | Element create, link and delete; comments from main; bookmarks; feedback note logs; tabular data; `update_actor_profile`; `find_collections` |
+| `Egeria` | Element create, link and delete; comments from main; bookmarks; My Network; feedback note logs; tabular data; `update_actor_profile`; `find_collections` |
 | `EgeriaTech` | Comments screen |
 | `AutomatedCuration` | Technology types |
 | `ProductManager` | Digital subscriptions |
@@ -547,6 +613,8 @@ The suite in `tests/micro-tests/my_profile/` has one module per handler and scre
 - Live mode writes to the server: it creates subscriptions and template elements, and may create a profile.
 
 **Running the whole app in a test.** Tests that run `MyProfileApp.run_test()` stub the profile client with `stub_profile_client()`.
+
+**My Network.** `test_network_handler.py` covers `NetworkMixin` and `MyNetworkScreen`, including the remove confirmation; `test_my_profile_app.py` checks the menu routing. The feature has also been tested by hand against a live server.
 
 **Add screens.** `test_screens.py::TestBaseAddScreen` covers the `BaseAddScreen` flow: required-field checks, create, link or no link, and keeping the form after a failed create.
 

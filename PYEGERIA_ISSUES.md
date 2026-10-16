@@ -155,13 +155,16 @@ content was changed. The numbered section list above describes the
 - ISSUE-146: Deleting a journal entry fails with OMAG-REPOSITORY-HANDLER-400-008, and pyegeria's `remove_note` reaches the delete only through the generic Asset Maker service
 - ISSUE-132: `DeleteElementRequestBody` serializes the cascade flag as `cascadeDelete`; Egeria's field is `cascadedDelete` and unknown fields are ignored, so no pyegeria cascade delete has ever cascaded
 - ISSUE-127: `CollectionManager.delete_collection(cascade=True)` silently never sends `cascadeDelete` -- same shape as ISSUE-62
+- ISSUE-85: No REST endpoint exists to create a `SolutionPort` element — only attach/detach/delegation relationships are exposed
 
 **Awaiting re-test**
 - ISSUE-125: `deleteEnumDef` answers 500 "unknown TypeDef" for an enum the server lists -- an enum added through the API cannot be removed
 - ISSUE-124: `updateTypeDef` (Metadata Expert `open-metadata-types/update`) can never succeed -- the server builds the patch without `updatedBy`, which the repository services require
 - ISSUE-117: Cascade delete that takes the soft-delete (Memento) path fails partway with `OMAG-REPOSITORY-HANDLER-400-010` unless `forLineage=true` — leaves the asset live and an anchored element already soft-deleted
 - ISSUE-112: `AutomatedCurationRESTServices.saveClientSideSecret`/`deleteClientSideSecret` return a plain success `VoidResponse` when the resolved connector isn't a `YAMLSecretsFileConnector` — no error, no write, no indication anything was skipped
+- ISSUE-95: No catalog template registered for the "Apache Kafka Server" technology type — `Create Kafka Server Element` (Asset Maker) fails with a 400 on `qs-view-server`
 - ISSUE-90: [fixed?] `qs-engine-host` retries `startMissedEngineActions` forever when one incomplete engine action's anchor is unreadable by the engine-host user
+- ISSUE-89: No configurable bearer-token lifetime in `application.properties` — platform tokens are fixed at 3600 s, and the signing key is random per restart
 - ISSUE-79: native survey against a template-created `FileFolder` asset fails server-side — `assetConnector` is null in `BasicFolderConnector.getFile()`
 - ISSUE-38 (PY-18): `count_relationships_between_elements("Exception")` (276) disagrees with `ClassificationExplorer.get_relationships("Exception")` (55)
 
@@ -171,9 +174,6 @@ content was changed. The numbered section list above describes the
 - ISSUE-130: The YAML secrets store's user directory caches a user forever, so editing an existing user needs a platform restart
 - ISSUE-128: Retention cannot be set on Egeria 6.2: the server registers the Jackson subtype as `RetentionProperties.class` (typo), and pyegeria only allows `RetentionClassificationProperties`
 - ISSUE-108: newly created relationships stay invisible to related-element queries for up to ~20 minutes after creation
-- ISSUE-95: No catalog template registered for the "Apache Kafka Server" technology type — `Create Kafka Server Element` (Asset Maker) fails with a 400 on `qs-view-server`
-- ISSUE-89: No configurable bearer-token lifetime in `application.properties` — platform tokens are fixed at 3600 s, and the signing key is random per restart
-- ISSUE-85: No REST endpoint exists to create a `SolutionPort` element — only attach/detach/delegation relationships are exposed
 
 ---
 
@@ -184,6 +184,74 @@ on an Egeria Server capability that doesn't exist yet — but the pyegeria/
 Dr.Egeria-side work each will need once that capability ships is written
 into the entry now, so it isn't rediscovered from scratch later.
 
+---
+
+### ISSUE-85: No REST endpoint exists to create a `SolutionPort` element — only attach/detach/delegation relationships are exposed
+
+**Status:** open, now a pyegeria gap (Egeria added the endpoints 2026-09-06) 
+consumer (trellis/Resource Explorer, designing a `PortMaterializer` for
+architecture-recovery proposals) hitting the same shape of gap ISSUE-84
+turned out not to be: this time the `.http` ground truth's absence really
+does match the live server, not a stale/incomplete `.http` file.
+
+**Confirmed at every layer:**
+- `pyegeria/omvs/solution_architect.py`: `link_solution_component_port`
+  (attach an *existing* port to a component), `link_solution_port_delegation`
+  (port-to-port delegation), and both detach counterparts exist. No
+  `create_solution_port`/`_async_create_solution_port` anywhere.
+- `Egeria-api-solution-architect.http`: only `.../solution-components/
+  {guid}/solution-ports/{guid}/attach|detach` and `.../solution-ports/
+  {guid}/port-delegations/{guid}/attach|detach`. No `POST .../solution-ports`
+  create path.
+- `md_processing/data/compact_commands/commands_solution_architect_compact.json`:
+  only `Link Solution Component Port`/`Link Solution Port Delegation`. No
+  `Create Solution Port` command.
+- `pyegeria/models/models.py`: no `SolutionPortProperties` model at all —
+  so even the generic fallback route has nothing typed to build a body
+  against.
+
+**Live-verified not just a stale-`.http`-file case** (the precedent this
+repo already has for that shape of false alarm — see the multi-link audit
+above, where 3 of 4 similarly-unwrapped relationship types turned out to
+have zero real endpoint on live-server inspection while others did):
+`dwolfson-1b`/trellis fetched the full live OpenAPI spec directly
+(`GET /v3/api-docs`, 2.39MB) and searched every path containing "port" —
+30 POST paths matched, every one of them attach/detach (component-port,
+port-delegation, even a generic process-ports attach under a different
+`{urlMarker}` service). Zero creation endpoints anywhere in the spec.
+This confirms the `.http` ground truth exactly; not a documentation gap.
+
+**The generic fallback exists but isn't usable without guessing:**
+`/servers/{serverName}/api/open-metadata/{urlMarker}/metadata-elements`
+(`MetadataExpert.create_metadata_element`,
+`NewOpenMetadataElementRequestBody`) is real and live-confirmed present,
+with a top-level `type_name` field that could carry `"SolutionPort"`. But
+per this file's own `pyegeria/models/models.py` gotcha, that endpoint's
+`properties` field needs the verbose nested `ElementProperties`/
+`propertyValueMap` shape server-side, not the flat dict every bespoke
+wrapper uses — and with no `SolutionPortProperties` model to check
+property names against, building that body means hand-guessing what
+properties a `SolutionPort` actually takes. Consistent with this repo's
+established practice (see the multi-link audit's "left unbuilt rather
+than guessing at undocumented URLs or building against the awkward
+generic path speculatively") — not attempted.
+
+**Nothing to fix in pyegeria until Egeria adds a real create endpoint.**
+Once one exists, the follow-on work is small and well-precedented: a
+`create_solution_port`/`_async_create_solution_port` wrapper in
+`SolutionArchitect` following the exact pattern ISSUE-84 just corrected
+(`NewElementRequestBody` + `contentStatus` inside `properties`, no
+fictional separate request-body class), plus a `Create Solution Port`
+Dr.Egeria compact command — the family's registration plumbing in
+`register_solution_architect_processors()` (`md_processing/dr_egeria.py`)
+already handles this shape of addition with no new routing logic needed.
+
+**Not blocking anything urgent** on the trellis/Resource Explorer side —
+they're holding real port materialization until this exists server-side
+(tracked as their own Backlog item 8), or until a workaround surfaces.
+
+
+**Egeria side addressed (2026-10-05 check, carried over from the retired `docs/egeria-open-bugs-2026-10-05.md`):** at `449ad06894`, Solution Architect has `createSolutionPort` and `createSolutionPortFromTemplate`, with endpoints `POST /solution-ports`, `/solution-ports/from-template`, `/solution-ports/{guid}/update`, `.../delete`, `/by-name`, `/by-search-string` and `.../retrieve`. They first appear in commit `571034df11` (2026-09-06). The running platform answers `POST /solution-ports/by-name` with 200. **Remaining (pyegeria):** the `.http` snapshot lists none of these, and `pyegeria/omvs/solution_architect.py` has no `create_solution_port` (or update, delete, find). Add them, ideally with Dr.Egeria support.
 ---
 
 
@@ -1476,116 +1544,8 @@ what peers were asked to clear.
 
 ---
 
-### ISSUE-95: No catalog template registered for the "Apache Kafka Server" technology type — `Create Kafka Server Element` (Asset Maker) fails with a 400 on `qs-view-server`
 
-**Layer:** Egeria Server (deployment/archive content) · **Status:** open, being investigated by the user (2026-09-11) · **Found:** 2026-09-11, live-verifying the new Asset Maker Dr.Egeria family (#354)
 
-`AutomatedCuration._async_get_template_guid_for_technology_type("Apache Kafka Server")`
-returns `None` on `qs-view-server` — no catalog template is registered for
-that technology type on this server — so `Create Kafka Server Element`'s
-underlying `_async_create_kafka_server_element_from_template` posts a body
-with `templateGUID: null` and gets back `VALIDATION_ERROR_1` ("Request body
-failed validation"). Not a pyegeria code defect: every other Asset Maker
-technology type tried resolved a real template GUID on the same server
-(CSV Data File, PostgreSQL Server, File System Directory, YAML File Secrets
-Collection, Unity Catalog Server) — this one is specific to the Kafka
-technology type's archive content on this deployment. `Create Kafka Server
-Element` itself is otherwise correct (parses/validates cleanly; the failure
-is entirely server-side at execution).
-
-**Ask:** confirm whether the Apache Kafka Server catalog template is
-expected to ship with quickstart's default archive content, and if so, why
-it's missing here — or add it to whichever archive/content-pack is meant to
-carry it.
-
----
-
-### ISSUE-89: No configurable bearer-token lifetime in `application.properties` — platform tokens are fixed at 3600 s, and the signing key is random per restart
-
-**Layer:** Egeria Server · **Status:** open · **Found:** 2026-09-04 (trellis-auth token contract)
-
-With `authentication.mode=token`, every token minted by the platform decodes to `exp - iat = 3600`
-(observed on `omag-server-platform-6.2-SNAPSHOT`, quickstart, `authentication.source=platform`).
-`application.properties` exposes `authentication.mode`, `authentication.source` and `rsa.key-id`, and
-nothing that controls the lifetime; with `rsa.key-id` empty the signing key is regenerated at start, so
-every token also dies on a platform restart. Client applications that hold a platform token on the
-user's behalf (Portal, Egeria Advisor, Resource Explorer — which now carry the Egeria bearer token in
-their session and never the password) cannot offer a session longer than an hour without either
-re-prompting the user or caching a password, which is what a bearer token exists to avoid.
-
-**Ask:** a property such as `authentication.token.lifetime=3600` (seconds, default unchanged), read at
-start and applied when a token is issued; optionally a refresh operation that returns a new token for a
-valid unexpired one. Full draft issue text: trellis session scratch `egeria-issue-token-lifetime.md`.
-
-**Correction, 2026-10-05 (Egeria team; confirmed in `RSAGenerator`):** the statement above that an empty `rsa.key-id` is why the signing key is regenerated is wrong. `RSAGenerator.generateRSAKeyPair(keyId)` always makes a fresh key pair and only uses the id as a label, so **no setting makes tokens survive a restart**; persisting the key is planned for the next release. Also: the lifetime property now exists, `bearerTokenTimeout` in HOURS (default 1), added in `a1f228d4a9` (2026-09-19); there is still no refresh operation.
-
----
-
-### ISSUE-85: No REST endpoint exists to create a `SolutionPort` element — only attach/detach/delegation relationships are exposed
-
-**Status:** open, confirmed Egeria-side gap 2026-09-03. Found by a
-consumer (trellis/Resource Explorer, designing a `PortMaterializer` for
-architecture-recovery proposals) hitting the same shape of gap ISSUE-84
-turned out not to be: this time the `.http` ground truth's absence really
-does match the live server, not a stale/incomplete `.http` file.
-
-**Confirmed at every layer:**
-- `pyegeria/omvs/solution_architect.py`: `link_solution_component_port`
-  (attach an *existing* port to a component), `link_solution_port_delegation`
-  (port-to-port delegation), and both detach counterparts exist. No
-  `create_solution_port`/`_async_create_solution_port` anywhere.
-- `Egeria-api-solution-architect.http`: only `.../solution-components/
-  {guid}/solution-ports/{guid}/attach|detach` and `.../solution-ports/
-  {guid}/port-delegations/{guid}/attach|detach`. No `POST .../solution-ports`
-  create path.
-- `md_processing/data/compact_commands/commands_solution_architect_compact.json`:
-  only `Link Solution Component Port`/`Link Solution Port Delegation`. No
-  `Create Solution Port` command.
-- `pyegeria/models/models.py`: no `SolutionPortProperties` model at all —
-  so even the generic fallback route has nothing typed to build a body
-  against.
-
-**Live-verified not just a stale-`.http`-file case** (the precedent this
-repo already has for that shape of false alarm — see the multi-link audit
-above, where 3 of 4 similarly-unwrapped relationship types turned out to
-have zero real endpoint on live-server inspection while others did):
-`dwolfson-1b`/trellis fetched the full live OpenAPI spec directly
-(`GET /v3/api-docs`, 2.39MB) and searched every path containing "port" —
-30 POST paths matched, every one of them attach/detach (component-port,
-port-delegation, even a generic process-ports attach under a different
-`{urlMarker}` service). Zero creation endpoints anywhere in the spec.
-This confirms the `.http` ground truth exactly; not a documentation gap.
-
-**The generic fallback exists but isn't usable without guessing:**
-`/servers/{serverName}/api/open-metadata/{urlMarker}/metadata-elements`
-(`MetadataExpert.create_metadata_element`,
-`NewOpenMetadataElementRequestBody`) is real and live-confirmed present,
-with a top-level `type_name` field that could carry `"SolutionPort"`. But
-per this file's own `pyegeria/models/models.py` gotcha, that endpoint's
-`properties` field needs the verbose nested `ElementProperties`/
-`propertyValueMap` shape server-side, not the flat dict every bespoke
-wrapper uses — and with no `SolutionPortProperties` model to check
-property names against, building that body means hand-guessing what
-properties a `SolutionPort` actually takes. Consistent with this repo's
-established practice (see the multi-link audit's "left unbuilt rather
-than guessing at undocumented URLs or building against the awkward
-generic path speculatively") — not attempted.
-
-**Nothing to fix in pyegeria until Egeria adds a real create endpoint.**
-Once one exists, the follow-on work is small and well-precedented: a
-`create_solution_port`/`_async_create_solution_port` wrapper in
-`SolutionArchitect` following the exact pattern ISSUE-84 just corrected
-(`NewElementRequestBody` + `contentStatus` inside `properties`, no
-fictional separate request-body class), plus a `Create Solution Port`
-Dr.Egeria compact command — the family's registration plumbing in
-`register_solution_architect_processors()` (`md_processing/dr_egeria.py`)
-already handles this shape of addition with no new routing logic needed.
-
-**Not blocking anything urgent** on the trellis/Resource Explorer side —
-they're holding real port materialization until this exists server-side
-(tracked as their own Backlog item 8), or until a workaround surfaces.
-
----
 
 # Quick reference: which OMVS client class for which purpose
 
@@ -2563,6 +2523,55 @@ if guid is None:
 Also added to the Quick reference table. Test:
 `tests/micro-tests/test_issue_114_guid_or_none.py`.
 
+---
+
+### ISSUE-95: No catalog template registered for the "Apache Kafka Server" technology type — `Create Kafka Server Element` (Asset Maker) fails with a 400 on `qs-view-server`
+
+**Layer:** Egeria Server (deployment/archive content) · **Status:** awaiting re-test (addressed on the Egeria side, confirmed live 2026-10-05) · **Found:** 2026-09-11, live-verifying the new Asset Maker Dr.Egeria family (#354)
+
+`AutomatedCuration._async_get_template_guid_for_technology_type("Apache Kafka Server")`
+returns `None` on `qs-view-server` — no catalog template is registered for
+that technology type on this server — so `Create Kafka Server Element`'s
+underlying `_async_create_kafka_server_element_from_template` posts a body
+with `templateGUID: null` and gets back `VALIDATION_ERROR_1` ("Request body
+failed validation"). Not a pyegeria code defect: every other Asset Maker
+technology type tried resolved a real template GUID on the same server
+(CSV Data File, PostgreSQL Server, File System Directory, YAML File Secrets
+Collection, Unity Catalog Server) — this one is specific to the Kafka
+technology type's archive content on this deployment. `Create Kafka Server
+Element` itself is otherwise correct (parses/validates cleanly; the failure
+is entirely server-side at execution).
+
+**Ask:** confirm whether the Apache Kafka Server catalog template is
+expected to ship with quickstart's default archive content, and if so, why
+it's missing here — or add it to whichever archive/content-pack is meant to
+carry it.
+
+
+**Addressed on the Egeria side (2026-10-05 check, carried over from the retired `docs/egeria-open-bugs-2026-10-05.md`):** the running platform resolves a template. `get_template_guid_for_technology_type("Apache Kafka Server")` returns `5e1ff810-5418-43f7-b7c4-e6e062f9aff7`, and Egeria source `449ad06894` ships `ApacheKafkaContentPack.omarchive`. It looks like a content-pack loading matter, not a code defect. **Remaining:** re-test `Create Kafka Server Element` live.
+---
+
+### ISSUE-89: No configurable bearer-token lifetime in `application.properties` — platform tokens are fixed at 3600 s, and the signing key is random per restart
+
+**Layer:** Egeria Server · **Status:** awaiting re-test (addressed in Egeria source 2026-09-19; not verified on the dev platform) · **Found:** 2026-09-04 (trellis-auth token contract)
+
+With `authentication.mode=token`, every token minted by the platform decodes to `exp - iat = 3600`
+(observed on `omag-server-platform-6.2-SNAPSHOT`, quickstart, `authentication.source=platform`).
+`application.properties` exposes `authentication.mode`, `authentication.source` and `rsa.key-id`, and
+nothing that controls the lifetime; with `rsa.key-id` empty the signing key is regenerated at start, so
+every token also dies on a platform restart. Client applications that hold a platform token on the
+user's behalf (Portal, Egeria Advisor, Resource Explorer — which now carry the Egeria bearer token in
+their session and never the password) cannot offer a session longer than an hour without either
+re-prompting the user or caching a password, which is what a bearer token exists to avoid.
+
+**Ask:** a property such as `authentication.token.lifetime=3600` (seconds, default unchanged), read at
+start and applied when a token is issued; optionally a refresh operation that returns a new token for a
+valid unexpired one. Full draft issue text: trellis session scratch `egeria-issue-token-lifetime.md`.
+
+**Correction, 2026-10-05 (Egeria team; confirmed in `RSAGenerator`):** the statement above that an empty `rsa.key-id` is why the signing key is regenerated is wrong. `RSAGenerator.generateRSAKeyPair(keyId)` always makes a fresh key pair and only uses the id as a label, so **no setting makes tokens survive a restart**; persisting the key is planned for the next release. Also: the lifetime property now exists, `bearerTokenTimeout` in HOURS (default 1), added in `a1f228d4a9` (2026-09-19); there is still no refresh operation.
+
+
+**Addressed in Egeria source (2026-10-05 check, carried over from the retired `docs/egeria-open-bugs-2026-10-05.md`):** commit `a1f228d4a9` (2026-09-19, "Add control of bearer token timeout") added `bearerTokenTimeout`, read by `TokenService`, in **hours** (default 1; the request asked for seconds). It is in `application.properties` and `container.application.properties`. **Not covered:** a token refresh operation. The signing key also changes on every restart: `rsa.key-id` does **not** prevent that (confirmed in `RSAGenerator.generateRSAKeyPair`: it always makes a fresh key pair and uses the id only as a label), and the Egeria team plans to persist the signing key in the next release. **Remaining:** verify on a platform built after 2026-09-19.
 ---
 
 ### ISSUE-113: `NewElementRequestBody` has no `initial_status` field, so `initialStatus` is silently dropped on every create routed through it

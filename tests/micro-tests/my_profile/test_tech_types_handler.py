@@ -119,14 +119,14 @@ class TestTechTypesMixin:
     ):
         app = DummyTechTypesApp(backend)
         if backend.live:
-            backend.patch("tech_types_handler.AutomatedCuration")
+            backend.patch("tech_types_handler.Egeria")
             # get_tech_type_detail matches on display name, so use a real one.
             selection = request.getfixturevalue("live_tech_type_name")
         else:
             mock_ac = MagicMock()
             mock_ac.create_egeria_bearer_token.return_value = "token"
             mock_ac.get_tech_type_detail.return_value = sample_tech_type_detail
-            backend.always_fake("tech_types_handler.AutomatedCuration", returns=mock_ac)
+            backend.always_fake("tech_types_handler.Egeria", returns=mock_ac)
             selection = "tech-type-guid-999"
 
         res = await app.tech_type_callback(selection)
@@ -161,11 +161,42 @@ class TestTechTypesMixin:
         app = DummyTechTypesApp(backend)
         mock_ac = MagicMock()
         mock_ac.create_egeria_bearer_token.side_effect = PyegeriaException("Auth failed")
-        backend.always_fake("tech_types_handler.AutomatedCuration", returns=mock_ac)
+        backend.always_fake("tech_types_handler.Egeria", returns=mock_ac)
 
-        await app.tech_type_callback("tech-type-guid-999")
-        assert len(app.pushed_screens) == 2  # StatusScreen pushed on error, then TechnologyTypeOptionsScreen
+        res = await app.tech_type_callback("tech-type-guid-999")
+        # Only the StatusScreen: the options screen is not opened after a failed lookup
+        assert res == 417
+        assert len(app.pushed_screens) == 1
         assert isinstance(app.pushed_screens[0][0], StatusScreen)
+
+    @pytest.mark.parametrize("result", ["201", 201, "200", 200])
+    @pytest.mark.asyncio
+    async def test_tech_type_callback_go_back(self, backend, result):
+        # TechnologyTypesScreen dismisses go back/quit as the strings "201"/"200"
+        app = DummyTechTypesApp(backend)
+        mock_egeria = MagicMock()
+        backend.always_fake("tech_types_handler.Egeria", returns=mock_egeria)
+
+        res = await app.tech_type_callback(result)
+        assert res == result
+        assert app.shown_main_screen is True
+        assert app.pushed_screens == []
+        mock_egeria.get_tech_type_detail.assert_not_called()
+
+    @pytest.mark.asyncio
+    async def test_tech_type_callback_no_details(self, backend):
+        # Always faked: Egeria answers with a string when the type has no details
+        app = DummyTechTypesApp(backend)
+        app.notify = MagicMock()
+        mock_egeria = MagicMock()
+        mock_egeria.get_tech_type_detail.return_value = "No elements found"
+        backend.always_fake("tech_types_handler.Egeria", returns=mock_egeria)
+
+        res = await app.tech_type_callback("Unknown Type")
+        assert res == 200
+        assert app.shown_main_screen is True
+        assert app.pushed_screens == []
+        app.notify.assert_called_once()
 
     @pytest.mark.asyncio
     async def test_tech_type_options_callback_template(self):
