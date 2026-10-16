@@ -1,0 +1,34 @@
+{
+  "My-User-Peers": {
+    "target_type": "Peer",
+    "heading": "Peers",
+    "description": "Detailed Peer Connections",
+    "family": "MyProfile",
+    "formats": [
+      {
+        "types": ["LIST", "REPORT", "DICT", "TABLE"],
+        "attributes": [
+          {
+            "name": "Peer",
+            "key": "relatedBy.relationshipHeader.type.typeName"
+          },
+          {
+            "name": "guid",
+            "key": "elementHeader.guid"
+          },
+          {
+            "name": "peerProperties",
+            "key": "relatedBy.relationshipProperties.class"
+          }
+        ]
+      }
+    ],
+    "action": {
+      "function": "ClassificationExplorer.get_related_elements",
+      "required_params": ["element_guid"],
+      "spec_params": {
+        "relationship_type": "Peer"
+      }
+    }
+  }
+}

@@ -164,6 +164,12 @@ class TestShopForDataMixin:
         assert res == 210
         assert app.shown_main_screen is True
 
+        # go back (b / Escape) dismisses with [200]
+        app.shown_main_screen = False
+        res = await app.shop_for_data_callback([200])
+        assert res == 200
+        assert app.shown_main_screen is True
+
     @pytest.mark.asyncio
     async def test_shop_for_data_callback_search_for_term(self):
         app = DummyShopApp()

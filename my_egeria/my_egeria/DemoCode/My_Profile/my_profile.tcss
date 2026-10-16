@@ -62,11 +62,52 @@ FeedbackScreen, FeedbackLogScreen {
     background: $background;
 }
 
+/* Title row, then network + search side by side, then the selected peer's details */
+MyNetworkScreen {
+    grid-rows: auto 1fr 1fr;
+    background: $background;
+}
+
+#my_network_container {
+    column-span: 2;
+    width: 100%;
+    height: 100%;
+}
+
+#people_search_container {
+    width: 100%;
+    height: 100%;
+}
+
+#peer_details_container {
+    column-span: 3;
+    width: 100%;
+    height: 100%;
+}
+
+#my_network_table {
+    width: 100%;
+    height: 1fr;
+}
+
+#my_network_buttons,
+#add_peer_container,
+#add_peer_container Horizontal {
+    height: auto;
+}
+
+#people_found_table,
+#peer_contacts_table,
+#peer_communities_table {
+    height: auto;
+    max-height: 12;
+}
+
 ModalScreen > Header, ModalScreen > Footer {
     column-span: 3;
 }
 
-#edit_profile_title, #create_profile_title, #edit_teams_title, #edit_roles_title, #edit_communities_title, #edit_identities_title, #status_title, #generic_data_view_title, #feedback_title, #feedback_log_title, .span-3 {
+#my_network_title, #confirm_remove_peer_title, #edit_profile_title, #create_profile_title, #edit_teams_title, #edit_roles_title, #edit_communities_title, #edit_identities_title, #status_title, #generic_data_view_title, #feedback_title, #feedback_log_title, .span-3 {
     column-span: 3;
     text-align: center;
     background: darkblue;
@@ -96,6 +137,7 @@ ModalScreen > Header, ModalScreen > Footer {
 #edit_projects_container,
 #edit_todos_container,
 #confirm_delete_container,
+#confirm_remove_peer_container,
 #status_container,
 #user_identities_container,
 #generic_data_view_container,

@@ -776,6 +776,18 @@ class TestShopForDataAndOverviewScreens:
             await pilot.pause()
             assert app.dismissed_result == [210]
 
+    @pytest.mark.parametrize("key", ["b", "escape"])
+    @pytest.mark.asyncio
+    async def test_shop_for_data_screen_go_back_key(self, key):
+        # Pressed as soon as the screen opens, without focusing a table first: nothing on the
+        # screen may take focus and swallow the key (a TextArea prompt used to)
+        app = ScreenTestHostApp(lambda: ShopForDataScreen())
+        async with app.run_test() as pilot:
+            await pilot.pause()
+            await pilot.press(key)
+            await pilot.pause()
+            assert app.dismissed_result == [200]
+
     @pytest.mark.asyncio
     async def test_shop_for_data_screen_subscribe_action(self):
         t2 = DataTable(id="digital_product_catalog_table")

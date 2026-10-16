@@ -256,6 +256,15 @@ class TestMyProfileAppActionsAndOptions:
             call_args = app.push_screen.call_args[0]
             assert isinstance(call_args[0], screen_cls)
 
+    @pytest.mark.asyncio
+    async def test_my_network_option_shows_network(self):
+        app = MyProfileApp()
+        app.show_my_network = MagicMock()
+        event = MagicMock()
+        event.option.prompt = "[] My Network"
+        await app.handle_option_selected(event)
+        app.show_my_network.assert_called_once_with()
+
     def test_status_callback(self):
         """Closing a status screen returns to the main screen; it must not end the app."""
         app = MyProfileApp()

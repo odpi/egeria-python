@@ -3,7 +3,7 @@
 
 # My Profile App User Manual
 
-The **My Profile App** is a terminal user interface (TUI), built with [Textual](https://textual.textualize.io/) and the `pyegeria` SDK, that gives an Egeria user a personal dashboard: their profile, roles, teams, communities, blogs, journal, to-dos and user identities, plus access to comments, feedback, data shopping, subscriptions and technology types.
+The **My Profile App** is a terminal user interface (TUI), built with [Textual](https://textual.textualize.io/) and the `pyegeria` SDK, that gives an Egeria user a personal dashboard: their profile, roles, teams, communities, blogs, journal, to-dos and user identities, plus access to comments, feedback, data shopping, subscriptions, technology types and their network of peers.
 
 This manual describes how to *use* the app. For how it works internally (screens, handlers, Egeria calls and flow diagrams) see the [My Profile Reference Guide](My-Egeria-Doc.md).
 
@@ -218,7 +218,7 @@ Opens a screen with five tables, each loading in the background: **Glossaries**,
 - `u` or `ctrl+s` – subscribe to the highlighted item.
 - `t` – search glossary terms. Back from the search (`g`) returns to Shop for Data.
 - `k` – bookmark the highlighted item; `ctrl+b` – open bookmarks with its GUID ready to add.
-- `b` – back; `q` – quit the screen.
+- `b` or `Escape` – back to the main screen; `q` – quit the screen.
 
 On the overview screen, `s` subscribes to the selected node, `b` goes back and `q` returns to the main screen. On a sample-data view, `s` subscribes, and `b`, `Escape` or `Enter` go back.
 
@@ -250,6 +250,16 @@ On the bookmarks screen:
 
 Your bookmarks are kept in Egeria as the members of your private **My Bookmarks** collection (qualified name `Bookmarks::<your user id>`), and only that collection. It is created the first time you bookmark something, anchored to your profile and linked from it with a `ResourceList` relationship whose resource use is "Bookmarks".
 
+### My Network
+Your network is the people linked to your profile in Egeria. The screen lists them (qualified name, display name, full name, pronouns, GUID and the description you gave the link). If your profile has not finished loading, the app tells you to wait and does not open the screen.
+
+- **View details:** highlight a person and press `v` (or **Person Details**). A panel shows their **contact methods** and the **communities** they belong to. A message tells you if either is empty.
+- **Add someone:** type all or part of a name in the search field and press `Enter`. Up to 10 matching people are listed, leaving out you and anyone already in your network. Select a person, optionally enter a **nickname** and a **description** of your relationship, then press **Add to Network**. **Cancel** clears the selection.
+- **Remove someone:** highlight a person and press `d` (or **Remove from Network**), then confirm with **Remove**. **Cancel** or `Escape` keeps them. Only the link between you is removed; their profile is not changed.
+- `q` returns to the main screen.
+
+Each person in your network is linked to your profile with a `Peer` relationship. The nickname and description are stored on that relationship.
+
 ### Leave Feedback / Feedback Log
 See [Leaving Feedback](#leaving-feedback).
 
@@ -267,10 +277,12 @@ See [Leaving Feedback](#leaving-feedback).
 | `ctrl+b` | Main screen, Shop for Data | Bookmarks, with the highlighted row's GUID ready to add |
 | `ctrl+k` | Main screen | Bookmark the selected row |
 | `ctrl+n` / `d` / `q` | Bookmarks | Add by GUID / remove highlighted / close |
+| `v` / `d` / `q` | My Network | Show highlighted person's details / remove highlighted person / close |
+| `Enter` | My Network search field | Search for people to add |
 | `a` / `d` / `Escape` | Edit screens | Add row / delete row / back |
 | `ctrl+a` / `q` | Add screens | Add / close (outside a text field) |
 | `ctrl+a` / `ctrl+r` / `q` | Comments screen | Add comment / show responses to highlighted comment / close |
-| `s` / `u` or `ctrl+s` / `t` / `k` / `b` / `q` | Shop for Data | Sample / subscribe / search glossary terms / bookmark / back / close |
+| `s` / `u` or `ctrl+s` / `t` / `k` / `b` or `Escape` / `q` | Shop for Data | Sample / subscribe / search glossary terms / bookmark / back / close |
 | `s` / `b` / `q` | Overview | Subscribe / back / back to main |
 | `c` / `q` | Create Subscription | Create / cancel |
 | `c` / `Enter` / `q` | Status screen | Copy GUID / close / close |
