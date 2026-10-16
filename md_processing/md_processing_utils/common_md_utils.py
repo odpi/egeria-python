@@ -438,22 +438,8 @@ def set_collection_manager_body(object_type: str, qualified_name: str, attribute
             "nextVersionDate": attributes.get('Next Version Date', {}).get('value', None),
         })
 
-    # Handle Agreement and Digital Subscription
-    if "Agreement" in object_type or "Subscription" in object_type:
-        prop_bod.update({
-            "agreementType": attributes.get('Agreement Type', {}).get('value', None),
-            "agreementStatus": attributes.get('Agreement Status', {}).get('value', None),
-            "agreementIdentifier": attributes.get('Agreement Identifier', {}).get('value', None),
-            "agreementStatusIdentifier": attributes.get('Agreement Status Identifier', {}).get('value', None),
-            "agreementVersionIdentifier": attributes.get('Agreement Version Identifier', {}).get('value', None),
-        })
-        if "Subscription" in object_type:
-            prop_bod.update({
-                "subscriberType": attributes.get('Subscriber Type', {}).get('value', None),
-                "subscriberId": attributes.get('Subscriber Id', {}).get('value', None),
-                "supportLevel": attributes.get('Support Level', {}).get('value', None),
-                "serviceLevels": attributes.get('Service Levels', {}).get('value', None),
-            })
+    # Agreement: AgreementProperties declares no fields of its own (ISSUE-145).
+    # Digital Subscription's supportLevel/serviceLevels are set by set_element_prop_body().
 
     # Handle Glossary
     if "Glossary" in object_type:

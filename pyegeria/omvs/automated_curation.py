@@ -2625,103 +2625,6 @@ class AutomatedCuration(ServerClient):
             self._async_get_active_claimed_engine_actions(governance_engine_guid, start_from, page_size)
         )
 
-    async def _async_get_engine_actions(
-            self,
-            start_from: int = 0,
-            page_size: int = 0,
-            output_format: str = "JSON",
-            report_spec: str | dict = "EngineAction",
-            body: Optional[dict | FilterRequestBody] = None,
-            **kwargs,
-    ) -> list | str:
-        """Retrieve the list of engine action metadata elements.
-
-        Async version.
-
-        Parameters
-        ----------
-        start_from : int, default 0
-            The index from which to start fetching.
-        page_size : int, default 0
-            The maximum number to fetch in a single request.
-        output_format : str, default "JSON"
-            The desired output format (e.g., "JSON", "DICT").
-        report_spec : str | dict, default "EngineAction"
-            The report specification to use for formatting.
-        body : dict | FilterRequestBody, optional
-            The request body.
-        **kwargs : Any
-            Additional keyword arguments to pass to the request.
-
-        Returns
-        -------
-        list | str
-            A list of dictionaries representing the retrieved engine actions.
-
-        Raises
-        ------
-        PyegeriaException
-            If there is an error in communication or processing.
-
-        Notes
-        -----
-        For more information see: https://egeria-project.org/concepts/engine-action
-        """
-
-        url = f"{self.ref_curation_command_base}/engine-actions"
-        response = await self._async_get_name_request(url, _type=self.ENGINE_ACTION_LABEL,
-                                                      _gen_output=self._generate_engine_action_output,
-                                                      filter_string=None, start_from=start_from, page_size=page_size,
-                                                      output_format=output_format, report_spec=report_spec, body=body, **kwargs)
-        return response
-
-    def get_engine_actions(
-            self,
-            start_from: int = 0,
-            page_size: int = 0,
-            output_format: str = "JSON",
-            report_spec: str | dict = "EngineAction",
-            body: Optional[dict | FilterRequestBody] = None,
-            **kwargs,
-    ) -> list | str:
-        """Retrieve the list of engine action metadata elements.
-
-        Parameters
-        ----------
-        start_from : int, optional
-            The index to start retrieving engine actions from. If not provided, the default value will be used.
-        page_size : int, optional
-            The maximum number of engine actions to retrieve in a single request. If not provided, the default global
-             maximum paging size will be used.
-        output_format: str, default = "JSON"
-            - one of "DICT", "MERMAID" or "JSON"
-        report_spec: dict , optional, default = None
-            The desired output columns/fields to include.
-        body: dict, optional, default = None
-            Provides, a full request body.
-        **kwargs : Any
-            Additional keyword arguments to pass to the request.
-
-        Returns
-        -------
-        list of dict | str
-            A list of dictionaries representing the retrieved engine actions.
-        Raises:
-        ------
-        PyegeriaException
-        Notes
-        -----
-        For more information see: https://egeria-project.org/concepts/engine-action
-
-        """
-        loop = asyncio.get_event_loop()
-        response = loop.run_until_complete(
-            self._async_get_engine_actions(
-                start_from, page_size, output_format, report_spec, body, **kwargs
-            )
-        )
-        return response
-
     async def _async_get_active_engine_actions(
             self,
             start_from: int = 0,
@@ -5350,7 +5253,9 @@ class AutomatedCuration(ServerClient):
 
     def print_engine_actions(self):
         """Print all the engine actions."""
-        governance_actions = self.get_engine_actions()
+        # The View Server has no list-all engine-actions endpoint (ISSUE-151); EngineAction
+        # is an Asset in 6.2, so the asset search is the list-all.
+        governance_actions = self.find_engine_actions("*")
         if governance_actions is not None and isinstance(governance_actions, list):
             for x in range(len(governance_actions)):
                 self.print_engine_action_summary(governance_actions[x])
