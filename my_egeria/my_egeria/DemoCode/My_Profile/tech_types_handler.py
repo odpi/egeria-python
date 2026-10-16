@@ -20,7 +20,7 @@ current_dir = Path(__file__).resolve().parent
 if str(current_dir) not in sys.path:
     sys.path.append(str(current_dir))
 
-from pyegeria import AutomatedCuration, PyegeriaException, print_basic_exception, load_app_config, settings
+from pyegeria import AutomatedCuration, PyegeriaException, print_basic_exception, load_app_config, settings, Egeria
 from StatusScreen import StatusScreen
 from TechnologyTypeScreens import (
     TechnologyTypesScreen,
@@ -64,6 +64,7 @@ class TechTypesMixin:
         If the result is int (4xx) it indicates an error in the screen.
         If the result is str it contains the GUID of the selected technology type.
         """
+        self.result = result
         # clear local data fields
         tech_type_description = ""
         self.tech_type_data = {}
@@ -71,15 +72,21 @@ class TechTypesMixin:
         self.tech_type_templates = []
         self.tech_type_processes = []
         # check that we got a valid result from the screen and process accordingly
-        if not result or isinstance(result, int):
+        if not self.result or isinstance(self.result, int):
             self.log(f"Technology Types screen cancelled or failed; return: {result}.")
             self._show_main_screen()
-            return result
+            return self.result
+        # The screen dismisses quit/go back as the strings "200"/"201", not ints
+        if str(self.result) in ("200", "201"):
+            self.log(f"Technology Types Screen returned on a quit/go back directive: {self.result}")
+            self._show_main_screen()
+            return self.result
+
         self.selected_t_node = str(result)
         self.log(f"Technology Types screen returned: {self.selected_t_node}")
         # Request details for selected tech type
         try:
-            p_client = AutomatedCuration(self.view_server, self.platform_url, self.user_name, self.user_password)
+            p_client = Egeria(self.view_server, self.platform_url, self.user_name, self.user_password)
             token = p_client.create_egeria_bearer_token(self.user_name, self.user_password)
             self.tech_type_data = p_client.get_tech_type_detail(
                 filter_string=self.selected_t_node,
@@ -91,8 +98,15 @@ class TechTypesMixin:
             error_message = f"Failed to retrieve technology type process details for {getattr(self, 'selected_q_name', self.selected_t_node)}: {str(e)}"
             self.log(f"Error retrieving technology type details: {error_category}, {error_message}")
             await self.push_screen(StatusScreen(f"{error_category}: {error_message}"), callback=self.status_callback)
+            return 417
 
         self.log(f"Technology Type Data: {self.tech_type_data}, type: {type(self.tech_type_data)}")
+        # Egeria returns a plain string such as "No elements found" when there is no detail
+        if not isinstance(self.tech_type_data, dict):
+            self.notify(f"No details found for technology type '{self.selected_t_node}'",
+                        timeout=10, severity="warning")
+            self._show_main_screen()
+            return 200
 
         if "specificationMermaidGraph" in self.tech_type_data:
             del self.tech_type_data["specificationMermaidGraph"]
