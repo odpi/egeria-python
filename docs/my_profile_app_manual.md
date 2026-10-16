@@ -218,7 +218,7 @@ Opens a screen with five tables, each loading in the background: **Glossaries**,
 - `u` or `ctrl+s` – subscribe to the highlighted item.
 - `t` – search glossary terms. Back from the search (`g`) returns to Shop for Data.
 - `k` – bookmark the highlighted item; `ctrl+b` – open bookmarks with its GUID ready to add.
-- `b` – back; `q` – quit the screen.
+- `b` or `Escape` – back to the main screen; `q` – quit the screen.
 
 On the overview screen, `s` subscribes to the selected node, `b` goes back and `q` returns to the main screen. On a sample-data view, `s` subscribes, and `b`, `Escape` or `Enter` go back.
 
@@ -282,7 +282,7 @@ See [Leaving Feedback](#leaving-feedback).
 | `a` / `d` / `Escape` | Edit screens | Add row / delete row / back |
 | `ctrl+a` / `q` | Add screens | Add / close (outside a text field) |
 | `ctrl+a` / `ctrl+r` / `q` | Comments screen | Add comment / show responses to highlighted comment / close |
-| `s` / `u` or `ctrl+s` / `t` / `k` / `b` / `q` | Shop for Data | Sample / subscribe / search glossary terms / bookmark / back / close |
+| `s` / `u` or `ctrl+s` / `t` / `k` / `b` or `Escape` / `q` | Shop for Data | Sample / subscribe / search glossary terms / bookmark / back / close |
 | `s` / `b` / `q` | Overview | Subscribe / back / back to main |
 | `c` / `q` | Create Subscription | Create / cancel |
 | `c` / `Enter` / `q` | Status screen | Copy GUID / close / close |
