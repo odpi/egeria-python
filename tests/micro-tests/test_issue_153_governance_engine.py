@@ -20,6 +20,14 @@ G = "11111111-1111-1111-1111-111111111111"
 G2 = "22222222-2222-2222-2222-222222222222"
 
 
+@pytest.fixture(autouse=True)
+def _no_live_connection_check():
+    """Every client this file builds, including the GovernanceEngine an AutomatedCuration wrapper creates lazily,
+    skips the live connection check: CI has no Egeria on localhost:9443."""
+    with patch("pyegeria.core._base_server_client.BaseServerClient.check_connection", return_value=""):
+        yield
+
+
 def _client(cls, **kw):
     with patch("pyegeria.core._base_server_client.BaseServerClient.check_connection", return_value=""):
         return cls(view_server="vs", platform_url="https://localhost:9443", user_id="u", user_pwd="p", **kw)
