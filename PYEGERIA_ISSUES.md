@@ -187,6 +187,26 @@ into the entry now, so it isn't rediscovered from scratch later.
 ---
 
 
+### ISSUE-152: five update methods pass the body into `_async_update_element_body_request`'s `prop` slot, so nothing is sent
+
+**Layer:** Pyegeria · **Status:** open (found 2026-10-15 by Resource Explorer's ClassificationAnnotation backfill; not fixed, per this repo's policy)
+
+`_async_update_element_body_request(self, url, prop=None, body=None)` (`pyegeria/core/_server_client.py:7317`) takes the body as its **third** parameter. Five callers pass it positionally as the second, so it lands in `prop` and `body` is `None`; the call fails before any request goes out (the builder observed an AttributeError):
+
+- `pyegeria/omvs/data_discovery.py:299` (`_async_update_annotation`, behind `update_annotation`)
+- `pyegeria/omvs/time_keeper.py:342`
+- `pyegeria/omvs/schema_maker.py:131` and `:174`
+- `pyegeria/omvs/subject_area.py:302`
+
+Checked at egeria-python `f1b06cdd`; the installed wheel in trellis has the same line in `data_discovery.py`.
+
+**Fix (one token each):** `await self._async_update_element_body_request(url, body=body)`. A test per method that the body reaches the HTTP layer would catch a repeat.
+
+**Workaround in Resource Explorer:** `scripts/backfill_classification_annotations.py` calls `_async_update_element_body_request(url, body=body)` directly, and pins this bug with a test that fails once pyegeria is fixed.
+
+---
+
+
 ### ISSUE-150: Dr.Egeria commands for an Analytic Function's Egeria declaration: a GovernanceActionType that Resource Explorer runs as an engine host, plus a synchronous path that bypasses Egeria
 
 **Layer:** Dr.Egeria (commands over existing Action Author / governance commands) · **Status:** open, direction agreed with the owner 2026-10-13 and **confirmed by Mandy 2026-10-14**, not yet built · **Found:** 2026-10-13, handed off by the Resource Explorer PR/CI session. Source: trellis `docs/extensibility-walking-skeleton-brief.md` §2c, §3a, §8. Egeria references: [Governance Action Processes (0462)](https://egeria-project.org/types/4/0462-Governance-Action-Processes/), [Survey Action Engine](https://egeria-project.org/concepts/survey-action-engine/).
