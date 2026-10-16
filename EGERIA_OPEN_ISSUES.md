@@ -1,496 +1,284 @@
 # Open Egeria Server Issues
 
-This is a standalone extract of every **currently open, Egeria-Server-side**
-issue from [`PYEGERIA_ISSUES.md`](PYEGERIA_ISSUES.md) — nothing here can be
-resolved by editing this repo; each needs a server-side fix, an upstream bug
-report, or a deployment/config change. It exists to hand to whoever owns the
-Egeria server side of a question without making them wade through
-`PYEGERIA_ISSUES.md`'s pyegeria-side entries and closed/resolved appendix.
+A standalone extract of the **Egeria-Server-side** issues in [`PYEGERIA_ISSUES.md`](PYEGERIA_ISSUES.md), for whoever owns the Egeria side. None of them can be fixed by editing this repo: each needs a server-side fix, an upstream bug report, or a deployment change.
 
-**`PYEGERIA_ISSUES.md` remains the source of record.** This file is a
-generated-by-hand extract of its "Open Egeria Server issues" section as of
-2026-08-30 — re-derive it from that section (don't edit the two
-independently) whenever an entry here changes status, gets fixed upstream,
-or a new server-side issue is filed.
+**`PYEGERIA_ISSUES.md` is the source of record.** This file was **re-derived from it on 2026-10-13** (its "Open Egeria Server issues" and "Awaiting re-test" index lists, plus the Egeria-side entries filed under pyegeria items). Don't edit the two independently. When an entry changes status, change it in `PYEGERIA_ISSUES.md`, then re-derive this file.
 
-**Note (2026-09-20):** this extract has not been fully re-derived since
-2026-08-30 — `PYEGERIA_ISSUES.md`'s "Open Egeria Server issues" section has
-since gained at least ISSUE-102 and a 2026-08-15 Postgres-checkpoint/
-background-connector-load entry that are not reflected below; only
-ISSUE-108 was appended here directly (source of record is
-`PYEGERIA_ISSUES.md`, this file is due a full re-sync).
+It replaces the 2026-10-05 snapshot `docs/egeria-open-bugs-2026-10-05.md` (deleted; it's in git history). That snapshot's Egeria-team verdicts and fix evidence are now in the individual `PYEGERIA_ISSUES.md` entries.
 
-**Down to 2 entries as of the 2026-08-30 refresh** (was 5): ISSUE-52,
-ISSUE-54, and ISSUE-41/PY-21 were all confirmed fixed server-side 2026-08-30
-(Egeria team) and moved to `PYEGERIA_ISSUES.md`'s "Fixed / Resolved"
-appendix — see that file for the full writeups. ISSUE-38/PY-18 also has a
-server-side fix as of the same date but is deliberately kept open here
-pending pyegeria-side
-verification against real data.
+## Summary
 
----
+| Group | Issues |
+|---|---|
+| **Open on the Egeria side** (full entries below) | ISSUE-147, ISSUE-143, ISSUE-130, ISSUE-128, ISSUE-108 |
+| **Awaiting re-test:** a fix landed (mostly Egeria `main`, odpi/egeria#9363, merged 2026-10-06), not yet verified live | ISSUE-125, ISSUE-124, ISSUE-117, ISSUE-112, ISSUE-95, ISSUE-90, ISSUE-89, ISSUE-79, ISSUE-38 |
+| **Egeria-side, but tracked as pyegeria items** (a pyegeria change waits on Egeria) | ISSUE-146, ISSUE-132 |
 
-These need an Egeria Server-side fix, an upstream bug report, or a
-deployment/config change — nothing here can be resolved by editing this
-repo. Where an entry has a known pyegeria/Dr.Egeria follow-on once the
-Egeria side lands, it's noted inline (also cross-referenced from the
-"Open pyegeria items" section below where the follow-on is substantial
-enough to track there too).
+## Awaiting re-test
 
----
+| Issue | Status (from `PYEGERIA_ISSUES.md`) |
+|---|---|
+| ISSUE-125: `deleteEnumDef` answers 500 "unknown TypeDef" for an enum the server lists -- an enum added through the API cannot be removed | open; reported to the Egeria team (response 2026-10-05); Egeria fix merged to Egeria `main` 2026-10-06 (odpi/egeria#9363), not yet re-tested on a platform built from it |
+| ISSUE-124: `updateTypeDef` (Metadata Expert `open-metadata-types/update`) can never succeed -- the server builds the patch without `updatedBy`, which the repository services require | open; reported to the Egeria team (response 2026-10-05); Egeria fix merged to Egeria `main` 2026-10-06 (odpi/egeria#9363), not yet re-tested on a platform built from it |
+| ISSUE-117: Cascade delete that takes the soft-delete (Memento) path fails partway with `OMAG-REPOSITORY-HANDLER-400-010` unless `forLineage=true` — leaves the asset live and an anchored element already soft-deleted | open, workaround known; reported to the Egeria team (response 2026-10-05); Egeria fix merged to Egeria `main` 2026-10-06 (odpi/egeria#9363), not yet re-tested on a platform built from it |
+| ISSUE-112: `AutomatedCurationRESTServices.saveClientSideSecret`/`deleteClientSideSecret` return a plain success `VoidResponse` when the resolved connector isn't a `YAMLSecretsFileConnector` — no error, no write, no indication anything was skipped | open |
+| ISSUE-95: No catalog template registered for the "Apache Kafka Server" technology type — `Create Kafka Server Element` (Asset Maker) fails with a 400 on `qs-view-server` | awaiting re-test (addressed on the Egeria side, confirmed live 2026-10-05) |
+| ISSUE-90: [fixed?] `qs-engine-host` retries `startMissedEngineActions` forever when one incomplete engine action's anchor is unreadable by the engine-host user | open |
+| ISSUE-89: No configurable bearer-token lifetime in `application.properties` — platform tokens are fixed at 3600 s, and the signing key is random per restart | awaiting re-test (addressed in Egeria source 2026-09-19; not verified on the dev platform) |
+| ISSUE-79: native survey against a template-created `FileFolder` asset fails server-side — `assetConnector` is null in `BasicFolderConnector.getFile()` | open (Egeria Server), reproduced live 2026-08-27, **re-checked |
+| ISSUE-38 (PY-18): `count_relationships_between_elements("Exception")` (276) disagrees with `ClassificationExplorer.get_relationships("Exception")` (55) | re-confirmed 2026-08-18, byte-for-byte identical to the |
 
-### ISSUE-38 (PY-18): `count_relationships_between_elements("Exception")` (276) disagrees with `ClassificationExplorer.get_relationships("Exception")` (55)
+## Egeria-side issues tracked as pyegeria items
 
-**Update 2026-08-30, from the Egeria team (Mandy Chessell).** Leaving this
-entry in "Open Egeria Server issues" until the verification below has been
-run against real data — the Egeria side is done, but this entry has been
-re-measured and re-confirmed several times, and it shouldn't move to
-Fixed/Resolved on the strength of a change nobody has yet pointed at the
-data that produced the original report.
+- **ISSUE-146: Deleting a journal entry fails with OMAG-REPOSITORY-HANDLER-400-008, and pyegeria's `remove_note` reaches the delete only through the generic Asset Maker service**: Egeria has no note/action delete, and the only route (the asset delete) fails with 400-008 for journal entries; awaiting Egeria's delete fixes. Full entry in `PYEGERIA_ISSUES.md`.
+- **ISSUE-132: `DeleteElementRequestBody` serializes the cascade flag as `cascadeDelete`; Egeria's field is `cascadedDelete` and unknown fields are ignored, so no pyegeria cascade delete has ever cascaded**: Egeria's DeleteOptions field is `cascadedDelete`; the pyegeria fix is on hold until Egeria's cascade-delete fix lands. Full entry in `PYEGERIA_ISSUES.md`.
 
-**Status: resolved on the Egeria side 2026-08-30** (`omf-metadata-spring`,
-`omf-metadata-server`, `generic-handlers`, and the OMF Java client) —
-**awaiting verification from the pyegeria side**, see below. The two
-numbers are not going to be made equal, because they are answers to two
-different questions and both are wanted; what has changed is that the
-caller now chooses which one they get.
+## Open on the Egeria side
 
-**What the difference actually was.** `findAttachmentLinks()` puts every
-relationship it retrieves through a visibility check on the entities at
-both ends, and silently drops the ones whose anchor the caller cannot
-read. `countAttachmentLinks()` skipped that check — deliberately, and
-documented as such in its own javadoc, because applying it means fetching
-every matching relationship, which is the cost the count exists to avoid
-— and also ignored `effectiveTime`. So the count was of what matches the
-search and the list was of what the caller may see. That answers this
-entry's open question ("what does the metadata-expert count include for
-`Exception` that the classification-explorer traversal excludes?"):
-relationships with an end whose anchor is not readable by the calling
-user, plus anything outside the effectivity window. It also explains why
-only `Exception` diverged among the types tested — it is the type whose
-ends are most likely to have been deleted or anchored to something the
-caller cannot see — and why the divergence tracked the demo data rather
-than staying at a fixed size.
+### ISSUE-147: Every valid-metadata clear call answers OPEN-METADATA-400-011 "not found", even after a successful delete; clear-map-value deletes nothing; clear-map-name leaves the map's value set behind
 
-**The new option.** Both counting endpoints take a `pushDown` query
-parameter, `required=false`, default `true`:
-```
-POST .../users/{userId}/relationships/by-search-conditions/count?pushDown=false
-POST .../users/{userId}/metadata-elements/by-search-conditions/count?pushDown=false
-```
-- `pushDown=true` (the default, and exactly the existing behaviour) — the
-  repository counts the matching rows itself. Fast, and counts what
-  matches the search.
-- `pushDown=false` — the relationships are retrieved and counted, so the
-  answer agrees with the list by construction, at the cost of reading
-  every one of them.
+**Layer:** Egeria Server (`ValidMetadataValueHandler`) · **Status:** open · **Found:** 2026-10-13. The first live run of the Valid Metadata commands showed it (the error text wasn't captured then). Re-tested the same day with the full responses captured.
 
-Nothing changes for a caller that does not send the parameter. The same
-choice is on the Java client (`countMetadataElements(..., pushDown)` and
-`countRelationshipsBetweenMetadataElements(..., pushDown)` on
-`OpenMetadataStore` and `OpenMetadataClient`), with the existing
-signatures kept and defaulting to `true`.
+**Re-test:** run once on qs-view-server as erinoverview, with all four live sessions clearing it first. It used made-up properties `pyegeriaClearRetest` and `pyegeriaClearRetestMap` (typeName `Asset`) and called the SDK methods in `pyegeria/omvs/valid_metadata.py`. The Dr.Egeria `Clear Valid Metadata *` commands call the same methods (`md_processing/v2/reference_data.py:198-242`).
 
-**The test the pyegeria side should run to prove it.** Against the
-environment that produced the original numbers, using whatever the
-current counts are rather than the 58/57 recorded here — the demo data
-has moved several times during this entry's life, and what matters is the
-relationship between the numbers, not their values:
+| Call | Response | Actual effect |
+|---|---|---|
+| `clear_valid_metadata_value(alpha)`, set up just before | 400-011 "value alpha ... is not found" | **alpha removed** (gone from the list afterwards) |
+| same call again (alpha already gone) | 400-011 | nothing to remove |
+| `clear_valid_metadata_value(beta)` | 400-011 | **beta removed** |
+| `clear_valid_metadata_map_value(mapOne, v1)` | 400-011 "value v1 ... is not found" | **nothing removed**: `get_valid_metadata_map_value` still returns v1 |
+| `clear_valid_metadata_map_name(mapTwo)` | 400-011 | **mapTwo removed** |
+| `clear_valid_metadata_map_name(mapOne)`, with v1 under it | 400-011 | the mapOne name value is removed, but the map's value set "mapOne" (holding v1) stays in `get_valid_metadata_values` |
 
-1. **The accurate count should equal the list.** For
-   `relationshipTypeName: "Exception"`, the count with `pushDown=false`
-   should equal `len(ClassificationExplorer.get_relationships("Exception"))`
-   exactly. This is the assertion that closes the entry — it is the
-   discrepancy this entry is about, stated as an equality.
-2. **The fast count should be unchanged.** The same call with
-   `pushDown=true`, and with the parameter omitted altogether, should both
-   return what the count returns today. If either moves, something
-   regressed for every existing caller.
-3. **A type that already agreed should still agree both ways.**
-   `SemanticAssignment` matched at 401=401 when this entry was last
-   measured. Both `pushDown` values should return that same number — the
-   retrieval route must not lose or double-count anything on a type where
-   there was never a discrepancy to resolve.
+Request ids: `ec9052e7` and `3975182d` (alpha), `38759736` (beta), `475e68f1` (map value), `407c0e17` and `07886f29` (map names). pyegeria surfaces each one as `SERVER_ERROR_500` wrapping `relatedHTTPCode` 400 `InvalidParameterException`.
 
-Worth capturing while verifying: the difference between the two counts is
-the number of matching relationships the calling user cannot fully see.
-If it is not the 1 recorded here, that is not a failure — it is a
-measurement of the current data — but it is worth writing down, because a
-large difference on a type that should be fully visible would be a
-separate finding. If test 1 comes out unequal, the remaining difference is
-not the visibility check and this entry should stay open with both
-numbers recorded.
+**Cause (Egeria source, `af400039c2`, `frameworks/open-metadata-framework/.../handlers/ValidMetadataValueHandler.java`):**
+1. **No `return` after the delete (lines ~541-680).** In all three `clear*` methods, `if (validValueGUID != null) deleteMetadataElementInStore(...)` is followed unconditionally by the audit log and `throw new InvalidParameterException(VALID_METADATA_MISSING ...)`. So every call throws, whether or not it deleted anything. The "not found" error is the method's normal exit.
+2. **Map name dropped in `clearValidMetadataMapValue`.** It calls `getValidValueGUID(userId, typeName, propertyName, null, preferredValue)`, passing `null` where `mapName` belongs. It therefore searches for `v1` as a plain value of the property, finds nothing, and deletes nothing.
+3. **`clearValidMetadataMapName` deletes only the name's own value.** It doesn't touch the per-map value set created by `setup-map-value` (the "Set of valid values for the mapOne map name ..." element) or its members. Whether that should cascade is Egeria's call.
 
-**Follow-on for pyegeria, once verified:** the Overview dashboard's
-current workaround — keeping relationship counts on
-`ClassificationExplorer.get_relationships` while using native counting
-only for element counts — can be revisited.
-`count_relationships_between_elements(..., pushDown=False)` gives the same
-number as the traversal without materialising the list client-side. Keep
-in mind that `pushDown=false` reads every matching relationship
-server-side, so it is the right choice for a number a user is going to
-compare against a list they can also see, and the wrong choice for a
-headline figure over a large type where speed is what matters. That
-trade-off is now the caller's to make, which is what this entry was
-ultimately asking for.
+**Effect on Dr.Egeria:** `Clear Valid Metadata Value` and `Clear Valid Metadata Map Name` report failure although the clear worked. `Clear Valid Metadata Map Value` reports failure and really did fail.
 
-**Egeria-side test cover:** `CountPushDownFVT` in
-`open-metadata-test/open-metadata-fvt/query-fvt` checks that both routes,
-over REST and through the Java client, agree when every matching element
-is visible, and that omitting the parameter changes nothing. It
-deliberately does not attempt the case where they differ — that needs an
-element the calling user cannot read, which that suite cannot arrange.
-Which is why the verification above, against real data, is the part that
-actually proves the fix.
+**Leftovers on qs-view-server:** the map value set "mapOne" with member v1 under `pyegeriaClearRetestMap`/`Asset`, plus whatever per-property container elements setup creates (`Egeria:ValidMetadataValue::pyegeriaClearRetest-Asset` and `...pyegeriaClearRetestMap-Asset`). These are test elements, not content-pack elements. RE's blueprint materializer treats `Egeria:ValidMetadataValue:` qualifiedNames as content-pack origin, but only for SolutionComponents, so they don't affect it.
 
-**Status:** re-confirmed 2026-08-18, byte-for-byte identical to the
-2026-08-15 numbers below — `count_relationships_between_elements("Exception")`
-still returns 58, `get_relationships("Exception")` still returns 57, same
-off-by-one. No change.
-
-**Status:** re-investigated 2026-08-15, narrowed and re-confirmed
-**Egeria server, not pyegeria-fixable** — this is a genuine, real bug, just
-smaller than originally measured (demo data has evidently changed since
-2026-07-24: `count` is now 58 and `get_relationships` is now 57, not
-276/55). Cross-checked against a **second, independent pyegeria list-based
-method** — `MetadataExpert.find_relationships_between_elements` (a
-different OMVS client, different endpoint,
-`.../relationships/by-search-conditions` rather than
-`ClassificationExplorer`'s `.../relationships/{type}`) — with the same
-`relationshipTypeName: "Exception"` filter: it also returns exactly 57,
-and its 57 relationship GUIDs are the **identical set** to
-`get_relationships`'s 57 (zero difference either direction). Two
-independently-implemented pyegeria code paths through two different
-endpoints agree exactly with each other; only the server's native
-`COUNT(*)` endpoint (`.../relationships/by-search-conditions/count`)
-disagrees, by exactly 1. Also re-confirmed the original "not the type
-filter" finding still holds with current data — re-ran `count` vs.
-`get_relationships` for `SemanticAssignment` (401=401), `License` (2=2),
-`Certification` (0=0), `AttachedRating` (0=0): all match; only `Exception`
-diverges. Also checked whether the count includes non-`ACTIVE`/soft-deleted
-relationships the list endpoints filter out — no: `limitResultsByStatus:
-["ACTIVE"]` and `["ACTIVE","DELETED"]` both still return 58 from `count`
-(no status-filter difference). Since both retrieval paths agree with each
-other and only the count differs, there's genuinely nothing to fix on the
-pyegeria side — this is squarely a server-side discrepancy between the
-native COUNT(*) query and the list-materialization logic for this one
-relationship type. No further pyegeria action needed; still needs
-Egeria-side investigation to say what specifically triggers it for
-`Exception`.
-
-**Original status:** open (Egeria server) — needs Egeria-side investigation. Found
-2026-07-24 while wiring the Egeria Overview dashboard to native counting
-(odpi/egeria#9168). Consolidated in from `egeria-workspaces-fs/
-PYEGERIA_ISSUES.md` 2026-08-05.
-
-**Summary:** the OMF metadata-expert native relationship count and the
-classification-explorer `get_relationships` return materially different
-totals for the `Exception` relationship type — and *only* that type, among
-those tested.
-
-**How to trigger:**
-```python
-from pyegeria import MetadataExpert, ClassificationExplorer
-me = MetadataExpert(view_server="qs-view-server", platform_url="https://localhost:9443",
-                    user_id="erinoverview", user_pwd="secret"); me.create_egeria_bearer_token()
-ce = ClassificationExplorer(view_server="qs-view-server", platform_url="https://localhost:9443",
-                    user_id="erinoverview", user_pwd="secret"); ce.create_egeria_bearer_token()
-
-me.count_relationships_between_elements({"class":"FindRelationshipRequestBody","relationshipTypeName":"Exception"})
-# -> 276
-len(ce.get_relationships(relationship_type="Exception", output_format="JSON", start_from=0, page_size=5000))
-# -> 55  (all 55 have exact typeName "Exception"; no effectivity dates)
-```
-
-**What it is NOT:**
-- Not the type filter — `count("SemanticAssignment")` = 397 =
-  `get_relationships` = 397; `License` 2 = 2; `Certification` 0 = 0;
-  `AttachedRating` 0 = 0. Every other tested type matches; only `Exception`
-  diverges.
-- Not status/effectivity — `count("Exception")` is 276 with
-  `limitResultsByStatus=[ACTIVE]`, with `effectiveTime=<now>`, and with
-  neither; the 55 `get_relationships` results carry no
-  `effectiveFromTime`/`effectiveToTime`.
-- `count(no relationshipTypeName)` = 31857 (all relationships), so 276 is
-  a genuine type-scoped subset, not "count ignores the filter".
-
-**Open question for Egeria:** what does the metadata-expert count include
-for `Exception` that the classification-explorer traversal excludes
-(subtypes counted under the supertype? relationships to non-visible/
-anchored/dangling ends? access/zone filtering that differs between the two
-OMVS)? Whichever is "true", the two APIs should agree for a given type —
-or the difference should be documented.
-
-**Impact / workaround:** egeria-workspaces-fs's Overview dashboard keeps
-**relationship** counts on `ClassificationExplorer.get_relationships` (so
-"Open Exceptions" stays consistent with the Audit app at 55) and uses
-native counting only for **element** counts.
+**pyegeria follow-on (not done, needs the owner's go-ahead):** Dr.Egeria's clear processor could treat 400-011 from `clear-value`/`clear-map-name` as success when a follow-up read confirms the value is gone. Otherwise, wait for the Egeria fix and re-test (see the BACKLOG.md delete re-test item).
 
 ---
 
-### ISSUE-79: native survey against a template-created `FileFolder` asset fails server-side — `assetConnector` is null in `BasicFolderConnector.getFile()`
+### ISSUE-143: `includeOnlyRelationships: ["PersonRoleAppointment"]` returns no relationships for a Person, although the unfiltered read has its role appointments
 
-**Update 2026-08-30, from the Egeria team (Mandy Chessell).** The entry
-stays in "Open Egeria Server issues" — the reported failure is not
-explained and not fixed. What has changed is that the cause recorded in
-this entry, and in Resource Explorer's `re-as-engine-host-plan.md`, is now
-known to be wrong, and the error it produces has been made legible.
+**Layer:** Egeria Server (not pyegeria) · **Status:** open, not yet reported to the Egeria team · **Found:** 2026-10-13, reported by the egeria-workspaces-fs Resource Browser session; reproduced read-only the same day.
 
-**Status: still open (Egeria Server)** — but the recorded cause is
-disproved, and this entry and `re-as-engine-host-plan.md` should both be
-corrected. Investigated 2026-08-30 from the Egeria side, including a new
-FVT suite built to run this exact scenario.
+**What:** reading a Person with a `GetRequestBody` whose
+`includeOnlyRelationships` is `["PersonRoleAppointment"]` returns the element
+with no relationships at all. The same read with no filter returns 8
+`performsRoles` entries, each with relationship type `PersonRoleAppointment`.
+Other filters on the same Person work.
 
-**The premise is false.** This entry, and the design doc's hold, rest on
-"template-based asset creation never wires up a working Connection." That
-is not true, in either environment it was checked against:
+**Reproduction** (Person `10dc7da9-e9e1-471f-9afd-46a7ff414cb7`, Erin Overview,
+as erinoverview on qs-view-server;
+`ClassificationExplorer.get_element_by_guid(guid, graph_query_depth=1,
+output_format="JSON", body={"class": "GetRequestBody", "graphQueryDepth": 1,
+"includeOnlyRelationships": [...]})`):
 
-- **On the quickstart that produced the report.** Every element created
-  from a template that itself carries a `ResourceConnection` got one — 10
-  of 10. Every `FileFolder` in that repository has one, including all
-  three that were created from a template (`/deployments/content-packs`,
-  `/deployments/loading-bay/sample-data`, `/deployments/secrets`).
-- **In a clean environment built from the current archives.** A folder
-  catalogued through `FileGovernance::create-file-folder` came back with a
-  `ResourceConnection` attached.
-- **The `FilesContentPack` template itself is also well formed:**
-  `FileFolder` template `fbdd8efd-...` carries an `Anchors`-classified
-  `Connection` with both a `ConnectToEndpoint` and a
-  `ConnectionConnectorType`.
+| Filter | Relationship keys returned |
+|---|---|
+| none | performsRoles 8, assignmentScope 15, requestedActions 11, contactDetails 1, userIdentities 1, contributionRecord 1 |
+| `["ContactThrough"]` | contactDetails 1 |
+| `["AssignmentScope"]` | assignmentScope 15 |
+| `["PersonRoleAppointment"]` | none |
 
-**The folder survey works.** A new `files-fvt` suite runs the reported
-scenario end to end — catalogue a folder from the `FileFolder` template,
-then survey it natively — and it passes:
-```
-OMES-SURVEY-ACTION-0019 The survey action service folder-survey-service has completed the
-analysis of asset 7050dc50-... with request type survey-folder in 1927 milliseconds; the
-results are stored in survey report 7e7892e2-...
-```
-The report carried six annotations. The test asserts the survey
-*completed*, not merely that it ran: a survey that dies on a null
-connector still produces an engine action, and the waiter throws on any
-terminal status other than `COMPLETED`.
+A spy on the request confirmed pyegeria sends the body exactly as given, so
+the filtering happens in Egeria.
 
-**A second hypothesis was also eliminated.** While investigating, a real
-defect was found in the PostgreSQL repository: a `TypeDefPatch` that
-reparents a type does not update the denormalised supertype chain stored
-on existing rows, so instances written before the patch become invisible
-to searches for the new supertype. That would have hidden connections
-exactly as reported, since `AssetConnection` was reparented under
-`ResourceConnection` on 2026-08-27. It is fixed — but it was never the
-cause here: the quickstart repository stores 202 rows as
-`:ResourceConnection:LabeledRelationship:` and none as
-`:AssetConnection:`, because it was reloaded after the type change.
+**Likely cause (not confirmed):** Egeria's relationship filter
+(`OpenMetadataHandlerBase`, around line 478) keeps a relationship when
+`propertyHelper.isTypeOf(rel, name)`, which should match. But `performsRoles` is
+filled in a separate step (`OpenMetadataHandlerBase`, around line 1282), so the
+role appointments may be dropped or never fetched once a filter is set.
 
-**What has been fixed, and what it does and does not buy.** The NPE
-itself is now a clean error. `getConnectorForAsset()` returns `null` by
-contract when an asset has no connection; `FolderSurveyService` cast that
-null and dereferenced it, and the framework's own
-`performCheckAssetAnalysisStep()` had the same hole on its error path.
-Both now report `OPEN-SURVEY-400-008` / `OPEN-SURVEY-0009`
-(`NO_ASSET_CONNECTOR`), naming the asset.
+**Workaround:** read the Person without `includeOnlyRelationships` and take
+`performsRoles` from the result. The Resource Browser already does this.
 
-This does not make such a survey succeed — an asset with no connection
-describes a resource nothing can open. It makes the failure say *which*
-asset, which is what the original report was missing: the NPE named
-`BasicFolderConnector`, a class the caller had never heard of, and pointed
-away from the asset.
+---
 
-**Why that matters for how this entry reads.** Four further defects were
-found in the same connectors, all on paths nothing else exercises: both
-file survey services failed on every invocation (annotations created
-without a qualified name, in three places), the CSV survey dereferenced a
-null root schema type, wrote a relationship property to an entity, and
-produced colliding annotation qualified names. The file survey path had,
-on this evidence, never run to completion. Someone hitting an NPE in this
-family had every reason to suspect the asset — the errors never named
-anything else. That is context for the original diagnosis, not a
-criticism of it.
+### ISSUE-130: The YAML secrets store's user directory caches a user forever, so editing an existing user needs a platform restart
 
-**The naming trap, which is directly actionable on the pyegeria side.**
-This entry already records that `initiate_file_folder_survey`'s default
-(`FileSurveys:survey-folder`) and the `.http` example
-(`AssetSurvey:survey-folder`) are both wrong. Confirmed and now
-understood: a governance action type is registered under
-`<governanceEngineName>::<requestType>` — two colons — so the real name is
-`FileSurvey::survey-folder`. `AssetSurvey` is not an engine that exists at
-all. The `.http` examples have been corrected upstream
-(`FileSurvey::survey-folder`, `ApacheKafkaSurvey::survey-kafka-server`,
-`PostgreSQLSurvey::survey-postgres-server`,
-`PostgreSQLSurvey::survey-postgres-database`) with a note stating the
-shape, because the error a wrong name produces —
-`OMAG-GENERIC-HANDLERS-400-013`, "the name is not recognized" — does not
-say what it wanted instead. `initiate_file_folder_survey`'s default still
-needs fixing in pyegeria.
+**Layer:** Egeria server (`YAMLSecretsStoreConnector`) · **Status:** open, reported to the Egeria lead · **Found:** 2026-10-09, while adding Resource Explorer's own account (`resourceexplorernpa`).
 
-**What is left, and what would settle it.** The remaining candidate is
-the deployment rather than the cataloguing or the survey: which server
-and userId the engine host's connected-asset client resolves
-`SurveyAssetStore.getConnectorToAsset()` against. That cannot be tested
-from the Egeria side — it needs the engine host that produced the
-failure. Suggested, in order:
+**What:** `getUser(userId)` returns the entry from `userAccountMap` if it is already there. `refreshSecrets()` re-reads the YAML file every `refreshTimeInterval` minutes, but `userAccountMap` (and `securityAccessControlMap`) are created only on the first load (when `secretsStoreFile == null`) and are never cleared afterwards. Re-reading the file only helps users the cache has never seen; the comment says "this may be a new user".
 
-1. Re-run the original repro against a build carrying the NPE fix. If the
-   asset genuinely has no connection the run now fails with
-   `OPEN-SURVEY-400-008` naming it, which turns the question from "why is
-   this connector null" into "why does this asset have no connection that
-   this userId can see". If instead the survey completes, the deployment
-   has moved on and this entry can be closed.
-2. Check the folder asset at the moment of failure for a
-   `ResourceConnection`, using the same userId the engine host runs as —
-   not an admin one. If the relationship is there but the survey cannot
-   see it, that is a visibility or server-routing problem, and the userId
-   is where to look next.
-3. Compare against `files-fvt`, which is a known-good baseline for this
-   exact scenario. Pointing the same two actions at a
-   differently-configured engine host isolates the variable.
+**Seen:** the account was first added without its `secrets` block, and the first token request cached it. After the password was added (and matched the servers file), `/api/token` still answered 401 for more than 10 minutes. It worked straight after a platform restart.
 
-Also worth correcting: this entry's earlier note about leftover probe
-elements (`FileFolder::localhost:/tmp/re-e1-probe-*`,
-`FileFolder::localhost:/tmp/re-issue79-recheck-*`) is out of date — the
-quickstart repository has been reloaded since and holds none of them, so
-that evidence is gone.
+**Effect:** any change to an existing user (password, status, named-list membership) needs a platform restart.
 
-**Status:** open (Egeria Server), reproduced live 2026-08-27, **re-checked
-2026-08-28 — still reproduces, identical failure.** Same class/method
-(`BasicFolderConnector.getFile()`, `assetConnector` null), same error IDs
-(`OMES-SURVEY-ACTION-0018`/`OPEN-SURVEY-500-001`), same
-`java.lang.NullPointerException`, against a freshly created `FileFolder`
-and a fresh survey run — not a one-off. Filed by content, not by number —
-see "why this entry exists" below.
+**Fix (Egeria):** clear or rebuild `userAccountMap` and `securityAccessControlMap` in `refreshSecrets()`.
 
-**Layer:** Egeria Server (survey action framework / `BasicFolderConnector`),
-not pyegeria. `create_folder_element_from_template` and the survey-initiate
-call both succeed and are correctly formed; the failure happens entirely
-inside the server's survey action service.
+---
 
-**Why this entry exists.** Resource Explorer's `re-as-engine-host-plan.md`
-is ON HOLD citing this exact symptom ("connector is null" on a native
-survey against a template-created asset) under the name `PYEGERIA_ISSUES.md`
-**ISSUE-51** — but this file was renumbered on 2026-08-15, and today's
-ISSUE-51 is an unrelated, already-fixed `fetch_element()` shape problem.
-The blocker's own content had no surviving entry anywhere in this file.
-Investigated fresh rather than guessed at, per the plan's own citation
-being untrustworthy.
+### ISSUE-128: Retention cannot be set on Egeria 6.2: the server registers the Jackson subtype as `RetentionProperties.class` (typo), and pyegeria only allows `RetentionClassificationProperties`
 
-**Two candidate bugs were in play, and they are not the same bug:**
+**Status:** open, found 2026-10-09 by Resource Explorer's first Retention publish on Egeria 6.2. **Layer:** Egeria server (a type registration typo). **Decision (owner, 2026-10-09):** wait for the Egeria fix; no pyegeria workaround. Retention publishing stays blocked until then.
 
-1. **Resource Explorer's superseded tracker, entry E1** (`packages/
-   resource-explorer/docs/egeria-pyegeria-issues.md`) describes a *different*
-   symptom: a 500 from the PostgreSQL repository connector on
-   `createMetadataElementFromTemplate` (`metadata_collection_guid` null
-   while saving a classification) — a failure to *create* the element at
-   all. **Re-tested live 2026-08-27 and does not reproduce**:
-   `create_folder_element_from_template(path_name=..., folder_name=...,
-   file_system="localhost")` against `qs-view-server` returned a real GUID
-   with no error. Whatever this was, it looks fixed.
-2. **The design doc's actual blocker** — a template-created asset surveyed
-   natively fails with a null connector — **does still reproduce**, and is
-   what this entry tracks.
+**What (all proven live on 6.2, with raw HTTP POSTs to `classification-explorer/elements/{guid}/retention` on a throwaway asset):**
+- `"class": "RetentionClassificationProperties"` is refused with `InvalidTypeIdException`. This is what pyegeria documents and whitelists, and it worked on the pre-6.2 server (processors.py comment, 2026-08-03).
+- `"class": "RetentionProperties"` (the `.http` ground truth) is also refused with `InvalidTypeIdException`.
+- `"class": "RetentionProperties.class"` gets **HTTP 200**, and the classification reads back with `retentionBasis` 2 and the notes.
+- The server's known-type list in the error has 96 ids. The only Retention entry is literally `RetentionProperties.class`. That looks like an `@JsonSubTypes.Type(name = "RetentionProperties.class")` typo in Egeria's `ClassificationProperties`.
+- pyegeria's `validate_new_classification_request` whitelist (`prop=["RetentionClassificationProperties"]`) refuses anything else client-side, so no Retention can be set through pyegeria on 6.2.
 
-**Reproduction** (against `qs-view-server`, no pyegeria bug involved):
-```python
-from pyegeria import AutomatedCuration
-c = AutomatedCuration("qs-view-server", "https://localhost:9443", "erinoverview", "secret")
-c.create_egeria_bearer_token()
+(An earlier version of this entry said 6.2 knows `RetentionProperties`. That was a misread of the error text, corrected the same day.)
 
-folder_guid = c.create_folder_element_from_template(
-    path_name="/tmp/some-new-path", folder_name="probe-folder", file_system="localhost")
+**Where seen:** Resource Explorer's Curate classifications step on two repository assets. Both were refused, so nothing was written. Confidentiality, Criticality, Confidence and Impact property classes are registered normally.
 
-# Note: initiate_file_folder_survey's own default survey_name
-# ("FileSurveys:survey-folder") and the .http ground truth's example
-# ("AssetSurvey:survey-folder") are BOTH wrong on this server -- neither
-# GovernanceActionType is registered (OMAG-GENERIC-HANDLERS-400-013). The
-# real registered qualifiedName, confirmed via
-# `EgeriaTech.get_elements("GovernanceActionType")`, is "FileSurvey::survey-folder".
-action_guid = c.initiate_file_folder_survey(folder_guid, survey_name="FileSurvey::survey-folder")
-```
-
-Poll the resulting `EngineAction` (`EgeriaTech.get_elements("EngineAction")`,
-match on `elementHeader.guid`) — it completes (fast, ~1s) with
-`activityStatus: "FAILED"` and `completionGuards: ["survey-failed"]`. Full
-`completionMessage`:
-```
-OMES-SURVEY-ACTION-0018 The survey action service folder-survey-service
-threw a org.odpi.openmetadata.frameworks.connectors.ffdc.ConnectorCheckedException
-exception during the generation of survey report ... for asset
-<folder-guid> during request type survey-folder in survey action engine
-FileSurvey (guid=4168abb9-6c60-46fb-b9c0-b44180d19500). The error message
-was OPEN-SURVEY-500-001 Unexpected exception in survey action service
-folder-survey-service of type java.lang.NullPointerException detected by
-method start. The error message was Cannot invoke
-"org.odpi.openmetadata.adapters.connectors.datastore.basicfile.BasicFolderConnector.getFile()"
-because "assetConnector" is null
-```
-
-**Analysis.** `create_folder_element_from_template` creates the `FileFolder`
-element and it looks entirely normal (confirmed via `get_elements`: proper
-`pathName`, `resourceName`, `Anchors` classification) — but no working
-`Connection`/`Connector` got wired to it, so when `folder-survey-service`
-tries to open the asset via `BasicFolderConnector.getFile()`, the
-connector reference is null and the survey action service crashes with an
-NPE rather than a clean error. This matches the design doc's
-characterization exactly ("template-based asset creation never wires up a
-working Connection, so any native survey against a template-created asset
-fails server-side with a NullPointerException") — just with the precise
-class/method now on record, which the design doc didn't have.
-
-**Impact:** blocks Resource Explorer's engine-host participation design
-(`re-as-engine-host-plan.md`, cases 1/2/4 — anything needing a native
-survey to actually *complete*, not just be triggered; case 3, RE-local
-surveying, is unaffected). The hold should be re-evaluated against this
-entry specifically, not against the old ISSUE-51 number. As of 2026-08-28
-this is confirmed the *only* thing still blocking that work on the
-pyegeria side — ISSUE-78's engine-host method trio shipped in 6.1.5 and RE
-has upgraded and verified it end to end, and the two other gaps
-identified alongside it (no REST way to create a `GovernanceEngine`/
-`GovernanceService` element; no per-engine "claimable work" listing,
-`get_active_engine_actions()` filtered client-side is the only option) are
-both genuine server-side gaps, not pyegeria ones. This entry is the real
-holdup.
-
-**Leftover from this investigation:** probe `FileFolder` elements
-(`qualifiedName: "FileFolder::localhost:/tmp/re-e1-probe-*"` from
-2026-08-27, `"FileFolder::localhost:/tmp/re-issue79-recheck-*"` from the
-2026-08-28 re-check) on `qs-metadata-store`, plus their failed
-`SurveyReport`/`EngineAction` pairs, left in place as reproduction
-evidence for both dates — not yet deleted.
+**Candidate fix:**
+1. **Egeria:** correct the subtype name to `RetentionProperties`, matching the `.http` file. Report it to Mandy.
+2. **pyegeria, after Egeria's fix:** change the whitelist and docstring to `RetentionProperties`, the `.http` name. No workaround for the typo, by the owner's decision.
+3. Re-check `md_processing/v2/processors.py` and `v2/curation.py`, which both pin `RetentionClassificationProperties`.
 
 ---
 
 ### ISSUE-108: newly created relationships stay invisible to related-element queries for up to ~20 minutes after creation
 
-**Status:** open · **Found:** 2026-09-20, reported by the user from a
-Dr.Egeria bulk load session (1,027 expected field-link relationships).
+**Layer:** Egeria Server · **Status:** open · **Found:** 2026-09-20, reported by
+the user from a Dr.Egeria bulk load session (1,027 expected field-link
+relationships).
 
-A catalog walk run immediately after a load found only 876 of 1,027
+**What:** a catalog walk run immediately after a load found only 876 of 1,027
 expected field links. A second walk 12 minutes later still showed 82
-structures short. A third walk, 20 minutes after the load, showed every
-link present, with no errors raised at any point and no further action
-taken in between. See `PYEGERIA_ISSUES.md`'s full entry for the complete
-writeup, including why this looks like the same family of symptom as the
-2026-08-15 Postgres-checkpoint/background-connector-load entry above
-(server falling behind under load, catching up later) rather than a
-paging defect like ISSUE-54, and the candidate next step for actually
-correlating it with connector/checkpoint activity instead of relying on
-these three anecdotal timing checkpoints.
+structures short. A third walk, 20 minutes after the load, showed every link
+present. No errors were raised at any point in the load itself — the
+relationships were created successfully, they simply did not show up in
+related-element queries for a long window afterward, then all became visible
+at once with no further action taken.
 
-**Update 2026-09-20:** no upstream `odpi/egeria` issue filed yet, nothing
-from the Egeria team. Two independent, unconfirmed peer leads on record in
-`PYEGERIA_ISSUES.md`'s full entry: a chronic Kafka consumer-group rebalance
-storm on `egeria-shared-kafka` (~90s recurrence, self-heals in seconds —
-timescale doesn't obviously match a one-shot ~20min resolution, so
-speculative), and a `refreshTimeInterval`-style cache/connector reload
-precedent from a different but structurally similar RE investigation. Also
-recorded there: a concrete method for telling a fixed-wall-clock cause
-apart from a volume-proportional one (smaller timed load + direct-GUID
-isolation fetch) before assuming either — not yet run.
+**Not yet root-caused.** This looks like the same family of symptom as the
+2026-08-15 Postgres-checkpoint/background-connector-load entry above (server
+falling behind under load, catching up later) rather than a paging defect
+like ISSUE-54 (which would not self-heal purely by waiting — ISSUE-54's
+bug is about tie-ordering across separately-executed pages, not about data
+not existing yet). But this has not been directly correlated with connector
+log activity or checkpoint timing the way that entry was — this is a fresh
+report, not yet independently reproduced or diagnosed by a pyegeria session.
 
-**Update 2026-09-20, small-scale reproduction attempt: not reproduced.** 20
-throwaway `Collection` elements linked via `CollectionMembership` (not the
-original `MemberDataField` relationship type) were all visible in a
-related-element query within ~1.1s of creation — no lag at current load.
-One point on the curve, not a refutation: doesn't distinguish "no bug under
-current load" from "genuinely volume-proportional, 20 is far below the
-~1,027-link scale that surfaced it." A same-relationship-type, larger-scale
-run is the real next step. Full writeup in `PYEGERIA_ISSUES.md`.
+**Impact:** any workflow that verifies a bulk write immediately after
+issuing it (a post-load catalog walk, an integration test, an automated
+Dr.Egeria "did it work" check) can get a false-negative "missing" result
+that resolves itself given enough time — worth knowing before treating an
+immediate post-write verification gap as evidence of a real data-loss bug.
+
+**Candidate next step (not yet done):** reproduce with a smaller, timed
+sample (e.g. create N relationships, poll related-element queries at 1-minute
+intervals, log when each becomes visible) to get a real latency
+distribution instead of the three anecdotal checkpoints here, and check
+whether it correlates with the same background-connector/checkpoint load
+already documented above. Worth raising with the Egeria team directly, per
+the original report.
+
+**Update 2026-09-20 (peer check, no upstream issue filed yet):** checked
+`odpi/egeria`'s issue tracker directly — nothing filed for this symptom, so
+no response from the Egeria team via GitHub. Asked three peer sessions
+working against the same dev Egeria server:
+- **egeria-workspaces-fs-4a:** hasn't seen this specific symptom, no word
+  from the Egeria team either. Raised a speculative, explicitly-unconfirmed
+  lead worth checking: a chronic, still-open issue on `egeria-shared-kafka`
+  where the `GroupCoordinator` repeatedly times out writing to
+  `__consumer_offsets` (5000ms) and triggers a consumer-group rebalance
+  roughly every 90s (confirmed via broker logs 2026-09-03; root cause still
+  open, CPU/GC/Postgres-restarts/virtiofs I/O already ruled out; historically
+  "Information" severity, self-heals within seconds, not chased further
+  since it wasn't visibly causing downstream harm). If `qs-view-server`'s
+  related-element queries are backed by Kafka-driven indexing/event
+  propagation rather than a direct repository read, a chronic rebalance
+  storm could plausibly manifest as exactly this "relationship exists but
+  isn't visible to queries yet" lag. **Explicitly not a confirmed
+  correlation** — the timescales don't obviously line up (a recurring ~90s
+  self-healing blip vs. a one-shot ~20-minute resolution) — and the peer
+  offered to check Kafka broker logs around the original bulk-load window
+  for the same rebalance pattern if useful.
+- **Resource Explorer experimental UI:** no direct evidence either way —
+  today's two live writes against the same server (a Governance Action
+  Process Step upsert, and a native-survey `SurveyReport` lookup) both
+  checked either *immediately* after the write or only *after* polling to a
+  terminal status, never in the 1-20 minute gap this entry describes, so
+  neither confirms nor rules it out. Flagged that a background agent on
+  their side doing a related connection-refresh fix will trigger fresh
+  engine actions/relationships shortly and will report back if it surfaces
+  the same lag.
+- **Egeria-trellis backlog review:** also nothing from the Egeria team (no
+  channel to them; checked RE docs/Backlog/design notes for this exact
+  shape first — a checked "no", not a guess). Offered a different, measured
+  precedent on this same platform as a *pattern* to distinguish causes, not
+  a diagnosis: `packages/resource-explorer/docs/investigation-classification-and-zoning-design.md`
+  (~line 830) documents a privately-zoned element still readable by a
+  non-owner *six minutes* after the control was written (denial began at
+  seven), caused by the security connector's `refreshTimeInterval` (10 min)
+  reload — "read it back immediately, so it must be fine" was exactly the
+  misleading evidence there too. Their key diagnostic point: a
+  **fixed-wall-clock cause** (everything becomes visible at once, at a time
+  unrelated to load size — test with 50 links instead of 1,027 and see if
+  the delay is still ~20 min) and a **volume-proportional cause** (async
+  indexing/event-driven materialisation catching up, arriving in a stream)
+  look identical from a single observation but have different fixes; the
+  876→945(implied)→1,027 partial-recovery-at-12-minutes data point *mildly*
+  favours volume-proportional, but "two points don't make a curve." Also
+  worth checking directly: fetch one of the missing links by its own GUID
+  during the window — if that resolves but the relationship is still absent
+  from the related-element query, the write landed fine and only the
+  traversal/index path lags, narrowing which service is actually behind. If
+  this gets filed upstream, the volume-vs-fixed measurement is what turns
+  it into a real bug report instead of getting bounced as "eventual
+  consistency, working as intended."
+
+Two independent, unconfirmed leads now on record (Kafka rebalance storms;
+a refresh-interval-style cache) alongside a concrete diagnostic method
+(fixed-wall-clock vs. volume-proportional, plus the direct-GUID-fetch
+isolation check) for telling them apart before assuming either. Next real
+step is still reproducing with a smaller, timed, instrumented load using
+that method — not yet done.
+
+**Reproduction attempt, 2026-09-20 (small end of the curve, not reproduced):**
+after clearing with all 5 live peer sessions first (per `coordinate-shared-writes`),
+ran a timed, instrumented small-scale reproduction against `qs-view-server`:
+20 throwaway `Collection` elements created and each linked to a parent via
+`CollectionMembership` (not the original `MemberDataField`/"field link" type
+— a different relationship type, noted as a limitation below), polling
+`get_collection_members` every 30s for up to 20 minutes, with a direct-GUID
+isolation check ready for anything still missing at the deadline.
+
+**Result: all 20 relationships were visible on the very first poll, ~1.1s
+after the last one was created — no lag at all.** Cleanup (delete all 21
+fixture elements) verified two independent ways: a direct-GUID fetch on
+each (`404`/`OMAG-REPOSITORY-HANDLER-404-007`, confirmed real soft-delete,
+not an ISSUE-63-style silent no-op) and a broad `find_collections` search
+for the `test-fixture-issue108` prefix (0 results). The script itself was
+run from an ephemeral per-session scratch directory, not committed anywhere
+— reproduce via the same approach (create N Collections linked to a parent
+via `_async_add_to_collection`, poll `_async_get_collection_members`) if
+needed later; the approach, not the script file, is what's worth keeping.
+
+**Per Egeria-trellis backlog review's own framework, this is one point on
+the curve, not a refutation.** It's consistent with either "no bug under
+current load" or "the lag is genuinely volume-proportional and 20 elements
+is nowhere near the ~1,027-link scale that surfaced it originally" — the
+one data point this run *can't* distinguish those two. Also a real
+methodology gap versus the original report: this used `CollectionMembership`
+on plain `Collection` elements, not the `MemberDataField` "field link"
+relationship the original 1,027-link load actually exercised (ISSUE-102 is
+in the same `MemberDataField` neighborhood, worth checking together). Server
+load conditions also weren't recorded this run (no `ListAgents`/`:8810`
+snapshot taken alongside the timings, despite the earlier plan to do so —
+an execution gap, not a design one).
+
+**Candidate next step, still open:** a same-relationship-type
+(`MemberDataField`), same-order-of-magnitude (~200+) run, following the
+same peer-clearance and independent-verification discipline, is what would
+actually test the volume-proportional hypothesis — this run didn't attempt
+that scale on its own initiative, since committing to it wasn't part of
+what peers were asked to clear.
+
+**Egeria team response, relayed 2026-10-05 (source `oak2026` fb3d6fce53; **fixes are in two unmerged PRs, so no build contains them, and nothing was tested against a live platform**):** not validated; no cache found. Best lead: a client clock ahead of the server's, with `effectiveFrom` set from it (related-element queries silently hide a relationship whose `effectiveFrom` is later than the server's "now"). They need, for one link still missing at ~12 minutes: its `effectiveFrom` and `createTime`, the server clock then, and whether the loader sets `effectiveFrom`. **Our facts:** pyegeria sets no `effectiveFrom`/`effectiveTo`/`effectiveTime` by default (model defaults are `None`; no clock call is tied to any `effective*` field; Dr.Egeria forwards an "Effective From" only if typed). Host and container clocks agree within 1 s on 2026-10-05; the 2026-09-20 load's values are unavailable.
+
+**Update 2026-10-10:** the `oak2026` source (`fb3d6fce53`) the team examined is now in Egeria `main` (merged 2026-10-06, odpi/egeria#9363). No fix was made for this issue; the team's questions above still stand.
+
+---
