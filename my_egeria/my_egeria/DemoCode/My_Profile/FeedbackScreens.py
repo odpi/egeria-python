@@ -22,8 +22,8 @@ class FeedbackScreen(ModalScreen):
     """ Collect feedback about the screen the user was on when they pressed the feedback key """
 
     BINDINGS = [
+        ("escape", "cancel", "Back"),
         ("ctrl+s", "submit", "Submit Feedback"),
-        ("escape", "cancel", "Cancel"),
     ]
 
     CSS_PATH = "my_profile.tcss"
@@ -98,8 +98,8 @@ class FeedbackLogScreen(ModalScreen):
     """ Show the accumulated entries in the private feedback note log """
 
     BINDINGS = [
-        ("q", "quit", "Quit"),
         ("escape", "quit", "Back"),
+        ("q", "quit", "Main Menu"),
     ]
 
     CSS_PATH = "my_profile.tcss"

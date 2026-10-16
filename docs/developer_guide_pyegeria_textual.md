@@ -686,7 +686,7 @@ That is the second of the two standard worker patterns, so you now have both:
 ### 7.5 Acting on the selected row
 
 My Profile lets the user act on "the selected row" from several places: add a comment
-(Ctrl+A), show comments (Ctrl+S), edit (Ctrl+T), bookmark it (Ctrl+K) and open bookmarks with
+(Ctrl+N), show comments (Ctrl+O), edit (Ctrl+T), bookmark it (Ctrl+K) and open bookmarks with
 its GUID ready to add (Ctrl+B). Two problems need solving.
 
 **Which row is selected?** `MainScreen` records the table and row whenever the user
@@ -737,7 +737,7 @@ qualified name. Some tables, such as Shop for Data's glossary table (built from 
 Because `get_row_guid` takes the table itself, not a table name on one particular screen, any
 screen can use it, and each key binding is a few lines:
 
-- **Ctrl+K** on the main screen, or **k** on Shop for Data, calls
+- **Ctrl+K**, on the main screen or Shop for Data, calls
   `self.app.bookmark_table_row(table, row_key)`, which bookmarks the row straight away.
 - **Ctrl+B** calls `self.app.show_my_bookmarks(self.app.get_row_guid(table, row_key))`. The
   bookmark screen receives the GUID as `target_guid` and pre-fills its input with it, just as

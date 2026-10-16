@@ -13,17 +13,19 @@ from textual.screen import Screen
 from textual.widgets import DataTable, OptionList, Header, Static, Footer
 from textual.widgets._option_list import Option
 
+from pyegeria import load_app_config, settings
+
 
 class MainScreen(Screen):
     """Main Screen for My Profile App."""
 
     BINDINGS = [
         ("q", "app.quit", "Quit"),
-        ("ctrl+a", "add_comment","add comment to selected row"),
-        ("ctrl+b", "bookmarks", "Manage Bookmarks"),
-        ("ctrl+k", "bookmark_row", "Bookmark Selected Row"),
-        ("ctrl+s", "show_comments", "Show Comments for Selected Row"),
         ("ctrl+t", "edit_table", "Edit Selected Table"),
+        ("ctrl+o", "show_comments", "Show Comments"),
+        ("ctrl+n", "add_comment", "Add Comment"),
+        ("ctrl+k", "bookmark_row", "Bookmark Row"),
+        ("ctrl+b", "bookmarks", "Bookmarks"),
     ]
 
     CSS_PATH = "my_profile.tcss"
@@ -31,10 +33,18 @@ class MainScreen(Screen):
     def __init__(self, *args, **kwargs):
         super().__init__(id="main_screen", *args, **kwargs)
         self.title = "Egeria"
-        self.sub_title = "My Profile"
         self.other_function_list: OptionList = OptionList(id="other_function_list")
         self.selected_table = None
         self.selected_row = None
+        load_app_config()
+        app_user = settings.User_Profile
+        self.user_name = app_user.user_name or "garygeeke"
+        self.sub_title = f"User: {self.user_name}"
+
+    def on_mount(self) -> None:
+        # self.log needs a running app, so it can't be called from __init__
+        self.log(f"Application Config: {settings.Environment}")
+        self.log(f"User Profile: {settings.User_Profile}")
 
     def compose(self) -> ComposeResult:
         # place widgets into grid on screen, note sequence determines position!

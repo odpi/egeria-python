@@ -17,8 +17,7 @@ from pyegeria import load_app_config, settings, PyegeriaException, exec_report_s
 
 class SearchForTermScreen(ModalScreen):
 
-    BINDINGS = [("q", "quit", "Quit"),
-                ("g", "go_back", "Go back"),
+    BINDINGS = [("escape", "go_back", "Back"),
                 ]
 
     CSS_PATH = "my_profile.tcss"

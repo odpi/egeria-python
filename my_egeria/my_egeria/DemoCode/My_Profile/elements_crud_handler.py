@@ -242,7 +242,7 @@ class ElementsCrudMixin:
         """Show comments for the selected table row, or the responses to a selected comment.
 
         When selected_comment_guid is given, the screen shows the comments attached to that
-        comment (its responses) and Ctrl+A adds a new response to it.
+        comment (its responses) and Ctrl+N adds a new response to it.
         """
         self.log(f"Showing comments for table: {table_name}, row: {row_k}, comment: {selected_comment_guid}")
         self.push_screen(

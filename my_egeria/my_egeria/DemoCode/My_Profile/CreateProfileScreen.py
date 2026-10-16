@@ -22,7 +22,8 @@ class CreateProfileScreen(ModalScreen[int]):
       4xx on failure
     """
 
-    BINDINGS = [("q", "dismiss(200)", "Quit")]
+    BINDINGS = [("escape", "quit", "Back"),
+                ("ctrl+s", "create_profile", "Create Profile")]
     CSS_PATH = "my_profile.tcss"
 
     def __init__(self, user: str | None = None, password: str | None = None, view_server: str | None = None, platform_url: str | None = None, *args, **kwargs):
@@ -65,6 +66,10 @@ class CreateProfileScreen(ModalScreen[int]):
         )
         yield Static()
         yield Footer()
+
+    def action_create_profile(self) -> None:
+        """ ctrl+s does the same as pressing the Create Profile button """
+        self.create_profile()
 
     @on(Button.Pressed, "#create_profile_btn")
     def create_profile(self) -> int:

@@ -16,8 +16,8 @@ from textual.widgets import Header, Static, Input, Footer
 class CreateSubscriptionRequestScreen(ModalScreen):
 
     BINDINGS = [
-        ("q", "quit", "Quit"),
-        ("c", "create_subscription", "Create Subscription")
+        ("escape", "quit", "Back"),
+        ("ctrl+s", "create_subscription", "Create Subscription"),
     ]
 
     CSS_PATH = "my_profile.tcss"

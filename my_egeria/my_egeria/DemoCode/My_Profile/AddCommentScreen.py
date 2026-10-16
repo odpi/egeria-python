@@ -18,9 +18,8 @@ class AddCommentScreen(ModalScreen):
     """ Add a comment to an Egeria Element the user has access to """
 
     BINDINGS = [
-        ("a", "add_comment", "Add Comment"),
-        ("c", "cancel", "Cancel"),
-        ("q", "quit", "Quit")
+        ("escape", "cancel", "Back"),
+        ("ctrl+s", "add_comment", "Add Comment"),
     ]
 
     CSS_PATH = "my_profile.tcss"
