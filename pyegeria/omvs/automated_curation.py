@@ -2300,6 +2300,9 @@ class AutomatedCuration(ServerClient):
 
     async def _async_cancel_engine_action(self, engine_action_guid: str) -> None:
         """Request that an engine action request is cancelled and any running governance service is stopped. Async Ver.
+
+        On Egeria 6.3 (odpi/egeria#9371) an engine action that has already finished (COMPLETED, INVALID,
+        IGNORED, FAILED, CANCELLED or ABANDONED) is left unchanged and the call still succeeds.
         Parameters
         ----------
         engine_action_guid : str
@@ -2351,279 +2354,134 @@ class AutomatedCuration(ServerClient):
         loop.run_until_complete(self._async_cancel_engine_action(engine_action_guid))
         return
 
+    # The operations below moved to the Governance Engine view service in Egeria odpi/egeria#9371. These
+    # wrappers are deprecated for one release: they delegate to
+    # pyegeria.omvs.governance_engine.GovernanceEngine on the new URLs. If (and only if) the new URL
+    # answers HTTP 404 - an Egeria built before #9371 - the call is retried once on the old
+    # automated-curation URL, and the URL family that worked is remembered for this client. No other
+    # error triggers a fallback.
+
+    def _governance_engine_client(self):
+        from pyegeria.omvs.governance_engine import GovernanceEngine
+        client = getattr(self, "_gov_engine_client", None)
+        if client is None:
+            client = GovernanceEngine(self.view_server, self.platform_url, self.user_id, self.user_pwd,
+                                      token=self.token, timeout=getattr(self, "timeout", None),
+                                      legacy_fallback=True)
+            self._gov_engine_client = client
+        return client
+
+    @staticmethod
+    def _warn_moved(name: str) -> None:
+        import warnings
+        warnings.warn(
+            f"AutomatedCuration.{name} is deprecated; the operation moved to the Governance Engine view "
+            f"service - use GovernanceEngine.{name} (egeria_client.gov_engine).",
+            DeprecationWarning, stacklevel=3)
+
     async def _async_claim_engine_action(self, engine_action_guid: str) -> None:
-        """Request that execution of an engine action is allocated to the caller. Async version.
-
-        Parameters
-        ----------
-        engine_action_guid : str
-            The GUID of the engine action to claim.
-
-        Returns
-        -------
-        None
-
-        Raises
-        ------
-        PyegeriaException
-
-        Notes
-        -----
-        For more information see: https://egeria-project.org/concepts/engine-action
-        """
-        validate_guid(engine_action_guid)
-        url = f"{self.ref_curation_command_base}/engine-actions/{engine_action_guid}/claim"
-        await self._async_make_request("POST", url)
+        """Deprecated - use GovernanceEngine. Claim an engine action for the caller. Async version."""
+        self._warn_moved("claim_engine_action")
+        await self._governance_engine_client()._async_claim_engine_action(engine_action_guid)
 
     def claim_engine_action(self, engine_action_guid: str) -> None:
-        """Request that execution of an engine action is allocated to the caller."""
+        """Deprecated - use GovernanceEngine. Claim an engine action for the caller."""
         loop = asyncio.get_event_loop()
         loop.run_until_complete(self._async_claim_engine_action(engine_action_guid))
-        return
 
     async def _async_update_engine_action_status(self, engine_action_guid: str, status: str,
-                                                  body: Optional[dict] = None) -> None:
-        """Update the status of the engine action - providing the caller is permitted. Async version.
-
-        Parameters
-        ----------
-        engine_action_guid : str
-            The GUID of the engine action to update.
-        status : str
-            One of "Requested", "Approved", "Waiting", "Activating", "In Progress", "Paused",
-            "For Information", "Completed", "Invalid", "Ignored", "Failed", "Cancelled", "Abandoned" or "Other".
-        body : dict, optional
-            Request body to pass directly to the API - overrides `status` if supplied.
-
-        Returns
-        -------
-        None
-
-        Raises
-        ------
-        PyegeriaException
-
-        Notes
-        -----
-        Sample JSON body:
-        ```json
-        {
-          "class" : "EngineActionStatusRequestBody",
-          "status" : "IN_PROGRESS"
-        }
-        ```
-        For more information see: https://egeria-project.org/concepts/engine-action
-        """
-        validate_guid(engine_action_guid)
-        url = f"{self.ref_curation_command_base}/engine-actions/{engine_action_guid}/status/update"
-        payload = body if body is not None else {"class": "EngineActionStatusRequestBody", "status": status}
-        await self._async_make_request("POST", url, payload)
+                                                 body: Optional[dict] = None) -> None:
+        """Deprecated - use GovernanceEngine. Update the status of an engine action. Async version."""
+        self._warn_moved("update_engine_action_status")
+        await self._governance_engine_client()._async_update_engine_action_status(
+            engine_action_guid, status, body)
 
     def update_engine_action_status(self, engine_action_guid: str, status: str,
                                     body: Optional[dict] = None) -> None:
-        """Update the status of the engine action - providing the caller is permitted."""
+        """Deprecated - use GovernanceEngine. Update the status of an engine action."""
         loop = asyncio.get_event_loop()
         loop.run_until_complete(self._async_update_engine_action_status(engine_action_guid, status, body))
-        return
 
     async def _async_update_action_target_status(
             self, action_target_guid: str, status: str,
             start_date: Optional[str] = None, completion_date: Optional[str] = None,
             completion_message: Optional[str] = None, body: Optional[dict] = None) -> None:
-        """Update the status of a specific action target. Async version.
-
-        By default, these values are derived from the values for the governance action service. However, if
-        the governance action service has to process many target elements, then setting the status on each
-        individual target will show the progress of the governance action service.
-
-        Parameters
-        ----------
-        action_target_guid : str
-            The GUID of the action target to update.
-        status : str
-            The new status for the action target.
-        start_date : str, optional
-            The date processing of this target started.
-        completion_date : str, optional
-            The date processing of this target completed.
-        completion_message : str, optional
-            A message describing the outcome of processing this target.
-        body : dict, optional
-            Request body to pass directly to the API - overrides the other parameters if supplied.
-
-        Returns
-        -------
-        None
-
-        Raises
-        ------
-        PyegeriaException
-
-        Notes
-        -----
-        Sample JSON body:
-        ```json
-        {
-          "class" : "ActionTargetStatusRequestBody",
-          "actionTargetGUID" : "add guid here",
-          "status" : "COMPLETED",
-          "startDate" : "{{$isoTimestamp}}",
-          "completionDate" : "{{$isoTimestamp}}",
-          "completionMessage" : "add completion message here"
-        }
-        ```
-        For more information see: https://egeria-project.org/concepts/engine-action
-        """
-        validate_guid(action_target_guid)
-        url = f"{self.ref_curation_command_base}/engine-actions/action-targets/update"
-        payload = body if body is not None else {
-            "class": "ActionTargetStatusRequestBody",
-            "actionTargetGUID": action_target_guid,
-            "status": status,
-            "startDate": start_date,
-            "completionDate": completion_date,
-            "completionMessage": completion_message,
-        }
-        await self._async_make_request("POST", url, body_slimmer(payload))
+        """Deprecated - use GovernanceEngine. Update the status of an action target. Async version."""
+        self._warn_moved("update_action_target_status")
+        await self._governance_engine_client()._async_update_action_target_status(
+            action_target_guid, status, start_date, completion_date, completion_message, body)
 
     def update_action_target_status(
             self, action_target_guid: str, status: str,
             start_date: Optional[str] = None, completion_date: Optional[str] = None,
             completion_message: Optional[str] = None, body: Optional[dict] = None) -> None:
-        """Update the status of a specific action target."""
+        """Deprecated - use GovernanceEngine. Update the status of an action target."""
         loop = asyncio.get_event_loop()
-        loop.run_until_complete(
-            self._async_update_action_target_status(
-                action_target_guid, status, start_date, completion_date, completion_message, body
-            )
-        )
-        return
+        loop.run_until_complete(self._async_update_action_target_status(
+            action_target_guid, status, start_date, completion_date, completion_message, body))
 
     async def _async_record_completion_status(
             self, engine_action_guid: str, status: str,
             request_parameters: Optional[dict] = None, output_guards: Optional[list[str]] = None,
             new_action_targets: Optional[list[dict]] = None, completion_message: Optional[str] = None,
             body: Optional[dict] = None) -> None:
-        """Declare that all the processing for the governance action service is finished and the status of the
-            work. Async version.
-
-        Parameters
-        ----------
-        engine_action_guid : str
-            The GUID of the engine action to record completion for.
-        status : str
-            One of "Actioned", "Invalid", "Failed" or "Other".
-        request_parameters : dict, optional
-            Additional request parameters.
-        output_guards : list[str], optional
-            Guards output by this governance action service, driving the next steps in a process.
-        new_action_targets : list[dict], optional
-            Additional action targets to add, each a dict with "actionTargetName"/"actionTargetGUID".
-        completion_message : str, optional
-            A message describing the completion outcome.
-        body : dict, optional
-            Request body to pass directly to the API - overrides the other parameters if supplied.
-
-        Returns
-        -------
-        None
-
-        Raises
-        ------
-        PyegeriaException
-
-        Notes
-        -----
-        Sample JSON body:
-        ```json
-        {
-          "class" : "CompletionStatusRequestBody",
-          "status" : "ACTIONED",
-          "requestParameters" : {
-            "propertyName1" : "propertyValue1",
-            "propertyName2" : "propertyValue2"
-          },
-          "outputGuards" : [ "add guard here" ],
-          "newActionTargets" : [
-            {
-              "actionTargetName" : "add action target name here",
-              "actionTargetGUID" : "add guid here"
-            }
-          ],
-          "completionMessage" : "add completion message here"
-        }
-        ```
-        For more information see: https://egeria-project.org/concepts/engine-action
-        """
-        validate_guid(engine_action_guid)
-        url = f"{self.ref_curation_command_base}/engine-actions/{engine_action_guid}/completion-status"
-        payload = body if body is not None else {
-            "class": "CompletionStatusRequestBody",
-            "status": status,
-            "requestParameters": request_parameters,
-            "outputGuards": output_guards,
-            "newActionTargets": new_action_targets,
-            "completionMessage": completion_message,
-        }
-        await self._async_make_request("POST", url, body_slimmer(payload))
+        """Deprecated - use GovernanceEngine. Record the completion status of an engine action. Async version."""
+        self._warn_moved("record_completion_status")
+        await self._governance_engine_client()._async_record_completion_status(
+            engine_action_guid, status, request_parameters, output_guards, new_action_targets,
+            completion_message, body)
 
     def record_completion_status(
             self, engine_action_guid: str, status: str,
             request_parameters: Optional[dict] = None, output_guards: Optional[list[str]] = None,
             new_action_targets: Optional[list[dict]] = None, completion_message: Optional[str] = None,
             body: Optional[dict] = None) -> None:
-        """Declare that all the processing for the governance action service is finished and the status of
-            the work."""
+        """Deprecated - use GovernanceEngine. Record the completion status of an engine action."""
         loop = asyncio.get_event_loop()
-        loop.run_until_complete(
-            self._async_record_completion_status(
-                engine_action_guid, status, request_parameters, output_guards, new_action_targets,
-                completion_message, body
-            )
-        )
-        return
+        loop.run_until_complete(self._async_record_completion_status(
+            engine_action_guid, status, request_parameters, output_guards, new_action_targets,
+            completion_message, body))
 
     async def _async_get_active_claimed_engine_actions(
             self, governance_engine_guid: str, start_from: int = 0, page_size: int = 0) -> list | str:
-        """Retrieve the engine actions that are still in process and that have been claimed by this caller's
-            userId. This call is used when the caller restarts. Async version.
-
-        Parameters
-        ----------
-        governance_engine_guid : str
-            The GUID of the governance engine to retrieve claimed engine actions for.
-        start_from : int, default 0
-            The index from which to start fetching.
-        page_size : int, default 0
-            The maximum number to fetch in a single request.
-
-        Returns
-        -------
-        list | str
-            A list of dictionaries representing the retrieved engine actions, or a message if none found.
-
-        Raises
-        ------
-        PyegeriaException
-
-        Notes
-        -----
-        For more information see: https://egeria-project.org/concepts/engine-action
-        """
-        validate_guid(governance_engine_guid)
-        url = f"{self.ref_curation_command_base}/governance-engines/{governance_engine_guid}/engine-actions/active-claimed"
-        response = await self._async_make_request("GET", url, params={"startFrom": start_from, "pageSize": page_size})
-        elements = response.json().get("elements", NO_ELEMENTS_FOUND)
-        return elements
+        """Deprecated - use GovernanceEngine. Engine actions in process claimed by this caller. Async version."""
+        self._warn_moved("get_active_claimed_engine_actions")
+        return await self._governance_engine_client()._async_get_active_claimed_engine_actions(
+            governance_engine_guid, start_from, page_size)
 
     def get_active_claimed_engine_actions(
             self, governance_engine_guid: str, start_from: int = 0, page_size: int = 0) -> list | str:
-        """Retrieve the engine actions that are still in process and that have been claimed by this caller's
-            userId. This call is used when the caller restarts."""
+        """Deprecated - use GovernanceEngine. Engine actions in process claimed by this caller."""
         loop = asyncio.get_event_loop()
-        return loop.run_until_complete(
-            self._async_get_active_claimed_engine_actions(governance_engine_guid, start_from, page_size)
-        )
+        return loop.run_until_complete(self._async_get_active_claimed_engine_actions(
+            governance_engine_guid, start_from, page_size))
+
+    @dynamic_catch
+    async def _async_cancel_governance_action_process(self, process_instance_guid: str) -> None:
+        """Request that a running governance action process instance is cancelled. Async version.
+
+        Each of its engine actions that has not yet finished is cancelled and any governance service running
+        one is stopped; engine actions that have already finished are left unchanged.
+
+        Parameters
+        ----------
+        process_instance_guid : str
+            The GUID of the governance action process instance.
+
+        Notes
+        -----
+        POST {automated-curation}/governance-action-process-instances/{processInstanceGUID}/cancel, no body.
+        Needs an Egeria that includes odpi/egeria#9371.
+        For more information see: https://egeria-project.org/concepts/governance-action-process
+        """
+        validate_guid(process_instance_guid)
+        url = f"{self.ref_curation_command_base}/governance-action-process-instances/{process_instance_guid}/cancel"
+        await self._async_make_request("POST", url)
+
+    def cancel_governance_action_process(self, process_instance_guid: str) -> None:
+        """Request that a running governance action process instance is cancelled."""
+        loop = asyncio.get_event_loop()
+        loop.run_until_complete(self._async_cancel_governance_action_process(process_instance_guid))
 
     async def _async_get_active_engine_actions(
             self,

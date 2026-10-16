@@ -31,6 +31,7 @@ from pyegeria.omvs.full_omag_server_config import FullServerConfig
 from pyegeria.omvs.glossary_manager import GlossaryManager
 from pyegeria.omvs.governance_officer import GovernanceOfficer
 from pyegeria.omvs.lineage_linker import LineageLinker
+from pyegeria.omvs.governance_engine import GovernanceEngine
 from pyegeria.omvs.location_arena import LocationArena
 from pyegeria.omvs.metadata_expert import MetadataExpert
 from pyegeria.omvs.my_profile import MyProfile
@@ -82,6 +83,8 @@ class Egeria:
             "asset_maker": AssetMaker,
             "auto_curate": AutomatedCuration,
             "automated_curation": AutomatedCuration,
+            "gov_engine": GovernanceEngine,
+            "governance_engine": GovernanceEngine,
             "class_mgr": ClassificationExplorer,
             "classification_manager": ClassificationExplorer,
             "collections": CollectionManager,
