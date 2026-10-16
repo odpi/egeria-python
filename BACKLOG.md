@@ -5,6 +5,18 @@ Status: `open` · `in-progress` · `done` · `deferred`
 
 ---
 
+## 🟡 Medium Priority — Wrap Mandy's new engine-host View Server endpoints
+
+**Status:** open, waiting on Egeria (expected "in a few days" from 2026-10-14)
+**Added:** 2026-10-14
+
+Mandy will expose more engine-host internal APIs as View Server REST calls once her current fixes are done. That includes the per-engine "approved, unclaimed" engine-action listing, which today exists only on the metadata server's governance-context service. RE needs them to act as an engine host (ISSUE-150). When they land, check the refreshed `.http` files and Egeria's `AutomatedCurationResource` (or wherever they're added), then:
+- add `AutomatedCuration` wrappers, e.g. next to `get_active_claimed_engine_actions`;
+- add micro-tests that pin the URLs;
+- tell the RE PR/CI session the pyegeria version.
+
+---
+
 ## 🟡 Medium Priority — Re-test deletes when the new Egeria release lands
 
 **Status:** open, blocked on Egeria (its delete fixes are in progress upstream)
