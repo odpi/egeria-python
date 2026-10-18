@@ -64,7 +64,7 @@ class MainScreen(Screen):
             Static(f"Other Functions"),
             Static(f"[b]Select a function[/b]"),
             OptionList(
-                Option("[] User Identities"),
+                # Option("[] User Identities"),
                 Option("[] Catalogs/Shop for Data"),
                 Option("[] Edit Profile"),
                 Option("[] Subscriptions"),
@@ -78,7 +78,7 @@ class MainScreen(Screen):
             id="other_function_container"
         )
         yield ScrollableContainer(
-            Static("Roles"),
+            Static("Roles  [dim](Enter on a TeamLeader/TeamMember role: show team)[/dim]"),
             DataTable(id="roles_table"),
             id="main_roles_container"
         )

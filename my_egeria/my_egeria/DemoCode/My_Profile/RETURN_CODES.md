@@ -48,7 +48,7 @@ In accordance with application conventions:
 | **`423`** | `BUSINESS_DOMAIN_SPEC_ERROR` | Error executing BusinessCapabilities report specification in Shop for Data handler. | `shop_for_data_handler.py` |
 | **`429`** | `SAMPLE_DATA_RETRIEVAL_ERROR` | Failed to retrieve or parse sample data from Egeria Asset Catalog / Data Engine in Shop for Data handler. | `shop_for_data_handler.py` |
 | **`430`** | `INCOMPATIBLE_ENVIRONMENT` | App started under a Python whose pydantic is older than pyegeria requires, so request bodies would reach Egeria with their parameters silently missing. The app exits at startup with a message naming the interpreter and how to run from the project venv instead. | `my_profile_app.py`, `profile_utils.py` |
-| **`440`** | `TEAM_ROLES_OR_GLOSSARY_ERROR` | Error communicating with Egeria or retrieving team members, user roles, or glossary term details. | `team_roles_handler.py` |
+| **`440`** | `TEAM_ROLES_OR_GLOSSARY_ERROR` | Error communicating with Egeria or retrieving glossary term details. (A failed team members lookup is now shown as an error notification and does not exit the app.) | `team_roles_handler.py` |
 
 ---
 
@@ -59,4 +59,4 @@ In accordance with application conventions:
 - **410–419**: Tree resolution errors in selection overview, and technology type data extraction / callback payload errors.
 - **420–429**: Data retrieval exceptions, report specification execution failures, and template instantiation failures across Shop for Data and Technology Types.
 - **430**: Incompatible Python environment detected at startup.
-- **440**: Team roles and glossary term query communication errors.
+- **440**: Glossary term query communication errors.

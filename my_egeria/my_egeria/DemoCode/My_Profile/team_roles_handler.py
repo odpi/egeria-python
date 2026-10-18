@@ -70,8 +70,17 @@ class TeamRolesMixin:
             if not isinstance(result, (tuple, list)) or len(result) != 5:
                 return
             team_members_list, team_display_name, team_qualified_name, team_category, team_description = result
+            if team_display_name is None:
+                # find_team_members has already told the user why there is no team to show
+                return
         else:
             self.log(f"Selected role is not a TeamLeader or TeamMember: {selected_role_name}")
+            self.notify(
+                f"'{selected_role_name}' is not a team role, so there are no team members to show. "
+                "Select a TeamLeader or TeamMember role.",
+                timeout=5,
+                severity="warning",
+            )
             return 201
 
         self.log(f"team_members_list: {team_members_list}")
@@ -131,7 +140,7 @@ class TeamRolesMixin:
         except PyegeriaException as e:
             print_basic_exception(e)
             self.log(f"Error retrieving team members: {e!s}")
-            self.exit(440)
+            self.notify(f"Could not retrieve the team members from Egeria: {e!s}", timeout=20, severity="error")
             return [[], None, None, None, None]
 
         self.log(f"team_member_data: {team_member_data}")

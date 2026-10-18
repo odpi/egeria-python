@@ -126,7 +126,7 @@ The header shows your full name, user ID and **Karma Points** (your contribution
 | **User Associations** | Status or Type, Name, Description, GUID | The communities you belong to |
 | **My Collections** | Collection Name, Collection Description, Collection GUID | Collections you created (your bookmarks collection is not listed here) |
 | **Other Functions** | – | A menu of further features ([below](#other-functions-menu)) |
-| **Roles** | Role Name, Role Type, Description, GUID | Roles you have been appointed to |
+| **Roles** | Role Name, Role Type, Description, GUID | Roles you have been appointed to. Press `Enter` on a TeamLeader or TeamMember role (or click it a second time) to see the other people in that team |
 | **Teams** | Assignment Type, Team Name, Description, GUID | Teams you are a member of |
 | **Blogs** | Blog Title, Date, Text, GUID | Your blog entries |
 | **Journal** | Journal Entry, Date, Text, GUID | Your journal entries |
@@ -135,6 +135,8 @@ The header shows your full name, user ID and **Karma Points** (your contribution
 | **Projects** | Status or Type, Name, Description, GUID | Projects you are involved in |
 
 Click or move into a table to select it; the highlighted row is the "selected row" used by the shortcuts below. Press `ctrl+r` to reload everything from Egeria. The app also reloads automatically when you close an Add screen.
+
+**Seeing your team.** Selecting a TeamLeader or TeamMember role in the Roles table (for example `TeamLeader::Department::0010`) opens the **My Team** screen, which lists the team's members and their assignment types; press `Escape` to return. Selecting any other role shows a warning that it is not a team role. If Egeria returns no members for the team, or the lookup fails, a message says so.
 
 Main screen shortcuts:
 
@@ -313,7 +315,7 @@ When the app exits it returns a code; screens also use codes to talk to the app.
 | `412` / `413` | Error / empty result reloading a newly created profile |
 | `416` | Technology types could not be fetched |
 | `430` | Incompatible Python or pydantic version |
-| `440` | Team, role or glossary lookup error |
+| `440` | Glossary term lookup error |
 
 The full list is in `RETURN_CODES.md` in the app folder.
 
@@ -328,7 +330,7 @@ The full list is in `RETURN_CODES.md` in the app folder.
 
 **Something I added doesn't appear.** Press `ctrl+r` on the main screen. Communities you create are not linked to you yet (see Known Limitations), so they don't appear in User Associations.
 
-**The app quit unexpectedly.** The app only exits by itself in a few cases: a startup problem (codes `402`, `403`, `430`), a failure fetching technology types (`416`), or an error looking up a team (`440`).
+**The app quit unexpectedly.** The app only exits by itself in a few cases: a startup problem (codes `402`, `403`, `430`), a failure fetching technology types (`416`), or an error looking up a glossary term (`440`). A failed team lookup is reported as a message instead.
 
 ## Known Limitations
 
