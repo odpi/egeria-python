@@ -18,6 +18,7 @@ from pyegeria.omvs.full_omag_server_config import FullServerConfig
 from pyegeria.omvs.glossary_manager import GlossaryManager
 from pyegeria.omvs.governance_officer import GovernanceOfficer
 from pyegeria.omvs.lineage_linker import LineageLinker
+from pyegeria.omvs.governance_engine import GovernanceEngine
 from pyegeria.omvs.location_arena import LocationArena
 from pyegeria.omvs.metadata_expert import MetadataExpert
 from pyegeria.omvs.my_profile import MyProfile
@@ -45,6 +46,7 @@ __all__ = [
     "AssetCatalog",
     "AssetMaker",
     "AutomatedCuration",
+    "GovernanceEngine",
     "ClassificationExplorer",
     "CollectionManager",
     "CommunityMatters",
