@@ -166,6 +166,8 @@ between sections yet, so the lists here still show the 2026-10-12 layout.
 - **pyegeria follow-ons** (class renames, `cascadedDelete`, `pushDown`
   default, new `DataValueAssignment`/`CrowdSourcingRole` values, view-service
   fixes that pyegeria worked around): ISSUE-154, proposed and not yet made.
+- **Gaps against Egeria `main` since 6.2** (omvs_audit plus source diff):
+  ISSUE-155, a ranked list for the owner to pick from.
 
 **Open pyegeria items**
 - ISSUE-150: Dr.Egeria commands for an Analytic Function's Egeria declaration: a GovernanceActionType Resource Explorer runs as an engine host, plus a synchronous path that bypasses Egeria (direction agreed, not built)
@@ -281,6 +283,29 @@ they're holding real port materialization until this exists server-side
 - **Also blocking, and not pyegeria:** on the redeployed quickstart, the new paths return 404 too (`/governance-engine/governance-engines/{guid}/engine-actions/active-claimed` and `.../approved`). `qs-view-server` does not have the new Governance Engine view service configured yet, so that's a quickstart config change for egeria-workspaces.
 - **Needed in pyegeria:** a `GovernanceEngine` client (or methods moved off `AutomatedCuration`) for approved, claim, active-claimed, status update, action-targets update and completion-status on the new base, plus `cancel_governance_action_process`. Keep `get_active_engine_actions` on Automated Curation.
 - Status: FIXED on branch fix/issue-153-governance-engine (9d412207, signed, pushed to dwolfson/egeria-python; owner approved 2026-10-16). New GovernanceEngine client (6 calls incl. get_approved_engine_actions), AutomatedCuration.cancel_governance_action_process, five deprecated AutomatedCuration wrappers with a one-time 404 fallback to the old path. 20 micro-tests (whole file fails to collect on upstream/main). Audit: governance-engine OK=6, automated-curation OK=9. Not yet released; not verified live (qs-view-server lacks the service).
+
+---
+
+### ISSUE-155: pyegeria gaps against Egeria `main` since 6.2 (omvs_audit + source diff, V6.2..05a5e982)
+
+**Layer:** Pyegeria · **Status:** open, proposed list for the owner to pick from; nothing changed · **Found:** 2026-10-18, Resource Explorer ops item 7. File-only audit, no Egeria calls.
+
+**How:** `scripts/omvs_audit.py --quiet --http-dir <dir>` was run twice against this branch's `pyegeria/omvs`: once with the `.http` files from Egeria tag `V6.2` (bc08cf55a8, 2026-10-06), once with those from `origin/main` (05a5e9822e, 2026-10-18). Each was restricted to the collections `pyegeria/http-clients/` already carries, plus the new `Egeria-api-governance-engine.http`. Totals: V6.2 OK=965, mismatch 4, missing 3. Main OK=959, mismatch 5, missing 15. The `.http` files lag the Java, so the view-service `*Resource.java` and request-DTO diffs from V6.2 to `main` were also read, for PRs #9365-#9374 and #9321. The checkouts were not touched; the files were read with `git show`. Ranked: risk to existing callers first, then new capability.
+
+1. **Engine-action calls moved to the Governance Engine view service (PR #9373).** Automated Curation no longer has claim, status update, action-targets update, completion-status or active-claimed. On `main` the audit reports them ELSEWHERE, plus `getApprovedEngineActions` and `cancelGovernanceActionProcess` MISSING. **Already fixed on branch `fix/issue-153-governance-engine` (ISSUE-153), not yet merged or released.** The only action is to merge and release that branch.
+2. **`cascadeDelete` alias (PR #9365, `DeleteOptions.setCascadedDelete` now has `@JsonAlias("cascadeDelete")`).** pyegeria's cascade flag now reaches the server, so ISSUE-154 item 1 applies: switch to `cascadedDelete` and re-test cascades.
+3. **Zones fail closed (PR #9367).** A GovernanceZone with no security access control now admits no-one; before, it was ignored. This is not a REST change. The new `MISSING_ZONE_ACCESS_CONTROL` exception type is raised by the platform cataloguer, not on a REST path. Callers will see 403s or empty results for elements whose only zones are unsecured. **pyegeria:** no code change. Expect more 403s on quickstart content, as with the digital-products zone (2026-10-14). The 403 error message already reads clearly since ISSUE-142.
+4. **`createMetadataElementFromTemplate` body class.** The `.http` now shows `OpenMetadataTemplateRequestBody`. The Java parameter type was already that at V6.2, so only the sample changed. pyegeria sends its `TemplateRequestBody` model (`metadata_expert.py:159-207`, `models.py:526`). That model has no `typeName`, `replacementClassifications` or `parentRelationshipProperties`, so the PyegeriaModel `extra='ignore'` rule silently drops those fields if a caller passes them. **Proposed:** add an `OpenMetadataTemplateRequestBody` model with those fields and use it here. Medium value: it is the only way to create a subtype from a template through Metadata Expert.
+5. **Undo and restore (PR #9365/#9373, new).** Metadata Expert `POST /metadata-elements/{guid}/undo` restores the previous version and fails if there is none. `/metadata-elements/{guid}/restore` reverses a delete or archive, including what that delete cascaded, but not a purge. `related-elements/{guid}/undo` and `/restore` do the same for relationships. Each takes an optional `MetadataSourceRequestBody`. **Proposed:** four methods on `MetadataExpert` via the existing `_async_metadata_source_body_request` (`_server_client.py:6395`). This pairs well with ISSUE-117 and RE's archive walk: restore is the safety net for a mistaken archive.
+6. **Usage Activity and Member Popularity Profile classifications (Classification Explorer, new, probably for the Lovelace Popularity Profiler in #9369).** Each has add (`POST /elements/{guid}/usage-activity`), `/update` and `/remove`, and the same for `/member-popularity-profile`. The bodies are New/Update/DeleteClassificationRequestBody with `UsageActivityProperties` or `MemberPopularityProfileProperties`. **Proposed:** six methods, and the property names in `element_status_fields.py` if Dr.Egeria should show them. Low priority until something writes them.
+7. **`GetOptions.viewElementGUID` (new).** It identifies the element whose view a request is assembling, so related elements fetched for that view are not reported as "found" (usage tracking). **Proposed:** an optional field on the get-request models, for the Resource Browser and the explorers. Low priority.
+8. **`relationshipPurpose` on RelationshipDef (PR #9365).** Type definitions now carry a relationship purpose used for anchor processing. Nothing in pyegeria reads it. **Proposed:** none now. Possibly show it in the Egeria Explorer type views later.
+9. **`finalAnalysisStep` (PR #9366).** This is internal to the survey connectors (a provider/service API) and not a REST field. **pyegeria:** none.
+10. **Property-class renames (PR #9365):** covered by ISSUE-154 item 3.
+
+**Audit noise (pre-existing, not gaps):** `getActorRoleByGUID` and `getSchemaAttributeByGUID` are reported as mismatches only because their `.http` URLs end in a stray `"}` (an Egeria `.http` typo; worth telling Egeria). `detachSolutionLinkingWire` is a false positive: Egeria has both `.../wired-to/{guid}/detach` and `.../wires/{relationshipGUID}/detach`, and pyegeria implements both (`solution_architect.py:4338`, `:4505`). `removeNote` is ISSUE-146. The three `product-catalog` MISSING rows are examples of one find call. `Egeria-valid-metadata-lists.http` exists only in the local copy, not on Egeria `main`.
+
+**Also worth doing:** refresh the gitignored `pyegeria/http-clients/` from Egeria `main`. The local copy predates `Egeria-api-governance-engine.http` and the classification-explorer and metadata-expert additions.
 
 ---
 
