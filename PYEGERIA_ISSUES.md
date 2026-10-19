@@ -1505,6 +1505,8 @@ role appointments may be dropped or never fetched once a filter is set.
 
 **Re-test 2026-10-19 (quickstart recreated 13:02Z on Egeria `main` 05a5e982, image 6.3-SNAPSHOT built 2026-10-18 16:13Z; as erinoverview on qs-view-server; throwaways named `pyeg_rt_*`, each deleted and verified gone by GUID; peers cleared first):** **Not re-testable here.** Needs an edit to a user in the platform's YAML secrets file and a wait for `refreshTimeInterval`. egeria-workspaces-fs is putting that to the owner as a separate step.
 
+**Re-test 2026-10-19 by egeria-workspaces-fs (reported to this session, not independently re-run here):** **PASS.** A throwaway user `pyegrt130` was added to the live `coco-user-directory.omsecrets` and logged in (200, 13:19:48Z), which cached it. It was then set to `userAccountStatus: DISABLED` in place with no restart (13:19:56Z). Logins worked until 13:20:32Z and were refused with 401 at 13:21:02Z, so the cache was rebuilt about a minute after the edit (`refreshTimeInterval: 10`). The file was restored byte-for-byte afterwards. Ready to move to the Appendix.
+
 **Layer:** Egeria server (`YAMLSecretsStoreConnector`) · **Status:** open, reported to the Egeria lead · **Found:** 2026-10-09, while adding Resource Explorer's own account (`resourceexplorernpa`).
 
 **What:** `getUser(userId)` returns the entry from `userAccountMap` if it is already there. `refreshSecrets()` re-reads the YAML file every `refreshTimeInterval` minutes, but `userAccountMap` (and `securityAccessControlMap`) are created only on the first load (when `secretsStoreFile == null`) and are never cleared afterwards. Re-reading the file only helps users the cache has never seen; the comment says "this may be a new user".
