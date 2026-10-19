@@ -30,8 +30,8 @@ class BaseAddScreen(ModalScreen):
     """
 
     BINDINGS = [
-        ("q", "quit", "Quit"),
-        ("ctrl+a", "add_element", "Add"),
+        ("escape", "quit", "Back"),
+        ("ctrl+s", "add_element", "Add"),
         ]
 
     CSS_PATH = "my_profile.tcss"
@@ -202,7 +202,8 @@ class AddAssociationScreen(ModalScreen):
     """
 
     BINDINGS = [
-        ("q", "quit", "Quit"),
+        ("escape", "quit", "Back"),
+        ("q", "quit", "Main Menu"),
         ]
 
     CSS_PATH = "my_profile.tcss"

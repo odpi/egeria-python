@@ -126,7 +126,7 @@ The header shows your full name, user ID and **Karma Points** (your contribution
 | **User Associations** | Status or Type, Name, Description, GUID | The communities you belong to |
 | **My Collections** | Collection Name, Collection Description, Collection GUID | Collections you created (your bookmarks collection is not listed here) |
 | **Other Functions** | – | A menu of further features ([below](#other-functions-menu)) |
-| **Roles** | Role Name, Role Type, Description, GUID | Roles you have been appointed to |
+| **Roles** | Role Name, Role Type, Description, GUID | Roles you have been appointed to. Press `Enter` on a TeamLeader or TeamMember role (or click it a second time) to see the other people in that team |
 | **Teams** | Assignment Type, Team Name, Description, GUID | Teams you are a member of |
 | **Blogs** | Blog Title, Date, Text, GUID | Your blog entries |
 | **Journal** | Journal Entry, Date, Text, GUID | Your journal entries |
@@ -134,18 +134,20 @@ The header shows your full name, user ID and **Karma Points** (your contribution
 | **User Identity** | Display Name, User ID, Distinguished Name, GUID | User identities linked to your profile |
 | **Projects** | Status or Type, Name, Description, GUID | Projects you are involved in |
 
-Click or move into a table to select it; the highlighted row is the "selected row" used by the shortcuts below. Press `r` to reload everything from Egeria. The app also reloads automatically when you close an Add screen.
+Click or move into a table to select it; the highlighted row is the "selected row" used by the shortcuts below. Press `ctrl+r` to reload everything from Egeria. The app also reloads automatically when you close an Add screen.
+
+**Seeing your team.** Selecting a TeamLeader or TeamMember role in the Roles table (for example `TeamLeader::Department::0010`) opens the **My Team** screen, which lists the team's members and their assignment types; press `Escape` to return. Selecting any other role shows a warning that it is not a team role. If Egeria returns no members for the team, or the lookup fails, a message says so.
 
 Main screen shortcuts:
 
 | Key | Action |
 | :--- | :--- |
 | `ctrl+t` | **Edit Selected Table** – opens the edit screen for the selected table, where you add and delete rows |
-| `ctrl+a` | **Add Comment** to the selected row |
-| `ctrl+s` | **Show Comments** for the selected row |
-| `ctrl+b` | **Manage Bookmarks** |
+| `ctrl+o` | **Show Comments** for the selected row |
+| `ctrl+n` | **Add Comment** to the selected row |
 | `ctrl+k` | **Bookmark** the element in the selected row |
-| `r` | Refresh all data from Egeria |
+| `ctrl+b` | **Manage Bookmarks** |
+| `ctrl+r` | Refresh all data from Egeria |
 | `ctrl+f` | Leave feedback (works on every screen) |
 | `q` | Quit the app |
 
@@ -155,8 +157,8 @@ Adding and deleting both go through the table's **edit screen**:
 
 1. On the main screen, select a table and press `ctrl+t`.
 2. The edit screen shows a copy of that table. Then:
-   - `a` – **Add Row**: opens the Add screen for that kind of element.
-   - `d` – **Delete Row**: asks you to confirm, then deletes the highlighted element from Egeria. The row is removed only if Egeria accepts the delete. You can delete one row at a time.
+   - `ctrl+n` – **Add Row**: opens the Add screen for that kind of element.
+   - `ctrl+d` – **Delete Row**: asks you to confirm, then deletes the highlighted element from Egeria. The row is removed only if Egeria accepts the delete. You can delete one row at a time.
    - `Escape` – back to the main screen.
 
 Edit screens add and delete; they do not edit a row's values in place. To change your own details use **Edit Profile** from the Other Functions menu.
@@ -165,10 +167,10 @@ Edit screens add and delete; they do not edit a row's values in place. To change
 
 Every Add screen works the same way:
 - Fill in the fields. Those marked \* are required.
-- Press **Add** (or `ctrl+a`).
+- Press **Add** (or `ctrl+s`).
 - Some screens have a switch that links the new element to you. It is on by default.
 
-If a required field is missing or a value is invalid, the screen tells you which one. After a successful add the form is cleared, so you can add another; after a failed add your input is kept so you can correct it. Press **Quit** (or `q` outside a text field) to close the screen. You go back to the main screen and the data is reloaded.
+If a required field is missing or a value is invalid, the screen tells you which one. After a successful add the form is cleared, so you can add another; after a failed add your input is kept so you can correct it. Press **Quit** (or `Escape`) to close the screen. You go back to the main screen and the data is reloaded.
 
 | Table | Fields | Link switch | Egeria result |
 | :--- | :--- | :--- | :--- |
@@ -187,15 +189,15 @@ If a required field is missing or a value is invalid, the screen tells you which
 
 Comments can be attached to any element in a main-screen table, and responses can be attached to comments to any depth.
 
-**Add a comment from the main screen:** select a row, press `ctrl+a`, enter the comment and a comment type (`Question`, `Answer`, `Suggestion` or `Requirement`), then press **Submit**.
+**Add a comment from the main screen:** select a row, press `ctrl+n`, enter the comment and a comment type (`Question`, `Answer`, `Suggestion` or `Requirement`), then press **Submit** (`ctrl+s`).
 
-**View and reply:** select a row and press `ctrl+s`. The comments screen lists the comments on that element.
+**View and reply:** select a row and press `ctrl+o`. The comments screen lists the comments on that element.
 
-- `ctrl+a` adds a new comment to the element being shown.
-- `ctrl+r` on a highlighted comment re-opens the screen focused on *that comment*, showing its responses. Here `ctrl+a` adds a response. Repeat to go deeper into a thread.
-- `q` closes the screen.
+- `ctrl+n` adds a new comment to the element being shown.
+- `ctrl+o` on a highlighted comment re-opens the screen focused on *that comment*, showing its responses. Here `ctrl+n` adds a response. Repeat to go deeper into a thread.
+- `Escape` or `q` closes the screen.
 
-If an element has no comments yet, the screen tells you to use `ctrl+a`.
+If an element has no comments yet, the screen tells you to use `ctrl+n`.
 
 ## Leaving Feedback
 
@@ -214,21 +216,21 @@ A read-only table of your user identities: display name, category, description, 
 Opens a screen with five tables, each loading in the background: **Glossaries**, **Digital Product Catalog**, **Data Dictionaries**, **Business Domains** and **Root Collections**.
 
 - **Enter** (or click) on a row opens an **overview** screen: a tree on the left and details on the right. Selecting a tree node shows its details – glossary terms, digital products (including sample data), dictionaries, business capabilities or collections.
-- `s` – show sample data for the highlighted row.
-- `u` or `ctrl+s` – subscribe to the highlighted item.
-- `t` – search glossary terms. Back from the search (`g`) returns to Shop for Data.
-- `k` – bookmark the highlighted item; `ctrl+b` – open bookmarks with its GUID ready to add.
-- `b` or `Escape` – back to the main screen; `q` – quit the screen.
+- `ctrl+l` – show sample data for the highlighted row.
+- `ctrl+u` – subscribe to the highlighted item.
+- `ctrl+g` – search glossary terms. `Escape` from the search returns to Shop for Data.
+- `ctrl+k` – bookmark the highlighted item; `ctrl+b` – open bookmarks with its GUID ready to add.
+- `Escape` or `q` – back to the main screen.
 
-On the overview screen, `s` subscribes to the selected node, `b` goes back and `q` returns to the main screen. On a sample-data view, `s` subscribes, and `b`, `Escape` or `Enter` go back.
+On the overview screen, `ctrl+u` subscribes to the selected node, `Escape` goes back and `q` returns to the main screen. On a sample-data view, `ctrl+u` subscribes, `Escape` goes back to Shop for Data and `q` returns to the main screen.
 
-**Subscribing**, from any of these screens, opens the **Create Subscription Request** form. It has Display Name, Description, Identifier and Status (`DRAFT`, `PROPOSED` or `ACTIVE`; an invalid value becomes `DRAFT`). Press `c` to create the digital subscription in Egeria. The subscription is linked to the item you chose and to you as its subscriber. If either link can't be made, a warning says so; the subscription itself is still created.
+**Subscribing**, from any of these screens, opens the **Create Subscription Request** form. It has Display Name, Description, Identifier and Status (`DRAFT`, `PROPOSED` or `ACTIVE`; an invalid value becomes `DRAFT`). Press `ctrl+s` to create the digital subscription in Egeria (`Escape` cancels). The subscription is linked to the item you chose and to you as its subscriber. If either link can't be made, a warning says so; the subscription itself is still created.
 
 ### Edit Profile
-A form pre-filled with your profile details (courtesy title, job title, given names, surname, preferred name, pronouns, description, time zone, employee ID, preferred language, resident country). Press **Edit Profile** to save. The screen also has shortcuts that open the Communities (`ctrl+c`), Identities (`ctrl+i`), Roles (`ctrl+r`) and Teams (`ctrl+t`) edit screens. Press `q` to return.
+A form pre-filled with your profile details (courtesy title, job title, given names, surname, preferred name, pronouns, description, time zone, employee ID, preferred language, resident country). Press **Edit Profile** (or `ctrl+s`) to save. The screen also has shortcuts that open the Communities (`ctrl+g`), Identities (`ctrl+l`), Roles (`ctrl+r`) and Teams (`ctrl+t`) edit screens. Press `Escape` to return.
 
 ### Subscriptions
-A table of the digital subscriptions you created: name, status, description and GUID. Press `q` to return.
+A table of the digital subscriptions you created: name, status, description and GUID. Press `Escape` or `q` to return.
 
 ### Technology Types
 Browse the technology type hierarchy as a tree. Selecting a type shows its **catalog templates** and **governance action processes**:
@@ -236,27 +238,27 @@ Browse the technology type hierarchy as a tree. Selecting a type shows its **cat
 - **Templates:** pick one and press **Select Template**. Fill in its placeholder values and submit. Egeria creates a new element from the template, and a **status screen** shows the result.
 - **Processes:** pick one and press **Select Process**, then fill in its request parameters and submit. Only the parameters you fill in are sent. Egeria starts the governance action process, and a **status screen** shows its GUID.
 
-On the status screen, `c` copies the GUID shown to your clipboard, and `Enter`/`q` closes it and returns you to the main screen.
+On the status screen, `ctrl+y` copies the GUID shown to your clipboard, and `Enter`, `Escape` or `q` closes it and returns you to the main screen.
 
 ### User Bookmarks
 Opens the bookmarks screen (also `ctrl+b` on the main screen and on Shop for Data). It lists your bookmarks (name, type, GUID).
 
-The easiest way to add a bookmark is from a table: select a row and press `ctrl+k` on the main screen, or highlight a row and press `k` on Shop for Data. Any row that has a GUID can be bookmarked, and so can a glossary row, which is identified by its qualified name. Bookmarking something that is already bookmarked just tells you so.
+The easiest way to add a bookmark is from a table: select a row and press `ctrl+k` on the main screen, or highlight a row and press `ctrl+k` on Shop for Data. Any row that has a GUID can be bookmarked, and so can a glossary row, which is identified by its qualified name. Bookmarking something that is already bookmarked just tells you so.
 
 On the bookmarks screen:
-- `ctrl+n` shows a field for the GUID of an element to bookmark. If you opened the screen with `ctrl+b` while a row was highlighted, that row's GUID is already filled in; otherwise copy a GUID from any table, or with `c` on a status screen.
-- `d` removes the highlighted bookmark (the element itself is not deleted).
-- `q` returns.
+- `ctrl+n` shows a field for the GUID of an element to bookmark. If you opened the screen with `ctrl+b` while a row was highlighted, that row's GUID is already filled in; otherwise copy a GUID from any table, or with `ctrl+y` on a status screen.
+- `ctrl+d` removes the highlighted bookmark (the element itself is not deleted).
+- `Escape` or `q` returns.
 
 Your bookmarks are kept in Egeria as the members of your private **My Bookmarks** collection (qualified name `Bookmarks::<your user id>`), and only that collection. It is created the first time you bookmark something, anchored to your profile and linked from it with a `ResourceList` relationship whose resource use is "Bookmarks".
 
 ### My Network
 Your network is the people linked to your profile in Egeria. The screen lists them (qualified name, display name, full name, pronouns, GUID and the description you gave the link). If your profile has not finished loading, the app tells you to wait and does not open the screen.
 
-- **View details:** highlight a person and press `v` (or **Person Details**). A panel shows their **contact methods** and the **communities** they belong to. A message tells you if either is empty.
+- **View details:** highlight a person and press `ctrl+o` (or **Person Details**). A panel shows their **contact methods** and the **communities** they belong to. A message tells you if either is empty.
 - **Add someone:** type all or part of a name in the search field and press `Enter`. Up to 10 matching people are listed, leaving out you and anyone already in your network. Select a person, optionally enter a **nickname** and a **description** of your relationship, then press **Add to Network**. **Cancel** clears the selection.
-- **Remove someone:** highlight a person and press `d` (or **Remove from Network**), then confirm with **Remove**. **Cancel** or `Escape` keeps them. Only the link between you is removed; their profile is not changed.
-- `q` returns to the main screen.
+- **Remove someone:** highlight a person and press `ctrl+d` (or **Remove from Network**), then confirm with **Remove**. **Cancel** or `Escape` keeps them. Only the link between you is removed; their profile is not changed.
+- `Escape` or `q` returns to the main screen.
 
 Each person in your network is linked to your profile with a `Peer` relationship. The nickname and description are stored on that relationship.
 
@@ -265,31 +267,35 @@ See [Leaving Feedback](#leaving-feedback).
 
 ## Keyboard Reference
 
-| Key | Where | Action |
+Every screen follows the same rules:
+
+- `Escape` goes back one level, on every screen except the main screen.
+- `q` returns to the main screen, or quits the app when you are on the main screen. Screens that are mostly text fields (Add screens, Add Comment, Create Subscription, Create/Edit Profile, Search for Term, Feedback, Template and Process forms) have no `q`, because it would be typed into the field; use `Escape`.
+- Every other action is a `ctrl` key, and a key means the same thing wherever it appears. `ctrl` keys work even while a text field has focus.
+
+| Key | Action | Where |
 | :--- | :--- | :--- |
-| `q` | Main screen | Quit the app |
-| `r` | Main screen | Refresh all data from Egeria |
-| `ctrl+f` | Any screen | Leave feedback |
-| `F3` | Any screen (feedback owner only) | Show the feedback log |
-| `ctrl+t` | Main screen | Edit the selected table |
-| `ctrl+a` | Main screen | Comment on the selected row |
-| `ctrl+s` | Main screen | Show comments for the selected row |
-| `ctrl+b` | Main screen, Shop for Data | Bookmarks, with the highlighted row's GUID ready to add |
-| `ctrl+k` | Main screen | Bookmark the selected row |
-| `ctrl+n` / `d` / `q` | Bookmarks | Add by GUID / remove highlighted / close |
-| `v` / `d` / `q` | My Network | Show highlighted person's details / remove highlighted person / close |
-| `Enter` | My Network search field | Search for people to add |
-| `a` / `d` / `Escape` | Edit screens | Add row / delete row / back |
-| `ctrl+a` / `q` | Add screens | Add / close (outside a text field) |
-| `ctrl+a` / `ctrl+r` / `q` | Comments screen | Add comment / show responses to highlighted comment / close |
-| `s` / `u` or `ctrl+s` / `t` / `k` / `b` or `Escape` / `q` | Shop for Data | Sample / subscribe / search glossary terms / bookmark / back / close |
-| `s` / `b` / `q` | Overview | Subscribe / back / back to main |
-| `c` / `q` | Create Subscription | Create / cancel |
-| `c` / `Enter` / `q` | Status screen | Copy GUID / close / close |
-| `Escape` | Splash screen | Continue to the app |
-| `ctrl+s` / `Escape` | Feedback | Submit / cancel |
-| `Escape` | Confirm Delete | Cancel |
-| `ctrl+c` | Anywhere | Force quit (terminal) |
+| `Escape` | Back | Every screen except Main; continue on the splash screen; cancel on confirm dialogs |
+| `q` | Main menu / quit the app | Every list screen / Main screen |
+| `Enter` | Select the highlighted row; continue | Tables and trees; Status screen |
+| `ctrl+s` | Save / submit the form | Add screens, Add Comment, Create Subscription, Create/Edit Profile, Feedback |
+| `ctrl+n` | Add a new item | Edit screens (row), Bookmarks, Comments, Main screen (comment) |
+| `ctrl+d` | Delete / remove the highlighted item | Edit screens, Bookmarks, My Network |
+| `ctrl+o` | Open the highlighted item | Main screen (comments), Comments (responses), My Network (person details) |
+| `ctrl+t` | Edit the selected table | Main screen |
+| `ctrl+k` | Bookmark the highlighted row | Main screen, Shop for Data |
+| `ctrl+b` | Bookmarks, with the highlighted row's GUID ready to add | Main screen, Shop for Data |
+| `ctrl+u` | Subscribe | Shop for Data, Overview, sample-data view |
+| `ctrl+l` | Show sample data | Shop for Data |
+| `ctrl+g` | Search glossary terms | Shop for Data |
+| `ctrl+e` | Expand / collapse the whole tree | Technology Types |
+| `ctrl+y` | Copy the GUID shown | Status screen |
+| `ctrl+x` | Close, flagging a bad result | Status screen |
+| `ctrl+g` / `ctrl+l` / `ctrl+r` / `ctrl+t` | Edit Communities / Identities / Roles / Teams | Edit Profile |
+| `ctrl+r` | Refresh all data from Egeria | Main screen |
+| `ctrl+f` | Leave feedback | Any screen |
+| `F3` | Show the feedback log | Any screen (feedback owner only) |
+| `ctrl+c` | Force quit (terminal) | Anywhere |
 
 ## Exit and Return Codes
 
@@ -309,7 +315,7 @@ When the app exits it returns a code; screens also use codes to talk to the app.
 | `412` / `413` | Error / empty result reloading a newly created profile |
 | `416` | Technology types could not be fetched |
 | `430` | Incompatible Python or pydantic version |
-| `440` | Team, role or glossary lookup error |
+| `440` | Glossary term lookup error |
 
 The full list is in `RETURN_CODES.md` in the app folder.
 
@@ -322,9 +328,9 @@ The full list is in `RETURN_CODES.md` in the app folder.
 - the view server named by `EGERIA_VIEW_SERVER` is running;
 - `EGERIA_USER` and `EGERIA_USER_PASSWORD` are correct, and the user is allowed to use the view server.
 
-**Something I added doesn't appear.** Press `r` on the main screen. Communities you create are not linked to you yet (see Known Limitations), so they don't appear in User Associations.
+**Something I added doesn't appear.** Press `ctrl+r` on the main screen. Communities you create are not linked to you yet (see Known Limitations), so they don't appear in User Associations.
 
-**The app quit unexpectedly.** The app only exits by itself in a few cases: a startup problem (codes `402`, `403`, `430`), a failure fetching technology types (`416`), or an error looking up a team (`440`).
+**The app quit unexpectedly.** The app only exits by itself in a few cases: a startup problem (codes `402`, `403`, `430`), a failure fetching technology types (`416`), or an error looking up a glossary term (`440`). A failed team lookup is reported as a message instead.
 
 ## Known Limitations
 

@@ -19,7 +19,8 @@ class ViewSubscriptionsScreen(ModalScreen):
     """View the digital subscriptions created by the current user."""
 
     BINDINGS = [
-        ("q", "quit", "Quit"),
+        ("escape", "quit", "Back"),
+        ("q", "quit", "Main Menu"),
         ]
 
     CSS_PATH = "my_profile.tcss"
@@ -37,7 +38,7 @@ class ViewSubscriptionsScreen(ModalScreen):
     def compose(self) -> ComposeResult:
         yield Header(show_clock=True)
         yield ScrollableContainer(
-            Static("Your digital subscriptions. Press q to return.", id="view_subsciptions_static"),
+            Static("Your digital subscriptions. Press Escape to go back.", id="view_subsciptions_static"),
             DataTable(id="subscriptions_table", zebra_stripes=True, cursor_type="row"),
             id="view-subscriptions_container",
         )

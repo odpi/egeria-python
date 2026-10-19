@@ -20,9 +20,10 @@ class MyBookMarksScreen(ModalScreen):
     """
 
     BINDINGS = [
-        ("q", "quit", "Quit"),
-        ("ctrl+n", "new_bookmark", "Add New Bookmark"),
-        ("d", "remove_bookmark", "Remove Highlighted Bookmark"),
+        ("escape", "quit", "Back"),
+        ("q", "quit", "Main Menu"),
+        ("ctrl+n", "new_bookmark", "Add Bookmark"),
+        ("ctrl+d", "remove_bookmark", "Remove Bookmark"),
     ]
 
     CSS_PATH = "my_profile.tcss"
@@ -39,7 +40,7 @@ class MyBookMarksScreen(ModalScreen):
     def compose(self) -> ComposeResult:
         yield Header(show_clock=True)
         yield ScrollableContainer(
-            Static("Your bookmarks. Ctrl+N adds one by GUID; 'd' removes the highlighted one."),
+            Static("Your bookmarks. Ctrl+N adds one by GUID; Ctrl+D removes the highlighted one."),
             DataTable(id="my_bookmark_table", zebra_stripes=True, cursor_type="row"),
             id="bookmarks_table_container",
         )

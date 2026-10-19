@@ -24,6 +24,7 @@ class DummyTeamRolesApp(TeamRolesMixin):
 
     def __init__(self, backend=None):
         self.pushed_screens = []
+        self.notifications = []
         self.exit_code = None
         self.shown_main_screen = False
         self.log_messages = []
@@ -48,6 +49,9 @@ class DummyTeamRolesApp(TeamRolesMixin):
 
     def exit(self, code):
         self.exit_code = code
+
+    def notify(self, message, **kwargs):
+        self.notifications.append((message, kwargs.get("severity")))
 
     def status_callback(self, *args, **kwargs):
         pass
@@ -76,6 +80,22 @@ class TestTeamRolesMixin:
         res = app.handle_roles_table_row_selection(mock_event)
         assert res == 201
         assert len(app.pushed_screens) == 0
+        # The user is told why nothing opened
+        assert len(app.notifications) == 1
+        message, severity = app.notifications[0]
+        assert "DataSteward" in message and "not a team role" in message
+        assert severity == "warning"
+
+    def test_handle_roles_table_row_selection_failed_lookup_opens_no_team_screen(self, backend):
+        # Always faked: an 'empty' result. Only the StatusScreen explaining it is shown, not MyTeam too.
+        app = DummyTeamRolesApp(backend)
+        backend.always_fake("team_roles_handler.exec_report_spec", returns={"kind": "empty"})
+        mock_event = MagicMock()
+        mock_event.data_table.get_row.return_value = ["TeamLeader::Department::101", "PersonRole", "Desc", "g1"]
+
+        app.handle_roles_table_row_selection(mock_event)
+
+        assert [type(screen) for screen, _ in app.pushed_screens] == [StatusScreen]
 
     @pytest.mark.live_capable
     def test_handle_roles_table_row_selection_team_leader(
@@ -138,8 +158,12 @@ class TestTeamRolesMixin:
         backend.always_fake("team_roles_handler.exec_report_spec", side_effect=PyegeriaException("API Error"))
 
         members, dname, qname, cat, desc = app.find_team_members("Department::101::TeamLeader")
-        assert members == []
-        assert app.exit_code == 440
+        assert members == [] and dname is None
+        # Reported to the user; the app keeps running
+        assert app.exit_code is None
+        assert len(app.notifications) == 1
+        message, severity = app.notifications[0]
+        assert "API Error" in message and severity == "error"
 
     def test_find_team_members_empty_kind(self, backend):
         # Always faked: an 'empty' result is not something a live server can be asked for.

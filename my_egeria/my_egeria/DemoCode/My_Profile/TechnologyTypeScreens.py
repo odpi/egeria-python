@@ -21,9 +21,8 @@ from textual.widgets._option_list import Option
 
 class TechnologyTypeOptionsScreen(ModalScreen):
     """ Modal screen to display a technology type's templates and processes."""
-    BINDINGS = [("q", "dismiss", "Quit"),
-                ("b", "go_back", "Go_Back"),
-                # ("ctl+s", "Select", "tech_type_option_select")
+    BINDINGS = [("escape", "go_back", "Back"),
+                ("q", "quit", "Main Menu"),
                 ]
 
     CSS_PATH = "my_profile.tcss"
@@ -239,7 +238,7 @@ class TechnologyTypeOptionsScreen(ModalScreen):
         """ Handle the back key press."""
         self.dismiss("back")
 
-    def action_Quit(self) -> None:
+    def action_quit(self) -> None:
         """ Handle the quit key press"""
         self.dismiss(200)
 
@@ -261,8 +260,7 @@ class TechnologyTypeOptionsScreen(ModalScreen):
 
 class TechnologyTypeProcessesScreen(ModalScreen[Any]):
     """Modal screen to display technology type processes in Egeria."""
-    BINDINGS = [("q", "quit", "Quit"),
-                ("b", "quit", "Go back")]
+    BINDINGS = [("escape", "quit", "Back")]
 
     CSS_PATH = "my_profile.tcss"
 
@@ -406,9 +404,9 @@ class TechnologyTypeProcessesScreen(ModalScreen[Any]):
 
 class TechnologyTypesScreen(ModalScreen):
     """Modal screen to display technology types in Egeria."""
-    BINDINGS = [("q", "dismiss(200)", "Quit"),
-                ("g", "go_back", "Back"),
-                ("ctrl+e", "expand", "Toggle Twisties")]
+    BINDINGS = [("escape", "go_back", "Back"),
+                ("q", "quit", "Main Menu"),
+                ("ctrl+e", "expand", "Expand/Collapse All")]
 
     CSS_PATH = "my_profile.tcss"
 
@@ -543,8 +541,7 @@ class TechnologyTypesScreen(ModalScreen):
 
 class TechnologyTypeTemplatesScreen(ModalScreen[Any]):
     """Modal screen to display technology type templates in Egeria."""
-    BINDINGS = [("q", "dismiss(200)", "Quit"),
-                ("b", "quit", "Go back")]
+    BINDINGS = [("escape", "quit", "Back")]
 
     CSS_PATH = "my_profile.tcss"
 

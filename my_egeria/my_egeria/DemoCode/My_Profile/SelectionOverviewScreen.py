@@ -21,9 +21,9 @@ from StatusScreen import StatusScreen
 
 class SelectionOverviewScreen(ModalScreen):
     """Screen to display the selection of the user's data sources."""
-    BINDINGS = [("q", "quit", "Quit"),
-                ("s", "subscribe", "Subscribe to Data Source"),
-                ("b", "back", "Go back")]
+    BINDINGS = [("escape", "back", "Back"),
+                ("q", "quit", "Main Menu"),
+                ("ctrl+u", "subscribe", "Subscribe")]
 
     CSS_PATH = "my_profile.tcss"
 

@@ -23,11 +23,9 @@ class GenericDataViewScreen(ModalScreen):
     """
 
     BINDINGS = [
-        ("q", "quit", "Quit"),
-        ("b", "back", "Go back"),
         ("escape", "back", "Back"),
-        ("return", "back", "Back"),
-        ("s", "subscribe", "Subscribe to Data Source"),
+        ("q", "quit", "Main Menu"),
+        ("ctrl+u", "subscribe", "Subscribe"),
     ]
 
     CSS_PATH = "my_profile.tcss"
