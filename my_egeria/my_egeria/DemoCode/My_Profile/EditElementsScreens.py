@@ -96,9 +96,10 @@ class BaseEditScreen(ModalScreen):
     SOURCE_TABLE: str = ""
 
     BINDINGS = [
-        ("escape", "exit_screen", "Exit"),
-        ("a", "add_row", "Add Row"),
-        ("d", "delete_row", "Delete Row"),
+        ("escape", "exit_screen", "Back"),
+        ("q", "exit_screen", "Main Menu"),
+        ("ctrl+n", "add_row", "Add Row"),
+        ("ctrl+d", "delete_row", "Delete Row"),
     ]
 
     CSS_PATH = "my_profile.tcss"
@@ -120,7 +121,7 @@ class BaseEditScreen(ModalScreen):
         yield Header(show_clock=True)
         yield Static(self.TITLE_TEXT, classes="span-3", id=self.TITLE_ID)
         yield Static(
-            " Press 'a' to add a row, 'd' to delete the selected row, Esc to exit."
+            " Press Ctrl+N to add a row, Ctrl+D to delete the selected row, Esc to go back."
             " Please note you may only delete one row at a time!",
             classes="span-3",
         )
@@ -351,11 +352,14 @@ class EditProfileScreen(ModalScreen[Any]):
       4xx on failure
     """
 
-    BINDINGS = [("q", "dismiss(200)", "Quit"),
-                ("ctrl+c", "Edit_communities", "Edit communities"),
-                ("ctrl+i", "Edit_identities", "Edit identities"),
-                ("ctrl+r", "Edit_roles", "Edit roles"),
-                ("ctrl+t", "Edit_teams", "Edit teams"),
+    # ctrl+c and ctrl+i can't be used here: ctrl+c is Textual's copy/quit key and a
+    # terminal sends ctrl+i as Tab. Input swallows ctrl+a/d/e/k/u, so these avoid those too.
+    BINDINGS = [("escape", "quit", "Back"),
+                ("ctrl+s", "create_profile", "Save Profile"),
+                ("ctrl+g", "Edit_communities", "Edit Communities"),
+                ("ctrl+l", "Edit_identities", "Edit Identities"),
+                ("ctrl+r", "Edit_roles", "Edit Roles"),
+                ("ctrl+t", "Edit_teams", "Edit Teams"),
                 ]
 
     CSS_PATH = "my_profile.tcss"
@@ -469,6 +473,10 @@ class EditProfileScreen(ModalScreen[Any]):
             )
         yield Static()
         yield Footer()
+
+    def action_create_profile(self) -> None:
+        """ ctrl+s does the same as pressing the Edit Profile button """
+        self.create_profile()
 
     @on(Button.Pressed, "#edit_profile_btn")
     def create_profile(self) -> Any:

@@ -21,9 +21,10 @@ class ShowCommentsScreen(ModalScreen):
     """Show any comments for an element Screen for My Profile App."""
 
     BINDINGS = [
-        ("q", "quit", "Quit"),
-        ("ctrl+a", "add_comment", "Add Comment"),
-        ("ctrl+r", "add_response", "Add Response"),
+        ("escape", "quit", "Back"),
+        ("q", "quit", "Main Menu"),
+        ("ctrl+n", "add_comment", "Add Comment"),
+        ("ctrl+o", "add_response", "Open Responses"),
     ]
 
     CSS_PATH = "my_profile.tcss"
@@ -40,7 +41,7 @@ class ShowCommentsScreen(ModalScreen):
         load_app_config()
         # The comment whose responses this screen shows (None = show an element's comments)
         self.selected_comment_guid = selected_comment_guid or None
-        # The comment currently highlighted in the DataTable (target for Ctrl+R)
+        # The comment currently highlighted in the DataTable (target for Ctrl+O)
         self.highlighted_comment_guid: str | None = None
         app_config = settings.Environment
         app_user = settings.User_Profile
@@ -116,15 +117,15 @@ class ShowCommentsScreen(ModalScreen):
 
         if comment_table.row_count == 0:
             if self.selected_comment_guid:
-                self.notify("This comment has no responses yet - use Ctrl+A to add one", timeout=10)
+                self.notify("This comment has no responses yet - use Ctrl+N to add one", timeout=10)
             else:
-                self.notify("Selected element does not have any comments - use Ctrl+A to add one", timeout=10)
+                self.notify("Selected element does not have any comments - use Ctrl+N to add one", timeout=10)
             return
 
         # Mount the table once, after all rows have been added
         container = self.query_one("#show_comments_container", ScrollableContainer)
         container.mount(comment_table)
-        container.mount(Static("Ctrl+R on a highlighted comment to view and add responses to it"))
+        container.mount(Static("Ctrl+O on a highlighted comment to view and add responses to it"))
 
     def extract_backend_identifier(self, table_name, row_key):
         try:

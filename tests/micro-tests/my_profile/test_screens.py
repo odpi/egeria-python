@@ -764,7 +764,7 @@ class TestShopForDataAndOverviewScreens:
             target.focus()
             target.move_cursor(row=0)
             await pilot.pause()
-            await pilot.press("k")
+            await pilot.press("ctrl+k")
             await pilot.pause()
             app.bookmark_table_row.assert_called_once_with(target, row_key)
 
@@ -776,7 +776,7 @@ class TestShopForDataAndOverviewScreens:
             await pilot.pause()
             assert app.dismissed_result == [210]
 
-    @pytest.mark.parametrize("key", ["b", "escape"])
+    @pytest.mark.parametrize("key", ["escape", "q"])
     @pytest.mark.asyncio
     async def test_shop_for_data_screen_go_back_key(self, key):
         # Pressed as soon as the screen opens, without focusing a table first: nothing on the

@@ -19,8 +19,8 @@ class UserIdentitiesScreen(ModalScreen):
     """ Modal Screen to display the user identities as stored in Egeria """
 
     BINDINGS = [
-        ("escape", "app.pop_screen", "Exit Screen"),
-        ("q", "app.pop_screen", "Exit Screen"),
+        ("escape", "app.pop_screen", "Back"),
+        ("q", "app.pop_screen", "Main Menu"),
         ]
 
     CSS_PATH = "my_profile.tcss"

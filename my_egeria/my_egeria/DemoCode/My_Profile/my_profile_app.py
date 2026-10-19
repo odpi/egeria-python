@@ -104,7 +104,7 @@ class MyProfileApp(App, TechTypesMixin, ShopForDataMixin, TeamRolesMixin, Elemen
     # means ctrl+f wins over the Input/TextArea "delete word right" binding on the same key.
     BINDINGS = [
         ("q", "quit", "Quit"),
-        ("r", "refresh", "Refresh Data"),
+        ("ctrl+r", "refresh", "Refresh Data"),
         Binding("ctrl+f", "feedback", "Feedback", priority=True),
         Binding("f3", "view_feedback_log", "Feedback Log", priority=True),
     ]

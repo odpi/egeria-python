@@ -64,9 +64,10 @@ class MyNetworkScreen(ModalScreen):
     """
 
     BINDINGS = [
-        ("q", "quit", "Quit"),
-        ("v", "view_details", "View Highlighted Person"),
-        ("d", "remove_peer", "Remove Highlighted Person"),
+        ("escape", "quit", "Back"),
+        ("q", "quit", "Main Menu"),
+        ("ctrl+o", "view_details", "Open Person"),
+        ("ctrl+d", "remove_peer", "Remove Person"),
     ]
 
     CSS_PATH = "my_profile.tcss"

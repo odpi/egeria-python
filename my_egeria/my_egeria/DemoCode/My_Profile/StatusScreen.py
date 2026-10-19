@@ -18,10 +18,11 @@ from textual.widgets import Header, TextArea, Footer, Static
 
 class StatusScreen(ModalScreen):
     """Modal screen to display the status of the application."""
-    BINDINGS = [("q", "quit", "Quit"),
-                ("return", "successful", "Continue"),
-                ("b", "unsuccessful", "Bad result"),
-                ("c", "copy_guid_to_clipboard", "Copy GUID to clipboard"),
+    BINDINGS = [("enter", "successful", "Continue"),
+                ("escape", "successful", "Back"),
+                ("q", "quit", "Main Menu"),
+                ("ctrl+y", "copy_guid_to_clipboard", "Copy GUID"),
+                ("ctrl+x", "unsuccessful", "Bad Result"),
                 ]
 
     CSS_PATH = "my_profile.tcss"

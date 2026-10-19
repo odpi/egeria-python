@@ -11,7 +11,6 @@ from typing import Any
 from pyegeria import load_app_config, settings
 from textual import on
 from textual.app import ComposeResult
-from textual.binding import Binding
 from textual.containers import ScrollableContainer
 from textual.events import Action
 from textual.screen import Screen
@@ -20,14 +19,13 @@ from textual.widgets import DataTable, Header, Static, Footer
 
 class ShopForDataScreen(Screen):
     """ Screen to Present a choice of different data sources to the user."""
-    BINDINGS = [("q", "dismiss(200)", "Quit"),
-                ("b", "back", "Go back"),
-                Binding("escape", "back", "Go back", show=False),
-                ("s", "sample_data_source", "Sample data source"),
-                ("u", "subscribe_to_data_source", "Subscribe"),
-                ("ctrl+s", "subscribe_to_data_source", "Subscribe"),
-                ("t", "search_for_term", "Search Glossary Terms"),
-                ("k", "bookmark_row", "Bookmark"),
+    BINDINGS = [("escape", "back", "Back"),
+                # Opened straight from the main screen, so back and main menu are the same place
+                ("q", "back", "Main Menu"),
+                ("ctrl+l", "sample_data_source", "Sample Data"),
+                ("ctrl+u", "subscribe_to_data_source", "Subscribe"),
+                ("ctrl+g", "search_for_term", "Search Glossary Terms"),
+                ("ctrl+k", "bookmark_row", "Bookmark Row"),
                 ("ctrl+b", "bookmarks", "Bookmarks")]
 
     CSS_PATH = "my_profile.tcss"
@@ -89,7 +87,7 @@ class ShopForDataScreen(Screen):
         """ Compose the UI components for the ShopForDataScreen screen."""
         yield Header(show_clock=True)
         # A Static, not a TextArea: a focused TextArea swallows the screen's letter key bindings (b, q, s, ...)
-        yield Static("\nPlease click on a line to select a data source, or press b or Escape to go back:")
+        yield Static("\nPlease click on a line to select a data source, or press Escape to go back:")
         yield ScrollableContainer(
             Static("Glossary"),
             self.glossary_table)

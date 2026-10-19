@@ -18,8 +18,8 @@ class MyTeam(ModalScreen):
     """ Display a list of team Members for a Team Leader """
 
     BINDINGS = [
-        ("q", "quit", "Quit"),
-        ("b", "back", "Go back")
+        ("escape", "back", "Back"),
+        ("q", "quit", "Main Menu"),
         ]
     CSS_PATH = "my_profile.tcss"
 
