@@ -622,6 +622,8 @@ Agreement.
 
 **Egeria team, 2026-10-18 (Mandy Chessell, note saved at `~/.re-gate/EGERIA-TEAM-NOTE-2026-10-18.md`):** **Status now: fixed on Egeria `main`; re-test against a platform built from current `main`** (the new view-services FVT exercises this request). `deleteEnumDef` removes an enum added through the API. **pyegeria:** no code change; the re-test should also remove the stray enum left on the dev platform.
 
+**Re-test 2026-10-19 (Egeria `main` 05a5e982; as erinoverview; owner approved the type-system writes in this session, peers cleared):** **PASS.** Throwaway enum `PyegRtCuisineType` (`02e193de-...`) was added and used by `PyegRtRecipe`. After `delete_type_def` of the entity type, `delete_enum_def(guid, name)` succeeded. Neither type appears afterwards (`get_typedef_by_name`, `get_attribute_types`, `get_all_entity_types` with 661 types). The 2026-10-05 stray enum `PyegeriaTmpCuisineType` (`118441be`) was already absent from the recreated platform, so nothing was deleted for it. Ready to move to the Appendix.
+
 **Layer:** Egeria Server (not pyegeria) · **Status:** open; reported to the Egeria team (response 2026-10-05); Egeria fix merged to Egeria `main` 2026-10-06 (odpi/egeria#9363), not yet re-tested on a platform built from it · **Found:**
 2026-10-05, live verification of `MetadataExpert.delete_enum_def` (PR #428). **Left a stray type behind.**
 
@@ -658,6 +660,8 @@ explains: the failure does not depend on what was loaded at startup.
 ### ISSUE-124: `updateTypeDef` (Metadata Expert `open-metadata-types/update`) can never succeed -- the server builds the patch without `updatedBy`, which the repository services require
 
 **Egeria team, 2026-10-18 (Mandy Chessell, note saved at `~/.re-gate/EGERIA-TEAM-NOTE-2026-10-18.md`):** **Status now: fixed on Egeria `main`; re-test against a platform built from current `main`** (the new view-services FVT exercises this request). `updateTypeDef` builds the patch with `updatedBy`, so updates succeed. **pyegeria:** no code change.
+
+**Re-test 2026-10-19 (Egeria `main` 05a5e982; as erinoverview; owner approved the type-system writes in this session, peers cleared):** **PASS.** `add_type_def` of a throwaway entity type `PyegRtRecipe` (supertype Referenceable, one enum attribute) returned `6610e176-...` at version 1. `update_type_def` with an `OpenMetadataTypeDefPatch` adding `preparationTimeMinutes` (int) succeeded: the type read back at version 2 with `updatedBy` erinoverview and both attributes. `update_type_def`'s docstring caveat ("unusable against current Egeria") can now be dropped. Ready to move to the Appendix.
 
 **Layer:** Egeria Server (not pyegeria) · **Status:** open; reported to the Egeria team (response 2026-10-05); Egeria fix merged to Egeria `main` 2026-10-06 (odpi/egeria#9363), not yet re-tested on a platform built from it · **Found:**
 2026-10-05, live verification of `MetadataExpert.update_type_def` (PR #428).
