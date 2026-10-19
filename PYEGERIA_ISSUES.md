@@ -550,6 +550,8 @@ Erin's profile. `fef83ed5` stays.
 
 **Egeria team, 2026-10-18 (Mandy Chessell, note saved at `~/.re-gate/EGERIA-TEAM-NOTE-2026-10-18.md`):** **Status now: fixed on Egeria's `oak2026` branch, pending its merge to `main`** (each fix has an FVT or unit test). Re-test once `oak2026` is merged and a platform is built from `main`. `cascadeDelete` is now accepted as an alias for `cascadedDelete`, so existing pyegeria requests will start to cascade; Egeria still recommends switching to `cascadedDelete`. **Risk check, 2026-10-18:** no production caller in `pyegeria/`, `md_processing/` or `commands/` passes cascade `True`; every `cascade`/`cascade_delete` default is `False`; `commands/tech/element_actions.py`'s `--cascade` flag (default True) is not forwarded. Live functional/scenario tests that pass `cascade=True` (collection, glossary, governance officer, `remove_note_log`) will now really cascade, which is what they intend. **pyegeria (proposed, not done):** change `DeleteElementRequestBody`'s serialization alias to `cascadedDelete` (keep both accepted on input) and the ~25 `"cascadeDelete"` literals (`_server_client.py`, `models.py`, `actor_manager.py`, `metadata_expert.py`, `product_manager.py`, `reference_data.py`, `valid_metadata.py`), then live-test one cascade and re-test ISSUE-127. No longer urgent, since the old spelling now works.
 
+**Re-test 2026-10-19 (quickstart recreated 13:02Z on Egeria `main` 05a5e982, image 6.3-SNAPSHOT built 2026-10-18 16:13Z; as erinoverview on qs-view-server; throwaways named `pyeg_rt_*`, each deleted and verified gone by GUID; peers cleared first):** **PASS (alias).** A throwaway DataStructure with a linked member DataField, deleted with `delete_data_structure(guid, cascade_delete=True)` (pyegeria still sends `cascadeDelete`), succeeded. Both elements were gone by GUID before any cleanup, so the cascade reached the server. The ISSUE-154 item 1 rename to `cascadedDelete` is still recommended but no longer urgent.
+
 **Layer:** pyegeria · **Status:** open, on hold: an Egeria fix for cascade delete is coming (owner, 2026-10-10). Egeria `main` checked 2026-10-10 (head `af400039c2`, 2026-10-06): no cascade change yet. Wait
 for it, live-test cascade delete against it, then decide the pyegeria change; the fix below may change once the
 Egeria side lands. Confirmed from Egeria source, not yet live-tested · **Found:**
@@ -582,6 +584,8 @@ annotations); do not choose by majority or by what the code already sends.
 ---
 
 ### ISSUE-127: `CollectionManager.delete_collection(cascade=True)` silently never sends `cascadeDelete` -- same shape as ISSUE-62
+
+**Re-test 2026-10-19 (quickstart recreated 13:02Z on Egeria `main` 05a5e982, image 6.3-SNAPSHOT built 2026-10-18 16:13Z; as erinoverview on qs-view-server; throwaways named `pyeg_rt_*`, each deleted and verified gone by GUID; peers cleared first):** **PASS.** The `DataStructure` refusal (`validateNoMemberDataFields`) did not recur: a cascade delete of a structure with a member field removed both. See ISSUE-132's re-test.
 
 **Layer:** pyegeria · **Status:** partly fixed in #429 (`68279835`), released in 6.1.29; cascade still blocked by ISSUE-132 · **Found:** 2026-10-05, found by capturing the request body while diagnosing a
 failed cleanup.
@@ -690,6 +694,8 @@ then deleted and verified gone. **Confirmed still present on the rebuilt platfor
 
 **Egeria team, 2026-10-18 (Mandy Chessell, note saved at `~/.re-gate/EGERIA-TEAM-NOTE-2026-10-18.md`):** **Status now: fixed on Egeria `main`; re-test against a platform built from current `main`** (the new view-services FVT exercises this request). Cascade deletes no longer fail partway. Related: a delete that is refused no longer leaves the job half done (deleting an element linked to a deleted action, a Memento, still needs `forLineage=true`; without it the delete is refused and nothing is removed), and the default delete method now honours `effectiveTime`/`forLineage`. **pyegeria:** no code change; keep sending `forLineage=true` on editing deletes. Resource Explorer's archive/delete block stays on until a throwaway re-proves the archive walk (owner's call).
 
+**Re-test 2026-10-19 (quickstart recreated 13:02Z on Egeria `main` 05a5e982, image 6.3-SNAPSHOT built 2026-10-18 16:13Z; as erinoverview on qs-view-server; throwaways named `pyeg_rt_*`, each deleted and verified gone by GUID; peers cleared first):** **Plain path PASS; Memento path not re-tested here.** A fresh CSV asset (`create_csv_data_file_element_from_template`) with its Connection, deleted with `{"class": "DeleteElementRequestBody", "cascadeDelete": True}` (forLineage default), succeeded; the asset and Connection were both gone by GUID. The soft-delete (Memento) path, which was the actual bug, needs an asset used as an engine-action target. Resource Explorer is re-testing that path with its own throwaways (agreed with the RE coordinator).
+
 **Layer:** Egeria Server · **Status:** open, workaround known; reported to the Egeria team (response 2026-10-05); Egeria fix merged to Egeria `main` 2026-10-06 (odpi/egeria#9363), not yet re-tested on a platform built from it · **Found:** 2026-10-02, live test of Dr.Egeria's
 Automation family (`Initiate Subscription` / `Cancel Subscription`, PR #414),
 cleaning up the throwaway destination data set afterwards.
@@ -757,6 +763,8 @@ reproduction is to run a subscription process with a fresh asset as
 ### ISSUE-112: `AutomatedCurationRESTServices.saveClientSideSecret`/`deleteClientSideSecret` return a plain success `VoidResponse` when the resolved connector isn't a `YAMLSecretsFileConnector` — no error, no write, no indication anything was skipped
 
 **Egeria team, 2026-10-18 (Mandy Chessell, note saved at `~/.re-gate/EGERIA-TEAM-NOTE-2026-10-18.md`):** **Status now: fixed on Egeria `main`; re-test against a platform built from current `main`** (the new view-services FVT exercises this request). Client-side secret save and delete now refuse a secrets store that cannot be updated instead of reporting success. **pyegeria:** no code change; callers must now expect an error where they used to get a silent success.
+
+**Re-test 2026-10-19 (quickstart recreated 13:02Z on Egeria `main` 05a5e982, image 6.3-SNAPSHOT built 2026-10-18 16:13Z; as erinoverview on qs-view-server; throwaways named `pyeg_rt_*`, each deleted and verified gone by GUID; peers cleared first):** **Left to Resource Explorer** (agreed with the RE coordinator); not re-tested here.
 
 **Layer:** Egeria Server (`automated-curation` OMVS) · **Status:** open ·
 **Found:** 2026-09-21, live-verifying Resource Explorer's own client-side
@@ -841,6 +849,8 @@ downstream investigation.
 ### ISSUE-90: [fixed?] `qs-engine-host` retries `startMissedEngineActions` forever when one incomplete engine action's anchor is unreadable by the engine-host user
 
 **Egeria team, 2026-10-18 (Mandy Chessell, note saved at `~/.re-gate/EGERIA-TEAM-NOTE-2026-10-18.md`):** **Status now: fixed on Egeria `main`; re-test against a platform built from current `main`** (the new view-services FVT exercises this request). One unreadable engine action no longer blocks the restart sweep. **pyegeria:** no code change; re-test is on the engine-host log (and RE's engine-host restart sweep).
+
+**Re-test 2026-10-19 (quickstart recreated 13:02Z on Egeria `main` 05a5e982, image 6.3-SNAPSHOT built 2026-10-18 16:13Z; as erinoverview on qs-view-server; throwaways named `pyeg_rt_*`, each deleted and verified gone by GUID; peers cleared first):** **No recurrence.** Read-only: no `ENGINE-HOST-SERVICES-2002` (or other qs-engine-host error) in the egeria-main log since the 13:01Z restart; the engine host initialized normally. The original trigger, an incomplete engine action whose anchor the engine-host user can't read, may simply not exist on this data, so this is not proof. RE also re-tests its engine-host restart sweep.
 
 **Layer:** Egeria Server (possibly quickstart content) · **Status:** open · **Found:** 2026-09-04 (trevor fresh quickstart)
 
@@ -1153,6 +1163,8 @@ evidence for both dates — not yet deleted.
 
 **Egeria team, 2026-10-18 (Mandy Chessell, note saved at `~/.re-gate/EGERIA-TEAM-NOTE-2026-10-18.md`):** **Status now: fixed on Egeria's `oak2026` branch, pending its merge to `main`** (each fix has an FVT or unit test). Re-test once `oak2026` is merged and a platform is built from `main`. Metadata Expert counts now take `pushDown`, **default `false`** (count matches the list); `true` gives the fast repository count. Relationship counts with end GUIDs and no criteria used to return 0; fixed. Egeria recommends `pushDown=false` for user-facing counts and `pushDown=true` for statistics. **pyegeria (proposed, not done):** `MetadataExpert.count_metadata_elements`/`count_relationships_between_elements` docstrings (`metadata_expert.py:3698`, `:4013`) say omitting `push_down` means `pushDown=True`; that is now wrong. Decide what `pyegeria/view/overview_metrics.py` (which omits `push_down`) should send, since its counts will become the slower list-matching kind once the platform has this. Verification below still needs running on a platform with the fix.
 
+**Re-test 2026-10-19 (quickstart recreated 13:02Z on Egeria `main` 05a5e982, image 6.3-SNAPSHOT built 2026-10-18 16:13Z; as erinoverview on qs-view-server; throwaways named `pyeg_rt_*`, each deleted and verified gone by GUID; peers cleared first):** **PASS.** Counts against the paged `ClassificationExplorer.get_relationships` total: `Exception` gives push_down omitted 146, false 146, true 148, list 146; `SemanticAssignment` gives 563, 563, 583, list 563. The default is now `false` and matches the list. The fast count is higher by what erinoverview cannot see (2 and 20). Read-only. The docstring fix in ISSUE-154 item 2 is now confirmed needed.
+
 **Update 2026-08-30, from the Egeria team (Mandy Chessell).** Leaving this
 entry in "Open Egeria Server issues" until the verification below has been
 run against real data — the Egeria side is done, but this entry has been
@@ -1416,6 +1428,8 @@ enough to track there too).
 
 **Egeria team, 2026-10-18 (Mandy Chessell, note saved at `~/.re-gate/EGERIA-TEAM-NOTE-2026-10-18.md`):** **Status now: fixed on Egeria's `oak2026` branch, pending its merge to `main`** (each fix has an FVT or unit test). Re-test once `oak2026` is merged and a platform is built from `main`. A successful clear now returns success; clear-map-value now uses the map name; clear-map-name also removes that map name's values. Egeria asks us to drop any workaround that treats 400-011 as success. **pyegeria:** there is none (checked 2026-10-18: no 400-011 handling in `md_processing/v2/reference_data.py` or `pyegeria/omvs/valid_metadata.py`), so the follow-on proposed below is withdrawn. Nothing to change; after the re-test, remove the leftover `pyegeriaClearRetest*` test elements on qs-view-server.
 
+**Re-test 2026-10-19 (quickstart recreated 13:02Z on Egeria `main` 05a5e982, image 6.3-SNAPSHOT built 2026-10-18 16:13Z; as erinoverview on qs-view-server; throwaways named `pyeg_rt_*`, each deleted and verified gone by GUID; peers cleared first):** **PASS.** On throwaway properties `pyegRtClear`/`pyegRtClearMap` (typeName Asset), `clear_valid_metadata_value` (alpha, beta), `clear_valid_metadata_map_value` (mapOne/v1) and `clear_valid_metadata_map_name` (mapTwo, mapOne) all return success. A second clear of an already-removed value still answers 400-011 "not found", which is correct. Values and map names were gone afterwards. One oddity: `get_valid_metadata_values` read in the same run straight after the clears still listed alpha/beta/mapOne/mapTwo, but a read a minute later was empty. Possibly a short server-side cache; not pursued. Setup creates per-property container sets (`Egeria:ValidMetadataValue::pyegRtClear-`, `...pyegRtClearMap-`) that the clears do not remove; deleted by GUID. **Not cleaned (outside what peers cleared):** the 2026-10-13 leftovers under `pyegeriaClearRetest*`, which the platform has since turned into DataProduct/DigitalProduct elements (e.g. `98de81ed`, `4b937012`).
+
 **Layer:** Egeria Server (`ValidMetadataValueHandler`) · **Status:** open · **Found:** 2026-10-13. The first live run of the Valid Metadata commands showed it (the error text wasn't captured then). Re-tested the same day with the full responses captured.
 
 **Re-test:** run once on qs-view-server as erinoverview, with all four live sessions clearing it first. It used made-up properties `pyegeriaClearRetest` and `pyegeriaClearRetestMap` (typeName `Asset`) and called the SDK methods in `pyegeria/omvs/valid_metadata.py`. The Dr.Egeria `Clear Valid Metadata *` commands call the same methods (`md_processing/v2/reference_data.py:198-242`).
@@ -1447,6 +1461,8 @@ Request ids: `ec9052e7` and `3975182d` (alpha), `38759736` (beta), `475e68f1` (m
 ### ISSUE-143: `includeOnlyRelationships: ["PersonRoleAppointment"]` returns no relationships for a Person, although the unfiltered read has its role appointments
 
 **Egeria team, 2026-10-18 (Mandy Chessell, note saved at `~/.re-gate/EGERIA-TEAM-NOTE-2026-10-18.md`):** **Status now: fixed on Egeria's `oak2026` branch, pending its merge to `main`** (each fix has an FVT or unit test). Re-test once `oak2026` is merged and a platform is built from `main`. The `includeOnlyRelationships` filter now leaves already-retrieved relationships in place, so `performsRoles` survives `["PersonRoleAppointment"]`. **pyegeria:** no code change; tell the Resource Browser (egeria-workspaces-fs) it can use the filter again after the re-test.
+
+**Re-test 2026-10-19 (quickstart recreated 13:02Z on Egeria `main` 05a5e982, image 6.3-SNAPSHOT built 2026-10-18 16:13Z; as erinoverview on qs-view-server; throwaways named `pyeg_rt_*`, each deleted and verified gone by GUID; peers cleared first):** **PASS.** Erin's Person `10dc7da9` read with `includeOnlyRelationships: ["PersonRoleAppointment"]` returns `performsRoles` 8 (unfiltered: performsRoles 8, assignmentScope 15, requestedActions 13, ...; `["ContactThrough"]` still returns contactDetails 1). Read-only. Tell the Resource Browser it can use the filter again.
 
 **Layer:** Egeria Server (not pyegeria) · **Status:** open, not yet reported to the Egeria team · **Found:** 2026-10-13, reported by the egeria-workspaces-fs Resource Browser session; reproduced read-only the same day.
 
@@ -1487,6 +1503,8 @@ role appointments may be dropped or never fetched once a filter is set.
 
 **Egeria team, 2026-10-18 (Mandy Chessell, note saved at `~/.re-gate/EGERIA-TEAM-NOTE-2026-10-18.md`):** **Status now: fixed on Egeria's `oak2026` branch, pending its merge to `main`** (each fix has an FVT or unit test). Re-test once `oak2026` is merged and a platform is built from `main`. The YAML secrets store rebuilds its user cache each time it re-reads the file (`refreshTimeInterval`), so editing an existing user no longer needs a platform restart. **pyegeria:** no code change.
 
+**Re-test 2026-10-19 (quickstart recreated 13:02Z on Egeria `main` 05a5e982, image 6.3-SNAPSHOT built 2026-10-18 16:13Z; as erinoverview on qs-view-server; throwaways named `pyeg_rt_*`, each deleted and verified gone by GUID; peers cleared first):** **Not re-testable here.** Needs an edit to a user in the platform's YAML secrets file and a wait for `refreshTimeInterval`. egeria-workspaces-fs is putting that to the owner as a separate step.
+
 **Layer:** Egeria server (`YAMLSecretsStoreConnector`) · **Status:** open, reported to the Egeria lead · **Found:** 2026-10-09, while adding Resource Explorer's own account (`resourceexplorernpa`).
 
 **What:** `getUser(userId)` returns the entry from `userAccountMap` if it is already there. `refreshSecrets()` re-reads the YAML file every `refreshTimeInterval` minutes, but `userAccountMap` (and `securityAccessControlMap`) are created only on the first load (when `secretsStoreFile == null`) and are never cleared afterwards. Re-reading the file only helps users the cache has never seen; the comment says "this may be a new user".
@@ -1502,6 +1520,8 @@ role appointments may be dropped or never fetched once a filter is set.
 ### ISSUE-128: Retention cannot be set on Egeria 6.2: the server registers the Jackson subtype as `RetentionProperties.class` (typo), and pyegeria only allows `RetentionClassificationProperties`
 
 **Egeria team, 2026-10-18 (Mandy Chessell, note saved at `~/.re-gate/EGERIA-TEAM-NOTE-2026-10-18.md`):** **Status now: fixed on Egeria's `oak2026` branch, pending its merge to `main`** (each fix has an FVT or unit test). Re-test once `oak2026` is merged and a platform is built from `main`. Fixed on `main` 13 Oct (`RetentionProperties`); `oak2026` also accepts `RetentionClassificationProperties` again. Responses now carry `RetentionProperties` in `class`. **pyegeria (proposed, not done):** per the owner's 2026-10-09 decision, switch the whitelist, docstrings and Dr.Egeria pins to `RetentionProperties`: `pyegeria/omvs/classification_explorer.py:8851,8878,8919`, `md_processing/v2/processors.py:220-237` (its comment says the opposite and must be rewritten), `md_processing/v2/curation.py:136`. Accept both names in the whitelist so older platforms keep working. Not urgent: the old name is accepted again.
+
+**Re-test 2026-10-19 (quickstart recreated 13:02Z on Egeria `main` 05a5e982, image 6.3-SNAPSHOT built 2026-10-18 16:13Z; as erinoverview on qs-view-server; throwaways named `pyeg_rt_*`, each deleted and verified gone by GUID; peers cleared first):** **PASS.** On a throwaway collection, `classification-explorer/elements/{guid}/retention` accepted both `"class": "RetentionClassificationProperties"` and `"RetentionProperties"`; each read back `retentionBasis` 2 and its notes under `elementHeader.retention`. pyegeria's own `set_retention_classification` (old name) also succeeded. ISSUE-154 item 3's switch to the new name stays optional.
 
 **Status:** open, found 2026-10-09 by Resource Explorer's first Retention publish on Egeria 6.2. **Layer:** Egeria server (a type registration typo). **Decision (owner, 2026-10-09):** wait for the Egeria fix; no pyegeria workaround. Retention publishing stays blocked until then.
 
@@ -2661,6 +2681,8 @@ Also added to the Quick reference table. Test:
 
 **Egeria team, 2026-10-18 (Mandy Chessell, note saved at `~/.re-gate/EGERIA-TEAM-NOTE-2026-10-18.md`):** **Status now: fixed on Egeria `main`; re-test against a platform built from current `main`** (the new view-services FVT exercises this request). The Apache Kafka Server catalog template is registered. **pyegeria:** no code change; re-run `Create Kafka Server Element`.
 
+**Re-test 2026-10-19 (quickstart recreated 13:02Z on Egeria `main` 05a5e982, image 6.3-SNAPSHOT built 2026-10-18 16:13Z; as erinoverview on qs-view-server; throwaways named `pyeg_rt_*`, each deleted and verified gone by GUID; peers cleared first):** **PASS.** `get_template_guid_for_technology_type("Apache Kafka Server")` returns `5e1ff810-5418-43f7-b7c4-e6e062f9aff7`. Read-only. Ready to move to the Appendix.
+
 **Layer:** Egeria Server (deployment/archive content) · **Status:** awaiting re-test (addressed on the Egeria side, confirmed live 2026-10-05) · **Found:** 2026-09-11, live-verifying the new Asset Maker Dr.Egeria family (#354)
 
 `AutomatedCuration._async_get_template_guid_for_technology_type("Apache Kafka Server")`
@@ -2688,6 +2710,8 @@ carry it.
 ### ISSUE-89: No configurable bearer-token lifetime in `application.properties` — platform tokens are fixed at 3600 s, and the signing key is random per restart
 
 **Egeria team, 2026-10-18 (Mandy Chessell, note saved at `~/.re-gate/EGERIA-TEAM-NOTE-2026-10-18.md`):** **Status now: fixed on Egeria `main`; re-test against a platform built from current `main`** (the new view-services FVT exercises this request). Bearer-token lifetime is configurable in `application.properties`. **pyegeria:** no code change; re-test means setting the property and decoding a token's `exp - iat`.
+
+**Re-test 2026-10-19 (quickstart recreated 13:02Z on Egeria `main` 05a5e982, image 6.3-SNAPSHOT built 2026-10-18 16:13Z; as erinoverview on qs-view-server; throwaways named `pyeg_rt_*`, each deleted and verified gone by GUID; peers cleared first):** **Not re-testable yet.** Tokens still decode to `exp - iat = 3600`, as expected: Egeria `main` has `bearerTokenTimeout` (hours, default 1, `TokenService`), but the quickstart's `/deployments/application.properties` does not set it. Proving it needs that property set and an egeria-main restart. egeria-workspaces-fs is putting that to the owner as a separate step.
 
 **Layer:** Egeria Server · **Status:** awaiting re-test (addressed in Egeria source 2026-09-19; not verified on the dev platform) · **Found:** 2026-09-04 (trellis-auth token contract)
 
