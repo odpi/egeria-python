@@ -150,6 +150,25 @@ content was changed. The numbered section list above describes the
 
 **At a glance** — 7 open pyegeria items, 7 awaiting re-test, 7 open Egeria Server issues.
 
+**Egeria team note, 2026-10-18 (Mandy Chessell).** Saved verbatim at
+`~/.re-gate/EGERIA-TEAM-NOTE-2026-10-18.md`. Each entry below has a dated
+"Egeria team, 2026-10-18" paragraph under its header; entries have not moved
+between sections yet, so the lists here still show the 2026-10-12 layout.
+- **Fixed on Egeria's `oak2026` branch, pending merge to `main`:** ISSUE-147,
+  143, 130, 132, 128, 38. Re-test once it is merged and a platform is built
+  from `main`.
+- **Fixed on Egeria `main`, re-test against a platform built from `main`:**
+  ISSUE-125, 124, 117, 112, 95, 90, 89.
+- **Works as designed:** ISSUE-146 (400-008 is the provenance check; the
+  pyegeria `remove_note` clean-up stays open).
+- **Egeria needs information from us:** ISSUE-108, ISSUE-79 (checklists
+  copied into each entry).
+- **pyegeria follow-ons** (class renames, `cascadedDelete`, `pushDown`
+  default, new `DataValueAssignment`/`CrowdSourcingRole` values, view-service
+  fixes that pyegeria worked around): ISSUE-154, proposed and not yet made.
+- **Gaps against Egeria `main` since 6.2** (omvs_audit plus source diff):
+  ISSUE-155, a ranked list for the owner to pick from.
+
 **Open pyegeria items**
 - ISSUE-150: Dr.Egeria commands for an Analytic Function's Egeria declaration: a GovernanceActionType Resource Explorer runs as an engine host, plus a synchronous path that bypasses Egeria (direction agreed, not built)
 - ISSUE-146: Deleting a journal entry fails with OMAG-REPOSITORY-HANDLER-400-008, and pyegeria's `remove_note` reaches the delete only through the generic Asset Maker service
@@ -255,6 +274,137 @@ they're holding real port materialization until this exists server-side
 ---
 
 
+### ISSUE-153: engine-action claim/status/completion calls still use Automated Curation paths that Egeria moved to the Governance Engine view service
+
+**Found 2026-10-16 by the Resource Explorer operations session, after the quickstart was redeployed on Egeria main (85d6c48a, includes odpi/egeria#9371 "Add Governance Engine API").**
+
+- Egeria #9371 removed these from `AutomatedCurationResource` and added them to the new `GovernanceEngineResource` (`/servers/{server}/api/open-metadata/governance-engine/...`): `GET /governance-engines/{guid}/engine-actions/approved` (new), `POST /engine-actions/{guid}/claim`, `GET /governance-engines/{guid}/engine-actions/active-claimed`, `POST /engine-actions/{guid}/status/update`, `POST /engine-actions/action-targets/update`, `POST /engine-actions/{guid}/completion-status`. `GET /engine-actions/active` stays on Automated Curation (urlMarker form). #9371 also adds `POST /governance-action-process-instances/{guid}/cancel` and makes cancel skip finished engine actions.
+- pyegeria v6.2.4 still builds `{ref_curation_command_base}/governance-engines/{guid}/engine-actions/active-claimed` (automated_curation.py:2614), and the same base for claim, status update and completion. Live result on the redeployed platform: the old active-claimed path returns 404. RE's engine host completion pass has failed every minute since about 15:44, and a claim would fail the same way.
+- **Also blocking, and not pyegeria:** on the redeployed quickstart, the new paths return 404 too (`/governance-engine/governance-engines/{guid}/engine-actions/active-claimed` and `.../approved`). `qs-view-server` does not have the new Governance Engine view service configured yet, so that's a quickstart config change for egeria-workspaces.
+- **Needed in pyegeria:** a `GovernanceEngine` client (or methods moved off `AutomatedCuration`) for approved, claim, active-claimed, status update, action-targets update and completion-status on the new base, plus `cancel_governance_action_process`. Keep `get_active_engine_actions` on Automated Curation.
+- Status: FIXED on branch fix/issue-153-governance-engine (9d412207, signed, pushed to dwolfson/egeria-python; owner approved 2026-10-16). New GovernanceEngine client (6 calls incl. get_approved_engine_actions), AutomatedCuration.cancel_governance_action_process, five deprecated AutomatedCuration wrappers with a one-time 404 fallback to the old path. 20 micro-tests (whole file fails to collect on upstream/main). Audit: governance-engine OK=6, automated-curation OK=9. Not yet released; not verified live (qs-view-server lacks the service).
+
+---
+
+### ISSUE-158: `GOV_DEF_PROPERTIES_LIST` lacks `DataQualityRuleProperties`, and Dr.Egeria's governance create fallback silently drops every type-specific attribute
+
+**Layer:** Pyegeria · **Status:** open, not fixed (owner approval needed) · **Found:** 2026-10-19, raised by the TestGen evaluation session while drafting a DataQualityRule convenience-API spec (`~/localGit/egeria-v6/wt-testgen-notes/packages/resource-explorer/docs/design-notes/SPEC-PYEGERIA-DATA-QUALITY-RULE.md`, uncommitted, pending owner review). Both points confirmed in source here, read-only; not run live.
+
+1. **Whitelist gap.** `GOV_DEF_PROPERTIES_LIST` (`pyegeria/omvs/governance_officer.py:37`) is the client-side property-class whitelist for `create_governance_definition` (`:426`) and `update_governance_definition` (`:955`). It has no `DataQualityRuleProperties`, although Egeria `main` has that class (`frameworks/.../properties/governance/DataQualityRuleProperties.java`). A caller-built DataQualityRule body is refused by pyegeria before it reaches the server. No Dr.Egeria command creates DataQualityRules today. **Proposed:** add `DataQualityRuleProperties`, and drop the list's duplicates (`RegulationProperties`, `GovernanceControlProperties` and `GovernanceApproachProperties` each appear twice). Better still, check the list against Egeria's `GovernanceDefinitionProperties` `@JsonSubTypes` so it can't drift again.
+2. **Silent fallback.** In `GovernanceProcessor`'s create path (`md_processing/v2/governance.py:203-221`), any non-SecurityGroup create that Egeria refuses with `OMAG-COMMON-400-029` (property class not accepted for `createGovernanceDefinition`) is retried with `_to_base_governance_definition_properties` (`:96`). That keeps only the cross-type fields (qualifiedName, displayName, description, category, identifier, contentStatus, versionIdentifier, effective dates, additional/extended properties). The element is created, but every type-specific attribute is dropped (e.g. a DataQualityRule's quality fields, a metric's `measurement`/`target`, a control's `implementationDescription`). The only sign is a `logger.warning`, and Dr.Egeria reports success. **Proposed:** remove the generic fallback, or keep it only for the server-compat case it was written for. Otherwise make it fail visibly, naming the dropped fields in the command's result. Live-test which current types, if any, still hit 400-029 on Egeria `main` before deciding.
+
+---
+
+### ISSUE-157: Dr.Egeria `Create Service Level Objective` sends `entitlements`/`obligations`/`restrictions` as empty lists; Egeria types them as maps
+
+**Fixed 2026-10-19 (owner approved) on branch `fix/issue-156-157-catalog-target-slo` (956b199c, off upstream main 770dfe31; not pushed, not released).** `set_gov_prop_body` now defaults the three fields to `None`. **Cause confirmed live** on Egeria `main` 05a5e982: the old code got a 400 `com.fasterxml.jackson.databind.exc.MismatchedInputException`, "Cannot deserialize value of type `java.util.LinkedHashMap<String,String>` from Array value ... ServiceLevelObjectiveProperties[\"entitlements\"]", and created nothing. The fixed code created `ServiceLevelObjective::pyeg_rt_slo` (`6258d428`) with `implementationDescription` intact; it was deleted and verified gone by GUID and by name. Micro-tests: `tests/micro-tests/test_issue_156_157_catalog_target_slo.py`; the full micro-test suite (1,394) passes in a clean python:3.13-slim container.
+
+**Layer:** Pyegeria (Dr.Egeria) · **Status:** open, not fixed (owner approval needed) · **Found:** 2026-10-19, reported by the Egeria team against pyegeria 6.2.5: the command "sends a field the platform rejects", so their hourly refreshes use the content pack's existing within-an-hour SLO instead. The cause below is from reading source; it was not reproduced live, since a wrong guess would create an SLO on the shared platform. The Egeria team's error text would confirm it.
+
+**Likely cause:** `set_gov_prop_body` (`md_processing/md_processing_utils/common_md_utils.py:588`) always sets `entitlements`, `obligations` and `restrictions` to `attributes...get('value', [])`, which is `[]` when the command has no such attributes. `Service Level Objective` is in `GOVERNANCE_CONTROLS` (`common_md_utils.py:50`), so `update_gov_body_for_type` takes the controls branch, adds `implementationDescription`, and leaves the three `[]` values. Only the `TermsAndConditions`/`CertificationType`/`LicenseType` branch replaces them with maps or `None`. `body_slimmer` keeps empty lists, so `[]` is sent. In Egeria `main` (05a5e982), `ServiceLevelObjectiveProperties extends TermsAndConditionsProperties`, whose `entitlements`/`restrictions`/`obligations` are `Map<String, String>`. Jackson cannot read a JSON array into a map, so the request is refused. Other governance types do not have these fields, so they silently ignore them (`ignoreUnknown=true`), which is why only SLO fails.
+
+**Proposed fix (not made):** in `set_gov_prop_body`, default the three to `None` rather than `[]`, or set them only in the TermsAndConditions branch. Route `ServiceLevelObjective` through that branch (it is a TermsAndConditions subtype, not a plain control), keeping `implementationDescription`. Optionally add `Entitlements`/`Restrictions`/`Obligations` (dict-valued) to the SLO command through the Spec Editor API. Then live-test one `Create Service Level Objective` on a throwaway.
+
+---
+
+### ISSUE-156: `AutomatedCuration.add_catalog_target` posts a flat `"class": "CatalogTargetRequestBody"`, which Egeria does not have; the endpoint takes `NewRelationshipRequestBody`
+
+**Fixed 2026-10-19 (owner approved) on branch `fix/issue-156-157-catalog-target-slo` (956b199c; not pushed, not released).** `add_catalog_target`/`update_catalog_target` keep their signatures but now send `NewRelationshipRequestBody`/`UpdateRelationshipRequestBody` with `CatalogTargetProperties` through the shared relationship helpers. `template_properties` now maps to Egeria's `templates` field; the old body had misnamed it `templateProperties`. **Live on Egeria `main` 05a5e982** (two runs, throwaway undeployed IntegrationConnector `pyeg_rt_ic` and a Collection target, never linked to an integration group): the old flat body was refused; the fixed add returned a relationship GUID and read back name/connection/config; update read back `pyeg_rt_target_v2` and `FROM_THIRD_PARTY` with `connectionName` kept; remove made the relationship unreadable; all throwaways verified gone. The `hey_egeria` `add_catalog_target` command uses this method, so it is fixed too.
+
+**Layer:** Pyegeria · **Status:** open, not fixed (owner approval needed) · **Found:** 2026-10-19, reported by the Egeria team against pyegeria 6.2.5: `add_catalog_target` "sends a request format the platform rejects"; their notebook now works around it. Confirmed from source; not re-run live.
+
+**What:** pyegeria has two `add_catalog_target` methods for the same URL, `.../integration-connectors/{connectorGUID}/catalog-targets/{elementGUID}`:
+- `AutomatedCuration.add_catalog_target(integ_connector_guid, metadata_element_guid, catalog_target_name, connection_name=..., metadata_src_qual_name=..., config_properties=..., template_properties=..., permitted_sync=..., delete_method=...)` (`pyegeria/omvs/automated_curation.py:4120-4190`) builds `{"class": "CatalogTargetRequestBody", "catalogTargetName": ..., "connectionName": ..., ...}` with the properties at the top level. **Broken:** no `CatalogTargetRequestBody` class exists in Egeria `main`.
+- `AssetMaker.add_catalog_target(integration_connector_guid, metadata_element_guid, body)` (`pyegeria/omvs/asset_maker.py:1095`) sends `NewRelationshipRequestBody` with `properties.class = "CatalogTargetProperties"`. **Correct.**
+
+Egeria (`AssetMakerResource.addCatalogTarget`, served under every generic URL marker including `automated-curation`) takes `@RequestBody(required=false) NewRelationshipRequestBody`. `CatalogTargetProperties` has `catalogTargetName`, `metadataCollectionQualifiedName`, `metadataSourceQualifiedName`, `connectionName`, `configurationProperties`, `templates`, `permittedSynchronization` and `deleteMethod`. The `hey_egeria` CLI command `add_catalog_target` (`commands/ops/gov_server_actions.py:45`, registered in `commands/cli/egeria.py` and `egeria_ops.py`) uses the broken one.
+
+**Proposed fix (not made):** keep `AutomatedCuration.add_catalog_target`'s signature but build `{"class": "NewRelationshipRequestBody", "properties": {"class": "CatalogTargetProperties", "catalogTargetName": ..., "connectionName": ..., "metadataSourceQualifiedName": ..., "configurationProperties": ..., "templates": ..., "permittedSynchronization": ..., "deleteMethod": ...}}` and send it through `_async_new_relationship_request`, as AssetMaker does. Add a micro-test asserting the body shape. `AutomatedCuration._async_update_catalog_target` (`automated_curation.py:4248`, body at `:4301`) has the same flat `CatalogTargetRequestBody` shape against `catalog-targets/{relationshipGUID}/update`. Egeria's `updateCatalogTarget` takes `UpdateRelationshipRequestBody`, so it needs the same fix.
+
+---
+
+### ISSUE-155: pyegeria gaps against Egeria `main` since 6.2 (omvs_audit + source diff, V6.2..05a5e982)
+
+**Layer:** Pyegeria · **Status:** open, proposed list for the owner to pick from; nothing changed · **Found:** 2026-10-18, Resource Explorer ops item 7. File-only audit, no Egeria calls.
+
+**How:** `scripts/omvs_audit.py --quiet --http-dir <dir>` was run twice against this branch's `pyegeria/omvs`: once with the `.http` files from Egeria tag `V6.2` (bc08cf55a8, 2026-10-06), once with those from `origin/main` (05a5e9822e, 2026-10-18). Each was restricted to the collections `pyegeria/http-clients/` already carries, plus the new `Egeria-api-governance-engine.http`. Totals: V6.2 OK=965, mismatch 4, missing 3. Main OK=959, mismatch 5, missing 15. The `.http` files lag the Java, so the view-service `*Resource.java` and request-DTO diffs from V6.2 to `main` were also read, for PRs #9365-#9374 and #9321. The checkouts were not touched; the files were read with `git show`. Ranked: risk to existing callers first, then new capability.
+
+1. **Engine-action calls moved to the Governance Engine view service (PR #9373).** Automated Curation no longer has claim, status update, action-targets update, completion-status or active-claimed. On `main` the audit reports them ELSEWHERE, plus `getApprovedEngineActions` and `cancelGovernanceActionProcess` MISSING. **Already fixed on branch `fix/issue-153-governance-engine` (ISSUE-153), not yet merged or released.** The only action is to merge and release that branch.
+2. **`cascadeDelete` alias (PR #9365, `DeleteOptions.setCascadedDelete` now has `@JsonAlias("cascadeDelete")`).** pyegeria's cascade flag now reaches the server, so ISSUE-154 item 1 applies: switch to `cascadedDelete` and re-test cascades.
+3. **Zones fail closed (PR #9367).** A GovernanceZone with no security access control now admits no-one; before, it was ignored. This is not a REST change. The new `MISSING_ZONE_ACCESS_CONTROL` exception type is raised by the platform cataloguer, not on a REST path. Callers will see 403s or empty results for elements whose only zones are unsecured. **pyegeria:** no code change. Expect more 403s on quickstart content, as with the digital-products zone (2026-10-14). The 403 error message already reads clearly since ISSUE-142.
+4. **`createMetadataElementFromTemplate` body class.** The `.http` now shows `OpenMetadataTemplateRequestBody`. The Java parameter type was already that at V6.2, so only the sample changed. pyegeria sends its `TemplateRequestBody` model (`metadata_expert.py:159-207`, `models.py:526`). That model has no `typeName`, `replacementClassifications` or `parentRelationshipProperties`, so the PyegeriaModel `extra='ignore'` rule silently drops those fields if a caller passes them. **Proposed:** add an `OpenMetadataTemplateRequestBody` model with those fields and use it here. Medium value: it is the only way to create a subtype from a template through Metadata Expert.
+5. **Undo and restore (PR #9365/#9373, new).** Metadata Expert `POST /metadata-elements/{guid}/undo` restores the previous version and fails if there is none. `/metadata-elements/{guid}/restore` reverses a delete or archive, including what that delete cascaded, but not a purge. `related-elements/{guid}/undo` and `/restore` do the same for relationships. Each takes an optional `MetadataSourceRequestBody`. **Proposed:** four methods on `MetadataExpert` via the existing `_async_metadata_source_body_request` (`_server_client.py:6395`). This pairs well with ISSUE-117 and RE's archive walk: restore is the safety net for a mistaken archive.
+6. **Usage Activity and Member Popularity Profile classifications (Classification Explorer, new, probably for the Lovelace Popularity Profiler in #9369).** Each has add (`POST /elements/{guid}/usage-activity`), `/update` and `/remove`, and the same for `/member-popularity-profile`. The bodies are New/Update/DeleteClassificationRequestBody with `UsageActivityProperties` or `MemberPopularityProfileProperties`. **Proposed:** six methods, and the property names in `element_status_fields.py` if Dr.Egeria should show them. Low priority until something writes them.
+7. **`GetOptions.viewElementGUID` (new).** It identifies the element whose view a request is assembling, so related elements fetched for that view are not reported as "found" (usage tracking). **Proposed:** an optional field on the get-request models, for the Resource Browser and the explorers. Low priority.
+8. **`relationshipPurpose` on RelationshipDef (PR #9365).** Type definitions now carry a relationship purpose used for anchor processing. Nothing in pyegeria reads it. **Proposed:** none now. Possibly show it in the Egeria Explorer type views later.
+9. **`finalAnalysisStep` (PR #9366).** This is internal to the survey connectors (a provider/service API) and not a REST field. **pyegeria:** none.
+10. **Property-class renames (PR #9365):** covered by ISSUE-154 item 3.
+
+**Audit noise (pre-existing, not gaps):** `getActorRoleByGUID` and `getSchemaAttributeByGUID` are reported as mismatches only because their `.http` URLs end in a stray `"}` (an Egeria `.http` typo; worth telling Egeria). `detachSolutionLinkingWire` is a false positive: Egeria has both `.../wired-to/{guid}/detach` and `.../wires/{relationshipGUID}/detach`, and pyegeria implements both (`solution_architect.py:4338`, `:4505`). `removeNote` is ISSUE-146. The three `product-catalog` MISSING rows are examples of one find call. `Egeria-valid-metadata-lists.http` exists only in the local copy, not on Egeria `main`.
+
+**Also worth doing:** refresh the gitignored `pyegeria/http-clients/` from Egeria `main`. The local copy predates `Egeria-api-governance-engine.http` and the classification-explorer and metadata-expert additions.
+
+---
+
+### ISSUE-154: pyegeria follow-ons from the Egeria team's 2026-10-18 note: renamed property classes, `cascadedDelete`, the `pushDown` default, new `DataValueAssignment`/`CrowdSourcingRole` values
+
+**Layer:** Pyegeria · **Status:** open, proposed, not made (owner approval needed, per this repo's policy) · **Found:** 2026-10-18, from the Egeria team's note (`~/.re-gate/EGERIA-TEAM-NOTE-2026-10-18.md`) and read-only greps of this checkout.
+
+Egeria says none of its changes break existing requests: the old class names and spellings are still accepted. So nothing here is urgent, and every change should keep accepting the old names so pyegeria still works against older platforms. Ranked by risk, highest first.
+
+**1. `cascadeDelete` now cascades (ISSUE-132).** Egeria accepts `cascadeDelete` as an alias for `cascadedDelete`, so any pyegeria call that sends `true` will start cascading on a platform with `oak2026`. Checked: no production caller in `pyegeria/`, `md_processing/` or `commands/` passes `True`; every `cascade`/`cascade_delete` default is `False`; `commands/tech/element_actions.py`'s `--cascade` flag (default True) is not forwarded. Only live tests pass `True`, on purpose. Proposed: serialize `DeleteElementRequestBody.cascade_delete` as `cascadedDelete` (accept both on input) and change the ~25 `"cascadeDelete"` literals (`_server_client.py` ×3, `models.py` ×7, `actor_manager.py` ×8, `metadata_expert.py`, `product_manager.py` ×2, `reference_data.py` ×2, `valid_metadata.py` ×2; several are docstring samples). Then live-test one cascade and re-test ISSUE-127.
+
+**2. Metadata Expert count default flipped (ISSUE-38).** Egeria's `pushDown` default is now `false` (list-matching, slower); `true` is the fast repository count. `metadata_expert.py:3698` and `:4013` document omission as `pushDown=True`. `pyegeria/view/overview_metrics.py` calls both counts without `push_down`, so its statistics silently become the slower kind. Proposed: fix both docstrings; owner to choose whether `overview_metrics` sends `push_down=True` (Egeria's advice for statistics) or keeps the list-matching default (which matches its own `len(find)` fallback).
+
+**3. Renamed property classes.** Responses now carry the new names in `class`. Checked: no pyegeria response parsing compares a response's `class` with any of the renamed names. The only matches are request-side `prop=[...]` whitelists, which refuse a caller-built body that uses the *new* name:
+
+| Old → new | Where pyegeria uses the old name | Proposed |
+|---|---|---|
+| `RetentionClassificationProperties` → `RetentionProperties` | `omvs/classification_explorer.py:8851,8878` (whitelist),`8919`; `md_processing/v2/processors.py:220-237` (comment says the opposite); `md_processing/v2/curation.py:136` | Send `RetentionProperties`, accept both in the whitelist, rewrite the comment (ISSUE-128) |
+| `SecurityGroupMembershipProperties` → `SecurityListMembershipProperties` | `omvs/actor_manager.py:3602,3617` (whitelist),`3654,3703,3753` | Send the new name, accept both |
+| `AssetSchemaTypeProperties` → `SchemaProperties` | not used; `schema_maker.py:822` already whitelists `SchemaProperties` | none |
+| `AssociatedSecurityGroupProperties` → `AssociatedSecurityListProperties` | not used; `md_processing/v2/governance.py:620` already sends the new name | none |
+| `ReferenceCodeMappingProperties` → `ReferenceCodeMappingTableProperties` | not used | none |
+| `GovernanceClassificationBase` → `GovernedDataClassificationBase` | only in a description string, `commands_curation_compact.json:2256` | optional wording fix through the Spec Editor API |
+
+`tests/functional-tests/test_classification_manager.py:1233` already sends `RetentionProperties`.
+
+**4. `DataValueAssignment` now accepts `label` and `description`.** Dr.Egeria's `Assign Data Value Specification` (`md_processing/v2/data_designer.py:1026-1037`) replaces `properties` with a fixed field list, and the `Data Value Assignment Base` bundle has no Label/Description. Proposed (feature, not a fix): add `Label` and `Description` to that bundle through the Spec Editor API, map them in the processor, run `refresh_specs`.
+
+**5. `CrowdSourcingRole` values now work** (PROPOSER, REVIEWER, SUPPORTER, APPROVER, OTHER). pyegeria's `link_crowd_sourcing_contribution` (`omvs/community_matters_omvs.py:479`) passes the body through, and no Dr.Egeria command sets a role. Proposed: list the values in the docstring; nothing else.
+
+**6. ISSUE-147's 400-011 workaround:** none exists. Nothing to drop.
+
+**7. View-service fixes pyegeria may have worked around.** The note lists 48 view-service defects found by Egeria's new view-services FVT. A read-only sweep of `pyegeria/`, `md_processing/` and `commands/` (2026-10-18) found almost nothing worked around, and no issues-file entry for any of them. The detach, Classification Explorer, Metadata Expert, search-option, history-order and delete/purge rows have no client-side workaround: the wrappers call the endpoint once and pass options straight through. So pyegeria users met those defects as calls that "succeeded" but did nothing, and the fixes need no pyegeria change. Candidates to review:
+- **Project hierarchy:** `commands/cat/get_project_structure.py:105-116` (and `get_project_dependencies.py:107`) walk the tree with `get_linked_projects()` and keep only `ProjectHierarchy` links, instead of calling `ProjectManager.get_project_hierarchy`. Not commented as a workaround. Optional: switch to `get_project_hierarchy` after re-testing it on a platform built from `main`.
+- **Term classifications with no body:** `glossary_manager.py:2686-2692` (is-question) and `4059-4062`/`4116`/`4170` (prime word, modifier, class word) always send a default body. The comment blames pyegeria's own helper (ISSUE-31), not the server, so keep them; harmless either way.
+- **`linkSolutionLinkingWire` with no body:** `md_processing/v2/solution_architect.py:856-860` always sends a body and skips recording the GUID when none returns. Keep it; no change needed.
+- **Asset from template:** Dr.Egeria's generic `Create Element` (`md_processing/v2/asset_maker.py:57-75`) uses Automated Curation `catalog-templates/new-element`, not Asset Maker `assets/from-template`, so it never hit the "always an Asset" bug. No change.
+- **Missing connector now refused** (Security Officer, Runtime Manager): calls that used to report success with nothing done will now raise. Callers should expect the error. ISSUE-112 is the same shape for client-side secrets.
+- **Delete with `forLineage`:** a delete that needs `forLineage=true` (Memento) is now refused whole instead of half-done. pyegeria's editing deletes already default to `forLineage=true` via `lineage_visible()`, so no change.
+
+---
+
+### ISSUE-152: five update methods pass the body into `_async_update_element_body_request`'s `prop` slot, so nothing is sent
+
+**Layer:** Pyegeria · **Status:** open (found 2026-10-15 by Resource Explorer's ClassificationAnnotation backfill; not fixed, per this repo's policy)
+
+`_async_update_element_body_request(self, url, prop=None, body=None)` (`pyegeria/core/_server_client.py:7317`) takes the body as its **third** parameter. Five callers pass it positionally as the second, so it lands in `prop` and `body` is `None`; the call fails before any request goes out (the builder observed an AttributeError):
+
+- `pyegeria/omvs/data_discovery.py:299` (`_async_update_annotation`, behind `update_annotation`)
+- `pyegeria/omvs/time_keeper.py:342`
+- `pyegeria/omvs/schema_maker.py:131` and `:174`
+- `pyegeria/omvs/subject_area.py:302`
+
+Checked at egeria-python `f1b06cdd`; the installed wheel in trellis has the same line in `data_discovery.py`.
+
+**Fix (one token each):** `await self._async_update_element_body_request(url, body=body)`. A test per method that the body reaches the HTTP layer would catch a repeat.
+
+**Workaround in Resource Explorer:** `scripts/backfill_classification_annotations.py` calls `_async_update_element_body_request(url, body=body)` directly, and pins this bug with a test that fails once pyegeria is fixed.
+
+---
+
+
 ### ISSUE-150: Dr.Egeria commands for an Analytic Function's Egeria declaration: a GovernanceActionType that Resource Explorer runs as an engine host, plus a synchronous path that bypasses Egeria
 
 **Layer:** Dr.Egeria (commands over existing Action Author / governance commands) · **Status:** open, direction agreed with the owner 2026-10-13 and **confirmed by Mandy 2026-10-14**, not yet built · **Found:** 2026-10-13, handed off by the Resource Explorer PR/CI session. Source: trellis `docs/extensibility-walking-skeleton-brief.md` §2c, §3a, §8. Egeria references: [Governance Action Processes (0462)](https://egeria-project.org/types/4/0462-Governance-Action-Processes/), [Survey Action Engine](https://egeria-project.org/concepts/survey-action-engine/).
@@ -342,6 +492,8 @@ they're holding real port materialization until this exists server-side
 
 
 ### ISSUE-146: Deleting a journal entry fails with OMAG-REPOSITORY-HANDLER-400-008, and pyegeria's `remove_note` reaches the delete only through the generic Asset Maker service
+
+**Egeria team, 2026-10-18 (Mandy Chessell, note saved at `~/.re-gate/EGERIA-TEAM-NOTE-2026-10-18.md`):** **Status now: works as designed (Egeria).** Asset Maker's `deleteAsset` is the right call: a JournalEntry is a Notification, so an asset, and no separate note delete is needed. Egeria's new FVT creates entries with My Profile's `journal-my-activity` and deletes them with `deleteAsset`, with no external source; every case passes on in-memory and PostgreSQL repositories. **400-008 is the provenance check:** it refuses a change made without an external source to an element an external source owns. No external source → 400-008; a different external source → 400-007; the matching external source → success. So an entry that returns 400-008 was not created locally, and its delete needs that entry's `externalSourceGUID` and `externalSourceName`. If 400-008 appears on an entry created through My Profile, that is a bug and Egeria wants: (1) the full error message (it names the type, GUID, provenance and metadata collection of the refused instance); (2) how the entry was created (which request, and which external source if any). Also new: purge applies the same provenance check. **pyegeria:** the `remove_note` clean-up below stays (route + docstring). Re-test on `8bec72e4` against a platform with the fixes; if 400-008 recurs, capture the full message for Egeria, since that entry was created locally through `journal-my-activity`.
 
 **Layer:** Egeria Server (pyegeria clean-up) · **Status:** open · **Found:** 2026-10-13, reported by the egeria-workspaces-fs Resource Browser session from a live private-journal test.
 
@@ -433,6 +585,10 @@ Erin's profile. `fef83ed5` stays.
 
 ### ISSUE-132: `DeleteElementRequestBody` serializes the cascade flag as `cascadeDelete`; Egeria's field is `cascadedDelete` and unknown fields are ignored, so no pyegeria cascade delete has ever cascaded
 
+**Egeria team, 2026-10-18 (Mandy Chessell, note saved at `~/.re-gate/EGERIA-TEAM-NOTE-2026-10-18.md`):** **Status now: fixed on Egeria's `oak2026` branch, pending its merge to `main`** (each fix has an FVT or unit test). Re-test once `oak2026` is merged and a platform is built from `main`. `cascadeDelete` is now accepted as an alias for `cascadedDelete`, so existing pyegeria requests will start to cascade; Egeria still recommends switching to `cascadedDelete`. **Risk check, 2026-10-18:** no production caller in `pyegeria/`, `md_processing/` or `commands/` passes cascade `True`; every `cascade`/`cascade_delete` default is `False`; `commands/tech/element_actions.py`'s `--cascade` flag (default True) is not forwarded. Live functional/scenario tests that pass `cascade=True` (collection, glossary, governance officer, `remove_note_log`) will now really cascade, which is what they intend. **pyegeria (proposed, not done):** change `DeleteElementRequestBody`'s serialization alias to `cascadedDelete` (keep both accepted on input) and the ~25 `"cascadeDelete"` literals (`_server_client.py`, `models.py`, `actor_manager.py`, `metadata_expert.py`, `product_manager.py`, `reference_data.py`, `valid_metadata.py`), then live-test one cascade and re-test ISSUE-127. No longer urgent, since the old spelling now works.
+
+**Re-test 2026-10-19 (quickstart recreated 13:02Z on Egeria `main` 05a5e982, image 6.3-SNAPSHOT built 2026-10-18 16:13Z; as erinoverview on qs-view-server; throwaways named `pyeg_rt_*`, each deleted and verified gone by GUID; peers cleared first):** **PASS (alias).** A throwaway DataStructure with a linked member DataField, deleted with `delete_data_structure(guid, cascade_delete=True)` (pyegeria still sends `cascadeDelete`), succeeded. Both elements were gone by GUID before any cleanup, so the cascade reached the server. The ISSUE-154 item 1 rename to `cascadedDelete` is still recommended but no longer urgent.
+
 **Layer:** pyegeria · **Status:** open, on hold: an Egeria fix for cascade delete is coming (owner, 2026-10-10). Egeria `main` checked 2026-10-10 (head `af400039c2`, 2026-10-06): no cascade change yet. Wait
 for it, live-test cascade delete against it, then decide the pyegeria change; the fix below may change once the
 Egeria side lands. Confirmed from Egeria source, not yet live-tested · **Found:**
@@ -466,6 +622,8 @@ annotations); do not choose by majority or by what the code already sends.
 
 ### ISSUE-127: `CollectionManager.delete_collection(cascade=True)` silently never sends `cascadeDelete` -- same shape as ISSUE-62
 
+**Re-test 2026-10-19 (quickstart recreated 13:02Z on Egeria `main` 05a5e982, image 6.3-SNAPSHOT built 2026-10-18 16:13Z; as erinoverview on qs-view-server; throwaways named `pyeg_rt_*`, each deleted and verified gone by GUID; peers cleared first):** **PASS.** The `DataStructure` refusal (`validateNoMemberDataFields`) did not recur: a cascade delete of a structure with a member field removed both. See ISSUE-132's re-test.
+
 **Layer:** pyegeria · **Status:** partly fixed in #429 (`68279835`), released in 6.1.29; cascade still blocked by ISSUE-132 · **Found:** 2026-10-05, found by capturing the request body while diagnosing a
 failed cleanup.
 
@@ -498,6 +656,10 @@ Agreement.
 ---
 
 ### ISSUE-125: `deleteEnumDef` answers 500 "unknown TypeDef" for an enum the server lists -- an enum added through the API cannot be removed
+
+**Egeria team, 2026-10-18 (Mandy Chessell, note saved at `~/.re-gate/EGERIA-TEAM-NOTE-2026-10-18.md`):** **Status now: fixed on Egeria `main`; re-test against a platform built from current `main`** (the new view-services FVT exercises this request). `deleteEnumDef` removes an enum added through the API. **pyegeria:** no code change; the re-test should also remove the stray enum left on the dev platform.
+
+**Re-test 2026-10-19 (Egeria `main` 05a5e982; as erinoverview; owner approved the type-system writes in this session, peers cleared):** **PASS.** Throwaway enum `PyegRtCuisineType` (`02e193de-...`) was added and used by `PyegRtRecipe`. After `delete_type_def` of the entity type, `delete_enum_def(guid, name)` succeeded. Neither type appears afterwards (`get_typedef_by_name`, `get_attribute_types`, `get_all_entity_types` with 661 types). The 2026-10-05 stray enum `PyegeriaTmpCuisineType` (`118441be`) was already absent from the recreated platform, so nothing was deleted for it. Ready to move to the Appendix.
 
 **Layer:** Egeria Server (not pyegeria) · **Status:** open; reported to the Egeria team (response 2026-10-05); Egeria fix merged to Egeria `main` 2026-10-06 (odpi/egeria#9363), not yet re-tested on a platform built from it · **Found:**
 2026-10-05, live verification of `MetadataExpert.delete_enum_def` (PR #428). **Left a stray type behind.**
@@ -534,6 +696,10 @@ explains: the failure does not depend on what was loaded at startup.
 
 ### ISSUE-124: `updateTypeDef` (Metadata Expert `open-metadata-types/update`) can never succeed -- the server builds the patch without `updatedBy`, which the repository services require
 
+**Egeria team, 2026-10-18 (Mandy Chessell, note saved at `~/.re-gate/EGERIA-TEAM-NOTE-2026-10-18.md`):** **Status now: fixed on Egeria `main`; re-test against a platform built from current `main`** (the new view-services FVT exercises this request). `updateTypeDef` builds the patch with `updatedBy`, so updates succeed. **pyegeria:** no code change.
+
+**Re-test 2026-10-19 (Egeria `main` 05a5e982; as erinoverview; owner approved the type-system writes in this session, peers cleared):** **PASS.** `add_type_def` of a throwaway entity type `PyegRtRecipe` (supertype Referenceable, one enum attribute) returned `6610e176-...` at version 1. `update_type_def` with an `OpenMetadataTypeDefPatch` adding `preparationTimeMinutes` (int) succeeded: the type read back at version 2 with `updatedBy` erinoverview and both attributes. `update_type_def`'s docstring caveat ("unusable against current Egeria") can now be dropped. Ready to move to the Appendix.
+
 **Layer:** Egeria Server (not pyegeria) · **Status:** open; reported to the Egeria team (response 2026-10-05); Egeria fix merged to Egeria `main` 2026-10-06 (odpi/egeria#9363), not yet re-tested on a platform built from it · **Found:**
 2026-10-05, live verification of `MetadataExpert.update_type_def` (PR #428).
 
@@ -566,6 +732,10 @@ then deleted and verified gone. **Confirmed still present on the rebuilt platfor
 ---
 
 ### ISSUE-117: Cascade delete that takes the soft-delete (Memento) path fails partway with `OMAG-REPOSITORY-HANDLER-400-010` unless `forLineage=true` — leaves the asset live and an anchored element already soft-deleted
+
+**Egeria team, 2026-10-18 (Mandy Chessell, note saved at `~/.re-gate/EGERIA-TEAM-NOTE-2026-10-18.md`):** **Status now: fixed on Egeria `main`; re-test against a platform built from current `main`** (the new view-services FVT exercises this request). Cascade deletes no longer fail partway. Related: a delete that is refused no longer leaves the job half done (deleting an element linked to a deleted action, a Memento, still needs `forLineage=true`; without it the delete is refused and nothing is removed), and the default delete method now honours `effectiveTime`/`forLineage`. **pyegeria:** no code change; keep sending `forLineage=true` on editing deletes. Resource Explorer's archive/delete block stays on until a throwaway re-proves the archive walk (owner's call).
+
+**Re-test 2026-10-19 (quickstart recreated 13:02Z on Egeria `main` 05a5e982, image 6.3-SNAPSHOT built 2026-10-18 16:13Z; as erinoverview on qs-view-server; throwaways named `pyeg_rt_*`, each deleted and verified gone by GUID; peers cleared first):** **Plain path PASS; Memento path not re-tested here.** A fresh CSV asset (`create_csv_data_file_element_from_template`) with its Connection, deleted with `{"class": "DeleteElementRequestBody", "cascadeDelete": True}` (forLineage default), succeeded; the asset and Connection were both gone by GUID. The soft-delete (Memento) path, which was the actual bug, needs an asset used as an engine-action target. Resource Explorer is re-testing that path with its own throwaways (agreed with the RE coordinator).
 
 **Layer:** Egeria Server · **Status:** open, workaround known; reported to the Egeria team (response 2026-10-05); Egeria fix merged to Egeria `main` 2026-10-06 (odpi/egeria#9363), not yet re-tested on a platform built from it · **Found:** 2026-10-02, live test of Dr.Egeria's
 Automation family (`Initiate Subscription` / `Cancel Subscription`, PR #414),
@@ -632,6 +802,10 @@ reproduction is to run a subscription process with a fresh asset as
 ---
 
 ### ISSUE-112: `AutomatedCurationRESTServices.saveClientSideSecret`/`deleteClientSideSecret` return a plain success `VoidResponse` when the resolved connector isn't a `YAMLSecretsFileConnector` — no error, no write, no indication anything was skipped
+
+**Egeria team, 2026-10-18 (Mandy Chessell, note saved at `~/.re-gate/EGERIA-TEAM-NOTE-2026-10-18.md`):** **Status now: fixed on Egeria `main`; re-test against a platform built from current `main`** (the new view-services FVT exercises this request). Client-side secret save and delete now refuse a secrets store that cannot be updated instead of reporting success. **pyegeria:** no code change; callers must now expect an error where they used to get a silent success.
+
+**Re-test 2026-10-19 (quickstart recreated 13:02Z on Egeria `main` 05a5e982, image 6.3-SNAPSHOT built 2026-10-18 16:13Z; as erinoverview on qs-view-server; throwaways named `pyeg_rt_*`, each deleted and verified gone by GUID; peers cleared first):** **Left to Resource Explorer** (agreed with the RE coordinator); not re-tested here.
 
 **Layer:** Egeria Server (`automated-curation` OMVS) · **Status:** open ·
 **Found:** 2026-09-21, live-verifying Resource Explorer's own client-side
@@ -715,6 +889,10 @@ downstream investigation.
 
 ### ISSUE-90: [fixed?] `qs-engine-host` retries `startMissedEngineActions` forever when one incomplete engine action's anchor is unreadable by the engine-host user
 
+**Egeria team, 2026-10-18 (Mandy Chessell, note saved at `~/.re-gate/EGERIA-TEAM-NOTE-2026-10-18.md`):** **Status now: fixed on Egeria `main`; re-test against a platform built from current `main`** (the new view-services FVT exercises this request). One unreadable engine action no longer blocks the restart sweep. **pyegeria:** no code change; re-test is on the engine-host log (and RE's engine-host restart sweep).
+
+**Re-test 2026-10-19 (quickstart recreated 13:02Z on Egeria `main` 05a5e982, image 6.3-SNAPSHOT built 2026-10-18 16:13Z; as erinoverview on qs-view-server; throwaways named `pyeg_rt_*`, each deleted and verified gone by GUID; peers cleared first):** **No recurrence.** Read-only: no `ENGINE-HOST-SERVICES-2002` (or other qs-engine-host error) in the egeria-main log since the 13:01Z restart; the engine host initialized normally. The original trigger, an incomplete engine action whose anchor the engine-host user can't read, may simply not exist on this data, so this is not proof. RE also re-tests its engine-host restart sweep.
+
 **Layer:** Egeria Server (possibly quickstart content) · **Status:** open · **Found:** 2026-09-04 (trevor fresh quickstart)
 
 On a fresh quickstart repository (6.2-SNAPSHOT builds of 2026-08-31 and 2026-09-04, all standard
@@ -782,6 +960,13 @@ read. Full draft: trellis session scratch `egeria-issue-engine-host-403-loop.md`
 ---
 
 ### ISSUE-79: native survey against a template-created `FileFolder` asset fails server-side — `assetConnector` is null in `BasicFolderConnector.getFile()`
+
+**Egeria team, 2026-10-18 (Mandy Chessell, note saved at `~/.re-gate/EGERIA-TEAM-NOTE-2026-10-18.md`):** **Status now: needs information from us.** Egeria cannot reproduce it. The error is now a clear "no asset connector" message, not a NullPointerException. Cause: the surveyed FileFolder had no ResourceConnection; the likely route is that the template create returned an existing FileFolder with the same qualified name (template create allows an existing element to be returned). They ask for:
+- [ ] The request used to create the FileFolder: its template GUID and placeholder values, and whether `deepCopy` or `allowRetrieve` was set.
+- [ ] The GUID of the surveyed asset, and whether that GUID existed before the create call.
+- [ ] Whether that asset has a ResourceConnection, and which process first catalogued it (for example a files integration connector).
+
+**pyegeria:** this fits the 2026-10-06 live check below (with `deepCopy` no longer sent, the new folder has a ResourceConnection). `create_folder_element_from_template` hardcodes `"allowRetrieve": True` (`pyegeria/omvs/automated_curation.py:1081`), so a create whose qualified name already exists returns the old, possibly connection-less folder, which matches Egeria's theory. Proposed (not done): let callers pass `allow_retrieve`, or log when the returned GUID was pre-existing. The answers above can come from the 2026-10-06 `live_79.py` run's request plus a read-only lookup of the original surveyed GUID.
 
 **Live check 2026-10-06 (about 02:00Z, current pyegeria 6.1.29 code, rebuilt platform): the `deepCopy:false` default WAS the cause of the missing connection.** `create_folder_element_from_template` now sends a request with no `deepCopy` key (keys sent: allowRetrieve, class, forDuplicateProcessing, forLineage, isOwnAnchor, parentAtEnd1, placeholderPropertyValues, templateGUID, templateSubstitute), and the new folder read back through the classification explorer **has 1 connection** (`ResourceConnection` present). Folder deleted (cascade) and verified gone by GUID. **Not run: the survey itself** (a survey creates elements owned by the survey identity that an ordinary user may not be able to delete), so "the survey now completes" is still unproven; the original `assetConnector`-null failure was the symptom of no connection, which is now shown not to occur. Whether the Egeria-side repair (`e01426db86`) also matters is untested. Script: `live_79.py` stage A (stage B `--survey` is opt-in).
 
@@ -1016,6 +1201,10 @@ evidence for both dates — not yet deleted.
 ---
 
 ### ISSUE-38 (PY-18): `count_relationships_between_elements("Exception")` (276) disagrees with `ClassificationExplorer.get_relationships("Exception")` (55)
+
+**Egeria team, 2026-10-18 (Mandy Chessell, note saved at `~/.re-gate/EGERIA-TEAM-NOTE-2026-10-18.md`):** **Status now: fixed on Egeria's `oak2026` branch, pending its merge to `main`** (each fix has an FVT or unit test). Re-test once `oak2026` is merged and a platform is built from `main`. Metadata Expert counts now take `pushDown`, **default `false`** (count matches the list); `true` gives the fast repository count. Relationship counts with end GUIDs and no criteria used to return 0; fixed. Egeria recommends `pushDown=false` for user-facing counts and `pushDown=true` for statistics. **pyegeria (proposed, not done):** `MetadataExpert.count_metadata_elements`/`count_relationships_between_elements` docstrings (`metadata_expert.py:3698`, `:4013`) say omitting `push_down` means `pushDown=True`; that is now wrong. Decide what `pyegeria/view/overview_metrics.py` (which omits `push_down`) should send, since its counts will become the slower list-matching kind once the platform has this. Verification below still needs running on a platform with the fix.
+
+**Re-test 2026-10-19 (quickstart recreated 13:02Z on Egeria `main` 05a5e982, image 6.3-SNAPSHOT built 2026-10-18 16:13Z; as erinoverview on qs-view-server; throwaways named `pyeg_rt_*`, each deleted and verified gone by GUID; peers cleared first):** **PASS.** Counts against the paged `ClassificationExplorer.get_relationships` total: `Exception` gives push_down omitted 146, false 146, true 148, list 146; `SemanticAssignment` gives 563, 563, 583, list 563. The default is now `false` and matches the list. The fast count is higher by what erinoverview cannot see (2 and 20). Read-only. The docstring fix in ISSUE-154 item 2 is now confirmed needed.
 
 **Update 2026-08-30, from the Egeria team (Mandy Chessell).** Leaving this
 entry in "Open Egeria Server issues" until the verification below has been
@@ -1278,6 +1467,10 @@ enough to track there too).
 
 ### ISSUE-147: Every valid-metadata clear call answers OPEN-METADATA-400-011 "not found", even after a successful delete; clear-map-value deletes nothing; clear-map-name leaves the map's value set behind
 
+**Egeria team, 2026-10-18 (Mandy Chessell, note saved at `~/.re-gate/EGERIA-TEAM-NOTE-2026-10-18.md`):** **Status now: fixed on Egeria's `oak2026` branch, pending its merge to `main`** (each fix has an FVT or unit test). Re-test once `oak2026` is merged and a platform is built from `main`. A successful clear now returns success; clear-map-value now uses the map name; clear-map-name also removes that map name's values. Egeria asks us to drop any workaround that treats 400-011 as success. **pyegeria:** there is none (checked 2026-10-18: no 400-011 handling in `md_processing/v2/reference_data.py` or `pyegeria/omvs/valid_metadata.py`), so the follow-on proposed below is withdrawn. Nothing to change; after the re-test, remove the leftover `pyegeriaClearRetest*` test elements on qs-view-server.
+
+**Re-test 2026-10-19 (quickstart recreated 13:02Z on Egeria `main` 05a5e982, image 6.3-SNAPSHOT built 2026-10-18 16:13Z; as erinoverview on qs-view-server; throwaways named `pyeg_rt_*`, each deleted and verified gone by GUID; peers cleared first):** **PASS.** On throwaway properties `pyegRtClear`/`pyegRtClearMap` (typeName Asset), `clear_valid_metadata_value` (alpha, beta), `clear_valid_metadata_map_value` (mapOne/v1) and `clear_valid_metadata_map_name` (mapTwo, mapOne) all return success. A second clear of an already-removed value still answers 400-011 "not found", which is correct. Values and map names were gone afterwards. One oddity: `get_valid_metadata_values` read in the same run straight after the clears still listed alpha/beta/mapOne/mapTwo, but a read a minute later was empty. Possibly a short server-side cache; not pursued. Setup creates per-property container sets (`Egeria:ValidMetadataValue::pyegRtClear-`, `...pyegRtClearMap-`) that the clears do not remove; deleted by GUID. **Not cleaned (outside what peers cleared):** the 2026-10-13 leftovers under `pyegeriaClearRetest*`, which the platform has since turned into DataProduct/DigitalProduct elements (e.g. `98de81ed`, `4b937012`).
+
 **Layer:** Egeria Server (`ValidMetadataValueHandler`) · **Status:** open · **Found:** 2026-10-13. The first live run of the Valid Metadata commands showed it (the error text wasn't captured then). Re-tested the same day with the full responses captured.
 
 **Re-test:** run once on qs-view-server as erinoverview, with all four live sessions clearing it first. It used made-up properties `pyegeriaClearRetest` and `pyegeriaClearRetestMap` (typeName `Asset`) and called the SDK methods in `pyegeria/omvs/valid_metadata.py`. The Dr.Egeria `Clear Valid Metadata *` commands call the same methods (`md_processing/v2/reference_data.py:198-242`).
@@ -1307,6 +1500,10 @@ Request ids: `ec9052e7` and `3975182d` (alpha), `38759736` (beta), `475e68f1` (m
 ---
 
 ### ISSUE-143: `includeOnlyRelationships: ["PersonRoleAppointment"]` returns no relationships for a Person, although the unfiltered read has its role appointments
+
+**Egeria team, 2026-10-18 (Mandy Chessell, note saved at `~/.re-gate/EGERIA-TEAM-NOTE-2026-10-18.md`):** **Status now: fixed on Egeria's `oak2026` branch, pending its merge to `main`** (each fix has an FVT or unit test). Re-test once `oak2026` is merged and a platform is built from `main`. The `includeOnlyRelationships` filter now leaves already-retrieved relationships in place, so `performsRoles` survives `["PersonRoleAppointment"]`. **pyegeria:** no code change; tell the Resource Browser (egeria-workspaces-fs) it can use the filter again after the re-test.
+
+**Re-test 2026-10-19 (quickstart recreated 13:02Z on Egeria `main` 05a5e982, image 6.3-SNAPSHOT built 2026-10-18 16:13Z; as erinoverview on qs-view-server; throwaways named `pyeg_rt_*`, each deleted and verified gone by GUID; peers cleared first):** **PASS.** Erin's Person `10dc7da9` read with `includeOnlyRelationships: ["PersonRoleAppointment"]` returns `performsRoles` 8 (unfiltered: performsRoles 8, assignmentScope 15, requestedActions 13, ...; `["ContactThrough"]` still returns contactDetails 1). Read-only. Tell the Resource Browser it can use the filter again.
 
 **Layer:** Egeria Server (not pyegeria) · **Status:** open, not yet reported to the Egeria team · **Found:** 2026-10-13, reported by the egeria-workspaces-fs Resource Browser session; reproduced read-only the same day.
 
@@ -1345,6 +1542,12 @@ role appointments may be dropped or never fetched once a filter is set.
 
 ### ISSUE-130: The YAML secrets store's user directory caches a user forever, so editing an existing user needs a platform restart
 
+**Egeria team, 2026-10-18 (Mandy Chessell, note saved at `~/.re-gate/EGERIA-TEAM-NOTE-2026-10-18.md`):** **Status now: fixed on Egeria's `oak2026` branch, pending its merge to `main`** (each fix has an FVT or unit test). Re-test once `oak2026` is merged and a platform is built from `main`. The YAML secrets store rebuilds its user cache each time it re-reads the file (`refreshTimeInterval`), so editing an existing user no longer needs a platform restart. **pyegeria:** no code change.
+
+**Re-test 2026-10-19 (quickstart recreated 13:02Z on Egeria `main` 05a5e982, image 6.3-SNAPSHOT built 2026-10-18 16:13Z; as erinoverview on qs-view-server; throwaways named `pyeg_rt_*`, each deleted and verified gone by GUID; peers cleared first):** **Not re-testable here.** Needs an edit to a user in the platform's YAML secrets file and a wait for `refreshTimeInterval`. egeria-workspaces-fs is putting that to the owner as a separate step.
+
+**Re-test 2026-10-19 by egeria-workspaces-fs (reported to this session, not independently re-run here):** **PASS.** A throwaway user `pyegrt130` was added to the live `coco-user-directory.omsecrets` and logged in (200, 13:19:48Z), which cached it. It was then set to `userAccountStatus: DISABLED` in place with no restart (13:19:56Z). Logins worked until 13:20:32Z and were refused with 401 at 13:21:02Z, so the cache was rebuilt about a minute after the edit (`refreshTimeInterval: 10`). The file was restored byte-for-byte afterwards. Ready to move to the Appendix.
+
 **Layer:** Egeria server (`YAMLSecretsStoreConnector`) · **Status:** open, reported to the Egeria lead · **Found:** 2026-10-09, while adding Resource Explorer's own account (`resourceexplorernpa`).
 
 **What:** `getUser(userId)` returns the entry from `userAccountMap` if it is already there. `refreshSecrets()` re-reads the YAML file every `refreshTimeInterval` minutes, but `userAccountMap` (and `securityAccessControlMap`) are created only on the first load (when `secretsStoreFile == null`) and are never cleared afterwards. Re-reading the file only helps users the cache has never seen; the comment says "this may be a new user".
@@ -1358,6 +1561,10 @@ role appointments may be dropped or never fetched once a filter is set.
 ---
 
 ### ISSUE-128: Retention cannot be set on Egeria 6.2: the server registers the Jackson subtype as `RetentionProperties.class` (typo), and pyegeria only allows `RetentionClassificationProperties`
+
+**Egeria team, 2026-10-18 (Mandy Chessell, note saved at `~/.re-gate/EGERIA-TEAM-NOTE-2026-10-18.md`):** **Status now: fixed on Egeria's `oak2026` branch, pending its merge to `main`** (each fix has an FVT or unit test). Re-test once `oak2026` is merged and a platform is built from `main`. Fixed on `main` 13 Oct (`RetentionProperties`); `oak2026` also accepts `RetentionClassificationProperties` again. Responses now carry `RetentionProperties` in `class`. **pyegeria (proposed, not done):** per the owner's 2026-10-09 decision, switch the whitelist, docstrings and Dr.Egeria pins to `RetentionProperties`: `pyegeria/omvs/classification_explorer.py:8851,8878,8919`, `md_processing/v2/processors.py:220-237` (its comment says the opposite and must be rewritten), `md_processing/v2/curation.py:136`. Accept both names in the whitelist so older platforms keep working. Not urgent: the old name is accepted again.
+
+**Re-test 2026-10-19 (quickstart recreated 13:02Z on Egeria `main` 05a5e982, image 6.3-SNAPSHOT built 2026-10-18 16:13Z; as erinoverview on qs-view-server; throwaways named `pyeg_rt_*`, each deleted and verified gone by GUID; peers cleared first):** **PASS.** On a throwaway collection, `classification-explorer/elements/{guid}/retention` accepted both `"class": "RetentionClassificationProperties"` and `"RetentionProperties"`; each read back `retentionBasis` 2 and its notes under `elementHeader.retention`. pyegeria's own `set_retention_classification` (old name) also succeeded. ISSUE-154 item 3's switch to the new name stays optional.
 
 **Status:** open, found 2026-10-09 by Resource Explorer's first Retention publish on Egeria 6.2. **Layer:** Egeria server (a type registration typo). **Decision (owner, 2026-10-09):** wait for the Egeria fix; no pyegeria workaround. Retention publishing stays blocked until then.
 
@@ -1380,6 +1587,14 @@ role appointments may be dropped or never fetched once a filter is set.
 ---
 
 ### ISSUE-108: newly created relationships stay invisible to related-element queries for up to ~20 minutes after creation
+
+**Egeria team, 2026-10-18 (Mandy Chessell, note saved at `~/.re-gate/EGERIA-TEAM-NOTE-2026-10-18.md`):** **Status now: needs information from us.** Egeria cannot reproduce it, and the new FVT does not show it. Their best lead is still timing: a related-element query hides a relationship whose `effectiveFrom` is later than the server's current time. For one link still missing about 12 minutes after a bulk load, they ask for:
+- [ ] The relationship's GUID, `effectiveFrom` and `createTime`, and the server clock at that moment.
+- [ ] Whether the link is returned when fetched directly by its GUID while it is missing from the related-element query.
+- [ ] Whether the loader (Dr.Egeria or pyegeria) sets `effectiveFrom` or `effectiveTime` on that run.
+- [ ] A timed run with `MemberDataField` links at 200 or more, polling every minute, to show whether the delay grows with load size or stays fixed.
+
+**pyegeria:** Dr.Egeria's body builders send `effectiveFrom` only when the author supplies `Effective From` (`common_md_utils.py:342` and siblings), so a default load sets none; still confirm `effectiveTime` is not stamped from the client clock on link requests (a client clock ahead of the server would explain the delay). The timed run needs Egeria writes, so it needs the owner's go-ahead.
 
 **Layer:** Egeria Server · **Status:** open · **Found:** 2026-09-20, reported by
 the user from a Dr.Egeria bulk load session (1,027 expected field-link
@@ -2507,6 +2722,10 @@ Also added to the Quick reference table. Test:
 
 ### ISSUE-95: No catalog template registered for the "Apache Kafka Server" technology type — `Create Kafka Server Element` (Asset Maker) fails with a 400 on `qs-view-server`
 
+**Egeria team, 2026-10-18 (Mandy Chessell, note saved at `~/.re-gate/EGERIA-TEAM-NOTE-2026-10-18.md`):** **Status now: fixed on Egeria `main`; re-test against a platform built from current `main`** (the new view-services FVT exercises this request). The Apache Kafka Server catalog template is registered. **pyegeria:** no code change; re-run `Create Kafka Server Element`.
+
+**Re-test 2026-10-19 (quickstart recreated 13:02Z on Egeria `main` 05a5e982, image 6.3-SNAPSHOT built 2026-10-18 16:13Z; as erinoverview on qs-view-server; throwaways named `pyeg_rt_*`, each deleted and verified gone by GUID; peers cleared first):** **PASS.** `get_template_guid_for_technology_type("Apache Kafka Server")` returns `5e1ff810-5418-43f7-b7c4-e6e062f9aff7`. Read-only. Ready to move to the Appendix.
+
 **Layer:** Egeria Server (deployment/archive content) · **Status:** awaiting re-test (addressed on the Egeria side, confirmed live 2026-10-05) · **Found:** 2026-09-11, live-verifying the new Asset Maker Dr.Egeria family (#354)
 
 `AutomatedCuration._async_get_template_guid_for_technology_type("Apache Kafka Server")`
@@ -2532,6 +2751,12 @@ carry it.
 ---
 
 ### ISSUE-89: No configurable bearer-token lifetime in `application.properties` — platform tokens are fixed at 3600 s, and the signing key is random per restart
+
+**Egeria team, 2026-10-18 (Mandy Chessell, note saved at `~/.re-gate/EGERIA-TEAM-NOTE-2026-10-18.md`):** **Status now: fixed on Egeria `main`; re-test against a platform built from current `main`** (the new view-services FVT exercises this request). Bearer-token lifetime is configurable in `application.properties`. **pyegeria:** no code change; re-test means setting the property and decoding a token's `exp - iat`.
+
+**Re-test 2026-10-19 (quickstart recreated 13:02Z on Egeria `main` 05a5e982, image 6.3-SNAPSHOT built 2026-10-18 16:13Z; as erinoverview on qs-view-server; throwaways named `pyeg_rt_*`, each deleted and verified gone by GUID; peers cleared first):** **Not re-testable yet.** Tokens still decode to `exp - iat = 3600`, as expected: Egeria `main` has `bearerTokenTimeout` (hours, default 1, `TokenService`), but the quickstart's `/deployments/application.properties` does not set it. Proving it needs that property set and an egeria-main restart. egeria-workspaces-fs is putting that to the owner as a separate step.
+
+**Re-test 2026-10-19, after the config change:** **PASS.** egeria-workspaces-fs set `bearerTokenTimeout=2` in the quickstart's `/deployments/application.properties` (the owner's choice) and restarted egeria-main. A fresh erinoverview token now decodes to `exp - iat = 7200`, re-checked from this session. The property is in hours. Ready to move to the Appendix.
 
 **Layer:** Egeria Server · **Status:** awaiting re-test (addressed in Egeria source 2026-09-19; not verified on the dev platform) · **Found:** 2026-09-04 (trellis-auth token contract)
 
