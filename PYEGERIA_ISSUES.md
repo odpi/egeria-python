@@ -2713,6 +2713,8 @@ carry it.
 
 **Re-test 2026-10-19 (quickstart recreated 13:02Z on Egeria `main` 05a5e982, image 6.3-SNAPSHOT built 2026-10-18 16:13Z; as erinoverview on qs-view-server; throwaways named `pyeg_rt_*`, each deleted and verified gone by GUID; peers cleared first):** **Not re-testable yet.** Tokens still decode to `exp - iat = 3600`, as expected: Egeria `main` has `bearerTokenTimeout` (hours, default 1, `TokenService`), but the quickstart's `/deployments/application.properties` does not set it. Proving it needs that property set and an egeria-main restart. egeria-workspaces-fs is putting that to the owner as a separate step.
 
+**Re-test 2026-10-19, after the config change:** **PASS.** egeria-workspaces-fs set `bearerTokenTimeout=2` in the quickstart's `/deployments/application.properties` (the owner's choice) and restarted egeria-main. A fresh erinoverview token now decodes to `exp - iat = 7200`, re-checked from this session. The property is in hours. Ready to move to the Appendix.
+
 **Layer:** Egeria Server · **Status:** awaiting re-test (addressed in Egeria source 2026-09-19; not verified on the dev platform) · **Found:** 2026-09-04 (trellis-auth token contract)
 
 With `authentication.mode=token`, every token minted by the platform decodes to `exp - iat = 3600`
