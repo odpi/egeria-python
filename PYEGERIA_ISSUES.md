@@ -286,6 +286,30 @@ they're holding real port materialization until this exists server-side
 
 ---
 
+### ISSUE-157: Dr.Egeria `Create Service Level Objective` sends `entitlements`/`obligations`/`restrictions` as empty lists; Egeria types them as maps
+
+**Layer:** Pyegeria (Dr.Egeria) · **Status:** open, not fixed (owner approval needed) · **Found:** 2026-10-19, reported by the Egeria team against pyegeria 6.2.5: the command "sends a field the platform rejects", so their hourly refreshes use the content pack's existing within-an-hour SLO instead. The cause below is from reading source; it was not reproduced live, since a wrong guess would create an SLO on the shared platform. The Egeria team's error text would confirm it.
+
+**Likely cause:** `set_gov_prop_body` (`md_processing/md_processing_utils/common_md_utils.py:588`) always sets `entitlements`, `obligations` and `restrictions` to `attributes...get('value', [])`, which is `[]` when the command has no such attributes. `Service Level Objective` is in `GOVERNANCE_CONTROLS` (`common_md_utils.py:50`), so `update_gov_body_for_type` takes the controls branch, adds `implementationDescription`, and leaves the three `[]` values. Only the `TermsAndConditions`/`CertificationType`/`LicenseType` branch replaces them with maps or `None`. `body_slimmer` keeps empty lists, so `[]` is sent. In Egeria `main` (05a5e982), `ServiceLevelObjectiveProperties extends TermsAndConditionsProperties`, whose `entitlements`/`restrictions`/`obligations` are `Map<String, String>`. Jackson cannot read a JSON array into a map, so the request is refused. Other governance types do not have these fields, so they silently ignore them (`ignoreUnknown=true`), which is why only SLO fails.
+
+**Proposed fix (not made):** in `set_gov_prop_body`, default the three to `None` rather than `[]`, or set them only in the TermsAndConditions branch. Route `ServiceLevelObjective` through that branch (it is a TermsAndConditions subtype, not a plain control), keeping `implementationDescription`. Optionally add `Entitlements`/`Restrictions`/`Obligations` (dict-valued) to the SLO command through the Spec Editor API. Then live-test one `Create Service Level Objective` on a throwaway.
+
+---
+
+### ISSUE-156: `AutomatedCuration.add_catalog_target` posts a flat `"class": "CatalogTargetRequestBody"`, which Egeria does not have; the endpoint takes `NewRelationshipRequestBody`
+
+**Layer:** Pyegeria · **Status:** open, not fixed (owner approval needed) · **Found:** 2026-10-19, reported by the Egeria team against pyegeria 6.2.5: `add_catalog_target` "sends a request format the platform rejects"; their notebook now works around it. Confirmed from source; not re-run live.
+
+**What:** pyegeria has two `add_catalog_target` methods for the same URL, `.../integration-connectors/{connectorGUID}/catalog-targets/{elementGUID}`:
+- `AutomatedCuration.add_catalog_target(integ_connector_guid, metadata_element_guid, catalog_target_name, connection_name=..., metadata_src_qual_name=..., config_properties=..., template_properties=..., permitted_sync=..., delete_method=...)` (`pyegeria/omvs/automated_curation.py:4120-4190`) builds `{"class": "CatalogTargetRequestBody", "catalogTargetName": ..., "connectionName": ..., ...}` with the properties at the top level. **Broken:** no `CatalogTargetRequestBody` class exists in Egeria `main`.
+- `AssetMaker.add_catalog_target(integration_connector_guid, metadata_element_guid, body)` (`pyegeria/omvs/asset_maker.py:1095`) sends `NewRelationshipRequestBody` with `properties.class = "CatalogTargetProperties"`. **Correct.**
+
+Egeria (`AssetMakerResource.addCatalogTarget`, served under every generic URL marker including `automated-curation`) takes `@RequestBody(required=false) NewRelationshipRequestBody`. `CatalogTargetProperties` has `catalogTargetName`, `metadataCollectionQualifiedName`, `metadataSourceQualifiedName`, `connectionName`, `configurationProperties`, `templates`, `permittedSynchronization` and `deleteMethod`. The `hey_egeria` CLI command `add_catalog_target` (`commands/ops/gov_server_actions.py:45`, registered in `commands/cli/egeria.py` and `egeria_ops.py`) uses the broken one.
+
+**Proposed fix (not made):** keep `AutomatedCuration.add_catalog_target`'s signature but build `{"class": "NewRelationshipRequestBody", "properties": {"class": "CatalogTargetProperties", "catalogTargetName": ..., "connectionName": ..., "metadataSourceQualifiedName": ..., "configurationProperties": ..., "templates": ..., "permittedSynchronization": ..., "deleteMethod": ...}}` and send it through `_async_new_relationship_request`, as AssetMaker does. Add a micro-test asserting the body shape. `AutomatedCuration._async_update_catalog_target` (`automated_curation.py:4248`, body at `:4301`) has the same flat `CatalogTargetRequestBody` shape against `catalog-targets/{relationshipGUID}/update`. Egeria's `updateCatalogTarget` takes `UpdateRelationshipRequestBody`, so it needs the same fix.
+
+---
+
 ### ISSUE-155: pyegeria gaps against Egeria `main` since 6.2 (omvs_audit + source diff, V6.2..05a5e982)
 
 **Layer:** Pyegeria · **Status:** open, proposed list for the owner to pick from; nothing changed · **Found:** 2026-10-18, Resource Explorer ops item 7. File-only audit, no Egeria calls.
