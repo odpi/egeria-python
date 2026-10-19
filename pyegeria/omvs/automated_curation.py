@@ -3975,6 +3975,25 @@ class AutomatedCuration(ServerClient):
         )
         return response
 
+    @staticmethod
+    def _catalog_target_properties(catalog_target_name: str, connection_name: Optional[str],
+                                   metadata_src_qual_name: Optional[str], config_properties: Optional[dict],
+                                   template_properties: Optional[dict], permitted_sync: Optional[str],
+                                   delete_method: Optional[str]) -> dict:
+        """Build the CatalogTargetProperties for add/update_catalog_target, omitting unset fields.
+        `template_properties` maps to Egeria's `templates` (template name -> template GUID)."""
+        props = {
+            "class": "CatalogTargetProperties",
+            "catalogTargetName": catalog_target_name,
+            "connectionName": connection_name,
+            "metadataSourceQualifiedName": metadata_src_qual_name,
+            "configurationProperties": config_properties,
+            "templates": template_properties,
+            "permittedSynchronization": permitted_sync,
+            "deleteMethod": delete_method,
+        }
+        return {k: v for k, v in props.items() if v is not None}
+
     async def _async_add_catalog_target(
             self,
             integ_connector_guid: str,
@@ -4032,19 +4051,18 @@ class AutomatedCuration(ServerClient):
 
         url = f"{self.ref_curation_command_base}/integration-connectors/{integ_connector_guid}/catalog-targets/{metadata_element_guid}"
 
+        # ISSUE-156: Egeria takes NewRelationshipRequestBody with CatalogTargetProperties
+        # (AssetMakerResource.addCatalogTarget); there is no CatalogTargetRequestBody class.
         body = {
-            "class": "CatalogTargetRequestBody",
-            "catalogTargetName": catalog_target_name,
-            "connectionName": connection_name,
-            "metadataSourceQualifiedName": metadata_src_qual_name,
-            "configurationProperties": config_properties,
-            "templateProperties": template_properties,
-            "permittedSynchronization": permitted_sync,
-            "deleteMethod": delete_method,
+            "class": "NewRelationshipRequestBody",
+            "properties": self._catalog_target_properties(
+                catalog_target_name, connection_name, metadata_src_qual_name,
+                config_properties, template_properties, permitted_sync, delete_method,
+            ),
         }
 
-        response = await self._async_make_request("POST", url, body)
-        return response.json().get("guid", "No Guid returned")
+        guid = await self._async_new_relationship_request(url, ["CatalogTargetProperties"], body)
+        return guid or "No Guid returned"
 
     def add_catalog_target(
             self,
@@ -4155,18 +4173,17 @@ class AutomatedCuration(ServerClient):
 
         url = f"{self.ref_curation_command_base}/catalog-targets/{relationship_guid}/update"
 
+        # ISSUE-156: Egeria takes UpdateRelationshipRequestBody with CatalogTargetProperties
+        # (AssetMakerResource.updateCatalogTarget).
         body = {
-            "class": "CatalogTargetRequestBody",
-            "catalogTargetName": catalog_target_name,
-            "connectionName": connection_name,
-            "metadataSourceQualifiedName": metadata_src_qual_name,
-            "configurationProperties": config_properties,
-            "templateProperties": template_properties,
-            "permittedSynchronization": permitted_sync,
-            "deleteMethod": delete_method,
+            "class": "UpdateRelationshipRequestBody",
+            "properties": self._catalog_target_properties(
+                catalog_target_name, connection_name, metadata_src_qual_name,
+                config_properties, template_properties, permitted_sync, delete_method,
+            ),
         }
 
-        await self._async_make_request("POST", url, body)
+        await self._async_update_relationship_request(url, ["CatalogTargetProperties"], body)
 
     def update_catalog_target(
             self,
