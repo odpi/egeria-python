@@ -807,6 +807,13 @@ reproduction is to run a subscription process with a fresh asset as
 
 **Re-test 2026-10-19 (quickstart recreated 13:02Z on Egeria `main` 05a5e982, image 6.3-SNAPSHOT built 2026-10-18 16:13Z; as erinoverview on qs-view-server; throwaways named `pyeg_rt_*`, each deleted and verified gone by GUID; peers cleared first):** **Left to Resource Explorer** (agreed with the RE coordinator); not re-tested here.
 
+**Re-test 2026-10-20 01:25Z by Resource Explorer (reported to this session; its record read here, the test not re-run): PASS** on Egeria `main` 05a5e982, run once by the owner as peterprofile with two throwaway secrets-store graphs (ConnectorType, Endpoint, Connection, Asset; `RE::rt112::<T>::...`) and fake values only.
+- **Case A, read-only provider** (`YAMLSecretsStoreProvider`): `save_client_side_secret` now raises `InvalidParameterException` `OMAG-COMMON-400-034`: "The saveClientSideSecret operation cannot be performed on asset <guid> because its connector, ...YAMLSecretsStoreConnector, does not support it". pyegeria surfaces it as `SERVER_ERROR_500` wrapping that 400. No file was written. Before the fix this returned success with no write.
+- **Case B, control** (`YAMLSecretsFileProvider`): the save succeeded and the file was created (184 B).
+- **Cleanup:** `delete_client_side_secret`, all 8 elements deleted, both `/tmp` files removed; typed getters return `PyegeriaNotFoundException` for all 8.
+
+Script `~/.re-gate/scripts/retest_issue_112.py`; record `~/.re-gate/retest-issue-112-20261020T012543Z.json`. Ready to move to the Appendix.
+
 **Layer:** Egeria Server (`automated-curation` OMVS) · **Status:** open ·
 **Found:** 2026-09-21, live-verifying Resource Explorer's own client-side
 secrets store end to end (`docs/design-notes/PROBES-2026-09-21.md` in the
