@@ -605,9 +605,11 @@ def set_gov_prop_body(object_type: str, qualified_name: str, attributes: dict)->
     prop_bod["implications"] = attributes.get('Implications', {}).get('value', [])
     prop_bod["outcomes"] = attributes.get('Outcomes', {}).get('value', [])
     prop_bod["results"] = attributes.get('Results', {}).get('value', []) or []
-    prop_bod["entitlements"] = attributes.get('Entitlements', {}).get('value', [])
-    prop_bod["obligations"] = attributes.get('Obligations', {}).get('value', [])
-    prop_bod["restrictions"] = attributes.get('Restrictions', {}).get('value', [])
+    # ISSUE-157: Egeria types these as Map<String, String> (TermsAndConditionsProperties and its
+    # subtypes, e.g. ServiceLevelObjectiveProperties); a [] default made the server refuse the body.
+    prop_bod["entitlements"] = attributes.get('Entitlements', {}).get('value', None)
+    prop_bod["obligations"] = attributes.get('Obligations', {}).get('value', None)
+    prop_bod["restrictions"] = attributes.get('Restrictions', {}).get('value', None)
     prop_bod["usage"] = attributes.get('Usage', {}).get('value', None)
     prop_bod["effectiveFrom"] = attributes.get('Effective From', {}).get('value', None)
     prop_bod["effectiveTo"] = attributes.get('Effective To', {}).get('value', None)

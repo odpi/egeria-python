@@ -3,7 +3,7 @@
 
 [project]
 name = "pyegeria"
-version = "6.2.5"
+version = "6.2.6"
 license = 'Apache-2.0'
 license-files = ["LICENSE"]
 authors = [{name = "Dan Wolfson", email = "dan.wolfson@pdr-associates.com"},]
@@ -80,6 +80,7 @@ dependencies = [
     list_glossaries = "commands.cat.list_glossaries:main"
     load_terms_from_csv_file = "commands.cat.glossary_actions:import_terms_csv"
     export_terms_to_csv_file = "commands.cat.glossary_actions:export_terms_csv"
+    view_schema_tree = "commands.cat.view_schema_tree:main"
     # list_categories/create_category/update_category/delete_category/
     # add_term_to_category/remove_term_from_category removed 2026-08-05 -
     # pointed at commands.cat.list_categories (file no longer exists) and
