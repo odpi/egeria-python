@@ -288,7 +288,7 @@ they're holding real port materialization until this exists server-side
 
 ### ISSUE-161: Dr.Egeria's two entry points resolve the Egeria user differently, and the CLI fixes its credential defaults at import time
 
-**Layer:** Pyegeria · **Status:** open, logged only (no fix without the owner's word) · **Found:** 2026-10-21, while checking an RE report that `dr_egeria --process` ignored `EGERIA_USER`. **That report is withdrawn; RE was the cause:** RE's own `config.py:316` defaulted its daemon identity (`EGERIA_USER_ID`) to "erinoverview", so RE handed the child process erinoverview. The CLI correctly used it. RE is removing that default.
+**Layer:** Pyegeria · **Status:** fixed on branch `fix/issue-161-dr-egeria-credentials` (owner approved 2026-10-21), not yet released · **Found:** 2026-10-21, while checking an RE report that `dr_egeria --process` ignored `EGERIA_USER`. **That report is withdrawn; RE was the cause:** RE's own `config.py:316` defaulted its daemon identity (`EGERIA_USER_ID`) to "erinoverview", so RE handed the child process erinoverview. The CLI correctly used it. RE is removing that default.
 
 **What was checked:** with `EGERIA_USER` set, the CLI path resolves and uses it throughout on 6.2.8:
 - `config.py:423` (`os.getenv("EGERIA_USER", config.json / .env value)`) feeds `settings.User_Profile.user_name`, the `--userid` default;
@@ -302,7 +302,13 @@ Intended precedence (CLAUDE.md): explicit `--userid` > OS env > `.env` > `config
 2. **Import-time defaults:** `commands/cat/dr_egeria.py:32-33` computes the `--userid` / `--user_pass` defaults when the module is imported. Code that imports it, then sets `EGERIA_USER` and invokes the command in the same process, gets the earlier user. This doesn't affect normal CLI use, where each run is a new process.
 3. **Help text:** "Overrides EGERIA_USER (env var or .env file)" doesn't mention `config.json`, or that the default is fixed at import.
 
-**Proposed (not made):**
+**Fix (2026-10-21):** a new `pyegeria.core.config.resolve_egeria_credentials(user_id=None, user_pwd=None)` resolves, when called: an explicit value > the `EGERIA_USER` / `EGERIA_USER_PASSWORD` environment variables > the settings User Profile (`config.json` / `.env`) > "erinoverview" / "secret".
+- The `dr_egeria` and `dr_egeria_folder` CLIs now default `--userid` / `--user_pass` to `None` and call it when they run. Their help text says so.
+- `md_processing/dr_egeria.py` (module constants and its `__main__` path) and `common_md_utils.py` constants now use it too. The module-level `EGERIA_USER` names are kept for importers.
+- Tests: `tests/micro-tests/test_issue_161_dr_egeria_credentials.py`. Five cases: precedence; env set after import, for both CLIs; config-only user; explicit flag wins. The three behaviour cases fail with the old caller code. The full micro-test suite (1,425) passes in a clean python:3.13-slim container.
+- **Not changed:** other `commands/cat` tools (`list_glossaries`, `get_asset_graph`, `run_report`, `get_collection_tree`, `get_project_dependencies`, `list_user_ids`, `view_schema_tree`) still read `EGERIA_USER_PASSWORD` straight from the environment. They could adopt the helper later.
+
+**Originally proposed:**
 - Resolve credentials through `settings.User_Profile` in all three places.
 - Look them up when the command runs (click `default=None`, then resolve inside the command).
 - Add a micro-test that both entry points pick up a user set only in `config.json` or `.env`.

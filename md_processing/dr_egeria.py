@@ -56,7 +56,7 @@ from md_processing.v2 import (
 )
 
 from pyegeria import settings, EgeriaTech, PyegeriaException, print_basic_exception, print_validation_error
-from pyegeria.core.config import settings
+from pyegeria.core.config import settings, resolve_egeria_credentials
 
 # Configure logging - module level default
 log_format = "{time} | {level} | {function} | {line} | {message} | {extra}"
@@ -90,8 +90,8 @@ EGERIA_OUTBOX_PATH = app_config.dr_egeria_outbox
 # User credentials and admin credentials are only from environment variables (not stored in config for security)
 EGERIA_ADMIN_USER = os.environ.get("ADMIN_USER", "garygeeke")
 EGERIA_ADMIN_PASSWORD = os.environ.get("ADMIN_PASSWORD", "secret")
-EGERIA_USER = os.environ.get("EGERIA_USER", "erinoverview")
-EGERIA_USER_PASSWORD = os.environ.get("EGERIA_USER_PASSWORD", "secret")
+# Same precedence as the dr_egeria CLI: env, then config.json / .env, then defaults (ISSUE-161).
+EGERIA_USER, EGERIA_USER_PASSWORD = resolve_egeria_credentials()
 
 # Legacy environment variables (deprecated, kept for backward compatibility)
 EGERIA_HOME_GLOSSARY_GUID = os.environ.get("EGERIA_HOME_GLOSSARY_GUID", None)
@@ -920,8 +920,7 @@ if __name__ == "__main__":
         directive = "validate"
 
     # Run the async v2 processor
-    user = os.environ.get("EGERIA_USER", "erinoverview")
-    password = os.environ.get("EGERIA_USER_PASSWORD", "secret")
+    user, password = resolve_egeria_credentials()
     client = EgeriaTech(settings.Environment.egeria_view_server, settings.Environment.egeria_view_server_url, user_id=user)
     client.create_egeria_bearer_token(user, password)
 
