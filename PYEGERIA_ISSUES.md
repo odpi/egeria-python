@@ -286,6 +286,42 @@ they're holding real port materialization until this exists server-side
 
 ---
 
+### ISSUE-160: `AutomatedCuration`'s template builders miss placeholders Egeria's templates now use, so created elements keep literal `~{name}~` values (folder endpoint `~{directoryAddress}~` breaks folder surveys)
+
+**Layer:** Pyegeria · **Status:** partly fixed on branch `fix/issue-160-template-placeholders` (owner approved 2026-10-21); not yet merged or released. The rest is listed below for the owner. **Found:** 2026-10-21, live by the RE coordinator against Egeria `main` 05a5e982 with pyegeria 6.2.7. Two FileFolders made with `create_folder_element_from_template` had Endpoint `networkAddress` = `~{directoryAddress}~`. Egeria's Folder Survey then failed with `BASIC-FILE-CONNECTOR-404-001` "The folder named ~{directoryAddress}~ ... does not exist" (engine action `c1d924b5`). The same folders also kept `versionIdentifier` = `~{versionIdentifier}~` and `deployedImplementationType` = `~{deployedImplementationType}~` (record `~/.re-gate/repair-folder-endpoints-20261021T143415Z.json`).
+
+**Cause (Egeria `origin/main` d8f72cbe25, read-only):** no placeholder was renamed (`git log -S` on `PlaceholderProperty.java`). Egeria **added** placeholders that pyegeria never sends:
+- **`directoryAddress` / `fileAddress`:** added by `156650efd6` (2026-07-19, "file system control for file cataloging"). They are now the Endpoint address in the folder and file templates (`DataAssetTemplateDefinition` `FILE_FOLDER_TEMPLATE`, `DATA_FOLDER_TEMPLATE`, `CSV_FILE_TEMPLATE`, ...). The templates still use `directoryPathName` / `filePathName` in the qualifiedName, so both are needed.
+- **`deployedImplementationType`:** in every folder/file placeholder list (`getFolderPlaceholderPropertyTypes`, `getDataFilesPlaceholderPropertyTypes`).
+- **`databaseDescription`:** the PostgreSQL Relational Database template's description placeholder (`PostgresPlaceholderProperty.DATABASE_DESCRIPTION`); pyegeria sent `description`.
+
+An unsent placeholder is stored as the literal `~{name}~`. `body_slimmer` drops `None` values, so an optional argument left unset has the same effect.
+
+**Fixed on the branch** (`pyegeria/omvs/automated_curation.py`; signatures unchanged):
+| Method | Added |
+|---|---|
+| `create_folder_element_from_template` | `directoryAddress` (= `path_name`), `deployedImplementationType: "File System Directory"` |
+| `create_csv_data_file_element_from_template`, `get_create_csv_data_file_element_from_template` | `fileAddress` (= `file_path_name`), `deployedImplementationType: "CSV Data File"` |
+| `create_secrets_store_element_from_template` | `fileAddress` (= `file_path_name`), `deployedImplementationType: "YAML File Secrets Collection"` |
+| `create_postgres_database_element_from_template` | `databaseDescription` (= `description`; `description` still sent) |
+
+Tests: `tests/micro-tests/test_issue_160_template_placeholders.py` (5 cases; all fail on the old code, all pass on the fix). The full micro-test suite (1,409) passes in a clean python:3.13-slim container. Not yet live-tested.
+
+**Not fixed: needs the owner's decision.** These are API additions or behaviour choices, not one-line key fixes.
+1. **Postgres server and database credentials:** both templates now take `secretsStorePathName` and `secretsCollectionName` (credentials come from a secrets store). pyegeria never sends them, so the connection keeps literals. pyegeria still sends `databaseUserId` / `databasePassword`, which the templates no longer list (`312c172639`, `56fa898e43`), so those are dead. Proposed: add optional `secrets_store_path_name` / `secrets_collection_name` parameters, and deprecate `db_user` / `db_pwd`.
+2. **Optional arguments left unset:** `versionIdentifier`, `description`, `fileSystemName` and the like are dropped when `None`, so they stay `~{...}~` (RE's `versionIdentifier` case). Options: send `""` for unset optional placeholders, or document that callers must pass them.
+3. **Unsent template placeholders in the Unity Catalog and Kafka builders:**
+   - UC catalog: `ucServerQualifiedName`;
+   - UC table and function: `rootSchemaTypeQualifiedName`;
+   - UC volume: `directoryPathName`, `localStorageLocation`;
+   - UC server and Kafka server: `resourceName` (Kafka also `versionIdentifier`).
+   Add parameters for them where a caller can know the value.
+4. **The secrets-store builder's fallback** to a "Keystore File" technology type (`_async_get_template_guid_for_technology_type`) matches no template on `origin/main`.
+
+Builders with no hard-coded keys (`create_elem_from_template`, Dr.Egeria's "Placeholder Property Values" attribute) are unaffected. The UC schema builder sends all its placeholders.
+
+---
+
 ### ISSUE-159: no archive wrappers on the project or collection managers, and no restore wrapper at all, although Egeria offers both
 
 **Layer:** Pyegeria · **Status:** open, logged only (no fix without the owner's word) · **Found:** 2026-10-20, raised by the Resource Explorer expansion-architecture session: RE's investigation-delete ruling needs a Project archived through the project manager and restored by GUID. Facts confirmed here against Egeria `origin/main` 05a5e982 and pyegeria upstream `main`, read-only.
