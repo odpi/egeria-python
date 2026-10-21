@@ -286,6 +286,30 @@ they're holding real port materialization until this exists server-side
 
 ---
 
+### ISSUE-159: no archive wrappers on the project or collection managers, and no restore wrapper at all, although Egeria offers both
+
+**Layer:** Pyegeria · **Status:** open, logged only (no fix without the owner's word) · **Found:** 2026-10-20, raised by the Resource Explorer expansion-architecture session: RE's investigation-delete ruling needs a Project archived through the project manager and restored by GUID. Facts confirmed here against Egeria `origin/main` 05a5e982 and pyegeria upstream `main`, read-only.
+
+**Egeria:** `OpenMetadataAPIGenericHandler.java` (common-services/generic-handlers):
+- `archiveBeanInRepository` (`:3289`) classifies the element Memento, renames each affected Referenceable's qualifiedName to `<qn>_archivedOn_<date>` (marker `archivedQualifiedNameMarker = "_archivedOn_"`, `:51`), and records one `lastOperationId` per operation.
+- `restoreBeanInRepository` (`:4170`) restores an element and everything the same delete or archive changed, given any GUID that operation touched.
+
+The OMF store's delete (`OpenMetadataStoreRESTServices`, around `:4118`) also routes `deleteMethod: ARCHIVE` to `archiveMetadataElementInStore`, and resolves `LOOK_FOR_LINEAGE` to ARCHIVE when lineage relationships exist.
+
+**pyegeria:**
+- Archive exists only as `MetadataExpert.archive_metadata_element` (`metadata-expert/metadata-elements/{guid}/archive`).
+- There is no `archive_project`, `archive_collection` or other manager-level archive.
+- There is no `restore_*` method anywhere. ISSUE-155 item 5 already lists Metadata Expert `metadata-elements/{guid}/restore` and `related-elements/{guid}/restore` as missing.
+
+**Possible route today (unverified):** `ProjectManager.delete_project(guid, body={"class": "DeleteElementRequestBody", "deleteMethod": "ARCHIVE"})`. pyegeria passes `deleteMethod` through, but whether the project-manager delete path honours ARCHIVE as the OMF store delete does was not traced.
+
+**Proposed (not made):**
+1. Add `MetadataExpert.restore_metadata_element` / `restore_related_elements` (and undo), per ISSUE-155 item 5.
+2. Add `ProjectManager.archive_project` and `CollectionManager.archive_collection`. These can be thin wrappers that send `deleteMethod: ARCHIVE` once that path is confirmed live, or call Metadata Expert archive.
+3. Live-test archive then restore of a throwaway Project, including the `_archivedOn_` rename and its reversal.
+
+---
+
 ### ISSUE-158: `GOV_DEF_PROPERTIES_LIST` lacks `DataQualityRuleProperties`, and Dr.Egeria's governance create fallback silently drops every type-specific attribute
 
 **Layer:** Pyegeria · **Status:** open, not fixed (owner approval needed) · **Found:** 2026-10-19, raised by the TestGen evaluation session while drafting a DataQualityRule convenience-API spec (`~/localGit/egeria-v6/wt-testgen-notes/packages/resource-explorer/docs/design-notes/SPEC-PYEGERIA-DATA-QUALITY-RULE.md`, uncommitted, pending owner review). Both points confirmed in source here, read-only; not run live.
