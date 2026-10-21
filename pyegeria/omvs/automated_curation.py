@@ -754,6 +754,9 @@ class AutomatedCuration(ServerClient):
             "placeholderPropertyValues": {
                 "fileSystemName": file_system_name,
                 "filePathName": file_path_name,
+                # ISSUE-160: the template's endpoint address is ~{fileAddress}~.
+                "fileAddress": file_path_name,
+                "deployedImplementationType": "YAML File Secrets Collection",
                 "fileName": file_name,
                 "description": description,
                 "fileType": file_type,
@@ -975,6 +978,9 @@ class AutomatedCuration(ServerClient):
                 "fileName": file_name,
                 "fileType": file_type,
                 "filePathName": file_path_name,
+                # ISSUE-160: the template's endpoint address is ~{fileAddress}~.
+                "fileAddress": file_path_name,
+                "deployedImplementationType": "CSV Data File",
                 "versionIdentifier": version_identifier,
                 "fileEncoding": file_encoding,
                 "fileExtension": file_extension,
@@ -1083,6 +1089,9 @@ class AutomatedCuration(ServerClient):
                 "fileName": file_name,
                 "fileType": file_type,
                 "filePathName": file_path_name,
+                # ISSUE-160: the template's endpoint address is ~{fileAddress}~.
+                "fileAddress": file_path_name,
+                "deployedImplementationType": "CSV Data File",
                 "versionIdentifier": version_identifier,
                 "fileEncoding": file_encoding,
                 "fileExtension": file_extension,
@@ -1300,6 +1309,8 @@ class AutomatedCuration(ServerClient):
                 "portNumber": port,
                 "databaseUserId": db_user,
                 "description": description,
+                # ISSUE-160: the database template's description placeholder is databaseDescription.
+                "databaseDescription": description,
                 "databasePassword": db_pwd,
             },
         }
@@ -1408,7 +1419,10 @@ class AutomatedCuration(ServerClient):
             "initialClassifications": initial_classifications,
             "placeholderPropertyValues": {
                 "directoryPathName": path_name,
+                # ISSUE-160: the template's endpoint address is ~{directoryAddress}~.
+                "directoryAddress": path_name,
                 "directoryName": folder_name,
+                "deployedImplementationType": "File System Directory",
                 "versionIdentifier": version,
                 "fileSystemName": file_system,
                 "description": description,
