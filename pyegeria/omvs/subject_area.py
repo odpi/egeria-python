@@ -299,7 +299,7 @@ class SubjectArea(ServerClient):
         ```
         """
         url = f"{self.platform_url}/servers/{self.view_server}/api/open-metadata/subject-area/collections/{subject_area_guid}/update"
-        await self._async_update_element_body_request(url, body)
+        await self._async_update_element_body_request(url, body=body)
 
     def update_subject_area(self, subject_area_guid: str, body: dict | UpdateElementRequestBody) -> None:
         """Update a subject area.
