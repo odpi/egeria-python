@@ -309,7 +309,27 @@ Tests: `tests/micro-tests/test_issue_160_template_placeholders.py` (5 cases; all
 
 **Live check 2026-10-21 14:52Z** (Egeria `main` 05a5e982, erinoverview, after a peer round; the fixed code on this branch): `create_folder_element_from_template("/tmp/pyeg_rt_folder_20261021T145254Z", ..., version="1.0")` created FileFolder `e9a45c7f` with `deployedImplementationType` "File System Directory" and `versionIdentifier` "1.0". Its anchored Endpoint `8f003544` had **`networkAddress` = `/tmp/pyeg_rt_folder_20261021T145254Z`**. The folder, Connection `18ef2ee9` and Endpoint had no `~{...}~` left in their own properties. A metadata-expert delete (`deleteMethod: PURGE`, `cascadedDelete: true`) removed all three; each was verified gone by GUID. A first run (`a3475d3e`) confirmed the folder fields but its script missed the Endpoint. Exact `networkAddress` searches (forLineage) afterwards found no leftover for that run either. The survey itself was not run.
 
-**Not fixed: needs the owner's decision.** These are API additions or behaviour choices, not one-line key fixes.
+**Follow-up fix 2026-10-21 (owner: "fix them all in a new pr")** on branch `fix/issue-160-remaining-placeholders`, built on #474. All 13 hard-coded builders now wrap their values in `_placeholder_values`, which sends `""` for any placeholder left `None`, so no `~{name}~` literal is stored. `body_slimmer` drops only `None`. A folder created without a file system therefore gets qualified name `FileFolder:::/path`.
+- **Postgres server and database:** new optional `secrets_store_path_name` / `secrets_collection_name`, sent as `secretsStorePathName` / `secretsCollectionName`, plus `version` (and `resource_name` on the server, defaulting to the server name). `db_user` / `db_pwd` are now optional, deprecated and no longer sent; passing either raises a `DeprecationWarning`.
+- **Kafka server:** `resourceName` (defaults to the server name) and `versionIdentifier`.
+- **Unity Catalog:**
+  - UC server: `resourceName`, defaulting to the server name;
+  - UC catalog: `ucServerQualifiedName`;
+  - UC table and function: `rootSchemaTypeQualifiedName`;
+  - UC volume: `directoryPathName` and `localStorageLocation`.
+  Each is a new optional parameter on the async method and its sync wrapper.
+- **Item 4 needed no change:** "Keystore File" is a real template (`DataAssetTemplateDefinition.KEYSTORE_FILE_TEMPLATE`), and live, both "YAML File Secrets Collection" and "Keystore File" resolve to template `fbcfcc0c`.
+
+Tests: `tests/micro-tests/test_issue_160_remaining_placeholders.py`, 11 cases, all failing on #474's code. The full micro-test suite (1,420) passes in a clean python:3.13-slim container. **Follow-up not in this fix:** Dr.Egeria's `Postgres Server Element` / `Postgres Database Element` commands still pass `Database User Id` / `Database Password`. Those are now ignored with a warning; their compact specs need `Secrets Store Path Name` / `Secrets Collection Name` attributes.
+
+**Follow-up live check 2026-10-21 15:16Z** (Egeria `main` 05a5e982, erinoverview, after a peer round; #475 code):
+- **(a)** `create_postgres_server_element_from_template("pyeg_rt_pg_…", "pyeg-rt.invalid", "5432", secrets_store_path_name=…, secrets_collection_name=…)`, with no `db_user` / `db_pwd`, created SoftwareServer `b6b2ebff`: `resourceName` = the server name, `versionIdentifier` and `description` = `""`, and no `~{...}~` in its own properties. Its Connection `55686913` and Endpoint `59014065` (`jdbc:postgresql://pyeg-rt.invalid:5432/postgres`) had no literals either.
+- The server had **no CatalogTarget link** (its relationships were sourcedFromTemplate, serverEndpoints, capabilities, connections), so the JDBC integration connector never saw it.
+- I did not find where Egeria stored the secrets-store values. They were not in the Connection's own properties, and no literal was left. Unconfirmed.
+- **(b)** `create_folder_element_from_template("/tmp/pyeg_rt_folder2_…", …, None)`, with no file system, version or description: qualifiedName `FileFolder:::/tmp/pyeg_rt_folder2_…`, `resourceName` `:/tmp/…`, `versionIdentifier` / `description` = `""`, `deployedImplementationType` "File System Directory", and Endpoint `networkAddress` = the path. No literals on the folder, Connection or Endpoint.
+- Both were purged (metadata-expert delete, `PURGE`, `cascadedDelete`), and all six GUIDs were verified gone. Name, host, stamp and secrets-file searches afterwards found nothing, which covers the server's capabilities too.
+
+**Originally listed as not fixed** (kept for the record):
 1. **Postgres server and database credentials:** both templates now take `secretsStorePathName` and `secretsCollectionName` (credentials come from a secrets store). pyegeria never sends them, so the connection keeps literals. pyegeria still sends `databaseUserId` / `databasePassword`, which the templates no longer list (`312c172639`, `56fa898e43`), so those are dead. Proposed: add optional `secrets_store_path_name` / `secrets_collection_name` parameters, and deprecate `db_user` / `db_pwd`.
 2. **Optional arguments left unset:** `versionIdentifier`, `description`, `fileSystemName` and the like are dropped when `None`, so they stay `~{...}~` (RE's `versionIdentifier` case). Options: send `""` for unset optional placeholders, or document that callers must pass them.
 3. **Unsent template placeholders in the Unity Catalog and Kafka builders:**
