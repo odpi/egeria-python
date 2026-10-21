@@ -389,6 +389,8 @@ Egeria says none of its changes break existing requests: the old class names and
 
 **Layer:** Pyegeria · **Status:** open (found 2026-10-15 by Resource Explorer's ClassificationAnnotation backfill; not fixed, per this repo's policy)
 
+**Fixed 2026-10-20 (owner approved) on branch `fix/issue-152-update-body-slot`, not yet merged or released.** All five call sites now pass `body=body`. `tests/micro-tests/test_issue_152_update_body_slot.py` sends a dict body and an `UpdateElementRequestBody` through each method and checks that the body reaches the HTTP layer. All 10 cases fail on the old lines and pass on the fix, and the full micro-test suite (1,404) passes in a clean python:3.13-slim container. Not live-tested. Hit again 2026-10-20 by the TestGen evaluation session (RE #791, `update_annotation`), which carries its own workaround until a release ships this.
+
 `_async_update_element_body_request(self, url, prop=None, body=None)` (`pyegeria/core/_server_client.py:7317`) takes the body as its **third** parameter. Five callers pass it positionally as the second, so it lands in `prop` and `body` is `None`; the call fails before any request goes out (the builder observed an AttributeError):
 
 - `pyegeria/omvs/data_discovery.py:299` (`_async_update_annotation`, behind `update_annotation`)
