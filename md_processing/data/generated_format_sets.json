@@ -715,7 +715,8 @@
         "metadata_element_type": "GovernanceActionProcess"
       },
       "analytic_function": null,
-      "analytic_spec_params": {}
+      "analytic_spec_params": {},
+      "analytic_binders": {}
     },
     "get_additional_props": null,
     "question_spec": null
@@ -2256,7 +2257,8 @@
         "metadata_element_type": "GovernanceActionProcess"
       },
       "analytic_function": null,
-      "analytic_spec_params": {}
+      "analytic_spec_params": {},
+      "analytic_binders": {}
     },
     "get_additional_props": null,
     "question_spec": null
@@ -3041,7 +3043,8 @@
         "metadata_element_type": "GovernanceActionType"
       },
       "analytic_function": null,
-      "analytic_spec_params": {}
+      "analytic_spec_params": {},
+      "analytic_binders": {}
     },
     "get_additional_props": null,
     "question_spec": null
@@ -4646,7 +4649,8 @@
         "metadata_element_type": "GovernanceActionType"
       },
       "analytic_function": null,
-      "analytic_spec_params": {}
+      "analytic_spec_params": {},
+      "analytic_binders": {}
     },
     "get_additional_props": null,
     "question_spec": null
@@ -5463,7 +5467,8 @@
         "metadata_element_type": "GovernanceActionProcessStep"
       },
       "analytic_function": null,
-      "analytic_spec_params": {}
+      "analytic_spec_params": {},
+      "analytic_binders": {}
     },
     "get_additional_props": null,
     "question_spec": null
@@ -7100,7 +7105,8 @@
         "metadata_element_type": "GovernanceActionProcessStep"
       },
       "analytic_function": null,
-      "analytic_spec_params": {}
+      "analytic_spec_params": {},
+      "analytic_binders": {}
     },
     "get_additional_props": null,
     "question_spec": null
@@ -7519,7 +7525,8 @@
       ],
       "spec_params": {},
       "analytic_function": null,
-      "analytic_spec_params": {}
+      "analytic_spec_params": {},
+      "analytic_binders": {}
     },
     "get_additional_props": null,
     "question_spec": null
@@ -8854,7 +8861,8 @@
       ],
       "spec_params": {},
       "analytic_function": null,
-      "analytic_spec_params": {}
+      "analytic_spec_params": {},
+      "analytic_binders": {}
     },
     "get_additional_props": null,
     "question_spec": null
@@ -9211,7 +9219,8 @@
         "metadata_element_type": "GovernanceRole"
       },
       "analytic_function": null,
-      "analytic_spec_params": {}
+      "analytic_spec_params": {},
+      "analytic_binders": {}
     },
     "get_additional_props": null,
     "question_spec": null
@@ -10356,7 +10365,8 @@
         "metadata_element_type": "GovernanceRole"
       },
       "analytic_function": null,
-      "analytic_spec_params": {}
+      "analytic_spec_params": {},
+      "analytic_binders": {}
     },
     "get_additional_props": null,
     "question_spec": null
@@ -10681,7 +10691,8 @@
         "metadata_element_type": "ITProfileRole"
       },
       "analytic_function": null,
-      "analytic_spec_params": {}
+      "analytic_spec_params": {},
+      "analytic_binders": {}
     },
     "get_additional_props": null,
     "question_spec": null
@@ -11794,7 +11805,8 @@
         "metadata_element_type": "ITProfileRole"
       },
       "analytic_function": null,
-      "analytic_spec_params": {}
+      "analytic_spec_params": {},
+      "analytic_binders": {}
     },
     "get_additional_props": null,
     "question_spec": null
@@ -12119,7 +12131,8 @@
         "metadata_element_type": "Organization"
       },
       "analytic_function": null,
-      "analytic_spec_params": {}
+      "analytic_spec_params": {},
+      "analytic_binders": {}
     },
     "get_additional_props": null,
     "question_spec": null
@@ -13232,7 +13245,8 @@
         "metadata_element_type": "Organization"
       },
       "analytic_function": null,
-      "analytic_spec_params": {}
+      "analytic_spec_params": {},
+      "analytic_binders": {}
     },
     "get_additional_props": null,
     "question_spec": null
@@ -13909,7 +13923,8 @@
         "metadata_element_type": "Person"
       },
       "analytic_function": null,
-      "analytic_spec_params": {}
+      "analytic_spec_params": {},
+      "analytic_binders": {}
     },
     "get_additional_props": null,
     "question_spec": null
@@ -15374,7 +15389,8 @@
         "metadata_element_type": "Person"
       },
       "analytic_function": null,
-      "analytic_spec_params": {}
+      "analytic_spec_params": {},
+      "analytic_binders": {}
     },
     "get_additional_props": null,
     "question_spec": null
@@ -15731,7 +15747,8 @@
         "metadata_element_type": "PersonRole"
       },
       "analytic_function": null,
-      "analytic_spec_params": {}
+      "analytic_spec_params": {},
+      "analytic_binders": {}
     },
     "get_additional_props": null,
     "question_spec": null
@@ -16876,7 +16893,8 @@
         "metadata_element_type": "PersonRole"
       },
       "analytic_function": null,
-      "analytic_spec_params": {}
+      "analytic_spec_params": {},
+      "analytic_binders": {}
     },
     "get_additional_props": null,
     "question_spec": null
@@ -17169,7 +17187,8 @@
         "metadata_element_type": "Perspective"
       },
       "analytic_function": null,
-      "analytic_spec_params": {}
+      "analytic_spec_params": {},
+      "analytic_binders": {}
     },
     "get_additional_props": null,
     "question_spec": null
@@ -18250,7 +18269,8 @@
         "metadata_element_type": "Perspective"
       },
       "analytic_function": null,
-      "analytic_spec_params": {}
+      "analytic_spec_params": {},
+      "analytic_binders": {}
     },
     "get_additional_props": null,
     "question_spec": null
@@ -18643,7 +18663,8 @@
         "metadata_element_type": "Skill"
       },
       "analytic_function": null,
-      "analytic_spec_params": {}
+      "analytic_spec_params": {},
+      "analytic_binders": {}
     },
     "get_additional_props": null,
     "question_spec": null
@@ -19856,7 +19877,8 @@
         "metadata_element_type": "Skill"
       },
       "analytic_function": null,
-      "analytic_spec_params": {}
+      "analytic_spec_params": {},
+      "analytic_binders": {}
     },
     "get_additional_props": null,
     "question_spec": null
@@ -20181,7 +20203,8 @@
         "metadata_element_type": "Team"
       },
       "analytic_function": null,
-      "analytic_spec_params": {}
+      "analytic_spec_params": {},
+      "analytic_binders": {}
     },
     "get_additional_props": null,
     "question_spec": null
@@ -21294,7 +21317,8 @@
         "metadata_element_type": "Team"
       },
       "analytic_function": null,
-      "analytic_spec_params": {}
+      "analytic_spec_params": {},
+      "analytic_binders": {}
     },
     "get_additional_props": null,
     "question_spec": null
@@ -21651,7 +21675,8 @@
         "metadata_element_type": "TeamRole"
       },
       "analytic_function": null,
-      "analytic_spec_params": {}
+      "analytic_spec_params": {},
+      "analytic_binders": {}
     },
     "get_additional_props": null,
     "question_spec": null
@@ -22796,7 +22821,8 @@
         "metadata_element_type": "TeamRole"
       },
       "analytic_function": null,
-      "analytic_spec_params": {}
+      "analytic_spec_params": {},
+      "analytic_binders": {}
     },
     "get_additional_props": null,
     "question_spec": null
@@ -23757,7 +23783,8 @@
       ],
       "spec_params": {},
       "analytic_function": null,
-      "analytic_spec_params": {}
+      "analytic_spec_params": {},
+      "analytic_binders": {}
     },
     "get_additional_props": null,
     "question_spec": null
@@ -24064,7 +24091,8 @@
       ],
       "spec_params": {},
       "analytic_function": null,
-      "analytic_spec_params": {}
+      "analytic_spec_params": {},
+      "analytic_binders": {}
     },
     "get_additional_props": null,
     "question_spec": null
@@ -24243,7 +24271,8 @@
       ],
       "spec_params": {},
       "analytic_function": null,
-      "analytic_spec_params": {}
+      "analytic_spec_params": {},
+      "analytic_binders": {}
     },
     "get_additional_props": null,
     "question_spec": null
@@ -24422,7 +24451,8 @@
       ],
       "spec_params": {},
       "analytic_function": null,
-      "analytic_spec_params": {}
+      "analytic_spec_params": {},
+      "analytic_binders": {}
     },
     "get_additional_props": null,
     "question_spec": null
@@ -24729,7 +24759,8 @@
       ],
       "spec_params": {},
       "analytic_function": null,
-      "analytic_spec_params": {}
+      "analytic_spec_params": {},
+      "analytic_binders": {}
     },
     "get_additional_props": null,
     "question_spec": null
@@ -25036,7 +25067,8 @@
       ],
       "spec_params": {},
       "analytic_function": null,
-      "analytic_spec_params": {}
+      "analytic_spec_params": {},
+      "analytic_binders": {}
     },
     "get_additional_props": null,
     "question_spec": null
@@ -25079,16 +25111,24 @@
             "valid_values": []
           },
           {
-            "name": "Database User Id",
-            "key": "db_user",
+            "name": "Secrets Store Path Name",
+            "key": "secrets_store_path_name",
             "value": null,
             "format": false,
             "detail_spec": null,
             "valid_values": []
           },
           {
-            "name": "Database Password",
-            "key": "db_pwd",
+            "name": "Secrets Collection Name",
+            "key": "secrets_collection_name",
+            "value": null,
+            "format": false,
+            "detail_spec": null,
+            "valid_values": []
+          },
+          {
+            "name": "Resource Name",
+            "key": "resource_name",
             "value": null,
             "format": false,
             "detail_spec": null,
@@ -25097,6 +25137,14 @@
           {
             "name": "Description",
             "key": "description",
+            "value": null,
+            "format": false,
+            "detail_spec": null,
+            "valid_values": []
+          },
+          {
+            "name": "Version Identifier",
+            "key": "version_identifier",
             "value": null,
             "format": false,
             "detail_spec": null,
@@ -25129,16 +25177,24 @@
             "valid_values": []
           },
           {
-            "name": "Database User Id",
-            "key": "db_user",
+            "name": "Secrets Store Path Name",
+            "key": "secrets_store_path_name",
             "value": null,
             "format": false,
             "detail_spec": null,
             "valid_values": []
           },
           {
-            "name": "Database Password",
-            "key": "db_pwd",
+            "name": "Secrets Collection Name",
+            "key": "secrets_collection_name",
+            "value": null,
+            "format": false,
+            "detail_spec": null,
+            "valid_values": []
+          },
+          {
+            "name": "Resource Name",
+            "key": "resource_name",
             "value": null,
             "format": false,
             "detail_spec": null,
@@ -25147,6 +25203,14 @@
           {
             "name": "Description",
             "key": "description",
+            "value": null,
+            "format": false,
+            "detail_spec": null,
+            "valid_values": []
+          },
+          {
+            "name": "Version Identifier",
+            "key": "version_identifier",
             "value": null,
             "format": false,
             "detail_spec": null,
@@ -25184,16 +25248,32 @@
             "valid_values": []
           },
           {
-            "name": "Database User Id",
-            "key": "db_user",
+            "name": "Secrets Store Path Name",
+            "key": "secrets_store_path_name",
             "value": null,
             "format": false,
             "detail_spec": null,
             "valid_values": []
           },
           {
-            "name": "Database Password",
-            "key": "db_pwd",
+            "name": "Secrets Collection Name",
+            "key": "secrets_collection_name",
+            "value": null,
+            "format": false,
+            "detail_spec": null,
+            "valid_values": []
+          },
+          {
+            "name": "Resource Name",
+            "key": "resource_name",
+            "value": null,
+            "format": false,
+            "detail_spec": null,
+            "valid_values": []
+          },
+          {
+            "name": "Version Identifier",
+            "key": "version_identifier",
             "value": null,
             "format": false,
             "detail_spec": null,
@@ -25234,16 +25314,32 @@
             "valid_values": []
           },
           {
-            "name": "Database User Id",
-            "key": "db_user",
+            "name": "Secrets Store Path Name",
+            "key": "secrets_store_path_name",
             "value": null,
             "format": false,
             "detail_spec": null,
             "valid_values": []
           },
           {
-            "name": "Database Password",
-            "key": "db_pwd",
+            "name": "Secrets Collection Name",
+            "key": "secrets_collection_name",
+            "value": null,
+            "format": false,
+            "detail_spec": null,
+            "valid_values": []
+          },
+          {
+            "name": "Resource Name",
+            "key": "resource_name",
+            "value": null,
+            "format": false,
+            "detail_spec": null,
+            "valid_values": []
+          },
+          {
+            "name": "Version Identifier",
+            "key": "version_identifier",
             "value": null,
             "format": false,
             "detail_spec": null,
@@ -25279,7 +25375,8 @@
       ],
       "spec_params": {},
       "analytic_function": null,
-      "analytic_spec_params": {}
+      "analytic_spec_params": {},
+      "analytic_binders": {}
     },
     "get_additional_props": null,
     "question_spec": null
@@ -25322,16 +25419,24 @@
             "valid_values": []
           },
           {
-            "name": "Database User Id",
-            "key": "db_user",
+            "name": "Secrets Store Path Name",
+            "key": "secrets_store_path_name",
             "value": null,
             "format": false,
             "detail_spec": null,
             "valid_values": []
           },
           {
-            "name": "Database Password",
-            "key": "db_pwd",
+            "name": "Secrets Collection Name",
+            "key": "secrets_collection_name",
+            "value": null,
+            "format": false,
+            "detail_spec": null,
+            "valid_values": []
+          },
+          {
+            "name": "Resource Name",
+            "key": "resource_name",
             "value": null,
             "format": false,
             "detail_spec": null,
@@ -25340,6 +25445,14 @@
           {
             "name": "Description",
             "key": "description",
+            "value": null,
+            "format": false,
+            "detail_spec": null,
+            "valid_values": []
+          },
+          {
+            "name": "Version Identifier",
+            "key": "version_identifier",
             "value": null,
             "format": false,
             "detail_spec": null,
@@ -25372,16 +25485,24 @@
             "valid_values": []
           },
           {
-            "name": "Database User Id",
-            "key": "db_user",
+            "name": "Secrets Store Path Name",
+            "key": "secrets_store_path_name",
             "value": null,
             "format": false,
             "detail_spec": null,
             "valid_values": []
           },
           {
-            "name": "Database Password",
-            "key": "db_pwd",
+            "name": "Secrets Collection Name",
+            "key": "secrets_collection_name",
+            "value": null,
+            "format": false,
+            "detail_spec": null,
+            "valid_values": []
+          },
+          {
+            "name": "Resource Name",
+            "key": "resource_name",
             "value": null,
             "format": false,
             "detail_spec": null,
@@ -25390,6 +25511,14 @@
           {
             "name": "Description",
             "key": "description",
+            "value": null,
+            "format": false,
+            "detail_spec": null,
+            "valid_values": []
+          },
+          {
+            "name": "Version Identifier",
+            "key": "version_identifier",
             "value": null,
             "format": false,
             "detail_spec": null,
@@ -25427,16 +25556,32 @@
             "valid_values": []
           },
           {
-            "name": "Database User Id",
-            "key": "db_user",
+            "name": "Secrets Store Path Name",
+            "key": "secrets_store_path_name",
             "value": null,
             "format": false,
             "detail_spec": null,
             "valid_values": []
           },
           {
-            "name": "Database Password",
-            "key": "db_pwd",
+            "name": "Secrets Collection Name",
+            "key": "secrets_collection_name",
+            "value": null,
+            "format": false,
+            "detail_spec": null,
+            "valid_values": []
+          },
+          {
+            "name": "Resource Name",
+            "key": "resource_name",
+            "value": null,
+            "format": false,
+            "detail_spec": null,
+            "valid_values": []
+          },
+          {
+            "name": "Version Identifier",
+            "key": "version_identifier",
             "value": null,
             "format": false,
             "detail_spec": null,
@@ -25477,16 +25622,32 @@
             "valid_values": []
           },
           {
-            "name": "Database User Id",
-            "key": "db_user",
+            "name": "Secrets Store Path Name",
+            "key": "secrets_store_path_name",
             "value": null,
             "format": false,
             "detail_spec": null,
             "valid_values": []
           },
           {
-            "name": "Database Password",
-            "key": "db_pwd",
+            "name": "Secrets Collection Name",
+            "key": "secrets_collection_name",
+            "value": null,
+            "format": false,
+            "detail_spec": null,
+            "valid_values": []
+          },
+          {
+            "name": "Resource Name",
+            "key": "resource_name",
+            "value": null,
+            "format": false,
+            "detail_spec": null,
+            "valid_values": []
+          },
+          {
+            "name": "Version Identifier",
+            "key": "version_identifier",
             "value": null,
             "format": false,
             "detail_spec": null,
@@ -25522,7 +25683,8 @@
       ],
       "spec_params": {},
       "analytic_function": null,
-      "analytic_spec_params": {}
+      "analytic_spec_params": {},
+      "analytic_binders": {}
     },
     "get_additional_props": null,
     "question_spec": null
@@ -25573,16 +25735,16 @@
             "valid_values": []
           },
           {
-            "name": "Database User Id",
-            "key": "db_user",
+            "name": "Secrets Store Path Name",
+            "key": "secrets_store_path_name",
             "value": null,
             "format": false,
             "detail_spec": null,
             "valid_values": []
           },
           {
-            "name": "Database Password",
-            "key": "db_pwd",
+            "name": "Secrets Collection Name",
+            "key": "secrets_collection_name",
             "value": null,
             "format": false,
             "detail_spec": null,
@@ -25591,6 +25753,14 @@
           {
             "name": "Description",
             "key": "description",
+            "value": null,
+            "format": false,
+            "detail_spec": null,
+            "valid_values": []
+          },
+          {
+            "name": "Version Identifier",
+            "key": "version_identifier",
             "value": null,
             "format": false,
             "detail_spec": null,
@@ -25631,16 +25801,16 @@
             "valid_values": []
           },
           {
-            "name": "Database User Id",
-            "key": "db_user",
+            "name": "Secrets Store Path Name",
+            "key": "secrets_store_path_name",
             "value": null,
             "format": false,
             "detail_spec": null,
             "valid_values": []
           },
           {
-            "name": "Database Password",
-            "key": "db_pwd",
+            "name": "Secrets Collection Name",
+            "key": "secrets_collection_name",
             "value": null,
             "format": false,
             "detail_spec": null,
@@ -25649,6 +25819,14 @@
           {
             "name": "Description",
             "key": "description",
+            "value": null,
+            "format": false,
+            "detail_spec": null,
+            "valid_values": []
+          },
+          {
+            "name": "Version Identifier",
+            "key": "version_identifier",
             "value": null,
             "format": false,
             "detail_spec": null,
@@ -25694,16 +25872,24 @@
             "valid_values": []
           },
           {
-            "name": "Database User Id",
-            "key": "db_user",
+            "name": "Secrets Store Path Name",
+            "key": "secrets_store_path_name",
             "value": null,
             "format": false,
             "detail_spec": null,
             "valid_values": []
           },
           {
-            "name": "Database Password",
-            "key": "db_pwd",
+            "name": "Secrets Collection Name",
+            "key": "secrets_collection_name",
+            "value": null,
+            "format": false,
+            "detail_spec": null,
+            "valid_values": []
+          },
+          {
+            "name": "Version Identifier",
+            "key": "version_identifier",
             "value": null,
             "format": false,
             "detail_spec": null,
@@ -25752,16 +25938,24 @@
             "valid_values": []
           },
           {
-            "name": "Database User Id",
-            "key": "db_user",
+            "name": "Secrets Store Path Name",
+            "key": "secrets_store_path_name",
             "value": null,
             "format": false,
             "detail_spec": null,
             "valid_values": []
           },
           {
-            "name": "Database Password",
-            "key": "db_pwd",
+            "name": "Secrets Collection Name",
+            "key": "secrets_collection_name",
+            "value": null,
+            "format": false,
+            "detail_spec": null,
+            "valid_values": []
+          },
+          {
+            "name": "Version Identifier",
+            "key": "version_identifier",
             "value": null,
             "format": false,
             "detail_spec": null,
@@ -25797,7 +25991,8 @@
       ],
       "spec_params": {},
       "analytic_function": null,
-      "analytic_spec_params": {}
+      "analytic_spec_params": {},
+      "analytic_binders": {}
     },
     "get_additional_props": null,
     "question_spec": null
@@ -25848,16 +26043,16 @@
             "valid_values": []
           },
           {
-            "name": "Database User Id",
-            "key": "db_user",
+            "name": "Secrets Store Path Name",
+            "key": "secrets_store_path_name",
             "value": null,
             "format": false,
             "detail_spec": null,
             "valid_values": []
           },
           {
-            "name": "Database Password",
-            "key": "db_pwd",
+            "name": "Secrets Collection Name",
+            "key": "secrets_collection_name",
             "value": null,
             "format": false,
             "detail_spec": null,
@@ -25866,6 +26061,14 @@
           {
             "name": "Description",
             "key": "description",
+            "value": null,
+            "format": false,
+            "detail_spec": null,
+            "valid_values": []
+          },
+          {
+            "name": "Version Identifier",
+            "key": "version_identifier",
             "value": null,
             "format": false,
             "detail_spec": null,
@@ -25906,16 +26109,16 @@
             "valid_values": []
           },
           {
-            "name": "Database User Id",
-            "key": "db_user",
+            "name": "Secrets Store Path Name",
+            "key": "secrets_store_path_name",
             "value": null,
             "format": false,
             "detail_spec": null,
             "valid_values": []
           },
           {
-            "name": "Database Password",
-            "key": "db_pwd",
+            "name": "Secrets Collection Name",
+            "key": "secrets_collection_name",
             "value": null,
             "format": false,
             "detail_spec": null,
@@ -25924,6 +26127,14 @@
           {
             "name": "Description",
             "key": "description",
+            "value": null,
+            "format": false,
+            "detail_spec": null,
+            "valid_values": []
+          },
+          {
+            "name": "Version Identifier",
+            "key": "version_identifier",
             "value": null,
             "format": false,
             "detail_spec": null,
@@ -25969,16 +26180,24 @@
             "valid_values": []
           },
           {
-            "name": "Database User Id",
-            "key": "db_user",
+            "name": "Secrets Store Path Name",
+            "key": "secrets_store_path_name",
             "value": null,
             "format": false,
             "detail_spec": null,
             "valid_values": []
           },
           {
-            "name": "Database Password",
-            "key": "db_pwd",
+            "name": "Secrets Collection Name",
+            "key": "secrets_collection_name",
+            "value": null,
+            "format": false,
+            "detail_spec": null,
+            "valid_values": []
+          },
+          {
+            "name": "Version Identifier",
+            "key": "version_identifier",
             "value": null,
             "format": false,
             "detail_spec": null,
@@ -26027,16 +26246,24 @@
             "valid_values": []
           },
           {
-            "name": "Database User Id",
-            "key": "db_user",
+            "name": "Secrets Store Path Name",
+            "key": "secrets_store_path_name",
             "value": null,
             "format": false,
             "detail_spec": null,
             "valid_values": []
           },
           {
-            "name": "Database Password",
-            "key": "db_pwd",
+            "name": "Secrets Collection Name",
+            "key": "secrets_collection_name",
+            "value": null,
+            "format": false,
+            "detail_spec": null,
+            "valid_values": []
+          },
+          {
+            "name": "Version Identifier",
+            "key": "version_identifier",
             "value": null,
             "format": false,
             "detail_spec": null,
@@ -26072,7 +26299,8 @@
       ],
       "spec_params": {},
       "analytic_function": null,
-      "analytic_spec_params": {}
+      "analytic_spec_params": {},
+      "analytic_binders": {}
     },
     "get_additional_props": null,
     "question_spec": null
@@ -26283,7 +26511,8 @@
       ],
       "spec_params": {},
       "analytic_function": null,
-      "analytic_spec_params": {}
+      "analytic_spec_params": {},
+      "analytic_binders": {}
     },
     "get_additional_props": null,
     "question_spec": null
@@ -26494,7 +26723,8 @@
       ],
       "spec_params": {},
       "analytic_function": null,
-      "analytic_spec_params": {}
+      "analytic_spec_params": {},
+      "analytic_binders": {}
     },
     "get_additional_props": null,
     "question_spec": null
@@ -26705,7 +26935,8 @@
       ],
       "spec_params": {},
       "analytic_function": null,
-      "analytic_spec_params": {}
+      "analytic_spec_params": {},
+      "analytic_binders": {}
     },
     "get_additional_props": null,
     "question_spec": null
@@ -26916,7 +27147,8 @@
       ],
       "spec_params": {},
       "analytic_function": null,
-      "analytic_spec_params": {}
+      "analytic_spec_params": {},
+      "analytic_binders": {}
     },
     "get_additional_props": null,
     "question_spec": null
@@ -27095,7 +27327,8 @@
       ],
       "spec_params": {},
       "analytic_function": null,
-      "analytic_spec_params": {}
+      "analytic_spec_params": {},
+      "analytic_binders": {}
     },
     "get_additional_props": null,
     "question_spec": null
@@ -27274,7 +27507,8 @@
       ],
       "spec_params": {},
       "analytic_function": null,
-      "analytic_spec_params": {}
+      "analytic_spec_params": {},
+      "analytic_binders": {}
     },
     "get_additional_props": null,
     "question_spec": null
@@ -27485,7 +27719,8 @@
       ],
       "spec_params": {},
       "analytic_function": null,
-      "analytic_spec_params": {}
+      "analytic_spec_params": {},
+      "analytic_binders": {}
     },
     "get_additional_props": null,
     "question_spec": null
@@ -27696,7 +27931,8 @@
       ],
       "spec_params": {},
       "analytic_function": null,
-      "analytic_spec_params": {}
+      "analytic_spec_params": {},
+      "analytic_binders": {}
     },
     "get_additional_props": null,
     "question_spec": null
@@ -28079,7 +28315,8 @@
       ],
       "spec_params": {},
       "analytic_function": null,
-      "analytic_spec_params": {}
+      "analytic_spec_params": {},
+      "analytic_binders": {}
     },
     "get_additional_props": null,
     "question_spec": null
@@ -28462,7 +28699,8 @@
       ],
       "spec_params": {},
       "analytic_function": null,
-      "analytic_spec_params": {}
+      "analytic_spec_params": {},
+      "analytic_binders": {}
     },
     "get_additional_props": null,
     "question_spec": null
@@ -28705,7 +28943,8 @@
       ],
       "spec_params": {},
       "analytic_function": null,
-      "analytic_spec_params": {}
+      "analytic_spec_params": {},
+      "analytic_binders": {}
     },
     "get_additional_props": null,
     "question_spec": null
@@ -28948,7 +29187,8 @@
       ],
       "spec_params": {},
       "analytic_function": null,
-      "analytic_spec_params": {}
+      "analytic_spec_params": {},
+      "analytic_binders": {}
     },
     "get_additional_props": null,
     "question_spec": null
@@ -29267,7 +29507,8 @@
       ],
       "spec_params": {},
       "analytic_function": null,
-      "analytic_spec_params": {}
+      "analytic_spec_params": {},
+      "analytic_binders": {}
     },
     "get_additional_props": null,
     "question_spec": null
@@ -29586,7 +29827,8 @@
       ],
       "spec_params": {},
       "analytic_function": null,
-      "analytic_spec_params": {}
+      "analytic_spec_params": {},
+      "analytic_binders": {}
     },
     "get_additional_props": null,
     "question_spec": null
@@ -29733,7 +29975,8 @@
       ],
       "spec_params": {},
       "analytic_function": null,
-      "analytic_spec_params": {}
+      "analytic_spec_params": {},
+      "analytic_binders": {}
     },
     "get_additional_props": null,
     "question_spec": null
@@ -30172,7 +30415,8 @@
       ],
       "spec_params": {},
       "analytic_function": null,
-      "analytic_spec_params": {}
+      "analytic_spec_params": {},
+      "analytic_binders": {}
     },
     "get_additional_props": null,
     "question_spec": null
@@ -30595,7 +30839,8 @@
       ],
       "spec_params": {},
       "analytic_function": null,
-      "analytic_spec_params": {}
+      "analytic_spec_params": {},
+      "analytic_binders": {}
     },
     "get_additional_props": null,
     "question_spec": null
@@ -31838,7 +32083,8 @@
       ],
       "spec_params": {},
       "analytic_function": null,
-      "analytic_spec_params": {}
+      "analytic_spec_params": {},
+      "analytic_binders": {}
     },
     "get_additional_props": null,
     "question_spec": null
@@ -32263,7 +32509,8 @@
         "metadata_element_type": "CollectionFolder"
       },
       "analytic_function": null,
-      "analytic_spec_params": {}
+      "analytic_spec_params": {},
+      "analytic_binders": {}
     },
     "get_additional_props": null,
     "question_spec": null
@@ -33508,7 +33755,8 @@
         "metadata_element_type": "CollectionFolder"
       },
       "analytic_function": null,
-      "analytic_spec_params": {}
+      "analytic_spec_params": {},
+      "analytic_binders": {}
     },
     "get_additional_props": null,
     "question_spec": null
@@ -33933,7 +34181,8 @@
         "metadata_element_type": "DataSharingRequest"
       },
       "analytic_function": null,
-      "analytic_spec_params": {}
+      "analytic_spec_params": {},
+      "analytic_binders": {}
     },
     "get_additional_props": null,
     "question_spec": null
@@ -35178,7 +35427,8 @@
         "metadata_element_type": "DataSharingRequest"
       },
       "analytic_function": null,
-      "analytic_spec_params": {}
+      "analytic_spec_params": {},
+      "analytic_binders": {}
     },
     "get_additional_props": null,
     "question_spec": null
@@ -35603,7 +35853,8 @@
         "metadata_element_type": "Folio"
       },
       "analytic_function": null,
-      "analytic_spec_params": {}
+      "analytic_spec_params": {},
+      "analytic_binders": {}
     },
     "get_additional_props": null,
     "question_spec": null
@@ -36848,7 +37099,8 @@
         "metadata_element_type": "Folio"
       },
       "analytic_function": null,
-      "analytic_spec_params": {}
+      "analytic_spec_params": {},
+      "analytic_binders": {}
     },
     "get_additional_props": null,
     "question_spec": null
@@ -37273,7 +37525,8 @@
         "metadata_element_type": "HomeCollection"
       },
       "analytic_function": null,
-      "analytic_spec_params": {}
+      "analytic_spec_params": {},
+      "analytic_binders": {}
     },
     "get_additional_props": null,
     "question_spec": null
@@ -38518,7 +38771,8 @@
         "metadata_element_type": "HomeCollection"
       },
       "analytic_function": null,
-      "analytic_spec_params": {}
+      "analytic_spec_params": {},
+      "analytic_binders": {}
     },
     "get_additional_props": null,
     "question_spec": null
@@ -38943,7 +39197,8 @@
         "metadata_element_type": "Namespace"
       },
       "analytic_function": null,
-      "analytic_spec_params": {}
+      "analytic_spec_params": {},
+      "analytic_binders": {}
     },
     "get_additional_props": null,
     "question_spec": null
@@ -40188,7 +40443,8 @@
         "metadata_element_type": "Namespace"
       },
       "analytic_function": null,
-      "analytic_spec_params": {}
+      "analytic_spec_params": {},
+      "analytic_binders": {}
     },
     "get_additional_props": null,
     "question_spec": null
@@ -40615,7 +40871,8 @@
         "search_string": "QuestionSpec"
       },
       "analytic_function": null,
-      "analytic_spec_params": {}
+      "analytic_spec_params": {},
+      "analytic_binders": {}
     },
     "get_additional_props": null,
     "question_spec": null
@@ -41862,7 +42119,8 @@
         "search_string": "QuestionSpec"
       },
       "analytic_function": null,
-      "analytic_spec_params": {}
+      "analytic_spec_params": {},
+      "analytic_binders": {}
     },
     "get_additional_props": null,
     "question_spec": null
@@ -42287,7 +42545,8 @@
         "metadata_element_type": "RecentAccess"
       },
       "analytic_function": null,
-      "analytic_spec_params": {}
+      "analytic_spec_params": {},
+      "analytic_binders": {}
     },
     "get_additional_props": null,
     "question_spec": null
@@ -43532,7 +43791,8 @@
         "metadata_element_type": "RecentAccess"
       },
       "analytic_function": null,
-      "analytic_spec_params": {}
+      "analytic_spec_params": {},
+      "analytic_binders": {}
     },
     "get_additional_props": null,
     "question_spec": null
@@ -43957,7 +44217,8 @@
         "metadata_element_type": "ReferenceList"
       },
       "analytic_function": null,
-      "analytic_spec_params": {}
+      "analytic_spec_params": {},
+      "analytic_binders": {}
     },
     "get_additional_props": null,
     "question_spec": null
@@ -45202,7 +45463,8 @@
         "metadata_element_type": "ReferenceList"
       },
       "analytic_function": null,
-      "analytic_spec_params": {}
+      "analytic_spec_params": {},
+      "analytic_binders": {}
     },
     "get_additional_props": null,
     "question_spec": null
@@ -45627,7 +45889,8 @@
         "metadata_element_type": "ResultsSet"
       },
       "analytic_function": null,
-      "analytic_spec_params": {}
+      "analytic_spec_params": {},
+      "analytic_binders": {}
     },
     "get_additional_props": null,
     "question_spec": null
@@ -46872,7 +47135,8 @@
         "metadata_element_type": "ResultsSet"
       },
       "analytic_function": null,
-      "analytic_spec_params": {}
+      "analytic_spec_params": {},
+      "analytic_binders": {}
     },
     "get_additional_props": null,
     "question_spec": null
@@ -47297,7 +47561,8 @@
         "metadata_element_type": "RootCollection"
       },
       "analytic_function": null,
-      "analytic_spec_params": {}
+      "analytic_spec_params": {},
+      "analytic_binders": {}
     },
     "get_additional_props": null,
     "question_spec": null
@@ -48542,7 +48807,8 @@
         "metadata_element_type": "RootCollection"
       },
       "analytic_function": null,
-      "analytic_spec_params": {}
+      "analytic_spec_params": {},
+      "analytic_binders": {}
     },
     "get_additional_props": null,
     "question_spec": null
@@ -48999,7 +49265,8 @@
         "metadata_element_type": "SecurityGroup"
       },
       "analytic_function": null,
-      "analytic_spec_params": {}
+      "analytic_spec_params": {},
+      "analytic_binders": {}
     },
     "get_additional_props": null,
     "question_spec": null
@@ -50148,7 +50415,8 @@
         "metadata_element_type": "SecurityGroup"
       },
       "analytic_function": null,
-      "analytic_spec_params": {}
+      "analytic_spec_params": {},
+      "analytic_binders": {}
     },
     "get_additional_props": null,
     "question_spec": null
@@ -50605,7 +50873,8 @@
         "metadata_element_type": "SecurityList"
       },
       "analytic_function": null,
-      "analytic_spec_params": {}
+      "analytic_spec_params": {},
+      "analytic_binders": {}
     },
     "get_additional_props": null,
     "question_spec": null
@@ -51754,7 +52023,8 @@
         "metadata_element_type": "SecurityList"
       },
       "analytic_function": null,
-      "analytic_spec_params": {}
+      "analytic_spec_params": {},
+      "analytic_binders": {}
     },
     "get_additional_props": null,
     "question_spec": null
@@ -52211,7 +52481,8 @@
         "metadata_element_type": "SecurityRole"
       },
       "analytic_function": null,
-      "analytic_spec_params": {}
+      "analytic_spec_params": {},
+      "analytic_binders": {}
     },
     "get_additional_props": null,
     "question_spec": null
@@ -53360,7 +53631,8 @@
         "metadata_element_type": "SecurityRole"
       },
       "analytic_function": null,
-      "analytic_spec_params": {}
+      "analytic_spec_params": {},
+      "analytic_binders": {}
     },
     "get_additional_props": null,
     "question_spec": null
@@ -53785,7 +54057,8 @@
         "metadata_element_type": "SkillSet"
       },
       "analytic_function": null,
-      "analytic_spec_params": {}
+      "analytic_spec_params": {},
+      "analytic_binders": {}
     },
     "get_additional_props": null,
     "question_spec": null
@@ -55030,7 +55303,8 @@
         "metadata_element_type": "SkillSet"
       },
       "analytic_function": null,
-      "analytic_spec_params": {}
+      "analytic_spec_params": {},
+      "analytic_binders": {}
     },
     "get_additional_props": null,
     "question_spec": null
@@ -55455,7 +55729,8 @@
         "metadata_element_type": "SubjectArea"
       },
       "analytic_function": null,
-      "analytic_spec_params": {}
+      "analytic_spec_params": {},
+      "analytic_binders": {}
     },
     "get_additional_props": null,
     "question_spec": null
@@ -56700,7 +56975,8 @@
         "metadata_element_type": "SubjectArea"
       },
       "analytic_function": null,
-      "analytic_spec_params": {}
+      "analytic_spec_params": {},
+      "analytic_binders": {}
     },
     "get_additional_props": null,
     "question_spec": null
@@ -57125,7 +57401,8 @@
         "metadata_element_type": "WorkItemList"
       },
       "analytic_function": null,
-      "analytic_spec_params": {}
+      "analytic_spec_params": {},
+      "analytic_binders": {}
     },
     "get_additional_props": null,
     "question_spec": null
@@ -58370,7 +58647,8 @@
         "metadata_element_type": "WorkItemList"
       },
       "analytic_function": null,
-      "analytic_spec_params": {}
+      "analytic_spec_params": {},
+      "analytic_binders": {}
     },
     "get_additional_props": null,
     "question_spec": null
@@ -58827,7 +59105,8 @@
         "metadata_element_type": "WorkingSet"
       },
       "analytic_function": null,
-      "analytic_spec_params": {}
+      "analytic_spec_params": {},
+      "analytic_binders": {}
     },
     "get_additional_props": null,
     "question_spec": null
@@ -60104,7 +60383,8 @@
         "metadata_element_type": "WorkingSet"
       },
       "analytic_function": null,
-      "analytic_spec_params": {}
+      "analytic_spec_params": {},
+      "analytic_binders": {}
     },
     "get_additional_props": null,
     "question_spec": null
@@ -60529,7 +60809,8 @@
         "metadata_element_type": "DataSharingHub"
       },
       "analytic_function": null,
-      "analytic_spec_params": {}
+      "analytic_spec_params": {},
+      "analytic_binders": {}
     },
     "get_additional_props": null,
     "question_spec": null
@@ -61774,7 +62055,8 @@
         "metadata_element_type": "DataSharingHub"
       },
       "analytic_function": null,
-      "analytic_spec_params": {}
+      "analytic_spec_params": {},
+      "analytic_binders": {}
     },
     "get_additional_props": null,
     "question_spec": null
@@ -62199,7 +62481,8 @@
         "metadata_element_type": "EventSet"
       },
       "analytic_function": null,
-      "analytic_spec_params": {}
+      "analytic_spec_params": {},
+      "analytic_binders": {}
     },
     "get_additional_props": null,
     "question_spec": null
@@ -63444,7 +63727,8 @@
         "metadata_element_type": "EventSet"
       },
       "analytic_function": null,
-      "analytic_spec_params": {}
+      "analytic_spec_params": {},
+      "analytic_binders": {}
     },
     "get_additional_props": null,
     "question_spec": null
@@ -63869,7 +64153,8 @@
         "metadata_element_type": "ContextEventCollection"
       },
       "analytic_function": null,
-      "analytic_spec_params": {}
+      "analytic_spec_params": {},
+      "analytic_binders": {}
     },
     "get_additional_props": null,
     "question_spec": null
@@ -65114,7 +65399,8 @@
         "metadata_element_type": "ContextEventCollection"
       },
       "analytic_function": null,
-      "analytic_spec_params": {}
+      "analytic_spec_params": {},
+      "analytic_binders": {}
     },
     "get_additional_props": null,
     "question_spec": null
@@ -65539,7 +65825,8 @@
         "metadata_element_type": "ITSubsystem"
       },
       "analytic_function": null,
-      "analytic_spec_params": {}
+      "analytic_spec_params": {},
+      "analytic_binders": {}
     },
     "get_additional_props": null,
     "question_spec": null
@@ -66784,7 +67071,8 @@
         "metadata_element_type": "ITSubsystem"
       },
       "analytic_function": null,
-      "analytic_spec_params": {}
+      "analytic_spec_params": {},
+      "analytic_binders": {}
     },
     "get_additional_props": null,
     "question_spec": null
@@ -67209,7 +67497,8 @@
         "metadata_element_type": "NamingStandardRuleSet"
       },
       "analytic_function": null,
-      "analytic_spec_params": {}
+      "analytic_spec_params": {},
+      "analytic_binders": {}
     },
     "get_additional_props": null,
     "question_spec": null
@@ -68454,7 +68743,8 @@
         "metadata_element_type": "NamingStandardRuleSet"
       },
       "analytic_function": null,
-      "analytic_spec_params": {}
+      "analytic_spec_params": {},
+      "analytic_binders": {}
     },
     "get_additional_props": null,
     "question_spec": null
@@ -68879,7 +69169,8 @@
         "metadata_element_type": "SoftwareArchive"
       },
       "analytic_function": null,
-      "analytic_spec_params": {}
+      "analytic_spec_params": {},
+      "analytic_binders": {}
     },
     "get_additional_props": null,
     "question_spec": null
@@ -70124,7 +70415,8 @@
         "metadata_element_type": "SoftwareArchive"
       },
       "analytic_function": null,
-      "analytic_spec_params": {}
+      "analytic_spec_params": {},
+      "analytic_binders": {}
     },
     "get_additional_props": null,
     "question_spec": null
@@ -70549,7 +70841,8 @@
         "metadata_element_type": "DataDictionary"
       },
       "analytic_function": null,
-      "analytic_spec_params": {}
+      "analytic_spec_params": {},
+      "analytic_binders": {}
     },
     "get_additional_props": null,
     "question_spec": null
@@ -71794,7 +72087,8 @@
         "metadata_element_type": "DataDictionary"
       },
       "analytic_function": null,
-      "analytic_spec_params": {}
+      "analytic_spec_params": {},
+      "analytic_binders": {}
     },
     "get_additional_props": null,
     "question_spec": null
@@ -72219,7 +72513,8 @@
         "metadata_element_type": "DataSpec"
       },
       "analytic_function": null,
-      "analytic_spec_params": {}
+      "analytic_spec_params": {},
+      "analytic_binders": {}
     },
     "get_additional_props": null,
     "question_spec": null
@@ -73464,7 +73759,8 @@
         "metadata_element_type": "DataSpec"
       },
       "analytic_function": null,
-      "analytic_spec_params": {}
+      "analytic_spec_params": {},
+      "analytic_binders": {}
     },
     "get_additional_props": null,
     "question_spec": null
@@ -73889,7 +74185,8 @@
         "metadata_element_type": "ReportType"
       },
       "analytic_function": null,
-      "analytic_spec_params": {}
+      "analytic_spec_params": {},
+      "analytic_binders": {}
     },
     "get_additional_props": null,
     "question_spec": null
@@ -75230,7 +75527,8 @@
         "metadata_element_type": "ReportType"
       },
       "analytic_function": null,
-      "analytic_spec_params": {}
+      "analytic_spec_params": {},
+      "analytic_binders": {}
     },
     "get_additional_props": null,
     "question_spec": null
@@ -75751,7 +76049,8 @@
         "metadata_element_type": "DataStructure"
       },
       "analytic_function": null,
-      "analytic_spec_params": {}
+      "analytic_spec_params": {},
+      "analytic_binders": {}
     },
     "get_additional_props": null,
     "question_spec": null
@@ -77092,7 +77391,8 @@
         "metadata_element_type": "DataStructure"
       },
       "analytic_function": null,
-      "analytic_spec_params": {}
+      "analytic_spec_params": {},
+      "analytic_binders": {}
     },
     "get_additional_props": null,
     "question_spec": null
@@ -78325,7 +78625,8 @@
         "metadata_element_type": "DataField"
       },
       "analytic_function": null,
-      "analytic_spec_params": {}
+      "analytic_spec_params": {},
+      "analytic_binders": {}
     },
     "get_additional_props": null,
     "question_spec": null
@@ -80378,7 +80679,8 @@
         "metadata_element_type": "DataField"
       },
       "analytic_function": null,
-      "analytic_spec_params": {}
+      "analytic_spec_params": {},
+      "analytic_binders": {}
     },
     "get_additional_props": null,
     "question_spec": null
@@ -81603,7 +81905,8 @@
         "metadata_element_type": "DataClass"
       },
       "analytic_function": null,
-      "analytic_spec_params": {}
+      "analytic_spec_params": {},
+      "analytic_binders": {}
     },
     "get_additional_props": null,
     "question_spec": null
@@ -83648,7 +83951,8 @@
         "metadata_element_type": "DataClass"
       },
       "analytic_function": null,
-      "analytic_spec_params": {}
+      "analytic_spec_params": {},
+      "analytic_binders": {}
     },
     "get_additional_props": null,
     "question_spec": null
@@ -84521,7 +84825,8 @@
         "metadata_element_type": "DataValueSpecification"
       },
       "analytic_function": null,
-      "analytic_spec_params": {}
+      "analytic_spec_params": {},
+      "analytic_binders": {}
     },
     "get_additional_props": null,
     "question_spec": null
@@ -86214,7 +86519,8 @@
         "metadata_element_type": "DataValueSpecification"
       },
       "analytic_function": null,
-      "analytic_spec_params": {}
+      "analytic_spec_params": {},
+      "analytic_binders": {}
     },
     "get_additional_props": null,
     "question_spec": null
@@ -87183,7 +87489,8 @@
         "metadata_element_type": "DataGrain"
       },
       "analytic_function": null,
-      "analytic_spec_params": {}
+      "analytic_spec_params": {},
+      "analytic_binders": {}
     },
     "get_additional_props": null,
     "question_spec": null
@@ -88972,7 +89279,8 @@
         "metadata_element_type": "DataGrain"
       },
       "analytic_function": null,
-      "analytic_spec_params": {}
+      "analytic_spec_params": {},
+      "analytic_binders": {}
     },
     "get_additional_props": null,
     "question_spec": null
@@ -89621,7 +89929,8 @@
         "metadata_element_type": "DigitalProduct"
       },
       "analytic_function": null,
-      "analytic_spec_params": {}
+      "analytic_spec_params": {},
+      "analytic_binders": {}
     },
     "get_additional_props": null,
     "question_spec": null
@@ -91090,7 +91399,8 @@
         "metadata_element_type": "DigitalProduct"
       },
       "analytic_function": null,
-      "analytic_spec_params": {}
+      "analytic_spec_params": {},
+      "analytic_binders": {}
     },
     "get_additional_props": null,
     "question_spec": null
@@ -91517,7 +91827,8 @@
         ]
       },
       "analytic_function": null,
-      "analytic_spec_params": {}
+      "analytic_spec_params": {},
+      "analytic_binders": {}
     },
     "get_additional_props": null,
     "question_spec": null
@@ -92764,7 +93075,8 @@
         ]
       },
       "analytic_function": null,
-      "analytic_spec_params": {}
+      "analytic_spec_params": {},
+      "analytic_binders": {}
     },
     "get_additional_props": null,
     "question_spec": null
@@ -93189,7 +93501,8 @@
         "metadata_element_type": "Agreement"
       },
       "analytic_function": null,
-      "analytic_spec_params": {}
+      "analytic_spec_params": {},
+      "analytic_binders": {}
     },
     "get_additional_props": null,
     "question_spec": null
@@ -94434,7 +94747,8 @@
         "metadata_element_type": "Agreement"
       },
       "analytic_function": null,
-      "analytic_spec_params": {}
+      "analytic_spec_params": {},
+      "analytic_binders": {}
     },
     "get_additional_props": null,
     "question_spec": null
@@ -94955,7 +95269,8 @@
         "metadata_element_type": "CSVFile"
       },
       "analytic_function": null,
-      "analytic_spec_params": {}
+      "analytic_spec_params": {},
+      "analytic_binders": {}
     },
     "get_additional_props": null,
     "question_spec": null
@@ -96296,7 +96611,8 @@
         "metadata_element_type": "CSVFile"
       },
       "analytic_function": null,
-      "analytic_spec_params": {}
+      "analytic_spec_params": {},
+      "analytic_binders": {}
     },
     "get_additional_props": null,
     "question_spec": null
@@ -96785,7 +97101,8 @@
         "metadata_element_type": "DigitalSubscription"
       },
       "analytic_function": null,
-      "analytic_spec_params": {}
+      "analytic_spec_params": {},
+      "analytic_binders": {}
     },
     "get_additional_props": null,
     "question_spec": null
@@ -98094,7 +98411,8 @@
         "metadata_element_type": "DigitalSubscription"
       },
       "analytic_function": null,
-      "analytic_spec_params": {}
+      "analytic_spec_params": {},
+      "analytic_binders": {}
     },
     "get_additional_props": null,
     "question_spec": null
@@ -98521,7 +98839,8 @@
         ]
       },
       "analytic_function": null,
-      "analytic_spec_params": {}
+      "analytic_spec_params": {},
+      "analytic_binders": {}
     },
     "get_additional_props": null,
     "question_spec": null
@@ -99768,7 +100087,8 @@
         ]
       },
       "analytic_function": null,
-      "analytic_spec_params": {}
+      "analytic_spec_params": {},
+      "analytic_binders": {}
     },
     "get_additional_props": null,
     "question_spec": null
@@ -101085,7 +101405,8 @@
       ],
       "spec_params": {},
       "analytic_function": null,
-      "analytic_spec_params": {}
+      "analytic_spec_params": {},
+      "analytic_binders": {}
     },
     "get_additional_props": null,
     "question_spec": null
@@ -102520,7 +102841,8 @@
       ],
       "spec_params": {},
       "analytic_function": null,
-      "analytic_spec_params": {}
+      "analytic_spec_params": {},
+      "analytic_binders": {}
     },
     "get_additional_props": null,
     "question_spec": null
@@ -103139,7 +103461,8 @@
         ]
       },
       "analytic_function": null,
-      "analytic_spec_params": {}
+      "analytic_spec_params": {},
+      "analytic_binders": {}
     },
     "get_additional_props": null,
     "question_spec": null
@@ -104578,7 +104901,8 @@
         ]
       },
       "analytic_function": null,
-      "analytic_spec_params": {}
+      "analytic_spec_params": {},
+      "analytic_binders": {}
     },
     "get_additional_props": null,
     "question_spec": null
@@ -105197,7 +105521,8 @@
         ]
       },
       "analytic_function": null,
-      "analytic_spec_params": {}
+      "analytic_spec_params": {},
+      "analytic_binders": {}
     },
     "get_additional_props": null,
     "question_spec": null
@@ -106636,7 +106961,8 @@
         ]
       },
       "analytic_function": null,
-      "analytic_spec_params": {}
+      "analytic_spec_params": {},
+      "analytic_binders": {}
     },
     "get_additional_props": null,
     "question_spec": null
@@ -107255,7 +107581,8 @@
         ]
       },
       "analytic_function": null,
-      "analytic_spec_params": {}
+      "analytic_spec_params": {},
+      "analytic_binders": {}
     },
     "get_additional_props": null,
     "question_spec": null
@@ -108694,7 +109021,8 @@
         ]
       },
       "analytic_function": null,
-      "analytic_spec_params": {}
+      "analytic_spec_params": {},
+      "analytic_binders": {}
     },
     "get_additional_props": null,
     "question_spec": null
@@ -109489,7 +109817,8 @@
         ]
       },
       "analytic_function": null,
-      "analytic_spec_params": {}
+      "analytic_spec_params": {},
+      "analytic_binders": {}
     },
     "get_additional_props": null,
     "question_spec": null
@@ -111104,7 +111433,8 @@
         ]
       },
       "analytic_function": null,
-      "analytic_spec_params": {}
+      "analytic_spec_params": {},
+      "analytic_binders": {}
     },
     "get_additional_props": null,
     "question_spec": null
@@ -112075,7 +112405,8 @@
         ]
       },
       "analytic_function": null,
-      "analytic_spec_params": {}
+      "analytic_spec_params": {},
+      "analytic_binders": {}
     },
     "get_additional_props": null,
     "question_spec": null
@@ -113866,7 +114197,8 @@
         ]
       },
       "analytic_function": null,
-      "analytic_spec_params": {}
+      "analytic_spec_params": {},
+      "analytic_binders": {}
     },
     "get_additional_props": null,
     "question_spec": null
@@ -114485,7 +114817,8 @@
         ]
       },
       "analytic_function": null,
-      "analytic_spec_params": {}
+      "analytic_spec_params": {},
+      "analytic_binders": {}
     },
     "get_additional_props": null,
     "question_spec": null
@@ -115924,7 +116257,8 @@
         ]
       },
       "analytic_function": null,
-      "analytic_spec_params": {}
+      "analytic_spec_params": {},
+      "analytic_binders": {}
     },
     "get_additional_props": null,
     "question_spec": null
@@ -116311,7 +116645,8 @@
       ],
       "spec_params": {},
       "analytic_function": null,
-      "analytic_spec_params": {}
+      "analytic_spec_params": {},
+      "analytic_binders": {}
     },
     "get_additional_props": null,
     "question_spec": null
@@ -117486,7 +117821,8 @@
       ],
       "spec_params": {},
       "analytic_function": null,
-      "analytic_spec_params": {}
+      "analytic_spec_params": {},
+      "analytic_binders": {}
     },
     "get_additional_props": null,
     "question_spec": null
@@ -117777,7 +118113,8 @@
       ],
       "spec_params": {},
       "analytic_function": null,
-      "analytic_spec_params": {}
+      "analytic_spec_params": {},
+      "analytic_binders": {}
     },
     "get_additional_props": null,
     "question_spec": null
@@ -118856,7 +119193,8 @@
       ],
       "spec_params": {},
       "analytic_function": null,
-      "analytic_spec_params": {}
+      "analytic_spec_params": {},
+      "analytic_binders": {}
     },
     "get_additional_props": null,
     "question_spec": null
@@ -123929,7 +124267,8 @@
       ],
       "spec_params": {},
       "analytic_function": null,
-      "analytic_spec_params": {}
+      "analytic_spec_params": {},
+      "analytic_binders": {}
     },
     "get_additional_props": null,
     "question_spec": null
@@ -125364,7 +125703,8 @@
       ],
       "spec_params": {},
       "analytic_function": null,
-      "analytic_spec_params": {}
+      "analytic_spec_params": {},
+      "analytic_binders": {}
     },
     "get_additional_props": null,
     "question_spec": null
@@ -125979,7 +126319,8 @@
       ],
       "spec_params": {},
       "analytic_function": null,
-      "analytic_spec_params": {}
+      "analytic_spec_params": {},
+      "analytic_binders": {}
     },
     "get_additional_props": null,
     "question_spec": null
@@ -127698,7 +128039,8 @@
       ],
       "spec_params": {},
       "analytic_function": null,
-      "analytic_spec_params": {}
+      "analytic_spec_params": {},
+      "analytic_binders": {}
     },
     "get_additional_props": null,
     "question_spec": null
@@ -128316,7 +128658,8 @@
         "classification": "Question"
       },
       "analytic_function": null,
-      "analytic_spec_params": {}
+      "analytic_spec_params": {},
+      "analytic_binders": {}
     },
     "get_additional_props": null,
     "question_spec": null
@@ -130038,7 +130381,8 @@
         "classification": "Question"
       },
       "analytic_function": null,
-      "analytic_spec_params": {}
+      "analytic_spec_params": {},
+      "analytic_binders": {}
     },
     "get_additional_props": null,
     "question_spec": null
@@ -130727,7 +131071,8 @@
         "metadata_element_type": "BusinessImperative"
       },
       "analytic_function": null,
-      "analytic_spec_params": {}
+      "analytic_spec_params": {},
+      "analytic_binders": {}
     },
     "get_additional_props": null,
     "question_spec": null
@@ -132236,7 +132581,8 @@
         "metadata_element_type": "BusinessImperative"
       },
       "analytic_function": null,
-      "analytic_spec_params": {}
+      "analytic_spec_params": {},
+      "analytic_binders": {}
     },
     "get_additional_props": null,
     "question_spec": null
@@ -133053,7 +133399,8 @@
         "metadata_element_type": "CertificationType"
       },
       "analytic_function": null,
-      "analytic_spec_params": {}
+      "analytic_spec_params": {},
+      "analytic_binders": {}
     },
     "get_additional_props": null,
     "question_spec": null
@@ -134562,7 +134909,8 @@
         "metadata_element_type": "CertificationType"
       },
       "analytic_function": null,
-      "analytic_spec_params": {}
+      "analytic_spec_params": {},
+      "analytic_binders": {}
     },
     "get_additional_props": null,
     "question_spec": null
@@ -135571,7 +135919,8 @@
         "metadata_element_type": "DataLens"
       },
       "analytic_function": null,
-      "analytic_spec_params": {}
+      "analytic_spec_params": {},
+      "analytic_binders": {}
     },
     "get_additional_props": null,
     "question_spec": null
@@ -137272,7 +137621,8 @@
         "metadata_element_type": "DataLens"
       },
       "analytic_function": null,
-      "analytic_spec_params": {}
+      "analytic_spec_params": {},
+      "analytic_binders": {}
     },
     "get_additional_props": null,
     "question_spec": null
@@ -137993,7 +138343,8 @@
         "metadata_element_type": "DataProcessingPurpose"
       },
       "analytic_function": null,
-      "analytic_spec_params": {}
+      "analytic_spec_params": {},
+      "analytic_binders": {}
     },
     "get_additional_props": null,
     "question_spec": null
@@ -139406,7 +139757,8 @@
         "metadata_element_type": "DataProcessingPurpose"
       },
       "analytic_function": null,
-      "analytic_spec_params": {}
+      "analytic_spec_params": {},
+      "analytic_binders": {}
     },
     "get_additional_props": null,
     "question_spec": null
@@ -140095,7 +140447,8 @@
         "metadata_element_type": "GovernanceApproach"
       },
       "analytic_function": null,
-      "analytic_spec_params": {}
+      "analytic_spec_params": {},
+      "analytic_binders": {}
     },
     "get_additional_props": null,
     "question_spec": null
@@ -141476,7 +141829,8 @@
         "metadata_element_type": "GovernanceApproach"
       },
       "analytic_function": null,
-      "analytic_spec_params": {}
+      "analytic_spec_params": {},
+      "analytic_binders": {}
     },
     "get_additional_props": null,
     "question_spec": null
@@ -142197,7 +142551,8 @@
         "metadata_element_type": "GovernanceControl"
       },
       "analytic_function": null,
-      "analytic_spec_params": {}
+      "analytic_spec_params": {},
+      "analytic_binders": {}
     },
     "get_additional_props": null,
     "question_spec": null
@@ -143610,7 +143965,8 @@
         "metadata_element_type": "GovernanceControl"
       },
       "analytic_function": null,
-      "analytic_spec_params": {}
+      "analytic_spec_params": {},
+      "analytic_binders": {}
     },
     "get_additional_props": null,
     "question_spec": null
@@ -144299,7 +144655,8 @@
         "metadata_element_type": "GovernanceDefinition"
       },
       "analytic_function": null,
-      "analytic_spec_params": {}
+      "analytic_spec_params": {},
+      "analytic_binders": {}
     },
     "get_additional_props": null,
     "question_spec": null
@@ -145808,7 +146165,8 @@
         "metadata_element_type": "GovernanceDefinition"
       },
       "analytic_function": null,
-      "analytic_spec_params": {}
+      "analytic_spec_params": {},
+      "analytic_binders": {}
     },
     "get_additional_props": null,
     "question_spec": null
@@ -146497,7 +146855,8 @@
         "metadata_element_type": "GovernanceDriver"
       },
       "analytic_function": null,
-      "analytic_spec_params": {}
+      "analytic_spec_params": {},
+      "analytic_binders": {}
     },
     "get_additional_props": null,
     "question_spec": null
@@ -147878,7 +148237,8 @@
         "metadata_element_type": "GovernanceDriver"
       },
       "analytic_function": null,
-      "analytic_spec_params": {}
+      "analytic_spec_params": {},
+      "analytic_binders": {}
     },
     "get_additional_props": null,
     "question_spec": null
@@ -148663,7 +149023,8 @@
         "metadata_element_type": "GovernanceMetric"
       },
       "analytic_function": null,
-      "analytic_spec_params": {}
+      "analytic_spec_params": {},
+      "analytic_binders": {}
     },
     "get_additional_props": null,
     "question_spec": null
@@ -150140,7 +150501,8 @@
         "metadata_element_type": "GovernanceMetric"
       },
       "analytic_function": null,
-      "analytic_spec_params": {}
+      "analytic_spec_params": {},
+      "analytic_binders": {}
     },
     "get_additional_props": null,
     "question_spec": null
@@ -150829,7 +151191,8 @@
         "metadata_element_type": "GovernanceObligation"
       },
       "analytic_function": null,
-      "analytic_spec_params": {}
+      "analytic_spec_params": {},
+      "analytic_binders": {}
     },
     "get_additional_props": null,
     "question_spec": null
@@ -152210,7 +152573,8 @@
         "metadata_element_type": "GovernanceObligation"
       },
       "analytic_function": null,
-      "analytic_spec_params": {}
+      "analytic_spec_params": {},
+      "analytic_binders": {}
     },
     "get_additional_props": null,
     "question_spec": null
@@ -152899,7 +153263,8 @@
         "metadata_element_type": "GovernancePolicy"
       },
       "analytic_function": null,
-      "analytic_spec_params": {}
+      "analytic_spec_params": {},
+      "analytic_binders": {}
     },
     "get_additional_props": null,
     "question_spec": null
@@ -154280,7 +154645,8 @@
         "metadata_element_type": "GovernancePolicy"
       },
       "analytic_function": null,
-      "analytic_spec_params": {}
+      "analytic_spec_params": {},
+      "analytic_binders": {}
     },
     "get_additional_props": null,
     "question_spec": null
@@ -154969,7 +155335,8 @@
         "metadata_element_type": "GovernancePrinciple"
       },
       "analytic_function": null,
-      "analytic_spec_params": {}
+      "analytic_spec_params": {},
+      "analytic_binders": {}
     },
     "get_additional_props": null,
     "question_spec": null
@@ -156350,7 +156717,8 @@
         "metadata_element_type": "GovernancePrinciple"
       },
       "analytic_function": null,
-      "analytic_spec_params": {}
+      "analytic_spec_params": {},
+      "analytic_binders": {}
     },
     "get_additional_props": null,
     "question_spec": null
@@ -157071,7 +157439,8 @@
         "metadata_element_type": "GovernanceProcedure"
       },
       "analytic_function": null,
-      "analytic_spec_params": {}
+      "analytic_spec_params": {},
+      "analytic_binders": {}
     },
     "get_additional_props": null,
     "question_spec": null
@@ -158484,7 +158853,8 @@
         "metadata_element_type": "GovernanceProcedure"
       },
       "analytic_function": null,
-      "analytic_spec_params": {}
+      "analytic_spec_params": {},
+      "analytic_binders": {}
     },
     "get_additional_props": null,
     "question_spec": null
@@ -159205,7 +159575,8 @@
         "metadata_element_type": "GovernanceResponsibility"
       },
       "analytic_function": null,
-      "analytic_spec_params": {}
+      "analytic_spec_params": {},
+      "analytic_binders": {}
     },
     "get_additional_props": null,
     "question_spec": null
@@ -160618,7 +160989,8 @@
         "metadata_element_type": "GovernanceResponsibility"
       },
       "analytic_function": null,
-      "analytic_spec_params": {}
+      "analytic_spec_params": {},
+      "analytic_binders": {}
     },
     "get_additional_props": null,
     "question_spec": null
@@ -161339,7 +161711,8 @@
         "metadata_element_type": "GovernanceRule"
       },
       "analytic_function": null,
-      "analytic_spec_params": {}
+      "analytic_spec_params": {},
+      "analytic_binders": {}
     },
     "get_additional_props": null,
     "question_spec": null
@@ -162752,7 +163125,8 @@
         "metadata_element_type": "GovernanceRule"
       },
       "analytic_function": null,
-      "analytic_spec_params": {}
+      "analytic_spec_params": {},
+      "analytic_binders": {}
     },
     "get_additional_props": null,
     "question_spec": null
@@ -163473,7 +163847,8 @@
         "metadata_element_type": "GovernanceStrategy"
       },
       "analytic_function": null,
-      "analytic_spec_params": {}
+      "analytic_spec_params": {},
+      "analytic_binders": {}
     },
     "get_additional_props": null,
     "question_spec": null
@@ -165014,7 +165389,8 @@
         "metadata_element_type": "GovernanceStrategy"
       },
       "analytic_function": null,
-      "analytic_spec_params": {}
+      "analytic_spec_params": {},
+      "analytic_binders": {}
     },
     "get_additional_props": null,
     "question_spec": null
@@ -165767,7 +166143,8 @@
         "metadata_element_type": "GovernanceZone"
       },
       "analytic_function": null,
-      "analytic_spec_params": {}
+      "analytic_spec_params": {},
+      "analytic_binders": {}
     },
     "get_additional_props": null,
     "question_spec": null
@@ -167212,7 +167589,8 @@
         "metadata_element_type": "GovernanceZone"
       },
       "analytic_function": null,
-      "analytic_spec_params": {}
+      "analytic_spec_params": {},
+      "analytic_binders": {}
     },
     "get_additional_props": null,
     "question_spec": null
@@ -168029,7 +168407,8 @@
         "metadata_element_type": "LicenseType"
       },
       "analytic_function": null,
-      "analytic_spec_params": {}
+      "analytic_spec_params": {},
+      "analytic_binders": {}
     },
     "get_additional_props": null,
     "question_spec": null
@@ -169538,7 +169917,8 @@
         "metadata_element_type": "LicenseType"
       },
       "analytic_function": null,
-      "analytic_spec_params": {}
+      "analytic_spec_params": {},
+      "analytic_binders": {}
     },
     "get_additional_props": null,
     "question_spec": null
@@ -170259,7 +170639,8 @@
         "metadata_element_type": "Methodology"
       },
       "analytic_function": null,
-      "analytic_spec_params": {}
+      "analytic_spec_params": {},
+      "analytic_binders": {}
     },
     "get_additional_props": null,
     "question_spec": null
@@ -171672,7 +172053,8 @@
         "metadata_element_type": "Methodology"
       },
       "analytic_function": null,
-      "analytic_spec_params": {}
+      "analytic_spec_params": {},
+      "analytic_binders": {}
     },
     "get_additional_props": null,
     "question_spec": null
@@ -172425,7 +172807,8 @@
         "metadata_element_type": "NamingStandardRule"
       },
       "analytic_function": null,
-      "analytic_spec_params": {}
+      "analytic_spec_params": {},
+      "analytic_binders": {}
     },
     "get_additional_props": null,
     "question_spec": null
@@ -173870,7 +174253,8 @@
         "metadata_element_type": "NamingStandardRule"
       },
       "analytic_function": null,
-      "analytic_spec_params": {}
+      "analytic_spec_params": {},
+      "analytic_binders": {}
     },
     "get_additional_props": null,
     "question_spec": null
@@ -174815,7 +175199,8 @@
         "metadata_element_type": "NotificationType"
       },
       "analytic_function": null,
-      "analytic_spec_params": {}
+      "analytic_spec_params": {},
+      "analytic_binders": {}
     },
     "get_additional_props": null,
     "question_spec": null
@@ -176452,7 +176837,8 @@
         "metadata_element_type": "NotificationType"
       },
       "analytic_function": null,
-      "analytic_spec_params": {}
+      "analytic_spec_params": {},
+      "analytic_binders": {}
     },
     "get_additional_props": null,
     "question_spec": null
@@ -177205,7 +177591,8 @@
         "metadata_element_type": "Regulation"
       },
       "analytic_function": null,
-      "analytic_spec_params": {}
+      "analytic_spec_params": {},
+      "analytic_binders": {}
     },
     "get_additional_props": null,
     "question_spec": null
@@ -178650,7 +179037,8 @@
         "metadata_element_type": "Regulation"
       },
       "analytic_function": null,
-      "analytic_spec_params": {}
+      "analytic_spec_params": {},
+      "analytic_binders": {}
     },
     "get_additional_props": null,
     "question_spec": null
@@ -179339,7 +179727,8 @@
         "metadata_element_type": "RegulationArticle"
       },
       "analytic_function": null,
-      "analytic_spec_params": {}
+      "analytic_spec_params": {},
+      "analytic_binders": {}
     },
     "get_additional_props": null,
     "question_spec": null
@@ -180720,7 +181109,8 @@
         "metadata_element_type": "RegulationArticle"
       },
       "analytic_function": null,
-      "analytic_spec_params": {}
+      "analytic_spec_params": {},
+      "analytic_binders": {}
     },
     "get_additional_props": null,
     "question_spec": null
@@ -181409,7 +181799,8 @@
         "metadata_element_type": "Risk"
       },
       "analytic_function": null,
-      "analytic_spec_params": {}
+      "analytic_spec_params": {},
+      "analytic_binders": {}
     },
     "get_additional_props": null,
     "question_spec": null
@@ -182790,7 +183181,8 @@
         "metadata_element_type": "Risk"
       },
       "analytic_function": null,
-      "analytic_spec_params": {}
+      "analytic_spec_params": {},
+      "analytic_binders": {}
     },
     "get_additional_props": null,
     "question_spec": null
@@ -183511,7 +183903,8 @@
         "metadata_element_type": "SecurityAccessControl"
       },
       "analytic_function": null,
-      "analytic_spec_params": {}
+      "analytic_spec_params": {},
+      "analytic_binders": {}
     },
     "get_additional_props": null,
     "question_spec": null
@@ -184924,7 +185317,8 @@
         "metadata_element_type": "SecurityAccessControl"
       },
       "analytic_function": null,
-      "analytic_spec_params": {}
+      "analytic_spec_params": {},
+      "analytic_binders": {}
     },
     "get_additional_props": null,
     "question_spec": null
@@ -185645,7 +186039,8 @@
         "metadata_element_type": "ServiceLevelObjective"
       },
       "analytic_function": null,
-      "analytic_spec_params": {}
+      "analytic_spec_params": {},
+      "analytic_binders": {}
     },
     "get_additional_props": null,
     "question_spec": null
@@ -187058,7 +187453,8 @@
         "metadata_element_type": "ServiceLevelObjective"
       },
       "analytic_function": null,
-      "analytic_spec_params": {}
+      "analytic_spec_params": {},
+      "analytic_binders": {}
     },
     "get_additional_props": null,
     "question_spec": null
@@ -187875,7 +188271,8 @@
         "metadata_element_type": "TermsAndConditions"
       },
       "analytic_function": null,
-      "analytic_spec_params": {}
+      "analytic_spec_params": {},
+      "analytic_binders": {}
     },
     "get_additional_props": null,
     "question_spec": null
@@ -189384,7 +189781,8 @@
         "metadata_element_type": "TermsAndConditions"
       },
       "analytic_function": null,
-      "analytic_spec_params": {}
+      "analytic_spec_params": {},
+      "analytic_binders": {}
     },
     "get_additional_props": null,
     "question_spec": null
@@ -190073,7 +190471,8 @@
         "metadata_element_type": "Threat"
       },
       "analytic_function": null,
-      "analytic_spec_params": {}
+      "analytic_spec_params": {},
+      "analytic_binders": {}
     },
     "get_additional_props": null,
     "question_spec": null
@@ -191454,7 +191853,8 @@
         "metadata_element_type": "Threat"
       },
       "analytic_function": null,
-      "analytic_spec_params": {}
+      "analytic_spec_params": {},
+      "analytic_binders": {}
     },
     "get_additional_props": null,
     "question_spec": null
@@ -192453,7 +192853,8 @@
         ]
       },
       "analytic_function": null,
-      "analytic_spec_params": {}
+      "analytic_spec_params": {},
+      "analytic_binders": {}
     },
     "get_additional_props": null,
     "question_spec": null
@@ -194272,7 +194673,8 @@
         ]
       },
       "analytic_function": null,
-      "analytic_spec_params": {}
+      "analytic_spec_params": {},
+      "analytic_binders": {}
     },
     "get_additional_props": null,
     "question_spec": null
@@ -195271,7 +195673,8 @@
         ]
       },
       "analytic_function": null,
-      "analytic_spec_params": {}
+      "analytic_spec_params": {},
+      "analytic_binders": {}
     },
     "get_additional_props": null,
     "question_spec": null
@@ -197090,7 +197493,8 @@
         ]
       },
       "analytic_function": null,
-      "analytic_spec_params": {}
+      "analytic_spec_params": {},
+      "analytic_binders": {}
     },
     "get_additional_props": null,
     "question_spec": null
@@ -198089,7 +198493,8 @@
         ]
       },
       "analytic_function": null,
-      "analytic_spec_params": {}
+      "analytic_spec_params": {},
+      "analytic_binders": {}
     },
     "get_additional_props": null,
     "question_spec": null
@@ -199908,7 +200313,8 @@
         ]
       },
       "analytic_function": null,
-      "analytic_spec_params": {}
+      "analytic_spec_params": {},
+      "analytic_binders": {}
     },
     "get_additional_props": null,
     "question_spec": null
@@ -200907,7 +201313,8 @@
         ]
       },
       "analytic_function": null,
-      "analytic_spec_params": {}
+      "analytic_spec_params": {},
+      "analytic_binders": {}
     },
     "get_additional_props": null,
     "question_spec": null
@@ -202726,7 +203133,8 @@
         ]
       },
       "analytic_function": null,
-      "analytic_spec_params": {}
+      "analytic_spec_params": {},
+      "analytic_binders": {}
     },
     "get_additional_props": null,
     "question_spec": null
@@ -203721,7 +204129,8 @@
       ],
       "spec_params": {},
       "analytic_function": null,
-      "analytic_spec_params": {}
+      "analytic_spec_params": {},
+      "analytic_binders": {}
     },
     "get_additional_props": null,
     "question_spec": null
@@ -205536,7 +205945,8 @@
       ],
       "spec_params": {},
       "analytic_function": null,
-      "analytic_spec_params": {}
+      "analytic_spec_params": {},
+      "analytic_binders": {}
     },
     "get_additional_props": null,
     "question_spec": null
@@ -207189,7 +207599,8 @@
         ]
       },
       "analytic_function": null,
-      "analytic_spec_params": {}
+      "analytic_spec_params": {},
+      "analytic_binders": {}
     },
     "get_additional_props": null,
     "question_spec": null
@@ -209008,7 +209419,8 @@
         ]
       },
       "analytic_function": null,
-      "analytic_spec_params": {}
+      "analytic_spec_params": {},
+      "analytic_binders": {}
     },
     "get_additional_props": null,
     "question_spec": null
@@ -210007,7 +210419,8 @@
         ]
       },
       "analytic_function": null,
-      "analytic_spec_params": {}
+      "analytic_spec_params": {},
+      "analytic_binders": {}
     },
     "get_additional_props": null,
     "question_spec": null
@@ -211826,7 +212239,8 @@
         ]
       },
       "analytic_function": null,
-      "analytic_spec_params": {}
+      "analytic_spec_params": {},
+      "analytic_binders": {}
     },
     "get_additional_props": null,
     "question_spec": null
@@ -212825,7 +213239,8 @@
         ]
       },
       "analytic_function": null,
-      "analytic_spec_params": {}
+      "analytic_spec_params": {},
+      "analytic_binders": {}
     },
     "get_additional_props": null,
     "question_spec": null
@@ -214644,7 +215059,8 @@
         ]
       },
       "analytic_function": null,
-      "analytic_spec_params": {}
+      "analytic_spec_params": {},
+      "analytic_binders": {}
     },
     "get_additional_props": null,
     "question_spec": null
@@ -215453,7 +215869,8 @@
         "metadata_element_type": "ReferenceDataSet"
       },
       "analytic_function": null,
-      "analytic_spec_params": {}
+      "analytic_spec_params": {},
+      "analytic_binders": {}
     },
     "get_additional_props": null,
     "question_spec": null
@@ -217114,7 +217531,8 @@
         "metadata_element_type": "ReferenceDataSet"
       },
       "analytic_function": null,
-      "analytic_spec_params": {}
+      "analytic_spec_params": {},
+      "analytic_binders": {}
     },
     "get_additional_props": null,
     "question_spec": null
@@ -217891,7 +218309,8 @@
         "metadata_element_type": "ReferenceDataValue"
       },
       "analytic_function": null,
-      "analytic_spec_params": {}
+      "analytic_spec_params": {},
+      "analytic_binders": {}
     },
     "get_additional_props": null,
     "question_spec": null
@@ -219520,7 +219939,8 @@
         "metadata_element_type": "ReferenceDataValue"
       },
       "analytic_function": null,
-      "analytic_spec_params": {}
+      "analytic_spec_params": {},
+      "analytic_binders": {}
     },
     "get_additional_props": null,
     "question_spec": null
@@ -220327,7 +220747,8 @@
       ],
       "spec_params": {},
       "analytic_function": null,
-      "analytic_spec_params": {}
+      "analytic_spec_params": {},
+      "analytic_binders": {}
     },
     "get_additional_props": null,
     "question_spec": null
@@ -222382,7 +222803,8 @@
       ],
       "spec_params": {},
       "analytic_function": null,
-      "analytic_spec_params": {}
+      "analytic_spec_params": {},
+      "analytic_binders": {}
     },
     "get_additional_props": null,
     "question_spec": null
@@ -224587,7 +225009,8 @@
       ],
       "spec_params": {},
       "analytic_function": null,
-      "analytic_spec_params": {}
+      "analytic_spec_params": {},
+      "analytic_binders": {}
     },
     "get_additional_props": null,
     "question_spec": null
@@ -225858,7 +226281,8 @@
       ],
       "spec_params": {},
       "analytic_function": null,
-      "analytic_spec_params": {}
+      "analytic_spec_params": {},
+      "analytic_binders": {}
     },
     "get_additional_props": null,
     "question_spec": null
@@ -226409,7 +226833,8 @@
       ],
       "spec_params": {},
       "analytic_function": null,
-      "analytic_spec_params": {}
+      "analytic_spec_params": {},
+      "analytic_binders": {}
     },
     "get_additional_props": null,
     "question_spec": null
@@ -227312,7 +227737,8 @@
       ],
       "spec_params": {},
       "analytic_function": null,
-      "analytic_spec_params": {}
+      "analytic_spec_params": {},
+      "analytic_binders": {}
     },
     "get_additional_props": null,
     "question_spec": null
@@ -227459,7 +227885,8 @@
       ],
       "spec_params": {},
       "analytic_function": null,
-      "analytic_spec_params": {}
+      "analytic_spec_params": {},
+      "analytic_binders": {}
     },
     "get_additional_props": null,
     "question_spec": null
@@ -227606,7 +228033,8 @@
       ],
       "spec_params": {},
       "analytic_function": null,
-      "analytic_spec_params": {}
+      "analytic_spec_params": {},
+      "analytic_binders": {}
     },
     "get_additional_props": null,
     "question_spec": null
@@ -228253,7 +228681,8 @@
       ],
       "spec_params": {},
       "analytic_function": null,
-      "analytic_spec_params": {}
+      "analytic_spec_params": {},
+      "analytic_binders": {}
     },
     "get_additional_props": null,
     "question_spec": null
@@ -229220,7 +229649,8 @@
       ],
       "spec_params": {},
       "analytic_function": null,
-      "analytic_spec_params": {}
+      "analytic_spec_params": {},
+      "analytic_binders": {}
     },
     "get_additional_props": null,
     "question_spec": null
@@ -229367,7 +229797,8 @@
       ],
       "spec_params": {},
       "analytic_function": null,
-      "analytic_spec_params": {}
+      "analytic_spec_params": {},
+      "analytic_binders": {}
     },
     "get_additional_props": null,
     "question_spec": null
@@ -229514,7 +229945,8 @@
       ],
       "spec_params": {},
       "analytic_function": null,
-      "analytic_spec_params": {}
+      "analytic_spec_params": {},
+      "analytic_binders": {}
     },
     "get_additional_props": null,
     "question_spec": null
@@ -230129,7 +230561,8 @@
       ],
       "spec_params": {},
       "analytic_function": null,
-      "analytic_spec_params": {}
+      "analytic_spec_params": {},
+      "analytic_binders": {}
     },
     "get_additional_props": null,
     "question_spec": null
@@ -231596,7 +232029,8 @@
       ],
       "spec_params": {},
       "analytic_function": null,
-      "analytic_spec_params": {}
+      "analytic_spec_params": {},
+      "analytic_binders": {}
     },
     "get_additional_props": null,
     "question_spec": null
@@ -232083,7 +232517,8 @@
       ],
       "spec_params": {},
       "analytic_function": null,
-      "analytic_spec_params": {}
+      "analytic_spec_params": {},
+      "analytic_binders": {}
     },
     "get_additional_props": null,
     "question_spec": null
@@ -233390,7 +233825,8 @@
       ],
       "spec_params": {},
       "analytic_function": null,
-      "analytic_spec_params": {}
+      "analytic_spec_params": {},
+      "analytic_binders": {}
     },
     "get_additional_props": null,
     "question_spec": null
@@ -233969,7 +234405,8 @@
       ],
       "spec_params": {},
       "analytic_function": null,
-      "analytic_spec_params": {}
+      "analytic_spec_params": {},
+      "analytic_binders": {}
     },
     "get_additional_props": null,
     "question_spec": null
@@ -235336,7 +235773,8 @@
       ],
       "spec_params": {},
       "analytic_function": null,
-      "analytic_spec_params": {}
+      "analytic_spec_params": {},
+      "analytic_binders": {}
     },
     "get_additional_props": null,
     "question_spec": null
@@ -236059,7 +236497,8 @@
       ],
       "spec_params": {},
       "analytic_function": null,
-      "analytic_spec_params": {}
+      "analytic_spec_params": {},
+      "analytic_binders": {}
     },
     "get_additional_props": null,
     "question_spec": null
@@ -237634,7 +238073,8 @@
       ],
       "spec_params": {},
       "analytic_function": null,
-      "analytic_spec_params": {}
+      "analytic_spec_params": {},
+      "analytic_binders": {}
     },
     "get_additional_props": null,
     "question_spec": null
@@ -238161,7 +238601,8 @@
       ],
       "spec_params": {},
       "analytic_function": null,
-      "analytic_spec_params": {}
+      "analytic_spec_params": {},
+      "analytic_binders": {}
     },
     "get_additional_props": null,
     "question_spec": null
@@ -239508,7 +239949,8 @@
       ],
       "spec_params": {},
       "analytic_function": null,
-      "analytic_spec_params": {}
+      "analytic_spec_params": {},
+      "analytic_binders": {}
     },
     "get_additional_props": null,
     "question_spec": null
@@ -239799,7 +240241,8 @@
       ],
       "spec_params": {},
       "analytic_function": null,
-      "analytic_spec_params": {}
+      "analytic_spec_params": {},
+      "analytic_binders": {}
     },
     "get_additional_props": null,
     "question_spec": null
@@ -240878,7 +241321,8 @@
       ],
       "spec_params": {},
       "analytic_function": null,
-      "analytic_spec_params": {}
+      "analytic_spec_params": {},
+      "analytic_binders": {}
     },
     "get_additional_props": null,
     "question_spec": null
@@ -241169,7 +241613,8 @@
       ],
       "spec_params": {},
       "analytic_function": null,
-      "analytic_spec_params": {}
+      "analytic_spec_params": {},
+      "analytic_binders": {}
     },
     "get_additional_props": null,
     "question_spec": null
@@ -242248,7 +242693,8 @@
       ],
       "spec_params": {},
       "analytic_function": null,
-      "analytic_spec_params": {}
+      "analytic_spec_params": {},
+      "analytic_binders": {}
     },
     "get_additional_props": null,
     "question_spec": null
@@ -242539,7 +242985,8 @@
       ],
       "spec_params": {},
       "analytic_function": null,
-      "analytic_spec_params": {}
+      "analytic_spec_params": {},
+      "analytic_binders": {}
     },
     "get_additional_props": null,
     "question_spec": null
@@ -243618,7 +244065,8 @@
       ],
       "spec_params": {},
       "analytic_function": null,
-      "analytic_spec_params": {}
+      "analytic_spec_params": {},
+      "analytic_binders": {}
     },
     "get_additional_props": null,
     "question_spec": null
@@ -244043,7 +244491,8 @@
         "metadata_element_type": "ConceptModel"
       },
       "analytic_function": null,
-      "analytic_spec_params": {}
+      "analytic_spec_params": {},
+      "analytic_binders": {}
     },
     "get_additional_props": null,
     "question_spec": null
@@ -245288,7 +245737,8 @@
         "metadata_element_type": "ConceptModel"
       },
       "analytic_function": null,
-      "analytic_spec_params": {}
+      "analytic_spec_params": {},
+      "analytic_binders": {}
     },
     "get_additional_props": null,
     "question_spec": null
