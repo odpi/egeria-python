@@ -71,7 +71,8 @@ class BaseAddScreen(ModalScreen):
         if self.LINK_LABEL is not None:
             widgets.append(Horizontal(
                 Static(self.LINK_LABEL),
-                Switch(value=True, id="link_to_profile"),
+                Switch(value=self.link_to_profile, id="link_to_profile"),
+                classes="link_row",
                 ))
         widgets.append(Horizontal(
             Button(f"Add {self.ELEMENT_NAME}", id="add_button", variant="primary"),
@@ -344,7 +345,7 @@ class AddProjectScreen(BaseAddScreen):
         ("project_start_date", "Start Date (YYYY-MM-DD)", False),
         ("project_end_date", "Planned End Date (YYYY-MM-DD)", False),
         ]
-    LINK_LABEL = "Add yourself to the project team? Default = True"
+    LINK_LABEL = "Add yourself to the project team?"
 
     def validate(self, values: dict[str, str]) -> str | None:
         kind = values["project_classification"]
@@ -383,7 +384,7 @@ class AddRoleScreen(BaseAddScreen):
         ("role_name", "Name of Role", True),
         ("role_description", "Description of Role", True),
         ]
-    LINK_LABEL = "Appoint yourself to this role? Default = True"
+    LINK_LABEL = "Appoint yourself to this role?"
 
     def create_element(self, client: Egeria, values: dict[str, str]) -> str:
         name = values["role_name"]
@@ -401,6 +402,8 @@ class AddRoleScreen(BaseAddScreen):
         return client.create_actor_role(body=body)
 
     def link_element(self, client: Egeria, guid: str) -> None:
+        self.log(f"link person role, GUID: {guid}")
+        self.log(f"link person role, user GUID: {self.user_guid}")
         client.link_person_role_to_profile(person_role_guid=guid, person_profile_guid=self.user_guid)
 
 
@@ -414,7 +417,7 @@ class AddTeamScreen(BaseAddScreen):
         ("team_name", "Name of Team", True),
         ("team_description", "Description of Team", True),
         ]
-    LINK_LABEL = "Join this team as a member? Default = True"
+    LINK_LABEL = "Join this team as a member?"
 
     def create_element(self, client: Egeria, values: dict[str, str]) -> str:
         name = values["team_name"]
@@ -483,7 +486,7 @@ class AddUserIdentityScreen(BaseAddScreen):
         ("user_identity_display_name", "Display Name", False),
         ("user_identity_distinguished_name", "Distinguished Name", False),
         ]
-    LINK_LABEL = "Link User Identity to your profile? True or False, Default = True"
+    LINK_LABEL = "Link this User Identity to your profile?"
 
     def create_element(self, client: Egeria, values: dict[str, str]) -> str:
         user_id = values["user_identity_user_id"]
