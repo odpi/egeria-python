@@ -69,20 +69,20 @@ ___
 >	**Description**: 
 
 
-### Database User Id
+### Secrets Store Path Name
 >	**Input Required**: False
 
 >	**Attribute Type**: Simple
 
->	**Description**: User id used to connect to the database server.
+>	**Description**: Path name of the secrets store file that holds the credentials used to connect to the database server (secretsStorePathName).
 
 
-### Database Password
+### Secrets Collection Name
 >	**Input Required**: False
 
 >	**Attribute Type**: Simple
 
->	**Description**: Password used to connect to the database server.
+>	**Description**: Name of the collection within the secrets store that holds the credentials for this connection (secretsCollectionName).
 
 
 ### Version Identifier
@@ -90,7 +90,7 @@ ___
 
 >	**Attribute Type**: Simple
 
->	**Description**: Published product version identifier.
+>	**Description**: The version of the element
 
 >	**Alternative Labels**: Version
 
