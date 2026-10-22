@@ -9,7 +9,7 @@ from rich.console import Console
 from rich.prompt import Prompt
 
 from pyegeria.core._exceptions import PyegeriaException, print_basic_exception
-from pyegeria.core.config import settings
+from pyegeria.core.config import settings, resolve_egeria_credentials
 from md_processing.dr_egeria import process_md_file_v2
 import asyncio
 
@@ -29,8 +29,8 @@ EGERIA_VIEW_SERVER_URL = os.environ.get("EGERIA_VIEW_SERVER_URL", app_config.ege
 # User credentials: resolved via the standard pyegeria config utility, which already
 # honors the full precedence chain (OS env > .env file > default) — a raw
 # os.environ.get() here would silently miss credentials that only exist in .env.
-EGERIA_USER = settings.User_Profile.user_name or "erinoverview"
-EGERIA_USER_PASSWORD = settings.User_Profile.user_pwd or "secret"
+# Kept for importers; the CLI itself resolves credentials when it runs (ISSUE-161).
+EGERIA_USER, EGERIA_USER_PASSWORD = resolve_egeria_credentials()
 EGERIA_WIDTH = int(os.environ.get("EGERIA_WIDTH", settings.Environment.egeria_width or 190))
 EGERIA_JUPYTER = os.environ.get("EGERIA_JUPYTER", str(settings.Environment.egeria_jupyter)).lower() in ("true", "1", "yes")
 
@@ -48,10 +48,10 @@ console = Console(width=EGERIA_WIDTH)
               help="Shortcut: execute all commands and make permanent changes in Egeria (overrides --directive)")
 @click.option("--server", default=EGERIA_VIEW_SERVER, help="Egeria view server to use.")
 @click.option("--url", default=EGERIA_VIEW_SERVER_URL, help="URL of Egeria platform to connect to")
-@click.option("--userid", default=EGERIA_USER,
-              help="Egeria user. Overrides EGERIA_USER (env var or .env file).")
-@click.option("--user_pass", default=EGERIA_USER_PASSWORD,
-              help="Egeria user password. Overrides EGERIA_USER_PASSWORD (env var or .env file).")
+@click.option("--userid", default=None,
+              help="Egeria user. Defaults to EGERIA_USER (env var), then the User Profile in config.json or .env; resolved when the command runs.")
+@click.option("--user_pass", default=None,
+              help="Egeria user password. Defaults to EGERIA_USER_PASSWORD (env var), then the User Profile in config.json or .env; resolved when the command runs.")
 @click.option("--parse-summary", default="none", help="When to show parse summaries",
               type=click.Choice(["all", "errors", "none"], case_sensitive=False))
 @click.option("--attribute-logs", default="info", help="Per-attribute log verbosity",
@@ -85,6 +85,7 @@ def process_markdown_file(input_file: str, output_folder: str, directive: str,
     try:
         # Instantiate the client
         from pyegeria import EgeriaTech
+        userid, user_pass = resolve_egeria_credentials(userid, user_pass)
         client = EgeriaTech(server, url, userid, user_pass)
         client.create_egeria_bearer_token()
 

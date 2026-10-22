@@ -11,6 +11,7 @@ from rich.console import Console
 from rich.markdown import Markdown
 
 from pyegeria import settings, ServerClient, PyegeriaException
+from pyegeria.core.config import resolve_egeria_credentials
 from pyegeria.core.utils import (camel_to_title_case)
 from pyegeria.core._globals import DEBUG_LEVEL, GovernanceDomains, resolve_enum
 from md_processing.md_processing_utils.message_constants import message_types
@@ -26,8 +27,8 @@ EGERIA_INTEGRATION_DAEMON = os.environ.get("EGERIA_INTEGRATION_DAEMON", "integra
 EGERIA_INTEGRATION_DAEMON_URL = os.environ.get("EGERIA_INTEGRATION_DAEMON_URL", "https://localhost:9443")
 EGERIA_ADMIN_USER = os.environ.get("ADMIN_USER", "garygeeke")
 EGERIA_ADMIN_PASSWORD = os.environ.get("ADMIN_PASSWORD", "secret")
-EGERIA_USER = os.environ.get("EGERIA_USER", "erinoverview")
-EGERIA_USER_PASSWORD = os.environ.get("EGERIA_USER_PASSWORD", "secret")
+# Same precedence as the dr_egeria CLI: env, then config.json / .env, then defaults (ISSUE-161).
+EGERIA_USER, EGERIA_USER_PASSWORD = resolve_egeria_credentials()
 EGERIA_WIDTH = settings.Environment.egeria_width
 EGERIA_JUPYTER = settings.Environment.egeria_jupyter
 EGERIA_HOME_GLOSSARY_GUID = os.environ.get("EGERIA_HOME_GLOSSARY_GUID", None)

@@ -286,6 +286,35 @@ they're holding real port materialization until this exists server-side
 
 ---
 
+### ISSUE-161: Dr.Egeria's two entry points resolve the Egeria user differently, and the CLI fixes its credential defaults at import time
+
+**Layer:** Pyegeria · **Status:** fixed on branch `fix/issue-161-dr-egeria-credentials` (owner approved 2026-10-21), not yet released · **Found:** 2026-10-21, while checking an RE report that `dr_egeria --process` ignored `EGERIA_USER`. **That report is withdrawn; RE was the cause:** RE's own `config.py:316` defaulted its daemon identity (`EGERIA_USER_ID`) to "erinoverview", so RE handed the child process erinoverview. The CLI correctly used it. RE is removing that default.
+
+**What was checked:** with `EGERIA_USER` set, the CLI path resolves and uses it throughout on 6.2.8:
+- `config.py:423` (`os.getenv("EGERIA_USER", config.json / .env value)`) feeds `settings.User_Profile.user_name`, the `--userid` default;
+- `EgeriaTech` / `BasePlatformClient` keep that `user_id`;
+- `create_egeria_bearer_token()` with no arguments uses `self.user_id`;
+- `_get_subclient` passes the user and token to every sub-client, and there is no token cache.
+Intended precedence (CLAUDE.md): explicit `--userid` > OS env > `.env` > `config.json` > default.
+
+**Real issues (pyegeria):**
+1. **Inconsistent resolution between entry points:** `md_processing/dr_egeria.py:93` (module constants) and `:923` (its own `__main__` path) read `os.environ.get("EGERIA_USER", "erinoverview")` / `EGERIA_USER_PASSWORD` directly, bypassing `.env` and `config.json`. `md_processing/md_processing_utils/common_md_utils.py:29-30` does the same. So `python -m md_processing.dr_egeria` and the `dr_egeria` CLI disagree whenever the user is set only in `.env` or `config.json`.
+2. **Import-time defaults:** `commands/cat/dr_egeria.py:32-33` computes the `--userid` / `--user_pass` defaults when the module is imported. Code that imports it, then sets `EGERIA_USER` and invokes the command in the same process, gets the earlier user. This doesn't affect normal CLI use, where each run is a new process.
+3. **Help text:** "Overrides EGERIA_USER (env var or .env file)" doesn't mention `config.json`, or that the default is fixed at import.
+
+**Fix (2026-10-21):** a new `pyegeria.core.config.resolve_egeria_credentials(user_id=None, user_pwd=None)` resolves, when called: an explicit value > the `EGERIA_USER` / `EGERIA_USER_PASSWORD` environment variables > the settings User Profile (`config.json` / `.env`) > "erinoverview" / "secret".
+- The `dr_egeria` and `dr_egeria_folder` CLIs now default `--userid` / `--user_pass` to `None` and call it when they run. Their help text says so.
+- `md_processing/dr_egeria.py` (module constants and its `__main__` path) and `common_md_utils.py` constants now use it too. The module-level `EGERIA_USER` names are kept for importers.
+- Tests: `tests/micro-tests/test_issue_161_dr_egeria_credentials.py`. Five cases: precedence; env set after import, for both CLIs; config-only user; explicit flag wins. The three behaviour cases fail with the old caller code. The full micro-test suite (1,425) passes in a clean python:3.13-slim container.
+- **Not changed:** other `commands/cat` tools (`list_glossaries`, `get_asset_graph`, `run_report`, `get_collection_tree`, `get_project_dependencies`, `list_user_ids`, `view_schema_tree`) still read `EGERIA_USER_PASSWORD` straight from the environment. They could adopt the helper later.
+
+**Originally proposed:**
+- Resolve credentials through `settings.User_Profile` in all three places.
+- Look them up when the command runs (click `default=None`, then resolve inside the command).
+- Add a micro-test that both entry points pick up a user set only in `config.json` or `.env`.
+
+---
+
 ### ISSUE-160: `AutomatedCuration`'s template builders miss placeholders Egeria's templates now use, so created elements keep literal `~{name}~` values (folder endpoint `~{directoryAddress}~` breaks folder surveys)
 
 **Layer:** Pyegeria · **Status:** partly fixed on branch `fix/issue-160-template-placeholders` (owner approved 2026-10-21); not yet merged or released. The rest is listed below for the owner. **Found:** 2026-10-21, live by the RE coordinator against Egeria `main` 05a5e982 with pyegeria 6.2.7. Two FileFolders made with `create_folder_element_from_template` had Endpoint `networkAddress` = `~{directoryAddress}~`. Egeria's Folder Survey then failed with `BASIC-FILE-CONNECTOR-404-001` "The folder named ~{directoryAddress}~ ... does not exist" (engine action `c1d924b5`). The same folders also kept `versionIdentifier` = `~{versionIdentifier}~` and `deployedImplementationType` = `~{deployedImplementationType}~` (record `~/.re-gate/repair-folder-endpoints-20261021T143415Z.json`).
