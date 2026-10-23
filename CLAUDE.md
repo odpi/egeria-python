@@ -201,7 +201,9 @@ after a real defect slipped through an earlier, weaker version of this script:
   `"…RequestBody"` string in `pyegeria/omvs` that isn't an Egeria Java class.
   The properties bases are polymorphic, so sending one is a 400; this is what
   caught `PersonAppointmentProperties`. **JAVA-MISSING** (review) lists SDK
-  endpoints with no Spring mapping, meaning no URL, not a missing class.
+  endpoints with no Spring mapping, meaning no URL, not a missing class. Each row is tagged
+  "MOVED?" when the same path tail is served under another service, and with `--live`
+  as served or absent on the running platform. ISSUE-165 records the validated list.
 - **Field-level checks** — these catch the "call succeeds but silently ignores
   an option" bugs that no class check can see.
   - **FIELD-DROP** (defect): a method passes an argument whose JSON key the

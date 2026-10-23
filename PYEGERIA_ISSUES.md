@@ -294,6 +294,7 @@ they're holding real port materialization until this exists server-side
 1. **No Spring mapping** in Egeria `main` 4486d1a7f1 (2026-10-23), the checkout `omvs_audit.py` reads.
 2. **Absent from the live platform's OpenAPI doc** (`GET https://localhost:9443/v3/api-docs`, which `omvs_audit.py --live` reads; it marks these rows "[LIVE: absent, so a confirmed 404]").
 3. **Git history:** `git log -S` on the path fragment, to find the commit that removed it, or to show it was never in Egeria's Java.
+4. **Not moved to another module** (owner's question): the same path tail is not served under any other view service, in Java or live. The mappings added by each removing commit show no renamed replacement, with one exception. `d299b120f4` moved the governance-action-process **step-link** endpoints to Action Author; pyegeria already calls them there (`action_author.py`, `ActionProcessStepLinkProcessor`). Process search was not re-added anywhere. The audit now tags a JAVA-MISSING row "MOVED?" when the tail is served elsewhere; there are 0 such rows today.
 
 Three other JAVA-MISSING rows are served live, so they are Java-scan false positives and are excluded: `get_classified_elements_by` (runtime `by-{}` segment), `get_search_keyword_by_guid` and `new_subscription_type`.
 

@@ -1265,6 +1265,14 @@ def audit(service_filter: str | None, report_path: str, quiet: bool,
                         tag = ("  **[LIVE: served, so a Java-scan false positive]**"
                                if live_matches(d.verb, d.path, *live_index)
                                else "  **[LIVE: absent, so a confirmed 404]**")
+                    # An endpoint can move between view services with the same tail
+                    # (e.g. process-step links went to action-author); say where.
+                    tail = "/" + "/".join(d.path.split("/")[2:])
+                    moved = sorted({p for (v, p) in java.endpoints
+                                    if v == d.verb and p.endswith(tail) and p != d.path})
+                    if moved:
+                        tag += f"  **[MOVED? Egeria serves `{moved[0]}`" + (
+                            f" (+{len(moved) - 1} more)" if len(moved) > 1 else "") + "]**"
                     java_missing.append(f"- `{svc}.py:{d.lineno}` `{m}` `{d.verb} {d.path}`{tag}")
                 if not d.body_class:
                     continue
