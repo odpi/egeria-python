@@ -177,12 +177,31 @@ after a real defect slipped through an earlier, weaker version of this script:
   trailing verbs (`/attach` vs `/detach`) or the leading service segment; an
   earlier version did, and that masked exactly the bugs worth finding.
 - **BODY** — compares the request-body class (`FilterRequestBody` vs
-  `ResultsRequestBody`, etc.). Heuristic: it takes the first `*RequestBody`
-  identifier in the method, which may be a signature annotation, so treat body
-  findings as lower-confidence than verb/path.
+  `ResultsRequestBody`, etc.). When the method delegates to a shared
+  `_async_*_request` helper it uses the classes that helper accepts (what is
+  actually sent); otherwise it falls back to the method's own `body`
+  annotation, which is lower-confidence.
 - **LINT** — structural URL defects detectable without ground truth: double
   slashes, a path parameter with no separator before it (`/agreements{guid}`),
   and underscores in path segments (Egeria uses hyphens).
+- **RENAMED** — a method found by verb+path under an unrelated name now gets
+  the verb/body checks too. It used to be reported as RENAMED and skipped,
+  which is how the IT-profile-role and profile-identity detaches (ISSUE-163)
+  sent the wrong body unchecked.
+- **Java checks** (needs `~/localGit/egeria-v6/egeria`, or `--java-dir` /
+  `$EGERIA_JAVA_DIR`; `--no-java` skips) — the Spring `@RequestBody` types are
+  a second ground truth, added after ISSUE-163, where the `.http` file named
+  the same wrong class as the SDK. **JAVA-BODY REJECTED** (defect) only fires
+  when the declared type sits under a `@JsonTypeInfo(property="class")` base.
+  Among request bodies that's only `DeleteRequestBody` →
+  `Delete{Element,Relationship,Classification}RequestBody`, where a sibling
+  class is a 400. Elsewhere Egeria ignores `"class"` and maps fields by name,
+  so a mismatch there is **CLASS-IGNORED** (review: only dropped fields
+  matter). **UNKNOWN-CLASS** (defect) flags any `"…Properties"` /
+  `"…RequestBody"` string in `pyegeria/omvs` that isn't an Egeria Java class.
+  The properties bases are polymorphic, so sending one is a 400; this is what
+  caught `PersonAppointmentProperties`. **JAVA-MISSING** (review) lists SDK
+  endpoints with no Spring mapping.
 
 URL extraction is AST-based, not regex — multi-line f-strings silently produced
 empty paths under the regex version, which made whole modules look clean.

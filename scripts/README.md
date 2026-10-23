@@ -11,6 +11,10 @@ package or the pytest suite.
   file (URL, HTTP verb, request-body class) and reports MISSING/VERB
   MISMATCH/PATH MISMATCH/BODY MISMATCH/ELSEWHERE/LINT findings (see
   `omvs_audit_report.md` at the repo root for the latest run's output).
+  When an Egeria Java checkout is present (`--java-dir`, `$EGERIA_JAVA_DIR`,
+  default `~/localGit/egeria-v6/egeria`) it also checks against the Spring
+  `@RequestBody` types: JAVA-BODY REJECTED / CLASS-IGNORED, UNKNOWN-CLASS,
+  JAVA-MISSING and HTTP-vs-JAVA (ISSUE-163). `--no-java` skips them.
   `python scripts/omvs_audit.py [--report PATH] [--service NAME] [--quiet]`;
   exits 1 on any confirmed defect, so it can gate CI.
 - `safe_git_sync.sh` — stashes all local changes (including untracked),

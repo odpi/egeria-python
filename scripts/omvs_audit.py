@@ -15,6 +15,24 @@ every ``_async_*`` method in ``pyegeria/omvs/*.py`` against them and reports:
                      @name (no amount of snake_case guessing would find it)
   * LINT           - malformed URLs (``//``, missing separators) in the SDK
 
+RENAMED matches get the verb and body checks too (they used to be skipped).
+
+With an Egeria Java checkout (``--java-dir``, ``$EGERIA_JAVA_DIR``, default
+``~/localGit/egeria-v6/egeria``) the Spring resources are a second ground
+truth, because the .http files can name the same wrong class the SDK sends:
+
+  * JAVA-BODY REJECTED      - the helper's body class is not assignable to the
+                              declared @RequestBody type, and that type sits
+                              under a @JsonTypeInfo(property="class") base, so
+                              Egeria returns 400 (defect)
+  * JAVA-BODY CLASS-IGNORED - a different class, but Egeria ignores "class"
+                              there and maps fields by name (review)
+  * UNKNOWN-CLASS           - a "...Properties"/"...RequestBody" string in the
+                              SDK that is no Egeria Java class (defect: under a
+                              polymorphic properties base this is a 400)
+  * JAVA-MISSING            - no Spring mapping for the SDK's verb+path (review)
+  * HTTP-vs-JAVA            - the .http body class disagrees with Java (info)
+
 Usage
 -----
     python scripts/omvs_audit.py [--report PATH] [--service NAME] [--quiet]
@@ -27,8 +45,8 @@ whether the SDK matches them. Defaults to $PYEGERIA_PLATFORM_URL or
 https://localhost:9443. Best-effort: an unreachable platform just skips live
 verification rather than failing the run.
 
-Exit status is 1 when any confirmed defect (verb/path/body mismatch or lint)
-is found, so this can gate CI.
+Exit status is 1 when any confirmed defect (verb/path/body mismatch, lint,
+JAVA-BODY REJECTED or UNKNOWN-CLASS) is found, so this can gate CI.
 
 Note: ``pyegeria/http-clients/`` is gitignored. It must be present locally or
 the audit cannot run - the script fails loudly rather than reporting a clean
@@ -178,6 +196,7 @@ def canon_path(path: str) -> str:
     # Strip copy/paste junk seen on some .http lines. Deliberately excludes '}'
     # and ']' so a path ending in a parameter ("/{{guid}}") stays intact.
     path = path.rstrip('"\'`),;')
+    path = re.sub(r'"\}+$', "", path)          # 'retrieve"}' junk seen on some .http lines
     path = re.sub(r"\{\{[^}]+\}\}", "{}", path)   # {{guid}} -> {}
     path = re.sub(r"\{[^}]*\}", "{}", path)       # {guid}   -> {}
     path = re.sub(r"\{\}(?=\{\})", "", path)      # collapse adjacent params
@@ -403,6 +422,147 @@ def discover_helper_bodies(path: str) -> dict[str, frozenset[str]]:
     return bodies
 
 
+# --------------------------------------------------------------------------
+# second ground truth: Egeria's Java source
+# --------------------------------------------------------------------------
+# The .http collections are hand-maintained and can be wrong in exactly the
+# way that hides an SDK bug: for actor-roles/{guid}/delete and
+# is-context-definition/delete they named the same wrong body class the SDK
+# sent, so the .http comparison reported OK (ISSUE-163). The Spring resource
+# classes' @RequestBody types are what the server actually deserialises.
+
+JAVA_DIR_DEFAULT = os.environ.get("EGERIA_JAVA_DIR",
+                                  os.path.expanduser("~/localGit/egeria-v6/egeria"))
+MAPPING_RE = re.compile(r"@(Get|Post|Put|Delete|Patch)Mapping\s*\(")
+CLASS_MAPPING_RE = re.compile(r"@RequestMapping\s*\(")
+REQUEST_BODY_RE = re.compile(r"@RequestBody\s*(?:\([^)]*\))?\s*([A-Z]\w*)")
+EXTENDS_RE = re.compile(r"\bclass\s+(\w+)(?:<[^>]*>)?\s+extends\s+(\w+)")
+# String constants in the SDK that name an Egeria Java class.
+CLASS_CONST_RE = re.compile(r"^[A-Z][A-Za-z0-9]*(?:Properties|RequestBody)$")
+
+
+def _balanced(text: str, open_at: int) -> str:
+    """Text between the '(' at ``open_at`` and its matching ')'."""
+    depth = 0
+    for i in range(open_at, len(text)):
+        if text[i] == "(":
+            depth += 1
+        elif text[i] == ")":
+            depth -= 1
+            if depth == 0:
+                return text[open_at + 1:i]
+    return text[open_at + 1:]
+
+
+@dataclass
+class JavaTruth:
+    # (verb, canonical path) -> {body class or None}. A generic resource
+    # mapped under {urlMarker} has "{}" as its service segment.
+    endpoints: dict[tuple[str, str], set[str | None]]
+    # class -> superclass, for every Java class seen (Jackson accepts a
+    # subclass of the declared @RequestBody type, nothing else).
+    parents: dict[str, str]
+    # Stems of every *Properties.java / *RequestBody.java file.
+    known_classes: set[str]
+    # Classes annotated @JsonTypeInfo(property="class"). Below one of these,
+    # Jackson resolves "class" as a type id and a non-assignable value is a
+    # 400 (DeleteRequestBody -> Delete{Element,Relationship,Classification}).
+    # Everywhere else "class" is an ignored unknown property and fields map
+    # by name, so a wrong class there is harmless unless fields are dropped.
+    polymorphic: set[str] = field(default_factory=set)
+
+    def lookup(self, verb: str, path: str) -> set[str | None] | None:
+        hit = self.endpoints.get((verb, path))
+        if hit is None:
+            parts = path.split("/")
+            if len(parts) > 2:
+                hit = self.endpoints.get((verb, "/".join(["", "{}"] + parts[2:])))
+        return hit
+
+    def ancestors(self, cls: str) -> list[str]:
+        chain, seen = [], set()
+        while cls and cls not in seen:
+            chain.append(cls)
+            seen.add(cls)
+            cls = self.parents.get(cls)
+        return chain
+
+    def rejects(self, declared: str, sent: str) -> bool:
+        """True when Egeria refuses ``sent`` where ``declared`` is expected."""
+        return (not self.accepts(declared, sent)
+                and any(a in self.polymorphic for a in self.ancestors(declared)))
+
+    def accepts(self, declared: str, sent: str) -> bool:
+        seen = set()
+        while sent and sent not in seen:
+            if sent == declared:
+                return True
+            seen.add(sent)
+            sent = self.parents.get(sent)
+        return False
+
+
+def load_java_truth(java_dir: str) -> JavaTruth | None:
+    impl = os.path.join(java_dir, "open-metadata-implementation")
+    if not os.path.isdir(impl):
+        return None
+    endpoints: dict[tuple[str, str], set[str | None]] = defaultdict(set)
+    parents: dict[str, str] = {}
+    known: set[str] = set()
+    polymorphic: set[str] = set()
+    for root, _dirs, files in os.walk(impl):
+        if {"test", "build", "target"} & set(os.path.relpath(root, impl).split(os.sep)):
+            continue
+        for fname in files:
+            if not fname.endswith(".java"):
+                continue
+            stem = fname[:-5]
+            if stem.endswith(("Properties", "RequestBody")):
+                known.add(stem)
+            if not (stem.endswith(("Properties", "RequestBody", "Options", "Resource"))
+                    or "properties" in root or "rest" in root):
+                continue
+            text = open(os.path.join(root, fname), encoding="utf-8", errors="ignore").read()
+            for child, parent in EXTENDS_RE.findall(text):
+                parents.setdefault(child, parent)
+            if "@JsonTypeInfo" in text and 'property = "class"' in text.replace("property=", "property = "):
+                polymorphic.add(stem)
+            if not (stem.endswith("Resource") and "spring" in root.split(os.sep)):
+                continue
+            cm = CLASS_MAPPING_RE.search(text)
+            base = ""
+            if cm:
+                strs = re.findall(r'"([^"]*)"', _balanced(text, cm.end() - 1))
+                base = strs[0] if strs else ""
+            for mm in MAPPING_RE.finditer(text):
+                verb = mm.group(1).upper()
+                args = _balanced(text, mm.end() - 1)
+                paths = [s for s in re.findall(r'"([^"]*)"', args) if s.startswith("/")] or [""]
+                sig_open = text.find("(", text.find("public", mm.end()))
+                body = None
+                if sig_open > 0:
+                    rb = REQUEST_BODY_RE.search(_balanced(text, sig_open))
+                    body = rb.group(1) if rb else None
+                for p in paths:
+                    endpoints[(verb, canon_path(base + p))].add(body)
+    return JavaTruth(dict(endpoints), parents, known, polymorphic)
+
+
+def class_constants(filepath: str) -> list[tuple[int, str]]:
+    """(line, name) for every string constant that names a Properties /
+    RequestBody class - prop lists, default bodies, module-level lists."""
+    try:
+        tree = ast.parse(open(filepath, encoding="utf-8").read())
+    except SyntaxError as exc:
+        print(f"  ! skipping {filepath}: {exc}", file=sys.stderr)
+        return []
+    # The fixed tail of f"{type}StatusRequestBody" is not a class name on its own.
+    fragments = {id(v) for n in ast.walk(tree) if isinstance(n, ast.JoinedStr) for v in n.values}
+    return [(n.lineno, n.value) for n in ast.walk(tree)
+            if isinstance(n, ast.Constant) and isinstance(n.value, str)
+            and id(n) not in fragments and CLASS_CONST_RE.match(n.value)]
+
+
 @dataclass
 class PyMethod:
     name: str
@@ -419,6 +579,11 @@ class PyMethod:
     # either branch under the same or a different @name, and `path` alone
     # (whichever assignment the walk sees first) isn't enough to match both.
     all_paths: list[str] = field(default_factory=list)
+    # "helper" when body_class is what a shared _async_*_request helper
+    # validates and sends; "signature" when it is only the method's own type
+    # hint (the method posts whatever the caller passes).
+    body_source: str | None = None
+    lineno: int = 0
 
 
 def _flatten(node: ast.AST, roots: dict[str, str]) -> str:
@@ -621,6 +786,8 @@ def parse_py_file(filepath: str, helper_verbs: dict[str, str],
             name=fn.name, verb=direct_verb or helper_verb, path=path,
             raw_url=raw_url, body_class=helper_body or body_class, lint=lint,
             all_paths=all_paths,
+            body_source="helper" if helper_body else ("signature" if body_class else None),
+            lineno=fn.lineno,
         )
 
     for sm in sync_names:
@@ -635,7 +802,7 @@ def parse_py_file(filepath: str, helper_verbs: dict[str, str],
 
 def audit(service_filter: str | None, report_path: str, quiet: bool,
           http_dir: str = HTTP_DIR, live_url: str | None = None,
-          live_insecure: bool = True) -> int:
+          live_insecure: bool = True, java_dir: str | None = JAVA_DIR_DEFAULT) -> int:
     if not os.path.isdir(http_dir):
         sys.exit(
             f"ERROR: '{http_dir}' not found.\n"
@@ -658,6 +825,11 @@ def audit(service_filter: str | None, report_path: str, quiet: bool,
 
     helper_verbs = discover_helper_verbs(SERVER_CLIENT)
     helper_bodies = discover_helper_bodies(SERVER_CLIENT)
+    java = load_java_truth(java_dir) if java_dir else None
+    if java_dir and java is None:
+        print(f"  ! Egeria Java source not found at '{java_dir}'; skipping the "
+              "JAVA-BODY / UNKNOWN-CLASS checks (--java-dir or $EGERIA_JAVA_DIR)",
+              file=sys.stderr)
 
     http_by_service = {}
     for hf in http_files:
@@ -739,6 +911,32 @@ def audit(service_filter: str | None, report_path: str, quiet: bool,
         lines.extend(dupe_rows)
         lines.append("")
 
+    def compare(d: PyMethod, req: HttpRequest) -> list[str]:
+        issues = []
+        if d.verb and d.verb != req.verb:
+            issues.append(f"VERB {d.verb} != {req.verb}")
+        candidate_paths = d.all_paths or ([d.path] if d.path else [])
+        if candidate_paths and not any(paths_compatible(p, req.path) for p in candidate_paths):
+            issues.append(f"PATH\n      SDK: {d.path}\n      API: {req.path}")
+        # Mismatch only when the documented class is not among those the
+        # SDK path accepts (several helpers accept a union).
+        if (d.body_class and req.body_class
+                and "RequestBody" in req.body_class
+                and req.body_class not in d.body_class
+                and not java_confirms(d)):
+            issues.append(
+                f"BODY sends {'|'.join(sorted(d.body_class))} != {req.body_class}")
+        return issues
+
+    def java_confirms(d: PyMethod) -> bool:
+        """The Spring @RequestBody type accepts what the SDK sends, so a
+        disagreeing .http file is the stale side (listed under HTTP-vs-JAVA)."""
+        if java is None or not (d.verb and d.path and d.body_class):
+            return False
+        declared = {b for p in (d.all_paths or [d.path])
+                    for b in (java.lookup(d.verb, p) or ()) if b}
+        return bool(declared) and any(java.accepts(x, sent) for x in declared for sent in d.body_class)
+
     # ---- coverage pass ---------------------------------------------------
     for svc, requests in sorted(http_by_service.items()):
         if svc in SKIP_SERVICES:
@@ -797,7 +995,19 @@ def audit(service_filter: str | None, report_path: str, quiet: bool,
                 elif by_path_hit:
                     counts["renamed"] += 1
                     hits = ", ".join(f"`{s}.py`:`{m}`" for s, m in by_path_hit)
-                    lines.append(f"- {name}: RENAMED -> {hits}{live_tag}")
+                    # A path match says nothing about the body: the IT-profile
+                    # role and profile-identity detaches (ISSUE-163) matched
+                    # here and sent the wrong body class unchecked.
+                    renamed_issues = [
+                        f"`{m}`: {i}" for s, m in by_path_hit
+                        for i in compare(py_by_service[s][m], req)]
+                    if renamed_issues:
+                        counts["mismatch"] += 1
+                        defects += 1
+                        lines.append(f"- {name}: MISMATCH (renamed) -> {hits}{live_tag}")
+                        lines += [f"    - {i}" for i in renamed_issues]
+                    else:
+                        lines.append(f"- {name}: RENAMED -> {hits}{live_tag}")
                 else:
                     counts["missing"] += 1
                     lines.append(f"- {name}: MISSING  (`{req.verb} {req.path}`){live_tag}")
@@ -806,19 +1016,7 @@ def audit(service_filter: str | None, report_path: str, quiet: bool,
             check = match if match.startswith("_async_") else f"_async_{match}"
             d = py_methods.get(check) or py_methods[match]
 
-            issues = []
-            if d.verb and d.verb != req.verb:
-                issues.append(f"VERB {d.verb} != {req.verb}")
-            candidate_paths = d.all_paths or ([d.path] if d.path else [])
-            if candidate_paths and not any(paths_compatible(p, req.path) for p in candidate_paths):
-                issues.append(f"PATH\n      SDK: {d.path}\n      API: {req.path}")
-            # Mismatch only when the documented class is not among those the
-            # SDK path accepts (several helpers accept a union).
-            if (d.body_class and req.body_class
-                    and "RequestBody" in req.body_class
-                    and req.body_class not in d.body_class):
-                issues.append(
-                    f"BODY sends {'|'.join(sorted(d.body_class))} != {req.body_class}")
+            issues = compare(d, req)
 
             if issues:
                 counts["mismatch"] += 1
@@ -829,6 +1027,108 @@ def audit(service_filter: str | None, report_path: str, quiet: bool,
                 counts["ok"] += 1
                 if not quiet or live_tag:
                     lines.append(f"- {name}: OK{live_tag}")
+
+    # ---- Java ground-truth pass -------------------------------------------
+    java_rows: list[str] = []
+    java_soft: list[str] = []
+    java_ignored: list[str] = []
+    unknown_rows: list[str] = []
+    http_vs_java: list[str] = []
+    java_missing: list[str] = []
+    if java is not None:
+        # Names of pyegeria's own Python classes (e.g. the SpecificationProperties
+        # OMVS client, or FindPropertyNamesRequestBody, a local model) appear as
+        # strings in __all__ lists; they are not wire class names.
+        py_classes = {n.name for f in glob.glob("pyegeria/**/*.py", recursive=True)
+                      for n in ast.walk(ast.parse(open(f, encoding="utf-8").read()))
+                      if isinstance(n, ast.ClassDef)}
+        for svc, ms in sorted(py_by_service.items()):
+            if service_filter and service_filter != svc:
+                continue
+            for m, d in sorted(ms.items()):
+                if not (m.startswith("_async_") and d.verb and d.path):
+                    continue
+                declared: set[str] = set()
+                mapped = False
+                for p in (d.all_paths or [d.path]):
+                    hit = java.lookup(d.verb, p) if p else None
+                    if hit is not None:
+                        mapped = True
+                        declared |= {b for b in hit if b}
+                if not mapped and "{" not in d.path.split("/")[1] and d.path.count("/") > 1:
+                    java_missing.append(f"- `{svc}.py:{d.lineno}` `{m}` `{d.verb} {d.path}`")
+                if not d.body_class:
+                    continue
+                if not declared:
+                    continue
+                if any(java.accepts(decl, sent) for decl in declared for sent in d.body_class):
+                    counts["java_ok"] += 1
+                    continue
+                row = (f"- `{svc}.py:{d.lineno}` `{m}` `{d.verb} {d.path}`: sends "
+                       f"{'|'.join(sorted(d.body_class))}, Java declares "
+                       f"{'|'.join(sorted(declared))}")
+                rejected = all(java.rejects(decl, sent) for decl in declared for sent in d.body_class)
+                if d.body_source != "helper":
+                    java_soft.append(row)
+                elif rejected:
+                    java_rows.append(row)
+                else:
+                    java_ignored.append(row)
+
+        # Dr.Egeria and the CLI build bodies too (curation.py's Retention spec
+        # sent the non-existent RetentionClassificationProperties, ISSUE-163).
+        omvs_files = sorted(glob.glob(f"{OMVS_DIR}/*.py")) + [SERVER_CLIENT]
+        other_files = sorted(glob.glob("md_processing/**/*.py", recursive=True)
+                             + glob.glob("commands/**/*.py", recursive=True))
+        for pf in omvs_files + ([] if service_filter else other_files):
+            svc = os.path.basename(pf).replace(".py", "").replace("_omvs", "").replace("_", "-")
+            if service_filter and service_filter != svc:
+                continue
+            seen: set[str] = set()
+            for lineno, cls in class_constants(pf):
+                if cls in java.known_classes or cls in py_classes or cls in seen:
+                    continue
+                seen.add(cls)
+                unknown_rows.append(f"- `{pf}:{lineno}`: `{cls}` is not an Egeria Java class")
+
+        for svc, requests in sorted(http_by_service.items()):
+            if service_filter and service_filter != svc:
+                continue
+            for name, req in requests.items():
+                if not (req.body_class and req.body_class.endswith("RequestBody")):
+                    continue
+                hit = java.lookup(req.verb, req.path)
+                declared = {b for b in (hit or ()) if b}
+                if declared and not any(java.accepts(decl, req.body_class) for decl in declared):
+                    http_vs_java.append(
+                        f"- {svc}: {name} `{req.verb} {req.path}`: .http says "
+                        f"{req.body_class}, Java declares {'|'.join(sorted(declared))}")
+
+        lines.append("\n## Java ground truth (Spring @RequestBody types)\n")
+        lines.append(f"_Source: `{java_dir}`._\n")
+        lines.append("### JAVA-BODY REJECTED: the endpoint refuses the body class the SDK sends (HTTP 400)\n")
+        lines.append("_The declared class sits under a `@JsonTypeInfo(property=\"class\")` base, so "
+                     "`class` is a type id and a non-assignable value fails deserialisation._\n")
+        lines.extend(java_rows or ["_none_"])
+        lines.append("\n### JAVA-BODY CLASS-IGNORED: a different class, but Egeria ignores `class` here\n")
+        lines.append("_No `@JsonTypeInfo` on the declared class, so fields map by name. Harmless unless "
+                     "the SDK relies on a field only its own class has; that field is silently dropped._\n")
+        lines.extend(java_ignored or ["_none_"])
+        lines.append("\n### JAVA-BODY (low confidence): the method's own type hint disagrees; "
+                     "it posts whatever the caller passes\n")
+        lines.extend(java_soft or ["_none_"])
+        lines.append("\n### UNKNOWN-CLASS: SDK names a Properties/RequestBody class Egeria does not have\n")
+        lines.extend(unknown_rows or ["_none_"])
+        lines.append("\n### JAVA-MISSING (review): no Spring mapping for this verb+path\n")
+        lines.append("_Removed or renamed in Egeria, or an endpoint the SDK guessed. Static path "
+                     "resolution can also miss a runtime-built segment, so confirm before changing._\n")
+        lines.extend(java_missing or ["_none_"])
+        lines.append("\n### HTTP-vs-JAVA (informational): the .http file disagrees with Java\n")
+        lines.extend(http_vs_java or ["_none_"])
+        lines.append("")
+        defects += len(java_rows) + len(unknown_rows)
+        counts["java_body"] = len(java_rows)
+        counts["unknown_class"] = len(unknown_rows)
 
     header = [
         "# OMVS Audit Report",
@@ -845,6 +1145,16 @@ def audit(service_filter: str | None, report_path: str, quiet: bool,
         f"| Found in another module | {counts['elsewhere']} |",
         f"| URL lint | {counts['lint']} |",
     ]
+    if java is not None:
+        header += [
+            f"| Java-verified body classes | {counts['java_ok']} |",
+            f"| JAVA-BODY REJECTED (helper sends a class the endpoint refuses) | {len(java_rows)} |",
+            f"| JAVA-BODY CLASS-IGNORED (different class, `class` ignored by Egeria) | {len(java_ignored)} |",
+            f"| JAVA-BODY low confidence (type hint only) | {len(java_soft)} |",
+            f"| UNKNOWN-CLASS | {len(unknown_rows)} |",
+            f"| JAVA-MISSING (no Spring mapping; review) | {len(java_missing)} |",
+            f"| HTTP-vs-JAVA disagreements (informational) | {len(http_vs_java)} |",
+        ]
     if live_index is not None:
         header += [
             f"| Live-verified against {live_url} | {counts['live_ok']} |",
@@ -859,6 +1169,12 @@ def audit(service_filter: str | None, report_path: str, quiet: bool,
     print(f"  OK={counts['ok']} mismatch={counts['mismatch']} "
           f"missing={counts['missing']} elsewhere={counts['elsewhere']} "
           f"lint={counts['lint']}")
+    if java is not None:
+        print(f"  java_ok={counts['java_ok']} java_rejected={len(java_rows)} "
+              f"java_class_ignored={len(java_ignored)} "
+              f"java_soft={len(java_soft)} unknown_class={len(unknown_rows)} "
+              f"java_missing={len(java_missing)} "
+              f"http_vs_java={len(http_vs_java)}")
     if live_index is not None:
         print(f"  live_ok={counts['live_ok']} live_stale={counts['live_stale']}")
     return 1 if defects else 0
@@ -891,9 +1207,17 @@ def main() -> int:
         help="verify TLS when fetching --live (default: off, for self-signed "
              "local dev platforms)",
     )
+    ap.add_argument(
+        "--java-dir", default=JAVA_DIR_DEFAULT,
+        help="Egeria Java checkout used as a second ground truth for request-body "
+             "classes and class names (defaults to $EGERIA_JAVA_DIR or "
+             "~/localGit/egeria-v6/egeria; skipped with a warning if absent)",
+    )
+    ap.add_argument("--no-java", action="store_true", help="skip the Java checks")
     args = ap.parse_args()
     return audit(args.service, args.report, args.quiet, args.http_dir,
-                 live_url=args.live, live_insecure=not args.live_verify_tls)
+                 live_url=args.live, live_insecure=not args.live_verify_tls,
+                 java_dir=None if args.no_java else args.java_dir)
 
 
 if __name__ == "__main__":
