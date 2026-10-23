@@ -286,6 +286,207 @@ they're holding real port materialization until this exists server-side
 
 ---
 
+### ISSUE-165: 19 SDK methods called endpoints Egeria doesn't serve: 13 removed upstream, 6 never existed (2 since repointed)
+
+**Layer:** Pyegeria · **Status:** open, documented, not changed (owner to decide: remove/deprecate, repoint, or raise with the Egeria team) · **Found:** 2026-10-23 by `scripts/omvs_audit.py` JAVA-MISSING (ISSUE-164).
+
+**Validation.** Each URL was checked three ways:
+1. **No Spring mapping** in Egeria `main` 4486d1a7f1 (2026-10-23), the checkout `omvs_audit.py` reads.
+2. **Absent from the live platform's OpenAPI doc** (`GET https://localhost:9443/v3/api-docs`, which `omvs_audit.py --live` reads; it marks these rows "[LIVE: absent, so a confirmed 404]").
+3. **Git history:** `git log -S` on the path fragment, to find the commit that removed it, or to show it was never in Egeria's Java.
+4. **Not moved to another module** (owner's question): the same path tail is not served under any other view service, in Java or live. The mappings added by each removing commit show no renamed replacement, with one exception. `d299b120f4` moved the governance-action-process **step-link** endpoints to Action Author; pyegeria already calls them there (`action_author.py`, `ActionProcessStepLinkProcessor`). Process search was not re-added anywhere. The audit now tags a JAVA-MISSING row "MOVED?" when the tail is served elsewhere; there are 0 such rows today.
+
+Three other JAVA-MISSING rows are served live, so they are Java-scan false positives and are excluded: `get_classified_elements_by` (runtime `by-{}` segment), `get_search_keyword_by_guid` and `new_subscription_type`.
+
+**Removed from Egeria:**
+
+| SDK method (file:line) | Calls | Removed by Egeria | Replacement in Egeria now |
+|---|---|---|---|
+| `data_discovery`: `create/update/delete_analysis_report`, `get_analysis_reports_by_name`, `find_analysis_reports`, `get_analysis_report_by_guid`, `link/detach_analysis_report_to/from_asset` (`data_discovery.py:1692-1773`, 8 methods) | `data-discovery/analysis-reports/...` | `e17cc09d44`, 2025-08-04 "Radical simplification of platform" | None as a CRUD API. Data Discovery now serves only `survey-reports/{g}/new-annotations[/{g}/attach\|detach]`; survey reports are produced by survey engines. The `AnalysisReportProperties` class these methods use doesn't exist either. |
+| `classification_explorer.add_element_to_subject_area` / `remove_element_from_subject_area` (`classification_explorer.py:12293/12405`) | `classification-explorer/elements/{g}/subject-area-member[/remove]` | `6a49a3e23f`, 2026-01-09, which also removed `elements/by-subject-area-membership` | Not confirmed. Likely collection membership on the subject area (`{urlMarker}/collections/{g}/members/{g}/attach\|detach`, served by the generic CollectionManager resource); ask the Egeria team. `SubjectAreaMemberProperties` doesn't exist either. |
+| `governance_officer.find_governance_action_processes` (`governance_officer.py:2310`) | `governance-officer/governance-action-processes/by-search-string` | `d299b120f4`, 2025-10-16, which removed all of Governance Officer's process create/update/publish/withdraw/remove/search endpoints | Not confirmed; a generic search by type `GovernanceActionProcess` is the likely route. `initiate` and `cancel` live on Automated Curation / Governance Engine (ISSUE-153). |
+| `platform_services.get_platform_organization` (`platform_services.py:1083`) | `GET platform-services/server-platform/organization-name` | `816076ab50`, 2026-06-05 "Improve OMAGServerPlatform properties…" | Not confirmed; presumably folded into the platform properties. `GET server-platform/origin` remains. |
+
+**Never in Egeria's Java (the SDK URL was a guess):**
+
+| SDK method (file:line) | Calls | What Egeria has |
+|---|---|---|
+| `data_designer.create_data_classification`, `update_data_classification`, `link_data_classification_to_data_field`, `detach_data_classification_from_data_field` (`data_designer.py:3298/3465/3601/3709`) | `data-designer/data-classifications/...` | Only `data-classes/{g}/nested-data-classes/{g}/attach\|detach`; there is no "data classification" element API. The `DataFieldClassificationProperties` class doesn't exist either. |
+| `subject_area.link_subject_area_hierarchy` / `detach_subject_area_hierarchy` (`subject_area.py:408/495`) | `subject-area/collections/{g}/collection-hierarchies/{g}/attach\|detach` | `subject-area/subject-areas/{parent}/subject-area-hierarchies/{nested}/attach\|detach`. **Fixed 2026-10-23** (owner approved): repointed. The same module already had `link_subject_areas` / `detach_subject_areas` on the correct URLs, so these were broken duplicates; both names are kept for existing callers. |
+| `governance_officer.get_gov_def_in_context` (`governance_officer.py:2796`) | `governance-officer/governance-definitions/{g}/retrieve-context` | Only `governance-definitions/{g}/retrieve` (plus update/delete and the peer/supporting links). |
+
+**Known consumer:** Dr.Egeria's `View Governance Definition Context` command (`GovernanceContextProcessor`, `md_processing/v2/governance.py:775`, registered in `dr_egeria.py:207`) calls `get_gov_def_in_context`, so that command 404s too. No other Dr.Egeria or CLI code calls these methods.
+
+**Every call above returns a 404 today.** Before ISSUE-164, pyegeria reported a 404 as "unable to connect to the Egeria platform", so a caller could not tell "this API is gone" from "the server is down".
+
+**Proposed (not made):**
+1. ~~Repoint `link/detach_subject_area_hierarchy`~~ (done).
+2. Mark the analysis-report, data-classification and `get_gov_def_in_context` methods deprecated, raising a clear "not supported by Egeria" error, before removing them in a later release. Dr.Egeria/CLI usage needs checking first.
+3. Ask the Egeria team for the intended replacements for subject-area membership, governance-action-process search and the platform organization name.
+
+---
+
+### ISSUE-164: `omvs_audit` now checks against Egeria's Java source. The first sweep finds 6 always-400 calls, 4 more 400s with a body, and 24 endpoints with no Spring mapping
+
+**Layer:** Pyegeria (+ Dr.Egeria, CLI) · **Status:** audit improved, and the findings were fixed on branch `fix/role-appointment-class-names` (owner approved 2026-10-23; not yet released), except the items under *Not fixed* at the end · **Found:** 2026-10-23, sweep requested by the owner before the next release, after ISSUE-163.
+
+**Fixed 2026-10-23, in the owner's order:**
+1. **Anchor scope and find keys** (3bb233c1): `anchorScopeGUIDs` serialisation on the New/Relationship/Template models; the `_async_find_request` keys.
+2. **Always-400 deletes and wrong class names** (b8b4567b): `remove_is_abstract_concept`, `remove_activity_description`, `detach_cohort_member`, `remove_search_keyword`, `initiate_engine_action` (`InitiateEngineActionRequestBody`, `actionSourceGUIDs`, `startDate`), `DataValueMeaningProperties`, `SolutionActorRoleProperties`, `DataProcessingPurposeProperties`, and the CLI todo typo.
+3. **Model gaps and Dr.Egeria/CLI keys** (13c17e37): `ActionRequestBody` anchor fields and `newActionTargets`; `TemplateRequestBody` `parentRelationshipProperties` and `replacementClassifications`; `endsWith`; Dr.Egeria/CLI `anchorScopeGUIDs`; the CLI update `properties`.
+
+Tests: `tests/micro-tests/test_issue164_silent_field_drops.py` (15 tests).
+
+**Live on quickstart 9443, 2026-10-23** (three peer-cleared runs, throwaway `pyeg-test::issue164::` glossary/terms/solution role; every GUID read back as gone and the prefix find was empty after each run):
+- **Anchor scope stored:** a term created with `anchorScopeGUIDs: [<glossary>]` reads back with `elementHeader.anchor.classificationProperties.anchorScopeGUIDs == [<glossary>]`; a term created without it has none.
+- **Classification add/remove round trips:** AbstractConcept, ContextDefinition, ActivityDescription and DataValue (stored as `DataValueMeaning`, matching the corrected class) each appear in `elementHeader.glossaryTermKinds` after the add and are gone after the remove. Before the fix, `remove_is_abstract_concept` was a 400 on every call.
+- **Solution role:** `create_solution_role` with `SolutionActorRoleProperties` created, then deleted.
+- **Not verified live:**
+  - The find zone filter: an unzoned element matches any zone filter, and zoning a throwaway element could make it undeletable for the test user. Verified at the wire level only.
+  - `remove_search_keyword`: my test body was wrong (`keyword`; Egeria's field is `displayName`, as the docstring says).
+  - `detach_cohort_member`, `initiate_engine_action`: not exercised, by design.
+
+**Egeria 6 element shape (for anyone reading classifications back; RE's read-backs too).** The view-service `get_*_by_guid(output_format="JSON")` calls (glossary, collection, actor manager, …) return the element with `elementHeader` and `properties`, and that header **has no `classifications` list**. The lower-level Metadata Expert / OMF shape (`get_metadata_element_by_guid`, an OpenMetadataElement) is different: it still has a top-level `classifications` list (Thursday Coordinator's read-only probe, 2026-10-23). Readers must know which shape they hold. Each classification is a named camelCase slot on `elementHeader` (`anchor`, `zoneMembership`, `retention`, `glossaryTermKinds`, `projectClassification`, `memento`, … per Java `ElementHeader`), and anything unslotted is in `elementHeader.otherClassifications`. A slot holds an `ElementClassification`, or a list of them for the `…Kinds` slots, each with `classificationName` and `classificationProperties`. Trimmed raw sample from this run:
+```json
+"elementHeader": {
+  "guid": "97581996-622d-46fe-82e0-0feaeea17132",
+  "anchor": {"class": "ElementClassification", "classificationName": "Anchors",
+             "classificationProperties": {"class": "AnchorsProperties", "anchorTypeName": "GlossaryTerm",
+                                          "anchorDomainName": "AuthoredReferenceable",
+                                          "anchorScopeGUIDs": ["057d4bd3-62bc-4591-8777-410f7528d867"]}},
+  "glossaryTermKinds": [{"class": "ElementClassification", "classificationName": "AbstractConcept", "...": "..."}]
+}
+```
+Note that the anchor property is the plural `anchorScopeGUIDs`, a list. Code that looks for a generic `classifications` list, or for a singular `anchorScopeGUID`, finds nothing. That is how this run's first two read-backs reported false absences.
+
+**Correction to the triage below:** `RetentionClassificationProperties` and `SecurityGroupMembershipProperties` are **not** bugs. Egeria registers them as `@JsonSubTypes` aliases (`names = {...}`): `RetentionProperties` is also accepted as `"RetentionClassificationProperties"`, and `processors.py` records a 2026-08-03 live 400 for `RetentionProperties` on an older build. Left unchanged; the audit now reads registered names and aliases.
+
+**Audit changes** (`scripts/omvs_audit.py`, docs in CLAUDE.md and `scripts/README.md`, tests in `tests/micro-tests/test_omvs_audit_java_truth.py`):
+- **RENAMED matches** now get the verb/body checks too; they used to be skipped.
+- **Java ground truth** (`--java-dir`, `$EGERIA_JAVA_DIR`, default `~/localGit/egeria-v6/egeria`; `--no-java` skips it). The audit indexes 1,587 Spring endpoints → `@RequestBody` type.
+  - **JAVA-BODY REJECTED** (defect): fires only when the declared type sits under a `@JsonTypeInfo(property="class")` base. Among request bodies that's only `DeleteRequestBody` → `Delete{Element,Relationship,Classification}RequestBody`, where a sibling class is a 400.
+  - **CLASS-IGNORED** (review): everywhere else Egeria's DTOs are plain `@JsonIgnoreProperties(ignoreUnknown=true)`, so `"class"` is ignored and fields map by name.
+  - **UNKNOWN-CLASS** (defect): any `"…Properties"`/`"…RequestBody"` string in `pyegeria/omvs`, `md_processing` or `commands` that is no Egeria class and no pyegeria class. The properties bases (`RelationshipBeanProperties`, `ClassificationBeanProperties`, …) are polymorphic, so an unknown name there is a 400.
+  - **JAVA-MISSING** (review): an SDK verb+path with no Spring mapping.
+  - **HTTP-vs-JAVA** (info): 21 `.http` entries name a body class Java doesn't accept. When Java accepts what the SDK sends, the `.http` BODY mismatch is no longer counted.
+- **Regression check:** on the pre-ISSUE-163 code the audit flags all eight ISSUE-163 bugs: 5 REJECTED and 3 UNKNOWN-CLASS, the detaches via the RENAMED path.
+
+**Findings, current branch**, against Egeria `main` 4486d1a7f1 (2026-10-23). `python scripts/omvs_audit.py --quiet` reports java_ok=951, rejected=4, class_ignored=25, unknown_class=16, java_missing=22, field_drop=3, client_drop=13, model_gaps=27, http_vs_java=21. An earlier run against a 2026-10-06 checkout listed 24 JAVA-MISSING; `cancel_governance_action_process` and `get_approved_engine_actions` (ISSUE-153's Governance Engine paths) now resolve.
+
+*Always fails: the SDK always sends this, so every call is a 400 or a client-side ValidationError.*
+
+| Where | What | Fix (from Java) |
+|---|---|---|
+| `glossary_manager.remove_is_abstract_concept` | element helper always sends `DeleteElementRequestBody`; endpoint takes `DeleteClassificationRequestBody` | `_async_delete_classification_request` |
+| `runtime_manager.detach_cohort_member` | `_async_metadata_source_body_request` always sends `{"class":"MetadataSourceRequestBody"}`; endpoint takes `DeleteRelationshipRequestBody` | `_async_delete_relationship_request` |
+| Dr.Egeria `Retention` classify (`md_processing/v2/curation.py:136`, `processors.py:237`) | body `class` is `RetentionClassificationProperties` | `RetentionProperties` |
+| CLI todo status update (`commands/my/todo_actions.py:201`) | typo `UpdataElementRequestBody`; pyegeria's Literal validator rejects it before sending | `UpdateElementRequestBody` |
+| `data_discovery` analysis-report methods (8) | `analysis-reports/...` has no mapping in `DataDiscoveryResource`; class `AnalysisReportProperties` doesn't exist | confirm whether Egeria still has the endpoint |
+| `classification_explorer.add/remove_element_to/from_subject_area` | `elements/{g}/subject-area-member` has no mapping; class `SubjectAreaMemberProperties` doesn't exist | confirm |
+
+*Fails only when a no-body default or a docstring-style body is used. With the caller's own correct body these work.*
+
+| Where | What | Fix |
+|---|---|---|
+| `feedback_manager.remove_search_keyword` | relationship body to an element `/remove` | `_async_delete_element_request` |
+| `glossary_manager.remove_activity_description` | relationship body; endpoint takes `DeleteClassificationRequestBody` | `_async_delete_classification_request` |
+| `actor_manager.add_security_group_membership` default class | `SecurityGroupMembershipProperties` | `SecurityListMembershipProperties` |
+| `classification_explorer.set_retention_classification` default class | `RetentionClassificationProperties` | `RetentionProperties` |
+| `glossary_manager.add_is_data_value` default class | `DataValueProperties` | `DataValueMeaningProperties` |
+| `solution_architect.create/update_solution_role` default class | `SolutionRoleProperties` | `SolutionActorRoleProperties` (extends `ActorRoleProperties`; the endpoint is `createActorRole`) |
+| `data_designer.link_data_classification_to_data_field` | `data-classifications/.../data-fields/{g}/attach` has no mapping; `DataFieldClassificationProperties` doesn't exist. The create/update/detach data-classification methods are also unmapped | confirm |
+| `GOV_DEF_PROPERTIES_LIST` (`governance_officer.py:40`) | `GovernanceProcessingPurposeProperties` | `DataProcessingPurposeProperties`; probably one of ISSUE-154's renames |
+
+*Harmless on the wire: an unknown top-level `class` that Egeria ignores.* `GovernanceActionRequestBody` (`automated_curation.initiate_engine_action`), `IntegrationServiceRequestBody` (`full_omag_server_config`), `AnyTimeRequestBody` (`metadata_expert.get_relationship_by_guid`, three Solution Architect retrieves) and `FindProperties` (`classification_explorer.retrieve_instance_for_guid`). Worth renaming for clarity only.
+
+*JAVA-MISSING (meaning no such URL in Egeria; it is not about classes), other entries to confirm.* `get_search_keyword_by_guid`, `find_governance_action_processes`, `get_gov_def_in_context`, `get_platform_organization`, `new_subscription_type`, and `subject_area.link/detach_subject_area_hierarchy`. The last calls `collections/{g}/collection-hierarchies`, while Java has `subject-areas/{g}/subject-area-hierarchies/{g}/attach|detach`, so it is likely a real 404. `get_classified_elements_by` (`by-{}`) is a static-analysis false positive.
+
+*CLASS-IGNORED (25), review only.* Mostly Filter-vs-Results and MetadataSource-vs-DeleteClassification pairs that are harmless. Worth a field-level look: `metadata_expert.create_metadata_element_from_template` (Java `OpenMetadataTemplateRequestBody`) and `metadata_expert.classify_metadata_element` (Java `NewOpenMetadataClassificationRequestBody`). Both Java classes use typed `ElementProperties`, so the flat SDK shape may silently lose fields; see CLAUDE.md's note on `MetadataExpert` create. Also `project_manager.create_project_task` (Java `NewAttachmentRequestBody`).
+
+**Field-level findings.** These calls succeed but silently ignore an option. Egeria's DTOs are `ignoreUnknown=true`, and pyegeria's models are `extra='ignore'`, so a misnamed field disappears on either side with no error.
+
+*CLIENT-DROP: pyegeria's own model discards the key before sending.*
+
+| Where | Key sent | Model/Java field | Effect |
+|---|---|---|---|
+| `_async_find_request` (`_server_client.py:6543`, every `find_*` without property names) | `zoneFilter`, `relationshipPageSize`, `anchorScopeGuid`, `anchorTypeName` | `governanceZoneFilter`, `relationshipsPageSize`, `anchorScopeGUID`; `anchorTypeName` is not a field at all | `governance_zone_filter`, `relationship_page_size` and `anchor_scope_guid` never take effect on any find |
+| My Profile to-do / meeting / review create (`my_profile.py:1314/1431/1523`) | `isOwnAnchor` | Java `ActionRequestBody` (via `AnchorOptions`) has it; **pyegeria's `ActionRequestBody` model lacks it**, and also `anchorGUID`, `anchorScopeGUIDs` and `initialClassifications`. It names Java's `newActionTargets` `actionTargetGUIDs` | not anchored as intended |
+| Dr.Egeria `common_md_utils.py:263` | `endWith` | `endsWith` | the "ends with" search option is ignored |
+| Dr.Egeria `common_md_utils.py:292/323/737`, `v2/schema_maker.py:28`, `v2/asset_maker.py:57`, CLI `glossary_actions.py:123` | `anchorScopeGUID(s)`, `governanceZoneFilter` on create/update bodies | the model reads `anchorScopeGuids` (see below); create/update bodies have no zone filter | anchor scope is dropped |
+| Dr.Egeria `v2/asset_maker.py:57` | `parentRelationshipProperties`, `typeName` | Java `TemplateRequestBody` has `parentRelationshipProperties` (and `replacementClassifications`); **the pyegeria model lacks both** | parent-relationship properties are dropped |
+| CLI `glossary_actions.py:178` | `elementProperties` | `properties` | update has no properties |
+| `validate_delete_classification_request` default (`_server_client.py:6244`) | `cascadeDelete` | not on the model, and Java spells it `cascadedDelete` | ISSUE-132 |
+
+*Model spelling that Egeria discards. Confirmed: anchor scope cannot be set through pyegeria at all.* The `NewElementRequestBody`, `NewRelationshipRequestBody` and `TemplateRequestBody` models alias `anchor_scope_guids` as `anchorScopeGuids`, while Java's `MakeAnchorOptions` reads `anchorScopeGUIDs`. A dict using the documented `"anchorScopeGUIDs"` (as in `collection_manager.py`'s docstrings) is dropped client-side. `anchorScopeGuids` / `anchor_scope_guids` are sent, then dropped server-side. Checked by `model_validate` → `model_dump_json`. This affects 47 create, 157 link and 26 from-template methods; one alias fixes it.
+
+*FIELD-DROP: the method passes it, Egeria's class lacks it.*
+- `get_tech_types_for_open_metadata_type(tech_name=...)` and `get_endpoints_for_asset(name=...)` send `filter` in a `FilterRequestBody`. The endpoints declare `ResultsRequestBody`, which has no `filter`, so they return everything unfiltered.
+- `find_software_capabilities(property_names=...)` sends `propertyNames` where Java declares `SearchStringRequestBody`, so the property restriction is lost.
+
+**New APIs (2026-10-23, from the refreshed `.http`; ISSUE-155 items 5 and 6), live on 9443.** One peer-cleared run with throwaway `pyeg-test::newapis::` elements; all GUIDs read back as gone and the prefix find was empty. Raw dumps were analysed afterwards:
+- **`add/update/clear_usage_activity`:** add stored `explicitGetCount=1, findCount=2`; update set `findCount=9`; clear removed the `elementHeader.usageActivity` slot. **Egeria behaviour:** that update also reset `explicitGetCount` to 0 despite `mergeUpdate: true`. The count fields are primitive `long`s (Java `UsageActivityProperties`), so an omitted count deserialises as 0. The docstrings say to send every count.
+- **`add/update/clear_member_popularity_profile`** (on a glossary): the total and the per-member map were stored; update set `findCountTotal=4` and kept the map; clear removed it.
+- **`undo_metadata_element_update`:** a term description `v2` went back to `v1`. **`undo_related_elements_update`:** a RelatedTerm description `r2` went back to `r1`.
+- **`restore_related_elements`:** a removed RelatedTerm came back with its properties.
+- **`restore_metadata_element`:** a soft-deleted term came back. **An archived (Memento) term also came back, with the same GUID, the Memento removed, and its qualifiedName restored** from `…t3_archivedOn_Fri Oct 23 19:29:39 GMT 2026` to the original. This answers ISSUE-159's open question: restore is not soft-delete-only. Anchor-scoped restore (anchored descendants) was not tested. A plain get of the archived term (no `forLineage`) returned HTTP 500, not 404.
+- **`link/detach_subject_area_hierarchy`** (repointed, ISSUE-165): the child was linked, then gone after detach.
+- **`ProductCatalog.find_digital_product_catalogs`:** a named search returned 2 results in 6.2s (`ProductManager`'s product-manager-marker version returned 13 in 41s). An unfiltered "*" search timed out at the helper's 90s.
+
+**Not fixed (owner's call or Egeria's):**
+- **19 endpoints Egeria doesn't serve**, documented in full with provenance in **ISSUE-165**. Confirmed absent from the live platform's OpenAPI doc (`omvs_audit.py --live`; GET `/v3/api-docs` on 9443) and from Egeria `main` 4486d1a7f1: the 8 Data Discovery analysis-report methods, data-classification create/update/link/detach, subject-area member add/remove, subject-area hierarchy link/detach (the SDK uses `collections/{g}/collection-hierarchies`; Egeria has `subject-areas/{g}/subject-area-hierarchies`), `find_governance_action_processes`, `get_gov_def_in_context` and `get_platform_organization`. Raise with the Egeria team, or remove from the SDK. Three other JAVA-MISSING entries are served live, so they were Java-scan false positives.
+- **No server-side filter exists:** `get_tech_types_for_open_metadata_type(tech_name=)` and `get_endpoints_for_asset(name=)`, whose endpoints take `ResultsRequestBody` (no `filter`), and `find_software_capabilities(property_names=)` (`SearchStringRequestBody`). Options: filter client-side, or drop and document the argument.
+- **Dr.Egeria Asset Maker template `typeName`:** Egeria's nearest field is `TemplateOptions.metadataElementSubtypeName` ("create an element of a subtype to the template type"). That isn't clearly the same as the spec's "type name of the element to create", so it needs a live check before mapping. Part of ISSUE-155 item 4 (Metadata Expert create-from-template) is covered by the `TemplateRequestBody` fields added above.
+- **Harmless top-level names Egeria ignores:** `FindProperties`, `AnyTimeRequestBody` (Java: `GetRequestBody`), `IntegrationServiceRequestBody` (legacy admin-services config).
+- `cascadeDelete` stays as it is: ISSUE-132, on hold for Egeria.
+- **New `.http` coverage, not part of this sweep:** the refreshed collections document usage-activity, member-popularity-profile and metadata undo/restore, which pyegeria lacks (ISSUE-155 style).
+- **Dead legacy path:** `pyegeria/view/md_processing_utils.py:1539` (behind the `dr_egeria_jupyter` CLI) still sends the sunset `initialStatus`, but it calls `create_controlled_glossary_term`, which no longer exists.
+
+*MODEL-FIELD gaps (review; 27 model→Java pairs, with users, in the report).*
+- Most are benign. For example, `ResultsRequestBody → GetRequestBody` drops paging on 51 `get_*_by_guid` calls, where paging means nothing.
+- Status-filter models carry both `activityStatus` and `activityStatusList`; only the `…List` form exists in Java. No current caller uses the singular form in a filter (My Profile's uses are inside the nested `…Properties`, where it is a real field).
+- `UpdatePropertiesRequestBody.replaceProperties` (Java `UpdateOptions` has only `mergeUpdate`) is used by three Metadata Expert updates.
+
+---
+
+### ISSUE-163: Actor Manager role-appointment links send non-existent `*AppointmentProperties` classes, and five delete/detach methods send the wrong request-body class
+
+**Fixed 2026-10-23 on branch `fix/role-appointment-class-names` (not yet released).** **Live on quickstart 9443** (two runs, throwaway `pyeg-test::role-appt::` elements, all read back as gone by GUID afterwards, and a find on the prefix returned nothing). The old person-link class was refused with a 400. All three fixed links, called with no body, read back the relationship to the profile. The old IT detach body was refused with a 400; the fixed detach made the link unreadable. The fixed `delete_actor_role` deleted its role.
+
+**Layer:** Pyegeria (+ Dr.Egeria) · **Status:** fixed on branch · **Found:** 2026-10-23, reported by the owner ("pyegeria is using the wrong class name when linking a role to a profile").
+
+**Root cause:** each method below either passes a properties class that doesn't exist to `_async_new_relationship_request`, or calls the shared delete helper for the wrong body class. Neither is caught client-side. A wrong `prop` list only matters when the caller passes no body: the helper then builds `{"class": "NewRelationshipRequestBody", "properties": {"class": prop[0]}}` itself. My Profile's "add role" calls `link_person_role_to_profile` that way. The ground truth is `ActorManagerResource.java` / `GlossaryManagerResource.java` (`@RequestBody` types) and `open-metadata-framework .../properties/actors/*RoleAppointmentProperties.java`. **The `.http` file is wrong for `actor-roles/{guid}/delete`:** it says `DeleteRelationshipRequestBody`, but Egeria declares `DeleteElementRequestBody`.
+
+| Method | Sent | Egeria expects | Live before fix |
+|---|---|---|---|
+| `link_person_role_to_profile` | `PersonAppointmentProperties` | `PersonRoleAppointmentProperties` | 400 |
+| `link_team_role_to_profile` | `TeamAppointmentProperties` | `TeamRoleAppointmentProperties` | (same shape) |
+| `link_it_profile_role_to_it_profile` | `ITProfileAppointmentProperties` | `ITProfileRoleAppointmentProperties` | (same shape) |
+| `detach_it_profile_role_from_it_profile` | `DeleteElementRequestBody` | `DeleteRelationshipRequestBody` | 400 |
+| `detach_identity_from_profile` (`user-identities/{g}/profile-identity/{g}/detach`) | `DeleteElementRequestBody` | `DeleteRelationshipRequestBody` | not run |
+| `delete_actor_role` | `DeleteRelationshipRequestBody` | `DeleteElementRequestBody` | accepted (tolerated) |
+| `delete_contribution_record` | `DeleteRelationshipRequestBody` | `DeleteElementRequestBody` | not run |
+| `GlossaryManager.remove_is_context_definition` | `DeleteRelationshipRequestBody` | `DeleteClassificationRequestBody` | not run |
+
+**IT detach request and response (before the fix), Egeria quickstart 9443, 2026-10-23:**
+```
+POST .../actor-manager/actor-roles/a6e578d4-…/it-profile-role-appointments/91cc35e6-…/detach
+{"forLineage":false,"forDuplicateProcessing":false,"class":"DeleteElementRequestBody","cascadeDelete":false}
+→ HTTP 400 (pyegeria reports it as CLIENT_ERROR_400, "The client is unable to connect to the Egeria platform", which is misleading for a 400)
+```
+
+**Dr.Egeria:** `ActorManagerLinkProcessor` (`md_processing/v2/actor_manager.py`) called `_async_link_it_profile_role_to_profile` for `Link IT Profile Role Appointment`. No such method exists (the real one is `_async_link_it_profile_role_to_it_profile`), so that command raised `AttributeError` on every Link.
+
+**Fix:** corrected the three `prop` lists; switched the two detaches to `_async_delete_relationship_request`, `delete_actor_role` and `delete_contribution_record` to `_async_delete_element_request`, and `remove_is_context_definition` to `_async_delete_classification_request`; aligned the type hints and docstrings; corrected the Dr.Egeria method name. Tests: `tests/micro-tests/test_role_appointment_class_names.py` (11 tests; 9 of them fail on the old code; the two that pass cover the person and team detaches, which were already correct).
+
+**Checked and left alone:** `MetadataExpert.delete_related_elements` sends `DeleteRelationshipRequestBody`, while Egeria declares `OpenMetadataDeleteRequestBody`. That's deliberate (ISSUE-63): the Egeria class can't carry `deleteMethod`. Decertify and unlicense (`GovernanceOfficerResource`: `DeleteRelationshipRequestBody`) are already correct. **Why the audit missed them:** `scripts/omvs_audit.py --service actor-manager` on the old code reported 59 OK and 1 unrelated mismatch. Three blind spots, all fixed in ISSUE-164:
+- Both detaches matched only by verb+path (RENAMED), and RENAMED matches skipped the body check.
+- Nothing compared the inner `properties` class, which is where the three link bugs were.
+- For `delete_actor_role`, `delete_contribution_record` and `is-context-definition`, the `.http` file named the same wrong class the SDK sent.
+
+The improved audit flags all eight on the pre-fix code.
+
+---
+
 ### ISSUE-162: Dr.Egeria "Update Glossary Term" resets isAbstractConcept / isActivityDescription / isContext / isDataValue to False whenever the document doesn't mention them
 
 **Layer:** Pyegeria (Dr.Egeria) · **Status:** fixed on branch `fix/issue-162-update-resets-booleans` (owner approved 2026-10-23), not yet released · **Found:** 2026-10-23 by RE's question-term update batch builder, reading `md_processing/v2` (RE term batch fix round 3). Reported via the Thursday Coordinator; confirmed here in source on `main` (6.2.9), not run live.
@@ -413,7 +614,7 @@ The OMF store's delete (`OpenMetadataStoreRESTServices`, around `:4118`) also ro
 **Possible route today (unverified):** `ProjectManager.delete_project(guid, body={"class": "DeleteElementRequestBody", "deleteMethod": "ARCHIVE"})`. pyegeria passes `deleteMethod` through, but whether the project-manager delete path honours ARCHIVE as the OMF store delete does was not traced.
 
 **Proposed (not made):**
-1. Add `MetadataExpert.restore_metadata_element` / `restore_related_elements` (and undo), per ISSUE-155 item 5.
+1. ~~Add `MetadataExpert.restore_metadata_element` / `restore_related_elements` (and undo), per ISSUE-155 item 5.~~ Done 2026-10-23 (branch `fix/role-appointment-class-names`). Items 2 and 3 are still open.
 2. Add `ProjectManager.archive_project` and `CollectionManager.archive_collection`. These can be thin wrappers that send `deleteMethod: ARCHIVE` once that path is confirmed live, or call Metadata Expert archive.
 3. Live-test archive then restore of a throwaway Project, including the `_archivedOn_` rename and its reversal.
 
@@ -465,9 +666,9 @@ Egeria (`AssetMakerResource.addCatalogTarget`, served under every generic URL ma
 1. **Engine-action calls moved to the Governance Engine view service (PR #9373).** Automated Curation no longer has claim, status update, action-targets update, completion-status or active-claimed. On `main` the audit reports them ELSEWHERE, plus `getApprovedEngineActions` and `cancelGovernanceActionProcess` MISSING. **Already fixed on branch `fix/issue-153-governance-engine` (ISSUE-153), not yet merged or released.** The only action is to merge and release that branch.
 2. **`cascadeDelete` alias (PR #9365, `DeleteOptions.setCascadedDelete` now has `@JsonAlias("cascadeDelete")`).** pyegeria's cascade flag now reaches the server, so ISSUE-154 item 1 applies: switch to `cascadedDelete` and re-test cascades.
 3. **Zones fail closed (PR #9367).** A GovernanceZone with no security access control now admits no-one; before, it was ignored. This is not a REST change. The new `MISSING_ZONE_ACCESS_CONTROL` exception type is raised by the platform cataloguer, not on a REST path. Callers will see 403s or empty results for elements whose only zones are unsecured. **pyegeria:** no code change. Expect more 403s on quickstart content, as with the digital-products zone (2026-10-14). The 403 error message already reads clearly since ISSUE-142.
-4. **`createMetadataElementFromTemplate` body class.** The `.http` now shows `OpenMetadataTemplateRequestBody`. The Java parameter type was already that at V6.2, so only the sample changed. pyegeria sends its `TemplateRequestBody` model (`metadata_expert.py:159-207`, `models.py:526`). That model has no `typeName`, `replacementClassifications` or `parentRelationshipProperties`, so the PyegeriaModel `extra='ignore'` rule silently drops those fields if a caller passes them. **Proposed:** add an `OpenMetadataTemplateRequestBody` model with those fields and use it here. Medium value: it is the only way to create a subtype from a template through Metadata Expert.
-5. **Undo and restore (PR #9365/#9373, new).** Metadata Expert `POST /metadata-elements/{guid}/undo` restores the previous version and fails if there is none. `/metadata-elements/{guid}/restore` reverses a delete or archive, including what that delete cascaded, but not a purge. `related-elements/{guid}/undo` and `/restore` do the same for relationships. Each takes an optional `MetadataSourceRequestBody`. **Proposed:** four methods on `MetadataExpert` via the existing `_async_metadata_source_body_request` (`_server_client.py:6395`). This pairs well with ISSUE-117 and RE's archive walk: restore is the safety net for a mistaken archive.
-6. **Usage Activity and Member Popularity Profile classifications (Classification Explorer, new, probably for the Lovelace Popularity Profiler in #9369).** Each has add (`POST /elements/{guid}/usage-activity`), `/update` and `/remove`, and the same for `/member-popularity-profile`. The bodies are New/Update/DeleteClassificationRequestBody with `UsageActivityProperties` or `MemberPopularityProfileProperties`. **Proposed:** six methods, and the property names in `element_status_fields.py` if Dr.Egeria should show them. Low priority until something writes them.
+4. **`createMetadataElementFromTemplate` body class.** The `.http` now shows `OpenMetadataTemplateRequestBody`. The Java parameter type was already that at V6.2, so only the sample changed. pyegeria sends its `TemplateRequestBody` model (`metadata_expert.py:159-207`, `models.py:526`). That model has no `typeName`, `replacementClassifications` or `parentRelationshipProperties`, so the PyegeriaModel `extra='ignore'` rule silently drops those fields if a caller passes them. **Proposed:** add an `OpenMetadataTemplateRequestBody` model with those fields and use it here. Medium value: it is the only way to create a subtype from a template through Metadata Expert. **Partly done 2026-10-23:** pyegeria's `TemplateRequestBody` now sends `replacementClassifications` and `parentRelationshipProperties` (ISSUE-164). `typeName` (on `OpenMetadataTemplateRequestBody` only) is still open.
+5. **Undo and restore (PR #9365/#9373, new).** Metadata Expert `POST /metadata-elements/{guid}/undo` restores the previous version and fails if there is none. `/metadata-elements/{guid}/restore` reverses a delete or archive, including what that delete cascaded, but not a purge. `related-elements/{guid}/undo` and `/restore` do the same for relationships. Each takes an optional `MetadataSourceRequestBody`. **Proposed:** four methods on `MetadataExpert` via the existing `_async_metadata_source_body_request` (`_server_client.py:6395`). This pairs well with ISSUE-117 and RE's archive walk: restore is the safety net for a mistaken archive. **Done 2026-10-23 (ISSUE-164 follow-up, branch `fix/role-appointment-class-names`):** `MetadataExpert.undo_metadata_element_update`, `restore_metadata_element`, `undo_related_elements_update`, `restore_related_elements`.
+6. **Usage Activity and Member Popularity Profile classifications (Classification Explorer, new, probably for the Lovelace Popularity Profiler in #9369).** Each has add (`POST /elements/{guid}/usage-activity`), `/update` and `/remove`, and the same for `/member-popularity-profile`. The bodies are New/Update/DeleteClassificationRequestBody with `UsageActivityProperties` or `MemberPopularityProfileProperties`. **Proposed:** six methods, and the property names in `element_status_fields.py` if Dr.Egeria should show them. Low priority until something writes them. **Done 2026-10-23 (same branch):** `ClassificationExplorer.add/update/clear_usage_activity` and `add/update/clear_member_popularity_profile`.
 7. **`GetOptions.viewElementGUID` (new).** It identifies the element whose view a request is assembling, so related elements fetched for that view are not reported as "found" (usage tracking). **Proposed:** an optional field on the get-request models, for the Resource Browser and the explorers. Low priority.
 8. **`relationshipPurpose` on RelationshipDef (PR #9365).** Type definitions now carry a relationship purpose used for anchor processing. Nothing in pyegeria reads it. **Proposed:** none now. Possibly show it in the Egeria Explorer type views later.
 9. **`finalAnalysisStep` (PR #9366).** This is internal to the survey connectors (a provider/service API) and not a REST field. **pyegeria:** none.

@@ -602,6 +602,100 @@ class MetadataExpert(ServerClient):
         return loop.run_until_complete(self._async_archive_metadata_element(metadata_element_guid, body))
 
     @dynamic_catch
+    async def _async_undo_metadata_element_update(self, metadata_element_guid: str, body: Optional[dict | MetadataSourceRequestBody] = None) -> None:
+        """
+        Undo the last update to a metadata element, restoring its previous version. Async version.
+
+        Egeria keeps the element's version history; this reverts one update.
+
+        Parameters
+        ----------
+        metadata_element_guid : str
+            Unique identifier of the metadata element.
+        body : dict | MetadataSourceRequestBody, optional
+            Request options.
+
+        Notes
+        -----
+        Sample JSON body (optional; with none, an empty MetadataSourceRequestBody is sent):
+        {
+          "class": "MetadataSourceRequestBody",
+          "externalSourceGUID": "",
+          "externalSourceName": "",
+          "forLineage": false,
+          "forDuplicateProcessing": false,
+          "effectiveTime": "{{$isoTimestamp}}"
+        }
+        """
+        url = f"{self.command_root}/metadata-elements/{metadata_element_guid}/undo"
+        await self._async_metadata_source_body_request(url, body)
+
+    @dynamic_catch
+    def undo_metadata_element_update(self, metadata_element_guid: str, body: Optional[dict | MetadataSourceRequestBody] = None) -> None:
+        """
+        Undo the last update to a metadata element, restoring its previous version.
+
+        Egeria keeps the element's version history; this reverts one update.
+
+        Parameters
+        ----------
+        metadata_element_guid : str
+            Unique identifier of the metadata element.
+        body : dict | MetadataSourceRequestBody, optional
+            Request options; see the async version for a sample.
+        """
+        loop = asyncio.get_event_loop()
+        return loop.run_until_complete(self._async_undo_metadata_element_update(metadata_element_guid, body))
+
+    @dynamic_catch
+    async def _async_restore_metadata_element(self, metadata_element_guid: str, body: Optional[dict | MetadataSourceRequestBody] = None) -> None:
+        """
+        Restore a deleted or archived metadata element. Async version.
+
+        Egeria also restores everything the same delete or archive changed (for example
+        the anchored elements removed with it).
+
+        Parameters
+        ----------
+        metadata_element_guid : str
+            Unique identifier of the metadata element.
+        body : dict | MetadataSourceRequestBody, optional
+            Request options.
+
+        Notes
+        -----
+        Sample JSON body (optional; with none, an empty MetadataSourceRequestBody is sent):
+        {
+          "class": "MetadataSourceRequestBody",
+          "externalSourceGUID": "",
+          "externalSourceName": "",
+          "forLineage": false,
+          "forDuplicateProcessing": false,
+          "effectiveTime": "{{$isoTimestamp}}"
+        }
+        """
+        url = f"{self.command_root}/metadata-elements/{metadata_element_guid}/restore"
+        await self._async_metadata_source_body_request(url, body)
+
+    @dynamic_catch
+    def restore_metadata_element(self, metadata_element_guid: str, body: Optional[dict | MetadataSourceRequestBody] = None) -> None:
+        """
+        Restore a deleted or archived metadata element.
+
+        Egeria also restores everything the same delete or archive changed (for example
+        the anchored elements removed with it).
+
+        Parameters
+        ----------
+        metadata_element_guid : str
+            Unique identifier of the metadata element.
+        body : dict | MetadataSourceRequestBody, optional
+            Request options; see the async version for a sample.
+        """
+        loop = asyncio.get_event_loop()
+        return loop.run_until_complete(self._async_restore_metadata_element(metadata_element_guid, body))
+
+    @dynamic_catch
     async def _async_classify_metadata_element(self, metadata_element_guid: str, classification_name: str, body: Optional[dict | NewClassificationRequestBody] = None) -> None:
         """
         Add a new classification to the metadata element. Async version.
@@ -1039,6 +1133,98 @@ class MetadataExpert(ServerClient):
         """
         loop = asyncio.get_event_loop()
         return loop.run_until_complete(self._async_delete_related_elements(relationship_guid, body))
+
+    @dynamic_catch
+    async def _async_undo_related_elements_update(self, relationship_guid: str, body: Optional[dict | MetadataSourceRequestBody] = None) -> None:
+        """
+        Undo the last update to a relationship, restoring its previous version. Async version.
+
+        Egeria keeps the relationship's version history; this reverts one update.
+
+        Parameters
+        ----------
+        relationship_guid : str
+            Unique identifier of the relationship.
+        body : dict | MetadataSourceRequestBody, optional
+            Request options.
+
+        Notes
+        -----
+        Sample JSON body (optional; with none, an empty MetadataSourceRequestBody is sent):
+        {
+          "class": "MetadataSourceRequestBody",
+          "externalSourceGUID": "",
+          "externalSourceName": "",
+          "forLineage": false,
+          "forDuplicateProcessing": false,
+          "effectiveTime": "{{$isoTimestamp}}"
+        }
+        """
+        url = f"{self.command_root}/related-elements/{relationship_guid}/undo"
+        await self._async_metadata_source_body_request(url, body)
+
+    @dynamic_catch
+    def undo_related_elements_update(self, relationship_guid: str, body: Optional[dict | MetadataSourceRequestBody] = None) -> None:
+        """
+        Undo the last update to a relationship, restoring its previous version.
+
+        Egeria keeps the relationship's version history; this reverts one update.
+
+        Parameters
+        ----------
+        relationship_guid : str
+            Unique identifier of the relationship.
+        body : dict | MetadataSourceRequestBody, optional
+            Request options; see the async version for a sample.
+        """
+        loop = asyncio.get_event_loop()
+        return loop.run_until_complete(self._async_undo_related_elements_update(relationship_guid, body))
+
+    @dynamic_catch
+    async def _async_restore_related_elements(self, relationship_guid: str, body: Optional[dict | MetadataSourceRequestBody] = None) -> None:
+        """
+        Restore a deleted or archived relationship. Async version.
+
+        Egeria also restores everything the same delete or archive changed.
+
+        Parameters
+        ----------
+        relationship_guid : str
+            Unique identifier of the relationship.
+        body : dict | MetadataSourceRequestBody, optional
+            Request options.
+
+        Notes
+        -----
+        Sample JSON body (optional; with none, an empty MetadataSourceRequestBody is sent):
+        {
+          "class": "MetadataSourceRequestBody",
+          "externalSourceGUID": "",
+          "externalSourceName": "",
+          "forLineage": false,
+          "forDuplicateProcessing": false,
+          "effectiveTime": "{{$isoTimestamp}}"
+        }
+        """
+        url = f"{self.command_root}/related-elements/{relationship_guid}/restore"
+        await self._async_metadata_source_body_request(url, body)
+
+    @dynamic_catch
+    def restore_related_elements(self, relationship_guid: str, body: Optional[dict | MetadataSourceRequestBody] = None) -> None:
+        """
+        Restore a deleted or archived relationship.
+
+        Egeria also restores everything the same delete or archive changed.
+
+        Parameters
+        ----------
+        relationship_guid : str
+            Unique identifier of the relationship.
+        body : dict | MetadataSourceRequestBody, optional
+            Request options; see the async version for a sample.
+        """
+        loop = asyncio.get_event_loop()
+        return loop.run_until_complete(self._async_restore_related_elements(relationship_guid, body))
 
     @dynamic_catch
     async def _async_detach_related_elements_in_store(

@@ -9,9 +9,9 @@ Author family manages (see egeria-project.org/concepts/engine-action).
 Both commands call pyegeria's `AutomatedCuration` client directly
 (`initiate_engine_action` / `cancel_engine_action`) rather than going through
 the generic AssetMaker/Referenceable create path: `initiate_engine_action`'s
-request body (qualifiedName/domainIdentifier/requestSourceGUIDs/
+request body (qualifiedName/domainIdentifier/actionSourceGUIDs/
 actionTargets/receivedGuards/requestType/requestParameters/processName/...)
-is its own bespoke shape (`GovernanceActionRequestBody`), not a
+is its own bespoke shape (`InitiateEngineActionRequestBody`), not a
 NewElementRequestBody-wrapped Properties object, and the element it creates
 is populated entirely server-side as the engine runs -- there is nothing to
 declare beyond the initiation request itself. `cancel_engine_action` takes
