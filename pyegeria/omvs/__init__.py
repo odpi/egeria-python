@@ -25,6 +25,7 @@ from pyegeria.omvs.my_profile import MyProfile
 from pyegeria.omvs.notification_manager import NotificationManager
 from pyegeria.omvs.people_organizer import PeopleOrganizer
 from pyegeria.omvs.product_manager import ProductManager
+from pyegeria.omvs.product_catalog import ProductCatalog
 from pyegeria.omvs.project_manager import ProjectManager
 from pyegeria.omvs.reference_data import ReferenceDataManager
 from pyegeria.omvs.registered_info import RegisteredInfo
@@ -65,6 +66,7 @@ __all__ = [
     "NotificationManager",
     "PeopleOrganizer",
     "ProductManager",
+    "ProductCatalog",
     "ProjectManager",
     "ReferenceDataManager",
     "RegisteredInfo",

@@ -13533,6 +13533,200 @@ class ClassificationExplorer(ServerClient):
         loop = asyncio.get_event_loop()
         loop.run_until_complete(self._async_clear_element_as_promise(element_guid, body))
 
+    #
+    #   UsageActivity
+    #
+
+    @dynamic_catch
+    async def _async_add_usage_activity(self, element_guid: str,
+                                        body: Optional[dict | NewClassificationRequestBody] = None) -> None:
+        """Add the UsageActivity classification to an element.
+        It records how often the element has been read, found, updated and had attachments or
+        feedback changed or deleted. Async version.
+
+        With no body, the classification is added with no counts set. Sample body:
+
+        {
+           "class" : "NewClassificationRequestBody",
+           "properties" : {
+               "class" : "UsageActivityProperties",
+               "explicitGetCount" : 0,
+               "findCount" : 0,
+               "updatePropertyCount" : 0,
+               "updateAttachmentCount" : 0,
+               "updateFeedbackCount" : 0,
+               "deleteAttachmentCount" : 0,
+               "deleteFeedbackCount" : 0
+           }
+        }
+        """
+        url = f"{self.classification_command_root}/elements/{element_guid}/usage-activity"
+        if body is None:
+            body = {"class": "NewClassificationRequestBody", "properties": {"class": "UsageActivityProperties"}}
+        await self._async_new_classification_request(url, prop=["UsageActivityProperties"], body=body)
+        logger.info(f"Added UsageActivity classification to {element_guid}")
+
+    @dynamic_catch
+    def add_usage_activity(self, element_guid: str, body: Optional[dict | NewClassificationRequestBody] = None) -> None:
+        """Add the UsageActivity classification to an element.
+        It records how often the element has been read, found, updated and had attachments or
+        feedback changed or deleted.
+        See _async_add_usage_activity for the body."""
+        loop = asyncio.get_event_loop()
+        loop.run_until_complete(self._async_add_usage_activity(element_guid, body))
+
+    @dynamic_catch
+    async def _async_update_usage_activity(self, element_guid: str,
+                                           body: dict | UpdateClassificationRequestBody) -> None:
+        """Update the properties of an element's UsageActivity classification. Set
+        "mergeUpdate": true to change only the properties supplied. Async version. Sample body:
+
+        {
+           "class" : "UpdateClassificationRequestBody",
+           "mergeUpdate" : true,
+           "properties" : {
+               "class" : "UsageActivityProperties",
+               "explicitGetCount" : 0,
+               "findCount" : 0,
+               "updatePropertyCount" : 0,
+               "updateAttachmentCount" : 0,
+               "updateFeedbackCount" : 0,
+               "deleteAttachmentCount" : 0,
+               "deleteFeedbackCount" : 0
+           }
+        }
+        """
+        url = f"{self.classification_command_root}/elements/{element_guid}/usage-activity/update"
+        await self._async_update_element_body_request(url, prop=["UsageActivityProperties"], body=body)
+        logger.info(f"Updated UsageActivity classification on {element_guid}")
+
+    @dynamic_catch
+    def update_usage_activity(self, element_guid: str, body: dict | UpdateClassificationRequestBody) -> None:
+        """Update the properties of an element's UsageActivity classification.
+        See _async_update_usage_activity for the body."""
+        loop = asyncio.get_event_loop()
+        loop.run_until_complete(self._async_update_usage_activity(element_guid, body))
+
+    @dynamic_catch
+    async def _async_clear_usage_activity(self, element_guid: str,
+                                          body: Optional[dict | DeleteClassificationRequestBody] = None) -> None:
+        """Remove the UsageActivity classification from an element. Async version."""
+        url = f"{self.classification_command_root}/elements/{element_guid}/usage-activity/remove"
+        if body is None:
+            body = {"class": "DeleteClassificationRequestBody"}
+        await self._async_delete_classification_request(url, body)
+        logger.info(f"Removed UsageActivity classification from {element_guid}")
+
+    @dynamic_catch
+    def clear_usage_activity(self, element_guid: str, body: Optional[dict | DeleteClassificationRequestBody] = None) -> None:
+        """Remove the UsageActivity classification from an element."""
+        loop = asyncio.get_event_loop()
+        loop.run_until_complete(self._async_clear_usage_activity(element_guid, body))
+
+    #
+    #   MemberPopularityProfile
+    #
+
+    @dynamic_catch
+    async def _async_add_member_popularity_profile(self, element_guid: str,
+                                                   body: Optional[dict | NewClassificationRequestBody] = None) -> None:
+        """Add the MemberPopularityProfile classification to an element.
+        It holds the same activity counts as UsageActivity for a collection, as a total plus a
+        per-member map of member GUID to count. Async version.
+
+        With no body, the classification is added with no counts set. Sample body:
+
+        {
+           "class" : "NewClassificationRequestBody",
+           "properties" : {
+               "class" : "MemberPopularityProfileProperties",
+               "explicitGetCountTotal" : 0,
+               "explicitGetCountProfile" : {"add member GUID" : 0},
+               "findCountTotal" : 0,
+               "findCountProfile" : {},
+               "updatePropertyCountTotal" : 0,
+               "updatePropertyCountProfile" : {},
+               "updateAttachmentCountTotal" : 0,
+               "updateAttachmentCountProfile" : {},
+               "updateFeedbackCountTotal" : 0,
+               "updateFeedbackCountProfile" : {},
+               "deleteAttachmentCountTotal" : 0,
+               "deleteAttachmentCountProfile" : {},
+               "deleteFeedbackCountTotal" : 0,
+               "deleteFeedbackCountProfile" : {}
+           }
+        }
+        """
+        url = f"{self.classification_command_root}/elements/{element_guid}/member-popularity-profile"
+        if body is None:
+            body = {"class": "NewClassificationRequestBody", "properties": {"class": "MemberPopularityProfileProperties"}}
+        await self._async_new_classification_request(url, prop=["MemberPopularityProfileProperties"], body=body)
+        logger.info(f"Added MemberPopularityProfile classification to {element_guid}")
+
+    @dynamic_catch
+    def add_member_popularity_profile(self, element_guid: str, body: Optional[dict | NewClassificationRequestBody] = None) -> None:
+        """Add the MemberPopularityProfile classification to an element.
+        It holds the same activity counts as UsageActivity for a collection, as a total plus a
+        per-member map of member GUID to count.
+        See _async_add_member_popularity_profile for the body."""
+        loop = asyncio.get_event_loop()
+        loop.run_until_complete(self._async_add_member_popularity_profile(element_guid, body))
+
+    @dynamic_catch
+    async def _async_update_member_popularity_profile(self, element_guid: str,
+                                                      body: dict | UpdateClassificationRequestBody) -> None:
+        """Update the properties of an element's MemberPopularityProfile classification. Set
+        "mergeUpdate": true to change only the properties supplied. Async version. Sample body:
+
+        {
+           "class" : "UpdateClassificationRequestBody",
+           "mergeUpdate" : true,
+           "properties" : {
+               "class" : "MemberPopularityProfileProperties",
+               "explicitGetCountTotal" : 0,
+               "explicitGetCountProfile" : {"add member GUID" : 0},
+               "findCountTotal" : 0,
+               "findCountProfile" : {},
+               "updatePropertyCountTotal" : 0,
+               "updatePropertyCountProfile" : {},
+               "updateAttachmentCountTotal" : 0,
+               "updateAttachmentCountProfile" : {},
+               "updateFeedbackCountTotal" : 0,
+               "updateFeedbackCountProfile" : {},
+               "deleteAttachmentCountTotal" : 0,
+               "deleteAttachmentCountProfile" : {},
+               "deleteFeedbackCountTotal" : 0,
+               "deleteFeedbackCountProfile" : {}
+           }
+        }
+        """
+        url = f"{self.classification_command_root}/elements/{element_guid}/member-popularity-profile/update"
+        await self._async_update_element_body_request(url, prop=["MemberPopularityProfileProperties"], body=body)
+        logger.info(f"Updated MemberPopularityProfile classification on {element_guid}")
+
+    @dynamic_catch
+    def update_member_popularity_profile(self, element_guid: str, body: dict | UpdateClassificationRequestBody) -> None:
+        """Update the properties of an element's MemberPopularityProfile classification.
+        See _async_update_member_popularity_profile for the body."""
+        loop = asyncio.get_event_loop()
+        loop.run_until_complete(self._async_update_member_popularity_profile(element_guid, body))
+
+    @dynamic_catch
+    async def _async_clear_member_popularity_profile(self, element_guid: str,
+                                                     body: Optional[dict | DeleteClassificationRequestBody] = None) -> None:
+        """Remove the MemberPopularityProfile classification from an element. Async version."""
+        url = f"{self.classification_command_root}/elements/{element_guid}/member-popularity-profile/remove"
+        if body is None:
+            body = {"class": "DeleteClassificationRequestBody"}
+        await self._async_delete_classification_request(url, body)
+        logger.info(f"Removed MemberPopularityProfile classification from {element_guid}")
+
+    @dynamic_catch
+    def clear_member_popularity_profile(self, element_guid: str, body: Optional[dict | DeleteClassificationRequestBody] = None) -> None:
+        """Remove the MemberPopularityProfile classification from an element."""
+        loop = asyncio.get_event_loop()
+        loop.run_until_complete(self._async_clear_member_popularity_profile(element_guid, body))
+
 
 if __name__ == "__main__":
     print("Main-Classification Manager")
